@@ -1,0 +1,144 @@
+<div class="image-viewer-wrapper">
+  <app-pan-zoom-viewer
+    [imageFile]="imageFile$ | async"
+    [viewerState]="viewerState$ | async"
+    [showInfoBar]="true"
+    [showRegionMarker]="(this.region$ | async)"
+    [region]="this.region$ | async"
+    [showSourceMarkers]="true"
+    [sources]="filteredSources$ | async"
+    [selectedSources]="selectedSources$ | async"
+    (onImageClick)="onImageClick($event)">
+  </app-pan-zoom-viewer>
+</div>
+  <div class="right-side-bar-wrapper">
+    <div class="card" style="height: 100%;">
+      <div class="card-header">
+        Source Extractor Settings
+      </div>
+  
+      <div class="card-body" style="overflow-y: auto;">
+        <div *ngIf="(imageFile$ | async)?.headerLoaded">
+          <div class="form-group">
+            <label for="extractionMode">Analysis Mode</label>
+            <div>
+              <mat-button-toggle-group name="extractionMode" class="" [ngModel]="(workbenchState$ | async)?.sourceExtractorModeOption" (ngModelChange)="setModeOption($event)">
+                <mat-button-toggle value="{{SourceExtractorModeOption.MOUSE}}">
+                  <mat-icon>mouse</mat-icon> Mouse
+                </mat-button-toggle>
+                <mat-button-toggle value="{{SourceExtractorModeOption.COORD}}">
+                  <mat-icon>language</mat-icon> Coordinates
+                </mat-button-toggle>
+                <mat-button-toggle value="{{SourceExtractorModeOption.AUTO}}">
+                  <mat-icon>brightness_auto</mat-icon> Auto
+                </mat-button-toggle>
+              </mat-button-toggle-group>
+            </div>
+            
+          </div>
+          <label></label>
+        
+  
+          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.MOUSE">
+            <p class="pb-2"> Manually extract sources by clicking on them in your image.</p>
+            <div class="pb-4">
+              <button mat-raised-button (click)="openPhotSettings()">Photometry Settings...</button>
+            </div>
+            
+          </div>
+
+          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.COORD">
+            <p class="pb-2"> Photometer specific coordinates within your image using either x/y coordinates or right ascension and declination.</p>
+
+            <div class="pb-4">
+              <button mat-raised-button (click)="openPhotSettings()">Photometry Settings...</button>
+            </div>
+    
+            
+
+            <p>TODO</p>
+    
+          </div>
+    
+          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.AUTO">
+            <p class="pb-2"> Automatically extract and photometer all sources in your image.</p>
+
+            <div class="pb-4">
+              <button mat-raised-button (click)="openPhotSettings()">Photometry Settings...</button>
+              <button mat-raised-button (click)="openSourceExtractionSettings()">Extraction Settings...</button>
+            </div>
+
+            <div class="row pb-4">
+              <div class="col-6">
+                <mat-form-field>
+                  <mat-select 
+                  placeholder="Search Region"
+                  [ngModel]="(sourceExtractorState$ | async)?.regionOption"
+                  (ngModelChange)="setRegionOption($event)">
+                    <mat-option *ngFor="let regionOption of regionOptions" [value]="regionOption.value">{{ regionOption.label }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+              </div>
+              <div class="col-6">
+                  <button mat-raised-button (click)="findSources()" [color]="'accent'">Find Sources</button>
+              </div>
+              
+            </div>
+    
+          </div>
+    
+          
+       
+          <hr>
+          <div class="row">
+            <div class="col-12">
+                <mat-button-toggle-group [(ngModel)]="pixelCoordView" (ngModelChange)="sourceTable.refresh()">
+                  <mat-button-toggle value="pixel">
+                    <mat-icon>border_all</mat-icon> Pixel
+                  </mat-button-toggle>
+                  <mat-button-toggle value="sky">
+                    <mat-icon>language</mat-icon> RA/DEC
+                  </mat-button-toggle>
+                </mat-button-toggle-group>
+    
+            </div>
+    
+          </div> 
+    
+        
+        
+          <td-data-table
+            #sourceTable
+            [data]="filteredSources$ | async"
+            [columns]="[
+              { name: 'x',  label: 'X', width: 130, numeric: true, format: DECIMAL_FORMAT, hidden: pixelCoordView != 'pixel' },
+              { name: 'y', label: 'Y', width: 130, numeric: true, format: DECIMAL_FORMAT, hidden: pixelCoordView != 'pixel'},
+              { name: 'raHours', label: 'RA', width: 130, numeric: true, format: SEXAGESIMAL_FORMAT, hidden: pixelCoordView != 'sky'},
+              { name: 'decDegs', label: 'DEC', width: 130, numeric: true, format: SEXAGESIMAL_FORMAT, hidden: pixelCoordView != 'sky'},
+              { name: 'mag', label: 'Mag', width: 80, numeric: true, format: DECIMAL_FORMAT},
+              { name: 'magError', label: 'Err', width: 80, numeric: true, format: DECIMAL_FORMAT}
+            ]"
+            [selectable]="true"
+            [ngModel]="selectedSources$ | async"
+            (rowSelect)="onSelectedRowChanges($event)"
+            (selectAll)="onSelectAllRows($event)"
+            [clickable]="true"
+            [multiple]="true"
+            [sortable]="true"
+            [style.height.px]="300">
+          </td-data-table>
+    
+        
+    
+          <div class="p-1">
+            <button mat-raised-button  [color]="'accent'" (click)="removeSelectedSources()">Remove Selected</button>
+            <button mat-raised-button [color]="'accent'" (click)="removeAllSources()">Remove All</button>            
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  
+  </div>
+  

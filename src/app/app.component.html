@@ -1,0 +1,8 @@
+<div id="top-menu">
+  <navbar [routes]=currentRoutes></navbar>
+  <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
+</div>
+
+<div id="content">
+  <router-outlet></router-outlet>
+</div>

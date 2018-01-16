@@ -1,0 +1,81 @@
+<h2 mat-dialog-title>Photometry Settings</h2>
+<mat-dialog-content>
+  <div class="row pb-3">
+    <div class="col-6">
+      <mat-slide-toggle
+        [checked]="settings?.centroid"
+        [labelPosition]="before"
+        (change)="onCentroidChange($event)">
+        Centroid before photometering
+      </mat-slide-toggle>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <mat-select
+        [disabled]="!settings?.centroid"
+        style="width: 200px;"
+        placeholder="Centroid Method"
+        [(ngModel)]="settings && settings.centroidMethod">
+        <mat-option *ngFor="let centroidMethodOption of centroidMethodOptions" [value]="centroidMethodOption.value">{{ centroidMethodOption.label }}</mat-option>
+      </mat-select>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="">
+          <input matInput
+            [disabled]="!settings?.centroid"
+            placeholder="Centroid Radius"
+            [ngModel]="settings && settings.centroidRadius"
+            (ngModelChange)="setCentroidRadius($event)"
+            type="number"
+            step="1"
+            min="1"
+            max="25">
+        </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <mat-form-field class="">
+          <input matInput
+            placeholder="Aperture"
+            [(ngModel)]="settings && settings.aperture"
+            type="number"
+            step="1"
+            min="1"
+            max="25">
+        </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="">
+        <input matInput
+          placeholder="Annulus Start"
+          [(ngModel)]="settings && settings.annulus"
+          type="number"
+          step="1"
+          min="1"
+          max="25">
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <mat-form-field class="">
+          <input matInput
+            placeholder="Annulus Width"
+            [(ngModel)]="settings && settings.dannulus"
+            type="number"
+            step="1"
+            min="1"
+            max="25">
+        </mat-form-field>
+    </div>
+
+      
+  </div>
+
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="settings">Save</button>
+  <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>

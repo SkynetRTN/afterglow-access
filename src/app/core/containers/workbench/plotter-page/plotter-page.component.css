@@ -1,0 +1,21 @@
+.image-viewer-wrapper {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 550px;
+    left: 0px;
+  }
+  
+  .image-viewer {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .right-side-bar-wrapper {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    width: 550px;
+    overflow-y: auto;
+  }

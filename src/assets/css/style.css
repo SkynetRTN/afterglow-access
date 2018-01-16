@@ -1,0 +1,39 @@
+/* fix margin beneath mat-button-toggle */
+label.mat-button-toggle-label {
+  margin-bottom: 0px;
+}
+
+/* fix bug in material2 dialog content */
+.mat-dialog-content {
+  max-width: none !important;
+  max-height: none !important;
+  overflow: initial !important;
+}
+
+
+.no-axis-labels .tick text,  .no-axis-labels .nv-axisMaxMin text{
+  display: none;
+}
+
+
+
+/* fix for datatables which scroll bar is hidden, column widths don't match header widths */
+div.ui-datatable-scrollable-body {
+  overflow-y: scroll;
+}
+
+/* fix for kendo ui grid selected rows with bootstrap css theme */
+.k-grid tr.k-state-selected:hover, .k-grid th.k-state-selected:hover, .k-grid td.k-state-selected:hover {
+  background-color: rgba(0, 123, 255, 0.25);
+}
+
+
+.td-data-table-cell-content-wrapper {
+  padding: 0px 5px 0px 5px !important;
+}
+
+
+.data-file-tool-tip {
+  background-color: rgba(35,35,35,255);
+  font-size: 12px;
+}

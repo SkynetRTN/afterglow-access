@@ -1,0 +1,47 @@
+<div class="image-viewer-wrapper">
+  <app-pan-zoom-viewer
+    [imageFile]="imageFile$ | async"
+    [viewerState]="viewerState$ | async"
+    [showInfoBar]="true">
+  </app-pan-zoom-viewer>
+</div>
+<div class="right-side-bar-wrapper">
+  <div class="card" style="height: 100%;">
+    <div class="card-header">
+      Normalization Settings
+    </div>
+
+    <div class="card-body" style="overflow-y: auto;">
+      <div *ngIf="(imageFile$ | async)">
+        <app-image-hist-chart
+          [hist]="(imageFile$ | async)?.hist"
+          [backgroundLevel]="(viewerState$ | async).normalizer?.backgroundLevel"
+          [peakLevel]="(viewerState$ | async).normalizer?.peakLevel"
+          (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
+          (onPeakLevelChange)="onPeakLevelChange($event)">
+        </app-image-hist-chart>
+  
+        <app-normalizer-form
+          [normalizer]="(viewerState$ | async).normalizer"
+          (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
+          (onPeakLevelChange)="onPeakLevelChange($event)"
+          (onColorMapChange)="onColorMapChange($event)"
+          (onStretchModeChange)="onStretchModeChange($event)">
+        </app-normalizer-form>
+        
+        <!-- <app-normalizer
+          [normalizer]="(imageFile$ | async)?.normalizer"
+          [hist]="(imageFile$ | async)?.hist">
+        </app-normalizer> -->
+  
+        <div class="pb-4">
+          <button mat-raised-button (click)="onZScaleClick()"><mat-icon>star_border</mat-icon> Z-Scale</button>
+          <button mat-raised-button (click)="onMinMaxClick()"><mat-icon>brightness_5</mat-icon> Min Max</button>
+          <button mat-raised-button (click)="onInvertClick()"><mat-icon>invert_colors</mat-icon> Invert</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+</div>

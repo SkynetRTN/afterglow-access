@@ -1,0 +1,52 @@
+#sidebar-wrapper {
+    position: absolute;
+    width: 275px;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+}
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+
+.box .box-row.header {
+  flex: 0 1 auto;
+  /* The above is shorthand for:
+  flex-grow: 0,
+  flex-shrink: 1,
+  flex-basis: auto
+  */
+}
+
+.box .box-row.content {
+  flex: 1 1 auto;
+  overflow: auto;
+  height: 100%;
+}
+
+#content-wrapper {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    left: 275px;
+}
+
+#workspace-subnav-wrapper {
+    position: absolute;
+    top: 0px;
+    height: 56px;
+    right: 0px;
+    left: 0px;
+}
+
+#workspace-content-wrapper {
+    position: absolute;
+    top: 56px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+}

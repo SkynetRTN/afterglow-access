@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>Source Extraction Settings</h2>
+<mat-dialog-content>
+  <div class="container">
+
+  </div>
+  <div class="row">
+    
+    <div class="col-6">
+      <mat-form-field class="">
+          <input matInput
+            placeholder="Threshold"
+            [ngModel]="settings?.threshold"
+            (ngModelChange)="setThreshold($event)"
+            type="number"
+            step="1"
+            min="1"
+            max="20">
+        </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="">
+          <input matInput
+            placeholder="FWHM"
+            [ngModel]="settings?.fwhm"
+            (ngModelChange)="setFwhm($event)"
+            type="number"
+            step=".1"
+            min="1"
+            max="25">
+        </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6" style="">
+      <div>
+        <mat-slide-toggle
+          [checked]="settings?.deblend"
+          [labelPosition]="before"
+          (change)="onDeblendChange($event)">
+          Deblend
+        </mat-slide-toggle>
+      </div>
+    </div>
+    
+  </div>
+
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="settings">Save</button>
+  <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>
