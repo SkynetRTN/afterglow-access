@@ -18,10 +18,10 @@ export interface Centroider {
 
 export function createCentroider(): Centroider{
   return {
-    centeringBoxWidth: 10,
+    centeringBoxWidth: 5,
     minSignalToNoise: 1.0,
-    maxIterations: 100,
-    maxCenterShift: 1,
+    maxIterations: 10,
+    maxCenterShift: 0.2,
     noiseModel: CentroidNoiseModel.POISSON,
     gain: 10.0,
   }
@@ -70,6 +70,8 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
         cny = subframeResult.cny
         let pixels = subframeResult.pixels
 
+        console.log('subframe: ', subframeResult, subframeResult.pixels);
+
         let dataMin = d3.min(pixels);
 
         // Apply threshold and check for positive or negative features.
@@ -99,22 +101,28 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
         xerr = centroidResult.xErr
         yerr = centroidResult.yErr;
 
-
+        console.log('subframe center:', xcenter, ycenter);
 
         //printf("CNX,CNY: (%f,%f)\n",cnx,cny);
         //printf("center: (%lf +/- %lf,%lf +/- %lf)\n",xcenter,xerr,ycenter,yerr);
 
-        //confine the next x center to the data box
+        // Confine the next x and y center to the data box
         xcenter = Math.max(0.5,Math.min (cnx + 0.5,xcenter));
+        ycenter = Math.max (0.5, Math.min (cny + 0.5,ycenter));
+        
+        console.log('subframe center constrained:', xcenter, ycenter);
+        
         xshift = xcenter - cxc;
+        yshift = ycenter - cyc;
+        console.log('shift required:', xshift, yshift);
+        
         xcenter = xshift + ox;
         //apxshift = xcenter - x;
-
-        // Confine the next y center to the data box.
-        ycenter = Math.max (0.5, Math.min (cny + 0.5,ycenter));
-        yshift = ycenter - cyc;
+        
         ycenter = yshift + oy;
         //apyshift = ycenter - y;
+
+        console.log('new center:', xcenter, ycenter);
 
 
         //oxinit = xcenter - apxshift;
@@ -132,6 +140,7 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
 
         //printf("niter: %d\nxshift: %lf yshift: %lf => (%lf,%lf)\n",niter,xshift,yshift,ox,oy);
         if(niter > centroider.maxIterations || (Math.abs(xshift) < centroider.maxCenterShift && Math.abs(yshift) < centroider.maxCenterShift)) {
+          console.log("FINISHED.......", niter, niter > centroider.maxIterations, xshift, Math.abs(xshift) < centroider.maxCenterShift, yshift, Math.abs(yshift) < centroider.maxCenterShift)
             break;
         }
 
@@ -149,20 +158,20 @@ function getSubframe(centroider: Centroider, imageFile: ImageFile, x: number, y:
     let ncols = getWidth(imageFile);
     let nlines = getHeight(imageFile);
 
-    let xc1 = x - halfCenteringBoxWidth;
-    let xc2 = x + halfCenteringBoxWidth;
-    let xl1 = y - halfCenteringBoxWidth;
-    let xl2 = y + halfCenteringBoxWidth;
+    let xc1 = Math.floor(x - halfCenteringBoxWidth);
+    let xc2 = Math.floor(x + halfCenteringBoxWidth);
+    let xl1 = Math.floor(y - halfCenteringBoxWidth);
+    let xl2 = Math.floor(y + halfCenteringBoxWidth);
 
     if (xc1 >= ncols || xc2 < 0.0 || xl1 >= nlines || xl2 < 0.0) {
         throw new Error('centering box does not intersect image');
     }
 
     // Get column and line limits, dimensions and center of subraster.
-    let c1 = Math.max(0.0, Math.min(ncols-1, xc1)) + 0.5;
-    let c2 = Math.max(0.0, Math.min(ncols-1, xc2)) + 0.5;
-    let l1 = Math.max(0.0, Math.min(nlines-1, xl1)) + 0.5;
-    let l2 = Math.max(0.0, Math.min(nlines-1, xl2)) + 0.5;
+    let c1 = Math.max(0.0, Math.min(ncols-1, xc1))+0.5;
+    let c2 = Math.max(0.0, Math.min(ncols-1, xc2))+0.5;
+    let l1 = Math.max(0.0, Math.min(nlines-1, xl1))+0.5;
+    let l2 = Math.max(0.0, Math.min(nlines-1, xl2))+0.5;
 
     let cnx = Math.round(c2 - c1) + 1;
     let cny = Math.round(l2 - l1) + 1;
