@@ -70,8 +70,6 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
         cny = subframeResult.cny
         let pixels = subframeResult.pixels
 
-        console.log('subframe: ', subframeResult, subframeResult.pixels);
-
         let dataMin = d3.min(pixels);
 
         // Apply threshold and check for positive or negative features.
@@ -101,8 +99,6 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
         xerr = centroidResult.xErr
         yerr = centroidResult.yErr;
 
-        console.log('subframe center:', xcenter, ycenter);
-
         //printf("CNX,CNY: (%f,%f)\n",cnx,cny);
         //printf("center: (%lf +/- %lf,%lf +/- %lf)\n",xcenter,xerr,ycenter,yerr);
 
@@ -110,19 +106,14 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
         xcenter = Math.max(0.5,Math.min (cnx + 0.5,xcenter));
         ycenter = Math.max (0.5, Math.min (cny + 0.5,ycenter));
         
-        console.log('subframe center constrained:', xcenter, ycenter);
-        
         xshift = xcenter - cxc;
         yshift = ycenter - cyc;
-        console.log('shift required:', xshift, yshift);
         
         xcenter = xshift + ox;
         //apxshift = xcenter - x;
         
         ycenter = yshift + oy;
         //apyshift = ycenter - y;
-
-        console.log('new center:', xcenter, ycenter);
 
 
         //oxinit = xcenter - apxshift;
@@ -140,8 +131,7 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
 
         //printf("niter: %d\nxshift: %lf yshift: %lf => (%lf,%lf)\n",niter,xshift,yshift,ox,oy);
         if(niter > centroider.maxIterations || (Math.abs(xshift) < centroider.maxCenterShift && Math.abs(yshift) < centroider.maxCenterShift)) {
-          console.log("FINISHED.......", niter, niter > centroider.maxIterations, xshift, Math.abs(xshift) < centroider.maxCenterShift, yshift, Math.abs(yshift) < centroider.maxCenterShift)
-            break;
+          break;
         }
 
 
