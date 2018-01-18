@@ -14,6 +14,8 @@ import { SourceExtractorModeOption } from '../models/source-extractor-mode-optio
 import { PhotSettings } from '../models/phot-settings';
 import { SourceExtractionSettings } from '../models/source-extraction-settings';
 import { Source } from '../models/source';
+import { PlotterSettings } from '../models/plotter-settings';
+import { CentroidSettings } from '../models/centroid-settings';
 
 
 export const SELECT_DATA_FILE = '[Workbench] Select Data File';
@@ -66,6 +68,9 @@ export const UPDATE_SOURCE_EXTRACTION_SETTINGS = '[Workbench] Update Source Extr
 export const START_PLOTTER_LINE = '[Workbench] Set Plotter Line';
 export const UPDATE_PLOTTER_LINE = '[Workbench] Update Plotter Line';
 export const UPDATE_PLOTTER_FILE_STATE = '[Workbench] Update Plotter File State';
+
+export const UPDATE_CENTROID_SETTINGS = '[Workbench] Update Centroid Settings';
+export const UPDATE_PLOTTER_SETTINGS = '[Workbench] Update Plotter Settings';
 
 /**
  * Selection
@@ -322,6 +327,18 @@ export class PhotometerSourcesFail implements Action {
  * Plotter
  */
 
+export class UpdateCentroidSettings implements Action {
+  readonly type = UPDATE_CENTROID_SETTINGS
+
+  constructor(public payload: {changes: Partial<CentroidSettings>}) {}
+}
+
+export class UpdatePlotterSettings implements Action {
+  readonly type = UPDATE_PLOTTER_SETTINGS
+
+  constructor(public payload: {changes: Partial<PlotterSettings>}) {}
+}
+
 export class StartPlotterLine implements Action {
   readonly type = START_PLOTTER_LINE
   
@@ -383,6 +400,8 @@ export type Actions =
 | PhotometerRaDecSources
 | PhotometerSourcesSuccess
 | PhotometerSourcesFail
+| UpdateCentroidSettings
+| UpdatePlotterSettings
 | StartPlotterLine
 | UpdatePlotterLine
 | UpdatePlotterFileState;

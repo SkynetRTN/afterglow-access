@@ -16,6 +16,8 @@ import { ViewerFileState } from '../../../models/viewer-file-state';
 import { PlotterFileState } from '../../../models/plotter-file-state';
 import { PlotterComponent } from '../../../components/plotter/plotter.component';
 import { ViewportChangeEvent, ViewerMouseEvent } from '../../../components/pan-zoom-viewer/pan-zoom-viewer.component';
+import { PlotterSettings } from '../../../models/plotter-settings';
+import { CentroidSettings } from '../../../models/centroid-settings';
 
 @Component({
   selector: 'app-plotter-page',
@@ -28,10 +30,13 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
   workbenchState$: Observable<fromWorkbench.State>;
   imageFile$: Observable<ImageFile>;
   viewerState$: Observable<ViewerFileState>;
+  plotterSettings$: Observable<PlotterSettings>;
+  centroidSettings$: Observable<CentroidSettings>;
   plotterState$: Observable<PlotterFileState>;
   line$: Observable<{x1: number, y1: number, x2: number, y2: number}> = null;
   lineLengthPixels$: Observable<number>;
   lineLengthScaled$: Observable<{value: number, units: string}>;
+  lineAngle$: Observable<number>;
   lastImageFile: ImageFile;
   lastViewerState: ViewerFileState;
   lastPlotterState: PlotterFileState;
@@ -44,6 +49,8 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
     let selectedFileWorkspaceState$ = store.select(fromCore.getSelectedFileWorkbenchState).filter(state => state !== null && state !== undefined);
     this.imageFile$ = selectedFileWorkspaceState$.map(state => state.file);
     this.workbenchState$ = selectedFileWorkspaceState$.map(state => state.workbenchState);
+    this.plotterSettings$ = this.workbenchState$.map(state => state.plotterSettings);
+    this.centroidSettings$ = this.workbenchState$.map(state => state.centroidSettings);
     this.viewerState$ = selectedFileWorkspaceState$.map(state => state.fileState.viewer);
     this.plotterState$ = selectedFileWorkspaceState$.map(state => state.fileState.plotter);
 
@@ -89,6 +96,13 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
         separationScaledUnits = 'arcsecs';
       }
       return {value: separationScaled, units: separationScaledUnits};
+    });
+
+    this.lineAngle$ = this.line$
+      .filter(line => line !== null)
+      .withLatestFrom(this.imageFile$)
+      .map(([line, imageFile]) => {
+        return (Math.atan2(line.x2-line.x1, line.y1-line.y2) * 180.0/Math.PI + 360) % 360;
     });
 
     this.stateSub = selectedFileWorkspaceState$.subscribe(state => {
@@ -163,11 +177,15 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
   }
 
   onCentroidClicksChange($event) {
-    this.store.dispatch(new workbenchActions.UpdatePlotterFileState({file: this.lastImageFile, changes: {centroidClicks: $event.checked}}));
+    this.store.dispatch(new workbenchActions.UpdateCentroidSettings({changes: {centroidClicks: $event.checked}}));
+  }
+
+  onPlanetCentroidingChange($event) {
+    this.store.dispatch(new workbenchActions.UpdateCentroidSettings({changes: {useDiskCentroiding: $event.checked}}));
   }
 
    onInterpolatePixelsChange($event) {
-    this.store.dispatch(new workbenchActions.UpdatePlotterFileState({file: this.lastImageFile, changes: {interpolatePixels: $event.checked}}));
+    this.store.dispatch(new workbenchActions.UpdatePlotterSettings({changes: {interpolatePixels: $event.checked}}));
   }
 
   // onCentroidLineClick() {

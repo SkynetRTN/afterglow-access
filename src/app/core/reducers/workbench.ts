@@ -8,7 +8,7 @@ import * as imageFileActions from '../../data-files/actions/image-file';
 import * as authActions from '../../auth/actions/auth';
 import { ImageTile } from '../../data-files/models/image-tile';
 import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth} from '../../data-files/models/data-file';
-import { createCentroider, centroidPsf } from '../models/centroider';
+import { centroidPsf, centroidDisk } from '../models/centroider';
 import { calcLevels } from '../../data-files/models/image-hist';
 import { DataFileType } from '../../data-files/models/data-file-type';
 
@@ -22,7 +22,8 @@ import { SourceExtractorFileState, SourceExtractorRegionOption } from '../models
 import { SourceExtractionSettings } from '../models/source-extraction-settings';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 import { PhotSettings } from '../models/phot-settings';
-import { CentroidMethod } from '../models/centroid-settings';
+import { CentroidSettings, CentroidMethod } from '../models/centroid-settings'
+import { PlotterSettings } from '../models/plotter-settings';
 /**
  * @ngrx/entity provides a predefined interface for handling
  * a structured dictionary of records. This interface
@@ -36,6 +37,8 @@ export interface State extends EntityState<WorkbenchFileState> {
   photSettings: PhotSettings,
   sourceExtractionSettings: SourceExtractionSettings,
   sourceExtractorModeOption: SourceExtractorModeOption,
+  centroidSettings: CentroidSettings,
+  plotterSettings: PlotterSettings
 }
 
 /**
@@ -71,6 +74,15 @@ export const initialState: State = adapter.getInitialState({
     fwhm: 3,
     deblend: false,
   },
+  centroidSettings: {
+    centroidClicks: false,
+    useDiskCentroiding: false,
+    psfCentroiderSettings: null,
+    diskCentroiderSettings:null,
+  },
+  plotterSettings: {
+    interpolatePixels: false,
+  },
   sourceExtractorModeOption: SourceExtractorModeOption.MOUSE
 
 });
@@ -105,8 +117,6 @@ export function reducer(
             }
           },
           plotter: {
-            centroidClicks: false,
-            interpolatePixels: false,
             measuring: false,
             lineMeasureStart: null,
             lineMeasureEnd: null,
@@ -828,6 +838,33 @@ export function reducer(
     * Plotter
     */
 
+    case workbenchActions.UPDATE_CENTROID_SETTINGS: {
+      let centroidSettings = {
+        ...state.centroidSettings,
+        ...action.payload.changes
+      }
+      
+      return {
+        ...state,
+        centroidSettings: centroidSettings
+      }
+      
+    }
+
+    case workbenchActions.UPDATE_PLOTTER_SETTINGS: {
+      let plotterSettings = {
+        ...state.plotterSettings,
+        ...action.payload.changes
+      }
+      
+      return {
+        ...state,
+        plotterSettings: plotterSettings
+      }
+      
+    }
+
+
     case workbenchActions.START_PLOTTER_LINE: {
       let imageFile = action.payload.file as ImageFile;
       let point = action.payload.point;
@@ -837,9 +874,15 @@ export function reducer(
 
       let xc = action.payload.point.x;
       let yc = action.payload.point.y;
-      if(plotter.centroidClicks) {
-        let centroider = createCentroider();
-        let result = centroidPsf(centroider, imageFile, point.x, point.y);
+      if(state.centroidSettings.centroidClicks) {
+        let result;
+        if(state.centroidSettings.useDiskCentroiding) {
+          result = centroidDisk(imageFile, point.x, point.y);
+        }
+        else {
+          result = centroidPsf(imageFile, point.x, point.y);
+        }
+        
         xc = result.x;
         yc = result.y;
       }
