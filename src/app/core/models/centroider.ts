@@ -2,12 +2,16 @@ import { ImageFile, getWidth, getHeight, getPixel } from '../../data-files/model
 declare let d3: any;
 
 export interface DiskCentroiderSettings {
+  maxIterations: number,
+  maxCenterShift: number,
   diskSearchBoxWidth: number;
 }
 
 export function createDiskCentroiderSettings(): DiskCentroiderSettings {
   return {
-    diskSearchBoxWidth: 200,
+    maxIterations: 10,
+    maxCenterShift: 0.2,
+    diskSearchBoxWidth: 100,
   }
 }
 
@@ -21,63 +25,125 @@ function getMedian(data: Array<number>) {
 
 export function centroidDisk(imageFile: ImageFile, x: number, y: number, settings: DiskCentroiderSettings=null) {
   if(settings == null) settings = createDiskCentroiderSettings();
+  let subWidth = settings.diskSearchBoxWidth;
+  let nIter = 0;
   let x0 = x;
   let y0 = y;
 
-  let sub = getSubframe(settings.diskSearchBoxWidth, imageFile, x0, y0);
-  let pixels = sub.pixels;
-  let avg = pixels.reduce( (sum, value) => sum + value, 0)/pixels.length;
-  let sqrDiffs = pixels.map(value => Math.pow(value-avg, 2))
-  let stdev = Math.sqrt(sqrDiffs.reduce( (sum, value) => sum + value, 0)/sqrDiffs.length);
-  let median = getMedian(pixels.slice());
+  while(true) {
+    let recenterSub = false;
+    let expandSub = false;
 
-  let thresh = median + 3.0*stdev;
+    let sub = getSubframe(subWidth, imageFile, x0, y0);
+    let pixels = sub.pixels;
+    let pixelsSorted = pixels.slice();
+    let median = getMedian(pixelsSorted);
+    let diffsSorted = pixelsSorted.map(value => value - median);
+    let minDiff = diffsSorted[0];
+    let maxDiff = diffsSorted[diffsSorted.length-1];
+    if(maxDiff == minDiff) return {x: x0, y: y0, xErr: 0, yErr: 0};
 
-  let xSlice = [];
-  for(let i=0; i<sub.cnx; i++) {
+    let diffsHist = [];
+    for(let i=0; i<1024; i++) diffsHist[i] = 0;
+    var indexFactor = (diffsHist.length-1)/(maxDiff-minDiff);
+    for(let i=0; i<diffsSorted.length; i++) {
+      let index = Math.floor((diffsSorted[i]-minDiff) * indexFactor);
+      diffsHist[index]++;
+    }
+    let lowerPercentile = 0.683*diffsSorted.length;
+    let count = 0, index = 0;
+    while(true) {
+      count += diffsHist[index];
+      if(count >= lowerPercentile) break;
+      index += 1;
+    }
+    let stdev = (index+1) / indexFactor; 
+
+    // let avg = pixels.reduce( (sum, value) => sum + value, 0)/pixels.length;
+    // let diffs = pixels.map(value => value-avg)
+    // let sqrDiffs = pixels.map(value => Math.pow(value-avg, 2))
+    // console.log('old stdev:', Math.sqrt(sqrDiffs.reduce( (sum, value) => sum + value, 0)/sqrDiffs.length));
+    // console.log('new stdev:', stdev);
     
-    if(i == 0 || i == sub.cnx-1) {
-      xSlice[i]=null;
-    }
-    else {
-      let index = Math.floor(sub.cyc)*sub.cnx + i;
-      let value = getMedian([pixels[index-1], pixels[index], pixels[index+1]]);
-      xSlice[i] = (value < thresh) ? 0 : 1;
-    }
-  }
 
-  let ySlice = [];
-  for(let j=0; j<sub.cny; j++) {
-    if(j == 0 || j == sub.cny-1) {
-      ySlice[j] = null;
-    }
-    else {
-      let index = j*sub.cnx + Math.floor(sub.cxc);
-      let value = getMedian([pixels[index-sub.cnx], pixels[index], pixels[index+sub.cnx]]);
-      ySlice[j] = (value < thresh) ? 0 : 1;
-    }
-    
-  }
+    let thresh = median + 3.0*stdev;
+    let ocxc = sub.cxc;
+    let ocyc = sub.cyc;
+    let cxc = ocxc;
+    let cyc = ocyc;
+    let xShift = 0;
+    let yShift = 0;
+    while(true) {
+      
 
-  let left = xSlice.splice(0,  Math.ceil(xSlice.length / 2));
-  let right = xSlice;
-  let leftEdgeIndex = left.lastIndexOf(0);
-  if(leftEdgeIndex == -1) leftEdgeIndex = 0;
-  let leftEdge = leftEdgeIndex == -1 ? null : leftEdgeIndex - sub.cxc + x0;
-  let rightEdgeIndex = right.indexOf(0);
-  if(rightEdgeIndex == -1) rightEdgeIndex = right.length-1;
-  let rightEdge = rightEdgeIndex == -1 ? null : rightEdgeIndex - sub.cxc + left.length + x0;
+      let xSlice = [];
+      for(let i=0; i<sub.cnx; i++) {
+        
+        if(i == 0 || i == sub.cnx-1) {
+          xSlice[i]=null;
+        }
+        else {
+          let index = Math.floor(cyc)*sub.cnx + i;
+          let value = getMedian([pixels[index-1], pixels[index], pixels[index+1]]);
+          xSlice[i] = (value < thresh) ? 0 : 1;
+        }
+      }
+
+      let ySlice = [];
+      for(let j=0; j<sub.cny; j++) {
+        if(j == 0 || j == sub.cny-1) {
+          ySlice[j] = null;
+        }
+        else {
+          let index = j*sub.cnx + Math.floor(cxc);
+          let value = getMedian([pixels[index-sub.cnx], pixels[index], pixels[index+sub.cnx]]);
+          ySlice[j] = (value < thresh) ? 0 : 1;
+        }
+        
+      }
+
+      let left = xSlice.splice(0,  Math.ceil(xSlice.length / 2));
+      let right = xSlice;
+      let leftEdge = left.lastIndexOf(0);
+      if(leftEdge == -1) leftEdge = 0;
+      let rightEdge = right.indexOf(0);
+      if(rightEdge == -1) rightEdge = right.length-1;
+      rightEdge += left.length;
+      
+      let upper = ySlice.splice(0,  Math.ceil(ySlice.length / 2));
+      let lower = ySlice;
+      let upperEdge = upper.lastIndexOf(0);
+      if(upperEdge == -1) upperEdge = 0;
+      let lowerEdge = lower.indexOf(0);
+      if(lowerEdge == -1) lowerEdge = lower.length-1;
+      lowerEdge += upper.length;
+
+      xShift = (leftEdge+rightEdge)/2 - cxc;
+      yShift = (upperEdge+lowerEdge)/2 - cyc;
+      cxc += xShift;
+      cyc += yShift;
+      nIter++;
+
+      if((leftEdge == 0) || (rightEdge == subWidth-1)) recenterSub = true; 
+      if((leftEdge == 0) && (rightEdge == subWidth-1)) expandSub = true;
+      if((upperEdge == 0) || (lowerEdge == subWidth-1)) recenterSub = true; 
+      if((upperEdge == 0) && (lowerEdge == subWidth-1)) expandSub = true;
+
+      if(recenterSub || nIter >= settings.maxIterations || (Math.abs(xShift) < settings.maxCenterShift && Math.abs(yShift) < settings.maxCenterShift)) {
+        break;
+      }
+    }
+
+    x0 += (cxc - ocxc);
+    y0 += (cyc - ocyc);
+
+    if(expandSub) subWidth *= 1.5;
+
+    if(nIter >= settings.maxIterations || !recenterSub) break;
+  }
   
-  let upper = ySlice.splice(0,  Math.ceil(ySlice.length / 2));
-  let lower = ySlice;
-  let upperEdgeIndex = upper.lastIndexOf(0);
-  if(upperEdgeIndex == -1) upperEdgeIndex = 0;
-  let upperEdge = upperEdgeIndex == -1 ? null : upperEdgeIndex - sub.cyc + y0;
-  let lowerEdgeIndex = lower.indexOf(0);
-  if(lowerEdgeIndex == -1) lowerEdgeIndex = lower.length-1;
-  let lowerEdge = lowerEdgeIndex == -1 ? null : lowerEdgeIndex - sub.cyc + upper.length + y0;
-
-  return {x: (leftEdge+rightEdge)/2, y: (upperEdge+lowerEdge)/2, xErr: 0, yErr: 0};
+  return {x: x0, y: y0, xErr: null, yErr: null};
+  
 }
 
 export enum CentroidNoiseModel {
