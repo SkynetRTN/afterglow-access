@@ -1,13 +1,91 @@
 import { ImageFile, getWidth, getHeight, getPixel } from '../../data-files/models/data-file'
 declare let d3: any;
 
+export interface DiskCentroiderSettings {
+  diskSearchBoxWidth: number;
+}
+
+export function createDiskCentroiderSettings(): DiskCentroiderSettings {
+  return {
+    diskSearchBoxWidth: 200,
+  }
+}
+
+function getMedian(data: Array<number>) {
+  data.sort((a, b) => a - b);
+  let lowMiddle = Math.floor((data.length - 1) / 2);
+  let highMiddle = Math.ceil((data.length - 1) / 2);
+  return (data[lowMiddle] + data[highMiddle]) / 2;
+}
+
+
+export function centroidDisk(imageFile: ImageFile, x: number, y: number, settings: DiskCentroiderSettings=null) {
+  if(settings == null) settings = createDiskCentroiderSettings();
+  let x0 = x;
+  let y0 = y;
+
+  let sub = getSubframe(settings.diskSearchBoxWidth, imageFile, x0, y0);
+  let pixels = sub.pixels;
+  let avg = pixels.reduce( (sum, value) => sum + value, 0)/pixels.length;
+  let sqrDiffs = pixels.map(value => Math.pow(value-avg, 2))
+  let stdev = Math.sqrt(sqrDiffs.reduce( (sum, value) => sum + value, 0)/sqrDiffs.length);
+  let median = getMedian(pixels.slice());
+
+  let thresh = median + 3.0*stdev;
+
+  let xSlice = [];
+  for(let i=0; i<sub.cnx; i++) {
+    
+    if(i == 0 || i == sub.cnx-1) {
+      xSlice[i]=null;
+    }
+    else {
+      let index = Math.floor(sub.cyc)*sub.cnx + i;
+      let value = getMedian([pixels[index-1], pixels[index], pixels[index+1]]);
+      xSlice[i] = (value < thresh) ? 0 : 1;
+    }
+  }
+
+  let ySlice = [];
+  for(let j=0; j<sub.cny; j++) {
+    if(j == 0 || j == sub.cny-1) {
+      ySlice[j] = null;
+    }
+    else {
+      let index = j*sub.cnx + Math.floor(sub.cxc);
+      let value = getMedian([pixels[index-sub.cnx], pixels[index], pixels[index+sub.cnx]]);
+      ySlice[j] = (value < thresh) ? 0 : 1;
+    }
+    
+  }
+
+  let left = xSlice.splice(0,  Math.ceil(xSlice.length / 2));
+  let right = xSlice;
+  let leftEdgeIndex = left.lastIndexOf(0);
+  if(leftEdgeIndex == -1) leftEdgeIndex = 0;
+  let leftEdge = leftEdgeIndex == -1 ? null : leftEdgeIndex - sub.cxc + x0;
+  let rightEdgeIndex = right.indexOf(0);
+  if(rightEdgeIndex == -1) rightEdgeIndex = right.length-1;
+  let rightEdge = rightEdgeIndex == -1 ? null : rightEdgeIndex - sub.cxc + left.length + x0;
+  
+  let upper = ySlice.splice(0,  Math.ceil(ySlice.length / 2));
+  let lower = ySlice;
+  let upperEdgeIndex = upper.lastIndexOf(0);
+  if(upperEdgeIndex == -1) upperEdgeIndex = 0;
+  let upperEdge = upperEdgeIndex == -1 ? null : upperEdgeIndex - sub.cyc + y0;
+  let lowerEdgeIndex = lower.indexOf(0);
+  if(lowerEdgeIndex == -1) lowerEdgeIndex = lower.length-1;
+  let lowerEdge = lowerEdgeIndex == -1 ? null : lowerEdgeIndex - sub.cyc + upper.length + y0;
+
+  return {x: (leftEdge+rightEdge)/2, y: (upperEdge+lowerEdge)/2, xErr: 0, yErr: 0};
+}
+
 export enum CentroidNoiseModel {
   POISSON,
   CONSTANT
 }
 
-
-export interface Centroider {
+export interface PsfCentroiderSettings {
   centeringBoxWidth: number;
   minSignalToNoise: number;
   maxIterations: number;
@@ -16,23 +94,20 @@ export interface Centroider {
   gain: number;
 }
 
-export function createCentroider(): Centroider{
+export function createPsfCentroiderSettings(): PsfCentroiderSettings{
   return {
     centeringBoxWidth: 5,
     minSignalToNoise: 1.0,
     maxIterations: 10,
     maxCenterShift: 0.2,
     noiseModel: CentroidNoiseModel.POISSON,
-    gain: 10.0,
+    gain: 10.0
   }
 }
 
 
-export function centroidDisk(centroider: Centroider, imageFile: ImageFile, x: number, y: number) {
-  
-}
-
-export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: number, y: number) {
+export function centroidPsf(imageFile: ImageFile, x: number, y: number, settings: PsfCentroiderSettings=null) {
+  if(settings == null) settings = createPsfCentroiderSettings();
     //let oxinit: number;            // initial output x center
     //let oyinit: number;            // initial output y center
     let xcenter: number;        // computed x center
@@ -63,7 +138,7 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
     let niter = 0;
     //bool low_signal_to_noise: number
     while(true) {
-        let subframeResult = getSubframe(centroider, imageFile, ox, oy);
+        let subframeResult = getSubframe(settings.centeringBoxWidth, imageFile, ox, oy);
         cxc = subframeResult.cxc
         cyc = subframeResult.cyc
         cnx = subframeResult.cnx
@@ -93,7 +168,7 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
 
 
 
-        let centroidResult = handleCentroidMethod(centroider, pixels, cnx, cny);
+        let centroidResult = handleCentroidMethod(settings, pixels, cnx, cny);
         xcenter = centroidResult.xCenter;
         ycenter = centroidResult.yCenter;
         xerr = centroidResult.xErr
@@ -130,7 +205,7 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
 
 
         //printf("niter: %d\nxshift: %lf yshift: %lf => (%lf,%lf)\n",niter,xshift,yshift,ox,oy);
-        if(niter > centroider.maxIterations || (Math.abs(xshift) < centroider.maxCenterShift && Math.abs(yshift) < centroider.maxCenterShift)) {
+        if(niter > settings.maxIterations || (Math.abs(xshift) < settings.maxCenterShift && Math.abs(yshift) < settings.maxCenterShift)) {
           break;
         }
 
@@ -142,9 +217,9 @@ export function centroidPsf(centroider: Centroider, imageFile: ImageFile, x: num
     
 }
 
-function getSubframe(centroider: Centroider, imageFile: ImageFile, x: number, y: number) {
+function getSubframe(size: number, imageFile: ImageFile, x: number, y: number) {
     // Test for out of bounds pixels
-    let halfCenteringBoxWidth = (centroider.centeringBoxWidth - 1.0) / 2.0;
+    let halfCenteringBoxWidth = (size - 1.0) / 2.0;
     let ncols = getWidth(imageFile);
     let nlines = getHeight(imageFile);
 
@@ -182,8 +257,8 @@ function getSubframe(centroider: Centroider, imageFile: ImageFile, x: number, y:
     return {cxc: cxc, cyc: cyc, cnx: cnx, cny: cny, pixels: result}
 }
 
-function handleCentroidMethod(centroider: Centroider, subframe: Array<number>, width: number, height: number) {
-    let md = getMarginalDistributions(centroider, subframe, width, height);
+function handleCentroidMethod(settings: PsfCentroiderSettings, subframe: Array<number>, width: number, height: number) {
+    let md = getMarginalDistributions(settings, subframe, width, height);
     let xm = md.xm;
     let ym = md.ym;
 
@@ -197,12 +272,12 @@ function handleCentroidMethod(centroider: Centroider, subframe: Array<number>, w
         //printf("ym[%d] = %f\n",i,ym[i]);
     }
 
-    let xResult = centroidAlgorithm(centroider, xm);
-    let yResult = centroidAlgorithm(centroider, ym);
+    let xResult = centroidAlgorithm(settings, xm);
+    let yResult = centroidAlgorithm(settings, ym);
     return {xCenter: xResult.center, xErr: xResult.error, yCenter: yResult.center, yErr: yResult.error};
 }
 
-function centroidAlgorithm(centroider: Centroider, marg: Array<number>) {
+function centroidAlgorithm(settings: PsfCentroiderSettings, marg: Array<number>) {
     let sum = 0.0;
     for (let i=0; i < marg.length; i++) {
         sum += marg[i];
@@ -240,7 +315,7 @@ function centroidAlgorithm(centroider: Centroider, marg: Array<number>) {
         if (error <= 0.0) {
             error = 0.0;
         } else {
-            error = Math.sqrt (error / ((sumi + mean * marg.length) * centroider.gain));
+            error = Math.sqrt (error / ((sumi + mean * marg.length) * settings.gain));
             if (error > marg.length) {
                 error = -1.0;
             }   
@@ -278,7 +353,7 @@ function centroidAlgorithm(centroider: Centroider, marg: Array<number>) {
 //     return 0.0;
 // }
 
-function getMarginalDistributions(centroider: Centroider, subframe: Array<number>, width: number, height: number)
+function getMarginalDistributions(settings: PsfCentroiderSettings, subframe: Array<number>, width: number, height: number)
 {
     let xm = new Array(width);
     let ym = new Array(height);
