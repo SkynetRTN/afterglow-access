@@ -46,6 +46,9 @@ import { SonifierPageComponent } from './containers/workbench/sonifier-page/soni
 import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
 
 import { WorkbenchEffects } from './effects/workbench';
+import { SonifierEffects } from './effects/sonifier';
+import { ViewerEffects } from './effects/viewer';
+import { SourceExtractorEffects } from './effects/source-extractor';
 import { reducers } from './reducers';
 
 import { AfterglowDataFileService } from './services/afterglow-data-files';
@@ -106,7 +109,7 @@ export const COMPONENTS = [
      * All Effects will only be instantiated once regardless of
      * whether they are registered once or multiple times.
      */
-    EffectsModule.forFeature([WorkbenchEffects]),
+    EffectsModule.forFeature([WorkbenchEffects, ViewerEffects, SonifierEffects, SourceExtractorEffects]),
   ],
   
   declarations: COMPONENTS,

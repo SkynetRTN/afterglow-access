@@ -1,6 +1,5 @@
 export interface PlotterFileState {
-  centroidClicks: boolean,
-  interpolatePixels: boolean,
+  fileId: string,
   measuring: boolean,
   lineMeasureStart: {x: number, y: number}
   lineMeasureEnd: {x: number, y: number}

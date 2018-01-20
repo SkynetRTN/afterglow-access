@@ -11,7 +11,6 @@ import * as SVG from 'svgjs';
 import { Point } from 'paper';
 
 import { ImageFile, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
-import { Centroider, createCentroider, centroidPsf } from '../../models/centroider';
 import { NvD3Component } from 'ng2-nvd3';
 
 
@@ -38,7 +37,6 @@ export class PlotterComponent implements OnInit, OnChanges {
   private chartOptions;
   private chartData = [];
   private chartDebouncer$: Subject<null> = new Subject();
-  private centroider: Centroider = createCentroider();
 
 
   constructor(private cd: ChangeDetectorRef) {

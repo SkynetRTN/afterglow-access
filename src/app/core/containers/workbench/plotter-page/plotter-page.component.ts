@@ -1,21 +1,24 @@
 import { Component, AfterViewInit, OnDestroy, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+
 import { Store } from '@ngrx/store';
+import * as SVG from 'svgjs'
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/of';
 
-import * as SVG from 'svgjs'
-
-import * as fromRoot from '../../../../reducers';
 import { ImageFile, getHasWcs, getWcs } from '../../../../data-files/models/data-file'
-
-import * as fromCore from '../../../reducers';
-import * as fromWorkbench from '../../../reducers/workbench'
-import * as workbenchActions from '../../../actions/workbench';
 import { ViewerFileState } from '../../../models/viewer-file-state';
 import { PlotterFileState } from '../../../models/plotter-file-state';
 import { PlotterComponent } from '../../../components/plotter/plotter.component';
 import { ViewportChangeEvent, ViewerMouseEvent } from '../../../components/pan-zoom-viewer/pan-zoom-viewer.component';
+import { PlotterSettings } from '../../../models/plotter-settings';
+import { CentroidSettings } from '../../../models/centroid-settings';
+
+import * as fromRoot from '../../../../reducers';
+import * as fromCore from '../../../reducers';
+import * as fromWorkbench from '../../../reducers/workbench'
+import * as workbenchActions from '../../../actions/workbench';
+import * as plotterActions from '../../../actions/plotter';
 
 @Component({
   selector: 'app-plotter-page',
@@ -25,27 +28,30 @@ import { ViewportChangeEvent, ViewerMouseEvent } from '../../../components/pan-z
 })
 export class PlotterPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('plotter') plotter: PlotterComponent;
-  workbenchState$: Observable<fromWorkbench.State>;
   imageFile$: Observable<ImageFile>;
   viewerState$: Observable<ViewerFileState>;
+  plotterSettings$: Observable<PlotterSettings>;
+  centroidSettings$: Observable<CentroidSettings>;
   plotterState$: Observable<PlotterFileState>;
   line$: Observable<{x1: number, y1: number, x2: number, y2: number}> = null;
   lineLengthPixels$: Observable<number>;
   lineLengthScaled$: Observable<{value: number, units: string}>;
+  lineAngle$: Observable<number>;
   lastImageFile: ImageFile;
   lastViewerState: ViewerFileState;
   lastPlotterState: PlotterFileState;
-  lastWorkbenchState: fromWorkbench.State;
-  stateSub: Subscription;
+  subs: Subscription[] = [];
   
 
 
   constructor(private store: Store<fromRoot.State>) {
-    let selectedFileWorkspaceState$ = store.select(fromCore.getSelectedFileWorkbenchState).filter(state => state !== null && state !== undefined);
-    this.imageFile$ = selectedFileWorkspaceState$.map(state => state.file);
-    this.workbenchState$ = selectedFileWorkspaceState$.map(state => state.workbenchState);
-    this.viewerState$ = selectedFileWorkspaceState$.map(state => state.fileState.viewer);
-    this.plotterState$ = selectedFileWorkspaceState$.map(state => state.fileState.plotter);
+    this.imageFile$ = store.select(fromCore.workbench.getImageFile);
+    let plotterGlobalState$ = store.select(fromCore.getPlotterGlobalState);
+    this.plotterSettings$ = plotterGlobalState$.map(state => state && state.plotterSettings);
+    this.centroidSettings$ = plotterGlobalState$.map(state => state &&  state.centroidSettings);
+    this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
+    this.plotterState$ = store.select(fromCore.workbench.getPlotterFileState).filter(v => v != null);
+    
 
     this.line$ = this.plotterState$
     .distinctUntilChanged((a,b) => {
@@ -57,17 +63,16 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
     })
 
     this.lineLengthPixels$ = this.line$
-    .filter(line => line !== null)
     .withLatestFrom(this.imageFile$)
     .map(([line, imageFile]) => {
+      if(!line || !imageFile) return null;
       return Math.sqrt(Math.pow(line.x1-line.x2,2) + Math.pow(line.y1-line.y2,2));
     });
 
     this.lineLengthScaled$ = this.line$
-    .filter(line => line !== null)
     .withLatestFrom(this.imageFile$)
     .map(([line, imageFile]) => {
-      if(!imageFile || !getHasWcs(imageFile)) return null;
+      if(!line || !imageFile || !getHasWcs(imageFile)) return null;
       
       let wcs = getWcs(imageFile);
       let raDec1 = wcs.pixToWorld([line.x1, line.y1]);
@@ -91,12 +96,17 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
       return {value: separationScaled, units: separationScaledUnits};
     });
 
-    this.stateSub = selectedFileWorkspaceState$.subscribe(state => {
-      this.lastImageFile = state && state.file;
-      this.lastWorkbenchState = state && state.workbenchState;
-      this.lastViewerState = state && state.fileState && state.fileState.viewer;
-      this.lastPlotterState = state && state.fileState && state.fileState.plotter;
+    this.lineAngle$ = this.line$
+      .filter(line => line !== null)
+      .withLatestFrom(this.imageFile$)
+      .map(([line, imageFile]) => {
+        return (Math.atan2(line.x2-line.x1, line.y1-line.y2) * 180.0/Math.PI + 360) % 360;
     });
+
+    this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
+    this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));
+    this.subs.push(this.plotterState$.subscribe(plotterState => this.lastPlotterState = plotterState));
+
   }
     
 
@@ -144,14 +154,14 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if(this.stateSub) this.stateSub.unsubscribe();
+    this.subs.forEach(sub => sub.unsubscribe());
   }
 
   onImageMove($event: ViewerMouseEvent) {
     if(this.lastPlotterState.measuring) {
       let x = $event.imageX;
       let y = $event.imageY;
-      this.store.dispatch(new workbenchActions.UpdatePlotterLine({file: this.lastImageFile, point: {x: x, y: y}}));
+      this.store.dispatch(new plotterActions.UpdateLine({file: this.lastImageFile, point: {x: x, y: y}}));
     }
     
   }
@@ -159,15 +169,19 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
   onImageClick($event: ViewerMouseEvent) {
     let x = $event.imageX;
     let y = $event.imageY;
-    this.store.dispatch(new workbenchActions.StartPlotterLine({file: this.lastImageFile, point: {x: x, y: y}}));
+    this.store.dispatch(new plotterActions.StartLine({file: this.lastImageFile, point: {x: x, y: y}}));
   }
 
   onCentroidClicksChange($event) {
-    this.store.dispatch(new workbenchActions.UpdatePlotterFileState({file: this.lastImageFile, changes: {centroidClicks: $event.checked}}));
+    this.store.dispatch(new plotterActions.UpdateCentroidSettings({changes: {centroidClicks: $event.checked}}));
+  }
+
+  onPlanetCentroidingChange($event) {
+    this.store.dispatch(new plotterActions.UpdateCentroidSettings({changes: {useDiskCentroiding: $event.checked}}));
   }
 
    onInterpolatePixelsChange($event) {
-    this.store.dispatch(new workbenchActions.UpdatePlotterFileState({file: this.lastImageFile, changes: {interpolatePixels: $event.checked}}));
+    this.store.dispatch(new plotterActions.UpdatePlotterSettings({changes: {interpolatePixels: $event.checked}}));
   }
 
   // onCentroidLineClick() {

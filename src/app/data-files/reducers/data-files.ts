@@ -154,7 +154,6 @@ export function reducer(
                 let index = j * getXTileDim(imageFile) + i;
                 let x = i * imageFile.tileWidth;
                 let y = j * imageFile.tileHeight;
-                console.log('Tile created:', index, getWidth(imageFile), getHeight(imageFile), x, y, tw, th);
                 tiles.push({
                   index: index,
                   x: x,
