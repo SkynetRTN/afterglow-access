@@ -5,7 +5,7 @@ import { ImageFile } from '../../data-files/models/data-file';
 
 import * as fromRoot from '../../reducers';
 import * as fromWorkbench from './workbench';
-import * as fromComparer from './comparer';
+// import * as fromComparer from './comparer';
 import * as fromViewer from './viewer';
 import * as fromPlotter from './plotter';
 import * as fromSonifier from './sonifier';
