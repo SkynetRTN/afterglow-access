@@ -126,8 +126,6 @@ export function reducer(
         
         xc = result.x;
         yc = result.y;
-
-        console.log('centroided: ', point.x, point.y, xc, yc);
       }
       if(!plotterState.measuring) {
         plotterState.lineMeasureStart = {x: xc, y: yc};
