@@ -10,18 +10,20 @@ import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
-import * as dataFileActions from '../../../../data-files/actions/data-file';
-import * as imageFileActions from '../../../../data-files/actions/image-file';
 import { calcLevels } from '../../../../data-files/models/image-hist';
 import { ImageFile } from '../../../../data-files/models/data-file';
 
-import * as fromCore from '../../../reducers';
-import * as workbenchActions from '../../../actions/workbench';
 import { ViewerFileState } from '../../../models/viewer-file-state';
 import { ColorMap } from '../../../models/color-map';
 import { StretchMode } from '../../../models/stretch-mode';
+
+import * as fromCore from '../../../reducers';
+import * as fromRoot from '../../../../reducers';
+import * as fromDataFiles from '../../../../data-files/reducers';
+import * as workbenchActions from '../../../actions/workbench';
+import * as viewerActions from '../../../actions/viewer';
+import * as dataFileActions from '../../../../data-files/actions/data-file';
+import * as imageFileActions from '../../../../data-files/actions/image-file';
 
 
 // import { DataFile, ImageFile } from '../../../models'
@@ -39,39 +41,41 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   viewerState$: Observable<ViewerFileState>;
   lastImageFile: ImageFile;
   lastViewerState: ViewerFileState;
-  stateSub: Subscription;
+  subs: Subscription[] = [];
 
   levels$: Subject<{background: number, peak: number}> = new Subject<{background: number, peak: number}>();
   backgroundLevel$: Subject<number> = new Subject<number>();
   peakLevel$: Subject<number> = new Subject<number>();
   
   constructor(private store: Store<fromRoot.State>) {
-    let selectedFileWorkspaceState$ = store.select(fromCore.getSelectedFileWorkbenchState);
-    this.imageFile$ = selectedFileWorkspaceState$.map(state => state && state.file);
-    this.viewerState$ = selectedFileWorkspaceState$.map(state => state && state.fileState.viewer);
+    this.imageFile$ = store.select(fromCore.workbench.getImageFile)
+    this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
     
-    this.stateSub = selectedFileWorkspaceState$.subscribe(state => {
-      this.lastImageFile = state && state.file;
-      this.lastViewerState = state && state.fileState && state.fileState.viewer;
-    });
+    this.subs.push(this.imageFile$.subscribe(imageFile => {
+      this.lastImageFile = imageFile;
+    }));
+
+    this.subs.push(this.viewerState$.subscribe(viewerState => {
+      this.lastViewerState = viewerState;
+    }));
 
     this.levels$
     .debounceTime(200) // wait 300ms after the last event before emitting last event
     .subscribe(value => {
-      this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: value.background, peakLevel: value.peak}}) );
+      this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: value.background, peakLevel: value.peak}}) );
     });
 
 
     this.backgroundLevel$
     .debounceTime(200) // wait 300ms after the last event before emitting last event
     .subscribe(value => {
-      this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: value}}) );
+      this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: value}}) );
     });
 
     this.peakLevel$
     .debounceTime(200) // wait 300ms after the last event before emitting last event
     .subscribe(value => {
-      this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {peakLevel: value}}) );
+      this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {peakLevel: value}}) );
     });
   }
 
@@ -84,25 +88,25 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onColorMapChange(value: ColorMap) {
-    this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {colorMap: value}}) )
+    this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {colorMap: value}}) )
   }
 
   onStretchModeChange(value: StretchMode) {
-    this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {stretchMode: value}}) )
+    this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {stretchMode: value}}) )
   }
 
   onMinMaxClick() {
     let result = calcLevels(this.lastImageFile.hist, 10.0, 99.9999)
-    this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel}}) );
+    this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel}}) );
   }
 
   onZScaleClick() {
     let result = calcLevels(this.lastImageFile.hist, 10.0, 99.0);
-    this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel}}) );
+    this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel}}) );
   }
 
   onInvertClick() {
-    this.store.dispatch(new workbenchActions.UpdateNormalizer({file: this.lastImageFile, changes: {
+    this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {
       backgroundLevel: this.lastViewerState.normalizer.peakLevel,
       peakLevel: this.lastViewerState.normalizer.backgroundLevel
     }}) );
@@ -112,7 +116,7 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if(this.stateSub) this.stateSub.unsubscribe();
+    this.subs.forEach(sub => sub.unsubscribe());
   }
 
   ngAfterViewInit() {

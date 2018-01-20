@@ -2,18 +2,19 @@ import { Component, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/
 import { Observable } from 'rxjs/Observable';
 import { Store } from '@ngrx/store';
 
-import * as fromRoot from '../../../reducers';
-import * as fromDataFiles from '../../../data-files/reducers'
 import { DataFile } from '../../../data-files/models/data-file'
 import { AuthGuard } from '../../../auth/services/auth-guard.service'
-import * as fromCore from '../../reducers';
-import * as workbenchActions from '../../actions/workbench'
-import * as dataFileActions from '../../../data-files/actions/data-file';
 import { MenuType } from '../../components/navbar/navbar.metadata';
 import { ViewerPageComponent } from './viewer-page/viewer-page.component'
 import { PlotterPageComponent } from './plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './source-extractor-page/source-extractor-page.component';
+
+import * as fromRoot from '../../../reducers';
+import * as fromDataFiles from '../../../data-files/reducers'
+import * as fromCore from '../../reducers';
+import * as workbenchActions from '../../actions/workbench'
+import * as dataFileActions from '../../../data-files/actions/data-file';
 
 export const workbenchRoutes = [
   {path: 'viewer', title: 'Viewer', component: ViewerPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
@@ -45,7 +46,7 @@ export class WorkbenchComponent implements OnInit {
     this.routes = workbenchRoutes;
 
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
-    this.selectedFile$ = this.store.select(fromCore.getSelectedDataFile);
+    this.selectedFile$ = this.store.select(fromCore.workbench.getFile);
     //this.loading$ = this.fileLibraryStore.loading$;
 
     // this.imageFiles$ = imageFileService.imageFiles$;

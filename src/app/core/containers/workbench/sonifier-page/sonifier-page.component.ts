@@ -1,24 +1,22 @@
 import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges} from '@angular/core';
 
 import {VgAPI} from 'videogular2/core';
-
 import { Store } from '@ngrx/store';
-
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
-import * as fromRoot from '../../../../reducers';
-import { ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
-
-import * as fromCore from '../../../reducers';
-import * as workbenchActions from '../../../actions/workbench';
 import { SonifierRegionOption } from '../../../models/sonifier-file-state';
 import { ViewerFileState } from '../../../models/viewer-file-state';
 import { SonifierFileState } from '../../../models/sonifier-file-state';
 import { ViewportChangeEvent } from '../../../components/pan-zoom-viewer/pan-zoom-viewer.component';
 import { AfterglowDataFileService } from '../../../services/afterglow-data-files';
+import { ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
 
+import * as fromRoot from '../../../../reducers';
+import * as fromCore from '../../../reducers';
+import * as workbenchActions from '../../../actions/workbench';
+import * as sonifierActions from '../../../actions/sonifier';
 
 @Component({
   selector: 'app-sonifier-page',
@@ -32,25 +30,22 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   lastImageFile: ImageFile;
   lastViewerState: ViewerFileState;
   lastSonifierState: SonifierFileState;
-  stateSub: Subscription;
   sonificationSrcUri: string = null;
   SonifierRegionOption = SonifierRegionOption;
   showPlayer: boolean = false;
   api:VgAPI;
   viewportSize: {width: number, height: number} = null;
+  subs: Subscription[] = [];
       
 
   constructor(private store: Store<fromRoot.State>, private afterglowService: AfterglowDataFileService) {
-    let selectedFileWorkspaceState$ = store.select(fromCore.getSelectedFileWorkbenchState);
-    this.imageFile$ = selectedFileWorkspaceState$.map(state => state && state.file);
-    this.viewerState$ = selectedFileWorkspaceState$.map(state => state && state.fileState.viewer);
-    this.sonifierState$ = selectedFileWorkspaceState$.map(state => state && state.fileState.sonifier);
+    this.imageFile$ = store.select(fromCore.workbench.getImageFile);
+    this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
+    this.sonifierState$ = store.select(fromCore.workbench.getSonifierFileState);
     
-    this.stateSub = selectedFileWorkspaceState$.subscribe(state => {
-      this.lastImageFile = state && state.file;
-      this.lastViewerState = state && state.fileState && state.fileState.viewer;
-      this.lastSonifierState = state && state.fileState && state.fileState.sonifier;
-    });
+    this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
+    this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));
+    this.subs.push(this.sonifierState$.subscribe(sonifierState => this.lastSonifierState = sonifierState));
 
   }
     
@@ -59,7 +54,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   ngOnDestroy() {
-    if(this.stateSub) this.stateSub.unsubscribe();
+    this.subs.forEach(sub => sub.unsubscribe());
   }
 
   ngOnChanges() {
@@ -78,80 +73,82 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   onViewportChange($event: ViewportChangeEvent) {
-    if(this.lastSonifierState.regionOption == SonifierRegionOption.VIEWPORT) {
-      this.store.dispatch(new workbenchActions.SetSonifierRegion({file: this.lastImageFile,
-        storeInHistory: false,
-        region: {
-        x: $event.imageX,
-        y: $event.imageY,
-        width: $event.imageWidth,
-        height: $event.imageHeight
+    this.store.dispatch(new sonifierActions.UpdateViewport({
+      file: this.lastImageFile,
+      viewport: {
+        imageX: $event.imageX,
+        imageY: $event.imageY,
+        imageWidth: $event.imageWidth,
+        imageHeight: $event.imageHeight,
+        viewportWidth: $event.viewportWidth,
+        viewportHeight: $event.viewportHeight
       }}))
-      this.sonificationSrcUri = null;
-    }
-    this.viewportSize = {width: $event.viewportWidth, height: $event.viewportHeight};
   }
 
   private selectSubregionByFrequency(subregion: number) {
     let region = this.lastSonifierState.region;
-    this.store.dispatch(new workbenchActions.SetSonifierRegion({file: this.lastImageFile,
+    this.store.dispatch(new sonifierActions.SetRegion({file: this.lastImageFile,
       storeInHistory: true,
       region: {
-      x: region.x + subregion * (region.width/4),
-      y: region.y,
-      width: region.width/2,
-      height: region.height
-    }}))
+        x: region.x + subregion * (region.width/4),
+        y: region.y,
+        width: region.width/2,
+        height: region.height
+      }
+    }))
   }
 
   private selectSubregionByTime(subregion: number) {
     let region = this.lastSonifierState.region;
-    this.store.dispatch(new workbenchActions.SetSonifierRegion({file: this.lastImageFile,
+    this.store.dispatch(new sonifierActions.SetRegion({file: this.lastImageFile,
       storeInHistory: true,
       region: {
-      x: region.x,
-      y: region.y + subregion * (region.height/4),
-      width: region.width,
-      height: region.height/2
-    }}))
+        x: region.x,
+        y: region.y + subregion * (region.height/4),
+        width: region.width,
+        height: region.height/2
+      }
+    }))
+
   }
 
   private resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
     
-    this.store.dispatch(new workbenchActions.SetSonifierRegion({file: this.lastImageFile,
+    this.store.dispatch(new sonifierActions.SetRegion({file: this.lastImageFile,
       storeInHistory: true,
       region: {
-      x: 0,
-      y: 0,
-      width: getWidth(this.lastImageFile),
-      height: getHeight(this.lastImageFile)
-    }}));
+        x: 0,
+        y: 0,
+        width: getWidth(this.lastImageFile),
+        height: getHeight(this.lastImageFile)
+      }
+    }));
   }
 
   private undoRegionSelection() {
-    this.store.dispatch(new workbenchActions.UndoSonifierRegionSelection({file: this.lastImageFile}));
+    this.store.dispatch(new sonifierActions.UndoRegionSelection({file: this.lastImageFile}));
   }
 
   private redoRegionSelection() {
-    this.store.dispatch(new workbenchActions.RedoSonifierRegionSelection({file: this.lastImageFile}));
+    this.store.dispatch(new sonifierActions.RedoRegionSelection({file: this.lastImageFile}));
   }
 
   private setRegionMethod(value: SonifierRegionOption) {
-    this.store.dispatch(new workbenchActions.UpdateSonifierConfig({file: this.lastImageFile, changes: {regionOption: value}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {regionOption: value}}))
   }
 
   private setDuration(value) {
-    this.store.dispatch(new workbenchActions.UpdateSonifierConfig({file: this.lastImageFile, changes: {duration: value}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {duration: value}}))
   }
 
   private setToneCount(value) {
-    this.store.dispatch(new workbenchActions.UpdateSonifierConfig({file: this.lastImageFile, changes: {toneCount: value}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {toneCount: value}}))
   }
 
   private setViewportSync(value) {
-    this.store.dispatch(new workbenchActions.UpdateSonifierConfig({file: this.lastImageFile, changes: {viewportSync: value.checked}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {viewportSync: value.checked}}))
   }
 
 

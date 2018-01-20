@@ -8,7 +8,8 @@
     [showSourceMarkers]="true"
     [sources]="filteredSources$ | async"
     [selectedSources]="selectedSources$ | async"
-    (onImageClick)="onImageClick($event)">
+    (onImageClick)="onImageClick($event)"
+    (onViewportChange)="onViewportChange($event)">
   </app-pan-zoom-viewer>
 </div>
   <div class="right-side-bar-wrapper">
@@ -22,7 +23,7 @@
           <div class="form-group">
             <label for="extractionMode">Analysis Mode</label>
             <div>
-              <mat-button-toggle-group name="extractionMode" class="" [ngModel]="(workbenchState$ | async)?.sourceExtractorModeOption" (ngModelChange)="setModeOption($event)">
+              <mat-button-toggle-group name="extractionMode" class="" [ngModel]="(sourceExtractorGlobalState$ | async)?.sourceExtractorModeOption" (ngModelChange)="setModeOption($event)">
                 <mat-button-toggle value="{{SourceExtractorModeOption.MOUSE}}">
                   <mat-icon>mouse</mat-icon> Mouse
                 </mat-button-toggle>
@@ -39,7 +40,7 @@
           <label></label>
         
   
-          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.MOUSE">
+          <div *ngIf="(sourceExtractorGlobalState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.MOUSE">
             <p class="pb-2"> Manually extract sources by clicking on them in your image.</p>
             <div class="pb-4">
               <button mat-raised-button (click)="openPhotSettings()">Photometry Settings...</button>
@@ -47,7 +48,7 @@
             
           </div>
 
-          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.COORD">
+          <div *ngIf="(sourceExtractorGlobalState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.COORD">
             <p class="pb-2"> Photometer specific coordinates within your image using either x/y coordinates or right ascension and declination.</p>
 
             <div class="pb-4">
@@ -60,7 +61,7 @@
     
           </div>
     
-          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.AUTO">
+          <div *ngIf="(sourceExtractorGlobalState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.AUTO">
             <p class="pb-2"> Automatically extract and photometer all sources in your image.</p>
 
             <div class="pb-4">

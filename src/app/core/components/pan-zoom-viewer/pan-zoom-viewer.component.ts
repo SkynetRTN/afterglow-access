@@ -4,23 +4,22 @@ import {
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
-
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-
 import { Point, Rectangle } from "paper";
 import * as SVG from 'svgjs'
 import normalizeWheel from 'normalize-wheel';
 
 import { ImageFile, getWidth, getHeight, findTiles, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
-import * as imageFileActions from '../../../data-files/actions/image-file';
-
-import * as fromCore from '../../reducers';
-import * as workbenchActions from '../../actions/workbench';
-import * as dataFileActions from '../../../data-files/actions/data-file';
 import { ViewerFileState } from '../../models/viewer-file-state';
 import { Marker, RectangleMarker, EllipseMarker, LineMarker, MarkerType } from '../../models/marker';
 import { Region } from '../../models/region';
 import { Source } from '../../models/source';
+
+import * as fromCore from '../../reducers';
+import * as workbenchActions from '../../actions/workbench';
+import * as viewerActions from '../../actions/viewer';
+import * as imageFileActions from '../../../data-files/actions/image-file';
+import * as dataFileActions from '../../../data-files/actions/data-file';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -247,7 +246,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
   }
 
   public moveBy(xShift: number, yShift: number) {
-    this.store.dispatch(new workbenchActions.MoveBy({
+    this.store.dispatch(new viewerActions.MoveBy({
       file: this.imageFile,
       xShift: xShift,
       yShift: yShift,
@@ -306,7 +305,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
         let centerViewer = new Point(this.targetCanvas.width / 2.0, this.targetCanvas.height / 2.0);
         imageAnchor = this.viewportCoordToImageCoord(centerViewer);
     }
-    this.store.dispatch(new workbenchActions.ZoomBy({
+    this.store.dispatch(new viewerActions.ZoomBy({
       file: this.imageFile,
       scaleFactor: factor,
       anchorPoint: {x: imageAnchor.x, y: imageAnchor.y}
@@ -378,7 +377,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
       }
     }
     if(JSON.stringify(this.lastViewportSize) !== JSON.stringify(viewportSize) ) {
-      this.store.dispatch(new workbenchActions.UpdateViewportSize({width: viewportSize.width, height: viewportSize.height}));
+      this.store.dispatch(new viewerActions.UpdateViewportSize({width: viewportSize.width, height: viewportSize.height}));
       this.lastViewportSize = viewportSize;
     }
     
@@ -613,7 +612,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
         }));
       }
       else if(tile.pixelsLoaded && !normTile.pixelsLoaded && !normTile.pixelsLoading && !normTile.pixelLoadingFailed) {
-        this.store.dispatch(new workbenchActions.NormalizeImageTile({
+        this.store.dispatch(new viewerActions.NormalizeImageTile({
           file: this.imageFile,
           tile: tile
         }));
