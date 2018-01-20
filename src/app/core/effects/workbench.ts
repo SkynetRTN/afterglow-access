@@ -68,12 +68,6 @@ export class WorkbenchEffects {
       let actions : Action[] = [];
       if(!dataFile.headerLoaded && !dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr(dataFile));
 
-      if(dataFile.type == DataFileType.IMAGE) {
-        //add effects for image file selection
-        let imageFile = dataFile as ImageFile;
-        if(!imageFile.histLoaded && !imageFile.histLoading) actions.push(new imageFileActions.LoadImageHist({file: imageFile}));
-      }
-
       return Observable.from(actions);
   });
 
@@ -93,6 +87,10 @@ export class WorkbenchEffects {
       if(dataFile.type == DataFileType.IMAGE) {
         //add effects for image file selection
         let imageFile = dataFile as ImageFile;
+
+        //if histogram not loaded,  load now
+        if(!imageFile.histLoaded && !imageFile.histLoading) actions.push(new imageFileActions.LoadImageHist({file: imageFile}));
+
         let sonifierState = sonifierStateGlobal.entities[imageFile.id];
         
         if(!sonifierState.regionHistoryInitialized) {
