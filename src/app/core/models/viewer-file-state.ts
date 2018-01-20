@@ -7,6 +7,7 @@ import { ImageTile } from '../../data-files/models/image-tile'
 
 
 export interface ViewerFileState {
+  fileId: string;
   normalizedTiles: Array<ImageTile>;
   panEnabled: boolean;
   zoomEnabled: boolean;

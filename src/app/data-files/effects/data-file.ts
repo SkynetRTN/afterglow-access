@@ -1,13 +1,3 @@
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/skip';
-import 'rxjs/add/operator/takeUntil';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/withLatestFrom';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/observable/from';
 import { Injectable, InjectionToken, Optional, Inject } from '@angular/core';
 import { Effect, Actions } from '@ngrx/effects';
 import { Action } from '@ngrx/store';
@@ -18,14 +8,25 @@ import { empty } from 'rxjs/observable/empty';
 import { of } from 'rxjs/observable/of';
 import { Store } from '@ngrx/store';
 import { Point } from 'paper';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/add/operator/skip';
+import 'rxjs/add/operator/takeUntil';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/withLatestFrom';
+import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/observable/from';
 
 import { AfterglowDataFileService } from '../../core/services/afterglow-data-files';
-import * as fromDataFile from '../reducers';
-import * as dataFileActions from '../actions/data-file';
-import * as imageFileActions from '../actions/image-file';
 import { DataFile, ImageFile, Header, getWidth, getHeight } from '../models/data-file';
 import { DataFileType } from '../models/data-file-type';
 import { ImageHist } from '../models/image-hist';
+
+import * as fromDataFile from '../reducers';
+import * as dataFileActions from '../actions/data-file';
+import * as imageFileActions from '../actions/image-file';
 
 // export const SEARCH_DEBOUNCE = new InjectionToken<number>('Search Debounce');
 // export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
@@ -55,7 +56,9 @@ export class DataFileEffects {
       .ofType<dataFileActions.RemoveAllDataFiles>(dataFileActions.REMOVE_ALL_DATA_FILES)
       .withLatestFrom(this.store.select(fromDataFile.getAllDataFiles))
       .switchMap(([action, dataFiles]) => {
+        
         return Observable.forkJoin(dataFiles.map(dataFile => {
+          
           return this.afterglowDataFileService
           .removeFile(dataFile.id);
         }))
@@ -99,7 +102,7 @@ export class DataFileEffects {
     @Effect()
     loadDataFileHdrSuccess$: Observable<Action> = this.actions$
       .ofType<dataFileActions.LoadDataFileHdrSuccess>(dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS)
-      .withLatestFrom(this.store.select(fromDataFile.getDataFileEntities))
+      .withLatestFrom(this.store.select(fromDataFile.getDataFiles))
       .flatMap(([action, dataFiles]) => {
         let dataFile = dataFiles[action.payload.fileId];
         let actions : Action[] = [];

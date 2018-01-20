@@ -10,6 +10,7 @@ export enum SourceExtractorRegionOption {
 }
 
 export interface SourceExtractorFileState {
+  fileId: string;
   regionOption: SourceExtractorRegionOption,
   region: Region,
   sources: Array<Source>,
