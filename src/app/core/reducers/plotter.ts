@@ -111,7 +111,7 @@ export function reducer(
     case plotterActions.START_LINE: {
       let imageFile = action.payload.file as ImageFile;
       let point = action.payload.point;
-      let plotterState = state.entities[imageFile.id];
+      let plotterState = {...state.entities[imageFile.id]};
 
       let xc = action.payload.point.x;
       let yc = action.payload.point.y;
@@ -126,6 +126,8 @@ export function reducer(
         
         xc = result.x;
         yc = result.y;
+
+        console.log('centroided: ', point.x, point.y, xc, yc);
       }
       if(!plotterState.measuring) {
         plotterState.lineMeasureStart = {x: xc, y: yc};
@@ -134,7 +136,6 @@ export function reducer(
       else {
         plotterState.lineMeasureEnd = {x: xc, y: yc};
       }
-      
       plotterState.measuring = !plotterState.measuring;
 
       
