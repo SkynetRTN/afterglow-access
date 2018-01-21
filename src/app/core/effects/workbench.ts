@@ -53,9 +53,34 @@ export class WorkbenchEffects {
     .withLatestFrom(this.store.select(fromDataFile.getAllDataFiles), this.store.select(fromCore.getWorkbenchGlobalState))
     .switchMap(([action, dataFiles, workbenchGlobalState]) => {
       let actions : Action[] = [];
-      if(workbenchGlobalState.selectedDataFileId == null && dataFiles.length != 0) {
-        actions.push(new workbenchActions.SelectDataFile(dataFiles[0].id))
+      let curentDataFile = dataFiles.find(dataFile => dataFile.id == workbenchGlobalState.selectedDataFileId);
+      console.log('HERE:', workbenchGlobalState.selectedDataFileId, dataFiles, curentDataFile)
+      if(dataFiles.length != 0) {
+        if(workbenchGlobalState.selectedDataFileId == null || !curentDataFile) {
+          actions.push(new workbenchActions.SelectDataFile(dataFiles[0].id));
+        }
       }
+      return Observable.from(actions);
+  });
+
+  @Effect()
+  dataFileRemoved$: Observable<Action> = this.actions$
+    .ofType<dataFileActions.RemoveDataFileSuccess>(dataFileActions.REMOVE_DATA_FILE_SUCCESS)
+    .withLatestFrom(this.store.select(fromDataFile.getAllDataFiles), this.store.select(fromCore.getWorkbenchGlobalState))
+    .switchMap(([action, dataFiles, workbenchGlobalState]) => {
+      let actions : Action[] = [];
+
+      if(workbenchGlobalState.selectedDataFileId != null) {
+        let newSelectedDataFileId = null;
+        if(dataFiles.length != 1) {
+          let selectedDataFile = dataFiles.find(dataFile => dataFile.id ==  workbenchGlobalState.selectedDataFileId)
+          let currentIndex = dataFiles.indexOf(selectedDataFile);
+          newSelectedDataFileId = dataFiles[Math.min(dataFiles.length-1, currentIndex+1)].id;
+        }
+        actions.push(new workbenchActions.SelectDataFile(newSelectedDataFileId));
+      }
+      
+      
       return Observable.from(actions);
   });
   
@@ -64,10 +89,11 @@ export class WorkbenchEffects {
     .ofType<workbenchActions.SelectDataFile>(workbenchActions.SELECT_DATA_FILE)
     .withLatestFrom(this.store.select(fromDataFile.getDataFiles))
     .switchMap(([action, dataFiles]) => {
-      let dataFile = dataFiles[action.payload];
       let actions : Action[] = [];
-      if(!dataFile.headerLoaded && !dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr(dataFile));
-
+      if(action.payload != null) {
+        let dataFile = dataFiles[action.payload];
+        if(!dataFile.headerLoaded && !dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr(dataFile));
+      }
       return Observable.from(actions);
   });
 
