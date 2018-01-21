@@ -582,14 +582,16 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
   }
 
   ngOnChanges() {
-    if(!this.initialized) return;
-    //must async dispatch actions within life cycle hooks to prevent
-    //ExpressionChangedAfterItHasBeenChecked Error
-    //https://blog.angularindepth.com/everything-you-need-to-know-about-the-expressionchangedafterithasbeencheckederror-error-e3fd9ce7dbb4 
-    setTimeout(() => {
-      this.lazyLoadPixels();
-      this.handleViewportChange();
-    });
+    if(this.initialized) {
+      //must async dispatch actions within life cycle hooks to prevent
+      //ExpressionChangedAfterItHasBeenChecked Error
+      //https://blog.angularindepth.com/everything-you-need-to-know-about-the-expressionchangedafterithasbeencheckederror-error-e3fd9ce7dbb4 
+      setTimeout(() => {
+        this.lazyLoadPixels();
+        this.handleViewportChange();
+      });
+    }
+    
     this.draw();
     //draw immediately for optimal performance once tiles have loaded
   }
@@ -622,33 +624,8 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
   }
 
   public draw() {
-    if(!this.initialized) return;
+    if(!this.viewInitialized) return;
 
-    let tiles = this.getViewportTiles();
-
-    tiles.forEach(tile => {
-      let normTile = this.viewerState.normalizedTiles[tile.index];
-      if(!tile.pixelsLoaded) {
-        // fill in tile with solid background when image file pixels have not been loaded
-        this.imageCtx.fillStyle = "rgb(100, 100, 100)";
-        this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
-      }
-      else if(normTile.pixelsLoaded) {
-        let imageData = this.imageCtx.createImageData(normTile.width, normTile.height);
-        let blendedImageDataUint8Clamped = new Uint8ClampedArray(normTile.pixels.buffer);
-        imageData.data.set(blendedImageDataUint8Clamped);
-        this.imageCtx.putImageData(imageData, normTile.x, normTile.y);
-        
-        // setTimeout(() => {
-        //   this.store.dispatch(new workbenchActions.ImageTileDrawn({
-        //     file: this.imageFile,
-        //     tile: tile
-        //   }));
-        // });
-      }
-      
-    })
-    
     let backgroundPattern = this.targetCtx.createPattern(this.backgroundCanvas, 'repeat');
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     this.setSmoothing(this.targetCtx, false);
@@ -657,13 +634,45 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     this.targetCtx.fillStyle = backgroundPattern;
     this.targetCtx.fillRect(0, 0, this.targetCtx.canvas.width, this.targetCtx.canvas.height);
 
+    if(this.initialized) {
+      let tiles = this.getViewportTiles();
 
-    this.viewerState.imageToViewportTransform.applyToContext(this.targetCtx);
-    this.targetCtx.drawImage(this.imageCanvas, 0, 0);
+      tiles.forEach(tile => {
+        let normTile = this.viewerState.normalizedTiles[tile.index];
+        if(!tile.pixelsLoaded) {
+          // fill in tile with solid background when image file pixels have not been loaded
+          this.imageCtx.fillStyle = "rgb(100, 100, 100)";
+          this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
+        }
+        else if(normTile.pixelsLoaded) {
+          let imageData = this.imageCtx.createImageData(normTile.width, normTile.height);
+          let blendedImageDataUint8Clamped = new Uint8ClampedArray(normTile.pixels.buffer);
+          imageData.data.set(blendedImageDataUint8Clamped);
+          this.imageCtx.putImageData(imageData, normTile.x, normTile.y);
+          
+          // setTimeout(() => {
+          //   this.store.dispatch(new workbenchActions.ImageTileDrawn({
+          //     file: this.imageFile,
+          //     tile: tile
+          //   }));
+          // });
+        }
+        
+      })
 
-    let t = this.viewerState.imageToViewportTransform;
-    this.svgGroup.nativeElement.setAttribute('transform', `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`);
+      this.viewerState.imageToViewportTransform.applyToContext(this.targetCtx);
+      this.targetCtx.drawImage(this.imageCanvas, 0, 0);
 
+      let t = this.viewerState.imageToViewportTransform;
+      this.svgGroup.nativeElement.setAttribute('transform', `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`);
+
+    }
+    
+    
+    
+
+
+    
     this.setSmoothing(this.targetCtx, true);
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     this.targetCtx.globalAlpha = 1.0;
