@@ -1,6 +1,6 @@
-import { Component, OnInit, Input, Output, EventEmitter  } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter,  OnChanges } from '@angular/core';
 
-import { PixelNormalizer } from '../../models/pixel-normalizer';
+import { PixelNormalizer, normalize } from '../../models/pixel-normalizer';
 import { ColorMap, grayColorMap, rainbowColorMap, coolColorMap,
   heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap } from '../../models/color-map';
 import { StretchMode } from '../../models/stretch-mode';
@@ -10,13 +10,15 @@ import { StretchMode } from '../../models/stretch-mode';
   templateUrl: './normalizer-form.component.html',
   styleUrls: ['./normalizer-form.component.scss']
 })
-export class NormalizerFormComponent implements OnInit {
+export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
 
   @Output() onBackgroundLevelChange = new EventEmitter<number>();
   @Output() onPeakLevelChange = new EventEmitter<number>();
   @Output() onColorMapChange = new EventEmitter<ColorMap>();
   @Output() onStretchModeChange = new EventEmitter<StretchMode>();
+
+  levelStep = 0.1;
 
   private stretchModeOptions = [
     {label: "Linear",  value: StretchMode.Linear},
@@ -30,6 +32,27 @@ export class NormalizerFormComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
+  }
+
+  ngOnChanges() {
+    if(!this.normalizer || this.normalizer.peakLevel == null || this.normalizer.backgroundLevel == null) {
+      this.levelStep = 0.1;
+    }
+    else {
+      let step = Math.abs(this.normalizer.peakLevel - this.normalizer.backgroundLevel)/100;
+      if(step == 0) {
+        this.levelStep = 0.1;
+      }
+      else {
+        let precision = Math.floor(Math.log10(step))*-1;
+        let factor = Math.pow(10, precision);
+        this.levelStep = Math.round(step*factor)/factor;
+        this.normalizer.peakLevel = Math.round(this.normalizer.peakLevel*factor)/factor;
+        this.normalizer.backgroundLevel = Math.round(this.normalizer.backgroundLevel*factor)/factor;
+      }
+      
+    }
+    
   }
 
 }
