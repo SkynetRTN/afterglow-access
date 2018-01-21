@@ -54,7 +54,6 @@ export class WorkbenchEffects {
     .switchMap(([action, dataFiles, workbenchGlobalState]) => {
       let actions : Action[] = [];
       let curentDataFile = dataFiles.find(dataFile => dataFile.id == workbenchGlobalState.selectedDataFileId);
-      console.log('HERE:', workbenchGlobalState.selectedDataFileId, dataFiles, curentDataFile)
       if(dataFiles.length != 0) {
         if(workbenchGlobalState.selectedDataFileId == null || !curentDataFile) {
           actions.push(new workbenchActions.SelectDataFile(dataFiles[0].id));

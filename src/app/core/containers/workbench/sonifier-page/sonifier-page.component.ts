@@ -161,7 +161,6 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   // }
 
   private sonify() {
-    console.log("HERE: ", this.lastSonifierState.sonificationUri);
     this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
   }
 
