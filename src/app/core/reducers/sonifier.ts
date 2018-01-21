@@ -4,7 +4,7 @@ import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { SonifierFileState, SonifierRegionOption } from '../models/sonifier-file-state';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 import { DataFileType } from '../../data-files/models/data-file-type';
-import { CentroidSettings, CentroidMethod } from '../models/centroid-settings'
+import { CentroidSettings } from '../models/centroid-settings'
 import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth} from '../../data-files/models/data-file';
 import { centroidDisk, centroidPsf } from '../models/centroider';
 

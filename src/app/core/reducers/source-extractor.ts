@@ -6,7 +6,7 @@ import { SourceExtractorModeOption } from '../models/source-extractor-mode-optio
 import { SourceExtractionSettings } from '../models/source-extraction-settings';
 import { PhotSettings } from '../models/phot-settings';
 import { DataFileType } from '../../data-files/models/data-file-type';
-import { CentroidSettings, CentroidMethod } from '../models/centroid-settings'
+import { CentroidSettings } from '../models/centroid-settings'
 import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth} from '../../data-files/models/data-file';
 import { centroidDisk, centroidPsf } from '../models/centroider';
 
@@ -40,8 +40,7 @@ export const initialState: State = adapter.getInitialState({
     annulus: 10,
     dannulus: 10,
     centroid: true,
-    centroidRadius: 10,
-    centroidMethod: CentroidMethod.COM
+    centroidRadius: 10
   },
   sourceExtractionSettings: {
     threshold: 10,

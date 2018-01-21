@@ -5,7 +5,7 @@ import { PlotterFileState } from '../models/plotter-file-state';
 import { PlotterSettings } from '../models/plotter-settings';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 import { DataFileType } from '../../data-files/models/data-file-type';
-import { CentroidSettings, CentroidMethod } from '../models/centroid-settings'
+import { CentroidSettings } from '../models/centroid-settings'
 import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth} from '../../data-files/models/data-file';
 import { centroidDisk, centroidPsf } from '../models/centroider';
 

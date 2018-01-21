@@ -19,7 +19,6 @@ import { SourceExtractorRegionOption } from '../models/source-extractor-file-sta
 import { Source } from '../models/source';
 import { SourceExtractionSettings } from '../models/source-extraction-settings';
 import { PhotSettings } from '../models/phot-settings';
-import { CentroidMethod } from '../models/centroid-settings';
 import { DataProvider } from '../../data-providers/models/data-provider';
 import { DataProviderAsset } from '../../data-providers/models/data-provider-asset';
 
@@ -161,19 +160,6 @@ export class AfterglowDataFileService {
 
     if(settings.centroid) {
       params = params.set('centroid_radius', settings.centroidRadius.toString())
-      let centroidMethod;
-      if(settings.centroidMethod == CentroidMethod.COM) {
-        centroidMethod = 'com'
-      }
-      else if(settings.centroidMethod == CentroidMethod.GAUSSIAN_2D) {
-        centroidMethod = '2dg'
-      }
-      else if(settings.centroidMethod == CentroidMethod.GAUSSIAN_1D) {
-        centroidMethod = '1dg'
-      }
-      if(centroidMethod) {
-        params = params.set('centroid_method', centroidMethod);
-      }
     }
 
 
