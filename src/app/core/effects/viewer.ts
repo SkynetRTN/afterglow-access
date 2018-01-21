@@ -24,12 +24,12 @@ export class ViewerEffects {
     )
     .flatMap(([action, dataFiles, viewerFileStates]) => {
       let dataFile = dataFiles[action.payload.fileId];
-      let displayState = viewerFileStates[dataFile.id];
+      let viewerFileState = viewerFileStates[dataFile.id];
       let actions : Action[] = [];
 
       if(dataFile.type == DataFileType.IMAGE) {
         let imageFile = dataFile as ImageFile;
-        if(!displayState.autoLevelsInitialized) actions.push(new viewerActions.InitAutoLevels({file: imageFile}));
+        if(!viewerFileState.autoLevelsInitialized) actions.push(new viewerActions.InitAutoLevels({file: imageFile}));
       }
       return Observable.from(actions);
   });
@@ -47,10 +47,10 @@ export class ViewerEffects {
 
       if(dataFile.type == DataFileType.IMAGE) {
         let imageFile = dataFile as ImageFile;
-        let viewerState = viewerFileStates[imageFile.id];
+        let viewerFileState = viewerFileStates[imageFile.id];
         actions.push(new viewerActions.UpdateNormalizer({file: imageFile, changes: {
-          backgroundLevel: viewerState.autoBkgLevel,
-          peakLevel: viewerState.autoPeakLevel
+          backgroundLevel: viewerFileState.autoBkgLevel,
+          peakLevel: viewerFileState.autoPeakLevel
         }}));
       }
       return Observable.from(actions);
