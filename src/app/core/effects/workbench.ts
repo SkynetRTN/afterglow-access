@@ -120,7 +120,7 @@ export class WorkbenchEffects {
         let sonifierState = sonifierStateGlobal.entities[imageFile.id];
         
         if(!sonifierState.regionHistoryInitialized) {
-          actions.push(new sonifierActions.SetRegion({file: imageFile, region: {x: 0, y: 0, width: getWidth(imageFile), height: getHeight(imageFile)}, storeInHistory: true}));
+          actions.push(new sonifierActions.AddRegionToHistory({file: imageFile, region: {x: 0, y: 0, width: getWidth(imageFile), height: getHeight(imageFile)}}));
         }
 
         let sourceExtractorState = sourceExtractorStateGlobal.entities[imageFile.id];

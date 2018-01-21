@@ -1,6 +1,6 @@
 import { Region } from './region';
 
-export enum SonifierRegionOption {
+export enum SonifierRegionMode {
   VIEWPORT,
   CUSTOM
 }
@@ -12,7 +12,7 @@ export interface SonifierFileState {
   region: Region | null;
   regionHistory: Array<Region>;
   regionHistoryIndex: number | null;
-  regionOption: SonifierRegionOption;
+  regionMode: SonifierRegionMode;
   viewportSync: boolean;
   duration: number;
   toneCount: number;

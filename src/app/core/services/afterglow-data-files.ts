@@ -13,7 +13,7 @@ import { HeaderEntry } from '../../data-files/models/header-entry';
 import { ImageHist } from '../../data-files/models/image-hist';
 import { DataFileType } from '../../data-files/models/data-file-type'
 import { Region } from '../models/region'
-import { SonifierRegionOption } from '../models/sonifier-file-state';
+import { SonifierRegionMode } from '../models/sonifier-file-state';
 import { MarkerType } from '../models/marker'
 import { SourceExtractorRegionOption } from '../models/source-extractor-file-state';
 import { Source } from '../models/source';

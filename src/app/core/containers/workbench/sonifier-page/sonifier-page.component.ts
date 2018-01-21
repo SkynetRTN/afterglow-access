@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
-import { SonifierRegionOption } from '../../../models/sonifier-file-state';
+import { SonifierRegionMode } from '../../../models/sonifier-file-state';
 import { ViewerFileState } from '../../../models/viewer-file-state';
 import { SonifierFileState } from '../../../models/sonifier-file-state';
 import { ViewportChangeEvent } from '../../../components/pan-zoom-viewer/pan-zoom-viewer.component';
@@ -32,7 +32,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   lastSonifierState: SonifierFileState;
   sonificationSrcUri: string = null;
   
-  SonifierRegionOption = SonifierRegionOption;
+  SonifierRegionMode = SonifierRegionMode;
   showPlayer: boolean = false;
   api:VgAPI;
   viewportSize: {width: number, height: number} = null;
@@ -79,8 +79,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
   private selectSubregionByFrequency(subregion: number) {
     let region = this.lastSonifierState.region;
-    this.store.dispatch(new sonifierActions.SetRegion({file: this.lastImageFile,
-      storeInHistory: true,
+    this.store.dispatch(new sonifierActions.AddRegionToHistory({file: this.lastImageFile,
       region: {
         x: region.x + subregion * (region.width/4),
         y: region.y,
@@ -92,8 +91,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
   private selectSubregionByTime(subregion: number) {
     let region = this.lastSonifierState.region;
-    this.store.dispatch(new sonifierActions.SetRegion({file: this.lastImageFile,
-      storeInHistory: true,
+    this.store.dispatch(new sonifierActions.AddRegionToHistory({file: this.lastImageFile,
       region: {
         x: region.x,
         y: region.y + subregion * (region.height/4),
@@ -108,8 +106,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
     
-    this.store.dispatch(new sonifierActions.SetRegion({file: this.lastImageFile,
-      storeInHistory: true,
+    this.store.dispatch(new sonifierActions.AddRegionToHistory({file: this.lastImageFile,
       region: {
         x: 0,
         y: 0,
@@ -127,8 +124,8 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     this.store.dispatch(new sonifierActions.RedoRegionSelection({file: this.lastImageFile}));
   }
 
-  private setRegionMethod(value: SonifierRegionOption) {
-    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {regionOption: value}}))
+  private setRegionMode(value: SonifierRegionMode) {
+    this.store.dispatch(new sonifierActions.SetRegionMode({file: this.lastImageFile, mode: value}))
   }
 
   private setDuration(value) {
@@ -164,6 +161,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   // }
 
   private sonify() {
+    console.log("HERE: ", this.lastSonifierState.sonificationUri);
     this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
   }
 

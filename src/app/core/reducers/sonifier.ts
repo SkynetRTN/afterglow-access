@@ -1,7 +1,7 @@
 import { createSelector} from '@ngrx/store';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 
-import { SonifierFileState, SonifierRegionOption } from '../models/sonifier-file-state';
+import { SonifierFileState, SonifierRegionMode } from '../models/sonifier-file-state';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 import { DataFileType } from '../../data-files/models/data-file-type';
 import { CentroidSettings } from '../models/centroid-settings'
@@ -53,7 +53,7 @@ export function reducer(
           regionHistory: [],
           regionHistoryIndex: null,
           regionHistoryInitialized: false,
-          regionOption: SonifierRegionOption.VIEWPORT,
+          regionMode: SonifierRegionMode.VIEWPORT,
           viewportSync: true,
           duration: 10,
           toneCount: 22
@@ -73,6 +73,14 @@ export function reducer(
       }
     }
 
+    case sonifierActions.SET_REGION_MODE: {
+      return {
+        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
+        regionMode: action.payload.mode
+        }}, state),
+      }
+    }
+
     case sonifierActions.UPDATE_VIEWPORT: {
       return {
         ...state,
@@ -80,24 +88,47 @@ export function reducer(
       }
     }
 
-    case sonifierActions.SET_REGION: {
+    case sonifierActions.UPDATE_REGION: {
+      let fileState = state.entities[action.payload.file.id];
+
+      let region = null;
+      if(fileState.regionMode == SonifierRegionMode.VIEWPORT) {
+        region = {
+          x: state.viewport.imageX,
+          y: state.viewport.imageY,
+          width: state.viewport.imageWidth,
+          height: state.viewport.imageHeight
+        };
+      }
+      else if(fileState.regionMode == SonifierRegionMode.CUSTOM) {
+        if(fileState.regionHistoryIndex < fileState.regionHistory.length) {
+          region = fileState.regionHistory[fileState.regionHistoryIndex];
+        }
+      }
+
+      return {
+        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
+        region: {...region}
+        }}, state),
+      }
+
+    }
+
+    case sonifierActions.ADD_REGION_TO_HISTORY: {
       if(action.payload.file.type == DataFileType.IMAGE) {
         let imageFile = action.payload.file;
         let sonifier = {...state.entities[imageFile.id]};
         let region = Object.assign({}, action.payload.region);
-        if(action.payload.storeInHistory) {
-          if(!sonifier.regionHistoryInitialized) {
-            sonifier.regionHistoryIndex = 0;
-            sonifier.regionHistory = [region];
-            sonifier.regionHistoryInitialized = true;
-          }
-          else {
-            sonifier.regionHistory = [...sonifier.regionHistory.slice(0,sonifier.regionHistoryIndex+1), region];
-            sonifier.regionHistoryIndex++;
-          }
+        if(!sonifier.regionHistoryInitialized) {
+          sonifier.regionHistoryIndex = 0;
+          sonifier.regionHistory = [region];
+          sonifier.regionHistoryInitialized = true;
+        }
+        else {
+          sonifier.regionHistory = [...sonifier.regionHistory.slice(0,sonifier.regionHistoryIndex+1), region];
+          sonifier.regionHistoryIndex++;
         }
         
-        sonifier.region = region;
         
         return {
           ...adapter.updateOne({'id': action.payload.file.id, 'changes': {

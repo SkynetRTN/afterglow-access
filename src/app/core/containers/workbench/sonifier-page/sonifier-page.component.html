@@ -20,11 +20,11 @@
             <tr>
               <th scope="row">Region Mode:</th>
               <td>
-                <mat-button-toggle-group [ngModel]="(sonifierState$ | async)?.regionOption" (ngModelChange)="setRegionMethod($event)">
-                  <mat-button-toggle value="{{SonifierRegionOption.CUSTOM}}">
+                <mat-button-toggle-group [ngModel]="(sonifierState$ | async)?.regionMode" (ngModelChange)="setRegionMode($event)">
+                  <mat-button-toggle value="{{SonifierRegionMode.CUSTOM}}">
                     <mat-icon>crop_square</mat-icon> Custom
                   </mat-button-toggle>
-                  <mat-button-toggle value="{{SonifierRegionOption.VIEWPORT}}">
+                  <mat-button-toggle value="{{SonifierRegionMode.VIEWPORT}}">
                     <mat-icon>remove_red_eye</mat-icon> Viewport
                   </mat-button-toggle>
                 </mat-button-toggle-group>
@@ -32,7 +32,7 @@
   
               </td>
             </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
+            <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
               <th scope="row">Time Navigation:</th>
               <td>
                 <button mat-raised-button
@@ -49,7 +49,7 @@
                 </button>
               </td>
             </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
+            <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
               <th scope="row">Tone Navigation:</th>
               <td>
                 <button mat-raised-button
@@ -66,7 +66,7 @@
                 </button>
               </td>
             </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
+            <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
                 <th scope="row">Selection Options:</th>
                 <td>
                   <button mat-raised-button
@@ -85,7 +85,7 @@
                   </button>
                 </td>
             </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
+            <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
   
             </tr>
             <tr>
