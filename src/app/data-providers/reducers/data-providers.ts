@@ -17,8 +17,10 @@ export interface State {
   currentPathBreadcrumbs: Array<{name: string, url: string}>;
   currentAssets: DataProviderAsset[];
   selectedAssets: DataProviderAsset[];
-  assetSortField: string;
-  assetSortOrder: TdDataTableSortingOrder;
+  userSortField: string;
+  userSortOrder: TdDataTableSortingOrder;
+  currentSortField: string;
+  currentSortOrder: TdDataTableSortingOrder;
 }
 
 export const initialState: State = {
@@ -30,8 +32,10 @@ export const initialState: State = {
   currentPathBreadcrumbs: [],
   currentAssets: [],
   selectedAssets: [],
-  assetSortField: null,
-  assetSortOrder: TdDataTableSortingOrder.Ascending
+  userSortField: null,
+  userSortOrder: TdDataTableSortingOrder.Ascending,
+  currentSortField: null,
+  currentSortOrder: TdDataTableSortingOrder.Ascending
 }
 
 export function reducer(
@@ -88,58 +92,77 @@ export function reducer(
 
 
     case dataProviderActions.SORT_DATA_PROVIDER_ASSETS: {
-      let fieldName = state.assetSortField;
-      let order = state.assetSortOrder;
+      let userSortField = state.userSortField;
+      let userSortOrder = state.userSortOrder;
+      
+      let currentSortField = null;
+      let currentSortOrder = TdDataTableSortingOrder.Ascending;
 
       //if action sets the sort field, use it
       if(action.payload) {
-        fieldName = action.payload.fieldName;
-        order = action.payload.order;
+        userSortField = action.payload.fieldName;
+        userSortOrder = action.payload.order;
       }
       
-      if(!fieldName) {
+      if(userSortField) {
+        //verify that the user selected sort field exists
+        if(userSortField == 'name') {
+          currentSortField = userSortField;
+          currentSortOrder = userSortOrder;
+        }
+        else if(state.currentProvider) {
+          let col = state.currentProvider.columns.find(col => col.fieldName == userSortField);
+          if(col) {
+            currentSortField = userSortField;
+            currentSortOrder = userSortOrder;
+          }
+        }
+
+      }
+      
+      if(!currentSortField) {
         //get default from current provider
         if(state.currentProvider && state.currentProvider.sortBy) {
           let col = state.currentProvider.columns.find(col => col.name == state.currentProvider.sortBy);
           if(col) {
-            fieldName = col.fieldName;
-            order = state.currentProvider.sortAsc ? TdDataTableSortingOrder.Ascending : TdDataTableSortingOrder.Descending;
+            currentSortField = col.fieldName;
+            currentSortOrder = state.currentProvider.sortAsc ? TdDataTableSortingOrder.Ascending : TdDataTableSortingOrder.Descending;
           }
         }
       }
-
-      if(!fieldName) {
+      
+      if(!currentSortField) {
         //use defaults
-        fieldName = 'name';
-        order = TdDataTableSortingOrder.Ascending;
+        currentSortField = 'name';
+        currentSortOrder = TdDataTableSortingOrder.Ascending;
       }
-
 
       let currentAssets = state.currentAssets.sort((a,b) => {
-        if(fieldName != 'name' && fieldName in a.metadata) {
-          //custom sort using metadata column
-          if(a.metadata[fieldName] < b.metadata[fieldName]) {
-            return order == TdDataTableSortingOrder.Ascending ? -1 : 1;
+        if(currentSortField != 'name') {
+          if(currentSortField in a.metadata) {
+             //custom sort using metadata column
+            if(a.metadata[currentSortField] < b.metadata[currentSortField]) {
+              return currentSortOrder == TdDataTableSortingOrder.Ascending ? -1 : 1;
+            }
+            if(a.metadata[currentSortField] > b.metadata[currentSortField]) {
+              return currentSortOrder == TdDataTableSortingOrder.Ascending ? 1 : -1;
+            }
+            return 0;
           }
-          if(a.metadata[fieldName] > b.metadata[fieldName]) {
-            return order == TdDataTableSortingOrder.Ascending ? 1 : -1;
-          }
-          return 0;
+          currentSortField = 'name';
+          currentSortOrder = TdDataTableSortingOrder.Ascending;
         }
-
-        fieldName = 'name';
-        order = TdDataTableSortingOrder.Ascending;
 
         if(a.collection != b.collection) {
           return a.collection ? -1 : 1;
         }
         
         if(a.name.toUpperCase() < b.name.toUpperCase()) {
-          return order == TdDataTableSortingOrder.Ascending ? -1 : 1;
+          return currentSortOrder == TdDataTableSortingOrder.Ascending ? -1 : 1;
         }
 
         if(a.name.toUpperCase() > b.name.toUpperCase()) {
-          return order == TdDataTableSortingOrder.Ascending ? 1 : -1;
+          return currentSortOrder == TdDataTableSortingOrder.Ascending ? 1 : -1;
         }
         return 0;
 
@@ -148,8 +171,10 @@ export function reducer(
       return {
         ...state,
         currentAssets: currentAssets,
-        assetSortField: fieldName,
-        assetSortOrder: order,
+        userSortField: userSortField,
+        userSortOrder: userSortOrder,
+        currentSortField: currentSortField,
+        currentSortOrder: currentSortOrder,
       };
     }
 
@@ -196,13 +221,10 @@ export function reducer(
       };
     }
     
-    
-
-
-    
-    
     default: {
       return state;
     }
   }
 }
+
+

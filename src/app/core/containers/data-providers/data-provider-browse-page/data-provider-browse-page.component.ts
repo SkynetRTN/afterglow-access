@@ -48,14 +48,14 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
     private slufigy: SlugifyPipe,
     @Optional() @Inject(DOCUMENT) private _document: any,) {
       let state$ = store.select(fromDataProviders.getDataProvidersState);
-      this.dataProviders$ = state$.map(state => state.dataProviders).distinctUntilChanged();
-      this.currentProvider$ = state$.map(state => state.currentProvider).distinctUntilChanged();
-      this.loadingAssets$ = state$.map(state => state.loadingAssets).distinctUntilChanged();
-      this.currentPathBreadcrumbs$ = state$.map(state => state.currentPathBreadcrumbs).distinctUntilChanged();
-      this.currentAssets$ = state$.map(state => state.currentAssets).distinctUntilChanged();
-      this.selectedAssets$ = state$.map(state => state.selectedAssets).distinctUntilChanged();
-      this.sortField$ = state$.map(state => state.assetSortField);
-      this.sortOrder$ = state$.map(state => state.assetSortOrder);
+      this.dataProviders$ =  store.select(fromDataProviders.getDataProviders);
+      this.currentProvider$ =  store.select(fromDataProviders.getCurrentProvider);
+      this.loadingAssets$ = store.select(fromDataProviders.getLoadingAssets);
+      this.currentPathBreadcrumbs$ =  store.select(fromDataProviders.getCurrentPathBreadcrumbs);
+      this.currentAssets$ =  store.select(fromDataProviders.getCurrentAssets);
+      this.selectedAssets$ =  store.select(fromDataProviders.getSelectedAssets);
+      this.sortField$ =  store.select(fromDataProviders.getCurrentSortField);
+      this.sortOrder$ =  store.select(fromDataProviders.getCurrentSortOrder);
   }
 
   ngOnInit() {
