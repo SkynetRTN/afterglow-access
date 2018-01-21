@@ -10,6 +10,7 @@ export const UNDO_REGION_SELECTION = '[Sonifier] Undo Region Selection';
 export const REDO_REGION_SELECTION = '[Sonifier] Redo Region Selection';
 export const UPDATE_FILE_STATE = '[Sonifier] Update File State';
 export const UPDATE_VIEWPORT = '[Sonifier] Update Viewport';
+export const UPDATE_SONIFICATION_URI = '[Sonifier] Update Sonification URI';
 
 export class SetRegion implements Action {
   readonly type = SET_REGION;
@@ -47,6 +48,12 @@ export class UpdateViewport implements Action {
   constructor(public payload: {file: ImageFile, viewport: {imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number}}) {}
 }
 
+export class UpdateSonificationUri implements Action {
+  readonly type = UPDATE_SONIFICATION_URI;
+  
+  constructor(public payload: {file: ImageFile, uri: string}) {}
+}
+
 
 
 
@@ -57,3 +64,4 @@ export type Actions =
 | RedoRegionSelection
 | UpdateFileState
 | UpdateViewport
+| UpdateSonificationUri

@@ -31,6 +31,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   lastViewerState: ViewerFileState;
   lastSonifierState: SonifierFileState;
   sonificationSrcUri: string = null;
+  
   SonifierRegionOption = SonifierRegionOption;
   showPlayer: boolean = false;
   api:VgAPI;
@@ -45,7 +46,10 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     
     this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
     this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));
-    this.subs.push(this.sonifierState$.subscribe(sonifierState => this.lastSonifierState = sonifierState));
+    this.subs.push(this.sonifierState$.subscribe(sonifierState => {
+      this.lastSonifierState = sonifierState;
+      if(sonifierState && this.sonificationSrcUri != sonifierState.sonificationUri) this.sonificationSrcUri = null;
+    }));
 
   }
     
@@ -58,18 +62,6 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   ngOnChanges() {
-    if(this.lastImageFile && this.lastSonifierState && this.sonificationSrcUri != null && this.lastSonifierState.region) {
-      let newUri = this.afterglowService.getSonificationUri(
-      this.lastImageFile.id,
-      this.lastSonifierState.region,
-      this.lastSonifierState.duration,
-      this.lastSonifierState.toneCount
-      );
-      if(newUri != this.sonificationSrcUri) this.sonificationSrcUri = null;
-    }
-    else {
-      this.sonificationSrcUri = null;
-    }
   }
 
   onViewportChange($event: ViewportChangeEvent) {
@@ -172,14 +164,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   // }
 
   private sonify() {
-    // console.log(this.currentSonificationUri);
-    // this.sonificationUri$.next(this.currentSonificationUri);
-    this.sonificationSrcUri = this.afterglowService.getSonificationUri(
-      this.lastImageFile.id,
-      this.lastSonifierState.region,
-      this.lastSonifierState.duration,
-      this.lastSonifierState.toneCount
-    )
+    this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
   }
 
   onPlayerReady(api:VgAPI) {

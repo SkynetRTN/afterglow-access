@@ -48,6 +48,7 @@ export function reducer(
       action.payload.filter(dataFile => dataFile.type == DataFileType.IMAGE).map(dataFile => {
         sonifierStates.push({
           fileId: dataFile.id,
+          sonificationUri: null,
           region: null,
           regionHistory: [],
           regionHistoryIndex: null,
@@ -158,6 +159,14 @@ export function reducer(
         }
       }
       return state;
+    }
+
+    case sonifierActions.UPDATE_SONIFICATION_URI: {
+      return {
+        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
+        sonificationUri: action.payload.uri
+        }}, state),
+      }
     }
 
     

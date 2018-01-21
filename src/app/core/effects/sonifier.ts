@@ -125,6 +125,35 @@ headerLoaded$: Observable<Action> = this.actions$
       return Observable.from(actions);
   });
 
+
+  @Effect()
+  updateSonifierUri$: Observable<Action> = this.actions$
+    .ofType<sonifierActions.SetRegion
+    | sonifierActions.UndoRegionSelection
+    | sonifierActions.RedoRegionSelection
+    | sonifierActions.UpdateFileState>(
+    sonifierActions.SET_REGION,
+    sonifierActions.UNDO_REGION_SELECTION,
+    sonifierActions.REDO_REGION_SELECTION,
+    sonifierActions.UPDATE_FILE_STATE)
+    .withLatestFrom(
+      this.store.select(fromCore.getSonifierFileStates)
+    )
+    .flatMap(([action,sonifierFileStates]) => {
+      let actions : Action[] = [];
+      let sonifier = sonifierFileStates[action.payload.file.id];
+      if(sonifier.region) {
+        let sonificationUri = this.afterglowDataFileService.getSonificationUri(
+          action.payload.file.id,
+          sonifier.region,
+          sonifier.duration,
+          sonifier.toneCount
+        )
+        actions.push(new sonifierActions.UpdateSonificationUri({file: action.payload.file, uri: sonificationUri}));
+      }
+      return Observable.from(actions);
+  });
+
  
 
 
