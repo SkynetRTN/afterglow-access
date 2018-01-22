@@ -299,10 +299,10 @@ function getSubframe(size: number, imageFile: ImageFile, x: number, y: number) {
     }
 
     // Get column and line limits, dimensions and center of subraster.
-    let c1 = Math.max(0.0, Math.min(ncols-1, xc1))+0.5;
-    let c2 = Math.max(0.0, Math.min(ncols-1, xc2))+0.5;
-    let l1 = Math.max(0.0, Math.min(nlines-1, xl1))+0.5;
-    let l2 = Math.max(0.0, Math.min(nlines-1, xl2))+0.5;
+    let c1 = Math.max(0.0, Math.min(ncols-1, xc1));
+    let c2 = Math.max(0.0, Math.min(ncols-1, xc2));
+    let l1 = Math.max(0.0, Math.min(nlines-1, xl1));
+    let l2 = Math.max(0.0, Math.min(nlines-1, xl2));
 
     let cnx = Math.round(c2 - c1) + 1;
     let cny = Math.round(l2 - l1) + 1;
