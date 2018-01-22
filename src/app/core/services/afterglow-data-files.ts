@@ -230,10 +230,10 @@ export class AfterglowDataFileService {
     .set('deblend',settings.deblend ? '1' : '0');
     
     if(region) {
-      params = params.set('x', Math.round(region.x+1).toString())
-      .set('y', Math.round(region.y+1).toString())
-      .set('width', Math.round(region.width).toString())
-      .set('height', Math.round(region.height).toString());
+      params = params.set('x', Math.ceil(region.x).toString())
+      .set('y', Math.ceil(region.y).toString())
+      .set('width', Math.floor(region.width).toString())
+      .set('height', Math.floor(region.height).toString());
     }
 
     return this.http.get<any[]>(`${environment.apiUrl}/data-files/${fileId}/sources`, {params: params})
