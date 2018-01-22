@@ -86,7 +86,6 @@ export function reducer(
       let currentProvider = {...action.payload.dataProvider};
       let currentPath = action.payload.path;
       let breadcrumbs: Array<{name: string, url: string}> = [];
-      console.log("HERE:", currentPath);
       if(currentProvider.browseable) {
         
         breadcrumbs.push({name: 'root', url: currentPath ? '' : null});
