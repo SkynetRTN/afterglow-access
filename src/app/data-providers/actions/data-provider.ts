@@ -19,8 +19,9 @@ export const SELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Select All Data P
 export const DESELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Deselect All Data Provider Assets';
 
 export const IMPORT_SELECTED_ASSETS = '[DataProvider] Import Selected Assets';
-export const IMPORT_SELECTED_ASSETS_SUCCESS = '[DataProvider] Import Selected Assets Success';
-export const IMPORT_SELECTED_ASSETS_FAIL = '[DataProvider] Import Selected Assets Fail';
+export const IMPORT_ASSET_SUCCESS = '[DataProvider] Import Asset Success';
+export const IMPORT_ASSET_FAIL = '[DataProvider] Import Asset Fail';
+export const IMPORT_ASSETS_CANCEL = '[DataProvider] Import Asset Cancel';
 
 /**
  * Load Library Actions
@@ -89,17 +90,22 @@ export class ImportSelectedAssets implements Action {
   constructor() {}
 }
 
-export class ImportSelectedAssetsSuccess implements Action {
-  readonly type = IMPORT_SELECTED_ASSETS_SUCCESS;
+export class ImportAssetSuccess implements Action {
+  readonly type = IMPORT_ASSET_SUCCESS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: {asset: DataProviderAsset}) {}
 }
 
-export class ImportSelectedAssetsFail implements Action {
-  readonly type = IMPORT_SELECTED_ASSETS_FAIL;
+export class ImportAssetFail implements Action {
+  readonly type = IMPORT_ASSET_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: {error: any, asset: DataProviderAsset}) {}
 }
+
+export class ImportAssetsCancel implements Action {
+  readonly type = IMPORT_ASSETS_CANCEL;
+}
+
 
 
 export type Actions =
@@ -114,6 +120,7 @@ export type Actions =
 | SelectAllDataProviderAssets
 | DeselectAllDataProviderAssets
 | ImportSelectedAssets
-| ImportSelectedAssetsSuccess
-| ImportSelectedAssetsFail;
+| ImportAssetSuccess
+| ImportAssetFail
+| ImportAssetsCancel;
 

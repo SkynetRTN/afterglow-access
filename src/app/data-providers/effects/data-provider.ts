@@ -74,22 +74,22 @@ export class DataProviderEffects {
     .withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState))
     //.debounceTime(this.debounce || 300, this.scheduler || async)
     .switchMap(([action, state]) => {
-      return Observable.forkJoin(state.selectedAssets.map(asset => {
+      return Observable.merge(...state.pendingImports.map(asset => {
         return this.afterglowDataFileService
-        .createFromDataProviderAsset(state.currentProvider, asset);
+        .createFromDataProviderAsset(state.currentProvider, asset)
+        .map(() => new dataProviderActions.ImportAssetSuccess({asset: asset}))
+        .catch(err => of(new dataProviderActions.ImportAssetFail({error: err, asset: asset})))
       }))
-      .map(() => new dataProviderActions.ImportSelectedAssetsSuccess({}))
-      .catch(err => of(new dataProviderActions.ImportSelectedAssetsFail(err)))
     });
 
-    @Effect()
-    importSelectedAssetsSuccess$: Observable<Action> = this.actions$
-      .ofType<dataProviderActions.ImportSelectedAssetsSuccess>(dataProviderActions.IMPORT_SELECTED_ASSETS_SUCCESS)
-      //.debounceTime(this.debounce || 300, this.scheduler || async)
-      .flatMap(action => {
-        this.router.navigate(['/workbench']);
-        return Observable.from([new dataFileActions.LoadLibrary()]);
-      });
+    // @Effect()
+    // importSelectedAssetsSuccess$: Observable<Action> = this.actions$
+    //   .ofType<dataProviderActions.ImportAssetSuccess>(dataProviderActions.IMPORT_ASSET_SUCCESS)
+    //   //.debounceTime(this.debounce || 300, this.scheduler || async)
+    //   .flatMap(action => {
+    //     this.router.navigate(['/workbench']);
+    //     return Observable.from([new dataFileActions.LoadLibrary()]);
+    //   });
         
   
   

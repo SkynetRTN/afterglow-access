@@ -21,6 +21,11 @@ export interface State {
   userSortOrder: TdDataTableSortingOrder;
   currentSortField: string;
   currentSortOrder: TdDataTableSortingOrder;
+  importing: boolean,
+  pendingImports: DataProviderAsset[];
+  completedImports: DataProviderAsset[];
+  importErrors: Array<{asset: DataProviderAsset, description: string}>
+  importProgress: number
 }
 
 export const initialState: State = {
@@ -35,7 +40,12 @@ export const initialState: State = {
   userSortField: null,
   userSortOrder: TdDataTableSortingOrder.Ascending,
   currentSortField: null,
-  currentSortOrder: TdDataTableSortingOrder.Ascending
+  currentSortOrder: TdDataTableSortingOrder.Ascending,
+  importing: false,
+  pendingImports: [],
+  completedImports: [],
+  importErrors: [],
+  importProgress: 0
 }
 
 export function reducer(
@@ -53,10 +63,20 @@ export function reducer(
     }
 
     case dataProviderActions.LOAD_DATA_PROVIDER_ASSETS: {
+      let changes : Partial<State> = {};
+      if(state.importProgress == 1) {
+        changes.importProgress = 0;
+        changes.importErrors = [];
+        changes.completedImports = [];
+        changes.pendingImports = [];
+        changes.importing = false;
+      }
+      
       
       return {
         ...state,
-        loadingAssets: true
+        loadingAssets: true,
+        ...changes
       };
     }
 
@@ -199,7 +219,6 @@ export function reducer(
       return {
         ...state,
         selectedAssets: selectedAssets
-
       };
     }
 
@@ -218,6 +237,49 @@ export function reducer(
         ...state,
         selectedAssets: selectedAssets
 
+      };
+    }
+
+    case dataProviderActions.IMPORT_SELECTED_ASSETS: {
+      
+      return {
+        ...state,
+        importing: true,
+        importProgress: 0,
+        pendingImports: [...state.selectedAssets],
+        completedImports: [],
+        importErrors: [],
+      };
+    }
+
+    case dataProviderActions.IMPORT_ASSET_SUCCESS: {
+      let pending = state.pendingImports.filter(asset => asset.path != action.payload.asset.path);
+      let completed = [...state.completedImports, action.payload.asset]
+      let total = pending.length + completed.length;
+      let progress = total == 0 ? 0 : completed.length / total;
+      return {
+        ...state,
+        importing: pending.length != 0,
+        importProgress: progress,
+        selectedAssets: state.selectedAssets.filter(asset => asset.path != action.payload.asset.path),
+        pendingImports: pending,
+        completedImports: completed
+      };
+      
+    }
+
+    case dataProviderActions.IMPORT_ASSET_FAIL: {
+      let pending = state.pendingImports.filter(asset => asset.path != action.payload.asset.path);
+      let completed = [...state.completedImports, action.payload.asset]
+      let total = pending.length + completed.length;
+      let progress = total == 0 ? 0 : completed.length / total;
+      return {
+        ...state,
+        importing: pending.length != 0,
+        importProgress: progress,
+        pendingImports: pending,
+        completedImports: completed,
+        importErrors: [...state.importErrors, {asset: action.payload.asset, description: action.payload.error.toString()}]
       };
     }
     

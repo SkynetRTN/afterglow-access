@@ -33,6 +33,11 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
   selectedAssets$: Observable<DataProviderAsset[]>;
   sortField$: Observable<string>;
   sortOrder$: Observable<TdDataTableSortingOrder>;
+  importing$: Observable<boolean>;
+  pendingImports$: Observable<DataProviderAsset[]>;
+  completedImports$: Observable<DataProviderAsset[]>;
+  importProgress$: Observable<number>;
+  importErrors$: Observable<any[]>;
   currentPathBreadcrumbs$: Observable<Array<{name: string, url: string}>>;
   routeParamSub: Subscription;
 
@@ -56,6 +61,11 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
       this.selectedAssets$ =  store.select(fromDataProviders.getSelectedAssets);
       this.sortField$ =  store.select(fromDataProviders.getCurrentSortField);
       this.sortOrder$ =  store.select(fromDataProviders.getCurrentSortOrder);
+      this.importing$ =  store.select(fromDataProviders.getImporting);
+      this.importProgress$ =  store.select(fromDataProviders.getImportProgress);
+      this.pendingImports$ =  store.select(fromDataProviders.getPendingImports);
+      this.completedImports$ =  store.select(fromDataProviders.getCompletedImports);
+      this.importErrors$ =  store.select(fromDataProviders.getImportErrors);
   }
 
   ngOnInit() {

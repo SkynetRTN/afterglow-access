@@ -5,155 +5,133 @@
     <div class="float-right">
       <button mat-raised-button (click)="onSelectAll(true)">Select All</button>
       <button mat-raised-button (click)="onSelectAll(false)">Deselect All</button>
-      <button mat-raised-button (click)="import()" [disabled]="(selectedAssets$ | async)?.length == 0">Import</button>
+      <button mat-raised-button (click)="import()" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Import</button>
      
     </div>
   </ol>
   <div *ngIf="(currentProvider$ | async)">
     <div class="container pt-1">
-      <div *ngIf="(loadingAssets$ | async)" class="alert alert-warning">
-        Loading...
+      
+      <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'accent'"></mat-progress-bar>
+      <div *ngIf="(importing$ | async)" class="alert alert-info">
+          Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
+      </div>
+      <div *ngIf="(importProgress$ | async) == 1.0 && (completedImports$ | async).length != 0" class="alert alert-success">
+          Import completed with {{(importErrors$ | async).length == 0 ? 'no' : (importErrors$ | async).length}} errors. 
+          <a routerLink="/workbench" class="alert-link">View your new files now.</a>
+      </div>
+      
+      <div *ngIf="(importErrors$ | async).length != 0" class="alert alert-danger" role="alert">
+        <div *ngFor="let e of (importErrors$ | async)">
+            <strong>Error: </strong> Failed to import {{e.asset.name}}. <span *ngIf="e.description">{{e.description}}</span>
+        </div>
+      </div>
+      <div *ngIf="(loadingAssets$ | async)" class="alert alert-info">
+          Loading assets...
       </div>
       <div *ngIf="!(loadingAssets$ | async)">
-        <div class="alert alert-info my-auto" role="alert">
-          <span *ngFor="let breadcrumb of (currentPathBreadcrumbs$ | async)">
-            <strong>
-              <span *ngIf="breadcrumb.url != null">
-                <a class="collection p-2 text-center" [routerLink]="[]" [queryParams]="{path: breadcrumb.url}" >{{breadcrumb.name}}</a>
-              </span>
-              <span *ngIf="breadcrumb.url == null">
-                {{breadcrumb.name}}
-              </span>
-              /
-            </strong>
-          </span>
-          <span class="float-right"><strong>{{(selectedAssets$ | async).length}}</strong> image files selected.</span>
-          <div style="clear: both;"></div>
-        </div>
-
-        <div class="pb-3">
-          <table td-data-table>
-              <thead>
-                <tr td-data-table-column-row>
-                  <th td-data-table-column [width]="70">
-                    <mat-checkbox
-                      #checkBoxAll
-                      [indeterminate]="selectAllIndeterminate && !allSelected"
-                      [checked]="allSelected"
-                      (click)="blockEvent($event); onSelectAll(!checkBoxAll.checked)"
-                      (keyup.enter)="selectAll(!checkBoxAll.checked)"
-                      (keyup.space)="selectAll(!checkBoxAll.checked)"
-                      (keydown.space)="blockEvent($event)">
-                    </mat-checkbox>
-                  </th>
-                  <th td-data-table-column
-                    [name]="'name'"
-                    [sortable]="true"
-                    [sortOrder]="(sortOrder$ | async)"
-                    (sortChange)="onSortChange($event)"
-                    [active]="(sortField$ | async) == 'name'">
-                    Name
-                  </th>
-                  <th td-data-table-column
-                    *ngFor="let column of (currentProvider$ | async)?.columns"
-                    [name]="column.fieldName"
-                    [sortable]="column.sortable"
-                    [sortOrder]="(sortOrder$ | async)"
-                    (sortChange)="onSortChange($event)"
-                    [active]="(sortField$ | async) == column.fieldName">
-                    {{column.name}}
-                  </th>
-                </tr>
-              </thead>
-              
-              <tbody>
-                <tr td-data-table-row
-                  [tabIndex]="0"
-                  (keyup)="rowKeyup($event, row)"
-                  (keydown.space)="blockEvent($event)"
-                  (keydown.shift.space)="blockEvent($event)"
-                  (keydown.shift)="disableTextSelection()"
-                  (keyup.shift)="enableTextSelection()"
-                  (click)="onAssetClick($event, row)"
-                  *ngFor="let row of (currentAssets$ | async)">
-                  <td td-data-table-cell>
-                    <mat-pseudo-checkbox
-                      *ngIf="!row.collection"
-                      class="ml-3"
-                      [state]="(selectedAssets$ | async)?.includes(row) ? 'checked' : 'unchecked'">
-                    </mat-pseudo-checkbox>
-    
-                  </td>
-                  <td td-data-table-cell>
-                    <div class="valign-center" *ngIf="row.collection">
-                      <mat-icon class="mr-1">folder</mat-icon>
-                      <a [routerLink]="[]" [queryParams]="{path: row.path}" >
-                          {{row.name}}
-                      </a>
-                    </div>
-                    <div class="valign-center" *ngIf="!row.collection">
-                      <mat-icon class="mr-1">photo</mat-icon>
-                      {{row.name}}
-                    </div>
-                  </td>
-                  <td td-data-table-cell *ngFor="let column of (currentProvider$ | async)?.columns">
-                    <span *ngIf="row.metadata && row.metadata.hasOwnProperty(column.fieldName)">
-                      {{row.metadata[column.fieldName]}}
+        <mat-card class="pb-3">
+          <mat-card-header>
+            <div class="pb-3" style="width: 100%">
+                <span *ngFor="let breadcrumb of (currentPathBreadcrumbs$ | async)">
+                  <strong>
+                    <span *ngIf="breadcrumb.url != null">
+                      <a class="collection p-2 text-center" [routerLink]="[]" [queryParams]="{path: breadcrumb.url}" >{{breadcrumb.name}}</a>
                     </span>
-                  </td>
-                  
-                </tr>
-              </tbody>
-            </table>
-        </div>
-        
+                    <span *ngIf="breadcrumb.url == null">
+                      {{breadcrumb.name}}
+                    </span>
+                    /
+                  </strong>
+                </span>
+                <span class="float-right"><strong>{{(selectedAssets$ | async).length}}</strong> image files selected.</span>
+                <div style="clear: both;"></div>
+              </div>
+          </mat-card-header>
+          
+          
+  
+          <div class="pb-3">
+            <table td-data-table>
+                <thead>
+                  <tr td-data-table-column-row>
+                    <th td-data-table-column [width]="70">
+                      <mat-checkbox
+                        #checkBoxAll
+                        [indeterminate]="selectAllIndeterminate && !allSelected"
+                        [checked]="allSelected"
+                        (click)="blockEvent($event); onSelectAll(!checkBoxAll.checked)"
+                        (keyup.enter)="selectAll(!checkBoxAll.checked)"
+                        (keyup.space)="selectAll(!checkBoxAll.checked)"
+                        (keydown.space)="blockEvent($event)">
+                      </mat-checkbox>
+                    </th>
+                    <th td-data-table-column
+                      [name]="'name'"
+                      [sortable]="true"
+                      [sortOrder]="(sortOrder$ | async)"
+                      (sortChange)="onSortChange($event)"
+                      [active]="(sortField$ | async) == 'name'">
+                      Name
+                    </th>
+                    <th td-data-table-column
+                      *ngFor="let column of (currentProvider$ | async)?.columns"
+                      [name]="column.fieldName"
+                      [sortable]="column.sortable"
+                      [sortOrder]="(sortOrder$ | async)"
+                      (sortChange)="onSortChange($event)"
+                      [active]="(sortField$ | async) == column.fieldName">
+                      {{column.name}}
+                    </th>
+                  </tr>
+                </thead>
+                
+                <tbody>
+                  <tr td-data-table-row
+                    [tabIndex]="0"
+                    (keyup)="rowKeyup($event, row)"
+                    (keydown.space)="blockEvent($event)"
+                    (keydown.shift.space)="blockEvent($event)"
+                    (keydown.shift)="disableTextSelection()"
+                    (keyup.shift)="enableTextSelection()"
+                    (click)="onAssetClick($event, row)"
+                    *ngFor="let row of (currentAssets$ | async)">
+                    <td td-data-table-cell>
+                      <mat-pseudo-checkbox
+                        *ngIf="!row.collection"
+                        class="ml-3"
+                        [state]="(selectedAssets$ | async)?.includes(row) ? 'checked' : 'unchecked'">
+                      </mat-pseudo-checkbox>
+      
+                    </td>
+                    <td td-data-table-cell>
+                      <div class="valign-center" *ngIf="row.collection">
+                        <mat-icon class="mr-1">folder</mat-icon>
+                        <a [routerLink]="[]" [queryParams]="{path: row.path}" >
+                            {{row.name}}
+                        </a>
+                      </div>
+                      <div class="valign-center" *ngIf="!row.collection">
+                        <mat-icon class="mr-1">photo</mat-icon>
+                        {{row.name}}
+                      </div>
+                    </td>
+                    <td td-data-table-cell *ngFor="let column of (currentProvider$ | async)?.columns">
+                      <span *ngIf="row.metadata && row.metadata.hasOwnProperty(column.fieldName)">
+                        {{row.metadata[column.fieldName]}}
+                      </span>
+                    </td>
+                    
+                  </tr>
+                </tbody>
+              </table>
+          </div>
+          <div class="text-center">
+              <button mat-raised-button (click)="import()"  [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)"><mat-icon>file_download</mat-icon> Import</button>
+            </div>
 
+        </mat-card>
         
-        <!-- <td-data-table
-          #assetsTable
-          [data]=""
-          [columns]="[
-            { name: 'name',  label: 'Name' }
-          ]"
-          [selectable]="true"
-          [ngModel]="(selectedAssets$ | async)"
-          (rowSelect)="onSelectedRowChanges($event)"
-          (selectAll)="onSelectAllRows($event)"
-          [clickable]="true"
-          [multiple]="true"
-          [sortable]="true">
-        </td-data-table> -->
-
-        
-        <!-- <div class="d-flex flex-wrap pt-1 align-items-stretch"> -->
-          <!-- <div class="p-2" *ngFor="let asset of (currentAssets$ | async)">
-            {{asset.name}}
-            <app-data-provider-asset-icon-item
-              #assetComponent
-              [asset]="asset"
-              [selected]="(selectedAssets$ | async)?.includes(asset)"
-              (select)="selectAsset(asset)"
-              (deselect)="deselectAsset(asset)">>
-            </app-data-provider-asset-icon-item>
-          </div> -->
-
-          <!--<div class="p-2" style="width: 150px;" *ngFor="let (currentProvider$ | async)Asset of (currentProvider$ | async)Assets" [ngSwitch]="(currentProvider$ | async)Asset.isCollection">
-            <app-image-provider-collection-asset *ngSwitchCase="true" [(currentProvider$ | async)Asset]="(currentProvider$ | async)Asset"></app-image-provider-collection-asset>
-            <app-image-provider-file-asset *ngSwitchCase="false" [(currentProvider$ | async)Asset]="(currentProvider$ | async)Asset"
-              (click)="select((currentProvider$ | async)Asset, $event)"
-              (keyup.shift.enter)="select((currentProvider$ | async)Asset, $event)"
-              (keyup.enter)="select((currentProvider$ | async)Asset, $event)"
-              [selected]="selectedImageProviderResults.indexOf((currentProvider$ | async)Asset) != -1"
-              role="checkbox"
-              [attr.aria-label]="'Image File - ' + (currentProvider$ | async)Asset.name"
-              [attr.aria-checked]="selectedImageProviderResults.indexOf((currentProvider$ | async)Asset) != -1" 
-              tabindex="0">
-            </app-image-provider-file-asset>
-          </div>-->
-        <!-- </div> -->
-        <div class="text-center">
-          <button mat-raised-button (click)="import()"  [disabled]="(selectedAssets$ | async)?.length == 0"><mat-icon>file_download</mat-icon> Import</button>
-        </div>
       </div>
     </div>
   </div>
