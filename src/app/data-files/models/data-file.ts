@@ -150,10 +150,10 @@ export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate
       }
 
 
-      let i = Math.floor(x / imageFile.tileWidth);
-      let j = Math.floor(y / imageFile.tileHeight);
+      let i = Math.floor((x-0.5) / imageFile.tileWidth);
+      let j = Math.floor((y-0.5) / imageFile.tileHeight);
       let tile = getTile(imageFile, i, j);
-      return getTilePixel(tile, Math.floor(x % imageFile.tileWidth), Math.floor(y % imageFile.tileWidth));
+      return getTilePixel(tile, Math.floor((x-0.5) % imageFile.tileWidth), Math.floor((y-0.5) % imageFile.tileWidth));
 
       // var BicubicInterpolation = (function(){
       //   return function(x, y, values){

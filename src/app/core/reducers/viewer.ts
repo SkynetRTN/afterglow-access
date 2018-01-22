@@ -40,7 +40,7 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
           autoLevelsInitialized: false,
           panEnabled: true,
           zoomEnabled: true,
-          imageToViewportTransform:  new Matrix(1, 0, 0, 1, 0, 0),
+          imageToViewportTransform:  null,
           normalizer: {
             backgroundLevel: 0,
             peakLevel: 0,
@@ -73,6 +73,10 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
     case imageFileActions.INIT_IMAGE_TILES: {
       let imageFile = action.payload.file;
 
+      // also initialize the transformation matrix since it requires the 
+      // image height
+      let transform = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
+
       let tiles : ImageTile[] = [];
 
       for (let j = 0; j < getYTileDim(imageFile); j += 1) {
@@ -103,6 +107,7 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
       return {
         ...adapter.updateOne({'id': imageFile.id, 'changes': {
           normalizedTiles: tiles,
+          imageToViewportTransform: transform
         }}, state),
       }
       
@@ -199,7 +204,7 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
       let viewerFileState = state.entities[imageFile.id];
       let transform = viewerFileState.imageToViewportTransform.clone();
       let scaleFactor = action.payload.scale/getScale(viewerFileState);
-      transform.scale(scaleFactor, new Point(action.payload.anchorPoint.x, action.payload.anchorPoint.y))
+      transform.scale(scaleFactor, new Point(action.payload.anchorPoint.x-0.5, action.payload.anchorPoint.y-0.5))
       return {
         ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
           imageToViewportTransform: transform,
@@ -211,7 +216,7 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
       let imageFile = action.payload.file;
       let viewerFileState = state.entities[imageFile.id];
       let transform = viewerFileState.imageToViewportTransform.clone();
-      transform.scale(action.payload.scaleFactor, new Point(action.payload.anchorPoint.x, action.payload.anchorPoint.y));
+      transform.scale(action.payload.scaleFactor, new Point(action.payload.anchorPoint.x-0.5, action.payload.anchorPoint.y-0.5));
       return {
         ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
           imageToViewportTransform: transform
@@ -223,27 +228,22 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
     case viewerActions.MOVE_TO: {
       let imageFile = action.payload.file;
       let viewerFileState = state.entities[imageFile.id];
-      let transform = viewerFileState.imageToViewportTransform.clone();
+      let imageToViewport = viewerFileState.imageToViewportTransform.clone();
+      let viewportToImage = imageToViewport.inverted();
       let viewportSize = state.imageViewerViewportSize;
-      let scale = getScale(viewerFileState);
-      let viewportTopLeft = {
-        x: -viewerFileState.imageToViewportTransform.tx,
-        y: -viewerFileState.imageToViewportTransform.ty
-      };
-  
-      let imagePoint = action.payload.imagePoint;
-      let viewportPoint = action.payload.viewportPoint;
-      if(!viewportPoint) {
-        viewportPoint = {x: viewportSize.width/2, y: viewportSize.height/2};
+      let viewportAnchor = action.payload.viewportAnchor;
+      if(!viewportAnchor) {
+        viewportAnchor = {x: viewportSize.width/2, y: viewportSize.height/2};
       }
-      
-      let xShift = viewportTopLeft.x - (imagePoint.x * scale - viewportPoint.x);
-      let yShift = viewportTopLeft.y - (imagePoint.y * scale - viewportPoint.y);
-      
-      transform.translate(xShift / scale, yShift / scale);
+
+      let anchor = viewportToImage.transform(new Point(viewportAnchor.x, viewportAnchor.y))
+      let xShift = anchor.x - action.payload.imagePoint.x;
+      let yShift = anchor.y - action.payload.imagePoint.y;
+
+      imageToViewport.translate(xShift, yShift);
       return {
         ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-          imageToViewportTransform: transform,
+          imageToViewportTransform: imageToViewport,
         }}, state),
       }
     }
@@ -255,7 +255,7 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
       let viewerFileState = state.entities[imageFile.id];
       let transform = viewerFileState.imageToViewportTransform.clone();
       let scale = getScale(viewerFileState);
-      transform.translate(action.payload.xShift / scale, action.payload.yShift / scale);
+      transform.translate(action.payload.xShift / scale, -action.payload.yShift / scale);
       return {
         ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
           imageToViewportTransform: transform

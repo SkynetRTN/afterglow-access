@@ -139,8 +139,8 @@ export class AfterglowDataFileService {
   private parseSource(s: any) : Source {
     let source : Source = Object.assign({}, {
       id: (this.SOURCE_ID++).toString(),
-      x: s.x-1,
-      y: s.y-1,
+      x: s.x,
+      y: s.y,
       mag: s.mag,
       magError: s.mag_err,
       raHours: s.ra_hours,
@@ -159,7 +159,7 @@ export class AfterglowDataFileService {
     .set('a_out', (settings.annulus + settings.dannulus).toString());
 
     if(settings.centroid) {
-      params = params.set('centroid_radius', settings.centroidRadius.toString())
+      params = params.set('centroid_radius', (settings.centeringBoxWidth/2).toString())
     }
 
 
@@ -198,8 +198,8 @@ export class AfterglowDataFileService {
     let xArg: string = '';
     let yArg: string = '';
     coords.forEach(coord => {
-      xArg += (coord.x+1).toFixed(3) + ',';
-      yArg += (coord.y+1).toFixed(3) + ',';
+      xArg += (coord.x).toFixed(3) + ',';
+      yArg += (coord.y).toFixed(3) + ',';
     });
     
     params = params.set('x', xArg)

@@ -79,7 +79,7 @@ export class MoveBy implements Action {
 export class MoveTo implements Action {
   readonly type = MOVE_TO;
 
-  constructor(public payload: {file: ImageFile, imagePoint: {x: number, y: number}, viewportPoint?: {x: number, y: number}}) {}
+  constructor(public payload: {file: ImageFile, imagePoint: {x: number, y: number}, viewportAnchor?: {x: number, y: number}}) {}
 }
 
 export class CenterRegionInViewport implements Action {

@@ -27,8 +27,8 @@ export class PhotSettingsDialogComponent implements OnInit {
     this.settings.aperture = value;
   }
 
-  private setCentroidRadius(value) {
-    this.settings.centroidRadius = value;
+  private setCenteringBoxWidth(value) {
+    this.settings.centeringBoxWidth = value;
   }
 
   ngOnInit() {

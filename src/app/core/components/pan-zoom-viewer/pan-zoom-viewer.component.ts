@@ -222,7 +222,8 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     canvasX = e.pageX - totalOffsetX;
     canvasY = e.pageY - totalOffsetY;
 
-    return new Point(canvasX, canvasY);
+    // assume we are in the center of the pixel
+    return new Point(canvasX+0.5, canvasY+0.5);
 
       //return new Point(e.pageX - this._targetCanvas.offsetLeft, e.pageY - this._targetCanvas.offsetTop);
   }
@@ -278,9 +279,9 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
 
   public zoomBy(factor: number, imageAnchor: {x: number, y: number}=null) {
     // max zoom reached when 1 pixel fills viewport
-    let viewportUpperLeft = this.imageCoordToViewportCoord({x: 0, y: 0});
+    let viewportUpperLeft = this.imageCoordToViewportCoord({x: 1, y: 1});
     let viewportULP = new Point(viewportUpperLeft.x, viewportUpperLeft.y)
-    let viewportLowerRight = this.imageCoordToViewportCoord({x: 1, y: 1});
+    let viewportLowerRight = this.imageCoordToViewportCoord({x: 2, y: 2});
     let viewportLRP = new Point(viewportLowerRight.x, viewportLowerRight.y);
     
     let d = viewportULP.getDistance(viewportLRP);
@@ -318,9 +319,15 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
   }
 
   public zoomToFit(padding: number=0) {
-    let xScale = (this.targetCanvas.width-2*padding)/getWidth(this.imageFile);
-    let yScale = (this.targetCanvas.height-2*padding)/getHeight(this.imageFile);
-    this.zoomTo(Math.min(xScale, yScale));
+    // let xScale = (this.targetCanvas.width-2*padding)/getWidth(this.imageFile);
+    // let yScale = (this.targetCanvas.height-2*padding)/getHeight(this.imageFile);
+    // this.zoomTo(Math.min(xScale, yScale));
+
+    this.store.dispatch(new viewerActions.CenterRegionInViewport({
+      file: this.imageFile,
+      region: {x: 1, y: 1, width: getWidth(this.imageFile), height: getHeight(this.imageFile)},
+      viewportSize: {width: this.targetCanvas.width, height: this.targetCanvas.height}
+    }))
 
     // this.moveTo(
     //     new Point(this.state.width/2.0, this.state.height/2.0),
@@ -335,11 +342,11 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
 
   public viewportCoordToImageCoord(p: {x: number, y: number}) {
     let result = this.viewportToImageTransform.transform(new Point(p.x, p.y));
-    return {x: result.x, y: result.y};
+    return {x: result.x+0.5, y: result.y+0.5};
   }
 
   public imageCoordToViewportCoord(p: {x: number, y: number}) {
-    let result = this.viewerState.imageToViewportTransform.transform(new Point(p.x, p.y));
+    let result = this.viewerState.imageToViewportTransform.transform(new Point(p.x-0.5, p.y-0.5));
     return {x: result.x, y: result.y};
   }
 
@@ -347,8 +354,8 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     // console.log('mouse on image');
 
     let imagePoint = this.viewportCoordToImageCoord(new Point(viewportCoord.x, viewportCoord.y));
-    let mouseOffImage: boolean = imagePoint.x < 0 || imagePoint.x >= getWidth(this.imageFile) ||
-      imagePoint.y < 0 || imagePoint.y >= getHeight(this.imageFile);
+    let mouseOffImage: boolean = imagePoint.x < 0.5 || imagePoint.x >= getWidth(this.imageFile)+0.5 ||
+      imagePoint.y < 0.5 || imagePoint.y >= getHeight(this.imageFile)+0.5;
     //console.log(viewportCoord.x, viewportCoord.y, imagePoint.x, imagePoint.y, !mouseOffImage);
     return !mouseOffImage;
   }
@@ -357,20 +364,20 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     let viewportSize = {width: this.placeholder.clientWidth, height: this.placeholder.clientHeight};
     if(this.imageFile && this.imageFile.headerLoaded && this.viewerState) {
       let transform = this.viewerState.imageToViewportTransform.inverted();
-      let ul = transform.transform(new Point(0, 0));
-      let lr = transform.transform(new Point(viewportSize.width, viewportSize.height));
+      let ll = transform.transform(new Point(0, viewportSize.height));
+      let ur = transform.transform(new Point(viewportSize.width, 0));
       
-      let x = Math.max(0, ul.x);
-      let y = Math.max(0, ul.y);
+      let x = Math.max(0, ll.x);
+      let y = Math.max(0, ll.y);
       let $event: ViewportChangeEvent = {
         viewportWidth: viewportSize.width,
         viewportHeight: viewportSize.height,
         imageX: x,
         imageY: y,
-        imageWidth: Math.min(getWidth(this.imageFile), lr.x) - x,
-        imageHeight: Math.min(getHeight(this.imageFile), lr.y) - y
+        imageWidth: Math.abs(Math.min(getWidth(this.imageFile), ur.x) - x),
+        imageHeight: Math.abs(Math.min(getHeight(this.imageFile), ur.y) - y)
       }
-
+      
       if(JSON.stringify(this.lastViewportChangeEvent) !== JSON.stringify($event) ) {
         this.onViewportChange.emit($event);
         this.lastViewportChangeEvent = $event;
@@ -457,8 +464,8 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
 
     // test if image is almost entirely out of viewer
     let buffer = 50;
-    let ul = this.imageCoordToViewportCoord(new Point(0, 0));
-    let lr = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), getHeight(this.imageFile)));
+    let ul = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), getHeight(this.imageFile)));
+    let lr = this.imageCoordToViewportCoord(new Point(0, 0));
     let imageRect = new Rectangle(Math.min(ul.x, lr.x) + buffer + this.mouseDragVector.width,
       Math.min(ul.y, lr.y) + buffer + this.mouseDragVector.height,
       Math.abs(ul.x - lr.x) - (buffer * 2),
@@ -578,7 +585,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     let corner0 = this.viewportCoordToImageCoord(new Point(0, 0));
     let corner1 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight));
 
-    return findTiles(this.imageFile, corner0.x, corner0.y, corner1.x-corner0.x, corner1.y-corner0.y);
+    return findTiles(this.imageFile, Math.min(corner0.x, corner1.x), Math.min(corner0.y, corner1.y), Math.abs(corner1.x-corner0.x), Math.abs(corner1.y-corner0.y));
   }
 
   ngOnChanges() {

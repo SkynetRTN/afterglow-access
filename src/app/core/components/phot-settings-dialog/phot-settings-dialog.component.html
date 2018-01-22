@@ -13,9 +13,9 @@
       <mat-form-field class="">
           <input matInput
             [disabled]="!settings?.centroid"
-            placeholder="Centroid Radius"
-            [ngModel]="settings && settings.centroidRadius"
-            (ngModelChange)="setCentroidRadius($event)"
+            placeholder="Centering Box Width"
+            [ngModel]="settings && settings.centeringBoxWidth"
+            (ngModelChange)="setCenteringBoxWidth($event)"
             type="number"
             step="1"
             min="1"

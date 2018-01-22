@@ -20,8 +20,8 @@
             <g *ngIf="showRegionMarker && region"
               app-svg-rectangle-marker
               class="region-marker"
-              [x]="region.x"
-              [y]="region.y"
+              [x]="region.x-0.5"
+              [y]="region.y-0.5"
               [width]="region.width"
               [height]="region.height">
             </g>
@@ -31,8 +31,8 @@
                 <g
                   app-svg-circle-marker
                   class="source-marker"
-                  [x]="source.x"
-                  [y]="source.y"
+                  [x]="source.x-0.5"
+                  [y]="source.y-0.5"
                   [radius]="10"
                   [selected]="selectedSources.indexOf(source) != -1"
                   (click)="onSourceClick($event, source)">
@@ -43,10 +43,10 @@
             <g *ngIf="showLineMarker && line"
               app-svg-line-marker
               class="line-marker"
-              [x1]="line.x1"
-              [y1]="line.y1"
-              [x2]="line.x2"
-              [y2]="line.y2">
+              [x1]="line.x1-0.5"
+              [y1]="line.y1-0.5"
+              [x2]="line.x2-0.5"
+              [y2]="line.y2-0.5">
             </g>
 
             

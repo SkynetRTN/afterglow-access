@@ -40,11 +40,11 @@ export const initialState: State = adapter.getInitialState({
     annulus: 10,
     dannulus: 10,
     centroid: true,
-    centroidRadius: 10
+    centeringBoxWidth: 5
   },
   sourceExtractionSettings: {
-    threshold: 10,
-    fwhm: 3,
+    threshold: 2,
+    fwhm: 0,
     deblend: false,
   },
   sourceExtractorModeOption: SourceExtractorModeOption.MOUSE

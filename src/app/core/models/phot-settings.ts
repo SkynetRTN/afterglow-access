@@ -3,5 +3,5 @@ export interface PhotSettings {
   annulus: number,
   dannulus: number,
   centroid: boolean,
-  centroidRadius: number,
+  centeringBoxWidth: number,
 }
