@@ -65,14 +65,6 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   onViewportChange($event: ViewportChangeEvent) {
-    console.log("HERE", {
-      imageX: $event.imageX,
-      imageY: $event.imageY,
-      imageWidth: $event.imageWidth,
-      imageHeight: $event.imageHeight,
-      viewportWidth: $event.viewportWidth,
-      viewportHeight: $event.viewportHeight
-    });
     this.store.dispatch(new sonifierActions.UpdateViewport({
       file: this.lastImageFile,
       viewport: {
