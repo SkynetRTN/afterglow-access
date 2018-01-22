@@ -364,18 +364,22 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     let viewportSize = {width: this.placeholder.clientWidth, height: this.placeholder.clientHeight};
     if(this.imageFile && this.imageFile.headerLoaded && this.viewerState) {
       let transform = this.viewerState.imageToViewportTransform.inverted();
-      let ll = transform.transform(new Point(0, viewportSize.height));
-      let ur = transform.transform(new Point(viewportSize.width, 0));
+      let ul = transform.transform(new Point(0.5, 0.5));
+      ul.x += 0.5;
+      ul.y += 0.5;
+      let lr = transform.transform(new Point(viewportSize.width+0.5, viewportSize.height+0.5));
+      lr.x += 0.5;
+      lr.y += 0.5;
       
-      let x = Math.max(0, ll.x);
-      let y = Math.max(0, ll.y);
+      let x = Math.max(0.5, ul.x);
+      let y = Math.max(0.5, lr.y);
       let $event: ViewportChangeEvent = {
         viewportWidth: viewportSize.width,
         viewportHeight: viewportSize.height,
         imageX: x,
         imageY: y,
-        imageWidth: Math.abs(Math.min(getWidth(this.imageFile), ur.x) - x),
-        imageHeight: Math.abs(Math.min(getHeight(this.imageFile), ur.y) - y)
+        imageWidth: Math.abs(Math.min(getWidth(this.imageFile)+0.5, lr.x) - x),
+        imageHeight: Math.abs(y-Math.min(getHeight(this.imageFile)+0.5, ul.y))
       }
       
       if(JSON.stringify(this.lastViewportChangeEvent) !== JSON.stringify($event) ) {
