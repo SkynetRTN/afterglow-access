@@ -145,7 +145,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
         imageHeight: $event.imageHeight,
         viewportWidth: $event.viewportWidth,
         viewportHeight: $event.viewportHeight
-    }}));
+      }}))
   }
 
   openPhotSettings() {
