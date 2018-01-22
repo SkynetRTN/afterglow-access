@@ -24,7 +24,7 @@ export interface State {
   importing: boolean,
   pendingImports: DataProviderAsset[];
   completedImports: DataProviderAsset[];
-  importErrors: Array<{asset: DataProviderAsset, description: string}>
+  importErrors: Array<{asset: DataProviderAsset, message: string}>
   importProgress: number
 }
 
@@ -86,13 +86,18 @@ export function reducer(
       let currentProvider = {...action.payload.dataProvider};
       let currentPath = action.payload.path;
       let breadcrumbs: Array<{name: string, url: string}> = [];
-      if(currentProvider.browseable && currentPath && currentPath != '') {
-        breadcrumbs.push({name: 'root', url: ''});
-        let paths = currentPath.split('/');
-        for(let i=0; i<paths.length; i++) {
-          if(paths[i] == '') continue;
-          breadcrumbs.push({name: paths[i], url: i==paths.length-1 ? null : breadcrumbs[breadcrumbs.length-1]['url'].concat(i == 0 ? '' : '/', paths[i])});
+      console.log("HERE:", currentPath);
+      if(currentProvider.browseable) {
+        
+        breadcrumbs.push({name: 'root', url: currentPath ? '' : null});
+        if(currentPath) {
+          let paths = currentPath.split('/');
+          for(let i=0; i<paths.length; i++) {
+            if(paths[i] == '') continue;
+            breadcrumbs.push({name: paths[i], url: i==paths.length-1 ? null : breadcrumbs[breadcrumbs.length-1]['url'].concat(i == 0 ? '' : '/', paths[i])});
+          }
         }
+        
       }
 
       //sort assets
@@ -273,13 +278,14 @@ export function reducer(
       let completed = [...state.completedImports, action.payload.asset]
       let total = pending.length + completed.length;
       let progress = total == 0 ? 0 : completed.length / total;
+      console.log(action.payload);
       return {
         ...state,
         importing: pending.length != 0,
         importProgress: progress,
         pendingImports: pending,
         completedImports: completed,
-        importErrors: [...state.importErrors, {asset: action.payload.asset, description: action.payload.error.toString()}]
+        importErrors: [...state.importErrors, {asset: action.payload.asset, message: action.payload.error}]
       };
     }
     

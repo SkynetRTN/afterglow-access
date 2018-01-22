@@ -26,6 +26,7 @@ import * as dataFileActions from '../../data-files/actions/data-file';
 import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 import { AfterglowDataFileService } from '../../core/services/afterglow-data-files';
+import { HttpErrorResponse } from '@angular/common/http/src/response';
 
 
 @Injectable()
@@ -78,7 +79,10 @@ export class DataProviderEffects {
         return this.afterglowDataFileService
         .createFromDataProviderAsset(state.currentProvider, asset)
         .map(() => new dataProviderActions.ImportAssetSuccess({asset: asset}))
-        .catch(err => of(new dataProviderActions.ImportAssetFail({error: err, asset: asset})))
+        .catch(err => {
+          console.log(err);
+          return of(new dataProviderActions.ImportAssetFail({error: (err as HttpErrorResponse).error.message, asset: asset}))
+        })
       }))
     });
 

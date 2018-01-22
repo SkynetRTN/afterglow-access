@@ -99,7 +99,7 @@ export class ImportAssetSuccess implements Action {
 export class ImportAssetFail implements Action {
   readonly type = IMPORT_ASSET_FAIL;
 
-  constructor(public payload: {error: any, asset: DataProviderAsset}) {}
+  constructor(public payload: {error: string, asset: DataProviderAsset}) {}
 }
 
 export class ImportAssetsCancel implements Action {
