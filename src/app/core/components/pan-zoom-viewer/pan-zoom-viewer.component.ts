@@ -1,11 +1,12 @@
 import {
-  Component, OnInit, Input, Output, OnChanges,
+  Component, OnInit, Input, Output, OnChanges, OnDestroy,
   ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Point, Rectangle } from "paper";
+import { Observable } from 'rxjs/Observable';
 import * as SVG from 'svgjs'
 import normalizeWheel from 'normalize-wheel';
 
@@ -20,6 +21,7 @@ import * as workbenchActions from '../../actions/workbench';
 import * as viewerActions from '../../actions/viewer';
 import * as imageFileActions from '../../../data-files/actions/image-file';
 import * as dataFileActions from '../../../data-files/actions/data-file';
+import { Subscription } from 'rxjs/Subscription';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -44,7 +46,7 @@ export type ViewerMouseEvent = {
   styleUrls: ['./pan-zoom-viewer.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit {
+export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 
   @Input() imageFile: ImageFile;
   @Input() viewerState: ViewerFileState;
@@ -104,7 +106,25 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
   private handleChannelChangeBound: EventListener;
   private handleStateChangeBound: EventListener;
 
-  constructor(private store: Store<fromCore.State>, private cdRef:ChangeDetectorRef) { }
+  private subs: Subscription[] = [];
+
+  constructor(private store: Store<fromCore.State>, private cdRef:ChangeDetectorRef) {
+    // TODO: find a better way to trigger the redraw
+    this.subs.push(Observable.merge(
+      this.store.select(fromCore.workbench.getShowConfig),
+      this.store.select(fromCore.workbench.getShowSidebar))
+      .subscribe(showConfig => {
+      setTimeout(() => {
+        if(!this.initialized) return;
+
+        this.checkForResize();
+        this.lazyLoadPixels();
+        this.handleViewportChange();
+        this.draw();
+      }, 100);
+    }))
+
+  }
 
   removeFromLibrary() {
     if(this.imageFile) {
@@ -173,6 +193,10 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
 
     this.handleViewportChange();
     this.draw();
+  }
+
+  ngOnDestroy() {
+    this.subs.forEach(sub => sub.unsubscribe());
   }
 
   private setSmoothing(ctx: CanvasRenderingContext2D, value: boolean) {
@@ -395,10 +419,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
   }
 
   private handleWindowResize() {
-    this.targetCanvas.width = this.placeholder.clientWidth;
-    this.targetCanvas.height = this.placeholder.clientHeight;
-    // this._svg.size(this._placeholder.clientWidth, this._placeholder.clientHeight);
-    this.setSmoothing(this.targetCtx, false);
     this.draw();
   }
 
@@ -592,12 +612,22 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
     return findTiles(this.imageFile, Math.min(corner0.x, corner1.x), Math.min(corner0.y, corner1.y), Math.abs(corner1.x-corner0.x), Math.abs(corner1.y-corner0.y));
   }
 
+  checkForResize() {
+    if(this.targetCanvas.width != this.placeholder.clientWidth || this.targetCanvas.height != this.placeholder.clientHeight) {
+      this.targetCanvas.width = this.placeholder.clientWidth;
+      this.targetCanvas.height = this.placeholder.clientHeight;
+      // this._svg.size(this._placeholder.clientWidth, this._placeholder.clientHeight);
+      this.setSmoothing(this.targetCtx, false);
+    }
+  }
+
   ngOnChanges() {
     if(this.initialized) {
       //must async dispatch actions within life cycle hooks to prevent
       //ExpressionChangedAfterItHasBeenChecked Error
       //https://blog.angularindepth.com/everything-you-need-to-know-about-the-expressionchangedafterithasbeencheckederror-error-e3fd9ce7dbb4 
       setTimeout(() => {
+        this.checkForResize();
         this.lazyLoadPixels();
         this.handleViewportChange();
       });
@@ -613,9 +643,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
 
   public lazyLoadPixels() {
     if(!this.initialized) return;
-
     let tiles = this.getViewportTiles();
-
     tiles.forEach(tile => {
       let normTile = this.viewerState.normalizedTiles[tile.index];
       if(!tile.pixelsLoaded && !tile.pixelsLoading && !tile.pixelLoadingFailed) {
@@ -636,7 +664,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit 
 
   public draw() {
     if(!this.viewInitialized) return;
-
     let backgroundPattern = this.targetCtx.createPattern(this.backgroundCanvas, 'repeat');
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     this.setSmoothing(this.targetCtx, false);

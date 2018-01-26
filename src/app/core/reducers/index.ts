@@ -152,4 +152,7 @@ export const workbench = {
   getPlotterFileState: getWorkbenchSelectedPlotterState,
   getSonifierFileState: getWorkbenchSelectedSonifierState,
   getSourceExtractorFileState: getWorkbenchSelectedSourceExtractorState,
+  getSidebarView: createSelector(getWorkbenchGlobalState, state => state.sidebarView),
+  getShowSidebar: createSelector(getWorkbenchGlobalState, state => state.showSidebar),
+  getShowConfig: createSelector(getWorkbenchGlobalState, state => state.showConfig),
 }

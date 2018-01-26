@@ -1,0 +1,30 @@
+@import '~@angular/material/theming';
+@import './app/core/components/main-navbar/main-navbar-theme';
+
+// Styles for the docs app that are based on the current theme.
+@mixin afterglow-app-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+
+  .app-background {
+    background: mat-color($background, background);
+  }
+
+  .primary-header {
+    background: mat-color($primary);
+
+    h1 {
+      color: mat-color($primary, default-contrast);
+    }
+  }
+
+  .footer {
+    background: mat-color($primary);
+    color: mat-color($primary, default-contrast);
+  }
+
+  @include main-nav-bar-theme($theme);
+}

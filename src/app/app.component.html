@@ -1,8 +1,9 @@
-<div id="top-menu">
-  <navbar [routes]=currentRoutes></navbar>
+<div class="main-header">
+  <app-main-navbar [authenticated]="(loggedIn$ | async)" class="mat-elevation-z6"></app-main-navbar>
+  <!-- <navbar [routes]=currentRoutes></navbar> -->
   <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
 </div>
 
-<div id="content">
+<div class="main-content">
   <router-outlet></router-outlet>
 </div>

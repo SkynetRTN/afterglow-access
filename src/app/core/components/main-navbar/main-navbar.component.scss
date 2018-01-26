@@ -1,0 +1,83 @@
+.navbar-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px 16px;
+
+  > .mat-button {
+    &:last-child {
+      margin-left: auto;
+    }
+  }
+}
+
+.flex-spacer {
+  flex-grow: 1;
+}
+
+a {
+  font-size: 16px;
+}
+
+a.afterglow-logo {
+  font-size: 20px;
+}
+
+a.active {
+  color: rgb(255,255,255);
+}
+
+a:not(.active) {
+  color: rgba(255,255,255,0.5);
+}
+
+// a.active {
+//   font-weight: 800;
+// }
+
+// .afterglow-logo {
+//   height: 26px;
+//   margin: 0 4px 3px 0;
+//   vertical-align: middle;
+// }
+
+// .github-logo {
+//   height: 21px;
+//   margin: 0 7px 2px 0;
+//   vertical-align: middle;
+// }
+
+.navbar-link {
+  text-decoration: inherit;
+  flex: 1;
+}
+
+.navbar {
+  display: none;
+}
+
+.navbar-show-small {
+  display: none;
+}
+
+/**
+  * Rules for when the device is detected to be a small screen.
+  * Moves content two rows instead of one.
+  */
+@media (max-width: 720px) {
+  .navbar-hide-small {
+    display: none;
+  }
+
+  .navbar-show-small {
+    display: block;
+  }
+
+  .navbar {
+    display: flex;
+  }
+
+  // .navbar--github-logo {
+  //   margin: 0;
+  // }
+}

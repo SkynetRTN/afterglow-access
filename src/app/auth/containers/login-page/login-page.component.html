@@ -11,7 +11,7 @@
       <p>If you don't have an account, you can login via one of the alternative methods below:</p>
       <div class="flex-center">
         <div class="oauth2-server p-2" *ngFor="let method of (oauthServerMethods$ | async)">
-          <button mat-raised-button [color]="'accent'" (click)="onOauthMethodClick(method)">{{method.description}}</button>
+          <button mat-raised-button [color]="'primary'" (click)="onOauthMethodClick(method)">{{method.description}}</button>
         </div>
       </div>
       

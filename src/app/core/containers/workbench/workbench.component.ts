@@ -4,26 +4,20 @@ import { Store } from '@ngrx/store';
 
 import { DataFile } from '../../../data-files/models/data-file'
 import { AuthGuard } from '../../../auth/services/auth-guard.service'
-import { MenuType } from '../../components/navbar/navbar.metadata';
 import { ViewerPageComponent } from './viewer-page/viewer-page.component'
 import { PlotterPageComponent } from './plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './source-extractor-page/source-extractor-page.component';
+import { SidebarView } from '../../models/sidebar-view';
 
 import * as fromRoot from '../../../reducers';
 import * as fromDataFiles from '../../../data-files/reducers'
 import * as fromCore from '../../reducers';
 import * as workbenchActions from '../../actions/workbench'
 import * as dataFileActions from '../../../data-files/actions/data-file';
+import { Router } from '@angular/router';
 
-export const workbenchRoutes = [
-  {path: 'viewer', title: 'Viewer', component: ViewerPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
-  {path: 'plotter', title: 'Plotter', component: PlotterPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
-  {path: 'sonifier', title: 'Sonifier', component: SonifierPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
-  {path: 'source-analyzer', title: 'Source Analyzer', component: SourceExtractorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
-  // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
-  {path: '',  redirectTo: 'viewer', pathMatch: 'full', menuType: MenuType.HIDDEN},
-]
+
 
 @Component({
   selector: 'app-workbench',
@@ -34,19 +28,20 @@ export const workbenchRoutes = [
 export class WorkbenchComponent implements OnInit {
 
   private files$: Observable<Array<DataFile>>;
+  private showSidebar$: Observable<boolean>;
+  private sidebarView$: Observable<SidebarView>;
   private selectedFile$: Observable<DataFile>;
   private loading$: Observable<boolean>;
   private fileFilterString: string = '';
-  private showSearch: boolean = false;
 
-  private routes: any[];
-  
+  private currentSidebarView : SidebarView = SidebarView.FILES;
+  private SidebarView = SidebarView;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.routes = workbenchRoutes;
-
+  constructor(private store: Store<fromRoot.State>, private router: Router) {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
     this.selectedFile$ = this.store.select(fromCore.workbench.getFile);
+    this.sidebarView$ = this.store.select(fromCore.workbench.getSidebarView);
+    this.showSidebar$ = this.store.select(fromCore.workbench.getShowSidebar);
     //this.loading$ = this.fileLibraryStore.loading$;
 
     // this.imageFiles$ = imageFileService.imageFiles$;
@@ -69,17 +64,27 @@ export class WorkbenchComponent implements OnInit {
     this.store.dispatch(new workbenchActions.SelectDataFile(file.id));
   }
 
-  toggleSearch() {
-    this.showSearch = !this.showSearch;
-    if(!this.showSearch) this.fileFilterString = '';
-  }
-
   removeAllFiles() {
     this.store.dispatch(new dataFileActions.RemoveAllDataFiles());
   }
 
   refresh() {
     this.store.dispatch(new dataFileActions.LoadLibrary());
+  }
+
+  setSidebarView(value: SidebarView) {
+    this.store.dispatch(new workbenchActions.SetSidebarView({sidebarView: value}))
+  }
+
+  onClickWorkbenchNav(isActiveUrl: boolean) {
+    if(isActiveUrl)  {
+      // toggle
+      this.store.dispatch(new workbenchActions.ToggleShowConfig());
+    }
+    else {
+      // show
+      this.store.dispatch(new workbenchActions.SetShowConfig({showConfig: true}));
+    }
   }
 
 }

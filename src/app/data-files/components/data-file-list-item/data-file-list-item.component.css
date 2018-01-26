@@ -1,10 +1,10 @@
 .data-file-list-item {
-    background: #ffffff;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .data-file-list-item.selected {
-   background: #292871;
+   background: #3f51b5;
     color: #ffffff;
 }
 

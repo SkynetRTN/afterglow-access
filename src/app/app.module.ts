@@ -18,7 +18,7 @@ import { AuthModule } from './auth/auth.module';
 import { reducers, metaReducers } from './reducers';
 
 import { AppComponent } from './app.component';
-import { routes } from './app.routing';
+import { AFTERGLOW_ROUTES } from './routes';
 import { environment } from '../environments/environment';
 
 @NgModule({
@@ -27,7 +27,7 @@ import { environment } from '../environments/environment';
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot(routes, { enableTracing: false }),
+    RouterModule.forRoot(AFTERGLOW_ROUTES, { enableTracing: false }),
     MaterialModule,
     CookieModule.forRoot(),
 

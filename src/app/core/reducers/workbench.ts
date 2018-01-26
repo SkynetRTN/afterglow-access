@@ -5,6 +5,7 @@ import * as dataFileActions from '../../data-files/actions/data-file';
 import * as imageFileActions from '../../data-files/actions/image-file';
 import * as authActions from '../../auth/actions/auth';
 import * as workbenchActions from '../actions/workbench';
+import { SidebarView } from '../models/sidebar-view';
 /**
  * @ngrx/entity provides a predefined interface for handling
  * a structured dictionary of records. This interface
@@ -14,11 +15,17 @@ import * as workbenchActions from '../actions/workbench';
  */
 export interface State {
   selectedDataFileId: string | null;
+  sidebarView: SidebarView;
+  showSidebar: boolean;
+  showConfig: boolean;
 }
 
 
 export const initialState: State = {
   selectedDataFileId: null,
+  sidebarView: SidebarView.FILES,
+  showSidebar: true,
+  showConfig: true,
 };
 
 export function reducer(
@@ -36,6 +43,33 @@ export function reducer(
       return {
         ...state,
         selectedDataFileId: action.payload
+      }
+    }
+
+    case workbenchActions.SET_SIDEBAR_VIEW: {
+      let showSidebar = true;
+      if(action.payload.sidebarView == state.sidebarView) {
+        showSidebar = !state.showSidebar;
+      }
+
+      return {
+        ...state,
+        showSidebar: showSidebar,
+        sidebarView: action.payload.sidebarView
+      }
+    }
+
+    case workbenchActions.SET_SHOW_CONFIG: {
+      return {
+        ...state,
+        showConfig: action.payload.showConfig
+      }
+    }
+
+    case workbenchActions.TOGGLE_SHOW_CONFIG: {
+      return {
+        ...state,
+        showConfig: !state.showConfig
       }
     }
 

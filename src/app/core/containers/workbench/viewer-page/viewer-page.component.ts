@@ -39,6 +39,7 @@ import * as imageFileActions from '../../../../data-files/actions/image-file';
 export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   imageFile$: Observable<ImageFile>;
   viewerState$: Observable<ViewerFileState>;
+  showConfig$: Observable<boolean>;
   lastImageFile: ImageFile;
   lastViewerState: ViewerFileState;
   subs: Subscription[] = [];
@@ -50,6 +51,7 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private store: Store<fromRoot.State>) {
     this.imageFile$ = store.select(fromCore.workbench.getImageFile)
     this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
+    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     
     this.subs.push(this.imageFile$.subscribe(imageFile => {
       this.lastImageFile = imageFile;

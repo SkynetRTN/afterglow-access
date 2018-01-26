@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { routes } from './app.routing'
 import { CookieService } from 'ngx-cookie';
 import { MenuType } from './core/components/navbar/navbar.metadata';
 import { Observable } from 'rxjs/Rx';
@@ -35,9 +34,9 @@ export class AppComponent {
       this.store.dispatch(new authActions.Init({loggedIn: true}));
     }
 
-    this.loggedInSub = this.loggedIn$.subscribe(loggedIn => {
-      this.currentRoutes = routes.filter(route => route.menuType == MenuType.BRAND || (('canActivate' in route) == loggedIn));
-    })
+    // this.loggedInSub = this.loggedIn$.subscribe(loggedIn => {
+    //   this.currentRoutes = routes.filter(route => route.menuType == MenuType.BRAND || (('canActivate' in route) == loggedIn));
+    // })
 
 
   }

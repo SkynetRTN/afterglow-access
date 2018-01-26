@@ -1,0 +1,17 @@
+import { Component, OnInit, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-main-navbar',
+  templateUrl: './main-navbar.component.html',
+  styleUrls: ['./main-navbar.component.scss']
+})
+export class MainNavbarComponent implements OnInit {
+  @Input() authenticated: boolean = false;
+
+
+  constructor() { }
+
+  ngOnInit() {
+  }
+
+}

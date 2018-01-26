@@ -41,6 +41,7 @@ import { Region } from '../../../models/region';
 export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, OnChanges {
   imageFile$: Observable<ImageFile>;
   viewerState$: Observable<ViewerFileState>;
+  showConfig$: Observable<boolean>;
   sourceExtractorState$: Observable<SourceExtractorFileState>;
   sourceExtractorGlobalState$: Observable<fromSourceExtractor.State>;
   region$: Observable<Region> = null;
@@ -73,6 +74,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
     this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
     this.sourceExtractorState$ = store.select(fromCore.workbench.getSourceExtractorFileState);
     this.sourceExtractorGlobalState$ = store.select(fromCore.getSourceExtractorGlobalState);
+    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
 
     this.filteredSources$ = this.sourceExtractorState$
     .distinctUntilChanged((a,b) => {

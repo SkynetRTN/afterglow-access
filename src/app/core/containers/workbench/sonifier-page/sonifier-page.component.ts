@@ -27,6 +27,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   imageFile$: Observable<ImageFile>;
   viewerState$: Observable<ViewerFileState>;
   sonifierState$: Observable<SonifierFileState>;
+  showConfig$: Observable<boolean>;
   lastImageFile: ImageFile;
   lastViewerState: ViewerFileState;
   lastSonifierState: SonifierFileState;
@@ -43,6 +44,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     this.imageFile$ = store.select(fromCore.workbench.getImageFile);
     this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
     this.sonifierState$ = store.select(fromCore.workbench.getSonifierFileState);
+    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     
     this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
     this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));

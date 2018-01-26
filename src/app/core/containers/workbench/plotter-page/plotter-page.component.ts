@@ -30,6 +30,7 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
   @ViewChild('plotter') plotter: PlotterComponent;
   imageFile$: Observable<ImageFile>;
   viewerState$: Observable<ViewerFileState>;
+  showConfig$: Observable<boolean>;
   plotterSettings$: Observable<PlotterSettings>;
   centroidSettings$: Observable<CentroidSettings>;
   plotterState$: Observable<PlotterFileState>;
@@ -51,6 +52,7 @@ export class PlotterPageComponent implements AfterViewInit, OnDestroy {
     this.centroidSettings$ = plotterGlobalState$.map(state => state &&  state.centroidSettings);
     this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
     this.plotterState$ = store.select(fromCore.workbench.getPlotterFileState).filter(v => v != null);
+    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     
 
     this.line$ = this.plotterState$
