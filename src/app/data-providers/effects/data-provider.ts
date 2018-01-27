@@ -36,7 +36,7 @@ export class DataProviderEffects {
     .ofType<dataProviderActions.LoadDataProviders>(dataProviderActions.LOAD_DATA_PROVIDERS)
     //.debounceTime(this.debounce || 300, this.scheduler || async)
     .switchMap(action => {
-      
+
       const nextReq$ = this.actions$.ofType(dataProviderActions.LOAD_DATA_PROVIDERS).skip(1);
 
       return this.afterglowDataProviderService
@@ -44,7 +44,7 @@ export class DataProviderEffects {
         .takeUntil(nextReq$)
         .map((dataProviders: DataProvider[]) => new dataProviderActions.LoadDataProvidersSuccess(dataProviders))
         .catch(err => of(new dataProviderActions.LoadDataProvidersFail(err)));
-  });
+    });
 
   @Effect()
   loadDataProviderAssets$: Observable<Action> = this.actions$
@@ -61,7 +61,7 @@ export class DataProviderEffects {
           assets: dataProviderAssets
         }))
         .catch(err => of(new dataProviderActions.LoadDataProviderAssetsFail(err)));
-  });
+    });
 
   @Effect()
   loadDataProviderAssetsSuccess$: Observable<Action> = this.actions$
@@ -77,31 +77,31 @@ export class DataProviderEffects {
     .switchMap(([action, state]) => {
       return Observable.merge(...state.pendingImports.map(asset => {
         return this.afterglowDataFileService
-        .createFromDataProviderAsset(state.currentProvider, asset)
-        .map(() => new dataProviderActions.ImportAssetSuccess({asset: asset}))
-        .catch(err => {
-          console.log(err);
-          return of(new dataProviderActions.ImportAssetFail({error: (err as HttpErrorResponse).error.message, asset: asset}))
-        })
+          .createFromDataProviderAsset(state.currentProvider, asset)
+          .map(() => new dataProviderActions.ImportAssetSuccess({ asset: asset }))
+          .catch(err => {
+            console.log(err);
+            return of(new dataProviderActions.ImportAssetFail({ error: (err as HttpErrorResponse).error.message, asset: asset }))
+          })
       }))
     });
 
-    // @Effect()
-    // importSelectedAssetsSuccess$: Observable<Action> = this.actions$
-    //   .ofType<dataProviderActions.ImportAssetSuccess>(dataProviderActions.IMPORT_ASSET_SUCCESS)
-    //   //.debounceTime(this.debounce || 300, this.scheduler || async)
-    //   .flatMap(action => {
-    //     this.router.navigate(['/workbench']);
-    //     return Observable.from([new dataFileActions.LoadLibrary()]);
-    //   });
-        
-  
-  
+  // @Effect()
+  // importSelectedAssetsSuccess$: Observable<Action> = this.actions$
+  //   .ofType<dataProviderActions.ImportAssetSuccess>(dataProviderActions.IMPORT_ASSET_SUCCESS)
+  //   //.debounceTime(this.debounce || 300, this.scheduler || async)
+  //   .flatMap(action => {
+  //     this.router.navigate(['/workbench']);
+  //     return Observable.from([new dataFileActions.LoadLibrary()]);
+  //   });
+
+
+
   constructor(
     private actions$: Actions,
     private afterglowDataProviderService: AfterglowDataProviderService,
     private afterglowDataFileService: AfterglowDataFileService,
     private store: Store<fromDataProviders.State>,
     private router: Router
-  ) {}
+  ) { }
 }

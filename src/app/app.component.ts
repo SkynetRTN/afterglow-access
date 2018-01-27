@@ -37,9 +37,9 @@ export class AppComponent implements OnInit {
   ) {
     this.loggedIn$ = this.store.select(fromAuth.getLoggedIn)
     this.user$ = this.store.select(fromAuth.getUser);
-    
+
     if (this.authGuard.isLoggedIn()) {
-      this.store.dispatch(new authActions.Init({loggedIn: true}));
+      this.store.dispatch(new authActions.Init({ loggedIn: true }));
     }
 
     // this.loggedInSub = this.loggedIn$.subscribe(loggedIn => {
@@ -51,11 +51,11 @@ export class AppComponent implements OnInit {
 
   getTitle(state, parent) {
     var data = [];
-    if(parent && parent.snapshot.data && parent.snapshot.data.title) {
+    if (parent && parent.snapshot.data && parent.snapshot.data.title) {
       data.push(parent.snapshot.data.title);
     }
 
-    if(state && parent) {
+    if (state && parent) {
       data.push(... this.getTitle(state, state.firstChild(parent)));
     }
     return data;
@@ -63,7 +63,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.router.events.subscribe(event => {
-      if(event instanceof NavigationEnd) {
+      if (event instanceof NavigationEnd) {
         var title = [...this.getTitle(this.router.routerState, this.router.routerState.root).reverse(), 'Afterglow Access'].join(' | ');
         this.titleService.setTitle(title);
       }

@@ -1,4 +1,4 @@
-import { createSelector} from '@ngrx/store';
+import { createSelector } from '@ngrx/store';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 
 import * as dataFileActions from '../../data-files/actions/data-file';
@@ -48,7 +48,7 @@ export function reducer(
 
     case workbenchActions.SET_SIDEBAR_VIEW: {
       let showSidebar = true;
-      if(action.payload.sidebarView == state.sidebarView) {
+      if (action.payload.sidebarView == state.sidebarView) {
         showSidebar = !state.showSidebar;
       }
 
@@ -73,7 +73,7 @@ export function reducer(
       }
     }
 
-    
+
 
     /**
      * Markers
@@ -112,7 +112,7 @@ export function reducer(
 
     //     let markerIds = [...imageFile.markerIds];
     //     markerIds.splice(markerIds.indexOf(action.payload.markerId), 1);
-        
+
     //     return {
     //       ...adapter.updateOne({'id': action.payload.fileId, 'changes': {
     //         markerEntities: markerEntities,
@@ -134,7 +134,7 @@ export function reducer(
     //     markerEntities[action.payload.markerId] = marker;
 
     //     let markerIds = [...imageFile.markerIds];
-        
+
     //     return {
     //       ...adapter.updateOne({'id': action.payload.fileId, 'changes': {
     //         markerEntities: markerEntities,

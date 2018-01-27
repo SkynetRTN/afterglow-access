@@ -96,22 +96,28 @@
   outline: none;
 }
 
-.workbench-nav-panel.collapsed {
-  border-left: 2px solid rgba(0, 0, 0, .125);
-}
-
-
-
-
-.vertical-icon-nav-item {
-  padding: 10px;
+.vertical-icon-nav-item .icon-wrapper {
+  padding: 15px 15px;
+  text-align: center;
   /* background-color: #e0e0e0; */
   color: rgba(0, 0, 0, 0.54);
+  background: #cacaca;
+  border-bottom: 1px solid #d6d6d6;
 }
 
+button.vertical-icon-nav-item {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  display: block;
+}
 
-.vertical-icon-nav-item.active {
+.vertical-icon-nav-item.active .icon-wrapper {
   /* background-color: inherit; */
   color: #3f51b5;
+  background: white;
 }
 
+.vertical-icon-nav-item .icon-wrapper .mat-icon {
+  vertical-align: middle;
+}

@@ -31,143 +31,143 @@ export const PHOTOMETER_SOURCES_FAIL = '[Source Extractor] Photometer Sources Fa
 
 export class UpdateViewport implements Action {
   readonly type = UPDATE_VIEWPORT;
-  
-  constructor(public payload: {file: ImageFile, viewport: {imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number}}) {}
+
+  constructor(public payload: { file: ImageFile, viewport: { imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number } }) { }
 }
 
 export class UpdateFilteredSources implements Action {
   readonly type = UPDATE_FILTERED_SOURCES
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class SetRegion implements Action {
   readonly type = SET_REGION
-  
-  constructor(public payload: {file: ImageFile, region: Region}) {}
+
+  constructor(public payload: { file: ImageFile, region: Region }) { }
 }
 
 export class UpdateRegion implements Action {
   readonly type = UPDATE_REGION
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class SetSourceExtractionMode implements Action {
   readonly type = SET_SOURCE_EXTRACTION_MODE;
-  
-  constructor(public payload: {mode: SourceExtractorModeOption}) {}
+
+  constructor(public payload: { mode: SourceExtractorModeOption }) { }
 }
 
 export class UpdateFileState implements Action {
   readonly type = UPDATE_FILE_STATE;
-  
-  constructor(public payload: {file: ImageFile, changes: Partial<SourceExtractorFileState>}) {}
+
+  constructor(public payload: { file: ImageFile, changes: Partial<SourceExtractorFileState> }) { }
 }
 
 export class UpdatePhotSettings implements Action {
   readonly type = UPDATE_PHOT_SETTINGS;
-  
-  constructor(public payload: {changes: Partial<PhotSettings>}) {}
+
+  constructor(public payload: { changes: Partial<PhotSettings> }) { }
 }
 
 export class UpdateSourceExtractionSettings implements Action {
   readonly type = UPDATE_SOURCE_EXTRACTION_SETTINGS
-  
-  constructor(public payload: {changes: Partial<SourceExtractionSettings>}) {}
+
+  constructor(public payload: { changes: Partial<SourceExtractionSettings> }) { }
 }
 
 export class ExtractSources implements Action {
   readonly type = EXTRACT_SOURCES
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class ExtractSourcesSuccess implements Action {
   readonly type = EXTRACT_SOURCES_SUCCESS
-  
-  constructor(public payload: {file: ImageFile, sources: Source[]}) {}
+
+  constructor(public payload: { file: ImageFile, sources: Source[] }) { }
 }
 
 export class ExtractSourcesFail implements Action {
   readonly type = EXTRACT_SOURCES_FAIL
-  
-  constructor(public payload: {file: ImageFile, error: any}) {}
+
+  constructor(public payload: { file: ImageFile, error: any }) { }
 }
 
 export class SelectSources implements Action {
   readonly type = SELECT_SOURCES
-  
-  constructor(public payload: {file: ImageFile, sources: Source[]}) {}
+
+  constructor(public payload: { file: ImageFile, sources: Source[] }) { }
 }
 
 export class DeselectSources implements Action {
   readonly type = DESELECT_SOURCES
-  
-  constructor(public payload: {file: ImageFile, sources: Source[]}) {}
+
+  constructor(public payload: { file: ImageFile, sources: Source[] }) { }
 }
 
 export class SetSourceSelection implements Action {
   readonly type = SET_SOURCE_SELECTION
-  
-  constructor(public payload: {file: ImageFile, sources: Source[]}) {}
+
+  constructor(public payload: { file: ImageFile, sources: Source[] }) { }
 }
 
 export class RemoveSelectedSources implements Action {
   readonly type = REMOVE_SELECTED_SOURCES
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class RemoveAllSources implements Action {
   readonly type = REMOVE_ALL_SOURCES
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class PhotometerXYSources implements Action {
   readonly type = PHOTOMETER_XY_SOURCES
-  
-  constructor(public payload: {file: ImageFile, coords: Array<{x: number, y: number}>}) {}
+
+  constructor(public payload: { file: ImageFile, coords: Array<{ x: number, y: number }> }) { }
 }
 
 export class PhotometerRaDecSources implements Action {
   readonly type = PHOTOMETER_RADEC_SOURCES
-  
-  constructor(public payload: {file: ImageFile, coords: Array<{raHours: number, decDegs: number}>}) {}
+
+  constructor(public payload: { file: ImageFile, coords: Array<{ raHours: number, decDegs: number }> }) { }
 }
 
 export class PhotometerSourcesSuccess implements Action {
   readonly type = PHOTOMETER_SOURCES_SUCCESS
-  
-  constructor(public payload: {file: ImageFile, sources: Source[]}) {}
+
+  constructor(public payload: { file: ImageFile, sources: Source[] }) { }
 }
 
 export class PhotometerSourcesFail implements Action {
   readonly type = PHOTOMETER_SOURCES_FAIL
-  
-  constructor(public payload: {file: ImageFile, error: any}) {}
+
+  constructor(public payload: { file: ImageFile, error: any }) { }
 }
 
 
 export type Actions =
-| UpdateViewport
-| UpdateFilteredSources
-| SetRegion
-| UpdateRegion
-| SetSourceExtractionMode
-| UpdateSourceExtractionSettings
-| UpdatePhotSettings
-| UpdateFileState
-| ExtractSources
-| ExtractSourcesSuccess
-| ExtractSourcesFail
-| SelectSources
-| DeselectSources
-| SetSourceSelection
-| RemoveAllSources
-| RemoveSelectedSources
-| PhotometerXYSources
-| PhotometerRaDecSources
-| PhotometerSourcesSuccess
-| PhotometerSourcesFail;
+  | UpdateViewport
+  | UpdateFilteredSources
+  | SetRegion
+  | UpdateRegion
+  | SetSourceExtractionMode
+  | UpdateSourceExtractionSettings
+  | UpdatePhotSettings
+  | UpdateFileState
+  | ExtractSources
+  | ExtractSourcesSuccess
+  | ExtractSourcesFail
+  | SelectSources
+  | DeselectSources
+  | SetSourceSelection
+  | RemoveAllSources
+  | RemoveSelectedSources
+  | PhotometerXYSources
+  | PhotometerRaDecSources
+  | PhotometerSourcesSuccess
+  | PhotometerSourcesFail;

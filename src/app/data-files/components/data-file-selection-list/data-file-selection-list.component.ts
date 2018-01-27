@@ -349,11 +349,11 @@ export class DataFileSelectionListComponent extends _DataFileSelectionListBaseMi
   private _selectFocusedOption(): void {
     let focusedIndex = this._keyManager.activeItemIndex;
 
-    
+
     if (focusedIndex != null && this._isValidIndex(focusedIndex)) {
       this.options.forEach((option, index) => {
-        if(index == focusedIndex) {
-          if(!option.selected) {
+        if (index == focusedIndex) {
+          if (!option.selected) {
             option.selected = true;
             this._emitChangeEvent(option)
           }

@@ -1,5 +1,5 @@
 export interface HeaderEntry {
-    key: string;
-    value: any;
-    comment: string;
+  key: string;
+  value: any;
+  comment: string;
 }

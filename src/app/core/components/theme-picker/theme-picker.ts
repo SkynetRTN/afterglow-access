@@ -1,11 +1,11 @@
-import {Component, ViewEncapsulation, ChangeDetectionStrategy, NgModule} from '@angular/core';
-import {StyleManager} from '../../services/style-manager';
-import {ThemeStorage, DocsSiteTheme} from './theme-storage/theme-storage';
+import { Component, ViewEncapsulation, ChangeDetectionStrategy, NgModule } from '@angular/core';
+import { StyleManager } from '../../services/style-manager';
+import { ThemeStorage, DocsSiteTheme } from './theme-storage/theme-storage';
 import {
   MatButtonModule, MatGridListModule, MatIconModule, MatMenuModule,
   MatTooltipModule
 } from '@angular/material';
-import {CommonModule} from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 
 @Component({
@@ -14,7 +14,7 @@ import {CommonModule} from '@angular/common';
   styleUrls: ['theme-picker.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  host: {'aria-hidden': 'true'},
+  host: { 'aria-hidden': 'true' },
 })
 export class ThemePicker {
   currentTheme;

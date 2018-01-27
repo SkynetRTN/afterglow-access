@@ -19,49 +19,51 @@ export class ViewerEffects {
   histLoaded$: Observable<Action> = this.actions$
     .ofType<imageFileActions.LoadImageHistSuccess>(imageFileActions.LOAD_IMAGE_HIST_SUCCESS)
     .withLatestFrom(
-      this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getViewerFileStates)
+    this.store.select(fromDataFile.getDataFiles),
+    this.store.select(fromCore.getViewerFileStates)
     )
     .flatMap(([action, dataFiles, viewerFileStates]) => {
       let dataFile = dataFiles[action.payload.fileId];
       let viewerFileState = viewerFileStates[dataFile.id];
-      let actions : Action[] = [];
+      let actions: Action[] = [];
 
-      if(dataFile.type == DataFileType.IMAGE) {
+      if (dataFile.type == DataFileType.IMAGE) {
         let imageFile = dataFile as ImageFile;
-        if(!viewerFileState.autoLevelsInitialized) actions.push(new viewerActions.InitAutoLevels({file: imageFile}));
+        if (!viewerFileState.autoLevelsInitialized) actions.push(new viewerActions.InitAutoLevels({ file: imageFile }));
       }
       return Observable.from(actions);
-  });
-  
+    });
+
   @Effect()
   autoLevelsInitialized$: Observable<Action> = this.actions$
     .ofType<viewerActions.InitAutoLevels>(viewerActions.INIT_AUTO_LEVELS)
     .withLatestFrom(
-      this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getViewerFileStates)
+    this.store.select(fromDataFile.getDataFiles),
+    this.store.select(fromCore.getViewerFileStates)
     )
     .flatMap(([action, dataFiles, viewerFileStates]) => {
       let dataFile = dataFiles[action.payload.file.id];
-      let actions : Action[] = [];
+      let actions: Action[] = [];
 
-      if(dataFile.type == DataFileType.IMAGE) {
+      if (dataFile.type == DataFileType.IMAGE) {
         let imageFile = dataFile as ImageFile;
         let viewerFileState = viewerFileStates[imageFile.id];
-        actions.push(new viewerActions.UpdateNormalizer({file: imageFile, changes: {
-          backgroundLevel: viewerFileState.autoBkgLevel,
-          peakLevel: viewerFileState.autoPeakLevel
-        }}));
+        actions.push(new viewerActions.UpdateNormalizer({
+          file: imageFile, changes: {
+            backgroundLevel: viewerFileState.autoBkgLevel,
+            peakLevel: viewerFileState.autoPeakLevel
+          }
+        }));
       }
       return Observable.from(actions);
-  });
+    });
 
   @Effect()
   imageTileNormalized$: Observable<Action> = this.actions$
     .ofType<viewerActions.NormalizeImageTile>(viewerActions.NORMALIZE_IMAGE_TILE)
     .withLatestFrom(
-      this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getViewerFileStates)
+    this.store.select(fromDataFile.getDataFiles),
+    this.store.select(fromCore.getViewerFileStates)
     )
     .flatMap(([action, dataFiles, viewerFileStates]) => {
       let imageFile = dataFiles[action.payload.file.id] as ImageFile;
@@ -73,7 +75,7 @@ export class ViewerEffects {
         tileIndex: tile.index,
         pixels: normPixels
       })])
-  });
+    });
 
   @Effect()
   normalizerUpdated$: Observable<Action> = this.actions$
@@ -81,8 +83,8 @@ export class ViewerEffects {
     .withLatestFrom(this.store.select(fromDataFile.getDataFiles))
     .switchMap(([action, dataFiles]) => {
       let imageFile = dataFiles[action.payload.file.id] as ImageFile;
-      return Observable.from([new viewerActions.RenormalizeImageFile({file: imageFile})]);
-  });
+      return Observable.from([new viewerActions.RenormalizeImageFile({ file: imageFile })]);
+    });
 
   // @Effect()
   // imageTilesInitialized$: Observable<Action> = this.actions$
@@ -95,36 +97,36 @@ export class ViewerEffects {
 
   @Effect()
   centerRegionInViewport$: Observable<Action> = this.actions$
-  .ofType<viewerActions.CenterRegionInViewport>(viewerActions.CENTER_REGION_IN_VIEWPORT)
-  .flatMap(action => {
-    let actions = [];
-    let imageFile = action.payload.file;
-    let viewportSize = action.payload.viewportSize;
-    let region = action.payload.region;
-    let scale = Math.min((viewportSize.width*.9)/region.width, (viewportSize.height*.9)/region.height);
+    .ofType<viewerActions.CenterRegionInViewport>(viewerActions.CENTER_REGION_IN_VIEWPORT)
+    .flatMap(action => {
+      let actions = [];
+      let imageFile = action.payload.file;
+      let viewportSize = action.payload.viewportSize;
+      let region = action.payload.region;
+      let scale = Math.min((viewportSize.width * .9) / region.width, (viewportSize.height * .9) / region.height);
 
-    actions.push(new viewerActions.ZoomTo({
-      file: imageFile,
-      scale: scale,
-      anchorPoint: {
-        x: viewportSize.width/2,
-        y: viewportSize.height/2
-      }
-    }));
-    actions.push(new viewerActions.MoveTo({
-      file: imageFile,
-      imagePoint: {
-        x: region.x + region.width/2,
-        y: region.y + region.height/2
-      },
-      viewportAnchor: {
-        x: viewportSize.width/2,
-        y: viewportSize.height/2
-      }
-    }));
+      actions.push(new viewerActions.ZoomTo({
+        file: imageFile,
+        scale: scale,
+        anchorPoint: {
+          x: viewportSize.width / 2,
+          y: viewportSize.height / 2
+        }
+      }));
+      actions.push(new viewerActions.MoveTo({
+        file: imageFile,
+        imagePoint: {
+          x: region.x + region.width / 2,
+          y: region.y + region.height / 2
+        },
+        viewportAnchor: {
+          x: viewportSize.width / 2,
+          y: viewportSize.height / 2
+        }
+      }));
 
-    return Observable.from(actions);
-  });
+      return Observable.from(actions);
+    });
 
 
   // @Effect()
@@ -156,5 +158,5 @@ export class ViewerEffects {
   constructor(
     private actions$: Actions,
     private store: Store<fromDataFile.State>
-  ) {}
+  ) { }
 }

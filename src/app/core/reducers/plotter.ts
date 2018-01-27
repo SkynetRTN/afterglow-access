@@ -1,4 +1,4 @@
-import { createSelector} from '@ngrx/store';
+import { createSelector } from '@ngrx/store';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 
 import { PlotterFileState } from '../models/plotter-file-state';
@@ -6,7 +6,7 @@ import { PlotterSettings } from '../models/plotter-settings';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 import { DataFileType } from '../../data-files/models/data-file-type';
 import { CentroidSettings } from '../models/centroid-settings'
-import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth} from '../../data-files/models/data-file';
+import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth } from '../../data-files/models/data-file';
 import { centroidDisk, centroidPsf } from '../models/centroider';
 
 import * as plotterActions from '../actions/plotter';
@@ -47,12 +47,12 @@ export const initialState: State = adapter.getInitialState({
     centroidClicks: false,
     useDiskCentroiding: false,
     psfCentroiderSettings: null,
-    diskCentroiderSettings:null,
+    diskCentroiderSettings: null,
   },
   plotterSettings: {
     interpolatePixels: false,
   }
-  
+
 });
 
 export function reducer(
@@ -76,7 +76,7 @@ export function reducer(
           lineMeasureEnd: null,
         })
       })
-        
+
       return {
         ...adapter.addMany(plotterStates, state)
       };
@@ -86,12 +86,12 @@ export function reducer(
         ...state.centroidSettings,
         ...action.payload.changes
       }
-      
+
       return {
         ...state,
         centroidSettings: centroidSettings
       }
-      
+
     }
 
     case plotterActions.UPDATE_PLOTTER_SETTINGS: {
@@ -104,68 +104,72 @@ export function reducer(
         ...state,
         plotterSettings: plotterSettings
       }
-      
+
     }
 
 
     case plotterActions.START_LINE: {
       let imageFile = action.payload.file as ImageFile;
       let point = action.payload.point;
-      let plotterState = {...state.entities[imageFile.id]};
+      let plotterState = { ...state.entities[imageFile.id] };
 
       let xc = action.payload.point.x;
       let yc = action.payload.point.y;
-      if(state.centroidSettings.centroidClicks) {
+      if (state.centroidSettings.centroidClicks) {
         let result;
-        if(state.centroidSettings.useDiskCentroiding) {
+        if (state.centroidSettings.useDiskCentroiding) {
           result = centroidDisk(imageFile, point.x, point.y);
         }
         else {
           result = centroidPsf(imageFile, point.x, point.y);
         }
-        
+
         xc = result.x;
         yc = result.y;
       }
-      if(!plotterState.measuring) {
-        plotterState.lineMeasureStart = {x: xc, y: yc};
-        plotterState.lineMeasureEnd = {x: point.x, y: point.y};
+      if (!plotterState.measuring) {
+        plotterState.lineMeasureStart = { x: xc, y: yc };
+        plotterState.lineMeasureEnd = { x: point.x, y: point.y };
       }
       else {
-        plotterState.lineMeasureEnd = {x: xc, y: yc};
+        plotterState.lineMeasureEnd = { x: xc, y: yc };
       }
       plotterState.measuring = !plotterState.measuring;
 
-      
+
       return {
-        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-        ...plotterState
-        }}, state),
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            ...plotterState
+          }
+        }, state),
       }
     }
 
     case plotterActions.UPDATE_LINE: {
       let imageFile = action.payload.file as ImageFile;
       let point = action.payload.point;
-      
+
       let plotterState = state.entities[imageFile.id];
 
-      if(!plotterState.measuring) return state;
+      if (!plotterState.measuring) return state;
 
       return {
-        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-        lineMeasureEnd: point
-        }}, state),
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            lineMeasureEnd: point
+          }
+        }, state),
       }
     }
 
-    
 
 
-    
 
 
-    
+
+
+
     default: {
       return state;
     }

@@ -1,50 +1,35 @@
 <div class="row">
-    <div class="col-6">
-      <mat-form-field class="">
-        <input matInput
-          placeholder="Background Level"
-          [ngModel]="normalizer?.backgroundLevel"
-          (ngModelChange)="onBackgroundLevelChange.emit($event)"
-          type="number"
-          [step]="levelStep">
-      </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="">
-        <input matInput
-          placeholder="Peak Level"
-          [ngModel]="normalizer?.peakLevel"
-          (ngModelChange)="onPeakLevelChange.emit($event)"
-          type="number"
-          [step]="levelStep">
-      </mat-form-field>
-    </div>
+  <div class="col-6">
+    <mat-form-field class="">
+      <input matInput placeholder="Background Level" [ngModel]="normalizer?.backgroundLevel" (ngModelChange)="onBackgroundLevelChange.emit($event)"
+        type="number" [step]="levelStep">
+    </mat-form-field>
   </div>
-  <div class="row pb-4">
-    <div class="col-6">
-      <mat-form-field>
-        <mat-select
-          placeholder="Color Map"
-          [ngModel]="normalizer?.colorMap"
-          (ngModelChange)="onColorMapChange.emit($event)"
-          style="width: 100%;">
-          <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap">{{ colorMap.name }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-    
-    </div>
-    <div class="col-6">
-      <mat-form-field>
-        <mat-select
-          placeholder="Stretch Mode"
-          [ngModel]="normalizer?.stretchMode"
-          (ngModelChange)="onStretchModeChange.emit($event)"
-          style="width: 100%;">
-          <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{ stretchModeOption.label }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-      
-
-    </div>
+  <div class="col-6">
+    <mat-form-field class="">
+      <input matInput placeholder="Peak Level" [ngModel]="normalizer?.peakLevel" (ngModelChange)="onPeakLevelChange.emit($event)"
+        type="number" [step]="levelStep">
+    </mat-form-field>
   </div>
+</div>
+<div class="row pb-4">
+  <div class="col-6">
+    <mat-form-field>
+      <mat-select placeholder="Color Map" [ngModel]="normalizer?.colorMap" (ngModelChange)="onColorMapChange.emit($event)" style="width: 100%;">
+        <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap">{{ colorMap.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+
+  </div>
+  <div class="col-6">
+    <mat-form-field>
+      <mat-select placeholder="Stretch Mode" [ngModel]="normalizer?.stretchMode" (ngModelChange)="onStretchModeChange.emit($event)"
+        style="width: 100%;">
+        <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{ stretchModeOption.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+
+  </div>
+</div>

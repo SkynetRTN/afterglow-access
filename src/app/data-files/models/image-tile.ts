@@ -12,6 +12,6 @@ export interface ImageTile {
 
 export function getTilePixel(tile: ImageTile, x: number, y: number) {
   let index: number = Math.floor(y) * tile.width + Math.floor(x);
-  if(!tile.pixelsLoaded) return NaN;
+  if (!tile.pixelsLoaded) return NaN;
   return tile.pixels[index];
 }

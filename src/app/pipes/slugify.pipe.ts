@@ -8,14 +8,14 @@ import { Pipe, PipeTransform } from '@angular/core';
  *   {{ 2 |  exponentialStrength:10}}
  *   formats to: 1024
 */
-@Pipe({name: 'slugify'})
+@Pipe({ name: 'slugify' })
 export class SlugifyPipe implements PipeTransform {
   transform(value: string): string {
     return value.toLowerCase()
-    .replace(/\s+/g, '-')           // Replace spaces with -
-    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-    .replace(/^-+/, '')             // Trim - from start of text
-    .replace(/-+$/, '');
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, '');
   }
 }

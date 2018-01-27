@@ -1,5 +1,7 @@
 <svg:g class="svg-circle-marker" [class.selected]="selected">
-    <svg:circle *ngIf="showShadow" class="shadow" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'"/>
-    <svg:circle *ngIf="showOutline" class="outline" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'"/>
-    <svg:circle class="stroke" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'"/>
+  <svg:circle *ngIf="showShadow" class="shadow" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'"
+  />
+  <svg:circle *ngIf="showOutline" class="outline" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'"
+  />
+  <svg:circle class="stroke" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'" />
 </svg:g>

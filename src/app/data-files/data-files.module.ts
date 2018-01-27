@@ -61,4 +61,4 @@ import { DataFileSelectionListComponent, DataFileListItemComponent } from './com
   ],
   providers: [],
 })
-export class DataFilesModule {}
+export class DataFilesModule { }

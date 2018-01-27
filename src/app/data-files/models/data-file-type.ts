@@ -1,4 +1,4 @@
 export enum DataFileType {
-    IMAGE,
-    TABLE
+  IMAGE,
+  TABLE
 }

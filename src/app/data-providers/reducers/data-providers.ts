@@ -1,4 +1,4 @@
-import { createSelector} from '@ngrx/store';
+import { createSelector } from '@ngrx/store';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { TdDataTableSortingOrder } from '@covalent/core';
 import { DataProvider } from '../models/data-provider';
@@ -14,7 +14,7 @@ export interface State {
   loadingAssets: boolean;
   currentProvider: DataProvider;
   currentPath: string;
-  currentPathBreadcrumbs: Array<{name: string, url: string}>;
+  currentPathBreadcrumbs: Array<{ name: string, url: string }>;
   currentAssets: DataProviderAsset[];
   selectedAssets: DataProviderAsset[];
   userSortField: string;
@@ -24,7 +24,7 @@ export interface State {
   importing: boolean,
   pendingImports: DataProviderAsset[];
   completedImports: DataProviderAsset[];
-  importErrors: Array<{asset: DataProviderAsset, message: string}>
+  importErrors: Array<{ asset: DataProviderAsset, message: string }>
   importProgress: number
 }
 
@@ -54,7 +54,7 @@ export function reducer(
 ): State {
   switch (action.type) {
     case dataProviderActions.LOAD_DATA_PROVIDERS_SUCCESS: {
-      
+
       return {
         ...state,
         dataProviders: action.payload,
@@ -63,16 +63,16 @@ export function reducer(
     }
 
     case dataProviderActions.LOAD_DATA_PROVIDER_ASSETS: {
-      let changes : Partial<State> = {};
-      if(state.importProgress == 1) {
+      let changes: Partial<State> = {};
+      if (state.importProgress == 1) {
         changes.importProgress = 0;
         changes.importErrors = [];
         changes.completedImports = [];
         changes.pendingImports = [];
         changes.importing = false;
       }
-      
-      
+
+
       return {
         ...state,
         loadingAssets: true,
@@ -83,25 +83,25 @@ export function reducer(
     case dataProviderActions.LOAD_DATA_PROVIDER_ASSETS_SUCCESS: {
 
       //split path into breadcrumb URIs
-      let currentProvider = {...action.payload.dataProvider};
+      let currentProvider = { ...action.payload.dataProvider };
       let currentPath = action.payload.path;
-      let breadcrumbs: Array<{name: string, url: string}> = [];
-      if(currentProvider.browseable) {
-        
-        breadcrumbs.push({name: 'root', url: currentPath ? '' : null});
-        if(currentPath) {
+      let breadcrumbs: Array<{ name: string, url: string }> = [];
+      if (currentProvider.browseable) {
+
+        breadcrumbs.push({ name: 'root', url: currentPath ? '' : null });
+        if (currentPath) {
           let paths = currentPath.split('/');
-          for(let i=0; i<paths.length; i++) {
-            if(paths[i] == '') continue;
-            breadcrumbs.push({name: paths[i], url: i==paths.length-1 ? null : breadcrumbs[breadcrumbs.length-1]['url'].concat(i == 0 ? '' : '/', paths[i])});
+          for (let i = 0; i < paths.length; i++) {
+            if (paths[i] == '') continue;
+            breadcrumbs.push({ name: paths[i], url: i == paths.length - 1 ? null : breadcrumbs[breadcrumbs.length - 1]['url'].concat(i == 0 ? '' : '/', paths[i]) });
           }
         }
-        
+
       }
 
       //sort assets
       let currentAssets = [...action.payload.assets];
-      
+
       return {
         ...state,
         loadingAssets: false,
@@ -118,57 +118,57 @@ export function reducer(
     case dataProviderActions.SORT_DATA_PROVIDER_ASSETS: {
       let userSortField = state.userSortField;
       let userSortOrder = state.userSortOrder;
-      
+
       let currentSortField = null;
       let currentSortOrder = TdDataTableSortingOrder.Ascending;
 
       //if action sets the sort field, use it
-      if(action.payload) {
+      if (action.payload) {
         userSortField = action.payload.fieldName;
         userSortOrder = action.payload.order;
       }
-      
-      if(userSortField) {
+
+      if (userSortField) {
         //verify that the user selected sort field exists
-        if(userSortField == 'name') {
+        if (userSortField == 'name') {
           currentSortField = userSortField;
           currentSortOrder = userSortOrder;
         }
-        else if(state.currentProvider) {
+        else if (state.currentProvider) {
           let col = state.currentProvider.columns.find(col => col.fieldName == userSortField);
-          if(col) {
+          if (col) {
             currentSortField = userSortField;
             currentSortOrder = userSortOrder;
           }
         }
 
       }
-      
-      if(!currentSortField) {
+
+      if (!currentSortField) {
         //get default from current provider
-        if(state.currentProvider && state.currentProvider.sortBy) {
+        if (state.currentProvider && state.currentProvider.sortBy) {
           let col = state.currentProvider.columns.find(col => col.name == state.currentProvider.sortBy);
-          if(col) {
+          if (col) {
             currentSortField = col.fieldName;
             currentSortOrder = state.currentProvider.sortAsc ? TdDataTableSortingOrder.Ascending : TdDataTableSortingOrder.Descending;
           }
         }
       }
-      
-      if(!currentSortField) {
+
+      if (!currentSortField) {
         //use defaults
         currentSortField = 'name';
         currentSortOrder = TdDataTableSortingOrder.Ascending;
       }
 
-      let currentAssets = state.currentAssets.sort((a,b) => {
-        if(currentSortField != 'name') {
-          if(currentSortField in a.metadata) {
-             //custom sort using metadata column
-            if(a.metadata[currentSortField] < b.metadata[currentSortField]) {
+      let currentAssets = state.currentAssets.sort((a, b) => {
+        if (currentSortField != 'name') {
+          if (currentSortField in a.metadata) {
+            //custom sort using metadata column
+            if (a.metadata[currentSortField] < b.metadata[currentSortField]) {
               return currentSortOrder == TdDataTableSortingOrder.Ascending ? -1 : 1;
             }
-            if(a.metadata[currentSortField] > b.metadata[currentSortField]) {
+            if (a.metadata[currentSortField] > b.metadata[currentSortField]) {
               return currentSortOrder == TdDataTableSortingOrder.Ascending ? 1 : -1;
             }
             return 0;
@@ -177,21 +177,21 @@ export function reducer(
           currentSortOrder = TdDataTableSortingOrder.Ascending;
         }
 
-        if(a.collection != b.collection) {
+        if (a.collection != b.collection) {
           return a.collection ? -1 : 1;
         }
-        
-        if(a.name.toUpperCase() < b.name.toUpperCase()) {
+
+        if (a.name.toUpperCase() < b.name.toUpperCase()) {
           return currentSortOrder == TdDataTableSortingOrder.Ascending ? -1 : 1;
         }
 
-        if(a.name.toUpperCase() > b.name.toUpperCase()) {
+        if (a.name.toUpperCase() > b.name.toUpperCase()) {
           return currentSortOrder == TdDataTableSortingOrder.Ascending ? 1 : -1;
         }
         return 0;
 
       })
-      
+
       return {
         ...state,
         currentAssets: currentAssets,
@@ -203,7 +203,7 @@ export function reducer(
     }
 
     case dataProviderActions.LOAD_DATA_PROVIDER_ASSETS_FAIL: {
-      
+
       return {
         ...state,
         loadingAssets: false
@@ -211,10 +211,10 @@ export function reducer(
     }
 
     case dataProviderActions.TOGGLE_DATA_PROVIDER_ASSET_SELECT: {
-      if(action.payload.asset.collection) return state;
-      
+      if (action.payload.asset.collection) return state;
+
       let selectedAssets = [...state.selectedAssets];
-      if(selectedAssets.includes(action.payload.asset)) {
+      if (selectedAssets.includes(action.payload.asset)) {
         selectedAssets.splice(selectedAssets.indexOf(action.payload.asset), 1);
       }
       else {
@@ -245,7 +245,7 @@ export function reducer(
     }
 
     case dataProviderActions.IMPORT_SELECTED_ASSETS: {
-      
+
       return {
         ...state,
         importing: true,
@@ -269,7 +269,7 @@ export function reducer(
         pendingImports: pending,
         completedImports: completed
       };
-      
+
     }
 
     case dataProviderActions.IMPORT_ASSET_FAIL: {
@@ -284,10 +284,10 @@ export function reducer(
         importProgress: progress,
         pendingImports: pending,
         completedImports: completed,
-        importErrors: [...state.importErrors, {asset: action.payload.asset, message: action.payload.error}]
+        importErrors: [...state.importErrors, { asset: action.payload.asset, message: action.payload.error }]
       };
     }
-    
+
     default: {
       return state;
     }

@@ -31,7 +31,7 @@ import * as fromLayout from '../core/reducers/layout';
  * our top level state interface is just a map of keys to inner state types.
  */
 export interface State {
-  
+
 }
 
 /**
@@ -40,14 +40,14 @@ export interface State {
  * and the current or initial state and return a new immutable state.
  */
 export const reducers: ActionReducerMap<State> = {
-  
+
 };
 
 // console.log all actions
 export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
-  return function(state: State, action: any): State {
+  return function (state: State, action: any): State {
     let result = reducer(state, action);
-    console.log({initialState: state, action: action, finalState: result});
+    console.log({ initialState: state, action: action, finalState: result });
     return result;
   };
 }

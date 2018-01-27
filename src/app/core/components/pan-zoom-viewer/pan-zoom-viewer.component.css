@@ -24,14 +24,22 @@
   height: 36px;
   padding: 5px;
   border-top: 2px solid #FFFFFF;
-  background: rgba(0,0,0,.9);
+  background: rgba(0, 0, 0, .9);
   color: #FFF;
 }
 
-.viewer { 
+.viewer {
   display: flex;
   flex: 1 1 auto;
   position: relative;
+}
+
+/* .viewer.mouse-over-image {
+  cursor: grab;
+} */
+
+.viewer.dragging {
+  cursor: grabbing;
 }
 
 .image-viewer-header-wrapper {
@@ -60,6 +68,3 @@
   top: 0px;
   left: 0px;
 }
-
-
-

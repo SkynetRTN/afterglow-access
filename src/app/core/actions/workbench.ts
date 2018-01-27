@@ -24,7 +24,7 @@ export const TOGGLE_SHOW_CONFIG = '[Workbench] Toggle Show Config';
 export class SelectDataFile implements Action {
   readonly type = SELECT_DATA_FILE;
 
-  constructor(public payload: string) {}
+  constructor(public payload: string) { }
 }
 
 
@@ -34,27 +34,27 @@ export class SelectDataFile implements Action {
 
 export class AddMarker implements Action {
   readonly type = ADD_MARKER;
-  
-  constructor(public payload: {file: ImageFile, marker: Marker}) {}
+
+  constructor(public payload: { file: ImageFile, marker: Marker }) { }
 }
 
 export class RemoveMarker implements Action {
   readonly type = REMOVE_MARKER;
-  
-  constructor(public payload: {fileId: string, markerId: string}) {}
+
+  constructor(public payload: { fileId: string, markerId: string }) { }
 }
 
 export class UpdateMarker implements Action {
   readonly type = UPDATE_MARKER;
-  
-  constructor(public payload: {fileId: string, markerId: string, changes: Partial<Marker>}) {}
+
+  constructor(public payload: { fileId: string, markerId: string, changes: Partial<Marker> }) { }
 }
 
 
 export class SetSidebarView implements Action {
   readonly type = SET_SIDEBAR_VIEW;
-  
-  constructor(public payload: {sidebarView: SidebarView}) {}
+
+  constructor(public payload: { sidebarView: SidebarView }) { }
 }
 
 export class ShowSidebar implements Action {
@@ -68,7 +68,7 @@ export class HideSidebar implements Action {
 export class SetShowConfig implements Action {
   readonly type = SET_SHOW_CONFIG;
 
-  constructor(public payload: {showConfig: boolean}) {}
+  constructor(public payload: { showConfig: boolean }) { }
 }
 
 export class ToggleShowConfig implements Action {
@@ -78,13 +78,13 @@ export class ToggleShowConfig implements Action {
 
 
 export type Actions =
-| SelectDataFile
-| AddMarker
-| RemoveMarker
-| UpdateMarker
-| SetSidebarView
-| ShowSidebar
-| HideSidebar 
-| SetShowConfig
-| ToggleShowConfig;
+  | SelectDataFile
+  | AddMarker
+  | RemoveMarker
+  | UpdateMarker
+  | SetSidebarView
+  | ShowSidebar
+  | HideSidebar
+  | SetShowConfig
+  | ToggleShowConfig;
 

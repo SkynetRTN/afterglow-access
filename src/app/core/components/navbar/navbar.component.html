@@ -10,22 +10,22 @@
   </button> -->
 
   <ng-container *ngIf="!authenticated">
-      <a mat-button class="afterglow-button" routerLink="login" aria-label="Login" routerLinkActive="active">
-        Login
-      </a>
+    <a mat-button class="afterglow-button" routerLink="login" aria-label="Login" routerLinkActive="active">
+      Login
+    </a>
   </ng-container>
   <ng-container *ngIf="authenticated">
-      <!-- <button mat-icon-button class="afterglow-button" matTooltip="View User Profile" tabindex="-1">
+    <!-- <button mat-icon-button class="afterglow-button" matTooltip="View User Profile" tabindex="-1">
         <mat-icon>account_box</mat-icon>
       </button> -->
-      <a mat-button class="afterglow-button" routerLink="workbench" aria-label="Workbench" routerLinkActive="active">
-          Workbench
-        </a>
-      <a mat-button class="afterglow-button" routerLink="import" aria-label="Import" routerLinkActive="active">
-          Import
-        </a>
-      <a mat-button class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active">
-        Logout
-      </a>
+    <a mat-button class="afterglow-button" routerLink="workbench" aria-label="Workbench" routerLinkActive="active">
+      Workbench
+    </a>
+    <a mat-button class="afterglow-button" routerLink="import" aria-label="Import" routerLinkActive="active">
+      Import
+    </a>
+    <a mat-button class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active">
+      Logout
+    </a>
   </ng-container>
 </nav>

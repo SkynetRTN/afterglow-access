@@ -17,53 +17,53 @@ export const LOAD_IMAGE_TILE_PIXELS_SUCCESS = '[Image File] Load Image Tile Succ
 export class LoadImageHist implements Action {
   readonly type = LOAD_IMAGE_HIST;
 
-  constructor(public payload: {file: ImageFile}) {}
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class LoadImageHistSuccess implements Action {
   readonly type = LOAD_IMAGE_HIST_SUCCESS;
-  
-  constructor(public payload: {fileId: string, hist: ImageHist}) {}
+
+  constructor(public payload: { fileId: string, hist: ImageHist }) { }
 }
 
 export class LoadImageHistFail implements Action {
   readonly type = LOAD_IMAGE_HIST_FAIL;
-  
-  constructor(public payload: {fileId: string, error: any}) {}
+
+  constructor(public payload: { fileId: string, error: any }) { }
 }
 
 export class InitImageTiles implements Action {
   readonly type = INIT_IMAGE_TILES;
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class LoadImageTilePixels implements Action {
   readonly type = LOAD_IMAGE_TILE_PIXELS;
 
-  constructor(public payload: {file: ImageFile, tile: ImageTile}) {}
+  constructor(public payload: { file: ImageFile, tile: ImageTile }) { }
 }
 
 export class LoadImageTilePixelsSuccess implements Action {
   readonly type = LOAD_IMAGE_TILE_PIXELS_SUCCESS;
-  
-  constructor(public payload: {fileId: string, tileIndex: number, pixels: Float32Array}) {}
+
+  constructor(public payload: { fileId: string, tileIndex: number, pixels: Float32Array }) { }
 }
 
 export class LoadImageTilePixelsFail implements Action {
   readonly type = LOAD_IMAGE_TILE_PIXELS_FAIL;
-  
-  constructor(public payload: {fileId: string, tileIndex: number, error: any}) {}
+
+  constructor(public payload: { fileId: string, tileIndex: number, error: any }) { }
 }
 
 
 
 export type Actions =
-| LoadImageHist
-| LoadImageHistFail
-| LoadImageHistSuccess
-| InitImageTiles
-| LoadImageTilePixels
-| LoadImageTilePixelsFail
-| LoadImageTilePixelsSuccess;
+  | LoadImageHist
+  | LoadImageHistFail
+  | LoadImageHistSuccess
+  | InitImageTiles
+  | LoadImageTilePixels
+  | LoadImageTilePixelsFail
+  | LoadImageTilePixelsSuccess;
 

@@ -115,7 +115,7 @@ const getWorkbenchSelectedViewerState = createSelector(
   getViewerFileStates,
   getWorkbenchSelectedImageFile,
   (viewerStates, imageFile) => {
-    return imageFile && imageFile.id in viewerStates  && viewerStates[imageFile.id]
+    return imageFile && imageFile.id in viewerStates && viewerStates[imageFile.id]
   }
 );
 
@@ -123,7 +123,7 @@ const getWorkbenchSelectedPlotterState = createSelector(
   getPlotterFileStates,
   getWorkbenchSelectedImageFile,
   (viewerStates, imageFile) => {
-    return imageFile && imageFile.id in viewerStates  && viewerStates[imageFile.id]
+    return imageFile && imageFile.id in viewerStates && viewerStates[imageFile.id]
   }
 );
 
@@ -131,7 +131,7 @@ const getWorkbenchSelectedSonifierState = createSelector(
   getSonifierFileStates,
   getWorkbenchSelectedImageFile,
   (sonifierStates, imageFile) => {
-    return imageFile && imageFile.id in sonifierStates  && sonifierStates[imageFile.id]
+    return imageFile && imageFile.id in sonifierStates && sonifierStates[imageFile.id]
   }
 );
 
@@ -139,7 +139,7 @@ const getWorkbenchSelectedSourceExtractorState = createSelector(
   getSourceExtractorFileStates,
   getWorkbenchSelectedImageFile,
   (sourceExtractorStates, imageFile) => {
-    return imageFile && imageFile.id in sourceExtractorStates  && sourceExtractorStates[imageFile.id]
+    return imageFile && imageFile.id in sourceExtractorStates && sourceExtractorStates[imageFile.id]
   }
 );
 

@@ -16,68 +16,68 @@ export const UPDATE_SONIFICATION_URI = '[Sonifier] Update Sonification URI';
 
 export class UpdateRegion implements Action {
   readonly type = UPDATE_REGION;
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class AddRegionToHistory implements Action {
   readonly type = ADD_REGION_TO_HISTORY;
-  
-  constructor(public payload: {file: ImageFile, region: Region}) {}
+
+  constructor(public payload: { file: ImageFile, region: Region }) { }
 }
 
 export class ClearRegionHistory implements Action {
   readonly type = CLEAR_REGION_HISTORY;
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class UndoRegionSelection implements Action {
   readonly type = UNDO_REGION_SELECTION;
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class RedoRegionSelection implements Action {
   readonly type = REDO_REGION_SELECTION;
-  
-  constructor(public payload: {file: ImageFile}) {}
+
+  constructor(public payload: { file: ImageFile }) { }
 }
 
 export class UpdateFileState implements Action {
   readonly type = UPDATE_FILE_STATE;
-  
-  constructor(public payload: {file: ImageFile, changes: Partial<SonifierFileState>}) {}
+
+  constructor(public payload: { file: ImageFile, changes: Partial<SonifierFileState> }) { }
 }
 
 export class SetRegionMode implements Action {
   readonly type = SET_REGION_MODE;
-  
-  constructor(public payload: {file: ImageFile, mode: SonifierRegionMode}) {}
+
+  constructor(public payload: { file: ImageFile, mode: SonifierRegionMode }) { }
 }
 
 export class UpdateViewport implements Action {
   readonly type = UPDATE_VIEWPORT;
-  
-  constructor(public payload: {file: ImageFile, viewport: {imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number}}) {}
+
+  constructor(public payload: { file: ImageFile, viewport: { imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number } }) { }
 }
 
 export class UpdateSonificationUri implements Action {
   readonly type = UPDATE_SONIFICATION_URI;
-  
-  constructor(public payload: {file: ImageFile, uri: string}) {}
+
+  constructor(public payload: { file: ImageFile, uri: string }) { }
 }
 
 
 
 
 export type Actions =
-| UpdateRegion
-| AddRegionToHistory
-| ClearRegionHistory
-| UndoRegionSelection
-| RedoRegionSelection
-| UpdateFileState
-| SetRegionMode
-| UpdateViewport
-| UpdateSonificationUri
+  | UpdateRegion
+  | AddRegionToHistory
+  | ClearRegionHistory
+  | UndoRegionSelection
+  | RedoRegionSelection
+  | UpdateFileState
+  | SetRegionMode
+  | UpdateViewport
+  | UpdateSonificationUri

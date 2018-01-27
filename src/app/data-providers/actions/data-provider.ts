@@ -33,73 +33,73 @@ export class LoadDataProviders implements Action {
 export class LoadDataProvidersSuccess implements Action {
   readonly type = LOAD_DATA_PROVIDERS_SUCCESS;
 
-  constructor(public payload: DataProvider[]) {}
+  constructor(public payload: DataProvider[]) { }
 }
 
 export class LoadDataProvidersFail implements Action {
   readonly type = LOAD_DATA_PROVIDERS_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class LoadDataProviderAssets implements Action {
   readonly type = LOAD_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: {dataProvider: DataProvider, path: string}) {}
+  constructor(public payload: { dataProvider: DataProvider, path: string }) { }
 }
 
 export class LoadDataProviderAssetsSuccess implements Action {
   readonly type = LOAD_DATA_PROVIDER_ASSETS_SUCCESS;
 
-  constructor(public payload: {dataProvider: DataProvider, path: string, assets: DataProviderAsset[]}) {}
+  constructor(public payload: { dataProvider: DataProvider, path: string, assets: DataProviderAsset[] }) { }
 }
 
 export class LoadDataProviderAssetsFail implements Action {
   readonly type = LOAD_DATA_PROVIDER_ASSETS_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class SortDataProviderAssets implements Action {
   readonly type = SORT_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: {fieldName: string, order: TdDataTableSortingOrder} = null) {}
+  constructor(public payload: { fieldName: string, order: TdDataTableSortingOrder } = null) { }
 }
 
 export class ToggleDataProviderAssetSelect implements Action {
   readonly type = TOGGLE_DATA_PROVIDER_ASSET_SELECT;
 
-  constructor(public payload: {asset: DataProviderAsset}) {}
+  constructor(public payload: { asset: DataProviderAsset }) { }
 }
 
 export class SelectAllDataProviderAssets implements Action {
   readonly type = SELECT_ALL_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class DeselectAllDataProviderAssets implements Action {
   readonly type = DESELECT_ALL_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class ImportSelectedAssets implements Action {
   readonly type = IMPORT_SELECTED_ASSETS;
 
-  constructor() {}
+  constructor() { }
 }
 
 export class ImportAssetSuccess implements Action {
   readonly type = IMPORT_ASSET_SUCCESS;
 
-  constructor(public payload: {asset: DataProviderAsset}) {}
+  constructor(public payload: { asset: DataProviderAsset }) { }
 }
 
 export class ImportAssetFail implements Action {
   readonly type = IMPORT_ASSET_FAIL;
 
-  constructor(public payload: {error: string, asset: DataProviderAsset}) {}
+  constructor(public payload: { error: string, asset: DataProviderAsset }) { }
 }
 
 export class ImportAssetsCancel implements Action {
@@ -109,18 +109,18 @@ export class ImportAssetsCancel implements Action {
 
 
 export type Actions =
-| LoadDataProviders
-| LoadDataProvidersSuccess
-| LoadDataProvidersFail
-| LoadDataProviderAssets
-| LoadDataProviderAssetsSuccess
-| LoadDataProviderAssetsFail
-| SortDataProviderAssets
-| ToggleDataProviderAssetSelect
-| SelectAllDataProviderAssets
-| DeselectAllDataProviderAssets
-| ImportSelectedAssets
-| ImportAssetSuccess
-| ImportAssetFail
-| ImportAssetsCancel;
+  | LoadDataProviders
+  | LoadDataProvidersSuccess
+  | LoadDataProvidersFail
+  | LoadDataProviderAssets
+  | LoadDataProviderAssetsSuccess
+  | LoadDataProviderAssetsFail
+  | SortDataProviderAssets
+  | ToggleDataProviderAssetSelect
+  | SelectAllDataProviderAssets
+  | DeselectAllDataProviderAssets
+  | ImportSelectedAssets
+  | ImportAssetSuccess
+  | ImportAssetFail
+  | ImportAssetsCancel;
 

@@ -2,7 +2,7 @@ circle {
   fill-opacity: 0.0;
 }
 
-circle.stroke { 
+circle.stroke {
   stroke: #002175;
   stroke-width: 3;
 }

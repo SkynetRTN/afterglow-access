@@ -2,65 +2,37 @@
 <mat-dialog-content>
   <div class="row">
     <div class="col-6">
-      <mat-slide-toggle
-        [checked]="settings?.centroid"
-        [labelPosition]="before"
-        (change)="onCentroidChange($event)">
+      <mat-slide-toggle [checked]="settings?.centroid" [labelPosition]="before" (change)="onCentroidChange($event)">
         Centroid before photometering
       </mat-slide-toggle>
     </div>
     <div class="col-6">
       <mat-form-field class="">
-          <input matInput
-            [disabled]="!settings?.centroid"
-            placeholder="Centering Box Width"
-            [ngModel]="settings && settings.centeringBoxWidth"
-            (ngModelChange)="setCenteringBoxWidth($event)"
-            type="number"
-            step="1"
-            min="1"
-            max="25">
-        </mat-form-field>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-6">
-      <mat-form-field class="">
-          <input matInput
-            placeholder="Aperture"
-            [(ngModel)]="settings && settings.aperture"
-            type="number"
-            step="1"
-            min="1"
-            max="25">
-        </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="">
-        <input matInput
-          placeholder="Annulus Start"
-          [(ngModel)]="settings && settings.annulus"
-          type="number"
-          step="1"
-          min="1"
-          max="25">
+        <input matInput [disabled]="!settings?.centroid" placeholder="Centering Box Width" [ngModel]="settings && settings.centeringBoxWidth"
+          (ngModelChange)="setCenteringBoxWidth($event)" type="number" step="1" min="1" max="25">
       </mat-form-field>
     </div>
   </div>
   <div class="row">
     <div class="col-6">
       <mat-form-field class="">
-          <input matInput
-            placeholder="Annulus Width"
-            [(ngModel)]="settings && settings.dannulus"
-            type="number"
-            step="1"
-            min="1"
-            max="25">
-        </mat-form-field>
+        <input matInput placeholder="Aperture" [(ngModel)]="settings && settings.aperture" type="number" step="1" min="1" max="25">
+      </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="">
+        <input matInput placeholder="Annulus Start" [(ngModel)]="settings && settings.annulus" type="number" step="1" min="1" max="25">
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <mat-form-field class="">
+        <input matInput placeholder="Annulus Width" [(ngModel)]="settings && settings.dannulus" type="number" step="1" min="1" max="25">
+      </mat-form-field>
     </div>
 
-      
+
   </div>
 
 </mat-dialog-content>

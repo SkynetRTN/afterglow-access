@@ -1,11 +1,11 @@
-import { createSelector} from '@ngrx/store';
+import { createSelector } from '@ngrx/store';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 
 import { SonifierFileState, SonifierRegionMode } from '../models/sonifier-file-state';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 import { DataFileType } from '../../data-files/models/data-file-type';
 import { CentroidSettings } from '../models/centroid-settings'
-import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth} from '../../data-files/models/data-file';
+import { DataFile, ImageFile, getYTileDim, getXTileDim, getHeight, getWidth } from '../../data-files/models/data-file';
 import { centroidDisk, centroidPsf } from '../models/centroider';
 
 import * as sonifierActions from '../actions/sonifier';
@@ -15,7 +15,7 @@ import * as imageFileActions from '../../data-files/actions/image-file';
 
 
 export interface State extends EntityState<SonifierFileState> {
-  viewport: {imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number};
+  viewport: { imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number };
 }
 
 export const adapter: EntityAdapter<SonifierFileState> = createEntityAdapter<SonifierFileState>({
@@ -59,7 +59,7 @@ export function reducer(
           toneCount: 22
         })
       })
-        
+
       return {
         ...adapter.addMany(sonifierStates, state)
       };
@@ -67,24 +67,28 @@ export function reducer(
 
     case sonifierActions.UPDATE_FILE_STATE: {
       return {
-        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-        ...action.payload.changes
-        }}, state),
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            ...action.payload.changes
+          }
+        }, state),
       }
     }
 
     case sonifierActions.SET_REGION_MODE: {
       return {
-        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-        regionMode: action.payload.mode
-        }}, state),
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            regionMode: action.payload.mode
+          }
+        }, state),
       }
     }
 
     case sonifierActions.UPDATE_VIEWPORT: {
       return {
         ...state,
-        viewport: {...action.payload.viewport}
+        viewport: { ...action.payload.viewport }
       }
     }
 
@@ -92,7 +96,7 @@ export function reducer(
       let fileState = state.entities[action.payload.file.id];
 
       let region = null;
-      if(fileState.regionMode == SonifierRegionMode.VIEWPORT) {
+      if (fileState.regionMode == SonifierRegionMode.VIEWPORT) {
         region = {
           x: state.viewport.imageX,
           y: state.viewport.imageY,
@@ -100,93 +104,103 @@ export function reducer(
           height: state.viewport.imageHeight
         };
       }
-      else if(fileState.regionMode == SonifierRegionMode.CUSTOM) {
-        if(fileState.regionHistoryIndex < fileState.regionHistory.length) {
+      else if (fileState.regionMode == SonifierRegionMode.CUSTOM) {
+        if (fileState.regionHistoryIndex < fileState.regionHistory.length) {
           region = fileState.regionHistory[fileState.regionHistoryIndex];
         }
       }
 
       return {
-        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-        region: {...region}
-        }}, state),
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            region: { ...region }
+          }
+        }, state),
       }
 
     }
 
     case sonifierActions.ADD_REGION_TO_HISTORY: {
-      if(action.payload.file.type == DataFileType.IMAGE) {
+      if (action.payload.file.type == DataFileType.IMAGE) {
         let imageFile = action.payload.file;
-        let sonifier = {...state.entities[imageFile.id]};
+        let sonifier = { ...state.entities[imageFile.id] };
         let region = Object.assign({}, action.payload.region);
-        if(!sonifier.regionHistoryInitialized) {
+        if (!sonifier.regionHistoryInitialized) {
           sonifier.regionHistoryIndex = 0;
           sonifier.regionHistory = [region];
           sonifier.regionHistoryInitialized = true;
         }
         else {
-          sonifier.regionHistory = [...sonifier.regionHistory.slice(0,sonifier.regionHistoryIndex+1), region];
+          sonifier.regionHistory = [...sonifier.regionHistory.slice(0, sonifier.regionHistoryIndex + 1), region];
           sonifier.regionHistoryIndex++;
         }
-        
-        
+
+
         return {
-          ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-          ...sonifier
-          }}, state),
+          ...adapter.updateOne({
+            'id': action.payload.file.id, 'changes': {
+              ...sonifier
+            }
+          }, state),
         }
       }
       return state;
     }
 
     case sonifierActions.UNDO_REGION_SELECTION: {
-      if(action.payload.file.type == DataFileType.IMAGE) {
+      if (action.payload.file.type == DataFileType.IMAGE) {
         let imageFile = action.payload.file;
-        let sonifier = {...state.entities[imageFile.id]};
-        if(!sonifier.regionHistoryInitialized || sonifier.regionHistoryIndex == 0) return state;
+        let sonifier = { ...state.entities[imageFile.id] };
+        if (!sonifier.regionHistoryInitialized || sonifier.regionHistoryIndex == 0) return state;
         sonifier.regionHistoryIndex--;
         sonifier.region = sonifier.regionHistory[sonifier.regionHistoryIndex];
-        
+
         return {
-          ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-          ...sonifier,
-          }}, state),
+          ...adapter.updateOne({
+            'id': action.payload.file.id, 'changes': {
+              ...sonifier,
+            }
+          }, state),
         }
       }
       return state;
     }
 
     case sonifierActions.REDO_REGION_SELECTION: {
-      if(action.payload.file.type == DataFileType.IMAGE) {
+      if (action.payload.file.type == DataFileType.IMAGE) {
         let imageFile = action.payload.file;
-        let sonifier = {...state.entities[imageFile.id]};
-        if(!sonifier.regionHistoryInitialized || sonifier.regionHistoryIndex == (sonifier.regionHistory.length -1)) return state;
+        let sonifier = { ...state.entities[imageFile.id] };
+        if (!sonifier.regionHistoryInitialized || sonifier.regionHistoryIndex == (sonifier.regionHistory.length - 1)) return state;
         sonifier.regionHistoryIndex++;
         sonifier.region = sonifier.regionHistory[sonifier.regionHistoryIndex];
-        
+
         return {
-          ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-          ...sonifier
-          }}, state),
+          ...adapter.updateOne({
+            'id': action.payload.file.id, 'changes': {
+              ...sonifier
+            }
+          }, state),
         }
       }
       return state;
     }
 
     case sonifierActions.CLEAR_REGION_HISTORY: {
-      if(action.payload.file.type == DataFileType.IMAGE) {
+      if (action.payload.file.type == DataFileType.IMAGE) {
         let imageFile = action.payload.file;
-        let sonifier = {...state.entities[imageFile.id]};
-        if(!sonifier.regionHistoryInitialized || sonifier.regionHistoryIndex == (sonifier.regionHistory.length -1)) return state;
+        let sonifier = { ...state.entities[imageFile.id] };
+        if (!sonifier.regionHistoryInitialized || sonifier.regionHistoryIndex == (sonifier.regionHistory.length - 1)) return state;
         sonifier.region = null;
         sonifier.regionHistoryIndex = null
         sonifier.regionHistory = [];
         sonifier.regionHistoryInitialized = false;
-        
+
         return {
-          ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-          ...sonifier,
-          }}, state),
+          ...adapter.updateOne({
+            'id': action.payload.file.id, 'changes': {
+              ...sonifier,
+            }
+          }, state),
         }
       }
       return state;
@@ -194,13 +208,15 @@ export function reducer(
 
     case sonifierActions.UPDATE_SONIFICATION_URI: {
       return {
-        ...adapter.updateOne({'id': action.payload.file.id, 'changes': {
-        sonificationUri: action.payload.uri
-        }}, state),
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            sonificationUri: action.payload.uri
+          }
+        }, state),
       }
     }
 
-    
+
     default: {
       return state;
     }

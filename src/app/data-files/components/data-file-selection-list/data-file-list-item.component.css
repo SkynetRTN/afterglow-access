@@ -17,13 +17,13 @@
 
 /* WebKit gets its native focus styles.
  */
+
 @media (-webkit-min-device-pixel-ratio:0) {
   .data-file-list-item-focused .item-row {
     outline-color: -webkit-focus-ring-color;
     outline-style: auto;
   }
 }
-
 
 .filename {
   padding-left: 4px;
@@ -34,4 +34,3 @@
   vertical-align: middle;
   align-items: center;
 }
-

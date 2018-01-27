@@ -18,29 +18,29 @@ export const UPDATE_PLOTTER_SETTINGS = '[Plotter] Update Plotter Settings';
 export class UpdateCentroidSettings implements Action {
   readonly type = UPDATE_CENTROID_SETTINGS
 
-  constructor(public payload: {changes: Partial<CentroidSettings>}) {}
+  constructor(public payload: { changes: Partial<CentroidSettings> }) { }
 }
 
 export class UpdatePlotterSettings implements Action {
   readonly type = UPDATE_PLOTTER_SETTINGS
 
-  constructor(public payload: {changes: Partial<PlotterSettings>}) {}
+  constructor(public payload: { changes: Partial<PlotterSettings> }) { }
 }
 
 export class StartLine implements Action {
   readonly type = START_LINE
-  
-  constructor(public payload: {file: ImageFile, point: {x: number, y: number}}) {}
+
+  constructor(public payload: { file: ImageFile, point: { x: number, y: number } }) { }
 }
 
 export class UpdateLine implements Action {
   readonly type = UPDATE_LINE
-  
-  constructor(public payload: {file: ImageFile, point: {x: number, y: number}}) {}
+
+  constructor(public payload: { file: ImageFile, point: { x: number, y: number } }) { }
 }
 
 export type Actions =
-| UpdateCentroidSettings
-| UpdatePlotterSettings
-| StartLine
-| UpdateLine;
+  | UpdateCentroidSettings
+  | UpdatePlotterSettings
+  | StartLine
+  | UpdateLine;

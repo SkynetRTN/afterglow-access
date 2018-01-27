@@ -1,5 +1,5 @@
 export function convolve(data: Array<number>, width: number, height: number, kernal: Array<Array<number>>) {
-  let result : Array<number> = [];
+  let result: Array<number> = [];
   let matrix = kernal;
   let w = matrix[0].length;
   let h = matrix.length;

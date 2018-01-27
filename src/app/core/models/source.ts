@@ -1,7 +1,7 @@
 export interface Source {
   id: string;
   x: number;
-  y: number; 
+  y: number;
   raHours: number;
   decDegs: number;
   a: number;

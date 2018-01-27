@@ -50,6 +50,10 @@ html, body {
   right: 0px;
 }
 
+.not-rounded {
+  border-radius: 0px;
+}
+
 /* fix bootstrap underlining and applying color to button font */
 a.mat-button {
   color: inherit;

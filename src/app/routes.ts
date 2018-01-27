@@ -12,7 +12,7 @@ import { PlotterPageComponent } from './core/containers/workbench/plotter-page/p
 import { SonifierPageComponent } from './core/containers/workbench/sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './core/containers/workbench/source-extractor-page/source-extractor-page.component';
 
-export const AFTERGLOW_ROUTES: Routes  = [
+export const AFTERGLOW_ROUTES: Routes = [
   {
     path: '',
     redirectTo: '/workbench/viewer',
@@ -21,36 +21,36 @@ export const AFTERGLOW_ROUTES: Routes  = [
   {
     path: 'login',
     component: LoginPageComponent,
-    data: {title: 'Login'}
+    data: { title: 'Login' }
   },
   {
     path: 'oauth_authorized',
     component: OauthAuthorizedPageComponent,
-    data: {title: 'Authorizing Please Wait'}
+    data: { title: 'Authorizing Please Wait' }
   },
   {
     path: 'logout',
     component: LogoutPageComponent,
     canActivate: [AuthGuard],
-    data: {title: 'Logout'}
+    data: { title: 'Logout' }
   },
   {
     path: 'import',
     component: DataProvidersComponent,
     canActivate: [AuthGuard],
-    data: {title: 'Import'},
+    data: { title: 'Import' },
     children: [
       {
         path: ':slug/browse',
         component: DataProviderBrowsePageComponent,
-        data: {title: 'Browse'},
+        data: { title: 'Browse' },
         canActivate: [AuthGuard],
         children: []
       },
       {
         path: '',
         component: DataProvidersIndexPageComponent,
-        data: {title: 'Data Providers'},
+        data: { title: 'Data Providers' },
         canActivate: [AuthGuard],
         children: []
       },
@@ -59,40 +59,40 @@ export const AFTERGLOW_ROUTES: Routes  = [
   {
     path: 'workbench',
     component: WorkbenchComponent,
-    data: {title: 'Workbench'},
+    data: { title: 'Workbench' },
     canActivate: [AuthGuard],
     children: [
       {
         path: 'viewer',
         component: ViewerPageComponent,
-        data: {title: 'Viewer'},
+        data: { title: 'Viewer' },
         canActivate: [AuthGuard],
       },
       {
         path: 'plotter',
         component: PlotterPageComponent,
-        data: {title: 'Plotter'},
+        data: { title: 'Plotter' },
         canActivate: [AuthGuard],
       },
       {
         path: 'sonifier',
         component: SonifierPageComponent,
-        data: {title: 'Sonifier'},
+        data: { title: 'Sonifier' },
         canActivate: [AuthGuard],
       },
       {
         path: 'source-analyzer',
         component: SourceExtractorPageComponent,
-        data: {title: 'Source Analyzer'},
+        data: { title: 'Source Analyzer' },
         canActivate: [AuthGuard],
       },
       // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
       {
-        path: '', 
+        path: '',
         redirectTo: 'viewer',
         pathMatch: 'full',
       },
     ]
   },
-  
+
 ];

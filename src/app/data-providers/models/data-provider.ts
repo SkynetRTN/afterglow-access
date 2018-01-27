@@ -5,16 +5,16 @@ export interface DataProviderColumn {
 }
 
 export interface DataProvider {
-    id: string;
-    name: string;
-    icon: string;
-    description: string;
-    columns: Array<DataProviderColumn>;
-    sortBy: string;
-    sortAsc: boolean;
-    browseable: boolean;
-    searchable: boolean;
-    readonly: boolean;
-    quota: number;
-    usage: number
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  columns: Array<DataProviderColumn>;
+  sortBy: string;
+  sortAsc: boolean;
+  browseable: boolean;
+  searchable: boolean;
+  readonly: boolean;
+  quota: number;
+  usage: number
 }

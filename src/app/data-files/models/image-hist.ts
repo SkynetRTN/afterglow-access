@@ -54,7 +54,7 @@ export interface ImageHist {
   //     Object.keys(hist.cachedState).every(key => {
   //       return hist.cachedState[key] == hist[key];
   //     });
-    
+
   //   let total = 0;
   //   for (let i = 0; i < hist.data.length; i++) {
   //     total += hist.data[i];
@@ -115,7 +115,7 @@ export function getBinCenter(hist: ImageHist, index: number) {
 export function calcLevels(
   hist: ImageHist,
   lowerPercentile: number = 10,
-  upperPercentile: number = 98) : {backgroundLevel: number, peakLevel: number} {
+  upperPercentile: number = 98): { backgroundLevel: number, peakLevel: number } {
 
   let total = 0;
   for (let i = 0; i < hist.data.length; i++) {
@@ -146,6 +146,6 @@ export function calcLevels(
       blackComplete = true;
     }
   }
-  return {backgroundLevel: backgroundLevel, peakLevel: peakLevel};
+  return { backgroundLevel: backgroundLevel, peakLevel: peakLevel };
 }
 

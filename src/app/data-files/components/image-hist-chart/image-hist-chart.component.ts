@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewChild,
-  OnChanges, Input, Output, EventEmitter } from '@angular/core';
+import {
+  Component, OnInit, ViewChild,
+  OnChanges, Input, Output, EventEmitter
+} from '@angular/core';
 
 declare let d3, nv: any;
 import { NvD3Component } from 'ng2-nvd3';
@@ -13,7 +15,7 @@ import { ImageHist, getBinCenter } from '../../models/image-hist';
 })
 export class ImageHistChartComponent implements OnInit, OnChanges {
   @ViewChild(NvD3Component) nvD3: NvD3Component;
-  
+
   @Input() hist: ImageHist;
   @Input() backgroundLevel: number;
   @Input() peakLevel: number;
@@ -24,7 +26,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   private lastHistData;
   private chartOptions;
   private chartData;
- 
+
   private backgroundLineData = {
     isBackground: true,
     x1: 0,
@@ -51,8 +53,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         focusEnable: false,
         height: 250,
         showLegend: false,
-        x: function(d){ return d.x; },
-        y: function(d){ return d.y; },
+        x: function (d) { return d.x; },
+        y: function (d) { return d.y; },
         useInteractiveGuideline: true,
         isArea: true,
         yAxis: {
@@ -103,9 +105,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     let self = this;
 
 
-    if(this.nvD3.svg && this.hist && this.backgroundLevel != undefined && this.peakLevel != undefined) {
+    if (this.nvD3.svg && this.hist && this.backgroundLevel != undefined && this.peakLevel != undefined) {
       let lineGroup = this.nvD3.svg.select('.nv-linesWrap').selectAll('g.levels');
-      if(lineGroup.empty()) {
+      if (lineGroup.empty()) {
         lineGroup = this.nvD3.svg.select('.nv-linesWrap').append('g').classed('levels', true);
       }
       this.backgroundLineData.x1 = this.backgroundLineData.x2 = this.backgroundLevel;
@@ -118,33 +120,33 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         .data(data);
 
       lines.transition()
-      .attr({
-            x1: function(d){ return self.nvD3.chart.xAxis.scale()(d.x1) },
-            y1: function(d){ return self.nvD3.chart.yAxis.scale()(d.y1) },
-            x2: function(d){ return self.nvD3.chart.xAxis.scale()(d.x2) },
-            y2: function(d){ return self.nvD3.chart.yAxis.scale()(d.y2) }
+        .attr({
+          x1: function (d) { return self.nvD3.chart.xAxis.scale()(d.x1) },
+          y1: function (d) { return self.nvD3.chart.yAxis.scale()(d.y1) },
+          x2: function (d) { return self.nvD3.chart.xAxis.scale()(d.x2) },
+          y2: function (d) { return self.nvD3.chart.yAxis.scale()(d.y2) }
         });
 
       lines.enter()
         .append('line')
         .attr({
-          x1: function(d){ return self.nvD3.chart.xAxis.scale()(d.x1) },
-          y1: function(d){ return self.nvD3.chart.yAxis.scale()(d.y1) },
-          x2: function(d){ return self.nvD3.chart.xAxis.scale()(d.x2) },
-          y2: function(d){ return self.nvD3.chart.yAxis.scale()(d.y2) }
+          x1: function (d) { return self.nvD3.chart.xAxis.scale()(d.x1) },
+          y1: function (d) { return self.nvD3.chart.yAxis.scale()(d.y1) },
+          x2: function (d) { return self.nvD3.chart.xAxis.scale()(d.x2) },
+          y2: function (d) { return self.nvD3.chart.yAxis.scale()(d.y2) }
         })
-        .style('stroke', function(d){ return d.isBackground ? 'rgb(0, 0, 255)' : 'rgb(255, 0, 0)';})
+        .style('stroke', function (d) { return d.isBackground ? 'rgb(0, 0, 255)' : 'rgb(255, 0, 0)'; })
         .style('stroke-width', 4)
         .style('stroke-opacity', 0.5)
         .style('stroke-linecap', 'round')
         .style('cursor', 'pointer')
         .call(d3.behavior.drag()
-          .on("drag", function(d,i) {
-            if(d3.event.dx == 0) return;
+          .on("drag", function (d, i) {
+            if (d3.event.dx == 0) return;
 
             let value = self.nvD3.chart.xAxis.scale().invert(d3.event.x);
             let levels;
-            if(d.isBackground) {
+            if (d.isBackground) {
               self.onBackgroundLevelChange.emit(value);
               //levels = {background: value, peak: self.normalizer.peakLevel};
             }
@@ -160,34 +162,34 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
             d.x2 = value;
             d3.select(this)
               .attr({
-                x1: function(d){ return self.nvD3.chart.xAxis.scale()(d.x1) },
-                y1: function(d){ return self.nvD3.chart.yAxis.scale()(d.y1) },
-                x2: function(d){ return self.nvD3.chart.xAxis.scale()(d.x2) },
-                y2: function(d){ return self.nvD3.chart.yAxis.scale()(d.y2) }
-            });
+                x1: function (d) { return self.nvD3.chart.xAxis.scale()(d.x1) },
+                y1: function (d) { return self.nvD3.chart.yAxis.scale()(d.y1) },
+                x2: function (d) { return self.nvD3.chart.xAxis.scale()(d.x2) },
+                y2: function (d) { return self.nvD3.chart.yAxis.scale()(d.y2) }
+              });
           }));
 
-        lines.exit().remove();
+      lines.exit().remove();
 
-        // self.nvD3.chart.focus.dispatch.on("onBrush.levels$", function(extent) {
-        //   self.updateBackgroundPeakLines();
-        // });
+      // self.nvD3.chart.focus.dispatch.on("onBrush.levels$", function(extent) {
+      //   self.updateBackgroundPeakLines();
+      // });
 
 
 
-        // // resize the chart with vertical lines
-        // // but only the third line will be scaled properly...
-        // nv.utils.windowResize(function() {
-        // 	this.nvD3.chart.update();
-        //   lineGroup.selectAll('line')
-        //   .transition()
-        //   .attr({
-        //       x1: function(d){ return self.nvD3.chart.xAxis.scale()(d.x1) },
-        //       y1: function(d){ return self.nvD3.chart.yAxis.scale()(d.y1) },
-        //       x2: function(d){ return self.nvD3.chart.xAxis.scale()(d.x2) },
-        //       y2: function(d){ return self.nvD3.chart.yAxis.scale()(d.y2) }
-        //     });
-        // }.bind(this));
+      // // resize the chart with vertical lines
+      // // but only the third line will be scaled properly...
+      // nv.utils.windowResize(function() {
+      // 	this.nvD3.chart.update();
+      //   lineGroup.selectAll('line')
+      //   .transition()
+      //   .attr({
+      //       x1: function(d){ return self.nvD3.chart.xAxis.scale()(d.x1) },
+      //       y1: function(d){ return self.nvD3.chart.yAxis.scale()(d.y1) },
+      //       x2: function(d){ return self.nvD3.chart.xAxis.scale()(d.x2) },
+      //       y2: function(d){ return self.nvD3.chart.yAxis.scale()(d.y2) }
+      //     });
+      // }.bind(this));
 
 
     }
@@ -197,10 +199,10 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   ngOnChanges() {
     let result = [];
-    if(this.hist && this.hist.data != this.lastHistData) {
+    if (this.hist && this.hist.data != this.lastHistData) {
       result = Array(this.hist.data.length);
-      for(let i=0; i<result.length; i++)  {
-        result[i] = {x: getBinCenter(this.hist, i), y: this.hist.data[i]}
+      for (let i = 0; i < result.length; i++) {
+        result[i] = { x: getBinCenter(this.hist, i), y: this.hist.data[i] }
       }
       this.chartData = [
         {

@@ -40,7 +40,7 @@ import { environment } from '../environments/environment';
      */
     StoreModule.forRoot(reducers, { metaReducers }),
 
-    
+
     /**
      * Store devtools instrument the store retaining past versions of state
      * and recalculating new states. This enables powerful time-travel
@@ -68,7 +68,7 @@ import { environment } from '../environments/environment';
      * `provideDB` sets up @ngrx/db with the provided schema and makes the Database
      * service available.
      */
-    
+
     CoreModule.forRoot(),
     AuthModule.forRoot(),
   ],
@@ -82,8 +82,8 @@ import { environment } from '../environments/environment';
       useClass: TokenInterceptor,
       multi: true
     }
-   
+
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

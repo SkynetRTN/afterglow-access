@@ -12,13 +12,13 @@ import { DataProviderAsset } from '../../data-providers/models/data-provider-ass
 @Injectable()
 export class AfterglowDataProviderService {
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
 
-  getDataProviders() : Observable<DataProvider[]> {
+  getDataProviders(): Observable<DataProvider[]> {
     return this.http
       .get<any[]>(`${environment.apiUrl}/data-providers`)
-      .map(res =>  res
+      .map(res => res
         .map(r => {
           return {
             id: r.id,
@@ -38,27 +38,27 @@ export class AfterglowDataProviderService {
             searchable: r.searchable,
             readonly: r.readonly,
             quota: r.quota,
-            usage: r.usage 
+            usage: r.usage
           }
         }));
   }
 
-  getAssets(dataProviderId: string, path:string) {
+  getAssets(dataProviderId: string, path: string) {
     let params: HttpParams = new HttpParams();
-    if(path) params = params.set('path', path);
+    if (path) params = params.set('path', path);
 
 
-    return this.http.get<any[]>(`${environment.apiUrl}/data-providers/${dataProviderId}/assets`, {params: params})
+    return this.http.get<any[]>(`${environment.apiUrl}/data-providers/${dataProviderId}/assets`, { params: params })
       .map(resp => resp.map(r => {
-        let asset : DataProviderAsset = {
+        let asset: DataProviderAsset = {
           name: r.name,
           collection: r.collection,
           path: r.path,
           metadata: r.metadata
         }
         return asset;
-    }));
+      }));
   }
 
- 
+
 }

@@ -84,6 +84,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   private dragging: boolean = false;
   private zooming: boolean = false;
   private zoomingTime: number = 0.01;
+  private mouseOverImage: boolean = false;
   // minimum number of pixels mouse must move after click to not be considered
   private maxDeltaBeforeMove: number = 3;
 
@@ -145,18 +146,19 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
 
 
-      // background pattern
-      this.placeholder = this.viewerPlaceholder.nativeElement;
+    // background pattern
+    let patternWidth = 8;
+    this.placeholder = this.viewerPlaceholder.nativeElement;
     this.backgroundCanvas = document.createElement('canvas');
-    this.backgroundCanvas.width = 16;
-    this.backgroundCanvas.height = 16;
+    this.backgroundCanvas.width = patternWidth * 2;
+    this.backgroundCanvas.height = patternWidth * 2;
     this.backgroundCtx = <CanvasRenderingContext2D>this.backgroundCanvas.getContext('2d');
     this.backgroundCtx.fillStyle = "rgb(215, 215, 215)";
-    this.backgroundCtx.fillRect(0, 0, 8, 8);
-    this.backgroundCtx.fillRect(8, 8, 8, 8);
+    this.backgroundCtx.fillRect(0, 0, patternWidth, patternWidth);
+    this.backgroundCtx.fillRect(patternWidth, patternWidth, patternWidth, patternWidth);
     this.backgroundCtx.fillStyle = "rgb(255, 255, 255)";
-    this.backgroundCtx.fillRect(8, 0, 8, 8);
-    this.backgroundCtx.fillRect(0, 8, 8, 8);
+    this.backgroundCtx.fillRect(patternWidth, 0, patternWidth, patternWidth);
+    this.backgroundCtx.fillRect(0, patternWidth, patternWidth, patternWidth);
 
 
     this.imageCanvas = document.createElement('canvas');
@@ -473,7 +475,8 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     if (!this.initialized) return;
     // console.log('image mouse move');
     let viewportCoord = this.viewportCoordFromEvent(event);
-    if (!this.mouseOnImage(viewportCoord))
+    this.mouseOverImage = this.mouseOnImage(viewportCoord)
+    if (!this.mouseOverImage)
       return;
 
     let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
@@ -534,7 +537,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     // document.removeEventListener('mouseup', this.handleImageMouseUpBound);
     document.removeEventListener('mousemove', this.handleDocumentMouseMoveWhileDownBound);
     this.placeholder.addEventListener('mousedown', this.handleImageMouseDownBound);
-
+    this.dragging = false;
     // if (this.dragging) {
     //   // this.dispatchEvent(new FitsViewerMouseEvent(FitsViewerMouseEvent.PAN_END,this.mouseImage));
     // }

@@ -53,4 +53,4 @@ import { reducers } from './reducers';
   ],
   providers: [],
 })
-export class DataProvidersModule {}
+export class DataProvidersModule { }

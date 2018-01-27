@@ -32,7 +32,7 @@ export interface EllipseMarker extends MarkerBase {
   theta: number;
 }
 
-export type Marker  =
+export type Marker =
   | RectangleMarker
   | EllipseMarker;
 
