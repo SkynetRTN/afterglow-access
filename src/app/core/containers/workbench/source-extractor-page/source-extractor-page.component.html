@@ -1,15 +1,16 @@
 <div class="workbench-outlet-wrapper">
 
-  <div class="image-viewer-panel">
-    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showInfoBar]="true" [showRegionMarker]="(this.region$ | async)"
+  <div class="image-viewer-panel" role="region" aria-label="image viewer">
+    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showInfoBar]="true"
+    [showRegionMarker]="(this.region$ | async) && (sourceExtractorState$ | async)?.regionOption != SourceExtractorRegionOption.VIEWPORT"
       [region]="this.region$ | async" [showSourceMarkers]="true" [sources]="filteredSources$ | async" [selectedSources]="selectedSources$ | async"
       (onImageClick)="onImageClick($event)" (onViewportChange)="onViewportChange($event)">
     </app-pan-zoom-viewer>
   </div>
   <span class="resizer"></span>
-  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel">
+  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel"  role="region" aria-labelledby="settings-header">
     <div class="card" style="height: 100%;">
-      <div class="card-header">
+      <div id="settings-header" class="card-header">
         Source Extractor Settings
       </div>
 
@@ -110,7 +111,7 @@
                     { name: 'mag', label: 'Mag', width: 80, numeric: true, format: DECIMAL_FORMAT},
                     { name: 'magError', label: 'Err', width: 80, numeric: true, format: DECIMAL_FORMAT}
                   ]" [selectable]="true" [ngModel]="selectedSources$ | async" (rowSelect)="onSelectedRowChanges($event)"
-            (selectAll)="onSelectAllRows($event)" [clickable]="true" [multiple]="true" [sortable]="true" [style.height.px]="300">
+            (selectAll)="onSelectAllRows($event)" [clickable]="true" [multiple]="true" [sortable]="true" [style.height.px]="300" [style.width.px]="500">
           </td-data-table>
 
 

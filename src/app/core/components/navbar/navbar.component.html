@@ -1,47 +1,31 @@
-<nav class="navbar navbar-expand-md navbar-dark bg-dark">
-    <button (click)="isCollapsed = !isCollapsed"
-      class="navbar-toggler" type="button" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-  <a class="navbar-brand" [routerLink]="[brandMenuItem.path]" routerLinkActive="active"
-    *ngFor="let brandMenuItem of brandMenuItems" i18n>{{brandMenuItem.title}}</a>
-  <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav">
-      <li class="nav-item" *ngFor="let menuItem of leftMenuItems"
-        routerLinkActive="active">
-        <a class="nav-link" [routerLink]="[menuItem.path]" routerLinkActive="active" i18n>{{menuItem.title}}</a>
-      </li>
-    </ul>
-    <ul class="navbar-nav ml-auto">
-      <li class="nav-item" *ngFor="let menuItem of rightMenuItems"
-        routerLinkActive="active">
-        <a class="nav-link" [routerLink]="[menuItem.path]" routerLinkActive="active" i18n>{{menuItem.title}}</a>
-      </li>
-    </ul>
-
-  </div>
-</nav>
-
-<!--
-<nav class="navbar navbar-expand-xs navbar-dark bg-inverse">
-  <button (click)="isCollapsed = !isCollapsed"
-    class="navbar-toggler navbar-toggler-right pull-xs-right hidden-sm-up" type="button"
-    aria-controls="bd-main-nav"
-    aria-label="Toggle navigation">
-      {{menuIcon}}
-  </button>
-  <a (click)="isCollapsed = true" class="navbar-brand hidden-sm-up" [routerLink]="[brandMenu.path]">
-    {{brandMenu.title}}
+<nav class="navbar-header" role="navigation" aria-label="primary">
+  <a mat-button class="afterglow-button afterglow-logo" routerLink="/" aria-label="Home" routerLinkActive="active">
+    <span>Afterglow Access</span>
   </a>
-  <div class="navbar-collapse" id="bd-main-nav"
-  [attr.aria-expanded]="!isCollapsed" [ngClass]="{collapse: isCollapsed}">
-    <ul class="navbar-nav">
-      <li (click)="isCollapsed = true" *ngFor="let menuItem of menuItems"
-        class="nav-item" routerLinkActive="active"
-        [ngClass]="getMenuItemClasses(menuItem)">
-        <a class="nav-link" [routerLink]="[menuItem.path]" routerLinkActive="active">{{menuItem.title}}</a>
-      </li>
-    </ul>
-  </div>
-</nav>-->
+
+  <div class="flex-spacer"></div>
+  <!-- <theme-picker></theme-picker> -->
+  <!-- <button mat-icon-button class="afterglow-button" matTooltip="Select a theme!" tabindex="-1">
+    <mat-icon>format_color_fill</mat-icon>
+  </button> -->
+
+  <ng-container *ngIf="!authenticated">
+      <a mat-button class="afterglow-button" routerLink="login" aria-label="Login" routerLinkActive="active">
+        Login
+      </a>
+  </ng-container>
+  <ng-container *ngIf="authenticated">
+      <!-- <button mat-icon-button class="afterglow-button" matTooltip="View User Profile" tabindex="-1">
+        <mat-icon>account_box</mat-icon>
+      </button> -->
+      <a mat-button class="afterglow-button" routerLink="workbench" aria-label="Workbench" routerLinkActive="active">
+          Workbench
+        </a>
+      <a mat-button class="afterglow-button" routerLink="import" aria-label="Import" routerLinkActive="active">
+          Import
+        </a>
+      <a mat-button class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active">
+        Logout
+      </a>
+  </ng-container>
+</nav>

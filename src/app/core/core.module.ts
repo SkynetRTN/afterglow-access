@@ -26,7 +26,6 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
-import { MainNavbarComponent } from './components/main-navbar/main-navbar.component';
 import { PanZoomViewerComponent } from './components/pan-zoom-viewer/pan-zoom-viewer.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
@@ -57,7 +56,6 @@ import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 
 export const COMPONENTS = [
-  MainNavbarComponent,
   NavbarComponent,
   AppFooterComponent,
   PanZoomViewerComponent,

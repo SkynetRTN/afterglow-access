@@ -12,7 +12,7 @@
   <div *ngIf="(currentProvider$ | async)">
     <div class="container pt-1">
       
-      <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'accent'"></mat-progress-bar>
+      <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
       <div *ngIf="(importing$ | async)" class="alert alert-info">
           Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
       </div>

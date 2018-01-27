@@ -1,64 +1,74 @@
 <div class="workbench-wrapper">
   <div class="sidebar-panel">
-    <div class="sidebar-wrapper">
+    <div class="sidebar-wrapper" role="region" aria-label="File Library">
       <div class="file-list-toolbar-panel" [class.collapsed]="!(showSidebar$ | async)">
         <div class="vertical-icon-nav-item" [class.active]="(sidebarView$ | async)==SidebarView.FILES" (click)="setSidebarView(SidebarView.FILES)">
-          <button mat-icon-button aria-label="View File List">
+          <button mat-icon-button id="tab-view-file-library" attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES ? 'Hide' : 'Show' }} File Library List"
+            [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES">
             <mat-icon>description</mat-icon>
           </button>
         </div>
         <div class="vertical-icon-nav-item" [class.active]="(sidebarView$ | async)==SidebarView.SEARCH" (click)="setSidebarView(SidebarView.SEARCH)">
-          <button mat-icon-button aria-label="Search File List">
+          <button mat-icon-button id="tab-search-file-library" attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH ? 'Hide' : 'Show' }} File Library Search"
+            [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH">
             <mat-icon>search</mat-icon>
           </button>
         </div>
 
       </div>
       <div *ngIf="(showSidebar$ | async)" class="file-list-panel">
-        <div class="file-list-panel-wrapper">
+        <div class="file-list-panel-wrapper" *ngIf="(sidebarView$ | async) == SidebarView.FILES" aria-labeledby="tab-view-file-library">
           <div class="file-list-panel-header">
-            <div *ngIf="(sidebarView$ | async) == SidebarView.FILES">
-              <div class="file-list-header-view">
-                <button mat-icon-button aria-label="Clear Library" (click)="removeAllFiles()">
-                  <mat-icon>delete_sweep</mat-icon>
-                </button>
-                <button mat-icon-button aria-label="Refresh" (click)="refresh()">
-                  <mat-icon>refresh</mat-icon>
-                </button>
-              </div>
+            <div class="file-list-header-view">
+              <button mat-icon-button aria-label="Clear Library" (click)="removeAllFiles()">
+                <mat-icon>delete_sweep</mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Refresh Library" (click)="refresh()">
+                <mat-icon>refresh</mat-icon>
+              </button>
             </div>
-
-            <div *ngIf="(sidebarView$ | async) == SidebarView.SEARCH">
-              <div class="file-list-header-search">
-                <mat-form-field class="">
-                  <input matInput placeholder="Filter library files" [(ngModel)]="fileFilterString" type="text">
-                </mat-form-field>
-                <div *ngIf="fileFilterString != ''" class="alert alert-warning mb-0" role="alert">
-                  {{( (files$ | async) | filteredFiles: fileFilterString)?.length}} of {{(files$ | async)?.length}} files matched
-                </div>
-              </div>
-
-
-            </div>
-
-
-
-
-
           </div>
           <div class="file-list-panel-content">
             <div class="file-list-content">
-              <ul class="list-unstyled" style="white-space: nowrap; display: inline-block; margin: 0px; min-width: 100%;">
+              <app-data-file-selection-list (selectionChange)="onFileSelect($event)" aria-label="File Library">
+                <app-data-file-list-item *ngFor="let file of (files$ | async); let index=index; let odd=odd; let even=even; trackBy: trackByFn"
+                  [ngClass]="{ odd: odd, even: even }" [file]="file" [selected]="(selectedFile$ | async) == file">
+                </app-data-file-list-item>
+              </app-data-file-selection-list>
+              <!-- <ul class="list-unstyled" style="white-space: nowrap; display: inline-block; margin: 0px; min-width: 100%;"
+              aria-label="Library File List" role="listbox" tabindex="0">
                 <div *ngFor="let file of (files$ | async); let index=index; let odd=odd; let even=even;" [ngClass]="{ odd: odd, even: even }">
                   <app-data-file-list-item [file]="file" [selected]="(selectedFile$ | async) == file" (select)="onFileSelect(file)">
                   </app-data-file-list-item>
                 </div>
-
-              </ul>
+              </ul> -->
             </div>
-
           </div>
         </div>
+        <!-- <div class="file-list-panel-wrapper" *ngIf="(sidebarView$ | async) == SidebarView.SEARCH" aria-labeledby="tab-search-file-library">
+          <div class="file-list-panel-header">
+            <div class="file-list-header-search">
+              <mat-form-field class="">
+                <input matInput placeholder="Filter library files" [(ngModel)]="fileFilterString" type="text">
+              </mat-form-field>
+              <div *ngIf="fileFilterString != ''" class="alert alert-warning mb-0" role="alert">
+                {{( (files$ | async) | filteredFiles: fileFilterString)?.length}} of {{(files$ | async)?.length}} files matched
+              </div>
+            </div>
+          </div>
+          <div class="file-list-panel-content">
+            <div class="file-list-content">
+              <ul class="list-unstyled" style="white-space: nowrap; display: inline-block; margin: 0px; min-width: 100%;" aria-label="Library File List"
+                role="listbox" tabindex="0">
+                <div *ngFor="let file of (files$ | async); let index=index; let odd=odd; let even=even;" [ngClass]="{ odd: odd, even: even }"
+                  role="option">
+                  <app-data-file-list-item [file]="file" [selected]="(selectedFile$ | async) == file" (select)="onFileSelect(file)">
+                  </app-data-file-list-item>
+                </div>
+              </ul>
+            </div>
+          </div>
+        </div> -->
       </div>
     </div>
 
@@ -68,26 +78,30 @@
 
     <router-outlet></router-outlet>
   </div>
-  <div class="workbench-nav-panel">
-    <nav>
+  <div class="workbench-nav-panel" [class.collapsed]="!(showConfig$ | async)">
+    <nav role="navigation" aria-label="workbench">
       <div class="vertical-icon-nav-item" routerLinkActive="active">
-        <a mat-icon-button aria-label="Viewer" routerLink="viewer" (click)="onClickWorkbenchNav(router.isActive('/workbench/viewer'))">
+        <a mat-icon-button aria-label="Viewer" routerLink="viewer" aria-label="Viewer" (click)="onClickWorkbenchNav(router.isActive('/workbench/viewer'))">
           <mat-icon>remove_red_eye</mat-icon>
         </a>
       </div>
       <div class="vertical-icon-nav-item" routerLinkActive="active">
-        <a mat-icon-button aria-label="Plotter" routerLink="plotter" (click)="onClickWorkbenchNav(router.isActive('/workbench/plotter'))">
+        <a mat-icon-button aria-label="Plotter" routerLink="plotter" aria-label="Plotter" (click)="onClickWorkbenchNav(router.isActive('/workbench/plotter'))">
           <mat-icon>insert_chart</mat-icon>
         </a>
       </div>
       <div class="vertical-icon-nav-item" routerLinkActive="active">
-        <a mat-icon-button aria-label="Sonifier" routerLink="sonifier" (click)="onClickWorkbenchNav(router.isActive('/workbench/sonifier'))">
+        <a mat-icon-button aria-label="Sonifier" routerLink="sonifier" aria-label="Sonifier" (click)="onClickWorkbenchNav(router.isActive('/workbench/sonifier'))">
           <mat-icon>audiotrack</mat-icon>
         </a>
       </div>
       <div class="vertical-icon-nav-item" routerLinkActive="active">
-        <a mat-icon-button aria-label="Source Analyzer" routerLink="source-analyzer" (click)="onClickWorkbenchNav(router.isActive('/workbench/source-analyzer'))">
-          <mat-icon>star_rate</mat-icon>
+        <a mat-icon-button aria-label="Source Analyzer" routerLink="source-analyzer" aria-label="Source Analyzer" (click)="onClickWorkbenchNav(router.isActive('/workbench/source-analyzer'))">
+          
+          <!-- star_rate causes strange issues with viewport width -->
+          <!-- <mat-icon>star_rate</mat-icon> -->
+          
+          <mat-icon>star_border</mat-icon>
         </a>
       </div>
     </nav>

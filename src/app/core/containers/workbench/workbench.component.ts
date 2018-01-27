@@ -16,6 +16,11 @@ import * as fromCore from '../../reducers';
 import * as workbenchActions from '../../actions/workbench'
 import * as dataFileActions from '../../../data-files/actions/data-file';
 import { Router } from '@angular/router';
+import { FocusKeyManager } from '@angular/cdk/a11y';
+import { DataFileListItemComponent } from '../../../data-files/components/data-file-list-item/data-file-list-item.component';
+import { QueryList } from '@angular/core/src/linker/query_list';
+import { ContentChildren } from '@angular/core/src/metadata/di';
+import { DataFileSelectionListChange } from '../../../data-files/components/data-file-selection-list/data-file-selection-list.component';
 
 
 
@@ -26,9 +31,10 @@ import { Router } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkbenchComponent implements OnInit {
-
+  
   private files$: Observable<Array<DataFile>>;
   private showSidebar$: Observable<boolean>;
+  private showConfig$: Observable<boolean>;
   private sidebarView$: Observable<SidebarView>;
   private selectedFile$: Observable<DataFile>;
   private loading$: Observable<boolean>;
@@ -41,7 +47,9 @@ export class WorkbenchComponent implements OnInit {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
     this.selectedFile$ = this.store.select(fromCore.workbench.getFile);
     this.sidebarView$ = this.store.select(fromCore.workbench.getSidebarView);
+    this.showConfig$ = this.store.select(fromCore.workbench.getShowConfig);
     this.showSidebar$ = this.store.select(fromCore.workbench.getShowSidebar);
+
     //this.loading$ = this.fileLibraryStore.loading$;
 
     // this.imageFiles$ = imageFileService.imageFiles$;
@@ -56,12 +64,14 @@ export class WorkbenchComponent implements OnInit {
 
   }
 
+ 
+
   ngOnInit() {
     this.store.dispatch(new dataFileActions.LoadLibrary());
   }
 
-  onFileSelect(file: DataFile) {
-    this.store.dispatch(new workbenchActions.SelectDataFile(file.id));
+  onFileSelect($event: DataFileSelectionListChange) {
+    this.store.dispatch(new workbenchActions.SelectDataFile($event.option.file.id));
   }
 
   removeAllFiles() {
@@ -85,6 +95,12 @@ export class WorkbenchComponent implements OnInit {
       // show
       this.store.dispatch(new workbenchActions.SetShowConfig({showConfig: true}));
     }
+  }
+
+
+  /* for data file selection list */
+  trackByFn(index, item) {
+    return item.id; // or item.id
   }
 
 }

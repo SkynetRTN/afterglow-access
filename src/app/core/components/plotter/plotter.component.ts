@@ -169,7 +169,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   }
 
   private updateLineView() {
-    if(!this.imageFile || !this.lineMeasureStart || !this.lineMeasureEnd) { 
+    if(!this.imageFile || !this.imageFile.headerLoaded || !this.lineMeasureStart || !this.lineMeasureEnd) { 
       this.currentSeparation = null;
       this.currentSeparationScaled = null;
       return;

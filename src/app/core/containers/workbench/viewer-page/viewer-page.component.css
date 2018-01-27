@@ -2,13 +2,11 @@
   display: flex;
   flex: 1 1 0%;
   height: 100%;
-  position: absolute;
+  width: 100%;
   outline: none;
   overflow: hidden;
   user-select: text;
   flex-direction: row;
-  left: 0px;
-  right: 0px;
 }
 
 .image-viewer-panel {
@@ -21,4 +19,5 @@
   flex: 0 0 auto;
   position: relative;
   outline: none;
+  min-width: 200px;
 }

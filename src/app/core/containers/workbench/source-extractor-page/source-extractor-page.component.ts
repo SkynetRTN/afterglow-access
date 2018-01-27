@@ -54,6 +54,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   lastSourceExtractorGlobalState: fromSourceExtractor.State;
   lastWorkbenchState: fromWorkbench.State;
   SourceExtractorModeOption = SourceExtractorModeOption;
+  SourceExtractorRegionOption = SourceExtractorRegionOption;
   subs: Subscription[] = [];
 
   pixelCoordView: string = 'pixel';

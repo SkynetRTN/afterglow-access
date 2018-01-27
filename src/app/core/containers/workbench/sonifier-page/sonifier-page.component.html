@@ -1,20 +1,21 @@
 <div class="workbench-outlet-wrapper">
 
-  <div class="image-viewer-panel">
-    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showRegionMarker]="true" [region]="(sonifierState$ | async)?.region"
+  <div class="image-viewer-panel" role="region" aria-label="image viewer">
+    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async"
+    [showRegionMarker]="(sonifierState$ | async)?.region && (sonifierState$ | async)?.regionMode != SonifierRegionMode.VIEWPORT" [region]="(sonifierState$ | async)?.region"
       (onViewportChange)="onViewportChange($event)">
     </app-pan-zoom-viewer>
   </div>
   <span class="resizer"></span>
-  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel">
+  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card" style="height: 100%;">
-      <div class="card-header">
+      <div  id="settings-header" class="card-header">
         Sonification Settings
       </div>
 
       <div *ngIf="(imageFile$ | async)" class="card-body" style="overflow-y: auto;">
 
-        <table class="table">
+        <table class="table header-value-table">
           <tbody>
             <tr>
               <th scope="row">Region Mode:</th>

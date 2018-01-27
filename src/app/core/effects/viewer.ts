@@ -84,6 +84,14 @@ export class ViewerEffects {
       return Observable.from([new viewerActions.RenormalizeImageFile({file: imageFile})]);
   });
 
+  // @Effect()
+  // imageTilesInitialized$: Observable<Action> = this.actions$
+  //   .ofType<imageFileActions.InitImageTiles>(imageFileActions.INIT_IMAGE_TILES)
+  //   .withLatestFrom(this.store.select(fromDataFile.getDataFiles))
+  //   .switchMap(([action, dataFiles]) => {
+  //     return Observable.from([new viewerActions.CenterRegionInViewport({file: imageFile})]);
+  // });
+
 
   @Effect()
   centerRegionInViewport$: Observable<Action> = this.actions$

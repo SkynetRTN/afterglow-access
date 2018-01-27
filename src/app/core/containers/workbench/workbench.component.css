@@ -1,16 +1,10 @@
 .workbench-wrapper {
   display: flex;
-  flex: 1 1 0%;
-  height: initial;
-  position: absolute;
+  height: 100%;
+  width: 100%;
   outline: none;
-  overflow: hidden;
   user-select: text;
-  bottom: 0px;
-  top: 56px;
   flex-direction: row;
-  left: 0px;
-  right: 0px;
 }
 
 .sidebar-panel {
@@ -47,6 +41,7 @@
   height: 100%;
   border-right: 2px solid rgba(0, 0, 0, .125);
   border-left: 1px solid #e0e0e0;
+  min-width: 200px;
 }
 
 .file-list-panel-wrapper {
@@ -85,6 +80,10 @@
   overflow: auto;
 }
 
+.file-list-content {
+  padding: 5px;
+}
+
 .workbench-outlet-panel {
   flex: 1 1 0%;
   position: relative;
@@ -97,9 +96,12 @@
   outline: none;
 }
 
-.file-list-content {
-  padding: 5px;
+.workbench-nav-panel.collapsed {
+  border-left: 2px solid rgba(0, 0, 0, .125);
 }
+
+
+
 
 .vertical-icon-nav-item {
   padding: 10px;
@@ -107,12 +109,9 @@
   color: rgba(0, 0, 0, 0.54);
 }
 
+
 .vertical-icon-nav-item.active {
   /* background-color: inherit; */
   color: #3f51b5;
-}
-
-.even {
-  background: rgba(0, 0, 0, .05);
 }
 

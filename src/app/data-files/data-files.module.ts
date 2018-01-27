@@ -17,11 +17,9 @@ import { SvgModule } from '../svg/svg.module';
 import { PipesModule } from '../pipes/pipes.module';
 
 import { DataFileEffects } from './effects/data-file';
-
-import { DataFileListItemComponent } from './components/data-file-list-item/data-file-list-item.component';
-
 import { reducers } from './reducers';
 import { ImageHistChartComponent } from './components/image-hist-chart/image-hist-chart.component';
+import { DataFileSelectionListComponent, DataFileListItemComponent } from './components/data-file-selection-list/data-file-selection-list.component';
 
 @NgModule({
   imports: [
@@ -54,10 +52,12 @@ import { ImageHistChartComponent } from './components/image-hist-chart/image-his
   declarations: [
     DataFileListItemComponent,
     ImageHistChartComponent,
+    DataFileSelectionListComponent,
   ],
   exports: [
     DataFileListItemComponent,
     ImageHistChartComponent,
+    DataFileSelectionListComponent
   ],
   providers: [],
 })

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
-import { CookieService } from 'ngx-cookie';
-import { MenuType } from './core/components/navbar/navbar.metadata';
+import { Component, OnInit } from '@angular/core';
+import { CookieService } from 'ngx-cookie';;
+import { AnyFn } from '@ngrx/store/src/selector';
+import { Title } from '@angular/platform-browser';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Rx';
 import { Store } from '@ngrx/store';
@@ -13,20 +15,26 @@ import * as dataFileActions from './data-files/actions/data-file';
 import * as dataProviderActions from './data-providers/actions/data-provider';
 import { Subscribable } from 'rxjs/Observable';
 import { User } from './auth/models/user';
-import { AnyFn } from '@ngrx/store/src/selector';
+
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   private currentRoutes: any[] = [];
   private loggedIn$: Observable<boolean>;
   private user$: Observable<User>;
   private loggedInSub: Subscription;
 
-  public constructor(private store: Store<fromRoot.State>, private authGuard: AuthGuard) {
+  public constructor(
+    private store: Store<fromRoot.State>,
+    private authGuard: AuthGuard,
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private titleService: Title
+  ) {
     this.loggedIn$ = this.store.select(fromAuth.getLoggedIn)
     this.user$ = this.store.select(fromAuth.getUser);
     
@@ -39,6 +47,27 @@ export class AppComponent {
     // })
 
 
+  }
+
+  getTitle(state, parent) {
+    var data = [];
+    if(parent && parent.snapshot.data && parent.snapshot.data.title) {
+      data.push(parent.snapshot.data.title);
+    }
+
+    if(state && parent) {
+      data.push(... this.getTitle(state, state.firstChild(parent)));
+    }
+    return data;
+  }
+
+  ngOnInit() {
+    this.router.events.subscribe(event => {
+      if(event instanceof NavigationEnd) {
+        var title = [...this.getTitle(this.router.routerState, this.router.routerState.root).reverse(), 'Afterglow Access'].join(' | ');
+        this.titleService.setTitle(title);
+      }
+    });
   }
 
 }

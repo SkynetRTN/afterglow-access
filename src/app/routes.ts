@@ -1,4 +1,3 @@
-import { MenuType } from './core/components/navbar/navbar.metadata';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './auth/services/auth-guard.service'
 import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
@@ -21,31 +20,37 @@ export const AFTERGLOW_ROUTES: Routes  = [
   },
   {
     path: 'login',
-    component: LoginPageComponent
+    component: LoginPageComponent,
+    data: {title: 'Login'}
   },
   {
     path: 'oauth_authorized',
-    component: OauthAuthorizedPageComponent
+    component: OauthAuthorizedPageComponent,
+    data: {title: 'Authorizing Please Wait'}
   },
   {
     path: 'logout',
     component: LogoutPageComponent,
     canActivate: [AuthGuard],
+    data: {title: 'Logout'}
   },
   {
     path: 'import',
     component: DataProvidersComponent,
     canActivate: [AuthGuard],
+    data: {title: 'Import'},
     children: [
       {
         path: ':slug/browse',
         component: DataProviderBrowsePageComponent,
+        data: {title: 'Browse'},
         canActivate: [AuthGuard],
         children: []
       },
       {
         path: '',
         component: DataProvidersIndexPageComponent,
+        data: {title: 'Data Providers'},
         canActivate: [AuthGuard],
         children: []
       },
@@ -54,26 +59,31 @@ export const AFTERGLOW_ROUTES: Routes  = [
   {
     path: 'workbench',
     component: WorkbenchComponent,
+    data: {title: 'Workbench'},
     canActivate: [AuthGuard],
     children: [
       {
         path: 'viewer',
         component: ViewerPageComponent,
+        data: {title: 'Viewer'},
         canActivate: [AuthGuard],
       },
       {
         path: 'plotter',
         component: PlotterPageComponent,
+        data: {title: 'Plotter'},
         canActivate: [AuthGuard],
       },
       {
         path: 'sonifier',
         component: SonifierPageComponent,
+        data: {title: 'Sonifier'},
         canActivate: [AuthGuard],
       },
       {
         path: 'source-analyzer',
         component: SourceExtractorPageComponent,
+        data: {title: 'Source Analyzer'},
         canActivate: [AuthGuard],
       },
       // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},

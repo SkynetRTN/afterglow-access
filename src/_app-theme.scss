@@ -1,5 +1,5 @@
 @import '~@angular/material/theming';
-@import './app/core/components/main-navbar/main-navbar-theme';
+@import './app/core/components/navbar/navbar-theme';
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -26,5 +26,5 @@
     color: mat-color($primary, default-contrast);
   }
 
-  @include main-nav-bar-theme($theme);
+  @include nav-bar-theme($theme);
 }

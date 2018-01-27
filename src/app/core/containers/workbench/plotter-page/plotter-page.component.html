@@ -1,15 +1,15 @@
 <div class="workbench-outlet-wrapper">
 
-  <div class="image-viewer-panel">
+  <div class="image-viewer-panel" role="region" aria-label="image viewer">
     <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showInfoBar]="true" [showLineMarker]="line$ | async"
       [line]="line$ | async" (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)">
     </app-pan-zoom-viewer>
   </div>
   <span class="resizer"></span>
-  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel">
+  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card" style="height: 100%;">
-      <div class="card-header">
-        Plotter
+      <div id="settings-header" class="card-header">
+        Plotter Settings
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
