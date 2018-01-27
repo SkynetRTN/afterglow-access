@@ -17,7 +17,6 @@ import * as workbenchActions from '../../actions/workbench'
 import * as dataFileActions from '../../../data-files/actions/data-file';
 import { Router } from '@angular/router';
 import { FocusKeyManager } from '@angular/cdk/a11y';
-import { DataFileListItemComponent } from '../../../data-files/components/data-file-list-item/data-file-list-item.component';
 import { QueryList } from '@angular/core/src/linker/query_list';
 import { ContentChildren } from '@angular/core/src/metadata/di';
 import { DataFileSelectionListChange } from '../../../data-files/components/data-file-selection-list/data-file-selection-list.component';
