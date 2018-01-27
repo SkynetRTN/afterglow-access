@@ -103,7 +103,7 @@ export class ViewerEffects {
       let imageFile = action.payload.file;
       let viewportSize = action.payload.viewportSize;
       let region = action.payload.region;
-      let scale = Math.min((viewportSize.width * .9) / region.width, (viewportSize.height * .9) / region.height);
+      let scale = Math.min((viewportSize.width - 20) / region.width, (viewportSize.height - 20) / region.height);
 
       actions.push(new viewerActions.ZoomTo({
         file: imageFile,
