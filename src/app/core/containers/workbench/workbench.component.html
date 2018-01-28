@@ -2,23 +2,23 @@
   <div class="sidebar-panel">
     <div class="sidebar-wrapper" role="region" aria-label="File Library">
       <div class="file-list-toolbar-panel" [class.collapsed]="!(showSidebar$ | async)">
+        <div class="vertical-icon-nav-item-group">
+          <button id="tab-view-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES"
+            attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES ? 'Hide' : 'Show' }} File Library List"
+            [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES" (click)="setSidebarView(SidebarView.FILES)">
+            <div class="icon-wrapper">
+              <mat-icon>description</mat-icon>
+            </div>
+          </button>
 
-        <button id="tab-view-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES"
-          attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES ? 'Hide' : 'Show' }} File Library List"
-          [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES" (click)="setSidebarView(SidebarView.FILES)">
-          <div class="icon-wrapper">
-            <mat-icon>description</mat-icon>
-          </div>
-        </button>
-
-        <button id="tab-search-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH"
-          attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH ? 'Hide' : 'Show' }} File Library Search"
-          [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH" (click)="setSidebarView(SidebarView.SEARCH)">
-          <div class="icon-wrapper">
-            <mat-icon>search</mat-icon>
-          </div>
-        </button>
-
+          <button id="tab-search-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH"
+            attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH ? 'Hide' : 'Show' }} File Library Search"
+            [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH" (click)="setSidebarView(SidebarView.SEARCH)">
+            <div class="icon-wrapper">
+              <mat-icon>search</mat-icon>
+            </div>
+          </button>
+        </div>
 
       </div>
       <div *ngIf="(showSidebar$ | async)" class="file-list-panel">
@@ -85,35 +85,36 @@
   </div>
   <div class="workbench-nav-panel" [class.collapsed]="!(showConfig$ | async)">
     <nav role="navigation" aria-label="workbench">
+      <div class="vertical-icon-nav-item-group">
+        <div class="workbench-settings-card"><div class="card-header spacer"></div></div>
+        <a class="vertical-icon-nav-item" routerLinkActive #viewerRoute="routerLinkActive" [class.active]="(showConfig$ | async) && viewerRoute.isActive"
+          routerLink="viewer" (click)="onClickWorkbenchNav(router.isActive('/workbench/viewer'))">
+          <div class="icon-wrapper">
+            <mat-icon>remove_red_eye</mat-icon>
+          </div>
+        </a>
+        <a class="vertical-icon-nav-item" routerLinkActive #plotterRoute="routerLinkActive" [class.active]="(showConfig$ | async) && plotterRoute.isActive"
+          routerLink="plotter" aria-label="Plotter" (click)="onClickWorkbenchNav(router.isActive('/workbench/plotter'))">
+          <div class="icon-wrapper">
+            <mat-icon>insert_chart</mat-icon>
+          </div>
+        </a>
+        <a class="vertical-icon-nav-item" routerLinkActive #sonifierRoute="routerLinkActive" [class.active]="(showConfig$ | async) && sonifierRoute.isActive"
+          routerLink="sonifier" aria-label="Sonifier" (click)="onClickWorkbenchNav(router.isActive('/workbench/sonifier'))">
+          <div class="icon-wrapper">
+            <mat-icon>audiotrack</mat-icon>
+          </div>
+        </a>
+        <a class="vertical-icon-nav-item" routerLinkActive #sourceAnalyzerRoute="routerLinkActive" [class.active]="(showConfig$ | async) && sourceAnalyzerRoute.isActive"
+          routerLink="source-analyzer" aria-label="Source Analyzer" (click)="onClickWorkbenchNav(router.isActive('/workbench/source-analyzer'))">
+          <div class="icon-wrapper">
+            <!-- star_rate causes strange issues with viewport width -->
+            <!-- <mat-icon>star_rate</mat-icon> -->
 
-      <a class="vertical-icon-nav-item" routerLinkActive #viewerRoute="routerLinkActive" [class.active]="(showConfig$ | async) && viewerRoute.isActive"
-        routerLink="viewer" (click)="onClickWorkbenchNav(router.isActive('/workbench/viewer'))">
-        <div class="icon-wrapper">
-          <mat-icon>remove_red_eye</mat-icon>
-        </div>
-      </a>
-      <a class="vertical-icon-nav-item" routerLinkActive #plotterRoute="routerLinkActive" [class.active]="(showConfig$ | async) && plotterRoute.isActive"
-        routerLink="plotter" aria-label="Plotter" (click)="onClickWorkbenchNav(router.isActive('/workbench/plotter'))">
-        <div class="icon-wrapper">
-          <mat-icon>insert_chart</mat-icon>
-        </div>
-      </a>
-      <a class="vertical-icon-nav-item" routerLinkActive #sonifierRoute="routerLinkActive" [class.active]="(showConfig$ | async) && sonifierRoute.isActive"
-        routerLink="sonifier" aria-label="Sonifier" (click)="onClickWorkbenchNav(router.isActive('/workbench/sonifier'))">
-        <div class="icon-wrapper">
-          <mat-icon>audiotrack</mat-icon>
-        </div>
-      </a>
-      <a class="vertical-icon-nav-item" routerLinkActive #sourceAnalyzerRoute="routerLinkActive" [class.active]="(showConfig$ | async) && sourceAnalyzerRoute.isActive"
-        routerLink="source-analyzer" aria-label="Source Analyzer" (click)="onClickWorkbenchNav(router.isActive('/workbench/source-analyzer'))">
-        <div class="icon-wrapper">
-          <!-- star_rate causes strange issues with viewport width -->
-          <!-- <mat-icon>star_rate</mat-icon> -->
-
-          <mat-icon>star_border</mat-icon>
-        </div>
-      </a>
-
+            <mat-icon>star_border</mat-icon>
+          </div>
+        </a>
+      </div>
 
     </nav>
 

@@ -94,13 +94,14 @@
   flex: 0 0 auto;
   position: relative;
   outline: none;
-  /* match the bootstrap card header */
-  padding-top: 47px;
-  background: #fafafa;
 }
 
 
 /* Vertical Icon Nav Styling */
+.workbench-nav-panel .card-header.spacer {
+  border-left: none;
+}
+
 .vertical-icon-nav-item .icon-wrapper {
   padding: 15px 15px;
   text-align: center;
@@ -125,9 +126,4 @@ button.vertical-icon-nav-item {
 
 .vertical-icon-nav-item .icon-wrapper .mat-icon {
   vertical-align: middle;
-}
-
-.workbench-nav-panel nav {
-  /* match the bootstrap card header */
-  border-top: 1px solid #d6d6d6;
 }
