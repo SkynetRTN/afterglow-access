@@ -50,9 +50,23 @@ html, body {
   right: 0px;
 }
 
-.not-rounded {
-  border-radius: 0px;
+.workbench-outlet-panel .image-viewer-header {
+  height: 49px;
+  border-bottom: 1px solid #d6d6d6;
 }
+
+.workbench-settings-card {
+  border-radius: 0px;
+  border-right: none;
+  border-top: none;
+}
+
+.workbench-settings-card .card-header {
+  height: 49px;
+  background: #fafafa;
+  border-left: 1px solid rgba(0,0,0,.125);
+}
+
 
 /* fix bootstrap underlining and applying color to button font */
 a.mat-button {

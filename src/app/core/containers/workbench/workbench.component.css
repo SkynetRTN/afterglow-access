@@ -39,8 +39,8 @@
   position: relative;
   outline: none;
   height: 100%;
-  border-right: 2px solid rgba(0, 0, 0, .125);
-  border-left: 1px solid #e0e0e0;
+  border-right: 1px solid #dfdfdf;
+  background: #ffffff;
   min-width: 200px;
 }
 
@@ -94,15 +94,20 @@
   flex: 0 0 auto;
   position: relative;
   outline: none;
+  /* match the bootstrap card header */
+  padding-top: 47px;
+  background: #fafafa;
 }
 
+
+/* Vertical Icon Nav Styling */
 .vertical-icon-nav-item .icon-wrapper {
   padding: 15px 15px;
   text-align: center;
   /* background-color: #e0e0e0; */
   color: rgba(0, 0, 0, 0.54);
   background: #cacaca;
-  border-bottom: 1px solid #d6d6d6;
+  border-bottom: 1px solid rgb(165, 165, 165);
 }
 
 button.vertical-icon-nav-item {
@@ -120,4 +125,9 @@ button.vertical-icon-nav-item {
 
 .vertical-icon-nav-item .icon-wrapper .mat-icon {
   vertical-align: middle;
+}
+
+.workbench-nav-panel nav {
+  /* match the bootstrap card header */
+  border-top: 1px solid #d6d6d6;
 }
