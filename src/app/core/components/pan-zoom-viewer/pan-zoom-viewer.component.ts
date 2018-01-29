@@ -66,6 +66,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
   @ViewChild('viewerPlaceholder') viewerPlaceholder: ElementRef;
   @ViewChild('svgGroup') svgGroup: ElementRef;
+  private lastImageFile: ImageFile = null;
   private mouseInfo$ = new BehaviorSubject<{ x: number, y: number, value: number, raHours: number, decDegs: number }>(null);
   private MarkerType = MarkerType;
   private viewInitialized: boolean = false;
@@ -616,6 +617,16 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     return findTiles(this.imageFile, Math.min(corner0.x, corner1.x), Math.min(corner0.y, corner1.y), Math.abs(corner1.x - corner0.x), Math.abs(corner1.y - corner0.y));
   }
 
+  checkForNewImage() {
+    if(!this.lastImageFile) this.lastImageFile = this.imageFile;
+    if(this.imageFile.id == this.lastImageFile.id) return;
+    //new image detected
+    this.mouseInfo$.next(null);
+    this.lastViewportChangeEvent = null;
+    this.lastViewportSize = {width: null, height: null};
+    this.lastImageFile = this.imageFile;
+  }
+
   checkForResize() {
     if (this.targetCanvas.width != this.placeholder.clientWidth || this.targetCanvas.height != this.placeholder.clientHeight) {
       this.targetCanvas.width = this.placeholder.clientWidth;
@@ -633,6 +644,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
       //ExpressionChangedAfterItHasBeenChecked Error
       //https://blog.angularindepth.com/everything-you-need-to-know-about-the-expressionchangedafterithasbeencheckederror-error-e3fd9ce7dbb4 
       setTimeout(() => {
+        this.checkForNewImage();
         this.checkForResize();
         this.lazyLoadPixels();
         this.handleViewportChange();
