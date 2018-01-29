@@ -1,6 +1,7 @@
-import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges} from '@angular/core';
+import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges } from '@angular/core';
+import 'rxjs/add/operator/map'
 
-import {VgAPI} from 'videogular2/core';
+import { VgAPI } from 'videogular2/core';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
@@ -32,29 +33,36 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   lastViewerState: ViewerFileState;
   lastSonifierState: SonifierFileState;
   sonificationSrcUri: string = null;
-  
+  clearProgressLine$: Observable<boolean>;
+  progressLine$: Observable<{ x1: number, y1: number, x2: number, y2: number }>;
+
   SonifierRegionMode = SonifierRegionMode;
   showPlayer: boolean = false;
-  api:VgAPI;
-  viewportSize: {width: number, height: number} = null;
+  api: VgAPI;
+  viewportSize: { width: number, height: number } = null;
   subs: Subscription[] = [];
-      
+
 
   constructor(private store: Store<fromRoot.State>, private afterglowService: AfterglowDataFileService) {
     this.imageFile$ = store.select(fromCore.workbench.getImageFile);
     this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
     this.sonifierState$ = store.select(fromCore.workbench.getSonifierFileState);
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
-    
+
+    this.clearProgressLine$ = this.sonifierState$.filter(state => {
+      return (state && this.sonificationSrcUri != state.sonificationUri)
+    })
+    .map(() => true)
+
     this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
     this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));
     this.subs.push(this.sonifierState$.subscribe(sonifierState => {
       this.lastSonifierState = sonifierState;
-      if(sonifierState && this.sonificationSrcUri != sonifierState.sonificationUri) this.sonificationSrcUri = null;
+      if (sonifierState && this.sonificationSrcUri != sonifierState.sonificationUri) this.sonificationSrcUri = null;
     }));
 
   }
-    
+
 
   ngAfterViewInit() {
   }
@@ -76,16 +84,18 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
         imageHeight: $event.imageHeight,
         viewportWidth: $event.viewportWidth,
         viewportHeight: $event.viewportHeight
-      }}))
+      }
+    }))
   }
 
   private selectSubregionByFrequency(subregion: number) {
     let region = this.lastSonifierState.region;
-    this.store.dispatch(new sonifierActions.AddRegionToHistory({file: this.lastImageFile,
+    this.store.dispatch(new sonifierActions.AddRegionToHistory({
+      file: this.lastImageFile,
       region: {
-        x: region.x + subregion * (region.width/4),
+        x: region.x + subregion * (region.width / 4),
         y: region.y,
-        width: region.width/2,
+        width: region.width / 2,
         height: region.height
       }
     }))
@@ -93,12 +103,13 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
   private selectSubregionByTime(subregion: number) {
     let region = this.lastSonifierState.region;
-    this.store.dispatch(new sonifierActions.AddRegionToHistory({file: this.lastImageFile,
+    this.store.dispatch(new sonifierActions.AddRegionToHistory({
+      file: this.lastImageFile,
       region: {
         x: region.x,
-        y: region.y + subregion * (region.height/4),
+        y: region.y + subregion * (region.height / 4),
         width: region.width,
-        height: region.height/2
+        height: region.height / 2
       }
     }))
 
@@ -107,8 +118,9 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   private resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
-    
-    this.store.dispatch(new sonifierActions.AddRegionToHistory({file: this.lastImageFile,
+
+    this.store.dispatch(new sonifierActions.AddRegionToHistory({
+      file: this.lastImageFile,
       region: {
         x: 0,
         y: 0,
@@ -119,27 +131,27 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   private undoRegionSelection() {
-    this.store.dispatch(new sonifierActions.UndoRegionSelection({file: this.lastImageFile}));
+    this.store.dispatch(new sonifierActions.UndoRegionSelection({ file: this.lastImageFile }));
   }
 
   private redoRegionSelection() {
-    this.store.dispatch(new sonifierActions.RedoRegionSelection({file: this.lastImageFile}));
+    this.store.dispatch(new sonifierActions.RedoRegionSelection({ file: this.lastImageFile }));
   }
 
   private setRegionMode(value: SonifierRegionMode) {
-    this.store.dispatch(new sonifierActions.SetRegionMode({file: this.lastImageFile, mode: value}))
+    this.store.dispatch(new sonifierActions.SetRegionMode({ file: this.lastImageFile, mode: value }))
   }
 
   private setDuration(value) {
-    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {duration: value}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({ file: this.lastImageFile, changes: { duration: value } }))
   }
 
   private setToneCount(value) {
-    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {toneCount: value}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({ file: this.lastImageFile, changes: { toneCount: value } }))
   }
 
   private setViewportSync(value) {
-    this.store.dispatch(new sonifierActions.UpdateFileState({file: this.lastImageFile, changes: {viewportSync: value.checked}}))
+    this.store.dispatch(new sonifierActions.UpdateFileState({ file: this.lastImageFile, changes: { viewportSync: value.checked } }))
   }
 
 
@@ -166,11 +178,66 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
   }
 
-  onPlayerReady(api:VgAPI) {
+  onPlayerReady(api: VgAPI) {
     this.api = api;
+
+    let stop$ = Observable.from(this.api.getDefaultMedia().subscriptions.ended);
+    let start$ = Observable.from(this.api.getDefaultMedia().subscriptions.playing);
+
+
+    this.progressLine$ = Observable.merge(
+      start$.flatMap(() => Observable.interval(10).takeUntil(stop$.merge(this.clearProgressLine$)))
+      .map(() => {
+        if(!this.api.getDefaultMedia()) return null;
+        if (this.api.getDefaultMedia().duration == 0) return null;
+        let region = this.lastSonifierState.region;
+        if (!region) return null;
+
+        let y = region.y + (this.api.getDefaultMedia().currentTime / this.api.getDefaultMedia().duration) * region.height;
+
+        return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
+      }),
+      stop$.map(() => null),
+      this.clearProgressLine$.map(() => null)
+    )
+
+
+
+
+
+    // this.api.getDefaultMedia().subscriptions.playing.subscribe(
+    //   () => {
+    //     // Set the video to the beginning
+    //     console.log('playing');
+    //     console.log(this.api.getDefaultMedia().duration);
+    //     console.log(this.api.getDefaultMedia().currentTime);
+    //     this.playing$.next(true);
+    //   }
+    // );
+
+    // this.api.getDefaultMedia().subscriptions.timeUpdate.subscribe(
+    //   () => {
+    //     // Set the video to the beginning
+    //     this.progressLine$.next()
+    //     console.log(this.api.getDefaultMedia().duration);
+    //     console.log(this.api.getDefaultMedia().currentTime);
+    //   }
+    // );
+
+    // this.api.getDefaultMedia().subscriptions.ended.subscribe(
+    //   () => {
+    //     // Set the video to the beginning
+    //     console.log('ended');
+    //     console.log(this.api.getDefaultMedia().duration);
+    //     console.log(this.api.getDefaultMedia().currentTime);
+    //     this.playing$.next(false);
+    //   }
+    // );
+
+
   }
 
- 
+
 
 
 }

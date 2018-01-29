@@ -1,8 +1,9 @@
 <div class="workbench-outlet-wrapper">
 
   <div class="image-viewer-panel" role="region" aria-label="image viewer">
-    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async"
+    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showInfoBar]="true"
     [showRegionMarker]="(sonifierState$ | async)?.region && (sonifierState$ | async)?.regionMode != SonifierRegionMode.VIEWPORT" [region]="(sonifierState$ | async)?.region"
+    [showLineMarker]="(progressLine$ | async)" [line]="(progressLine$ | async)"
       (onViewportChange)="onViewportChange($event)">
     </app-pan-zoom-viewer>
   </div>
