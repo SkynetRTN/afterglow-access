@@ -46,9 +46,9 @@ export class DataFileSelectionListChange {
     '(blur)': '_handleBlur()',
     '(click)': '_handleClick()',
     'tabindex': '-1',
-    '[class.data-file-list-item-disabled]': 'disabled',
-    '[class.data-file-list-item-focused]': '_hasFocus',
-    '[class.data-file-list-item-selected]': '_selected',
+    '[class.disabled]': 'disabled',
+    '[class.focused]': '_hasFocus',
+    '[class.selected]': '_selected',
     '[attr.aria-selected]': 'selected.toString()',
     '[attr.aria-disabled]': 'disabled.toString()',
   },
@@ -249,7 +249,6 @@ export class DataFileSelectionListComponent extends _DataFileSelectionListBaseMi
 
   /** Sets the focused option of the selection-list. */
   _setFocusedOption(option: DataFileListItemComponent) {
-    console.log('list is setting focused option to: ', this._getOptionIndex(option), option)
     this._keyManager.updateActiveItemIndex(this._getOptionIndex(option));
   }
 
