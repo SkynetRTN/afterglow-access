@@ -22,6 +22,7 @@ import * as viewerActions from '../../actions/viewer';
 import * as imageFileActions from '../../../data-files/actions/image-file';
 import * as dataFileActions from '../../../data-files/actions/data-file';
 import { Subscription } from 'rxjs/Subscription';
+import { ImageTile } from '../../../data-files/models/image-tile';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -77,17 +78,18 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   private imageCtx: CanvasRenderingContext2D;
   private backgroundCanvas: HTMLCanvasElement;
   private backgroundCtx: CanvasRenderingContext2D;
-  private lastClickWasDrag: boolean = false;
 
   private lastViewportChangeEvent: ViewportChangeEvent = null;
   private lastViewportSize: { width: number, height: number } = { width: null, height: null };
 
   private dragging: boolean = false;
+  private dragged: boolean = false;
   private zooming: boolean = false;
   private zoomingTime: number = 0.01;
   private mouseOverImage: boolean = false;
   // minimum number of pixels mouse must move after click to not be considered
   private maxDeltaBeforeMove: number = 3;
+  private bufferedTiles: {[key: number]: ImageTile} = {};
 
 
   // a move and not a click
@@ -457,6 +459,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     if (!this.initialized) return;
 
     this.dragging = false;
+    this.dragged = false;
     // console.log('image mouse down');
     let viewportCoord = this.viewportCoordFromEvent(event);
     if (!this.mouseOnImage(viewportCoord)) {
@@ -513,6 +516,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     this.sumPixelsMoved += this.mouseDragVector.topLeft.getDistance(this.mouseDragVector.bottomRight);
     if (this.sumPixelsMoved > this.maxDeltaBeforeMove && !this.dragging) {
       this.dragging = true;
+      this.dragged = true;
       // this.dispatchEvent(new FitsViewerMouseEvent(FitsViewerMouseEvent.PAN_START,this.mouseImage));
     }
 
@@ -584,7 +588,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   onViewportClick($event: MouseEvent, source: Source = null) {
-    if (this.initialized && !this.dragging) {
+    if (this.initialized && !this.dragged) {
       let viewportCoord = this.viewportCoordFromEvent($event);
       let onImage = this.mouseOnImage(viewportCoord);
       let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
@@ -625,6 +629,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     this.lastViewportChangeEvent = null;
     this.lastViewportSize = {width: null, height: null};
     this.lastImageFile = this.imageFile;
+    this.bufferedTiles = {};
   }
 
   checkForResize() {
@@ -701,11 +706,15 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
           this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
         }
         else if (normTile.pixelsLoaded) {
+          if(this.bufferedTiles[normTile.index] === normTile ) {
+            //this tile has not changed and is already in the buffered canvas
+            return;
+          }
           let imageData = this.imageCtx.createImageData(normTile.width, normTile.height);
           let blendedImageDataUint8Clamped = new Uint8ClampedArray(normTile.pixels.buffer);
           imageData.data.set(blendedImageDataUint8Clamped);
           this.imageCtx.putImageData(imageData, normTile.x, normTile.y);
-
+          this.bufferedTiles[normTile.index] = normTile;
           // setTimeout(() => {
           //   this.store.dispatch(new workbenchActions.ImageTileDrawn({
           //     file: this.imageFile,
