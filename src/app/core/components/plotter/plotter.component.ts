@@ -57,6 +57,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         type: 'lineChart',
         focusEnable: false,
         height: 200,
+        width: 500,
         showLegend: false,
         x: function (d) { return d.t; },
         y: function (d) { return d.v; },

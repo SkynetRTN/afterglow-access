@@ -52,6 +52,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         type: 'lineChart',
         focusEnable: false,
         height: 250,
+        width: 450,
         showLegend: false,
         x: function (d) { return d.x; },
         y: function (d) { return d.y; },
