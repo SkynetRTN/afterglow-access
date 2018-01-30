@@ -8,7 +8,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Point, Rectangle } from "paper";
 import { Observable } from 'rxjs/Observable';
 import * as SVG from 'svgjs'
-import normalizeWheel from 'normalize-wheel';
+import * as normalizeWheel from 'normalize-wheel';
 
 import { ImageFile, getWidth, getHeight, findTiles, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
 import { ViewerFileState } from '../../models/viewer-file-state';
@@ -439,6 +439,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     }
 
     let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
+    console.log(normalizeWheel);
     const normalized = normalizeWheel(event);
     let delta: number = normalized.spinY;
 
