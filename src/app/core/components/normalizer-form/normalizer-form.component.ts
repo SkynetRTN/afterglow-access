@@ -41,17 +41,18 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
       this.levelStep = 0.1;
     }
     else {
-      let step = Math.abs(this.normalizer.peakLevel - this.normalizer.backgroundLevel) / 100;
-      if (step == 0) {
-        this.levelStep = 0.1;
-      }
-      else {
-        let precision = Math.floor(Math.log10(step)) * -1;
-        let factor = Math.pow(10, precision);
-        this.levelStep = Math.round(step * factor) / factor;
-        this.normalizer.peakLevel = Math.round(this.normalizer.peakLevel * factor) / factor;
-        this.normalizer.backgroundLevel = Math.round(this.normalizer.backgroundLevel * factor) / factor;
-      }
+      let step = Math.abs(this.normalizer.peakLevel - this.normalizer.backgroundLevel) / 50;
+      if (step == 0) step = 0.1
+
+      let precision = Math.floor(Math.log10(step)) * -1;
+      let factor = Math.pow(10, precision);
+      this.levelStep = Math.round(step * factor) / factor;
+        
+      this.normalizer.peakLevel = this.levelStep * Math.round(this.normalizer.peakLevel / this.levelStep);
+      this.normalizer.backgroundLevel = this.levelStep * Math.round(this.normalizer.backgroundLevel / this.levelStep);
+
+      this.normalizer.backgroundLevel = Math.round(this.normalizer.backgroundLevel * factor) / factor;
+      this.normalizer.peakLevel = Math.round(this.normalizer.peakLevel * factor) / factor;
 
     }
 
