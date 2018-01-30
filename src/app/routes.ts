@@ -81,9 +81,9 @@ export const AFTERGLOW_ROUTES: Routes = [
         canActivate: [AuthGuard],
       },
       {
-        path: 'source-analyzer',
+        path: 'source-extractor',
         component: SourceExtractorPageComponent,
-        data: { title: 'Source Analyzer' },
+        data: { title: 'Source Extractor' },
         canActivate: [AuthGuard],
       },
       // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},

@@ -30,6 +30,11 @@ import { DataFileSelectionListChange } from '../../../data-files/components/data
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkbenchComponent implements OnInit {
+
+  private VIEWER_ROUTE = '/workbench/viewer';
+  private PLOTTER_ROUTE = '/workbench/plotter';
+  private SONIFIER_ROUTE = '/workbench/sonifier';
+  private SOURCE_EXTRACTOR_ROUTE = '/workbench/source-extractor';
   
   private files$: Observable<Array<DataFile>>;
   private showSidebar$: Observable<boolean>;
@@ -94,6 +99,18 @@ export class WorkbenchComponent implements OnInit {
       // show
       this.store.dispatch(new workbenchActions.SetShowConfig({showConfig: true}));
     }
+  }
+
+  onWorkbenchNavClick(route: string) {
+    if(this.router.isActive(route, false))  {
+      // toggle
+      this.store.dispatch(new workbenchActions.ToggleShowConfig());
+    }
+    else {
+      // show
+      this.store.dispatch(new workbenchActions.SetShowConfig({showConfig: true}));
+    }
+    this.router.navigate([route]);
   }
 
 

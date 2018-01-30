@@ -86,34 +86,39 @@
   <div class="workbench-nav-panel" [class.collapsed]="!(showConfig$ | async)">
     <nav role="navigation" aria-label="workbench">
       <div class="vertical-icon-nav-item-group">
-        <div class="workbench-settings-card"><div class="card-header spacer"></div></div>
-        <a class="vertical-icon-nav-item" routerLinkActive #viewerRoute="routerLinkActive" [class.active]="(showConfig$ | async) && viewerRoute.isActive"
-          routerLink="viewer" (click)="onClickWorkbenchNav(router.isActive('/workbench/viewer'))">
+        <div class="workbench-settings-card">
+          <div class="card-header spacer"></div>
+        </div>
+        <button class="vertical-icon-nav-item" [class.active]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(VIEWER_ROUTE) ? 'Close' : 'Open' }} Viewer Settings" [attr.aria-selected]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)"
+          (click)="onWorkbenchNavClick(VIEWER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>remove_red_eye</mat-icon>
           </div>
-        </a>
-        <a class="vertical-icon-nav-item" routerLinkActive #plotterRoute="routerLinkActive" [class.active]="(showConfig$ | async) && plotterRoute.isActive"
-          routerLink="plotter" aria-label="Plotter" (click)="onClickWorkbenchNav(router.isActive('/workbench/plotter'))">
+        </button>
+        <button class="vertical-icon-nav-item" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(PLOTTER_ROUTE) ? 'Close' : 'Open' }} Plotter Settings" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
+          (click)="onWorkbenchNavClick(PLOTTER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>insert_chart</mat-icon>
           </div>
-        </a>
-        <a class="vertical-icon-nav-item" routerLinkActive #sonifierRoute="routerLinkActive" [class.active]="(showConfig$ | async) && sonifierRoute.isActive"
-          routerLink="sonifier" aria-label="Sonifier" (click)="onClickWorkbenchNav(router.isActive('/workbench/sonifier'))">
+        </button>
+        <button class="vertical-icon-nav-item" [class.active]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(SONIFIER_ROUTE) ? 'Close' : 'Open' }} Sonifier Settings" [attr.aria-selected]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
+          (click)="onWorkbenchNavClick(SONIFIER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>audiotrack</mat-icon>
           </div>
-        </a>
-        <a class="vertical-icon-nav-item" routerLinkActive #sourceAnalyzerRoute="routerLinkActive" [class.active]="(showConfig$ | async) && sourceAnalyzerRoute.isActive"
-          routerLink="source-analyzer" aria-label="Source Analyzer" (click)="onClickWorkbenchNav(router.isActive('/workbench/source-analyzer'))">
+        </button>
+        <button class="vertical-icon-nav-item" [class.active]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE) ? 'Close' : 'Open' }} Source Extractor Settings" [attr.aria-selected]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)"
+          (click)="onWorkbenchNavClick(SOURCE_EXTRACTOR_ROUTE)">
           <div class="icon-wrapper">
-            <!-- star_rate causes strange issues with viewport width -->
-            <!-- <mat-icon>star_rate</mat-icon> -->
-
             <mat-icon>star_border</mat-icon>
           </div>
-        </a>
+        </button>
+
+
       </div>
 
     </nav>
