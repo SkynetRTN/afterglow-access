@@ -439,7 +439,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     }
 
     let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-    console.log(normalizeWheel);
     const normalized = normalizeWheel(event);
     let delta: number = normalized.spinY;
 
