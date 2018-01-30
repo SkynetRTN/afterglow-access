@@ -62,20 +62,20 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }));
 
     this.levels$
-    .debounceTime(200) // wait 300ms after the last event before emitting last event
+    .debounceTime(50) // wait 300ms after the last event before emitting last event
     .subscribe(value => {
       this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: value.background, peakLevel: value.peak}}) );
     });
 
 
     this.backgroundLevel$
-    .debounceTime(200) // wait 300ms after the last event before emitting last event
+    .debounceTime(50) // wait 300ms after the last event before emitting last event
     .subscribe(value => {
       this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {backgroundLevel: value}}) );
     });
 
     this.peakLevel$
-    .debounceTime(200) // wait 300ms after the last event before emitting last event
+    .debounceTime(50) // wait 300ms after the last event before emitting last event
     .subscribe(value => {
       this.store.dispatch(new viewerActions.UpdateNormalizer({file: this.lastImageFile, changes: {peakLevel: value}}) );
     });
