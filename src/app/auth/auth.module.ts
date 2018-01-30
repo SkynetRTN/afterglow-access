@@ -6,7 +6,6 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { Http, RequestOptions } from '@angular/http';
-import { AuthHttp, AuthConfig } from 'angular2-jwt';
 import { LoginPageComponent } from './containers/login-page/login-page.component';
 import { LogoutPageComponent } from './containers/logout-page/logout-page.component';
 import { LoginFormComponent } from './components/login-form.component';
@@ -19,10 +18,6 @@ import { reducers } from './reducers';
 import { MaterialModule } from '../material';
 
 export const COMPONENTS = [LoginPageComponent, LoginFormComponent, LogoutPageComponent, OauthAuthorizedPageComponent];
-
-export function authHttpServiceFactory(http: Http, options: RequestOptions) {
-  return new AuthHttp(new AuthConfig(), http, options);
-}
 
 @NgModule({
   imports: [
@@ -43,11 +38,6 @@ export class AuthModule {
       providers: [
         AuthService,
         AuthGuard,
-        {
-          provide: AuthHttp,
-          useFactory: authHttpServiceFactory,
-          deps: [Http, RequestOptions]
-        }
       ],
     };
   }

@@ -2,7 +2,6 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/observable/of';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { AuthHttp } from 'angular2-jwt';
 import { Observable } from 'rxjs/Observable';
 import { environment } from '../../../environments/environment';
 

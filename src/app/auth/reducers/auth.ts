@@ -1,6 +1,5 @@
 import * as authActions from '../actions/auth';
 import { User } from '../models/user';
-import { JwtHelper } from 'angular2-jwt';
 
 export interface State {
   loggedIn: boolean;

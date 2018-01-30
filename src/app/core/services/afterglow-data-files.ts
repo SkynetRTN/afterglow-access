@@ -4,7 +4,6 @@ import { Injectable } from '@angular/core';
 import { Matrix } from "paper";
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { AuthHttp } from 'angular2-jwt';
 import { Observable } from 'rxjs/Observable';
 import { grayColorMap } from '../models/color-map';
 import { StretchMode } from '../models/stretch-mode';
