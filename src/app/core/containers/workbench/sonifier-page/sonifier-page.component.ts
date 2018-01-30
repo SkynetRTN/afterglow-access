@@ -175,7 +175,13 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   // }
 
   private sonify() {
-    this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
+    if(this.sonificationSrcUri == this.lastSonifierState.sonificationUri && this.api && this.api.canPlay) {
+      this.api.getDefaultMedia().play();
+    }
+    else {
+      this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
+    }
+    
   }
 
   onPlayerReady(api: VgAPI) {
