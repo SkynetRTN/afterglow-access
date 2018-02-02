@@ -54,7 +54,7 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
   currentAssets$: Observable<DataProviderAsset[]>;
   selectedAssets$: Observable<DataProviderAsset[]>;
   sortField$: Observable<string>;
-  //sortOrder$: Observable<TdDataTableSortingOrder>;
+  sortOrder$: Observable<'' | 'asc' | 'desc'>;
   importing$: Observable<boolean>;
   pendingImports$: Observable<DataProviderAsset[]>;
   completedImports$: Observable<DataProviderAsset[]>;
@@ -73,7 +73,6 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
         this.store.dispatch(new dataProviderActions.SortDataProviderAssets({fieldName: this.sort.active, order: this.sort.direction}))
     });
   }
-  displayedColumns = [];
   dataSource: DataProviderAssetsDataSource;
   selection = new SelectionModel<DataProviderAsset>(true, []);
   subs: Subscription[] = [];
@@ -84,8 +83,8 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
     private route: ActivatedRoute,
     private location: Location,
     private router: Router,
-    private slufigy: SlugifyPipe,
-    @Optional() @Inject(DOCUMENT) private _document: any, ) {
+    private slufigy: SlugifyPipe) {
+
     let state$ = store.select(fromDataProviders.getDataProvidersState);
     this.dataProviders$ = store.select(fromDataProviders.getDataProviders);
     this.currentProvider$ = store.select(fromDataProviders.getCurrentProvider);
@@ -94,7 +93,7 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
     this.currentAssets$ = store.select(fromDataProviders.getCurrentAssets);
     this.selectedAssets$ = store.select(fromDataProviders.getSelectedAssets);
     this.sortField$ = store.select(fromDataProviders.getCurrentSortField);
-    //this.sortOrder$ =  store.select(fromDataProviders.getCurrentSortOrder);
+    this.sortOrder$ =  store.select(fromDataProviders.getCurrentSortOrder);
     this.importing$ = store.select(fromDataProviders.getImporting);
     this.importProgress$ = store.select(fromDataProviders.getImportProgress);
     this.pendingImports$ = store.select(fromDataProviders.getPendingImports);
@@ -113,10 +112,15 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
         let dataProvider = dataProviders.find(provider => this.slufigy.transform(provider.name) == slug);
         if (dataProvider) {
           this.store.dispatch(new dataProviderActions.LoadDataProviderAssets({ dataProvider: dataProvider, path: qparams['path'] }))
-          this.displayedColumns = ['select', 'name', ...dataProvider.columns.map(col => col.fieldName)];
+          this.selection.clear();
         }
-        
       }));
+
+    this.subs.push(this.completedImports$.subscribe(completedImports => {
+      completedImports.forEach(asset => {
+        this.selection.deselect(asset);
+      })
+    }))
   }
 
   ngAfterViewInit() {
@@ -125,6 +129,10 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
 
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
+  }
+
+  showSelectAll() {
+    return this.dataSource && this.dataSource.assets && this.dataSource.assets.filter(asset => !asset.collection).length != 0;
   }
 
   isAllSelected() {
@@ -142,6 +150,10 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
 
   onRowClick(row: DataProviderAsset) {
     if (!row.collection) this.selection.toggle(row);
+  }
+
+  getDataProviderColumns(dataProvider: DataProvider) {
+    return ['select', 'name', ...dataProvider.columns.map(col => col.fieldName)];
   }
 
   import() {
