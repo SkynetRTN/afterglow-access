@@ -28,7 +28,7 @@ export class DataProviderAssetsDataSource implements DataSource<DataProviderAsse
     this.assets$ = store.select(fromDataProviders.getCurrentAssets);
 
     this.sub = this.assets$
-    .subscribe(assets => this.assets = assets);
+      .subscribe(assets => this.assets = assets);
   }
 
   connect(collectionViewer: CollectionViewer): Observable<DataProviderAsset[]> {
@@ -65,13 +65,13 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
   sortSub: Subscription;
 
   @ViewChild(MatSort) set sortSetter(sort: MatSort) {
-    if(!sort) return;
+    if (!sort) return;
     this.sort = sort;
-    if(this.sortSub) this.sortSub.unsubscribe();
+    if (this.sortSub) this.sortSub.unsubscribe();
     this.sortSub = this.sort.sortChange
       .subscribe(() => {
-        this.store.dispatch(new dataProviderActions.SortDataProviderAssets({fieldName: this.sort.active, order: this.sort.direction}))
-    });
+        this.store.dispatch(new dataProviderActions.SortDataProviderAssets({ fieldName: this.sort.active, order: this.sort.direction }))
+      });
   }
   dataSource: DataProviderAssetsDataSource;
   selection = new SelectionModel<DataProviderAsset>(true, []);
@@ -93,7 +93,7 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
     this.currentAssets$ = store.select(fromDataProviders.getCurrentAssets);
     this.selectedAssets$ = store.select(fromDataProviders.getSelectedAssets);
     this.sortField$ = store.select(fromDataProviders.getCurrentSortField);
-    this.sortOrder$ =  store.select(fromDataProviders.getCurrentSortOrder);
+    this.sortOrder$ = store.select(fromDataProviders.getCurrentSortOrder);
     this.importing$ = store.select(fromDataProviders.getImporting);
     this.importProgress$ = store.select(fromDataProviders.getImportProgress);
     this.pendingImports$ = store.select(fromDataProviders.getPendingImports);
@@ -156,8 +156,12 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
     return ['select', 'name', ...dataProvider.columns.map(col => col.fieldName)];
   }
 
+  isArray(value: any) {
+    return Array.isArray(value);
+  }
+
   import() {
-    this.store.dispatch(new dataProviderActions.ImportAssets({assets: this.selection.selected}));
+    this.store.dispatch(new dataProviderActions.ImportAssets({ assets: this.selection.selected }));
   }
 
 }
