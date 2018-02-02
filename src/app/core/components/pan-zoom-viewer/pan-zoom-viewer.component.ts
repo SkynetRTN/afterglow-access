@@ -89,7 +89,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   private mouseOverImage: boolean = false;
   // minimum number of pixels mouse must move after click to not be considered
   private maxDeltaBeforeMove: number = 3;
-  private bufferedTiles: {[key: number]: ImageTile} = {};
+  private bufferedTiles: { [key: number]: ImageTile } = {};
 
 
   // a move and not a click
@@ -622,12 +622,12 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   checkForNewImage() {
-    if(!this.lastImageFile) this.lastImageFile = this.imageFile;
-    if(this.imageFile.id == this.lastImageFile.id) return;
+    if (!this.lastImageFile) this.lastImageFile = this.imageFile;
+    if (this.imageFile.id == this.lastImageFile.id) return;
     //new image detected
     this.mouseInfo$.next(null);
     this.lastViewportChangeEvent = null;
-    this.lastViewportSize = {width: null, height: null};
+    this.lastViewportSize = { width: null, height: null };
     this.lastImageFile = this.imageFile;
     this.bufferedTiles = {};
   }
@@ -649,11 +649,14 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
       //ExpressionChangedAfterItHasBeenChecked Error
       //https://blog.angularindepth.com/everything-you-need-to-know-about-the-expressionchangedafterithasbeencheckederror-error-e3fd9ce7dbb4 
       setTimeout(() => {
-        this.checkForNewImage();
-        this.checkForResize();
-        this.lazyLoadPixels();
-        this.handleViewportChange();
-        this.draw();
+        if (this.initialized) {
+          this.checkForNewImage();
+          this.checkForResize();
+          this.lazyLoadPixels();
+          this.handleViewportChange();
+          this.draw();
+        }
+
       });
     }
     this.draw();
@@ -706,7 +709,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
           this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
         }
         else if (normTile.pixelsLoaded) {
-          if(this.bufferedTiles[normTile.index] === normTile ) {
+          if (this.bufferedTiles[normTile.index] === normTile) {
             //this tile has not changed and is already in the buffered canvas
             return;
           }
