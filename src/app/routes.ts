@@ -35,10 +35,10 @@ export const AFTERGLOW_ROUTES: Routes = [
     data: { title: 'Logout' }
   },
   {
-    path: 'import',
+    path: 'data-providers',
     component: DataProvidersComponent,
     canActivate: [AuthGuard],
-    data: { title: 'Import' },
+    data: {  },
     children: [
       {
         path: ':slug/browse',
