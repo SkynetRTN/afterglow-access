@@ -19,27 +19,27 @@
     <div class="content-wrapper">
 
       <mat-card class="pb-3" [hidden]="(loadingAssets$ | async)">
-          <div>
-              <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
-              <div *ngIf="(importing$ | async)" class="alert alert-info">
-                Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
-              </div>
-              <div *ngIf="(importProgress$ | async) == 1.0 && (completedImports$ | async).length != 0 && (completedImports$ | async).length > (importErrors$ | async).length"
-                class="alert" [ngClass]="((importErrors$ | async).length == 0)?'alert-success':'alert-warning'">
-                Import completed with {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors(s)'}}.
-                <a routerLink="/workbench" class="alert-link">View your imported files now.</a>
-              </div>
-      
-              <div *ngIf="(importErrors$ | async).length != 0" class="alert alert-danger" role="alert">
-                <div *ngFor="let e of (importErrors$ | async)">
-                  <strong>Error: </strong> Failed to import {{e.asset.name}}.
-                  <span *ngIf="e.message">{{e.message}}</span>
-                </div>
-              </div>
-              <div *ngIf="(loadingAssets$ | async)" class="alert alert-info">
-                Loading assets...
-              </div>
+        <div>
+          <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
+          <div *ngIf="(importing$ | async)" class="alert alert-info">
+            Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
           </div>
+
+          <div [hidden]="(importProgress$ | async) != 1.0" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
+            Import completed with {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
+            <a [hidden]="(completedImports$ | async).length <= (importErrors$ | async).length" routerLink="/workbench" class="alert-link">View your imported files now.</a>
+            <div *ngIf="(importErrors$ | async).length != 0">
+              <div *ngFor="let e of (importErrors$ | async)">
+                <strong>Error: </strong> Failed to import {{e.asset.name}}.
+                <span *ngIf="e.message">{{e.message}}</span>
+              </div>
+            </div>
+
+          </div>
+          <div *ngIf="(loadingAssets$ | async)" class="alert alert-info">
+            Loading assets...
+          </div>
+        </div>
 
         <mat-card-header>
           <div class="dp-browser-info">
@@ -53,8 +53,8 @@
 
         </mat-card-header>
 
-        
-        
+
+
 
 
 
@@ -100,7 +100,7 @@
               <mat-header-cell *matHeaderCellDef mat-sort-header [disabled]="!columnMeta.sortable"> {{columnMeta.name}} </mat-header-cell>
               <mat-cell *matCellDef="let row">
                 <ng-container *ngIf="row.metadata && row.metadata.hasOwnProperty(columnMeta.fieldName)">
-                  {{row.metadata[columnMeta.fieldName]}}
+                  {{isArray(row.metadata[columnMeta.fieldName]) ? row.metadata[columnMeta.fieldName].join(',&#8203;') : row.metadata[columnMeta.fieldName]}}
                 </ng-container>
               </mat-cell>
             </ng-container>
