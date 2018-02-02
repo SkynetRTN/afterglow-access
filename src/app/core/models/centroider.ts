@@ -11,7 +11,7 @@ export function createDiskCentroiderSettings(): DiskCentroiderSettings {
   return {
     maxIterations: 10,
     maxCenterShift: 0.2,
-    diskSearchBoxWidth: 100,
+    diskSearchBoxWidth: 200,
   }
 }
 
