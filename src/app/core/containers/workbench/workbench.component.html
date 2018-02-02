@@ -24,7 +24,7 @@
       <div *ngIf="(showSidebar$ | async)" class="file-list-panel">
         <div *ngIf="!(files$ | async) || (files$ | async)?.length == 0" class="empty-library-info alert alert-info">
           <p>Your library is empty.</p> 
-          <p>Import files from a data provider <a [routerLink]="['/data-providers']">here</a>.</p>
+          <p>Import files from your <a [routerLink]="['/data-providers']">data providers</a>.</p>
         </div>
         <ng-container *ngIf="(files$ | async)?.length != 0">
           <div class="file-list-panel-wrapper" *ngIf="(sidebarView$ | async) == SidebarView.FILES" aria-labeledby="tab-view-file-library">
