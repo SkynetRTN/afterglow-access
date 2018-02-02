@@ -18,6 +18,7 @@ export const TOGGLE_DATA_PROVIDER_ASSET_SELECT = '[DataProvider] Toggle Data Pro
 export const SELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Select All Data Provider Assets';
 export const DESELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Deselect All Data Provider Assets';
 
+export const IMPORT_ASSETS = '[DataProvider] Import Assets';
 export const IMPORT_SELECTED_ASSETS = '[DataProvider] Import Selected Assets';
 export const IMPORT_ASSET_SUCCESS = '[DataProvider] Import Asset Success';
 export const IMPORT_ASSET_FAIL = '[DataProvider] Import Asset Fail';
@@ -63,7 +64,7 @@ export class LoadDataProviderAssetsFail implements Action {
 export class SortDataProviderAssets implements Action {
   readonly type = SORT_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: { fieldName: string, order: TdDataTableSortingOrder } = null) { }
+  constructor(public payload: { fieldName: string, order: '' | 'asc' | 'desc' } = null) { }
 }
 
 export class ToggleDataProviderAssetSelect implements Action {
@@ -88,6 +89,12 @@ export class ImportSelectedAssets implements Action {
   readonly type = IMPORT_SELECTED_ASSETS;
 
   constructor() { }
+}
+
+export class ImportAssets implements Action {
+  readonly type = IMPORT_ASSETS;
+
+  constructor(public payload: { assets: DataProviderAsset[] }) {  }
 }
 
 export class ImportAssetSuccess implements Action {
@@ -119,6 +126,7 @@ export type Actions =
   | ToggleDataProviderAssetSelect
   | SelectAllDataProviderAssets
   | DeselectAllDataProviderAssets
+  | ImportAssets
   | ImportSelectedAssets
   | ImportAssetSuccess
   | ImportAssetFail

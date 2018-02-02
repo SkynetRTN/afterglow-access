@@ -80,7 +80,22 @@ export class DataProviderEffects {
           .createFromDataProviderAsset(state.currentProvider, asset)
           .map(() => new dataProviderActions.ImportAssetSuccess({ asset: asset }))
           .catch(err => {
-            console.log(err);
+            return of(new dataProviderActions.ImportAssetFail({ error: (err as HttpErrorResponse).error.message, asset: asset }))
+          })
+      }))
+    });
+
+    @Effect()
+  importAssets$: Observable<Action> = this.actions$
+    .ofType<dataProviderActions.ImportAssets>(dataProviderActions.IMPORT_ASSETS)
+    .withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState))
+    //.debounceTime(this.debounce || 300, this.scheduler || async)
+    .switchMap(([action, state]) => {
+      return Observable.merge(...state.pendingImports.map(asset => {
+        return this.afterglowDataFileService
+          .createFromDataProviderAsset(state.currentProvider, asset)
+          .map(() => new dataProviderActions.ImportAssetSuccess({ asset: asset }))
+          .catch(err => {
             return of(new dataProviderActions.ImportAssetFail({ error: (err as HttpErrorResponse).error.message, asset: asset }))
           })
       }))

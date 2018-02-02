@@ -1,12 +1,10 @@
 import { createSelector } from '@ngrx/store';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
-import { TdDataTableSortingOrder } from '@covalent/core';
 import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 
 import * as dataProviderActions from '../actions/data-provider';
 import { select } from 'd3';
-import { TdDataTableCellComponent } from '@covalent/core/data-table/data-table-cell/data-table-cell.component';
 
 export interface State {
   dataProvidersLoaded: boolean;
@@ -18,9 +16,9 @@ export interface State {
   currentAssets: DataProviderAsset[];
   selectedAssets: DataProviderAsset[];
   userSortField: string;
-  userSortOrder: TdDataTableSortingOrder;
+  userSortOrder: '' | 'asc' | 'desc';
   currentSortField: string;
-  currentSortOrder: TdDataTableSortingOrder;
+  currentSortOrder: '' | 'asc' | 'desc';
   importing: boolean,
   pendingImports: DataProviderAsset[];
   completedImports: DataProviderAsset[];
@@ -38,9 +36,9 @@ export const initialState: State = {
   currentAssets: [],
   selectedAssets: [],
   userSortField: null,
-  userSortOrder: TdDataTableSortingOrder.Ascending,
+  userSortOrder: 'asc',
   currentSortField: null,
-  currentSortOrder: TdDataTableSortingOrder.Ascending,
+  currentSortOrder: 'asc',
   importing: false,
   pendingImports: [],
   completedImports: [],
@@ -88,7 +86,7 @@ export function reducer(
       let breadcrumbs: Array<{ name: string, url: string }> = [];
       if (currentProvider.browseable) {
 
-        breadcrumbs.push({ name: 'root', url: currentPath ? '' : null });
+        breadcrumbs.push({ name: action.payload.dataProvider.name, url: currentPath ? '' : null });
         if (currentPath) {
           let paths = currentPath.split('/');
           for (let i = 0; i < paths.length; i++) {
@@ -120,7 +118,7 @@ export function reducer(
       let userSortOrder = state.userSortOrder;
 
       let currentSortField = null;
-      let currentSortOrder = TdDataTableSortingOrder.Ascending;
+      let currentSortOrder: '' | 'asc' | 'desc' = 'asc';
 
       //if action sets the sort field, use it
       if (action.payload) {
@@ -150,7 +148,7 @@ export function reducer(
           let col = state.currentProvider.columns.find(col => col.name == state.currentProvider.sortBy);
           if (col) {
             currentSortField = col.fieldName;
-            currentSortOrder = state.currentProvider.sortAsc ? TdDataTableSortingOrder.Ascending : TdDataTableSortingOrder.Descending;
+            currentSortOrder = state.currentProvider.sortAsc ? 'asc' : 'desc';
           }
         }
       }
@@ -158,23 +156,23 @@ export function reducer(
       if (!currentSortField) {
         //use defaults
         currentSortField = 'name';
-        currentSortOrder = TdDataTableSortingOrder.Ascending;
+        currentSortOrder = 'asc';
       }
 
-      let currentAssets = state.currentAssets.sort((a, b) => {
+      let currentAssets = state.currentAssets.slice().sort((a, b) => {
         if (currentSortField != 'name') {
           if (currentSortField in a.metadata) {
             //custom sort using metadata column
             if (a.metadata[currentSortField] < b.metadata[currentSortField]) {
-              return currentSortOrder == TdDataTableSortingOrder.Ascending ? -1 : 1;
+              return currentSortOrder == 'asc' ? -1 : 1;
             }
             if (a.metadata[currentSortField] > b.metadata[currentSortField]) {
-              return currentSortOrder == TdDataTableSortingOrder.Ascending ? 1 : -1;
+              return currentSortOrder == 'asc' ? 1 : -1;
             }
             return 0;
           }
           currentSortField = 'name';
-          currentSortOrder = TdDataTableSortingOrder.Ascending;
+          currentSortOrder = 'asc';
         }
 
         if (a.collection != b.collection) {
@@ -182,11 +180,11 @@ export function reducer(
         }
 
         if (a.name.toUpperCase() < b.name.toUpperCase()) {
-          return currentSortOrder == TdDataTableSortingOrder.Ascending ? -1 : 1;
+          return currentSortOrder == 'asc' ? -1 : 1;
         }
 
         if (a.name.toUpperCase() > b.name.toUpperCase()) {
-          return currentSortOrder == TdDataTableSortingOrder.Ascending ? 1 : -1;
+          return currentSortOrder == 'asc' ? 1 : -1;
         }
         return 0;
 
@@ -251,6 +249,18 @@ export function reducer(
         importing: true,
         importProgress: 0,
         pendingImports: [...state.selectedAssets],
+        completedImports: [],
+        importErrors: [],
+      };
+    }
+
+    case dataProviderActions.IMPORT_ASSETS: {
+
+      return {
+        ...state,
+        importing: true,
+        importProgress: 0,
+        pendingImports: [...action.payload.assets],
         completedImports: [],
         importErrors: [],
       };
