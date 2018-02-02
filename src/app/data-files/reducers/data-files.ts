@@ -241,8 +241,10 @@ export function reducer(
     }
 
     case imageFileActions.LOAD_IMAGE_TILE_PIXELS_FAIL: {
-      // must save failure to state so that no more requests are sent by draw function
+      //verify that file is still in library
+      if(!state.entities[action.payload.file.id]) return state;
 
+      // must save failure to state so that no more requests are sent by draw function
       if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
         let imageFile = state.entities[action.payload.file.id] as ImageFile;
         let tile = Object.assign({}, (state.entities[action.payload.file.id] as ImageFile).tiles[action.payload.tileIndex]);
