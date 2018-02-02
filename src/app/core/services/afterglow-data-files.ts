@@ -43,8 +43,8 @@ function createImageFile(id: string, name: string): ImageFile {
     hist: null,
     histLoaded: false,
     histLoading: false,
-    tileWidth: 512,
-    tileHeight: 512,
+    tileWidth: environment.tileSize,
+    tileHeight: environment.tileSize,
     // markerEntities: {},
     // markerIds: []
   }

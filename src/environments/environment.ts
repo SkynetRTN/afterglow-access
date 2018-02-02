@@ -6,5 +6,6 @@
 export const environment = {
   production: false,
   apiUrl: '/api/v1.0',
-  accessTokenCookieName: 'access_token'
+  accessTokenCookieName: 'access_token',
+  tileSize: 512
 };
