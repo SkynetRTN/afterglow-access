@@ -34,7 +34,7 @@ export class SonifierEffects {
     this.store.select(fromCore.getSonifierFileStates)
     )
     .flatMap(([action, dataFiles, sourceExtractorFileStates, sonifierFileStates]) => {
-      let dataFile = dataFiles[action.payload.fileId];
+      let dataFile = dataFiles[action.payload.file.id];
       let actions: Action[] = [];
 
       if (dataFile.type == DataFileType.IMAGE) {

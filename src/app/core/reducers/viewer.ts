@@ -55,6 +55,12 @@ export function reducer(state = initialState, action: viewerActions.Actions | im
       };
     }
 
+    case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
+      return {
+        ...adapter.removeOne(action.payload.file.id, state),
+      }
+    }
+
     case viewerActions.INIT_AUTO_LEVELS: {
       if (action.payload.file.type == DataFileType.IMAGE) {
         let imageFile = action.payload.file;

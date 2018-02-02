@@ -68,16 +68,19 @@ export class WorkbenchEffects {
     .withLatestFrom(this.store.select(fromDataFile.getAllDataFiles), this.store.select(fromCore.getWorkbenchGlobalState))
     .switchMap(([action, dataFiles, workbenchGlobalState]) => {
       let actions: Action[] = [];
-
-      if (workbenchGlobalState.selectedDataFileId != null) {
-        let newSelectedDataFileId = null;
-        if (dataFiles.length != 1) {
-          let selectedDataFile = dataFiles.find(dataFile => dataFile.id == workbenchGlobalState.selectedDataFileId)
-          let currentIndex = dataFiles.indexOf(selectedDataFile);
-          newSelectedDataFileId = dataFiles[Math.min(dataFiles.length - 1, currentIndex + 1)].id;
-        }
-        actions.push(new workbenchActions.SelectDataFile(newSelectedDataFileId));
+      if(workbenchGlobalState.selectedDataFileId == action.payload.file.id) {
+        actions.push(new workbenchActions.SelectDataFile(null));
       }
+
+      // if (workbenchGlobalState.selectedDataFileId != null) {
+      //   let newSelectedDataFileId = null;
+      //   if (dataFiles.length != 1) {
+      //     let selectedDataFile = dataFiles.find(dataFile => dataFile.id == workbenchGlobalState.selectedDataFileId)
+      //     let currentIndex = dataFiles.indexOf(selectedDataFile);
+      //     newSelectedDataFileId = dataFiles[Math.min(dataFiles.length - 1, currentIndex + 1)].id;
+      //   }
+      //   actions.push(new workbenchActions.SelectDataFile(newSelectedDataFileId));
+      // }
 
 
       return Observable.from(actions);
@@ -91,7 +94,7 @@ export class WorkbenchEffects {
       let actions: Action[] = [];
       if (action.payload != null) {
         let dataFile = dataFiles[action.payload];
-        if (!dataFile.headerLoaded && !dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr(dataFile));
+        if (!dataFile.headerLoaded && !dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr({file: dataFile}));
       }
       return Observable.from(actions);
     });
@@ -106,7 +109,7 @@ export class WorkbenchEffects {
     this.store.select(fromCore.getSourceExtractorGlobalState)
     )
     .flatMap(([action, dataFiles, sonifierStateGlobal, sourceExtractorStateGlobal]) => {
-      let dataFile = dataFiles[action.payload.fileId];
+      let dataFile = dataFiles[action.payload.file.id];
       let actions: Action[] = [];
 
       if (dataFile.type == DataFileType.IMAGE) {

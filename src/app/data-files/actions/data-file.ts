@@ -43,6 +43,8 @@ export class RemoveDataFile implements Action {
 
 export class RemoveDataFileSuccess implements Action {
   readonly type = REMOVE_DATA_FILE_SUCCESS;
+
+  constructor(public payload: { file: DataFile }) { }
 }
 
 export class RemoveDataFileFail implements Action {
@@ -62,19 +64,19 @@ export class RemoveAllDataFiles implements Action {
 export class LoadDataFileHdr implements Action {
   readonly type = LOAD_DATA_FILE_HDR;
 
-  constructor(public payload: DataFile) { }
+  constructor(public payload: {file: DataFile}) { }
 }
 
 export class LoadDataFileHdrSuccess implements Action {
   readonly type = LOAD_DATA_FILE_HDR_SUCCESS;
 
-  constructor(public payload: { 'fileId': string, 'header': Header }) { }
+  constructor(public payload: { file: DataFile, header: Header }) { }
 }
 
 export class LoadDataFileHdrFail implements Action {
   readonly type = LOAD_DATA_FILE_HDR_FAIL;
 
-  constructor(public payload: { fileId: string, error: any }) { }
+  constructor(public payload: { file: DataFile, error: any }) { }
 }
 
 export type Actions =

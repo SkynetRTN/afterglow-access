@@ -23,7 +23,7 @@ export class ViewerEffects {
     this.store.select(fromCore.getViewerFileStates)
     )
     .flatMap(([action, dataFiles, viewerFileStates]) => {
-      let dataFile = dataFiles[action.payload.fileId];
+      let dataFile = dataFiles[action.payload.file.id];
       let viewerFileState = viewerFileStates[dataFile.id];
       let actions: Action[] = [];
 

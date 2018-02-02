@@ -65,6 +65,12 @@ export function reducer(
       };
     }
 
+    case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
+      return {
+        ...adapter.removeOne(action.payload.file.id, state),
+      }
+    }
+
     case sonifierActions.UPDATE_FILE_STATE: {
       return {
         ...adapter.updateOne({

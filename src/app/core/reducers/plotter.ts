@@ -81,6 +81,14 @@ export function reducer(
         ...adapter.addMany(plotterStates, state)
       };
     }
+
+    case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
+      return {
+        ...adapter.removeOne(action.payload.file.id, state),
+      }
+    }
+
+    
     case plotterActions.UPDATE_CENTROID_SETTINGS: {
       let centroidSettings = {
         ...state.centroidSettings,

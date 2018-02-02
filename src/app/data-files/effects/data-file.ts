@@ -55,16 +55,9 @@ export class DataFileEffects {
   removeAllDataFiles$: Observable<Action> = this.actions$
     .ofType<dataFileActions.RemoveAllDataFiles>(dataFileActions.REMOVE_ALL_DATA_FILES)
     .withLatestFrom(this.store.select(fromDataFile.getAllDataFiles))
-    .switchMap(([action, dataFiles]) => {
-
-      return Observable.forkJoin(dataFiles.map(dataFile => {
-
-        return this.afterglowDataFileService
-          .removeFile(dataFile.id);
-      }))
-        .map(() => new dataFileActions.RemoveDataFileSuccess())
-        .catch(err => of(new dataFileActions.RemoveDataFileFail(err)))
-    });
+    .flatMap(([action, dataFiles]) => {
+      return Observable.from(dataFiles.map(dataFile => new dataFileActions.RemoveDataFile({ file: dataFile })));
+    })
 
   @Effect()
   removeDataFile$: Observable<Action> = this.actions$
@@ -73,7 +66,7 @@ export class DataFileEffects {
     .flatMap(action => {
       return this.afterglowDataFileService
         .removeFile(action.payload.file.id)
-        .map((dataFiles: DataFile[]) => new dataFileActions.RemoveDataFileSuccess())
+        .map((dataFiles: DataFile[]) => new dataFileActions.RemoveDataFileSuccess({ file: action.payload.file }))
         .catch(err => of(new dataFileActions.RemoveDataFileFail(err)));
     });
 
@@ -90,13 +83,23 @@ export class DataFileEffects {
     .ofType<dataFileActions.LoadDataFileHdr>(dataFileActions.LOAD_DATA_FILE_HDR)
     //.debounceTime(this.debounce || 300, this.scheduler || async)
     .flatMap(action => {
-      const nextReq$ = this.actions$.ofType(dataFileActions.LOAD_DATA_FILE_HDR).skip(1);
+      let cancel$ = Observable.merge(
+        this.actions$
+          .ofType<dataFileActions.RemoveDataFile>(dataFileActions.REMOVE_DATA_FILE)
+          .filter(cancelAction => cancelAction.payload.file.id == action.payload.file.id),
+        this.actions$
+          .ofType<dataFileActions.LoadDataFileHdr>(dataFileActions.LOAD_DATA_FILE_HDR)
+          .filter(cancelAction => cancelAction.payload.file.id != action.payload.file.id)
+      );
 
       return this.afterglowDataFileService
-        .getHeader(action.payload.id)
-        .takeUntil(nextReq$)
-        .map((hdr: Header) => new dataFileActions.LoadDataFileHdrSuccess({ fileId: action.payload.id, header: hdr }))
-        .catch(err => of(new dataFileActions.LoadDataFileHdrFail({ fileId: action.payload.id, error: err })));
+        .getHeader(action.payload.file.id)
+        .map((hdr: Header) => new dataFileActions.LoadDataFileHdrSuccess({ file: action.payload.file, header: hdr }))
+        .catch(err => of(new dataFileActions.LoadDataFileHdrFail({ file: action.payload.file, error: err })))
+        .race(cancel$
+          .map(cancelAction => new dataFileActions.LoadDataFileHdrFail({ file: action.payload.file, error: 'Cancelled' }))
+          .take(1)
+        )
     });
 
   @Effect()
@@ -104,7 +107,7 @@ export class DataFileEffects {
     .ofType<dataFileActions.LoadDataFileHdrSuccess>(dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS)
     .withLatestFrom(this.store.select(fromDataFile.getDataFiles))
     .flatMap(([action, dataFiles]) => {
-      let dataFile = dataFiles[action.payload.fileId];
+      let dataFile = dataFiles[action.payload.file.id];
       let actions: Action[] = [];
 
       if (dataFile.type == DataFileType.IMAGE) {
@@ -121,13 +124,26 @@ export class DataFileEffects {
     .ofType<imageFileActions.LoadImageHist>(imageFileActions.LOAD_IMAGE_HIST)
     //.debounceTime(this.debounce || 300, this.scheduler || async)
     .flatMap(action => {
-      const nextReq$ = this.actions$.ofType(imageFileActions.LOAD_IMAGE_HIST).skip(1);
+      let cancel$ = Observable.merge(
+        this.actions$
+          .ofType<dataFileActions.RemoveDataFile>(dataFileActions.REMOVE_DATA_FILE)
+          .filter(cancelAction => cancelAction.payload.file.id == action.payload.file.id),
+        this.actions$
+          .ofType<imageFileActions.LoadImageHist | dataFileActions.LoadDataFileHdr>(
+            imageFileActions.LOAD_IMAGE_HIST,
+            dataFileActions.LOAD_DATA_FILE_HDR
+          )
+          .filter(cancelAction => cancelAction.payload.file.id != action.payload.file.id)
+      );
 
       return this.afterglowDataFileService
         .getHist(action.payload.file.id)
-        .takeUntil(nextReq$)
-        .map((hist: ImageHist) => new imageFileActions.LoadImageHistSuccess({ fileId: action.payload.file.id, hist: hist }))
-        .catch(err => of(new imageFileActions.LoadImageHistFail({ fileId: action.payload.file.id, error: err })));
+        .map((hist: ImageHist) => new imageFileActions.LoadImageHistSuccess({ file: action.payload.file, hist: hist }))
+        .catch(err => of(new imageFileActions.LoadImageHistFail({ file: action.payload.file, error: err })))
+        .race(cancel$
+          .map(cancelAction => new imageFileActions.LoadImageHistFail({ file: action.payload.file, error: 'Cancelled' }))
+          .take(1)
+        )
     });
 
 
@@ -135,20 +151,40 @@ export class DataFileEffects {
   loadImageTilePixels$: Observable<Action> = this.actions$
     .ofType<imageFileActions.LoadImageTilePixels>(imageFileActions.LOAD_IMAGE_TILE_PIXELS)
     .flatMap(action => {
-      //const nextReq$ = this.actions$.ofType(imageFileActions.LOAD_IMAGE_TILE_PIXELS).skip(1);
+      let cancel$ = Observable.merge(
+        this.actions$
+          .ofType<dataFileActions.RemoveDataFile>(dataFileActions.REMOVE_DATA_FILE)
+          .filter(cancelAction => cancelAction.payload.file.id == action.payload.file.id),
+        this.actions$
+          .ofType<imageFileActions.LoadImageTilePixels | dataFileActions.LoadDataFileHdr | imageFileActions.LoadImageHist>(
+            imageFileActions.LOAD_IMAGE_TILE_PIXELS,
+            dataFileActions.LOAD_DATA_FILE_HDR,
+            imageFileActions.LOAD_IMAGE_HIST
+          )
+          .filter(cancelAction => cancelAction.payload.file.id != action.payload.file.id)
+      );
+
       return this.afterglowDataFileService
         .getPixels(action.payload.file.id, action.payload.tile)
-        //.takeUntil(nextReq$)
         .map((pixels: Float32Array) => new imageFileActions.LoadImageTilePixelsSuccess({
-          fileId: action.payload.file.id,
+          file: action.payload.file,
           tileIndex: action.payload.tile.index,
           pixels: pixels
         }))
-        .catch(err => of(new imageFileActions.LoadImageTilePixelsFail({
-          fileId: action.payload.file.id,
-          tileIndex: action.payload.tile.index,
-          error: err
-        })));
+        .catch(err => {
+          return of(new imageFileActions.LoadImageTilePixelsFail({
+            file: action.payload.file,
+            tileIndex: action.payload.tile.index,
+            error: err
+          }))
+        })
+        .race(cancel$
+          .map(cancelAction => new imageFileActions.LoadImageTilePixelsCancel({
+            file: action.payload.file,
+            tileIndex: action.payload.tile.index,
+          }))
+          .take(1)
+        )
     });
 
 

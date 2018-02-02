@@ -75,10 +75,17 @@ export function reducer(
         ...result
       };
     }
+
+    case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
+      return {
+        ...adapter.removeOne(action.payload.file.id, state),
+      }
+    }
+    
     case dataFileActions.LOAD_DATA_FILE_HDR: {
       return {
         ...adapter.updateOne({
-          'id': action.payload.id, 'changes': {
+          'id': action.payload.file.id, 'changes': {
             headerLoaded: false,
             headerLoading: true
           }
@@ -88,7 +95,7 @@ export function reducer(
     case dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS: {
       return {
         ...adapter.updateOne({
-          'id': action.payload.fileId, 'changes': {
+          'id': action.payload.file.id, 'changes': {
             header: action.payload.header,
             headerLoaded: true,
             headerLoading: false
@@ -99,7 +106,7 @@ export function reducer(
     case dataFileActions.LOAD_DATA_FILE_HDR_FAIL: {
       return {
         ...adapter.updateOne({
-          'id': action.payload.fileId, 'changes': {
+          'id': action.payload.file.id, 'changes': {
             headerLoaded: false,
             headerLoading: false
           }
@@ -120,10 +127,10 @@ export function reducer(
       return state;
     }
     case imageFileActions.LOAD_IMAGE_HIST_SUCCESS: {
-      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
+      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
         return {
           ...adapter.updateOne({
-            'id': action.payload.fileId, 'changes': {
+            'id': action.payload.file.id, 'changes': {
               histLoaded: true,
               histLoading: false,
               hist: action.payload.hist
@@ -134,10 +141,10 @@ export function reducer(
       return state;
     }
     case imageFileActions.LOAD_IMAGE_HIST_FAIL: {
-      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
+      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
         return {
           ...adapter.updateOne({
-            'id': action.payload.fileId, 'changes': {
+            'id': action.payload.file.id, 'changes': {
               histLoaded: false,
               histLoading: false
             }
@@ -213,9 +220,9 @@ export function reducer(
       return state;
     }
     case imageFileActions.LOAD_IMAGE_TILE_PIXELS_SUCCESS: {
-      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
-        let imageFile = state.entities[action.payload.fileId] as ImageFile
-        let tile = Object.assign({}, (state.entities[action.payload.fileId] as ImageFile).tiles[action.payload.tileIndex]);
+      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
+        let imageFile = state.entities[action.payload.file.id] as ImageFile
+        let tile = Object.assign({}, (state.entities[action.payload.file.id] as ImageFile).tiles[action.payload.tileIndex]);
         tile.pixelsLoaded = true;
         tile.pixelsLoading = false;
         tile.pixels = action.payload.pixels;
@@ -224,7 +231,7 @@ export function reducer(
 
         return {
           ...adapter.updateOne({
-            'id': action.payload.fileId, 'changes': {
+            'id': action.payload.file.id, 'changes': {
               tiles: tiles
             }
           }, state),
@@ -234,9 +241,11 @@ export function reducer(
     }
 
     case imageFileActions.LOAD_IMAGE_TILE_PIXELS_FAIL: {
-      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
-        let imageFile = state.entities[action.payload.fileId] as ImageFile;
-        let tile = Object.assign({}, (state.entities[action.payload.fileId] as ImageFile).tiles[action.payload.tileIndex]);
+      // must save failure to state so that no more requests are sent by draw function
+
+      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
+        let imageFile = state.entities[action.payload.file.id] as ImageFile;
+        let tile = Object.assign({}, (state.entities[action.payload.file.id] as ImageFile).tiles[action.payload.tileIndex]);
         tile.pixelsLoaded = false;
         tile.pixelsLoading = false;
         tile.pixelLoadingFailed = true;
@@ -245,13 +254,31 @@ export function reducer(
 
         return {
           ...adapter.updateOne({
-            'id': action.payload.fileId, 'changes': {
+            'id': action.payload.file.id, 'changes': {
               tiles: tiles
             }
           }, state),
         }
       }
       return state;
+    }
+
+    case imageFileActions.LOAD_IMAGE_TILE_PIXELS_CANCEL: {
+      let imageFile = state.entities[action.payload.file.id] as ImageFile;
+      let tile = Object.assign({}, (state.entities[action.payload.file.id] as ImageFile).tiles[action.payload.tileIndex]);
+      tile.pixelsLoaded = false;
+      tile.pixelsLoading = false;
+      tile.pixelLoadingFailed = false;
+      let tiles = [...imageFile.tiles];
+      tiles[tile.index] = tile;
+
+      return {
+        ...adapter.updateOne({
+          'id': action.payload.file.id, 'changes': {
+            tiles: tiles
+          }
+        }, state),
+      }
     }
 
 

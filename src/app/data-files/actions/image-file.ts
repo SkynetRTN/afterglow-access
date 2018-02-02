@@ -12,6 +12,7 @@ export const INIT_IMAGE_TILES = '[Image File] Init Image Tiles';
 export const LOAD_IMAGE_TILE_PIXELS = '[Image File] Load Image Tile';
 export const LOAD_IMAGE_TILE_PIXELS_FAIL = '[Image File] Load Image Tile Fail';
 export const LOAD_IMAGE_TILE_PIXELS_SUCCESS = '[Image File] Load Image Tile Success';
+export const LOAD_IMAGE_TILE_PIXELS_CANCEL = '[Image File] Load Image Tile Cancel';
 
 
 export class LoadImageHist implements Action {
@@ -23,13 +24,13 @@ export class LoadImageHist implements Action {
 export class LoadImageHistSuccess implements Action {
   readonly type = LOAD_IMAGE_HIST_SUCCESS;
 
-  constructor(public payload: { fileId: string, hist: ImageHist }) { }
+  constructor(public payload: { file: ImageFile, hist: ImageHist }) { }
 }
 
 export class LoadImageHistFail implements Action {
   readonly type = LOAD_IMAGE_HIST_FAIL;
 
-  constructor(public payload: { fileId: string, error: any }) { }
+  constructor(public payload: { file: ImageFile, error: any }) { }
 }
 
 export class InitImageTiles implements Action {
@@ -47,13 +48,19 @@ export class LoadImageTilePixels implements Action {
 export class LoadImageTilePixelsSuccess implements Action {
   readonly type = LOAD_IMAGE_TILE_PIXELS_SUCCESS;
 
-  constructor(public payload: { fileId: string, tileIndex: number, pixels: Float32Array }) { }
+  constructor(public payload: { file: ImageFile, tileIndex: number, pixels: Float32Array }) { }
 }
 
 export class LoadImageTilePixelsFail implements Action {
   readonly type = LOAD_IMAGE_TILE_PIXELS_FAIL;
 
-  constructor(public payload: { fileId: string, tileIndex: number, error: any }) { }
+  constructor(public payload: { file: ImageFile, tileIndex: number, error: any }) { }
+}
+
+export class LoadImageTilePixelsCancel implements Action {
+  readonly type = LOAD_IMAGE_TILE_PIXELS_CANCEL;
+
+  constructor(public payload: { file: ImageFile, tileIndex: number }) { }
 }
 
 
@@ -65,5 +72,6 @@ export type Actions =
   | InitImageTiles
   | LoadImageTilePixels
   | LoadImageTilePixelsFail
-  | LoadImageTilePixelsSuccess;
+  | LoadImageTilePixelsSuccess
+  | LoadImageTilePixelsCancel;
 
