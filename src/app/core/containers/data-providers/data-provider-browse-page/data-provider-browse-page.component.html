@@ -17,167 +17,170 @@
   </div>
   <div class="content-panel container" *ngIf="(currentProvider$ | async) as dataProvider">
     <div class="content-wrapper">
-
-      <mat-card class="pb-3" [hidden]="(loadingAssets$ | async)">
-        <div>
-          <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
-          <div *ngIf="(importing$ | async)" class="alert alert-info">
-            Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
-          </div>
-
-          <div [hidden]="(importProgress$ | async) != 1.0" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
-            Import completed with {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
-            <a [hidden]="(completedImports$ | async).length <= (importErrors$ | async).length" routerLink="/workbench" class="alert-link">View your imported files now.</a>
-            <div *ngIf="(importErrors$ | async).length != 0">
-              <div *ngFor="let e of (importErrors$ | async)">
-                <strong>Error: </strong> Failed to import {{e.asset.name}}.
-                <span *ngIf="e.message">{{e.message}}</span>
-              </div>
+      <mat-card class="pb-3">
+        <div *ngIf="(loadingAssets$ | async)" class="alert alert-info">
+          Loading assets...
+        </div>
+        <div [hidden]="(loadingAssets$ | async)">
+          <div>
+            <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
+            <div *ngIf="(importing$ | async)" class="alert alert-info">
+              Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
             </div>
 
-          </div>
-          <div *ngIf="(loadingAssets$ | async)" class="alert alert-info">
-            Loading assets...
-          </div>
-        </div>
 
-        <mat-card-header>
-          <div class="dp-browser-info">
-            <strong>{{selection.selected.length}}</strong> image files selected.
-          </div>
-          <div class="dp-browser-toolbar">
-            <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
-            <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
-            <button mat-raised-button (click)="import()" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
-          </div>
-
-        </mat-card-header>
-
-
-
-
-
-
-        <div class="pb-3 asset-table-wrapper">
-          <mat-table #table [dataSource]="dataSource" matSort [matSortDisableClear]="true" [matSortActive]="(sortField$ | async)" [matSortDirection]="(sortOrder$ | async)">
-
-            <!-- Checkbox Column -->
-            <ng-container matColumnDef="select">
-              <mat-header-cell *matHeaderCellDef class="select-header-cell">
-                <mat-checkbox [hidden]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
-                  [indeterminate]="selection.hasValue() && !isAllSelected()">
-                </mat-checkbox>
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row" class="select-data-cell">
-                <mat-checkbox *ngIf="!row.collection" (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
-                  [checked]="selection.isSelected(row)">
-                </mat-checkbox>
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="name">
-              <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
-              <mat-cell *matCellDef="let row">
-                <div class="valign-center">
-                  <ng-container *ngIf="!row.collection">
-                    <mat-icon class="mr-1">photo</mat-icon>
-                    {{row.name}}
-                  </ng-container>
-                  <ng-container *ngIf="row.collection">
-                    <mat-icon class="mr-1">folder</mat-icon>
-                    <a tabindex="-1" [routerLink]="[]" [queryParams]="{path: row.path}">
-
-                      {{row.name}}
-                    </a>
-                  </ng-container>
+            <div [hidden]="(importProgress$ | async) != 1.0" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
+              Import completed with {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
+              <a [hidden]="(completedImports$ | async).length <= (importErrors$ | async).length" routerLink="/workbench" class="alert-link">View your imported files now.</a>
+              <div *ngIf="(importErrors$ | async).length != 0">
+                <div *ngFor="let e of (importErrors$ | async)">
+                  <strong>Error: </strong> Failed to import {{e.asset.name}}.
+                  <span *ngIf="e.message">{{e.message}}</span>
                 </div>
+              </div>
 
-              </mat-cell>
-            </ng-container>
+            </div>
+          </div>
 
+          <mat-card-header>
+            <div class="dp-browser-info">
+              <strong>{{selection.selected.length}}</strong> image files selected.
+            </div>
+            <div class="dp-browser-toolbar">
+              <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
+                  <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
+              <button mat-raised-button (click)="import()" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
+            </div>
 
-            <ng-container *ngFor="let columnMeta of (currentProvider$ | async)?.columns" [matColumnDef]="columnMeta.fieldName">
-              <mat-header-cell *matHeaderCellDef mat-sort-header [disabled]="!columnMeta.sortable"> {{columnMeta.name}} </mat-header-cell>
-              <mat-cell *matCellDef="let row">
-                <ng-container *ngIf="row.metadata && row.metadata.hasOwnProperty(columnMeta.fieldName)">
-                  {{isArray(row.metadata[columnMeta.fieldName]) ? row.metadata[columnMeta.fieldName].join(',&#8203;') : row.metadata[columnMeta.fieldName]}}
-                </ng-container>
-              </mat-cell>
-            </ng-container>
-
-            <mat-header-row *matHeaderRowDef="getDataProviderColumns(dataProvider)"></mat-header-row>
-            <mat-row *matRowDef="let row; columns: getDataProviderColumns(dataProvider);" (click)="onRowClick(row)">
-            </mat-row>
-          </mat-table>
+          </mat-card-header>
 
 
 
 
 
 
+          <div class="pb-3 asset-table-wrapper">
+            <mat-table #table [dataSource]="dataSource" matSort [matSortDisableClear]="true" [matSortActive]="(sortField$ | async)" [matSortDirection]="(sortOrder$ | async)">
 
+              <!-- Checkbox Column -->
+              <ng-container matColumnDef="select">
+                <mat-header-cell *matHeaderCellDef class="select-header-cell">
+                  <mat-checkbox [hidden]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+                    [indeterminate]="selection.hasValue() && !isAllSelected()">
+                  </mat-checkbox>
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row" class="select-data-cell">
+                  <mat-checkbox *ngIf="!row.collection" (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+                    [checked]="selection.isSelected(row)">
+                  </mat-checkbox>
+                </mat-cell>
+              </ng-container>
 
-
-          <!-- <table td-data-table role="grid" aria-label="Data Provider Assets">
-            <thead>
-              <tr td-data-table-column-row>
-
-                <th td-data-table-column [name]="'name'" [sortable]="true" [sortOrder]="(sortOrder$ | async)" (sortChange)="onSortChange($event)"
-                  [active]="(sortField$ | async) == 'name'" aria-label="name" [attr.aria-sort]="(sortField$ | async) != 'name' ? 'none' : ((sortOrder$ | async) == 'ASC' ? 'ascending' : 'descending')"
-                  role="button">
-                  Name
-                </th>
-                <th td-data-table-column *ngFor="let column of (currentProvider$ | async)?.columns" [name]="column.fieldName" [sortable]="column.sortable"
-                  [sortOrder]="(sortOrder$ | async)" (sortChange)="onSortChange($event)" [active]="(sortField$ | async) == column.fieldName"
-                  [attr.aria-sort]="(!column.sortable  || (sortField$ | async) != column.fieldName) ? 'none' : ((sortOrder$ | async) == 'ASC' ? 'ascending' : 'descending')"
-                  [attr.aria-label]="column.name">
-                  {{column.name}}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr td-data-table-row *ngFor="let row of (currentAssets$ | async); let rowIndex = index;" (keyup)="rowKeyup($event, row, rowIndex)">
-
-                <td tabindex="-1" td-data-table-cell>
+              <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
+                <mat-cell *matCellDef="let row">
                   <div class="valign-center">
-                    <mat-checkbox [tabIndex]="-1"  class="pr-3" *ngIf="!row.collection" [checked]="(selectedAssets$ | async)?.includes(row)">
-                      <div class="valign-center">
-                        <mat-icon class="mr-1">photo</mat-icon>
-                        {{row.name}}
-                      </div>
-                    </mat-checkbox>
-                    <div class="valign-center" *ngIf="row.collection">
+                    <ng-container *ngIf="!row.collection">
+                      <mat-icon class="mr-1">photo</mat-icon>
+                      {{row.name}}
+                    </ng-container>
+                    <ng-container *ngIf="row.collection">
                       <mat-icon class="mr-1">folder</mat-icon>
                       <a tabindex="-1" [routerLink]="[]" [queryParams]="{path: row.path}">
+
                         {{row.name}}
                       </a>
-                    </div>
-
+                    </ng-container>
                   </div>
-                </td>
-                <td tabindex="-1" class="focusable" td-data-table-cell *ngFor="let column of (currentProvider$ | async)?.columns; let colIndex = index;">
-                  <span *ngIf="row.metadata && row.metadata.hasOwnProperty(column.fieldName)">
-                    {{row.metadata[column.fieldName]}}
-                  </span>
-                </td>
 
-              </tr>
-            </tbody>
-          </table> -->
+                </mat-cell>
+              </ng-container>
+
+
+              <ng-container *ngFor="let columnMeta of (currentProvider$ | async)?.columns" [matColumnDef]="columnMeta.fieldName">
+                <mat-header-cell *matHeaderCellDef mat-sort-header [disabled]="!columnMeta.sortable"> {{columnMeta.name}} </mat-header-cell>
+                <mat-cell *matCellDef="let row">
+                  <ng-container *ngIf="row.metadata && row.metadata.hasOwnProperty(columnMeta.fieldName)">
+                    {{isArray(row.metadata[columnMeta.fieldName]) ? row.metadata[columnMeta.fieldName].join(',&#8203;') : row.metadata[columnMeta.fieldName]}}
+                  </ng-container>
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="getDataProviderColumns(dataProvider)"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: getDataProviderColumns(dataProvider);" (click)="onRowClick(row)">
+              </mat-row>
+            </mat-table>
+
+
+
+
+
+
+
+
+
+            <!-- <table td-data-table role="grid" aria-label="Data Provider Assets">
+                  <thead>
+                    <tr td-data-table-column-row>
+      
+                      <th td-data-table-column [name]="'name'" [sortable]="true" [sortOrder]="(sortOrder$ | async)" (sortChange)="onSortChange($event)"
+                        [active]="(sortField$ | async) == 'name'" aria-label="name" [attr.aria-sort]="(sortField$ | async) != 'name' ? 'none' : ((sortOrder$ | async) == 'ASC' ? 'ascending' : 'descending')"
+                        role="button">
+                        Name
+                      </th>
+                      <th td-data-table-column *ngFor="let column of (currentProvider$ | async)?.columns" [name]="column.fieldName" [sortable]="column.sortable"
+                        [sortOrder]="(sortOrder$ | async)" (sortChange)="onSortChange($event)" [active]="(sortField$ | async) == column.fieldName"
+                        [attr.aria-sort]="(!column.sortable  || (sortField$ | async) != column.fieldName) ? 'none' : ((sortOrder$ | async) == 'ASC' ? 'ascending' : 'descending')"
+                        [attr.aria-label]="column.name">
+                        {{column.name}}
+                      </th>
+                    </tr>
+                  </thead>
+      
+                  <tbody>
+                    <tr td-data-table-row *ngFor="let row of (currentAssets$ | async); let rowIndex = index;" (keyup)="rowKeyup($event, row, rowIndex)">
+      
+                      <td tabindex="-1" td-data-table-cell>
+                        <div class="valign-center">
+                          <mat-checkbox [tabIndex]="-1"  class="pr-3" *ngIf="!row.collection" [checked]="(selectedAssets$ | async)?.includes(row)">
+                            <div class="valign-center">
+                              <mat-icon class="mr-1">photo</mat-icon>
+                              {{row.name}}
+                            </div>
+                          </mat-checkbox>
+                          <div class="valign-center" *ngIf="row.collection">
+                            <mat-icon class="mr-1">folder</mat-icon>
+                            <a tabindex="-1" [routerLink]="[]" [queryParams]="{path: row.path}">
+                              {{row.name}}
+                            </a>
+                          </div>
+      
+                        </div>
+                      </td>
+                      <td tabindex="-1" class="focusable" td-data-table-cell *ngFor="let column of (currentProvider$ | async)?.columns; let colIndex = index;">
+                        <span *ngIf="row.metadata && row.metadata.hasOwnProperty(column.fieldName)">
+                          {{row.metadata[column.fieldName]}}
+                        </span>
+                      </td>
+      
+                    </tr>
+                  </tbody>
+                </table> -->
+          </div>
+
+          <mat-card-header>
+            <div class="dp-browser-info">
+
+            </div>
+            <div class="dp-browser-toolbar">
+              <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
+                  <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
+              <button mat-raised-button (click)="import()" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
+            </div>
+
+          </mat-card-header>
         </div>
 
-        <mat-card-header>
-          <div class="dp-browser-info">
-
-          </div>
-          <div class="dp-browser-toolbar">
-            <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
-            <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
-            <button mat-raised-button (click)="import()" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
-          </div>
-
-        </mat-card-header>
 
       </mat-card>
 
