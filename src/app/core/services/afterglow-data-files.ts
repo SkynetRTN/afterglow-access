@@ -2,7 +2,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/observable/of';
 import { Injectable } from '@angular/core';
 import { Matrix } from "paper";
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs/Observable';
 import { grayColorMap } from '../models/color-map';
@@ -122,9 +122,11 @@ export class AfterglowDataFileService {
         .set('width', region.width.toString())
         .set('height', region.height.toString())
     }
+    let headers: HttpHeaders = new HttpHeaders({
+      
+    })
 
-
-    return this.http.get(`${environment.apiUrl}/data-files/${fileId}/pixels`, { responseType: 'arraybuffer', params: params })
+    return this.http.get(`${environment.apiUrl}/data-files/${fileId}/pixels`, { headers: headers, responseType: 'arraybuffer', params: params })
       .map(resp => {
         let result = new Float32Array(resp);
         return result;

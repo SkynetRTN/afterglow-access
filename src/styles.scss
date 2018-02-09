@@ -96,9 +96,13 @@ a.mat-button {
   
 }
 
-
 /* fix margin beneath mat-button-toggle */
 label.mat-button-toggle-label {
+  margin-bottom: 0px;
+}
+
+/* fix bootstrap margin bottom on labels */
+.mat-checkbox label {
   margin-bottom: 0px;
 }
 

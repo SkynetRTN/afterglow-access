@@ -38,13 +38,12 @@ import { AppFooterComponent } from './components/app-footer/app-footer.component
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { DataProvidersComponent } from './containers/data-providers/data-providers.component';
 import { DataProvidersIndexPageComponent } from './containers/data-providers/data-providers-index-page/data-providers-index-page.component'
-import { DataProviderBrowsePageComponent } from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
+import { DataProviderBrowsePageComponent, FocusableCell, AssetNameCell, FocusableHeaderCell, FocusableCheckboxCell} from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
 import { WorkbenchComponent } from './containers/workbench/workbench.component';
 import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-page.component';
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
-
 import { WorkbenchEffects } from './effects/workbench';
 import { SonifierEffects } from './effects/sonifier';
 import { ViewerEffects } from './effects/viewer';
@@ -73,7 +72,11 @@ export const COMPONENTS = [
   SourceExtractorPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
-  PlotterComponent
+  PlotterComponent,
+  FocusableCell,
+  AssetNameCell,
+  FocusableHeaderCell,
+  FocusableCheckboxCell
 ];
 
 

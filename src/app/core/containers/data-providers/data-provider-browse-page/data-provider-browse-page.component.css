@@ -56,7 +56,7 @@
   cursor: pointer;
 }
 
-.mat-column-select {
+.mat-column-select, .cdk-column-select {
   overflow: visible;
   width: 50px;
   padding-left: 15px;
