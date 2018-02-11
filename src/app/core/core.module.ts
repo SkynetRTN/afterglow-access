@@ -22,6 +22,7 @@ import { NvD3Module } from 'ng2-nvd3';
 import 'd3';
 import 'nvd3';
 
+import { LibModule }  from '../lib/lib.module';
 import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
@@ -38,7 +39,7 @@ import { AppFooterComponent } from './components/app-footer/app-footer.component
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { DataProvidersComponent } from './containers/data-providers/data-providers.component';
 import { DataProvidersIndexPageComponent } from './containers/data-providers/data-providers-index-page/data-providers-index-page.component'
-import { DataProviderBrowsePageComponent, FocusableCell, AssetNameCell, FocusableHeaderCell, FocusableCheckboxCell} from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
+import { DataProviderBrowsePageComponent} from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
 import { WorkbenchComponent } from './containers/workbench/workbench.component';
 import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-page.component';
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
@@ -72,11 +73,7 @@ export const COMPONENTS = [
   SourceExtractorPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
-  PlotterComponent,
-  FocusableCell,
-  AssetNameCell,
-  FocusableHeaderCell,
-  FocusableCheckboxCell
+  PlotterComponent
 ];
 
 
@@ -86,6 +83,7 @@ export const COMPONENTS = [
     CommonModule,
     HttpModule,
     FormsModule,
+    LibModule,
     PipesModule,
     DataProvidersModule,
     DataFilesModule,

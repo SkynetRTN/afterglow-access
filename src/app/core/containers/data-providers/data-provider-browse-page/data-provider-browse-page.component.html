@@ -57,48 +57,57 @@
 
 
           <div class="pb-3 asset-table-wrapper">
-            <mat-table #table [dataSource]="dataSource" matSort [matSortDisableClear]="true" [matSortActive]="(sortField$ | async)" [matSortDirection]="(sortOrder$ | async)"
-              (keydown)="onKeydown($event)">
+            <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="dataSource" matSort [matSortDisableClear]="true"
+              [matSortActive]="(sortField$ | async)" [matSortDirection]="(sortOrder$ | async)">
 
               <!-- Checkbox Column -->
               <ng-container matColumnDef="select">
-                <app-focusable-checkbox-cell #cell="cell" *matHeaderCellDef class="select-header-cell mat-header-cell" role="columnheader"
-                  [rowIndex]="0" [columnIndex]="0" [inTabOrder]="activeCell == cell || activeCell == null" (focusin)="setActiveCell(cell)">
-                  <mat-checkbox [disabled]="!showSelectAll()" [tabIndex]="cell.inTabOrder ? 0 : -1" (change)="$event ? masterToggle() : null"
-                    [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()">
+                <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell" [rowIndex]="0" [columnIndex]="0"
+                  (focus)="cb?.focus()" [cellInTabOrder]="false">
+                  <mat-checkbox #cb [disabled]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+                    [indeterminate]="selection.hasValue() && !isAllSelected()" [tabIndex]="cell.isActiveCell ? 0 : -1">
                   </mat-checkbox>
-                </app-focusable-checkbox-cell>
-                <app-focusable-checkbox-cell #cell="cell" *matCellDef="let row; let rowIndex = index;" class="select-data-cell" [rowIndex]="rowIndex+1"
-                  [columnIndex]="0" [inTabOrder]="activeCell == cell" (focusin)="setActiveCell(cell)">
-                  <mat-checkbox *ngIf="!row.collection" (click)="$event.stopPropagation()" [tabIndex]="cell.inTabOrder ? 0 : -1" (change)="$event ? selection.toggle(row) : null"
-                    [checked]="selection.isSelected(row)">
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="0"
+                  (focus)="cb?.focus()" [cellInTabOrder]="row.collection">
+                  <mat-checkbox [hidden]="row.collection" #cb (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+                    [checked]="selection.isSelected(row)" [tabIndex]="cell.isActiveCell ? 0 : -1">
                   </mat-checkbox>
-                </app-focusable-checkbox-cell>
+                </mat-cell>
               </ng-container>
 
               <!-- Name Column -->
               <ng-container matColumnDef="name">
-                <app-focusable-header-cell #cell="cell" *matHeaderCellDef mat-sort-header class="select-header-cell mat-header-cell" [rowIndex]="0"
-                  [columnIndex]="1" [inTabOrder]="activeCell == cell" (focusin)="setActiveCell(cell)">
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="1"
+                  [cellInTabOrder]="false">
                   Name
-                </app-focusable-header-cell>
-                <app-asset-name-cell #cell *matCellDef="let row; let rowIndex = index;" [asset]="row" [rowIndex]="rowIndex+1" [columnIndex]="1"
-                  [inTabOrder]="activeCell == cell" (focusin)="setActiveCell(cell)">
-                </app-asset-name-cell>
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="1"
+                  (focus)="a?.focus()" [cellInTabOrder]="!row.collection">
+                  <div class="valign-center" [hidden]="row.collection">
+                    <mat-icon class="mr-1">photo</mat-icon>
+                    {{row.name}}
+                  </div>
+                  <div class="valign-center" [hidden]="!row.collection">
+                    <mat-icon class="mr-1">folder</mat-icon>
+                    <a #a [tabIndex]="cell.isActiveCell ? 0 : -1" [routerLink]="[]" [queryParams]="{path: row.path}">
+                      {{row.name}}
+                    </a>
+                  </div>
+                </mat-cell>
               </ng-container>
 
               <!-- Custom Columns -->
               <ng-container *ngFor="let columnMeta of (currentProvider$ | async)?.columns; let colIndex = index;" [matColumnDef]="columnMeta.fieldName">
-                <app-focusable-header-cell #cell="cell" *matHeaderCellDef mat-sort-header [disabled]="!columnMeta.sortable" class="mat-header-cell"
-                  role="columnheader" [rowIndex]="0" [columnIndex]="colIndex+2" [inTabOrder]="activeCell == cell" (focusin)="setActiveCell(cell)">
+                <mat-header-cell *matHeaderCellDef mat-sort-header [disabled]="!columnMeta.sortable" app-focusable-cell [rowIndex]="0" [columnIndex]="colIndex+2"
+                  [cellInTabOrder]="false">
                   {{columnMeta.name}}
-                </app-focusable-header-cell>
-                <app-focusable-cell #cell="cell" *matCellDef="let row; let rowIndex = index;" role="gridcell" class="mat-cell" [rowIndex]="rowIndex+1"
-                  [columnIndex]="colIndex+2" [inTabOrder]="activeCell == cell" (focusin)="setActiveCell(cell)">
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell [rowIndex]="rowIndex+1" [columnIndex]="colIndex+2">
                   <div *ngIf="row.metadata && row.metadata.hasOwnProperty(columnMeta.fieldName)">
                     {{isArray(row.metadata[columnMeta.fieldName]) ? row.metadata[columnMeta.fieldName].join(',&#8203;') : row.metadata[columnMeta.fieldName]}}
                   </div>
-                </app-focusable-cell>
+                </mat-cell>
               </ng-container>
 
               <mat-header-row *matHeaderRowDef="(currentProviderColumns$ | async)"></mat-header-row>
