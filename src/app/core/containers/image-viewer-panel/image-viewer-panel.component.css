@@ -1,0 +1,26 @@
+#image-viewer-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  width: 100%;
+  position: absolute;
+  outline: none;
+  overflow: hidden;
+  user-select: text;
+  top: 0px;
+  bottom: 0px;
+}
+
+.viewer {
+  display: flex;
+  flex: 1 1 auto;
+  position: relative;
+}
+
+/* .viewer.mouse-over-image {
+  cursor: grab;
+} */
+
+.viewer.dragging {
+  cursor: grabbing;
+}

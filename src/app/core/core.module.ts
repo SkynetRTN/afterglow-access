@@ -27,7 +27,13 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
-import { PanZoomViewerComponent } from './components/pan-zoom-viewer/pan-zoom-viewer.component';
+import { ImageViewerPanelComponent } from './containers/image-viewer-panel/image-viewer-panel.component';
+import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
+import { WorkbenchDataFileListComponent } from './containers/workbench/workbench-data-file-list/workbench-data-file-list.component';
+import { WorkbenchViewerGridComponent } from './containers/workbench/workbench-viewer-grid/workbench-viewer-grid.component';
+import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
+import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { ImageViewerTitleBarComponent } from './components/image-viewer-title-bar/image-viewer-title-bar.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from './components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
@@ -45,9 +51,13 @@ import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-p
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
+import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
+import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
+import { AlignerPageComponent } from './containers/workbench/aligner-page/aligner-page.component';
 import { WorkbenchEffects } from './effects/workbench';
 import { SonifierEffects } from './effects/sonifier';
-import { ViewerEffects } from './effects/viewer';
+import { TransformationEffects } from './effects/transformation';
+import { NormalizationEffects } from './effects/normalization';
 import { SourceExtractorEffects } from './effects/source-extractor';
 import { reducers } from './reducers';
 
@@ -58,7 +68,13 @@ import { AfterglowDataProviderService } from './services/afterglow-data-provider
 export const COMPONENTS = [
   NavbarComponent,
   AppFooterComponent,
-  PanZoomViewerComponent,
+  WorkbenchDataFileListComponent,
+  WorkbenchViewerGridComponent,
+  ImageViewerPanelComponent,
+  PanZoomCanvasComponent,
+  ImageViewerMarkerOverlayComponent,
+  ImageViewerTitleBarComponent,
+  ImageViewerStatusBarComponent,
   NormalizerFormComponent,
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
@@ -71,6 +87,9 @@ export const COMPONENTS = [
   PlotterPageComponent,
   SonifierPageComponent,
   SourceExtractorPageComponent,
+  ImageCalculatorPageComponent,
+  StackerPageComponent,
+  AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
   PlotterComponent
@@ -111,7 +130,7 @@ export const COMPONENTS = [
      * All Effects will only be instantiated once regardless of
      * whether they are registered once or multiple times.
      */
-    EffectsModule.forFeature([WorkbenchEffects, ViewerEffects, SonifierEffects, SourceExtractorEffects]),
+    EffectsModule.forFeature([WorkbenchEffects, SonifierEffects, SourceExtractorEffects, NormalizationEffects, TransformationEffects]),
   ],
 
   declarations: COMPONENTS,

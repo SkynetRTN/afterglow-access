@@ -1,0 +1,10 @@
+
+  <div class="image-viewer-grid-wrapper" [style.flex-direction]="(viewMode$ | async)==ViewMode.SPLIT_VERTICAL ? 'column' : 'row'">
+    <div class="image-viewer-panel" [class.active]="(activeViewerIndex$ | async) == viewerIndex" [class.inactive]="(activeViewerIndex$ | async) != viewerIndex"
+      *ngFor="let viewer of (viewers$ | async); index as viewerIndex; trackBy: viewerTrackByFn" (mousedown)="setActiveViewer($event, viewerIndex, viewer)">
+      <app-image-viewer-panel [fileId]="viewer.fileId" [markers]="(activeViewerIndex$ | async) == viewerIndex ? markers : []" 
+        (onImageMove)="handleImageMove($event, viewerIndex, viewer)" (onImageClick)="handleImageClick($event, viewerIndex, viewer)"
+        (onMarkerClick)="handleMarkerClick($event, viewerIndex, viewer)">
+      </app-image-viewer-panel>
+    </div>
+  </div>

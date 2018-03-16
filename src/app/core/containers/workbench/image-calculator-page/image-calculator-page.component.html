@@ -1,0 +1,24 @@
+<div class="workbench-outlet-wrapper">
+    <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+      <app-workbench-viewer-grid></app-workbench-viewer-grid>
+    </div>
+  
+    <span class="resizer"></span>
+    <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
+      <div class="card workbench-settings-card" style="height: 100%;">
+        <div id="settings-header" class="card-header">
+          Image Calculator
+        </div>
+  
+        <div class="card-body" style="overflow-y: auto;">
+          <div *ngIf="!(activeImageFile$ | async)" class="alert alert-info">
+            Select a data file to see image calculator options.
+          </div>
+          <div *ngIf="(activeImageFile$ | async)">
+            
+          </div>
+        </div>
+      </div>
+  
+    </div>
+  </div>

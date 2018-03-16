@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit } from '@angular/core';
 import 'rxjs/add/operator/map'
 
 import { VgAPI } from 'videogular2/core';
@@ -8,45 +8,52 @@ import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
 import { SonifierRegionMode } from '../../../models/sonifier-file-state';
-import { ViewerFileState } from '../../../models/viewer-file-state';
+import { Normalization } from '../../../models/normalization';
 import { SonifierFileState } from '../../../models/sonifier-file-state';
-import { ViewportChangeEvent } from '../../../components/pan-zoom-viewer/pan-zoom-viewer.component';
+import { ViewportChangeEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { AfterglowDataFileService } from '../../../services/afterglow-data-files';
-import { ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
+import { ImageFile, getWidth, getHeight, DataFile } from '../../../../data-files/models/data-file';
 
 import * as fromRoot from '../../../../reducers';
 import * as fromCore from '../../../reducers';
+import * as fromDataFiles from '../../../../data-files/reducers';
 import * as workbenchActions from '../../../actions/workbench';
 import * as sonifierActions from '../../../actions/sonifier';
+import { ImageFileState } from '../../../models/image-file-state';
+import { Viewer } from '../../../models/viewer';
+import { Dictionary } from '@ngrx/entity/src/models';
+import { Marker, MarkerType } from '../../../models/marker';
 
 @Component({
   selector: 'app-sonifier-page',
   templateUrl: './sonifier-page.component.html',
   styleUrls: ['./sonifier-page.component.css']
 })
-export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChanges {
+export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   imageFile$: Observable<ImageFile>;
-  viewerState$: Observable<ViewerFileState>;
+  imageFileState$: Observable<ImageFileState>;
   sonifierState$: Observable<SonifierFileState>;
   showConfig$: Observable<boolean>;
   lastImageFile: ImageFile;
-  lastViewerState: ViewerFileState;
+  lastViewerState: Normalization;
   lastSonifierState: SonifierFileState;
   sonificationSrcUri: string = null;
   clearProgressLine$: Observable<boolean>;
   progressLine$: Observable<{ x1: number, y1: number, x2: number, y2: number }>;
+  markers$: Observable<Marker[]>;
+  loading: boolean;
 
   SonifierRegionMode = SonifierRegionMode;
   showPlayer: boolean = false;
   api: VgAPI;
   viewportSize: { width: number, height: number } = null;
   subs: Subscription[] = [];
-
+  activeViewer: Viewer;
 
   constructor(private store: Store<fromRoot.State>, private afterglowService: AfterglowDataFileService) {
-    this.imageFile$ = store.select(fromCore.workbench.getImageFile);
-    this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
-    this.sonifierState$ = store.select(fromCore.workbench.getSonifierFileState);
+    this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
+    this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
+    this.sonifierState$ = this.imageFileState$.filter(state => state != null).map(state => state.sonifier)
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
 
     this.clearProgressLine$ = this.sonifierState$.filter(state => {
@@ -55,12 +62,15 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     .map(() => true)
 
     this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
-    this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));
     this.subs.push(this.sonifierState$.subscribe(sonifierState => {
       this.lastSonifierState = sonifierState;
       if (sonifierState && this.sonificationSrcUri != sonifierState.sonificationUri) this.sonificationSrcUri = null;
     }));
 
+  }
+
+  ngOnInit() {
+    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
   }
 
 
@@ -73,21 +83,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
   ngOnChanges() {
   }
-
-  onViewportChange($event: ViewportChangeEvent) {
-    this.store.dispatch(new sonifierActions.UpdateViewport({
-      file: this.lastImageFile,
-      viewport: {
-        imageX: $event.imageX,
-        imageY: $event.imageY,
-        imageWidth: $event.imageWidth,
-        imageHeight: $event.imageHeight,
-        viewportWidth: $event.viewportWidth,
-        viewportHeight: $event.viewportHeight
-      }
-    }))
-  }
-
+  
   private selectSubregionByFrequency(subregion: number) {
     let region = this.lastSonifierState.region;
     this.store.dispatch(new sonifierActions.AddRegionToHistory({
@@ -122,8 +118,8 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     this.store.dispatch(new sonifierActions.AddRegionToHistory({
       file: this.lastImageFile,
       region: {
-        x: 0,
-        y: 0,
+        x: 0.5,
+        y: 0.5,
         width: getWidth(this.lastImageFile),
         height: getHeight(this.lastImageFile)
       }
@@ -154,26 +150,6 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     this.store.dispatch(new sonifierActions.UpdateFileState({ file: this.lastImageFile, changes: { viewportSync: value.checked } }))
   }
 
-
-  // private onViewportChange() {
-  //   //requires header loaded
-  //   if(this.sonifierStore.getRegionOption() == SonifierRegionOption.VIEWPORT) {
-  //     let ul = this.imageFile.viewerState.viewportToImage({x: 0, y: 0});
-  //     let lr = this.imageFile.viewerState.viewportToImage({x: this.viewer.width, y: this.viewer.height});
-
-
-  //     let x = Math.max(0, ul.x);
-  //     let y = Math.max(0, ul.y);
-  //     this.sonifierStore.setRegion({
-  //       x: x,
-  //       y: y,
-  //       width: Math.min(this.imageFile.width, lr.x) - x,
-  //       height: Math.min(this.imageFile.height, lr.y) - y
-  //     },
-  //     false);
-  //   }
-  // }
-
   private sonify() {
     if(this.sonificationSrcUri == this.lastSonifierState.sonificationUri && this.api && this.api.canPlay) {
       this.api.getDefaultMedia().play();
@@ -184,12 +160,27 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     
   }
 
+  private getMarkers(state: SonifierFileState, progressLine: {x1: number, y1: number, x2: number, y2: number} = null) {
+    let result : Marker[] = [];
+    if(state.region && state.regionMode == SonifierRegionMode.CUSTOM) result.push({type: MarkerType.RECTANGLE, ...state.region})
+    if(progressLine) result.push({type: MarkerType.LINE, ...progressLine})
+    return result;
+  }
+
   onPlayerReady(api: VgAPI) {
     this.api = api;
 
     let stop$ = Observable.from(this.api.getDefaultMedia().subscriptions.ended);
     let start$ = Observable.from(this.api.getDefaultMedia().subscriptions.playing);
+    
+    
+    this.subs.push(Observable.from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe(canPlayThrough => {
+      this.loading = false;
+    }));
 
+    this.subs.push(Observable.from(this.api.getDefaultMedia().subscriptions.loadStart).subscribe(canPlayThrough => {
+      this.loading = true;
+    }));
 
     this.progressLine$ = Observable.merge(
       start$.flatMap(() => Observable.interval(10).takeUntil(stop$.merge(this.clearProgressLine$)))
@@ -206,44 +197,12 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
       stop$.map(() => null),
       this.clearProgressLine$.map(() => null)
     )
-
-
-
-
-
-    // this.api.getDefaultMedia().subscriptions.playing.subscribe(
-    //   () => {
-    //     // Set the video to the beginning
-    //     console.log('playing');
-    //     console.log(this.api.getDefaultMedia().duration);
-    //     console.log(this.api.getDefaultMedia().currentTime);
-    //     this.playing$.next(true);
-    //   }
-    // );
-
-    // this.api.getDefaultMedia().subscriptions.timeUpdate.subscribe(
-    //   () => {
-    //     // Set the video to the beginning
-    //     this.progressLine$.next()
-    //     console.log(this.api.getDefaultMedia().duration);
-    //     console.log(this.api.getDefaultMedia().currentTime);
-    //   }
-    // );
-
-    // this.api.getDefaultMedia().subscriptions.ended.subscribe(
-    //   () => {
-    //     // Set the video to the beginning
-    //     console.log('ended');
-    //     console.log(this.api.getDefaultMedia().duration);
-    //     console.log(this.api.getDefaultMedia().currentTime);
-    //     this.playing$.next(false);
-    //   }
-    // );
-
+    this.markers$ = Observable.combineLatest(this.sonifierState$, this.progressLine$)
+    .map(([state, progressLine]) => {
+      return this.getMarkers(state, progressLine);
+    })
 
   }
-
-
 
 
 }

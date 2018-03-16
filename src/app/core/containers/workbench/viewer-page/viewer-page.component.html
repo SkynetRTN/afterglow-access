@@ -1,31 +1,59 @@
 <div class="workbench-outlet-wrapper">
-
-  <div class="image-viewer-panel" role="region" aria-label="image viewer">
-    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showInfoBar]="true">
-    </app-pan-zoom-viewer>
+  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+    <app-workbench-viewer-grid></app-workbench-viewer-grid>
   </div>
+
   <span class="resizer"></span>
-  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel"  role="region" aria-labelledby="settings-header">
+
+
+
+  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card workbench-settings-card" style="height: 100%;">
       <div id="settings-header" class="card-header">
-        Viewer Settings
+        Viewer
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
+        <div class="form-group">
+          <label class="pr-3" for="viewMode">Layout:</label>
+          <mat-button-toggle-group name="viewMode" class="" [ngModel]="(workbenchState$ | async)?.viewMode" (ngModelChange)="setViewModeOption($event)">
+            <mat-button-toggle aria-label="Single Viewer" value="{{ViewMode.SINGLE}}">
+              <mat-icon>crop_din</mat-icon>
+            </mat-button-toggle>
+            <mat-button-toggle aria-label="Dual Viewer Split Horizontally" value="{{ViewMode.SPLIT_VERTICAL}}">
+              <mat-icon>view_stream</mat-icon>
+            </mat-button-toggle>
+            <mat-button-toggle aria-label="Dual Viewer Split Vertically" value="{{ViewMode.SPLIT_HORIZONTAL}}">
+              <mat-icon style="transform: rotate(90deg) translate(-3px,2px);">view_stream</mat-icon>
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+
+        <div *ngIf="!(imageFile$ | async)" class="alert alert-info">
+          Select a data file to see viewer options.
+        </div>
         <div *ngIf="(imageFile$ | async)">
-          <app-image-hist-chart [hist]="(imageFile$ | async)?.hist" [backgroundLevel]="(viewerState$ | async).normalizer?.backgroundLevel"
-            [peakLevel]="(viewerState$ | async).normalizer?.peakLevel" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
+          <div class="form-group">
+            <mat-slide-toggle [disabled]="!(viewerSyncAvailable$ | async)" [checked]="(viewerSyncEnabled$ | async)" [labelPosition]="after"
+              (change)="onViewerSyncEnabledChange($event)">
+              Enable Viewer Sync
+            </mat-slide-toggle>
+          </div>
+
+          <app-image-hist-chart [width]="450" [height]="250" [hist]="(imageFile$ | async)?.hist" [backgroundLevel]="(normalization$ | async).normalizer?.backgroundLevel"
+            [peakLevel]="(normalization$ | async).normalizer?.peakLevel" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
             (onPeakLevelChange)="onPeakLevelChange($event)">
           </app-image-hist-chart>
 
-          <app-normalizer-form [normalizer]="(viewerState$ | async).normalizer" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
+          <app-normalizer-form [normalizer]="(normalization$ | async).normalizer" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
             (onPeakLevelChange)="onPeakLevelChange($event)" (onColorMapChange)="onColorMapChange($event)" (onStretchModeChange)="onStretchModeChange($event)">
           </app-normalizer-form>
 
           <!-- <app-normalizer
-            [normalizer]="(imageFile$ | async)?.normalizer"
-            [hist]="(imageFile$ | async)?.hist">
-          </app-normalizer> -->
+                  [normalizer]="(imageFile$ | async)?.normalizer"
+                  [hist]="(imageFile$ | async)?.hist">
+                </app-normalizer> -->
 
           <div class="pb-4">
             <button mat-raised-button (click)="onZScaleClick()">
@@ -35,11 +63,17 @@
             <button mat-raised-button (click)="onInvertClick()">
               <mat-icon>invert_colors</mat-icon> Invert</button>
           </div>
+          <div class="pb-4">
+            <button mat-raised-button (click)="onFlipClick()">
+              <mat-icon>flip</mat-icon> Flip</button>
+            <button mat-raised-button (click)="onRotateClick()">
+              <mat-icon>rotate_right</mat-icon> Rotate</button>
+            <button mat-raised-button (click)="onResetOrientationClick()">
+              <mat-icon>crop_din</mat-icon> Reset Orientation</button>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
-
-
-
 </div>

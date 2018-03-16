@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PanZoomViewerComponent } from './pan-zoom-viewer.component';
+import { StackerPageComponent } from './stacker-page.component';
 
-describe('PanZoomViewerComponent', () => {
-  let component: PanZoomViewerComponent;
-  let fixture: ComponentFixture<PanZoomViewerComponent>;
+describe('StackerPageComponent', () => {
+  let component: StackerPageComponent;
+  let fixture: ComponentFixture<StackerPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PanZoomViewerComponent ]
+      declarations: [ StackerPageComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PanZoomViewerComponent);
+    fixture = TestBed.createComponent(StackerPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

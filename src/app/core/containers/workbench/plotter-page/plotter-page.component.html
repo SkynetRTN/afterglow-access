@@ -1,21 +1,23 @@
 <div class="workbench-outlet-wrapper">
-
-  <div class="image-viewer-panel" role="region" aria-label="image viewer">
-    <app-pan-zoom-viewer [imageFile]="imageFile$ | async" [viewerState]="viewerState$ | async" [showInfoBar]="true" [showLineMarker]="line$ | async"
-      [line]="line$ | async" (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)">
-    </app-pan-zoom-viewer>
+  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+    <app-workbench-viewer-grid [markers]="markers$ | async" (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)"></app-workbench-viewer-grid>
   </div>
+
   <span class="resizer"></span>
   <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card workbench-settings-card" style="height: 100%;">
       <div id="settings-header" class="card-header">
-        Plotter Settings
+        Plotter
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
-        <div *ngIf="(imageFile$ | async)">
-          <app-plotter #plotter [imageFile]="imageFile$ | async" [lineMeasureStart]="(plotterState$ | async)?.lineMeasureStart" [lineMeasureEnd]="(plotterState$ | async)?.lineMeasureEnd"
-            [interpolatePixels]="(plotterSettings$ | async)?.interpolatePixels">
+        <div *ngIf="!(imageFile$ | async) || !(imageFileState$ | async)" class="alert alert-info">
+          Select a data file to see plotter options.
+        </div>
+
+        <div *ngIf="(imageFile$ | async) && (imageFileState$ | async)">
+          <app-plotter #plotter [imageFile]="imageFile$ | async" [width]="450" [height]="300" [lineMeasureStart]="(plotterState$ | async)?.lineMeasureStart"
+            [lineMeasureEnd]="(plotterState$ | async)?.lineMeasureEnd" [interpolatePixels]="(plotterSettings$ | async)?.interpolatePixels">
           </app-plotter>
           <div class="row">
             <div class="col-6">

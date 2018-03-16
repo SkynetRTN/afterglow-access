@@ -15,6 +15,7 @@ import * as fromDataFile from '../../data-files/reducers';
 
 import { AfterglowDataFileService } from '../services/afterglow-data-files';
 import { SourceExtractorRegionOption } from '../models/source-extractor-file-state';
+import { getViewportRegion } from '../models/transformation';
 
 
 @Injectable()
@@ -26,17 +27,17 @@ export class SourceExtractorEffects {
     .ofType<sourceExtractorActions.ExtractSources>(sourceExtractorActions.EXTRACT_SOURCES)
     .withLatestFrom(
     this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getSourceExtractorFileStates),
-    this.store.select(fromCore.getSourceExtractorGlobalState)
+    this.store.select(fromCore.getImageFileGlobalState),
+    this.store.select(fromCore.getImageFileStates),
 
     )
     //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .switchMap(([action, dataFiles, sourceExtractorFileStates, sourceExtractorGlobalState]) => {
+    .switchMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
       let imageFile = dataFiles[action.payload.file.id] as ImageFile;
-      let sourceExtractor = sourceExtractorFileStates[imageFile.id];
+      let sourceExtractor = imageFileStates[imageFile.id].sourceExtractor;
 
       return this.afterglowDataFileService
-        .extractSources(action.payload.file.id, sourceExtractorGlobalState.sourceExtractionSettings, sourceExtractor.region)
+        .extractSources(action.payload.file.id, imageFileGlobalState.sourceExtractionSettings, sourceExtractor.region)
         .flatMap(allExtractedSources => {
           let maxPerRequest = 25;
           let extractedSourcesArrays: Array<Array<Source>> = [];
@@ -48,7 +49,7 @@ export class SourceExtractorEffects {
           let observables: Array<Observable<Source[]>> = [];
 
           extractedSourcesArrays.forEach(extractedSources => {
-            let o = this.afterglowDataFileService.photometerXY(action.payload.file.id, extractedSources, sourceExtractorGlobalState.photSettings)
+            let o = this.afterglowDataFileService.photometerXY(action.payload.file.id, extractedSources, imageFileGlobalState.photSettings)
               .map(photSources => {
                 for (let i = 0; i < extractedSources.length; i++) {
                   extractedSources[i].x = photSources[i].x;
@@ -76,12 +77,12 @@ export class SourceExtractorEffects {
     .ofType<sourceExtractorActions.PhotometerXYSources>(sourceExtractorActions.PHOTOMETER_XY_SOURCES)
     .withLatestFrom(
     this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getSourceExtractorGlobalState)
+    this.store.select(fromCore.getImageFileGlobalState)
     )
     //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .flatMap(([action, dataFiles, sourceExtractorGlobalState]) => {
+    .flatMap(([action, dataFiles, imageFileGlobalState]) => {
       return this.afterglowDataFileService
-        .photometerXY(action.payload.file.id, action.payload.coords, sourceExtractorGlobalState.photSettings)
+        .photometerXY(action.payload.file.id, action.payload.coords, imageFileGlobalState.photSettings)
         .map((sources: Source[]) => new sourceExtractorActions.PhotometerSourcesSuccess({ file: action.payload.file, sources: sources }))
         .catch(err => of(new sourceExtractorActions.PhotometerSourcesFail({ file: action.payload.file, error: err })));
     });
@@ -91,21 +92,15 @@ export class SourceExtractorEffects {
     .ofType<sourceExtractorActions.PhotometerRaDecSources>(sourceExtractorActions.PHOTOMETER_RADEC_SOURCES)
     .withLatestFrom(
     this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getSourceExtractorGlobalState)
+    this.store.select(fromCore.getImageFileGlobalState)
     )
     //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .flatMap(([action, dataFiles, sourceExtractorGlobalState]) => {
+    .flatMap(([action, dataFiles, imageFileGlobalState]) => {
       return this.afterglowDataFileService
-        .photometerRaDec(action.payload.file.id, action.payload.coords, sourceExtractorGlobalState.photSettings)
+        .photometerRaDec(action.payload.file.id, action.payload.coords, imageFileGlobalState.photSettings)
         .map((sources: Source[]) => new sourceExtractorActions.PhotometerSourcesSuccess({ file: action.payload.file, sources: sources }))
         .catch(err => of(new sourceExtractorActions.PhotometerSourcesFail({ file: action.payload.file, error: err })));
     });
-
-
-  @Effect()
-  viewportChanged$: Observable<Action> = this.actions$
-    .ofType<sourceExtractorActions.UpdateViewport>(sourceExtractorActions.UPDATE_VIEWPORT)
-    .map(action => new sourceExtractorActions.UpdateRegion({ file: action.payload.file }));
 
 
   @Effect()
@@ -119,24 +114,24 @@ export class SourceExtractorEffects {
     .ofType<sourceExtractorActions.UpdateRegion>(sourceExtractorActions.UPDATE_REGION)
     .withLatestFrom(
     this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getSourceExtractorGlobalState),
-    this.store.select(fromCore.getSourceExtractorFileStates),
-    this.store.select(fromCore.getSonifierFileStates),
+    this.store.select(fromCore.getImageFileGlobalState),
+    this.store.select(fromCore.getImageFileStates)
   )
-    .flatMap(([action, dataFiles, sourceExtractorGlobalState, sourceExtractorFileStates, sonifierFileStates]) => {
+    .flatMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
       let imageFile = dataFiles[action.payload.file.id] as ImageFile;
-      let sourceExtractorFileState = sourceExtractorFileStates[imageFile.id];
-      let sonifierFileState = sonifierFileStates[imageFile.id];
+      let sourceExtractorFileState = imageFileStates[imageFile.id].sourceExtractor;
+      let sonifierFileState = imageFileStates[imageFile.id].sonifier;
       let actions: Action[] = [];
 
       let region = null;
       if (sourceExtractorFileState.regionOption == SourceExtractorRegionOption.VIEWPORT) {
-        region = {
-          x: sourceExtractorGlobalState.viewport.imageX,
-          y: sourceExtractorGlobalState.viewport.imageY,
-          width: sourceExtractorGlobalState.viewport.imageWidth,
-          height: sourceExtractorGlobalState.viewport.imageHeight
-        }
+        region = getViewportRegion(imageFileStates[imageFile.id].transformation, imageFile);
+        // region = {
+        //   x: imageFileGlobalState.viewport.imageX,
+        //   y: imageFileGlobalState.viewport.imageY,
+        //   width: imageFileGlobalState.viewport.imageWidth,
+        //   height: imageFileGlobalState.viewport.imageHeight
+        // }
       }
       else if (sourceExtractorFileState.regionOption == SourceExtractorRegionOption.SONIFIER_REGION) {
         region = sonifierFileState.region;
@@ -160,7 +155,7 @@ export class SourceExtractorEffects {
   constructor(
     private actions$: Actions,
     private afterglowDataFileService: AfterglowDataFileService,
-    private store: Store<fromDataFile.State>
+    private store: Store<fromCore.State>
   ) { }
 }
 

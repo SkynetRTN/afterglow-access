@@ -6,7 +6,6 @@ export enum SonifierRegionMode {
 }
 
 export interface SonifierFileState {
-  fileId: string,
   sonificationUri: string,
   regionHistoryInitialized: boolean;
   region: Region | null;

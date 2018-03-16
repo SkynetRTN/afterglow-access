@@ -424,12 +424,12 @@ export class AfterglowDataFileService {
 
   // getImageViewerState(imageFile: ImageFile) {
   //   let settings = this.imageFileToState[imageFile.id];
-  //   if(settings.viewerState) {
-  //     console.log("settings exist", settings.viewerState, settings.viewerState.layer);
-  //     return Promise.resolve(settings.viewerState);
+  //   if(settings.normalization) {
+  //     console.log("settings exist", settings.normalization, settings.normalization.layer);
+  //     return Promise.resolve(settings.normalization);
   //   }
 
-  //   settings.viewerState = new zp.ImageViewerState();
+  //   settings.normalization = new zp.ImageViewerState();
   //   let tm = new zp.ImageTileManager<Uint16Array>(imageFile.width, imageFile.height,
   //     this.tileWidth, this.tileHeight, imageFile.numChannels);
   //   tm.tileLoader = (tile: zp.ImageTile<Uint16Array>) => { return this.loadTile(imageFile, tile) };
@@ -438,9 +438,9 @@ export class AfterglowDataFileService {
   //   // normalization may be set prior to viewer being loaded
   //   if(settings.normalizer) {
   //     layer.normalizer = settings.normalizer;
-  //     settings.viewerState.addLayer(layer);
-  //     console.log("new settings, default normalizer, added layer", settings.viewerState);
-  //     return Promise.resolve(settings.viewerState);
+  //     settings.normalization.addLayer(layer);
+  //     console.log("new settings, default normalizer, added layer", settings.normalization);
+  //     return Promise.resolve(settings.normalization);
   //   }
 
   //   //on first load, get histogram to initialize normalizer values
@@ -449,9 +449,9 @@ export class AfterglowDataFileService {
   //     settings.normalizer.colorMap = this.colorMaps[0];
   //     settings.normalizer.setBackgroundPeak(Math.round(imageHist.backgroundLevel*100.0)/100.0, Math.round(imageHist.peakLevel*100.0)/100.0);
   //     layer.normalizer = settings.normalizer;
-  //     settings.viewerState.addLayer(layer);
-  //     console.log("new settings, new normalizer, added layer", settings.viewerState);
-  //     return settings.viewerState;
+  //     settings.normalization.addLayer(layer);
+  //     console.log("new settings, new normalizer, added layer", settings.normalization);
+  //     return settings.normalization;
   //   });
   // }
 

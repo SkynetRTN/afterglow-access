@@ -6,6 +6,8 @@ import * as imageFileActions from '../../data-files/actions/image-file';
 import * as authActions from '../../auth/actions/auth';
 import * as workbenchActions from '../actions/workbench';
 import { SidebarView } from '../models/sidebar-view';
+import { WorkbenchState } from '../models/workbench-state';
+import { ViewMode } from '../models/view-mode';
 /**
  * @ngrx/entity provides a predefined interface for handling
  * a structured dictionary of records. This interface
@@ -13,25 +15,36 @@ import { SidebarView } from '../models/sidebar-view';
  * model type by id. This interface is extended to include
  * any additional interface properties.
  */
-export interface State {
-  selectedDataFileId: string | null;
-  sidebarView: SidebarView;
-  showSidebar: boolean;
-  showConfig: boolean;
-}
 
 
-export const initialState: State = {
-  selectedDataFileId: null,
+export const initialState: WorkbenchState = {
+  multiFileSelectionEnabled: false,
+  activeViewerIndex: 0,
+  viewMode: ViewMode.SINGLE,
+  viewers: [
+    {
+      fileId: null,
+      panEnabled: true,
+      zoomEnabled: true
+    },
+    {
+      fileId: null,
+      panEnabled: true,
+      zoomEnabled: true
+    },
+  ],
+  viewerSyncAvailable: false,
+  viewerSyncEnabled: false,
   sidebarView: SidebarView.FILES,
   showSidebar: true,
   showConfig: true,
+  
 };
 
 export function reducer(
   state = initialState,
   action: workbenchActions.Actions | dataFileActions.Actions | imageFileActions.Actions | authActions.Actions
-): State {
+): WorkbenchState {
   switch (action.type) {
     case authActions.LOGOUT: {
       return {
@@ -39,10 +52,17 @@ export function reducer(
       }
     }
 
-    case workbenchActions.SELECT_DATA_FILE: {
+    case workbenchActions.ENABLE_MULTI_FILE_SELECTION: {
       return {
         ...state,
-        selectedDataFileId: action.payload
+        multiFileSelectionEnabled: true
+      }
+    }
+
+    case workbenchActions.DISABLE_MULTI_FILE_SELECTION: {
+      return {
+        ...state,
+        multiFileSelectionEnabled: false
       }
     }
 
@@ -56,6 +76,68 @@ export function reducer(
         ...state,
         showSidebar: showSidebar,
         sidebarView: action.payload.sidebarView
+      }
+    }
+
+    case workbenchActions.SET_ACTIVE_VIEWER: {
+      if(state.activeViewerIndex == action.payload.viewerIndex) return state;
+      
+      return {
+        ...state,
+        activeViewerIndex: action.payload.viewerIndex
+      }
+    }
+
+    case workbenchActions.SET_VIEW_MODE: {
+
+      let activeViewerIndex = state.activeViewerIndex;
+      if(action.payload.viewMode == ViewMode.SINGLE) {
+        activeViewerIndex = 0;
+      } 
+      else {
+        activeViewerIndex = 1;
+      }
+
+      return {
+        ...state,
+        viewMode: action.payload.viewMode,
+        activeViewerIndex: activeViewerIndex
+      }
+    }
+
+    case workbenchActions.SET_VIEWER_FILE: {
+      let viewers = [...state.viewers];
+      let viewer = {...viewers[action.payload.viewerIndex]};
+      if(action.payload.file == null) {
+        viewer.fileId = null;
+      }
+      else {
+        viewer.fileId = action.payload.file.id;
+      }
+      viewers[action.payload.viewerIndex] = viewer;
+
+      return {
+        ...state,
+        viewers: viewers,
+      }
+
+    }
+
+    case workbenchActions.SET_VIEWER_SYNC_AVAILABLE: {
+      let isAvailable = action.payload.available;
+      return {
+        ...state,
+        viewerSyncAvailable: isAvailable,
+      }
+    }
+
+    case workbenchActions.SET_VIEWER_SYNC_ENABLED: {
+      let enabled = action.payload.enabled;
+      if(!state.viewerSyncAvailable && enabled) return state;
+
+      return {
+        ...state,
+        viewerSyncEnabled: enabled ? state.viewerSyncAvailable : false
       }
     }
 
@@ -150,4 +232,6 @@ export function reducer(
   }
 }
 
-export const getSelectedId = (state: State) => state.selectedDataFileId;
+export const getActiveViewerIndex = (state: WorkbenchState) => state.activeViewerIndex;
+export const getViewers = (state: WorkbenchState) => state.viewers;
+export const getViewMode = (state: WorkbenchState) => state.viewMode;

@@ -287,7 +287,6 @@ export function reducer(
       let completed = [...state.completedImports, action.payload.asset]
       let total = pending.length + completed.length;
       let progress = total == 0 ? 0 : completed.length / total;
-      console.log(action.payload);
       return {
         ...state,
         importing: pending.length != 0,

@@ -47,6 +47,17 @@ html, body {
   width: 100%;
 }
 
+.image-viewer-panel.inactive .image-viewer-header-wrapper {
+  background-color: #f3f3f3;
+}
+
+.image-viewer-panel.active .image-viewer-header-wrapper {
+  background-color: #28a745;
+  color: white;
+  border: solid 2px #d7d7d7;
+}
+
+
 .workbench-settings-card {
   border-radius: 0px;
   border-right: none;
@@ -63,7 +74,7 @@ html, body {
   border-radius: 0px;
 }
 
-.workbench-settings-car .plotter svg {
+.workbench-settings-card .plotter svg {
   width: 200px;
 }
 

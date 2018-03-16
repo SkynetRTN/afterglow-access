@@ -22,6 +22,8 @@ import { NvD3Component } from 'ng2-nvd3';
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input() imageFile: ImageFile;
+  @Input() width: number = 200;
+  @Input() height: number = 200;
   @Input() lineMeasureStart: { x: number, y: number };
   @Input() lineMeasureEnd: { x: number, y: number };
   @Input() interpolatePixels: boolean;
@@ -43,21 +45,13 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   }
 
-  ngOnInit() {
-    let self = this;
-
-    this.chartDebouncer$
-      .debounceTime(200)
-      .subscribe(value => {
-        this.updateChart();
-      });
-
+  updateChartOptions() {
     this.chartOptions = {
       chart: {
         type: 'lineChart',
         focusEnable: false,
-        height: 200,
-        width: 500,
+        height: this.height,
+        width: this.width,
         showLegend: false,
         x: function (d) { return d.t; },
         y: function (d) { return d.v; },
@@ -78,6 +72,18 @@ export class PlotterComponent implements OnInit, OnChanges {
         callback: this.onChartCreation.bind(this)
       }
     };
+  }
+
+  ngOnInit() {
+    let self = this;
+
+    this.chartDebouncer$
+      .debounceTime(200)
+      .subscribe(value => {
+        this.updateChart();
+      });
+
+    this.updateChartOptions();
 
     this.chartDebouncer$.next();
 
@@ -86,6 +92,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   ngOnChanges() {
     this.updateLineView();
     this.chartDebouncer$.next();
+    this.updateChartOptions();
   }
 
   public getData() {

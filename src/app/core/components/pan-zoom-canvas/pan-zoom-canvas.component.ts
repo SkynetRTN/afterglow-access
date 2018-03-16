@@ -1,6 +1,6 @@
 import {
   Component, OnInit, Input, Output, OnChanges, OnDestroy,
-  ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter
+  ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Directive
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
@@ -11,18 +11,22 @@ import * as SVG from 'svgjs'
 import * as normalizeWheel from 'normalize-wheel';
 
 import { ImageFile, getWidth, getHeight, findTiles, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
-import { ViewerFileState } from '../../models/viewer-file-state';
+import { Normalization } from '../../models/normalization';
+import { Transformation, getViewportRegion } from '../../models/transformation';
 import { Marker, RectangleMarker, EllipseMarker, LineMarker, MarkerType } from '../../models/marker';
 import { Region } from '../../models/region';
 import { Source } from '../../models/source';
 
+import * as fromRoot from '../../../reducers';
 import * as fromCore from '../../reducers';
 import * as workbenchActions from '../../actions/workbench';
-import * as viewerActions from '../../actions/viewer';
+import * as transformationActions from '../../actions/transformation';
+import * as normalizationActions from '../../actions/normalization';
 import * as imageFileActions from '../../../data-files/actions/image-file';
 import * as dataFileActions from '../../../data-files/actions/data-file';
 import { Subscription } from 'rxjs/Subscription';
 import { ImageTile } from '../../../data-files/models/image-tile';
+import { Viewer } from '../../models/viewer';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -33,7 +37,13 @@ export type ViewportChangeEvent = {
   viewportHeight: number;
 }
 
-export type ViewerMouseEvent = {
+export type ViewportSizeChangeEvent = {
+  width: number;
+  height: number;
+}
+
+export type CanvasMouseEvent = {
+  targetFile: ImageFile;
   imageX: number;
   imageY: number;
   hitImage: boolean;
@@ -41,35 +51,29 @@ export type ViewerMouseEvent = {
   mouseEvent: MouseEvent;
 }
 
-@Component({
-  selector: 'app-pan-zoom-viewer',
-  templateUrl: './pan-zoom-viewer.component.html',
-  styleUrls: ['./pan-zoom-viewer.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+@Directive({
+  selector: '[app-pan-zoom-canvas]',
+  host: {
+    // 'class': 'viewer',
+    '(click)': 'onViewportClick($event)',
+    '(mousemove)': 'onViewportMove($event)',
+    // '(touchmove)': 'onViewportMove($event)',
+    '[class.dragging]': 'dragging',
+    '[class.mouse-over-image]': 'mouseOverImage'
+  },
+  exportAs: 'panZoomCanvas'
 })
-export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-
+export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() imageFile: ImageFile;
-  @Input() viewerState: ViewerFileState;
-  @Input() showInfoBar: boolean = false;
-  @Input() showCustomMarkers: boolean = false;
-  @Input() showRegionMarker: boolean = false;
-  @Input() region: Region;
-  @Input() showSourceMarkers: boolean = false;
-  @Input() sources: Source[] = [];
-  @Input() selectedSources: Source[] = [];
-  @Input() showLineMarker: boolean = false;
-  @Input() line: { x1: number, y1: number, x2: number, y2: number };
+  @Input() normalization: Normalization;
+  @Input() transformation: Transformation;
 
   @Output() onViewportChange = new EventEmitter<ViewportChangeEvent>();
-  @Output() onImageClick = new EventEmitter<ViewerMouseEvent>();
-  @Output() onImageMove = new EventEmitter<ViewerMouseEvent>();
+  @Output() onViewportSizeChange = new EventEmitter<ViewportSizeChangeEvent>();
+  @Output() onImageClick = new EventEmitter<CanvasMouseEvent>();
+  @Output() onImageMove = new EventEmitter<CanvasMouseEvent>();
 
-  @ViewChild('viewerPlaceholder') viewerPlaceholder: ElementRef;
-  @ViewChild('svgGroup') svgGroup: ElementRef;
   private lastImageFile: ImageFile = null;
-  private mouseInfo$ = new BehaviorSubject<{ x: number, y: number, value: number, raHours: number, decDegs: number }>(null);
-  private MarkerType = MarkerType;
   private viewInitialized: boolean = false;
   private placeholder: HTMLDivElement;
   private targetCanvas: HTMLCanvasElement;
@@ -84,21 +88,16 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
   private dragging: boolean = false;
   private dragged: boolean = false;
-  private zooming: boolean = false;
-  private zoomingTime: number = 0.01;
   private mouseOverImage: boolean = false;
   // minimum number of pixels mouse must move after click to not be considered
-  private maxDeltaBeforeMove: number = 3;
+  private maxDeltaBeforeMove: number = 5;
   private bufferedTiles: { [key: number]: ImageTile } = {};
 
 
   // a move and not a click
 
   private sumPixelsMoved: number = 0;
-  private windowMaskUpdateNeeded: boolean = true;
   private zoomStepFactor: number = 0.92;
-  private reachedMaxZoom: boolean = false;
-  private reachedMinZoom: boolean = false;
   private mouseDragVector: Rectangle = new Rectangle(0, 0, 0, 0);
 
   private handleWindowResizeBound: EventListener;
@@ -112,15 +111,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
   private resizeMonitor: any;
 
-  private subs: Subscription[] = [];
-
-  constructor(private store: Store<fromCore.State>, private cdRef: ChangeDetectorRef) {
-  }
-
-  removeFromLibrary() {
-    if (this.imageFile) {
-      this.store.dispatch(new dataFileActions.RemoveDataFile({ file: this.imageFile }));
-    }
+  constructor(private store: Store<fromRoot.State>, protected viewerPlaceholder: ElementRef) {
   }
 
   ngOnInit() { }
@@ -133,7 +124,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
         self.handleViewportChange();
         self.draw();
       }
-    }, 300);
+    }, 50);
   }
 
   ngAfterViewInit() {
@@ -145,9 +136,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     this.handleDocumentMouseMoveWhileDownBound = this.handleDocumentMouseMoveWhileDown.bind(this);
 
     this.initializeResizeMonitor();
-
-
-
 
     // background pattern
     let patternWidth = 8;
@@ -163,7 +151,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     this.backgroundCtx.fillRect(patternWidth, 0, patternWidth, patternWidth);
     this.backgroundCtx.fillRect(0, patternWidth, patternWidth, patternWidth);
 
-
     this.imageCanvas = document.createElement('canvas');
     this.imageCtx = <CanvasRenderingContext2D>this.imageCanvas.getContext('2d');
     this.setSmoothing(this.imageCtx, false);
@@ -175,25 +162,14 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     this.targetCanvas.height = this.placeholder.clientHeight;
     this.targetCtx = <CanvasRenderingContext2D>this.targetCanvas.getContext('2d');
     this.setSmoothing(this.targetCtx, false);
-
     window.addEventListener('resize', this.debounce(this.handleWindowResizeBound, this, 250));
-
-
-    // console.log('event listeners', this._targetCanvas);
     this.placeholder.addEventListener('mousedown', this.handleImageMouseDownBound);
+    // this.placeholder.addEventListener('touchstart', this.handleImageMouseDownBound);
     this.placeholder.addEventListener('mousemove', this.handleImageMouseMoveBound);
+    // this.placeholder.addEventListener('touchmove', this.handleImageMouseDownBound);
     this.placeholder.addEventListener('mousewheel', this.handleImageMouseWheelBound);
     this.placeholder.addEventListener('DOMMouseScroll', this.handleImageMouseWheelBound);
-
-    // empty placeholder
-    // while (this._placeholder.firstChild) {
-    //   this._placeholder.removeChild(this._placeholder.firstChild);
-    // }
     this.placeholder.appendChild(this.targetCanvas);
-
-    // this._svg = SVG(this._svgDiv);
-    // this._svgMarkerGroup = this._svg.group();
-
     this.viewInitialized = true;
 
     this.handleViewportChange();
@@ -201,7 +177,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   ngOnDestroy() {
-    this.subs.forEach(sub => sub.unsubscribe());
     clearInterval(this.resizeMonitor);
   }
 
@@ -213,10 +188,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     ctx.imageSmoothingEnabled = value;
   }
 
-  // Returns a function, that, as long as it continues to be invoked, will not
-  // be triggered. The function will be called after it stops being called for
-  // N milliseconds. If `immediate` is passed, trigger the function on the
-  // leading edge, instead of the trailing.
   private debounce(func: any, context: any, wait: number, immediate: boolean = false) {
     let timeout: any;
     return function () {
@@ -258,29 +229,37 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     //return new Point(e.pageX - this._targetCanvas.offsetLeft, e.pageY - this._targetCanvas.offsetTop);
   }
 
-  get width() {
-    return this.targetCanvas.width;
+  get canvasWidth() {
+    return this.targetCanvas ? this.targetCanvas.width : 0;
   }
 
-  get height() {
-    return this.targetCanvas.height;
+  get canvasHeight() {
+    return this.targetCanvas ? this.targetCanvas.height : 0;
+  }
+
+  get placeholderWidth() {
+    return this.placeholder ? this.placeholder.clientWidth : 0;
+  }
+
+  get placeholderHeight() {
+    return this.placeholder ? this.placeholder.clientHeight : 0;
   }
 
   get scale() {
-    // let temp = this.viewerStateConfig.imageToViewportTransform.scaling;
-    let temp = new Point(this.viewerState.imageToViewportTransform.a, this.viewerState.imageToViewportTransform.c);
+    // let temp = this.normalizationConfig.imageToViewportTransform.scaling;
+    let temp = new Point(this.transformation.imageToViewportTransform.a, this.transformation.imageToViewportTransform.c);
     return temp.getDistance(new Point(0, 0));
   }
 
   get viewportTopLeft() {
-    return new Point(-this.viewerState.imageToViewportTransform.tx, -this.viewerState.imageToViewportTransform.ty);
+    return new Point(-this.transformation.imageToViewportTransform.tx, -this.transformation.imageToViewportTransform.ty);
   }
 
   public moveBy(xShift: number, yShift: number) {
-    this.store.dispatch(new viewerActions.MoveBy({
+    this.store.dispatch(new transformationActions.MoveBy({
       file: this.imageFile,
       xShift: xShift,
-      yShift: yShift,
+      yShift: yShift
     }));
   }
 
@@ -290,84 +269,23 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
   public moveTo(imageRef: { x: number, y: number }, canvasRef: { x: number, y: number } = null) {
     if (canvasRef == null) {
-      canvasRef = { x: this.width / 2, y: this.height / 2 };
+      canvasRef = { x: this.canvasWidth / 2, y: this.canvasHeight / 2 };
     }
     let xShift = this.viewportTopLeft.x - (imageRef.x * this.scale - canvasRef.x);
     let yShift = this.viewportTopLeft.y - (imageRef.y * this.scale - canvasRef.y);
     this.moveBy(xShift, yShift);
   }
 
-  public zoomIn(imageAnchor: { x: number, y: number } = null) {
-    if (!this.reachedMaxZoom) {
-      this.zoomBy(1.0 / this.zoomStepFactor, imageAnchor);
-    }
-  }
-
-  public zoomOut(imageAnchor: { x: number, y: number } = null) {
-    this.zoomBy(this.zoomStepFactor, imageAnchor);
-  }
-
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
-    // max zoom reached when 1 pixel fills viewport
-    let viewportUpperLeft = this.imageCoordToViewportCoord({ x: 1, y: 1 });
-    let viewportULP = new Point(viewportUpperLeft.x, viewportUpperLeft.y)
-    let viewportLowerRight = this.imageCoordToViewportCoord({ x: 2, y: 2 });
-    let viewportLRP = new Point(viewportLowerRight.x, viewportLowerRight.y);
-
-    let d = viewportULP.getDistance(viewportLRP);
-    this.reachedMaxZoom = d > this.targetCanvas.clientWidth || d > this.targetCanvas.clientHeight;
-
-    // min zoom reached when image fits in viewer
-    viewportLowerRight = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), getHeight(this.imageFile)));
-    viewportLRP = new Point(viewportLowerRight.x, viewportLowerRight.y);
-    d = viewportULP.getDistance(viewportLRP);
-    this.reachedMinZoom = d < this.targetCanvas.clientWidth && d < this.targetCanvas.clientHeight;
-
-    if (factor === 1 || (factor > 1 && this.reachedMaxZoom) || (factor < 1 && this.reachedMinZoom)) {
-      // do nothing
-
-      return;
-    }
-
-    this.zooming = true;
-
-    // if image anchor is null, set to center of image viewer
-    if (arguments.length === 1 || imageAnchor == null) {
-      let centerViewer = new Point(this.targetCanvas.width / 2.0, this.targetCanvas.height / 2.0);
-      imageAnchor = this.viewportCoordToImageCoord(centerViewer);
-    }
-    this.store.dispatch(new viewerActions.ZoomBy({
+    this.store.dispatch(new transformationActions.ZoomBy({
       file: this.imageFile,
       scaleFactor: factor,
-      anchorPoint: { x: imageAnchor.x, y: imageAnchor.y }
+      viewportAnchor: imageAnchor
     }));
   }
 
-  public zoomTo(value: number, imageAnchor: Point = null) {
-    let factor = value / this.scale;
-    this.zoomBy(factor, imageAnchor);
-  }
-
-  public zoomToFit(padding: number = 0) {
-    // let xScale = (this.targetCanvas.width-2*padding)/getWidth(this.imageFile);
-    // let yScale = (this.targetCanvas.height-2*padding)/getHeight(this.imageFile);
-    // this.zoomTo(Math.min(xScale, yScale));
-
-    this.store.dispatch(new viewerActions.CenterRegionInViewport({
-      file: this.imageFile,
-      region: { x: 1, y: 1, width: getWidth(this.imageFile), height: getHeight(this.imageFile) },
-      viewportSize: { width: this.targetCanvas.width, height: this.targetCanvas.height }
-    }))
-
-    // this.moveTo(
-    //     new Point(this.state.width/2.0, this.state.height/2.0),
-    //     new Point(this._targetCanvas.width, this._targetCanvas.height)
-    // );
-
-  }
-
   public get viewportToImageTransform() {
-    return this.viewerState.imageToViewportTransform.inverted();
+    return this.transformation.imageToViewportTransform.inverted();
   }
 
   public viewportCoordToImageCoord(p: { x: number, y: number }) {
@@ -376,7 +294,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public imageCoordToViewportCoord(p: { x: number, y: number }) {
-    let result = this.viewerState.imageToViewportTransform.transform(new Point(p.x - 0.5, p.y - 0.5));
+    let result = this.transformation.imageToViewportTransform.transform(new Point(p.x - 0.5, p.y - 0.5));
     return { x: result.x, y: result.y };
   }
 
@@ -392,24 +310,17 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
   private handleViewportChange() {
     let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
-    if (this.imageFile && this.imageFile.headerLoaded && this.viewerState) {
-      let transform = this.viewerState.imageToViewportTransform.inverted();
-      let ul = transform.transform(new Point(0.5, 0.5));
-      ul.x += 0.5;
-      ul.y += 0.5;
-      let lr = transform.transform(new Point(viewportSize.width + 0.5, viewportSize.height + 0.5));
-      lr.x += 0.5;
-      lr.y += 0.5;
+    if (this.imageFile && this.imageFile.headerLoaded && this.transformation && this.transformation.viewportSize) {
 
-      let x = Math.max(0.5, ul.x);
-      let y = Math.max(0.5, lr.y);
+      let viewportRegion = getViewportRegion(this.transformation, this.imageFile);
+
       let $event: ViewportChangeEvent = {
         viewportWidth: viewportSize.width,
         viewportHeight: viewportSize.height,
-        imageX: x,
-        imageY: y,
-        imageWidth: Math.abs(Math.min(getWidth(this.imageFile) + 0.5, lr.x) - x),
-        imageHeight: Math.abs(y - Math.min(getHeight(this.imageFile) + 0.5, ul.y))
+        imageX: viewportRegion.x,
+        imageY: viewportRegion.y,
+        imageWidth: viewportRegion.width,
+        imageHeight: viewportRegion.height
       }
 
       if (JSON.stringify(this.lastViewportChangeEvent) !== JSON.stringify($event)) {
@@ -418,7 +329,8 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
       }
     }
     if (JSON.stringify(this.lastViewportSize) !== JSON.stringify(viewportSize)) {
-      this.store.dispatch(new viewerActions.UpdateViewportSize({ width: viewportSize.width, height: viewportSize.height }));
+      this.onViewportSizeChange.emit({ width: viewportSize.width, height: viewportSize.height })
+      if(this.imageFile) this.store.dispatch(new transformationActions.UpdateCurrentViewportSize({ file: this.imageFile, viewportSize: { width: viewportSize.width, height: viewportSize.height } }));
       this.lastViewportSize = viewportSize;
     }
 
@@ -431,8 +343,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   public handleImageMouseWheel(event: WheelEvent) {
     if (!this.initialized) return;
 
-
-    // console.log('mouse wheel', event);
     let viewportCoord = this.viewportCoordFromEvent(event);
     if (!this.mouseOnImage(viewportCoord)) {
       return;
@@ -442,14 +352,11 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     const normalized = normalizeWheel(event);
     let delta: number = normalized.spinY;
 
-    /*TODO: Use the scroll distance to change zoom amount*/
     if (delta > 0) {
-      this.zoomOut(mouseImage);
-      this.zoomOut(mouseImage);
+      this.zoomBy(Math.pow(this.zoomStepFactor,2), viewportCoord);
     }
     else {
-      this.zoomIn(mouseImage);
-      this.zoomIn(mouseImage);
+      this.zoomBy(Math.pow(1/this.zoomStepFactor,2), viewportCoord);
     }
 
     event.preventDefault();
@@ -460,7 +367,6 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
     this.dragging = false;
     this.dragged = false;
-    // console.log('image mouse down');
     let viewportCoord = this.viewportCoordFromEvent(event);
     if (!this.mouseOnImage(viewportCoord)) {
       return;
@@ -468,90 +374,76 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
 
     this.mouseDragVector.topLeft = new Point(viewportCoord.x, viewportCoord.y);
     this.placeholder.removeEventListener('mousedown', this.handleImageMouseDownBound);
+    // this.placeholder.removeEventListener('touchstart', this.handleImageMouseDownBound);
     document.addEventListener('mouseup', this.handleDocumentMouseUpBound);
     // document.addEventListener('mouseup', this.handleImageMouseUpBound);
     document.addEventListener('mousemove', this.handleDocumentMouseMoveWhileDownBound);
+    // document.addEventListener('touchmove', this.handleDocumentMouseMoveWhileDownBound);
 
     this.sumPixelsMoved = 0;
   }
 
   public handleImageMouseMove(event: MouseEvent) {
     if (!this.initialized) return;
-    // console.log('image mouse move');
     let viewportCoord = this.viewportCoordFromEvent(event);
     this.mouseOverImage = this.mouseOnImage(viewportCoord)
-    if (!this.mouseOverImage)
-      return;
-
     let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-    //this.fire(new ImageViewerMouseEvent("imagemousemove", mouseImage.x, mouseImage.y));
   }
 
   public handleDocumentMouseMoveWhileDown(event: MouseEvent) {
     if (!this.initialized) return;
-    // console.log('image mouse move while down');
     let viewportCoord = this.viewportCoordFromEvent(event);
 
     this.mouseDragVector.bottomRight = new Point(viewportCoord.x, viewportCoord.y);
 
-    // test if image is almost entirely out of viewer
-    let buffer = 50;
-    let ul = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), getHeight(this.imageFile)));
-    let lr = this.imageCoordToViewportCoord(new Point(0, 0));
-    let imageRect = new Rectangle(Math.min(ul.x, lr.x) + buffer + this.mouseDragVector.width,
-      Math.min(ul.y, lr.y) + buffer + this.mouseDragVector.height,
-      Math.abs(ul.x - lr.x) - (buffer * 2),
-      Math.abs(ul.y - lr.y) - (buffer * 2)
-    );
+    // // test if image is almost entirely out of viewer
+    // let buffer = 50;
+    // let c1 = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), getHeight(this.imageFile)));
+    // let c2 = this.imageCoordToViewportCoord(new Point(0, 0));
+    // let c3 = this.imageCoordToViewportCoord(new Point(0, getHeight(this.imageFile)));
+    // let c4 = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), 0));
+    // let maxPoint = new Point(Math.max(c1.x, c2.x, c3.x, c4.x), Math.max(c1.y, c2.y, c3.y, c4.y));
+    // let minPoint =  new Point(Math.min(c1.x, c2.x, c3.x, c4.x), Math.min(c1.y, c2.y, c3.y, c4.y));
+    // let imageRect = new Rectangle(minPoint.x + buffer + this.mouseDragVector.width,
+    //   minPoint.y + buffer + this.mouseDragVector.height,
+    //   maxPoint.x - minPoint.x - (buffer * 2),
+    //   maxPoint.y - minPoint.y - (buffer * 2)
+    // );
 
 
-    let viewportRect = new Rectangle(0, 0, this.targetCanvas.clientWidth, this.targetCanvas.clientHeight);
-    if (!imageRect.intersects(viewportRect)) {
-      let e = event || window.event;
-      //EventTarget.pauseEvent(e);
-      return;
-    }
+    // let viewportRect = new Rectangle(0, 0, this.targetCanvas.clientWidth, this.targetCanvas.clientHeight);
+    // if (!imageRect.intersects(viewportRect)) {
+    //   let e = event || window.event;
+    //   return;
+    // }
 
 
     this.sumPixelsMoved += this.mouseDragVector.topLeft.getDistance(this.mouseDragVector.bottomRight);
     if (this.sumPixelsMoved > this.maxDeltaBeforeMove && !this.dragging) {
       this.dragging = true;
       this.dragged = true;
-      // this.dispatchEvent(new FitsViewerMouseEvent(FitsViewerMouseEvent.PAN_START,this.mouseImage));
     }
 
     if (this.dragging) {
       let e = event || window.event;
-      //EventTarget.pauseEvent(e);
+      this.moveBy(this.mouseDragVector.width, this.mouseDragVector.height);
+      this.mouseDragVector.topLeft = this.mouseDragVector.bottomRight.clone();
+      event.preventDefault();
+      
     }
 
-    this.moveBy(this.mouseDragVector.width, this.mouseDragVector.height);
-    // console.log('moving by: ', this._mouseDragVector.width, this._mouseDragVector.height)
-    // console.log(this._sumPixelsMoved);
-    this.mouseDragVector.topLeft = this.mouseDragVector.bottomRight.clone();
-    if (this.dragging) {
-      //this.fire(new ImageViewerMouseEvent("imagemousedrag", null, null));
-    }
-    event.preventDefault();
+    
+    
   }
 
   public handleDocumentMouseUp(event: MouseEvent) {
     if (!this.initialized) return;
-    // console.log('document mouse up');
     document.removeEventListener('mouseup', this.handleDocumentMouseUpBound);
-    // document.removeEventListener('mouseup', this.handleImageMouseUpBound);
     document.removeEventListener('mousemove', this.handleDocumentMouseMoveWhileDownBound);
+    // document.removeEventListener('touchmove', this.handleDocumentMouseMoveWhileDownBound);
     this.placeholder.addEventListener('mousedown', this.handleImageMouseDownBound);
+    // this.placeholder.addEventListener('touchstart', this.handleImageMouseDownBound);
     this.dragging = false;
-    // if (this.dragging) {
-    //   // this.dispatchEvent(new FitsViewerMouseEvent(FitsViewerMouseEvent.PAN_END,this.mouseImage));
-    // }
-    // else {
-
-
-
-    // }
-    // this.dragging = false;
   }
 
   onViewportMove($event: MouseEvent) {
@@ -559,84 +451,61 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
       let viewportCoord = this.viewportCoordFromEvent($event);
       let onImage = this.mouseOnImage(viewportCoord);
       let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-      this.onImageMove.emit({ hitImage: onImage, imageX: mouseImage.x, imageY: mouseImage.y, mouseEvent: $event, source: null })
-
-      if (onImage) {
-        let x = mouseImage.x
-        let y = mouseImage.y
-        let value = getPixel(this.imageFile, x, y);
-
-        let raHours = null;
-        let decDegs = null;
-
-        if (this.imageFile.header && getHasWcs(this.imageFile)) {
-          let wcs = getWcs(this.imageFile);
-          let raDec = wcs.pixToWorld([x, y]);
-          raHours = raDec[0];
-          decDegs = raDec[1];
-        }
-
-        this.mouseInfo$.next({ x: x, y: y, value: value, raHours: raHours, decDegs: decDegs });
-
-      }
-      else {
-        this.mouseInfo$.next(null);
-      }
-
-      //this.fire(new ImageViewerMouseEvent("imagemouseclick", mouseImage.x, mouseImage.y));
+      this.onImageMove.emit({ targetFile: this.imageFile, hitImage: onImage, imageX: mouseImage.x, imageY: mouseImage.y, mouseEvent: $event, source: null })
     }
   }
 
-  onViewportClick($event: MouseEvent, source: Source = null) {
+  onViewportClick($event: MouseEvent) {
     if (this.initialized && !this.dragged) {
       let viewportCoord = this.viewportCoordFromEvent($event);
       let onImage = this.mouseOnImage(viewportCoord);
       let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-      this.onImageClick.emit({ hitImage: onImage, imageX: mouseImage.x, imageY: mouseImage.y, mouseEvent: $event, source: source })
-      //this.fire(new ImageViewerMouseEvent("imagemouseclick", mouseImage.x, mouseImage.y));
+      this.onImageClick.emit({ targetFile: this.imageFile, hitImage: onImage, imageX: mouseImage.x, imageY: mouseImage.y, mouseEvent: $event, source: null })
     }
   }
 
-  onSourceClick($event: MouseEvent, source: Source) {
-    this.onViewportClick($event, source)
-    $event.stopPropagation();
-  }
-
   ngAfterViewChecked() {
-    // console.log("after view check");
-    // this.draw();
-    // this.cdRef.detectChanges();
   }
 
   getViewportTiles() {
-    //console.log(this._imageCanvas);
     if (getWidth(this.imageFile) != this.imageCanvas.width || getHeight(this.imageFile) != this.imageCanvas.height) {
       this.imageCanvas.width = getWidth(this.imageFile);
       this.imageCanvas.height = getHeight(this.imageFile);
     }
 
-    let corner0 = this.viewportCoordToImageCoord(new Point(0, 0));
-    let corner1 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight));
+    let c1 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight));
+    let c2 = this.viewportCoordToImageCoord(new Point(0, 0));
+    let c3 = this.viewportCoordToImageCoord(new Point(0,this.targetCanvas.clientHeight));
+    let c4 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, 0));
+    let maxPoint = new Point(Math.max(c1.x, c2.x, c3.x, c4.x), Math.max(c1.y, c2.y, c3.y, c4.y));
+    let minPoint =  new Point(Math.min(c1.x, c2.x, c3.x, c4.x), Math.min(c1.y, c2.y, c3.y, c4.y));
 
-    return findTiles(this.imageFile, Math.min(corner0.x, corner1.x), Math.min(corner0.y, corner1.y), Math.abs(corner1.x - corner0.x), Math.abs(corner1.y - corner0.y));
+    return findTiles(this.imageFile, minPoint.x, minPoint.y, maxPoint.x-minPoint.x, maxPoint.y-minPoint.y);
+
+
+
+    // let corner0 = this.viewportCoordToImageCoord(new Point(0, 0));
+    // let corner1 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight));
+
+    // return findTiles(this.imageFile, Math.min(corner0.x, corner1.x), Math.min(corner0.y, corner1.y), Math.abs(corner1.x - corner0.x), Math.abs(corner1.y - corner0.y));
   }
 
   checkForNewImage() {
-    if (!this.lastImageFile) this.lastImageFile = this.imageFile;
-    if (this.imageFile.id == this.lastImageFile.id) return;
+    if (this.lastImageFile && this.imageFile.id == this.lastImageFile.id) return;
     //new image detected
-    this.mouseInfo$.next(null);
     this.lastViewportChangeEvent = null;
     this.lastViewportSize = { width: null, height: null };
     this.lastImageFile = this.imageFile;
     this.bufferedTiles = {};
+
+    let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
+    this.store.dispatch(new transformationActions.UpdateCurrentViewportSize({ file: this.imageFile, viewportSize: { width: viewportSize.width, height: viewportSize.height } }));
   }
 
   checkForResize() {
     if (this.targetCanvas.width != this.placeholder.clientWidth || this.targetCanvas.height != this.placeholder.clientHeight) {
       this.targetCanvas.width = this.placeholder.clientWidth;
       this.targetCanvas.height = this.placeholder.clientHeight;
-      // this._svg.size(this._placeholder.clientWidth, this._placeholder.clientHeight);
       this.setSmoothing(this.targetCtx, false);
       return true;
     }
@@ -664,14 +533,14 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private get initialized() {
-    return this.viewInitialized && this.imageFile && this.viewerState && this.imageFile.headerLoaded;
+    return this.viewInitialized && this.imageFile && this.normalization && this.imageFile.headerLoaded;
   }
 
   public lazyLoadPixels() {
     if (!this.initialized) return;
     let tiles = this.getViewportTiles();
     tiles.forEach(tile => {
-      let normTile = this.viewerState.normalizedTiles[tile.index];
+      let normTile = this.normalization.normalizedTiles[tile.index];
       if (!tile.pixelsLoaded && !tile.pixelsLoading && !tile.pixelLoadingFailed) {
         this.store.dispatch(new imageFileActions.LoadImageTilePixels({
           file: this.imageFile,
@@ -679,7 +548,7 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
         }));
       }
       else if (tile.pixelsLoaded && !normTile.pixelsLoaded && !normTile.pixelsLoading && !normTile.pixelLoadingFailed) {
-        this.store.dispatch(new viewerActions.NormalizeImageTile({
+        this.store.dispatch(new normalizationActions.NormalizeImageTile({
           file: this.imageFile,
           tile: tile
         }));
@@ -698,11 +567,13 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
     this.targetCtx.fillStyle = backgroundPattern;
     this.targetCtx.fillRect(0, 0, this.targetCtx.canvas.width, this.targetCtx.canvas.height);
 
+
+
     if (this.initialized) {
       let tiles = this.getViewportTiles();
 
       tiles.forEach(tile => {
-        let normTile = this.viewerState.normalizedTiles[tile.index];
+        let normTile = this.normalization.normalizedTiles[tile.index];
         if (!tile.pixelsLoaded) {
           // fill in tile with solid background when image file pixels have not been loaded
           this.imageCtx.fillStyle = "rgb(100, 100, 100)";
@@ -718,34 +589,15 @@ export class PanZoomViewerComponent implements OnInit, OnChanges, AfterViewInit,
           imageData.data.set(blendedImageDataUint8Clamped);
           this.imageCtx.putImageData(imageData, normTile.x, normTile.y);
           this.bufferedTiles[normTile.index] = normTile;
-          // setTimeout(() => {
-          //   this.store.dispatch(new workbenchActions.ImageTileDrawn({
-          //     file: this.imageFile,
-          //     tile: tile
-          //   }));
-          // });
         }
 
       })
-
-      this.viewerState.imageToViewportTransform.applyToContext(this.targetCtx);
+      this.transformation.imageToViewportTransform.applyToContext(this.targetCtx);
       this.targetCtx.drawImage(this.imageCanvas, 0, 0);
-
-      let t = this.viewerState.imageToViewportTransform;
-      this.svgGroup.nativeElement.setAttribute('transform', `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`);
-
     }
-
-
-
-
-
-
     this.setSmoothing(this.targetCtx, true);
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     this.targetCtx.globalAlpha = 1.0;
-
-
   }
 
 }

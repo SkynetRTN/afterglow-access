@@ -1,10 +1,11 @@
-import * as math from 'mathjs';
+import { Matrix } from 'paper';
 
 
+// declare let wcs: any;
 
 class WcsTrig {
-  private static D2R = Math.PI / 180.0;
-  private static R2D = 180.0 / Math.PI;
+  public static D2R = Math.PI / 180.0;
+  public static R2D = 180.0 / Math.PI;
   private static WCSTRIG_TOL = 1e-10;
 
   public static fmod(numerator, denominator) {
@@ -135,6 +136,38 @@ export class Wcs {
     this.params = params;
   }
 
+  public get crpix1() {
+    return this.params['CRPIX1'];
+  }
+
+  public get crpix2() {
+    return this.params['CRPIX2'];
+  }
+
+  public get crval1() {
+    return this.params['CRVAL1'];
+  }
+
+  public get crval2() {
+    return this.params['CRVAL2'];
+  }
+
+  public get cd11() {
+    return this.params['CD1_1'];
+  }
+
+  public get cd12() {
+    return this.params['CD1_2'];
+  }
+
+  public get cd21() {
+    return this.params['CD2_1'];
+  }
+
+  public get cd22() {
+    return this.params['CD2_2'];
+  }
+
   public hasWcs() {
     return 'NAXIS1' in this.params &&
       'NAXIS2' in this.params &&
@@ -144,15 +177,24 @@ export class Wcs {
       'CRVAL2' in this.params &&
       'CD1_2' in this.params &&
       'CD2_1' in this.params &&
-      'CD2_2' in this.params &&
+      'CD1_1' in this.params &&
       'CD2_2' in this.params;
   }
 
   public worldToPix(raDec: Array<number>) {
     if (!this.hasWcs()) return [null, null];
 
+    // let lng = raDec[0]*15;
+    // let lat = raDec[1];
+
+    // let w = new wcs();
+    // w.init(this.getHeaderString());
+    // let pix = w.sky2pix(lng, lat);
+    // return pix;
+
     let lng = raDec[0] * 15.0;
     let lat = raDec[1];
+
     let h = this.params['NAXIS2'];
     let crpix1 = this.params['CRPIX1'];
     let crval1 = this.params['CRVAL1'];
@@ -163,12 +205,12 @@ export class Wcs {
     let cd2_1 = this.params['CD2_1'];
     let cd2_2 = this.params['CD2_2'];
 
-    let mat = new math.Matrix([cd1_1, cd2_1], [cd1_2, cd2_2]);
-    mat = mat.inv();
-    cd1_1 = mat.get([1, 1]);
-    cd1_2 = mat.get([1, 2]);
-    cd2_1 = mat.get([2, 1]);
-    cd2_2 = mat.get([2, 2]);
+    let mat = new Matrix(cd1_1, cd2_1, cd1_2, cd2_2, 0, 0);
+    mat = mat.inverted();
+    cd1_1 = mat.a;
+    cd1_2 = mat.c;
+    cd2_1 = mat.b;
+    cd2_2 = mat.d;
 
     //cel.c -> celset(pcode,cel,prg)
     let alpha0 = crval1; // is ref[0]
@@ -267,9 +309,18 @@ export class Wcs {
 
   public pixToWorld(xy: Array<number>) {
     if (!this.hasWcs()) return [null, null];
+    // let xpix = xy[0];
+    // let ypix = xy[1];
+
+    // let w = new wcs();
+    // w.init(this.getHeaderString());
+    // let world = w.pix2sky(xpix, ypix);
+    // return [world[0]/15, world[1]];
 
     let xpix = xy[0];
     let ypix = xy[1];
+
+    
     let h = this.params['NAXIS2'];
     let crpix1 = this.params['CRPIX1'];
     let crval1 = this.params['CRVAL1'];
@@ -382,7 +433,6 @@ export class Wcs {
         del = WcsTrig.asindeg(z);
       }
     }
-
     return [alpha / 15.0, del];
   }
 
@@ -396,4 +446,28 @@ export class Wcs {
 
     return (Math.abs(cd1_1) + Math.abs(cd2_2)) / 2.0;
   }
+
+  public isFlipped() {
+    let cd1_1 = this.params['CD1_1'];
+    let cd1_2 = this.params['CD1_2'];
+    let cd2_1 = this.params['CD2_1'];
+    let cd2_2 = this.params['CD2_2'];
+
+    return (cd1_1 * cd2_2 - cd1_2 * cd2_1) < 0
+  }
+
+  public positionAngle() {
+    let cd1_1 = this.params['CD1_1'];
+    let cd1_2 = this.params['CD1_2'];
+    let cd2_1 = this.params['CD2_1'];
+    let cd2_2 = this.params['CD2_2'];
+
+    if (this.isFlipped()) {
+      return 180 + Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
+    }
+    else {
+      return 180 - Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
+    }
+  }
+
 }

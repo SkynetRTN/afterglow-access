@@ -11,6 +11,9 @@ import { ViewerPageComponent } from './core/containers/workbench/viewer-page/vie
 import { PlotterPageComponent } from './core/containers/workbench/plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './core/containers/workbench/sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './core/containers/workbench/source-extractor-page/source-extractor-page.component';
+import { ImageCalculatorPageComponent } from './core/containers/workbench/image-calculator-page/image-calculator-page.component';
+import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
+import { StackerPageComponent } from './core/containers/workbench/stacker-page/stacker-page.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -87,6 +90,24 @@ export const AFTERGLOW_ROUTES: Routes = [
         canActivate: [AuthGuard],
       },
       // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
+      {
+        path: 'image-calculator',
+        component: ImageCalculatorPageComponent,
+        data: { title: 'Image Arithmetic' },
+        canActivate: [AuthGuard],
+      },
+      {
+        path: 'aligner',
+        component: AlignerPageComponent,
+        data: { title: 'Aligner' },
+        canActivate: [AuthGuard],
+      },
+      {
+        path: 'stacker',
+        component: StackerPageComponent,
+        data: { title: 'Stacker' },
+        canActivate: [AuthGuard],
+      },
       {
         path: '',
         redirectTo: 'viewer',

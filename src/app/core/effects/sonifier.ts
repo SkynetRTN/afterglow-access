@@ -11,7 +11,7 @@ import { SonifierRegionMode } from '../models/sonifier-file-state';
 import { normalize } from '../models/pixel-normalizer';
 import * as dataFileActions from '../../data-files/actions/data-file';
 import * as sonifierActions from '../actions/sonifier';
-import * as viewerActions from '../actions/viewer';
+import * as transformationActions from '../actions/transformation';
 import * as sourceExtractorActions from '../actions/source-extractor';
 import * as imageFileActions from '../../data-files/actions/image-file';
 import * as fromCore from '../reducers';
@@ -29,17 +29,16 @@ export class SonifierEffects {
   headerLoaded$: Observable<Action> = this.actions$
     .ofType<dataFileActions.LoadDataFileHdrSuccess>(dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS)
     .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getSourceExtractorFileStates),
-    this.store.select(fromCore.getSonifierFileStates)
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getImageFileStates)
     )
-    .flatMap(([action, dataFiles, sourceExtractorFileStates, sonifierFileStates]) => {
+    .flatMap(([action, dataFiles, imageFileStates]) => {
       let dataFile = dataFiles[action.payload.file.id];
       let actions: Action[] = [];
 
       if (dataFile.type == DataFileType.IMAGE) {
-        let sonifierState = sonifierFileStates[dataFile.id];
-        let sourceExtractorState = sourceExtractorFileStates[dataFile.id];
+        let sonifierState = imageFileStates[dataFile.id].sonifier;
+        let sourceExtractorState = imageFileStates[dataFile.id].sourceExtractor;
         //add effects for image file selection
         let imageFile = dataFile as ImageFile;
         if (sonifierState.regionHistoryInitialized) {
@@ -55,39 +54,31 @@ export class SonifierEffects {
       return Observable.from(actions);
     });
 
+
   @Effect()
   viewportChanged$: Observable<Action> = this.actions$
-    .ofType<sonifierActions.UpdateViewport>(sonifierActions.UPDATE_VIEWPORT)
-    .withLatestFrom(
-    this.store.select(fromCore.getSonifierFileStates),
-  )
-    .flatMap(([action, sonifierFileStates]) => {
-      let sonifierFileState = sonifierFileStates[action.payload.file.id];
-      let actions: Action[] = [];
-      if (sonifierFileState.regionMode == SonifierRegionMode.VIEWPORT) {
-        actions.push(new sonifierActions.UpdateRegion({ file: action.payload.file }));
-      }
-      return Observable.from(actions);
-    });
+    .ofType<sonifierActions.SetRegionMode>(sonifierActions.SET_REGION_MODE)
+    .map((action) => new sonifierActions.UpdateRegion({ file: action.payload.file }))
+
 
   @Effect()
   regionModeChanged$: Observable<Action> = this.actions$
     .ofType<sonifierActions.SetRegionMode>(sonifierActions.SET_REGION_MODE)
-    .map(action => new sonifierActions.UpdateRegion({ file: action.payload.file }));
+    .map((action) => new sonifierActions.UpdateRegion({ file: action.payload.file }))
 
   @Effect()
   regionHistoryChanged$: Observable<Action> = this.actions$
     .ofType<sonifierActions.AddRegionToHistory
     | sonifierActions.UndoRegionSelection
     | sonifierActions.RedoRegionSelection>(
-    sonifierActions.ADD_REGION_TO_HISTORY,
-    sonifierActions.UNDO_REGION_SELECTION,
-    sonifierActions.REDO_REGION_SELECTION)
+      sonifierActions.ADD_REGION_TO_HISTORY,
+      sonifierActions.UNDO_REGION_SELECTION,
+      sonifierActions.REDO_REGION_SELECTION)
     .withLatestFrom(
-    this.store.select(fromCore.getSonifierFileStates),
-  )
-    .flatMap(([action, sonifierFileStates]) => {
-      let sonifierFileState = sonifierFileStates[action.payload.file.id];
+      this.store.select(fromCore.getImageFileStates)
+    )
+    .flatMap(([action, imageFileStates]) => {
+      let sonifierFileState = imageFileStates[action.payload.file.id].sonifier;
       let actions: Action[] = [];
       if (sonifierFileState.regionMode == SonifierRegionMode.CUSTOM) {
         actions.push(new sonifierActions.UpdateRegion({ file: action.payload.file }));
@@ -100,25 +91,20 @@ export class SonifierEffects {
   regionUpdated$: Observable<Action> = this.actions$
     .ofType<sonifierActions.UpdateRegion>(sonifierActions.UPDATE_REGION)
     .withLatestFrom(
-    this.store.select(fromCore.getSonifierGlobalState),
-    this.store.select(fromCore.getSonifierFileStates),
-    this.store.select(fromCore.getSourceExtractorFileStates)
-    )
-    .flatMap(([action, sonifierGlobalState, sonifierFileStates, sourceExtractorFileStates]) => {
+      this.store.select(fromCore.getImageFileStates),
+  )
+    .flatMap(([action, imageFileStates]) => {
       let actions: Action[] = [];
       let imageFile = action.payload.file;
-      let fileState = sonifierFileStates[imageFile.id];
-      let sourceExtractor = sourceExtractorFileStates[imageFile.id];
-      let viewport = sonifierGlobalState.viewport;
+      let sonifier = imageFileStates[imageFile.id].sonifier;
+      let transformation = imageFileStates[imageFile.id].transformation;
+      let sourceExtractor = imageFileStates[imageFile.id].sourceExtractor;
 
-      if (fileState.regionMode == SonifierRegionMode.CUSTOM && fileState.viewportSync && fileState.region && viewport) {
-        actions.push(new viewerActions.CenterRegionInViewport({
+      if (sonifier.regionMode == SonifierRegionMode.CUSTOM && sonifier.viewportSync && sonifier.region) {
+        actions.push(new transformationActions.CenterRegionInViewport({
           file: imageFile,
-          region: fileState.region,
-          viewportSize: {
-            width: viewport.viewportWidth,
-            height: viewport.viewportHeight
-          }
+          region: sonifier.region,
+          viewportSize: transformation.viewportSize
         }));
       }
 
@@ -132,14 +118,14 @@ export class SonifierEffects {
   updateSonifierUri$: Observable<Action> = this.actions$
     .ofType<sonifierActions.UpdateRegion
     | sonifierActions.UpdateFileState>(
-    sonifierActions.UPDATE_REGION,
-    sonifierActions.UPDATE_FILE_STATE)
+      sonifierActions.UPDATE_REGION,
+      sonifierActions.UPDATE_FILE_STATE)
     .withLatestFrom(
-    this.store.select(fromCore.getSonifierFileStates)
-    )
-    .flatMap(([action, sonifierFileStates]) => {
+      this.store.select(fromCore.getImageFileStates),
+  )
+    .flatMap(([action, imageFileStates]) => {
       let actions: Action[] = [];
-      let sonifier = sonifierFileStates[action.payload.file.id];
+      let sonifier = imageFileStates[action.payload.file.id].sonifier;
       if (sonifier.region) {
         let sonificationUri = this.afterglowDataFileService.getSonificationUri(
           action.payload.file.id,
@@ -158,7 +144,7 @@ export class SonifierEffects {
   constructor(
     private actions$: Actions,
     private afterglowDataFileService: AfterglowDataFileService,
-    private store: Store<fromDataFile.State>
+    private store: Store<fromCore.State>
     // @Optional()
     // @Inject(SEARCH_DEBOUNCE)
     // private debounce: number,

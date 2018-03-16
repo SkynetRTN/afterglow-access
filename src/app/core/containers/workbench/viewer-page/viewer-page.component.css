@@ -1,3 +1,10 @@
+.workbench-config-panel {
+  flex: 0 0 auto;
+  position: relative;
+  outline: none;
+  width: 500px;
+}
+
 .workbench-outlet-wrapper {
   display: flex;
   flex: 1 1 0%;
@@ -9,15 +16,16 @@
   flex-direction: row;
 }
 
-.image-viewer-panel {
+.image-viewer-grid-panel {
   flex: 1 1 0%;
   position: relative;
   outline: none;
 }
 
-.workbench-config-panel {
-  flex: 0 0 auto;
-  position: relative;
-  outline: none;
-  min-width: 200px;
+.rotate-90 {
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  transform: rotate(90deg);
 }

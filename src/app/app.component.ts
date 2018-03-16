@@ -7,9 +7,11 @@ import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Rx';
 import { Store } from '@ngrx/store';
 import { AuthGuard } from './auth/services/auth-guard.service';
+
 import * as fromAuth from './auth/reducers';
 import * as fromRoot from './reducers';
 import * as fromDataFiles from './data-files/reducers';
+import * as coreActions from './core/actions/core';
 import * as authActions from './auth/actions/auth';
 import * as dataFileActions from './data-files/actions/data-file';
 import * as dataProviderActions from './data-providers/actions/data-provider';
@@ -68,6 +70,8 @@ export class AppComponent implements OnInit {
         this.titleService.setTitle(title);
       }
     });
+
+    this.store.dispatch(new coreActions.Initialize());
   }
 
 }

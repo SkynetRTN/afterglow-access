@@ -1,0 +1,74 @@
+.item-row {
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
+}
+
+.item-row.even  {
+  background: rgba(0, 0, 0, .03);
+}
+
+.item-row.selected  {
+  background: #3f51b5;
+  color: #ffffff;
+}
+
+.item-row.focused {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-color: Highlight;
+}
+
+/* WebKit gets its native focus styles.
+ */
+
+@media (-webkit-min-device-pixel-ratio:0) {
+  .data-file-list-item-focused .item-row {
+    outline-color: -webkit-focus-ring-color;
+    outline-style: auto;
+  }
+}
+
+.filename {
+  padding-left: 4px;
+}
+
+.valign-center {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+}
+
+.mat-column-select, .cdk-column-select {
+  overflow: visible;
+  width: 50px;
+  padding-left: 15px;
+}
+
+/* .mat-checkbox {
+
+} */
+
+/* style mat-table with auto-sizing columns instead of equal distribution of whitespace to flex items */
+
+.mat-table {
+  display: table;
+  width: 100%;
+  padding: 5px;
+}
+
+.mat-header-row, .mat-row {
+  display: table-row;
+  padding: 0;
+  border: none;
+}
+
+.mat-row {
+  min-height: 30px;
+}
+
+.mat-header-cell, .mat-cell {
+  display: table-cell;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}

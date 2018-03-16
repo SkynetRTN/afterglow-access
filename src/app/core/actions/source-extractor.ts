@@ -7,7 +7,6 @@ import { PhotSettings } from '../models/phot-settings';
 import { SourceExtractionSettings } from '../models/source-extraction-settings';
 import { Source } from '../models/source';
 
-export const UPDATE_VIEWPORT = '[Source Extractor] Update Viewport';
 export const SET_REGION = '[Source Extractor] Set Region';
 export const UPDATE_REGION = '[Source Extractor] Update Region';
 export const UPDATE_FILTERED_SOURCES = '[Source Extractor] Update Filtered Sources';
@@ -28,12 +27,6 @@ export const PHOTOMETER_RADEC_SOURCES = '[Source Extractor] Photometer RADEC Sou
 export const PHOTOMETER_SOURCES_SUCCESS = '[Source Extractor] Photometer Sources Success';
 export const PHOTOMETER_SOURCES_FAIL = '[Source Extractor] Photometer Sources Fail';
 
-
-export class UpdateViewport implements Action {
-  readonly type = UPDATE_VIEWPORT;
-
-  constructor(public payload: { file: ImageFile, viewport: { imageX: number, imageY: number, imageWidth: number, imageHeight: number, viewportWidth: number, viewportHeight: number } }) { }
-}
 
 export class UpdateFilteredSources implements Action {
   readonly type = UPDATE_FILTERED_SOURCES
@@ -151,7 +144,6 @@ export class PhotometerSourcesFail implements Action {
 
 
 export type Actions =
-  | UpdateViewport
   | UpdateFilteredSources
   | SetRegion
   | UpdateRegion

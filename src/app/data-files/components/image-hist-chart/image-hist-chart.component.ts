@@ -17,6 +17,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   @ViewChild(NvD3Component) nvD3: NvD3Component;
 
   @Input() hist: ImageHist;
+  @Input() width: number = 200;
+  @Input() height: number = 200;
   @Input() backgroundLevel: number;
   @Input() peakLevel: number;
 
@@ -46,13 +48,13 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   constructor() { }
 
-  ngOnInit() {
+  updateChartOptions() {
     this.chartOptions = {
       chart: {
         type: 'lineChart',
         focusEnable: false,
-        height: 250,
-        width: 450,
+        height: this.height,
+        width: this.width,
         showLegend: false,
         x: function (d) { return d.x; },
         y: function (d) { return d.y; },
@@ -94,6 +96,10 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         // }
       }
     };
+  }
+
+  ngOnInit() {
+    this.updateChartOptions();
   }
 
   onChartCreation() {
@@ -217,6 +223,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       //console.log(this.chartOptions);
     }
     this.updateBackgroundPeakLines();
+    this.updateChartOptions();
   }
 
 }

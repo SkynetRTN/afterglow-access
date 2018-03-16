@@ -20,6 +20,9 @@ import { FocusKeyManager } from '@angular/cdk/a11y';
 import { QueryList } from '@angular/core/src/linker/query_list';
 import { ContentChildren } from '@angular/core/src/metadata/di';
 import { DataFileSelectionListChange } from '../../../data-files/components/data-file-selection-list/data-file-selection-list.component';
+import { Viewer } from '../../models/viewer';
+import { ImageFileState } from '../../models/image-file-state';
+import { Dictionary } from '@ngrx/entity/src/models';
 
 
 
@@ -35,24 +38,31 @@ export class WorkbenchComponent implements OnInit {
   private PLOTTER_ROUTE = '/workbench/plotter';
   private SONIFIER_ROUTE = '/workbench/sonifier';
   private SOURCE_EXTRACTOR_ROUTE = '/workbench/source-extractor';
-  
+  private IMAGE_ARITHMETIC_ROUTE = '/workbench/image-calculator';
+  private ALIGNER_ROUTE = '/workbench/aligner';
+  private STACKER_ROUTE = '/workbench/stacker';
+
   private files$: Observable<Array<DataFile>>;
+  private selectedFile$: Observable<DataFile>;
+  private multiFileSelectionEnabled$: Observable<boolean>;
   private showSidebar$: Observable<boolean>;
   private showConfig$: Observable<boolean>;
   private sidebarView$: Observable<SidebarView>;
-  private selectedFile$: Observable<DataFile>;
   private loading$: Observable<boolean>;
   private fileFilterString: string = '';
 
-  private currentSidebarView : SidebarView = SidebarView.FILES;
+  private currentSidebarView: SidebarView = SidebarView.FILES;
   private SidebarView = SidebarView;
 
   constructor(private store: Store<fromRoot.State>, private router: Router) {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
-    this.selectedFile$ = this.store.select(fromCore.workbench.getFile);
+    this.selectedFile$ = this.store.select(fromCore.workbench.getActiveFile);
+
+    this.multiFileSelectionEnabled$ = this.store.select(fromCore.workbench.getMultiFileSelectionEnabled);
     this.sidebarView$ = this.store.select(fromCore.workbench.getSidebarView);
     this.showConfig$ = this.store.select(fromCore.workbench.getShowConfig);
     this.showSidebar$ = this.store.select(fromCore.workbench.getShowSidebar);
+
 
     //this.loading$ = this.fileLibraryStore.loading$;
 
@@ -68,14 +78,19 @@ export class WorkbenchComponent implements OnInit {
 
   }
 
- 
+
 
   ngOnInit() {
     this.store.dispatch(new dataFileActions.LoadLibrary());
   }
 
-  onFileSelect($event: DataFileSelectionListChange) {
-    this.store.dispatch(new workbenchActions.SelectDataFile($event.option.file.id));
+  // onFileSelect($event: DataFileSelectionListChange, activeViewer: Viewer) {
+  //   this.store.dispatch(new workbenchActions.SelectDataFile($event.option.file.id));
+  // }
+
+  onFileSelect(file: DataFile) {
+    if(!file) return;
+    this.store.dispatch(new workbenchActions.SelectDataFile(file.id));
   }
 
   removeAllFiles() {
@@ -87,28 +102,28 @@ export class WorkbenchComponent implements OnInit {
   }
 
   setSidebarView(value: SidebarView) {
-    this.store.dispatch(new workbenchActions.SetSidebarView({sidebarView: value}))
+    this.store.dispatch(new workbenchActions.SetSidebarView({ sidebarView: value }))
   }
 
   onClickWorkbenchNav(isActiveUrl: boolean) {
-    if(isActiveUrl)  {
+    if (isActiveUrl) {
       // toggle
       this.store.dispatch(new workbenchActions.ToggleShowConfig());
     }
     else {
       // show
-      this.store.dispatch(new workbenchActions.SetShowConfig({showConfig: true}));
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
     }
   }
 
   onWorkbenchNavClick(route: string) {
-    if(this.router.isActive(route, false))  {
+    if (this.router.isActive(route, false)) {
       // toggle
       this.store.dispatch(new workbenchActions.ToggleShowConfig());
     }
     else {
       // show
-      this.store.dispatch(new workbenchActions.SetShowConfig({showConfig: true}));
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
     }
     this.router.navigate([route]);
   }

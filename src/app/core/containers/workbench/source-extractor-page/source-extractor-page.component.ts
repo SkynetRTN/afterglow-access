@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges} from '@angular/core';
+import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit} from '@angular/core';
 
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 import { ITdDataTableColumn, ITdDataTableSelectEvent, ITdDataTableSelectAllEvent } from '@covalent/core';
@@ -14,23 +14,29 @@ import * as fromRoot from '../../../../reducers';
 import * as fromDataFiles from '../../../../data-files/reducers';
 import * as fromCore from '../../../reducers';
 import * as fromWorkbench from '../../../reducers/workbench'
-import * as fromSourceExtractor from '../../../reducers/source-extractor';
+import * as fromImageFileState from '../../../reducers/image-file-state';
 import * as workbenchActions from '../../../actions/workbench';
 import * as sourceExtractorActions from '../../../actions/source-extractor';
 import * as dataFileActions from '../../../../data-files/actions/data-file';
 import * as imageFileActions from '../../../../data-files/actions/image-file';
 
-import { ViewerFileState } from '../../../models/viewer-file-state';
+import { Normalization } from '../../../models/normalization';
 import { calcLevels } from '../../../../data-files/models/image-hist';
-import { ImageFile } from '../../../../data-files/models/data-file';
+import { ImageFile, DataFile } from '../../../../data-files/models/data-file';
 import { DmsPipe } from '../../../../pipes/dms.pipe'
 import { SourceExtractorFileState, SourceExtractorRegionOption } from '../../../models/source-extractor-file-state';
 import { SourceExtractorModeOption } from '../../../models/source-extractor-mode-option';
 import { PhotSettingsDialogComponent } from '../../../components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from '../../../components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
-import { ViewportChangeEvent, ViewerMouseEvent } from '../../../components/pan-zoom-viewer/pan-zoom-viewer.component';
+import { ViewportChangeEvent, CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { Source } from '../../../models/source';
 import { Region } from '../../../models/region';
+import { ImageFileState } from '../../../models/image-file-state';
+import { Viewer } from '../../../models/viewer';
+import { Dictionary } from '@ngrx/entity/src/models';
+import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { Marker, MarkerType } from '../../../models/marker';
+import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../workbench-viewer-grid/workbench-viewer-grid.component';
 
 
 @Component({
@@ -38,25 +44,23 @@ import { Region } from '../../../models/region';
   templateUrl: './source-extractor-page.component.html',
   styleUrls: ['./source-extractor-page.component.css']
 })
-export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, OnChanges {
-  imageFile$: Observable<ImageFile>;
-  viewerState$: Observable<ViewerFileState>;
+export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+  activeImageFile$: Observable<ImageFile>;
+  activeImageFileState$: Observable<ImageFileState>;
   showConfig$: Observable<boolean>;
-  sourceExtractorState$: Observable<SourceExtractorFileState>;
-  sourceExtractorGlobalState$: Observable<fromSourceExtractor.State>;
+  activeSourceExtractorFileState$: Observable<SourceExtractorFileState>;
+  sourceExtractorState$: Observable<fromImageFileState.State>;
+  markers$: Observable<Marker[]>;
   region$: Observable<Region> = null;
   filteredSources$: Observable<Source[]>;
   selectedSources$: Observable<Source[]>;
   selectedSources: Array<Source> = [];
-  lastImageFile: ImageFile;
-  lastViewerState: ViewerFileState;
-  lastSourceExtractorState: SourceExtractorFileState;
-  lastSourceExtractorGlobalState: fromSourceExtractor.State;
-  lastWorkbenchState: fromWorkbench.State;
+  activeImageFile: ImageFile;
+  activeSourceExtractorFileState: SourceExtractorFileState;
+  sourceExtractorState: fromImageFileState.State;
   SourceExtractorModeOption = SourceExtractorModeOption;
   SourceExtractorRegionOption = SourceExtractorRegionOption;
   subs: Subscription[] = [];
-
   pixelCoordView: string = 'pixel';
   NUMBER_FORMAT: (v: any) => any = (v: number) => v ? v : 'N/A';
   DECIMAL_FORMAT: (v: any) => any = (v: number) => v ? v.toFixed(2) : 'N/A';
@@ -71,13 +75,13 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
       
 
   constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, private dmsPipe: DmsPipe) {
-    this.imageFile$ = store.select(fromCore.workbench.getImageFile);
-    this.viewerState$ = store.select(fromCore.workbench.getViewerFileState);
-    this.sourceExtractorState$ = store.select(fromCore.workbench.getSourceExtractorFileState);
-    this.sourceExtractorGlobalState$ = store.select(fromCore.getSourceExtractorGlobalState);
+    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile)
+    this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
+    this.sourceExtractorState$ = store.select(fromCore.getImageFileGlobalState).filter(state => state != null);
+    this.activeSourceExtractorFileState$ = this.activeImageFileState$.filter(state => state != null).map(state => state.sourceExtractor).filter(v => v != null);
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
 
-    this.filteredSources$ = this.sourceExtractorState$
+    this.filteredSources$ = this.activeSourceExtractorFileState$
     .distinctUntilChanged((a,b) => {
       return a && b && a.region == b.region && a.sources == b.sources;
     })
@@ -91,7 +95,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
       // })
     })
 
-    this.selectedSources$ = this.sourceExtractorState$
+    this.selectedSources$ = this.activeSourceExtractorFileState$
     .distinctUntilChanged((a,b) => {
       return a && b && a.selectedSourceIds == b.selectedSourceIds;
     })
@@ -100,7 +104,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
       return state.sources.filter(source => state.selectedSourceIds.indexOf(source.id) != -1)
     })
 
-    this.region$ = this.sourceExtractorState$
+    this.region$ = this.activeSourceExtractorFileState$
     .distinctUntilChanged((a,b) => {
       return a && b && a.region == b.region;
     })
@@ -109,15 +113,42 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
       return state.region;
     })
 
+    this.markers$ = Observable.combineLatest(
+      this.region$,
+      this.filteredSources$,
+      this.selectedSources$
+    )
+    .map(([region, filteredSources, selectedSources]) => {
+      let result: Marker[] = [];
+      if(region) result.push({type: MarkerType.RECTANGLE, ...region});
+      if(filteredSources) {
+        let sourceMarkers = filteredSources.map(source => {
+          return {
+            type: MarkerType.ELLIPSE,
+            x: source.x,
+            y: source.y,
+            a: 15,
+            b: 15,
+            theta: 0,
+            selected: selectedSources.find(selectedSource => selectedSource.id == source.id) != null,
+            data: {id: source.id}
+          }
+        });
 
-    
-    this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
-    this.subs.push(this.viewerState$.subscribe(viewerState => this.lastViewerState = viewerState));
-    this.subs.push(this.sourceExtractorState$.subscribe(sourceExtractorState => this.lastSourceExtractorState = sourceExtractorState));
-    this.subs.push(this.sourceExtractorGlobalState$.subscribe(sourceExtractorGlobalState => this.lastSourceExtractorGlobalState = sourceExtractorGlobalState));
+        result = result.concat(sourceMarkers);
+      }
+
+      return result;
+    })
+
+    this.subs.push(this.activeImageFile$.subscribe(imageFile => this.activeImageFile = imageFile));
+    this.subs.push(this.activeSourceExtractorFileState$.subscribe(sourceExtractorState => this.activeSourceExtractorFileState = sourceExtractorState));
+    this.subs.push(this.sourceExtractorState$.subscribe(sourceExtractorGlobalState => this.sourceExtractorState = sourceExtractorGlobalState));
   }
 
-    
+  ngOnInit() {
+    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
+  }
 
   ngAfterViewInit() {
   }
@@ -135,26 +166,13 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   }
 
   setRegionOption(value) {
-    this.store.dispatch(new sourceExtractorActions.UpdateFileState({file: this.lastImageFile, changes: {regionOption: value}}));
-  }
-
-  onViewportChange($event: ViewportChangeEvent) {
-    this.store.dispatch(new sourceExtractorActions.UpdateViewport({
-      file: this.lastImageFile,
-      viewport: {
-        imageX: $event.imageX,
-        imageY: $event.imageY,
-        imageWidth: $event.imageWidth,
-        imageHeight: $event.imageHeight,
-        viewportWidth: $event.viewportWidth,
-        viewportHeight: $event.viewportHeight
-      }}))
+    this.store.dispatch(new sourceExtractorActions.UpdateFileState({file: this.activeImageFile, changes: {regionOption: value}}));
   }
 
   openPhotSettings() {
     let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
       width: '600px',
-      data: {...this.lastSourceExtractorGlobalState.photSettings}
+      data: {...this.sourceExtractorState.photSettings}
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -167,7 +185,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   openSourceExtractionSettings() {
     let dialogRef = this.dialog.open(SourceExtractionSettingsDialogComponent, {
       width: '500px',
-      data: {...this.lastSourceExtractorGlobalState.sourceExtractionSettings}
+      data: {...this.sourceExtractorState.sourceExtractionSettings}
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -181,77 +199,80 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
 
   onSelectedRowChanges($event: ITdDataTableSelectEvent) {
     if($event.selected) {
-      this.selectSources([$event.row])
+      this.selectSources(this.activeImageFile, [$event.row])
     }
     else {
-      this.deselectSources([$event.row]);
+      this.deselectSources(this.activeImageFile, [$event.row]);
     }
   }
 
   onSelectAllRows($event: ITdDataTableSelectAllEvent) {
     if($event.selected) {
-      this.selectSources($event.rows);
+      this.selectSources(this.activeImageFile, $event.rows);
     }
     else {
-      this.deselectSources($event.rows);
+      this.deselectSources(this.activeImageFile, $event.rows);
     }
    
   }
 
-  selectSources(sources: Source[]) {
-    this.store.dispatch(new sourceExtractorActions.SelectSources({file: this.lastImageFile, sources: sources}));
+  selectSources(imageFile: ImageFile, sources: Source[]) {
+    this.store.dispatch(new sourceExtractorActions.SelectSources({file: this.activeImageFile, sources: sources}));
   }
 
-  deselectSources(sources: Source[]) {
-    this.store.dispatch(new sourceExtractorActions.DeselectSources({file: this.lastImageFile, sources: sources}));
+  deselectSources(imageFile: ImageFile, sources: Source[]) {
+    this.store.dispatch(new sourceExtractorActions.DeselectSources({file: this.activeImageFile, sources: sources}));
   }
 
   findSources() {
-    this.store.dispatch(new sourceExtractorActions.ExtractSources({file: this.lastImageFile}));
+    this.store.dispatch(new sourceExtractorActions.ExtractSources({file: this.activeImageFile}));
   }
 
-  onImageClick($event: ViewerMouseEvent) {
-    if($event.source) {
-      let sourceSelected = this.lastSourceExtractorState.selectedSourceIds.indexOf($event.source.id) != -1;
-      if($event.mouseEvent.ctrlKey) {
-        if(!sourceSelected) {
-          // select the source
-          this.selectSources([$event.source]);
-        }
-        else {
-          // deselect the source
-          this.deselectSources([$event.source]);
-        }
+  onMarkerClick($event: ViewerGridMarkerMouseEvent) {
+    let source = this.activeSourceExtractorFileState.sources.find(source => source.id == $event.marker.data['id']);
+    if(!source) return;
+
+    let sourceSelected = this.activeSourceExtractorFileState.selectedSourceIds.indexOf(source.id) != -1;
+    if($event.mouseEvent.ctrlKey) {
+      if(!sourceSelected) {
+        // select the source
+        this.selectSources($event.targetFile, [source]);
       }
       else {
-        this.store.dispatch(new sourceExtractorActions.SetSourceSelection({file: this.lastImageFile, sources: [$event.source]}));
+        // deselect the source
+        this.deselectSources($event.targetFile, [source]);
       }
-      
     }
-    else if($event.hitImage) {
-      
+    else {
+      this.store.dispatch(new sourceExtractorActions.SetSourceSelection({file: this.activeImageFile, sources: [source]}));
+    }
+    $event.mouseEvent.stopImmediatePropagation();
+    $event.mouseEvent.preventDefault();
+  }
 
-      if(this.lastSourceExtractorGlobalState.sourceExtractorModeOption == SourceExtractorModeOption.MOUSE && this.lastSourceExtractorState.selectedSourceIds.length == 0) {
+  onImageClick($event: ViewerGridCanvasMouseEvent) {
+    if($event.hitImage) {
+      if(this.sourceExtractorState.sourceExtractorModeOption == SourceExtractorModeOption.MOUSE && this.activeSourceExtractorFileState.selectedSourceIds.length == 0) {
         let x = $event.imageX;
         let y = $event.imageY;
-        this.store.dispatch(new sourceExtractorActions.PhotometerXYSources({file: this.lastImageFile, coords: [{x: x, y: y}]}));
+        this.store.dispatch(new sourceExtractorActions.PhotometerXYSources({file: $event.targetFile, coords: [{x: x, y: y}]}));
       }
 
-      this.store.dispatch(new sourceExtractorActions.SetSourceSelection({file: this.lastImageFile, sources: []}));
+      this.store.dispatch(new sourceExtractorActions.SetSourceSelection({file: $event.targetFile, sources: []}));
       
     }
     
   }
 
   removeAllSources() {
-    this.store.dispatch(new sourceExtractorActions.RemoveAllSources({file: this.lastImageFile}))
+    this.store.dispatch(new sourceExtractorActions.RemoveAllSources({file: this.activeImageFile}))
   }
 
   removeSelectedSources() {
-    this.store.dispatch(new sourceExtractorActions.RemoveSelectedSources({file: this.lastImageFile}))
+    this.store.dispatch(new sourceExtractorActions.RemoveSelectedSources({file: this.activeImageFile}))
   }
 
   
-
+  
 }
 

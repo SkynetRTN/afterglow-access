@@ -34,6 +34,8 @@ import * as imageFileActions from '../actions/image-file';
 // );
 
 
+
+
 @Injectable()
 export class DataFileEffects {
   @Effect()
@@ -155,13 +157,13 @@ export class DataFileEffects {
         this.actions$
           .ofType<dataFileActions.RemoveDataFile>(dataFileActions.REMOVE_DATA_FILE)
           .filter(cancelAction => cancelAction.payload.file.id == action.payload.file.id),
-        this.actions$
-          .ofType<imageFileActions.LoadImageTilePixels | dataFileActions.LoadDataFileHdr | imageFileActions.LoadImageHist>(
-            imageFileActions.LOAD_IMAGE_TILE_PIXELS,
-            dataFileActions.LOAD_DATA_FILE_HDR,
-            imageFileActions.LOAD_IMAGE_HIST
-          )
-          .filter(cancelAction => cancelAction.payload.file.id != action.payload.file.id)
+        // this.actions$
+        //   .ofType<imageFileActions.LoadImageTilePixels | dataFileActions.LoadDataFileHdr | imageFileActions.LoadImageHist>(
+        //     imageFileActions.LOAD_IMAGE_TILE_PIXELS,
+        //     dataFileActions.LOAD_DATA_FILE_HDR,
+        //     imageFileActions.LOAD_IMAGE_HIST
+        //   )
+        //   .filter(cancelAction => cancelAction.payload.file.id != action.payload.file.id)
       );
 
       return this.afterglowDataFileService
