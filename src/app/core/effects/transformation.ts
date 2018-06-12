@@ -69,12 +69,12 @@ export class TransformationEffects {
       transformationActions.SET_VIEWPORT_TRANSFORM)
     .withLatestFrom(
       this.store.select(fromCore.getImageFileStates),
-      this.store.select(fromCore.getWorkbenchGlobalState)
+      this.store.select(fromCore.getWorkbenchState)
     )
     .flatMap(([action, imageFileStates, workbenchState]) => {
       let actions = [];
       let imageFile = action.payload.file;
-      if (imageFile.headerLoaded) {
+      if (imageFile.headerLoaded && imageFileStates[action.payload.file.id].transformation.viewportSize) {
         let sonifier = imageFileStates[action.payload.file.id].sonifier;
         let sourceExtractor = imageFileStates[action.payload.file.id].sourceExtractor;
         if (sonifier.regionMode == SonifierRegionMode.VIEWPORT) actions.push(new sonifierActions.UpdateRegion({ file: action.payload.file }));

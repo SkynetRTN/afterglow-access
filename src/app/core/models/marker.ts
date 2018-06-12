@@ -1,7 +1,8 @@
 export enum MarkerType {
   LINE,
   RECTANGLE,
-  ELLIPSE
+  CIRCLE,
+  TEARDROP
 }
 
 interface IMarker {
@@ -27,16 +28,19 @@ export interface RectangleMarker extends IMarker {
   height: number;
 }
 
-export interface EllipseMarker extends IMarker {
+export interface CircleMarker extends IMarker {
   x: number;
   y: number;
-  a: number;
-  b: number;
+  radius: number;
+}
+
+export interface TeardropMarker extends CircleMarker {
   theta: number;
 }
 
 export type Marker =
   | LineMarker
   | RectangleMarker
-  | EllipseMarker;
+  | CircleMarker
+  | TeardropMarker;
 

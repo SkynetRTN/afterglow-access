@@ -84,10 +84,6 @@ export class WorkbenchComponent implements OnInit {
     this.store.dispatch(new dataFileActions.LoadLibrary());
   }
 
-  // onFileSelect($event: DataFileSelectionListChange, activeViewer: Viewer) {
-  //   this.store.dispatch(new workbenchActions.SelectDataFile($event.option.file.id));
-  // }
-
   onFileSelect(file: DataFile) {
     if(!file) return;
     this.store.dispatch(new workbenchActions.SelectDataFile(file.id));

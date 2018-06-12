@@ -14,55 +14,74 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
-        <div class="form-group">
-          <label class="pr-3" for="viewMode">Layout:</label>
-          <mat-button-toggle-group name="viewMode" class="" [ngModel]="(workbenchState$ | async)?.viewMode" (ngModelChange)="setViewModeOption($event)">
-            <mat-button-toggle aria-label="Single Viewer" value="{{ViewMode.SINGLE}}">
-              <mat-icon>crop_din</mat-icon>
-            </mat-button-toggle>
-            <mat-button-toggle aria-label="Dual Viewer Split Horizontally" value="{{ViewMode.SPLIT_VERTICAL}}">
-              <mat-icon>view_stream</mat-icon>
-            </mat-button-toggle>
-            <mat-button-toggle aria-label="Dual Viewer Split Vertically" value="{{ViewMode.SPLIT_HORIZONTAL}}">
-              <mat-icon style="transform: rotate(90deg) translate(-3px,2px);">view_stream</mat-icon>
-            </mat-button-toggle>
-          </mat-button-toggle-group>
+        <div class="row">
+          <div class="col-5">
+            <div class="form-group pt-2">
+              <mat-button-toggle-group name="viewMode" [ngModel]="(workbenchState$ | async)?.viewMode" (ngModelChange)="setViewModeOption($event)">
+                <mat-button-toggle aria-label="Single Viewer" value="{{ViewMode.SINGLE}}" matTooltip="Single Viewer" [matTooltipPosition]="'below'">
+                  <mat-icon>crop_din</mat-icon>
+                </mat-button-toggle>
+                <mat-button-toggle aria-label="Dual Viewer Split Horizontally" value="{{ViewMode.SPLIT_VERTICAL}}" matTooltip="Split Viewer Horizontally" [matTooltipPosition]="'below'">
+                  <mat-icon>view_stream</mat-icon>
+                </mat-button-toggle>
+                <mat-button-toggle aria-label="Dual Viewer Split Vertically" value="{{ViewMode.SPLIT_HORIZONTAL}}" matTooltip="Split Viewer Vertically" [matTooltipPosition]="'below'">
+                  <mat-icon style="transform: rotate(90deg) translate(-3px,2px);">view_stream</mat-icon>
+                </mat-button-toggle>
+              </mat-button-toggle-group>
+            </div>
+          </div>
+          <div class="col-7">
+              <mat-form-field *ngIf="(workbenchState$ | async)?.viewMode != ViewMode.SINGLE" style="width: 100%;">
+                  <mat-select placeholder="Active Viewer" [ngModel]="(activeViewerIndex$ | async)" (ngModelChange)="onActiveViewerIndexChange($event)"
+                    style="width: 100%;">
+                    <mat-option *ngFor="let viewer of (viewers$ | async); index as viewerIndex" [value]="viewerIndex">Viewer {{ viewerIndex+1 }} {{ (fileEntities$ | async)[viewer.fileId] ? '- ' + (fileEntities$ | async)[viewer.fileId].name
+                      : ''}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+          </div>
         </div>
-
+        <div class="row">
+          <div class="col-12">
+            
+          </div>
+        </div>
 
         <div *ngIf="!(imageFile$ | async)" class="alert alert-info">
           Select a data file to see viewer options.
         </div>
+
         <div *ngIf="(imageFile$ | async)">
-          <div class="form-group">
-            <mat-slide-toggle [disabled]="!(viewerSyncAvailable$ | async)" [checked]="(viewerSyncEnabled$ | async)" [labelPosition]="after"
-              (change)="onViewerSyncEnabledChange($event)">
-              Enable Viewer Sync
-            </mat-slide-toggle>
-          </div>
+
 
           <app-image-hist-chart [width]="450" [height]="250" [hist]="(imageFile$ | async)?.hist" [backgroundLevel]="(normalization$ | async).normalizer?.backgroundLevel"
             [peakLevel]="(normalization$ | async).normalizer?.peakLevel" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
             (onPeakLevelChange)="onPeakLevelChange($event)">
           </app-image-hist-chart>
 
-          <app-normalizer-form [normalizer]="(normalization$ | async).normalizer" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
-            (onPeakLevelChange)="onPeakLevelChange($event)" (onColorMapChange)="onColorMapChange($event)" (onStretchModeChange)="onStretchModeChange($event)">
-          </app-normalizer-form>
+          <div class="pb-4">
+            <app-normalizer-form [normalizer]="(normalization$ | async).normalizer" (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
+              (onPeakLevelChange)="onPeakLevelChange($event)" (onColorMapChange)="onColorMapChange($event)" (onStretchModeChange)="onStretchModeChange($event)"
+              (onInvertedChange)="onInvertedChange($event)">
+            </app-normalizer-form>
+          </div>
+
 
           <!-- <app-normalizer
                   [normalizer]="(imageFile$ | async)?.normalizer"
                   [hist]="(imageFile$ | async)?.hist">
                 </app-normalizer> -->
 
+          <label>Background/Peak Presets: </label>
           <div class="pb-4">
-            <button mat-raised-button (click)="onZScaleClick()">
-              <mat-icon>star_border</mat-icon> Z-Scale</button>
-            <button mat-raised-button (click)="onMinMaxClick()">
-              <mat-icon>brightness_5</mat-icon> Min Max</button>
-            <button mat-raised-button (click)="onInvertClick()">
-              <mat-icon>invert_colors</mat-icon> Invert</button>
+            <button mat-raised-button (click)="onPresetClick(10, 98)">
+              <mat-icon>brightness_3</mat-icon>Faint Target</button>
+            <button mat-raised-button (click)="onPresetClick(lowerPercentileDefault, upperPercentileDefault)">
+              <mat-icon>brightness_2</mat-icon>Default</button>
+            <button mat-raised-button (click)="onPresetClick(10, 99.999)">
+              <mat-icon>brightness_5</mat-icon>Bright Target</button>
           </div>
+
+          <label>Viewer Orientation Options: </label>
           <div class="pb-4">
             <button mat-raised-button (click)="onFlipClick()">
               <mat-icon>flip</mat-icon> Flip</button>
@@ -70,6 +89,18 @@
               <mat-icon>rotate_right</mat-icon> Rotate</button>
             <button mat-raised-button (click)="onResetOrientationClick()">
               <mat-icon>crop_din</mat-icon> Reset Orientation</button>
+          </div>
+
+          <div class="form-group pt-2">
+            <mat-slide-toggle [checked]="(viewerSyncEnabled$ | async)" [labelPosition]="after" (change)="onViewerSyncEnabledChange($event)">
+              Sync orientation across all data files
+            </mat-slide-toggle>
+          </div>
+
+          <div class="form-group pt-2">
+            <mat-slide-toggle [checked]="(normalizationSyncEnabled$ | async)" [labelPosition]="after" (change)="onNormalizationSyncEnabledChange($event)">
+              Sync display settings for all data files
+            </mat-slide-toggle>
           </div>
 
         </div>

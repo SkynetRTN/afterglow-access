@@ -26,6 +26,7 @@ import * as fromRoot from '../../../../reducers';
 import * as fromDataFiles from '../../../../data-files/reducers';
 import * as workbenchActions from '../../../actions/workbench';
 import * as transformationActions from '../../../actions/transformation';
+import * as markerActions from '../../../actions/markers';
 import * as normalizationActions from '../../../actions/normalization';
 import * as dataFileActions from '../../../../data-files/actions/data-file';
 import * as imageFileActions from '../../../../data-files/actions/image-file';
@@ -33,7 +34,8 @@ import { Dictionary } from '@ngrx/entity/src/models';
 import { ImageFileState } from '../../../models/image-file-state';
 import { Marker, MarkerType } from '../../../models/marker';
 import { ViewMode } from '../../../models/view-mode';
-import { WorkbenchState } from '../../../models/workbench-state';
+import { WorkbenchState, WorkbenchTool } from '../../../models/workbench-state';
+import { environment } from '../../../../../environments/environment.prod';
 
 
 // import { DataFile, ImageFile } from '../../../models'
@@ -49,12 +51,13 @@ import { WorkbenchState } from '../../../models/workbench-state';
 export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   ViewMode = ViewMode;
   viewers$: Observable<Array<Viewer>>;
+  activeViewerIndex$: Observable<number>;
   activeViewer$: Observable<Viewer>;
   fileEntities$: Observable<Dictionary<DataFile>>;
   fileStateEntities$: Observable<Dictionary<ImageFileState>>;
   workbenchState$: Observable<WorkbenchState>;
   viewerSyncEnabled$: Observable<boolean>;
-  viewerSyncAvailable$: Observable<boolean>;
+  normalizationSyncEnabled$: Observable<boolean>;
 
   imageFile$: Observable<ImageFile>;
   normalization$: Observable<Normalization>;
@@ -68,20 +71,25 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   backgroundLevel$: Subject<number> = new Subject<number>();
   peakLevel$: Subject<number> = new Subject<number>();
 
+  upperPercentileDefault = environment.upperPercentileDefault;
+  lowerPercentileDefault = environment.lowerPercentileDefault;
+
   constructor(private store: Store<fromRoot.State>) {
-    this.workbenchState$ = this.store.select(fromCore.getWorkbenchGlobalState);
+    this.workbenchState$ = this.store.select(fromCore.getWorkbenchState);
     this.fileEntities$ = this.store.select(fromDataFiles.getDataFiles);
     this.fileStateEntities$ = this.store.select(fromCore.getImageFileStates);
     this.viewers$ = this.store.select(fromCore.workbench.getViewers);
     this.activeViewer$ = this.store.select(fromCore.workbench.getActiveViewer);
-    this.imageFile$ = store.select(fromCore.workbench.getActiveFile)
-    this.viewerSyncAvailable$ = store.select(fromCore.workbench.getViewerSyncAvailable);
+    this.activeViewerIndex$ = this.store.select(fromCore.workbench.getActiveViewerIndex);
+    this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.viewerSyncEnabled$ = store.select(fromCore.workbench.getViewerSyncEnabled);
+    this.normalizationSyncEnabled$ = store.select(fromCore.workbench.getNormalizationSyncEnabled)
     this.normalization$ = store.select(fromCore.workbench.getActiveFileState).filter(fileState => fileState != null).map(fileState => fileState.normalization);
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
 
     this.subs.push(this.imageFile$.subscribe(imageFile => {
       this.lastImageFile = imageFile;
+      // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
     }));
 
     this.subs.push(this.normalization$.subscribe(normalization => {
@@ -107,6 +115,9 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
         this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { peakLevel: value } }));
       });
 
+
+    this.store.dispatch(new workbenchActions.SetActiveTool({ tool: WorkbenchTool.VIEWER }));
+
   }
 
   setViewModeOption(value) {
@@ -129,14 +140,18 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { stretchMode: value } }))
   }
 
-  onMinMaxClick() {
-    let result = calcLevels(this.lastImageFile.hist, 10.0, 99.9999)
+  onInvertedChange(value: boolean) {
+    console.log('inverted change', value);
+    this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { inverted: value } }))
+  }
+
+  onPresetClick(lowerPercentile: number, upperPercentile: number) {
+    let result = calcLevels(this.lastImageFile.hist, lowerPercentile, upperPercentile)
     this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel } }));
   }
 
-  onZScaleClick() {
-    let result = calcLevels(this.lastImageFile.hist, 10.0, 99.0);
-    this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel } }));
+  onActiveViewerIndexChange(value: number) {
+    this.store.dispatch(new workbenchActions.SetActiveViewer({ viewerIndex: value }));
   }
 
   onInvertClick() {
@@ -162,6 +177,10 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onViewerSyncEnabledChange($event) {
     this.store.dispatch(new workbenchActions.SetViewerSyncEnabled({ enabled: $event.checked }));
+  }
+
+  onNormalizationSyncEnabledChange($event) {
+    this.store.dispatch(new workbenchActions.SetNormalizationSyncEnabled({ enabled: $event.checked }));
   }
 
   ngOnInit() {

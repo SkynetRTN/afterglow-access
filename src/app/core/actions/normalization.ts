@@ -3,7 +3,7 @@ import { ImageFile } from '../../data-files/models/data-file';
 import { ImageTile } from '../../data-files/models/image-tile';
 import { PixelNormalizer } from '../models/pixel-normalizer';
 
-export const INIT_AUTO_LEVELS = '[Viewer] Init Auto Levels';
+// export const INIT_AUTO_LEVELS = '[Viewer] Init Auto Levels';
 
 export const NORMALIZE_IMAGE_TILE = '[Viewer] Normalize Image Tile';
 export const NORMALIZE_IMAGE_TILE_SUCCESS = '[Viewer] Normalize Image Tile Success';
@@ -11,11 +11,11 @@ export const NORMALIZE_IMAGE_TILE_FAIL = '[Viewer] Normalize Image Tile Fail';
 export const RENORMALIZE_IMAGE_FILE = '[Viewer] Renormalize Image File';
 export const UPDATE_NORMALIZER = '[Viewer] Update Normalizer';
 
-export class InitAutoLevels implements Action {
-  readonly type = INIT_AUTO_LEVELS;
+// export class InitAutoLevels implements Action {
+//   readonly type = INIT_AUTO_LEVELS;
 
-  constructor(public payload: { file: ImageFile }) { }
-}
+//   constructor(public payload: { file: ImageFile }) { }
+// }
 
 export class RenormalizeImageFile implements Action {
   readonly type = RENORMALIZE_IMAGE_FILE;
@@ -49,7 +49,7 @@ export class UpdateNormalizer implements Action {
 
 
 export type Actions =
-  | InitAutoLevels
+  // | InitAutoLevels
   | RenormalizeImageFile
   | NormalizeImageTile
   | NormalizeImageTileSuccess

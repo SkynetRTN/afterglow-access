@@ -12,7 +12,7 @@ export enum SourceExtractorRegionOption {
 export interface SourceExtractorFileState {
   regionOption: SourceExtractorRegionOption,
   region: Region,
-  sources: Array<Source>,
+  // sources: Array<Source>,
   // filteredSources: Array<Source>,
   selectedSourceIds: Array<string>,
   // filteredSources: Array<Source>,

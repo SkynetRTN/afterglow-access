@@ -5,10 +5,11 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs/Observable';
 import { of } from 'rxjs/observable/of';
 
-import { ImageFile, getWidth, getHeight } from '../../data-files/models/data-file';
-import { Source } from '../models/source';
+import { ImageFile, getWidth, getHeight, getCenterTime, getHasWcs, getWcs } from '../../data-files/models/data-file';
+import { Source, PosType } from '../models/source';
 import * as dataFileActions from '../../data-files/actions/data-file';
 import * as sourceExtractorActions from '../actions/source-extractor';
+import * as sourceActions from '../actions/source';
 import * as imageFileActions from '../../data-files/actions/image-file';
 import * as fromCore from '../reducers';
 import * as fromDataFile from '../../data-files/reducers';
@@ -27,80 +28,109 @@ export class SourceExtractorEffects {
     .ofType<sourceExtractorActions.ExtractSources>(sourceExtractorActions.EXTRACT_SOURCES)
     .withLatestFrom(
     this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getImageFileGlobalState),
+    this.store.select(fromCore.getWorkbenchState),
     this.store.select(fromCore.getImageFileStates),
 
     )
     //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .switchMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
+    .switchMap(([action, dataFiles, workbenchState, imageFileStates]) => {
       let imageFile = dataFiles[action.payload.file.id] as ImageFile;
       let sourceExtractor = imageFileStates[imageFile.id].sourceExtractor;
 
       return this.afterglowDataFileService
-        .extractSources(action.payload.file.id, imageFileGlobalState.sourceExtractionSettings, sourceExtractor.region)
-        .flatMap(allExtractedSources => {
-          let maxPerRequest = 25;
-          let extractedSourcesArrays: Array<Array<Source>> = [];
+        .extractSources(action.payload.file.id, workbenchState.sourceExtractionSettings, sourceExtractor.region)
+        // .flatMap(allExtractedSources => {
+        //   allExtractedSources.forEach(source => {
+        //     source.fileId = action.payload.file.id;
+        //     if(action.payload.file.headerLoaded) {
+        //       source.epoch = getCenterTime(action.payload.file);
+        //     }
+        //   })
+        //   let maxPerRequest = 25;
+        //   let extractedSourcesArrays: Array<Array<Source>> = [];
 
-          while (allExtractedSources.length > 0) {
-            extractedSourcesArrays.push(allExtractedSources.splice(0, maxPerRequest));
-          }
+        //   while (allExtractedSources.length > 0) {
+        //     extractedSourcesArrays.push(allExtractedSources.splice(0, maxPerRequest));
+        //   }
 
-          let observables: Array<Observable<Source[]>> = [];
+        //   let observables: Array<Observable<Source[]>> = [];
 
-          extractedSourcesArrays.forEach(extractedSources => {
-            let o = this.afterglowDataFileService.photometerXY(action.payload.file.id, extractedSources, imageFileGlobalState.photSettings)
-              .map(photSources => {
-                for (let i = 0; i < extractedSources.length; i++) {
-                  extractedSources[i].x = photSources[i].x;
-                  extractedSources[i].y = photSources[i].y;
-                  extractedSources[i].mag = photSources[i].mag;
-                  extractedSources[i].magError = photSources[i].magError;
-                  extractedSources[i].fwhm = photSources[i].fwhm;
-                }
-                return extractedSources;
-              })
+        //   // extractedSourcesArrays.forEach(extractedSources => {
+        //   //   let o = this.afterglowDataFileService.photometerXY(action.payload.file.id, extractedSources, imageFileGlobalState.photSettings)
+        //   //     .map(photSources => {
+        //   //       for (let i = 0; i < extractedSources.length; i++) {
+        //   //         extractedSources[i].x = photSources[i].x;
+        //   //         extractedSources[i].y = photSources[i].y;
+        //   //         extractedSources[i].mag = photSources[i].mag;
+        //   //         extractedSources[i].magError = photSources[i].magError;
+        //   //         extractedSources[i].fwhm = photSources[i].fwhm;
+        //   //       }
+        //   //       return extractedSources;
+        //   //     })
 
 
-            observables.push(o);
-          })
+        //   //   observables.push(o);
+        //   // })
 
-          return Observable.forkJoin(observables).map(sourcesArrays => [].concat.apply([], sourcesArrays))
+        //   return Observable.forkJoin(observables).map(sourcesArrays => [].concat.apply([], sourcesArrays))
 
-        })
-        .map((sources: Source[]) => new sourceExtractorActions.ExtractSourcesSuccess({ file: action.payload.file, sources: sources }))
+        // })
+        .map((sources: Source[]) => new sourceActions.AddSources({ sources: sources }))
         .catch(err => of(new sourceExtractorActions.ExtractSourcesFail({ file: action.payload.file, error: err })));
     });
 
-  @Effect()
-  photometerXYSources$: Observable<Action> = this.actions$
-    .ofType<sourceExtractorActions.PhotometerXYSources>(sourceExtractorActions.PHOTOMETER_XY_SOURCES)
-    .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getImageFileGlobalState)
-    )
-    //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .flatMap(([action, dataFiles, imageFileGlobalState]) => {
-      return this.afterglowDataFileService
-        .photometerXY(action.payload.file.id, action.payload.coords, imageFileGlobalState.photSettings)
-        .map((sources: Source[]) => new sourceExtractorActions.PhotometerSourcesSuccess({ file: action.payload.file, sources: sources }))
-        .catch(err => of(new sourceExtractorActions.PhotometerSourcesFail({ file: action.payload.file, error: err })));
-    });
+  // @Effect()
+  // photometerXYSources$: Observable<Action> = this.actions$
+  //   .ofType<sourceExtractorActions.PhotometerXYSources>(sourceExtractorActions.PHOTOMETER_XY_SOURCES)
+  //   .withLatestFrom(
+  //   this.store.select(fromDataFile.getDataFiles),
+  //   this.store.select(fromCore.getWorkbenchState)
+  //   )
+  //   //.debounceTime(this.debounce || 300, this.scheduler || async)
+  //   .flatMap(([action, dataFiles, workbenchState]) => {
+  //     return this.afterglowDataFileService
+  //       .photometerXY(action.payload.file.id, action.payload.coords, workbenchState.photSettings, workbenchState.centroidSettings)
+  //       .map((sources: Source[]) => {
+  //         sources.forEach(source => {
+  //           source.fileId = action.payload.file.id;
+  //           if(action.payload.file.headerLoaded) {
+  //             source.epoch = getCenterTime(action.payload.file);
 
-  @Effect()
-  photometerRaDecSources$: Observable<Action> = this.actions$
-    .ofType<sourceExtractorActions.PhotometerRaDecSources>(sourceExtractorActions.PHOTOMETER_RADEC_SOURCES)
-    .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getImageFileGlobalState)
-    )
-    //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .flatMap(([action, dataFiles, imageFileGlobalState]) => {
-      return this.afterglowDataFileService
-        .photometerRaDec(action.payload.file.id, action.payload.coords, imageFileGlobalState.photSettings)
-        .map((sources: Source[]) => new sourceExtractorActions.PhotometerSourcesSuccess({ file: action.payload.file, sources: sources }))
-        .catch(err => of(new sourceExtractorActions.PhotometerSourcesFail({ file: action.payload.file, error: err })));
-    });
+  //             if(getHasWcs(action.payload.file)) {
+  //               let raDec = getWcs(action.payload.file).pixToWorld([source.primaryCoord, source.secondaryCoord]);
+  //               source.primaryCoord = raDec[0];
+  //               source.secondaryCoord = raDec[1];
+  //               source.posType = PosType.SKY;
+  //             }
+  //           }
+  //         })
+  //         return new sourceExtractorActions.PhotometerSourcesSuccess({ file: action.payload.file, sources: sources })
+  //       })
+  //       .catch(err => of(new sourceExtractorActions.PhotometerSourcesFail({ file: action.payload.file, error: err })));
+  //   });
+
+  // @Effect()
+  // photometerRaDecSources$: Observable<Action> = this.actions$
+  //   .ofType<sourceExtractorActions.PhotometerRaDecSources>(sourceExtractorActions.PHOTOMETER_RADEC_SOURCES)
+  //   .withLatestFrom(
+  //   this.store.select(fromDataFile.getDataFiles),
+  //   this.store.select(fromCore.getWorkbenchState)
+  //   )
+  //   //.debounceTime(this.debounce || 300, this.scheduler || async)
+  //   .flatMap(([action, dataFiles, workbenchState]) => {
+  //     return this.afterglowDataFileService
+  //       .photometerRaDec(action.payload.file.id, action.payload.coords, workbenchState.photSettings, workbenchState.centroidSettings)
+  //       .map((sources: Source[]) => {
+  //         sources.forEach(source => {
+  //           source.fileId = action.payload.file.id;
+  //           if(action.payload.file.headerLoaded) {
+  //             source.epoch = getCenterTime(action.payload.file);
+  //           }
+  //         })
+  //         return new sourceExtractorActions.PhotometerSourcesSuccess({ file: action.payload.file, sources: sources })
+  //       })
+  //       .catch(err => of(new sourceExtractorActions.PhotometerSourcesFail({ file: action.payload.file, error: err })));
+  //   });
 
 
   @Effect()

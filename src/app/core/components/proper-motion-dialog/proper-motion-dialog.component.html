@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>Set Proper Motion</h2>
+<mat-dialog-content>
+  <div class="row pb-4">
+    <div class="col-12">
+      <mat-button-toggle-group [(ngModel)]="pixelCoordView">
+        <mat-button-toggle value="pixel">
+          <mat-icon>border_all</mat-icon> Pixel
+        </mat-button-toggle>
+        <mat-button-toggle value="sky">
+          <mat-icon>language</mat-icon> RA/DEC
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>  
+  <div class="row pb-4" *ngIf="pixelCoordView == 'sky'">
+    <div class="col-6">
+      <mat-form-field class="" style="width: 100%;">
+        <input matInput placeholder="Rate (arcsecs/sec)" [(ngModel)]="source && source.skyPm">
+      </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="" style="width: 100%;">
+        <input matInput placeholder="Direction (degrees E of N)" [(ngModel)]="source && source.skyPmPosAngle">
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="row pb-4" *ngIf="pixelCoordView == 'pixel'">
+    <div class="col-6">
+      <mat-form-field class="" style="width: 100%;">
+        <input matInput placeholder="Rate (pixels/sec)" [(ngModel)]="source && source.pixelPm">
+      </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="" style="width: 100%;">
+        <input matInput placeholder="Direction (degrees CW from +Y)" [(ngModel)]="source && source.pixelPmPosAngle">
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="pb-4">
+      <mat-divider></mat-divider>
+  </div>
+  
+
+  <p>You can automatically calculate the proper motion by selecting the same source from a different image and clicking the calculate button:</p>
+
+  <div class="alert alert-info" *ngIf="(referenceSources$ | async)?.length == 0">
+    No other sources were found.  To use this feature, you must identify and label this same source in one of your other image files.
+  </div>
+  <div class="row pb-4" *ngIf="(referenceSources$ | async)?.length != 0">
+    <div class="col-9">
+      
+      <mat-form-field style="width: 100%;">
+        <mat-select placeholder="Calculate from reference source" [ngModel]="referenceSource" (ngModelChange)="onReferenceSourceChange($event)" >
+          <mat-option *ngFor="let source of (referenceSources$ | async)" [value]="source">{{ (referenceFiles$ | async)[source.fileId]?.name }} - Source: {{ source.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+
+    </div>
+    <div class="col-3">
+        <button mat-button [disabled]="!referenceSource" (click)="onCalculateClick($event)">Calculate</button>
+    </div>
+  </div>
+
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="source">Save</button>
+  <button mat-button mat-dialog-close>Cancel</button>
+</mat-dialog-actions>

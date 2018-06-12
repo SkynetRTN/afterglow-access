@@ -23,6 +23,7 @@ import { ImageFileState } from '../../../models/image-file-state';
 import { Viewer } from '../../../models/viewer';
 import { Dictionary } from '@ngrx/entity/src/models';
 import { Marker, MarkerType } from '../../../models/marker';
+import { WorkbenchTool } from '../../../models/workbench-state';
 
 @Component({
   selector: 'app-sonifier-page',
@@ -66,6 +67,8 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
       this.lastSonifierState = sonifierState;
       if (sonifierState && this.sonificationSrcUri != sonifierState.sonificationUri) this.sonificationSrcUri = null;
     }));
+
+    this.store.dispatch(new workbenchActions.SetActiveTool({tool: WorkbenchTool.SONIFIER}));
 
   }
 
@@ -160,13 +163,6 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     
   }
 
-  private getMarkers(state: SonifierFileState, progressLine: {x1: number, y1: number, x2: number, y2: number} = null) {
-    let result : Marker[] = [];
-    if(state.region && state.regionMode == SonifierRegionMode.CUSTOM) result.push({type: MarkerType.RECTANGLE, ...state.region})
-    if(progressLine) result.push({type: MarkerType.LINE, ...progressLine})
-    return result;
-  }
-
   onPlayerReady(api: VgAPI) {
     this.api = api;
 
@@ -197,13 +193,11 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
       stop$.map(() => null),
       this.clearProgressLine$.map(() => null)
     )
-    this.markers$ = Observable.combineLatest(this.sonifierState$, this.progressLine$)
-    .map(([state, progressLine]) => {
-      return this.getMarkers(state, progressLine);
-    })
 
+    this.subs.push(this.progressLine$.distinctUntilChanged().subscribe(line => {
+      this.store.dispatch(new sonifierActions.SetProgressLine({file: this.lastImageFile, line: line}));
+    }))
   }
-
 
 }
 

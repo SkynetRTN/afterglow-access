@@ -19,6 +19,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   @Output() onPeakLevelChange = new EventEmitter<number>();
   @Output() onColorMapChange = new EventEmitter<ColorMap>();
   @Output() onStretchModeChange = new EventEmitter<StretchMode>();
+  @Output() onInvertedChange = new EventEmitter<boolean>();
 
   levelStep = 0.1;
 

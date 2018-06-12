@@ -1,16 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Location } from '@angular/common';
 import { of } from 'rxjs/observable/of';
 import { _throw } from 'rxjs/observable/throw';
 import { User, Authenticate } from '../models/user';
 import { AuthMethod } from '../models/auth-method';
 import { Observable } from 'rxjs/Observable';
 import { environment } from '../../../environments/environment';
+import { OAuthClient } from '../models/oauth-client';
 
 @Injectable()
 export class AuthService {
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private location: Location) {}
 
   login({ username, password }: Authenticate) {
     /**
@@ -25,11 +27,11 @@ export class AuthService {
   }
 
   loginOAuth(authMethodId: string, redirectUri: string, code: string) {
-    return this.http.post(`${environment.apiUrl}/auth/login/${authMethodId}`, {code: code, redirect_uri: redirectUri});
+    return this.http.post(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/login/${authMethodId}`), {code: code, redirect_uri: redirectUri});
   }
 
   getAuthMethods() {
-    return this.http.get<any[]>(`${environment.apiUrl}/auth/methods`)
+    return this.http.get<any[]>(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/methods`))
       .map(resp => resp.map(r => {
         let method : AuthMethod = {
           id: r.id,
@@ -46,7 +48,29 @@ export class AuthService {
     }));
   }
 
+  getOAuthClients() {
+    return this.http.get<any[]>(this.location.prepareExternalUrl(`${environment.apiUrl}/oauth2/clients`))
+      .map(resp => resp.map(r => {
+        let client : OAuthClient = {
+          clientId: r.id,
+          redirectUri: r.redirect_uri,
+          name: r.name,
+          description: r.description
+        }
+        
+        return client;
+    }));
+  }
+
+  getPermittedOAuthClients() {
+    return this.http.get<string[]>(this.location.prepareExternalUrl(`${environment.apiUrl}/oauth2/user-clients`));
+  }
+
+  addPermittedOAuthClient(client: OAuthClient) {
+    return this.http.post(this.location.prepareExternalUrl(`${environment.apiUrl}/oauth2/user-clients`), {client_id: client.clientId});
+  }
+
   logout() {
-    return this.http.get(`${environment.apiUrl}/auth/logout`)
+    return this.http.get(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/logout`))
   }
 }

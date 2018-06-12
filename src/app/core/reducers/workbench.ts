@@ -6,8 +6,10 @@ import * as imageFileActions from '../../data-files/actions/image-file';
 import * as authActions from '../../auth/actions/auth';
 import * as workbenchActions from '../actions/workbench';
 import { SidebarView } from '../models/sidebar-view';
-import { WorkbenchState } from '../models/workbench-state';
+import { WorkbenchState, WorkbenchTool } from '../models/workbench-state';
 import { ViewMode } from '../models/view-mode';
+import { createPsfCentroiderSettings, createDiskCentroiderSettings } from '../models/centroider';
+import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
 /**
  * @ngrx/entity provides a predefined interface for handling
  * a structured dictionary of records. This interface
@@ -20,25 +22,50 @@ import { ViewMode } from '../models/view-mode';
 export const initialState: WorkbenchState = {
   multiFileSelectionEnabled: false,
   activeViewerIndex: 0,
+  activeTool: WorkbenchTool.VIEWER,
   viewMode: ViewMode.SINGLE,
   viewers: [
     {
       fileId: null,
+      pendingFileId: null,
       panEnabled: true,
       zoomEnabled: true
     },
     {
       fileId: null,
+      pendingFileId: null,
       panEnabled: true,
       zoomEnabled: true
     },
   ],
-  viewerSyncAvailable: false,
   viewerSyncEnabled: false,
+  normalizationSyncEnabled: false,
+  plotterSyncEnabled: false,
   sidebarView: SidebarView.FILES,
   showSidebar: true,
   showConfig: true,
-  
+  showAllSources: true,
+  centroidSettings: {
+    centroidClicks: true,
+    useDiskCentroiding: false,
+    psfCentroiderSettings: createPsfCentroiderSettings(),
+    diskCentroiderSettings: createDiskCentroiderSettings()
+  },
+  photSettings: {
+    centroid: true,
+    aperture: 10,
+    annulus: 10,
+    dannulus: 10
+  },
+  sourceExtractionSettings: {
+    threshold: 3,
+    fwhm: 0,
+    deblend: false,
+  },
+  sourceExtractorModeOption: SourceExtractorModeOption.MOUSE,
+  plotterSettings: {
+    interpolatePixels: false
+  }
 };
 
 export function reducer(
@@ -80,8 +107,8 @@ export function reducer(
     }
 
     case workbenchActions.SET_ACTIVE_VIEWER: {
-      if(state.activeViewerIndex == action.payload.viewerIndex) return state;
-      
+      if (state.activeViewerIndex == action.payload.viewerIndex) return state;
+
       return {
         ...state,
         activeViewerIndex: action.payload.viewerIndex
@@ -91,9 +118,9 @@ export function reducer(
     case workbenchActions.SET_VIEW_MODE: {
 
       let activeViewerIndex = state.activeViewerIndex;
-      if(action.payload.viewMode == ViewMode.SINGLE) {
+      if (action.payload.viewMode == ViewMode.SINGLE) {
         activeViewerIndex = 0;
-      } 
+      }
       else {
         activeViewerIndex = 1;
       }
@@ -107,13 +134,8 @@ export function reducer(
 
     case workbenchActions.SET_VIEWER_FILE: {
       let viewers = [...state.viewers];
-      let viewer = {...viewers[action.payload.viewerIndex]};
-      if(action.payload.file == null) {
-        viewer.fileId = null;
-      }
-      else {
-        viewer.fileId = action.payload.file.id;
-      }
+      let viewer = { ...viewers[action.payload.viewerIndex] };
+      viewer.pendingFileId = action.payload.file.id;
       viewers[action.payload.viewerIndex] = viewer;
 
       return {
@@ -123,21 +145,38 @@ export function reducer(
 
     }
 
-    case workbenchActions.SET_VIEWER_SYNC_AVAILABLE: {
-      let isAvailable = action.payload.available;
+    case workbenchActions.SET_VIEWER_FILE_SUCCESS: {
+      let viewers = [...state.viewers];
+      let viewer = { ...viewers[action.payload.viewerIndex] };
+      viewer.fileId = viewer.pendingFileId;
+      viewer.pendingFileId = null;
+      viewers[action.payload.viewerIndex] = viewer;
+
       return {
         ...state,
-        viewerSyncAvailable: isAvailable,
+        viewers: viewers,
       }
+
     }
 
     case workbenchActions.SET_VIEWER_SYNC_ENABLED: {
-      let enabled = action.payload.enabled;
-      if(!state.viewerSyncAvailable && enabled) return state;
-
       return {
         ...state,
-        viewerSyncEnabled: enabled ? state.viewerSyncAvailable : false
+        viewerSyncEnabled: action.payload.enabled
+      }
+    }
+
+    case workbenchActions.SET_NORMALIZATION_SYNC_ENABLED: {
+      return {
+        ...state,
+        normalizationSyncEnabled: action.payload.enabled
+      }
+    }
+
+    case workbenchActions.SET_PLOTTER_SYNC_ENABLED: {
+      return {
+        ...state,
+        plotterSyncEnabled: action.payload.enabled
       }
     }
 
@@ -154,6 +193,80 @@ export function reducer(
         showConfig: !state.showConfig
       }
     }
+
+
+    case workbenchActions.SET_ACTIVE_TOOL: {
+      if (state.activeTool == action.payload.tool) return state;
+
+      return {
+        ...state,
+        activeTool: action.payload.tool
+      }
+    }
+
+    case workbenchActions.SET_SHOW_ALL_SOURCES: {
+      if (state.showAllSources == action.payload.showAllSources) return state;
+
+      return {
+        ...state,
+        showAllSources: action.payload.showAllSources
+      }
+    }
+
+    case workbenchActions.UPDATE_CENTROID_SETTINGS: {
+      let centroidSettings = {
+        ...state.centroidSettings,
+        ...action.payload.changes
+      }
+
+      return {
+        ...state,
+        centroidSettings: centroidSettings
+      }
+
+    }
+
+    case workbenchActions.UPDATE_PLOTTER_SETTINGS: {
+      let plotterSettings = {
+        ...state.plotterSettings,
+        ...action.payload.changes
+      }
+
+      return {
+        ...state,
+        plotterSettings: plotterSettings
+      }
+
+    }
+
+    case workbenchActions.SET_SOURCE_EXTRACTION_MODE: {
+      return {
+        ...state,
+        sourceExtractorModeOption: action.payload.mode
+      }
+    }
+
+    case workbenchActions.UPDATE_PHOT_SETTINGS: {
+      return {
+        ...state,
+        photSettings: {
+          ...state.photSettings,
+          ...action.payload.changes
+        }
+      }
+    }
+
+    case workbenchActions.UPDATE_SOURCE_EXTRACTION_SETTINGS: {
+      return {
+        ...state,
+        sourceExtractionSettings: {
+          ...state.sourceExtractionSettings,
+          ...action.payload.changes
+        }
+      }
+    }
+
+
 
 
 
@@ -235,3 +348,4 @@ export function reducer(
 export const getActiveViewerIndex = (state: WorkbenchState) => state.activeViewerIndex;
 export const getViewers = (state: WorkbenchState) => state.viewers;
 export const getViewMode = (state: WorkbenchState) => state.viewMode;
+export const getActiveTool = (state: WorkbenchState) => state.activeTool;

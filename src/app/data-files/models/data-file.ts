@@ -14,6 +14,7 @@ export interface IDataFile {
   header: Header;
   headerLoaded: boolean;
   headerLoading: boolean;
+  layer: string;
 }
 
 export function getEntry(dataFile: DataFile, key: string) {
@@ -241,7 +242,15 @@ export function getStartTime(imageFile: ImageFile) {
   let dateObs = getEntry(imageFile, 'DATE-OBS');
   if (dateObs) {
     imageDateStr = dateObs.value;
+    if(imageDateStr.includes('T')) {
+      let s = Date.parse(imageDateStr.replace('T', ' '));
+      if (!isNaN(s)) {
+        return new Date(s);
+      }
+      return undefined;
+    }
   }
+
   let timeObs = getEntry(imageFile, 'TIME-OBS');
   if (timeObs) {
     imageTimeStr = timeObs.value;

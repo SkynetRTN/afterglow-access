@@ -13,7 +13,7 @@
   overflow: hidden;
 }
 
-.image-viewer-panel {
+.workbench-viewer-panel {
   flex: 1 1 0%;
   position: relative;
   outline: none;

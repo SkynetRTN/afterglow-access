@@ -5,7 +5,8 @@ export interface PixelNormalizer {
   backgroundLevel: number,
   peakLevel: number,
   colorMap: ColorMap,
-  stretchMode: StretchMode
+  stretchMode: StretchMode,
+  inverted: boolean
 }
 
 // export function createPixelNormalizer(backgroundLevel: number, peakLevel: number, colorMap: ColorMap, stretchMode: StretchMode) : PixelNormalizer {
@@ -21,6 +22,11 @@ export function normalize(pixels: Float32Array | Uint32Array, normalizer: PixelN
   let backgroundLevel = normalizer.backgroundLevel;
   let colorMapLookup = normalizer.colorMap.lookup;
   let normalizedPixels = new Uint32Array(pixels.length);
+
+  if(normalizer.inverted) {
+    backgroundLevel = normalizer.peakLevel;
+    peakLevel = normalizer.backgroundLevel;
+  }
 
   let stretchFn: (x: number) => number;
   switch (+stretchMode) {

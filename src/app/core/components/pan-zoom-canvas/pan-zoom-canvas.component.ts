@@ -13,7 +13,7 @@ import * as normalizeWheel from 'normalize-wheel';
 import { ImageFile, getWidth, getHeight, findTiles, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
 import { Normalization } from '../../models/normalization';
 import { Transformation, getViewportRegion } from '../../models/transformation';
-import { Marker, RectangleMarker, EllipseMarker, LineMarker, MarkerType } from '../../models/marker';
+import { Marker, RectangleMarker, CircleMarker, LineMarker, MarkerType } from '../../models/marker';
 import { Region } from '../../models/region';
 import { Source } from '../../models/source';
 

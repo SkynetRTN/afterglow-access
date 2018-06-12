@@ -25,9 +25,14 @@ export const selectAuthStatusState = createSelector(
 );
 export const getLoggedIn = createSelector(
   selectAuthStatusState,
-  fromAuth.getLoggedIn
+  (state: fromAuth.State) => state.loggedIn
 );
-export const getUser = createSelector(selectAuthStatusState, fromAuth.getUser);
+export const getUser = createSelector(selectAuthStatusState, (state: fromAuth.State) => state.user);
+export const getLoadingPermittedOAuthClientIds = createSelector(selectAuthStatusState, (state: fromAuth.State) => state.loadingPermittedOAuthClientIds);
+export const getLoadingOAuthClients = createSelector(selectAuthStatusState, (state: fromAuth.State) => state.loadingOAuthClients);
+export const getPermittedOAuthClients = createSelector(selectAuthStatusState, (state: fromAuth.State) => state.permittedOAuthClientIds);
+export const getOAuthClients = createSelector(selectAuthStatusState, (state: fromAuth.State) => state.oAuthClients);
+
 
 export const selectLoginPageState = createSelector(
   selectAuthState,
@@ -47,7 +52,7 @@ export const getLoginPageAuthMethods = createSelector(
   fromLoginPage.getAuthMethods
 );
 
-export const getLoginPageNextUrl = createSelector(
-  selectLoginPageState,
-  fromLoginPage.getNextUrl
-);
+// export const getLoginPageNextUrl = createSelector(
+//   selectLoginPageState,
+//   fromLoginPage.getNextUrl
+// );

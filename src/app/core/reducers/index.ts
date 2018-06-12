@@ -7,19 +7,22 @@ import * as fromRoot from '../../reducers';
 import * as fromWorkbench from './workbench';
 // import * as fromComparer from './comparer';
 import * as fromImageFileState from './image-file-state';
+import * as fromSources from './source';
 import * as fromDataFiles from '../../data-files/reducers';
 import { ImageFileState } from '../models/image-file-state';
 import { WorkbenchState } from '../models/workbench-state';
 
 
 export const reducers = {
-  imageFileGlobalState: fromImageFileState.reducer,
-  workbenchGlobalState: fromWorkbench.reducer
+  imageFileState: fromImageFileState.reducer,
+  sourcesState: fromSources.reducer,
+  workbenchState: fromWorkbench.reducer
 };
 
 export interface CoreState {
-  imageFileGlobalState: fromImageFileState.State,
-  workbenchGlobalState: WorkbenchState
+  imageFileState: fromImageFileState.State,
+  workbenchState: WorkbenchState,
+  sourcesState: fromSources.State
 }
 
 export interface State extends fromRoot.State {
@@ -30,7 +33,7 @@ export const getCoreState = createFeatureSelector<CoreState>('coreState');
 
 export const getImageFileGlobalState = createSelector(
   getCoreState,
-  state => state.imageFileGlobalState
+  state => state.imageFileState
 );
 
 export const {
@@ -41,24 +44,45 @@ export const {
 } = fromImageFileState.adapter.getSelectors(getImageFileGlobalState);
 
 
-export const getWorkbenchGlobalState = createSelector(
+
+export const getSourcesGlobalState = createSelector(
   getCoreState,
-  state => state.workbenchGlobalState
+  state => state.sourcesState
+);
+
+export const {
+  selectIds: getSourceIds,
+  selectEntities: getSources,
+  selectAll: getAllSources,
+  selectTotal: getTotalSources,
+} = fromSources.adapter.getSelectors(getSourcesGlobalState);
+
+export const getSelectedSources = createSelector(
+  getSourcesGlobalState,
+  state => state.selectedSourceIds.map(sourceId => state.entities[sourceId])
+);
+
+
+export const getWorkbenchState = createSelector(
+  getCoreState,
+  state => state.workbenchState
 );
 
 
 const getWorkbenchActiveViewerIndex = createSelector(
-  getWorkbenchGlobalState,
+  getWorkbenchState,
   fromWorkbench.getActiveViewerIndex
 );
 
+
+
 const getWorkbenchViewers = createSelector(
-  getWorkbenchGlobalState,
+  getWorkbenchState,
   fromWorkbench.getViewers
 );
 
 const getWorkbenchViewMode = createSelector(
-  getWorkbenchGlobalState,
+  getWorkbenchState,
   fromWorkbench.getViewMode
 );
 
@@ -101,10 +125,13 @@ export const workbench = {
   getActiveFileId: getWorkbenchActiveViewerFileId,
   getActiveFile: getWorkbenchActiveViewerFile,
   getActiveFileState: getWorkbenchActiveViewerFileState,
-  getViewerSyncAvailable: createSelector(getWorkbenchGlobalState, state => state.viewerSyncAvailable),
-  getViewerSyncEnabled: createSelector(getWorkbenchGlobalState, state => state.viewerSyncEnabled),
-  getSidebarView: createSelector(getWorkbenchGlobalState, state => state.sidebarView),
-  getShowSidebar: createSelector(getWorkbenchGlobalState, state => state.showSidebar),
-  getShowConfig: createSelector(getWorkbenchGlobalState, state => state.showConfig),
-  getMultiFileSelectionEnabled: createSelector(getWorkbenchGlobalState, state => state.multiFileSelectionEnabled),
+  getViewerSyncEnabled: createSelector(getWorkbenchState, state => state.viewerSyncEnabled),
+  getPlotterSyncEnabled: createSelector(getWorkbenchState, state => state.plotterSyncEnabled),
+  getNormalizationSyncEnabled: createSelector(getWorkbenchState, state => state.normalizationSyncEnabled),
+  getSidebarView: createSelector(getWorkbenchState, state => state.sidebarView),
+  getShowSidebar: createSelector(getWorkbenchState, state => state.showSidebar),
+  getShowConfig: createSelector(getWorkbenchState, state => state.showConfig),
+  getActiveTool: createSelector(getWorkbenchState, state => state.activeTool),
+  getMultiFileSelectionEnabled: createSelector(getWorkbenchState, state => state.multiFileSelectionEnabled),
+  getShowAllSources: createSelector(getWorkbenchState, state => state.showAllSources),
 }

@@ -13,6 +13,7 @@ export const REDO_REGION_SELECTION = '[Sonifier] Redo Region Selection';
 export const UPDATE_FILE_STATE = '[Sonifier] Update File State';
 export const SET_REGION_MODE = '[Sonifier] Set Region Mode';
 export const UPDATE_SONIFICATION_URI = '[Sonifier] Update Sonification URI';
+export const SET_PROGRESS_LINE = '[Sonifier] Set Progress Line';
 
 export class UpdateRegion implements Action {
   readonly type = UPDATE_REGION;
@@ -62,6 +63,12 @@ export class UpdateSonificationUri implements Action {
   constructor(public payload: { file: ImageFile, uri: string }) { }
 }
 
+export class SetProgressLine implements Action {
+  readonly type = SET_PROGRESS_LINE;
+
+  constructor(public payload: { file: ImageFile, line: { x1: number, y1: number, x2: number, y2: number } }) { }
+}
+
 
 
 
@@ -74,3 +81,4 @@ export type Actions =
   | UpdateFileState
   | SetRegionMode
   | UpdateSonificationUri
+  | SetProgressLine

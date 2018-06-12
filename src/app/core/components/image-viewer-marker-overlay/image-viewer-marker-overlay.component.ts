@@ -20,7 +20,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges {
   
   @Input() imageFile: ImageFile;
   @Input() transform: Matrix;
-  @Input() markers: Marker[];
+  @Input() markerLayers: Array<Marker[]>;
   @Input() svgWidth: number;
   @Input() svgHeight: number;
 
@@ -45,6 +45,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges {
       marker: marker,
       mouseEvent: $event
     })
+  }
+
+  trackByFn(index, item) {
+    return index;
   }
 
 }

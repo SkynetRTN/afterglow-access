@@ -13,6 +13,7 @@ import * as normalizationActions from '../actions/normalization';
 import * as transformationActions from '../actions/transformation';
 import * as plotterActions from '../actions/plotter';
 import * as sonifierActions from '../actions/sonifier';
+import * as markerActions from '../actions/markers';
 import * as sourceExtractorActions from '../actions/source-extractor';
 import * as imageFileActions from '../../data-files/actions/image-file';
 import * as dataFileActions from '../../data-files/actions/data-file';
@@ -28,43 +29,14 @@ import { SourceExtractorModeOption } from '../models/source-extractor-mode-optio
 import { PhotSettings } from '../models/phot-settings';
 import { SourceExtractionSettings } from '../models/source-extraction-settings';
 
-export interface State extends EntityState<ImageFileState> {
-  centroidSettings: CentroidSettings,
-  plotterSettings: PlotterSettings;
-  sourceExtractorModeOption: SourceExtractorModeOption;
-  photSettings: PhotSettings;
-  sourceExtractionSettings: SourceExtractionSettings;
-}
+export interface State extends EntityState<ImageFileState> {}
 
 export const adapter: EntityAdapter<ImageFileState> = createEntityAdapter<ImageFileState>({
   selectId: (imageFileState: ImageFileState) => imageFileState.imageFileId,
   sortComparer: false,
 });
 
-export const initialState: State = adapter.getInitialState({
-  centroidSettings: {
-    centroidClicks: false,
-    useDiskCentroiding: false,
-    psfCentroiderSettings: null,
-    diskCentroiderSettings: null,
-  },
-  plotterSettings: {
-    interpolatePixels: false,
-  },
-  photSettings: {
-    aperture: 10,
-    annulus: 10,
-    dannulus: 10,
-    centroid: true,
-    centeringBoxWidth: 5
-  },
-  sourceExtractionSettings: {
-    threshold: 2,
-    fwhm: 0,
-    deblend: false,
-  },
-  sourceExtractorModeOption: SourceExtractorModeOption.MOUSE
-});
+export const initialState: State = adapter.getInitialState();
 
 
 export function reducer(state = initialState, action: dataFileActions.Actions |
@@ -84,11 +56,14 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
           normalization: {
             normalizedTiles: null,
             autoLevelsInitialized: false,
+            autoUpperPercentile: 99,
+            autoLowerPercentile: 10,
             normalizer: {
               backgroundLevel: 0,
               peakLevel: 0,
               colorMap: grayColorMap,
-              stretchMode: StretchMode.Linear
+              stretchMode: StretchMode.Linear,
+              inverted: false
             }
           },
           transformation: {
@@ -111,16 +86,15 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
             regionMode: SonifierRegionMode.VIEWPORT,
             viewportSync: true,
             duration: 10,
-            toneCount: 22
+            toneCount: 22,
+            progressLine: null,
           },
           sourceExtractor: {
             regionOption: SourceExtractorRegionOption.VIEWPORT,
             region: null,
-            sources: [],
             selectedSourceIds: [],
           },
-
-
+          markers: []
         })
       });
 
@@ -135,26 +109,26 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
       }
     }
 
-    case normalizationActions.INIT_AUTO_LEVELS: {
-      if (action.payload.file.type == DataFileType.IMAGE) {
-        let imageFile = action.payload.file;
-        let normalization: Normalization = { ...state.entities[imageFile.id].normalization };
-        let levels = calcLevels(imageFile.hist, 10.0, 98.0);
-        normalization.autoBkgLevel = levels.backgroundLevel;
-        normalization.autoPeakLevel = levels.peakLevel;
-        normalization.autoLevelsInitialized = true;
+    // case normalizationActions.INIT_AUTO_LEVELS: {
+    //   if (action.payload.file.type == DataFileType.IMAGE) {
+    //     let imageFile = action.payload.file;
+    //     let normalization: Normalization = { ...state.entities[imageFile.id].normalization };
+    //     let levels = calcLevels(imageFile.hist, 10.0, 98.0);
+    //     normalization.autoBkgLevel = levels.backgroundLevel;
+    //     normalization.autoPeakLevel = levels.peakLevel;
+    //     normalization.autoLevelsInitialized = true;
 
-        return {
-          ...adapter.updateOne({
-            id: action.payload.file.id,
-            changes: {
-              normalization: normalization,
-            }
-          }, state)
-        }
-      }
-      return state;
-    }
+    //     return {
+    //       ...adapter.updateOne({
+    //         id: action.payload.file.id,
+    //         changes: {
+    //           normalization: normalization,
+    //         }
+    //       }, state)
+    //     }
+    //   }
+    //   return state;
+    // }
     case imageFileActions.INIT_IMAGE_TILES: {
       let imageFile = action.payload.file;
       let normalization: Normalization = { ...state.entities[imageFile.id].normalization };
@@ -286,7 +260,11 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
     case normalizationActions.UPDATE_NORMALIZER: {
       let imageFile = action.payload.file;
       let normalization: Normalization = { ...state.entities[imageFile.id].normalization };
-      normalization.normalizer = Object.assign({ ...normalization.normalizer }, action.payload.changes);
+      normalization.normalizer = {
+        ...normalization.normalizer,
+        ...action.payload.changes
+      };
+      normalization.autoLevelsInitialized = true;
 
       return {
         ...adapter.updateOne({
@@ -509,8 +487,8 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
     case transformationActions.UPDATE_CURRENT_VIEWPORT_SIZE: {
       let imageFile = action.payload.file;
       /*verify that the image was not just removed from the library*/
-      if(!state.entities[imageFile.id]) return state;
-      
+      if (!state.entities[imageFile.id]) return state;
+
       let transformation: Transformation = { ...state.entities[imageFile.id].transformation };
       transformation.viewportSize = action.payload.viewportSize;
       return {
@@ -523,58 +501,20 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
       }
     }
 
-    case plotterActions.UPDATE_CENTROID_SETTINGS: {
-      let centroidSettings = {
-        ...state.centroidSettings,
-        ...action.payload.changes
-      }
-
-      return {
-        ...state,
-        centroidSettings: centroidSettings
-      }
-
-    }
-
-    case plotterActions.UPDATE_PLOTTER_SETTINGS: {
-      let plotterSettings = {
-        ...state.plotterSettings,
-        ...action.payload.changes
-      }
-
-      return {
-        ...state,
-        plotterSettings: plotterSettings
-      }
-
-    }
+   
 
 
     case plotterActions.START_LINE: {
       let imageFile = action.payload.file as ImageFile;
       let point = action.payload.point;
       let plotterState: PlotterFileState = { ...state.entities[imageFile.id].plotter };
-
-      let xc = action.payload.point.x;
-      let yc = action.payload.point.y;
-      if (state.centroidSettings.centroidClicks) {
-        let result;
-        if (state.centroidSettings.useDiskCentroiding) {
-          result = centroidDisk(imageFile, point.x, point.y);
-        }
-        else {
-          result = centroidPsf(imageFile, point.x, point.y);
-        }
-
-        xc = result.x;
-        yc = result.y;
-      }
+      
       if (!plotterState.measuring) {
-        plotterState.lineMeasureStart = { x: xc, y: yc };
-        plotterState.lineMeasureEnd = { x: point.x, y: point.y };
+        plotterState.lineMeasureStart = { ...action.payload.point };
+        plotterState.lineMeasureEnd = { ...action.payload.point };
       }
       else {
-        plotterState.lineMeasureEnd = { x: xc, y: yc };
+        plotterState.lineMeasureEnd = { ...action.payload.point };
       }
       plotterState.measuring = !plotterState.measuring;
 
@@ -597,6 +537,23 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
       if (!plotterState.measuring) return state;
 
       plotterState.lineMeasureEnd = point;
+
+      return {
+        ...adapter.updateOne({
+          id: imageFile.id,
+          changes: {
+            plotter: plotterState,
+          }
+        }, state)
+      }
+    }
+
+    case plotterActions.UPDATE_PLOTTER_FILE_STATE: {
+      let imageFile = action.payload.file as ImageFile;
+      let plotterState: PlotterFileState = {
+        ...state.entities[imageFile.id].plotter,
+        ...action.payload.changes
+      };
 
       return {
         ...adapter.updateOne({
@@ -763,32 +720,20 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
       }
     }
 
-    case sourceExtractorActions.SET_SOURCE_EXTRACTION_MODE: {
+    case sonifierActions.SET_PROGRESS_LINE: {
+      let sonifierState = { ...state.entities[action.payload.file.id].sonifier };
+      sonifierState.progressLine = {...action.payload.line};
       return {
-        ...state,
-        sourceExtractorModeOption: action.payload.mode
+        ...adapter.updateOne({
+          id: action.payload.file.id,
+          changes: {
+            sonifier: sonifierState,
+          }
+        }, state)
       }
     }
 
-    case sourceExtractorActions.UPDATE_PHOT_SETTINGS: {
-      return {
-        ...state,
-        photSettings: {
-          ...state.photSettings,
-          ...action.payload.changes
-        }
-      }
-    }
-
-    case sourceExtractorActions.UPDATE_SOURCE_EXTRACTION_SETTINGS: {
-      return {
-        ...state,
-        sourceExtractionSettings: {
-          ...state.sourceExtractionSettings,
-          ...action.payload.changes
-        }
-      }
-    }
+   
 
     case sourceExtractorActions.SET_REGION: {
       let imageFile = action.payload.file;
@@ -817,113 +762,103 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
       }
     }
 
-    case sourceExtractorActions.EXTRACT_SOURCES_SUCCESS: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      sourceExtractorState.sources = [...action.payload.sources];
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    // case sourceExtractorActions.EXTRACT_SOURCES_SUCCESS: {
+    //   let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
+    //   sourceExtractorState.sources = [...action.payload.sources];
+    //   return {
+    //     ...adapter.updateOne({
+    //       id: action.payload.file.id,
+    //       changes: {
+    //         sourceExtractor: sourceExtractorState,
+    //       }
+    //     }, state)
+    //   }
+    // }
 
-    case sourceExtractorActions.SELECT_SOURCES: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      let sourceIds = action.payload.sources
-        .map(source => source.id)
-        .filter(sourceId => {
-          return sourceExtractorState.selectedSourceIds.indexOf(sourceId) == -1;
-        });
-      sourceExtractorState.selectedSourceIds = [...sourceExtractorState.selectedSourceIds, ...sourceIds];
+    // case sourceExtractorActions.UPDATE_SOURCE: {
+    //   let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
+    //   sourceExtractorState.sources = [...sourceExtractorState.sources];
+    //   let source = sourceExtractorState.sources.find(s => s.id == action.payload.sourceId)
+    //   if(!source) return state;
+    //   let sourceIndex = sourceExtractorState.sources.indexOf(source);
+    //   sourceExtractorState.sources[sourceIndex] = {...source, ...action.payload.changes};
+    //   return {
+    //     ...adapter.updateOne({
+    //       id: action.payload.file.id,
+    //       changes: {
+    //         sourceExtractor: sourceExtractorState,
+    //       }
+    //     }, state)
+    //   }
+    // }
 
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    
 
-    case sourceExtractorActions.DESELECT_SOURCES: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      let deselectedSourceIds = action.payload.sources.map(source => source.id);
-      let selectedSourceIds = sourceExtractorState.selectedSourceIds
-        .filter(sourceId => {
-          return deselectedSourceIds.indexOf(sourceId) == -1;
-        });
-      sourceExtractorState.selectedSourceIds = selectedSourceIds;
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    // case sourceExtractorActions.REMOVE_ALL_SOURCES: {
+    //   let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
+    //   sourceExtractorState.selectedSourceIds = [];
+    //   sourceExtractorState.sources = [];
+    //   return {
+    //     ...adapter.updateOne({
+    //       id: action.payload.file.id,
+    //       changes: {
+    //         sourceExtractor: sourceExtractorState,
+    //       }
+    //     }, state)
+    //   }
+    // }
 
-    case sourceExtractorActions.SET_SOURCE_SELECTION: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      sourceExtractorState.selectedSourceIds = action.payload.sources.map(source => source.id);
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    // case sourceExtractorActions.REMOVE_SELECTED_SOURCES: {
+    //   let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
+    //   let sources = sourceExtractorState.sources.filter(source => {
+    //     return sourceExtractorState.selectedSourceIds.indexOf(source.id) == -1;
+    //   })
+    //   sourceExtractorState.selectedSourceIds = [];
+    //   sourceExtractorState.sources = sources;
 
-    case sourceExtractorActions.REMOVE_ALL_SOURCES: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      sourceExtractorState.selectedSourceIds = [];
-      sourceExtractorState.sources = [];
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    //   return {
+    //     ...adapter.updateOne({
+    //       id: action.payload.file.id,
+    //       changes: {
+    //         sourceExtractor: sourceExtractorState,
+    //       }
+    //     }, state)
+    //   }
+    // }
 
-    case sourceExtractorActions.REMOVE_SELECTED_SOURCES: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      let sources = sourceExtractorState.sources.filter(source => {
-        return sourceExtractorState.selectedSourceIds.indexOf(source.id) == -1;
-      })
-      sourceExtractorState.selectedSourceIds = [];
-      sourceExtractorState.sources = sources;
+    // case sourceExtractorActions.PHOTOMETER_SOURCES_SUCCESS: {
+    //   let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
+    //   sourceExtractorState.sources = [...sourceExtractorState.sources, ...action.payload.sources];
+    //   return {
+    //     ...adapter.updateOne({
+    //       id: action.payload.file.id,
+    //       changes: {
+    //         sourceExtractor: sourceExtractorState,
+    //       }
+    //     }, state)
+    //   }
+    // }
 
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    // case sourceExtractorActions.SET_SOURCE_LABEL: {
+    //   let sourceExtractorState = {...state.entities[action.payload.file.id].sourceExtractor};
+    //   let sources = [...sourceExtractorState.sources];
+    //   let sourceIndex = sources.map(source => source.id).indexOf(action.payload.source.id);
+    //   if(sourceIndex == -1) return state;
+    //   sources[sourceIndex] = {...sources[sourceIndex], label: action.payload.label};
+    //   sourceExtractorState.sources = sources;
 
-    case sourceExtractorActions.PHOTOMETER_SOURCES_SUCCESS: {
-      let sourceExtractorState = { ...state.entities[action.payload.file.id].sourceExtractor };
-      sourceExtractorState.sources = [...sourceExtractorState.sources, ...action.payload.sources];
-      return {
-        ...adapter.updateOne({
-          id: action.payload.file.id,
-          changes: {
-            sourceExtractor: sourceExtractorState,
-          }
-        }, state)
-      }
-    }
+    //   return {
+    //     ...adapter.updateOne({
+    //       id: action.payload.file.id,
+    //       changes: {
+    //         sourceExtractor: sourceExtractorState,
+    //       }
+    //     }, state)
+    //   }
+    // }
+
+
+
 
 
 

@@ -27,7 +27,7 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
-import { ImageViewerPanelComponent } from './containers/image-viewer-panel/image-viewer-panel.component';
+import { WorkbenchViewerPanelComponent } from './containers/workbench/workbench-viewer-panel/workbench-viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { WorkbenchDataFileListComponent } from './containers/workbench/workbench-data-file-list/workbench-data-file-list.component';
 import { WorkbenchViewerGridComponent } from './containers/workbench/workbench-viewer-grid/workbench-viewer-grid.component';
@@ -37,9 +37,11 @@ import { ImageViewerTitleBarComponent } from './components/image-viewer-title-ba
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from './components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
+import { ProperMotionDialogComponent } from './components/proper-motion-dialog/proper-motion-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
+import { SvgTeardropMarkerComponent } from './components/svg-teardrop-marker/svg-teardrop-marker.component';
 import { PlotterComponent } from './components/plotter/plotter.component'
 import { AppFooterComponent } from './components/app-footer/app-footer.component'
 import { NavbarComponent } from './components/navbar/navbar.component';
@@ -70,7 +72,7 @@ export const COMPONENTS = [
   AppFooterComponent,
   WorkbenchDataFileListComponent,
   WorkbenchViewerGridComponent,
-  ImageViewerPanelComponent,
+  WorkbenchViewerPanelComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
   ImageViewerTitleBarComponent,
@@ -78,6 +80,7 @@ export const COMPONENTS = [
   NormalizerFormComponent,
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
+  SvgTeardropMarkerComponent,
   SvgLineMarkerComponent,
   DataProvidersComponent,
   DataProvidersIndexPageComponent,
@@ -92,6 +95,7 @@ export const COMPONENTS = [
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
+  ProperMotionDialogComponent,
   PlotterComponent
 ];
 
@@ -137,7 +141,8 @@ export const COMPONENTS = [
   exports: COMPONENTS,
   entryComponents: [
     PhotSettingsDialogComponent,
-    SourceExtractionSettingsDialogComponent
+    SourceExtractionSettingsDialogComponent,
+    ProperMotionDialogComponent
   ],
 
 })

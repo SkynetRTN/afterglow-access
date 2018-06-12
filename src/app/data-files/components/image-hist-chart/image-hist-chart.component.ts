@@ -110,8 +110,6 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   updateBackgroundPeakLines() {
     let self = this;
-
-
     if (this.nvD3.svg && this.hist && this.backgroundLevel != undefined && this.peakLevel != undefined) {
       let lineGroup = this.nvD3.svg.select('.nv-linesWrap').selectAll('g.levels');
       if (lineGroup.empty()) {
@@ -222,8 +220,11 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
       //console.log(this.chartOptions);
     }
-    this.updateBackgroundPeakLines();
-    this.updateChartOptions();
+    setTimeout(() => {
+      this.updateBackgroundPeakLines();
+    });
+    
+    //this.updateChartOptions();
   }
 
 }

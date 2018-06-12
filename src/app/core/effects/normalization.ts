@@ -15,48 +15,48 @@ import * as fromDataFile from '../../data-files/reducers';
 @Injectable()
 export class NormalizationEffects {
 
-  @Effect()
-  histLoaded$: Observable<Action> = this.actions$
-    .ofType<imageFileActions.LoadImageHistSuccess>(imageFileActions.LOAD_IMAGE_HIST_SUCCESS)
-    .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getImageFileStates)
-    )
-    .flatMap(([action, dataFiles, imageFileStates]) => {
-      let dataFile = dataFiles[action.payload.file.id];
-      let normalization = imageFileStates[dataFile.id].normalization;
-      let actions: Action[] = [];
+  // @Effect()
+  // histLoaded$: Observable<Action> = this.actions$
+  //   .ofType<imageFileActions.LoadImageHistSuccess>(imageFileActions.LOAD_IMAGE_HIST_SUCCESS)
+  //   .withLatestFrom(
+  //   this.store.select(fromDataFile.getDataFiles),
+  //   this.store.select(fromCore.getImageFileStates)
+  //   )
+  //   .flatMap(([action, dataFiles, imageFileStates]) => {
+  //     let dataFile = dataFiles[action.payload.file.id];
+  //     let normalization = imageFileStates[dataFile.id].normalization;
+  //     let actions: Action[] = [];
 
-      if (dataFile.type == DataFileType.IMAGE) {
-        let imageFile = dataFile as ImageFile;
-        if (!normalization.autoLevelsInitialized) actions.push(new normalizationActions.InitAutoLevels({ file: imageFile }));
-      }
-      return Observable.from(actions);
-    });
+  //     if (dataFile.type == DataFileType.IMAGE) {
+  //       let imageFile = dataFile as ImageFile;
+  //       if (!normalization.autoLevelsInitialized) actions.push(new normalizationActions.InitAutoLevels({ file: imageFile }));
+  //     }
+  //     return Observable.from(actions);
+  //   });
 
-  @Effect()
-  autoLevelsInitialized$: Observable<Action> = this.actions$
-    .ofType<normalizationActions.InitAutoLevels>(normalizationActions.INIT_AUTO_LEVELS)
-    .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getImageFileStates)
-    )
-    .flatMap(([action, dataFiles, imageFileStates]) => {
-      let dataFile = dataFiles[action.payload.file.id];
-      let actions: Action[] = [];
+  // @Effect()
+  // autoLevelsInitialized$: Observable<Action> = this.actions$
+  //   .ofType<normalizationActions.InitAutoLevels>(normalizationActions.INIT_AUTO_LEVELS)
+  //   .withLatestFrom(
+  //   this.store.select(fromDataFile.getDataFiles),
+  //   this.store.select(fromCore.getImageFileStates)
+  //   )
+  //   .flatMap(([action, dataFiles, imageFileStates]) => {
+  //     let dataFile = dataFiles[action.payload.file.id];
+  //     let actions: Action[] = [];
 
-      if (dataFile.type == DataFileType.IMAGE) {
-        let imageFile = dataFile as ImageFile;
-        let normalization = imageFileStates[imageFile.id].normalization;
-        actions.push(new normalizationActions.UpdateNormalizer({
-          file: imageFile, changes: {
-            backgroundLevel: normalization.autoBkgLevel,
-            peakLevel: normalization.autoPeakLevel
-          }
-        }));
-      }
-      return Observable.from(actions);
-    });
+  //     if (dataFile.type == DataFileType.IMAGE) {
+  //       let imageFile = dataFile as ImageFile;
+  //       let normalization = imageFileStates[imageFile.id].normalization;
+  //       actions.push(new normalizationActions.UpdateNormalizer({
+  //         file: imageFile, changes: {
+  //           backgroundLevel: normalization.autoBkgLevel,
+  //           peakLevel: normalization.autoPeakLevel
+  //         }
+  //       }));
+  //     }
+  //     return Observable.from(actions);
+  //   });
 
   @Effect()
   imageTileNormalized$: Observable<Action> = this.actions$

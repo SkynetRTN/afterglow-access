@@ -15,4 +15,5 @@ export interface SonifierFileState {
   viewportSync: boolean;
   duration: number;
   toneCount: number;
+  progressLine: { x1: number, y1: number, x2: number, y2: number };
 }

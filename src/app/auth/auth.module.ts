@@ -16,8 +16,9 @@ import { AuthGuard } from './services/auth-guard.service';
 import { AuthEffects } from './effects/auth.effects';
 import { reducers } from './reducers';
 import { MaterialModule } from '../material';
+import { OauthClientConsentPageComponent } from './containers/oauth-client-consent-page/oauth-client-consent-page.component';
 
-export const COMPONENTS = [LoginPageComponent, LoginFormComponent, LogoutPageComponent, OauthAuthorizedPageComponent];
+export const COMPONENTS = [LoginPageComponent, LoginFormComponent, LogoutPageComponent, OauthAuthorizedPageComponent, OauthClientConsentPageComponent];
 
 @NgModule({
   imports: [

@@ -4,14 +4,14 @@ import { AuthMethod } from '../models/auth-method';
 export interface State {
   error: string | null;
   pending: boolean;
-  nextUrl: string | null;
+  // nextUrl: string | null;
   authMethods: AuthMethod[];
 }
 
 export const initialState: State = {
   error: null,
   pending: false,
-  nextUrl: null,
+  // nextUrl: null,
   authMethods: []
 };
 
@@ -56,4 +56,4 @@ export function reducer(state = initialState, action: authActions.Actions): Stat
 export const getError = (state: State) => state.error;
 export const getPending = (state: State) => state.pending;
 export const getAuthMethods = (state: State) => state.authMethods;
-export const getNextUrl = (state: State) => state.nextUrl;
+// export const getNextUrl = (state: State) => state.nextUrl;

@@ -23,12 +23,14 @@ import { Point, Matrix } from 'paper';
 import * as fromDataFile from '../../data-files/reducers';
 import { DataFile, ImageFile, Header, getWidth, getHeight, getHasWcs, getWcs, hasOverlap } from '../../data-files/models/data-file';
 import { DataFileType } from '../../data-files/models/data-file-type';
-import { ImageHist } from '../../data-files/models/image-hist';
+import { ImageHist, calcPercentiles, calcLevels } from '../../data-files/models/image-hist';
 import { SourceExtractorRegionOption } from '../models/source-extractor-file-state';
 
 import * as fromCore from '../reducers'
 import * as workbenchActions from '../actions/workbench';
 import * as sonifierActions from '../actions/sonifier';
+import * as plotterActions from '../actions/plotter';
+import * as normalizationActions from '../actions/normalization';
 import * as transformationActions from '../actions/transformation';
 import * as dataFileActions from '../../data-files/actions/data-file';
 import * as imageFileActions from '../../data-files/actions/image-file';
@@ -39,6 +41,7 @@ import { Source } from '../models/source';
 import { ViewMode } from '../models/view-mode';
 import { Region } from '../models/region';
 import { getScale } from '../models/transformation';
+import { environment } from '../../../environments/environment.prod';
 
 // export const SEARCH_DEBOUNCE = new InjectionToken<number>('Search Debounce');
 // export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
@@ -72,17 +75,6 @@ export class WorkbenchEffects {
         actions.push(new workbenchActions.SelectDataFile(null));
       }
 
-      // if (workbenchGlobalState.selectedDataFileId != null) {
-      //   let newSelectedDataFileId = null;
-      //   if (dataFiles.length != 1) {
-      //     let selectedDataFile = dataFiles.find(dataFile => dataFile.id == workbenchGlobalState.selectedDataFileId)
-      //     let currentIndex = dataFiles.indexOf(selectedDataFile);
-      //     newSelectedDataFileId = dataFiles[Math.min(dataFiles.length - 1, currentIndex + 1)].id;
-      //   }
-      //   actions.push(new workbenchActions.SelectDataFile(newSelectedDataFileId));
-      // }
-
-
       return Observable.from(actions);
     });
 
@@ -97,21 +89,6 @@ export class WorkbenchEffects {
         let dataFile = dataFiles[action.payload];
         if (viewers.length != 0) {
 
-          // let matchedViewer = viewers.find((viewer, index) => viewer.fileId == dataFile.id);
-          // if (matchedViewer) {
-          //   let matchedViewerIndex = viewers.indexOf(matchedViewer);
-          //   let activeViewerIndex = viewers.indexOf(activeViewer);
-
-          //   if(viewMode == ViewMode.SINGLE) {
-          //     if(matchedViewerIndex != 0) actions.push(new workbenchActions.SetViewerFile({ viewerIndex: matchedViewerIndex, file: null }))
-          //   }
-          //   else if(activeViewer && activeViewerIndex != matchedViewerIndex) {
-          //     //change active viewer to one containing selected file
-          //     actions.push(new workbenchActions.SetActiveViewer({ viewerIndex: matchedViewerIndex }));
-          //     return Observable.from(actions);
-          //   }
-          // }
-
           if (!activeViewer) {
             activeViewer = viewers[0];
             actions.push(new workbenchActions.SetActiveViewer({ viewerIndex: viewers.indexOf(activeViewer) }));
@@ -119,59 +96,68 @@ export class WorkbenchEffects {
           if (activeViewer.fileId != dataFile.id) actions.push(new workbenchActions.SetViewerFile({ viewerIndex: viewers.indexOf(activeViewer), file: dataFile as ImageFile }))
         }
 
-        if (!dataFile.headerLoaded && !dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr({ file: dataFile }));
       }
       return Observable.from(actions);
     });
 
   @Effect()
-  updateViewerSyncEnabled$: Observable<Action> = this.actions$
-    .ofType<workbenchActions.SetViewerFile
-    | workbenchActions.SetViewMode
-    | dataFileActions.LoadDataFileHdrSuccess>(
-      workbenchActions.SET_VIEWER_FILE,
-      workbenchActions.SET_VIEW_MODE,
-      dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS
-    )
+  onSetViewerFile$: Observable<Action> = this.actions$
+    .ofType<workbenchActions.SetViewerFile | dataFileActions.LoadDataFileHdrSuccess | imageFileActions.LoadImageHistSuccess>(workbenchActions.SET_VIEWER_FILE, dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS, imageFileActions.LOAD_IMAGE_HIST_SUCCESS)
     .withLatestFrom(
       this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getWorkbenchGlobalState),
+      this.store.select(fromCore.getWorkbenchState),
       this.store.select(fromCore.getImageFileStates),
   )
     .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+      //initialize file for workbench
       let actions = [];
+      let dataFile = dataFiles[action.payload.file.id] as ImageFile;
+      //when setting file, use other viewer as src for viewer sync.  this will transform the new file to match the old image it was replacing
+      let pendingViewer = workbenchState.viewers.find(viewer => viewer.pendingFileId == action.payload.file.id);
+      let pendingFile = dataFiles[pendingViewer.pendingFileId] as ImageFile;
+      let pendingViewerIndex = workbenchState.viewers.indexOf(pendingViewer);
+      if (pendingViewer) {
+        if (!dataFile.headerLoaded) {
+          if (!dataFile.headerLoading) actions.push(new dataFileActions.LoadDataFileHdr({ file: dataFile }));
+        }
+        else if (!dataFile.histLoaded) {
+          if (!dataFile.histLoading) actions.push(new imageFileActions.LoadImageHist({ file: dataFile }));
+        }
+        else {
 
-      let viewerSyncAvailable = false;
-      if (workbenchState.viewMode != ViewMode.SINGLE) {
-        let targetViewers = workbenchState.viewers.filter(viewer => {
-          return viewer.fileId != null && dataFiles[viewer.fileId] && dataFiles[viewer.fileId].headerLoaded && getHasWcs(dataFiles[viewer.fileId] as ImageFile)
-        })
-        if (targetViewers.length > 1) {
-          for (let srcViewerIndex = 0; srcViewerIndex < targetViewers.length; srcViewerIndex++) {
-            let srcViewer = targetViewers[srcViewerIndex];
-            let srcFile: ImageFile = dataFiles[srcViewer.fileId] as ImageFile;
 
-            for (let targetViewerIndex = srcViewerIndex + 1; targetViewerIndex < targetViewers.length; targetViewerIndex++) {
-              let targetViewer = targetViewers[targetViewerIndex];
-              let targetFile: ImageFile = dataFiles[targetViewer.fileId] as ImageFile;
-              let overlap = hasOverlap(srcFile, targetFile);
-
-              if (overlap) {
-                viewerSyncAvailable = true;
-                break;
-              }
-
-            }
-
-            if (viewerSyncAvailable) break;
+          //find reference file in the event syncing is requested
+          let referenceFileId = pendingViewer.fileId;
+          if (referenceFileId == null) {
+            let referenceViewer = workbenchState.viewers.find((viewer, index) => index != pendingViewerIndex && viewer.fileId != null);
+            if (referenceViewer) referenceFileId = referenceViewer.fileId;
           }
 
+          //normalization
+          let normalizationState = imageFileStates[dataFile.id].normalization;
+          if (workbenchState.normalizationSyncEnabled && referenceFileId) {
+            actions.push(new workbenchActions.SyncFileNormalizations({ reference: dataFiles[referenceFileId] as ImageFile, files: [pendingFile] }));
+          }
+          else if (!normalizationState.autoLevelsInitialized) {
+            //calculate good defaults based on histogram
+            let levels = calcLevels(dataFile.hist, environment.lowerPercentileDefault, environment.upperPercentileDefault);
+            actions.push(new normalizationActions.UpdateNormalizer({ file: pendingFile, changes: { peakLevel: levels.peakLevel, backgroundLevel: levels.backgroundLevel } }));
+          }
+
+          let sonifierState = imageFileStates[dataFile.id].sonifier;
+          if (!sonifierState.regionHistoryInitialized) {
+            actions.push(new sonifierActions.AddRegionToHistory({ file: dataFile, region: { x: 0.5, y: 0.5, width: getWidth(dataFile), height: getHeight(dataFile) } }));
+          }
+
+          if (referenceFileId) {
+            //sync pending file transformation to current file
+            if (workbenchState.viewerSyncEnabled) actions.push(new workbenchActions.SyncFileTransformations({ reference: dataFiles[referenceFileId] as ImageFile, files: [dataFiles[pendingViewer.pendingFileId] as ImageFile] }));
+            if (workbenchState.plotterSyncEnabled) actions.push(new workbenchActions.SyncFilePlotters({ reference: dataFiles[referenceFileId] as ImageFile, files: [dataFiles[pendingViewer.pendingFileId] as ImageFile] }));
+          }
+
+          actions.push(new workbenchActions.SetViewerFileSuccess({ viewerIndex: pendingViewerIndex }));
         }
       }
-
-
-      if (viewerSyncAvailable != workbenchState.viewerSyncAvailable) actions.push(new workbenchActions.SetViewerSyncAvailable({ available: viewerSyncAvailable }))
-
       return Observable.from(actions);
     });
 
@@ -183,24 +169,23 @@ export class WorkbenchEffects {
     )
     .withLatestFrom(
       this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getWorkbenchGlobalState),
+      this.store.select(fromCore.getWorkbenchState),
       this.store.select(fromCore.getImageFileStates),
   )
     .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
       let actions = [];
-      let activeViewer = workbenchState.viewers[workbenchState.activeViewerIndex];
-      if (workbenchState.viewerSyncAvailable && workbenchState.viewerSyncEnabled && dataFiles[activeViewer.fileId]) {
-        actions.push(new workbenchActions.UpdateViewerSync({ srcFile: dataFiles[activeViewer.fileId] as ImageFile }))
+      let referenceFile = dataFiles[workbenchState.viewers[workbenchState.activeViewerIndex].fileId] as ImageFile;
+      let files = workbenchState.viewers.filter((viewer, index) => index != workbenchState.activeViewerIndex && viewer.fileId !== null).map(viewer => dataFiles[viewer.fileId] as ImageFile);
+      if (referenceFile && files.length != 0) {
+        if (workbenchState.viewerSyncEnabled) actions.push(new workbenchActions.SyncFileTransformations({ reference: referenceFile, files: files }));
       }
+
       return Observable.from(actions);
     });
 
-
-  onTransformChangeSkipCount = 0;
   @Effect()
   onTransformChange$: Observable<Action> = this.actions$
-    .ofType<workbenchActions.SetViewerFile
-    | transformationActions.MoveBy
+    .ofType<transformationActions.MoveBy
     | transformationActions.ZoomBy
     | transformationActions.RotateBy
     | transformationActions.Flip
@@ -208,7 +193,6 @@ export class WorkbenchEffects {
     | transformationActions.SetViewportTransform
     | transformationActions.SetImageTransform
     >(
-      workbenchActions.SET_VIEWER_FILE,
       transformationActions.MOVE_BY,
       transformationActions.ZOOM_BY,
       transformationActions.ROTATE_BY,
@@ -219,109 +203,244 @@ export class WorkbenchEffects {
     )
     .withLatestFrom(
       this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getWorkbenchGlobalState),
+      this.store.select(fromCore.getWorkbenchState),
       this.store.select(fromCore.getImageFileStates),
   )
     .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
       let actions = [];
-      if (this.onTransformChangeSkipCount != 0) {
-        this.onTransformChangeSkipCount--;
-        return Observable.from(actions);
-      }
-      actions.push(new workbenchActions.UpdateViewerSync({ srcFile: action.payload.file }));
+
+      let activeViewer = workbenchState.viewers[workbenchState.activeViewerIndex];
+      if (!workbenchState.viewerSyncEnabled || !activeViewer || activeViewer.fileId != action.payload.file.id) return Observable.from(actions);
+
+      let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
+      let files = workbenchState.viewers.filter((viewer, index) => index != workbenchState.activeViewerIndex && viewer.fileId !== null).map(viewer => dataFiles[viewer.fileId] as ImageFile);
+      actions.push(new workbenchActions.SyncFileTransformations({ reference: referenceFile, files: files }));
+
 
       return Observable.from(actions);
     });
 
 
+
   @Effect()
-  updateViewerSync$: Observable<Action> = this.actions$
-    .ofType<workbenchActions.UpdateViewerSync
-    >(
-      workbenchActions.UPDATE_VIEWER_SYNC
-    )
+  onNormalizationChange$: Observable<Action> = this.actions$
+    .ofType<normalizationActions.UpdateNormalizer>(normalizationActions.UPDATE_NORMALIZER)
     .withLatestFrom(
       this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getWorkbenchGlobalState),
+      this.store.select(fromCore.getWorkbenchState),
       this.store.select(fromCore.getImageFileStates),
   )
     .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
       let actions = [];
 
+      let activeViewer = workbenchState.viewers[workbenchState.activeViewerIndex];
+      if (!workbenchState.normalizationSyncEnabled || !activeViewer || activeViewer.fileId != action.payload.file.id) return Observable.from(actions);
+
+      let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
+      let files = workbenchState.viewers.filter((viewer, index) => index != workbenchState.activeViewerIndex && viewer.fileId !== null).map(viewer => dataFiles[viewer.fileId] as ImageFile);
+      actions.push(new workbenchActions.SyncFileNormalizations({ reference: referenceFile, files: files }));
 
 
-      if (!workbenchState.viewerSyncAvailable || !workbenchState.viewerSyncEnabled) return Observable.from(actions);
-      let srcFile: ImageFile = action.payload.srcFile;
+      return Observable.from(actions);
+    });
 
-      let targetViewers = workbenchState.viewers.filter(viewer => {
-        return viewer.fileId != null && dataFiles[viewer.fileId] && hasOverlap(srcFile, dataFiles[viewer.fileId] as ImageFile)
-      })
-      let srcViewer = targetViewers.find(viewer => viewer.fileId == action.payload.srcFile.id);
-      if (srcViewer) {
-        let srcWcs = getWcs(srcFile);
-        let srcWcsTransform = new Matrix(srcWcs.cd11, srcWcs.cd21, srcWcs.cd12, srcWcs.cd22, 0, 0);
-        let originWorld = srcWcs.pixToWorld([0, 0]);
 
-        targetViewers.forEach(viewer => {
-          if (viewer.fileId == srcViewer.fileId) return;
+    @Effect()
+    onPlotterChange$: Observable<Action> = this.actions$
+      .ofType<plotterActions.StartLine | plotterActions.UpdateLine | plotterActions.UpdatePlotterFileState>(plotterActions.START_LINE, plotterActions.UPDATE_LINE, plotterActions.UPDATE_PLOTTER_FILE_STATE)
+      .withLatestFrom(
+        this.store.select(fromDataFile.getDataFiles),
+        this.store.select(fromCore.getWorkbenchState),
+        this.store.select(fromCore.getImageFileStates),
+    )
+      .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+        let actions = [];
+  
+        let activeViewer = workbenchState.viewers[workbenchState.activeViewerIndex];
+        if (!workbenchState.plotterSyncEnabled || !activeViewer || activeViewer.fileId != action.payload.file.id) return Observable.from(actions);
+  
+        let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
+        let files = workbenchState.viewers.filter((viewer, index) => index != workbenchState.activeViewerIndex && viewer.fileId !== null).map(viewer => dataFiles[viewer.fileId] as ImageFile);
+        actions.push(new workbenchActions.SyncFilePlotters({ reference: referenceFile, files: files }));
+  
+  
+        return Observable.from(actions);
+      });
 
-          let targetFile: ImageFile = dataFiles[viewer.fileId] as ImageFile;
+
+
+  // plotterSyncSkip = 0
+  // @Effect()
+  // plotterSyncStartLine$: Observable<Action> = this.actions$
+  //   .ofType<plotterActions.StartLine
+  //   | plotterActions.UpdateLine
+  //   >(
+  //     plotterActions.START_LINE,
+  //     plotterActions.UPDATE_LINE
+  //   )
+  //   .withLatestFrom(
+  //     this.store.select(fromDataFile.getDataFiles),
+  //     this.store.select(fromCore.getWorkbenchGlobalState),
+  //     this.store.select(fromCore.getImageFileStates),
+  // )
+  //   .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+  //     let actions = [];
+  //     if (this.plotterSyncSkip != 0) {
+  //       this.plotterSyncSkip--;
+  //       return Observable.from(actions);
+  //     }
+
+  //     if (!workbenchState.viewerSyncEnabled) return Observable.from(actions);
+  //     let srcFile: ImageFile = action.payload.file;
+
+  //     let targetViewers = workbenchState.viewers.filter(viewer => {
+  //       return viewer.fileId != null && dataFiles[viewer.fileId] && dataFiles[viewer.fileId].headerLoaded && (workbenchState.viewerSyncMode == ViewerSyncMode.PIXEL || hasOverlap(srcFile, dataFiles[viewer.fileId] as ImageFile));
+  //     })
+  //     if (targetViewers.length <= 1) return Observable.from(actions);
+
+  //     let srcViewer = targetViewers.find(viewer => viewer.fileId == action.payload.file.id);
+  //     if (srcViewer) {
+  //       if (workbenchState.viewerSyncMode == ViewerSyncMode.SKY) {
+  //         let srcWcs = getWcs(srcFile);
+  //         let srcWorld = srcWcs.pixToWorld([action.payload.point.x, action.payload.point.y]);
+  //         targetViewers.forEach(viewer => {
+  //           if (viewer.fileId == srcViewer.fileId) return;
+
+  //           let targetFile: ImageFile = dataFiles[viewer.fileId] as ImageFile;
+  //           let targetWcs = getWcs(targetFile);
+
+  //           if (hasOverlap(srcFile, targetFile)) {
+  //             let targetPix = targetWcs.worldToPix(srcWorld);
+  //             // do not allow centroiding.  Forces exact pixel location to be synced
+  //             if (action.type == plotterActions.START_LINE) {
+  //               actions.push(new plotterActions.StartLine({ file: targetFile, point: { x: targetPix[0], y: targetPix[1] } }));
+  //             }
+  //             else {
+  //               actions.push(new plotterActions.UpdateLine({ file: targetFile, point: { x: targetPix[0], y: targetPix[1] } }))
+  //             }
+
+  //             this.plotterSyncSkip++;
+  //           }
+  //         })
+  //       }
+  //       else {
+  //         targetViewers.forEach(viewer => {
+  //           if (viewer.fileId == srcViewer.fileId) return;
+
+  //           let targetFile: ImageFile = dataFiles[viewer.fileId] as ImageFile;
+  //           if (action.type == plotterActions.START_LINE) {
+  //             actions.push(new plotterActions.StartLine({ file: targetFile, point: { x: action.payload.point.x, y: action.payload.point.y } }));
+  //           }
+  //           else {
+  //             actions.push(new plotterActions.UpdateLine({ file: targetFile, point: { x: action.payload.point.x, y: action.payload.point.y } }))
+  //           }
+  //           this.plotterSyncSkip++;
+  //         })
+  //       }
+
+  //     }
+  //     return Observable.from(actions);
+  //   });
+
+  @Effect()
+  syncFileNormalizations$: Observable<Action> = this.actions$
+    .ofType<workbenchActions.SyncFileNormalizations>(workbenchActions.SYNC_FILE_NORMALIZATIONS)
+    .withLatestFrom(
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getWorkbenchState),
+      this.store.select(fromCore.getImageFileStates)
+    )
+    .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+      let actions = [];
+      let srcFile: ImageFile = action.payload.reference;
+      let targetFiles: ImageFile[] = action.payload.files;
+      let srcNormalizer = imageFileStates[srcFile.id].normalization.normalizer;
+      let percentiles = calcPercentiles(srcFile.hist, srcNormalizer.backgroundLevel, srcNormalizer.peakLevel);
+
+      targetFiles.forEach(targetFile => {
+        if (targetFile.id == srcFile.id) return;
+        let levels = calcLevels(targetFile.hist, percentiles.lowerPercentile, percentiles.upperPercentile);
+        actions.push(new normalizationActions.UpdateNormalizer({ file: targetFile, changes: { ...srcNormalizer, peakLevel: levels.peakLevel, backgroundLevel: levels.backgroundLevel } }));
+      });
+      return Observable.from(actions);
+    });
+
+
+  @Effect()
+  syncFilePlotters$: Observable<Action> = this.actions$
+    .ofType<workbenchActions.SyncFilePlotters>(workbenchActions.SYNC_FILE_PLOTTERS)
+    .withLatestFrom(
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getWorkbenchState),
+      this.store.select(fromCore.getImageFileStates)
+    )
+    .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+      let actions = [];
+      let srcFile: ImageFile = action.payload.reference;
+      let targetFiles: ImageFile[] = action.payload.files;
+      let srcPlotter = imageFileStates[srcFile.id].plotter
+
+      targetFiles.forEach(targetFile => {
+        if (targetFile.id == srcFile.id) return;
+        actions.push(new plotterActions.UpdatePlotterFileState({ file: targetFile, changes: { ...srcPlotter } }));
+      });
+      return Observable.from(actions);
+    });
+
+
+
+  @Effect()
+  syncFileTransformations$: Observable<Action> = this.actions$
+    .ofType<workbenchActions.SyncFileTransformations
+    >(
+      workbenchActions.SYNC_FILE_TRANSFORMATIONS
+    )
+    .withLatestFrom(
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getWorkbenchState),
+      this.store.select(fromCore.getImageFileStates),
+  )
+    .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+      let actions = [];
+      let srcFile: ImageFile = action.payload.reference;
+      let targetFiles: ImageFile[] = action.payload.files;
+
+      let srcHasWcs = getHasWcs(srcFile);
+      let srcImageTransform = imageFileStates[srcFile.id].transformation.imageTransform;
+      let srcViewportTransform = imageFileStates[srcFile.id].transformation.viewportTransform;
+
+      targetFiles.forEach(targetFile => {
+        if (targetFile.id == srcFile.id) return;
+
+        let targetHasWcs = getHasWcs(targetFile);
+
+        if (srcHasWcs && targetHasWcs) {
+          let srcWcs = getWcs(srcFile);
+          let srcWcsTransform = new Matrix(srcWcs.cd11, srcWcs.cd21, srcWcs.cd12, srcWcs.cd22, 0, 0);
+          let originWorld = srcWcs.pixToWorld([0, 0]);
           let targetWcs = getWcs(targetFile);
           let originPixels = targetWcs.worldToPix(originWorld);
           let targetWcsTransform = new Matrix(targetWcs.cd11, targetWcs.cd21, targetWcs.cd12, targetWcs.cd22, 0, 0);
           let targetImageFileState = imageFileStates[targetFile.id];
-          let targetImageTransformation = targetImageFileState.transformation;
 
           if (hasOverlap(srcFile, targetFile)) {
             let srcToTargetTransform = srcWcsTransform.inverted().appended(targetWcsTransform).translate(-originPixels[0], -originPixels[1]);
             let targetImageTransform = imageFileStates[srcFile.id].transformation.imageTransform.appended(srcToTargetTransform);
             actions.push(new transformationActions.SetImageTransform({ file: targetFile, transform: targetImageTransform }));
-            this.onTransformChangeSkipCount++;
             actions.push(new transformationActions.SetViewportTransform({ file: targetFile, transform: imageFileStates[srcFile.id].transformation.viewportTransform }))
-            this.onTransformChangeSkipCount++;
           }
-        })
-      }
-      return Observable.from(actions);
-    });
-
-
-  @Effect()
-  headerLoaded$: Observable<Action> = this.actions$
-    .ofType<dataFileActions.LoadDataFileHdrSuccess>(dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS)
-    .withLatestFrom(
-      this.store.select(fromDataFile.getDataFiles),
-      this.store.select(fromCore.getImageFileGlobalState),
-      this.store.select(fromCore.getImageFileStates),
-  )
-    .flatMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
-      let dataFile = dataFiles[action.payload.file.id];
-      let actions: Action[] = [];
-
-      if (dataFile.type == DataFileType.IMAGE) {
-        //add effects for image file selection
-        let imageFile = dataFile as ImageFile;
-
-        //if histogram not loaded,  load now
-        if (!imageFile.histLoaded && !imageFile.histLoading) actions.push(new imageFileActions.LoadImageHist({ file: imageFile }));
-
-        let sonifierState = imageFileStates[imageFile.id].sonifier;
-
-        if (!sonifierState.regionHistoryInitialized) {
-          actions.push(new sonifierActions.AddRegionToHistory({ file: imageFile, region: { x: 0.5, y: 0.5, width: getWidth(imageFile), height: getHeight(imageFile) } }));
-        }
-
-        let sourceExtractorState = imageFileStates[imageFile.id].sourceExtractor;
-        //actions.push(new workbenchActions.UpdateSourceExtractorRegion({file: imageFile}));
-        if (sourceExtractorState.regionOption == SourceExtractorRegionOption.ENTIRE_IMAGE) {
 
         }
+        else {
 
-      }
+          let targetImageFileState = imageFileStates[targetFile.id];
+          actions.push(new transformationActions.SetImageTransform({ file: targetFile, transform: srcImageTransform }));
+          actions.push(new transformationActions.SetViewportTransform({ file: targetFile, transform: srcViewportTransform }))
+        }
+
+      })
       return Observable.from(actions);
     });
-
-
 
 
 

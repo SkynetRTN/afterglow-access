@@ -34,7 +34,6 @@ export interface ViewerGridMarkerMouseEvent extends MarkerMouseEvent {
 })
 export class WorkbenchViewerGridComponent implements OnInit {
   ViewMode = ViewMode;
-  @Input() markers: Marker[] = [];
 
   @Output() onImageClick = new EventEmitter<ViewerGridCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerGridCanvasMouseEvent>();
@@ -45,11 +44,9 @@ export class WorkbenchViewerGridComponent implements OnInit {
   activeViewerIndex$: Observable<number>;
   files$: Observable<Dictionary<DataFile>>;
   fileStates$: Observable<Dictionary<ImageFileState>>;
-
-  skipNextMouseEvent = false;
-
   subs: Subscription[] = [];
   activeViewerIndex: number;
+  mouseDownActiveViewerIndex: number;
 
   constructor(private store: Store<fromRoot.State>) {
     this.viewMode$ = this.store.select(fromCore.workbench.getViewMode);
@@ -78,8 +75,8 @@ export class WorkbenchViewerGridComponent implements OnInit {
   }
 
   setActiveViewer($event: Event, viewerIndex: number, viewer: Viewer) {
+    this.mouseDownActiveViewerIndex = this.activeViewerIndex;
     if (viewerIndex != this.activeViewerIndex) {
-      this.skipNextMouseEvent = true;
       this.store.dispatch(new workbenchActions.SetActiveViewer({ viewerIndex: viewerIndex }));
       $event.preventDefault();
       $event.stopImmediatePropagation();
@@ -95,10 +92,8 @@ export class WorkbenchViewerGridComponent implements OnInit {
   }
 
   handleImageClick($event: CanvasMouseEvent, viewerIndex: number, viewer: Viewer) {
-    if(this.skipNextMouseEvent) {
-      this.skipNextMouseEvent = false;
-      return;
-    }
+    if(viewerIndex != this.mouseDownActiveViewerIndex) return;
+
     this.onImageClick.emit({
       viewerIndex: viewerIndex,
       viewer: viewer,
@@ -107,10 +102,8 @@ export class WorkbenchViewerGridComponent implements OnInit {
   }
 
   handleMarkerClick($event: MarkerMouseEvent, viewerIndex: number, viewer: Viewer) {
-    if(this.skipNextMouseEvent) {
-      this.skipNextMouseEvent = false;
-      return;
-    }
+    if(viewerIndex != this.mouseDownActiveViewerIndex) return;
+
     this.onMarkerClick.emit({
       viewerIndex: viewerIndex,
       viewer: viewer,

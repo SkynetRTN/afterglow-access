@@ -320,7 +320,7 @@ export class Wcs {
     let xpix = xy[0];
     let ypix = xy[1];
 
-    
+
     let h = this.params['NAXIS2'];
     let crpix1 = this.params['CRPIX1'];
     let crval1 = this.params['CRVAL1'];
@@ -462,12 +462,17 @@ export class Wcs {
     let cd2_1 = this.params['CD2_1'];
     let cd2_2 = this.params['CD2_2'];
 
-    if (this.isFlipped()) {
-      return 180 + Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
-    }
-    else {
-      return 180 - Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
-    }
+    let result = Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
+    result = result % 360;
+    if (result < 0) result += 360;
+    return result;
+
+    // if (this.isFlipped()) {
+    //   return 180 + ;
+    // }
+    // else {
+    //   return 180 - Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
+    // }
   }
 
 }

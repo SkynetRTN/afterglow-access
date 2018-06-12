@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageViewerPanelComponent } from './image-viewer-panel.component';
+import { ProperMotionDialogComponent } from './proper-motion-dialog.component';
 
-describe('ViewerComponent', () => {
-  let component: ImageViewerPanelComponent;
-  let fixture: ComponentFixture<ImageViewerPanelComponent>;
+describe('PhotSettingsDialogComponent', () => {
+  let component: ProperMotionDialogComponent;
+  let fixture: ComponentFixture<ProperMotionDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ImageViewerPanelComponent ]
+      declarations: [ ProperMotionDialogComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ImageViewerPanelComponent);
+    fixture = TestBed.createComponent(ProperMotionDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

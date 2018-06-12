@@ -11,6 +11,8 @@ export interface Normalization {
   
   normalizer: PixelNormalizer;
 
+  autoUpperPercentile: number;
+  autoLowerPercentile: number;
   autoLevelsInitialized: boolean;
   autoPeakLevel?: number;
   autoBkgLevel?: number;
