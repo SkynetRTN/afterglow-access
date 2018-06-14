@@ -533,7 +533,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private get initialized() {
-    return this.viewInitialized && this.imageFile && this.normalization && this.imageFile.headerLoaded;
+    return this.viewInitialized && this.imageFile && this.normalization && this.imageFile.headerLoaded && this.transformation;
   }
 
   public lazyLoadPixels() {
