@@ -136,7 +136,7 @@ export function calcLevels(
       let y0 = getBinCenter(hist, i);
       let y1 = getBinCenter(hist, i+1);
       let x = maxPixCount;
-      let y = (y0*(x1-x)+y1*(x-x0))/(x1-x0);
+      let y = (x1 == x0) ? y0 : (y0*(x1-x)+y1*(x-x0))/(x1-x0);
       peakLevel = y;
       if (blackComplete) {
         break;
@@ -147,7 +147,7 @@ export function calcLevels(
       let y0 = getBinCenter(hist, i);
       let y1 = getBinCenter(hist, i+1);
       let x = minPixCount;
-      let y = (y0*(x1-x)+y1*(x-x0))/(x1-x0);
+      let y = (x1 == x0) ? y0 : (y0*(x1-x)+y1*(x-x0))/(x1-x0);
       backgroundLevel = y;
       if (blackComplete) {
         break;
