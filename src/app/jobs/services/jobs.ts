@@ -3,7 +3,6 @@ import 'rxjs/add/observable/of';
 import { Injectable } from '@angular/core';
 import { Location } from '@angular/common';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import changeCase = require('change-case');
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs/Observable';
 import { JobType } from '../models/job-types';
