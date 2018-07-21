@@ -24,6 +24,8 @@ import { Viewer } from '../../../models/viewer';
 import { Dictionary } from '@ngrx/entity/src/models';
 import { Marker, MarkerType } from '../../../models/marker';
 import { WorkbenchTool } from '../../../models/workbench-state';
+import { Hotkey, HotkeysService } from '../../../../../../node_modules/angular2-hotkeys';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-sonifier-page',
@@ -34,6 +36,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   imageFile$: Observable<ImageFile>;
   imageFileState$: Observable<ImageFileState>;
   sonifierState$: Observable<SonifierFileState>;
+  regionMode: SonifierRegionMode;
   showConfig$: Observable<boolean>;
   lastImageFile: ImageFile;
   lastViewerState: Normalization;
@@ -43,6 +46,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   progressLine$: Observable<{ x1: number, y1: number, x2: number, y2: number }>;
   markers$: Observable<Marker[]>;
   loading: boolean;
+  hotKeys: Array<Hotkey> = [];
 
   SonifierRegionMode = SonifierRegionMode;
   showPlayer: boolean = false;
@@ -51,11 +55,12 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   subs: Subscription[] = [];
   activeViewer: Viewer;
 
-  constructor(private store: Store<fromRoot.State>, private afterglowService: AfterglowDataFileService) {
+  constructor(private store: Store<fromRoot.State>, private afterglowService: AfterglowDataFileService, private _hotkeysService: HotkeysService, private ref: ChangeDetectorRef) {
     this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.sonifierState$ = this.imageFileState$.filter(state => state != null).map(state => state.sonifier)
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+
 
     this.clearProgressLine$ = this.sonifierState$.filter(state => {
       return (state && this.sonificationSrcUri != state.sonificationUri)
@@ -70,6 +75,59 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
     this.store.dispatch(new workbenchActions.SetActiveTool({tool: WorkbenchTool.SONIFIER}));
 
+    this.hotKeys.push(new Hotkey('t 1', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.selectSubregionByTime(0)
+      return false; // Prevent bubbling
+    }, undefined, 'Time Navigation: Early'));
+
+    this.hotKeys.push(new Hotkey('t 2', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.selectSubregionByTime(1)
+      return false; // Prevent bubbling
+    }, undefined, 'Time Navigation: Mid'));
+
+    this.hotKeys.push(new Hotkey('t 3', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.selectSubregionByTime(0)
+      return false; // Prevent bubbling
+    }, undefined, 'Time Navigation: Late'));
+
+    this.hotKeys.push(new Hotkey('f 1', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.selectSubregionByFrequency(0)
+      return false; // Prevent bubbling
+    }, undefined, 'Frequency Navigation: Low'));
+
+    this.hotKeys.push(new Hotkey('f 2', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.selectSubregionByFrequency(1)
+      return false; // Prevent bubbling
+    }, undefined, 'Frequency Navigation: Mid'));
+
+    this.hotKeys.push(new Hotkey('f 3', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.selectSubregionByFrequency(0)
+      return false; // Prevent bubbling
+    }, undefined, 'Frequency Navigation: High'));
+
+    this.hotKeys.push(new Hotkey('enter', (event: KeyboardEvent): boolean => {
+      this.sonify();
+      this.ref.markForCheck();
+      return false; // Prevent bubbling
+    }, undefined, 'Play Sonification'));
+
+    this.hotKeys.push(new Hotkey('esc', (event: KeyboardEvent): boolean => {
+      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      this.resetRegionSelection();
+      return false; // Prevent bubbling
+    }, undefined, 'Reset Sonification Region'));
+
+    this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
+
+
+
+
   }
 
   ngOnInit() {
@@ -82,6 +140,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
+    this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
 
   ngOnChanges() {
