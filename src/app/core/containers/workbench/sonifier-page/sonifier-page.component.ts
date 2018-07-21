@@ -89,7 +89,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
     this.hotKeys.push(new Hotkey('t 3', (event: KeyboardEvent): boolean => {
       if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
-      this.selectSubregionByTime(0)
+      this.selectSubregionByTime(2)
       return false; // Prevent bubbling
     }, undefined, 'Time Navigation: Late'));
 
@@ -107,7 +107,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
     this.hotKeys.push(new Hotkey('f 3', (event: KeyboardEvent): boolean => {
       if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
-      this.selectSubregionByFrequency(0)
+      this.selectSubregionByFrequency(2)
       return false; // Prevent bubbling
     }, undefined, 'Frequency Navigation: High'));
 
