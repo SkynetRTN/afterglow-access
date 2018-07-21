@@ -38,24 +38,27 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    if (!this.normalizer || this.normalizer.peakLevel == null || this.normalizer.backgroundLevel == null) {
-      this.levelStep = 0.1;
-    }
-    else {
-      let step = Math.abs(this.normalizer.peakLevel - this.normalizer.backgroundLevel) / 50;
-      if (step == 0) step = 0.1
+    // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
+    // if (!this.normalizer || this.normalizer.peakLevel == null || this.normalizer.backgroundLevel == null) {
+    //   this.levelStep = 0.1;
+    // }
+    // else {
+    //   let step = Math.abs(this.normalizer.peakLevel - this.normalizer.backgroundLevel) / 50;
+    //   if (step == 0) step = 0.1
 
-      let precision = Math.floor(Math.log10(step)) * -1;
-      let factor = Math.pow(10, precision);
-      this.levelStep = Math.round(step * factor) / factor;
+    //   let precision = Math.floor(Math.log10(step)) * -1;
+    //   let factor = Math.pow(10, precision);
+    //   this.levelStep = Math.round(step * factor) / factor;
         
-      this.normalizer.peakLevel = this.levelStep * Math.round(this.normalizer.peakLevel / this.levelStep);
-      this.normalizer.backgroundLevel = this.levelStep * Math.round(this.normalizer.backgroundLevel / this.levelStep);
+    //   this.normalizer.peakLevel = this.levelStep * Math.round(this.normalizer.peakLevel / this.levelStep);
+    //   this.normalizer.backgroundLevel = this.levelStep * Math.round(this.normalizer.backgroundLevel / this.levelStep);
 
-      this.normalizer.backgroundLevel = Math.round(this.normalizer.backgroundLevel * factor) / factor;
-      this.normalizer.peakLevel = Math.round(this.normalizer.peakLevel * factor) / factor;
+    //   this.normalizer.backgroundLevel = Math.round(this.normalizer.backgroundLevel * factor) / factor;
+    //   this.normalizer.peakLevel = Math.round(this.normalizer.peakLevel * factor) / factor;
 
-    }
+    // }
+
+    // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
 
   }
 
