@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Store } from '@ngrx/store';
 
@@ -34,7 +34,7 @@ import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hot
   styleUrls: ['./workbench.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class WorkbenchComponent implements OnInit {
+export class WorkbenchComponent implements OnInit, OnDestroy {
 
   private VIEWER_ROUTE = '/workbench/viewer';
   private PLOTTER_ROUTE = '/workbench/plotter';
@@ -57,6 +57,7 @@ export class WorkbenchComponent implements OnInit {
 
   private currentSidebarView: SidebarView = SidebarView.FILES;
   private SidebarView = SidebarView;
+  private hotKeys: Array<Hotkey> = [];
 
   constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService) {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
@@ -70,27 +71,28 @@ export class WorkbenchComponent implements OnInit {
 
     this.subs.push(this.showConfig$.subscribe(showConfig => this.showConfig = showConfig));
 
-
-
-    this._hotkeysService.add(new Hotkey('d', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('d', (event: KeyboardEvent): boolean => {
       this.router. navigate([this.VIEWER_ROUTE]);
       return false; // Prevent bubbling
-    }, undefined, 'Display Settings'));
+    }, undefined, 'Display Settings'))
 
-    this._hotkeysService.add(new Hotkey('p', (event: KeyboardEvent): boolean => {
+
+    this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
       this.router. navigate([this.PLOTTER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Plotter Settings'));
 
-    this._hotkeysService.add(new Hotkey('s', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('s', (event: KeyboardEvent): boolean => {
       this.router. navigate([this.SONIFIER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Sonifier Settings'));
 
-    this._hotkeysService.add(new Hotkey('e', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('e', (event: KeyboardEvent): boolean => {
       this.router. navigate([this.SOURCE_EXTRACTOR_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Extractor Settings'));
+
+    this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
 
 
     //this.loading$ = this.fileLibraryStore.loading$;
@@ -111,6 +113,10 @@ export class WorkbenchComponent implements OnInit {
 
   ngOnInit() {
     this.store.dispatch(new dataFileActions.LoadLibrary());
+  }
+
+  ngOnDestroy() {
+    this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
 
   onFileSelect(file: DataFile) {
