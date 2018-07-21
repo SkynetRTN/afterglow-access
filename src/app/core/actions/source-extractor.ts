@@ -3,9 +3,8 @@ import { ImageFile } from '../../data-files/models/data-file';
 import { Region } from '../models/region';
 import { SourceExtractorFileState } from '../models/source-extractor-file-state';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option'
-import { PhotSettings } from '../models/phot-settings';
-import { SourceExtractionSettings } from '../models/source-extraction-settings';
 import { Source } from '../models/source';
+import { SourceExtractionJob } from '../../jobs/models/source-extraction';
 
 export const SET_REGION = '[Source Extractor] Set Region';
 export const UPDATE_REGION = '[Source Extractor] Update Region';
@@ -13,8 +12,11 @@ export const UPDATE_FILTERED_SOURCES = '[Source Extractor] Update Filtered Sourc
 export const UPDATE_FILE_STATE = '[Source Extractor] Update File State';
 export const EXTRACT_SOURCES = '[Source Extractor] Extract Sources';
 export const EXTRACT_SOURCES_SUCCESS = '[Source Extractor] Extract Sources Success';
-export const UPDATE_SOURCE = '[Source Extractor] Update Source';
 export const EXTRACT_SOURCES_FAIL = '[Source Extractor] Extract Sources Fail';
+export const SET_SOURCE_EXTRACTION_JOB = '[Source Extractor] Set Source Extraction Job';
+
+export const UPDATE_SOURCE = '[Source Extractor] Update Source';
+
 
 export const REMOVE_SELECTED_SOURCES = '[Source Extractor] Remove Selected Sources';
 export const REMOVE_ALL_SOURCES = '[Source Extractor] Remove All Sources';
@@ -64,7 +66,13 @@ export class ExtractSourcesSuccess implements Action {
 export class ExtractSourcesFail implements Action {
   readonly type = EXTRACT_SOURCES_FAIL
 
-  constructor(public payload: { file: ImageFile, error: any }) { }
+  constructor(public payload: { error: string }) { }
+}
+
+export class SetSourceExtractionJob implements Action {
+  readonly type = SET_SOURCE_EXTRACTION_JOB;
+
+  constructor(public payload: { job: SourceExtractionJob }) { }
 }
 
 export class UpdateSource implements Action {
@@ -72,7 +80,6 @@ export class UpdateSource implements Action {
 
   constructor(public payload: { file: ImageFile, sourceId: string, changes: Partial<Source> }) { }
 }
-
 
 
 export class RemoveSelectedSources implements Action {
@@ -124,6 +131,7 @@ export type Actions =
   | UpdateRegion
   | UpdateFileState
   | ExtractSources
+  | SetSourceExtractionJob
   | ExtractSourcesSuccess
   | ExtractSourcesFail
   | UpdateSource

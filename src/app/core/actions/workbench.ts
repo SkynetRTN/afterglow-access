@@ -1,19 +1,20 @@
 import { Action } from '@ngrx/store';
 
-import { ImageFile } from '../../data-files/models/data-file';
+import { ImageFile, DataFile } from '../../data-files/models/data-file';
 import { SidebarView } from '../models/sidebar-view';
 import { Viewer } from '../models/viewer';
 import { ViewMode } from '../models/view-mode';
 import { WorkbenchTool } from '../models/workbench-state';
 import { CentroidSettings } from '../models/centroid-settings';
 import { PlotterSettings } from '../models/plotter-settings';
-import { SourceExtractionSettings } from '../models/source-extraction-settings';
-import { PhotSettings } from '../models/phot-settings';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
+import { SourceExtractionSettings } from '../../jobs/models/source-extraction';
+import { PhotSettings } from '../../jobs/models/photometry';
 
 export const ENABLE_MULTI_FILE_SELECTION = '[Workbench] Enable Multi File Selection';
 export const DISABLE_MULTI_FILE_SELECTION = '[Workbench] Disable Multi File Selection';
 export const SELECT_DATA_FILE = '[Workbench] Select Data File';
+export const SET_MULTI_FILE_SELECTION = '[Workbench] Set Multi File Selection';
 export const SET_ACTIVE_VIEWER = '[Workbench] Set Active Viewer';
 export const SET_VIEWER_FILE = '[Workbench] Set Viewer File';
 export const SET_VIEWER_FILE_SUCCESS = '[Workbench] Set Viewer File Success';
@@ -59,7 +60,13 @@ export class DisableMultiFileSelection implements Action {
 export class SelectDataFile implements Action {
   readonly type = SELECT_DATA_FILE;
 
-  constructor(public payload: string) { }
+  constructor(public payload: {file: DataFile}) { }
+}
+
+export class SetMultiFileSelection implements Action {
+  readonly type = SET_MULTI_FILE_SELECTION;
+
+  constructor(public payload: {files: Array<DataFile>}) { }
 }
 
 export class SetActiveViewer implements Action {
@@ -194,6 +201,7 @@ export type Actions =
   | EnableMultiFileSelection
   | DisableMultiFileSelection
   | SelectDataFile
+  | SetMultiFileSelection
   | SetActiveViewer
   | SetViewerFile
   | SetViewerFileSuccess

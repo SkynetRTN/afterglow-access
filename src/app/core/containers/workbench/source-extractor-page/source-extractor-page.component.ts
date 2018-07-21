@@ -10,10 +10,13 @@ import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/do';
 import * as jStat from 'jstat';
+import { saveAs } from 'file-saver/FileSaver';
 
 import * as fromRoot from '../../../../reducers';
 import * as fromDataFiles from '../../../../data-files/reducers';
 import * as fromCore from '../../../reducers';
+import * as jobActions from '../../../../jobs/actions/job';
+import * as fromJobs from '../../../../jobs/reducers';
 import * as fromWorkbench from '../../../reducers/workbench'
 import * as fromImageFileState from '../../../reducers/image-file-state';
 import * as workbenchActions from '../../../actions/workbench';
@@ -46,6 +49,13 @@ import { SPACE, ENTER, DELETE } from '@angular/cdk/keycodes';
 import { ProperMotionDialogComponent } from '../../../components/proper-motion-dialog/proper-motion-dialog.component';
 import { centroidPsf } from '../../../models/centroider';
 import { CentroidSettings } from '../../../models/centroid-settings';
+import { DataFileType } from '../../../../data-files/models/data-file-type';
+import { PhotometryJob, PhotometryJobResult } from '../../../../jobs/models/photometry';
+import { JobType } from '../../../../jobs/models/job-types';
+import { Astrometry } from '../../../../jobs/models/astrometry';
+import { SourceId } from '../../../../jobs/models/source-id';
+import { SourceExtractionJob, SourceExtractionJobResult } from '../../../../jobs/models/source-extraction';
+import { PapaParseService } from '../../../../../../node_modules/ngx-papaparse';
 
 
 export class SourcesDataSource implements DataSource<Source> {
@@ -59,6 +69,7 @@ export class SourcesDataSource implements DataSource<Source> {
       store.select(fromCore.workbench.getActiveFile),
       store.select(fromCore.workbench.getShowAllSources))
       .map(([sources, activeFile, showAllSources]) => {
+        if(!activeFile) return [];
         return sources.filter(source => {
           return source.fileId == activeFile.id || showAllSources;
         })
@@ -93,8 +104,10 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   selectedSources$: Observable<Source[]>;
   selectedSources: Array<Source> = [];
   activeImageFile$: Observable<ImageFile>;
+  selectedImageFiles$: Observable<Array<ImageFile>>;
   activeImageFileState$: Observable<ImageFileState>;
   showAllSources$: Observable<boolean>;
+  extractionJobRows$: Observable<Array<{ job: PhotometryJob, result: PhotometryJobResult }>>;
 
   showConfig$: Observable<boolean>;
   activeSourceExtractorFileState$: Observable<SourceExtractorFileState>;
@@ -103,8 +116,8 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   region$: Observable<Region> = null;
   filteredSources$: Observable<Source[]>;
 
-
   activeImageFile: ImageFile;
+  selectedImageFiles: Array<ImageFile>;
   activeSourceExtractorFileState: SourceExtractorFileState;
   workbenchState: WorkbenchState;
   SourceExtractorModeOption = SourceExtractorModeOption;
@@ -126,19 +139,33 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   ];
 
 
-  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, private dmsPipe: DmsPipe) {
+  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, private dmsPipe: DmsPipe, private papa: PapaParseService) {
     this.dataSource = new SourcesDataSource(store);
 
     this.selectedSources$ = store.select(fromCore.getSelectedSources);
     this.subs.push(this.selectedSources$.subscribe(sources => this.selectedSources = sources));
     this.showAllSources$ = store.select(fromCore.workbench.getShowAllSources);
 
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile)
+    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
+    this.selectedImageFiles$ = store.select(fromCore.workbench.getSelectedFiles).map(files => files.filter(file => file.type == DataFileType.IMAGE) as Array<ImageFile>).do(val => console.log(val));
+
     this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.workbenchState$ = store.select(fromCore.getWorkbenchState).filter(state => state != null);
     this.activeSourceExtractorFileState$ = this.activeImageFileState$.filter(state => state != null).map(state => state.sourceExtractor).filter(v => v != null);
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     this.centroidSettings$ = this.workbenchState$.map(state => state && state.centroidSettings);
+
+    this.extractionJobRows$ = Observable.combineLatest(
+      store.select(fromJobs.getAllJobs)
+        .map(rows => rows.filter(row => row.job.type == JobType.Photometry) as Array<{ job: PhotometryJob, result: PhotometryJobResult }>),
+      this.activeImageFile$)
+      .map(([rows, activeImageFile]) => activeImageFile ? rows.filter(row => row.job.file_ids.includes(parseInt(activeImageFile.id))).sort((a, b) => {
+        if (a.job.id == b.job.id) return 0;
+        return a.job.id > b.job.id ? -1 : 1;
+      }) : [])
+
+
+
 
     this.region$ = this.activeSourceExtractorFileState$
       .distinctUntilChanged((a, b) => {
@@ -153,6 +180,9 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
 
     this.subs.push(this.activeImageFile$.subscribe(imageFile => {
       this.activeImageFile = imageFile;
+    }));
+    this.subs.push(this.selectedImageFiles$.subscribe(imageFiles => {
+      this.selectedImageFiles = imageFiles;
     }));
     this.subs.push(this.activeSourceExtractorFileState$.subscribe(state => this.activeSourceExtractorFileState = state));
     this.subs.push(this.workbenchState$.subscribe(state => this.workbenchState = state));
@@ -191,10 +221,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   openPhotSettings() {
     let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
       width: '600px',
-      data: {
-        phot: { ...this.workbenchState.photSettings },
-        centroid: { ...this.workbenchState.centroidSettings }
-      }
+      data: { ...this.workbenchState.photSettings }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -264,7 +291,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
   }
 
   onMarkerClick($event: ViewerGridMarkerMouseEvent) {
-    if($event.mouseEvent.altKey) return;
+    if ($event.mouseEvent.altKey) return;
 
     let source = this.dataSource.sources.find(source => $event.marker.data && source.id == $event.marker.data['id']);
     if (!source) return;
@@ -370,7 +397,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
       let centerSecondaryCoord = (source.secondaryCoord + secondaryCoord0) / 2.0;
       return [
         (source.pmEpoch.getTime() - t0) / 1000.0,
-        (source.primaryCoord - primaryCoord0) * (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos(centerSecondaryCoord * Math.PI / 180.0)),
+        (source.primaryCoord - primaryCoord0) * (source.posType == PosType.PIXEL ? 1 : ((15 * 3600) / Math.cos(centerSecondaryCoord * Math.PI / 180.0))),
         (source.secondaryCoord - secondaryCoord0) * (source.posType == PosType.PIXEL ? 1 : 3600)
       ]
     });
@@ -384,10 +411,11 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
 
     let primaryRate = primaryModel.coef[1];
     let secondaryRate = secondaryModel.coef[1];
-    let positionAngle = Math.atan2(secondaryRate, -primaryRate) * 180.0 / Math.PI - 90;
+    let positionAngle = Math.atan2(primaryRate, secondaryRate) * 180.0 / Math.PI;
     positionAngle = positionAngle % 360;
     if (positionAngle < 0) positionAngle += 360;
     let rate = Math.sqrt(Math.pow(primaryRate, 2) + Math.pow(secondaryRate, 2));
+    console.log(primaryRate, secondaryRate, rate, positionAngle);
 
     this.store.dispatch(new sourceActions.UpdateSource({ sourceId: this.selectedSources[0].id, changes: { pm: rate, pmPosAngle: positionAngle } }));
     this.store.dispatch(new sourceActions.RemoveSources({ sources: this.selectedSources.slice(1) }))
@@ -443,6 +471,61 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
     //       skyPmPosAngle: null
     //     }
     //   }
+  }
+
+  photometerSelectedSources() {
+
+    let job: PhotometryJob = {
+      type: JobType.Photometry,
+      id: null,
+      file_ids: this.selectedImageFiles.map(file => parseInt(file.id)),
+      sources: this.selectedSources.map((source, index) => {
+        let x = null;
+        let y = null;
+        let pmPixel = null;
+        let pmPosAnglePixel = null;
+        let raHours = null;
+        let decDegs = null;
+        let pmSky = null;
+        let pmPosAngleSky = null;
+
+        if (source.posType == PosType.PIXEL) {
+          x = source.primaryCoord;
+          y = source.secondaryCoord;
+          pmPixel = source.pm;
+          pmPosAnglePixel = source.pmPosAngle
+        }
+        else {
+          raHours = source.primaryCoord;
+          decDegs = source.secondaryCoord;
+          pmSky = source.pm;
+          if(pmSky) pmSky /= 3600.0;
+          pmPosAngleSky = source.pmPosAngle
+        }
+        return {
+          id: source.id,
+          pm_epoch: source.pmEpoch ? source.pmEpoch.toISOString() : null,
+          x: x,
+          y: y,
+          pm_pixel: pmPixel,
+          pm_pos_angle_pixel: pmPosAnglePixel,
+          ra_hours: raHours,
+          dec_degs: decDegs,
+          pm_sky: pmSky,
+          pm_pos_angle_sky: pmPosAngleSky
+        } as (Astrometry & SourceId)
+      }),
+      settings: this.workbenchState.photSettings
+    }
+
+
+    this.store.dispatch(new jobActions.CreateJob({ job: job }));
+  }
+
+  downloadPhotometry(row: { job: PhotometryJob, result: PhotometryJobResult }) {
+    let data = this.papa.unparse(row.result.data)
+    var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
+    saveAs(blob, `afterglow_photometry_${row.job.id}.csv`);
   }
 
 

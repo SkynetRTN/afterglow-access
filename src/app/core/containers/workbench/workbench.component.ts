@@ -23,6 +23,8 @@ import { DataFileSelectionListChange } from '../../../data-files/components/data
 import { Viewer } from '../../models/viewer';
 import { ImageFileState } from '../../models/image-file-state';
 import { Dictionary } from '@ngrx/entity/src/models';
+import { Subscription } from '../../../../../node_modules/rxjs';
+import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
 
 
 
@@ -47,14 +49,16 @@ export class WorkbenchComponent implements OnInit {
   private multiFileSelectionEnabled$: Observable<boolean>;
   private showSidebar$: Observable<boolean>;
   private showConfig$: Observable<boolean>;
+  private showConfig: boolean;
   private sidebarView$: Observable<SidebarView>;
   private loading$: Observable<boolean>;
   private fileFilterString: string = '';
+  private subs: Subscription[] = [];
 
   private currentSidebarView: SidebarView = SidebarView.FILES;
   private SidebarView = SidebarView;
 
-  constructor(private store: Store<fromRoot.State>, private router: Router) {
+  constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService) {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
     this.selectedFile$ = this.store.select(fromCore.workbench.getActiveFile);
 
@@ -62,6 +66,31 @@ export class WorkbenchComponent implements OnInit {
     this.sidebarView$ = this.store.select(fromCore.workbench.getSidebarView);
     this.showConfig$ = this.store.select(fromCore.workbench.getShowConfig);
     this.showSidebar$ = this.store.select(fromCore.workbench.getShowSidebar);
+    this.loading$ = this.store.select(fromDataFiles.getLibraryLoading);
+
+    this.subs.push(this.showConfig$.subscribe(showConfig => this.showConfig = showConfig));
+
+
+
+    this._hotkeysService.add(new Hotkey('d', (event: KeyboardEvent): boolean => {
+      this.router. navigate([this.VIEWER_ROUTE]);
+      return false; // Prevent bubbling
+    }, undefined, 'Display Settings'));
+
+    this._hotkeysService.add(new Hotkey('p', (event: KeyboardEvent): boolean => {
+      this.router. navigate([this.PLOTTER_ROUTE]);
+      return false; // Prevent bubbling
+    }, undefined, 'Plotter Settings'));
+
+    this._hotkeysService.add(new Hotkey('s', (event: KeyboardEvent): boolean => {
+      this.router. navigate([this.SONIFIER_ROUTE]);
+      return false; // Prevent bubbling
+    }, undefined, 'Sonifier Settings'));
+
+    this._hotkeysService.add(new Hotkey('e', (event: KeyboardEvent): boolean => {
+      this.router. navigate([this.SOURCE_EXTRACTOR_ROUTE]);
+      return false; // Prevent bubbling
+    }, undefined, 'Extractor Settings'));
 
 
     //this.loading$ = this.fileLibraryStore.loading$;
@@ -86,7 +115,12 @@ export class WorkbenchComponent implements OnInit {
 
   onFileSelect(file: DataFile) {
     if(!file) return;
-    this.store.dispatch(new workbenchActions.SelectDataFile(file.id));
+    this.store.dispatch(new workbenchActions.SelectDataFile({file: file}));
+  }
+
+  onMultiFileSelect(files: Array<DataFile>) {
+    if(!files) return;
+    this.store.dispatch(new workbenchActions.SetMultiFileSelection({files: files}));
   }
 
   removeAllFiles() {
@@ -128,6 +162,10 @@ export class WorkbenchComponent implements OnInit {
   /* for data file selection list */
   trackByFn(index, item) {
     return item.id; // or item.id
+  }
+
+  getToolbarTooltip(route: string, base: string) {
+    return (this.showConfig && this.router.isActive(route, false) ? 'Hide ' : 'Show ') + base;
   }
 
 }

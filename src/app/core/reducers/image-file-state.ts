@@ -26,8 +26,6 @@ import { PlotterSettings } from '../models/plotter-settings';
 import { centroidDisk, centroidPsf } from '../models/centroider';
 import { PlotterFileState } from '../models/plotter-file-state';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
-import { PhotSettings } from '../models/phot-settings';
-import { SourceExtractionSettings } from '../models/source-extraction-settings';
 
 export interface State extends EntityState<ImageFileState> {}
 
@@ -93,6 +91,7 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
             regionOption: SourceExtractorRegionOption.VIEWPORT,
             region: null,
             selectedSourceIds: [],
+            sourceExtractionJobId: null,
           },
           markers: []
         })
@@ -755,6 +754,24 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
       return {
         ...adapter.updateOne({
           id: action.payload.file.id,
+          changes: {
+            sourceExtractor: sourceExtractorState,
+          }
+        }, state)
+      }
+    }
+
+    case sourceExtractorActions.SET_SOURCE_EXTRACTION_JOB: {
+      let fileId = action.payload.job.file_ids[0];
+      let sourceExtractorState: SourceExtractorFileState = Object.assign(
+        { ...state.entities[fileId].sourceExtractor },
+        {
+          sourceExtractionJobId: action.payload.job.id
+        }
+      );
+      return {
+        ...adapter.updateOne({
+          id: fileId,
           changes: {
             sourceExtractor: sourceExtractorState,
           }

@@ -71,6 +71,7 @@ export class AuthService {
   }
 
   logout() {
-    return this.http.get(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/logout`))
+    return Observable.of(null);
+    //return this.http.get(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/logout`))
   }
 }

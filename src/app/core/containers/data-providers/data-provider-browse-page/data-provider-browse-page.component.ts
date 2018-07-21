@@ -87,7 +87,6 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
   sortSub: Subscription;
 
 
-
   @ViewChild(MatSort) set sortSetter(sort: MatSort) {
     if (!sort) return;
     this.sort = sort;
@@ -154,9 +153,17 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
       })
     }))
 
+    this.subs.push(this.importProgress$
+      .withLatestFrom(this.importErrors$)
+      .filter(([progress, errors]) => progress == 1 && errors.length == 0)
+      .subscribe(v => {
+        this.router.navigate(['/']);
+      }));
+
   }
 
   ngAfterViewInit() {
+
   }
 
   ngOnDestroy() {
@@ -184,6 +191,13 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
     if (!row.collection) this.selection.toggle(row);
   }
 
+  onSpaceSelect($event: KeyboardEvent, row: DataProviderAsset) {
+    if (row.collection) return;
+
+    this.selection.toggle(row);
+    $event.preventDefault();
+  }
+
 
   isArray(value: any) {
     return Array.isArray(value);
@@ -191,6 +205,10 @@ export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, O
 
   import() {
     this.store.dispatch(new dataProviderActions.ImportAssets({ assets: this.selection.selected }));
+  }
+
+  navigateToCollection(path: string) {
+    this.router.navigate([], { queryParams: { path: path } });
   }
 
 }

@@ -17,8 +17,6 @@ import { SonifierRegionMode } from '../models/sonifier-file-state';
 import { MarkerType } from '../models/marker'
 import { SourceExtractorRegionOption } from '../models/source-extractor-file-state';
 import { Source, PosType } from '../models/source';
-import { SourceExtractionSettings } from '../models/source-extraction-settings';
-import { PhotSettings } from '../models/phot-settings';
 import { DataProvider } from '../../data-providers/models/data-provider';
 import { DataProviderAsset } from '../../data-providers/models/data-provider-asset';
 import { CentroidSettings } from '../models/centroid-settings';
@@ -220,26 +218,26 @@ export class AfterglowDataFileService {
   //   return this.photometryCoordHandler(fileId, params, photSettings, centroidSettings);
   // }
 
-  extractSources(fileId: string, settings: SourceExtractionSettings, region: Region = null): Observable<Array<Source>> {
-    let params: HttpParams = new HttpParams()
-      .set('threshold', settings.threshold.toString())
-      .set('fwhm', settings.fwhm.toString())
-      .set('deblend', settings.deblend ? '1' : '0');
+  // extractSources(fileId: string, settings: SourceExtractionSettings, region: Region = null): Observable<Array<Source>> {
+  //   let params: HttpParams = new HttpParams()
+  //     .set('threshold', settings.threshold.toString())
+  //     .set('fwhm', settings.fwhm.toString())
+  //     .set('deblend', settings.deblend ? '1' : '0');
 
-    if (region) {
-      params = params.set('x', Math.ceil(region.x).toString())
-        .set('y', Math.ceil(region.y).toString())
-        .set('width', Math.floor(region.width).toString())
-        .set('height', Math.floor(region.height).toString());
-    }
+  //   if (region) {
+  //     params = params.set('x', Math.ceil(region.x).toString())
+  //       .set('y', Math.ceil(region.y).toString())
+  //       .set('width', Math.floor(region.width).toString())
+  //       .set('height', Math.floor(region.height).toString());
+  //   }
 
-    return this.http.get<any[]>(this.location.prepareExternalUrl(`${environment.apiUrl}/data-files/${fileId}/sources`), { params: params })
-      .map(r => {
-        return r.map(s => this.parseSource(s))
-      });
+  //   return this.http.get<any[]>(this.location.prepareExternalUrl(`${environment.apiUrl}/data-files/${fileId}/sources`), { params: params })
+  //     .map(r => {
+  //       return r.map(s => this.parseSource(s))
+  //     });
 
 
-  }
+  // }
 
   
 }

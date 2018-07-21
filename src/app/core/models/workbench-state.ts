@@ -2,10 +2,11 @@ import { SidebarView } from "./sidebar-view";
 import { ViewMode } from "./view-mode";
 import { Viewer } from "./viewer";
 import { CentroidSettings } from "./centroid-settings";
-import { PhotSettings } from "./phot-settings";
-import { SourceExtractionSettings } from "./source-extraction-settings";
 import { SourceExtractorModeOption } from "./source-extractor-mode-option";
 import { PlotterSettings } from "./plotter-settings";
+import { SourceExtractionSettings } from "../../jobs/models/source-extraction";
+import { PhotSettings } from "../../jobs/models/photometry";
+import { DataFile } from "../../data-files/models/data-file";
 
 export enum WorkbenchTool {
   VIEWER,
@@ -16,6 +17,7 @@ export enum WorkbenchTool {
 
 export interface WorkbenchState {
   multiFileSelectionEnabled: boolean;
+  selectedFileIds: Array<string>;
   activeViewerIndex: number;
   activeTool: WorkbenchTool;
   viewMode: ViewMode;
@@ -28,7 +30,7 @@ export interface WorkbenchState {
   showConfig: boolean;
   showAllSources: boolean;
   centroidSettings: CentroidSettings;
-  photSettings: PhotSettings;
+  photSettings: PhotSettings
   sourceExtractionSettings: SourceExtractionSettings;
   sourceExtractorModeOption: SourceExtractorModeOption;
   plotterSettings: PlotterSettings;

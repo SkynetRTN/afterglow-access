@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
-import {PlatformLocation } from '@angular/common';
 import { Store } from '@ngrx/store';
 import * as fromAuth from '../../reducers';
 import * as authActions from '../../actions/auth';

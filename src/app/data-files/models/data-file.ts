@@ -243,7 +243,7 @@ export function getStartTime(imageFile: ImageFile) {
   if (dateObs) {
     imageDateStr = dateObs.value;
     if(imageDateStr.includes('T')) {
-      let s = Date.parse(imageDateStr.replace('T', ' '));
+      let s = Date.parse(imageDateStr.replace('T', ' ') + ' GMT');
       if (!isNaN(s)) {
         return new Date(s);
       }
@@ -256,7 +256,7 @@ export function getStartTime(imageFile: ImageFile) {
     imageTimeStr = timeObs.value;
   }
 
-  let s = Date.parse(imageDateStr + ' ' + imageTimeStr);
+  let s = Date.parse(imageDateStr + ' ' + imageTimeStr + ' GMT');
   if (!isNaN(s)) {
     return new Date(s);
   }

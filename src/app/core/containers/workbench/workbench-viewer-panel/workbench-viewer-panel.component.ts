@@ -17,6 +17,7 @@ import { WorkbenchTool } from '../../../models/workbench-state';
 import { SonifierRegionMode } from '../../../models/sonifier-file-state';
 import { Source, PosType } from '../../../models/source';
 import { PlotterFileState } from '../../../models/plotter-file-state';
+import { min } from '../../../../../../node_modules/rxjs/operators';
 
 @Component({
   selector: 'app-workbench-viewer-panel',
@@ -198,11 +199,19 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
             if (!fileEpoch) return;
 
             let deltaT = (fileEpoch.getTime() - epoch.getTime()) / 1000.0;
-            let primaryRate = source.pm * Math.sin(source.pmPosAngle * Math.PI / 180.0);
-            let secondaryRate = source.pm * Math.cos(source.pmPosAngle * Math.PI / 180.0);
+            let mu = source.pm * deltaT / 3600.0;
+            let theta = source.pmPosAngle * (Math.PI / 180.0);
+            let cd =  Math.cos(secondaryCoord*Math.PI/180);
 
-            secondaryCoord += (secondaryRate * deltaT)/3600;
-            primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
+            console.log(fileEpoch, epoch, deltaT, mu, theta, cd);
+            
+            primaryCoord += mu*Math.sin(theta)/cd/15;
+            primaryCoord = primaryCoord % 360;
+            secondaryCoord += mu*Math.cos(theta);
+            secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord))
+            
+            // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
+            
 
           }
 

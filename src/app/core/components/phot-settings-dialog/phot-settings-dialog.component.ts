@@ -1,8 +1,8 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
-import { PhotSettings } from '../../models/phot-settings';
 import { CentroidSettings } from '../../models/centroid-settings';
+import { PhotSettings } from '../../../jobs/models/photometry';
 
 @Component({
   selector: 'app-phot-settings-dialog',
@@ -11,25 +11,17 @@ import { CentroidSettings } from '../../models/centroid-settings';
 })
 export class PhotSettingsDialogComponent implements OnInit {
 
-  private settings: {phot: PhotSettings, centroid: CentroidSettings};
+  private settings: PhotSettings;
 
   constructor(public dialogRef: MatDialogRef<PhotSettingsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: {phot: PhotSettings, centroid: CentroidSettings}) {
+    @Inject(MAT_DIALOG_DATA) public data: PhotSettings) {
 
     this.settings = data;
 
   }
 
-  private onCentroidChange($event) {
-    this.settings.phot.centroid = $event.checked;
-  }
-
-  private setAperture(value) {
-    this.settings.phot.aperture = value;
-  }
-
   private setCenteringBoxWidth(value) {
-    this.settings.centroid.psfCentroiderSettings.centeringBoxWidth = value;
+    this.settings.centroid_radius = value;
   }
 
   ngOnInit() {

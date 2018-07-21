@@ -17,6 +17,7 @@ import * as dataFileActions from './data-files/actions/data-file';
 import * as dataProviderActions from './data-providers/actions/data-provider';
 import { Subscribable } from 'rxjs/Observable';
 import { User } from './auth/models/user';
+import { HotkeysService, Hotkey } from '../../node_modules/angular2-hotkeys';
 
 
 @Component({
@@ -47,6 +48,8 @@ export class AppComponent implements OnInit {
     // this.loggedInSub = this.loggedIn$.subscribe(loggedIn => {
     //   this.currentRoutes = routes.filter(route => route.menuType == MenuType.BRAND || (('canActivate' in route) == loggedIn));
     // })
+
+   
 
 
   }

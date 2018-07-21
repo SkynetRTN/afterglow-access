@@ -16,6 +16,7 @@ import { MaterialModule } from './material';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './auth/auth.module';
 import { reducers, metaReducers } from './reducers';
+import {HotkeyModule} from 'angular2-hotkeys';
 
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
@@ -71,6 +72,7 @@ import { environment } from '../environments/environment';
 
     CoreModule.forRoot(),
     AuthModule.forRoot(),
+    HotkeyModule.forRoot()
   ],
 
   declarations: [

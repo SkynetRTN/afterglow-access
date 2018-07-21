@@ -59,7 +59,7 @@ export class WorkbenchEffects {
     .switchMap(([action, dataFiles, viewers, activeViewer]) => {
       let actions: Action[] = [];
       if (!activeViewer || !activeViewer.fileId || dataFiles.map(f => f.id).indexOf(activeViewer.fileId) == -1 && dataFiles.length != 0) {
-        actions.push(new workbenchActions.SelectDataFile(dataFiles[0].id))
+        actions.push(new workbenchActions.SelectDataFile({file: dataFiles[0]}))
       }
 
       return Observable.from(actions);
@@ -72,7 +72,7 @@ export class WorkbenchEffects {
     .switchMap(([action, dataFiles, activeViewer]) => {
       let actions: Action[] = [];
       if (activeViewer && activeViewer.fileId == action.payload.file.id) {
-        actions.push(new workbenchActions.SelectDataFile(null));
+        actions.push(new workbenchActions.SelectDataFile({file: null}));
       }
 
       return Observable.from(actions);
@@ -85,8 +85,8 @@ export class WorkbenchEffects {
     .switchMap(([action, dataFiles, viewers, activeViewer, viewMode]) => {
       let actions: Action[] = [];
 
-      if (action.payload != null) {
-        let dataFile = dataFiles[action.payload];
+      if (action.payload != null && action.payload.file != null) {
+        let dataFile = dataFiles[action.payload.file.id];
         if (viewers.length != 0) {
 
           if (!activeViewer) {

@@ -22,7 +22,10 @@ export class DataFilesDataSource implements DataSource<DataFile> {
         this.files = files;
       });
 
-    return this.files$;
+    return this.files$.map(files => files.sort((a,b) => {
+      if(a.name == b.name) return 0;
+      return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+    }));
   }
 
   disconnect(collectionViewer: CollectionViewer): void {
@@ -42,9 +45,9 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
     if(this.primarySelectionModel.selected.length > 0 && this.primarySelectionModel.selected[0] == value) return;
     this.primarySelectionModel.select(value);
   }
-  @Input() set secondarySelection(value: DataFile[]) {
-    this.secondarySelectionModel.clear();
-    value.forEach(file => this.secondarySelectionModel.select(file));
+  @Input() set multiSelection(value: DataFile[]) {
+    this.multiSelectionModel.clear();
+    value.forEach(file => this.multiSelectionModel.select(file));
   }
 
   @Output() onPrimarySelectionChange = new EventEmitter<DataFile>();
@@ -52,7 +55,7 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
 
   dataSource: DataFilesDataSource;
   primarySelectionModel = new SelectionModel<DataFile>(false, []);
-  secondarySelectionModel = new SelectionModel<DataFile>(true, []);
+  multiSelectionModel = new SelectionModel<DataFile>(true, []);
   subs: Subscription[] = [];
   constructor(private store: Store<fromRoot.State>) {
     this.dataSource = new DataFilesDataSource(store);
@@ -63,10 +66,15 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.subs.push(this.primarySelectionModel.onChange.subscribe(change => {
       this.onPrimarySelectionChange.emit(this.primarySelectionModel.selected.length == 0 ? null : this.primarySelectionModel.selected[0]);
+      this.multiSelectionModel.onChange.next();
     }));
 
-    this.subs.push(this.secondarySelectionModel.onChange.subscribe(change => {
-      this.onMultiSelectionChange.emit(this.secondarySelectionModel.selected);
+    this.subs.push(this.multiSelectionModel.onChange.subscribe(change => {
+      let result = [...this.multiSelectionModel.selected];
+      if(this.primarySelectionModel.selected.length != 0 && this.primarySelectionModel.selected[0] && !result.map(file => file.id).includes(this.primarySelectionModel.selected[0].id)) {
+        result.push(this.primarySelectionModel.selected[0])
+      }
+      this.onMultiSelectionChange.emit(result);
     }));
   }
 
@@ -83,7 +91,7 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   }
 
   isAllSelected() {
-    const numSelected = this.secondarySelectionModel.selected.length;
+    const numSelected = this.multiSelectionModel.selected.length;
     const numRows = this.dataSource.files.length;
     return numSelected === numRows;
   }
@@ -91,8 +99,8 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
     this.isAllSelected() ?
-      this.secondarySelectionModel.clear() :
-      this.dataSource.files.forEach(file => this.secondarySelectionModel.select(file));
+      this.multiSelectionModel.clear() :
+      this.dataSource.files.forEach(file => this.multiSelectionModel.select(file));
   }
 
   onRowKeyup($event: KeyboardEvent, file: DataFile) {

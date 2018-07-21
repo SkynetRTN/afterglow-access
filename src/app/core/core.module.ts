@@ -26,6 +26,7 @@ import { LibModule }  from '../lib/lib.module';
 import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
+import { PapaParseModule } from 'ngx-papaparse';
 
 import { WorkbenchViewerPanelComponent } from './containers/workbench/workbench-viewer-panel/workbench-viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
@@ -66,6 +67,7 @@ import { reducers } from './reducers';
 import { StyleManager } from './services/style-manager';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
+import { JobsModule } from '../jobs/jobs.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -110,6 +112,7 @@ export const COMPONENTS = [
     PipesModule,
     DataProvidersModule,
     DataFilesModule,
+    JobsModule,
     MaterialModule,
     CovalentDataTableModule,
     VgCoreModule,
@@ -117,6 +120,7 @@ export const COMPONENTS = [
     VgOverlayPlayModule,
     VgBufferingModule,
     NvD3Module,
+    PapaParseModule,
 
     /**
      * StoreModule.forFeature is used for composing state

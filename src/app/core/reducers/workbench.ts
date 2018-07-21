@@ -21,6 +21,7 @@ import { SourceExtractorModeOption } from '../models/source-extractor-mode-optio
 
 export const initialState: WorkbenchState = {
   multiFileSelectionEnabled: false,
+  selectedFileIds: [],
   activeViewerIndex: 0,
   activeTool: WorkbenchTool.VIEWER,
   viewMode: ViewMode.SINGLE,
@@ -52,15 +53,16 @@ export const initialState: WorkbenchState = {
     diskCentroiderSettings: createDiskCentroiderSettings()
   },
   photSettings: {
-    centroid: true,
-    aperture: 10,
-    annulus: 10,
-    dannulus: 10
+    centroid_radius: 4,
+    a: 5,
+    a_in: 10,
+    a_out: 15
   },
   sourceExtractionSettings: {
     threshold: 3,
     fwhm: 0,
     deblend: false,
+    limit: 200,
   },
   sourceExtractorModeOption: SourceExtractorModeOption.MOUSE,
   plotterSettings: {
@@ -90,6 +92,13 @@ export function reducer(
       return {
         ...state,
         multiFileSelectionEnabled: false
+      }
+    }
+
+    case workbenchActions.SET_MULTI_FILE_SELECTION: {
+      return {
+        ...state,
+        selectedFileIds: action.payload.files.map(file => file.id)
       }
     }
 
@@ -346,6 +355,7 @@ export function reducer(
 }
 
 export const getActiveViewerIndex = (state: WorkbenchState) => state.activeViewerIndex;
+export const getSelectedFileIds = (state: WorkbenchState) => state.selectedFileIds;
 export const getViewers = (state: WorkbenchState) => state.viewers;
 export const getViewMode = (state: WorkbenchState) => state.viewMode;
 export const getActiveTool = (state: WorkbenchState) => state.activeTool;

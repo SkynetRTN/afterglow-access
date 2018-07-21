@@ -1,7 +1,7 @@
 import { createSelector, createFeatureSelector } from '@ngrx/store';
 
 import { DataFileType } from '../../data-files/models/data-file-type';
-import { ImageFile } from '../../data-files/models/data-file';
+import { ImageFile, DataFile } from '../../data-files/models/data-file';
 
 import * as fromRoot from '../../reducers';
 import * as fromWorkbench from './workbench';
@@ -117,11 +117,26 @@ const getWorkbenchActiveViewerFileState = createSelector(
   }
 );
 
+const getWorkbenchSelectedFileIds = createSelector(
+  getWorkbenchState,
+  fromWorkbench.getSelectedFileIds
+);
+
+const getWorkbenchSelectedFiles = createSelector(
+  getWorkbenchSelectedFileIds,
+  fromDataFiles.getDataFiles,
+  (fileIds, dataFiles) => {
+    return fileIds.map(fileId => dataFiles[fileId] as DataFile);
+  }
+)
+
 export const workbench = {
   getViewers: getWorkbenchViewers,
   getViewMode: getWorkbenchViewMode,
   getActiveViewerIndex: getWorkbenchActiveViewerIndex,
   getActiveViewer: getWorkbenchActiveViewer,
+  getSelectedFileIds: fromWorkbench.getSelectedFileIds,
+  getSelectedFiles: getWorkbenchSelectedFiles,
   getActiveFileId: getWorkbenchActiveViewerFileId,
   getActiveFile: getWorkbenchActiveViewerFile,
   getActiveFileState: getWorkbenchActiveViewerFileState,

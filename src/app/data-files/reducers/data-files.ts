@@ -25,6 +25,7 @@ let MARKER_ID = 0;
  * any additional interface properties.
  */
 export interface State extends EntityState<DataFile> {
+  libraryLoading: boolean;
 }
 
 /**
@@ -45,6 +46,7 @@ export const adapter: EntityAdapter<DataFile> = createEntityAdapter<DataFile>({
  * additional properties can also be defined.
 */
 export const initialState: State = adapter.getInitialState({
+  libraryLoading: false,
 });
 
 export function reducer(
@@ -57,6 +59,14 @@ export function reducer(
         ...adapter.removeAll(initialState)
       }
     }
+
+    case dataFileActions.LOAD_LIBRARY: {
+      return {
+        ...state,
+        libraryLoading: true
+      };
+    }
+
     case dataFileActions.LOAD_LIBRARY_SUCCESS: {
       let newFileIds = action.payload.map(file => file.id);
       let currentFileIds = Object.keys(state.entities);
@@ -72,7 +82,15 @@ export function reducer(
       let result = adapter.removeMany(defunctFileIds, state);
       result = adapter.addMany(newFiles, result);
       return {
-        ...result
+        ...result,
+        libraryLoading: false,
+      };
+    }
+
+    case dataFileActions.LOAD_LIBRARY_FAIL: {
+      return {
+        ...state,
+        libraryLoading: false
       };
     }
 

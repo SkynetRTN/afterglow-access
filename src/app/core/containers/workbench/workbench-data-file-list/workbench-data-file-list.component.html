@@ -4,14 +4,14 @@
   <ng-container matColumnDef="select">
     <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell" [rowIndex]="0" [columnIndex]="0"
       (focus)="cb?.focus()" [cellInTabOrder]="false">
-      <mat-checkbox #cb [disabled]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="secondarySelectionModel.hasValue() && isAllSelected()"
-        [indeterminate]="secondarySelectionModel.hasValue() && !isAllSelected()" [tabIndex]="cell.isActiveCell ? 0 : -1">
+      <mat-checkbox #cb [disabled]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="multiSelectionModel.hasValue() && isAllSelected()"
+        [indeterminate]="multiSelectionModel.hasValue() && !isAllSelected()" [tabIndex]="cell.isActiveCell ? 0 : -1">
       </mat-checkbox>
     </mat-header-cell>
     <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="allowMultiSelection ? rowIndex+1 : rowIndex"
       [columnIndex]="0" (focus)="cb?.focus()" [cellInTabOrder]="primarySelectionModel.isSelected(row)">
-      <mat-checkbox #cb (click)="$event.stopPropagation()" (change)="$event ? secondarySelectionModel.toggle(row) : null" [checked]="secondarySelectionModel.isSelected(row)"
-        [tabIndex]="cell.isActiveCell ? 0 : -1"  [hidden]="primarySelectionModel.isSelected(row)">
+      <mat-checkbox #cb (click)="$event.stopPropagation()" (change)="$event ? multiSelectionModel.toggle(row) : null" [checked]="primarySelectionModel.isSelected(row) || multiSelectionModel.isSelected(row)"
+        [tabIndex]="cell.isActiveCell ? 0 : -1"  [disabled]="primarySelectionModel.isSelected(row)">
       </mat-checkbox>
     </mat-cell>
   </ng-container>

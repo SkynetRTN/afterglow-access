@@ -21,7 +21,9 @@ export class AuthEffects {
   @Effect()
   login$ = this.actions$
     .ofType<authActions.Login>(authActions.LOGIN)
-    .map((action) => action.payload)
+    .map((action) => {
+      return action.payload;
+    })
     .exhaustMap((auth: Authenticate) =>
       this.authService
         .login(auth)

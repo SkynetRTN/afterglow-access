@@ -10,7 +10,7 @@
   <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card workbench-settings-card" style="height: 100%;">
       <div id="settings-header" class="card-header">
-        Viewer
+        <h4>Display Settings</h4>
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
@@ -87,7 +87,7 @@
               <mat-icon>flip</mat-icon> Flip</button>
             <button mat-raised-button (click)="onRotateClick()">
               <mat-icon>rotate_right</mat-icon> Rotate</button>
-            <button mat-raised-button (click)="onResetOrientationClick()">
+            <button mat-raised-button color="warn" (click)="onResetOrientationClick()">
               <mat-icon>crop_din</mat-icon> Reset Orientation</button>
           </div>
 

@@ -7,7 +7,7 @@
   <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card workbench-settings-card" style="height: 100%;">
       <div id="settings-header" class="card-header">
-        Source Extractor
+        <h4>Source Extractor Settings</h4>
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
@@ -23,9 +23,9 @@
                 <mat-button-toggle value="{{SourceExtractorModeOption.MOUSE}}">
                   <mat-icon>mouse</mat-icon> Mouse
                 </mat-button-toggle>
-                <mat-button-toggle value="{{SourceExtractorModeOption.COORD}}">
+                <!-- <mat-button-toggle value="{{SourceExtractorModeOption.COORD}}">
                   <mat-icon>language</mat-icon> Coordinates
-                </mat-button-toggle>
+                </mat-button-toggle> -->
                 <mat-button-toggle value="{{SourceExtractorModeOption.AUTO}}">
                   <mat-icon>brightness_auto</mat-icon> Auto
                 </mat-button-toggle>
@@ -37,7 +37,7 @@
 
 
           <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.MOUSE">
-            
+
             <div class="row pb-1">
               <div class="col-6">
                 <div class="form-group">
@@ -45,29 +45,30 @@
                     Centroid clicks
                   </mat-slide-toggle>
                 </div>
-  
+
               </div>
               <div class="col-6">
-               
+
               </div>
-  
+
             </div>
 
             <p> Manually add sources by clicking on them in your image.</p>
-            <p class="pb-2">Tip: Hold <span class="kbd">Alt</span> to click beneath existing markers</p>
+            <p class="pb-2">Tip: Hold
+              <span class="kbd">Alt</span> to click beneath existing markers</p>
 
           </div>
 
-          <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.COORD">
+          <!-- <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.COORD">
             <p class="pb-2"> Add sources using either x/y coordinates or right ascension and declination.</p>
 
             <p>TODO</p>
 
-          </div>
+          </div> -->
 
           <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.AUTO">
             <p class="pb-2"> Add sources by automatically extracting them from your image.</p>
-            
+
 
 
             <div class="row">
@@ -86,7 +87,7 @@
               </div>
 
             </div>
-           
+
 
           </div>
 
@@ -159,7 +160,7 @@
                   <mat-icon>merge_type</mat-icon>
                   <span>Merge Selected</span>
                 </button>
-                <button mat-menu-item>
+                <button mat-menu-item (click)="photometerSelectedSources()">
                   <mat-icon>wb_incandescent</mat-icon>
                   <span>Photometer Selected</span>
                 </button>
@@ -176,6 +177,77 @@
           <div *ngIf="selectedSourceActionError" class="alert alert-danger">
             {{selectedSourceActionError}}
           </div>
+
+          <div>
+            <h5>Photometry Jobs</h5>
+            <div class="mb-3" style="max-height: 200px; overflow: auto;">
+              <mat-table app-cell-focuser #cellFocuser="cellFocuser" #jobTable [dataSource]="extractionJobRows$">
+                <ng-container matColumnDef="id">
+                  <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="0" [cellInTabOrder]="true">
+                    ID
+                  </mat-header-cell>
+                  <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="0"
+                    [cellInTabOrder]="true">
+                    {{row.job.id}}
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="state">
+                  <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="1" [cellInTabOrder]="true">
+                    State
+                  </mat-header-cell>
+                  <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="1"
+                    [cellInTabOrder]="true">
+                    <ng-container *ngIf="row.job.state.status == 'in_progress'">
+                      <div class="pl-5 pr-5"><mat-progress-bar mode="determinate" [value]="row.job.state.progress" [color]="'primary'"></mat-progress-bar></div> 
+                    </ng-container>
+                    <ng-container *ngIf="row.job.state.status != 'in_progress'">
+                      {{row.job.state.status}}
+                    </ng-container>
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="sources">
+                  <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="2" [cellInTabOrder]="true">
+                    Sources
+                  </mat-header-cell>
+                  <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="2"
+                    [cellInTabOrder]="true">
+                    {{row.job.sources.length}}
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="files">
+                  <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="3" [cellInTabOrder]="true">
+                    Files
+                  </mat-header-cell>
+                  <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="3"
+                    [cellInTabOrder]="true">
+                    {{row.job.file_ids.length}}
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="options">
+                  <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="4" [cellInTabOrder]="true">
+                    Options
+                  </mat-header-cell>
+                  <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="4"
+                    [cellInTabOrder]="true">
+                    <span *ngIf="row.job.state.status == 'completed'">
+                      <button mat-icon-button (click)="downloadPhotometry(row)">
+                        <mat-icon aria-label="download as CSV">cloud_download</mat-icon>
+                      </button>
+                    </span>
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="['id', 'state', 'sources', 'files', 'options']"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: ['id', 'state', 'sources', 'files', 'options'];"></mat-row>
+              </mat-table>
+            </div>
+
+          </div>
+
 
 
 

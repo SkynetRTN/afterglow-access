@@ -41,7 +41,14 @@
             </div>
             <div class="file-list-panel-content">
               <div class="file-list-content">
-                <app-workbench-data-file-list [allowMultiSelection]="(multiFileSelectionEnabled$ | async)" [primarySelection]="(selectedFile$ | async)" (onPrimarySelectionChange)="onFileSelect($event)"></app-workbench-data-file-list>
+                <div [hidden]="!(loading$ | async)">
+                  <p>Loading library...</p>
+                  <div class="flex-center">
+                    <mat-spinner></mat-spinner>
+                  </div>
+                </div>
+                <app-workbench-data-file-list [hidden]="(loading$ | async)" [allowMultiSelection]="(multiFileSelectionEnabled$ | async)"
+                  [primarySelection]="(selectedFile$ | async)" (onPrimarySelectionChange)="onFileSelect($event)" (onMultiSelectionChange)="onMultiFileSelect($event)"></app-workbench-data-file-list>
               </div>
             </div>
           </div>
@@ -63,52 +70,55 @@
         <div class="workbench-settings-card">
           <div class="card-header spacer"></div>
         </div>
-        <button class="vertical-icon-nav-item" matTooltip="Viewer" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)" attr.aria-label="{{(showConfig$ | async) && router.isActive(VIEWER_ROUTE) ? 'Close' : 'Open' }} Viewer"
-          [attr.aria-selected]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)" (click)="onWorkbenchNavClick(VIEWER_ROUTE)">
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(VIEWER_ROUTE, 'Display Settings')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Display Settings')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)"
+          (click)="onWorkbenchNavClick(VIEWER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>remove_red_eye</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item" matTooltip="Plotter" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)" attr.aria-label="{{(showConfig$ | async) && router.isActive(PLOTTER_ROUTE) ? 'Close' : 'Open' }} Plotter"
-          [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)" (click)="onWorkbenchNavClick(PLOTTER_ROUTE)">
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(PLOTTER_ROUTE, 'Plotter Settings')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Plotter Settings')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
+          (click)="onWorkbenchNavClick(PLOTTER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>insert_chart</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item" matTooltip="Sonifier" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)" attr.aria-label="{{(showConfig$ | async) && router.isActive(SONIFIER_ROUTE) ? 'Close' : 'Open' }} Sonifier"
-          [attr.aria-selected]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)" (click)="onWorkbenchNavClick(SONIFIER_ROUTE)">
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SONIFIER_ROUTE, 'Sonifier Settings')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Sonifier Settings')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
+          (click)="onWorkbenchNavClick(SONIFIER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>audiotrack</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item" matTooltip="Source Extractor" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)"
-          attr.aria-label="{{(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE) ? 'Close' : 'Open' }} Source Extractor"
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SOURCE_EXTRACTOR_ROUTE, 'Source Extractor Settings')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Source Extractor Settings')"
           [attr.aria-selected]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)" (click)="onWorkbenchNavClick(SOURCE_EXTRACTOR_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>star_border</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item" matTooltip="Image Arithmetic" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(IMAGE_ARITHMETIC_ROUTE)"
-          attr.aria-label="{{(showConfig$ | async) && router.isActive(IMAGE_ARITHMETIC_ROUTE) ? 'Close' : 'Open' }} Image Arithmetic"
+        <!-- <button class="vertical-icon-nav-item" matTooltip="Image Arithmetic" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(IMAGE_ARITHMETIC_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(IMAGE_ARITHMETIC_ROUTE) ? 'Hide' : 'Show' }} Image Arithmetic"
           [attr.aria-selected]="(showConfig$ | async) && router.isActive(IMAGE_ARITHMETIC_ROUTE)" (click)="onWorkbenchNavClick(IMAGE_ARITHMETIC_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>add_to_photos</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item"  matTooltip="Aligner" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(ALIGNER_ROUTE)"
-          attr.aria-label="{{(showConfig$ | async) && router.isActive(ALIGNER_ROUTE) ? 'Close' : 'Open' }} Aligner"
-          [attr.aria-selected]="(showConfig$ | async) && router.isActive(ALIGNER_ROUTE)" (click)="onWorkbenchNavClick(ALIGNER_ROUTE)">
+        <button class="vertical-icon-nav-item" matTooltip="Aligner" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(ALIGNER_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(ALIGNER_ROUTE) ? 'Hide' : 'Show' }} Aligner" [attr.aria-selected]="(showConfig$ | async) && router.isActive(ALIGNER_ROUTE)"
+          (click)="onWorkbenchNavClick(ALIGNER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>photo_size_select_large</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item"  matTooltip="Stacker" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(STACKER_ROUTE)"
-          attr.aria-label="{{(showConfig$ | async) && router.isActive(STACKER_ROUTE) ? 'Close' : 'Open' }} Stacker"
-          [attr.aria-selected]="(showConfig$ | async) && router.isActive(STACKER_ROUTE)" (click)="onWorkbenchNavClick(STACKER_ROUTE)">
+        <button class="vertical-icon-nav-item" matTooltip="Stacker" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(STACKER_ROUTE)"
+          attr.aria-label="{{(showConfig$ | async) && router.isActive(STACKER_ROUTE) ? 'Hide' : 'Show' }} Stacker" [attr.aria-selected]="(showConfig$ | async) && router.isActive(STACKER_ROUTE)"
+          (click)="onWorkbenchNavClick(STACKER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>photo_library</mat-icon>
           </div>
-        </button>
+        </button> -->
 
 
       </div>

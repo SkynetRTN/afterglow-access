@@ -13,10 +13,14 @@ import * as sourceActions from '../actions/source';
 import * as imageFileActions from '../../data-files/actions/image-file';
 import * as fromCore from '../reducers';
 import * as fromDataFile from '../../data-files/reducers';
+import * as jobActions from '../../jobs/actions/job';
 
 import { AfterglowDataFileService } from '../services/afterglow-data-files';
 import { SourceExtractorRegionOption } from '../models/source-extractor-file-state';
 import { getViewportRegion } from '../models/transformation';
+import { JobType } from '../../jobs/models/job-types';
+import { SourceExtractionJob } from '../../jobs/models/source-extraction';
+import { PhotometryJobResult } from '../../jobs/models/photometry';
 
 
 @Injectable()
@@ -26,58 +30,161 @@ export class SourceExtractorEffects {
   @Effect()
   extractSources$: Observable<Action> = this.actions$
     .ofType<sourceExtractorActions.ExtractSources>(sourceExtractorActions.EXTRACT_SOURCES)
-    .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getWorkbenchState),
-    this.store.select(fromCore.getImageFileStates),
+    .withLatestFrom(this.store.select(fromCore.getWorkbenchState))
+    .flatMap(([action, workbenchState]) => {
+      let targetFileId = action.payload.file.id;
+      let job: SourceExtractionJob = {
+        id: null,
+        type: JobType.SourceExtraction,
+        file_ids: [parseInt(action.payload.file.id)],
+        source_extraction_settings: workbenchState.sourceExtractionSettings,
+        merge_sources: false,
+        source_merge_settings: null
+      }
 
-    )
-    //.debounceTime(this.debounce || 300, this.scheduler || async)
-    .switchMap(([action, dataFiles, workbenchState, imageFileStates]) => {
-      let imageFile = dataFiles[action.payload.file.id] as ImageFile;
-      let sourceExtractor = imageFileStates[imageFile.id].sourceExtractor;
-
-      return this.afterglowDataFileService
-        .extractSources(action.payload.file.id, workbenchState.sourceExtractionSettings, sourceExtractor.region)
-        // .flatMap(allExtractedSources => {
-        //   allExtractedSources.forEach(source => {
-        //     source.fileId = action.payload.file.id;
-        //     if(action.payload.file.headerLoaded) {
-        //       source.epoch = getCenterTime(action.payload.file);
-        //     }
-        //   })
-        //   let maxPerRequest = 25;
-        //   let extractedSourcesArrays: Array<Array<Source>> = [];
-
-        //   while (allExtractedSources.length > 0) {
-        //     extractedSourcesArrays.push(allExtractedSources.splice(0, maxPerRequest));
-        //   }
-
-        //   let observables: Array<Observable<Source[]>> = [];
-
-        //   // extractedSourcesArrays.forEach(extractedSources => {
-        //   //   let o = this.afterglowDataFileService.photometerXY(action.payload.file.id, extractedSources, imageFileGlobalState.photSettings)
-        //   //     .map(photSources => {
-        //   //       for (let i = 0; i < extractedSources.length; i++) {
-        //   //         extractedSources[i].x = photSources[i].x;
-        //   //         extractedSources[i].y = photSources[i].y;
-        //   //         extractedSources[i].mag = photSources[i].mag;
-        //   //         extractedSources[i].magError = photSources[i].magError;
-        //   //         extractedSources[i].fwhm = photSources[i].fwhm;
-        //   //       }
-        //   //       return extractedSources;
-        //   //     })
-
-
-        //   //   observables.push(o);
-        //   // })
-
-        //   return Observable.forkJoin(observables).map(sourcesArrays => [].concat.apply([], sourcesArrays))
-
-        // })
-        .map((sources: Source[]) => new sourceActions.AddSources({ sources: sources }))
-        .catch(err => of(new sourceExtractorActions.ExtractSourcesFail({ file: action.payload.file, error: err })));
+      return Observable.merge(
+        Observable.of(new jobActions.CreateJob({ job: job })),
+        this.actions$.ofType<jobActions.CreateJobSuccess | jobActions.CreateJobFail>(jobActions.CREATE_JOB_SUCCESS, jobActions.CREATE_JOB_FAIL)
+          .filter(action => action.payload.job.type == JobType.SourceExtraction && job.file_ids[0] == parseInt(targetFileId))
+          .takeUntil(
+            this.actions$.ofType<sourceExtractorActions.ExtractSources>(sourceExtractorActions.EXTRACT_SOURCES)
+              .filter(action => action.payload.file.id == targetFileId)
+              .skip(1)
+          )
+          .take(1)
+          .flatMap(action => {
+            switch (action.type) {
+              case jobActions.CREATE_JOB_SUCCESS: {
+                return Observable.of(new sourceExtractorActions.SetSourceExtractionJob({ job: action.payload.job as SourceExtractionJob }));
+              }
+              case jobActions.CREATE_JOB_FAIL: {
+                return Observable.of(new sourceExtractorActions.ExtractSourcesFail({ error: "Failed to create job" }));
+              }
+              default: {
+                return Observable.from([]);
+              }
+            }
+          })
+      )
     });
+
+  @Effect()
+  addSourcesFromJob$: Observable<Action> = this.actions$
+    .ofType<jobActions.UpdateJobResultSuccess>(jobActions.UPDATE_JOB_RESULT_SUCCESS)
+    .withLatestFrom(this.store.select(fromCore.getImageFileStates))
+    .filter(([action, imageFileStates]) => {
+      let job = action.payload.job;
+
+      if (job.type != JobType.SourceExtraction || job.file_ids.length != 1) return false;
+      let fileId = job.file_ids[0];
+
+      return imageFileStates[fileId].sourceExtractor.sourceExtractionJobId == job.id
+    })
+    .map(([action, imageFileStates]) => {
+      let photJobResult = action.payload.result as PhotometryJobResult;
+      let sources = photJobResult.data.map(d => {
+        let posType = PosType.PIXEL;
+        let primaryCoord = d.x;
+        let secondaryCoord = d.y;
+
+
+        if (d.ra_hours !== null && d.dec_degs !== null) {
+          posType = PosType.SKY;
+          primaryCoord = d.ra_hours;
+          secondaryCoord = d.dec_degs;
+        }
+        return {
+          id: d.id,
+          label: d.id,
+          objectId: null,
+          fileId: d.file_id,
+          posType: posType,
+          primaryCoord: primaryCoord,
+          secondaryCoord: secondaryCoord,
+          pm: null,
+          pmPosAngle: null,
+          pmEpoch: d.time ? new Date(d.time) : null
+        } as Source;
+      })
+
+      return new sourceActions.AddSources({ sources: sources });
+    });
+
+
+
+
+  // return [
+  //   new jobActions.CreateJob({ job: job }),
+
+
+  // ]
+
+  // return [new jobActions.CreateJob({ job: job }),
+  //   Observable.merge(
+  //     this.actions$.ofType<jobActions.CreateJobSuccess>(jobActions.CREATE_JOB_SUCCESS).filter(action => action.payload.job.type == JobType.SourceExtraction),
+  //     this.actions$.ofType<jobActions.CreateJobFail>(jobActions.CREATE_JOB_FAIL).filter(action => action.payload.job.type == JobType.SourceExtraction),
+  //   )
+  //   .takeUntil(this.actions$.ofType<sourceExtractorActions.ExtractSources>(sourceExtractorActions.EXTRACT_SOURCES))
+  //   .take(1)
+  //   .map(action => {
+  //     switch (action.type) {
+  //       case jobActions.CREATE_JOB_SUCCESS: {
+  //         return new sourceExtractorActions.SetSourceExtractionJobId({jobId: action.payload.job.id})
+  //       }
+  //       case jobActions.CREATE_JOB_FAIL: {
+  //         return new sourceExtractorActions.ExtractSourcesFail({error: "Failed to create job"})
+  //       }
+  //     }
+  //   })
+  // ];
+
+  // return this.jobService
+  //   .createJob(job)
+  //   .map(job => {
+  //     return null;
+  //   })
+  // .flatMap(job => {
+  //   let update$ = 
+  // })
+  // .flatMap(allExtractedSources => {
+  //   allExtractedSources.forEach(source => {
+  //     source.fileId = action.payload.file.id;
+  //     if(action.payload.file.headerLoaded) {
+  //       source.epoch = getCenterTime(action.payload.file);
+  //     }
+  //   })
+  //   let maxPerRequest = 25;
+  //   let extractedSourcesArrays: Array<Array<Source>> = [];
+
+  //   while (allExtractedSources.length > 0) {
+  //     extractedSourcesArrays.push(allExtractedSources.splice(0, maxPerRequest));
+  //   }
+
+  //   let observables: Array<Observable<Source[]>> = [];
+
+  //   // extractedSourcesArrays.forEach(extractedSources => {
+  //   //   let o = this.afterglowDataFileService.photometerXY(action.payload.file.id, extractedSources, imageFileGlobalState.photSettings)
+  //   //     .map(photSources => {
+  //   //       for (let i = 0; i < extractedSources.length; i++) {
+  //   //         extractedSources[i].x = photSources[i].x;
+  //   //         extractedSources[i].y = photSources[i].y;
+  //   //         extractedSources[i].mag = photSources[i].mag;
+  //   //         extractedSources[i].magError = photSources[i].magError;
+  //   //         extractedSources[i].fwhm = photSources[i].fwhm;
+  //   //       }
+  //   //       return extractedSources;
+  //   //     })
+
+
+  //   //   observables.push(o);
+  //   // })
+
+  //   return Observable.forkJoin(observables).map(sourcesArrays => [].concat.apply([], sourcesArrays))
+
+  // })
+  // .map((sources: Source[]) => new sourceActions.AddSources({ sources: sources }))
+  // .catch(err => of(new sourceExtractorActions.ExtractSourcesFail({ file: action.payload.file, error: err })));
+
 
   // @Effect()
   // photometerXYSources$: Observable<Action> = this.actions$
@@ -143,10 +250,10 @@ export class SourceExtractorEffects {
   updateRegion$: Observable<Action> = this.actions$
     .ofType<sourceExtractorActions.UpdateRegion>(sourceExtractorActions.UPDATE_REGION)
     .withLatestFrom(
-    this.store.select(fromDataFile.getDataFiles),
-    this.store.select(fromCore.getImageFileGlobalState),
-    this.store.select(fromCore.getImageFileStates)
-  )
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getImageFileGlobalState),
+      this.store.select(fromCore.getImageFileStates)
+    )
     .flatMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
       let imageFile = dataFiles[action.payload.file.id] as ImageFile;
       let sourceExtractorFileState = imageFileStates[imageFile.id].sourceExtractor;
