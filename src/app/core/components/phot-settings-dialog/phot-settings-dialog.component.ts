@@ -11,7 +11,7 @@ import { PhotSettings } from '../../../jobs/models/photometry';
 })
 export class PhotSettingsDialogComponent implements OnInit {
 
-  private settings: PhotSettings;
+  settings: PhotSettings;
 
   constructor(public dialogRef: MatDialogRef<PhotSettingsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: PhotSettings) {
@@ -20,7 +20,7 @@ export class PhotSettingsDialogComponent implements OnInit {
 
   }
 
-  private setCenteringBoxWidth(value) {
+ setCenteringBoxWidth(value) {
     this.settings.centroid_radius = value;
   }
 

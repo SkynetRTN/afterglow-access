@@ -28,14 +28,17 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges {
 
   @ViewChild('svgGroup') svgGroup: ElementRef;
 
+  private lastTransform: Matrix;
+
   constructor() { }
 
   ngOnInit() {
   }
 
   ngOnChanges() {
-    if(!this.transform || !this.svgGroup) return;
-    let t = this.transform;
+    if(!this.transform || !this.svgGroup || this.transform == this.lastTransform) return;
+    this.lastTransform = this.transform;
+    let t = this.lastTransform;
     this.svgGroup.nativeElement.setAttribute('transform', `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`);
   }
 

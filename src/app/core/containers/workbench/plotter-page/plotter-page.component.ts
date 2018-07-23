@@ -190,7 +190,7 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onImageClick($event: CanvasMouseEvent, viewer: Viewer) {
+  onImageClick($event: CanvasMouseEvent) {
     if ($event.hitImage && this.latestImageFile) {
       let x = $event.imageX;
       let y = $event.imageY;

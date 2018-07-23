@@ -10,7 +10,7 @@ import { SourceExtractionSettings } from '../../../jobs/models/source-extraction
 })
 export class SourceExtractionSettingsDialogComponent implements OnInit {
 
-  private settings: SourceExtractionSettings;
+  settings: SourceExtractionSettings;
 
   constructor(public dialogRef: MatDialogRef<SourceExtractionSettingsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any) {
@@ -19,15 +19,15 @@ export class SourceExtractionSettingsDialogComponent implements OnInit {
 
   }
 
-  private onDeblendChange($event) {
+  onDeblendChange($event) {
     this.settings.deblend = $event.checked;
   }
 
-  private setFwhm(value) {
+  setFwhm(value) {
     this.settings.fwhm = value;
   }
 
-  private setThreshold(value) {
+  setThreshold(value) {
     this.settings.threshold = value;
   }
 

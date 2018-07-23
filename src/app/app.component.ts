@@ -27,7 +27,7 @@ import { HotkeysService, Hotkey } from '../../node_modules/angular2-hotkeys';
 })
 export class AppComponent implements OnInit {
   private currentRoutes: any[] = [];
-  private loggedIn$: Observable<boolean>;
+  loggedIn$: Observable<boolean>;
   private user$: Observable<User>;
   private loggedInSub: Subscription;
 

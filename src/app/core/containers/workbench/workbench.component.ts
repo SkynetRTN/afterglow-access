@@ -44,19 +44,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private ALIGNER_ROUTE = '/workbench/aligner';
   private STACKER_ROUTE = '/workbench/stacker';
 
-  private files$: Observable<Array<DataFile>>;
+  files$: Observable<Array<DataFile>>;
   private selectedFile$: Observable<DataFile>;
   private multiFileSelectionEnabled$: Observable<boolean>;
-  private showSidebar$: Observable<boolean>;
+  showSidebar$: Observable<boolean>;
   private showConfig$: Observable<boolean>;
   private showConfig: boolean;
-  private sidebarView$: Observable<SidebarView>;
+  sidebarView$: Observable<SidebarView>;
   private loading$: Observable<boolean>;
   private fileFilterString: string = '';
   private subs: Subscription[] = [];
 
   private currentSidebarView: SidebarView = SidebarView.FILES;
-  private SidebarView = SidebarView;
+  SidebarView = SidebarView;
   private hotKeys: Array<Hotkey> = [];
 
   constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService) {

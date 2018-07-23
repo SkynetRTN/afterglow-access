@@ -26,8 +26,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   @Output() onPeakLevelChange = new EventEmitter<number>();
 
   private lastHistData;
-  private chartOptions;
-  private chartData;
+  chartOptions: any;
+  chartData: any;
 
   private backgroundLineData = {
     isBackground: true,

@@ -38,7 +38,6 @@ import { ImageViewerTitleBarComponent } from './components/image-viewer-title-ba
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from './components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
-import { ProperMotionDialogComponent } from './components/proper-motion-dialog/proper-motion-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
@@ -97,7 +96,6 @@ export const COMPONENTS = [
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
-  ProperMotionDialogComponent,
   PlotterComponent
 ];
 
@@ -145,8 +143,7 @@ export const COMPONENTS = [
   exports: COMPONENTS,
   entryComponents: [
     PhotSettingsDialogComponent,
-    SourceExtractionSettingsDialogComponent,
-    ProperMotionDialogComponent
+    SourceExtractionSettingsDialogComponent
   ],
 
 })

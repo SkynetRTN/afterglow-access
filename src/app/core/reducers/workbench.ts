@@ -275,6 +275,13 @@ export function reducer(
       }
     }
 
+    case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
+      return {
+        ...state,
+        selectedFileIds: state.selectedFileIds.filter(fileId => fileId != action.payload.file.id)
+      }
+    }
+
 
 
 

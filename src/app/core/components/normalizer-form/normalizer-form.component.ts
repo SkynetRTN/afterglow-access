@@ -23,14 +23,14 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   levelStep = 0.1;
 
-  private stretchModeOptions = [
+  stretchModeOptions = [
     { label: "Linear", value: StretchMode.Linear },
     { label: "Log", value: StretchMode.Log },
     { label: "Square Root", value: StretchMode.SquareRoot },
     { label: "ArcSinh", value: StretchMode.ArcSinh }
   ];
 
-  private colorMaps = [grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap];
+  colorMaps = [grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap];
 
   constructor() { }
 

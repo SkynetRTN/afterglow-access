@@ -36,8 +36,8 @@ export class PlotterComponent implements OnInit, OnChanges {
   private currentSeparationScaledUnits = null;
   private crosshairX: number = null;
   private crosshairY: number = null;
-  private chartOptions;
-  private chartData = [];
+  chartOptions: any;
+  chartData: any = [];
   private chartDebouncer$: Subject<null> = new Subject();
 
 
