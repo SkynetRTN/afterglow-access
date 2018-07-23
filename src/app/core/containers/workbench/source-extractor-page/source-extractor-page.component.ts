@@ -1,10 +1,8 @@
-import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, OnChanges, OnInit } from '@angular/core';
 
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatCheckboxChange } from '@angular/material';
-import { ITdDataTableColumn, ITdDataTableSelectEvent, ITdDataTableSelectAllEvent } from '@covalent/core';
-import { VgAPI } from 'videogular2/core';
+import { MatDialog, MatCheckboxChange } from '@angular/material';
+import { ITdDataTableSelectEvent, ITdDataTableSelectAllEvent } from '@covalent/core';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/combineLatest';
@@ -13,40 +11,26 @@ import * as jStat from 'jstat';
 import { saveAs } from 'file-saver/FileSaver';
 
 import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
 import * as fromCore from '../../../reducers';
 import * as jobActions from '../../../../jobs/actions/job';
 import * as fromJobs from '../../../../jobs/reducers';
-import * as fromWorkbench from '../../../reducers/workbench'
-import * as fromImageFileState from '../../../reducers/image-file-state';
 import * as workbenchActions from '../../../actions/workbench';
 import * as sourceExtractorActions from '../../../actions/source-extractor';
-import * as dataFileActions from '../../../../data-files/actions/data-file';
-import * as imageFileActions from '../../../../data-files/actions/image-file';
 import * as sourceActions from '../../../actions/source';
 
-import { Normalization } from '../../../models/normalization';
-import { calcLevels } from '../../../../data-files/models/image-hist';
-import { ImageFile, DataFile, getWcs, getHasWcs, getCenterTime } from '../../../../data-files/models/data-file';
+import { ImageFile, getWcs, getHasWcs, getCenterTime } from '../../../../data-files/models/data-file';
 import { DmsPipe } from '../../../../pipes/dms.pipe'
 import { SourceExtractorFileState, SourceExtractorRegionOption } from '../../../models/source-extractor-file-state';
 import { SourceExtractorModeOption } from '../../../models/source-extractor-mode-option';
 import { PhotSettingsDialogComponent } from '../../../components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from '../../../components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
-import { ViewportChangeEvent, CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { Source, PosType } from '../../../models/source';
 import { Region } from '../../../models/region';
 import { ImageFileState } from '../../../models/image-file-state';
-import { Viewer } from '../../../models/viewer';
-import { Dictionary } from '@ngrx/entity/src/models';
-import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
-import { Marker, MarkerType } from '../../../models/marker';
 import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../workbench-viewer-grid/workbench-viewer-grid.component';
 import { WorkbenchTool, WorkbenchState } from '../../../models/workbench-state';
 import { DataSource } from '@angular/cdk/table';
 import { CollectionViewer, SelectionModel } from '@angular/cdk/collections';
-import { SPACE, ENTER, DELETE } from '@angular/cdk/keycodes';
-import { ProperMotionDialogComponent } from '../../../components/proper-motion-dialog/proper-motion-dialog.component';
 import { centroidPsf } from '../../../models/centroider';
 import { CentroidSettings } from '../../../models/centroid-settings';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
@@ -54,7 +38,6 @@ import { PhotometryJob, PhotometryJobResult } from '../../../../jobs/models/phot
 import { JobType } from '../../../../jobs/models/job-types';
 import { Astrometry } from '../../../../jobs/models/astrometry';
 import { SourceId } from '../../../../jobs/models/source-id';
-import { SourceExtractionJob, SourceExtractionJobResult } from '../../../../jobs/models/source-extraction';
 import { PapaParseService } from '../../../../../../node_modules/ngx-papaparse';
 
 
@@ -530,23 +513,23 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
 
 
   setSourceProperMotion(source: Source) {
-    let dialogRef = this.dialog.open(ProperMotionDialogComponent, {
-      width: '600px',
-      data: { source: { ...source } }
-    });
+    // let dialogRef = this.dialog.open(ProperMotionDialogComponent, {
+    //   width: '600px',
+    //   data: { source: { ...source } }
+    // });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // this.store.dispatch(new sourceExtractorActions.UpdateSource({
-        //   file: this.activeImageFile, sourceId: source.id, changes: {
-        //     skyPm: result.skyPm,
-        //     skyPmPosAngle: result.skyPmPosAngle,
-        //     pixelPm: result.pixelPm,
-        //     pixelPmPosAngle: result.pixelPmPosAngle
-        //   }
-        // }));
-      }
-    });
+    // dialogRef.afterClosed().subscribe(result => {
+    //   if (result) {
+    //     // this.store.dispatch(new sourceExtractorActions.UpdateSource({
+    //     //   file: this.activeImageFile, sourceId: source.id, changes: {
+    //     //     skyPm: result.skyPm,
+    //     //     skyPmPosAngle: result.skyPmPosAngle,
+    //     //     pixelPm: result.pixelPm,
+    //     //     pixelPmPosAngle: result.pixelPmPosAngle
+    //     //   }
+    //     // }));
+    //   }
+    // });
   }
 
 
