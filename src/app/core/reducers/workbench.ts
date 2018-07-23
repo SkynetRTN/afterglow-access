@@ -130,9 +130,9 @@ export function reducer(
       if (action.payload.viewMode == ViewMode.SINGLE) {
         activeViewerIndex = 0;
       }
-      else {
-        activeViewerIndex = 1;
-      }
+      // else {
+      //   activeViewerIndex = 1;
+      // }
 
       return {
         ...state,
