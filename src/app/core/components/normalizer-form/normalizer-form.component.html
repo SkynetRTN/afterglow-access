@@ -31,7 +31,7 @@
 </div>
 <div class="row">
   <div class="col-6">
-    <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="before" (change)="onInvertedChange.emit($event.checked)">
+    <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="'before'" (change)="onInvertedChange.emit($event.checked)">
       Inverted
     </mat-slide-toggle>
   </div>
