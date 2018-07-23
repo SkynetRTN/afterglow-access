@@ -204,8 +204,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
             let theta = source.pmPosAngle * (Math.PI / 180.0);
             let cd = Math.cos(secondaryCoord * Math.PI / 180);
 
-            console.log(fileEpoch, epoch, deltaT, mu, theta, cd);
-
             primaryCoord += mu * Math.sin(theta) / cd / 15;
             primaryCoord = primaryCoord % 360;
             secondaryCoord += mu * Math.cos(theta);

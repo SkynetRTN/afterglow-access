@@ -141,7 +141,6 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onInvertedChange(value: boolean) {
-    console.log('inverted change', value);
     this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { inverted: value } }))
   }
 

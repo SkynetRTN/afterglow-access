@@ -130,7 +130,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
     this.showAllSources$ = store.select(fromCore.workbench.getShowAllSources);
 
     this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.selectedImageFiles$ = store.select(fromCore.workbench.getSelectedFiles).map(files => files.filter(file => file.type == DataFileType.IMAGE) as Array<ImageFile>).do(val => console.log(val));
+    this.selectedImageFiles$ = store.select(fromCore.workbench.getSelectedFiles).map(files => files.filter(file => file.type == DataFileType.IMAGE) as Array<ImageFile>);
 
     this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.workbenchState$ = store.select(fromCore.getWorkbenchState).filter(state => state != null);
@@ -398,7 +398,6 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
     positionAngle = positionAngle % 360;
     if (positionAngle < 0) positionAngle += 360;
     let rate = Math.sqrt(Math.pow(primaryRate, 2) + Math.pow(secondaryRate, 2));
-    console.log(primaryRate, secondaryRate, rate, positionAngle);
 
     this.store.dispatch(new sourceActions.UpdateSource({ sourceId: this.selectedSources[0].id, changes: { pm: rate, pmPosAngle: positionAngle } }));
     this.store.dispatch(new sourceActions.RemoveSources({ sources: this.selectedSources.slice(1) }))
