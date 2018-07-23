@@ -397,7 +397,7 @@ export class SourceExtractorPageComponent implements AfterViewInit, OnDestroy, O
       let centerSecondaryCoord = (source.secondaryCoord + secondaryCoord0) / 2.0;
       return [
         (source.pmEpoch.getTime() - t0) / 1000.0,
-        (source.primaryCoord - primaryCoord0) * (source.posType == PosType.PIXEL ? 1 : ((15 * 3600) / Math.cos(centerSecondaryCoord * Math.PI / 180.0))),
+        (source.primaryCoord - primaryCoord0) * (source.posType == PosType.PIXEL ? 1 : ((15 * 3600) * Math.cos(centerSecondaryCoord * Math.PI / 180.0))),
         (source.secondaryCoord - secondaryCoord0) * (source.posType == PosType.PIXEL ? 1 : 3600)
       ]
     });
