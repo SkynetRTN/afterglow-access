@@ -65,7 +65,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     this.clearProgressLine$ = this.sonifierState$.filter(state => {
       return (state && this.sonificationSrcUri != state.sonificationUri)
     })
-    .map(() => true)
+      .map(() => true)
 
     this.subs.push(this.imageFile$.subscribe(imageFile => this.lastImageFile = imageFile));
     this.subs.push(this.sonifierState$.subscribe(sonifierState => {
@@ -73,40 +73,40 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
       if (sonifierState && this.sonificationSrcUri != sonifierState.sonificationUri) this.sonificationSrcUri = null;
     }));
 
-    this.store.dispatch(new workbenchActions.SetActiveTool({tool: WorkbenchTool.SONIFIER}));
+    this.store.dispatch(new workbenchActions.SetActiveTool({ tool: WorkbenchTool.SONIFIER }));
 
     this.hotKeys.push(new Hotkey('t 1', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.selectSubregionByTime(0)
       return false; // Prevent bubbling
     }, undefined, 'Time Navigation: Early'));
 
     this.hotKeys.push(new Hotkey('t 2', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.selectSubregionByTime(1)
       return false; // Prevent bubbling
     }, undefined, 'Time Navigation: Mid'));
 
     this.hotKeys.push(new Hotkey('t 3', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.selectSubregionByTime(2)
       return false; // Prevent bubbling
     }, undefined, 'Time Navigation: Late'));
 
     this.hotKeys.push(new Hotkey('f 1', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.selectSubregionByFrequency(0)
       return false; // Prevent bubbling
     }, undefined, 'Frequency Navigation: Low'));
 
     this.hotKeys.push(new Hotkey('f 2', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.selectSubregionByFrequency(1)
       return false; // Prevent bubbling
     }, undefined, 'Frequency Navigation: Mid'));
 
     this.hotKeys.push(new Hotkey('f 3', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.selectSubregionByFrequency(2)
       return false; // Prevent bubbling
     }, undefined, 'Frequency Navigation: High'));
@@ -118,7 +118,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
     }, undefined, 'Play Sonification'));
 
     this.hotKeys.push(new Hotkey('esc', (event: KeyboardEvent): boolean => {
-      if(this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
+      if (this.lastSonifierState.regionMode != SonifierRegionMode.CUSTOM) return true;
       this.resetRegionSelection();
       return false; // Prevent bubbling
     }, undefined, 'Reset Sonification Region'));
@@ -145,7 +145,7 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
   ngOnChanges() {
   }
-  
+
   private selectSubregionByFrequency(subregion: number) {
     let region = this.lastSonifierState.region;
     this.store.dispatch(new sonifierActions.AddRegionToHistory({
@@ -213,13 +213,13 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
   }
 
   private sonify() {
-    if(this.sonificationSrcUri == this.lastSonifierState.sonificationUri && this.api && this.api.canPlay) {
+    if (this.sonificationSrcUri == this.lastSonifierState.sonificationUri && this.api && this.api.canPlay) {
       this.api.getDefaultMedia().play();
     }
     else {
       this.sonificationSrcUri = this.lastSonifierState.sonificationUri;
     }
-    
+
   }
 
   onPlayerReady(api: VgAPI) {
@@ -227,8 +227,8 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
     let stop$ = Observable.from(this.api.getDefaultMedia().subscriptions.ended);
     let start$ = Observable.from(this.api.getDefaultMedia().subscriptions.playing);
-    
-    
+
+
     this.subs.push(Observable.from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe(canPlayThrough => {
       this.loading = false;
     }));
@@ -239,22 +239,22 @@ export class SonifierPageComponent implements AfterViewInit, OnDestroy, OnChange
 
     this.progressLine$ = Observable.merge(
       start$.flatMap(() => Observable.interval(10).takeUntil(stop$.merge(this.clearProgressLine$)))
-      .map(() => {
-        if(!this.api.getDefaultMedia()) return null;
-        if (this.api.getDefaultMedia().duration == 0) return null;
-        let region = this.lastSonifierState.region;
-        if (!region) return null;
+        .map(() => {
+          if (!this.api.getDefaultMedia()) return null;
+          if (this.api.getDefaultMedia().duration == 0) return null;
+          let region = this.lastSonifierState.region;
+          if (!region) return null;
 
-        let y = region.y + (this.api.getDefaultMedia().currentTime / this.api.getDefaultMedia().duration) * region.height;
+          let y = region.y + (this.api.getDefaultMedia().currentTime / this.api.getDefaultMedia().duration) * region.height;
 
-        return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
-      }),
+          return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
+        }),
       stop$.map(() => null),
       this.clearProgressLine$.map(() => null)
     )
 
     this.subs.push(this.progressLine$.distinctUntilChanged().subscribe(line => {
-      this.store.dispatch(new sonifierActions.SetProgressLine({file: this.lastImageFile, line: line}));
+      this.store.dispatch(new sonifierActions.SetProgressLine({ file: this.lastImageFile, line: line }));
     }))
   }
 

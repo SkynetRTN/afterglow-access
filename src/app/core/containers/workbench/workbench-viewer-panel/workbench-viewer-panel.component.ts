@@ -57,17 +57,17 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       this.fileId$,
       this.store.select(fromCore.getImageFileStates)
     )
-    .map(([fileId, imageFileStates]) => imageFileStates[fileId])
-    .filter(state => state !== undefined && state !== null);
+      .map(([fileId, imageFileStates]) => imageFileStates[fileId])
+      .filter(state => state !== undefined && state !== null);
 
 
     let lineStart$ = this.activeFileState$
-    .map(state => state.plotter.lineMeasureStart)
-    .distinctUntilChanged();
+      .map(state => state.plotter.lineMeasureStart)
+      .distinctUntilChanged();
 
     let lineEnd$ = this.activeFileState$
-    .map(state => state.plotter.lineMeasureEnd)
-    .distinctUntilChanged();
+      .map(state => state.plotter.lineMeasureEnd)
+      .distinctUntilChanged();
 
     let plotterMarkerLayers$ = Observable.combineLatest(this.fileId$, this.files$, lineStart$, lineEnd$)
       .map(([fileId, files, lineMeasureStart, lineMeasureEnd]) => {
@@ -75,7 +75,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
         let file = files[this.fileId] as ImageFile;
 
-        if(!file) return [[]];
+        if (!file) return [[]];
 
         let startPrimaryCoord = lineMeasureStart.primaryCoord;
         let startSecondaryCoord = lineMeasureStart.secondaryCoord;
@@ -83,30 +83,30 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         let endPrimaryCoord = lineMeasureEnd.primaryCoord;
         let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
         let endPosType = lineMeasureEnd.posType;
-    
+
         let x1 = startPrimaryCoord;
         let y1 = startSecondaryCoord;
         let x2 = endPrimaryCoord;
         let y2 = endSecondaryCoord;
 
-        if ((startPosType == PosType.SKY || endPosType == PosType.SKY))  {
+        if ((startPosType == PosType.SKY || endPosType == PosType.SKY)) {
           if (!file.headerLoaded || !getHasWcs(file)) return [[]];
           let wcs = getWcs(file);
-          if(startPosType == PosType.SKY) {
+          if (startPosType == PosType.SKY) {
             let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
             x1 = Math.max(Math.min(xy[0], getWidth(file)), 0);
             y1 = Math.max(Math.min(xy[1], getHeight(file)), 0)
-            
+
           }
 
-          if(endPosType == PosType.SKY) {
+          if (endPosType == PosType.SKY) {
             let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
             x2 = Math.max(Math.min(xy[0], getWidth(file)), 0);
             y2 = Math.max(Math.min(xy[1], getHeight(file)), 0)
           }
         }
 
-        
+
         return [[{
           type: MarkerType.LINE,
           x1: x1,
@@ -116,13 +116,14 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         } as LineMarker]];
       });
 
-    let sonifierMarkerLayers$ = Observable.combineLatest(this.activeFileState$
-      .map(state => state.sonifier.region)
-      .distinctUntilChanged(),
+    let sonifierMarkerLayers$ = Observable.combineLatest(
+      this.activeFileState$
+        .map(state => state.sonifier.region)
+        .distinctUntilChanged(),
       this.activeFileState$
         .map(state => state.sonifier.regionMode)
         .distinctUntilChanged(),
-        this.activeFileState$
+      this.activeFileState$
         .map(state => state.sonifier.progressLine)
         .distinctUntilChanged())
       .map(([region, regionMode, progressLine]) => {
@@ -184,7 +185,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         if (fileId === null) return [[]];
         let markers = [];
         let file = files[fileId] as ImageFile;
-        if(!file) return [[]];
+        if (!file) return [[]];
         sources.forEach(source => {
           let primaryCoord = source.primaryCoord;
           let secondaryCoord = source.secondaryCoord;
@@ -201,17 +202,17 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
             let deltaT = (fileEpoch.getTime() - epoch.getTime()) / 1000.0;
             let mu = source.pm * deltaT / 3600.0;
             let theta = source.pmPosAngle * (Math.PI / 180.0);
-            let cd =  Math.cos(secondaryCoord*Math.PI/180);
+            let cd = Math.cos(secondaryCoord * Math.PI / 180);
 
             console.log(fileEpoch, epoch, deltaT, mu, theta, cd);
-            
-            primaryCoord += mu*Math.sin(theta)/cd/15;
+
+            primaryCoord += mu * Math.sin(theta) / cd / 15;
             primaryCoord = primaryCoord % 360;
-            secondaryCoord += mu*Math.cos(theta);
+            secondaryCoord += mu * Math.cos(theta);
             secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord))
-            
+
             // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
-            
+
 
           }
 
@@ -229,7 +230,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
             y = xy[1];
             if (x < 0.5 || x >= getWidth(file) + 0.5 || y < 0.5 || y >= getHeight(file) + 0.5) return;
 
-            if(pm) {
+            if (pm) {
               theta = posAngle + wcs.positionAngle();
               theta = theta % 360;
               if (theta < 0) theta += 360;
