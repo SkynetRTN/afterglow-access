@@ -20,7 +20,7 @@ export class PhotSettingsDialogComponent implements OnInit {
 
   }
 
- setCenteringBoxWidth(value) {
+ setCentroidRadius(value) {
     this.settings.centroid_radius = value;
   }
 
