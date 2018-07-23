@@ -721,7 +721,7 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
 
     case sonifierActions.SET_PROGRESS_LINE: {
       let sonifierState = { ...state.entities[action.payload.file.id].sonifier };
-      sonifierState.progressLine = {...action.payload.line};
+      sonifierState.progressLine = action.payload.line ? {...action.payload.line}: null;
       return {
         ...adapter.updateOne({
           id: action.payload.file.id,
