@@ -1,100 +1,125 @@
-<div class="image-viewer-wrapper">
-  <app-pan-zoom-viewer
-    [imageFile]="imageFile$ | async"
-    [viewerState]="viewerState$ | async"
-    [showInfoBar]="true"
-    [showLineMarker]="line$ | async"
-    [line]="line$ | async"
-    (onImageClick)="onImageClick($event)"
-    (onImageMove)="onImageMove($event)">
-  </app-pan-zoom-viewer>
-</div>
+<div class="workbench-outlet-wrapper">
+  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+    <app-workbench-viewer-grid (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)"></app-workbench-viewer-grid>
+  </div>
 
-<div class="right-side-bar-wrapper">
-  <div class="card" style="height: 100%;">
-    <div class="card-header">
-      Plotter
-    </div>
+  <span class="resizer"></span>
+  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
+    <div class="card workbench-settings-card" style="height: 100%;">
+      <div id="settings-header" class="card-header">
+        <h4>Plotter Settings</h4>
+      </div>
 
-    <div class="card-body" style="overflow-y: auto;">
-      <div *ngIf="(imageFile$ | async)"> 
-        <app-plotter
-          #plotter
-          [imageFile]="imageFile$ | async"
-          [lineMeasureStart]="(plotterState$ | async)?.lineMeasureStart"
-          [lineMeasureEnd]="(plotterState$ | async)?.lineMeasureEnd"
-          [interpolatePixels]="(plotterSettings$ | async)?.interpolatePixels">
-        </app-plotter>
-        <div class="row">
-          <div class="col-4">
-            <div class="form-group">
-              <mat-slide-toggle
-                [checked]="(centroidSettings$ | async)?.centroidClicks"
-                [labelPosition]="before"
-                (change)="onCentroidClicksChange($event)">
-                Centroid clicks
-              </mat-slide-toggle>
-            </div>
-          </div>
-          <div class="col-4">
-            <div class="form-group">
-              <mat-slide-toggle
-                [checked]="(centroidSettings$ | async)?.useDiskCentroiding"
-                [disabled]="!(centroidSettings$ | async)?.centroidClicks"
-                [labelPosition]="before"
-                (change)="onPlanetCentroidingChange($event)">
-                Planet Centroiding
-              </mat-slide-toggle>
-            </div>
-          </div>
-          <div class="col-4">
-            <div class="form-group">
-              <mat-slide-toggle
-                [checked]="(plotterSettings$ | async)?.interpolatePixels"
-                [labelPosition]="before"
-                (change)="onInterpolatePixelsChange($event)">
-                Interpolate pixels
-              </mat-slide-toggle>
-            </div>
-          </div>
+      <div class="card-body" style="overflow-y: auto;">
+        <div *ngIf="!(imageFile$ | async) || !(imageFileState$ | async)" class="alert alert-info">
+          Select a data file to see plotter options.
         </div>
-      
-      
-        <div class="row">
-          <div class="col-12">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Measurement</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="(plotterState$ | async)?.lineMeasureStart?.x && (plotterState$ | async)?.lineMeasureStart?.y">
-                  <th scope="row">Start</th>
-                  <td>{{(plotterState$ | async)?.lineMeasureStart?.x | number: '1.0-3'}}, {{(plotterState$ | async)?.lineMeasureStart?.y | number: '1.0-3'}}</td>
-                </tr>
-                <tr *ngIf="(plotterState$ | async)?.lineMeasureEnd?.x && (plotterState$ | async)?.lineMeasureEnd?.y">
-                  <th scope="row">End</th>
-                  <td>{{(plotterState$ | async)?.lineMeasureEnd?.x | number: '1.0-3'}}, {{(plotterState$ | async)?.lineMeasureEnd?.y | number: '1.0-3'}}</td>
-                </tr>
-                <tr *ngIf="(lineLengthPixels$ | async)">
-                  <th scope="row">Separation</th>
-                  <td>{{(lineLengthPixels$ | async) | number: '1.0-3'}} pixels <br>
-                    <span *ngIf="(lineLengthScaled$ | async)">{{(lineLengthScaled$ | async)?.value | number: '1.0-3'}} {{(lineLengthScaled$ | async).units}}</span>
-                  </td>
-                </tr>
-                <tr *ngIf="(lineLengthPixels$ | async)">
-                  <th scope="row">Angle</th>
-                  <td>{{(lineAngle$ | async) | number: '1.0-2'}} degrees
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+        <div *ngIf="(imageFile$ | async) && (imageFileState$ | async)">
+          <app-plotter #plotter [imageFile]="imageFile$ | async" [width]="450" [height]="300" [lineMeasureStart]="(lineStart$ | async)"
+            [lineMeasureEnd]="(lineEnd$ | async)" [interpolatePixels]="(plotterSettings$ | async)?.interpolatePixels">
+          </app-plotter>
+          <div class="row">
+            <div class="col-6">
+              <div class="form-group">
+                <mat-slide-toggle [checked]="(centroidSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)">
+                  Centroid clicks
+                </mat-slide-toggle>
+              </div>
+
+            </div>
+            <div class="col-6">
+              <div class="form-group">
+                <mat-slide-toggle [checked]="(centroidSettings$ | async)?.useDiskCentroiding" [disabled]="!(centroidSettings$ | async)?.centroidClicks"
+                  [labelPosition]="before" (change)="onPlanetCentroidingChange($event)">
+                  Planet Centroiding
+                </mat-slide-toggle>
+              </div>
+
+            </div>
+
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="form-group">
+                <mat-slide-toggle [checked]="(plotterSettings$ | async)?.interpolatePixels" [labelPosition]="before" (change)="onInterpolatePixelsChange($event)">
+                  Interpolate pixels
+                </mat-slide-toggle>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group pt-2">
+                <mat-slide-toggle [checked]="(plotterSyncEnabled$ | async)" [labelPosition]="after" (change)="onPlotterSyncEnabledChange($event)">
+                  Sync Plot Across Files
+                </mat-slide-toggle>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="row">
+            <div class="col-12">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Measurement</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="(lineStart$ | async)">
+                    <th scope="row">Start</th>
+                    <td>
+                      <div *ngIf="(lineStart$ | async)?.x !== null && (lineStart$ | async)?.y !== null">
+                        {{(lineStart$ | async)?.x | number: '1.0-3'}}, {{(lineStart$ | async)?.y | number: '1.0-3'}}
+                      </div>
+                      <div *ngIf="(lineStart$ | async)?.raHours !== null && (lineStart$ | async)?.decDegs !== null">
+                        {{(lineStart$ | async)?.raHours | dms: '1.0-3'}}, {{(lineStart$ | async)?.decDegs | dms: '1.0-3'}}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="(lineEnd$ | async)">
+                    <th scope="row">End</th>
+                    <td>
+                      <div *ngIf="(lineEnd$ | async)?.x !== null && (lineEnd$ | async)?.y !== null">
+                        {{(lineEnd$ | async)?.x | number: '1.0-3'}}, {{(lineEnd$ | async)?.y | number: '1.0-3'}}
+                      </div>
+                      <div *ngIf="(lineEnd$ | async)?.raHours !== null && (lineEnd$ | async)?.decDegs !== null">
+                        {{(lineEnd$ | async)?.raHours | dms: '1.0-3'}}, {{(lineEnd$ | async)?.decDegs | dms: '1.0-3'}}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="(vectorInfo$ | async)">
+                    <th scope="row">Separation</th>
+                    <td>
+                      <div *ngIf="(vectorInfo$ | async)?.pixelSeparation !== null">
+                        {{(vectorInfo$ | async)?.pixelSeparation | number: '1.0-3'}} pixels
+                      </div>
+                      <div *ngIf="(vectorInfo$ | async)?.skySeparation !== null">
+                        {{(vectorInfo$ | async)?.skySeparation | number: '1.0-3'}} arcsecs
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="(vectorInfo$ | async)">
+                    <th scope="row">Angle</th>
+                    <td>
+                      <div *ngIf="(vectorInfo$ | async)?.pixelPosAngle !== null">
+                        {{(vectorInfo$ | async)?.pixelPosAngle | number: '1.0-3'}} degrees CW of +Y
+                      </div>
+                      <div *ngIf="(vectorInfo$ | async)?.skyPosAngle !== null">
+                        {{(vectorInfo$ | async)?.skyPosAngle | number: '1.0-3'}} degrees E of N
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+
 
 </div>

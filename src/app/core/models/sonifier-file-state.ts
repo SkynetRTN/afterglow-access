@@ -1,18 +1,19 @@
 import { Region } from './region';
 
-export enum SonifierRegionOption {
+export enum SonifierRegionMode {
   VIEWPORT,
   CUSTOM
 }
 
 export interface SonifierFileState {
-  fileId: string,
+  sonificationUri: string,
   regionHistoryInitialized: boolean;
   region: Region | null;
   regionHistory: Array<Region>;
   regionHistoryIndex: number | null;
-  regionOption: SonifierRegionOption;
+  regionMode: SonifierRegionMode;
   viewportSync: boolean;
   duration: number;
   toneCount: number;
+  progressLine: { x1: number, y1: number, x2: number, y2: number };
 }

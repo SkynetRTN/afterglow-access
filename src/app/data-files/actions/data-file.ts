@@ -23,13 +23,13 @@ export class LoadLibrary implements Action {
 export class LoadLibrarySuccess implements Action {
   readonly type = LOAD_LIBRARY_SUCCESS;
 
-  constructor(public payload: DataFile[]) {}
+  constructor(public payload: DataFile[]) { }
 }
 
 export class LoadLibraryFail implements Action {
   readonly type = LOAD_LIBRARY_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 /**
@@ -38,17 +38,19 @@ export class LoadLibraryFail implements Action {
 export class RemoveDataFile implements Action {
   readonly type = REMOVE_DATA_FILE;
 
-  constructor(public payload: {file: DataFile}) {}
+  constructor(public payload: { file: DataFile }) { }
 }
 
 export class RemoveDataFileSuccess implements Action {
   readonly type = REMOVE_DATA_FILE_SUCCESS;
+
+  constructor(public payload: { file: DataFile }) { }
 }
 
 export class RemoveDataFileFail implements Action {
   readonly type = REMOVE_DATA_FILE_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class RemoveAllDataFiles implements Action {
@@ -62,29 +64,29 @@ export class RemoveAllDataFiles implements Action {
 export class LoadDataFileHdr implements Action {
   readonly type = LOAD_DATA_FILE_HDR;
 
-  constructor(public payload: DataFile) {}
+  constructor(public payload: {file: DataFile}) { }
 }
 
 export class LoadDataFileHdrSuccess implements Action {
   readonly type = LOAD_DATA_FILE_HDR_SUCCESS;
-  
-  constructor(public payload: {'fileId': string, 'header': Header}) {}
+
+  constructor(public payload: { file: DataFile, header: Header }) { }
 }
 
 export class LoadDataFileHdrFail implements Action {
   readonly type = LOAD_DATA_FILE_HDR_FAIL;
-  
-  constructor(public payload: {fileId: string, error: any}) {}
+
+  constructor(public payload: { file: DataFile, error: any }) { }
 }
 
 export type Actions =
-| LoadLibrary
-| LoadLibrarySuccess
-| LoadLibraryFail
-| LoadDataFileHdr
-| LoadDataFileHdrSuccess
-| LoadDataFileHdrFail
-| RemoveDataFile
-| RemoveDataFileSuccess
-| RemoveDataFileFail;
+  | LoadLibrary
+  | LoadLibrarySuccess
+  | LoadLibraryFail
+  | LoadDataFileHdr
+  | LoadDataFileHdrSuccess
+  | LoadDataFileHdrFail
+  | RemoveDataFile
+  | RemoveDataFileSuccess
+  | RemoveDataFileFail;
 

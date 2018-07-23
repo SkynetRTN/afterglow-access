@@ -1,4 +1,4 @@
 export enum BlendMode {
-    Normal,
-    Screen,
+  Normal,
+  Screen,
 }

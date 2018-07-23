@@ -1,6 +1,6 @@
 export enum StretchMode {
-    Linear,
-    ArcSinh,
-    Log,
-    SquareRoot,
+  Linear,
+  ArcSinh,
+  Log,
+  SquareRoot,
 }

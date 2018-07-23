@@ -1,179 +1,158 @@
-<div class="image-viewer-wrapper">
-  <app-pan-zoom-viewer
-    [imageFile]="imageFile$ | async"
-    [viewerState]="viewerState$ | async"
-    [showRegionMarker]="true"
-    [region]="(sonifierState$ | async)?.region"
-    (onViewportChange)="onViewportChange($event)">
-  </app-pan-zoom-viewer>
-</div>
-  <div class="right-side-bar-wrapper">
-    <div class="card" style="height: 100%;">
-      <div class="card-header">
-        Sonification Settings
+<div class="workbench-outlet-wrapper">
+  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+    <app-workbench-viewer-grid></app-workbench-viewer-grid>
+  </div>
+
+  <span class="resizer"></span>
+
+  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
+    <div class="card workbench-settings-card" style="height: 100%;">
+      <div id="settings-header" class="card-header">
+        <h4>Sonifier Settings</h4>
       </div>
-  
-      <div *ngIf="(imageFile$ | async)" class="card-body" style="overflow-y: auto;">
-        
-        <table class="table">
-          <tbody>
-            <tr>
-              <th scope="row">Region Mode:</th>
-              <td>
-                <mat-button-toggle-group [ngModel]="(sonifierState$ | async)?.regionOption" (ngModelChange)="setRegionMethod($event)">
-                  <mat-button-toggle value="{{SonifierRegionOption.CUSTOM}}">
-                    <mat-icon>crop_square</mat-icon> Custom
-                  </mat-button-toggle>
-                  <mat-button-toggle value="{{SonifierRegionOption.VIEWPORT}}">
-                    <mat-icon>remove_red_eye</mat-icon> Viewport
-                  </mat-button-toggle>
-                </mat-button-toggle-group>
-  
-  
-              </td>
-            </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
-              <th scope="row">Time Navigation:</th>
-              <td>
-                <button mat-raised-button
-                  (click)="selectSubregionByTime(0)">
-                  Early
-                </button>
-                <button mat-raised-button
-                  (click)="selectSubregionByTime(1)">
-                  Mid
-                </button>
-                <button mat-raised-button
-                  (click)="selectSubregionByTime(2)">
-                  Late
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
-              <th scope="row">Tone Navigation:</th>
-              <td>
-                <button mat-raised-button
-                  (click)="selectSubregionByFrequency(0)">
-                  Low
-                </button>
-                <button mat-raised-button
-                  (click)="selectSubregionByFrequency(1)">
-                  Mid
-                </button>
-                <button mat-raised-button
-                  (click)="selectSubregionByFrequency(2)">
-                  High
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
+
+      <div class="card-body" style="overflow-y: auto;">
+        <div *ngIf="!(imageFile$ | async)" class="alert alert-info">
+          Select a data file to see sonifier options.
+        </div>
+        <div *ngIf="(imageFile$ | async)">
+          <table class="table header-value-table">
+            <tbody>
+              <tr>
+                <th scope="row">Region Mode:</th>
+                <td>
+                  <mat-button-toggle-group [ngModel]="(sonifierState$ | async)?.regionMode" (ngModelChange)="setRegionMode($event)">
+                    <mat-button-toggle value="{{SonifierRegionMode.CUSTOM}}">
+                      <mat-icon>crop_square</mat-icon> Custom
+                    </mat-button-toggle>
+                    <mat-button-toggle value="{{SonifierRegionMode.VIEWPORT}}">
+                      <mat-icon>remove_red_eye</mat-icon> Viewport
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+
+
+                </td>
+              </tr>
+              <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
+                <th scope="row">Time Navigation:</th>
+                <td>
+                  <button mat-raised-button (click)="selectSubregionByTime(0)">
+                    Early
+                  </button>
+                  <button mat-raised-button (click)="selectSubregionByTime(1)">
+                    Mid
+                  </button>
+                  <button mat-raised-button (click)="selectSubregionByTime(2)">
+                    Late
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
+                <th scope="row">Tone Navigation:</th>
+                <td>
+                  <button mat-raised-button (click)="selectSubregionByFrequency(0)">
+                    Low
+                  </button>
+                  <button mat-raised-button (click)="selectSubregionByFrequency(1)">
+                    Mid
+                  </button>
+                  <button mat-raised-button (click)="selectSubregionByFrequency(2)">
+                    High
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
                 <th scope="row">Selection Options:</th>
                 <td>
-                  <button mat-raised-button
-                    [disabled]="(sonifierState$ | async)?.regionHistoryIndex <= 0"
-                    (click)="undoRegionSelection()">
+                  <button mat-raised-button [disabled]="(sonifierState$ | async)?.regionHistoryIndex <= 0" (click)="undoRegionSelection()">
                     Undo
                   </button>
-                  <button mat-raised-button
-                    [disabled]="(sonifierState$ | async)?.regionHistoryIndex >= ((sonifierState$ | async)?.regionHistory?.length-1)"
+                  <button mat-raised-button [disabled]="(sonifierState$ | async)?.regionHistoryIndex >= ((sonifierState$ | async)?.regionHistory?.length-1)"
                     (click)="redoRegionSelection()">
                     Redo
                   </button>
-                  <button mat-raised-button
-                    (click)="resetRegionSelection()">
+                  <button mat-raised-button (click)="resetRegionSelection()">
                     Reset
                   </button>
                 </td>
-            </tr>
-            <tr *ngIf="(sonifierState$ | async)?.regionOption==SonifierRegionOption.CUSTOM">
-  
-            </tr>
-            <tr>
-              <th scope="row">Region Size:</th>
-              <td>{{(sonifierState$ | async)?.region?.height | number:'1.0-2'}} x {{(sonifierState$ | async)?.region?.width | number: '1.0-2'}} pixels</td>
-            </tr>
-            <tr>
-              <th scope="row">Start Pixel:</th>
-              <td>({{(sonifierState$ | async)?.region?.x | number:'1.0-2'}}, {{(sonifierState$ | async)?.region?.y | number:'1.0-2'}})</td>
-            </tr>
-            <tr>
-              <th scope="row">End Pixel:</th>
-              <td>({{((sonifierState$ | async)?.region?.x + (sonifierState$ | async)?.region?.width) | number:'1.0-2'}}, {{((sonifierState$ | async)?.region?.y + (sonifierState$ | async)?.region?.height)  | number:'1.0-2'}})</td>
-            </tr>
-          </tbody>
-        </table>
-  
-        
-        <div class="row">
-          <div class="col-6">
-            <mat-form-field class="">
-              <input matInput
-                placeholder="Duration"
-                [ngModel]="(sonifierState$ | async)?.duration"
-                (ngModelChange)="setDuration($event)"
-                type="number"
-                step="1"
-                min="5"
-                max="60">
-            </mat-form-field>
-           
+              </tr>
+              <tr *ngIf="(sonifierState$ | async)?.regionMode==SonifierRegionMode.CUSTOM">
+
+              </tr>
+              <tr>
+                <th scope="row">Region Size:</th>
+                <td>{{(sonifierState$ | async)?.region?.height | number:'1.0-2'}} x {{(sonifierState$ | async)?.region?.width
+                  | number: '1.0-2'}} pixels</td>
+              </tr>
+              <tr>
+                <th scope="row">Start Pixel:</th>
+                <td>({{(sonifierState$ | async)?.region?.x | number:'1.0-2'}}, {{(sonifierState$ | async)?.region?.y | number:'1.0-2'}})</td>
+              </tr>
+              <tr>
+                <th scope="row">End Pixel:</th>
+                <td>({{((sonifierState$ | async)?.region?.x + (sonifierState$ | async)?.region?.width) | number:'1.0-2'}}, {{((sonifierState$
+                  | async)?.region?.y + (sonifierState$ | async)?.region?.height) | number:'1.0-2'}})</td>
+              </tr>
+            </tbody>
+          </table>
+
+
+          <div class="row">
+            <div class="col-6">
+              <mat-form-field class="">
+                <input matInput placeholder="Duration" [ngModel]="(sonifierState$ | async)?.duration" (ngModelChange)="setDuration($event)"
+                  type="number" step="1" min="5" max="60">
+              </mat-form-field>
+
+            </div>
+            <div class="col-6">
+              <mat-form-field class="">
+                <input matInput placeholder="Tones" [ngModel]="(sonifierState$ | async)?.toneCount" (ngModelChange)="setToneCount($event)"
+                  type="number" step="1" min="1" max="100">
+              </mat-form-field>
+            </div>
           </div>
-          <div class="col-6">
-            <mat-form-field class="">
-              <input matInput
-                placeholder="Tones"
-                [ngModel]="(sonifierState$ | async)?.toneCount"
-                (ngModelChange)="setToneCount($event)"
-                type="number"
-                step="1"
-                min="1"
-                max="100">
-            </mat-form-field>
+          <mat-slide-toggle [checked]="(sonifierState$ | async)?.viewportSync" [labelPosition]="before" (change)="setViewportSync($event)">
+            Keep selected region in viewer
+          </mat-slide-toggle>
+
+
+
+          <div class="pb-3">
+            <button mat-raised-button (click)="sonify()" class="pull-right">
+              <mat-icon>audiotrack</mat-icon>Sonify</button>
+            <div style="clear: both"></div>
+          </div>
+
+
+          <div>
+            <div *ngIf="sonificationSrcUri && loading" class="alert alert-warning">
+              Loading...
+            </div>
+            <vg-player (onPlayerReady)="onPlayerReady($event)" [hidden]="!sonificationSrcUri || loading" style="height: 50px;">
+              <vg-controls>
+                <vg-play-pause></vg-play-pause>
+                <vg-playback-button></vg-playback-button>
+                <vg-time-display vgformat="mm:ss" vgproperty="current"></vg-time-display>
+
+                <vg-scrub-bar>
+                  <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+                  <vg-scrub-bar-buffering-time></vg-scrub-bar-buffering-time>
+                </vg-scrub-bar>
+
+                <vg-time-display vgformat="mm:ss" vgproperty="left"></vg-time-display>
+                <vg-time-display vgformat="mm:ss" vgproperty="total"></vg-time-display>
+
+                <vg-mute></vg-mute>
+              </vg-controls>
+              <audio [vgMedia]="media" #media id="sonificationAudio" [src]="sonificationSrcUri" autoplay>
+              </audio>
+            </vg-player>
           </div>
         </div>
-        <mat-slide-toggle
-          [checked]="(sonifierState$ | async)?.viewportSync"
-          [labelPosition]="before"
-          (change)="setViewportSync($event)">
-          Keep selected region in viewer
-        </mat-slide-toggle>
-  
-          
-  
-        <div class="pb-3">
-          <button mat-raised-button (click)="sonify()" class="pull-right"><mat-icon>audiotrack</mat-icon>Sonify</button>
-          <div style="clear: both"></div>
-        </div>
-        
-  
-        <div *ngIf="sonificationSrcUri">
-          <div *ngIf="!api?.canPlay" class="alert alert-warning">
-            Loading...
-          </div>
-  
-          <vg-player (onPlayerReady)="onPlayerReady($event)" [hidden]="!api?.canPlay" style="height: 50px;">
-            <vg-controls>
-              <vg-play-pause ></vg-play-pause>
-              <vg-playback-button ></vg-playback-button>
-              <vg-time-display  vgformat="mm:ss" vgproperty="current"></vg-time-display>
-      
-              <vg-scrub-bar >
-                  <vg-scrub-bar-current-time ></vg-scrub-bar-current-time>
-                  <vg-scrub-bar-buffering-time ></vg-scrub-bar-buffering-time>
-              </vg-scrub-bar>
-      
-              <vg-time-display  vgformat="mm:ss" vgproperty="left"></vg-time-display>
-              <vg-time-display  vgformat="mm:ss" vgproperty="total"></vg-time-display>
-      
-              <vg-mute ></vg-mute>
-            </vg-controls>
-            <audio [vgMedia]="media" #media id="sonificationAudio" [src]="sonificationSrcUri" autoplay>
-            </audio>
-          </vg-player>
-        </div>
-        
+
+
       </div>
     </div>
-  
   </div>
-  
+</div>

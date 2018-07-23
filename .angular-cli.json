@@ -19,17 +19,16 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
-        "styles.scss",
-        "assets/css/google-fonts.css",
-        "assets/css/bootstrap.min.css",
-        "assets/css/style.css",
-        "assets/css/nv.d3.min.css",
-        "../node_modules/videogular2/fonts/videogular.css"
+        "../node_modules/bootstrap-css-only/css/bootstrap.min.css",
+        "../node_modules/nvd3/build/nv.d3.min.css",
+        "../node_modules/videogular2/fonts/videogular.css",
+        "../node_modules/material-design-icons/iconfont/material-icons.css",
+        "styles.scss"
       ],
       "scripts": [
         "../node_modules/downloadjs/download.js",
-        "assets/js/d3.min.js",
-        "assets/js/nv.d3.min.js"
+        "../node_modules/d3/d3.min.js",
+        "../node_modules/nvd3/build/nv.d3.min.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

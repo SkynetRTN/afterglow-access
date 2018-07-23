@@ -14,4 +14,4 @@ export const COMPONENTS = [
   declarations: COMPONENTS,
   exports: COMPONENTS,
 })
-export class SvgModule {};
+export class SvgModule { };

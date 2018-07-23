@@ -16,9 +16,10 @@ import { MaterialModule } from './material';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './auth/auth.module';
 import { reducers, metaReducers } from './reducers';
+import {HotkeyModule} from 'angular2-hotkeys';
 
 import { AppComponent } from './app.component';
-import { routes } from './app.routing';
+import { AFTERGLOW_ROUTES } from './routes';
 import { environment } from '../environments/environment';
 
 @NgModule({
@@ -27,7 +28,7 @@ import { environment } from '../environments/environment';
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot(routes, { enableTracing: false }),
+    RouterModule.forRoot(AFTERGLOW_ROUTES, { enableTracing: false }),
     MaterialModule,
     CookieModule.forRoot(),
 
@@ -40,7 +41,7 @@ import { environment } from '../environments/environment';
      */
     StoreModule.forRoot(reducers, { metaReducers }),
 
-    
+
     /**
      * Store devtools instrument the store retaining past versions of state
      * and recalculating new states. This enables powerful time-travel
@@ -68,9 +69,10 @@ import { environment } from '../environments/environment';
      * `provideDB` sets up @ngrx/db with the provided schema and makes the Database
      * service available.
      */
-    
+
     CoreModule.forRoot(),
     AuthModule.forRoot(),
+    HotkeyModule.forRoot()
   ],
 
   declarations: [
@@ -82,8 +84,8 @@ import { environment } from '../environments/environment';
       useClass: TokenInterceptor,
       multi: true
     }
-   
+
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

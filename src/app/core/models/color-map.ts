@@ -20,23 +20,23 @@ function getColorFromChannel(i: number, count: number, cc: Array<LIColor>) {
   let x = i / count;
   let index = 0;
   while (index < cc.length && (cc[index].x < x)) {
-      index++;
+    index++;
   }
 
   if (index === 0) {
-      return cc[0].y * 255;
+    return cc[0].y * 255;
   }
   if (index === cc.length) {
-      return cc[cc.length - 1].y * 255;
+    return cc[cc.length - 1].y * 255;
   }
 
   // interpolate
   let m = (cc[index].y - cc[index - 1].y) / (cc[index].x - cc[index - 1].x);
   if (m !== 0) {
-      return (m * (x - cc[index - 1].x) + cc[index - 1].y) * 255;
+    return (m * (x - cc[index - 1].x) + cc[index - 1].y) * 255;
   }
   else {
-      return cc[index - 1].y * 255;
+    return cc[index - 1].y * 255;
   }
 }
 
@@ -49,8 +49,8 @@ function getColor(i: number, count: number, red: LIColor[], green: LIColor[], bl
   return (a << 24 | b << 16 | g << 8 | r);
 }
 
-function createColorMap(name: string, red: LIColor[], green: LIColor[], blue: LIColor[]) : ColorMap {
-  let colorMap : ColorMap = {
+function createColorMap(name: string, red: LIColor[], green: LIColor[], blue: LIColor[]): ColorMap {
+  let colorMap: ColorMap = {
     name: name,
     red: red,
     green: green,
@@ -69,153 +69,153 @@ function createColorMap(name: string, red: LIColor[], green: LIColor[], blue: LI
 export let grayColorMap = createColorMap(
   "Gray Color Map",
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
   ],
 );
 
 export let rainbowColorMap = createColorMap(
   "Rainbow Color Map",
   [
-    {x: 0, y: 1},
-    {x: .2, y: 0},
-    {x: .6, y: 0},
-    {x: .8, y: 1},
-    {x: 1, y: 1},
+    { x: 0, y: 1 },
+    { x: .2, y: 0 },
+    { x: .6, y: 0 },
+    { x: .8, y: 1 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: .2, y: 0},
-    {x: .4, y: 1},
-    {x: .8, y: 1},
-    {x: 1, y: 0},
+    { x: 0, y: 0 },
+    { x: .2, y: 0 },
+    { x: .4, y: 1 },
+    { x: .8, y: 1 },
+    { x: 1, y: 0 },
   ],
   [
-    {x: 0, y: 1},
-    {x: .4, y: 1},
-    {x: .6, y: 0},
-    {x: 1, y: 0},
+    { x: 0, y: 1 },
+    { x: .4, y: 1 },
+    { x: .6, y: 0 },
+    { x: 1, y: 0 },
   ],
 );
 
 export let coolColorMap = createColorMap(
   "Cool Color Map",
   [
-    {x: 0, y: 0},
-    {x: .29, y: 0},
-    {x: .76, y: .1},
-    {x: 1, y: 1}
+    { x: 0, y: 0 },
+    { x: .29, y: 0 },
+    { x: .76, y: .1 },
+    { x: 1, y: 1 }
   ],
   [
-    {x: 0, y: 0},
-    {x: .22, y: 0},
-    {x: .96, y: 1},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: .22, y: 0 },
+    { x: .96, y: 1 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: .53, y: 1},
-    {x: 1, y: 1}
+    { x: 0, y: 0 },
+    { x: .53, y: 1 },
+    { x: 1, y: 1 }
   ],
 );
 
 export let heatColorMap = createColorMap(
   "Heat Color Map",
   [
-    {x: 0, y: 0},
-    {x: .34, y: 1},
-    {x: 1, y: 1}
+    { x: 0, y: 0 },
+    { x: .34, y: 1 },
+    { x: 1, y: 1 }
   ],
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: .65, y: 0},
-    {x: .98, y: 1},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: .65, y: 0 },
+    { x: .98, y: 1 },
+    { x: 1, y: 1 },
   ],
 );
 
 export let redColorMap = createColorMap(
   "Red Color Map",
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1}
+    { x: 0, y: 0 },
+    { x: 1, y: 1 }
   ],
   [
-    {x: 0, y: 0},
-    {x: 0, y: 0},
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
   [
-    {x: 0, y: 0},
-    {x: 0, y: 0},
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
 );
 
 export let greenColorMap = createColorMap(
   "Green Color Map",
   [
-    {x: 0, y: 0},
-    {x: 0, y: 0},
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1}
+    { x: 0, y: 0 },
+    { x: 1, y: 1 }
   ],
   [
-    {x: 0, y: 0},
-    {x: 0, y: 0},
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
 );
 
 export let blueColorMap = createColorMap(
   "Blue Color Map",
   [
-    {x: 0, y: 0},
-    {x: 0, y: 0},
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
   [
-    {x: 0, y: 0},
-    {x: 0, y: 0}
+    { x: 0, y: 0 },
+    { x: 0, y: 0 }
   ],
   [
-    {x: 0, y: 0},
-    {x: 1, y: 1}
+    { x: 0, y: 0 },
+    { x: 1, y: 1 }
   ],
 );
 
 export let aColorMap = createColorMap(
   "A Color Map",
   [
-    {x: 0, y: 0},
-    {x: .25, y: 0},
-    {x: .5, y: 1},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: .25, y: 0 },
+    { x: .5, y: 1 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: .25, y: 1},
-    {x: .5, y: 0},
-    {x: .77, y: 0},
-    {x: 1, y: 1},
+    { x: 0, y: 0 },
+    { x: .25, y: 1 },
+    { x: .5, y: 0 },
+    { x: .77, y: 0 },
+    { x: 1, y: 1 },
   ],
   [
-    {x: 0, y: 0},
-    {x: .125, y: 0},
-    {x: .5, y: 1},
-    {x: .64, y: .5},
-    {x: .77, y: 0},
-    {x: 1, y: 0},
+    { x: 0, y: 0 },
+    { x: .125, y: 0 },
+    { x: .5, y: 1 },
+    { x: .64, y: .5 },
+    { x: .77, y: 0 },
+    { x: 1, y: 0 },
   ],
 );
 

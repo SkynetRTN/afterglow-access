@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { SourceExtractionSettings } from '../../../jobs/models/source-extraction';
 
-import { SourceExtractionSettings } from '../../models/source-extraction-settings';
 
 @Component({
   selector: 'app-source-extraction-settings-dialog',

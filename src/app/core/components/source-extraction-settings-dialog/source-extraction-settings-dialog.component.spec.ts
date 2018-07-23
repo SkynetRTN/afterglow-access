@@ -8,9 +8,9 @@ describe('SourceExtractionSettingsDialogComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SourceExtractionSettingsDialogComponent ]
+      declarations: [SourceExtractionSettingsDialogComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

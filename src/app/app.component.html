@@ -1,8 +1,13 @@
-<div id="top-menu">
-  <navbar [routes]=currentRoutes></navbar>
-  <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
-</div>
+<hotkeys-cheatsheet></hotkeys-cheatsheet>
+<div class="main-wrapper">
+  <header class="main-header">
+    <app-navbar [authenticated]="(loggedIn$ | async)" class="mat-elevation-z6"></app-navbar>
+    <!-- <navbar [routes]=currentRoutes></navbar> -->
+    <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
+  </header>
 
-<div id="content">
-  <router-outlet></router-outlet>
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
 </div>

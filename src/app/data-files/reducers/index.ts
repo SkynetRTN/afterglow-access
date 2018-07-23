@@ -10,6 +10,12 @@ export const reducers = fromDataFiles.reducer;
 
 export const getDataFilesState = createFeatureSelector<fromDataFiles.State>('dataFiles');
 
+export const getLibraryLoading = createSelector(
+  getDataFilesState,
+  (state) => state.libraryLoading
+);
+
+
 
 export const {
   selectIds: getDataFileIds,

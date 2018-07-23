@@ -26,6 +26,7 @@ import * as dataFileActions from '../../data-files/actions/data-file';
 import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 import { AfterglowDataFileService } from '../../core/services/afterglow-data-files';
+import { HttpErrorResponse } from '@angular/common/http/src/response';
 
 
 @Injectable()
@@ -35,7 +36,7 @@ export class DataProviderEffects {
     .ofType<dataProviderActions.LoadDataProviders>(dataProviderActions.LOAD_DATA_PROVIDERS)
     //.debounceTime(this.debounce || 300, this.scheduler || async)
     .switchMap(action => {
-      
+
       const nextReq$ = this.actions$.ofType(dataProviderActions.LOAD_DATA_PROVIDERS).skip(1);
 
       return this.afterglowDataProviderService
@@ -43,7 +44,7 @@ export class DataProviderEffects {
         .takeUntil(nextReq$)
         .map((dataProviders: DataProvider[]) => new dataProviderActions.LoadDataProvidersSuccess(dataProviders))
         .catch(err => of(new dataProviderActions.LoadDataProvidersFail(err)));
-  });
+    });
 
   @Effect()
   loadDataProviderAssets$: Observable<Action> = this.actions$
@@ -60,7 +61,7 @@ export class DataProviderEffects {
           assets: dataProviderAssets
         }))
         .catch(err => of(new dataProviderActions.LoadDataProviderAssetsFail(err)));
-  });
+    });
 
   @Effect()
   loadDataProviderAssetsSuccess$: Observable<Action> = this.actions$
@@ -74,30 +75,48 @@ export class DataProviderEffects {
     .withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState))
     //.debounceTime(this.debounce || 300, this.scheduler || async)
     .switchMap(([action, state]) => {
-      return Observable.forkJoin(state.selectedAssets.map(asset => {
+      return Observable.merge(...state.pendingImports.map(asset => {
         return this.afterglowDataFileService
-        .createFromDataProviderAsset(state.currentProvider, asset);
+          .createFromDataProviderAsset(state.currentProvider, asset)
+          .map(() => new dataProviderActions.ImportAssetSuccess({ asset: asset }))
+          .catch(err => {
+            return of(new dataProviderActions.ImportAssetFail({ error: (err as HttpErrorResponse).error.message, asset: asset }))
+          })
       }))
-      .map(() => new dataProviderActions.ImportSelectedAssetsSuccess({}))
-      .catch(err => of(new dataProviderActions.ImportSelectedAssetsFail(err)))
     });
 
     @Effect()
-    importSelectedAssetsSuccess$: Observable<Action> = this.actions$
-      .ofType<dataProviderActions.ImportSelectedAssetsSuccess>(dataProviderActions.IMPORT_SELECTED_ASSETS_SUCCESS)
-      //.debounceTime(this.debounce || 300, this.scheduler || async)
-      .flatMap(action => {
-        this.router.navigate(['/workbench']);
-        return Observable.from([new dataFileActions.LoadLibrary()]);
-      });
-        
-  
-  
+  importAssets$: Observable<Action> = this.actions$
+    .ofType<dataProviderActions.ImportAssets>(dataProviderActions.IMPORT_ASSETS)
+    .withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState))
+    //.debounceTime(this.debounce || 300, this.scheduler || async)
+    .switchMap(([action, state]) => {
+      return Observable.merge(...state.pendingImports.map(asset => {
+        return this.afterglowDataFileService
+          .createFromDataProviderAsset(state.currentProvider, asset)
+          .map(() => new dataProviderActions.ImportAssetSuccess({ asset: asset }))
+          .catch(err => {
+            return of(new dataProviderActions.ImportAssetFail({ error: (err as HttpErrorResponse).error.message, asset: asset }))
+          })
+      }))
+    });
+
+  // @Effect()
+  // importSelectedAssetsSuccess$: Observable<Action> = this.actions$
+  //   .ofType<dataProviderActions.ImportAssetSuccess>(dataProviderActions.IMPORT_ASSET_SUCCESS)
+  //   //.debounceTime(this.debounce || 300, this.scheduler || async)
+  //   .flatMap(action => {
+  //     this.router.navigate(['/workbench']);
+  //     return Observable.from([new dataFileActions.LoadLibrary()]);
+  //   });
+
+
+
   constructor(
     private actions$: Actions,
     private afterglowDataProviderService: AfterglowDataProviderService,
     private afterglowDataFileService: AfterglowDataFileService,
     private store: Store<fromDataProviders.State>,
     private router: Router
-  ) {}
+  ) { }
 }

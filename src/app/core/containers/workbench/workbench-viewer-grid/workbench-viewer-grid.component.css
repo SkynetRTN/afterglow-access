@@ -1,0 +1,21 @@
+.image-viewer-grid-panel {
+  flex: 1 1 0%;
+  position: relative;
+  outline: none;
+}
+
+.image-viewer-grid-wrapper {
+  display: flex;
+  flex: 1 1 0%;
+  height: 100%;
+  width: 100%;
+  outline: none;
+  overflow: hidden;
+}
+
+.workbench-viewer-panel {
+  flex: 1 1 0%;
+  position: relative;
+  outline: none;
+  border: 2px solid #ffffff;
+}

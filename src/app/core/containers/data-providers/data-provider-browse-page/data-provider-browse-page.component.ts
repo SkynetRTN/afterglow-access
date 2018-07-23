@@ -1,11 +1,16 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, Optional, Inject } from '@angular/core';
+import {
+  Component, OnInit, AfterViewInit, Renderer, Output, EventEmitter, OnDestroy, Optional,
+  Inject, ViewChild, Directive, HostListener, ContentChildren, QueryList, ViewChildren, ElementRef,
+  Attribute, Input, AfterContentInit, forwardRef, ContentChild, OnChanges, HostBinding
+} from '@angular/core';
 import { DOCUMENT, DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Location }               from '@angular/common';
-import { MatCheckboxChange } from '@angular/material';
+import { Location } from '@angular/common';
+import { MatCheckboxChange, MatTableDataSource, MatSort, Sort, MatCell, MatRow, MatColumnDef, MatHeaderCell, MatTable, MatCheckbox, MatSortHeader } from '@angular/material';
 import { ENTER, SPACE, UP_ARROW, DOWN_ARROW } from '@angular/cdk/keycodes';
-import { ITdDataTableColumn, ITdDataTableSortChangeEvent, TdDataTableSortingOrder } from '@covalent/core';
-import { TdDialogService } from '@covalent/core';
+import { SelectionModel } from '@angular/cdk/collections';
+import { CollectionViewer, DataSource } from "@angular/cdk/collections";
+import { FocusableOption, FocusKeyManager } from '@angular/cdk/a11y'
 
 import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../../reducers';
@@ -18,7 +23,43 @@ import * as dataProviderActions from '../../../../data-providers/actions/data-pr
 
 import { Subscription } from 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
-import { TdDataTableCellComponent } from '@covalent/core/data-table/data-table-cell/data-table-cell.component';
+import {
+  // UP_ARROW,
+  // DOWN_ARROW,
+  LEFT_ARROW,
+  RIGHT_ARROW,
+  TAB,
+  A,
+  Z,
+  ZERO,
+  NINE,
+} from '@angular/cdk/keycodes';
+import { CdkColumnDef } from '@angular/cdk/table';
+
+
+export class DataProviderAssetsDataSource implements DataSource<DataProviderAsset> {
+  assets$: Observable<DataProviderAsset[]>;
+  assets: DataProviderAsset[] = [];
+  sub: Subscription;
+
+  constructor(private store: Store<fromRoot.State>) {
+    this.assets$ = store.select(fromDataProviders.getCurrentAssets);
+  }
+
+  connect(collectionViewer: CollectionViewer): Observable<DataProviderAsset[]> {
+    this.sub = this.assets$
+      .subscribe(assets => {
+        this.assets = assets;
+      });
+
+    return this.assets$;
+  }
+
+  disconnect(collectionViewer: CollectionViewer): void {
+    this.sub.unsubscribe();
+  }
+
+}
 
 @Component({
   selector: 'app-data-provider-browse-page',
@@ -26,170 +67,148 @@ import { TdDataTableCellComponent } from '@covalent/core/data-table/data-table-c
   styleUrls: ['./data-provider-browse-page.component.css']
 })
 export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  dataProvidersLoaded$: Observable<boolean>;
   dataProviders$: Observable<DataProvider[]>;
   currentProvider$: Observable<DataProvider>;
+  currentProviderColumns$: Observable<string[]>;
   loadingAssets$: Observable<boolean>;
   currentAssets$: Observable<DataProviderAsset[]>;
   selectedAssets$: Observable<DataProviderAsset[]>;
   sortField$: Observable<string>;
-  sortOrder$: Observable<TdDataTableSortingOrder>;
-  currentPathBreadcrumbs$: Observable<Array<{name: string, url: string}>>;
-  routeParamSub: Subscription;
+  sortOrder$: Observable<'' | 'asc' | 'desc'>;
+  importing$: Observable<boolean>;
+  pendingImports$: Observable<DataProviderAsset[]>;
+  completedImports$: Observable<DataProviderAsset[]>;
+  importProgress$: Observable<number>;
+  importErrors$: Observable<any[]>;
+  currentPathBreadcrumbs$: Observable<Array<{ name: string, url: string }>>;
+  sort: MatSort;
+  sortSub: Subscription;
 
-  selectAllIndeterminate: boolean = false;
-  allSelected: boolean = false;
-  
+
+  @ViewChild(MatSort) set sortSetter(sort: MatSort) {
+    if (!sort) return;
+    this.sort = sort;
+    if (this.sortSub) this.sortSub.unsubscribe();
+    this.sortSub = this.sort.sortChange
+      .subscribe(() => {
+        this.store.dispatch(new dataProviderActions.SortDataProviderAssets({ fieldName: this.sort.active, order: this.sort.direction }))
+      });
+  }
+  dataSource: DataProviderAssetsDataSource;
+  selection = new SelectionModel<DataProviderAsset>(true, []);
+  subs: Subscription[] = [];
+
 
   constructor(
     private store: Store<fromRoot.State>,
     private route: ActivatedRoute,
     private location: Location,
     private router: Router,
-    private slufigy: SlugifyPipe,
-    @Optional() @Inject(DOCUMENT) private _document: any,) {
-      let state$ = store.select(fromDataProviders.getDataProvidersState);
-      this.dataProviders$ = state$.map(state => state.dataProviders).distinctUntilChanged();
-      this.currentProvider$ = state$.map(state => state.currentProvider).distinctUntilChanged();
-      this.loadingAssets$ = state$.map(state => state.loadingAssets).distinctUntilChanged();
-      this.currentPathBreadcrumbs$ = state$.map(state => state.currentPathBreadcrumbs).distinctUntilChanged();
-      this.currentAssets$ = state$.map(state => state.currentAssets).distinctUntilChanged();
-      this.selectedAssets$ = state$.map(state => state.selectedAssets).distinctUntilChanged();
-      this.sortField$ = state$.map(state => state.assetSortField);
-      this.sortOrder$ = state$.map(state => state.assetSortOrder);
+    private slufigy: SlugifyPipe) {
+
+    let state$ = store.select(fromDataProviders.getDataProvidersState);
+    this.dataProviders$ = store.select(fromDataProviders.getDataProviders);
+    this.dataProvidersLoaded$ = store.select(fromDataProviders.getDataProvidersLoaded);
+    this.currentProvider$ = store.select(fromDataProviders.getCurrentProvider);
+    this.currentProviderColumns$ = this.currentProvider$.filter(provider => provider != null).map(provider => ['select', 'name', ...provider.columns.map(col => col.fieldName)]);
+    this.loadingAssets$ = store.select(fromDataProviders.getLoadingAssets);
+    this.currentPathBreadcrumbs$ = store.select(fromDataProviders.getCurrentPathBreadcrumbs);
+    this.currentAssets$ = store.select(fromDataProviders.getCurrentAssets);
+    this.selectedAssets$ = store.select(fromDataProviders.getSelectedAssets);
+    this.sortField$ = store.select(fromDataProviders.getCurrentSortField);
+    this.sortOrder$ = store.select(fromDataProviders.getCurrentSortOrder);
+    this.importing$ = store.select(fromDataProviders.getImporting);
+    this.importProgress$ = store.select(fromDataProviders.getImportProgress);
+    this.pendingImports$ = store.select(fromDataProviders.getPendingImports);
+    this.completedImports$ = store.select(fromDataProviders.getCompletedImports);
+    this.importErrors$ = store.select(fromDataProviders.getImportErrors);
+
+    this.dataSource = new DataProviderAssetsDataSource(store);
   }
 
   ngOnInit() {
-    this.store.dispatch(new dataProviderActions.LoadDataProviders());
-    this.routeParamSub = Observable.combineLatest(this.route.params, this.route.queryParams, this.dataProviders$)
-    .subscribe(([params, qparams, dataProviders]) => {
-      let slug : string = params['slug'];
-      let dataProvider = dataProviders.find(provider => this.slufigy.transform(provider.name) == slug);
-      if(dataProvider) {
-        this.store.dispatch(new dataProviderActions.LoadDataProviderAssets({dataProvider: dataProvider, path: qparams['path']}))
-      }
-    });
+
+
+    this.subs.push(Observable.combineLatest(this.route.params, this.route.queryParams, this.dataProviders$)
+      .withLatestFrom(this.dataProvidersLoaded$)
+      .subscribe(([[params, qparams, dataProviders], dataProvidersLoaded]) => {
+        if (!dataProvidersLoaded) {
+          this.store.dispatch(new dataProviderActions.LoadDataProviders());
+          return;
+        }
+        let slug: string = params['slug'];
+        let dataProvider = dataProviders.find(provider => this.slufigy.transform(provider.name) == slug);
+        if (dataProvider) {
+          this.store.dispatch(new dataProviderActions.LoadDataProviderAssets({ dataProvider: dataProvider, path: qparams['path'] }))
+          this.selection.clear();
+          //this.activeCell = null; 
+        }
+      }));
+
+    this.subs.push(this.completedImports$.subscribe(completedImports => {
+      completedImports.forEach(asset => {
+        this.selection.deselect(asset);
+      })
+    }))
+
+    this.subs.push(this.importProgress$
+      .withLatestFrom(this.importErrors$)
+      .filter(([progress, errors]) => progress == 1 && errors.length == 0)
+      .subscribe(v => {
+        this.router.navigate(['/']);
+      }));
+
   }
 
   ngAfterViewInit() {
+
   }
 
   ngOnDestroy() {
-    this.routeParamSub.unsubscribe();
+    this.subs.forEach(sub => sub.unsubscribe());
   }
 
-  rowKeyup(event: KeyboardEvent, asset: DataProviderAsset): void {
-    switch (event.keyCode) {
-      case ENTER:
-      case SPACE:
-        if(asset.collection) return;
-        this.store.dispatch(new dataProviderActions.ToggleDataProviderAssetSelect({asset: asset}));
-        break;
-      // case UP_ARROW:
-      //   /**
-      //    * if users presses the up arrow, we focus the prev row
-      //    * unless its the first row
-      //    */
-      //   if (index > 0) {
-      //     this._rows.toArray()[index - 1].focus();
-      //   }
-      //   this.blockEvent(event);
-      //   if (this.selectable && this.multiple && event.shiftKey && this.fromRow + index >= 0) {
-      //     this._doSelection(this._data[this.fromRow + index], this.fromRow + index);
-      //   }
-      //   break;
-      // case DOWN_ARROW:
-      //   /**
-      //    * if users presses the down arrow, we focus the next row
-      //    * unless its the last row
-      //    */
-      //   if (index < (this._rows.toArray().length - 1)) {
-      //     this._rows.toArray()[index + 1].focus();
-      //   }
-      //   this.blockEvent(event);
-      //   if (this.selectable && this.multiple && event.shiftKey && this.fromRow + index < this._data.length) {
-      //     this._doSelection(this._data[this.fromRow + index], this.fromRow + index);
-      //   }
-      //   break;
-      default:
-        // default
-    }
+  showSelectAll() {
+    return this.dataSource && this.dataSource.assets && this.dataSource.assets.filter(asset => !asset.collection).length != 0;
   }
 
-    /**
-   * Overrides the onselectstart method of the document so other text on the page
-   * doesn't get selected when doing shift selections.
-   */
-  disableTextSelection(): void {
-    if (this._document) {
-      this._document.onselectstart = function(): boolean {
-        return false;
-      };
-    }
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.assets.filter(asset => !asset.collection).length;
+    return numSelected === numRows;
   }
 
-  /**
-   * Resets the original onselectstart method.
-   */
-  enableTextSelection(): void {
-    if (this._document) {
-      this._document.onselectstart = undefined;
-    }
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.dataSource.assets.filter(asset => !asset.collection).forEach(row => this.selection.select(row));
   }
 
-  blockEvent(event: Event): void {
-    event.preventDefault();
+  onRowClick(row: DataProviderAsset) {
+    if (!row.collection) this.selection.toggle(row);
   }
 
-   /**
-   * Selects or clears all rows depending on 'checked' value.
-   */
-  onSelectAll(checked: boolean): void {
-    let toggledRows: any[] = [];
-    if (checked) {
-      this.allSelected = true;
-      this.selectAllIndeterminate = true;
-      this.store.dispatch(new dataProviderActions.SelectAllDataProviderAssets({}));
-    } else {
-      this.allSelected = false;
-      this.selectAllIndeterminate = false;
-      this.store.dispatch(new dataProviderActions.DeselectAllDataProviderAssets({}));
-    }
+  onSpaceSelect($event: KeyboardEvent, row: DataProviderAsset) {
+    if (row.collection) return;
+
+    this.selection.toggle(row);
+    $event.preventDefault();
   }
 
-  onAssetClick($event: Event, asset: DataProviderAsset) {
-    console.log('row click', $event, asset);
-    if(asset.collection) return;
-    this.store.dispatch(new dataProviderActions.ToggleDataProviderAssetSelect({asset: asset}));
+
+  isArray(value: any) {
+    return Array.isArray(value);
   }
 
   import() {
-    this.store.dispatch(new dataProviderActions.ImportSelectedAssets());
+    this.store.dispatch(new dataProviderActions.ImportAssets({ assets: this.selection.selected }));
   }
 
-  onSortChange($event: ITdDataTableSortChangeEvent) {
-    let newSortOrder = TdDataTableSortingOrder.Ascending;
-    if($event.order == TdDataTableSortingOrder.Ascending ) {
-      newSortOrder = TdDataTableSortingOrder.Descending;
-    }
-    
-    this.store.dispatch(new dataProviderActions.SortDataProviderAssets({fieldName: $event.name, order: newSortOrder}))
+  navigateToCollection(path: string) {
+    this.router.navigate([], { queryParams: { path: path } });
   }
-
-  // selectAsset(asset: DataProviderAsset) {
-  //   this.dataProviderStore.selectAsset(asset);
-  // }
-
-  // deselectAsset(asset: DataProviderAsset) {
-  //   this.dataProviderStore.deselectAsset(asset);
-  // }
-
-  // import( ) {
-  //   let obs = this.dataProviderStore.importSelectedAssets().flatMap(r => this.fileLibraryStore.loadLibrary());
-  //   obs.subscribe(r => {
-  //     this.router.navigate(['/workbench']);
-  //   })
-  // }
-
-  
 
 }

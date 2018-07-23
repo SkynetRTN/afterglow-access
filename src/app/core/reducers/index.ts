@@ -1,32 +1,28 @@
 import { createSelector, createFeatureSelector } from '@ngrx/store';
 
 import { DataFileType } from '../../data-files/models/data-file-type';
-import { ImageFile } from '../../data-files/models/data-file';
+import { ImageFile, DataFile } from '../../data-files/models/data-file';
 
 import * as fromRoot from '../../reducers';
 import * as fromWorkbench from './workbench';
-import * as fromComparer from './comparer';
-import * as fromViewer from './viewer';
-import * as fromPlotter from './plotter';
-import * as fromSonifier from './sonifier';
-import * as fromSourceExtractor from './source-extractor';
+// import * as fromComparer from './comparer';
+import * as fromImageFileState from './image-file-state';
+import * as fromSources from './source';
 import * as fromDataFiles from '../../data-files/reducers';
+import { ImageFileState } from '../models/image-file-state';
+import { WorkbenchState } from '../models/workbench-state';
 
 
 export const reducers = {
-  viewerGlobalState: fromViewer.reducer,
-  plotterGlobalState: fromPlotter.reducer,
-  sonifierGlobalState: fromSonifier.reducer,
-  sourceExtractorGlobalState: fromSourceExtractor.reducer,
-  workbenchGlobalState: fromWorkbench.reducer
+  imageFileState: fromImageFileState.reducer,
+  sourcesState: fromSources.reducer,
+  workbenchState: fromWorkbench.reducer
 };
 
 export interface CoreState {
-  viewerGlobalState: fromViewer.State,
-  plotterGlobalState: fromPlotter.State,
-  sonifierGlobalState: fromSonifier.State,
-  sourceExtractorGlobalState: fromSourceExtractor.State,
-  workbenchGlobalState: fromWorkbench.State
+  imageFileState: fromImageFileState.State,
+  workbenchState: WorkbenchState,
+  sourcesState: fromSources.State
 }
 
 export interface State extends fromRoot.State {
@@ -35,179 +31,122 @@ export interface State extends fromRoot.State {
 
 export const getCoreState = createFeatureSelector<CoreState>('coreState');
 
-export const getViewerGlobalState = createSelector(
+export const getImageFileGlobalState = createSelector(
   getCoreState,
-  state => state.viewerGlobalState
+  state => state.imageFileState
 );
 
 export const {
-  selectIds: getViewerFileStateIds,
-  selectEntities: getViewerFileStates,
-  selectAll: getAllViewerFileStates,
-  selectTotal: getTotalViewerFileStates,
-} = fromViewer.adapter.getSelectors(getViewerGlobalState);
+  selectIds: getImageFileStateIds,
+  selectEntities: getImageFileStates,
+  selectAll: getAllImageFileStates,
+  selectTotal: getTotalImageFileStates,
+} = fromImageFileState.adapter.getSelectors(getImageFileGlobalState);
 
-export const getPlotterGlobalState = createSelector(
+
+
+export const getSourcesGlobalState = createSelector(
   getCoreState,
-  state => state.plotterGlobalState
+  state => state.sourcesState
 );
 
 export const {
-  selectIds: getPlotterFileStateIds,
-  selectEntities: getPlotterFileStates,
-  selectAll: getAllPlotterFileStates,
-  selectTotal: getTotalPlotterFileStates,
-} = fromPlotter.adapter.getSelectors(getPlotterGlobalState);
+  selectIds: getSourceIds,
+  selectEntities: getSources,
+  selectAll: getAllSources,
+  selectTotal: getTotalSources,
+} = fromSources.adapter.getSelectors(getSourcesGlobalState);
 
-export const getSonifierGlobalState = createSelector(
+export const getSelectedSources = createSelector(
+  getSourcesGlobalState,
+  state => state.selectedSourceIds.map(sourceId => state.entities[sourceId])
+);
+
+
+export const getWorkbenchState = createSelector(
   getCoreState,
-  state => state.sonifierGlobalState
-);
-
-export const {
-  selectIds: getSonifierFileStateIds,
-  selectEntities: getSonifierFileStates,
-  selectAll: getAllSonifierFileStates,
-  selectTotal: getTotalSonifierFileStates,
-} = fromSonifier.adapter.getSelectors(getSonifierGlobalState);
-
-export const getSourceExtractorGlobalState = createSelector(
-  getCoreState,
-  state => state.sourceExtractorGlobalState
-);
-
-export const {
-  selectIds: getSourceExtractorFileStateIds,
-  selectEntities: getSourceExtractorFileStates,
-  selectAll: getAllSourceExtractorFileStates,
-  selectTotal: getTotalSourceExtractorFileStates,
-} = fromSourceExtractor.adapter.getSelectors(getSourceExtractorGlobalState);
-
-
-
-export const getWorkbenchGlobalState = createSelector(
-  getCoreState,
-  state => state.workbenchGlobalState
+  state => state.workbenchState
 );
 
 
-const getWorkbenchSelectedFileId = createSelector(
-  getWorkbenchGlobalState,
-  fromWorkbench.getSelectedId
+const getWorkbenchActiveViewerIndex = createSelector(
+  getWorkbenchState,
+  fromWorkbench.getActiveViewerIndex
 );
 
-const getWorkbenchSelectedFile = createSelector(
+
+
+const getWorkbenchViewers = createSelector(
+  getWorkbenchState,
+  fromWorkbench.getViewers
+);
+
+const getWorkbenchViewMode = createSelector(
+  getWorkbenchState,
+  fromWorkbench.getViewMode
+);
+
+const getWorkbenchActiveViewer = createSelector(
+  getWorkbenchActiveViewerIndex,
+  getWorkbenchViewers,
+  (index, viewers) => {
+    return viewers[index];
+  }
+);
+
+const getWorkbenchActiveViewerFileId = createSelector(
+  getWorkbenchActiveViewer,
+  (viewer) => {
+    return viewer.fileId;
+  }
+)
+
+const getWorkbenchActiveViewerFile = createSelector(
+  getWorkbenchActiveViewerFileId,
   fromDataFiles.getDataFiles,
-  getWorkbenchSelectedFileId,
-  (entities, selectedId) => {
-    return selectedId && entities[selectedId];
+  (fileId, dataFiles) => {
+    return dataFiles[fileId] as ImageFile;
+  }
+)
+
+const getWorkbenchActiveViewerFileState = createSelector(
+  getWorkbenchActiveViewerFileId,
+  getImageFileStates,
+  (fileId, fileStates) => {
+    return fileStates[fileId];
   }
 );
 
-const getWorkbenchSelectedImageFile = createSelector(
-  getWorkbenchSelectedFile,
-  (dataFile) => {
-    return dataFile && dataFile.type == DataFileType.IMAGE && dataFile as ImageFile;
-  }
+const getWorkbenchSelectedFileIds = createSelector(
+  getWorkbenchState,
+  fromWorkbench.getSelectedFileIds
 );
 
-const getWorkbenchSelectedViewerState = createSelector(
-  getViewerFileStates,
-  getWorkbenchSelectedImageFile,
-  (viewerStates, imageFile) => {
-    return imageFile && imageFile.id in viewerStates  && viewerStates[imageFile.id]
+const getWorkbenchSelectedFiles = createSelector(
+  getWorkbenchSelectedFileIds,
+  fromDataFiles.getDataFiles,
+  (fileIds, dataFiles) => {
+    return fileIds.map(fileId => dataFiles[fileId] as DataFile);
   }
-);
-
-const getWorkbenchSelectedPlotterState = createSelector(
-  getPlotterFileStates,
-  getWorkbenchSelectedImageFile,
-  (viewerStates, imageFile) => {
-    return imageFile && imageFile.id in viewerStates  && viewerStates[imageFile.id]
-  }
-);
-
-const getWorkbenchSelectedSonifierState = createSelector(
-  getSonifierFileStates,
-  getWorkbenchSelectedImageFile,
-  (sonifierStates, imageFile) => {
-    return imageFile && imageFile.id in sonifierStates  && sonifierStates[imageFile.id]
-  }
-);
-
-const getWorkbenchSelectedSourceExtractorState = createSelector(
-  getSourceExtractorFileStates,
-  getWorkbenchSelectedImageFile,
-  (sourceExtractorStates, imageFile) => {
-    return imageFile && imageFile.id in sourceExtractorStates  && sourceExtractorStates[imageFile.id]
-  }
-);
-
+)
 
 export const workbench = {
-  getFileId: getWorkbenchSelectedFileId,
-  getFile: getWorkbenchSelectedFile,
-  getImageFile: getWorkbenchSelectedImageFile,
-  getViewerFileState: getWorkbenchSelectedViewerState,
-  getPlotterFileState: getWorkbenchSelectedPlotterState,
-  getSonifierFileState: getWorkbenchSelectedSonifierState,
-  getSourceExtractorFileState: getWorkbenchSelectedSourceExtractorState,
+  getViewers: getWorkbenchViewers,
+  getViewMode: getWorkbenchViewMode,
+  getActiveViewerIndex: getWorkbenchActiveViewerIndex,
+  getActiveViewer: getWorkbenchActiveViewer,
+  getSelectedFileIds: fromWorkbench.getSelectedFileIds,
+  getSelectedFiles: getWorkbenchSelectedFiles,
+  getActiveFileId: getWorkbenchActiveViewerFileId,
+  getActiveFile: getWorkbenchActiveViewerFile,
+  getActiveFileState: getWorkbenchActiveViewerFileState,
+  getViewerSyncEnabled: createSelector(getWorkbenchState, state => state.viewerSyncEnabled),
+  getPlotterSyncEnabled: createSelector(getWorkbenchState, state => state.plotterSyncEnabled),
+  getNormalizationSyncEnabled: createSelector(getWorkbenchState, state => state.normalizationSyncEnabled),
+  getSidebarView: createSelector(getWorkbenchState, state => state.sidebarView),
+  getShowSidebar: createSelector(getWorkbenchState, state => state.showSidebar),
+  getShowConfig: createSelector(getWorkbenchState, state => state.showConfig),
+  getActiveTool: createSelector(getWorkbenchState, state => state.activeTool),
+  getMultiFileSelectionEnabled: createSelector(getWorkbenchState, state => state.multiFileSelectionEnabled),
+  getShowAllSources: createSelector(getWorkbenchState, state => state.showAllSources),
 }
-
-
-
-
-
-
-// export const getSelectedDataFileId = createSelector(
-//   getWorkbenchState,
-//   fromWorkbench.getSelectedId
-// );
-
-// export const {
-//   selectIds: getDataFileIds,
-//   selectEntities: getWorkbenchFileStateEntities,
-//   selectAll: getAllWorkbenchFileStates,
-//   selectTotal: getTotalWorkbenchFileStates,
-// } = fromWorkbench.adapter.getSelectors(getWorkbenchState);
-
-// export const getSelectedDataFile = createSelector(
-//   fromDataFiles.getDataFileEntities,
-//   getSelectedDataFileId,
-//   (entities, selectedId) => {
-//     return selectedId && entities[selectedId];
-//   }
-// );
-
-// export const getSelectedImageFile = createSelector(
-//   getSelectedDataFile,
-//   (dataFile) => {
-//     return dataFile && dataFile.type == DataFileType.IMAGE && dataFile as ImageFile;
-//   }
-// );
-
-
-// export interface SelectedFileWorkbenchState {
-//   file: ImageFile
-//   workbenchState: fromWorkbench.State,
-//   fileState: WorkbenchFileState,
-// }
-
-// export const getSelectedFileWorkbenchState = createSelector(
-//   getWorkbenchState,
-//   getSelectedImageFile,
-//   (workbenchState, selectedImageFile) => {
-//     if(!selectedImageFile || !(selectedImageFile.id in workbenchState.entities)) return;
-//     let result : SelectedFileWorkbenchState = {
-//       file: selectedImageFile,
-//       workbenchState: workbenchState,
-//       fileState: workbenchState.entities[selectedImageFile.id]
-//     }
-
-//     return result;
-//   }
-// )
-
-
-
-

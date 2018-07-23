@@ -1,31 +1,179 @@
-// @import "~@angular/material/prebuilt-themes/indigo-pink.css";
 @import '~@angular/material/theming';
 @import '~@covalent/core/theming/all-theme';
+// @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
+// @import url('https://fonts.googleapis.com/css?family=Anonymous+Pro|Lato|Roboto+Mono|Roboto');
+@import './app-theme';
 
-// (optional) Additional themes
-// @import '~@covalent/markdown/markdown-theme';
-// @import '~@covalent/highlight/highlight-theme';\
-
+// Include material core styles.
 @include mat-core();
 
-$primary: mat-palette($mat-orange, 800);
-$accent:  mat-palette($mat-light-blue, 600, A100, A400);
-$warn:    mat-palette($mat-red, 600);
-$theme: mat-light-theme($primary, $accent, $warn);
+// Define the light theme.
+$primary: mat-palette($mat-indigo);
+$accent: mat-palette($mat-deep-orange);
+
+$theme: mat-light-theme($primary, $accent);
 @include angular-material-theme($theme);
 @include covalent-theme($theme);
-
-// (optional) Additional themes
-// @include covalent-markdown-theme($theme);
-// @include covalent-highlight-theme();
+@include afterglow-app-theme($theme);
 
 
-/* You can add global styles to this file, and also import other style files */
-@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
-//@import "~@progress/kendo-theme-bootstrap/scss/all.scss";
 $fa-font-path:"~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
 .icon-user {
   @extend .fa;
   @extend .fa-user;
 }
+
+
+$custom-typography: mat-typography-config(
+  $font-family: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
+  $headline: mat-typography-level(32px, 48px, 700),
+  $body-1: mat-typography-level(16px, 24px, 500)
+);
+
+@include angular-material-typography($custom-typography);
+
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+
+.mono {
+  // font-family: 'Anonymous Pro', monospace;
+  font-family: 'Roboto Mono', monospace;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+.workbench-viewer-panel.inactive .image-viewer-header-wrapper {
+  background-color: #f3f3f3;
+}
+
+.workbench-viewer-panel.active .image-viewer-header-wrapper {
+  background-color: #28a745;
+  color: white;
+  border: solid 2px #d7d7d7;
+}
+
+
+.workbench-settings-card {
+  border-radius: 0px;
+  border-right: none;
+  border-top: none;
+}
+
+.workbench-settings-card .card-header {
+  height: 49px;
+  background: #fafafa;
+  border-left: 1px solid rgba(0,0,0,.125);
+}
+
+.workbench-settings-card .card-header:first-child {
+  border-radius: 0px;
+}
+
+.workbench-settings-card .plotter svg {
+  width: 200px;
+}
+
+.kbd {
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.1em 0.5em;
+  margin: 0 0.2em;
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff inset;
+  background-color: #f7f7f7;
+}
+
+/* Videogular 2 Player */
+
+vg-player {
+  background: rgb(240, 240, 240) !important;
+}
+
+vg-controls {
+  background: rgb(240, 240, 240) !important;
+}
+
+vg-controls * {
+  color: black !important;
+}
+
+vg-controls vg-scrub-bar-current-time .background {
+  border: 1px solid black !important;
+}
+
+vg-scrub-bar-current-time .background {
+  background-color: black !important;
+}
+
+/* fix bootstrap underlining and applying color to button font */
+a.mat-button {
+  color: inherit;
+  text-decoration: none;
+  
+}
+
+/* fix margin beneath mat-button-toggle */
+label.mat-button-toggle-label {
+  margin-bottom: 0px;
+}
+
+/* fix bootstrap margin bottom on labels */
+.mat-checkbox label {
+  margin-bottom: 0px;
+}
+
+/* fix bug in material2 dialog content */
+.mat-dialog-content {
+  max-width: none !important;
+  max-height: none !important;
+  overflow: initial !important;
+}
+
+
+.no-axis-labels .tick text,  .no-axis-labels .nv-axisMaxMin text{
+  display: none;
+}
+
+
+
+/* fix for datatables which scroll bar is hidden, column widths don't match header widths */
+div.ui-datatable-scrollable-body {
+  overflow-y: scroll;
+}
+
+/* fix for kendo ui grid selected rows with bootstrap css theme */
+.k-grid tr.k-state-selected:hover, .k-grid th.k-state-selected:hover, .k-grid td.k-state-selected:hover {
+  background-color: rgba(0, 123, 255, 0.25);
+}
+
+
+.td-data-table-cell-content-wrapper {
+  padding: 0px 5px 0px 5px !important;
+}
+
+
+.data-file-tool-tip {
+  background-color: rgba(35,35,35,255);
+  font-size: 12px;
+}
+
+
+// /* Material Icon */
+// /* Rules for sizing the icon. */
+// .material-icons.md-18 { font-size: 18px; }
+// .material-icons.md-24 { font-size: 24px; }
+// .material-icons.md-36 { font-size: 36px; }
+// .material-icons.md-48 { font-size: 48px; }
+
+// /* Rules for using icons as black on a light background. */
+// .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+// .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+// /* Rules for using icons as white on a dark background. */
+// .material-icons.md-light { color: rgba(255, 255, 255, 1); }
+// .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3)}

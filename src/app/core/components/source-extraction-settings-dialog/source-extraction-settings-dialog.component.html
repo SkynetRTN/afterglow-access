@@ -4,44 +4,29 @@
 
   </div>
   <div class="row">
-    
+
     <div class="col-6">
       <mat-form-field class="">
-          <input matInput
-            placeholder="Threshold"
-            [ngModel]="settings?.threshold"
-            (ngModelChange)="setThreshold($event)"
-            type="number"
-            step="1"
-            min="1"
-            max="20">
-        </mat-form-field>
+        <input matInput placeholder="Threshold" [ngModel]="settings?.threshold" (ngModelChange)="setThreshold($event)" type="number"
+          step="0.1" min="2" max="20">
+      </mat-form-field>
     </div>
     <div class="col-6">
       <mat-form-field class="">
-          <input matInput
-            placeholder="FWHM"
-            [ngModel]="settings?.fwhm"
-            (ngModelChange)="setFwhm($event)"
-            type="number"
-            step=".1"
-            min="1"
-            max="25">
-        </mat-form-field>
+        <input matInput placeholder="FWHM" [ngModel]="settings?.fwhm" (ngModelChange)="setFwhm($event)" type="number" step=".1" min="1"
+          max="25">
+      </mat-form-field>
     </div>
   </div>
   <div class="row">
-    <div class="col-6" style="">
+    <div class="col-6">
       <div>
-        <mat-slide-toggle
-          [checked]="settings?.deblend"
-          [labelPosition]="before"
-          (change)="onDeblendChange($event)">
+        <mat-slide-toggle [checked]="settings?.deblend" [labelPosition]="before" (change)="onDeblendChange($event)">
           Deblend
         </mat-slide-toggle>
       </div>
     </div>
-    
+
   </div>
 
 </mat-dialog-content>

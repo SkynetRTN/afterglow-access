@@ -8,10 +8,10 @@
   <mat-card class="mat-card ml-3" *ngIf="(oauthServerMethods$ | async)?.length != 0">
     <mat-card-title class="mat-card-title flex-center">Login Services</mat-card-title>
     <mat-card-content class="mat-card-content">
-      <p>If you don't have an account, you can login via one of the alternative methods below:</p>
+      <p>Login using one of the following services.</p>
       <div class="flex-center">
         <div class="oauth2-server p-2" *ngFor="let method of (oauthServerMethods$ | async)">
-          <button mat-raised-button [color]="'accent'" (click)="onOauthMethodClick(method)">{{method.description}}</button>
+          <button mat-raised-button [color]="'primary'" (click)="onOauthMethodClick(method)">{{method.description}}</button>
         </div>
       </div>
       

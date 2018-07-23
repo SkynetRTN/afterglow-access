@@ -1,37 +1,17 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
-import { MenuType } from './navbar.metadata'
+import { Component, OnInit, Input } from '@angular/core';
 
 @Component({
-  selector: 'navbar',
-  templateUrl: 'navbar.component.html',
-  styleUrls: [ 'navbar.component.css' ]
+  selector: 'app-navbar',
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
-  @Input() routes: any[];
+export class NavbarComponent implements OnInit {
+  @Input() authenticated: boolean = false;
 
-  private router: Router;
-  isCollapsed = true;
 
-  constructor(router: Router) {
-    this.router = router;
-    
-  }
+  constructor() { }
 
-  public get brandMenuItems() {
-    return this.routes.filter(menuItem => menuItem.menuType == MenuType.BRAND);
-  }
-
-  public get leftMenuItems() {
-    return this.routes.filter(menuItem => menuItem.menuType == MenuType.LEFT);
-  }
-
-  public get rightMenuItems() {
-    return this.routes.filter(menuItem => menuItem.menuType == MenuType.RIGHT);
-  }
-
-  public get menuIcon(): string {
-    return this.isCollapsed ? '☰' : '✖';
+  ngOnInit() {
   }
 
 }

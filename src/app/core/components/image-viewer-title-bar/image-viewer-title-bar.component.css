@@ -1,0 +1,27 @@
+.image-viewer-header {
+  display: flex;
+  flex: 0 0 auto;
+  height: 49px;
+  border-bottom: 1px solid #d6d6d6;
+}
+
+.image-viewer-header-wrapper {
+  display: flex;
+  flex: 1 1 0%;
+  height: initial;
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+  align-items: center;
+}
+
+.tool-bar {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.title-bar {
+  padding-left: 5px;
+  display: flex;
+  flex: 1 1 0%;
+}

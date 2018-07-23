@@ -1,0 +1,28 @@
+<div class="login-panels">
+  <mat-card class="mat-card ml-3" *ngIf="(loading$ | async)">
+    <mat-card-title class="mat-card-title flex-center">Loading...</mat-card-title>
+    <mat-card-content class="mat-card-content">
+      <p>Please wait while we process your request.</p>
+      <div class="flex-center">
+        <mat-spinner></mat-spinner>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+
+  <ng-container *ngIf="!(loading$ | async)">
+    <mat-card class="mat-card ml-3" *ngIf="oAuthClient$ | async as client">
+      <mat-card-title class="mat-card-title flex-center">Third-Party Application Consent</mat-card-title>
+      <mat-card-content class="mat-card-content">
+        <p>'{{client.name}}' would like offline access to your Afterglow account. You must grant access to continue with the
+          login process. </p>
+        <!-- <h4 *ngIf="client.description">{{client.description}}</h4> -->
+        <div class="flex-center">
+          <button class="m-2" mat-raised-button [color]="'primary'" (click)="onCancelClick(client)">Deny Offline Access</button>
+          <button class="m-2" mat-raised-button [color]="'primary'" (click)="addPermittedOAuthClient(client)">Grant Offline Access</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+
+</div>

@@ -6,7 +6,6 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { Http, RequestOptions } from '@angular/http';
-import { AuthHttp, AuthConfig } from 'angular2-jwt';
 import { LoginPageComponent } from './containers/login-page/login-page.component';
 import { LogoutPageComponent } from './containers/logout-page/logout-page.component';
 import { LoginFormComponent } from './components/login-form.component';
@@ -17,12 +16,9 @@ import { AuthGuard } from './services/auth-guard.service';
 import { AuthEffects } from './effects/auth.effects';
 import { reducers } from './reducers';
 import { MaterialModule } from '../material';
+import { OauthClientConsentPageComponent } from './containers/oauth-client-consent-page/oauth-client-consent-page.component';
 
-export const COMPONENTS = [LoginPageComponent, LoginFormComponent, LogoutPageComponent, OauthAuthorizedPageComponent];
-
-export function authHttpServiceFactory(http: Http, options: RequestOptions) {
-  return new AuthHttp(new AuthConfig(), http, options);
-}
+export const COMPONENTS = [LoginPageComponent, LoginFormComponent, LogoutPageComponent, OauthAuthorizedPageComponent, OauthClientConsentPageComponent];
 
 @NgModule({
   imports: [
@@ -43,11 +39,6 @@ export class AuthModule {
       providers: [
         AuthService,
         AuthGuard,
-        {
-          provide: AuthHttp,
-          useFactory: authHttpServiceFactory,
-          deps: [Http, RequestOptions]
-        }
       ],
     };
   }

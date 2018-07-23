@@ -1,38 +1,46 @@
 export enum MarkerType {
+  LINE,
   RECTANGLE,
-  ELLIPSE
+  CIRCLE,
+  TEARDROP
 }
 
-interface MarkerBase {
-  type: MarkerType;
-  id: string;
-  label: string;
-  selected: boolean;
+interface IMarker {
+  readonly type: MarkerType;
+  id?: string;
+  label?: string;
+  class?: string;
+  selected?: boolean;
+  data?: {[key: string]: any}
 }
 
-export interface LineMarker extends MarkerBase {
+export interface LineMarker extends IMarker {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
 }
 
-export interface RectangleMarker extends MarkerBase {
+export interface RectangleMarker extends IMarker {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export interface EllipseMarker extends MarkerBase {
+export interface CircleMarker extends IMarker {
   x: number;
   y: number;
-  a: number;
-  b: number;
+  radius: number;
+}
+
+export interface TeardropMarker extends CircleMarker {
   theta: number;
 }
 
-export type Marker  =
+export type Marker =
+  | LineMarker
   | RectangleMarker
-  | EllipseMarker;
+  | CircleMarker
+  | TeardropMarker;
 

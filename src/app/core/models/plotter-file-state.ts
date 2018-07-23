@@ -1,6 +1,8 @@
+import { LineMarker } from "./marker";
+import { PosType } from "./source";
+
 export interface PlotterFileState {
-  fileId: string,
   measuring: boolean,
-  lineMeasureStart: {x: number, y: number}
-  lineMeasureEnd: {x: number, y: number}
+  lineMeasureStart: { primaryCoord: number, secondaryCoord: number, posType: PosType }
+  lineMeasureEnd: { primaryCoord: number, secondaryCoord: number, posType: PosType },
 }

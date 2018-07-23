@@ -1,0 +1,22 @@
+<div class="image-viewer-header">
+  <div class="image-viewer-header-wrapper">
+    <div class="title-bar">
+      <span>{{imageFile?.name}}</span>
+    </div>
+    <div class="tool-bar">
+      <button mat-icon-button aria-label="Zoom In" (click)="zoomIn()">
+        <mat-icon>zoom_in</mat-icon>
+      </button>
+      <button mat-icon-button aria-label="Zoom Out" (click)="zoomOut()">
+        <mat-icon>zoom_out</mat-icon>
+      </button>
+      <button mat-icon-button aria-label="Zoom to Fit" (click)="zoomToFit()">
+        <mat-icon>settings_overscan</mat-icon>
+      </button>
+      <!-- <button mat-icon-button aria-label="Download Viewer Snapshot" (click)="downloadSnapshot()"><mat-icon>photo_camera</mat-icon></button> -->
+      <button mat-icon-button aria-label="Remove From Library" (click)="removeFromLibrary()">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

@@ -18,9 +18,11 @@ export const TOGGLE_DATA_PROVIDER_ASSET_SELECT = '[DataProvider] Toggle Data Pro
 export const SELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Select All Data Provider Assets';
 export const DESELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Deselect All Data Provider Assets';
 
+export const IMPORT_ASSETS = '[DataProvider] Import Assets';
 export const IMPORT_SELECTED_ASSETS = '[DataProvider] Import Selected Assets';
-export const IMPORT_SELECTED_ASSETS_SUCCESS = '[DataProvider] Import Selected Assets Success';
-export const IMPORT_SELECTED_ASSETS_FAIL = '[DataProvider] Import Selected Assets Fail';
+export const IMPORT_ASSET_SUCCESS = '[DataProvider] Import Asset Success';
+export const IMPORT_ASSET_FAIL = '[DataProvider] Import Asset Fail';
+export const IMPORT_ASSETS_CANCEL = '[DataProvider] Import Asset Cancel';
 
 /**
  * Load Library Actions
@@ -32,88 +34,101 @@ export class LoadDataProviders implements Action {
 export class LoadDataProvidersSuccess implements Action {
   readonly type = LOAD_DATA_PROVIDERS_SUCCESS;
 
-  constructor(public payload: DataProvider[]) {}
+  constructor(public payload: DataProvider[]) { }
 }
 
 export class LoadDataProvidersFail implements Action {
   readonly type = LOAD_DATA_PROVIDERS_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class LoadDataProviderAssets implements Action {
   readonly type = LOAD_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: {dataProvider: DataProvider, path: string}) {}
+  constructor(public payload: { dataProvider: DataProvider, path: string }) { }
 }
 
 export class LoadDataProviderAssetsSuccess implements Action {
   readonly type = LOAD_DATA_PROVIDER_ASSETS_SUCCESS;
 
-  constructor(public payload: {dataProvider: DataProvider, path: string, assets: DataProviderAsset[]}) {}
+  constructor(public payload: { dataProvider: DataProvider, path: string, assets: DataProviderAsset[] }) { }
 }
 
 export class LoadDataProviderAssetsFail implements Action {
   readonly type = LOAD_DATA_PROVIDER_ASSETS_FAIL;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class SortDataProviderAssets implements Action {
   readonly type = SORT_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: {fieldName: string, order: TdDataTableSortingOrder} = null) {}
+  constructor(public payload: { fieldName: string, order: '' | 'asc' | 'desc' } = null) { }
 }
 
 export class ToggleDataProviderAssetSelect implements Action {
   readonly type = TOGGLE_DATA_PROVIDER_ASSET_SELECT;
 
-  constructor(public payload: {asset: DataProviderAsset}) {}
+  constructor(public payload: { asset: DataProviderAsset }) { }
 }
 
 export class SelectAllDataProviderAssets implements Action {
   readonly type = SELECT_ALL_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class DeselectAllDataProviderAssets implements Action {
   readonly type = DESELECT_ALL_DATA_PROVIDER_ASSETS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: any) { }
 }
 
 export class ImportSelectedAssets implements Action {
   readonly type = IMPORT_SELECTED_ASSETS;
 
-  constructor() {}
+  constructor() { }
 }
 
-export class ImportSelectedAssetsSuccess implements Action {
-  readonly type = IMPORT_SELECTED_ASSETS_SUCCESS;
+export class ImportAssets implements Action {
+  readonly type = IMPORT_ASSETS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: { assets: DataProviderAsset[] }) {  }
 }
 
-export class ImportSelectedAssetsFail implements Action {
-  readonly type = IMPORT_SELECTED_ASSETS_FAIL;
+export class ImportAssetSuccess implements Action {
+  readonly type = IMPORT_ASSET_SUCCESS;
 
-  constructor(public payload: any) {}
+  constructor(public payload: { asset: DataProviderAsset }) { }
 }
+
+export class ImportAssetFail implements Action {
+  readonly type = IMPORT_ASSET_FAIL;
+
+  constructor(public payload: { error: string, asset: DataProviderAsset }) { }
+}
+
+export class ImportAssetsCancel implements Action {
+  readonly type = IMPORT_ASSETS_CANCEL;
+}
+
 
 
 export type Actions =
-| LoadDataProviders
-| LoadDataProvidersSuccess
-| LoadDataProvidersFail
-| LoadDataProviderAssets
-| LoadDataProviderAssetsSuccess
-| LoadDataProviderAssetsFail
-| SortDataProviderAssets
-| ToggleDataProviderAssetSelect
-| SelectAllDataProviderAssets
-| DeselectAllDataProviderAssets
-| ImportSelectedAssets
-| ImportSelectedAssetsSuccess
-| ImportSelectedAssetsFail;
+  | LoadDataProviders
+  | LoadDataProvidersSuccess
+  | LoadDataProvidersFail
+  | LoadDataProviderAssets
+  | LoadDataProviderAssetsSuccess
+  | LoadDataProviderAssetsFail
+  | SortDataProviderAssets
+  | ToggleDataProviderAssetSelect
+  | SelectAllDataProviderAssets
+  | DeselectAllDataProviderAssets
+  | ImportAssets
+  | ImportSelectedAssets
+  | ImportAssetSuccess
+  | ImportAssetFail
+  | ImportAssetsCancel;
 
