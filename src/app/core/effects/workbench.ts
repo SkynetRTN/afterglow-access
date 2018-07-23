@@ -353,12 +353,14 @@ export class WorkbenchEffects {
     .flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
       let actions = [];
       let srcFile: ImageFile = action.payload.reference;
+      if(!srcFile) return Observable.from(actions);
+
       let targetFiles: ImageFile[] = action.payload.files;
       let srcNormalizer = imageFileStates[srcFile.id].normalization.normalizer;
       let percentiles = calcPercentiles(srcFile.hist, srcNormalizer.backgroundLevel, srcNormalizer.peakLevel);
 
       targetFiles.forEach(targetFile => {
-        if (targetFile.id == srcFile.id) return;
+        if (!targetFile || targetFile.id == srcFile.id) return;
         let levels = calcLevels(targetFile.hist, percentiles.lowerPercentile, percentiles.upperPercentile);
         actions.push(new normalizationActions.UpdateNormalizer({ file: targetFile, changes: { ...srcNormalizer, peakLevel: levels.peakLevel, backgroundLevel: levels.backgroundLevel } }));
       });
@@ -381,7 +383,7 @@ export class WorkbenchEffects {
       let srcPlotter = imageFileStates[srcFile.id].plotter
 
       targetFiles.forEach(targetFile => {
-        if (targetFile.id == srcFile.id) return;
+        if (!targetFile || targetFile.id == srcFile.id) return;
         actions.push(new plotterActions.UpdatePlotterFileState({ file: targetFile, changes: { ...srcPlotter } }));
       });
       return Observable.from(actions);
@@ -405,12 +407,14 @@ export class WorkbenchEffects {
       let srcFile: ImageFile = action.payload.reference;
       let targetFiles: ImageFile[] = action.payload.files;
 
+      if(!srcFile) return Observable.from(actions);
+
       let srcHasWcs = getHasWcs(srcFile);
       let srcImageTransform = imageFileStates[srcFile.id].transformation.imageTransform;
       let srcViewportTransform = imageFileStates[srcFile.id].transformation.viewportTransform;
 
       targetFiles.forEach(targetFile => {
-        if (targetFile.id == srcFile.id) return;
+        if (!targetFile || targetFile.id == srcFile.id) return;
 
         let targetHasWcs = getHasWcs(targetFile);
 
