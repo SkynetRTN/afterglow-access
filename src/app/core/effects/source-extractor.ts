@@ -88,7 +88,7 @@ export class SourceExtractorEffects {
         let secondaryCoord = d.y;
 
 
-        if (d.ra_hours !== null && d.dec_degs !== null) {
+        if ('ra_hours' in d && d.ra_hours !== null && 'dec_degs' in d && d.dec_degs !== null) {
           posType = PosType.SKY;
           primaryCoord = d.ra_hours;
           secondaryCoord = d.dec_degs;
