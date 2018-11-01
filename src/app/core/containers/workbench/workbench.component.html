@@ -77,6 +77,13 @@
             <mat-icon>remove_red_eye</mat-icon>
           </div>
         </button>
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(MARKER_ROUTE, 'Custom Marker Settings')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(MARKER_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(MARKER_ROUTE, 'Custom Marker Settings')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(MARKER_ROUTE)"
+          (click)="onWorkbenchNavClick(MARKER_ROUTE)">
+          <div class="icon-wrapper">
+            <mat-icon>place</mat-icon>
+          </div>
+        </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(PLOTTER_ROUTE, 'Plotter Settings')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
           [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Plotter Settings')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
           (click)="onWorkbenchNavClick(PLOTTER_ROUTE)">

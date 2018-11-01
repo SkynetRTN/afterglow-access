@@ -41,6 +41,7 @@ import { SourceExtractionSettingsDialogComponent } from './components/source-ext
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
+import { CircleMarkerEditorComponent } from './components/circle-marker-editor/circle-marker-editor.component';
 import { SvgTeardropMarkerComponent } from './components/svg-teardrop-marker/svg-teardrop-marker.component';
 import { PlotterComponent } from './components/plotter/plotter.component'
 import { AppFooterComponent } from './components/app-footer/app-footer.component'
@@ -51,6 +52,7 @@ import { DataProviderBrowsePageComponent} from './containers/data-providers/data
 import { WorkbenchComponent } from './containers/workbench/workbench.component';
 import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-page.component';
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
+import { CustomMarkerPageComponent } from './containers/workbench/custom-marker-page/custom-marker-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
@@ -67,6 +69,9 @@ import { StyleManager } from './services/style-manager';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
+import { SvgTextMarkerComponent } from './components/svg-text-marker/svg-text-marker.component';
+
+import { ReactiveFormsModule } from '@angular/forms';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -81,6 +86,7 @@ export const COMPONENTS = [
   NormalizerFormComponent,
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
+  SvgTextMarkerComponent,
   SvgTeardropMarkerComponent,
   SvgLineMarkerComponent,
   DataProvidersComponent,
@@ -96,7 +102,9 @@ export const COMPONENTS = [
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
-  PlotterComponent
+  PlotterComponent,
+  CustomMarkerPageComponent,
+  CircleMarkerEditorComponent
 ];
 
 
@@ -106,6 +114,7 @@ export const COMPONENTS = [
     CommonModule,
     HttpModule,
     FormsModule,
+    ReactiveFormsModule,
     LibModule,
     PipesModule,
     DataProvidersModule,

@@ -37,6 +37,7 @@ import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hot
 export class WorkbenchComponent implements OnInit, OnDestroy {
 
   private VIEWER_ROUTE = '/workbench/viewer';
+  private MARKER_ROUTE = '/workbench/markers';
   private PLOTTER_ROUTE = '/workbench/plotter';
   private SONIFIER_ROUTE = '/workbench/sonifier';
   private SOURCE_EXTRACTOR_ROUTE = '/workbench/source-extractor';

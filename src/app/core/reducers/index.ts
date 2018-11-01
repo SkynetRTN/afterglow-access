@@ -8,6 +8,7 @@ import * as fromWorkbench from './workbench';
 // import * as fromComparer from './comparer';
 import * as fromImageFileState from './image-file-state';
 import * as fromSources from './source';
+import * as fromCustomMarkers from './custom-marker';
 import * as fromDataFiles from '../../data-files/reducers';
 import { ImageFileState } from '../models/image-file-state';
 import { WorkbenchState } from '../models/workbench-state';
@@ -16,13 +17,15 @@ import { WorkbenchState } from '../models/workbench-state';
 export const reducers = {
   imageFileState: fromImageFileState.reducer,
   sourcesState: fromSources.reducer,
+  customMarkersState: fromCustomMarkers.reducer,
   workbenchState: fromWorkbench.reducer
 };
 
 export interface CoreState {
   imageFileState: fromImageFileState.State,
   workbenchState: WorkbenchState,
-  sourcesState: fromSources.State
+  sourcesState: fromSources.State,
+  customMarkersState: fromCustomMarkers.State,
 }
 
 export interface State extends fromRoot.State {
@@ -62,6 +65,27 @@ export const getSelectedSources = createSelector(
   state => state.selectedSourceIds.map(sourceId => state.entities[sourceId])
 );
 
+export const getCustomMarkersGlobalState = createSelector(
+  getCoreState,
+  state => state.customMarkersState
+);
+
+export const {
+  selectIds: getCustomMarkerIds,
+  selectEntities: getCustomMarkers,
+  selectAll: getAllCustomMarkers,
+  selectTotal: getTotalCustomMarkers,
+} = fromCustomMarkers.adapter.getSelectors(getCustomMarkersGlobalState);
+
+export const getSelectedCustomMarkers = createSelector(
+  getCustomMarkersGlobalState,
+  state => state.selectedCustomMarkerIds.map(customMarkerId => state.entities[customMarkerId])
+);
+
+export const getNextCustomMarkerId = createSelector(
+  getCustomMarkersGlobalState,
+  state => state.nextCustomMarkerId
+);
 
 export const getWorkbenchState = createSelector(
   getCoreState,

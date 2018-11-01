@@ -1,0 +1,40 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="row">
+    <div class="col-6">
+      <mat-form-field class="">
+        <input #labelField matInput placeholder="Label" formControlName="label">
+      </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="">
+        <input matInput placeholder="Radius" formControlName="radius" type="number" [min]="1" [step]="1">
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6">
+      <mat-form-field class="">
+        <input matInput placeholder="Label Gap" formControlName="labelGap" type="number" [step]="1">
+      </mat-form-field>
+    </div>
+    <div class="col-6">
+      <mat-form-field class="">
+        <input matInput placeholder="Label Direction (degs)" formControlName="labelTheta" type="number" [min]="0" [max]="360" [step]="15">
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+      <div class="col-6">
+        <mat-form-field class="">
+          <input matInput placeholder="X" formControlName="x" type="number">
+        </mat-form-field>
+      </div>
+      <div class="col-6">
+        <mat-form-field class="">
+          <input matInput placeholder="Y" formControlName="y" type="number">
+        </mat-form-field>
+      </div>
+    </div>
+
+
+</form>

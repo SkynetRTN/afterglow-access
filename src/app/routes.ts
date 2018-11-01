@@ -12,6 +12,7 @@ import { ViewerPageComponent } from './core/containers/workbench/viewer-page/vie
 import { PlotterPageComponent } from './core/containers/workbench/plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './core/containers/workbench/sonifier-page/sonifier-page.component';
 import { SourceExtractorPageComponent } from './core/containers/workbench/source-extractor-page/source-extractor-page.component';
+import { CustomMarkerPageComponent } from './core/containers/workbench/custom-marker-page/custom-marker-page.component';
 import { ImageCalculatorPageComponent } from './core/containers/workbench/image-calculator-page/image-calculator-page.component';
 import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
 import { StackerPageComponent } from './core/containers/workbench/stacker-page/stacker-page.component';
@@ -76,6 +77,12 @@ export const AFTERGLOW_ROUTES: Routes = [
         path: 'viewer',
         component: ViewerPageComponent,
         data: { title: 'Viewer' },
+        canActivate: [AuthGuard],
+      },
+      {
+        path: 'markers',
+        component: CustomMarkerPageComponent,
+        data: { title: 'Custom Markers' },
         canActivate: [AuthGuard],
       },
       {

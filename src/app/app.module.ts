@@ -17,6 +17,8 @@ import { CoreModule } from './core/core.module';
 import { AuthModule } from './auth/auth.module';
 import { reducers, metaReducers } from './reducers';
 import {HotkeyModule} from 'angular2-hotkeys';
+import { ReactiveFormsModule } from '@angular/forms';
+
 
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
@@ -30,6 +32,7 @@ import { environment } from '../environments/environment';
     HttpClientModule,
     RouterModule.forRoot(AFTERGLOW_ROUTES, { enableTracing: false }),
     MaterialModule,
+    ReactiveFormsModule,
     CookieModule.forRoot(),
 
     /**

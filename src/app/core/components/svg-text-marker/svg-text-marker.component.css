@@ -1,0 +1,21 @@
+text {
+  fill: #ffffff;
+  text-anchor: middle;
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  stroke: #000000;
+  text-rendering: optimizeLegibility;
+}
+
+.selected text {
+  /* stroke: #ff8b00; */
+}

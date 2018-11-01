@@ -18,6 +18,7 @@ import { SonifierRegionMode } from '../../../models/sonifier-file-state';
 import { Source, PosType } from '../../../models/source';
 import { PlotterFileState } from '../../../models/plotter-file-state';
 import { min } from '../../../../../../node_modules/rxjs/operators';
+import { CustomMarker } from '../../../models/custom-marker';
 
 @Component({
   selector: 'app-workbench-viewer-panel',
@@ -33,13 +34,15 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Output() onImageMove = new EventEmitter<CanvasMouseEvent>();
   @Output() onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
-  markerLayers$: Observable<Array<Marker[]>>;
+  markers$: Observable<Marker[]>;
 
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
 
   files$: Observable<Dictionary<DataFile>>;
   sources$: Observable<Source[]>;
+  customMarkers$: Observable<CustomMarker[]>;
+  selectedCustomMarkers$: Observable<CustomMarker[]>;
   selectedSources$: Observable<Source[]>;
   showAllSources$: Observable<boolean>;
   activeFileState$: Observable<ImageFileState>;
@@ -50,6 +53,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   constructor(private store: Store<fromRoot.State>) {
     this.files$ = this.store.select(fromDataFiles.getDataFiles);
     this.sources$ = this.store.select(fromCore.getAllSources);
+    this.customMarkers$ = this.store.select(fromCore.getAllCustomMarkers);
+    this.selectedCustomMarkers$ = this.store.select(fromCore.getSelectedCustomMarkers);
     this.selectedSources$ = this.store.select(fromCore.getSelectedSources);
     this.showAllSources$ = this.store.select(fromCore.workbench.getShowAllSources).distinctUntilChanged();
 
@@ -69,7 +74,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       .map(state => state.plotter.lineMeasureEnd)
       .distinctUntilChanged();
 
-    let plotterMarkerLayers$ = Observable.combineLatest(this.fileId$, this.files$, lineStart$, lineEnd$)
+    let plotterMarkers$ = Observable.combineLatest(this.fileId$, this.files$, lineStart$, lineEnd$)
       .map(([fileId, files, lineMeasureStart, lineMeasureEnd]) => {
         if (!lineMeasureStart || !lineMeasureEnd) return [[]];
 
@@ -107,16 +112,16 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         }
 
 
-        return [[{
+        return [{
           type: MarkerType.LINE,
           x1: x1,
           y1: y1,
           x2: x2,
           y2: y2
-        } as LineMarker]];
+        } as LineMarker];
       });
 
-    let sonifierMarkerLayers$ = Observable.combineLatest(
+    let sonifierMarkers$ = Observable.combineLatest(
       this.activeFileState$
         .map(state => state.sonifier.region)
         .distinctUntilChanged(),
@@ -127,9 +132,9 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         .map(state => state.sonifier.progressLine)
         .distinctUntilChanged())
       .map(([region, regionMode, progressLine]) => {
-        let result = [];
-        if (region && regionMode == SonifierRegionMode.CUSTOM) result.push([{ type: MarkerType.RECTANGLE, ...region } as RectangleMarker]);
-        if (progressLine) result.push([{ type: MarkerType.LINE, ...progressLine } as LineMarker])
+        let result: Array<RectangleMarker | LineMarker> = [];
+        if (region && regionMode == SonifierRegionMode.CUSTOM) result.push({ type: MarkerType.RECTANGLE, ...region } as RectangleMarker);
+        if (progressLine) result.push({ type: MarkerType.LINE, ...progressLine } as LineMarker)
         return result;
       });
 
@@ -180,10 +185,10 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // );
 
 
-    let sourceMarkerLayers$ = Observable.combineLatest(this.fileId$, this.files$, this.showAllSources$, this.sources$, this.selectedSources$)
+    let sourceMarkers$ = Observable.combineLatest(this.fileId$, this.files$, this.showAllSources$, this.sources$, this.selectedSources$)
       .map(([fileId, files, showAllSources, sources, selectedSources]) => {
         if (fileId === null) return [[]];
-        let markers = [];
+        let markers : Array<CircleMarker | TeardropMarker> = [];
         let file = files[fileId] as ImageFile;
         if (!file) return [[]];
         sources.forEach(source => {
@@ -242,6 +247,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
               x: x,
               y: y,
               radius: 15,
+              labelGap: 14,
+              labelTheta: 0,
               theta: theta,
               selected: selected,
               data: { id: source.id }
@@ -253,38 +260,61 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
               x: x,
               y: y,
               radius: 15,
+              labelGap: 14,
+              labelTheta: 0,
               selected: selected,
               data: { id: source.id }
             } as CircleMarker);
           }
         })
 
-        return [markers];
+        return markers;
+      })
+
+
+      let customMarkers$ = Observable.combineLatest(this.store.select(fromCore.workbench.getActiveTool), this.fileId$, this.files$, this.customMarkers$, this.selectedCustomMarkers$)
+      .map(([activeTool, fileId, files, customMarkers, selectedCustomMarkers]) => {
+        if (fileId === null) return [[]];
+        let markers: Array<Marker> = [];
+        let file = files[fileId] as ImageFile;
+        if (!file) return [[]];
+        markers = customMarkers.filter(customMarker => customMarker.fileId == file.id).map(customMarker => {
+          let marker = {
+            ...customMarker.marker,
+            data: {id: customMarker.id},
+            selected: activeTool == WorkbenchTool.CUSTOM_MARKER && selectedCustomMarkers.includes(customMarker)
+          };
+          return marker;
+        });
+        return markers;
       })
 
 
 
 
-    this.markerLayers$ = Observable.combineLatest(
+    this.markers$ = Observable.combineLatest(
       this.store.select(fromCore.workbench.getActiveTool),
-      plotterMarkerLayers$,
-      sonifierMarkerLayers$,
-      sourceMarkerLayers$
+      plotterMarkers$,
+      sonifierMarkers$,
+      sourceMarkers$,
+      customMarkers$
     )
-      .map(([activeTool, plotterMarkerLayers, sonifierMarkerLayers, sourceMarkerLayers]) => {
-        if (!this.fileId) return [[]];
-
+      .map(([activeTool, plotterMarkers, sonifierMarkers, sourceMarkers, customMarkers]) => {
+        if (!this.fileId) return [];
+        let markers = [];
         if (activeTool == WorkbenchTool.PLOTTER) {
-          return plotterMarkerLayers;
+          markers.push(...plotterMarkers);
         }
-        else if (activeTool == WorkbenchTool.SONIFIER) {
-          return sonifierMarkerLayers;
+        if (activeTool == WorkbenchTool.SONIFIER) {
+          markers.push(...sonifierMarkers);
         }
-        else if (activeTool == WorkbenchTool.SOURCE_EXTRACTOR) {
-          return sourceMarkerLayers;
+        if (activeTool == WorkbenchTool.SOURCE_EXTRACTOR) {
+          markers.push(...sourceMarkers);
         }
-
-        return [[]];
+        if (activeTool != WorkbenchTool.SOURCE_EXTRACTOR) {
+          markers.push(...customMarkers);
+        }
+        return markers;
       })
   }
 

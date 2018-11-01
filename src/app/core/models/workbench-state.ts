@@ -12,7 +12,8 @@ export enum WorkbenchTool {
   VIEWER,
   PLOTTER,
   SONIFIER,
-  SOURCE_EXTRACTOR
+  SOURCE_EXTRACTOR,
+  CUSTOM_MARKER,
 }
 
 export interface WorkbenchState {
