@@ -5,7 +5,7 @@ import { Store } from '@ngrx/store';
 import * as fromAuth from '../../reducers';
 import * as authActions from '../../actions/auth';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs/Rx';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-oauth-authorized-page',

@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { Viewer } from '../../../models/viewer';
 
@@ -51,12 +52,12 @@ export class WorkbenchViewerGridComponent implements OnInit {
   constructor(private store: Store<fromRoot.State>) {
     this.viewMode$ = this.store.select(fromCore.workbench.getViewMode);
 
-    this.viewers$ = Observable.combineLatest(this.store.select(fromCore.workbench.getViewers), this.viewMode$)
-      .map(([viewers, viewMode]) => {
+    this.viewers$ = combineLatest(this.store.select(fromCore.workbench.getViewers), this.viewMode$)
+      .pipe(map(([viewers, viewMode]) => {
         if (!viewers || viewers.length == 0) return [];
         if (viewMode == ViewMode.SINGLE) return [viewers[0]];
         return viewers;
-      });
+      }));
 
     this.activeViewerIndex$ = this.store.select(fromCore.workbench.getActiveViewerIndex);
     this.files$ = this.store.select(fromDataFiles.getDataFiles);

@@ -23,6 +23,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
 import { environment } from '../environments/environment';
+import { TourMatMenuModule } from 'ngx-tour-md-menu';
+import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
+import {NgxPopperModule} from 'ngx-popper';
 
 @NgModule({
   imports: [
@@ -34,6 +37,9 @@ import { environment } from '../environments/environment';
     MaterialModule,
     ReactiveFormsModule,
     CookieModule.forRoot(),
+    // TourMatMenuModule.forRoot(),
+    TourNgxPopperModule.forRoot(),
+    NgxPopperModule,
 
     /**
      * StoreModule.forRoot is imported once in the root module, accepting a reducer

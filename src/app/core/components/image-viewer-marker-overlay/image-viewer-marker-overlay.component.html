@@ -1,5 +1,5 @@
 <div id="svg-placeholder">
-  <svg [attr.width]="svgWidth" [attr.height]="svgHeight">
+  <svg [attr.width]="svgWidth" [attr.height]="svgHeight" #svgElementRef>
     <g #svgGroup>
       <ng-container *ngFor="let marker of markers;">
         <ng-container [ngSwitch]="marker.type">

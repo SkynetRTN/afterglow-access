@@ -12,8 +12,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 import { FocusableOption, FocusKeyManager } from '@angular/cdk/a11y'
 
-import { Subscription } from 'rxjs/Rx';
-import { Observable } from 'rxjs/Rx';
+import { Subscription } from 'rxjs';
 import {
   // UP_ARROW,
   // DOWN_ARROW,

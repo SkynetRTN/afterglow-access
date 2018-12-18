@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { DataFile } from '../../../data-files/models/data-file'
@@ -25,6 +25,10 @@ import { ImageFileState } from '../../models/image-file-state';
 import { Dictionary } from '@ngrx/entity/src/models';
 import { Subscription } from '../../../../../node_modules/rxjs';
 import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
+// import { TourService } from 'ngx-tour-md-menu';
+import { TourService } from 'ngx-tour-ngx-popper';
+import { TourDialogComponent } from '../../components/tour-dialog/tour-dialog.component';
+import { MatDialogRef, MatDialog } from '@angular/material';
 
 
 
@@ -38,6 +42,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   private VIEWER_ROUTE = '/workbench/viewer';
   private MARKER_ROUTE = '/workbench/markers';
+  private FILE_INFO_ROUTE = '/workbench/file-info';
   private PLOTTER_ROUTE = '/workbench/plotter';
   private SONIFIER_ROUTE = '/workbench/sonifier';
   private SOURCE_EXTRACTOR_ROUTE = '/workbench/source-extractor';
@@ -60,7 +65,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   SidebarView = SidebarView;
   private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService) {
+  constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService, private tourService: TourService, public dialog: MatDialog) {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
     this.selectedFile$ = this.store.select(fromCore.workbench.getActiveFile);
 
@@ -95,6 +100,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
 
+   
+    if(localStorage.getItem('previouslyVisited') != 'true') {
+      localStorage.setItem('previouslyVisited', 'true')
+      let dialogRef = this.dialog.open(TourDialogComponent);
+
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('The dialog was closed', result);
+        if(result) this.tourService.start();
+      });
+      
+    }
+
 
     //this.loading$ = this.fileLibraryStore.loading$;
 
@@ -113,7 +130,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
 
   ngOnInit() {
+    
     this.store.dispatch(new dataFileActions.LoadLibrary());
+    
   }
 
   ngOnDestroy() {

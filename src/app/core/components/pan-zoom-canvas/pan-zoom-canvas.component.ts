@@ -4,9 +4,7 @@ import {
 } from '@angular/core';
 
 import { Store } from '@ngrx/store';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Point, Rectangle } from "paper";
-import { Observable } from 'rxjs/Observable';
 import * as SVG from 'svgjs'
 import * as normalizeWheel from 'normalize-wheel';
 
@@ -24,7 +22,6 @@ import * as transformationActions from '../../actions/transformation';
 import * as normalizationActions from '../../actions/normalization';
 import * as imageFileActions from '../../../data-files/actions/image-file';
 import * as dataFileActions from '../../../data-files/actions/data-file';
-import { Subscription } from 'rxjs/Subscription';
 import { ImageTile } from '../../../data-files/models/image-tile';
 import { Viewer } from '../../models/viewer';
 
@@ -227,6 +224,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     return new Point(canvasX + 0.5, canvasY + 0.5);
 
     //return new Point(e.pageX - this._targetCanvas.offsetLeft, e.pageY - this._targetCanvas.offsetTop);
+  }
+
+  get canvas() {
+    return this.targetCanvas;
   }
 
   get canvasWidth() {

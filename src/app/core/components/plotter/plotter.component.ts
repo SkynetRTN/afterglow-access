@@ -1,35 +1,49 @@
-import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnChanges,
+  ViewChild,
+  AfterViewInit,
+  Input,
+  ChangeDetectorRef
+} from "@angular/core";
 
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/throttleTime';
-import 'rxjs/add/operator/distinctUntilChanged';
+import { Subject } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 
 declare let d3, nv: any;
-import * as SVG from 'svgjs';
-import { Point } from 'paper';
+import * as SVG from "svgjs";
+import { Point } from "paper";
 
-import { ImageFile, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
-import { NvD3Component } from 'ng2-nvd3';
-
-
+import {
+  ImageFile,
+  getPixel,
+  getHasWcs,
+  getWcs
+} from "../../../data-files/models/data-file";
+import { NvD3Component } from "ng2-nvd3";
 
 @Component({
-  selector: 'app-plotter',
-  templateUrl: './plotter.component.html',
-  styleUrls: ['./plotter.component.css']
+  selector: "app-plotter",
+  templateUrl: "./plotter.component.html",
+  styleUrls: ["./plotter.component.css"]
 })
 export class PlotterComponent implements OnInit, OnChanges {
-  @Input() imageFile: ImageFile;
-  @Input() width: number = 200;
-  @Input() height: number = 200;
-  @Input() lineMeasureStart: { x: number, y: number };
-  @Input() lineMeasureEnd: { x: number, y: number };
-  @Input() interpolatePixels: boolean;
+  @Input()
+  imageFile: ImageFile;
+  @Input()
+  width: number = 200;
+  @Input()
+  height: number = 200;
+  @Input()
+  lineMeasureStart: { x: number; y: number };
+  @Input()
+  lineMeasureEnd: { x: number; y: number };
+  @Input()
+  interpolatePixels: boolean;
 
-  @ViewChild(NvD3Component) nvD3: NvD3Component;
-
+  @ViewChild(NvD3Component)
+  nvD3: NvD3Component;
 
   private currentSeparation = null;
   private currentSeparationScaled = null;
@@ -40,26 +54,27 @@ export class PlotterComponent implements OnInit, OnChanges {
   chartData: any = [];
   private chartDebouncer$: Subject<null> = new Subject();
 
-
-  constructor(private cd: ChangeDetectorRef) {
-
-  }
+  constructor(private cd: ChangeDetectorRef) {}
 
   updateChartOptions() {
     this.chartOptions = {
       chart: {
-        type: 'lineChart',
+        type: "lineChart",
         focusEnable: false,
         height: this.height,
         width: this.width,
         showLegend: false,
-        x: function (d) { return d.t; },
-        y: function (d) { return d.v; },
+        x: function(d) {
+          return d.t;
+        },
+        y: function(d) {
+          return d.v;
+        },
         useInteractiveGuideline: true,
         isArea: true,
         yAxis: {
           //tickValues: [],
-          showMaxMin: false,
+          showMaxMin: false
         },
         xAxis: {
           //tickValues: [],
@@ -68,7 +83,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         xScale: d3.scale.linear(),
         yScale: d3.scale.linear(),
         focusShowAxisX: false,
-        noData: 'Cross-section not available',
+        noData: "Cross-section not available",
         callback: this.onChartCreation.bind(this)
       }
     };
@@ -77,16 +92,13 @@ export class PlotterComponent implements OnInit, OnChanges {
   ngOnInit() {
     let self = this;
 
-    this.chartDebouncer$
-      .debounceTime(200)
-      .subscribe(value => {
-        this.updateChart();
-      });
+    this.chartDebouncer$.pipe(debounceTime(200)).subscribe(value => {
+      this.updateChart();
+    });
 
     this.updateChartOptions();
 
     this.chartDebouncer$.next();
-
   }
 
   ngOnChanges() {
@@ -96,21 +108,21 @@ export class PlotterComponent implements OnInit, OnChanges {
   }
 
   public getData() {
-    return this.chartData.length == 0 ? null : this.chartData[0]
+    return this.chartData.length == 0 ? null : this.chartData[0];
   }
 
   private onChartCreation() {
     let self = this;
 
-    let onChartMouseMove = (xy) => {
+    let onChartMouseMove = xy => {
       if (this.lineMeasureStart && this.lineMeasureEnd) {
         let xScale = self.nvD3.chart.xAxis.scale();
         let yScale = self.nvD3.chart.yAxis.scale();
         let t = xScale.invert(xy[0]);
         //let y = yScale.invert(xy[1]);
 
-        let start = self.lineMeasureStart
-        let end = self.lineMeasureEnd
+        let start = self.lineMeasureStart;
+        let end = self.lineMeasureEnd;
         let v = { x: end.x - start.x, y: end.y - start.y };
         let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
         let vUnit = { x: v.x / vLength, y: v.y / vLength };
@@ -122,19 +134,28 @@ export class PlotterComponent implements OnInit, OnChanges {
         //self.nvD3.chart.xAxis.scale().invert(d3.event.offsetX), self.nvD3.chart.yAxis.scale().invert(d3.event.offsetY)
         //console.log('mouse over', e.mouseX, self.nvD3.chart.xAxis.scale().invert(e.mouseX));
       }
-    }
+    };
 
     let onChartMouseOut = () => {
       self.crosshairX = null;
       self.crosshairY = null;
       self.updateLineView();
-    }
-
+    };
 
     if (this.nvD3.svg) {
-      this.nvD3.svg.select('.nv-linesWrap').on('mousemove.lines', function (e) { onChartMouseMove(d3.mouse(this)) });
-      this.nvD3.svg.select('.nv-background').on('mousemove.background', function (e) { onChartMouseMove(d3.mouse(this)) });
-      this.nvD3.svg.select('.nv-lineChart').on('mouseout.linechart', function (e) { onChartMouseOut() });
+      this.nvD3.svg.select(".nv-linesWrap").on("mousemove.lines", function(e) {
+        onChartMouseMove(d3.mouse(this));
+      });
+      this.nvD3.svg
+        .select(".nv-background")
+        .on("mousemove.background", function(e) {
+          onChartMouseMove(d3.mouse(this));
+        });
+      this.nvD3.svg
+        .select(".nv-lineChart")
+        .on("mouseout.linechart", function(e) {
+          onChartMouseOut();
+        });
     }
   }
 
@@ -144,8 +165,8 @@ export class PlotterComponent implements OnInit, OnChanges {
       return;
     }
 
-    let start = this.lineMeasureStart
-    let end = this.lineMeasureEnd
+    let start = this.lineMeasureStart;
+    let end = this.lineMeasureEnd;
     let v = { x: end.x - start.x, y: end.y - start.y };
     let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
 
@@ -163,60 +184,80 @@ export class PlotterComponent implements OnInit, OnChanges {
       let t = d3.round(i * spacing, 1);
       let x = d3.round(start.x + vUnit.x * t, 2);
       let y = d3.round(start.y + vUnit.y * t, 2);
-      result[i] = { x: x, y: y, t: t, v: d3.round(getPixel(this.imageFile, x, y, this.interpolatePixels), 2), x0: x, y0: y }
+      result[i] = {
+        x: x,
+        y: y,
+        t: t,
+        v: d3.round(getPixel(this.imageFile, x, y, this.interpolatePixels), 2),
+        x0: x,
+        y0: y
+      };
     }
 
     this.chartData = [
       {
         values: result,
-        key: 'cross-section',
-        color: 'rgb(44, 44, 160)'
+        key: "cross-section",
+        color: "rgb(44, 44, 160)"
       }
     ];
     this.cd.detectChanges();
   }
 
   private updateLineView() {
-    if (!this.imageFile || !this.imageFile.headerLoaded || !this.lineMeasureStart || !this.lineMeasureEnd) {
+    if (
+      !this.imageFile ||
+      !this.imageFile.headerLoaded ||
+      !this.lineMeasureStart ||
+      !this.lineMeasureEnd
+    ) {
       this.currentSeparation = null;
       this.currentSeparationScaled = null;
       return;
     }
 
-    this.currentSeparation = Math.sqrt(Math.pow(this.lineMeasureStart.x - this.lineMeasureEnd.x, 2) +
-      Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2));
-
-
+    this.currentSeparation = Math.sqrt(
+      Math.pow(this.lineMeasureStart.x - this.lineMeasureEnd.x, 2) +
+        Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
+    );
 
     if (getHasWcs(this.imageFile)) {
-      let wcs = getWcs(this.imageFile)
-      let raDec1 = wcs.pixToWorld([this.lineMeasureStart.x, this.lineMeasureStart.y]);
-      let raDec2 = wcs.pixToWorld([this.lineMeasureEnd.x, this.lineMeasureEnd.y]);
+      let wcs = getWcs(this.imageFile);
+      let raDec1 = wcs.pixToWorld([
+        this.lineMeasureStart.x,
+        this.lineMeasureStart.y
+      ]);
+      let raDec2 = wcs.pixToWorld([
+        this.lineMeasureEnd.x,
+        this.lineMeasureEnd.y
+      ]);
       let phi1 = raDec1[1] * (Math.PI / 180.0);
       let phi2 = raDec2[1] * (Math.PI / 180.0);
       let deltaLambda = (raDec1[0] - raDec2[0]) * (Math.PI / 180.0);
       let deltaPhi = (raDec1[1] - raDec2[1]) * (Math.PI / 180.0);
 
-      let separationScaled = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(deltaPhi / 2), 2) + Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2), 2)))
-      separationScaled *= (180.0 / Math.PI);
-      let separationScaledUnits = 'degrees';
+      let separationScaled =
+        2 *
+        Math.asin(
+          Math.sqrt(
+            Math.pow(Math.sin(deltaPhi / 2), 2) +
+              Math.cos(phi1) *
+                Math.cos(phi2) *
+                Math.pow(Math.sin(deltaLambda / 2), 2)
+          )
+        );
+      separationScaled *= 180.0 / Math.PI;
+      let separationScaledUnits = "degrees";
       if (separationScaled < 1.0) {
         separationScaled *= 60.0;
-        separationScaledUnits = 'arcmins';
+        separationScaledUnits = "arcmins";
       }
       if (separationScaled < 1.0) {
         separationScaled *= 60.0;
-        separationScaledUnits = 'arcsecs';
+        separationScaledUnits = "arcsecs";
       }
       this.currentSeparationScaled = separationScaled;
       this.currentSeparationScaledUnits = separationScaledUnits;
-
     }
-
-
   }
-
-
-
-
 }

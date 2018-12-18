@@ -7,7 +7,8 @@ import {
   HttpInterceptor,
   HttpErrorResponse
 } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import * as fromRoot from './reducers';
 import * as authActions from './auth/actions/auth';
 
@@ -23,7 +24,8 @@ export class TokenInterceptor implements HttpInterceptor {
       }
     });
     return next.handle(request)
-      .catch(error => {
+    .pipe(
+      catchError(error => {
         if (error instanceof HttpErrorResponse) {
           switch ((<HttpErrorResponse>error).status) {
             case 401: {
@@ -32,7 +34,8 @@ export class TokenInterceptor implements HttpInterceptor {
           }
         }
         return Observable.throw(error);
-      });
+      })
+    )
 
   }
 }

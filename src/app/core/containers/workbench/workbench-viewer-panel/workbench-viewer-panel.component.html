@@ -1,5 +1,5 @@
 <div id="image-viewer-wrapper">
-  <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]"></app-image-viewer-title-bar>
+  <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-title-bar>
 
   <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]" [normalization]="(activeFileState$ | async)?.normalization"
     [transformation]="(activeFileState$ | async)?.transformation" (onImageMove)="handleImageMove($event)" (onImageClick)="handleImageClick($event)">

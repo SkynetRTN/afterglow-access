@@ -2,6 +2,7 @@ import {APP_BASE_HREF} from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import {PlatformLocation, Location } from '@angular/common';
+import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { Authenticate } from '../../models/user';
 import { AuthMethod } from '../../models/auth-method';
@@ -17,8 +18,8 @@ export class LoginPageComponent implements OnInit {
   pending$ = this.store.select(fromAuth.getLoginPagePending);
   error$ = this.store.select(fromAuth.getLoginPageError);
   authMethods$ = this.store.select(fromAuth.getLoginPageAuthMethods)
-  showHttpAuth$ = this.authMethods$.map(methods => methods.findIndex(method => method.type == 'http') != -1);
-  oauthServerMethods$ = this.authMethods$.map(methods => methods.filter(method => method.type == 'oauth2server'));
+  showHttpAuth$ = this.authMethods$.pipe(map(methods => methods.findIndex(method => method.type == 'http') != -1));
+  oauthServerMethods$ = this.authMethods$.pipe(map(methods => methods.filter(method => method.type == 'oauth2server')));
 
   constructor(private store: Store<fromAuth.State>, private router: Router, private location: Location) {}
 

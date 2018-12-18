@@ -35,7 +35,7 @@
   </ng-container>
 
 
-
-  <mat-header-row *matHeaderRowDef="allowMultiSelection ? ['select', 'name'] : []"></mat-header-row>
+  <mat-header-row [hidden]="!allowMultiSelection" *matHeaderRowDef="['select', 'name']"></mat-header-row>
+  
   <mat-row *matRowDef="let row; columns: allowMultiSelection ? ['select', 'name'] : ['name'];"></mat-row>
 </mat-table>

@@ -15,6 +15,10 @@ export class SvgCircleMarkerComponent implements OnInit, AfterViewInit {
   @Input() showShadow: boolean = true;
   @Input() selected: boolean = false;
 
+  @Input() stroke: string = '#002175';
+  @Input() strokeWidth: number = 3;
+  @Input() selectedStroke: string = '#ff8b00';
+
   constructor(private cdr: ChangeDetectorRef) { }
 
   ngOnInit() {

@@ -1,0 +1,100 @@
+<div class="workbench-outlet-wrapper">
+  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+    <app-workbench-viewer-grid></app-workbench-viewer-grid>
+  </div>
+
+  <span class="resizer"></span>
+
+  <div
+    *ngIf="(showConfig$ | async)"
+    class="workbench-config-panel"
+    role="region"
+    aria-labelledby="settings-header"
+  >
+    <div class="card workbench-settings-card" style="height: 100%;">
+      <div id="settings-header" class="card-header"><h4>File Info</h4></div>
+
+      <div class="card-body" style="overflow-y: auto;">
+        <div class="card-body" style="overflow-y: auto;">
+          <div
+            *ngIf="!(imageFile$ | async) || !(header$ | async)"
+            class="alert alert-info"
+          >
+            Select a data file to see file info.
+          </div>
+
+          <div *ngIf="(imageFile$ | async) && (header$ | async)">
+            <div class="raw-header-option">
+                <mat-slide-toggle [color]="'primary'" [checked]="showRawHeader" (change)="onShowRawHeaderChange($event)">
+                    Show Raw Header Data
+                  </mat-slide-toggle>
+            </div>
+            
+            <div *ngIf="!showRawHeader && (headerSummary$ | async)">
+              <div style="padding: 10px;">
+                  <mat-button-toggle-group name="timeZone" aria-label="Time Zone" [value]="timeZone">
+                      <mat-button-toggle value="system">System Time</mat-button-toggle>
+                      <mat-button-toggle value="utc">UTC</mat-button-toggle>
+                    </mat-button-toggle-group>
+              </div>
+                
+              <table mat-table [dataSource]="headerSummary$ | async">
+                <ng-container matColumnDef="key">
+                  <th mat-header-cell *matHeaderCellDef>Key</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="value">
+                  <th mat-header-cell *matHeaderCellDef>Value</th>
+                  <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+                </ng-container>
+                <ng-container matColumnDef="comment">
+                  <th mat-header-cell *matHeaderCellDef>Comment</th>
+                  <td mat-cell *matCellDef="let row">
+                    <mat-icon *ngIf="row.comment" [matTooltip]="row.comment"
+                      >comment</mat-icon
+                    >
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let myRowData; columns: columnsDisplayed"
+                ></tr>
+              </table>
+            </div>
+
+            <div *ngIf="showRawHeader">
+              <table mat-table [dataSource]="header$ | async">
+                <ng-container matColumnDef="key">
+                  <th mat-header-cell *matHeaderCellDef>Key</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="value">
+                  <th mat-header-cell *matHeaderCellDef>Value</th>
+                  <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+                </ng-container>
+                <ng-container matColumnDef="comment">
+                  <th mat-header-cell *matHeaderCellDef>Comment</th>
+                  <td mat-cell *matCellDef="let row">
+                    <mat-icon *ngIf="row.comment" [matTooltip]="row.comment"
+                      >comment</mat-icon
+                    >
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let myRowData; columns: columnsDisplayed"
+                ></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener } from "@angular/core";
 import { Store } from "@ngrx/store";
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
+import { Observable, Subscription } from "rxjs";
+import { filter, map } from "rxjs/operators";
 
 import * as fromRoot from "../../../../reducers";
 import * as fromCore from "../../../reducers";
@@ -51,9 +51,9 @@ export class CustomMarkerPageComponent implements OnInit {
     );
     this.workbenchState$ = store
       .select(fromCore.getWorkbenchState)
-      .filter(state => state != null);
-    this.centroidSettings$ = this.workbenchState$.map(
-      state => state && state.centroidSettings
+      .pipe(filter(state => state != null));
+    this.centroidSettings$ = this.workbenchState$.pipe(
+      map(state => state && state.centroidSettings)
     );
 
     this.subs.push(
@@ -99,8 +99,6 @@ export class CustomMarkerPageComponent implements OnInit {
 
   @HostListener("document:keyup", ["$event"])
   keyEvent($event: KeyboardEvent) {
-    console.log($event);
-
     if (
       this.selectedCustomMarkers.length != 0 &&
       $event.srcElement.tagName != "INPUT" &&
@@ -142,8 +140,8 @@ export class CustomMarkerPageComponent implements OnInit {
       // if (this.selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
       let x = $event.imageX;
       let y = $event.imageY;
-      if(this.workbenchState.centroidSettings.centroidClicks) {
-        let result: {x: number, y: number}
+      if (this.workbenchState.centroidSettings.centroidClicks) {
+        let result: { x: number; y: number };
         if (this.workbenchState.centroidSettings.useDiskCentroiding) {
           result = centroidDisk(
             this.activeImageFile,
@@ -151,8 +149,7 @@ export class CustomMarkerPageComponent implements OnInit {
             y,
             this.workbenchState.centroidSettings.diskCentroiderSettings
           );
-        }
-        else {
+        } else {
           result = centroidPsf(
             this.activeImageFile,
             x,
@@ -163,7 +160,7 @@ export class CustomMarkerPageComponent implements OnInit {
         x = result.x;
         y = result.y;
       }
-      
+
       let customMarker: CustomMarker = {
         id: null,
         fileId: this.activeImageFile.id,
@@ -187,7 +184,6 @@ export class CustomMarkerPageComponent implements OnInit {
       //     })
       //   );
       // }
-
     }
   }
 
@@ -241,10 +237,18 @@ export class CustomMarkerPageComponent implements OnInit {
   }
 
   onCentroidClicksChange($event) {
-    this.store.dispatch(new workbenchActions.UpdateCentroidSettings({ changes: { centroidClicks: $event.checked } }));
+    this.store.dispatch(
+      new workbenchActions.UpdateCentroidSettings({
+        changes: { centroidClicks: $event.checked }
+      })
+    );
   }
 
   onPlanetCentroidingChange($event) {
-    this.store.dispatch(new workbenchActions.UpdateCentroidSettings({ changes: { useDiskCentroiding: $event.checked } }));
+    this.store.dispatch(
+      new workbenchActions.UpdateCentroidSettings({
+        changes: { useDiskCentroiding: $event.checked }
+      })
+    );
   }
 }

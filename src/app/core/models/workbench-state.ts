@@ -14,6 +14,7 @@ export enum WorkbenchTool {
   SONIFIER,
   SOURCE_EXTRACTOR,
   CUSTOM_MARKER,
+  INFO
 }
 
 export interface WorkbenchState {

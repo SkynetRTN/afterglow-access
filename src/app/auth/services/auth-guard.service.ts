@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { CanActivate, Router, RouterStateSnapshot, ActivatedRouteSnapshot } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { CookieService } from 'ngx-cookie';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import * as authActions from '../actions/auth';
 import * as fromAuth from '../reducers';

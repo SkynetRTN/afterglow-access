@@ -28,6 +28,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   @ViewChild('svgGroup') svgGroup: ElementRef;
   @ViewChild('svgTextGroup') svgTextGroup: ElementRef;
+  @ViewChild('svgElementRef') svgElementRef: ElementRef;
 
   private lastTransform: Matrix;
 
@@ -60,27 +61,59 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
     return index;
   }
 
+  get svg() : SVGElement {
+    return this.svgElementRef.nativeElement;
+  }
+
   markerToSvgTextData(marker: Marker) {
     if(marker.type != MarkerType.CIRCLE) return null;
     let m = marker as CircleMarker;
     if(!m.label) return null;
     let p = this.transform.transform(new Point(m.x, m.y));
+    let mirrored = this.transform.scaling.x < 0;
+    let flipped = this.transform.scaling.y >= 0;
+    let rotation = Math.round(-Math.atan2(-this.transform.b, this.transform.a)*180.0/Math.PI);
+    
+    
+    let labelTheta = m.labelTheta;
+    console.log(labelTheta, mirrored, flipped, rotation);
+    
+
+    if(mirrored) {
+      flipped = !flipped;
+      labelTheta += 180;
+    }
+    while(labelTheta < 0) labelTheta += 360;
+    labelTheta = labelTheta % 360;
+    if(flipped) {
+      if(labelTheta <= 180) {
+        labelTheta = 180-labelTheta;
+      }
+      else {
+        labelTheta = (180-(labelTheta-180))+180
+      }
+    }
+
+    labelTheta += rotation;
+    while(labelTheta < 0) labelTheta += 360;
+    labelTheta = labelTheta % 360;
+
     let radius = m.radius + m.labelGap;
     if(radius < 0) {
       radius *= -1;
-      m.labelTheta += 180;
-      while(m.labelTheta < 0) m.labelTheta += 360;
-      m.labelTheta = m.labelTheta % 360;
+      labelTheta += 180;
+      while(labelTheta < 0) labelTheta += 360;
+      labelTheta = labelTheta % 360;
     }
     /*TODO: Find better way of determining line height and positioning label */
-    if(m.labelTheta > 90 && m.labelTheta < 270) {
-      radius += 10 * Math.abs(Math.cos(m.labelTheta*Math.PI/180)); // line height ?
+    if(labelTheta > 90 && labelTheta < 270) {
+      radius += 10 * Math.abs(Math.cos(labelTheta*Math.PI/180)); // line height ?
     }
-    let dx = radius * Math.sin(m.labelTheta*Math.PI/180);
-    let dy = -radius * Math.cos(m.labelTheta*Math.PI/180);
+    let dx = radius * Math.sin(labelTheta*Math.PI/180);
+    let dy = -radius * Math.cos(labelTheta*Math.PI/180);
     let anchor = 'middle';
-    if(m.labelTheta > 0 && m.labelTheta < 180) anchor = 'start';
-    if(m.labelTheta > 180 && m.labelTheta < 360) anchor = 'end';
+    if(labelTheta > 0 && labelTheta < 180) anchor = 'start';
+    if(labelTheta > 180 && labelTheta < 360) anchor = 'end';
     
     
     return {

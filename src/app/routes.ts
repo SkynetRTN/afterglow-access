@@ -16,6 +16,7 @@ import { CustomMarkerPageComponent } from './core/containers/workbench/custom-ma
 import { ImageCalculatorPageComponent } from './core/containers/workbench/image-calculator-page/image-calculator-page.component';
 import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
 import { StackerPageComponent } from './core/containers/workbench/stacker-page/stacker-page.component';
+import { InfoPageComponent } from './core/containers/workbench/info-page/info-page.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -80,11 +81,18 @@ export const AFTERGLOW_ROUTES: Routes = [
         canActivate: [AuthGuard],
       },
       {
+        path: 'file-info',
+        component: InfoPageComponent,
+        data: { title: 'File Info' },
+        canActivate: [AuthGuard],
+      },
+      {
         path: 'markers',
         component: CustomMarkerPageComponent,
         data: { title: 'Custom Markers' },
         canActivate: [AuthGuard],
       },
+
       {
         path: 'plotter',
         component: PlotterPageComponent,

@@ -4,6 +4,8 @@ import { FormBuilder } from '@angular/forms';
 import { CircleMarker } from '../../models/marker';
 import { CustomValidators } from '../../../lib/custom_form_validator';
 
+import { debounceTime } from 'rxjs/operators';
+
 @Component({
   selector: 'app-circle-marker-editor',
   templateUrl: './circle-marker-editor.component.html',
@@ -30,7 +32,7 @@ export class CircleMarkerEditorComponent implements OnInit, OnChanges, AfterView
   constructor(private fb: FormBuilder) { }
 
   ngOnInit() {
-    this.form.valueChanges.debounceTime(250).subscribe(data => {
+    this.form.valueChanges.pipe(debounceTime(250)).subscribe(data => {
       if(this.form.valid) this.changed.emit(data);
     })
 

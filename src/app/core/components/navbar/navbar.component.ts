@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { TourService } from "ngx-tour-ngx-popper";
 
 @Component({
   selector: 'app-navbar',
@@ -9,7 +10,7 @@ export class NavbarComponent implements OnInit {
   @Input() authenticated: boolean = false;
 
 
-  constructor() { }
+  constructor(private tourService: TourService) { }
 
   ngOnInit() {
   }

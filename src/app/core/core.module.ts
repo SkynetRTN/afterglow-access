@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '../material'
 
 //Covalent
-import { CovalentDataTableModule } from '@covalent/core';
+// import { CovalentDataTableModule } from '@covalent/core';
 
 // Videogular2
 import { VgCoreModule } from 'videogular2/core';
@@ -38,6 +38,7 @@ import { ImageViewerTitleBarComponent } from './components/image-viewer-title-ba
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from './components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
+import { TourDialogComponent } from './components/tour-dialog/tour-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
@@ -54,6 +55,7 @@ import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-p
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
 import { CustomMarkerPageComponent } from './containers/workbench/custom-marker-page/custom-marker-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
+import { InfoPageComponent } from './containers/workbench/info-page/info-page.component';
 import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
@@ -72,6 +74,9 @@ import { JobsModule } from '../jobs/jobs.module';
 import { SvgTextMarkerComponent } from './components/svg-text-marker/svg-text-marker.component';
 
 import { ReactiveFormsModule } from '@angular/forms';
+import { TourMatMenuModule } from 'ngx-tour-md-menu';
+import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
+import {NgxPopperModule} from 'ngx-popper';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -102,9 +107,11 @@ export const COMPONENTS = [
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
+  TourDialogComponent,
   PlotterComponent,
   CustomMarkerPageComponent,
-  CircleMarkerEditorComponent
+  CircleMarkerEditorComponent,
+  InfoPageComponent
 ];
 
 
@@ -121,13 +128,16 @@ export const COMPONENTS = [
     DataFilesModule,
     JobsModule,
     MaterialModule,
-    CovalentDataTableModule,
+    // CovalentDataTableModule,
     VgCoreModule,
     VgControlsModule,
     VgOverlayPlayModule,
     VgBufferingModule,
     NvD3Module,
     PapaParseModule,
+    // TourMatMenuModule,
+    TourNgxPopperModule,
+    NgxPopperModule,
 
     /**
      * StoreModule.forFeature is used for composing state
@@ -152,7 +162,8 @@ export const COMPONENTS = [
   exports: COMPONENTS,
   entryComponents: [
     PhotSettingsDialogComponent,
-    SourceExtractionSettingsDialogComponent
+    SourceExtractionSettingsDialogComponent,
+    TourDialogComponent
   ],
 
 })

@@ -2,7 +2,8 @@ import { Component, OnInit, Input, EventEmitter, Output, OnChanges, OnDestroy, S
 import { DataFile } from '../../../../data-files/models/data-file';
 import { SelectionModel, DataSource, CollectionViewer, SelectionChange,  } from '@angular/cdk/collections';
 import { ENTER, SPACE, UP_ARROW, DOWN_ARROW } from '@angular/cdk/keycodes';
-import { Observable, Subscription } from 'rxjs/Rx';
+import { Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../../reducers';
 import * as fromDataFiles from '../../../../data-files/reducers';
@@ -22,10 +23,10 @@ export class DataFilesDataSource implements DataSource<DataFile> {
         this.files = files;
       });
 
-    return this.files$.map(files => files.sort((a,b) => {
+    return this.files$.pipe(map(files => files.sort((a,b) => {
       if(a.name == b.name) return 0;
       return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
-    }));
+    })));
   }
 
   disconnect(collectionViewer: CollectionViewer): void {

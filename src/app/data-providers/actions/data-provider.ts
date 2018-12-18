@@ -2,7 +2,7 @@ import { Action } from '@ngrx/store';
 import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 import { TOGGLE_ACTION } from '@ngrx/store-devtools/src/actions';
-import { TdDataTableSortingOrder } from '@covalent/core';
+// import { TdDataTableSortingOrder } from '@covalent/core';
 
 export const LOAD_DATA_PROVIDERS = '[DataProvider] Load Data Provider';
 export const LOAD_DATA_PROVIDERS_SUCCESS = '[DataProvider] Load Data Provider Success';

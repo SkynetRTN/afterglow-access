@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
 
 import * as dataFileActions from '../../../data-files/actions/data-file';
@@ -13,12 +13,17 @@ import { ImageFile, getWidth, getHeight } from '../../../data-files/models/data-
 })
 export class ImageViewerTitleBarComponent implements OnInit {
   @Input() imageFile: ImageFile;
+  @Output() downloadSnapshot = new EventEmitter();
 
   private zoomStepFactor: number = 0.75;
 
   constructor(private store: Store<fromRoot.State>) { }
 
   ngOnInit() {
+  }
+
+  onDownloadSnapshotClick() {
+    this.downloadSnapshot.emit();
   }
 
   removeFromLibrary() {

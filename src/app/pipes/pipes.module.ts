@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { DecimalPipe } from '@angular/common'
 
 import { SlugifyPipe } from './slugify.pipe'
@@ -26,6 +26,6 @@ import { FilteredFilesPipe } from './filtered-files.pipe'
     RegionFilterPipe,
     FilteredFilesPipe
   ],
-  providers: [SlugifyPipe, TruncatePipe, DmsPipe, DecimalPipe, RegionFilterPipe, FilteredFilesPipe]
+  providers: [SlugifyPipe, TruncatePipe, DmsPipe, DecimalPipe, DatePipe, RegionFilterPipe, FilteredFilesPipe]
 })
 export class PipesModule { }

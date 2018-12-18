@@ -275,7 +275,7 @@ export function getCenterTime(imageFile: ImageFile) {
   let expLength = getExpLength(imageFile);
   let startTime = getStartTime(imageFile);
   if (expLength !== undefined || startTime !== undefined) {
-    return new Date(startTime.getTime() + expLength / 2.0);
+    return new Date(startTime.getTime() + expLength * 1000.0 / 2.0);
   }
   return undefined;
 }

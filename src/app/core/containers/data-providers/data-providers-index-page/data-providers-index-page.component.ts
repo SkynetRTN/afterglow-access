@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
+
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { Store } from '@ngrx/store';
 import * as fromRoot from '../../../../reducers';
@@ -18,7 +19,7 @@ export class DataProvidersIndexPageComponent implements OnInit, AfterViewInit {
   dataProviders$: Observable<DataProvider[]>;
 
   constructor(private store: Store<fromRoot.State>) {
-    this.dataProviders$ = store.select(fromDataProviders.getDataProvidersState).map(state => state.dataProviders);
+    this.dataProviders$ = store.select(fromDataProviders.getDataProvidersState).pipe(map(state => state.dataProviders));
   }
 
   ngOnInit() {

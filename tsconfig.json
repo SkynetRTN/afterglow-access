@@ -8,13 +8,15 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es5",
-    "skipLibCheck": true,  //due to videogular using old rxjs
+    "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
       "es2017",
       "dom"
-    ]
+    ],
+    "module": "es2015",
+    "baseUrl": "./"
   }
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { ImageFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
 import { Store } from '@ngrx/store';
