@@ -3,18 +3,79 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Afterglow Access's documentation!
-============================================
+:tocdepth: 3
+
+###############################
+Afterglow Access Documentation
+###############################
+
+``Afterglow Access`` is an accessible web application for astronomical image processing and analysis.  
+After importing data into their workspace,  users can change how the images are displayed, listen to a sonification of the image data, add markers and labels,  extract sources, and much more.
+
+.. _getting-started:
+
+***************
+Getting Started
+***************
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+
+   installation
+
+.. _user-docs:
+
+******************
+User Documentation
+******************
+
+.. _user-accounts:
+
+User Accounts and File Management
+---------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   account-creation
+   third-party-authentication
+   data-providers
+
+.. _workbench: 
+
+Workbench
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   file-library
+   display
+   file-info
+   custom-markers
+   plotter
+   sonifier
+   source-extractor
 
 
+.. _project-details:
 
-Indices and tables
-==================
+***************
+Project details
+***************
+
+.. toctree::
+   :maxdepth: 1
+
+   known-issues
+   credits
+   license
+
+*****
+Index
+*****
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+

@@ -45,3 +45,8 @@ Thumbs.db
 
 package-lock.json
 package-lock.json
+
+# docs
+/docs/_build
+/docs/_static
+/docs/_templates
