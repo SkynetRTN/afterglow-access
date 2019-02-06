@@ -27,5 +27,5 @@
 }
 
 .title-bar span {
-  word-wrap: break-all;
+  word-break: break-all;
 }
