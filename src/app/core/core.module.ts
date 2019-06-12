@@ -53,6 +53,7 @@ import { DataProviderBrowsePageComponent} from './containers/data-providers/data
 import { WorkbenchComponent } from './containers/workbench/workbench.component';
 import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-page.component';
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
+import { FieldCalPageComponent } from './containers/workbench/field-cal-page/field-cal-page.component';
 import { CustomMarkerPageComponent } from './containers/workbench/custom-marker-page/custom-marker-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
 import { InfoPageComponent } from './containers/workbench/info-page/info-page.component';
@@ -77,6 +78,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { TourMatMenuModule } from 'ngx-tour-md-menu';
 import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
 import {NgxPopperModule} from 'ngx-popper';
+import { AfterglowCatalogService } from './services/afterglow-catalogs';
+import { CreateFieldCalDialogComponent } from './components/create-field-cal-dialog/create-field-cal-dialog.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { AfterglowFieldCalService } from './services/afterglow-field-cals';
+import { ThemePickerModule } from '../theme-picker';
+import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -101,17 +108,21 @@ export const COMPONENTS = [
   ViewerPageComponent,
   PlotterPageComponent,
   SonifierPageComponent,
+  FieldCalPageComponent,
   SourceExtractorPageComponent,
   ImageCalculatorPageComponent,
   StackerPageComponent,
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
+  CreateFieldCalDialogComponent,
   TourDialogComponent,
   PlotterComponent,
   CustomMarkerPageComponent,
   CircleMarkerEditorComponent,
-  InfoPageComponent
+  InfoPageComponent,
+  PixelOpsJobsDialogComponent,
+
 ];
 
 
@@ -138,6 +149,8 @@ export const COMPONENTS = [
     // TourMatMenuModule,
     TourNgxPopperModule,
     NgxPopperModule,
+    FlexLayoutModule,
+    ThemePickerModule,
 
     /**
      * StoreModule.forFeature is used for composing state
@@ -163,7 +176,9 @@ export const COMPONENTS = [
   entryComponents: [
     PhotSettingsDialogComponent,
     SourceExtractionSettingsDialogComponent,
-    TourDialogComponent
+    CreateFieldCalDialogComponent,
+    TourDialogComponent,
+    PixelOpsJobsDialogComponent
   ],
 
 })
@@ -171,7 +186,7 @@ export class CoreModule {
   static forRoot() {
     return {
       ngModule: CoreModule,
-      providers: [AfterglowDataFileService, AfterglowDataProviderService],
+      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
     };
   }
 }

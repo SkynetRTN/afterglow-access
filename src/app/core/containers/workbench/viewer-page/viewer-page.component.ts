@@ -5,7 +5,9 @@ import {
   AfterViewInit,
   ViewChild,
   Input,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  ViewEncapsulation,
+  HostBinding
 } from "@angular/core";
 import { Observable, Subscription, Subject } from "rxjs";
 import { map, filter, debounceTime } from "rxjs/operators";
@@ -45,10 +47,12 @@ import { environment } from "../../../../../environments/environment.prod";
 @Component({
   selector: "app-viewer-page",
   templateUrl: "./viewer-page.component.html",
-  styleUrls: ["./viewer-page.component.css"]
+  styleUrls: ["./viewer-page.component.scss"]
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
+  @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+
   ViewMode = ViewMode;
   viewers$: Observable<Array<Viewer>>;
   activeViewerIndex$: Observable<number>;

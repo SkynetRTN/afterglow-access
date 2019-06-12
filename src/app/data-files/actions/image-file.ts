@@ -14,23 +14,25 @@ export const LOAD_IMAGE_TILE_PIXELS_FAIL = '[Image File] Load Image Tile Fail';
 export const LOAD_IMAGE_TILE_PIXELS_SUCCESS = '[Image File] Load Image Tile Success';
 export const LOAD_IMAGE_TILE_PIXELS_CANCEL = '[Image File] Load Image Tile Cancel';
 
+export const CLEAR_IMAGE_DATA_CACHE = "[Image File] Clear Image Data";
+
 
 export class LoadImageHist implements Action {
   readonly type = LOAD_IMAGE_HIST;
 
-  constructor(public payload: { file: ImageFile }) { }
+  constructor(public payload: { fileId: string }) { }
 }
 
 export class LoadImageHistSuccess implements Action {
   readonly type = LOAD_IMAGE_HIST_SUCCESS;
 
-  constructor(public payload: { file: ImageFile, hist: ImageHist }) { }
+  constructor(public payload: { fileId: string, hist: ImageHist }) { }
 }
 
 export class LoadImageHistFail implements Action {
   readonly type = LOAD_IMAGE_HIST_FAIL;
 
-  constructor(public payload: { file: ImageFile, error: any }) { }
+  constructor(public payload: { fileId: string, error: any }) { }
 }
 
 export class InitImageTiles implements Action {
@@ -63,6 +65,12 @@ export class LoadImageTilePixelsCancel implements Action {
   constructor(public payload: { file: ImageFile, tileIndex: number }) { }
 }
 
+export class ClearImageDataCache implements Action {
+  readonly type = CLEAR_IMAGE_DATA_CACHE;
+
+  constructor(public payload: { fileIds: string[] }) { }
+}
+
 
 
 export type Actions =
@@ -73,5 +81,6 @@ export type Actions =
   | LoadImageTilePixels
   | LoadImageTilePixelsFail
   | LoadImageTilePixelsSuccess
-  | LoadImageTilePixelsCancel;
+  | LoadImageTilePixelsCancel
+  | ClearImageDataCache;
 

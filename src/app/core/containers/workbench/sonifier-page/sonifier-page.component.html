@@ -1,14 +1,14 @@
-<div class="workbench-outlet-wrapper">
-  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
+
+  <div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers">
     <app-workbench-viewer-grid></app-workbench-viewer-grid>
   </div>
 
   <span class="resizer"></span>
 
-  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
+  <div *ngIf="(showConfig$ | async)" fxFlex="0 0 auto" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
     <div class="card workbench-settings-card" style="height: 100%;">
       <div id="settings-header" class="card-header">
-        <h4>Sonifier Settings</h4>
+        <h5>Sonification</h5>
       </div>
 
       <div class="card-body" style="overflow-y: auto;">
@@ -155,4 +155,3 @@
       </div>
     </div>
   </div>
-</div>

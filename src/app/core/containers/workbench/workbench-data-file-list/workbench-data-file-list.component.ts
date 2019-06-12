@@ -65,12 +65,12 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.subs.push(this.primarySelectionModel.onChange.subscribe(change => {
+    this.subs.push(this.primarySelectionModel.changed.subscribe(change => {
       this.onPrimarySelectionChange.emit(this.primarySelectionModel.selected.length == 0 ? null : this.primarySelectionModel.selected[0]);
-      this.multiSelectionModel.onChange.next();
+      this.multiSelectionModel.changed.next();
     }));
 
-    this.subs.push(this.multiSelectionModel.onChange.subscribe(change => {
+    this.subs.push(this.multiSelectionModel.changed.subscribe(change => {
       let result = [...this.multiSelectionModel.selected];
       if(this.primarySelectionModel.selected.length != 0 && this.primarySelectionModel.selected[0] && !result.map(file => file.id).includes(this.primarySelectionModel.selected[0].id)) {
         result.push(this.primarySelectionModel.selected[0])

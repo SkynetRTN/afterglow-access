@@ -4,7 +4,9 @@ import {
   OnDestroy,
   ViewChild,
   ChangeDetectionStrategy,
-  OnInit
+  OnInit,
+  HostBinding,
+  Input
 } from "@angular/core";
 
 import { Store } from "@ngrx/store";
@@ -50,6 +52,7 @@ import { PosType } from "../../../models/source";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
+  @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
   @ViewChild("plotter")
   plotter: PlotterComponent;
   imageFile$: Observable<ImageFile>;

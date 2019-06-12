@@ -1,5 +1,5 @@
 import { Injectable, InjectionToken, Optional, Inject } from "@angular/core";
-import { Effect, Actions } from "@ngrx/effects";
+import { Effect, Actions, ofType } from "@ngrx/effects";
 import { Action } from "@ngrx/store";
 import { Store } from "@ngrx/store";
 import { Observable, from, of, merge } from "rxjs";
@@ -40,126 +40,121 @@ import { PhotometryJobResult } from "../../jobs/models/photometry";
 @Injectable()
 export class SourceExtractorEffects {
   @Effect()
-  extractSources$: Observable<Action> = this.actions$
-    .ofType<sourceExtractorActions.ExtractSources>(
+  extractSources$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExtractorActions.ExtractSources>(
       sourceExtractorActions.EXTRACT_SOURCES
-    )
-    .pipe(
-      withLatestFrom(this.store.select(fromCore.getWorkbenchState)),
-      flatMap(([action, workbenchState]) => {
-        let targetFileId = action.payload.file.id;
-        let job: SourceExtractionJob = {
-          id: null,
-          type: JobType.SourceExtraction,
-          file_ids: [parseInt(action.payload.file.id)],
-          source_extraction_settings: workbenchState.sourceExtractionSettings,
-          merge_sources: false,
-          source_merge_settings: null
-        };
+    ),
+    withLatestFrom(this.store.select(fromCore.getWorkbenchState)),
+    flatMap(([action, workbenchState]) => {
+      let targetFileId = action.payload.file.id;
+      let job: SourceExtractionJob = {
+        id: null,
+        type: JobType.SourceExtraction,
+        file_ids: [parseInt(action.payload.file.id)],
+        source_extraction_settings: workbenchState.sourceExtractionSettings,
+        merge_sources: false,
+        source_merge_settings: null
+      };
 
-        return merge(
-          of(new jobActions.CreateJob({ job: job })),
-          this.actions$
-            .ofType<jobActions.CreateJobSuccess | jobActions.CreateJobFail>(
-              jobActions.CREATE_JOB_SUCCESS,
-              jobActions.CREATE_JOB_FAIL
-            )
-            .pipe(
-              filter(
-                action =>
-                  action.payload.job.type == JobType.SourceExtraction &&
-                  job.file_ids[0] == parseInt(targetFileId)
+      return merge(
+        of(new jobActions.CreateJob({ job: job })),
+        this.actions$.pipe(
+          ofType<jobActions.CreateJobSuccess | jobActions.CreateJobFail>(
+            jobActions.CREATE_JOB_SUCCESS,
+            jobActions.CREATE_JOB_FAIL
+          ),
+          filter(
+            action =>
+              action.payload.job.type == JobType.SourceExtraction &&
+              job.file_ids[0] == parseInt(targetFileId)
+          ),
+          takeUntil(
+            this.actions$.pipe(
+              ofType<sourceExtractorActions.ExtractSources>(
+                sourceExtractorActions.EXTRACT_SOURCES
               ),
-              takeUntil(
-                this.actions$
-                  .ofType<sourceExtractorActions.ExtractSources>(
-                    sourceExtractorActions.EXTRACT_SOURCES
-                  )
-                  .pipe(
-                    filter(action => action.payload.file.id == targetFileId),
-                    skip(1)
-                  )
-              ),
-              take(1),
-              flatMap(action => {
-                switch (action.type) {
-                  case jobActions.CREATE_JOB_SUCCESS: {
-                    return of(
-                      new sourceExtractorActions.SetSourceExtractionJob({
-                        job: action.payload.job as SourceExtractionJob
-                      })
-                    );
-                  }
-                  case jobActions.CREATE_JOB_FAIL: {
-                    return of(
-                      new sourceExtractorActions.ExtractSourcesFail({
-                        error: "Failed to create job"
-                      })
-                    );
-                  }
-                  default: {
-                    return from([]);
-                  }
-                }
-              })
+              filter(action => action.payload.file.id == targetFileId),
+              skip(1)
             )
-        );
-      })
-    );
+          ),
+          take(1),
+          flatMap(action => {
+            switch (action.type) {
+              case jobActions.CREATE_JOB_SUCCESS: {
+                return of(
+                  new sourceExtractorActions.SetSourceExtractionJob({
+                    job: action.payload.job as SourceExtractionJob
+                  })
+                );
+              }
+              case jobActions.CREATE_JOB_FAIL: {
+                return of(
+                  new sourceExtractorActions.ExtractSourcesFail({
+                    error: "Failed to create job"
+                  })
+                );
+              }
+              default: {
+                return from([]);
+              }
+            }
+          })
+        )
+      );
+    })
+  );
 
   @Effect()
-  addSourcesFromJob$: Observable<Action> = this.actions$
-    .ofType<jobActions.UpdateJobResultSuccess>(
+  addSourcesFromJob$: Observable<Action> = this.actions$.pipe(
+    ofType<jobActions.UpdateJobResultSuccess>(
       jobActions.UPDATE_JOB_RESULT_SUCCESS
-    )
-    .pipe(
-      withLatestFrom(this.store.select(fromCore.getImageFileStates)),
-      filter(([action, imageFileStates]) => {
-        let job = action.payload.job;
+    ),
+    withLatestFrom(this.store.select(fromCore.getImageFileStates)),
+    filter(([action, imageFileStates]) => {
+      let job = action.payload.job;
 
-        if (job.type != JobType.SourceExtraction || job.file_ids.length != 1)
-          return false;
-        let fileId = job.file_ids[0];
+      if (job.type != JobType.SourceExtraction || job.file_ids.length != 1)
+        return false;
+      let fileId = job.file_ids[0];
 
-        return (
-          imageFileStates[fileId].sourceExtractor.sourceExtractionJobId ==
-          job.id
-        );
-      }),
-      map(([action, imageFileStates]) => {
-        let photJobResult = action.payload.result as PhotometryJobResult;
-        let sources = photJobResult.data.map(d => {
-          let posType = PosType.PIXEL;
-          let primaryCoord = d.x;
-          let secondaryCoord = d.y;
+      return (
+        imageFileStates[fileId].sourceExtractor.sourceExtractionJobId == job.id
+      );
+    }),
+    map(([action, imageFileStates]) => {
+      let photJobResult = action.payload.result as PhotometryJobResult;
+      let sources = photJobResult.data.map(d => {
+        let posType = PosType.PIXEL;
+        let primaryCoord = d.x;
+        let secondaryCoord = d.y;
 
-          if (
-            "ra_hours" in d &&
-            d.ra_hours !== null &&
-            "dec_degs" in d &&
-            d.dec_degs !== null
-          ) {
-            posType = PosType.SKY;
-            primaryCoord = d.ra_hours;
-            secondaryCoord = d.dec_degs;
-          }
-          return {
-            id: d.id,
-            label: d.id,
-            objectId: null,
-            fileId: d.file_id,
-            posType: posType,
-            primaryCoord: primaryCoord,
-            secondaryCoord: secondaryCoord,
-            pm: null,
-            pmPosAngle: null,
-            pmEpoch: d.time ? new Date(d.time) : null
-          } as Source;
-        });
+        if (
+          "ra_hours" in d &&
+          d.ra_hours !== null &&
+          "dec_degs" in d &&
+          d.dec_degs !== null
+        ) {
+          posType = PosType.SKY;
+          primaryCoord = d.ra_hours;
+          secondaryCoord = d.dec_degs;
+        }
+        return {
+          id: d.id,
+          label: d.id,
+          objectId: null,
+          fileId: d.file_id,
+          posType: posType,
+          primaryCoord: primaryCoord,
+          secondaryCoord: secondaryCoord,
+          pm: null,
+          pmPosAngle: null,
+          pmEpoch: d.time ? new Date(d.time) : null
+        } as Source;
+      });
 
-        return new sourceActions.AddSources({ sources: sources });
-      })
-    );
+      return new sourceActions.AddSources({ sources: sources });
+    })
+  );
 
   // return [
   //   new jobActions.CreateJob({ job: job }),
@@ -285,74 +280,72 @@ export class SourceExtractorEffects {
   //   });
 
   @Effect()
-  sourceExtractorFileStateUpdated$: Observable<Action> = this.actions$
-    .ofType<sourceExtractorActions.UpdateFileState>(
+  sourceExtractorFileStateUpdated$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExtractorActions.UpdateFileState>(
       sourceExtractorActions.UPDATE_FILE_STATE
+    ),
+    map(
+      action =>
+        new sourceExtractorActions.UpdateRegion({ file: action.payload.file })
     )
-    .pipe(
-      map(
-        action =>
-          new sourceExtractorActions.UpdateRegion({ file: action.payload.file })
-      )
-    );
+  );
 
   @Effect()
-  updateRegion$: Observable<Action> = this.actions$
-    .ofType<sourceExtractorActions.UpdateRegion>(
+  updateRegion$: Observable<Action> = this.actions$.pipe(
+    ofType<sourceExtractorActions.UpdateRegion>(
       sourceExtractorActions.UPDATE_REGION
-    )
-    .pipe(
-      withLatestFrom(
-        this.store.select(fromDataFile.getDataFiles),
-        this.store.select(fromCore.getImageFileGlobalState),
-        this.store.select(fromCore.getImageFileStates)
-      ),
-      flatMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
-        let imageFile = dataFiles[action.payload.file.id] as ImageFile;
-        let sourceExtractorFileState =
-          imageFileStates[imageFile.id].sourceExtractor;
-        let sonifierFileState = imageFileStates[imageFile.id].sonifier;
-        let actions: Action[] = [];
+    ),
+    withLatestFrom(
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getImageFileGlobalState),
+      this.store.select(fromCore.getImageFileStates)
+    ),
+    flatMap(([action, dataFiles, imageFileGlobalState, imageFileStates]) => {
+      let imageFile = dataFiles[action.payload.file.id] as ImageFile;
+      let sourceExtractorFileState =
+        imageFileStates[imageFile.id].sourceExtractor;
+      let sonifierFileState = imageFileStates[imageFile.id].sonifier;
+      let actions: Action[] = [];
 
-        let region = null;
-        if (
-          sourceExtractorFileState.regionOption ==
-          SourceExtractorRegionOption.VIEWPORT
-        ) {
-          region = getViewportRegion(
-            imageFileStates[imageFile.id].transformation,
-            imageFile
-          );
-          // region = {
-          //   x: imageFileGlobalState.viewport.imageX,
-          //   y: imageFileGlobalState.viewport.imageY,
-          //   width: imageFileGlobalState.viewport.imageWidth,
-          //   height: imageFileGlobalState.viewport.imageHeight
-          // }
-        } else if (
-          sourceExtractorFileState.regionOption ==
-          SourceExtractorRegionOption.SONIFIER_REGION
-        ) {
-          region = sonifierFileState.region;
-        } else {
-          region = {
-            x: 0,
-            y: 0,
-            width: getWidth(imageFile),
-            height: getHeight(imageFile)
-          };
-        }
-
-        actions.push(
-          new sourceExtractorActions.SetRegion({
-            file: imageFile,
-            region: region
-          })
+      let region = null;
+      if (
+        sourceExtractorFileState.regionOption ==
+        SourceExtractorRegionOption.VIEWPORT
+      ) {
+        region = getViewportRegion(
+          imageFileStates[imageFile.id].transformation,
+          imageFile
         );
+        // region = {
+        //   x: imageFileGlobalState.viewport.imageX,
+        //   y: imageFileGlobalState.viewport.imageY,
+        //   width: imageFileGlobalState.viewport.imageWidth,
+        //   height: imageFileGlobalState.viewport.imageHeight
+        // }
+      } else if (
+        sourceExtractorFileState.regionOption ==
+        SourceExtractorRegionOption.SONIFIER_REGION
+      ) {
+        region = sonifierFileState.region;
+      } else {
+        region = {
+          x: 0,
+          y: 0,
+          width: getWidth(imageFile),
+          height: getHeight(imageFile)
+        };
+      }
 
-        return from(actions);
-      })
-    );
+      actions.push(
+        new sourceExtractorActions.SetRegion({
+          file: imageFile,
+          region: region
+        })
+      );
+
+      return from(actions);
+    })
+  );
 
   constructor(
     private actions$: Actions,

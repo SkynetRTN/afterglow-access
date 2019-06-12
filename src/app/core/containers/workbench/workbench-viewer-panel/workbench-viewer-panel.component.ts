@@ -56,11 +56,12 @@ import { Source, PosType } from "../../../models/source";
 import { PlotterFileState } from "../../../models/plotter-file-state";
 import { min } from "../../../../../../node_modules/rxjs/operators";
 import { CustomMarker } from "../../../models/custom-marker";
+import { FieldCal } from '../../../models/field-cal';
 
 @Component({
   selector: "app-workbench-viewer-panel",
   templateUrl: "./workbench-viewer-panel.component.html",
-  styleUrls: ["./workbench-viewer-panel.component.css"]
+  styleUrls: ["./workbench-viewer-panel.component.scss"]
 })
 export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Input()
@@ -68,6 +69,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   private fileId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
   @Input()
   showInfoBar: boolean = true;
+  @Input()
+  active: boolean = true;
 
   @Output()
   onImageClick = new EventEmitter<CanvasMouseEvent>();
@@ -96,6 +99,11 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   activeFileState$: Observable<ImageFileState>;
   imageMouseX: number = null;
   imageMouseY: number = null;
+
+  fieldCals$: Observable<FieldCal[]>;
+  selectedFieldCal$: Observable<FieldCal>;
+  selectedFieldCalId$: Observable<string>;
+  fieldCalMarkers$: Observable<Marker[]>;
 
   constructor(private store: Store<fromRoot.State>, private sanitization:DomSanitizer) {
     this.files$ = this.store.select(fromDataFiles.getDataFiles);
@@ -350,6 +358,65 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       })
     );
 
+    this.fieldCals$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.fieldCals));
+    this.selectedFieldCalId$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.selectedFieldCalId));
+    this.selectedFieldCal$ = combineLatest(this.fieldCals$, this.selectedFieldCalId$).pipe(
+      map(([fieldCals, selectedFieldCalId]) => {
+        if(!fieldCals || selectedFieldCalId == null) return null;
+        let selectedFieldCal = fieldCals.find(fieldCal => fieldCal.id == selectedFieldCalId);
+        if(!selectedFieldCal) return null;
+        return selectedFieldCal; 
+      })
+    );
+
+
+    let fieldCalMarkers$ = combineLatest(
+      this.fileId$,
+      this.files$,
+      this.selectedFieldCal$
+    ).pipe(
+      map(([fileId, files, fieldCal]) => {
+        if (fileId === null || fieldCal == null) return [[]];
+        let markers: Array<CircleMarker> = [];
+        let file = files[fileId] as ImageFile;
+        if (!file || !file.headerLoaded || !getHasWcs(file)) return [[]];
+
+              
+        fieldCal.catalogSources.forEach(source => {
+          let primaryCoord = source.primaryCoord;
+          let secondaryCoord = source.secondaryCoord;
+          // let selected = selectedSources.includes(source);
+          let selected = false;
+
+          let wcs = getWcs(file);
+          let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
+          let x = xy[0];
+          let y = xy[1];
+          if (
+            x < 0.5 ||
+            x >= getWidth(file) + 0.5 ||
+            y < 0.5 ||
+            y >= getHeight(file) + 0.5
+          ) return;
+
+          markers.push({
+            type: MarkerType.CIRCLE,
+            x: x,
+            y: y,
+            radius: 15,
+            labelGap: 14,
+            labelTheta: 0,
+            selected: selected,
+            data: { id: source.id }
+          } as CircleMarker);
+
+
+        });
+
+        return markers;
+      })
+    );
+
     let customMarkers$ = combineLatest(
       this.store.select(fromCore.workbench.getActiveTool),
       this.fileId$,
@@ -375,6 +442,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
               };
               return marker;
             });
+            
           return markers;
         }
       )
@@ -385,7 +453,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       plotterMarkers$,
       sonifierMarkers$,
       sourceMarkers$,
-      customMarkers$
+      customMarkers$,
+      fieldCalMarkers$
     ).pipe(
       map(
         ([
@@ -393,7 +462,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
           plotterMarkers,
           sonifierMarkers,
           sourceMarkers,
-          customMarkers
+          customMarkers,
+          fieldCalMarkers
         ]) => {
           if (!this.fileId) return [];
           let markers = [];
@@ -408,6 +478,9 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
           }
           if (activeTool != WorkbenchTool.SOURCE_EXTRACTOR) {
             markers.push(...customMarkers);
+          }
+          if (activeTool == WorkbenchTool.FIELD_CAL) {
+            markers.push(...fieldCalMarkers);
           }
           return markers;
         }

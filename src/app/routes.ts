@@ -17,6 +17,7 @@ import { ImageCalculatorPageComponent } from './core/containers/workbench/image-
 import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
 import { StackerPageComponent } from './core/containers/workbench/stacker-page/stacker-page.component';
 import { InfoPageComponent } from './core/containers/workbench/info-page/info-page.component';
+import { FieldCalPageComponent } from './core/containers/workbench/field-cal-page/field-cal-page.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -103,6 +104,12 @@ export const AFTERGLOW_ROUTES: Routes = [
         path: 'sonifier',
         component: SonifierPageComponent,
         data: { title: 'Sonifier' },
+        canActivate: [AuthGuard],
+      },
+      {
+        path: 'field-cal',
+        component: FieldCalPageComponent,
+        data: { title: 'Field Calibration' },
         canActivate: [AuthGuard],
       },
       {

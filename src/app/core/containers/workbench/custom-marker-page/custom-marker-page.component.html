@@ -1,59 +1,85 @@
-<div class="workbench-outlet-wrapper">
-  <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
-    <app-workbench-viewer-grid (onImageClick)="onImageClick($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-viewer-grid>
-  </div>
+<div
+  fxFlex="1 1 0%"
+  class="image-viewer-grid-panel"
+  role="region"
+  aria-label="image viewers"
+>
+  <app-workbench-viewer-grid
+    (onImageClick)="onImageClick($event)"
+    (onMarkerClick)="onMarkerClick($event)"
+  ></app-workbench-viewer-grid>
+</div>
 
-  <span class="resizer"></span>
-  <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
-    <div class="card workbench-settings-card" style="height: 100%;">
-      <div id="settings-header" class="card-header">
-        <h4>Custom Marker Settings</h4>
-      </div>
-
-      <div class="card-body" style="overflow-y: auto;">
-        <div *ngIf="!(activeImageFile$ | async)?.headerLoaded" class="alert alert-info">
-          Select a data file to see custom marker options.
-        </div>
-        <div *ngIf="(activeImageFile$ | async)?.headerLoaded">
-          <div>
-            <div class="row pb-1">
-              <div class="col-6">
-                <div class="form-group">
-                  <mat-slide-toggle [checked]="(centroidSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)">
-                    Centroid clicks
-                  </mat-slide-toggle>
-                </div>
-
-              </div>
-              <div class="col-6">
-                <div class="form-group">
-                  <mat-slide-toggle [checked]="(centroidSettings$ | async)?.useDiskCentroiding" [disabled]="!(centroidSettings$ | async)?.centroidClicks"
-                    [labelPosition]="before" (change)="onPlanetCentroidingChange($event)">
-                    Planet Centroiding
-                  </mat-slide-toggle>
-                </div>
-              </div>
-
-            </div>
-
-            <p> Add custom markers by clicking on your image.</p>
-            <p class="pb-2">Tip: Hold
-              <span class="kbd">Alt</span> to click beneath existing markers</p>
-
-          </div>
-
-          <ng-container *ngIf="(selectedCustomMarkers$ | async); let selectedCustomMarkers;">
-            <ng-container *ngIf="selectedCustomMarkers.length == 1">
-              <hr>
-              <h5>Marker Customization </h5>
-              <app-circle-marker-editor [marker]="selectedCustomMarkers[0].marker" (changed)="onMarkerChange($event, selectedCustomMarkers[0])"></app-circle-marker-editor>
-            </ng-container>
-
-          </ng-container>
-
-        </div>
-      </div>
+<span class="resizer"></span>
+<div
+  *ngIf="showConfig$ | async"
+  fxFlex="0 0 auto"
+  class="workbench-config-panel"
+  role="region"
+  aria-labelledby="settings-header"
+>
+  <div class="card workbench-settings-card" style="height: 100%;">
+    <div id="settings-header" class="card-header">
+      <h5>Custom Markers</h5>
     </div>
 
+    <div class="card-body" style="overflow-y: auto;">
+      <div
+        *ngIf="!(activeImageFile$ | async)?.headerLoaded"
+        class="alert alert-info"
+      >
+        Select a data file to see custom marker options.
+      </div>
+      <div *ngIf="(activeImageFile$ | async)?.headerLoaded">
+        <div>
+          <div class="row pb-1">
+            <div class="col-6">
+              <div class="form-group">
+                <mat-slide-toggle
+                  [checked]="(centroidSettings$ | async)?.centroidClicks"
+                  [labelPosition]="before"
+                  (change)="onCentroidClicksChange($event)"
+                  color="primary"
+                >
+                  Centroid clicks
+                </mat-slide-toggle>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group">
+                <mat-slide-toggle
+                  [checked]="(centroidSettings$ | async)?.useDiskCentroiding"
+                  [disabled]="!(centroidSettings$ | async)?.centroidClicks"
+                  color="primary"
+                  [labelPosition]="before"
+                  (change)="onPlanetCentroidingChange($event)"
+                >
+                  Planet Centroiding
+                </mat-slide-toggle>
+              </div>
+            </div>
+          </div>
+
+          <p>Add custom markers by clicking on your image.</p>
+          <p class="pb-2">
+            Tip: Hold <span class="kbd">Alt</span> to click beneath existing
+            markers
+          </p>
+        </div>
+
+        <ng-container
+          *ngIf="selectedCustomMarkers$ | async; let selectedCustomMarkers"
+        >
+          <ng-container *ngIf="selectedCustomMarkers.length == 1">
+            <hr />
+            <h5>Marker Customization</h5>
+            <app-circle-marker-editor
+              [marker]="selectedCustomMarkers[0].marker"
+              (changed)="onMarkerChange($event, selectedCustomMarkers[0])"
+            ></app-circle-marker-editor>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
   </div>
 </div>

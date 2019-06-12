@@ -1,14 +1,3 @@
-.main-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.main-header, .main-footer {
-  flex: 0 0 auto;
-}
-
 .main-content {
-  flex: 1 1 0%;
   overflow-y: auto;
 }

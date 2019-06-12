@@ -1,26 +1,28 @@
-<hotkeys-cheatsheet></hotkeys-cheatsheet>
-<tour-step-template>
-    <ng-template let-step="step">
-      <p class="ngxp-title">{{step?.title}}</p>
-      <p class="ngxp-content">{{step?.content}}</p>
-      <div class="tour-step-navigation">
-      <button [disabled]="!tourService.hasPrev(step)" class="ngxp-btn" (click)="tourService.prev()">« {{step?.prevBtnTitle}}</button>
-      
-        <button [disabled]="!tourService.hasNext(step)" class="ngxp-btn" (click)="tourService.next()">{{step?.nextBtnTitle}} »</button>
-        <button class="ngxp-btn" (click)="tourService.end()">{{step?.endBtnTitle}}</button>
-      </div>
-    </ng-template>
-  </tour-step-template>
-
-<div class="main-wrapper">
-  <header class="main-header">
-    <app-navbar [authenticated]="(loggedIn$ | async)" class="mat-elevation-z6" tourAnchor="primary navigation"></app-navbar>
-    <!-- <navbar [routes]=currentRoutes></navbar> -->
-    <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
-  </header>
-
-  <main class="main-content">
-    <router-outlet></router-outlet>
-  </main>
-
+<div style="height: 100%;">
+    <hotkeys-cheatsheet></hotkeys-cheatsheet>
+    <tour-step-template>
+        <ng-template let-step="step">
+          <p class="ngxp-title">{{step?.title}}</p>
+          <p class="ngxp-content">{{step?.content}}</p>
+          <div class="tour-step-navigation">
+          <button [disabled]="!tourService.hasPrev(step)" class="ngxp-btn" (click)="tourService.prev()">« {{step?.prevBtnTitle}}</button>
+          
+            <button [disabled]="!tourService.hasNext(step)" class="ngxp-btn" (click)="tourService.next()">{{step?.nextBtnTitle}} »</button>
+            <button class="ngxp-btn" (click)="tourService.end()">{{step?.endBtnTitle}}</button>
+          </div>
+        </ng-template>
+      </tour-step-template>
+    
+    <div fxLayout="column" fxFill>
+      <header fxFlex="0 0 auto" class="main-header">
+        <app-navbar [authenticated]="(loggedIn$ | async)" class="mat-elevation-z6" tourAnchor="primary navigation"></app-navbar>
+        <!-- <navbar [routes]=currentRoutes></navbar> -->
+        <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
+      </header>
+    
+      <main fxFlex="1 1 0%" class="main-content">
+        <router-outlet></router-outlet>
+      </main>
+    
+    </div>
 </div>

@@ -26,9 +26,9 @@ export class JobService {
     );
   }
 
-  getJobResult(job: Job) {
+  getJobResult(job: Job): Observable<JobResult> {
     return this.http
-      .get<JobResult>(
+      .get<any>(
         this.location.prepareExternalUrl(
           `${environment.apiUrl}/jobs/${job.id}/result`
         )

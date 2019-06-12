@@ -1,24 +1,144 @@
-<div class="workbench-outlet-wrapper">
-    <div class="image-viewer-grid-panel" role="region" aria-label="image viewers">
-      <app-workbench-viewer-grid></app-workbench-viewer-grid>
+<div
+  fxFlex="1 1 0%"
+  class="image-viewer-grid-panel"
+  role="region"
+  aria-label="image viewers"
+>
+  <app-workbench-viewer-grid></app-workbench-viewer-grid>
+</div>
+
+<span class="resizer"></span>
+<div
+  *ngIf="showConfig$ | async"
+  fxFlex="0 0 auto"
+  class="workbench-config-panel"
+  role="region"
+  aria-labelledby="settings-header"
+>
+  <div class="card workbench-settings-card" style="height: 100%;">
+    <div id="settings-header" class="card-header">
+      <h5>Aligner</h5>
     </div>
-  
-    <span class="resizer"></span>
-    <div *ngIf="(showConfig$ | async)" class="workbench-config-panel" role="region" aria-labelledby="settings-header">
-      <div class="card workbench-settings-card" style="height: 100%;">
-        <div id="settings-header" class="card-header">
-          Aligner
-        </div>
-  
-        <div class="card-body" style="overflow-y: auto;">
-          <div *ngIf="!(activeImageFile$ | async)" class="alert alert-info">
-            Select data files to see aligner options.
+
+    <div class="card-body" style="overflow-y: auto;">
+      <div *ngIf="allImageFiles$ | async; let allImageFiles">
+        <form [formGroup]="alignForm">
+          <mat-form-field appearance="outline" style="width: 300px;">
+            <mat-label>Select Image(s) to Align</mat-label>
+            <mat-select multiple formControlName="selectedImageFileIds">
+              <mat-option
+                *ngFor="let imageFile of allImageFiles"
+                [value]="imageFile.id"
+                >{{ imageFile.name }}</mat-option
+              >
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-icon-button (click)="selectImageFiles(allImageFiles)">
+            <mat-icon>select_all</mat-icon>
+          </button>
+
+          <button mat-icon-button (click)="selectImageFiles([])">
+            <mat-icon>clear</mat-icon>
+          </button>
+
+          <mat-form-field appearance="outline" style="width: 300px;">
+            <mat-label>Active Image File</mat-label>
+            <mat-select
+              [value]="(activeImageFile$ | async)?.id"
+              (selectionChange)="onActiveImageChange($event)"
+            >
+              <mat-option
+                *ngFor="let imageFile of selectedImageFiles$ | async"
+                [value]="imageFile.id"
+                >{{ imageFile.name }}</mat-option
+              >
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" style="width: 300px;">
+            <mat-label>Mode</mat-label>
+            <mat-select formControlName="mode">
+              <mat-option [value]="'astrometric'">astrometric</mat-option>
+              <!-- <mat-option  [value]="'manual_source'">manual</mat-option> -->
+            </mat-select>
+          </mat-form-field>
+          <div>
+            <mat-checkbox formControlName="inPlace">
+              Overwrite Files</mat-checkbox
+            >
           </div>
-          <div *ngIf="(activeImageFile$ | async)">
-            
+
+          <div *ngIf="activeImageIsSelected$ | async">
+            <div *ngIf="(alignFormData$ | async)?.mode == 'astrometric'">
+              <div *ngIf="!(activeImageHasWcs$ | async); else hasWcs">
+                <div class="alert alert-warning" style="margin-top: 10px;">
+                  This image does not have astrometric data in its header and
+                  cannot be aligned using the selected mode.
+                </div>
+              </div>
+              <ng-template #hasWcs>
+                <!-- <div
+                class="alert alert-info"
+              >
+                  Astrometric data is available for this image.
+                  </div> -->
+              </ng-template>
+            </div>
           </div>
+          <div style="clear: both;"></div>
+          <button
+            mat-raised-button
+            (click)="submit(alignForm.value)"
+            [disabled]="!alignForm.valid"
+            class="float-right"
+          >
+            Submit
+          </button>
+          <div style="clear: both;"></div>
+        </form>
+
+        <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
+        <div
+          *ngIf="alignmentJobRow$ | async; let jobRow"
+          style="margin-top: 10px;"
+        >
+          <div
+            class="alert alert-info"
+            *ngIf="
+              !jobRow.result ||
+                ['pending', 'in_progress'].includes(jobRow.job.state.status);
+              else jobComplete
+            "
+          >
+            Processing job {{ jobRow.job.id }} ... ({{jobRow.job.state.progress | number:'1.0-0'}}%)
+
+            <ng-container *ngIf="jobRow.job.state.status == 'in_progress'">
+              <div style="margin-top: 5px">
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="jobRow.job.state.progress"
+                  [color]="'primary'"
+                ></mat-progress-bar>
+              </div>
+            </ng-container>
+          </div>
+          <ng-template #jobComplete>
+            <div
+              *ngIf="jobRow.result.errors.length != 0; else noErrors"
+              class="alert alert-danger"
+            >
+              {{ jobRow.result.errors }}
+            </div>
+            <ng-template #noErrors>
+              <div class="alert alert-success">
+                Processing is complete.
+              </div>
+            </ng-template>
+          </ng-template>
         </div>
+        <!-- </div> -->
       </div>
-  
     </div>
   </div>
+</div>

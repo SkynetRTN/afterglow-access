@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from "@angular/core";
+import { Component, OnInit, AfterViewInit, Renderer2 } from "@angular/core";
 import { CookieService } from "ngx-cookie";
 import { AnyFn } from "@ngrx/store/src/selector";
 import { Title } from "@angular/platform-browser";
@@ -18,6 +18,8 @@ import { User } from "./auth/models/user";
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 // import { TourService } from "ngx-tour-md-menu";
 import { TourService } from "ngx-tour-ngx-popper";
+import { Renderer3 } from "@angular/core/src/render3/interfaces/renderer";
+import { ThemeStorage } from './theme-picker/theme-storage/theme-storage';
 
 @Component({
   selector: "app-root",
@@ -29,6 +31,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   loggedIn$: Observable<boolean>;
   private user$: Observable<User>;
   private loggedInSub: Subscription;
+  private currentThemeName: string;
 
   public constructor(
     private store: Store<fromRoot.State>,
@@ -36,8 +39,23 @@ export class AppComponent implements OnInit, AfterViewInit {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
-    private tourService: TourService
+    private tourService: TourService,
+    private renderer: Renderer2,
+    private themeStorage: ThemeStorage
   ) {
+
+    this.currentThemeName = this.themeStorage.getStoredThemeName();
+    if(this.currentThemeName) this.renderer.addClass(document.body, this.currentThemeName);
+
+    this.themeStorage.onThemeUpdate.subscribe(theme => {
+      this.renderer.removeClass(document.body, this.currentThemeName);
+      this.currentThemeName = theme.name;
+      this.renderer.addClass(document.body, this.currentThemeName);
+    })
+
+    
+
+
     this.loggedIn$ = this.store.select(fromAuth.getLoggedIn);
     this.user$ = this.store.select(fromAuth.getUser);
 

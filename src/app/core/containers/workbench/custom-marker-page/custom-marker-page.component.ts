@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from "@angular/core";
+import { Component, OnInit, HostListener, Input, HostBinding } from "@angular/core";
 import { Store } from "@ngrx/store";
 import { Observable, Subscription } from "rxjs";
 import { filter, map } from "rxjs/operators";
@@ -26,6 +26,7 @@ import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
   styleUrls: ["./custom-marker-page.component.css"]
 })
 export class CustomMarkerPageComponent implements OnInit {
+  @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
   subs: Subscription[] = [];
   workbenchState$: Observable<WorkbenchState>;
   centroidSettings$: Observable<CentroidSettings>;

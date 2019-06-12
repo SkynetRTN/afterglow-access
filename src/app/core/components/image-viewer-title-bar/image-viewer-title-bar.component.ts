@@ -9,7 +9,7 @@ import { ImageFile, getWidth, getHeight } from '../../../data-files/models/data-
 @Component({
   selector: 'app-image-viewer-title-bar',
   templateUrl: './image-viewer-title-bar.component.html',
-  styleUrls: ['./image-viewer-title-bar.component.css']
+  styleUrls: ['./image-viewer-title-bar.component.scss']
 })
 export class ImageViewerTitleBarComponent implements OnInit {
   @Input() imageFile: ImageFile;
@@ -28,7 +28,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
 
   removeFromLibrary() {
     if (this.imageFile) {
-      this.store.dispatch(new dataFileActions.RemoveDataFile({ file: this.imageFile }));
+      this.store.dispatch(new dataFileActions.RemoveDataFile({ fileId: this.imageFile.id }));
     }
   }
 

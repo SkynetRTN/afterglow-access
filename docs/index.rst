@@ -25,10 +25,6 @@ Getting Started
 
 .. _user-docs:
 
-******************
-User Documentation
-******************
-
 .. _user-accounts:
 
 User Accounts and File Management

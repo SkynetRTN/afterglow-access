@@ -1,0 +1,15 @@
+@mixin workbench-data-file-list-theme($theme) {
+    $primary: map-get($theme, primary);
+    $accent: map-get($theme, accent);
+    $warn: map-get($theme, warn);
+    $background: map-get($theme, background);
+    $foreground: map-get($theme, foreground);
+
+    app-workbench-data-file-list {
+
+        .item-row.selected  {
+            background: mat-color($primary);
+            color: mat-color($primary, default-contrast);
+          }
+    }
+  }

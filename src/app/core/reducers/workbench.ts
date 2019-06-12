@@ -4,12 +4,14 @@ import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import * as dataFileActions from '../../data-files/actions/data-file';
 import * as imageFileActions from '../../data-files/actions/image-file';
 import * as authActions from '../../auth/actions/auth';
+import * as jobActions from '../../jobs/actions/job';
 import * as workbenchActions from '../actions/workbench';
 import { SidebarView } from '../models/sidebar-view';
 import { WorkbenchState, WorkbenchTool } from '../models/workbench-state';
 import { ViewMode } from '../models/view-mode';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from '../models/centroider';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
+import { JobType } from '../../jobs/models/job-types';
 /**
  * @ngrx/entity provides a predefined interface for handling
  * a structured dictionary of records. This interface
@@ -67,12 +69,47 @@ export const initialState: WorkbenchState = {
   sourceExtractorModeOption: SourceExtractorModeOption.MOUSE,
   plotterSettings: {
     interpolatePixels: false
-  }
+  },
+  catalogs: [],
+  selectedCatalogId: null,
+  fieldCals: [],
+  selectedFieldCalId: null,
+  currentPixelOpsJobId: null,
+  showCurrentPixelOpsJobState: true,
+  addFieldCalSourcesFromCatalogJobId: null,
+  creatingAddFieldCalSourcesFromCatalogJob: false,
+  addFieldCalSourcesFromCatalogFieldCalId: null,
+  pixelOpsFormData: {
+    operand: '+',
+    mode: 'image',
+    auxImageFileId: null,
+    auxImageFileIds: [],
+    imageFileIds: [],
+    scalarValue: 1,
+    inPlace: false,
+    opString: ''
+  },
+  alignFormData: {
+    selectedImageFileIds: [],
+    mode: 'astrometric',
+    inPlace: true,
+  },
+  currentAlignmentJobId: null,
+  stackFormData: {
+    selectedImageFileIds: [],
+    mode: 'average',
+    scaling: 'none',
+    rejection: 'none',
+    percentile: 50,
+    low: 0,
+    high: 0,
+  },
+  currentStackingJobId: null
 };
 
 export function reducer(
   state = initialState,
-  action: workbenchActions.Actions | dataFileActions.Actions | imageFileActions.Actions | authActions.Actions
+  action: workbenchActions.Actions | dataFileActions.Actions | imageFileActions.Actions | authActions.Actions | jobActions.Actions
 ): WorkbenchState {
   switch (action.type) {
     case authActions.LOGOUT: {
@@ -144,7 +181,7 @@ export function reducer(
     case workbenchActions.SET_VIEWER_FILE: {
       let viewers = [...state.viewers];
       let viewer = { ...viewers[action.payload.viewerIndex] };
-      viewer.pendingFileId = action.payload.file.id;
+      viewer.pendingFileId = action.payload.fileId;
       viewers[action.payload.viewerIndex] = viewer;
 
       return {
@@ -278,9 +315,128 @@ export function reducer(
     case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
       return {
         ...state,
-        selectedFileIds: state.selectedFileIds.filter(fileId => fileId != action.payload.file.id)
+        selectedFileIds: state.selectedFileIds.filter(fileId => fileId != action.payload.fileId),
+        alignFormData: {
+          ...state.alignFormData,
+          selectedImageFileIds: state.alignFormData.selectedImageFileIds.filter(fileId => fileId != action.payload.fileId)
+        },
+        pixelOpsFormData: {
+          ...state.pixelOpsFormData,
+          imageFileIds: state.pixelOpsFormData.imageFileIds.filter(fileId => fileId != action.payload.fileId),
+          auxImageFileIds: state.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != action.payload.fileId),
+          auxImageFileId: state.pixelOpsFormData.auxImageFileId == action.payload.fileId ? null : state.pixelOpsFormData.auxImageFileId
+        },
       }
     }
+
+    case workbenchActions.LOAD_CATALOGS_SUCCESS: {
+      return {
+        ...state,
+        catalogs: action.payload.catalogs,
+        selectedCatalogId: action.payload.catalogs.length != 0 ? action.payload.catalogs[0].name : null
+      }
+    }
+
+    case workbenchActions.LOAD_FIELD_CALS_SUCCESS: {
+      return {
+        ...state,
+        fieldCals: action.payload.fieldCals,
+        selectedFieldCalId: state.selectedFieldCalId == null ? (action.payload.fieldCals.length == 0 ? null : action.payload.fieldCals[0].id) : state.selectedFieldCalId
+      }
+    }
+
+    case workbenchActions.CREATE_FIELD_CAL_SUCCESS: {
+      return {
+        ...state,
+        selectedFieldCalId: action.payload.fieldCal.id
+      }
+    }
+
+    case jobActions.CREATE_JOB_SUCCESS: {
+      switch(action.payload.job.type) {
+        case JobType.PixelOps: {
+          return {
+            ...state,
+            currentPixelOpsJobId: action.payload.job.id
+          }
+        }
+        case JobType.Alignment: {
+          return {
+            ...state,
+            currentAlignmentJobId: action.payload.job.id
+          }
+        }
+        case JobType.CatalogQuery: {
+          if(!state.creatingAddFieldCalSourcesFromCatalogJob) return state;
+          return {
+            ...state,
+            creatingAddFieldCalSourcesFromCatalogJob: false,
+            addFieldCalSourcesFromCatalogJobId:  action.payload.job.id
+          }
+        }
+      }
+      return state;
+    }
+
+    case workbenchActions.SET_SELECTED_CATALOG: {
+      return {
+        ...state,
+        selectedCatalogId: action.payload.catalogId
+      }
+    }
+
+    case workbenchActions.SET_SELECTED_FIELD_CAL: {
+      return {
+        ...state,
+        selectedFieldCalId: action.payload.fieldCalId
+      }
+    }
+
+    case workbenchActions.ADD_FIELD_CAL_SOURCES_FROM_CATALOG: {
+      return {
+        ...state,
+        creatingAddFieldCalSourcesFromCatalogJob: true,
+        addFieldCalSourcesFromCatalogFieldCalId: action.payload.fieldCalId
+      }
+    }
+
+    case workbenchActions.UPDATE_PIXEL_OPS_FORM_DATA: {
+      return {
+        ...state,
+        pixelOpsFormData: {
+          ...state.pixelOpsFormData,
+          ...action.payload.data
+        }
+      }
+    }
+
+    case workbenchActions.CREATE_ADV_PIXEL_OPS_JOB:
+    case workbenchActions.CREATE_PIXEL_OPS_JOB: {
+      return {
+        ...state,
+        showCurrentPixelOpsJobState: true
+      }
+    }
+
+
+    case workbenchActions.HIDE_CURRENT_PIXEL_OPS_JOB_STATE: {
+      return {
+        ...state,
+        showCurrentPixelOpsJobState: false
+      }
+    }
+
+    case workbenchActions.UPDATE_ALIGN_FORM_DATA: {
+      return {
+        ...state,
+        alignFormData: {
+          ...state.alignFormData,
+          ...action.payload.data
+        }
+      }
+    }
+
+
 
 
 

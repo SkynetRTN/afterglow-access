@@ -7,14 +7,104 @@
 // Include material core styles.
 @include mat-core();
 
-// Define the light theme.
-$primary: mat-palette($mat-indigo);
-$accent: mat-palette($mat-deep-orange);
 
-$theme: mat-light-theme($primary, $accent);
-@include angular-material-theme($theme);
-// @include covalent-theme($theme);
-@include afterglow-app-theme($theme);
+// @function afterglow-light-theme($primary, $accent, $warn: mat-palette($mat-red), $background-color: #fafafa, $foreground-color: #000000) {
+//   $theme:  mat-light-theme($primary, $accent, $warn);
+//   $background: map-get($theme, background);
+//   @debug $background;
+//   $background: map_merge($background, (background: $background-color));
+//   $theme: map_merge($theme, (background: $background));
+//   $foreground: map-get($theme, foreground);
+//   @debug $foreground;
+//   $foreground: map_merge($foreground, (foreground: $foreground-color));
+//   $theme: map_merge($theme, (foreground: $foreground));
+
+//   @return $theme;
+// }
+
+// @function afterglow-dark-theme($primary, $accent, $warn: mat-palette($mat-red), $background-color: #000000, $foreground-color: #fafafa) {
+//   $theme:  mat-dark-theme($primary, $accent, $warn);
+//   // $background: map-get($theme, background);
+//   // $background: map_merge($background, (background: $background-color));
+//   // $theme: map_merge($theme, (background: $background));
+
+//   @return $theme;
+// }
+
+
+//Define a light theme.
+$light-primary: mat-palette($mat-indigo, 600, 400, 800);
+$light-accent:  mat-palette($mat-deep-orange);
+$light-warn:    mat-palette($mat-red);
+$light-theme:   mat-light-theme($light-primary, $light-accent, $light-warn);
+@include angular-material-theme($light-theme);
+@include afterglow-app-theme($light-theme);
+
+// Define a dark theme.
+$dark-primary: mat-palette($mat-cyan, 500, 400, 700);
+$dark-accent:  mat-palette($mat-orange);
+$dark-warn:    mat-palette($mat-red);
+$dark-theme:   mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
+
+.cyan-dark-theme {
+  @include angular-material-theme($dark-theme);
+  @include afterglow-app-theme($dark-theme);
+
+  app-navbar {
+    .navbar, .navbar-header {
+      background: mat-color($mat-grey, 700);
+    }
+
+    .mat-button, .mat-icon-button {
+      $foreground: map-get($dark-theme, foreground);
+      color: mat-color($foreground, text);
+    }
+  }
+}
+
+// Define a dark high contrast theme.
+$dark-hc-primary: mat-palette($mat-yellow, 500, 400, 600);
+$dark-hc-text: mat-color($mat-yellow, 500);
+$dark-hc-disabled-text: mat-color($mat-yellow, 700);
+$dark-hc-icons: mat-color($mat-yellow, 400);
+$dark-hc-accent: mat-palette($mat-yellow, 600);
+$dark-hc-theme:  mat-dark-theme($dark-hc-primary, $dark-hc-accent, $dark-warn);
+$foreground: map-get($dark-hc-theme, foreground);
+// @debug $foreground;
+$foreground: map_merge($foreground, (
+  text: $dark-hc-text,
+  'secondary-text': $dark-hc-text,
+  icon: $dark-hc-icons,
+));
+
+$background: map-get($dark-hc-theme, background);
+// @debug $foreground;
+$background: map_merge($background, (
+  
+));
+
+
+$dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: $background));
+
+
+.high-contrast-theme {
+  @include angular-material-theme($dark-hc-theme);
+  @include afterglow-app-theme($dark-hc-theme);
+
+  .mat-button, .mat-icon-button {
+    color: mat-color($foreground, text);
+  }
+
+  app-navbar {
+    .navbar, .navbar-header {
+      background: mat-color($background, background);
+    }
+
+    .mat-button, .mat-icon-button {
+      color: mat-color($foreground, text);
+    }
+  }
+}
 
 
 $fa-font-path:"~font-awesome/fonts";
@@ -47,46 +137,17 @@ html, body {
   width: 100%;
 }
 
-.workbench-viewer-panel.inactive .image-viewer-header-wrapper {
-  background-color: #f3f3f3;
+.fx-workbench-outlet {
+  height: 100%;
+  width: 100%;
+  min-height: 100%;
+  min-width: 100%;
+  display: flex;
+  flex: 1 1 0%;
+  outline: none;
+  flex-direction: row;
 }
 
-.workbench-viewer-panel.active .image-viewer-header-wrapper {
-  background-color: #28a745;
-  color: white;
-  border: solid 2px #d7d7d7;
-}
-
-
-.workbench-settings-card {
-  border-radius: 0px;
-  border-right: none;
-  border-top: none;
-}
-
-.workbench-settings-card .card-header {
-  height: 49px;
-  background: #fafafa;
-  border-left: 1px solid rgba(0,0,0,.125);
-}
-
-.workbench-settings-card .card-header:first-child {
-  border-radius: 0px;
-}
-
-.workbench-settings-card .plotter svg {
-  width: 200px;
-}
-
-.kbd {
-  display: inline-block;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.1em 0.5em;
-  margin: 0 0.2em;
-  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff inset;
-  background-color: #f7f7f7;
-}
 
 /* Videogular 2 Player */
 

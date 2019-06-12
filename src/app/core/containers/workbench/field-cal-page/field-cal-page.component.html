@@ -1,0 +1,257 @@
+<div
+  fxFlex="1 1 0%"
+  class="image-viewer-grid-panel"
+  role="region"
+  aria-label="image viewers"
+>
+  <app-workbench-viewer-grid
+    (onImageClick)="onImageClick($event)"
+    (onMarkerClick)="onMarkerClick($event)"
+  ></app-workbench-viewer-grid>
+</div>
+
+<span class="resizer"></span>
+<div
+  *ngIf="showConfig$ | async"
+  fxFlex="0 0 auto"
+  class="workbench-config-panel"
+  role="region"
+  aria-labelledby="settings-header"
+>
+  <div class="card workbench-settings-card" style="height: 100%;">
+    <div id="settings-header" class="card-header">
+      <h5>Field Calibration</h5>
+    </div>
+
+    <div class="card-body" style="overflow-y: auto;">
+      <div
+        *ngIf="!(activeImageFile$ | async) || !(activeImageHasWcs$ | async)"
+        class="alert alert-info"
+      >
+        Select data files to see field calibration options. Only images with WCS
+        are supported at this time.
+      </div>
+
+      <div *ngIf="(activeImageFile$ | async) && (activeImageHasWcs$ | async)">
+        <div *ngIf="selectedImageFiles$ | async as selectedImageFiles">
+          <button mat-raised-button (click)="openCreateFieldCalDialog()">
+            <mat-icon>create</mat-icon> Create New Field Calibration...
+          </button>
+
+          <hr />
+
+          <div
+            *ngIf="(fieldCals$ | async) && (fieldCals$ | async)?.length != 0"
+          >
+            <mat-form-field appearance="outline" style="width: 300px;">
+              <mat-label>Select a Field Calibration</mat-label>
+              <mat-select
+                [ngModel]="selectedFieldCalId$ | async"
+                (ngModelChange)="onFieldCalChange($event)"
+              >
+                <mat-option
+                  *ngFor="let fieldCal of fieldCals$ | async"
+                  [value]="fieldCal.id"
+                  >{{ fieldCal.id }} - {{ fieldCal.name }}</mat-option
+                >
+              </mat-select>
+            </mat-form-field>
+
+            <h6>Field Calibration Sources</h6>
+            <div *ngIf="selectedFieldCal$ | async; let selectedFieldCal">
+              <form [formGroup]="catalogForm">
+                <mat-form-field appearance="outline">
+                  <mat-label>Select a Catalog</mat-label>
+                  <mat-select
+                    [ngModel]="selectedCatalogId$ | async"
+                    (ngModelChange)="onCatalogChange($event)"
+                    formControlName="catalog"
+                  >
+                    <mat-option
+                      *ngFor="let catalog of catalogs$ | async"
+                      [value]="catalog.name"
+                      >{{ catalog.name }}</mat-option
+                    >
+                  </mat-select>
+                </mat-form-field>
+
+                <br />
+
+                <mat-checkbox formControlName="enableMagLimit"
+                  >Enable Magnitude Limit</mat-checkbox
+                >
+                <br />
+
+                <mat-form-field appearance="outline" style="width: 150px;">
+                  <mat-label>Filter</mat-label>
+                  <mat-select
+                    [ngModel]="magLimitFilter"
+                    (ngModelChange)="onMagLimitFilterChange($event)"
+                    formControlName="magLimitFilter"
+                  >
+                    <mat-option
+                      *ngFor="let filter of (selectedCatalog$ | async)?.mags"
+                      [value]="filter"
+                      >{{ filter }}</mat-option
+                    >
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" style="width: 150px;">
+                  <mat-label>Brightest Mag</mat-label>
+                  <input
+                    matInput
+                    formControlName="magMinLimitValue"
+                    type="number"
+                  />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" style="width: 150px;">
+                  <mat-label>Faintest Mag</mat-label>
+                  <input
+                    matInput
+                    formControlName="magMaxLimitValue"
+                    type="number"
+                  />
+                </mat-form-field>
+
+                <button
+                  mat-raised-button
+                  [disabled]="!catalogForm.valid"
+                  (click)="
+                    addSourcesFromCatalog(
+                      selectedFieldCal.id,
+                      selectedImageFiles,
+                      catalogForm.value
+                    )
+                  "
+                >
+                  <mat-icon>add</mat-icon> Add Sources From Catalog
+                </button>
+              </form>
+            </div>
+
+            <hr />
+            <h6>Sources</h6>
+
+            <div class="mb-3" style="max-height: 200px; overflow: auto;">
+              <mat-table
+                app-cell-focuser
+                #cellFocuser="cellFocuser"
+                #table
+                [dataSource]="(selectedFieldCal$ | async)?.catalogSources"
+                matSort
+                [matSortDisableClear]="true"
+              >
+                <ng-container matColumnDef="select">
+                  <mat-header-cell
+                    *matHeaderCellDef
+                    class="select-header-cell"
+                    app-focusable-cell
+                    #cell="cell"
+                    [rowIndex]="0"
+                    [columnIndex]="0"
+                    (focus)="cb?.focus()"
+                    [cellInTabOrder]="false"
+                  >
+                    <mat-checkbox
+                      #cb
+                      [disabled]="!showSelectAll()"
+                      (change)="$event ? masterToggle() : null"
+                      [checked]="selectionModel.hasValue() && isAllSelected()"
+                      [indeterminate]="
+                        selectionModel.hasValue() && !isAllSelected()
+                      "
+                      [tabIndex]="cell.isActiveCell ? 0 : -1"
+                    >
+                    </mat-checkbox>
+                  </mat-header-cell>
+                  <mat-cell
+                    *matCellDef="let row; let rowIndex = index"
+                    app-focusable-cell
+                    #cell="cell"
+                    [rowIndex]="rowIndex + 1"
+                    [columnIndex]="0"
+                    (focus)="cb?.focus()"
+                    [cellInTabOrder]="selectionModel.isSelected(row.id)"
+                  >
+                    <mat-checkbox
+                      #cb
+                      (click)="$event.stopPropagation()"
+                      (change)="$event ? toggleSource(row) : null"
+                      [checked]="selectionModel.isSelected(row.id)"
+                      [tabIndex]="cell.isActiveCell ? 0 : -1"
+                    >
+                    </mat-checkbox>
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="primaryCoord">
+                  <mat-header-cell
+                    *matHeaderCellDef
+                    mat-sort-header
+                    class="select-header-cell"
+                    app-focusable-cell
+                    [rowIndex]="0"
+                    [columnIndex]="1"
+                    [cellInTabOrder]="true"
+                  >
+                    RA
+                  </mat-header-cell>
+                  <mat-cell
+                    *matCellDef="let row; let rowIndex = index"
+                    app-focusable-cell
+                    #cell="cell"
+                    [rowIndex]="rowIndex + 1"
+                    [columnIndex]="1"
+                    [cellInTabOrder]="true"
+                  >
+                    {{ row.primaryCoord | dms: "0.0-3" }}
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="secondaryCoord">
+                  <mat-header-cell
+                    *matHeaderCellDef
+                    mat-sort-header
+                    class="select-header-cell"
+                    app-focusable-cell
+                    [rowIndex]="0"
+                    [columnIndex]="2"
+                    [cellInTabOrder]="true"
+                  >
+                    DEC
+                  </mat-header-cell>
+                  <mat-cell
+                    *matCellDef="let row; let rowIndex = index"
+                    app-focusable-cell
+                    #cell="cell"
+                    [rowIndex]="rowIndex + 1"
+                    [columnIndex]="2"
+                    [cellInTabOrder]="true"
+                  >
+                    {{ row.secondaryCoord | dms: "0.0-3" }}
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row
+                  *matHeaderRowDef="[
+                    'select',
+                    'primaryCoord',
+                    'secondaryCoord'
+                  ]"
+                ></mat-header-row>
+                <mat-row
+                  *matRowDef="
+                    let row;
+                    columns: ['select', 'primaryCoord', 'secondaryCoord']
+                  "
+                ></mat-row>
+              </mat-table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

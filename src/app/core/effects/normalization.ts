@@ -1,5 +1,5 @@
 import { Injectable, InjectionToken, Optional, Inject } from "@angular/core";
-import { Effect, Actions } from "@ngrx/effects";
+import { Effect, Actions, ofType } from "@ngrx/effects";
 import { Action } from "@ngrx/store";
 import { Store } from "@ngrx/store";
 import { Observable, from } from "rxjs";
@@ -15,55 +15,12 @@ import * as fromDataFile from "../../data-files/reducers";
 
 @Injectable()
 export class NormalizationEffects {
-  // @Effect()
-  // histLoaded$: Observable<Action> = this.actions$
-  //   .ofType<imageFileActions.LoadImageHistSuccess>(imageFileActions.LOAD_IMAGE_HIST_SUCCESS)
-  //   .withLatestFrom(
-  //   this.store.select(fromDataFile.getDataFiles),
-  //   this.store.select(fromCore.getImageFileStates)
-  //   )
-  //   .flatMap(([action, dataFiles, imageFileStates]) => {
-  //     let dataFile = dataFiles[action.payload.file.id];
-  //     let normalization = imageFileStates[dataFile.id].normalization;
-  //     let actions: Action[] = [];
-
-  //     if (dataFile.type == DataFileType.IMAGE) {
-  //       let imageFile = dataFile as ImageFile;
-  //       if (!normalization.autoLevelsInitialized) actions.push(new normalizationActions.InitAutoLevels({ file: imageFile }));
-  //     }
-  //     return Observable.from(actions);
-  //   });
-
-  // @Effect()
-  // autoLevelsInitialized$: Observable<Action> = this.actions$
-  //   .ofType<normalizationActions.InitAutoLevels>(normalizationActions.INIT_AUTO_LEVELS)
-  //   .withLatestFrom(
-  //   this.store.select(fromDataFile.getDataFiles),
-  //   this.store.select(fromCore.getImageFileStates)
-  //   )
-  //   .flatMap(([action, dataFiles, imageFileStates]) => {
-  //     let dataFile = dataFiles[action.payload.file.id];
-  //     let actions: Action[] = [];
-
-  //     if (dataFile.type == DataFileType.IMAGE) {
-  //       let imageFile = dataFile as ImageFile;
-  //       let normalization = imageFileStates[imageFile.id].normalization;
-  //       actions.push(new normalizationActions.UpdateNormalizer({
-  //         file: imageFile, changes: {
-  //           backgroundLevel: normalization.autoBkgLevel,
-  //           peakLevel: normalization.autoPeakLevel
-  //         }
-  //       }));
-  //     }
-  //     return Observable.from(actions);
-  //   });
 
   @Effect()
-  imageTileNormalized$: Observable<Action> = this.actions$
-    .ofType<normalizationActions.NormalizeImageTile>(
+  imageTileNormalized$: Observable<Action> = this.actions$.pipe(
+    ofType<normalizationActions.NormalizeImageTile>(
       normalizationActions.NORMALIZE_IMAGE_TILE
-    )
-    .pipe(
+    ),
       withLatestFrom(
         this.store.select(fromDataFile.getDataFiles),
         this.store.select(fromCore.getImageFileStates)
@@ -84,11 +41,10 @@ export class NormalizationEffects {
     );
 
   @Effect()
-  normalizerUpdated$: Observable<Action> = this.actions$
-    .ofType<normalizationActions.UpdateNormalizer>(
+  normalizerUpdated$: Observable<Action> = this.actions$.pipe(
+    ofType<normalizationActions.UpdateNormalizer>(
       normalizationActions.UPDATE_NORMALIZER
-    )
-    .pipe(
+    ),
       withLatestFrom(this.store.select(fromDataFile.getDataFiles)),
       switchMap(([action, dataFiles]) => {
         let imageFile = dataFiles[action.payload.file.id] as ImageFile;

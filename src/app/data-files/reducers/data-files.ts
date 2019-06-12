@@ -96,14 +96,14 @@ export function reducer(
 
     case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
       return {
-        ...adapter.removeOne(action.payload.file.id, state),
+        ...adapter.removeOne(action.payload.fileId, state),
       }
     }
     
     case dataFileActions.LOAD_DATA_FILE_HDR: {
       return {
         ...adapter.updateOne({
-          'id': action.payload.file.id, 'changes': {
+          'id': action.payload.fileId, 'changes': {
             headerLoaded: false,
             headerLoading: true
           }
@@ -113,7 +113,7 @@ export function reducer(
     case dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS: {
       return {
         ...adapter.updateOne({
-          'id': action.payload.file.id, 'changes': {
+          'id': action.payload.fileId, 'changes': {
             header: action.payload.header,
             headerLoaded: true,
             headerLoading: false
@@ -124,7 +124,7 @@ export function reducer(
     case dataFileActions.LOAD_DATA_FILE_HDR_FAIL: {
       return {
         ...adapter.updateOne({
-          'id': action.payload.file.id, 'changes': {
+          'id': action.payload.fileId, 'changes': {
             headerLoaded: false,
             headerLoading: false
           }
@@ -132,10 +132,10 @@ export function reducer(
       };
     }
     case imageFileActions.LOAD_IMAGE_HIST: {
-      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
+      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
         return {
           ...adapter.updateOne({
-            'id': action.payload.file.id, 'changes': {
+            'id': action.payload.fileId, 'changes': {
               histLoaded: false,
               histLoading: true
             }
@@ -145,10 +145,10 @@ export function reducer(
       return state;
     }
     case imageFileActions.LOAD_IMAGE_HIST_SUCCESS: {
-      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
+      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
         return {
           ...adapter.updateOne({
-            'id': action.payload.file.id, 'changes': {
+            'id': action.payload.fileId, 'changes': {
               histLoaded: true,
               histLoading: false,
               hist: action.payload.hist
@@ -159,10 +159,10 @@ export function reducer(
       return state;
     }
     case imageFileActions.LOAD_IMAGE_HIST_FAIL: {
-      if (state.entities[action.payload.file.id].type == DataFileType.IMAGE) {
+      if (state.entities[action.payload.fileId].type == DataFileType.IMAGE) {
         return {
           ...adapter.updateOne({
-            'id': action.payload.file.id, 'changes': {
+            'id': action.payload.fileId, 'changes': {
               histLoaded: false,
               histLoading: false
             }
@@ -298,6 +298,24 @@ export function reducer(
             tiles: tiles
           }
         }, state),
+      }
+    }
+
+    case imageFileActions.CLEAR_IMAGE_DATA_CACHE: {
+      return {
+        ...adapter.updateMany(action.payload.fileIds.map(id => {
+          return {
+            id: id,
+            changes: {
+              headerLoaded: false,
+              header: null,
+              histLoaded: false,
+              hist: null,
+              tilesInitialized: false,
+              tiles: []
+            }
+                      }
+        }), state)
       }
     }
 

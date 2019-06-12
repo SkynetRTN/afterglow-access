@@ -178,10 +178,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private setSmoothing(ctx: CanvasRenderingContext2D, value: boolean) {
-    ctx.mozImageSmoothingEnabled = value;
+    //ctx.mozImageSmoothingEnabled = value;
     // ctx.msImageSmoothingEnabled = value;
-    ctx.oImageSmoothingEnabled = value;
-    ctx.webkitImageSmoothingEnabled = value;
+    //ctx.oImageSmoothingEnabled = value;
+    //ctx.webkitImageSmoothingEnabled = value;
     ctx.imageSmoothingEnabled = value;
   }
 

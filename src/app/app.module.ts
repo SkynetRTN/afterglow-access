@@ -18,6 +18,7 @@ import { AuthModule } from './auth/auth.module';
 import { reducers, metaReducers } from './reducers';
 import {HotkeyModule} from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 
 import { AppComponent } from './app.component';
@@ -26,6 +27,7 @@ import { environment } from '../environments/environment';
 import { TourMatMenuModule } from 'ngx-tour-md-menu';
 import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
 import {NgxPopperModule} from 'ngx-popper';
+import { ThemePickerModule } from './theme-picker';
 
 @NgModule({
   imports: [
@@ -36,10 +38,12 @@ import {NgxPopperModule} from 'ngx-popper';
     RouterModule.forRoot(AFTERGLOW_ROUTES, { enableTracing: false }),
     MaterialModule,
     ReactiveFormsModule,
+    FlexLayoutModule,
     CookieModule.forRoot(),
     // TourMatMenuModule.forRoot(),
     TourNgxPopperModule.forRoot(),
     NgxPopperModule,
+    ThemePickerModule,
 
     /**
      * StoreModule.forRoot is imported once in the root module, accepting a reducer

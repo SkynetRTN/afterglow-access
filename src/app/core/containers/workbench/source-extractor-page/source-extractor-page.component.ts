@@ -3,7 +3,9 @@ import {
   AfterViewInit,
   OnDestroy,
   OnChanges,
-  OnInit
+  OnInit,
+  HostBinding,
+  Input
 } from "@angular/core";
 
 import { MatDialog, MatCheckboxChange } from "@angular/material";
@@ -22,7 +24,7 @@ import {
 } from "rxjs/operators";
 
 import * as jStat from "jstat";
-import { saveAs } from "file-saver/FileSaver";
+import { saveAs } from "file-saver/dist/FileSaver";
 
 import * as fromRoot from "../../../../reducers";
 import * as fromCore from "../../../reducers";
@@ -67,6 +69,8 @@ import { JobType } from "../../../../jobs/models/job-types";
 import { Astrometry } from "../../../../jobs/models/astrometry";
 import { SourceId } from "../../../../jobs/models/source-id";
 import { Papa } from "ngx-papaparse";
+import { datetimeToJd, jdToMjd } from '../../../../lib/skynet-astro';
+import { DecimalPipe, DatePipe } from '@angular/common';
 
 export class SourcesDataSource implements DataSource<Source> {
   sources$: Observable<Source[]>;
@@ -108,6 +112,8 @@ export class SourcesDataSource implements DataSource<Source> {
 })
 export class SourceExtractorPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+  @HostBinding("class") @Input("class") classList: string =
+    "fx-workbench-outlet";
   selectedSourceActionError: string = null;
   selectedSources$: Observable<Source[]>;
   selectedSources: Array<Source> = [];
@@ -156,7 +162,9 @@ export class SourceExtractorPageComponent
     private store: Store<fromRoot.State>,
     public dialog: MatDialog,
     private dmsPipe: DmsPipe,
-    private papa: Papa
+    private papa: Papa,
+    private decimalPipe: DecimalPipe,
+    private datePipe: DatePipe
   ) {
     this.dataSource = new SourcesDataSource(store);
 
@@ -208,18 +216,17 @@ export class SourceExtractorPageComponent
       ),
       this.activeImageFile$
     ).pipe(
-      map(
-        ([rows, activeImageFile]) =>
-          activeImageFile
-            ? rows
-                .filter(row =>
-                  row.job.file_ids.includes(parseInt(activeImageFile.id))
-                )
-                .sort((a, b) => {
-                  if (a.job.id == b.job.id) return 0;
-                  return a.job.id > b.job.id ? -1 : 1;
-                })
-            : []
+      map(([rows, activeImageFile]) =>
+        activeImageFile
+          ? rows
+              .filter(row =>
+                row.job.file_ids.includes(parseInt(activeImageFile.id))
+              )
+              .sort((a, b) => {
+                if (a.job.id == b.job.id) return 0;
+                return a.job.id > b.job.id ? -1 : 1;
+              })
+          : []
       )
     );
 
@@ -642,7 +649,18 @@ export class SourceExtractorPageComponent
   }
 
   downloadPhotometry(row: { job: PhotometryJob; result: PhotometryJobResult }) {
-    let data = this.papa.unparse(row.result.data);
+    let data = this.papa.unparse(row.result.data.map(d => {
+      let time = d.time ? new Date(d.time) : null;
+      let pmEpoch = d.pm_epoch ? new Date(d.pm_epoch) : null;
+      let jd = time ? datetimeToJd(time.getUTCFullYear(), time.getUTCMonth(), time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()) : null
+      return {
+        ...d,
+        time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
+        pm_epoch: pmEpoch ? this.datePipe.transform(pmEpoch, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
+        jd: jd,
+        mjd: jd ? jdToMjd(jd) : null
+      }
+    }));
     var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
     saveAs(blob, `afterglow_photometry_${row.job.id}.csv`);
   }

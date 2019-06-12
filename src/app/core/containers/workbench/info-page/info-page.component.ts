@@ -2,10 +2,13 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  AfterViewInit
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  HostBinding,
+  Input
 } from "@angular/core";
-import { Observable, Subscription, Subject } from "rxjs";
-import { map, filter, debounceTime } from "rxjs/operators";
+import { Observable, Subscription, Subject, BehaviorSubject, combineLatest} from "rxjs";
+import { map, filter, debounceTime, tap } from "rxjs/operators";
 import { Store } from "@ngrx/store";
 
 import { ImageFile, DataFile, Header, getHasWcs, getWidth, getHeight, getDegsPerPixel, getStartTime, getCenterTime, getExpLength, getObject, getTelescope, getFilter } from "../../../../data-files/models/data-file";
@@ -33,16 +36,18 @@ import { MatSlideToggleChange } from "@angular/material";
 @Component({
   selector: "app-info-page",
   templateUrl: "./info-page.component.html",
-  styleUrls: ["./info-page.component.css"]
-  //changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ["./info-page.component.css"],
+  // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
+  @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+
   imageFile$: Observable<ImageFile>;
   header$: Observable<Header>;
   headerSummary$: Observable<Header>;
   viewers$: Observable<Array<Viewer>>;
   showRawHeader: boolean = false;
-  timeZone: 'system' | 'utc' = 'utc';
+  useSystemTime$ = new BehaviorSubject<boolean>(true);
   
   showConfig$: Observable<boolean>;
   lastImageFile: ImageFile;
@@ -66,7 +71,7 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.header$ = this.imageFile$.pipe(filter(imageFile => imageFile != null), map(imageFile => imageFile.header))
-    this.headerSummary$ = this.imageFile$.pipe(filter(imageFile => imageFile != null), map(imageFile => {
+    this.headerSummary$ = combineLatest(this.useSystemTime$, this.imageFile$.pipe(filter(imageFile => imageFile != null))).pipe(map(([useSystemTime, imageFile]) => {
       let result: Header = [];
       let width = getWidth(imageFile);
       let height = getHeight(imageFile);
@@ -80,7 +85,8 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
       let filter = getFilter(imageFile);
 
       let systemTimeZone: string = (new Date()).getTimezoneOffset().toString();
-    
+
+      
 
       if(width && height) {
         result.push({
@@ -107,7 +113,7 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
           if(startTime) {
             result.push({
               key: 'Start',
-              value: `${datePipe.transform(startTime, 'yyyy-MM-dd HH:mm:ss z', this.timeZone == 'system' ? systemTimeZone : 'UTC')}`,
+              value: `${datePipe.transform(startTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')}`,
               comment: ''
             })
           }
@@ -115,7 +121,7 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
           if(centerTime) {
             result.push({
               key: 'Center',
-              value: `${datePipe.transform(centerTime, 'yyyy-MM-dd HH:mm:ss z', this.timeZone == 'system' ? systemTimeZone : 'UTC')}`,
+              value: `${datePipe.transform(centerTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')}`,
               comment: ''
             })
           }
@@ -154,7 +160,7 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
       
 
       return result;
-    }))
+    }));
     
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
 
@@ -165,8 +171,6 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
         // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
       })
     );
-
-    
 
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.INFO })
@@ -186,5 +190,9 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
     this.showRawHeader = $event.checked;
+  }
+
+  onUseSystemTimeChange($event: MatSlideToggleChange) {
+    this.useSystemTime$.next($event.checked);
   }
 }

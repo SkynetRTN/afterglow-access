@@ -1,0 +1,20 @@
+.workbench-config-panel {
+  // flex: 0 0 auto;
+  // position: relative;
+  // outline: none;
+  width: 500px;
+}
+
+
+
+.image-viewer-grid-panel {
+  min-width: 250px;
+}
+
+.rotate-90 {
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  transform: rotate(90deg);
+}

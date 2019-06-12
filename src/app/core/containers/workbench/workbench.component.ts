@@ -3,11 +3,6 @@ import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { DataFile } from '../../../data-files/models/data-file'
-import { AuthGuard } from '../../../auth/services/auth-guard.service'
-import { ViewerPageComponent } from './viewer-page/viewer-page.component'
-import { PlotterPageComponent } from './plotter-page/plotter-page.component';
-import { SonifierPageComponent } from './sonifier-page/sonifier-page.component';
-import { SourceExtractorPageComponent } from './source-extractor-page/source-extractor-page.component';
 import { SidebarView } from '../../models/sidebar-view';
 
 import * as fromRoot from '../../../reducers';
@@ -16,13 +11,6 @@ import * as fromCore from '../../reducers';
 import * as workbenchActions from '../../actions/workbench'
 import * as dataFileActions from '../../../data-files/actions/data-file';
 import { Router } from '@angular/router';
-import { FocusKeyManager } from '@angular/cdk/a11y';
-import { QueryList } from '@angular/core/src/linker/query_list';
-import { ContentChildren } from '@angular/core/src/metadata/di';
-import { DataFileSelectionListChange } from '../../../data-files/components/data-file-selection-list/data-file-selection-list.component';
-import { Viewer } from '../../models/viewer';
-import { ImageFileState } from '../../models/image-file-state';
-import { Dictionary } from '@ngrx/entity/src/models';
 import { Subscription } from '../../../../../node_modules/rxjs';
 import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
 // import { TourService } from 'ngx-tour-md-menu';
@@ -35,7 +23,7 @@ import { MatDialogRef, MatDialog } from '@angular/material';
 @Component({
   selector: 'app-workbench',
   templateUrl: './workbench.component.html',
-  styleUrls: ['./workbench.component.css'],
+  styleUrls: ['./workbench.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkbenchComponent implements OnInit, OnDestroy {
@@ -46,6 +34,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private PLOTTER_ROUTE = '/workbench/plotter';
   private SONIFIER_ROUTE = '/workbench/sonifier';
   private SOURCE_EXTRACTOR_ROUTE = '/workbench/source-extractor';
+  private FIELD_CAL_ROUTE = '/workbench/field-cal';
   private IMAGE_ARITHMETIC_ROUTE = '/workbench/image-calculator';
   private ALIGNER_ROUTE = '/workbench/aligner';
   private STACKER_ROUTE = '/workbench/stacker';
@@ -132,6 +121,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   ngOnInit() {
     
     this.store.dispatch(new dataFileActions.LoadLibrary());
+    this.store.dispatch(new workbenchActions.LoadCatalogs());
+    this.store.dispatch(new workbenchActions.LoadFieldCals());
     
   }
 
@@ -141,7 +132,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   onFileSelect(file: DataFile) {
     if(!file) return;
-    this.store.dispatch(new workbenchActions.SelectDataFile({file: file}));
+    this.store.dispatch(new workbenchActions.SelectDataFile({fileId: file.id}));
   }
 
   onMultiFileSelect(files: Array<DataFile>) {

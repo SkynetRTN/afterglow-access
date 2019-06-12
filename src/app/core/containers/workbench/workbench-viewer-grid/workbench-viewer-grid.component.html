@@ -2,7 +2,7 @@
   <div class="image-viewer-grid-wrapper" [style.flex-direction]="(viewMode$ | async)==ViewMode.SPLIT_VERTICAL ? 'column' : 'row'">
     <div class="workbench-viewer-panel" [class.active]="(activeViewerIndex$ | async) == viewerIndex" [class.inactive]="(activeViewerIndex$ | async) != viewerIndex"
       *ngFor="let viewer of (viewers$ | async); index as viewerIndex; trackBy: viewerTrackByFn" (mousedown)="setActiveViewer($event, viewerIndex, viewer)">
-      <app-workbench-viewer-panel [fileId]="viewer.fileId"
+      <app-workbench-viewer-panel [fileId]="viewer.fileId" [active]="(activeViewerIndex$ | async) == viewerIndex"
         (onImageMove)="handleImageMove($event, viewerIndex, viewer)" (onImageClick)="handleImageClick($event, viewerIndex, viewer)"
         (onMarkerClick)="handleMarkerClick($event, viewerIndex, viewer)">
       </app-workbench-viewer-panel>

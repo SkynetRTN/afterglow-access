@@ -3,6 +3,7 @@
   flex-wrap: wrap;
   align-items: center;
   padding: 8px 16px;
+  
 
   > .mat-button {
     &:last-child {
@@ -15,21 +16,22 @@
   flex-grow: 1;
 }
 
-a {
+.mat-button {
   font-size: 16px;
+  text-decoration: none;
 }
 
-a.afterglow-logo {
+.afterglow-logo .mat-button {
   font-size: 20px;
 }
 
-a.active {
-  color: rgb(255,255,255);
-}
+// a.active {
+//   color: rgb(255,255,255);
+// }
 
-a:not(.active) {
-  color: rgba(255,255,255,0.5);
-}
+// a:not(.active) {
+//   color: rgba(255,255,255,0.5);
+// }
 
 // a.active {
 //   font-weight: 800;

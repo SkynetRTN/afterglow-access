@@ -1,5 +1,5 @@
 import { Injectable, InjectionToken, Optional, Inject } from "@angular/core";
-import { Effect, Actions } from "@ngrx/effects";
+import { Effect, Actions, ofType } from "@ngrx/effects";
 import { Action } from "@ngrx/store";
 import { Store } from "@ngrx/store";
 import { Observable, from } from "rxjs";
@@ -20,56 +20,55 @@ import { getHeight } from "../../data-files/models/data-file";
 @Injectable()
 export class TransformationEffects {
   @Effect()
-  centerRegionInViewport$: Observable<Action> = this.actions$
-    .ofType<transformationActions.CenterRegionInViewport>(
+  centerRegionInViewport$: Observable<Action> = this.actions$.pipe(
+    ofType<transformationActions.CenterRegionInViewport>(
       transformationActions.CENTER_REGION_IN_VIEWPORT
-    )
-    .pipe(
-      withLatestFrom(this.store.select(fromCore.getImageFileStates)),
-      flatMap(([action, imageFileStates]) => {
-        let actions = [];
-        let imageFile = action.payload.file;
-        let transformationState = imageFileStates[imageFile.id].transformation;
-        let viewportSize = transformationState.viewportSize;
+    ),
+    withLatestFrom(this.store.select(fromCore.getImageFileStates)),
+    flatMap(([action, imageFileStates]) => {
+      let actions = [];
+      let imageFile = action.payload.file;
+      let transformationState = imageFileStates[imageFile.id].transformation;
+      let viewportSize = transformationState.viewportSize;
 
-        if (!viewportSize)
-          viewportSize =
-            imageFileStates[imageFile.id].transformation.viewportSize;
+      if (!viewportSize)
+        viewportSize =
+          imageFileStates[imageFile.id].transformation.viewportSize;
 
-        let region = action.payload.region;
+      let region = action.payload.region;
 
-        let viewportAnchor = new Point(
-          viewportSize.width / 2,
-          viewportSize.height / 2
-        );
-        let scale = Math.min(
-          (viewportSize.width - 20) / region.width,
-          (viewportSize.height - 20) / region.height
-        );
+      let viewportAnchor = new Point(
+        viewportSize.width / 2,
+        viewportSize.height / 2
+      );
+      let scale = Math.min(
+        (viewportSize.width - 20) / region.width,
+        (viewportSize.height - 20) / region.height
+      );
 
-        let xShift = viewportAnchor.x - scale * (region.x + region.width / 2);
-        let yShift =
-          viewportAnchor.y -
-          scale * (getHeight(imageFile) - (region.y + region.height / 2));
-        let viewportTransform = new Matrix(scale, 0, 0, scale, xShift, yShift);
+      let xShift = viewportAnchor.x - scale * (region.x + region.width / 2);
+      let yShift =
+        viewportAnchor.y -
+        scale * (getHeight(imageFile) - (region.y + region.height / 2));
+      let viewportTransform = new Matrix(scale, 0, 0, scale, xShift, yShift);
 
-        actions.push(
-          new transformationActions.ResetImageTransform({ file: imageFile })
-        );
-        actions.push(
-          new transformationActions.SetViewportTransform({
-            file: imageFile,
-            transform: viewportTransform
-          })
-        );
+      actions.push(
+        new transformationActions.ResetImageTransform({ file: imageFile })
+      );
+      actions.push(
+        new transformationActions.SetViewportTransform({
+          file: imageFile,
+          transform: viewportTransform
+        })
+      );
 
-        return from(actions);
-      })
-    );
+      return from(actions);
+    })
+  );
 
   @Effect()
-  viewportChanged$: Observable<Action> = this.actions$
-    .ofType<
+  viewportChanged$: Observable<Action> = this.actions$.pipe(
+    ofType<
       | transformationActions.MoveBy
       | transformationActions.ZoomBy
       | transformationActions.UpdateCurrentViewportSize
@@ -85,40 +84,39 @@ export class TransformationEffects {
       transformationActions.RESET_IMAGE_TRANSFORM,
       transformationActions.SET_IMAGE_TRANSFORM,
       transformationActions.SET_VIEWPORT_TRANSFORM
-    )
-    .pipe(
-      withLatestFrom(
-        this.store.select(fromCore.getImageFileStates),
-        this.store.select(fromCore.getWorkbenchState)
-      ),
-      flatMap(([action, imageFileStates, workbenchState]) => {
-        let actions = [];
-        let imageFile = action.payload.file;
-        let imageFileState = imageFileStates[action.payload.file.id];
+    ),
+    withLatestFrom(
+      this.store.select(fromCore.getImageFileStates),
+      this.store.select(fromCore.getWorkbenchState)
+    ),
+    flatMap(([action, imageFileStates, workbenchState]) => {
+      let actions = [];
+      let imageFile = action.payload.file;
+      let imageFileState = imageFileStates[action.payload.file.id];
+      if (
+        imageFile.headerLoaded &&
+        imageFileState &&
+        imageFileState.transformation.viewportSize
+      ) {
+        let sonifier = imageFileStates[action.payload.file.id].sonifier;
+        let sourceExtractor =
+          imageFileStates[action.payload.file.id].sourceExtractor;
+        if (sonifier.regionMode == SonifierRegionMode.VIEWPORT)
+          actions.push(
+            new sonifierActions.UpdateRegion({ file: action.payload.file })
+          );
         if (
-          imageFile.headerLoaded &&
-          imageFileState &&
-          imageFileState.transformation.viewportSize
-        ) {
-          let sonifier = imageFileStates[action.payload.file.id].sonifier;
-          let sourceExtractor =
-            imageFileStates[action.payload.file.id].sourceExtractor;
-          if (sonifier.regionMode == SonifierRegionMode.VIEWPORT)
-            actions.push(
-              new sonifierActions.UpdateRegion({ file: action.payload.file })
-            );
-          if (
-            sourceExtractor.regionOption == SourceExtractorRegionOption.VIEWPORT
-          )
-            actions.push(
-              new sourceExtractorActions.UpdateRegion({
-                file: action.payload.file
-              })
-            );
-        }
-        return from(actions);
-      })
-    );
+          sourceExtractor.regionOption == SourceExtractorRegionOption.VIEWPORT
+        )
+          actions.push(
+            new sourceExtractorActions.UpdateRegion({
+              file: action.payload.file
+            })
+          );
+      }
+      return from(actions);
+    })
+  );
 
   constructor(
     private actions$: Actions,

@@ -104,7 +104,7 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
 
     case dataFileActions.REMOVE_DATA_FILE_SUCCESS: {
       return {
-        ...adapter.removeOne(action.payload.file.id, state),
+        ...adapter.removeOne(action.payload.fileId, state),
       }
     }
 

@@ -4,7 +4,9 @@ import {
   ViewChild,
   OnDestroy,
   OnChanges,
-  OnInit
+  OnInit,
+  HostBinding,
+  Input
 } from "@angular/core";
 
 import { VgAPI } from "videogular2/core";
@@ -53,6 +55,8 @@ import { ChangeDetectorRef } from "@angular/core";
 })
 export class SonifierPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+  @HostBinding("class") @Input("class") classList: string =
+    "fx-workbench-outlet";
   imageFile$: Observable<ImageFile>;
   imageFileState$: Observable<ImageFileState>;
   sonifierState$: Observable<SonifierFileState>;
