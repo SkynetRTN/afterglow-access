@@ -46,7 +46,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   };
 
 
-  constructor() { }
+  constructor() {
+    console.log("HERE!!!:", d3)
+  }
 
   updateChartOptions() {
     this.chartOptions = {

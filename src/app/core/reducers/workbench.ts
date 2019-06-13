@@ -366,6 +366,12 @@ export function reducer(
             currentAlignmentJobId: action.payload.job.id
           }
         }
+        case JobType.Stacking: {
+          return {
+            ...state,
+            currentStackingJobId: action.payload.job.id
+          }
+        }
         case JobType.CatalogQuery: {
           if(!state.creatingAddFieldCalSourcesFromCatalogJob) return state;
           return {
@@ -436,6 +442,16 @@ export function reducer(
       }
     }
 
+
+    case workbenchActions.UPDATE_STACK_FORM_DATA: {
+      return {
+        ...state,
+        stackFormData: {
+          ...state.stackFormData,
+          ...action.payload.data
+        }
+      }
+    }
 
 
 

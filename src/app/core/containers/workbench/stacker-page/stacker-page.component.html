@@ -82,15 +82,15 @@
               appearance="outline"
               [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)"
             >
-              <mat-label>Min</mat-label>
-              <input matInput formControlName="min" type="number" />
+              <mat-label>Low</mat-label>
+              <input matInput formControlName="low" type="number" />
             </mat-form-field>
             <mat-form-field
               appearance="outline"
               [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)"  style="margin-left: 10px;"
             >
-              <mat-label>Max</mat-label>
-              <input matInput formControlName="max" type="number" />
+              <mat-label>High</mat-label>
+              <input matInput formControlName="high" type="number" />
             </mat-form-field>
           </div>
 

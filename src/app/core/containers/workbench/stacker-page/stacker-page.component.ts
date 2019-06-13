@@ -79,9 +79,12 @@ export class StackerPageComponent implements OnInit {
     this.stackFormData$ = store.select(fromCore.getWorkbenchState).pipe(
       map(state => state.stackFormData),
       tap(data => {
+        console.log("patching values: ", data.selectedImageFileIds)
         this.stackForm.patchValue(data, {emitEvent: false});
       })
     );
+
+    this.stackFormData$.subscribe();
 
     this.selectedImageFiles$ = combineLatest(this.allImageFiles$, this.stackFormData$).pipe(
       map(([allImageFiles, data]) => data.selectedImageFileIds.map(id => allImageFiles.find(f => f.id == id)))
@@ -96,17 +99,24 @@ export class StackerPageComponent implements OnInit {
     )
 
 
+    this.stackForm.valueChanges.subscribe(value => {
+      // if(this.imageCalcForm.valid) {
+        this.store.dispatch(new workbenchActions.UpdateStackFormData({data: this.stackForm.value}));
+      // }
+    })
+
+
   }
 
   selectImageFiles(imageFiles: ImageFile[]) {
-    this.store.dispatch(new workbenchActions.UpdateAlignFormData({data: {
+    this.store.dispatch(new workbenchActions.UpdateStackFormData({data: {
       ...this.stackForm.value,
       selectedImageFileIds: imageFiles.map(f => f.id)
     }}));
   }
 
   submit(data: StackFormData) {
-    // this.store.dispatch(new workbenchActions.CreateAlignmentJob())
+    this.store.dispatch(new workbenchActions.CreateStackingJob());
   }
 
   ngOnInit() {

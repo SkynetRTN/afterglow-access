@@ -7,11 +7,11 @@
 
     <p class="card-text">{{dataProvider.description}}</p>
     <div class="row">
-      <a class="btn btn-primary m-2" *ngIf="dataProvider.browseable" [routerLink]="[dataProvider.name | slugify, 'browse']" [queryParams]="{}">
-        <i class="fa fa-folder-open pr-1"></i> Browse
+      <a  mat-raised-button class="m-2" *ngIf="dataProvider.browseable" [routerLink]="[dataProvider.name | slugify, 'browse']" [queryParams]="{}">
+        <mat-icon>folder_open</mat-icon> Browse
       </a>
-      <a class="btn btn-primary m-2" *ngIf="dataProvider.searchable" [routerLink]="[dataProvider.name | slugify, 'search']">
-        <i class="fa fa-search pr-1"></i> Search
+      <a mat-raised-button class="m-2" *ngIf="dataProvider.searchable" [routerLink]="[dataProvider.name | slugify, 'search']">
+        <mat-icon>folder_open</mat-icon> Search
       </a>
     </div>
   </div>

@@ -22,10 +22,10 @@
 
       </div>
       <div fxFlex="1 1 0%" *ngIf="(showSidebar$ | async)" class="file-list-panel h-100"  tourAnchor="file library">
-        <div *ngIf="!(files$ | async) || (files$ | async)?.length == 0" class="empty-library-info alert alert-info">
-          <p>Your library is empty.</p>
-          <p>Import files from your
-            <a [routerLink]="['/data-providers']">data providers</a>.</p>
+        <div *ngIf="!(files$ | async) || (files$ | async)?.length == 0" class="empty-library-info alert alert-info" style="margin: 10px;">
+          Your library is empty.
+          Import files from your
+            <a [routerLink]="['/data-providers']">data providers</a>.
         </div>
         <ng-container *ngIf="(files$ | async)?.length != 0">
           <div fxLayout="column" fxFlex="1 1 0%" class="file-list-panel-wrapper h-100" *ngIf="(sidebarView$ | async) == SidebarView.FILES" aria-labeledby="tab-view-file-library">

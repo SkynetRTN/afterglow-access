@@ -3,13 +3,12 @@ import { JobType } from './job-types';
 import { SourceExtractionData } from './source-extraction';
 
 export interface StackSettings {
-    selectedImageFileIds: string[];
     mode: 'average' | 'percentile' | 'mode' | 'sum';
     scaling: null | 'average' | 'median' | 'mode';
     rejection: null | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';
     percentile?: number;
-    low?: number;
-    high?: number;
+    lo?: number;
+    hi?: number;
 }
 
 export interface StackingJob extends JobBase {

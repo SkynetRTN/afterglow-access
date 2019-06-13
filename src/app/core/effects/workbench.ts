@@ -51,6 +51,7 @@ import { DataFileType } from '../../data-files/models/data-file-type';
 import { PixelOpsJob } from '../../jobs/models/pixel-ops';
 import { JobType } from '../../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult } from '../../jobs/models/alignment';
+import { StackingJob, StackingJobResult } from '../../jobs/models/stacking';
 
 // export const SEARCH_DEBOUNCE = new InjectionToken<number>('Search Debounce');
 // export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
@@ -77,9 +78,12 @@ export class WorkbenchEffects {
         (dataFiles.map(f => f.id).indexOf(activeViewer.fileId) == -1 &&
           dataFiles.length != 0)
       ) {
-        actions.push(
-          new workbenchActions.SelectDataFile({ fileId: dataFiles[0].id })
-        );
+        if(dataFiles[0]) {
+          actions.push(
+            new workbenchActions.SelectDataFile({ fileId: dataFiles[0].id })
+          );
+        }
+       
       }
       return from(actions);
     })
@@ -915,8 +919,49 @@ export class WorkbenchEffects {
       
       return from(actions)
     })
+  );
 
- );
+
+    @Effect()
+  createStackingJob$: Observable<Action> = this.actions$.pipe(
+    ofType<workbenchActions.CreateStackingJob>(workbenchActions.CREATE_STACKING_JOB),
+    withLatestFrom(
+      this.store.select(fromDataFiles.getAllDataFiles).pipe(
+      map(
+        files =>
+          files.filter(file => file.type == DataFileType.IMAGE) as Array<
+            ImageFile
+          >
+      )),
+      this.store.select(fromCore.getWorkbenchState)
+    ),
+    flatMap(([action, allImageFiles, workbenchState]: [workbenchActions.CreateStackingJob, ImageFile[], WorkbenchState]) => {
+      let data = workbenchState.stackFormData;
+      let imageFiles = data.selectedImageFileIds.map(id => allImageFiles.find(f => f.id == id)).filter(f => f != null);
+      let job: StackingJob = {
+        type: JobType.Stacking,
+        id: null,
+        file_ids: imageFiles.sort( (a,b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0).map(f => parseInt(f.id)),
+        stacking_settings: {
+          mode: data.mode,
+          scaling: data.scaling == 'none' ? null : data.scaling,
+          rejection: data.rejection == 'none' ? null : data.rejection,
+          percentile: data.percentile,
+          lo: data.low,
+          hi: data.high
+        }
+      };
+      return of(new jobActions.CreateJob({job: job}))
+    })
+  );
+
+
+  @Effect()
+  stackingJobComplete$: Observable<Action> = this.actions$.pipe(
+    ofType<jobActions.UpdateJobResultSuccess>(jobActions.UPDATE_JOB_RESULT_SUCCESS),
+    filter(action => action.payload.job.type == JobType.Stacking && action.payload.job.state.status == 'completed' && action.payload.result != null ),
+    flatMap(action =>  of(new dataFileActions.LoadLibrary()))
+  );
 
 
   //.debounceTime(this.debounce || 300, this.scheduler || async)

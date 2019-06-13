@@ -4,7 +4,7 @@ import { ImageFile, DataFile } from '../../data-files/models/data-file';
 import { SidebarView } from '../models/sidebar-view';
 import { Viewer } from '../models/viewer';
 import { ViewMode } from '../models/view-mode';
-import { WorkbenchTool, PixelOpsFormData, AlignFormData } from '../models/workbench-state';
+import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData } from '../models/workbench-state';
 import { CentroidSettings } from '../models/centroid-settings';
 import { PlotterSettings } from '../models/plotter-settings';
 import { SourceExtractorModeOption } from '../models/source-extractor-mode-option';
@@ -75,6 +75,9 @@ export const HIDE_CURRENT_PIXEL_OPS_JOB_STATE = '[Workbench] Hide Current Pixel 
 
 export const UPDATE_ALIGN_FORM_DATA = '[Workbench] Update Align Form Data';
 export const CREATE_ALIGNMENT_JOB = '[Workbench] Create Alignment Job';
+
+export const UPDATE_STACK_FORM_DATA = '[Workbench] Update Stack Form Data';
+export const CREATE_STACKING_JOB = '[Workbench] Create Stacking Job';
 
 
 /**
@@ -341,6 +344,16 @@ export class CreateAlignmentJob implements Action {
   readonly type = CREATE_ALIGNMENT_JOB;
 }
 
+export class UpdateStackFormData implements Action {
+  readonly type = UPDATE_STACK_FORM_DATA;
+
+  constructor(public payload: { data: Partial<StackFormData>}) {}
+}
+
+export class CreateStackingJob implements Action {
+  readonly type = CREATE_STACKING_JOB;
+}
+
 
 export type Actions =
   | EnableMultiFileSelection
@@ -389,5 +402,7 @@ export type Actions =
   | CreateAdvPixelOpsJob
   | HideCurrentPixelOpsJobState
   | UpdateAlignFormData
-  | CreateAlignmentJob;
+  | CreateAlignmentJob
+  | UpdateStackFormData
+  | CreateStackingJob;
 

@@ -67,6 +67,8 @@ export class AlignerPageComponent implements OnInit {
       })
     );
 
+    this.alignFormData$.subscribe();
+
 
 
     this.selectedImageFiles$ = combineLatest(this.allImageFiles$, this.alignFormData$).pipe(
