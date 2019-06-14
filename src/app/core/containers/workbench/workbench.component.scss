@@ -1,31 +1,12 @@
-// .workbench-wrapper {
-//   display: flex;
-//   height: 100%;
-//   width: 100%;
-//   outline: none;
-//   user-select: text;
-//   flex-direction: row;
-// }
-
 .sidebar-panel {
   max-width: 400px;
 }
 
-// .sidebar-wrapper {
-//   display: flex;
-//   flex: 1 1 0%;
-//   height: initial;
-//   flex-direction: row;
-//   height: 100%;
-//   overflow: hidden;
-// }
+.full-screen.sidebar-panel {
+  max-width: none;
+  width: 100%;
+}
 
-// .file-list-toolbar-panel {
-//   flex: 0 0 auto;
-//   position: relative;
-//   outline: none;
-//   height: 100%;
-// }
 
 .file-list-toolbar-panel.collapsed {
   border-right: 2px solid rgba(0, 0, 0, .125);
@@ -35,14 +16,6 @@
   min-width: 200px;
 }
 
-// .file-list-panel-wrapper {
-//   display: flex;
-//   flex: 1 1 0%;
-//   flex-direction: column;
-//   overflow: hidden;
-//   height: 100%;
-// }
-
 .file-list-header-view {
   text-align: center;
 }
@@ -51,35 +24,13 @@
   text-align: center;
 }
 
-// .file-list-panel-header {
-//   flex: 0 0 auto;
-//   position: relative;
-//   outline: none;
-// }
-
-
 .file-list-panel-content {
-  // flex: 1 1 auto;
-  // position: relative;
-  // outline: none;
   overflow: auto;
 }
 
 .file-list-content {
   padding-top: 5px;
 }
-
-// .workbench-outlet-panel {
-//   flex: 1 1 0%;
-//   position: relative;
-//   outline: none;
-// }
-
-// .workbench-nav-panel {
-//   flex: 0 0 auto;
-//   position: relative;
-//   outline: none;
-// }
 
 /* Vertical Icon Nav Styling */
 

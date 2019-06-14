@@ -18,6 +18,7 @@ import { AlignerPageComponent } from './core/containers/workbench/aligner-page/a
 import { StackerPageComponent } from './core/containers/workbench/stacker-page/stacker-page.component';
 import { InfoPageComponent } from './core/containers/workbench/info-page/info-page.component';
 import { FieldCalPageComponent } from './core/containers/workbench/field-cal-page/field-cal-page.component';
+import { WorkbenchGuard } from './core/services/workbench-guard.service';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -73,7 +74,7 @@ export const AFTERGLOW_ROUTES: Routes = [
     path: 'workbench',
     component: WorkbenchComponent,
     data: { title: 'Workbench' },
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, WorkbenchGuard],
     children: [
       {
         path: 'viewer',

@@ -11,8 +11,8 @@ import {
 
 import { Store } from "@ngrx/store";
 import * as SVG from "svgjs";
-import { Observable, Subscription, combineLatest } from "rxjs";
-import { map, filter, withLatestFrom } from "rxjs/operators";
+import { Observable, Subscription, Subject, BehaviorSubject, combineLatest} from "rxjs";
+import { map, filter, debounceTime, tap, withLatestFrom } from "rxjs/operators";
 
 import {
   ImageFile,
@@ -44,6 +44,7 @@ import { Marker, MarkerType, LineMarker } from "../../../models/marker";
 import { WorkbenchTool } from "../../../models/workbench-state";
 import { centroidDisk, centroidPsf } from "../../../models/centroider";
 import { PosType } from "../../../models/source";
+import { Router } from '@angular/router';
 
 @Component({
   selector: "app-plotter-page",
@@ -52,6 +53,10 @@ import { PosType } from "../../../models/source";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
+
+
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
   @ViewChild("plotter")
   plotter: PlotterComponent;
@@ -119,7 +124,10 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     return { x: x, y: y, raHours: raHours, decDegs: decDegs };
   }
 
-  constructor(private store: Store<fromRoot.State>) {
+  constructor(private store: Store<fromRoot.State>, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+    console.log("HERE:", this.fullScreenPanel$, this.inFullScreenMode$);
     this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.plotterState$ = this.imageFileState$.pipe(
@@ -235,6 +243,10 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.PLOTTER })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
   }
 
   ngOnInit() {

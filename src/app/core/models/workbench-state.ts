@@ -18,7 +18,9 @@ export enum WorkbenchTool {
   CUSTOM_MARKER,
   INFO,
   FIELD_CAL,
-  IMAGE_CALC
+  IMAGE_CALC,
+  STACKER,
+  ALIGNER
 }
 
 export interface PixelOpsFormData {
@@ -49,6 +51,9 @@ export interface StackFormData {
 }
 
 export interface WorkbenchState {
+  lastRouterPath: string,
+  inFullScreenMode: boolean,
+  fullScreenPanel: 'file' | 'viewer' | 'tool';
   multiFileSelectionEnabled: boolean;
   selectedFileIds: Array<string>;
   activeViewerIndex: number;

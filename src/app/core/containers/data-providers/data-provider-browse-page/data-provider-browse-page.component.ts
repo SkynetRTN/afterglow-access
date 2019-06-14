@@ -187,7 +187,7 @@ export class DataProviderBrowsePageComponent
           filter(([progress, errors]) => progress == 1 && errors.length == 0)
         )
         .subscribe(v => {
-          this.router.navigate(["/"]);
+          this.router.navigate(["/workbench"]);
         })
     );
   }

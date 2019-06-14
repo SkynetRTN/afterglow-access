@@ -84,6 +84,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { ThemePickerModule } from '../theme-picker';
 import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
+import { WorkbenchGuard } from './services/workbench-guard.service';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -186,7 +187,7 @@ export class CoreModule {
   static forRoot() {
     return {
       ngModule: CoreModule,
-      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
+      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService, WorkbenchGuard],
     };
   }
 }

@@ -14,6 +14,12 @@ import { Catalog } from '../models/catalog';
 import { FieldCal } from '../models/field-cal';
 import { CatalogQueryJob } from '../../jobs/models/catalog-query';
 
+export const SET_LAST_ROUTER_PATH = '[Workbench] Set Last Router Path';
+
+export const TOGGLE_FULL_SCREEN = '[Workbench] Toggle Full Screen';
+export const SET_FULL_SCREEN = '[Workbench] Set Full Screen';
+export const SET_FULL_SCREEN_PANEL = '[Workbench] Set Full Screen Panel';
+
 export const ENABLE_MULTI_FILE_SELECTION = '[Workbench] Enable Multi File Selection';
 export const DISABLE_MULTI_FILE_SELECTION = '[Workbench] Disable Multi File Selection';
 export const SELECT_DATA_FILE = '[Workbench] Select Data File';
@@ -79,6 +85,29 @@ export const CREATE_ALIGNMENT_JOB = '[Workbench] Create Alignment Job';
 export const UPDATE_STACK_FORM_DATA = '[Workbench] Update Stack Form Data';
 export const CREATE_STACKING_JOB = '[Workbench] Create Stacking Job';
 
+
+
+export class SetLastRouterPath implements Action {
+  readonly type = SET_LAST_ROUTER_PATH;
+
+  constructor(public payload: {path: string}) { }
+}
+
+export class ToggleFullScreen implements Action {
+  readonly type = TOGGLE_FULL_SCREEN;
+}
+
+export class SetFullScreen implements Action {
+  readonly type = SET_FULL_SCREEN;
+
+  constructor(public payload: {value: boolean}) { }
+}
+
+export class SetFullScreenPanel implements Action {
+  readonly type = SET_FULL_SCREEN_PANEL;
+
+  constructor(public payload: {panel: 'file' | 'viewer' | 'tool'}) { }
+}
 
 /**
  * Selection
@@ -356,6 +385,9 @@ export class CreateStackingJob implements Action {
 
 
 export type Actions =
+  | ToggleFullScreen
+  | SetFullScreen
+  | SetFullScreenPanel
   | EnableMultiFileSelection
   | DisableMultiFileSelection
   | SelectDataFile
@@ -404,5 +436,6 @@ export type Actions =
   | UpdateAlignFormData
   | CreateAlignmentJob
   | UpdateStackFormData
-  | CreateStackingJob;
+  | CreateStackingJob
+  | SetLastRouterPath;
 

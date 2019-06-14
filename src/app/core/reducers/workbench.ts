@@ -22,6 +22,9 @@ import { JobType } from '../../jobs/models/job-types';
 
 
 export const initialState: WorkbenchState = {
+  lastRouterPath: null,
+  inFullScreenMode: false,
+  fullScreenPanel: 'file',
   multiFileSelectionEnabled: false,
   selectedFileIds: [],
   activeViewerIndex: 0,
@@ -112,9 +115,38 @@ export function reducer(
   action: workbenchActions.Actions | dataFileActions.Actions | imageFileActions.Actions | authActions.Actions | jobActions.Actions
 ): WorkbenchState {
   switch (action.type) {
+
+    case workbenchActions.SET_LAST_ROUTER_PATH: {
+      return {
+        ...state,
+        lastRouterPath: action.payload.path
+      }
+    }
+
+
     case authActions.LOGOUT: {
       return {
         ...initialState
+      }
+    }
+
+    case workbenchActions.TOGGLE_FULL_SCREEN: {
+      return {
+        ...state,
+        inFullScreenMode: !state.inFullScreenMode
+      }
+    }
+    case workbenchActions.SET_FULL_SCREEN: {
+      return {
+        ...state,
+        inFullScreenMode: action.payload.value
+      }
+    }
+
+    case workbenchActions.SET_FULL_SCREEN_PANEL: {
+      return {
+        ...state,
+        fullScreenPanel: action.payload.panel
       }
     }
 

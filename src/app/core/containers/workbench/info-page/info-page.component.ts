@@ -28,6 +28,7 @@ import { environment } from "../../../../../environments/environment.prod";
 import { Viewer } from "../../../models/viewer";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material";
+import { Router } from '@angular/router';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -41,7 +42,8 @@ import { MatSlideToggleChange } from "@angular/material";
 })
 export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
-
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   imageFile$: Observable<ImageFile>;
   header$: Observable<Header>;
   headerSummary$: Observable<Header>;
@@ -60,7 +62,9 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
   columnsDisplayed = ['key', 'value', 'comment'];
 
   
-  constructor(private store: Store<fromRoot.State>, private decimalPipe: DecimalPipe, private datePipe: DatePipe) {
+  constructor(private store: Store<fromRoot.State>, private decimalPipe: DecimalPipe, private datePipe: DatePipe, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.workbenchState$ = this.store.select(fromCore.getWorkbenchState);
     this.fileEntities$ = this.store.select(fromDataFiles.getDataFiles);
     this.fileStateEntities$ = this.store.select(fromCore.getImageFileStates);
@@ -167,7 +171,6 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subs.push(
       this.imageFile$.subscribe(imageFile => {
         this.lastImageFile = imageFile;
-        if(imageFile) console.log(imageFile.header);
         // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
       })
     );
@@ -175,6 +178,10 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.INFO })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
   }
 
   

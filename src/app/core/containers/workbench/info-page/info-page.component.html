@@ -1,99 +1,118 @@
+<div
+  fxFlex="1 1 0%"
+  class="image-viewer-grid-panel"
+  role="region"
+  aria-label="image viewers"
+  [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
+  "
+>
+  <app-workbench-viewer-grid></app-workbench-viewer-grid>
+</div>
 
-  <div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers">
-    <app-workbench-viewer-grid></app-workbench-viewer-grid>
-  </div>
+<span class="resizer"></span>
 
-  <span class="resizer"></span>
+<div
+  *ngIf="showConfig$ | async"
+  fxFlex="0 0 auto"
+  class="workbench-config-panel"
+  role="region"
+  aria-labelledby="settings-header"
+  [ngClass]="{ 'full-screen': inFullScreenMode$ | async }"
+  [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'
+  "
+>
+  <div class="card workbench-settings-card" style="height: 100%;">
+    <div id="settings-header" class="card-header"><h5>File Info</h5></div>
 
-  <div
-    *ngIf="(showConfig$ | async)"
-    fxFlex="0 0 auto"
-    class="workbench-config-panel"
-    role="region"
-    aria-labelledby="settings-header"
-  >
-    <div class="card workbench-settings-card" style="height: 100%;">
-      <div id="settings-header" class="card-header"><h5>File Info</h5></div>
-
+    <div class="card-body" style="overflow-y: auto;">
       <div class="card-body" style="overflow-y: auto;">
-        <div class="card-body" style="overflow-y: auto;">
-          <div
-            *ngIf="!(imageFile$ | async) || !(header$ | async)"
-            class="alert alert-info"
-          >
-            Select a data file to see file info.
+        <div
+          *ngIf="!(imageFile$ | async) || !(header$ | async)"
+          class="alert alert-info"
+        >
+          Select a data file to see file info.
+        </div>
+
+        <div *ngIf="(imageFile$ | async) && (header$ | async)">
+          <div class="p-2">
+            <mat-slide-toggle
+              [color]="'primary'"
+              [checked]="showRawHeader"
+              (change)="onShowRawHeaderChange($event)"
+            >
+              Show Raw Header Data
+            </mat-slide-toggle>
           </div>
 
-          <div *ngIf="(imageFile$ | async) && (header$ | async)">
+          <div *ngIf="!showRawHeader && (headerSummary$ | async)">
             <div class="p-2">
-                <mat-slide-toggle [color]="'primary'" [checked]="showRawHeader" (change)="onShowRawHeaderChange($event)">
-                    Show Raw Header Data
-                  </mat-slide-toggle>
-            </div>
-            
-            <div *ngIf="!showRawHeader && (headerSummary$ | async)">
-                <div class="p-2">
-                  <mat-slide-toggle [color]="'primary'" [checked]="(useSystemTime$ | async)" (change)="onUseSystemTimeChange($event)">
-                      Use System Time
-                    </mat-slide-toggle>
-                </div>
-                
-              <table mat-table [dataSource]="headerSummary$ | async">
-                <ng-container matColumnDef="key">
-                  <th mat-header-cell *matHeaderCellDef>Key</th>
-                  <td mat-cell *matCellDef="let row">
-                    <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="value">
-                  <th mat-header-cell *matHeaderCellDef>Value</th>
-                  <td mat-cell *matCellDef="let row">{{ row.value }}</td>
-                </ng-container>
-                <ng-container matColumnDef="comment">
-                  <th mat-header-cell *matHeaderCellDef>Comment</th>
-                  <td mat-cell *matCellDef="let row">
-                    <mat-icon *ngIf="row.comment" [matTooltip]="row.comment"
-                      >comment</mat-icon
-                    >
-                  </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
-                <tr
-                  mat-row
-                  *matRowDef="let myRowData; columns: columnsDisplayed"
-                ></tr>
-              </table>
+              <mat-slide-toggle
+                [color]="'primary'"
+                [checked]="useSystemTime$ | async"
+                (change)="onUseSystemTimeChange($event)"
+              >
+                Use System Time
+              </mat-slide-toggle>
             </div>
 
-            <div *ngIf="showRawHeader">
-              <table mat-table [dataSource]="header$ | async">
-                <ng-container matColumnDef="key">
-                  <th mat-header-cell *matHeaderCellDef>Key</th>
-                  <td mat-cell *matCellDef="let row">
-                    <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="value">
-                  <th mat-header-cell *matHeaderCellDef>Value</th>
-                  <td mat-cell *matCellDef="let row">{{ row.value }}</td>
-                </ng-container>
-                <ng-container matColumnDef="comment">
-                  <th mat-header-cell *matHeaderCellDef>Comment</th>
-                  <td mat-cell *matCellDef="let row">
-                    <mat-icon *ngIf="row.comment" [matTooltip]="row.comment"
-                      >comment</mat-icon
-                    >
-                  </td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
-                <tr
-                  mat-row
-                  *matRowDef="let myRowData; columns: columnsDisplayed"
-                ></tr>
-              </table>
-            </div>
+            <table mat-table [dataSource]="headerSummary$ | async">
+              <ng-container matColumnDef="key">
+                <th mat-header-cell *matHeaderCellDef>Key</th>
+                <td mat-cell *matCellDef="let row">
+                  <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Value</th>
+                <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+              </ng-container>
+              <ng-container matColumnDef="comment">
+                <th mat-header-cell *matHeaderCellDef>Comment</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-icon *ngIf="row.comment" [matTooltip]="row.comment"
+                    >comment</mat-icon
+                  >
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
+              <tr
+                mat-row
+                *matRowDef="let myRowData; columns: columnsDisplayed"
+              ></tr>
+            </table>
+          </div>
+
+          <div *ngIf="showRawHeader">
+            <table mat-table [dataSource]="header$ | async">
+              <ng-container matColumnDef="key">
+                <th mat-header-cell *matHeaderCellDef>Key</th>
+                <td mat-cell *matCellDef="let row">
+                  <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Value</th>
+                <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+              </ng-container>
+              <ng-container matColumnDef="comment">
+                <th mat-header-cell *matHeaderCellDef>Comment</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-icon *ngIf="row.comment" [matTooltip]="row.comment"
+                    >comment</mat-icon
+                  >
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
+              <tr
+                mat-row
+                *matRowDef="let myRowData; columns: columnsDisplayed"
+              ></tr>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>

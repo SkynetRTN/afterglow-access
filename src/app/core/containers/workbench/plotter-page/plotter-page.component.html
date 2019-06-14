@@ -3,6 +3,9 @@
   class="image-viewer-grid-panel"
   role="region"
   aria-label="image viewers"
+  [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
+  "
 >
   <app-workbench-viewer-grid
     (onImageClick)="onImageClick($event)"
@@ -17,6 +20,10 @@
   class="workbench-config-panel"
   role="region"
   aria-labelledby="settings-header"
+  [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }"
+  [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'
+  "
 >
   <div class="card workbench-settings-card" style="height: 100%;">
     <div id="settings-header" class="card-header">
@@ -181,9 +188,7 @@
                       degrees CW of +Y
                     </div>
                     <div *ngIf="(vectorInfo$ | async)?.skyPosAngle !== null">
-                      {{
-                        (vectorInfo$ | async)?.skyPosAngle | number: "1.0-3"
-                      }}
+                      {{ (vectorInfo$ | async)?.skyPosAngle | number: "1.0-3" }}
                       degrees E of N
                     </div>
                   </td>

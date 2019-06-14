@@ -66,6 +66,10 @@
     color: mat-color($primary, default-contrast);
   }
 
+  .cfp-hotkeys-container {
+    background-color: mat-color($background, card) !important;
+  }
+
   /* override bootstrap */
   .app-root {
     color: mat-color($foreground, text);

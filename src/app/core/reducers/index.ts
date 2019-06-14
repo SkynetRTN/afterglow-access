@@ -173,4 +173,6 @@ export const workbench = {
   getActiveTool: createSelector(getWorkbenchState, state => state.activeTool),
   getMultiFileSelectionEnabled: createSelector(getWorkbenchState, state => state.multiFileSelectionEnabled),
   getShowAllSources: createSelector(getWorkbenchState, state => state.showAllSources),
+  getFullScreenPanel: createSelector(getWorkbenchState, state => state.fullScreenPanel),
+  getInFullScreenMode: createSelector(getWorkbenchState, state => state.inFullScreenMode)
 }

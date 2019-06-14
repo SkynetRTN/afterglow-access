@@ -71,6 +71,7 @@ import { SourceId } from "../../../../jobs/models/source-id";
 import { Papa } from "ngx-papaparse";
 import { datetimeToJd, jdToMjd } from '../../../../lib/skynet-astro';
 import { DecimalPipe, DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 export class SourcesDataSource implements DataSource<Source> {
   sources$: Observable<Source[]>;
@@ -114,6 +115,8 @@ export class SourceExtractorPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
+    inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   selectedSourceActionError: string = null;
   selectedSources$: Observable<Source[]>;
   selectedSources: Array<Source> = [];
@@ -164,8 +167,10 @@ export class SourceExtractorPageComponent
     private dmsPipe: DmsPipe,
     private papa: Papa,
     private decimalPipe: DecimalPipe,
-    private datePipe: DatePipe
+    private datePipe: DatePipe, router: Router
   ) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.dataSource = new SourcesDataSource(store);
 
     this.selectedSources$ = store.select(fromCore.getSelectedSources);
@@ -271,6 +276,10 @@ export class SourceExtractorPageComponent
         tool: WorkbenchTool.SOURCE_EXTRACTOR
       })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
   }
 
   ngOnInit() {

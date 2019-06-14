@@ -14,9 +14,10 @@ import * as fromJobs from '../../../../jobs/reducers';
 import * as workbenchActions from '../../../actions/workbench';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { AlignFormData } from '../../../models/workbench-state';
+import { AlignFormData, WorkbenchTool } from '../../../models/workbench-state';
 import { MatSelectChange } from '@angular/material';
 import { AlignmentJob, AlignmentJobResult } from '../../../../jobs/models/alignment';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-aligner-page',
@@ -25,6 +26,8 @@ import { AlignmentJob, AlignmentJobResult } from '../../../../jobs/models/alignm
 })
 export class AlignerPageComponent implements OnInit {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   activeImageFile$: Observable<ImageFile>;
   activeImageFileState$: Observable<ImageFileState>;
   showConfig$: Observable<boolean>;
@@ -41,7 +44,12 @@ export class AlignerPageComponent implements OnInit {
     inPlace: new FormControl(false, Validators.required)
   });
 
-  constructor(private store: Store<fromRoot.State>) {
+  constructor(private store: Store<fromRoot.State>, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+  
+    
+
     this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
     
     this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
@@ -97,6 +105,14 @@ export class AlignerPageComponent implements OnInit {
         return jobRowLookup[state.currentAlignmentJobId] as {job: AlignmentJob, result: AlignmentJobResult};
       })
       
+    )
+
+    this.store.dispatch(
+      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.ALIGNER })
+    );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
     )
 
 

@@ -27,6 +27,7 @@ import { JobType } from '../../../../jobs/models/job-types';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../workbench-viewer-grid/workbench-viewer-grid.component';
 import { CatalogQueryJob } from '../../../../jobs/models/catalog-query';
+import { Router } from '@angular/router';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -40,6 +41,8 @@ import { CatalogQueryJob } from '../../../../jobs/models/catalog-query';
 })
 export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   activeImageFile$: Observable<ImageFile>;
   activeImageHasWcs$: Observable<boolean>;
   activeImageFileState$: Observable<ImageFileState>;
@@ -68,7 +71,9 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   });
   
 
-  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog) {
+  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.activeImageHasWcs$ = this.activeImageFile$.pipe(map(imageFile => imageFile != null && getHasWcs(imageFile)));
     this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
@@ -123,6 +128,10 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.FIELD_CAL })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
   }
   
   ngOnInit() {

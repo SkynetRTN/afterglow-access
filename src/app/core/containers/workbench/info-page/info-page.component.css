@@ -2,6 +2,11 @@
     width: 500px;
   }
   
+  .full-screen.workbench-config-panel {
+    width: 100%;
+  }
+
+  
   .rotate-90 {
     -webkit-transform: rotate(90deg);
     -moz-transform: rotate(90deg);

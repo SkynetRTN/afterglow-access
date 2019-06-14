@@ -39,6 +39,7 @@ import { Marker, MarkerType } from "../../../models/marker";
 import { ViewMode } from "../../../models/view-mode";
 import { WorkbenchState, WorkbenchTool } from "../../../models/workbench-state";
 import { environment } from "../../../../../environments/environment.prod";
+import { Router } from '@angular/router';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -52,6 +53,8 @@ import { environment } from "../../../../../environments/environment.prod";
 })
 export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
 
   ViewMode = ViewMode;
   viewers$: Observable<Array<Viewer>>;
@@ -81,7 +84,9 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   upperPercentileDefault = environment.upperPercentileDefault;
   lowerPercentileDefault = environment.lowerPercentileDefault;
 
-  constructor(private store: Store<fromRoot.State>) {
+  constructor(private store: Store<fromRoot.State>, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.workbenchState$ = this.store.select(fromCore.getWorkbenchState);
     this.fileEntities$ = this.store.select(fromDataFiles.getDataFiles);
     this.fileStateEntities$ = this.store.select(fromCore.getImageFileStates);
@@ -151,6 +156,10 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.VIEWER })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
   }
 
   setViewModeOption(value) {

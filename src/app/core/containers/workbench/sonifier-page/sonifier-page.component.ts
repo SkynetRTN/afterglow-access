@@ -47,6 +47,7 @@ import {
   HotkeysService
 } from "../../../../../../node_modules/angular2-hotkeys";
 import { ChangeDetectorRef } from "@angular/core";
+import { Router } from '@angular/router';
 
 @Component({
   selector: "app-sonifier-page",
@@ -57,6 +58,8 @@ export class SonifierPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
+    inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   imageFile$: Observable<ImageFile>;
   imageFileState$: Observable<ImageFileState>;
   sonifierState$: Observable<SonifierFileState>;
@@ -83,8 +86,10 @@ export class SonifierPageComponent
     private store: Store<fromRoot.State>,
     private afterglowService: AfterglowDataFileService,
     private _hotkeysService: HotkeysService,
-    private ref: ChangeDetectorRef
+    private ref: ChangeDetectorRef, router: Router
   ) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.sonifierState$ = this.imageFileState$.pipe(
@@ -117,6 +122,10 @@ export class SonifierPageComponent
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.SONIFIER })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
 
     this.hotKeys.push(
       new Hotkey(
@@ -374,6 +383,7 @@ export class SonifierPageComponent
       )
     );
 
+    let indexToneDuration = .852/2.0;
     this.progressLine$ = merge(
       start$.pipe(
         flatMap(() =>
@@ -384,11 +394,10 @@ export class SonifierPageComponent
           if (this.api.getDefaultMedia().duration == 0) return null;
           let region = this.lastSonifierState.region;
           if (!region) return null;
-
           let y =
             region.y +
-            (this.api.getDefaultMedia().currentTime /
-              this.api.getDefaultMedia().duration) *
+            Math.max(0, Math.min(1, ((this.api.getDefaultMedia().currentTime-indexToneDuration) /
+              (this.api.getDefaultMedia().duration-(2*indexToneDuration))))) *
               region.height;
 
           return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };

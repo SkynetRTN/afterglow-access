@@ -19,6 +19,7 @@ import { WorkbenchTool, WorkbenchState } from "../../../models/workbench-state";
 import { centroidPsf, centroidDisk } from "../../../models/centroider";
 import { CentroidSettings } from "../../../models/centroid-settings";
 import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
+import { Router } from '@angular/router';
 
 @Component({
   selector: "app-custom-marker-page",
@@ -27,6 +28,8 @@ import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
 })
 export class CustomMarkerPageComponent implements OnInit {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   subs: Subscription[] = [];
   workbenchState$: Observable<WorkbenchState>;
   centroidSettings$: Observable<CentroidSettings>;
@@ -42,7 +45,10 @@ export class CustomMarkerPageComponent implements OnInit {
   selectedCustomMarkers: Array<CustomMarker> = [];
   selectedMarker: CircleMarker = null;
 
-  constructor(private store: Store<fromRoot.State>) {
+  constructor(private store: Store<fromRoot.State>, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+    
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.customMarkers$ = store.select(fromCore.getAllCustomMarkers);
@@ -94,6 +100,10 @@ export class CustomMarkerPageComponent implements OnInit {
     this.store.dispatch(
       new workbenchActions.SetActiveTool({ tool: WorkbenchTool.CUSTOM_MARKER })
     );
+
+    this.store.dispatch(
+      new workbenchActions.SetLastRouterPath({path: router.url})
+    )
   }
 
   ngOnInit() {}

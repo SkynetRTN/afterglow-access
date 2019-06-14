@@ -5,3 +5,7 @@
 .header-value-table th {
   vertical-align: middle;
 }
+
+.full-screen.workbench-config-panel {
+  width: 100%;
+}

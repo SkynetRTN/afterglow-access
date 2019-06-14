@@ -1,3 +1,7 @@
 .workbench-config-panel {
   width: 550px;
 }
+
+.full-screen.workbench-config-panel {
+  width: 100%;
+}

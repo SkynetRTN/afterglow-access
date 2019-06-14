@@ -185,7 +185,7 @@ export class AfterglowDataFileService {
         region.width
       )}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
         region.height / duration
-      )}&num_tones=${Math.floor(toneCount)}`
+      )}&num_tones=${Math.floor(toneCount)}&index_sounds=1`
     );
   }
 

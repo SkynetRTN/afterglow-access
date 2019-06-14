@@ -22,11 +22,12 @@ import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { JobType } from '../../../../jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from '../../../../jobs/models/pixel-ops';
-import { PixelOpsFormData, WorkbenchState } from '../../../models/workbench-state';
+import { PixelOpsFormData, WorkbenchState, WorkbenchTool } from '../../../models/workbench-state';
 import { Job } from '../../../../jobs/models/job';
 import { JobResult } from '../../../../jobs/models/job-result';
 import { MatDialog, MatTabChangeEvent } from '@angular/material';
 import { PixelOpsJobsDialogComponent } from '../../../components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
+import { Router } from '@angular/router';
 
 interface PixelOpVariable {
   name: string,
@@ -41,6 +42,8 @@ interface PixelOpVariable {
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
+    inFullScreenMode$: Observable<boolean>;
+    fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   activeImageFile$: Observable<ImageFile>;
   allImageFiles$: Observable<Array<ImageFile>>;
   selectedImageFiles$: Observable<Array<ImageFile>>;
@@ -91,7 +94,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
   
 
-  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog) {
+  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, router: Router) {
+    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.activeImageFileState$ = store.select(
       fromCore.workbench.getActiveFileState
@@ -201,6 +206,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       this.showCurrentPixelOpsJobState$ =  store.select(fromCore.getWorkbenchState).pipe(
         map(state => state.showCurrentPixelOpsJobState)
       );
+
+      this.store.dispatch(
+        new workbenchActions.SetActiveTool({ tool: WorkbenchTool.IMAGE_CALC })
+      );
+  
+      this.store.dispatch(
+        new workbenchActions.SetLastRouterPath({path: router.url})
+      )
 
 
       // this.extractionJobRows$ = combineLatest(

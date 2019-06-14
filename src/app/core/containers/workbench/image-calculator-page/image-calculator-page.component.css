@@ -2,6 +2,10 @@
   width: 375px;
 }
 
+.full-screen.workbench-config-panel {
+  width: 100%;
+}
+
 .mat-form-field, .mat-checkbox {
   margin: 5px;
 }

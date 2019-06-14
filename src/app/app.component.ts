@@ -20,6 +20,7 @@ import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { TourService } from "ngx-tour-ngx-popper";
 import { Renderer3 } from "@angular/core/src/render3/interfaces/renderer";
 import { ThemeStorage } from './theme-picker/theme-storage/theme-storage';
+import { WorkbenchGuard } from './core/services/workbench-guard.service';
 
 @Component({
   selector: "app-root",
