@@ -72,6 +72,8 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   latestImageFile: ImageFile;
   latestCentroidSettings: CentroidSettings;
 
+  mode$: Observable<'1D' | '2D' | '3D'>;
+
   lineStart$: Observable<{
     x: number;
     y: number;
@@ -145,6 +147,10 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     this.plotterSyncEnabled$ = store.select(
       fromCore.workbench.getPlotterSyncEnabled
+    );
+
+    this.mode$ = workbenchState$.pipe(
+      map(state => state.plotterMode)
     );
 
     this.lineStart$ = this.plotterState$.pipe(
@@ -259,6 +265,12 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
+  }
+
+  onModeChange($event) {
+    this.store.dispatch(
+      new workbenchActions.SetPlotMode({mode: $event})
+    )
   }
 
   onPlotterSyncEnabledChange($event) {

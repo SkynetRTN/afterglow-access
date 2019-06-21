@@ -45,8 +45,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     private themeStorage: ThemeStorage
   ) {
 
-    this.currentThemeName = this.themeStorage.getStoredThemeName();
-    if(this.currentThemeName) this.renderer.addClass(document.body, this.currentThemeName);
+    let theme = this.themeStorage.getCurrentTheme();
+    if(!theme) {
+      theme = this.themeStorage.themes[0]
+      this.themeStorage.storeTheme(theme);
+    }
+    this.currentThemeName = theme.name
+    this.renderer.addClass(document.body, this.currentThemeName);
 
     this.themeStorage.onThemeUpdate.subscribe(theme => {
       this.renderer.removeClass(document.body, this.currentThemeName);

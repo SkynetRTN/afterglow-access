@@ -47,12 +47,13 @@ export const initialState: WorkbenchState = {
   viewerSyncEnabled: false,
   normalizationSyncEnabled: false,
   plotterSyncEnabled: false,
+  plotterMode: '1D',
   sidebarView: SidebarView.FILES,
   showSidebar: true,
   showConfig: true,
   showAllSources: true,
   centroidSettings: {
-    centroidClicks: true,
+    centroidClicks: false,
     useDiskCentroiding: false,
     psfCentroiderSettings: createPsfCentroiderSettings(),
     diskCentroiderSettings: createDiskCentroiderSettings()
@@ -255,6 +256,13 @@ export function reducer(
       return {
         ...state,
         plotterSyncEnabled: action.payload.enabled
+      }
+    }
+
+    case workbenchActions.SET_PLOT_MODE: {
+      return {
+        ...state,
+        plotterMode: action.payload.mode
       }
     }
 

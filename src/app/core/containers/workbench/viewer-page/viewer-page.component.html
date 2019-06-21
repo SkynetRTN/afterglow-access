@@ -1,7 +1,12 @@
-<div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers"
-[fxShow]="
-  !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
-">
+<div
+  fxFlex="1 1 0%"
+  class="image-viewer-grid-panel"
+  role="region"
+  aria-label="image viewers"
+  [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
+  "
+>
   <app-workbench-viewer-grid></app-workbench-viewer-grid>
 </div>
 
@@ -95,20 +100,24 @@
       </div>
 
       <div *ngIf="imageFile$ | async">
-        <app-image-hist-chart
-          [width]="450"
-          [height]="250"
-          [hist]="(imageFile$ | async)?.hist"
-          [backgroundLevel]="
-            (normalization$ | async).normalizer?.backgroundLevel
-          "
-          [peakLevel]="(normalization$ | async).normalizer?.peakLevel"
-          (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
-          (onPeakLevelChange)="onPeakLevelChange($event)"
-        >
-        </app-image-hist-chart>
+          <div class="pr-3 pl-3">
+              <app-image-hist-chart
+              [width]="450"
+              [height]="250"
+              [hist]="(imageFile$ | async)?.hist"
+              [backgroundLevel]="
+                (normalization$ | async).normalizer?.backgroundLevel
+              "
+              [peakLevel]="(normalization$ | async).normalizer?.peakLevel"
+              (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
+              (onPeakLevelChange)="onPeakLevelChange($event)"
+            >
+            </app-image-hist-chart>
+            <div style="clear: both;"></div>
+          </div>
+          
 
-        <div class="pb-4">
+        <div class="pb-4 pt-4">
           <app-normalizer-form
             [normalizer]="(normalization$ | async).normalizer"
             (onBackgroundLevelChange)="onBackgroundLevelChange($event)"

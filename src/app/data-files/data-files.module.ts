@@ -5,9 +5,13 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { FormsModule } from '@angular/forms';
 
-import { NvD3Module } from 'ng2-nvd3';
-import 'd3';
-import 'nvd3';
+// import { NvD3Module } from 'ng2-nvd3';
+// import 'd3';
+// import 'nvd3';
+
+import * as PlotlyJS from 'plotly.js/dist/plotly.js';
+import { PlotlyModule } from 'angular-plotly.js';
+PlotlyModule.plotlyjs = PlotlyJS;
 
 //Angular Material
 import { MaterialModule } from '../material';
@@ -20,6 +24,7 @@ import { DataFileEffects } from './effects/data-file';
 import { reducers } from './reducers';
 import { ImageHistChartComponent } from './components/image-hist-chart/image-hist-chart.component';
 import { DataFileSelectionListComponent, DataFileListItemComponent } from './components/data-file-selection-list/data-file-selection-list.component';
+import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 
 @NgModule({
   imports: [
@@ -27,8 +32,10 @@ import { DataFileSelectionListComponent, DataFileListItemComponent } from './com
     FormsModule,
     MaterialModule,
     PipesModule,
-    NvD3Module,
+    // NvD3Module,
     SvgModule,
+    PlotlyModule,
+    AfterglowPlotlyModule,
 
 
     /**

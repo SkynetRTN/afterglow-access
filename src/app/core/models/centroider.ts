@@ -1,5 +1,4 @@
 import { ImageFile, getWidth, getHeight, getPixel } from '../../data-files/models/data-file'
-declare let d3: any;
 
 export interface DiskCentroiderSettings {
   maxIterations: number,
@@ -211,7 +210,7 @@ export function centroidPsf(imageFile: ImageFile, x: number, y: number, settings
     cny = subframeResult.cny
     let pixels = subframeResult.pixels
 
-    let dataMin = d3.min(pixels);
+    let dataMin = Math.min(...pixels);
 
     // Apply threshold and check for positive or negative features.
     //thresholding is not implemented yet

@@ -1,12 +1,12 @@
-@import '~@angular/material/theming';
-@import './app/core/components/navbar/navbar-theme';
-@import './app/core/containers/workbench/workbench-theme';
-@import './app/core/containers/workbench/viewer-page/viewer-theme';
-@import './app/core/containers/workbench/workbench-viewer-panel/workbench-viewer-panel-theme';
-@import './app/core/components/image-viewer-title-bar/image-viewer-title-bar-theme';
-@import './app/core/containers/workbench/workbench-viewer-grid/workbench-viewer-grid-theme';
-@import './app/core/containers/workbench/workbench-data-file-list/workbench-data-file-list-theme';
-@import './app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page-theme';
+@import "~@angular/material/theming";
+@import "./app/core/components/navbar/navbar-theme";
+@import "./app/core/containers/workbench/workbench-theme";
+@import "./app/core/containers/workbench/viewer-page/viewer-theme";
+@import "./app/core/containers/workbench/workbench-viewer-panel/workbench-viewer-panel-theme";
+@import "./app/core/components/image-viewer-title-bar/image-viewer-title-bar-theme";
+@import "./app/core/containers/workbench/workbench-viewer-grid/workbench-viewer-grid-theme";
+@import "./app/core/containers/workbench/workbench-data-file-list/workbench-data-file-list-theme";
+@import "./app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page-theme";
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -83,7 +83,22 @@
     background: mat-color($background, card);
   }
 
-  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p {
+  label,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  th,
+  td,
+  p {
     color: mat-color($foreground, text);
   }
 
@@ -92,21 +107,24 @@
   }
 
   .breadcrumb {
-    background: mat-color($background, card)
+    background: mat-color($background, card);
   }
 
   a {
     color: mat-color($accent);
   }
 
-
   .alert-info a {
     color: #0c5460;
-}
+  }
 
   .alert-success a {
     color: #155724;
   }
-  
-  
+
+  // .plotly {
+  //   svg {
+  //     background-color: #ABABAB;
+  //   }
+  // }
 }

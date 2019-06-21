@@ -139,9 +139,10 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       this.fileId$,
       this.files$,
       lineStart$,
-      lineEnd$
+      lineEnd$,
+      this.store.select(fromCore.getWorkbenchState)
     ).pipe(
-      map(([fileId, files, lineMeasureStart, lineMeasureEnd]) => {
+      map(([fileId, files, lineMeasureStart, lineMeasureEnd, workbenchState]) => {
         if (!lineMeasureStart || !lineMeasureEnd) return [[]];
 
         let file = files[this.fileId] as ImageFile;
@@ -176,15 +177,29 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
           }
         }
 
-        return [
-          {
-            type: MarkerType.LINE,
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2
-          } as LineMarker
-        ];
+        if(workbenchState.plotterMode == '1D') {
+          return [
+            {
+              type: MarkerType.LINE,
+              x1: x1,
+              y1: y1,
+              x2: x2,
+              y2: y2
+            } as LineMarker
+          ];
+        }
+        else {
+          return [
+            {
+              type: MarkerType.RECTANGLE,
+              x: Math.min(x1, x2),
+              y: Math.min(y1, y2),
+              width: Math.abs(x2-x1),
+              height: Math.abs(y2-y1)
+            } as RectangleMarker
+          ]; 
+        }
+        
       })
     );
 

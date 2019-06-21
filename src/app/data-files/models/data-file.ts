@@ -86,6 +86,18 @@ export function getHeight(imageFile: ImageFile) {
   return undefined;
 }
 
+export function getPixels(imageFile: ImageFile, x: number, y: number, width: number, height: number) {
+  let result: Array<Array<number>> = [];
+  for(let j=0; j<height; j++) {
+    let row = Array(width)
+    for(let i=0; i<width; i++) {
+      row[i] = getPixel(imageFile, x+i, y+j);
+    }
+    result[j] = row;
+  }
+  return result;
+}
+
 export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate: boolean = false) {
   //let interpolateMethod = 'bilinear';
   // let interpolateMethod = 'bicubic';

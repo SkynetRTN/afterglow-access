@@ -22,15 +22,12 @@
             ],
             "styles": [
               "node_modules/bootstrap-css-only/css/bootstrap.min.css",
-              "node_modules/nvd3/build/nv.d3.min.css",
               "node_modules/videogular2/fonts/videogular.css",
               "node_modules/material-design-icons/iconfont/material-icons.css",
               "src/styles.scss"
             ],
             "scripts": [
-              "node_modules/downloadjs/download.js",
-              "node_modules/d3/d3.min.js",
-              "node_modules/nvd3/build/nv.d3.min.js"
+              "node_modules/downloadjs/download.js"
             ]
           },
           "configurations": {

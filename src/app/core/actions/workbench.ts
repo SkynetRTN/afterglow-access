@@ -35,6 +35,7 @@ export const SET_PLOTTER_SYNC_ENABLED = '[Workbench] Set Plotter Sync Enabled';
 export const SYNC_FILE_TRANSFORMATIONS = '[Workbench] Sync File Transformations';
 export const SYNC_FILE_NORMALIZATIONS= '[Workbench] Sync File Normalizations';
 export const SYNC_FILE_PLOTTERS = '[Workbench] Sync File Plotters';
+export const SET_PLOT_MODE = '[Workbench] Set Plot Mode';
 
 export const SET_ACTIVE_TOOL = '[Workbench] Set Active Tool';
 export const SET_SHOW_ALL_SOURCES = '[Workbench] Set Show All Sources';
@@ -191,6 +192,12 @@ export class SyncFilePlotters implements Action {
   readonly type = SYNC_FILE_PLOTTERS;
 
   constructor(public payload: { reference: ImageFile,  files: ImageFile[]}) { }
+}
+
+export class SetPlotMode implements Action {
+  readonly type = SET_PLOT_MODE;
+
+  constructor(public payload: {mode: '1D' | '2D' | '3D'}) { }
 }
 
 export class SetActiveTool implements Action {
@@ -402,6 +409,7 @@ export type Actions =
   | SyncFileTransformations
   | SyncFileNormalizations
   | SyncFilePlotters
+  | SetPlotMode
   | SetActiveTool
   | SetShowAllSources
   | SetSidebarView

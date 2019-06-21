@@ -11,17 +11,18 @@ import {
 import { Subject } from "rxjs";
 import { debounceTime } from "rxjs/operators";
 
-declare let d3, nv: any;
-import * as SVG from "svgjs";
-import { Point } from "paper";
+import * as d3 from "d3"
 
 import {
   ImageFile,
   getPixel,
   getHasWcs,
-  getWcs
+  getWcs,
+  getPixels
 } from "../../../data-files/models/data-file";
-import { NvD3Component } from "ng2-nvd3";
+import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
+import * as Plotly from 'plotly.js/dist/plotly.js';
+// import { NvD3Component } from "ng2-nvd3";
 
 @Component({
   selector: "app-plotter",
@@ -31,6 +32,8 @@ import { NvD3Component } from "ng2-nvd3";
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   imageFile: ImageFile;
+  @Input()
+  mode: '1D' | '2D' | '3D';
   @Input()
   width: number = 200;
   @Input()
@@ -42,52 +45,85 @@ export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   interpolatePixels: boolean;
 
-  @ViewChild(NvD3Component)
-  nvD3: NvD3Component;
+  // @ViewChild(NvD3Component)
+  // nvD3: NvD3Component;
 
   private currentSeparation = null;
   private currentSeparationScaled = null;
   private currentSeparationScaledUnits = null;
   private crosshairX: number = null;
   private crosshairY: number = null;
-  chartOptions: any;
-  chartData: any = [];
+  
+  public data : Array<Plotly.Data> = [];
+  public layout: Partial<Plotly.Layout> = {
+    width: null,
+    height: null,
+    xaxis: {
+      type: 'linear',
+      autorange: true,
+
+    },
+    yaxis: {
+      type: 'linear',
+      autorange: true,
+    },
+    margin: {
+      l: 50,
+      r: 50,
+      b: 50,
+      t: 50
+    },
+    
+  };
+  public theme: PlotlyTheme;
+
+  public config: Partial<Plotly.Config> = {
+    scrollZoom: true
+  };
+
+
   private chartDebouncer$: Subject<null> = new Subject();
 
-  constructor(private cd: ChangeDetectorRef) {}
-
-  updateChartOptions() {
-    this.chartOptions = {
-      chart: {
-        type: "lineChart",
-        focusEnable: false,
-        height: this.height,
-        width: this.width,
-        showLegend: false,
-        x: function(d) {
-          return d.t;
-        },
-        y: function(d) {
-          return d.v;
-        },
-        useInteractiveGuideline: true,
-        isArea: true,
-        yAxis: {
-          //tickValues: [],
-          showMaxMin: false
-        },
-        xAxis: {
-          //tickValues: [],
-          showMaxMin: false
-        },
-        xScale: d3.scale.linear(),
-        yScale: d3.scale.linear(),
-        focusShowAxisX: false,
-        noData: "Cross-section not available",
-        callback: this.onChartCreation.bind(this)
-      }
-    };
+  constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef) {
+    this.theme = themeStorage.getCurrentTheme().plotlyTheme;
+    themeStorage.onThemeUpdate.subscribe(theme => {
+      this.theme = theme.plotlyTheme;
+      this.cd.detectChanges();
+    });
   }
+
+  // updateChartOptions() {
+  //   this.chartOptions = {
+  //     chart: {
+  //       type: "lineChart",
+  //       focusEnable: false,
+  //       height: this.height,
+  //       width: this.width,
+  //       showLegend: false,
+  //       x: function(d) {
+  //         return d.t;
+  //       },
+  //       y: function(d) {
+  //         return d.v;
+  //       },
+  //       useInteractiveGuideline: true,
+  //       isArea: true,
+  //       yAxis: {
+  //         //tickValues: [],
+  //         showMaxMin: false
+  //       },
+  //       xAxis: {
+  //         //tickValues: [],
+  //         showMaxMin: false
+  //       },
+  //       xScale: d3.scale.linear(),
+  //       yScale: d3.scale.linear(),
+  //       focusShowAxisX: false,
+  //       noData: "Cross-section not available",
+  //       callback: this.onChartCreation.bind(this)
+  //     }
+  //   };
+  // }
 
   ngOnInit() {
     let self = this;
@@ -96,7 +132,7 @@ export class PlotterComponent implements OnInit, OnChanges {
       this.updateChart();
     });
 
-    this.updateChartOptions();
+    // this.updateChartOptions();
 
     this.chartDebouncer$.next();
   }
@@ -104,103 +140,150 @@ export class PlotterComponent implements OnInit, OnChanges {
   ngOnChanges() {
     this.updateLineView();
     this.chartDebouncer$.next();
-    this.updateChartOptions();
+    if(this.layout.width != this.width) this.layout.width = this.width;
+    if(this.layout.height != this.height) this.layout.height = this.height;
+    // this.updateChartOptions();
   }
 
   public getData() {
-    return this.chartData.length == 0 ? null : this.chartData[0];
+    return this.data.length == 0 ? null : this.data[0];
   }
 
   private onChartCreation() {
-    let self = this;
+    // let self = this;
 
-    let onChartMouseMove = xy => {
-      if (this.lineMeasureStart && this.lineMeasureEnd) {
-        let xScale = self.nvD3.chart.xAxis.scale();
-        let yScale = self.nvD3.chart.yAxis.scale();
-        let t = xScale.invert(xy[0]);
-        //let y = yScale.invert(xy[1]);
+    // let onChartMouseMove = xy => {
+    //   if (this.lineMeasureStart && this.lineMeasureEnd) {
+    //     let xScale = self.nvD3.chart.xAxis.scale();
+    //     let yScale = self.nvD3.chart.yAxis.scale();
+    //     let t = xScale.invert(xy[0]);
+    //     //let y = yScale.invert(xy[1]);
 
-        let start = self.lineMeasureStart;
-        let end = self.lineMeasureEnd;
-        let v = { x: end.x - start.x, y: end.y - start.y };
-        let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
-        let vUnit = { x: v.x / vLength, y: v.y / vLength };
+    //     let start = self.lineMeasureStart;
+    //     let end = self.lineMeasureEnd;
+    //     let v = { x: end.x - start.x, y: end.y - start.y };
+    //     let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+    //     let vUnit = { x: v.x / vLength, y: v.y / vLength };
 
-        //console.log(vUnit.x*t + start.x, vUnit.y*t + start.y);
-        self.crosshairX = vUnit.x * t + start.x;
-        self.crosshairY = vUnit.y * t + start.y;
-        self.updateLineView();
-        //self.nvD3.chart.xAxis.scale().invert(d3.event.offsetX), self.nvD3.chart.yAxis.scale().invert(d3.event.offsetY)
-        //console.log('mouse over', e.mouseX, self.nvD3.chart.xAxis.scale().invert(e.mouseX));
-      }
-    };
+    //     //console.log(vUnit.x*t + start.x, vUnit.y*t + start.y);
+    //     self.crosshairX = vUnit.x * t + start.x;
+    //     self.crosshairY = vUnit.y * t + start.y;
+    //     self.updateLineView();
+    //     //self.nvD3.chart.xAxis.scale().invert(d3.event.offsetX), self.nvD3.chart.yAxis.scale().invert(d3.event.offsetY)
+    //     //console.log('mouse over', e.mouseX, self.nvD3.chart.xAxis.scale().invert(e.mouseX));
+    //   }
+    // };
 
-    let onChartMouseOut = () => {
-      self.crosshairX = null;
-      self.crosshairY = null;
-      self.updateLineView();
-    };
+    // let onChartMouseOut = () => {
+    //   self.crosshairX = null;
+    //   self.crosshairY = null;
+    //   self.updateLineView();
+    // };
 
-    if (this.nvD3.svg) {
-      this.nvD3.svg.select(".nv-linesWrap").on("mousemove.lines", function(e) {
-        onChartMouseMove(d3.mouse(this));
-      });
-      this.nvD3.svg
-        .select(".nv-background")
-        .on("mousemove.background", function(e) {
-          onChartMouseMove(d3.mouse(this));
-        });
-      this.nvD3.svg
-        .select(".nv-lineChart")
-        .on("mouseout.linechart", function(e) {
-          onChartMouseOut();
-        });
-    }
+    // if (this.nvD3.svg) {
+    //   this.nvD3.svg.select(".nv-linesWrap").on("mousemove.lines", function(e) {
+    //     onChartMouseMove(d3.mouse(this));
+    //   });
+    //   this.nvD3.svg
+    //     .select(".nv-background")
+    //     .on("mousemove.background", function(e) {
+    //       onChartMouseMove(d3.mouse(this));
+    //     });
+    //   this.nvD3.svg
+    //     .select(".nv-lineChart")
+    //     .on("mouseout.linechart", function(e) {
+    //       onChartMouseOut();
+    //     });
+    // }
   }
 
   private updateChart() {
     if (!this.imageFile || !this.lineMeasureStart || !this.lineMeasureEnd) {
-      this.chartData = [];
+      this.data = [];
       return;
     }
 
     let start = this.lineMeasureStart;
     let end = this.lineMeasureEnd;
-    let v = { x: end.x - start.x, y: end.y - start.y };
-    let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
-
-    if (vLength == 0) {
-      this.chartData = [];
-      return;
-    }
-
-    let vUnit = { x: v.x / vLength, y: v.y / vLength };
-
-    let numPoints = 256;
-    let spacing = vLength / numPoints;
-    let result = new Array(numPoints);
-    for (let i = 0; i < numPoints; i++) {
-      let t = d3.round(i * spacing, 1);
-      let x = d3.round(start.x + vUnit.x * t, 2);
-      let y = d3.round(start.y + vUnit.y * t, 2);
-      result[i] = {
-        x: x,
-        y: y,
-        t: t,
-        v: d3.round(getPixel(this.imageFile, x, y, this.interpolatePixels), 2),
-        x0: x,
-        y0: y
-      };
-    }
-
-    this.chartData = [
-      {
-        values: result,
-        key: "cross-section",
-        color: "rgb(44, 44, 160)"
+    
+    if(this.mode == '1D') {
+      let v = { x: end.x - start.x, y: end.y - start.y };
+      let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+  
+      if (vLength == 0) {
+        this.data = [];
+        return;
       }
-    ];
+  
+      let vUnit = { x: v.x / vLength, y: v.y / vLength };
+  
+      let numPoints = 256;
+      let spacing = vLength / numPoints;
+      let result = new Array(numPoints);
+      let xs = new Array(numPoints);
+      let ys = new Array(numPoints);
+      let ts = new Array(numPoints);
+      let vs = new Array(numPoints);
+  
+      for (let i = 0; i < numPoints; i++) {
+        let t = i * spacing;
+        let x = start.x + vUnit.x * t;
+        let y = start.y + vUnit.y * t;
+  
+        xs[i] = x;
+        ys[i] = y;
+        ts[i] = t;
+        vs[i] = getPixel(this.imageFile, x, y, this.interpolatePixels)
+  
+        // result[i] = {
+        //   x: x,
+        //   y: y,
+        //   t: t,
+        //   v: getPixel(this.imageFile, x, y, this.interpolatePixels),
+        //   x0: x,
+        //   y0: y
+        // };
+      }
+  
+      this.data = [
+        {
+          x: ts,
+          y: vs,
+          fill: "tozeroy",
+          type: "scatter",
+          mode: "none"
+        }
+      ];
+    }
+    else if(this.mode == '3D' || this.mode == '2D') {
+      let x = Math.floor(Math.min(start.x, end.x));
+      let y = Math.floor(Math.min(start.y, end.y));
+      let width = Math.floor(Math.abs(start.x - end.x));
+      let height = Math.floor(Math.abs(start.y - end.y));
+
+      if(width != 0 && height != 0) {
+        console.log(x, y, width, height);
+        this.data = [
+          {
+            z: getPixels(this.imageFile, x, y, width, height),
+            type: this.mode == '3D' ? 'surface' : 'heatmap'
+          }
+        ];
+      }
+
+      
+    }
+    
+    
+    
+
+    // this.data = [
+    //   {
+    //     values: result,
+    //     key: "cross-section",
+    //     color: "rgb(44, 44, 160)"
+    //   }
+    // ];
     this.cd.detectChanges();
   }
 

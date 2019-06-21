@@ -5,10 +5,6 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { FormsModule } from '@angular/forms';
 
-import { NvD3Module } from 'ng2-nvd3';
-import 'd3';
-import 'nvd3';
-
 //Angular Material
 import { MaterialModule } from '../material';
 
@@ -26,7 +22,6 @@ import { JobService } from './services/jobs';
     FormsModule,
     MaterialModule,
     PipesModule,
-    NvD3Module,
     SvgModule,
 
 

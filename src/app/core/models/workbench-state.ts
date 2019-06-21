@@ -63,6 +63,7 @@ export interface WorkbenchState {
   viewerSyncEnabled: boolean;
   normalizationSyncEnabled: boolean;
   plotterSyncEnabled: boolean;
+  plotterMode: '1D' | '2D' | '3D';
   sidebarView: SidebarView
   showSidebar: boolean;
   showConfig: boolean;

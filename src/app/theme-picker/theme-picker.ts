@@ -28,36 +28,21 @@ import {ActivatedRoute} from '@angular/router';
 })
 export class ThemePicker implements OnInit, OnDestroy {
   currentTheme: AfterglowTheme;
-
-  themes: AfterglowTheme[] = [
-    {
-      name: 'indigo-light-theme',
-      displayName: 'Indigo Light',
-      primaryIconColor: '#3949AB',
-      secondaryIconColor: '#FFFFFF',
-    },
-    {
-      name: 'cyan-dark-theme',
-      displayName: 'Cyan Dark',
-      primaryIconColor: '#00BCD4',
-      secondaryIconColor: '#616161',
-    },
-    {
-      name: 'high-contrast-theme',
-      displayName: 'High Contrast',
-      primaryIconColor: '#ffeb3b',
-      secondaryIconColor: '#303030',
-    }
-    
-  ];
+  availableThemes: AfterglowTheme[];
+  
 
   constructor(
-    private _themeStorage: ThemeStorage,
+    private themeStorage: ThemeStorage,
     private _activatedRoute: ActivatedRoute) {
+      this.availableThemes = themeStorage.themes;
+      this.currentTheme = themeStorage.getCurrentTheme();
+      themeStorage.onThemeUpdate.subscribe(theme => {
+        this.currentTheme = theme;
+      });
   }
 
   installTheme(theme: AfterglowTheme) {
-    this._themeStorage.storeTheme(theme);
+    this.themeStorage.storeTheme(theme);
   }
 
   ngOnInit() {

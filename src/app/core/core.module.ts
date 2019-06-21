@@ -18,9 +18,9 @@ import { VgControlsModule } from 'videogular2/controls';
 import { VgOverlayPlayModule } from 'videogular2/overlay-play';
 import { VgBufferingModule } from 'videogular2/buffering';
 
-import { NvD3Module } from 'ng2-nvd3';
-import 'd3';
-import 'nvd3';
+// import { NvD3Module } from 'ng2-nvd3';
+// import 'd3';
+// import 'nvd3';
 
 import { LibModule }  from '../lib/lib.module';
 import { PipesModule } from '../pipes/pipes.module';
@@ -85,6 +85,7 @@ import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { ThemePickerModule } from '../theme-picker';
 import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { WorkbenchGuard } from './services/workbench-guard.service';
+import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -145,13 +146,14 @@ export const COMPONENTS = [
     VgControlsModule,
     VgOverlayPlayModule,
     VgBufferingModule,
-    NvD3Module,
+    // NvD3Module,
     PapaParseModule,
     // TourMatMenuModule,
     TourNgxPopperModule,
     NgxPopperModule,
     FlexLayoutModule,
     ThemePickerModule,
+    AfterglowPlotlyModule,
 
     /**
      * StoreModule.forFeature is used for composing state

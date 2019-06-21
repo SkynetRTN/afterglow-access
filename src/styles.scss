@@ -106,6 +106,37 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
   }
 }
 
+.big-font {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-size: 1.25em;
+  }
+  .mat-slide-toggle {
+    line-height: normal;
+  }
+}
+
+.bigger-font {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-size: 1.5em;
+  }
+  .mat-slide-toggle {
+    line-height: normal;
+  }
+}
+
+
+.bold-font {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-weight: bold;
+  }
+}
+
+.bolder-font {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-weight: bolder;
+  }
+}
+
 
 $fa-font-path:"~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
