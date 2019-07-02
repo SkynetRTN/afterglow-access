@@ -9,10 +9,6 @@ import { FormsModule } from '@angular/forms';
 // import 'd3';
 // import 'nvd3';
 
-import * as PlotlyJS from 'plotly.js/dist/plotly.js';
-import { PlotlyModule } from 'angular-plotly.js';
-PlotlyModule.plotlyjs = PlotlyJS;
-
 //Angular Material
 import { MaterialModule } from '../material';
 
@@ -34,7 +30,6 @@ import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.modu
     PipesModule,
     // NvD3Module,
     SvgModule,
-    PlotlyModule,
     AfterglowPlotlyModule,
 
 

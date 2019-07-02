@@ -17,7 +17,7 @@ import {
   getPixels
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
-import * as Plotly from 'plotly.js/dist/plotly.js';
+import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({

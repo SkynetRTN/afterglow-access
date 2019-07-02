@@ -12,14 +12,10 @@ import {
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
 
-import * as shape from "d3-shape";
-import * as d3 from "d3";
-
 import { ImageHist, getBinCenter } from "../../models/image-hist";
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
-import * as Plotly from 'plotly.js/dist/plotly.js';
-
+import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
 
 @Component({
   selector: "app-image-hist-chart",
