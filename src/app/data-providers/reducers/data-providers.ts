@@ -4,7 +4,6 @@ import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 
 import * as dataProviderActions from '../actions/data-provider';
-import { select } from 'd3';
 
 export interface State {
   dataProvidersLoaded: boolean;

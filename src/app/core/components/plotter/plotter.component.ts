@@ -11,8 +11,6 @@ import {
 import { Subject } from "rxjs";
 import { debounceTime } from "rxjs/operators";
 
-import * as d3 from "d3"
-
 import {
   ImageFile,
   getPixel,
