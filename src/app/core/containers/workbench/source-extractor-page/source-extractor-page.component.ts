@@ -8,7 +8,7 @@ import {
   Input
 } from "@angular/core";
 
-import * as moment_ from 'moment';
+import * as moment_ from "moment";
 const moment = moment_;
 
 import { MatCheckboxChange } from "@angular/material/checkbox";
@@ -71,9 +71,9 @@ import { JobType } from "../../../../jobs/models/job-types";
 import { Astrometry } from "../../../../jobs/models/astrometry";
 import { SourceId } from "../../../../jobs/models/source-id";
 import { Papa } from "ngx-papaparse";
-import { datetimeToJd, jdToMjd } from '../../../../lib/skynet-astro';
-import { DecimalPipe, DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { datetimeToJd, jdToMjd } from "../../../../lib/skynet-astro";
+import { DecimalPipe, DatePipe } from "@angular/common";
+import { Router } from "@angular/router";
 
 export class SourcesDataSource implements DataSource<Source> {
   sources$: Observable<Source[]>;
@@ -117,8 +117,8 @@ export class SourceExtractorPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-    inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<"file" | "viewer" | "tool">;
   selectedSourceActionError: string = null;
   selectedSources$: Observable<Source[]>;
   selectedSources: Array<Source> = [];
@@ -169,10 +169,15 @@ export class SourceExtractorPageComponent
     private dmsPipe: DmsPipe,
     private papa: Papa,
     private decimalPipe: DecimalPipe,
-    private datePipe: DatePipe, router: Router
+    private datePipe: DatePipe,
+    router: Router
   ) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+    this.fullScreenPanel$ = this.store.select(
+      fromCore.workbench.getFullScreenPanel
+    );
+    this.inFullScreenMode$ = this.store.select(
+      fromCore.workbench.getInFullScreenMode
+    );
     this.dataSource = new SourcesDataSource(store);
 
     this.selectedSources$ = store.select(fromCore.getSelectedSources);
@@ -280,8 +285,8 @@ export class SourceExtractorPageComponent
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
-    )
+      new workbenchActions.SetLastRouterPath({ path: router.url })
+    );
   }
 
   ngOnInit() {
@@ -660,19 +665,40 @@ export class SourceExtractorPageComponent
   }
 
   downloadPhotometry(row: { job: PhotometryJob; result: PhotometryJobResult }) {
-    let data = this.papa.unparse(row.result.data.map(d => {
-      let time = d.time ? moment.utc(d.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
-      let pmEpoch = d.pm_epoch ? moment.utc(d.pm_epoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
-      // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
-      let jd = time ? datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()) : null
-      return {
-        ...d,
-        time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
-        pm_epoch: pmEpoch ? this.datePipe.transform(pmEpoch, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
-        jd: jd,
-        mjd: jd ? jdToMjd(jd) : null
-      }
-    }));
+    let data = this.papa.unparse(
+      row.result.data
+        .map(d => {
+          let time = d.time
+            ? moment.utc(d.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate()
+            : null;
+          let pmEpoch = d.pm_epoch
+            ? moment.utc(d.pm_epoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate()
+            : null;
+          // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
+          let jd = time
+            ? datetimeToJd(
+                time.getUTCFullYear(),
+                time.getUTCMonth() + 1,
+                time.getUTCDate(),
+                time.getUTCHours(),
+                time.getUTCMinutes(),
+                time.getUTCSeconds()
+              )
+            : null;
+          return {
+            ...d,
+            time: time
+              ? this.datePipe.transform(time, "yyyy-MM-dd HH:mm:ss.SSS")
+              : null,
+            pm_epoch: pmEpoch
+              ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS")
+              : null,
+            jd: jd,
+            mjd: jd ? jdToMjd(jd) : null
+          };
+        })
+        // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
+    );
     var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
     saveAs(blob, `afterglow_photometry_${row.job.id}.csv`);
   }

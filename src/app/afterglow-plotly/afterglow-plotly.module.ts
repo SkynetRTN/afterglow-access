@@ -1,21 +1,18 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PlotComponent } from './plot/plot.component';
+import { AfterglowPlotComponent } from './plot/afterglow-plot.component';
 
-// import * as PlotlyJS from 'plotly.js/dist/plotly.js';
-// import { PlotlyModule } from 'angular-plotly.js';
 import { PlotlyViaWindowModule } from 'angular-plotly.js';
 
-// PlotlyModule.plotlyjs = PlotlyJS;
-
 @NgModule({
-  declarations: [PlotComponent],
+  declarations: [AfterglowPlotComponent],
   imports: [
     CommonModule,
     PlotlyViaWindowModule
   ],
   exports: [
-    PlotComponent
+    AfterglowPlotComponent,
+    PlotlyViaWindowModule
   ]
 })
 export class AfterglowPlotlyModule { }

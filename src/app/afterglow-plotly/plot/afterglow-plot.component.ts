@@ -1,14 +1,16 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, ChangeDetectorRef, IterableDiffers, KeyValueDiffers } from '@angular/core';
-import { PlotComponent as AngularPlotlyPlotComponent, PlotlyService } from 'angular-plotly.js';
+// import { PlotComponent as AngularPlotlyPlotComponent, PlotlyService } from 'angular-plotly.js';
 import { PlotlyTheme } from '../../theme-picker/theme-storage/theme-storage';
 import * as deepmerge from 'deepmerge'
+import { PlotlyService, PlotComponent } from 'angular-plotly.js';
 
 @Component({
   selector: 'afterglow-plot',
   template: `<div #plot [attr.id]="divId" [className]="getClassName()" [ngStyle]="style"></div>`,
   providers: [PlotlyService],
 })
-export class PlotComponent extends AngularPlotlyPlotComponent implements OnChanges {
+export class AfterglowPlotComponent extends PlotComponent implements OnChanges {
+
 
   @Input() theme?: PlotlyTheme;
 
