@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, ChangeDetectorRef, IterableDiffers, KeyValueDiffers } from '@angular/core';
 import { PlotComponent as AngularPlotlyPlotComponent, PlotlyService } from 'angular-plotly.js';
 import { PlotlyTheme } from '../../theme-picker/theme-storage/theme-storage';
-import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
 import * as deepmerge from 'deepmerge'
 
 @Component({
