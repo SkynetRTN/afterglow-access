@@ -17,7 +17,7 @@ import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hot
 // import { TourService } from 'ngx-tour-md-menu';
 import { TourService } from 'ngx-tour-ngx-popper';
 import { TourDialogComponent } from '../../components/tour-dialog/tour-dialog.component';
-import { MatDialogRef, MatDialog } from '@angular/material';
+import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 
 
 
@@ -160,7 +160,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       let dialogRef = this.dialog.open(TourDialogComponent);
 
       dialogRef.afterClosed().subscribe(result => {
-        console.log('The dialog was closed', result);
+        // console.log('The dialog was closed', result);
         if(result) this.tourService.start();
       });
       

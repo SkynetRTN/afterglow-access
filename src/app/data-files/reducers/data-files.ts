@@ -14,6 +14,7 @@ import { DataFileType } from '../models/data-file-type';
 import * as dataFileActions from '../actions/data-file';
 import * as imageFileActions from '../actions/image-file';
 import * as authActions from '../../auth/actions/auth';
+import { Wcs } from '../../image-tools/wcs';
 
 let MARKER_ID = 0;
 
@@ -111,12 +112,25 @@ export function reducer(
       };
     }
     case dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS: {
+      let result: { [key: string]: any } = {};
+      action.payload.header.forEach(entry => {
+        result[entry.key] = entry.value;
+      });
+      // if('PC1_1' in result && 'CD1_1' in result) {
+      //   delete result['CD1_1'];
+      //   delete result['CD1_2'];
+      //   delete result['CD2_1'];
+      //   delete result['CD2_2'];
+      //   console.log('deleted cd');
+      // }
+      // console.log(result);
       return {
         ...adapter.updateOne({
           'id': action.payload.fileId, 'changes': {
             header: action.payload.header,
             headerLoaded: true,
-            headerLoading: false
+            headerLoading: false,
+            wcs: new Wcs(result)
           }
         }, state),
       };

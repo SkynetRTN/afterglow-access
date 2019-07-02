@@ -12,6 +12,7 @@ export interface IDataFile {
   id: string;
   name: string;
   header: Header;
+  wcs: Wcs;
   headerLoaded: boolean;
   headerLoading: boolean;
   layer: string;
@@ -230,14 +231,14 @@ export function findTiles(imageFile: ImageFile, x: number, y: number, width: num
   return result;
 }
 
-export function getWcs(imageFile: ImageFile) {
-  return new Wcs(toKeyValueHash(imageFile));
-}
+// export function getWcs(imageFile: ImageFile) {
+//   return new Wcs(toKeyValueHash(imageFile));
+// }
 
-export function getHasWcs(imageFile: ImageFile) {
-  let wcs = new Wcs(toKeyValueHash(imageFile));
-  return wcs.hasWcs();
-}
+// export function getHasWcs(imageFile: ImageFile) {
+//   let wcs = new Wcs(toKeyValueHash(imageFile));
+//   return wcs.hasWcs();
+// }
 
 export function getDegsPerPixel(imageFile: ImageFile) {
   let secpix = getEntry(imageFile, 'SECPIX');
@@ -324,17 +325,18 @@ export function getFilter(imageFile: ImageFile) {
   return undefined;
 }
 
-export function hasOverlap(imageFile1: ImageFile, imageFile2: ImageFile) {
-  if(!imageFile1.headerLoaded || !imageFile2.headerLoaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
+export function hasOverlap(imageFileA: ImageFile, imageFileB: ImageFile) {
+  // if(!imageFile1.headerLoaded || !imageFile2.headerLoaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
+  if(!imageFileA.headerLoaded || !imageFileB.headerLoaded || !imageFileA.wcs || !imageFileB.wcs) return false;
 
-  let wcsA = getWcs(imageFile1);
+  let wcsA = imageFileA.wcs;
   let worldLowerLeft = wcsA.pixToWorld([0, 0]);
-  let worldUpperRight = wcsA.pixToWorld([getWidth(imageFile1), getHeight(imageFile1)]);
-  let wcsB = getWcs(imageFile2);
+  let worldUpperRight = wcsA.pixToWorld([getWidth(imageFileA), getHeight(imageFileA)]);
+  let wcsB = imageFileB.wcs;
   let pixelLowerLeft = wcsB.worldToPix(worldLowerLeft);
   let pixelUpperRight = wcsB.worldToPix(worldUpperRight);
   let regionA = { x1: Math.min(pixelLowerLeft[0], pixelUpperRight[0]), y1: Math.max(pixelLowerLeft[1], pixelUpperRight[1]), x2: Math.max(pixelLowerLeft[0], pixelUpperRight[0]), y2: Math.min(pixelLowerLeft[1], pixelUpperRight[1]) };
-  let regionB = { x1: 0, y1: getHeight(imageFile2), x2: getWidth(imageFile2), y2: 0 };
+  let regionB = { x1: 0, y1: getHeight(imageFileB), x2: getWidth(imageFileB), y2: 0 };
   let overlap = (regionA.x1 < regionB.x2 && regionA.x2 > regionB.x1 && regionA.y1 > regionB.y2 && regionA.y2 < regionB.y1);
   return overlap;
 }

@@ -7,13 +7,11 @@ import {
   OnDestroy,
 } from '@angular/core';
 import {ThemeStorage, AfterglowTheme} from './theme-storage/theme-storage';
-import {
-  MatButtonModule,
-  MatGridListModule,
-  MatIconModule,
-  MatMenuModule,
-  MatTooltipModule,
-} from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute} from '@angular/router';
 

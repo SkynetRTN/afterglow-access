@@ -8,7 +8,11 @@ import {
   Input
 } from "@angular/core";
 
-import { MatDialog, MatCheckboxChange } from "@angular/material";
+import * as moment_ from 'moment';
+const moment = moment_;
+
+import { MatCheckboxChange } from "@angular/material/checkbox";
+import { MatDialog } from "@angular/material/dialog";
 // import {
 //   ITdDataTableSelectEvent,
 //   ITdDataTableSelectAllEvent
@@ -36,8 +40,6 @@ import * as sourceActions from "../../../actions/source";
 
 import {
   ImageFile,
-  getWcs,
-  getHasWcs,
   getCenterTime
 } from "../../../../data-files/models/data-file";
 import { DmsPipe } from "../../../../pipes/dms.pipe";
@@ -448,8 +450,8 @@ export class SourceExtractorPageComponent
           primaryCoord = result.x;
           secondaryCoord = result.y;
         }
-        if (getHasWcs(this.activeImageFile)) {
-          let wcs = getWcs(this.activeImageFile);
+        if (this.activeImageFile.wcs.isValid()) {
+          let wcs = this.activeImageFile.wcs;
           let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
           primaryCoord = raDec[0];
           secondaryCoord = raDec[1];
@@ -659,9 +661,10 @@ export class SourceExtractorPageComponent
 
   downloadPhotometry(row: { job: PhotometryJob; result: PhotometryJobResult }) {
     let data = this.papa.unparse(row.result.data.map(d => {
-      let time = d.time ? new Date(d.time) : null;
-      let pmEpoch = d.pm_epoch ? new Date(d.pm_epoch) : null;
-      let jd = time ? datetimeToJd(time.getUTCFullYear(), time.getUTCMonth(), time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()) : null
+      let time = d.time ? moment.utc(d.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+      let pmEpoch = d.pm_epoch ? moment.utc(d.pm_epoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+      // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
+      let jd = time ? datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()) : null
       return {
         ...d,
         time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,

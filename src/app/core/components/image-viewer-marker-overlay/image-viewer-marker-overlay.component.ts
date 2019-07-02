@@ -26,9 +26,9 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   @Output() onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
-  @ViewChild('svgGroup') svgGroup: ElementRef;
-  @ViewChild('svgTextGroup') svgTextGroup: ElementRef;
-  @ViewChild('svgElementRef') svgElementRef: ElementRef;
+  @ViewChild('svgGroup', { static: true }) svgGroup: ElementRef;
+  @ViewChild('svgTextGroup', { static: false }) svgTextGroup: ElementRef;
+  @ViewChild('svgElementRef', { static: true }) svgElementRef: ElementRef;
 
   private lastTransform: Matrix;
 
@@ -76,7 +76,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
     
     
     let labelTheta = m.labelTheta;
-    console.log(labelTheta, mirrored, flipped, rotation);
+    // console.log(labelTheta, mirrored, flipped, rotation);
     
 
     if(mirrored) {

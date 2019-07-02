@@ -100,9 +100,9 @@
       </div>
 
       <div *ngIf="imageFile$ | async">
-          <div class="pr-3 pl-3">
+          <div class="pr-3 pl-3 pb-0">
               <app-image-hist-chart
-              [width]="450"
+              [width]="440"
               [height]="250"
               [hist]="(imageFile$ | async)?.hist"
               [backgroundLevel]="
@@ -117,7 +117,7 @@
           </div>
           
 
-        <div class="pb-4 pt-4">
+        <div class="pb-4 pt-1">
           <app-normalizer-form
             [normalizer]="(normalization$ | async).normalizer"
             (onBackgroundLevelChange)="onBackgroundLevelChange($event)"

@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpModule } from '@angular/http';
 import { RouterModule } from '@angular/router';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
@@ -21,7 +20,6 @@ export const COMPONENTS = [
   imports: [
     RouterModule,
     CommonModule,
-    HttpModule,
     FormsModule,
     MaterialModule,
   ],

@@ -8,7 +8,7 @@ import { Point, Rectangle } from "paper";
 import * as SVG from 'svgjs'
 import * as normalizeWheel from 'normalize-wheel';
 
-import { ImageFile, getWidth, getHeight, findTiles, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
+import { ImageFile, getWidth, getHeight, findTiles } from '../../../data-files/models/data-file';
 import { Normalization } from '../../models/normalization';
 import { Transformation, getViewportRegion } from '../../models/transformation';
 import { Marker, RectangleMarker, CircleMarker, LineMarker, MarkerType } from '../../models/marker';

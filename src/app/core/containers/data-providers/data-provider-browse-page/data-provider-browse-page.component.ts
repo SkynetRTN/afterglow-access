@@ -7,7 +7,7 @@ import {
 } from "@angular/core";
 import { ActivatedRoute, Params, Router } from "@angular/router";
 import { Location } from "@angular/common";
-import { MatSort } from "@angular/material";
+import { MatSort } from "@angular/material/sort";
 import { SelectionModel } from "@angular/cdk/collections";
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 
@@ -82,7 +82,7 @@ export class DataProviderBrowsePageComponent
   sort: MatSort;
   sortSub: Subscription;
 
-  @ViewChild(MatSort)
+  @ViewChild(MatSort, { static: false })
   set sortSetter(sort: MatSort) {
     if (!sort) return;
     this.sort = sort;

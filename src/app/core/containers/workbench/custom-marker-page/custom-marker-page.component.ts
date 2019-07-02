@@ -13,7 +13,7 @@ import {
   ViewerGridMarkerMouseEvent
 } from "../workbench-viewer-grid/workbench-viewer-grid.component";
 import { ImageFile } from "../../../../data-files/models/data-file";
-import { CircleMarker, MarkerType } from "../../../models/marker";
+import { CircleMarker, MarkerType, RectangleMarker } from "../../../models/marker";
 import { CustomMarker } from "../../../models/custom-marker";
 import { WorkbenchTool, WorkbenchState } from "../../../models/workbench-state";
 import { centroidPsf, centroidDisk } from "../../../models/centroider";
@@ -110,11 +110,14 @@ export class CustomMarkerPageComponent implements OnInit {
 
   @HostListener("document:keyup", ["$event"])
   keyEvent($event: KeyboardEvent) {
+    // if (
+    //   this.selectedCustomMarkers.length != 0 &&
+    //   $event.srcElement.tagName != "INPUT" &&
+    //   $event.srcElement.tagName != "TEXTAREA"
+    // ) {
     if (
-      this.selectedCustomMarkers.length != 0 &&
-      $event.srcElement.tagName != "INPUT" &&
-      $event.srcElement.tagName != "TEXTAREA"
-    ) {
+        this.selectedCustomMarkers.length != 0
+      ) {
       if ($event.keyCode === DELETE) {
         this.store.dispatch(
           new customMarkerActions.RemoveCustomMarkers({
@@ -172,18 +175,34 @@ export class CustomMarkerPageComponent implements OnInit {
         y = result.y;
       }
 
+      // let customMarker: CustomMarker = {
+      //   id: null,
+      //   fileId: this.activeImageFile.id,
+      //   marker: {
+      //     type: MarkerType.CIRCLE,
+      //     label: `M${this.nextCutomMarkerId}`,
+      //     x: x,
+      //     y: y,
+      //     radius: 10,
+      //     labelGap: 8,
+      //     labelTheta: 0
+      //   } as CircleMarker
+      // };
+
+
       let customMarker: CustomMarker = {
         id: null,
         fileId: this.activeImageFile.id,
         marker: {
-          type: MarkerType.CIRCLE,
+          type: MarkerType.RECTANGLE,
           label: `M${this.nextCutomMarkerId}`,
           x: x,
           y: y,
-          radius: 10,
+          width: 10,
+          height: 10,
           labelGap: 8,
           labelTheta: 0
-        } as CircleMarker
+        } as RectangleMarker
       };
       this.store.dispatch(
         new customMarkerActions.AddCustomMarkers({ markers: [customMarker] })

@@ -11,7 +11,7 @@ import { Observable, Subscription, Subject, BehaviorSubject, combineLatest} from
 import { map, filter, debounceTime, tap } from "rxjs/operators";
 import { Store } from "@ngrx/store";
 
-import { ImageFile, DataFile, Header, getHasWcs, getWidth, getHeight, getDegsPerPixel, getStartTime, getCenterTime, getExpLength, getObject, getTelescope, getFilter } from "../../../../data-files/models/data-file";
+import { ImageFile, DataFile, Header, getWidth, getHeight, getDegsPerPixel, getStartTime, getCenterTime, getExpLength, getObject, getTelescope, getFilter } from "../../../../data-files/models/data-file";
 
 import * as fromCore from "../../../reducers";
 import * as fromRoot from "../../../../reducers";
@@ -27,7 +27,7 @@ import { WorkbenchState, WorkbenchTool } from "../../../models/workbench-state";
 import { environment } from "../../../../../environments/environment.prod";
 import { Viewer } from "../../../models/viewer";
 import { DecimalPipe, DatePipe } from "@angular/common";
-import { MatSlideToggleChange } from "@angular/material";
+import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 import { Router } from '@angular/router';
 
 // import { DataFile, ImageFile } from '../../../models'
@@ -79,7 +79,7 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
       let result: Header = [];
       let width = getWidth(imageFile);
       let height = getHeight(imageFile);
-      let hasWcs = getHasWcs(imageFile);
+      let hasWcs = imageFile.wcs.isValid();
       let degsPerPixel = getDegsPerPixel(imageFile);
       let startTime = getStartTime(imageFile);
       let expLength = getExpLength(imageFile);

@@ -22,7 +22,7 @@ export class WorkbenchGuard implements CanActivate {
   }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    console.log("HERE", this.lastRouterPath, state.url, this.lastRouterPath && state.url != this.lastRouterPath)
+    // console.log("HERE", this.lastRouterPath, state.url, this.lastRouterPath && state.url != this.lastRouterPath)
     if(this.lastRouterPath && state.url != this.lastRouterPath) {
       console.log('navigating...');
       this.router.navigate([this.lastRouterPath]);

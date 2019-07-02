@@ -1,0 +1,8 @@
+.DS_Store
+wcslib.*
+wcslib
+node_modules
+test/data/*.gz
+a.out
+bower_components
+*.fits

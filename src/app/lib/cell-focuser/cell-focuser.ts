@@ -3,10 +3,12 @@ import {
   Inject, ViewChild, Directive, HostListener, ContentChildren, QueryList, ViewChildren, ElementRef,
   Attribute, Input, AfterContentInit, forwardRef, ContentChild, OnChanges, HostBinding
 } from '@angular/core';
-import { DOCUMENT, DomSanitizer, SafeStyle } from '@angular/platform-browser';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Location } from '@angular/common';
-import { MatCheckboxChange, MatTableDataSource, MatSort, Sort, MatCell, MatRow, MatColumnDef, MatHeaderCell, MatTable, MatCheckbox, MatSortHeader } from '@angular/material';
+import { Location, DOCUMENT } from '@angular/common';
+import { MatCheckboxChange, MatCheckbox } from '@angular/material/checkbox';
+import { MatSort, Sort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatCell, MatRow, MatColumnDef, MatHeaderCell, MatTable } from '@angular/material/table';
 import { ENTER, SPACE, UP_ARROW, DOWN_ARROW } from '@angular/cdk/keycodes';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";

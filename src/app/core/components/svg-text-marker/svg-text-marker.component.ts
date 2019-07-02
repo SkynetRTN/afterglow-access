@@ -36,7 +36,7 @@ export class SvgTextMarkerComponent implements OnInit, AfterViewInit, OnChanges,
   @Input()
   showBackground: boolean = true;
 
-  @ViewChild("textSvgElement") textSvgElement: ElementRef;
+  @ViewChild("textSvgElement", { static: true }) textSvgElement: ElementRef;
 
   constructor(private cdr: ChangeDetectorRef) {}
 

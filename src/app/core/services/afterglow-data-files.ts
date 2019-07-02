@@ -34,6 +34,7 @@ function createImageFile(id: string, name: string, layer: string): ImageFile {
     name: name,
     layer: layer,
     header: null,
+    wcs: null,
     headerLoaded: false,
     headerLoading: false,
     tilesInitialized: false,

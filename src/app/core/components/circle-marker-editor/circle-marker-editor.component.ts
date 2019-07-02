@@ -17,7 +17,7 @@ export class CircleMarkerEditorComponent implements OnInit, OnChanges, AfterView
   @Input() marker: CircleMarker;
   @Output() changed = new EventEmitter<any>();
 
-  @ViewChild("labelField") labelField: ElementRef;
+  @ViewChild("labelField", { static: true }) labelField: ElementRef;
   
   form = this.fb.group({
     label: [''],

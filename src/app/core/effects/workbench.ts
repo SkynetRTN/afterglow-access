@@ -20,8 +20,6 @@ import {
   ImageFile,
   getWidth,
   getHeight,
-  getHasWcs,
-  getWcs,
   hasOverlap
 } from "../../data-files/models/data-file";
 import {
@@ -602,7 +600,7 @@ export class WorkbenchEffects {
 
       if (!srcFile) return from(actions);
 
-      let srcHasWcs = getHasWcs(srcFile);
+      let srcHasWcs = srcFile.wcs.isValid();
       let srcImageTransform =
         imageFileStates[srcFile.id].transformation.imageTransform;
       let srcViewportTransform =
@@ -611,26 +609,26 @@ export class WorkbenchEffects {
       targetFiles.forEach(targetFile => {
         if (!targetFile || targetFile.id == srcFile.id) return;
 
-        let targetHasWcs = getHasWcs(targetFile);
+        let targetHasWcs = targetFile.wcs.isValid();
 
         if (srcHasWcs && targetHasWcs) {
-          let srcWcs = getWcs(srcFile);
+          let srcWcs = srcFile.wcs;
           let srcWcsTransform = new Matrix(
-            srcWcs.cd11,
-            srcWcs.cd21,
-            srcWcs.cd12,
-            srcWcs.cd22,
+            srcWcs.m11,
+            srcWcs.m21,
+            srcWcs.m12,
+            srcWcs.m22,
             0,
             0
           );
           let originWorld = srcWcs.pixToWorld([0, 0]);
-          let targetWcs = getWcs(targetFile);
+          let targetWcs = targetFile.wcs;
           let originPixels = targetWcs.worldToPix(originWorld);
           let targetWcsTransform = new Matrix(
-            targetWcs.cd11,
-            targetWcs.cd21,
-            targetWcs.cd12,
-            targetWcs.cd22,
+            targetWcs.m11,
+            targetWcs.m21,
+            targetWcs.m12,
+            targetWcs.m22,
             0,
             0
           );
@@ -777,7 +775,7 @@ export class WorkbenchEffects {
       
       let fieldCal = workbenchState.fieldCals.find(c => c.id == workbenchState.addFieldCalSourcesFromCatalogFieldCalId);
       let result = action.payload.result as CatalogQueryJobResult;
-      console.log("SOURCES:", result.data);
+      // console.log("SOURCES:", result.data);
       fieldCal = {
         ...fieldCal,
         catalogSources: [...fieldCal.catalogSources, ...result.data]

@@ -18,7 +18,6 @@ import { User } from "./auth/models/user";
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 // import { TourService } from "ngx-tour-md-menu";
 import { TourService } from "ngx-tour-ngx-popper";
-import { Renderer3 } from "@angular/core/src/render3/interfaces/renderer";
 import { ThemeStorage } from './theme-picker/theme-storage/theme-storage';
 import { WorkbenchGuard } from './core/services/workbench-guard.service';
 
@@ -70,7 +69,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     // localStorage.setItem("previouslyVisited", "false");
-    this.tourService.events$.subscribe(x => console.log(x));
+    // this.tourService.events$.subscribe(x => console.log(x));
     this.tourService.initialize(
       [
         {
@@ -200,6 +199,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
     this.store.dispatch(new coreActions.Initialize());
+
   }
 
   ngAfterViewInit() {}

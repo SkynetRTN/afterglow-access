@@ -14,7 +14,7 @@ import { environment } from '../../environments/environment';
  * exception will be thrown. This is useful during development mode to
  * ensure that none of the reducers accidentally mutates the state.
  */
-import { storeFreeze } from 'ngrx-store-freeze';
+
 
 /**
  * Every reducer module's default export is the reducer function itself. In

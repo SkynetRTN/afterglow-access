@@ -16,8 +16,6 @@ import * as d3 from "d3"
 import {
   ImageFile,
   getPixel,
-  getHasWcs,
-  getWcs,
   getPixels
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
@@ -262,7 +260,6 @@ export class PlotterComponent implements OnInit, OnChanges {
       let height = Math.floor(Math.abs(start.y - end.y));
 
       if(width != 0 && height != 0) {
-        console.log(x, y, width, height);
         this.data = [
           {
             z: getPixels(this.imageFile, x, y, width, height),
@@ -304,8 +301,8 @@ export class PlotterComponent implements OnInit, OnChanges {
         Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
     );
 
-    if (getHasWcs(this.imageFile)) {
-      let wcs = getWcs(this.imageFile);
+    if (this.imageFile.wcs.isValid()) {
+      let wcs = this.imageFile.wcs;
       let raDec1 = wcs.pixToWorld([
         this.lineMeasureStart.x,
         this.lineMeasureStart.y

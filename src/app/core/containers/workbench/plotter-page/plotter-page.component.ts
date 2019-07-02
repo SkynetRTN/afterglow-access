@@ -16,8 +16,6 @@ import { map, filter, debounceTime, tap, withLatestFrom } from "rxjs/operators";
 
 import {
   ImageFile,
-  getHasWcs,
-  getWcs,
   DataFile
 } from "../../../../data-files/models/data-file";
 import { Normalization } from "../../../models/normalization";
@@ -45,6 +43,7 @@ import { WorkbenchTool } from "../../../models/workbench-state";
 import { centroidDisk, centroidPsf } from "../../../models/centroider";
 import { PosType } from "../../../models/source";
 import { Router } from '@angular/router';
+import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 
 @Component({
   selector: "app-plotter-page",
@@ -58,7 +57,7 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
-  @ViewChild("plotter")
+  @ViewChild("plotter", { static: false })
   plotter: PlotterComponent;
   imageFile$: Observable<ImageFile>;
   imageFileState$: Observable<ImageFileState>;
@@ -107,8 +106,8 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     if (line.posType == PosType.PIXEL) {
       x = line.primaryCoord;
       y = line.secondaryCoord;
-      if (getHasWcs(imageFile)) {
-        let wcs = getWcs(imageFile);
+      if (imageFile.wcs.isValid()) {
+        let wcs = imageFile.wcs;
         let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
         raHours = raDec[0];
         decDegs = raDec[1];
@@ -116,8 +115,8 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       raHours = line.primaryCoord;
       decDegs = line.secondaryCoord;
-      if (getHasWcs(imageFile)) {
-        let wcs = getWcs(imageFile);
+      if (imageFile.wcs.isValid()) {
+        let wcs = imageFile.wcs;
         let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
         x = xy[0];
         y = xy[1];
@@ -129,7 +128,7 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private store: Store<fromRoot.State>, router: Router) {
     this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
     this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    console.log("HERE:", this.fullScreenPanel$, this.inFullScreenMode$);
+    // console.log("HERE:", this.fullScreenPanel$, this.inFullScreenMode$);
     this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
     this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.plotterState$ = this.imageFileState$.pipe(
@@ -284,8 +283,8 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
       let primaryCoord = $event.imageX;
       let secondaryCoord = $event.imageY;
       let posType = PosType.PIXEL;
-      if (getHasWcs(this.latestImageFile)) {
-        let wcs = getWcs(this.latestImageFile);
+      if (this.latestImageFile.wcs.isValid()) {
+        let wcs = this.latestImageFile.wcs;
         let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
         primaryCoord = raDec[0];
         secondaryCoord = raDec[1];
@@ -302,6 +301,9 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
         })
       );
     }
+  }
+
+  onMarkerClick($event: MarkerMouseEvent) {
   }
 
   onImageClick($event: CanvasMouseEvent) {
@@ -326,8 +328,8 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
       let primaryCoord = x;
       let secondaryCoord = y;
       let posType = PosType.PIXEL;
-      if (getHasWcs(this.latestImageFile)) {
-        let wcs = getWcs(this.latestImageFile);
+      if (this.latestImageFile.wcs.isValid()) {
+        let wcs = this.latestImageFile.wcs;
         let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
         primaryCoord = raDec[0];
         secondaryCoord = raDec[1];

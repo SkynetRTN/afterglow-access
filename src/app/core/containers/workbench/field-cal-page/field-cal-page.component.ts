@@ -12,14 +12,14 @@ import {
   map
 } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { ImageFile, getHasWcs } from '../../../../data-files/models/data-file';
+import { ImageFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
 import * as fromRoot from "../../../../reducers";
 import * as fromCore from '../../../reducers';
 import * as workbenchActions from "../../../actions/workbench";
 import { WorkbenchState, WorkbenchTool } from "../../../models/workbench-state";
 import { Catalog } from "../../../models/catalog";
-import { MatDialog } from "@angular/material";
+import { MatDialog } from "@angular/material/dialog";
 import { CreateFieldCalDialogComponent } from "../../../components/create-field-cal-dialog/create-field-cal-dialog.component";
 import { FieldCal } from '../../../models/field-cal';
 import { SelectionModel } from '@angular/cdk/collections';
@@ -75,7 +75,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
     this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
     this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.activeImageHasWcs$ = this.activeImageFile$.pipe(map(imageFile => imageFile != null && getHasWcs(imageFile)));
+    this.activeImageHasWcs$ = this.activeImageFile$.pipe(map(imageFile => imageFile != null && imageFile.wcs.isValid()));
     this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
     this.catalogs$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.catalogs));

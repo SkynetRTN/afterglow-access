@@ -2,7 +2,7 @@ import { Component, OnInit, HostBinding, Input } from '@angular/core';
 import { Observable, combineLatest } from 'rxjs';
 
 import { map, tap } from "rxjs/operators";
-import { ImageFile, getHasWcs } from '../../../../data-files/models/data-file';
+import { ImageFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
 import { Store } from '@ngrx/store';
 
@@ -15,7 +15,7 @@ import * as workbenchActions from '../../../actions/workbench';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { AlignFormData, WorkbenchTool } from '../../../models/workbench-state';
-import { MatSelectChange } from '@angular/material';
+import { MatSelectChange } from '@angular/material/select';
 import { AlignmentJob, AlignmentJobResult } from '../../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 
@@ -96,7 +96,7 @@ export class AlignerPageComponent implements OnInit {
     )
 
     this.activeImageHasWcs$ = this.activeImageFile$.pipe(
-      map(imageFile => imageFile != null && imageFile.headerLoaded && getHasWcs(imageFile))
+      map(imageFile => imageFile != null && imageFile.headerLoaded && imageFile.wcs.isValid())
     )
 
     this.alignmentJobRow$ = combineLatest(store.select(fromCore.getWorkbenchState), store.select(fromJobs.getJobs)).pipe(

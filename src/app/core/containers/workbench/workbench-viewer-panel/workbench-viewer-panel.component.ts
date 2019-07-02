@@ -24,9 +24,7 @@ import * as fromDataFiles from "../../../../data-files/reducers";
 import { Dictionary } from "@ngrx/entity/src/models";
 import {
   DataFile,
-  getHasWcs,
   ImageFile,
-  getWcs,
   getWidth,
   getHeight,
   getDegsPerPixel,
@@ -79,10 +77,10 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Output()
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
-  @ViewChild(PanZoomCanvasComponent)
+  @ViewChild(PanZoomCanvasComponent, { static: true })
   panZoomCanvasComponent: PanZoomCanvasComponent;
 
-  @ViewChild(ImageViewerMarkerOverlayComponent)
+  @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
   markers$: Observable<Marker[]>;
@@ -162,8 +160,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         let y2 = endSecondaryCoord;
 
         if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-          if (!file.headerLoaded || !getHasWcs(file)) return [[]];
-          let wcs = getWcs(file);
+          if (!file.headerLoaded || !file.wcs.isValid()) return [[]];
+          let wcs = file.wcs;
           if (startPosType == PosType.SKY) {
             let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
             x1 = Math.max(Math.min(xy[0], getWidth(file)), 0);
@@ -323,8 +321,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
           let theta = posAngle;
 
           if (source.posType == PosType.SKY) {
-            if (!file.headerLoaded || !getHasWcs(file)) return;
-            let wcs = getWcs(file);
+            if (!file.headerLoaded || !file.wcs.isValid()) return;
+            let wcs = file.wcs;
             let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
             x = xy[0];
             y = xy[1];
@@ -394,7 +392,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         if (fileId === null || fieldCal == null) return [[]];
         let markers: Array<CircleMarker> = [];
         let file = files[fileId] as ImageFile;
-        if (!file || !file.headerLoaded || !getHasWcs(file)) return [[]];
+        if (!file || !file.headerLoaded || !file.wcs.isValid()) return [[]];
 
               
         fieldCal.catalogSources.forEach(source => {
@@ -403,7 +401,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
           // let selected = selectedSources.includes(source);
           let selected = false;
 
-          let wcs = getWcs(file);
+          let wcs = file.wcs;
           let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
           let x = xy[0];
           let y = xy[1];

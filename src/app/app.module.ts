@@ -28,7 +28,6 @@ import { TourMatMenuModule } from 'ngx-tour-md-menu';
 import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
 import {NgxPopperModule} from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
-
 @NgModule({
   imports: [
     CommonModule,
@@ -52,7 +51,9 @@ import { ThemePickerModule } from './theme-picker';
      * meta-reducer. This returns all providers for an @ngrx/store
      * based application.
      */
-    StoreModule.forRoot(reducers, { metaReducers }),
+
+     // Can't enable strict immutability because we hold array buffers in within the state which cannot be frozen
+    StoreModule.forRoot(reducers, { metaReducers, runtimeChecks: { strictStateImmutability: false, strictActionImmutability: false } }),
 
 
     /**
@@ -96,7 +97,7 @@ import { ThemePickerModule } from './theme-picker';
       provide: HTTP_INTERCEPTORS,
       useClass: TokenInterceptor,
       multi: true
-    }
+    },
 
   ],
   bootstrap: [AppComponent],

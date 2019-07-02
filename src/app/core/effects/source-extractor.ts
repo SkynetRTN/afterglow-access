@@ -17,9 +17,7 @@ import {
   ImageFile,
   getWidth,
   getHeight,
-  getCenterTime,
-  getHasWcs,
-  getWcs
+  getCenterTime
 } from "../../data-files/models/data-file";
 import { Source, PosType } from "../models/source";
 import * as dataFileActions from "../../data-files/actions/data-file";

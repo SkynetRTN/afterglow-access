@@ -84,7 +84,7 @@ export class StackerPageComponent implements OnInit {
     this.stackFormData$ = store.select(fromCore.getWorkbenchState).pipe(
       map(state => state.stackFormData),
       tap(data => {
-        console.log("patching values: ", data.selectedImageFileIds)
+        // console.log("patching values: ", data.selectedImageFileIds)
         this.stackForm.patchValue(data, {emitEvent: false});
       })
     );

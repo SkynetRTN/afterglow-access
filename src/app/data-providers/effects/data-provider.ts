@@ -20,7 +20,7 @@ import * as dataFileActions from "../../data-files/actions/data-file";
 import { DataProvider } from "../models/data-provider";
 import { DataProviderAsset } from "../models/data-provider-asset";
 import { AfterglowDataFileService } from "../../core/services/afterglow-data-files";
-import { HttpErrorResponse } from "@angular/common/http/src/response";
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable()
 export class DataProviderEffects {

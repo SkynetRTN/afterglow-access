@@ -25,7 +25,8 @@ import { PixelOpsJob, PixelOpsJobResult } from '../../../../jobs/models/pixel-op
 import { PixelOpsFormData, WorkbenchState, WorkbenchTool } from '../../../models/workbench-state';
 import { Job } from '../../../../jobs/models/job';
 import { JobResult } from '../../../../jobs/models/job-result';
-import { MatDialog, MatTabChangeEvent } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTabChangeEvent } from '@angular/material/tabs';
 import { PixelOpsJobsDialogComponent } from '../../../components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { Router } from '@angular/router';
 
