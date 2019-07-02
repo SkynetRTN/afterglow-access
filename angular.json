@@ -29,7 +29,7 @@
             "scripts": [
               "node_modules/downloadjs/download.js",
               "wasm/wcsjs/wcs.js",
-              "src/app/afterglow-plotly/plotly.js"
+              "node_modules/plotly.js/dist/plotly.min.js"
             ]
           },
           "configurations": {
