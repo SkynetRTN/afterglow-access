@@ -1,6 +1,6 @@
 .DS_Store
-wcslib.*
 wcslib
+wcslib.tar*
 node_modules
 test/data/*.gz
 a.out
