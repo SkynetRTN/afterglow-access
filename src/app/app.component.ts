@@ -86,6 +86,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     if (this.authGuard.isLoggedIn()) {
       this.store.dispatch(new authActions.Init({ loggedIn: true }));
+      this.store.dispatch(new dataProviderActions.LoadDataProviders());
     }
 
     // localStorage.setItem("previouslyVisited", "false");

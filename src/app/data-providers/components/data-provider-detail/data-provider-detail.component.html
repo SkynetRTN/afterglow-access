@@ -7,7 +7,7 @@
 
     <p class="card-text">{{dataProvider.description}}</p>
     <div class="row">
-      <a  mat-raised-button class="m-2" *ngIf="dataProvider.browseable" [routerLink]="[dataProvider.name | slugify, 'browse']" [queryParams]="{}">
+      <a  mat-raised-button class="m-2" *ngIf="dataProvider.browseable" [routerLink]="[dataProvider.name | slugify, 'browse']" [queryParams]="{path: ''}">
         <mat-icon>folder_open</mat-icon> Browse
       </a>
       <a mat-raised-button class="m-2" *ngIf="dataProvider.searchable" [routerLink]="[dataProvider.name | slugify, 'search']">

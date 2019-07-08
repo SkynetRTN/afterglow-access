@@ -3,7 +3,7 @@
 </button>
 
 <!-- TODO: replace use of `mat-menu` here with a custom overlay -->
-<mat-menu class="docs-theme-picker-menu" #themeMenu="matMenu" x-position="before">
+<mat-menu class="docs-theme-picker-menu pb-2" #themeMenu="matMenu" x-position="before">
   <mat-grid-list cols="3">
     <mat-grid-tile *ngFor="let colorTheme of availableColorThemes">
       <div mat-menu-item (click)="setColorTheme(colorTheme)" (keyup.enter)="setColorTheme(colorTheme)">
@@ -14,12 +14,12 @@
       </div>
     </mat-grid-tile>
   </mat-grid-list>
-  <mat-button-toggle-group name="fontWeight" aria-label="Font Weight" [value]="currentTheme?.fontWeight" (change)="setFontWeight($event)">
+  <mat-button-toggle-group class="mb-2" name="fontWeight" aria-label="Font Weight" [value]="currentTheme?.fontWeight" (change)="setFontWeight($event)">
       <mat-button-toggle value="default">Normal</mat-button-toggle>
       <mat-button-toggle value="bold">Bold</mat-button-toggle>
       <mat-button-toggle value="boldest">Extra Bold</mat-button-toggle>
     </mat-button-toggle-group>
-    <mat-button-toggle-group name="fontSize" aria-label="Font Size" [value]="currentTheme?.fontSize" (change)="setFontSize($event)">
+    <mat-button-toggle-group  class="mb-2" name="fontSize" aria-label="Font Size" [value]="currentTheme?.fontSize" (change)="setFontSize($event)">
         <mat-button-toggle value="default">Normal</mat-button-toggle>
         <mat-button-toggle value="large">Large</mat-button-toggle>
         <mat-button-toggle value="largest">Extra Large</mat-button-toggle>

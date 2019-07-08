@@ -100,7 +100,7 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
       background: mat-color($background, background);
     }
 
-    a.mat-button, a.mat-icon-button {
+    a.mat-button, a.mat-icon-button, .mat-button, .mat-icon-button {
       color: mat-color($foreground, text);
     }
   }

@@ -24,7 +24,9 @@
     }
 
     a.mat-button,
-    a.mat-icon-button {
+    a.mat-icon-button,
+    .mat-button,
+    .mat-icon-button {
       color: mat-color($primary, default-contrast);
       opacity: 0.8;
     }
