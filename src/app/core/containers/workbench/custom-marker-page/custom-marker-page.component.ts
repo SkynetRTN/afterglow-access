@@ -44,6 +44,7 @@ export class CustomMarkerPageComponent implements OnInit {
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers: Array<CustomMarker> = [];
   selectedMarker: CircleMarker = null;
+  MarkerType = MarkerType;
 
   constructor(private store: Store<fromRoot.State>, router: Router) {
     this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
@@ -175,35 +176,35 @@ export class CustomMarkerPageComponent implements OnInit {
         y = result.y;
       }
 
-      // let customMarker: CustomMarker = {
-      //   id: null,
-      //   fileId: this.activeImageFile.id,
-      //   marker: {
-      //     type: MarkerType.CIRCLE,
-      //     label: `M${this.nextCutomMarkerId}`,
-      //     x: x,
-      //     y: y,
-      //     radius: 10,
-      //     labelGap: 8,
-      //     labelTheta: 0
-      //   } as CircleMarker
-      // };
-
-
       let customMarker: CustomMarker = {
         id: null,
         fileId: this.activeImageFile.id,
         marker: {
-          type: MarkerType.RECTANGLE,
+          type: MarkerType.CIRCLE,
           label: `M${this.nextCutomMarkerId}`,
           x: x,
           y: y,
-          width: 10,
-          height: 10,
+          radius: 10,
           labelGap: 8,
           labelTheta: 0
-        } as RectangleMarker
+        } as CircleMarker
       };
+
+
+      // let customMarker: CustomMarker = {
+      //   id: null,
+      //   fileId: this.activeImageFile.id,
+      //   marker: {
+      //     type: MarkerType.RECTANGLE,
+      //     label: `M${this.nextCutomMarkerId}`,
+      //     x: x-5,
+      //     y: y-5,
+      //     width: 10,
+      //     height: 10,
+      //     labelGap: 8,
+      //     labelTheta: 0
+      //   } as RectangleMarker
+      // };
       this.store.dispatch(
         new customMarkerActions.AddCustomMarkers({ markers: [customMarker] })
       );

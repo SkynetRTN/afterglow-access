@@ -80,10 +80,14 @@
           <ng-container *ngIf="selectedCustomMarkers.length == 1">
             <hr />
             <h5>Marker Customization</h5>
-            <app-circle-marker-editor
+            <app-circle-marker-editor *ngIf="selectedCustomMarkers[0].marker.type == MarkerType.CIRCLE"
               [marker]="selectedCustomMarkers[0].marker"
               (changed)="onMarkerChange($event, selectedCustomMarkers[0])"
             ></app-circle-marker-editor>
+            <app-rectangle-marker-editor *ngIf="selectedCustomMarkers[0].marker.type == MarkerType.RECTANGLE"
+              [marker]="selectedCustomMarkers[0].marker"
+              (changed)="onMarkerChange($event, selectedCustomMarkers[0])"
+            ></app-rectangle-marker-editor>
           </ng-container>
         </ng-container>
       </div>

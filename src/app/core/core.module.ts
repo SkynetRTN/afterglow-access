@@ -83,6 +83,7 @@ import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/
 import { WorkbenchGuard } from './services/workbench-guard.service';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
+import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -118,6 +119,7 @@ export const COMPONENTS = [
   PlotterComponent,
   CustomMarkerPageComponent,
   CircleMarkerEditorComponent,
+  RectangleMarkerEditorComponent,
   InfoPageComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent
