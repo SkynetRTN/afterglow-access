@@ -24,6 +24,7 @@ import { environment } from '../../environments/environment';
  */
 
 import * as fromLayout from '../core/reducers/layout';
+import { isDevMode } from '@angular/core';
 
 
 /**
@@ -47,7 +48,7 @@ export const reducers: ActionReducerMap<State> = {
 export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
   return function (state: State, action: any): State {
     let result = reducer(state, action);
-    console.log({ initialState: state, action: action, finalState: result });
+    if(isDevMode()) console.log({ initialState: state, action: action, finalState: result });
     return result;
   };
 }

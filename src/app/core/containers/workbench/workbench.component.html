@@ -5,7 +5,7 @@
         <div class="vertical-icon-nav-item-group">
           <button id="tab-view-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES"
             attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES ? 'Hide' : 'Show' }} File Library List"
-            [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES" (click)="setSidebarView(SidebarView.FILES)" tourAnchor="file libary show/hide">
+            [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES" (click)="setSidebarView(SidebarView.FILES)">
             <div class="icon-wrapper">
               <mat-icon>description</mat-icon>
             </div>
@@ -21,7 +21,7 @@
         </div>
 
       </div>
-      <div fxFlex="1 1 0%" *ngIf="(showSidebar$ | async)" class="file-list-panel h-100"  tourAnchor="file library">
+      <div fxFlex="1 1 0%" *ngIf="(showSidebar$ | async)" class="file-list-panel h-100">
         <div *ngIf="!(files$ | async) || (files$ | async)?.length == 0" class="empty-library-info alert alert-info" style="margin: 10px;">
           Your library is empty.
           Import files from your
@@ -59,61 +59,61 @@
 
   </div>
   <span class="resizer"></span>
-  <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0" tourAnchor="workbench tools">
+  <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0">
      
     <router-outlet></router-outlet>
 
   </div>
-  <div fxFlex="0 0 auto" [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'" class="workbench-nav-panel" [class.collapsed]="!(showConfig$ | async)" *ngIf="(files$ | async)?.length != 0"   tourAnchor="workbench nav">
+  <div fxFlex="0 0 auto" [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'" class="workbench-nav-panel" [class.collapsed]="!(showConfig$ | async)" *ngIf="(files$ | async)?.length != 0">
     <nav role="navigation" aria-label="workbench">
       <div class="vertical-icon-nav-item-group">
         <div class="workbench-settings-card">
           <div class="card-header spacer"></div>
         </div>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(VIEWER_ROUTE, 'Display')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Display')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)" tourAnchor="display settings"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Display')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(VIEWER_ROUTE)"
           (click)="onWorkbenchNavClick(VIEWER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>remove_red_eye</mat-icon>
           </div>
         </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(FILE_INFO_ROUTE, 'File Info')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(FILE_INFO_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(FILE_INFO_ROUTE, 'File Info')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(FILE_INFO_ROUTE)" tourAnchor="file info"
+          [attr.aria-label]="getToolbarTooltip(FILE_INFO_ROUTE, 'File Info')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(FILE_INFO_ROUTE)"
           (click)="onWorkbenchNavClick(FILE_INFO_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>info</mat-icon>
           </div>
         </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(MARKER_ROUTE, 'Custom Markers')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(MARKER_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(MARKER_ROUTE, 'Custom Markers')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(MARKER_ROUTE)" tourAnchor="marker settings"
+          [attr.aria-label]="getToolbarTooltip(MARKER_ROUTE, 'Custom Markers')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(MARKER_ROUTE)"
           (click)="onWorkbenchNavClick(MARKER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>place</mat-icon>
           </div>
         </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(PLOTTER_ROUTE, 'Plotting')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Plotting')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)" tourAnchor="plotter settings"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Plotting')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
           (click)="onWorkbenchNavClick(PLOTTER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>insert_chart</mat-icon>
           </div>
         </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SONIFIER_ROUTE, 'Sonification')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Sonification')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)" tourAnchor="sonifier settings"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Sonification')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
           (click)="onWorkbenchNavClick(SONIFIER_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>audiotrack</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')"  tourAnchor="field calibration"
+        <!-- <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')"
           [attr.aria-selected]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)" (click)="onWorkbenchNavClick(FIELD_CAL_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>flare</mat-icon>
           </div>
-        </button>
+        </button> -->
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SOURCE_EXTRACTOR_ROUTE, 'Photometry')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Photometry')"  tourAnchor="source extraction settings"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Photometry')"
           [attr.aria-selected]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)" (click)="onWorkbenchNavClick(SOURCE_EXTRACTOR_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>star_border</mat-icon>

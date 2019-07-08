@@ -37,7 +37,6 @@ import { ImageViewerTitleBarComponent } from './components/image-viewer-title-ba
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionSettingsDialogComponent } from './components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
-import { TourDialogComponent } from './components/tour-dialog/tour-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
@@ -74,8 +73,6 @@ import { JobsModule } from '../jobs/jobs.module';
 import { SvgTextMarkerComponent } from './components/svg-text-marker/svg-text-marker.component';
 
 import { ReactiveFormsModule } from '@angular/forms';
-import { TourMatMenuModule } from 'ngx-tour-md-menu';
-import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
 import {NgxPopperModule} from 'ngx-popper';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { CreateFieldCalDialogComponent } from './components/create-field-cal-dialog/create-field-cal-dialog.component';
@@ -85,6 +82,7 @@ import { ThemePickerModule } from '../theme-picker';
 import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { WorkbenchGuard } from './services/workbench-guard.service';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
+import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -117,12 +115,12 @@ export const COMPONENTS = [
   PhotSettingsDialogComponent,
   SourceExtractionSettingsDialogComponent,
   CreateFieldCalDialogComponent,
-  TourDialogComponent,
   PlotterComponent,
   CustomMarkerPageComponent,
   CircleMarkerEditorComponent,
   InfoPageComponent,
   PixelOpsJobsDialogComponent,
+  HelpDialogComponent
 
 ];
 
@@ -146,8 +144,6 @@ export const COMPONENTS = [
     VgBufferingModule,
     // NvD3Module,
     PapaParseModule,
-    // TourMatMenuModule,
-    TourNgxPopperModule,
     NgxPopperModule,
     FlexLayoutModule,
     ThemePickerModule,
@@ -178,8 +174,8 @@ export const COMPONENTS = [
     PhotSettingsDialogComponent,
     SourceExtractionSettingsDialogComponent,
     CreateFieldCalDialogComponent,
-    TourDialogComponent,
-    PixelOpsJobsDialogComponent
+    PixelOpsJobsDialogComponent,
+    HelpDialogComponent
   ],
 
 })

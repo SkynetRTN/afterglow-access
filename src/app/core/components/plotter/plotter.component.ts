@@ -81,11 +81,11 @@ export class PlotterComponent implements OnInit, OnChanges {
   private chartDebouncer$: Subject<null> = new Subject();
 
   constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef) {
-    this.theme = themeStorage.getCurrentTheme().plotlyTheme;
+    this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
     themeStorage.onThemeUpdate.subscribe(theme => {
-      this.theme = theme.plotlyTheme;
+      this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
       this.cd.detectChanges();
-    });
+    })
   }
 
   // updateChartOptions() {

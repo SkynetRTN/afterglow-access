@@ -100,13 +100,19 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
       background: mat-color($background, background);
     }
 
+    a.mat-button, a.mat-icon-button {
+      color: mat-color($foreground, text);
+    }
+  }
+
+  theme-picker {
     .mat-button, .mat-icon-button {
       color: mat-color($foreground, text);
     }
   }
 }
 
-.big-font {
+.large {
   label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
     font-size: 1.25em;
   }
@@ -115,7 +121,7 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
   }
 }
 
-.bigger-font {
+.largest {
   label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
     font-size: 1.5em;
   }
@@ -125,16 +131,20 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
 }
 
 
-.bold-font {
+.bold {
   label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
     font-weight: bold;
   }
 }
 
-.bolder-font {
+.boldest {
   label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
     font-weight: bolder;
   }
+}
+
+.data-provider-menu {
+  max-width: 350px !important;
 }
 
 

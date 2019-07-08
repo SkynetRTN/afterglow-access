@@ -22,7 +22,8 @@ export interface State {
   pendingImports: DataProviderAsset[];
   completedImports: DataProviderAsset[];
   importErrors: Array<{ asset: DataProviderAsset, message: string }>
-  importProgress: number
+  importProgress: number,
+  lastPath: {[id: string]: string}
 }
 
 export const initialState: State = {
@@ -42,7 +43,8 @@ export const initialState: State = {
   pendingImports: [],
   completedImports: [],
   importErrors: [],
-  importProgress: 0
+  importProgress: 0,
+  lastPath: {}
 }
 
 export function reducer(
@@ -99,6 +101,12 @@ export function reducer(
       //sort assets
       let currentAssets = [...action.payload.assets];
 
+      let lastPath = {
+        ...state.lastPath
+      }
+
+      lastPath[action.payload.dataProvider.id] = action.payload.path;
+
       return {
         ...state,
         loadingAssets: false,
@@ -106,8 +114,8 @@ export function reducer(
         currentPath: currentPath,
         currentPathBreadcrumbs: breadcrumbs,
         currentAssets: currentAssets,
-        selectedAssets: []
-
+        selectedAssets: [],
+        lastPath: lastPath
       };
     }
 

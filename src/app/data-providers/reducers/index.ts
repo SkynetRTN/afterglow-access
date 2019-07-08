@@ -25,3 +25,4 @@ export const getPendingImports = createSelector(getDataProvidersState, state => 
 export const getCompletedImports = createSelector(getDataProvidersState, state => state.completedImports);
 export const getImportErrors = createSelector(getDataProvidersState, state => state.importErrors);
 export const getImportProgress = createSelector(getDataProvidersState, state => state.importProgress);
+export const getLastPath = createSelector(getDataProvidersState, state => state.lastPath);

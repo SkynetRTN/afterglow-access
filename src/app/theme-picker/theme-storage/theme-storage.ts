@@ -1,9 +1,9 @@
-import {Injectable, EventEmitter} from '@angular/core';
+import { Injectable, EventEmitter } from "@angular/core";
 
 export interface PlotlyTheme {
-  xAxisColor: string,
-  yAxisColor: string,
-  fontColor: string,
+  xAxisColor: string;
+  yAxisColor: string;
+  fontColor: string;
   paperBgColor: string;
   plotBgColor: string;
   colorWay: string;
@@ -14,6 +14,12 @@ export interface PlotlyTheme {
 }
 
 export interface AfterglowTheme {
+  colorThemeName: string;
+  fontSize: "default" | "large" | "largest";
+  fontWeight: "default" | "bold" | "boldest";
+}
+
+export interface AfterglowColorTheme {
   name: string;
   displayName: string;
   primaryIconColor: string;
@@ -21,97 +27,106 @@ export interface AfterglowTheme {
   plotlyTheme: PlotlyTheme;
 }
 
-
 @Injectable()
 export class ThemeStorage {
-  static storageKey = 'afterglow-theme-storage-current-name';
+  static themeStorageKey = "afterglow-theme-storage-201907050912";
 
-  onThemeUpdate: EventEmitter<AfterglowTheme> = new EventEmitter<AfterglowTheme>();
+  onThemeUpdate: EventEmitter<AfterglowTheme> = new EventEmitter<
+    AfterglowTheme
+  >();
 
-  themes: AfterglowTheme[] = [
+  colorThemes: AfterglowColorTheme[] = [
     {
-      name: 'indigo-light-theme',
-      displayName: 'Indigo Light',
-      primaryIconColor: '#3949AB',
-      secondaryIconColor: '#FFFFFF',
+      name: "indigo-light-theme",
+      displayName: "Indigo Light",
+      primaryIconColor: "#3949AB",
+      secondaryIconColor: "#FFFFFF",
       plotlyTheme: {
-        xAxisColor: '#000000',
-        yAxisColor: '#000000',
-        fontColor: '#000000',
-        paperBgColor: '#FFFFFF',
-        plotBgColor: '#FFFFFF',
-        colorWay: '#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf',
-        modeBarBgColor: '#FFFFFF',
-        modeBarColor: '#757575',
-        modeBarActiveColor:  '#757575',
-        legendFontColor: '#757575'
+        xAxisColor: "#000000",
+        yAxisColor: "#000000",
+        fontColor: "#000000",
+        paperBgColor: "#FFFFFF",
+        plotBgColor: "#FFFFFF",
+        colorWay:
+          "#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf",
+        modeBarBgColor: "#FFFFFF",
+        modeBarColor: "#757575",
+        modeBarActiveColor: "#757575",
+        legendFontColor: "#757575"
       }
     },
     {
-      name: 'cyan-dark-theme',
-      displayName: 'Cyan Dark',
-      primaryIconColor: '#00BCD4',
-      secondaryIconColor: '#616161',
+      name: "cyan-dark-theme",
+      displayName: "Cyan Dark",
+      primaryIconColor: "#00BCD4",
+      secondaryIconColor: "#616161",
       plotlyTheme: {
-        xAxisColor: '#FFFFFF',
-        yAxisColor: '#FFFFFF',
-        fontColor: '#FFFFFF',
-        paperBgColor: '#424242',
-        plotBgColor: '#424242',
-        colorWay: '#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf',
-        modeBarBgColor: '#424242',
-        modeBarColor: '#FFFFFF',
-        modeBarActiveColor:  '#FFFFFF',
-        legendFontColor: '#FFFFFF'
+        xAxisColor: "#FFFFFF",
+        yAxisColor: "#FFFFFF",
+        fontColor: "#FFFFFF",
+        paperBgColor: "#424242",
+        plotBgColor: "#424242",
+        colorWay:
+          "#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf",
+        modeBarBgColor: "#424242",
+        modeBarColor: "#FFFFFF",
+        modeBarActiveColor: "#FFFFFF",
+        legendFontColor: "#FFFFFF"
       }
     },
     {
-      name: 'high-contrast-theme',
-      displayName: 'High Contrast',
-      primaryIconColor: '#ffeb3b',
-      secondaryIconColor: '#303030',
+      name: "high-contrast-theme",
+      displayName: "High Contrast",
+      primaryIconColor: "#ffeb3b",
+      secondaryIconColor: "#303030",
       plotlyTheme: {
-        xAxisColor: '#FFEB3B',
-        yAxisColor: '#FFEB3B',
-        fontColor: '#FFEB3B',
-        paperBgColor: '#424242',
-        plotBgColor: '#424242',
-        colorWay: '#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf',
-        modeBarBgColor: '#424242',
-        modeBarColor: '#FFEB3B',
-        modeBarActiveColor:  '#FFEB3B',
-        legendFontColor: '#FFEB3B'
+        xAxisColor: "#FFEB3B",
+        yAxisColor: "#FFEB3B",
+        fontColor: "#FFEB3B",
+        paperBgColor: "#424242",
+        plotBgColor: "#424242",
+        colorWay:
+          "#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf",
+        modeBarBgColor: "#424242",
+        modeBarColor: "#FFEB3B",
+        modeBarActiveColor: "#FFEB3B",
+        legendFontColor: "#FFEB3B"
       }
-      
     }
-    
   ];
 
   storeTheme(theme: AfterglowTheme) {
     try {
-      window.localStorage[ThemeStorage.storageKey] = theme.name;
-    } catch { }
+      window.localStorage[ThemeStorage.themeStorageKey] = JSON.stringify(theme);
+    } catch {}
 
     this.onThemeUpdate.emit(theme);
   }
 
   getCurrentTheme(): AfterglowTheme {
-    if(!this.getStoredThemeName()) return null;
-    let theme = this.themes.find(t => t.name == this.getStoredThemeName());
-    return theme ? theme : null;
-  }
-
-  getStoredThemeName(): string | null {
     try {
-      return window.localStorage[ThemeStorage.storageKey] || null;
+      let currentTheme = JSON.parse(window.localStorage[ThemeStorage.themeStorageKey]);
+      if(!currentTheme) return null;
+      return currentTheme;
     } catch {
       return null;
     }
   }
 
+  getCurrentColorTheme(): AfterglowColorTheme {
+    let theme = this.getCurrentTheme();
+    if(!theme) return null;
+    return this.colorThemes.find(t => t.name == theme.colorThemeName) || null;
+  }
+
+  getColorThemeByName(name: string) {
+    let colorTheme = this.colorThemes.find(t => t.name == name);
+    return colorTheme ? colorTheme : null;
+  }
+
   clearStorage() {
     try {
-      window.localStorage.removeItem(ThemeStorage.storageKey);
-    } catch { }
+      window.localStorage.removeItem(ThemeStorage.themeStorageKey);
+    } catch {}
   }
 }

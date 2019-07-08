@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TourDialogComponent } from './tour-dialog.component';
+import { HelpDialogComponent } from './help-dialog.component';
 
-describe('TourDialogComponent', () => {
-  let component: TourDialogComponent;
-  let fixture: ComponentFixture<TourDialogComponent>;
+describe('HelpDialogComponent', () => {
+  let component: HelpDialogComponent;
+  let fixture: ComponentFixture<HelpDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [TourDialogComponent]
+      declarations: [ HelpDialogComponent ]
     })
-      .compileComponents();
+    .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TourDialogComponent);
+    fixture = TestBed.createComponent(HelpDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

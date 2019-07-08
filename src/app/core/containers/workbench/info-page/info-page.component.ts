@@ -90,7 +90,11 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
       let systemTimeZone: string = (new Date()).getTimezoneOffset().toString();
 
-      
+      result.push({
+        key: 'ID',
+        value: `${imageFile.id}`,
+        comment: ''
+      });
 
       if(width && height) {
         result.push({

@@ -1,5 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { TourService } from "ngx-tour-ngx-popper";
+import { MatDialog } from '@angular/material';
+import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
+import { DataProvider } from '../../../data-providers/models/data-provider';
 
 @Component({
   selector: 'app-navbar',
@@ -8,11 +10,20 @@ import { TourService } from "ngx-tour-ngx-popper";
 })
 export class NavbarComponent implements OnInit {
   @Input() authenticated: boolean = false;
+  @Input() dataProviders: Array<DataProvider>;
 
 
-  constructor(private tourService: TourService) { }
+  constructor(public dialog: MatDialog) { }
 
   ngOnInit() {
+  }
+
+  openQuickStartGuide() {
+    this.dialog.open(HelpDialogComponent, {
+      data: {},
+      width: '800px',
+      height: '600px',
+    });
   }
 
 }

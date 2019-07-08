@@ -79,6 +79,7 @@ export class DataProviderBrowsePageComponent
   importProgress$: Observable<number>;
   importErrors$: Observable<any[]>;
   currentPathBreadcrumbs$: Observable<Array<{ name: string; url: string }>>;
+  lastPath$: Observable<{[id: string]: string}>
   sort: MatSort;
   sortSub: Subscription;
 
@@ -132,6 +133,7 @@ export class DataProviderBrowsePageComponent
     this.importing$ = store.select(fromDataProviders.getImporting);
     this.importProgress$ = store.select(fromDataProviders.getImportProgress);
     this.pendingImports$ = store.select(fromDataProviders.getPendingImports);
+    this.lastPath$ = store.select(fromDataProviders.getLastPath);
     this.completedImports$ = store.select(
       fromDataProviders.getCompletedImports
     );
@@ -147,9 +149,9 @@ export class DataProviderBrowsePageComponent
         this.route.queryParams,
         this.dataProviders$
       )
-        .pipe(withLatestFrom(this.dataProvidersLoaded$))
+        .pipe(withLatestFrom(this.dataProvidersLoaded$, this.lastPath$))
         .subscribe(
-          ([[params, qparams, dataProviders], dataProvidersLoaded]) => {
+          ([[params, qparams, dataProviders], dataProvidersLoaded, lastPath]) => {
             if (!dataProvidersLoaded) {
               this.store.dispatch(new dataProviderActions.LoadDataProviders());
               return;
@@ -159,10 +161,33 @@ export class DataProviderBrowsePageComponent
               provider => this.slufigy.transform(provider.name) == slug
             );
             if (dataProvider) {
+              // if(!('path' in qparams) && dataProvider.id in lastPath) {
+              //   console.log("navigating!!!");
+              //   this.router.navigate(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}});
+              // }
+              // else {
+              //   let path = qparams['path'];
+              //   this.store.dispatch(
+              //     new dataProviderActions.LoadDataProviderAssets({
+              //       dataProvider: dataProvider,
+              //       path: path
+              //     })
+              //   );
+              //   this.selection.clear();
+              //   //this.activeCell = null;
+              // }
+              let path = '';
+              if('path' in qparams) {
+                path = qparams['path'];
+              }
+              else if(dataProvider.id in lastPath) {
+                path = lastPath[dataProvider.id];
+                this.location.go(this.router.createUrlTree(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}}).toString())
+              }
               this.store.dispatch(
                 new dataProviderActions.LoadDataProviderAssets({
                   dataProvider: dataProvider,
-                  path: qparams["path"]
+                  path: path
                 })
               );
               this.selection.clear();

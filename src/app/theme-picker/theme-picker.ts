@@ -6,7 +6,7 @@ import {
   OnInit,
   OnDestroy,
 } from '@angular/core';
-import {ThemeStorage, AfterglowTheme} from './theme-storage/theme-storage';
+import {ThemeStorage, AfterglowColorTheme, AfterglowTheme} from './theme-storage/theme-storage';
 import { MatButtonModule } from '@angular/material/button';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute} from '@angular/router';
+import { MatButtonToggleModule, MatButtonToggleChange } from '@angular/material';
 
 
 @Component({
@@ -26,21 +27,38 @@ import {ActivatedRoute} from '@angular/router';
 })
 export class ThemePicker implements OnInit, OnDestroy {
   currentTheme: AfterglowTheme;
-  availableThemes: AfterglowTheme[];
+  availableColorThemes: AfterglowColorTheme[];
   
 
   constructor(
     private themeStorage: ThemeStorage,
     private _activatedRoute: ActivatedRoute) {
-      this.availableThemes = themeStorage.themes;
+      this.availableColorThemes = themeStorage.colorThemes;
       this.currentTheme = themeStorage.getCurrentTheme();
       themeStorage.onThemeUpdate.subscribe(theme => {
         this.currentTheme = theme;
       });
   }
 
-  installTheme(theme: AfterglowTheme) {
-    this.themeStorage.storeTheme(theme);
+  setColorTheme(colorTheme: AfterglowColorTheme) {
+    this.themeStorage.storeTheme({
+      ...this.currentTheme,
+      colorThemeName: colorTheme.name
+    });
+  }
+
+  setFontSize($value: MatButtonToggleChange) {
+    this.themeStorage.storeTheme({
+      ...this.currentTheme,
+      fontSize: $value.value
+    });
+  }
+
+  setFontWeight($value: MatButtonToggleChange) {
+    this.themeStorage.storeTheme({
+      ...this.currentTheme,
+      fontWeight: $value.value
+    });
   }
 
   ngOnInit() {
@@ -54,6 +72,7 @@ export class ThemePicker implements OnInit, OnDestroy {
 @NgModule({
   imports: [
     MatButtonModule,
+    MatButtonToggleModule,
     MatIconModule,
     MatMenuModule,
     MatGridListModule,

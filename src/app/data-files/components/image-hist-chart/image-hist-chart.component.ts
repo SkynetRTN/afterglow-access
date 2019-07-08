@@ -85,9 +85,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
 
   constructor(private themeStorage: ThemeStorage, private _changeDetectorRef: ChangeDetectorRef) {
-    this.theme = themeStorage.getCurrentTheme().plotlyTheme;
+    this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
     themeStorage.onThemeUpdate.subscribe(theme => {
-      this.theme = theme.plotlyTheme;
+      this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
       this._changeDetectorRef.detectChanges();
     })
   }

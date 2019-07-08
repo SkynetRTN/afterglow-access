@@ -24,8 +24,6 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
 import { environment } from '../environments/environment';
-import { TourMatMenuModule } from 'ngx-tour-md-menu';
-import { TourNgxPopperModule } from 'ngx-tour-ngx-popper';
 import {NgxPopperModule} from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
 @NgModule({
@@ -39,8 +37,6 @@ import { ThemePickerModule } from './theme-picker';
     ReactiveFormsModule,
     FlexLayoutModule,
     CookieModule.forRoot(),
-    // TourMatMenuModule.forRoot(),
-    TourNgxPopperModule.forRoot(),
     NgxPopperModule,
     ThemePickerModule,
 

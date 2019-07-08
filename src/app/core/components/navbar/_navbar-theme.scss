@@ -6,11 +6,6 @@
   $foreground: map-get($theme, foreground);
 
   app-navbar {
-
-    // mat-icon {
-    //   color: map-get($foreground, text);
-    // }
-
     // .mat-button {
     //   color: map-get($foreground, text);
     // }
@@ -23,18 +18,21 @@
     //   opacity: 1.0;
     // }
 
-    .navbar, .navbar-header {
+    .navbar,
+    .navbar-header {
       background: mat-color($primary);
-      
     }
 
-    .mat-button, .mat-icon-button {
+    a.mat-button,
+    a.mat-icon-button {
       color: mat-color($primary, default-contrast);
       opacity: 0.8;
     }
 
-    a.active .mat-button {
-      opacity: 1.0;
+    a.active {
+      opacity: 1;
     }
+
+    
   }
 }

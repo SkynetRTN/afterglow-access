@@ -14,9 +14,6 @@ import * as dataFileActions from '../../../data-files/actions/data-file';
 import { Router } from '@angular/router';
 import { Subscription } from '../../../../../node_modules/rxjs';
 import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
-// import { TourService } from 'ngx-tour-md-menu';
-import { TourService } from 'ngx-tour-ngx-popper';
-import { TourDialogComponent } from '../../components/tour-dialog/tour-dialog.component';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 
 
@@ -60,7 +57,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   SidebarView = SidebarView;
   private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService, private tourService: TourService, public dialog: MatDialog) {
+  constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService, public dialog: MatDialog) {
     this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
     this.selectedFile$ = this.store.select(fromCore.workbench.getActiveFile);
 
@@ -155,16 +152,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
 
    
-    if(localStorage.getItem('previouslyVisited') != 'true') {
-      localStorage.setItem('previouslyVisited', 'true')
-      let dialogRef = this.dialog.open(TourDialogComponent);
+    // if(localStorage.getItem('previouslyVisited') != 'true') {
+    //   localStorage.setItem('previouslyVisited', 'true')
+    //   let dialogRef = this.dialog.open(TourDialogComponent);
 
-      dialogRef.afterClosed().subscribe(result => {
-        // console.log('The dialog was closed', result);
-        if(result) this.tourService.start();
-      });
+    //   dialogRef.afterClosed().subscribe(result => {
+    //     // console.log('The dialog was closed', result);
+    //     if(result) this.tourService.start();
+    //   });
       
-    }
+    // }
 
 
     //this.loading$ = this.fileLibraryStore.loading$;

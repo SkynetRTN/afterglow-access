@@ -1,8 +1,6 @@
 <nav class="navbar-header" role="navigation" aria-label="primary">
-  <a class="afterglow-button afterglow-logo" routerLink="/" aria-label="Home" routerLinkActive="active">
-    <button mat-button>
-        Afterglow Access
-    </button>
+  <a class="afterglow-button afterglow-logo" routerLink="/" aria-label="Home" routerLinkActive="active" mat-button>
+    Afterglow Access
   </a>
 
   <div class="flex-spacer"></div>
@@ -12,10 +10,8 @@
   </button> -->
 
   <ng-container *ngIf="!authenticated">
-    <a class="afterglow-button" routerLink="login" aria-label="Login" routerLinkActive="active">
-        <button mat-button>
+    <a class="afterglow-button" routerLink="login" aria-label="Login" routerLinkActive="active" mat-button>
             Login
-        </button>
     </a>
   </ng-container>
   <div>
@@ -24,24 +20,25 @@
               <mat-icon>account_box</mat-icon>
             </button> -->
             
-      <a class="afterglow-button" routerLink="workbench" aria-label="Workbench" routerLinkActive="active" tourAnchor="workbench nav link">
-        <button mat-button>
+      <a class="afterglow-button" routerLink="workbench" aria-label="Workbench" routerLinkActive="active" mat-button>
             Workbench
-        </button>
       </a>
-      <a class="afterglow-button" routerLink="data-providers" aria-label="Import" routerLinkActive="active" tourAnchor="data providers nav link">
-          <button mat-button>
-              Import
-          </button>
-      </a>
-      <a class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active">
-          <button mat-button>
-              Logout
-          </button>
+      <button mat-button [matMenuTriggerFor]="dataProviderMenu">Data Providers</button>
+      <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
+          <a *ngFor="let dataProvider of dataProviders" class="afterglow-button" [routerLink]="['data-providers', dataProvider.name | slugify, dataProvider.browseable ? 'browse' : 'search']" routerLinkActive="active"  mat-menu-item>
+              {{dataProvider.name}}
+        </a>
+
+        <a class="afterglow-button" routerLink="data-providers" aria-label="Data Provider Index" routerLinkActive="active" mat-menu-item>
+            View All
+      </a> 
+      </mat-menu>
+      <a class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active" mat-button>
+          Logout
       </a>
       <theme-picker></theme-picker>
-      <a mat-icon-button class="afterglow-button" aria-label="Help" tourAnchor="tour nav link"  (click)="tourService.start()">
-          <mat-icon aria-label="Help - Start Tour">help</mat-icon>
+      <a mat-icon-button class="afterglow-button" aria-label="Help" (click)="openQuickStartGuide()">
+          <mat-icon aria-label="Help">help</mat-icon>
         </a>
     </ng-container>
   </div>
