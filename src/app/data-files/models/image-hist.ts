@@ -115,7 +115,8 @@ export function getBinCenter(hist: ImageHist, index: number) {
 export function calcLevels(
   hist: ImageHist,
   lowerPercentile: number = 10,
-  upperPercentile: number = 99) {
+  upperPercentile: number = 99,
+  round: boolean = false) {
 
   let total = 0;
   for (let i = 0; i < hist.data.length; i++) {
@@ -155,7 +156,14 @@ export function calcLevels(
       blackComplete = true;
     }
   }
-  return { backgroundLevel: backgroundLevel, peakLevel: peakLevel };
+  let result = { backgroundLevel: backgroundLevel, peakLevel: peakLevel };
+  if(round) {
+    let roundFactor = Math.pow(10, Math.abs(Math.min(-3, Math.floor(Math.log10(result.peakLevel-result.backgroundLevel))-3)));
+    result.peakLevel = Math.round(result.peakLevel*roundFactor)/roundFactor;
+    result.backgroundLevel = Math.round(result.backgroundLevel*roundFactor)/roundFactor;
+  }
+
+  return result;
 }
 
 export function calcPercentiles(

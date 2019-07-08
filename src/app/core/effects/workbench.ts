@@ -204,7 +204,8 @@ export class WorkbenchEffects {
             let levels = calcLevels(
               dataFile.hist,
               environment.lowerPercentileDefault,
-              environment.upperPercentileDefault
+              environment.upperPercentileDefault,
+              true
             );
             actions.push(
               new normalizationActions.UpdateNormalizer({
@@ -537,7 +538,8 @@ export class WorkbenchEffects {
         let levels = calcLevels(
           targetFile.hist,
           percentiles.lowerPercentile,
-          percentiles.upperPercentile
+          percentiles.upperPercentile,
+          true
         );
         actions.push(
           new normalizationActions.UpdateNormalizer({

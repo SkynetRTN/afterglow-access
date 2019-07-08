@@ -205,8 +205,10 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     let result = calcLevels(
       this.lastImageFile.hist,
       lowerPercentile,
-      upperPercentile
+      upperPercentile,
+      true
     );
+
     this.store.dispatch(
       new normalizationActions.UpdateNormalizer({
         file: this.lastImageFile,
