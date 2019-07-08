@@ -11,6 +11,7 @@ import * as fromDataFiles from '../../../data-files/reducers'
 import * as fromCore from '../../reducers';
 import * as workbenchActions from '../../actions/workbench'
 import * as dataFileActions from '../../../data-files/actions/data-file';
+import * as dataProviderActions from '../../../data-providers/actions/data-provider';
 import { Router } from '@angular/router';
 import { Subscription } from '../../../../../node_modules/rxjs';
 import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
@@ -185,6 +186,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new dataFileActions.LoadLibrary());
     this.store.dispatch(new workbenchActions.LoadCatalogs());
     this.store.dispatch(new workbenchActions.LoadFieldCals());
+    
+    this.store.dispatch(new dataProviderActions.LoadDataProviders());
     
   }
 
