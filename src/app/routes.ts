@@ -75,73 +75,64 @@ export const AFTERGLOW_ROUTES: Routes = [
     component: WorkbenchComponent,
     data: { title: 'Workbench' },
     canActivate: [AuthGuard, WorkbenchGuard],
+    canActivateChild: [AuthGuard, WorkbenchGuard],
     children: [
       {
         path: 'viewer',
         component: ViewerPageComponent,
         data: { title: 'Viewer' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'file-info',
         component: InfoPageComponent,
         data: { title: 'File Info' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'markers',
         component: CustomMarkerPageComponent,
         data: { title: 'Custom Markers' },
-        canActivate: [AuthGuard],
       },
 
       {
         path: 'plotter',
         component: PlotterPageComponent,
         data: { title: 'Plotter' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'sonifier',
         component: SonifierPageComponent,
         data: { title: 'Sonifier' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'field-cal',
         component: FieldCalPageComponent,
         data: { title: 'Field Calibration' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'source-extractor',
         component: SourceExtractorPageComponent,
         data: { title: 'Source Extractor' },
-        canActivate: [AuthGuard],
       },
       // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
       {
         path: 'image-calculator',
         component: ImageCalculatorPageComponent,
         data: { title: 'Image Arithmetic' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'aligner',
         component: AlignerPageComponent,
         data: { title: 'Aligner' },
-        canActivate: [AuthGuard],
       },
       {
         path: 'stacker',
         component: StackerPageComponent,
         data: { title: 'Stacker' },
-        canActivate: [AuthGuard],
       },
       {
         path: '',
-        redirectTo: 'viewer',
-        pathMatch: 'full',
+        component: WorkbenchComponent,
+        data: { title: 'Workbench' },
       },
     ]
   },

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router, RouterStateSnapshot, ActivatedRouteSnapshot } from '@angular/router';
+import { CanActivate, Router, RouterStateSnapshot, ActivatedRouteSnapshot, CanActivateChild } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { CookieService } from 'ngx-cookie';
 import { Observable } from 'rxjs';
@@ -9,7 +9,7 @@ import * as fromAuth from '../reducers';
 import { environment } from '../../../environments/environment';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class AuthGuard implements CanActivate, CanActivateChild {
   constructor(private store: Store<fromAuth.State>, private cookieService: CookieService) {}
 
   isLoggedIn() {
@@ -48,4 +48,10 @@ export class AuthGuard implements CanActivate {
   //     .take(1);
   // }
   }
+
+  canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+    return this.canActivate(route, state);
+  }
 }
+
+
