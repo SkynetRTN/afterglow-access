@@ -37,9 +37,12 @@
       <a class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active" mat-button>
           Logout
       </a>
-      <theme-picker></theme-picker>
-      <a mat-icon-button class="afterglow-button" aria-label="Help" (click)="openQuickStartGuide()">
-          <mat-icon aria-label="Help">help</mat-icon>
+      <!-- <theme-picker></theme-picker> -->
+      <a mat-icon-button class="afterglow-button" aria-label="Theme" (click)="openThemeDialog()" (keyup.enter)="openThemeDialog()">
+          <mat-icon>format_color_fill</mat-icon>
+        </a>
+      <a mat-icon-button class="afterglow-button" aria-label="Help" (click)="openQuickStartGuide()" (keyup.enter)="openQuickStartGuide()">
+          <mat-icon>help</mat-icon>
         </a>
     </ng-container>
   </div>

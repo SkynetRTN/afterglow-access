@@ -84,6 +84,7 @@ import { WorkbenchGuard } from './services/workbench-guard.service';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
+import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -122,7 +123,8 @@ export const COMPONENTS = [
   RectangleMarkerEditorComponent,
   InfoPageComponent,
   PixelOpsJobsDialogComponent,
-  HelpDialogComponent
+  HelpDialogComponent,
+  ThemeDialogComponent
 
 ];
 
@@ -177,7 +179,8 @@ export const COMPONENTS = [
     SourceExtractionSettingsDialogComponent,
     CreateFieldCalDialogComponent,
     PixelOpsJobsDialogComponent,
-    HelpDialogComponent
+    HelpDialogComponent,
+    ThemeDialogComponent
   ],
 
 })

@@ -186,7 +186,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new dataFileActions.LoadLibrary());
     this.store.dispatch(new workbenchActions.LoadCatalogs());
     this.store.dispatch(new workbenchActions.LoadFieldCals());
-    
     this.store.dispatch(new dataProviderActions.LoadDataProviders());
     
   }

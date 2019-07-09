@@ -14,7 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute} from '@angular/router';
-import { MatButtonToggleModule, MatButtonToggleChange } from '@angular/material';
+import { MatButtonToggleModule, MatButtonToggleChange, MatFormField, MatFormFieldModule, MatSelectModule } from '@angular/material';
 
 
 @Component({
@@ -40,10 +40,11 @@ export class ThemePicker implements OnInit, OnDestroy {
       });
   }
 
-  setColorTheme(colorTheme: AfterglowColorTheme) {
+  setColorTheme(colorThemeName: string) {
+    console.log(colorThemeName);
     this.themeStorage.storeTheme({
       ...this.currentTheme,
-      colorThemeName: colorTheme.name
+      colorThemeName: colorThemeName
     });
   }
 
@@ -77,6 +78,8 @@ export class ThemePicker implements OnInit, OnDestroy {
     MatMenuModule,
     MatGridListModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatSelectModule,
     CommonModule
   ],
   exports: [ThemePicker],

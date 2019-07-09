@@ -2,6 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
 import { DataProvider } from '../../../data-providers/models/data-provider';
+import { ThemeDialogComponent } from '../theme-dialog/theme-dialog.component';
 
 @Component({
   selector: 'app-navbar',
@@ -23,6 +24,14 @@ export class NavbarComponent implements OnInit {
       data: {},
       width: '800px',
       height: '600px',
+    });
+  }
+
+  openThemeDialog() {
+    this.dialog.open(ThemeDialogComponent, {
+      data: {},
+      width: '500px',
+      height: '400px',
     });
   }
 
