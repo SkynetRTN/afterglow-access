@@ -25,13 +25,14 @@
       </a>
       <button mat-button [matMenuTriggerFor]="dataProviderMenu">Data Providers</button>
       <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
-          <a *ngFor="let dataProvider of dataProviders" class="afterglow-button" [routerLink]="['data-providers', dataProvider.name | slugify, dataProvider.browseable ? 'browse' : 'search']" routerLinkActive="active"  mat-menu-item>
+          <a class="afterglow-button" routerLink="data-providers" aria-label="Data Provider Index" routerLinkActive="active" mat-menu-item>
+              View All
+        </a> 
+          <a *ngFor="let dataProvider of dataProviders; let i = index" class="afterglow-button" [routerLink]="['data-providers', dataProvider.name | slugify, dataProvider.browseable ? 'browse' : 'search']" routerLinkActive="active"  mat-menu-item>
               {{dataProvider.name}}
         </a>
 
-        <a class="afterglow-button" routerLink="data-providers" aria-label="Data Provider Index" routerLinkActive="active" mat-menu-item>
-            View All
-      </a> 
+        
       </mat-menu>
       <a class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active" mat-button>
           Logout
