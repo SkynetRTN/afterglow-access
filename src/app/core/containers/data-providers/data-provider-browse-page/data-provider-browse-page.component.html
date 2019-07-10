@@ -61,7 +61,7 @@
               <ng-container matColumnDef="select">
                 <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell" [rowIndex]="0" [columnIndex]="0"
                   (focus)="cb?.focus()" [cellInTabOrder]="false">
-                  <mat-checkbox #cb [disabled]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+                  <mat-checkbox #cb [disabled]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" aria-label="Select All"
                     [indeterminate]="selection.hasValue() && !isAllSelected()" [tabIndex]="cell.isActiveCell ? 0 : -1">
                   </mat-checkbox>
                 </mat-header-cell>
@@ -75,7 +75,7 @@
 
               <!-- Name Column -->
               <ng-container matColumnDef="name">
-                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="1"
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="1" aria-label="name"
                   [cellInTabOrder]="false">
                   Name
                 </mat-header-cell>
