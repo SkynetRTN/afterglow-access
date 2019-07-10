@@ -1,6 +1,6 @@
 <div class="container">
   <mat-form-field>
-    <mat-label>Select your color theme:</mat-label>
+    <mat-label>Select your color theme</mat-label>
     <mat-select
       (selectionChange)="setColorTheme($event.value)"
       [value]="currentTheme?.colorThemeName"
@@ -14,7 +14,7 @@
     </mat-select>
   </mat-form-field>
   <mat-form-field>
-    <mat-label>Select your font weight:</mat-label>
+    <mat-label>Select your font weight</mat-label>
     <mat-select
       (selectionChange)="setFontWeight($event.value)"
       [value]="currentTheme?.fontWeight"
@@ -26,7 +26,7 @@
   </mat-form-field>
 
   <mat-form-field>
-    <mat-label>Select your font size:</mat-label>
+    <mat-label>Select your font size</mat-label>
     <mat-select
       (selectionChange)="setFontSize($event.value)"
       [value]="currentTheme?.fontSize"

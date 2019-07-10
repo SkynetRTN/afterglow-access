@@ -1,5 +1,11 @@
 <nav class="navbar-header" role="navigation" aria-label="primary">
-  <a class="afterglow-button afterglow-logo" routerLink="/" aria-label="Home" routerLinkActive="active" mat-button>
+  <a
+    class="afterglow-button afterglow-logo"
+    routerLink="/"
+    aria-label="Home"
+    routerLinkActive="active"
+    mat-button
+  >
     Afterglow Access
   </a>
 
@@ -10,8 +16,14 @@
   </button> -->
 
   <ng-container *ngIf="!authenticated">
-    <a class="afterglow-button" routerLink="login" aria-label="Login" routerLinkActive="active" mat-button>
-            Login
+    <a
+      class="afterglow-button"
+      routerLink="login"
+      aria-label="Login"
+      routerLinkActive="active"
+      mat-button
+    >
+      Login
     </a>
   </ng-container>
   <div>
@@ -19,41 +31,80 @@
       <!-- <button mat-icon-button class="afterglow-button" matTooltip="View User Profile" tabindex="-1">
               <mat-icon>account_box</mat-icon>
             </button> -->
-            
-      <a class="afterglow-button mr-2" routerLink="workbench" aria-label="Workbench" routerLinkActive="active" mat-button>
-            Workbench
-      </a>
-      <button class=" mr-2" mat-button [matMenuTriggerFor]="dataProviderMenu">Data Providers <mat-icon>keyboard_arrow_down</mat-icon></button>
-      <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
-          <a class="afterglow-button" routerLink="data-providers" aria-label="Data Provider Index" routerLinkActive="active" mat-menu-item>
-              View All
-        </a> 
-          <a *ngFor="let dataProvider of dataProviders; let i = index" class="afterglow-button" [routerLink]="['data-providers', dataProvider.name | slugify, dataProvider.browseable ? 'browse' : 'search']" routerLinkActive="active"  mat-menu-item>
-              {{dataProvider.name}}
-        </a>
 
-        
+      <a
+        class="afterglow-button mr-2"
+        routerLink="workbench"
+        aria-label="Workbench"
+        routerLinkActive="active"
+        mat-button
+      >
+        Workbench
+      </a>
+      <button
+        class=" mr-2"
+        mat-button
+        [matMenuTriggerFor]="dataProviderMenu"
+        aria-label="Data Provider Menu"
+      >
+        Data Providers <mat-icon>keyboard_arrow_down</mat-icon>
+      </button>
+      <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
+        <a
+          class="afterglow-button"
+          routerLink="data-providers"
+          aria-label="View All"
+          routerLinkActive="active"
+          mat-menu-item
+        >
+          View All
+        </a>
+        <a
+          *ngFor="let dataProvider of dataProviders; let i = index"
+          class="afterglow-button"
+          [routerLink]="[
+            'data-providers',
+            dataProvider.name | slugify,
+            dataProvider.browseable ? 'browse' : 'search'
+          ]"
+          routerLinkActive="active"
+          [attr.aria-label]="dataProvider.name"
+          mat-menu-item
+        >
+          {{dataProvider.name}}
+        </a>
       </mat-menu>
-      <button class="mr-2" mat-button [matMenuTriggerFor]="actionMenu">
-          <mat-icon>menu</mat-icon>
+      <button
+        class="mr-2"
+        mat-button
+        [matMenuTriggerFor]="actionMenu"
+        aria-label="Action Menu"
+      >
+        <mat-icon>menu</mat-icon>
       </button>
       <mat-menu #actionMenu="matMenu" class="action-menu">
-          <button mat-menu-item (click)="openThemeDialog()" >
-              <mat-icon>format_color_fill</mat-icon>
-              Select Theme...
-          </button>
-          <button mat-menu-item (click)="openQuickStartGuide()" >
-              <mat-icon>help</mat-icon>
-              Quick Start Guide...
-          </button>
-          <button mat-menu-item  (click)="logout()">
-              <mat-icon>exit_to_app</mat-icon>
-              Logout
-          </button>
+        <button
+          mat-menu-item
+          (click)="openThemeDialog()"
+          aria-label="Open Theme Editor"
+        >
+          <mat-icon>format_color_fill</mat-icon>
+          Theme Editor...
+        </button>
+        <button
+          mat-menu-item
+          (click)="openQuickStartGuide()"
+          aria-label="Open Quick Start Guide"
+        >
+          <mat-icon>help</mat-icon>
+          Quick Start Guide...
+        </button>
+        <button mat-menu-item (click)="logout()" aria-label="Logout">
+          <mat-icon>exit_to_app</mat-icon>
+          Logout
+        </button>
       </mat-menu>
 
-
-      
       <!-- <theme-picker></theme-picker> -->
       <!-- <a mat-icon-button class="afterglow-button" aria-label="Theme" (click)="openThemeDialog()" (keyup.enter)="openThemeDialog()">
           <mat-icon>format_color_fill</mat-icon>
@@ -63,5 +114,4 @@
         </a> -->
     </ng-container>
   </div>
-
 </nav>
