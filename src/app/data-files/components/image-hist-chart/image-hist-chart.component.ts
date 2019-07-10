@@ -305,9 +305,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         {
           x: x,
           y: y,
-          fill: "tozeroy",
+          // fill: "tozeroy",
           type: "scatter",
-          mode: "none"
+          // mode: "none"
         }
       ];
       

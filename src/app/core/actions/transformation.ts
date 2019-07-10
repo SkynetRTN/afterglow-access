@@ -24,11 +24,11 @@ export class ZoomBy implements Action {
   constructor(public payload: { file: ImageFile, scaleFactor: number, viewportAnchor: { x: number, y: number } }) { }
 }
 
-// export class ZoomTo implements Action {
-//   readonly type = ZOOM_TO;
+export class ZoomTo implements Action {
+  readonly type = ZOOM_TO;
 
-//   constructor(public payload: { file: ImageFile, scale: number, anchorPoint: { x: number, y: number } }) { }
-// }
+  constructor(public payload: { file: ImageFile, scale: number, anchorPoint: { x: number, y: number } }) { }
+}
 
 export class MoveBy implements Action {
   readonly type = MOVE_BY;
@@ -95,7 +95,7 @@ export class UpdateCurrentViewportSize implements Action {
 
 export type Actions =
   | ZoomBy
-  // | ZoomTo
+  | ZoomTo
   | MoveBy
   // | MoveTo
   | SetImageTransform 

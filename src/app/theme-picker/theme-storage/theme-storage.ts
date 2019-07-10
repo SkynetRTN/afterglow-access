@@ -6,7 +6,7 @@ export interface PlotlyTheme {
   fontColor: string;
   paperBgColor: string;
   plotBgColor: string;
-  colorWay: string;
+  colorWay: string[];
   modeBarBgColor: string;
   modeBarColor: string;
   modeBarActiveColor: string;
@@ -48,7 +48,7 @@ export class ThemeStorage {
         paperBgColor: "#FFFFFF",
         plotBgColor: "#FFFFFF",
         colorWay:
-          "#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf",
+          ["#3949AB","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"],
         modeBarBgColor: "#FFFFFF",
         modeBarColor: "#757575",
         modeBarActiveColor: "#757575",
@@ -67,7 +67,7 @@ export class ThemeStorage {
         paperBgColor: "#424242",
         plotBgColor: "#424242",
         colorWay:
-          "#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf",
+          ["#00BCD4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"],
         modeBarBgColor: "#424242",
         modeBarColor: "#FFFFFF",
         modeBarActiveColor: "#FFFFFF",
@@ -76,7 +76,7 @@ export class ThemeStorage {
     },
     {
       name: "high-contrast-theme",
-      displayName: "High Contrast",
+      displayName: "Yellow on Black",
       primaryIconColor: "#ffeb3b",
       secondaryIconColor: "#303030",
       plotlyTheme: {
@@ -86,7 +86,7 @@ export class ThemeStorage {
         paperBgColor: "#424242",
         plotBgColor: "#424242",
         colorWay:
-          "#1f77b4#ff7f0e#2ca02c#d62728#9467bd#8c564b#e377c2#7f7f7f#bcbd22#17becf",
+          ["#FFEB3B","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"],
         modeBarBgColor: "#424242",
         modeBarColor: "#FFEB3B",
         modeBarActiveColor: "#FFEB3B",

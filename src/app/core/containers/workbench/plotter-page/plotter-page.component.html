@@ -40,6 +40,7 @@
       </div>
 
       <div *ngIf="(imageFile$ | async) && (imageFileState$ | async)">
+          <p>Click once on the image to set the measurement's start point,  move your mouse, then click a second time to set the end point.</p>
         
 
         <app-plotter

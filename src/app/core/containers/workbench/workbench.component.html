@@ -31,10 +31,10 @@
           <div fxLayout="column" fxFlex="1 1 0%" class="file-list-panel-wrapper h-100" *ngIf="(sidebarView$ | async) == SidebarView.FILES" aria-labeledby="tab-view-file-library">
             <div fxFlex="0 0 auto" class="file-list-panel-header">
               <div class="file-list-header-view">
-                <button mat-icon-button aria-label="Clear Library" (click)="removeAllFiles()">
+                <button mat-icon-button aria-label="Remove All Files From Library" (click)="removeAllFiles()"   matTooltip="Remove All Files From Library">
                   <mat-icon>delete_sweep</mat-icon>
                 </button>
-                <button mat-icon-button aria-label="Refresh Library" (click)="refresh()">
+                <button mat-icon-button aria-label="Refresh Library" (click)="refresh()"   matTooltip="Refresh Library">
                   <mat-icon>refresh</mat-icon>
                 </button>
               </div>

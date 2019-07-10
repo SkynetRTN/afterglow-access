@@ -48,17 +48,17 @@ export class ThemePicker implements OnInit, OnDestroy {
     });
   }
 
-  setFontSize($value: MatButtonToggleChange) {
+  setFontSize(value: 'default' | 'large' | 'largest') {
     this.themeStorage.storeTheme({
       ...this.currentTheme,
-      fontSize: $value.value
+      fontSize: value
     });
   }
 
-  setFontWeight($value: MatButtonToggleChange) {
+  setFontWeight(value: 'default' | 'bold' | 'boldest') {
     this.themeStorage.storeTheme({
       ...this.currentTheme,
-      fontWeight: $value.value
+      fontWeight: value
     });
   }
 

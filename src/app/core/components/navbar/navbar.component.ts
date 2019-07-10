@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material';
 import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
 import { DataProvider } from '../../../data-providers/models/data-provider';
 import { ThemeDialogComponent } from '../theme-dialog/theme-dialog.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -14,7 +15,7 @@ export class NavbarComponent implements OnInit {
   @Input() dataProviders: Array<DataProvider>;
 
 
-  constructor(public dialog: MatDialog) { }
+  constructor(public dialog: MatDialog, private router: Router) { }
 
   ngOnInit() {
   }
@@ -33,6 +34,10 @@ export class NavbarComponent implements OnInit {
       width: '500px',
       height: '400px',
     });
+  }
+
+  logout() {
+    this.router.navigate(['logout']);
   }
 
 }

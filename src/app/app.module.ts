@@ -82,7 +82,9 @@ import { ThemePickerModule } from './theme-picker';
 
     CoreModule.forRoot(),
     AuthModule.forRoot(),
-    HotkeyModule.forRoot()
+    HotkeyModule.forRoot({
+      disableCheatSheet: true
+    })
   ],
 
   declarations: [

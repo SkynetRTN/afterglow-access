@@ -59,7 +59,6 @@
     "svgjs": "^2.6.2",
     "tslib": "^1.9.3",
     "videogular2": "^6.4.0",
-    "wcs.js": "github:astrojs/wcsjs#master",
     "worker-loader": "^2.0.0",
     "zone.js": "~0.9.1"
   },

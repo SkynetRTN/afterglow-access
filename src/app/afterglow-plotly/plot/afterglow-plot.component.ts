@@ -50,7 +50,9 @@ export class AfterglowPlotComponent extends PlotComponent implements OnChanges {
       colorway: theme.colorWay
     }
 
-    this.layout = deepmerge(this.layout, themedLayout);
+    this.layout = deepmerge(this.layout, themedLayout, {
+      arrayMerge: (destinationArray, sourceArray, options) => sourceArray
+    });
     
 
    

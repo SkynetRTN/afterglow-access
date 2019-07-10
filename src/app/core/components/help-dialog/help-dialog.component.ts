@@ -12,22 +12,31 @@ export interface KeyboardShortcutGroup {
 
 const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
   {
+    name: "Global Shortcuts",
+    shortcuts: [
+      { key: "W", description: "Workbench Page" },
+      { key: "D", description: "Data Provider Page" },
+      { key: "T", description: "Open Theme Settings" },
+      { key: "?", description: "Open Quick Start Guide" },
+    ]
+  },
+  {
     name: "Workbench Shortcuts",
     shortcuts: [
-      { key: "d", description: "Show Display Settings" },
-      { key: "i", description: "Show File Info Tool" },
-      { key: "m", description: "Show Custom Markers Tool" },
-      { key: "c", description: "Show Plotting Tool" },
-      { key: "s", description: "Show Sonification Tool" },
-      { key: "f", description: "Show Field Calibration Tool" },
-      { key: "p", description: "Show Photometry Tool" },
-      { key: "o", description: "Show Image Arithmetic Tool" },
-      { key: "a", description: "Show Aligning Tool" },
-      { key: "z", description: "Show Stacking Tool" },
-      { key: "w 0", description: "Show All Workbench Panels" },
-      { key: "w 1", description: "Show Only Workbench File Panel" },
-      { key: "w 2", description: "Show Only Workbench Image Panel" },
-      { key: "w 3", description: "Show Only Workbench Tool Panel" }
+      { key: "d", description: "Display Settings" },
+      { key: "i", description: "File Info Tool" },
+      { key: "m", description: "Custom Markers Tool" },
+      { key: "c", description: "Plotting Tool" },
+      { key: "s", description: "Sonification Tool" },
+      { key: "f", description: "Field Calibration Tool" },
+      { key: "p", description: "Photometry Tool" },
+      { key: "o", description: "Image Arithmetic Tool" },
+      { key: "a", description: "Aligning Tool" },
+      { key: "z", description: "Stacking Tool" },
+      { key: "W", description: "Reset Workbench View" },
+      { key: "1", description: "Show Only Workbench File Panel" },
+      { key: "2", description: "Only Workbench Image Panel" },
+      { key: "3", description: "Only Workbench Tool Panel" }
     ]
   },
   {

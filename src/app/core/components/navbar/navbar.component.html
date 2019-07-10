@@ -20,10 +20,10 @@
               <mat-icon>account_box</mat-icon>
             </button> -->
             
-      <a class="afterglow-button" routerLink="workbench" aria-label="Workbench" routerLinkActive="active" mat-button>
+      <a class="afterglow-button mr-2" routerLink="workbench" aria-label="Workbench" routerLinkActive="active" mat-button>
             Workbench
       </a>
-      <button mat-button [matMenuTriggerFor]="dataProviderMenu">Data Providers</button>
+      <button class=" mr-2" mat-button [matMenuTriggerFor]="dataProviderMenu">Data Providers <mat-icon>keyboard_arrow_down</mat-icon></button>
       <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
           <a class="afterglow-button" routerLink="data-providers" aria-label="Data Provider Index" routerLinkActive="active" mat-menu-item>
               View All
@@ -34,16 +34,33 @@
 
         
       </mat-menu>
-      <a class="afterglow-button" routerLink="logout" aria-label="Logout" routerLinkActive="active" mat-button>
-          Logout
-      </a>
+      <button class="mr-2" mat-button [matMenuTriggerFor]="actionMenu">
+          <mat-icon>menu</mat-icon>
+      </button>
+      <mat-menu #actionMenu="matMenu" class="action-menu">
+          <button mat-menu-item (click)="openThemeDialog()" >
+              <mat-icon>format_color_fill</mat-icon>
+              Select Theme...
+          </button>
+          <button mat-menu-item (click)="openQuickStartGuide()" >
+              <mat-icon>help</mat-icon>
+              Quick Start Guide...
+          </button>
+          <button mat-menu-item  (click)="logout()">
+              <mat-icon>exit_to_app</mat-icon>
+              Logout
+          </button>
+      </mat-menu>
+
+
+      
       <!-- <theme-picker></theme-picker> -->
-      <a mat-icon-button class="afterglow-button" aria-label="Theme" (click)="openThemeDialog()" (keyup.enter)="openThemeDialog()">
+      <!-- <a mat-icon-button class="afterglow-button" aria-label="Theme" (click)="openThemeDialog()" (keyup.enter)="openThemeDialog()">
           <mat-icon>format_color_fill</mat-icon>
         </a>
       <a mat-icon-button class="afterglow-button" aria-label="Help" (click)="openQuickStartGuide()" (keyup.enter)="openQuickStartGuide()">
           <mat-icon>help</mat-icon>
-        </a>
+        </a> -->
     </ng-container>
   </div>
 

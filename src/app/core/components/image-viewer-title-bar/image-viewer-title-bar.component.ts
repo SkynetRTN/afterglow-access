@@ -40,6 +40,14 @@ export class ImageViewerTitleBarComponent implements OnInit {
     this.zoomBy(this.zoomStepFactor, imageAnchor);
   }
 
+  public zoomTo(value: number) {
+    this.store.dispatch(new transformationActions.ZoomTo({
+      file: this.imageFile,
+      scale: value,
+      anchorPoint: null
+    }));
+  }
+
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
     this.store.dispatch(new transformationActions.ZoomBy({
       file: this.imageFile,

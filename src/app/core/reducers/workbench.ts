@@ -185,6 +185,20 @@ export function reducer(
       }
     }
 
+    case workbenchActions.SHOW_SIDEBAR: {
+      return {
+        ...state,
+        showSidebar: true,
+      }
+    }
+
+    case workbenchActions.HIDE_SIDEBAR: {
+      return {
+        ...state,
+        showSidebar: false,
+      }
+    }
+
     case workbenchActions.SET_ACTIVE_VIEWER: {
       if (state.activeViewerIndex == action.payload.viewerIndex) return state;
 

@@ -74,77 +74,89 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
 
     this.hotKeys.push(new Hotkey('d', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.VIEWER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Display Settings'))
 
     this.hotKeys.push(new Hotkey('i', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.FILE_INFO_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'File Info'));
 
     this.hotKeys.push(new Hotkey('m', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.MARKER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Markers'));
 
     this.hotKeys.push(new Hotkey('c', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.PLOTTER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Plotter'));
 
     this.hotKeys.push(new Hotkey('s', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.SONIFIER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Sonifier'));
 
     this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.FIELD_CAL_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Field Calibration'));
 
     this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.SOURCE_EXTRACTOR_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Photometry'));
 
     this.hotKeys.push(new Hotkey('o', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.IMAGE_ARITHMETIC_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Image Arithmetic'));
 
     this.hotKeys.push(new Hotkey('a', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.ALIGNER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Aligning'));
 
     this.hotKeys.push(new Hotkey('z', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       this.router. navigate([this.STACKER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Stacking'));
 
     
 
-    this.hotKeys.push(new Hotkey('w 0', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetFullScreen({value: false}))
-      return false; // Prevent bubbling
-    }, undefined, 'Show all workbench panels'));
+    // this.hotKeys.push(new Hotkey('0', (event: KeyboardEvent): boolean => {
+    //   this.store.dispatch(new workbenchActions.SetFullScreen({value: false}))
+    //   return false; // Prevent bubbling
+    // }, undefined, 'Show all workbench panels'));
 
-    this.hotKeys.push(new Hotkey('w 1', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('1', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new workbenchActions.SetFullScreen({value: true}));
-      this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'file'}))
+      this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'file'}));
+      this.store.dispatch(new workbenchActions.ShowSidebar());
       return false; // Prevent bubbling
     }, undefined, 'Show workbench file panel'));
 
-    this.hotKeys.push(new Hotkey('w 2', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('2', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new workbenchActions.SetFullScreen({value: true}));
       this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'viewer'}))
       return false; // Prevent bubbling
     }, undefined, 'Show workbench file panel'));
 
-    this.hotKeys.push(new Hotkey('w 3', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('3', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new workbenchActions.SetFullScreen({value: true}));
       this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'tool'}))
+      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
       return false; // Prevent bubbling
     }, undefined, 'Show workbench file panel'));
 

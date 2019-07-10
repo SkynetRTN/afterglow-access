@@ -147,6 +147,10 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
   max-width: 350px !important;
 }
 
+.action-menu {
+  max-width: 450px !important;
+}
+
 
 $fa-font-path:"~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";

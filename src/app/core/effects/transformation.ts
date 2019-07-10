@@ -16,6 +16,7 @@ import * as sourceExtractorActions from "../actions/source-extractor";
 import { SonifierRegionMode } from "../models/sonifier-file-state";
 import { SourceExtractorRegionOption } from "../models/source-extractor-file-state";
 import { getHeight } from "../../data-files/models/data-file";
+import { getScale } from '../models/transformation';
 
 @Injectable()
 export class TransformationEffects {
@@ -65,6 +66,32 @@ export class TransformationEffects {
       return from(actions);
     })
   );
+
+  @Effect()
+  zoomTo$: Observable<Action> = this.actions$.pipe(
+    ofType<transformationActions.ZoomTo>(
+      transformationActions.ZOOM_TO
+    ),
+    withLatestFrom(this.store.select(fromCore.getImageFileStates)),
+    flatMap(([action, imageFileStates]) => {
+      let actions = [];
+      let imageFile = action.payload.file;
+      let transformationState = imageFileStates[imageFile.id].transformation;
+      let zoomByFactor = action.payload.scale/getScale(transformationState);
+      
+      actions.push(
+        new transformationActions.ZoomBy({
+          file: action.payload.file,
+          scaleFactor : zoomByFactor,
+          viewportAnchor: action.payload.anchorPoint
+        })
+      );
+     
+
+      return from(actions);
+    })
+  );
+  
 
   @Effect()
   viewportChanged$: Observable<Action> = this.actions$.pipe(

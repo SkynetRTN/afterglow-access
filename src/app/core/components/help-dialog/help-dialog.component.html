@@ -12,8 +12,8 @@
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
               <td mat-cell *matCellDef="let shortcut">
-                <span class="cfp-hotkeys-key">
-                  {{ shortcut.key }}
+                <span *ngFor="let key of shortcut.key.split(' ')" class="cfp-hotkeys-key pr-1">
+                  {{ key }}
                 </span>
               </td>
             </ng-container>
@@ -37,5 +37,5 @@
   </mat-tab-group>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close>Close</button>
+  <button mat-raised-button mat-dialog-close>Close</button>
 </mat-dialog-actions>

@@ -1,72 +1,39 @@
-<!-- <button mat-icon-button [mat-menu-trigger-for]="themeMenu" matTooltip="Select a theme!">
-  <mat-icon>format_color_fill</mat-icon>
-</button> -->
-
-<!-- TODO: replace use of `mat-menu` here with a custom overlay -->
-<!-- <mat-menu class="docs-theme-picker-menu pb-2" #themeMenu="matMenu" x-position="before"> -->
-  <div>
-      <mat-form-field>
-          <mat-label>Select your color theme:</mat-label>
-          <mat-select style="width: 300px;" (selectionChange)="setColorTheme($event.value)" [value]="currentTheme?.colorThemeName">
-            <mat-option *ngFor="let colorTheme of availableColorThemes" [value]="colorTheme.name">
-              {{colorTheme.displayName}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-  </div>
-<!-- <div class="docs-theme-picker-menu">
-  <mat-grid-list cols="3">
-    <mat-grid-tile >
-      <div
-        mat-button
-        (click)="setColorTheme(colorTheme)"
-        (keyup.enter)="setColorTheme(colorTheme)"
+<div class="container">
+  <mat-form-field>
+    <mat-label>Select your color theme:</mat-label>
+    <mat-select
+      (selectionChange)="setColorTheme($event.value)"
+      [value]="currentTheme?.colorThemeName"
+    >
+      <mat-option
+        *ngFor="let colorTheme of availableColorThemes"
+        [value]="colorTheme.name"
       >
-        <div class="docs-theme-picker-swatch">
-          <mat-icon
-            class="docs-theme-chosen-icon"
-            *ngIf="currentTheme?.colorThemeName === colorTheme.name"
-            >check_circle</mat-icon
-          >
-          <div
-            class="docs-theme-picker-primary"
-            [style.background]="colorTheme.primaryIconColor"
-          ></div>
-        </div>
-      </div>
-    </mat-grid-tile>
-  </mat-grid-list>
-</div> -->
+        {{ colorTheme.displayName }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Select your font weight:</mat-label>
+    <mat-select
+      (selectionChange)="setFontWeight($event.value)"
+      [value]="currentTheme?.fontWeight"
+    >
+      <mat-option value="default">Default</mat-option>
+      <mat-option value="bold">Bold</mat-option>
+      <mat-option value="boldest">Extra Bold</mat-option>
+    </mat-select>
+  </mat-form-field>
 
-<div>
-  <label class="pr-2" >Font Weight:</label>
-
-  <mat-button-toggle-group
-    class="mb-2"
-    name="fontWeight"
-    aria-label="Font Weight"
-    [value]="currentTheme?.fontWeight"
-    (change)="setFontWeight($event)"
-  >
-    <mat-button-toggle value="default">Default</mat-button-toggle>
-    <mat-button-toggle value="bold">Bold</mat-button-toggle>
-    <mat-button-toggle value="boldest">Extra Bold</mat-button-toggle>
-  </mat-button-toggle-group>
+  <mat-form-field>
+    <mat-label>Select your font size:</mat-label>
+    <mat-select
+      (selectionChange)="setFontSize($event.value)"
+      [value]="currentTheme?.fontSize"
+    >
+      <mat-option value="default">Default</mat-option>
+      <mat-option value="large">Large</mat-option>
+      <mat-option value="largest">Extra Large</mat-option>
+    </mat-select>
+  </mat-form-field>
 </div>
-<div>
-  
-    <label class="pr-2">Font Size:</label>
-  <mat-button-toggle-group
-    class="mb-2"
-    name="fontSize"
-    aria-label="Font Size"
-    [value]="currentTheme?.fontSize"
-    (change)="setFontSize($event)"
-  >
-    <mat-button-toggle value="default">Default</mat-button-toggle>
-    <mat-button-toggle value="large">Large</mat-button-toggle>
-    <mat-button-toggle value="largest">Extra Large</mat-button-toggle>
-  </mat-button-toggle-group>
-</div>
-
-<!-- </mat-menu> -->

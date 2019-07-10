@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, Renderer2 } from "@angular/core";
+import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular/core";
 import { CookieService } from "ngx-cookie";
 import { AnyFn } from "@ngrx/store/src/selector";
 import { Title } from "@angular/platform-browser";
@@ -13,29 +13,34 @@ import * as fromDataFiles from "./data-files/reducers";
 import * as fromDataProviders from "./data-providers/reducers";
 import * as coreActions from "./core/actions/core";
 import * as authActions from "./auth/actions/auth";
+import * as workbenchActions from "./core/actions/workbench";
 import * as dataFileActions from "./data-files/actions/data-file";
 import * as dataProviderActions from "./data-providers/actions/data-provider";
 import { User } from "./auth/models/user";
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
-import { ThemeStorage } from './theme-picker/theme-storage/theme-storage';
-import { WorkbenchGuard } from './core/services/workbench-guard.service';
-import { DataProvider } from './data-providers/models/data-provider';
+import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
+import { WorkbenchGuard } from "./core/services/workbench-guard.service";
+import { DataProvider } from "./data-providers/models/data-provider";
+import { HelpDialogComponent } from "./core/components/help-dialog/help-dialog.component";
+import { MatDialog } from "@angular/material";
+import { ThemeDialogComponent } from "./core/components/theme-dialog/theme-dialog.component";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.css"]
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentRoutes: any[] = [];
   loggedIn$: Observable<boolean>;
   private user$: Observable<User>;
   private loggedInSub: Subscription;
   private colorThemeName: string;
-  private fontSize: 'default' | 'large' | 'largest';
-  private fontWeight: 'default' | 'bold' | 'boldest';
+  private fontSize: "default" | "large" | "largest";
+  private fontWeight: "default" | "bold" | "boldest";
   private dataProviders$: Observable<Array<DataProvider>>;
 
+  private hotKeys: Array<Hotkey> = [];
 
   public constructor(
     private store: Store<fromRoot.State>,
@@ -44,41 +49,46 @@ export class AppComponent implements OnInit, AfterViewInit {
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
     private renderer: Renderer2,
-    private themeStorage: ThemeStorage
+    private themeStorage: ThemeStorage,
+    public dialog: MatDialog,
+    private _hotkeysService: HotkeysService
   ) {
-
     let theme = this.themeStorage.getCurrentTheme();
-    if(!theme) {
+    if (!theme) {
       theme = {
         colorThemeName: this.themeStorage.colorThemes[0].name,
-        fontSize: 'default',
-        fontWeight: 'default'
-      }
+        fontSize: "default",
+        fontWeight: "default"
+      };
       this.themeStorage.storeTheme(theme);
     }
-    this.colorThemeName = theme.colorThemeName
+    this.colorThemeName = theme.colorThemeName;
     this.renderer.addClass(document.body, this.colorThemeName);
     this.fontSize = theme.fontSize;
-    if(this.fontSize != 'default') this.renderer.addClass(document.body, this.fontSize);
+    if (this.fontSize != "default")
+      this.renderer.addClass(document.body, this.fontSize);
     this.fontWeight = theme.fontWeight;
-    if(this.fontWeight != 'default') this.renderer.addClass(document.body, this.fontWeight);
-    
+    if (this.fontWeight != "default")
+      this.renderer.addClass(document.body, this.fontWeight);
 
     this.themeStorage.onThemeUpdate.subscribe(theme => {
       this.renderer.removeClass(document.body, this.colorThemeName);
       this.colorThemeName = theme.colorThemeName;
       this.renderer.addClass(document.body, this.colorThemeName);
-      
-      if(this.fontSize != 'default') this.renderer.removeClass(document.body, this.fontSize);
+
+      if (this.fontSize != "default")
+        this.renderer.removeClass(document.body, this.fontSize);
       this.fontSize = theme.fontSize;
-      if(this.fontSize != 'default') this.renderer.addClass(document.body, this.fontSize);
+      if (this.fontSize != "default")
+        this.renderer.addClass(document.body, this.fontSize);
 
-      if(this.fontWeight != 'default') this.renderer.removeClass(document.body, this.fontWeight);
+      if (this.fontWeight != "default")
+        this.renderer.removeClass(document.body, this.fontWeight);
       this.fontWeight = theme.fontWeight;
-      if(this.fontWeight != 'default') this.renderer.addClass(document.body, this.fontWeight);
-    })
+      if (this.fontWeight != "default")
+        this.renderer.addClass(document.body, this.fontWeight);
+    });
 
-    
     this.dataProviders$ = this.store.select(fromDataProviders.getDataProviders);
 
     this.loggedIn$ = this.store.select(fromAuth.getLoggedIn);
@@ -87,6 +97,66 @@ export class AppComponent implements OnInit, AfterViewInit {
     if (this.authGuard.isLoggedIn()) {
       this.store.dispatch(new authActions.Init({ loggedIn: true }));
     }
+
+    this.hotKeys.push(
+      new Hotkey(
+        "W",
+        (event: KeyboardEvent): boolean => {
+          this.router.navigate(["workbench"]);
+          this.store.dispatch(new workbenchActions.SetFullScreen({value: false}))
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Workbench"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "D",
+        (event: KeyboardEvent): boolean => {
+          this.router.navigate(["data-providers"]);
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Data Providers"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "T",
+        (event: KeyboardEvent): boolean => {
+          this.dialog.open(ThemeDialogComponent, {
+            data: {},
+            width: "500px",
+            height: "400px"
+          });
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Quick Start Guide"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "?",
+        (event: KeyboardEvent): boolean => {
+          this.dialog.open(HelpDialogComponent, {
+            data: {},
+            width: "800px",
+            height: "600px"
+          });
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Quick Start Guide"
+      )
+    );
+
+    
+    this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
 
     // localStorage.setItem("previouslyVisited", "false");
     // this.tourService.events$.subscribe(x => console.log(x));
@@ -177,7 +247,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     //       title: "Hide Workbench Tools",
     //       route: "/workbench/viewer"
     //     },
-        
+
     //   ],
     //   {
     //     popperSettings: {
@@ -219,9 +289,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
     this.store.dispatch(new coreActions.Initialize());
-    
-
   }
 
   ngAfterViewInit() {}
+
+  
+  ngOnDestroy() {
+    this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
+  }
+
 }

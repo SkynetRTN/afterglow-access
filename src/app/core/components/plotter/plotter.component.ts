@@ -245,9 +245,9 @@ export class PlotterComponent implements OnInit, OnChanges {
         {
           x: ts,
           y: vs,
-          fill: "tozeroy",
+          // fill: "tozeroy",
           type: "scatter",
-          mode: "none"
+          // mode: "none"
         }
       ];
     }
