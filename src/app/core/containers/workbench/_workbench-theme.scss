@@ -57,18 +57,27 @@
         }
 
         .vertical-icon-nav-item {
+          border: none;
+          opacity: 0.9;
           @if($is-dark-theme) {
-            background: rgba(white, 0.2),
+            background: rgba(white, 0.2);
+            border-bottom: 2px solid rgba(white, 0.1);
+            
           }
           @else {
-            background: rgba(black, 0.1),
+            background: rgba(black, 0.1);
+            border-bottom: 2px solid rgba(black, 0.05);
           }
           
         }
 
+        .vertical-icon-nav-item:hover {
+          opacity: 1.0;
+        }
+
         .vertical-icon-nav-item.active {
           background: mat-color($background, card);
-          
+          opacity: 1.0;
 
           .mat-icon {
             color: mat-color($primary);
