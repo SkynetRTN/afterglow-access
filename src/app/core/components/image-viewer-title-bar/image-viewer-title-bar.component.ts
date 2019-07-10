@@ -5,6 +5,8 @@ import * as dataFileActions from '../../../data-files/actions/data-file';
 import * as transformationActions from '../../actions/transformation';
 import * as fromRoot from '../../../reducers';
 import { ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file';
+import { Subject, BehaviorSubject, Observable, timer, interval } from 'rxjs';
+import { filter, flatMap, takeUntil } from 'rxjs/Operators';
 
 @Component({
   selector: 'app-image-viewer-title-bar',
@@ -16,8 +18,14 @@ export class ImageViewerTitleBarComponent implements OnInit {
   @Output() downloadSnapshot = new EventEmitter();
 
   private zoomStepFactor: number = 0.75;
+  private startZoomIn$ = new Subject<boolean>();
+  private stopZoomIn$ = new Subject<boolean>();
+  
+  private startZoomOut$ = new Subject<boolean>();
+  private stopZoomOut$ = new Subject<boolean>();
 
-  constructor(private store: Store<fromRoot.State>) { }
+  constructor(private store: Store<fromRoot.State>) {
+  }
 
   ngOnInit() {
   }
@@ -30,6 +38,32 @@ export class ImageViewerTitleBarComponent implements OnInit {
     if (this.imageFile) {
       this.store.dispatch(new dataFileActions.RemoveDataFile({ fileId: this.imageFile.id }));
     }
+  }
+
+  public startZoomIn() {
+    interval(500).pipe(
+      takeUntil(this.stopZoomIn$),
+
+    ).subscribe(t => {
+      this.zoomIn();
+    });
+  }
+
+  public stopZoomIn() {
+    this.stopZoomIn$.next(true);
+  }
+
+  public startZoomOut() {
+    interval(500).pipe(
+      takeUntil(this.stopZoomOut$),
+
+    ).subscribe(t => {
+      this.zoomOut();
+    });
+  }
+
+  public stopZoomOut() {
+    this.stopZoomOut$.next(true);
   }
 
   public zoomIn(imageAnchor: { x: number, y: number } = null) {

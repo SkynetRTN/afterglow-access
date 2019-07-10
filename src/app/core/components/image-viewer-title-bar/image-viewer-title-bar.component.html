@@ -4,10 +4,10 @@
       <span>{{imageFile?.name}}</span>
     </div>
     <div class="tool-bar">
-      <button mat-icon-button aria-label="Zoom In" (click)="zoomIn()"  matTooltip="Zoom In">
+      <button mat-icon-button aria-label="Zoom In"   (mousedown)="startZoomIn()" (mouseup)="stopZoomIn()" matTooltip="Zoom In">
         <mat-icon>zoom_in</mat-icon>
       </button>
-      <button mat-icon-button aria-label="Zoom Out" (click)="zoomOut()"  matTooltip="Zoom Out">
+      <button mat-icon-button aria-label="Zoom Out"   (mousedown)="startZoomOut()" (mouseup)="stopZoomOut()"   matTooltip="Zoom Out">
         <mat-icon>zoom_out</mat-icon>
       </button>
       <button mat-icon-button aria-label="Zoom to Fit" (click)="zoomToFit()"  matTooltip="Zoom To Fit">
