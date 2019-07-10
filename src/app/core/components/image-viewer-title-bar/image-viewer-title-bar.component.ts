@@ -41,7 +41,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
   }
 
   public startZoomIn() {
-    timer(0, 250).pipe(
+    timer(0, 125).pipe(
       takeUntil(this.stopZoomIn$),
 
     ).subscribe(t => {
@@ -54,7 +54,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
   }
 
   public startZoomOut() {
-    timer(0, 250).pipe(
+    timer(0, 125).pipe(
       takeUntil(this.stopZoomOut$),
 
     ).subscribe(t => {
