@@ -6,7 +6,7 @@ import * as transformationActions from '../../actions/transformation';
 import * as fromRoot from '../../../reducers';
 import { ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file';
 import { Subject, BehaviorSubject, Observable, timer, interval } from 'rxjs';
-import { filter, flatMap, takeUntil } from 'rxjs/Operators';
+import { filter, flatMap, takeUntil } from "rxjs/operators";
 
 @Component({
   selector: 'app-image-viewer-title-bar',
