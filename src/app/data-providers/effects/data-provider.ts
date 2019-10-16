@@ -4,11 +4,14 @@ import { Action } from "@ngrx/store";
 import { Observable, merge, of } from "rxjs";
 import {
   map,
+  flatMap,
   catchError,
   switchMap,
   takeUntil,
   withLatestFrom,
-  skip
+  filter,
+  skip,
+  tap
 } from "rxjs/operators";
 import { Store } from "@ngrx/store";
 import { ActivatedRoute, Params, Router } from "@angular/router";
@@ -98,11 +101,11 @@ export class DataProviderEffects {
       return merge(
         ...state.pendingImports.map(asset => {
           return this.afterglowDataFileService
-            .createFromDataProviderAsset(state.currentProvider, asset)
+            .createFromDataProviderAsset(state.currentProvider.id, asset.path)
             .pipe(
               map(
-                () =>
-                  new dataProviderActions.ImportAssetSuccess({ asset: asset })
+                (resp: any) =>
+                  new dataProviderActions.ImportAssetSuccess({ asset: asset, fileId:  resp[0].id.toString()})
               ),
               catchError(err => {
                 return of(
@@ -126,18 +129,18 @@ export class DataProviderEffects {
       return merge(
         ...state.pendingImports.map(asset => {
           return this.afterglowDataFileService
-            .createFromDataProviderAsset(state.currentProvider, asset)
+            .createFromDataProviderAsset(action.payload.dataProviderId, asset.path)
             .pipe(
               map(
-                () =>
-                  new dataProviderActions.ImportAssetSuccess({ asset: asset })
+                (resp: any) =>
+                  new dataProviderActions.ImportAssetSuccess({ asset: asset, fileId:  resp[0].id.toString() }, action.correlationId)
               ),
               catchError(err => {
                 return of(
                   new dataProviderActions.ImportAssetFail({
                     error: (err as HttpErrorResponse).error.message,
                     asset: asset
-                  })
+                  }, action.correlationId)
                 );
               })
             );
@@ -146,14 +149,16 @@ export class DataProviderEffects {
     })
   );
 
-  // @Effect()
-  // importSelectedAssetsSuccess$: Observable<Action> = this.actions$
-  //   .ofType<dataProviderActions.ImportAssetSuccess>(dataProviderActions.IMPORT_ASSET_SUCCESS)
-  //   //.debounceTime(this.debounce || 300, this.scheduler || async)
-  //   .flatMap(action => {
-  //     this.router.navigate(['/workbench']);
-  //     return Observable.from([new dataFileActions.LoadLibrary()]);
-  //   });
+  @Effect()
+  importSelectedAssetsSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail>(dataProviderActions.IMPORT_ASSET_SUCCESS, dataProviderActions.IMPORT_ASSET_FAIL),
+    withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
+    filter(([action, state]) => state.pendingImports.length == 0),
+    flatMap(([action, state]) => {
+      this.router.navigate(['/workbench']);
+      return of(new dataFileActions.LoadLibrary());
+    })
+  );
 
   constructor(
     private actions$: Actions,

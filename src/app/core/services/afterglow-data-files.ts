@@ -114,11 +114,11 @@ export class AfterglowDataFileService {
   }
 
   createFromDataProviderAsset(
-    provider: DataProvider,
-    asset: DataProviderAsset
+    providerId: string,
+    assetPath: string
   ) {
-    asset.path = asset.path.replace("\\", "/");
-    let body = { provider_id: provider.id, path: asset.path };
+    // assetPath = assetPath.replace("\\", "/");
+    let body = { provider_id: providerId, path: assetPath };
     return this.http.post(
       this.location.prepareExternalUrl(`${environment.apiUrl}/data-files`),
       body

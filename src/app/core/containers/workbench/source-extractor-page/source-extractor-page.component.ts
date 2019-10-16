@@ -71,9 +71,10 @@ import { JobType } from "../../../../jobs/models/job-types";
 import { Astrometry } from "../../../../jobs/models/astrometry";
 import { SourceId } from "../../../../jobs/models/source-id";
 import { Papa } from "ngx-papaparse";
-import { datetimeToJd, jdToMjd } from "../../../../lib/skynet-astro";
+import { datetimeToJd, jdToMjd } from "../../../../utils/skynet-astro";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { Router } from "@angular/router";
+import { MatButtonToggleChange } from '@angular/material';
 
 export class SourcesDataSource implements DataSource<Source> {
   sources$: Observable<Source[]>;
@@ -301,9 +302,9 @@ export class SourceExtractorPageComponent
 
   ngOnChanges() {}
 
-  setModeOption(value) {
+  setModeOption($event: MatButtonToggleChange) {
     this.store.dispatch(
-      new workbenchActions.SetSourceExtractionMode({ mode: value })
+      new workbenchActions.SetSourceExtractionMode({ mode: $event.value })
     );
   }
 

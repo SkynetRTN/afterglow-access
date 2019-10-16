@@ -52,9 +52,9 @@ export class DataFileEffects {
         takeUntil(nextReq$),
         map(
           (dataFiles: DataFile[]) =>
-            new dataFileActions.LoadLibrarySuccess(dataFiles)
+            new dataFileActions.LoadLibrarySuccess(dataFiles, action.correlationId)
         ),
-        catchError(err => of(new dataFileActions.LoadLibraryFail(err)))
+        catchError(err => of(new dataFileActions.LoadLibraryFail(err, action.correlationId)))
       );
     })
   );

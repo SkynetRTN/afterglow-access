@@ -44,16 +44,16 @@
             <mat-button-toggle-group
               name="extractionMode"
               class=""
-              [ngModel]="(workbenchState$ | async)?.sourceExtractorModeOption"
-              (ngModelChange)="setModeOption($event)"
+              [value]="(workbenchState$ | async)?.sourceExtractorModeOption"
+              (change)="setModeOption($event)"
             >
-              <mat-button-toggle value="{{ SourceExtractorModeOption.MOUSE }}">
+              <mat-button-toggle [value]="SourceExtractorModeOption.MOUSE">
                 <mat-icon>mouse</mat-icon> Mouse
               </mat-button-toggle>
               <!-- <mat-button-toggle value="{{SourceExtractorModeOption.COORD}}">
                   <mat-icon>language</mat-icon> Coordinates
                 </mat-button-toggle> -->
-              <mat-button-toggle value="{{ SourceExtractorModeOption.AUTO }}">
+              <mat-button-toggle [value]="SourceExtractorModeOption.AUTO">
                 <mat-icon>brightness_auto</mat-icon> Auto
               </mat-button-toggle>
             </mat-button-toggle-group>

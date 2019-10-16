@@ -2,6 +2,7 @@ import { Action } from '@ngrx/store';
 import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 import { TOGGLE_ACTION } from '@ngrx/store-devtools/src/actions';
+import { CorrelatedAction } from '../../utils/correlated-action';
 // import { TdDataTableSortingOrder } from '@covalent/core';
 
 export const LOAD_DATA_PROVIDERS = '[DataProvider] Load Data Provider';
@@ -91,22 +92,22 @@ export class ImportSelectedAssets implements Action {
   constructor() { }
 }
 
-export class ImportAssets implements Action {
+export class ImportAssets implements CorrelatedAction {
   readonly type = IMPORT_ASSETS;
 
-  constructor(public payload: { assets: DataProviderAsset[] }) {  }
+  constructor(public payload: { dataProviderId: string, assets: DataProviderAsset[] }, public correlationId?: string) {  }
 }
 
-export class ImportAssetSuccess implements Action {
+export class ImportAssetSuccess implements CorrelatedAction {
   readonly type = IMPORT_ASSET_SUCCESS;
 
-  constructor(public payload: { asset: DataProviderAsset }) { }
+  constructor(public payload: { asset: DataProviderAsset, fileId: string }, public correlationId?: string) { }
 }
 
-export class ImportAssetFail implements Action {
+export class ImportAssetFail implements CorrelatedAction {
   readonly type = IMPORT_ASSET_FAIL;
 
-  constructor(public payload: { error: string, asset: DataProviderAsset }) { }
+  constructor(public payload: { error: string, asset: DataProviderAsset }, public correlationId?: string) { }
 }
 
 export class ImportAssetsCancel implements Action {

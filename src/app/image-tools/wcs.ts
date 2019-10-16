@@ -173,7 +173,9 @@ export class Wcs {
   }
 
   public isValid() {
-    return this.wcs && this.wcs.isValid;
+    return this.wcs && this.wcs.isValid && ['CTYPE1', 'CTYPE2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2'].every(key => key in this.params) && (
+      ['CD1_1', 'CD1_2', 'CD2_1', 'CD2_2'].every(key => key in this.params) || ['CDELT1', 'CDELT2'].every(key => key in this.params) || ['PC1_1', 'PC1_2', 'PC2_1', 'PC2_2'].every(key => key in this.params)
+    )
   }
 
   public get crpix1() {
@@ -193,19 +195,31 @@ export class Wcs {
   }
 
   public get m11() {
-    return 'CD1_1' in this.params ? this.params['CD1_1'] :  this.params['PC1_1'];
+   if('CD1_1' in this.params) return this.params['CD1_1'];
+   if('PC1_1' in this.params) return  this.params['PC1_1'];
+   if('CDELT1' in this.params) return this.params['CDELT1'];
+   return null;
   }
 
   public get m12() {
-    return 'CD1_2' in this.params ? this.params['CD1_2'] :  this.params['PC1_2'];
+    if('CD1_2' in this.params) return this.params['CD1_2'];
+    if('PC1_2' in this.params) return  this.params['PC1_2'];
+    if('CDELT1' in this.params) return 0;
+    return null;
   }
 
   public get m21() {
-    return 'CD2_1' in this.params ? this.params['CD2_1'] :  this.params['PC2_1'];
+    if('CD2_1' in this.params) return this.params['CD2_1'];
+    if('PC2_1' in this.params) return  this.params['PC2_1'];
+    if('CDELT1' in this.params) return 0;
+    return null;
   }
 
   public get m22() {
-    return 'CD2_2' in this.params ? this.params['CD2_2'] :  this.params['PC2_2'];
+    if('CD2_2' in this.params) return this.params['CD2_2'];
+   if('PC2_2' in this.params) return  this.params['PC2_2'];
+   if('CDELT2' in this.params) return this.params['CDELT2'];
+   return null;
   }
 
   public worldToPix(raDec: Array<number>) {

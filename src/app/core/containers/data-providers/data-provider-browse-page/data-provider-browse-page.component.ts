@@ -262,9 +262,9 @@ export class DataProviderBrowsePageComponent
     return Array.isArray(value);
   }
 
-  import() {
+  import(provider: DataProvider, assets: DataProviderAsset[]) {
     this.store.dispatch(
-      new dataProviderActions.ImportAssets({ assets: this.selection.selected })
+      new dataProviderActions.ImportAssets({ dataProviderId: provider.id, assets: assets })
     );
   }
 

@@ -6,6 +6,7 @@ import * as imageFileActions from '../../data-files/actions/image-file';
 import * as authActions from '../../auth/actions/auth';
 import * as jobActions from '../../jobs/actions/job';
 import * as workbenchActions from '../actions/workbench';
+import * as surveyActions from '../actions/survey';
 import { SidebarView } from '../models/sidebar-view';
 import { WorkbenchState, WorkbenchTool } from '../models/workbench-state';
 import { ViewMode } from '../models/view-mode';
@@ -108,12 +109,13 @@ export const initialState: WorkbenchState = {
     low: 0,
     high: 0,
   },
-  currentStackingJobId: null
+  currentStackingJobId: null,
+  surveyImportCorrId: null
 };
 
 export function reducer(
   state = initialState,
-  action: workbenchActions.Actions | dataFileActions.Actions | imageFileActions.Actions | authActions.Actions | jobActions.Actions
+  action: workbenchActions.Actions | dataFileActions.Actions | imageFileActions.Actions | authActions.Actions | jobActions.Actions | surveyActions.Actions
 ): WorkbenchState {
   switch (action.type) {
 
@@ -504,6 +506,20 @@ export function reducer(
           ...state.stackFormData,
           ...action.payload.data
         }
+      }
+    }
+
+    case surveyActions.IMPORT_FROM_SURVEY: {
+      return {
+        ...state,
+        surveyImportCorrId: action.correlationId
+      }
+    }
+
+    case surveyActions.IMPORT_FROM_SURVEY_SUCCESS, surveyActions.IMPORT_FROM_SURVEY_FAIL: {
+      return {
+        ...state,
+        surveyImportCorrId: null
       }
     }
 

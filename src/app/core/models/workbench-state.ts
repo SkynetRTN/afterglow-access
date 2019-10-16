@@ -87,4 +87,5 @@ export interface WorkbenchState {
   currentAlignmentJobId: string;
   stackFormData: StackFormData;
   currentStackingJobId: string;
+  surveyImportCorrId: string;
 }

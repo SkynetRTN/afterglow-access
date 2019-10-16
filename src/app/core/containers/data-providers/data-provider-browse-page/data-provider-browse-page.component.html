@@ -1,4 +1,4 @@
-<div class="page-wrapper">
+<div class="page-wrapper" *ngIf="(currentProvider$ | async); let currentProvider">
   <div class="header-panel container pt-1">
     <ol class="breadcrumb data-provider-nav">
       <li class="breadcrumb-item">
@@ -44,7 +44,7 @@
             <div class="dp-browser-toolbar">
               <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
                   <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
-              <button mat-raised-button (click)="import()" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
+                  <button mat-raised-button (click)="import(currentProvider, selection.selected)" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
             </div>
           </mat-card-header>
 
@@ -122,7 +122,7 @@
                 
               <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
                   <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
-              <button mat-raised-button (click)="import()" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
+              <button mat-raised-button (click)="import(currentProvider, selection.selected)" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
             </div>
 
           </mat-card-header>

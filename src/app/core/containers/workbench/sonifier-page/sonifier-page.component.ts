@@ -48,6 +48,7 @@ import {
 } from "../../../../../../node_modules/angular2-hotkeys";
 import { ChangeDetectorRef } from "@angular/core";
 import { Router } from '@angular/router';
+import { MatButtonToggleChange } from '@angular/material';
 
 @Component({
   selector: "app-sonifier-page",
@@ -313,11 +314,11 @@ export class SonifierPageComponent
     );
   }
 
-  private setRegionMode(value: SonifierRegionMode) {
+  private setRegionMode($event: MatButtonToggleChange) {
     this.store.dispatch(
       new sonifierActions.SetRegionMode({
         file: this.lastImageFile,
-        mode: value
+        mode: $event.value
       })
     );
   }

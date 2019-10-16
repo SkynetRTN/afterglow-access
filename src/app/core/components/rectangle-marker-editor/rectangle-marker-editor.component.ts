@@ -2,7 +2,7 @@ import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ElementRef, 
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { FormBuilder } from '@angular/forms';
 import { RectangleMarker } from '../../models/marker';
-import { CustomValidators } from '../../../lib/custom_form_validator';
+import { CustomValidators } from '../../../utils/custom_form_validator';
 
 import { debounceTime } from 'rxjs/operators';
 

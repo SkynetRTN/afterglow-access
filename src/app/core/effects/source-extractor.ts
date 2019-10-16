@@ -42,14 +42,27 @@ export class SourceExtractorEffects {
     ofType<sourceExtractorActions.ExtractSources>(
       sourceExtractorActions.EXTRACT_SOURCES
     ),
-    withLatestFrom(this.store.select(fromCore.getWorkbenchState)),
-    flatMap(([action, workbenchState]) => {
+    withLatestFrom(this.store.select(fromCore.getWorkbenchState), this.store.select(fromCore.getImageFileStates)),
+    flatMap(([action, workbenchState, imageFileStates]) => {
+      let imageFileOptions = imageFileStates[action.payload.file.id].sourceExtractor;
+      let sourceExtractorSettings = {
+        ...workbenchState.sourceExtractionSettings
+      };
+      if(imageFileOptions.regionOption != SourceExtractorRegionOption.ENTIRE_IMAGE) {
+        sourceExtractorSettings = {
+          ...sourceExtractorSettings,
+          x: Math.min(getWidth(action.payload.file), Math.max(0, imageFileOptions.region.x+1)),
+          y: Math.min(getHeight(action.payload.file), Math.max(0, imageFileOptions.region.y+1)),
+          width: Math.min(getWidth(action.payload.file), Math.max(0, imageFileOptions.region.width+1)),
+          height: Math.min(getHeight(action.payload.file), Math.max(0, imageFileOptions.region.height+1))
+        }
+      }
       let targetFileId = action.payload.file.id;
       let job: SourceExtractionJob = {
         id: null,
         type: JobType.SourceExtraction,
         file_ids: [parseInt(action.payload.file.id)],
-        source_extraction_settings: workbenchState.sourceExtractionSettings,
+        source_extraction_settings: sourceExtractorSettings,
         merge_sources: false,
         source_merge_settings: null
       };

@@ -1,12 +1,18 @@
 addOnPostRun(() => {
   function WCS() {
     this._getWCS = Module.cwrap("getWcs", "number", ["String", "number"]);
+
+    this._hasCelestial = Module.cwrap("hasCelestial", "number", [
+      "number"
+    ]);
+
     this._pix2sky = Module.cwrap("pix2sky", "number", [
       "number",
       "number",
       "number",
       "number"
     ]);
+
     this._sky2pix = Module.cwrap("sky2pix", "number", [
       "number",
       "number",
@@ -102,6 +108,7 @@ addOnPostRun(() => {
       return false;
     });
     headerStr = headerArray.join("\n");
+    console.log(headerStr);
 
     nkeyrec = headerArray.length;
     header = string2buffer(headerStr);
@@ -118,6 +125,7 @@ addOnPostRun(() => {
     // Use byte offset to pass header string to libwcs
     this.wcsPtr = this._getWCS(headerHeap.byteOffset, nkeyrec);
     this.isValid = this.wcsPtr ? true : false;
+    // console.log(this.isValid, this.wcsPtr);
   };
 
   WCS.prototype.pix2sky = function(x, y) {
@@ -129,6 +137,10 @@ addOnPostRun(() => {
     );
     return new Float64Array(world);
   };
+
+  WCS.prototype.hasCelestial = function() {
+    return this._hasCelestial(this.wcsPtr);
+  }
 
   WCS.prototype.sky2pix = function(ra, dec) {
     this._sky2pix(this.wcsPtr, ra, dec, this.coordinatePtr);

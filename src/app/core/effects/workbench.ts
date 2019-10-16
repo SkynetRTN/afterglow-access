@@ -30,8 +30,10 @@ import {
 import * as fromCore from "../reducers";
 import * as fromDataFiles from "../../data-files/reducers";
 import * as workbenchActions from "../actions/workbench";
+import * as surveyActions from '../actions/survey';
 import * as sonifierActions from "../actions/sonifier";
 import * as plotterActions from "../actions/plotter";
+import * as dataProviderActions from "../../data-providers/actions/data-provider"
 import * as jobActions from '../../jobs/actions/job';
 import * as normalizationActions from "../actions/normalization";
 import * as transformationActions from "../actions/transformation";
@@ -50,6 +52,7 @@ import { PixelOpsJob } from '../../jobs/models/pixel-ops';
 import { JobType } from '../../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult } from '../../jobs/models/alignment';
 import { StackingJob, StackingJobResult } from '../../jobs/models/stacking';
+import { ViewMode } from '../models/view-mode';
 
 // export const SEARCH_DEBOUNCE = new InjectionToken<number>('Search Debounce');
 // export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
@@ -168,7 +171,7 @@ export class WorkbenchEffects {
       );
       let pendingFile = dataFiles[pendingViewer.pendingFileId] as ImageFile;
       let pendingViewerIndex = workbenchState.viewers.indexOf(pendingViewer);
-      if (pendingViewer) {
+      if (dataFile && pendingViewer) {
         if (!dataFile.headerLoaded) {
           if (!dataFile.headerLoading)
             actions.push(
@@ -962,6 +965,52 @@ export class WorkbenchEffects {
     filter(action => action.payload.job.type == JobType.Stacking && action.payload.job.state.status == 'completed' && action.payload.result != null ),
     flatMap(action =>  of(new dataFileActions.LoadLibrary()))
   );
+
+
+
+  @Effect()
+  importFromSurvey$: Observable<Action> = this.actions$.pipe(
+    ofType<surveyActions.ImportFromSurvey>(surveyActions.IMPORT_FROM_SURVEY),
+    flatMap(action =>  {
+      let importAction = new dataProviderActions.ImportAssets({
+        dataProviderId: action.payload.surveyDataProviderId,
+        assets: [
+          {
+            name: "",
+            collection: false,
+            path: `DSS\\${action.payload.raHours*15},${action.payload.decDegs}\\${action.payload.widthArcmins},${action.payload.heightArcmins}`,
+            metadata: {}
+          }
+        ]
+      },
+      action.correlationId
+    )
+      return of(importAction)
+    })
+  );
+
+  @Effect()
+  importFromSurveySuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail>(dataProviderActions.IMPORT_ASSET_SUCCESS, dataProviderActions.IMPORT_ASSET_FAIL),
+    withLatestFrom(
+      this.store.select(fromCore.getWorkbenchState)
+    ),
+    filter(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) => action.correlationId == workbenchState.surveyImportCorrId),
+    flatMap(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) =>  {
+      if(action.type == dataProviderActions.IMPORT_ASSET_SUCCESS) {
+        let successAction = action as dataProviderActions.ImportAssetSuccess;
+        return from([
+          new surveyActions.ImportFromSurveySuccess(),
+          new workbenchActions.SetViewMode({viewMode: ViewMode.SPLIT_VERTICAL}),
+          new workbenchActions.SetViewerFile({viewerIndex: 1, fileId: successAction.payload.fileId})
+        ])
+      }
+
+      return of(new surveyActions.ImportFromSurveyFail())
+    })
+  );
+
+ 
 
 
   //.debounceTime(this.debounce || 300, this.scheduler || async)

@@ -1,5 +1,6 @@
 import { Action } from '@ngrx/store';
 import { DataFile, Header } from '../models/data-file';
+import { CorrelatedAction } from '../../utils/correlated-action';
 
 export const LOAD_LIBRARY = '[DataFile] Load Library';
 export const LOAD_LIBRARY_SUCCESS = '[DataFile] Load Library Success';
@@ -16,20 +17,22 @@ export const LOAD_DATA_FILE_HDR_SUCCESS = '[DataFile] Load Data File Hdr Success
 /**
  * Load Library Actions
  */
-export class LoadLibrary implements Action {
+export class LoadLibrary implements CorrelatedAction {
   readonly type = LOAD_LIBRARY;
+
+  constructor(public correlationId?: string) { }
 }
 
 export class LoadLibrarySuccess implements Action {
   readonly type = LOAD_LIBRARY_SUCCESS;
 
-  constructor(public payload: DataFile[]) { }
+  constructor(public payload: DataFile[], public correlationId?: string) { }
 }
 
 export class LoadLibraryFail implements Action {
   readonly type = LOAD_LIBRARY_FAIL;
 
-  constructor(public payload: any) { }
+  constructor(public payload: any, public correlationId?: string) { }
 }
 
 /**

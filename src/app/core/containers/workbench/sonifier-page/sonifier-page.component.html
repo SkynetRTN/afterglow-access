@@ -28,11 +28,11 @@
               <tr>
                 <th scope="row">Region Mode:</th>
                 <td>
-                  <mat-button-toggle-group [ngModel]="(sonifierState$ | async)?.regionMode" (ngModelChange)="setRegionMode($event)">
-                    <mat-button-toggle value="{{SonifierRegionMode.CUSTOM}}">
+                  <mat-button-toggle-group [value]="(sonifierState$ | async)?.regionMode" (change)="setRegionMode($event)">
+                    <mat-button-toggle [value]="SonifierRegionMode.CUSTOM">
                       <mat-icon>crop_square</mat-icon> Custom
                     </mat-button-toggle>
-                    <mat-button-toggle value="{{SonifierRegionMode.VIEWPORT}}">
+                    <mat-button-toggle [value]="SonifierRegionMode.VIEWPORT">
                       <mat-icon>remove_red_eye</mat-icon> Viewport
                     </mat-button-toggle>
                   </mat-button-toggle-group>

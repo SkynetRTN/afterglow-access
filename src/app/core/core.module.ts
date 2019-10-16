@@ -21,7 +21,7 @@ import { VgBufferingModule } from 'videogular2/buffering';
 // import 'd3';
 // import 'nvd3';
 
-import { LibModule }  from '../lib/lib.module';
+import { UtilsModule }  from '../utils/utils.module';
 import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
@@ -135,7 +135,7 @@ export const COMPONENTS = [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    LibModule,
+    UtilsModule.forRoot(),
     PipesModule,
     DataProvidersModule,
     DataFilesModule,

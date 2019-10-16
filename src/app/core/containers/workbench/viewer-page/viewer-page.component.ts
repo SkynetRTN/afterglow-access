@@ -10,13 +10,18 @@ import {
   HostBinding
 } from "@angular/core";
 import { Observable, Subscription, Subject } from "rxjs";
-import { map, filter, debounceTime } from "rxjs/operators";
+import { map, filter, debounceTime, tap } from "rxjs/operators";
 import { Store } from "@ngrx/store";
 
 declare let d3: any;
 
 import { calcLevels } from "../../../../data-files/models/image-hist";
-import { ImageFile, DataFile } from "../../../../data-files/models/data-file";
+import {
+  ImageFile,
+  DataFile,
+  getWidth,
+  getHeight
+} from "../../../../data-files/models/data-file";
 
 import { Normalization } from "../../../models/normalization";
 import { Viewer } from "../../../models/viewer";
@@ -24,12 +29,16 @@ import { Transformation } from "../../../models/transformation";
 import { ColorMap } from "../../../models/color-map";
 import { StretchMode } from "../../../models/stretch-mode";
 
+import * as fromDataProviders from "../../../../data-providers/reducers";
+
 import * as fromCore from "../../../reducers";
 import * as fromRoot from "../../../../reducers";
 import * as fromDataFiles from "../../../../data-files/reducers";
 import * as workbenchActions from "../../../actions/workbench";
 import * as transformationActions from "../../../actions/transformation";
 import * as markerActions from "../../../actions/markers";
+import * as surveyActions from "../../../actions/survey";
+import * as dataProviderActions from "../../../../data-providers/actions/data-provider";
 import * as normalizationActions from "../../../actions/normalization";
 import * as dataFileActions from "../../../../data-files/actions/data-file";
 import * as imageFileActions from "../../../../data-files/actions/image-file";
@@ -39,7 +48,10 @@ import { Marker, MarkerType } from "../../../models/marker";
 import { ViewMode } from "../../../models/view-mode";
 import { WorkbenchState, WorkbenchTool } from "../../../models/workbench-state";
 import { environment } from "../../../../../environments/environment.prod";
-import { Router } from '@angular/router';
+import { Router } from "@angular/router";
+import { MatButtonToggleChange } from "@angular/material";
+import { DataProvider } from '../../../../data-providers/models/data-provider';
+import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -52,9 +64,10 @@ import { Router } from '@angular/router';
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
-  @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+  @HostBinding("class") @Input("class") classList: string =
+    "fx-workbench-outlet";
   inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
+  fullScreenPanel$: Observable<"file" | "viewer" | "tool">;
 
   ViewMode = ViewMode;
   viewers$: Observable<Array<Viewer>>;
@@ -65,6 +78,8 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   workbenchState$: Observable<WorkbenchState>;
   viewerSyncEnabled$: Observable<boolean>;
   normalizationSyncEnabled$: Observable<boolean>;
+
+  surveyDataProvider$: Observable<DataProvider>;
 
   imageFile$: Observable<ImageFile>;
   normalization$: Observable<Normalization>;
@@ -84,9 +99,13 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   upperPercentileDefault = environment.upperPercentileDefault;
   lowerPercentileDefault = environment.lowerPercentileDefault;
 
-  constructor(private store: Store<fromRoot.State>, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+  constructor(private store: Store<fromRoot.State>, private router: Router, private corrGen: CorrelationIdGenerator) {
+    this.fullScreenPanel$ = this.store.select(
+      fromCore.workbench.getFullScreenPanel
+    );
+    this.inFullScreenMode$ = this.store.select(
+      fromCore.workbench.getInFullScreenMode
+    );
     this.workbenchState$ = this.store.select(fromCore.getWorkbenchState);
     this.fileEntities$ = this.store.select(fromDataFiles.getDataFiles);
     this.fileStateEntities$ = this.store.select(fromCore.getImageFileStates);
@@ -158,12 +177,18 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
-    )
+      new workbenchActions.SetLastRouterPath({ path: router.url })
+    );
+
+    this.surveyDataProvider$ = this.store.select(fromDataProviders.getDataProviders).pipe(
+      map(dataProviders => dataProviders.find(dp => dp.name == 'Imaging Surveys'))
+    );
   }
 
-  setViewModeOption(value) {
-    this.store.dispatch(new workbenchActions.SetViewMode({ viewMode: value }));
+  setViewModeOption($event: MatButtonToggleChange) {
+    this.store.dispatch(
+      new workbenchActions.SetViewMode({ viewMode: $event.value })
+    );
   }
 
   onBackgroundLevelChange(value: number) {
@@ -272,6 +297,27 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
       new workbenchActions.SetNormalizationSyncEnabled({
         enabled: $event.checked
       })
+    );
+  }
+
+  importFromSurvey(surveyDataProvider: DataProvider, imageFile: ImageFile) {
+    let centerRaDec = imageFile.wcs.pixToWorld([
+      getWidth(imageFile) / 2,
+      getHeight(imageFile) / 2
+    ]);
+    let pixelScale = imageFile.wcs.getPixelScale() * 60;
+    let width = pixelScale * getWidth(imageFile);
+    let height = pixelScale * getHeight(imageFile);
+
+    this.store.dispatch(
+      new surveyActions.ImportFromSurvey({
+        surveyDataProviderId:  surveyDataProvider.id,
+        raHours: centerRaDec[0],
+        decDegs: centerRaDec[1],
+        widthArcmins: width,
+        heightArcmins: height
+      },
+      this.corrGen.next())
     );
   }
 

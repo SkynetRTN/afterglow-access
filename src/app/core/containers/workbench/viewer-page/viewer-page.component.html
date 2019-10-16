@@ -34,12 +34,12 @@
           <div class="form-group pt-2">
             <mat-button-toggle-group
               name="viewMode"
-              [ngModel]="(workbenchState$ | async)?.viewMode"
-              (ngModelChange)="setViewModeOption($event)"
+              [value]="(workbenchState$ | async)?.viewMode"
+              (change)="setViewModeOption($event)"
             >
               <mat-button-toggle
                 aria-label="Single Viewer"
-                value="{{ ViewMode.SINGLE }}"
+                [value]="ViewMode.SINGLE"
                 matTooltip="Single Viewer"
                 [matTooltipPosition]="'below'"
               >
@@ -47,7 +47,7 @@
               </mat-button-toggle>
               <mat-button-toggle
                 aria-label="Dual Viewer Split Horizontally"
-                value="{{ ViewMode.SPLIT_VERTICAL }}"
+                [value]="ViewMode.SPLIT_VERTICAL"
                 matTooltip="Split Viewer Horizontally"
                 [matTooltipPosition]="'below'"
               >
@@ -55,7 +55,7 @@
               </mat-button-toggle>
               <mat-button-toggle
                 aria-label="Dual Viewer Split Vertically"
-                value="{{ ViewMode.SPLIT_HORIZONTAL }}"
+                [value]="ViewMode.SPLIT_HORIZONTAL"
                 matTooltip="Split Viewer Vertically"
                 [matTooltipPosition]="'below'"
               >
@@ -95,11 +95,36 @@
         <div class="col-12"></div>
       </div>
 
+
       <div *ngIf="!(imageFile$ | async)" class="alert alert-info">
         Select a data file to see viewer options.
       </div>
 
-      <div *ngIf="imageFile$ | async">
+      <div *ngIf="imageFile$ | async; let imageFile">
+          <label>Background/Peak Presets: </label>
+          <div class="pb-1">
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 98)">
+              <mat-icon>brightness_3</mat-icon>Faint Target
+            </button>
+            <button
+              mat-raised-button
+              class="m-1"
+              (click)="
+                onPresetClick(lowerPercentileDefault, upperPercentileDefault)
+              "
+            >
+              <mat-icon>brightness_2</mat-icon>Default
+            </button>
+            <button
+              mat-raised-button
+              class="m-1"
+              (click)="onPresetClick(10, 99.999)"
+            >
+              <mat-icon>brightness_5</mat-icon>Bright Target
+            </button>
+          </div>
+
+
           <div class="pr-3 pl-3 pb-0">
               <app-image-hist-chart
               [width]="440"
@@ -134,28 +159,7 @@
                   [hist]="(imageFile$ | async)?.hist">
                 </app-normalizer> -->
 
-        <label>Background/Peak Presets: </label>
-        <div class="pb-4">
-          <button mat-raised-button class="m-1" (click)="onPresetClick(10, 98)">
-            <mat-icon>brightness_3</mat-icon>Faint Target
-          </button>
-          <button
-            mat-raised-button
-            class="m-1"
-            (click)="
-              onPresetClick(lowerPercentileDefault, upperPercentileDefault)
-            "
-          >
-            <mat-icon>brightness_2</mat-icon>Default
-          </button>
-          <button
-            mat-raised-button
-            class="m-1"
-            (click)="onPresetClick(10, 99.999)"
-          >
-            <mat-icon>brightness_5</mat-icon>Bright Target
-          </button>
-        </div>
+        
 
         <label>Viewer Orientation Options: </label>
         <div class="pb-4">
@@ -195,6 +199,10 @@
           >
             Sync display settings for all data files
           </mat-slide-toggle>
+        </div>
+
+        <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider">
+          <button mat-raised-button [disabled]="!imageFile.wcs || !imageFile.wcs.isValid()" (click)="importFromSurvey(surveyDataProvider, imageFile)">Import DSS Image</button>
         </div>
       </div>
     </div>
