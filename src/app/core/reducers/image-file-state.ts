@@ -53,12 +53,10 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
           imageFileId: dataFile.id,
           normalization: {
             normalizedTiles: null,
-            autoLevelsInitialized: false,
-            autoUpperPercentile: 99,
-            autoLowerPercentile: 10,
+            initialized: false,
             normalizer: {
-              backgroundLevel: 0,
-              peakLevel: 0,
+              backgroundPercentile: 10,
+              peakPercentile: 99,
               colorMap: grayColorMap,
               stretchMode: StretchMode.Linear,
               inverted: false
@@ -263,7 +261,7 @@ export function reducer(state = initialState, action: dataFileActions.Actions |
         ...normalization.normalizer,
         ...action.payload.changes
       };
-      normalization.autoLevelsInitialized = true;
+      normalization.initialized = true;
 
       return {
         ...adapter.updateOne({

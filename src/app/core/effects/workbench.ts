@@ -202,22 +202,16 @@ export class WorkbenchEffects {
                 files: [pendingFile]
               })
             );
-          } else if (!normalizationState.autoLevelsInitialized) {
-            //calculate good defaults based on histogram
-            let levels = calcLevels(
-              dataFile.hist,
-              environment.lowerPercentileDefault,
-              environment.upperPercentileDefault,
-              true
-            );
+          } else if (!normalizationState.initialized) {
+            // //calculate good defaults based on histogram
+            // let levels = calcLevels(
+            //   dataFile.hist,
+            //   environment.lowerPercentileDefault,
+            //   environment.upperPercentileDefault,
+            //   true
+            // );
             actions.push(
-              new normalizationActions.UpdateNormalizer({
-                file: pendingFile,
-                changes: {
-                  peakLevel: levels.peakLevel,
-                  backgroundLevel: levels.backgroundLevel
-                }
-              })
+              new normalizationActions.RenormalizeImageFile({ file: dataFile })
             );
           }
 
@@ -530,27 +524,16 @@ export class WorkbenchEffects {
 
       let targetFiles: ImageFile[] = action.payload.files;
       let srcNormalizer = imageFileStates[srcFile.id].normalization.normalizer;
-      let percentiles = calcPercentiles(
-        srcFile.hist,
-        srcNormalizer.backgroundLevel,
-        srcNormalizer.peakLevel
-      );
-
+     
       targetFiles.forEach(targetFile => {
         if (!targetFile || targetFile.id == srcFile.id) return;
-        let levels = calcLevels(
-          targetFile.hist,
-          percentiles.lowerPercentile,
-          percentiles.upperPercentile,
-          true
-        );
         actions.push(
           new normalizationActions.UpdateNormalizer({
             file: targetFile,
             changes: {
               ...srcNormalizer,
-              peakLevel: levels.peakLevel,
-              backgroundLevel: levels.backgroundLevel
+              peakPercentile: srcNormalizer.peakPercentile,
+              backgroundPercentile: srcNormalizer.backgroundPercentile
             }
           })
         );

@@ -10,11 +10,6 @@ export interface Normalization {
   normalizedTiles: Array<ImageTile>;
   
   normalizer: PixelNormalizer;
-
-  autoUpperPercentile: number;
-  autoLowerPercentile: number;
-  autoLevelsInitialized: boolean;
-  autoPeakLevel?: number;
-  autoBkgLevel?: number;
+  initialized: boolean;
 }
 

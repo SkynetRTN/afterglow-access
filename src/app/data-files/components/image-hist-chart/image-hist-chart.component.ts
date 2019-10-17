@@ -12,10 +12,11 @@ import {
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
 
-import { ImageHist, getBinCenter } from "../../models/image-hist";
+import { ImageHist, getBinCenter, calcLevels } from "../../models/image-hist";
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
 import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
+import { MatCheckboxChange } from '@angular/material';
 
 @Component({
   selector: "app-image-hist-chart",
@@ -30,27 +31,24 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   @Input() hist: ImageHist;
   @Input() width: number = 200;
   @Input() height: number = 200;
-  @Input() backgroundLevel: number;
-  @Input() peakLevel: number;
-
-  @Output() onBackgroundLevelChange = new EventEmitter<number>();
-  @Output() onPeakLevelChange = new EventEmitter<number>();
+  @Input() backgroundPercentile: number;
+  @Input() peakPercentile: number;
 
   math = Math;
   private lastHistData;
+  private yMax = 0;
+  private logarithmicX: boolean = false;
+  private logarithmicY: boolean = true;
 
-
-  public data : Array<Plotly.Data> = [];
+  public data: Array<Plotly.Data> = [];
   public layout: Partial<Plotly.Layout> = {
     width: null,
     height: null,
     xaxis: {
-      type: 'linear',
       autorange: true,
 
     },
     yaxis: {
-      type: 'log',
       autorange: true,
     },
     margin: {
@@ -59,14 +57,15 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       b: 50,
       t: 50
     },
-    
+
+
   };
   public theme: PlotlyTheme;
 
   public config: Partial<Plotly.Config> = {
     scrollZoom: true
   };
-  
+
   // private backgroundLineData = {
   //   isBackground: true,
   //   x1: 0,
@@ -93,11 +92,11 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   }
 
 
-  select($event) {}
+  select($event) { }
 
-  activate($event) {}
+  activate($event) { }
 
-  deactivate($event) {}
+  deactivate($event) { }
 
   // updateChartOptions() {
   //   this.chartOptions = {
@@ -166,129 +165,17 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     // this.updateChartOptions();
   }
 
-  onChartCreation() {
-    // x values of vertical lines
-    // add vertical lines
-    // this.updateBackgroundPeakLines();
+  onXAxisTypeChange($event: MatCheckboxChange) {
+    this.logarithmicX = $event.checked;
+    this.updateChart();
   }
 
-  updateBackgroundPeakLines() {
-    // let self = this;
-    // if (
-    //   this.nvD3.svg &&
-    //   this.hist &&
-    //   this.backgroundLevel != undefined &&
-    //   this.peakLevel != undefined
-    // ) {
-    //   let lineGroup = this.nvD3.svg
-    //     .select(".nv-linesWrap")
-    //     .selectAll("g.levels");
-    //   if (lineGroup.empty()) {
-    //     lineGroup = this.nvD3.svg
-    //       .select(".nv-linesWrap")
-    //       .append("g")
-    //       .classed("levels", true);
-    //   }
-    //   this.backgroundLineData.x1 = this.backgroundLineData.x2 = this.backgroundLevel;
-    //   this.peakLineData.x1 = this.peakLineData.x2 = this.peakLevel;
-    //   this.backgroundLineData.y1 = this.peakLineData.y1 = 0;
-    //   this.backgroundLineData.y2 = this.peakLineData.y2 = d3.max(
-    //     this.hist.data
-    //   );
-    //   let data = [this.backgroundLineData, this.peakLineData];
-    //   let lines = lineGroup.selectAll("line").data(data);
-    //   lines.transition().attr({
-    //     x1: function(d) {
-    //       return self.nvD3.chart.xAxis.scale()(d.x1);
-    //     },
-    //     y1: function(d) {
-    //       return self.nvD3.chart.yAxis.scale()(d.y1);
-    //     },
-    //     x2: function(d) {
-    //       return self.nvD3.chart.xAxis.scale()(d.x2);
-    //     },
-    //     y2: function(d) {
-    //       return self.nvD3.chart.yAxis.scale()(d.y2);
-    //     }
-    //   });
-    //   lines
-    //     .enter()
-    //     .append("line")
-    //     .attr({
-    //       x1: function(d) {
-    //         return self.nvD3.chart.xAxis.scale()(d.x1);
-    //       },
-    //       y1: function(d) {
-    //         return self.nvD3.chart.yAxis.scale()(d.y1);
-    //       },
-    //       x2: function(d) {
-    //         return self.nvD3.chart.xAxis.scale()(d.x2);
-    //       },
-    //       y2: function(d) {
-    //         return self.nvD3.chart.yAxis.scale()(d.y2);
-    //       }
-    //     })
-    //     .style("stroke", function(d) {
-    //       return d.isBackground ? "rgb(0, 0, 255)" : "rgb(255, 0, 0)";
-    //     })
-    //     .style("stroke-width", 4)
-    //     .style("stroke-opacity", 0.5)
-    //     .style("stroke-linecap", "round")
-    //     .style("cursor", "pointer")
-    //     .call(
-    //       d3.behavior.drag().on("drag", function(d, i) {
-    //         if (d3.event.dx == 0) return;
-    //         let value = self.nvD3.chart.xAxis.scale().invert(d3.event.x);
-    //         let levels;
-    //         if (d.isBackground) {
-    //           self.onBackgroundLevelChange.emit(value);
-    //           //levels = {background: value, peak: self.normalizer.peakLevel};
-    //         } else {
-    //           self.onPeakLevelChange.emit(value);
-    //           //console.log('next peak:', value);
-    //           //levels = {background: self.normalizer.backgroundLevel, peak: value};
-    //         }
-    //         //console.log(levels);
-    //         //self.levels$.next(levels$);
-    //         d.x1 = value;
-    //         d.x2 = value;
-    //         d3.select(this).attr({
-    //           x1: function(d) {
-    //             return self.nvD3.chart.xAxis.scale()(d.x1);
-    //           },
-    //           y1: function(d) {
-    //             return self.nvD3.chart.yAxis.scale()(d.y1);
-    //           },
-    //           x2: function(d) {
-    //             return self.nvD3.chart.xAxis.scale()(d.x2);
-    //           },
-    //           y2: function(d) {
-    //             return self.nvD3.chart.yAxis.scale()(d.y2);
-    //           }
-    //         });
-    //       })
-    //     );
-    //   lines.exit().remove();
-    //   // self.nvD3.chart.focus.dispatch.on("onBrush.levels$", function(extent) {
-    //   //   self.updateBackgroundPeakLines();
-    //   // });
-    //   // // resize the chart with vertical lines
-    //   // // but only the third line will be scaled properly...
-    //   // nv.utils.windowResize(function() {
-    //   // 	this.nvD3.chart.update();
-    //   //   lineGroup.selectAll('line')
-    //   //   .transition()
-    //   //   .attr({
-    //   //       x1: function(d){ return self.nvD3.chart.xAxis.scale()(d.x1) },
-    //   //       y1: function(d){ return self.nvD3.chart.yAxis.scale()(d.y1) },
-    //   //       x2: function(d){ return self.nvD3.chart.xAxis.scale()(d.x2) },
-    //   //       y2: function(d){ return self.nvD3.chart.yAxis.scale()(d.y2) }
-    //   //     });
-    //   // }.bind(this));
-    // }
+  onYAxisTypeChange($event: MatCheckboxChange) {
+    this.logarithmicY = $event.checked;
+    this.updateChart();
   }
 
-  ngOnChanges() {
+  updateChart() {
     let x = [];
     let y = [];
     if (this.hist && this.hist.data != this.lastHistData) {
@@ -298,9 +185,12 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         if (this.hist.data[i] <= 1) continue;
         x[j] = getBinCenter(this.hist, i);
         y[j] = this.hist.data[i];
+        if (this.yMax < y[j]) this.yMax = y[j];
+
         j++;
+
       }
-     
+
       this.data = [
         {
           x: x,
@@ -310,18 +200,61 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
           // mode: "none"
         }
       ];
-      
+
       this.lastHistData = this.hist.data;
       //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
       //console.log(this.chartOptions);
     }
-    setTimeout(() => {
-      this.updateBackgroundPeakLines();
-    });
 
-    if(this.layout.width != this.width) this.layout.width = this.width;
-    if(this.layout.height != this.height) this.layout.height = this.height;
+    if (this.layout.width != this.width) this.layout.width = this.width;
+    if (this.layout.height != this.height) this.layout.height = this.height;
+
+    let levels = calcLevels(this.hist, this.backgroundPercentile, this.peakPercentile);
+    this.layout = {
+      ...this.layout,
+      xaxis: {
+        ...this.layout.xaxis,
+        type: this.logarithmicX ? 'log' : 'linear',
+      },
+      yaxis: {
+        ...this.layout.yaxis,
+        type: this.logarithmicY ? 'log' : 'linear',
+      },
+      shapes: [
+        // Line Vertical
+        {
+          type: "line",
+          x0: levels.backgroundLevel,
+          y0: 1,
+          x1: levels.backgroundLevel,
+          y1: this.yMax,
+          line: {
+            color: "red",
+            width: 2,
+            dash: "dot"
+          }
+        },
+        {
+          type: "line",
+          x0: levels.peakLevel,
+          y0: 1,
+          x1: levels.peakLevel,
+          y1: this.yMax,
+          line: {
+            color: "red",
+            width: 2,
+            dash: "dot"
+          }
+        },
+      ]
+    }
+
+    console.log(this.layout);
 
     //this.updateChartOptions();
+  }
+
+  ngOnChanges() {
+    this.updateChart();
   }
 }

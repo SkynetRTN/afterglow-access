@@ -103,14 +103,14 @@
       <div *ngIf="imageFile$ | async; let imageFile">
           <label>Background/Peak Presets: </label>
           <div class="pb-1">
-            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 98)">
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 95)">
               <mat-icon>brightness_3</mat-icon>Faint Target
             </button>
             <button
               mat-raised-button
               class="m-1"
               (click)="
-                onPresetClick(lowerPercentileDefault, upperPercentileDefault)
+                onPresetClick(10, 99)
               "
             >
               <mat-icon>brightness_2</mat-icon>Default
@@ -130,12 +130,10 @@
               [width]="440"
               [height]="250"
               [hist]="(imageFile$ | async)?.hist"
-              [backgroundLevel]="
-                (normalization$ | async).normalizer?.backgroundLevel
+              [backgroundPercentile]="
+                (normalization$ | async).normalizer?.backgroundPercentile
               "
-              [peakLevel]="(normalization$ | async).normalizer?.peakLevel"
-              (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
-              (onPeakLevelChange)="onPeakLevelChange($event)"
+              [peakPercentile]="(normalization$ | async).normalizer?.peakPercentile"
             >
             </app-image-hist-chart>
             <div style="clear: both;"></div>
@@ -145,8 +143,8 @@
         <div class="pb-4 pt-1">
           <app-normalizer-form
             [normalizer]="(normalization$ | async).normalizer"
-            (onBackgroundLevelChange)="onBackgroundLevelChange($event)"
-            (onPeakLevelChange)="onPeakLevelChange($event)"
+            (onBackgroundPercentileChange)="onBackgroundPercentileChange($event)"
+            (onPeakPercentileChange)="onPeakPercentileChange($event)"
             (onColorMapChange)="onColorMapChange($event)"
             (onStretchModeChange)="onStretchModeChange($event)"
             (onInvertedChange)="onInvertedChange($event)"

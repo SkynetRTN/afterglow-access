@@ -10,7 +10,7 @@ import {
   HostBinding
 } from "@angular/core";
 import { Observable, Subscription, Subject } from "rxjs";
-import { map, filter, debounceTime, tap } from "rxjs/operators";
+import { map, filter, auditTime, tap } from "rxjs/operators";
 import { Store } from "@ngrx/store";
 
 declare let d3: any;
@@ -93,8 +93,8 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     background: number;
     peak: number;
   }>();
-  backgroundLevel$: Subject<number> = new Subject<number>();
-  peakLevel$: Subject<number> = new Subject<number>();
+  backgroundPercentile$: Subject<number> = new Subject<number>();
+  peakPercentile$: Subject<number> = new Subject<number>();
 
   upperPercentileDefault = environment.upperPercentileDefault;
   lowerPercentileDefault = environment.lowerPercentileDefault;
@@ -142,32 +142,32 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.levels$.pipe(debounceTime(50)).subscribe(value => {
+    this.levels$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
         new normalizationActions.UpdateNormalizer({
           file: this.lastImageFile,
-          changes: { backgroundLevel: value.background, peakLevel: value.peak }
+          changes: { backgroundPercentile: value.background, peakPercentile: value.peak }
         })
       );
     });
 
-    this.backgroundLevel$.pipe(debounceTime(50)).subscribe(value => {
+    this.backgroundPercentile$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
         new normalizationActions.UpdateNormalizer({
           file: this.lastImageFile,
-          changes: { backgroundLevel: value }
+          changes: { backgroundPercentile: value }
         })
       );
     });
 
-    this.peakLevel$
-      .pipe(debounceTime(50))
+    this.peakPercentile$
+      .pipe(auditTime(25))
 
       .subscribe(value => {
         this.store.dispatch(
           new normalizationActions.UpdateNormalizer({
             file: this.lastImageFile,
-            changes: { peakLevel: value }
+            changes: { peakPercentile: value }
           })
         );
       });
@@ -191,12 +191,12 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  onBackgroundLevelChange(value: number) {
-    this.backgroundLevel$.next(value);
+  onBackgroundPercentileChange(value: number) {
+    this.backgroundPercentile$.next(value);
   }
 
-  onPeakLevelChange(value: number) {
-    this.peakLevel$.next(value);
+  onPeakPercentileChange(value: number) {
+    this.peakPercentile$.next(value);
   }
 
   onColorMapChange(value: ColorMap) {
@@ -227,19 +227,12 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {
-    let result = calcLevels(
-      this.lastImageFile.hist,
-      lowerPercentile,
-      upperPercentile,
-      true
-    );
-
     this.store.dispatch(
       new normalizationActions.UpdateNormalizer({
         file: this.lastImageFile,
         changes: {
-          backgroundLevel: result.backgroundLevel,
-          peakLevel: result.peakLevel
+          backgroundPercentile: lowerPercentile,
+          peakPercentile: upperPercentile
         }
       })
     );
@@ -256,8 +249,8 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
       new normalizationActions.UpdateNormalizer({
         file: this.lastImageFile,
         changes: {
-          backgroundLevel: this.lastViewerState.normalizer.peakLevel,
-          peakLevel: this.lastViewerState.normalizer.backgroundLevel
+          backgroundPercentile: this.lastViewerState.normalizer.peakPercentile,
+          peakPercentile: this.lastViewerState.normalizer.backgroundPercentile
         }
       })
     );

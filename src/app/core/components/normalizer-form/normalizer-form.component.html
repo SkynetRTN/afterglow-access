@@ -2,15 +2,15 @@
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label>Background Level</mat-label>
-      <input matInput [ngModel]="normalizer?.backgroundLevel" (ngModelChange)="onBackgroundLevelChange.emit($event)"
-        type="number" [step]="levelStep">
+      <input matInput [ngModel]="normalizer?.backgroundPercentile" (ngModelChange)="onBackgroundPercentileChange.emit($event)"
+        type="number" [step]="backgroundStep" min="0" max="100">
     </mat-form-field>
   </div>
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
         <mat-label>Peak Level</mat-label>
-      <input matInput [ngModel]="normalizer?.peakLevel" (ngModelChange)="onPeakLevelChange.emit($event)"
-        type="number" [step]="levelStep">
+      <input matInput [ngModel]="normalizer?.peakPercentile" (ngModelChange)="onPeakPercentileChange.emit($event)"
+        type="number" [step]="peakStep" min="0" max="100">
     </mat-form-field>
   </div>
 </div>

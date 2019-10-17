@@ -15,13 +15,14 @@ import { StretchMode } from '../../models/stretch-mode';
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
 
-  @Output() onBackgroundLevelChange = new EventEmitter<number>();
-  @Output() onPeakLevelChange = new EventEmitter<number>();
+  @Output() onBackgroundPercentileChange = new EventEmitter<number>();
+  @Output() onPeakPercentileChange = new EventEmitter<number>();
   @Output() onColorMapChange = new EventEmitter<ColorMap>();
   @Output() onStretchModeChange = new EventEmitter<StretchMode>();
   @Output() onInvertedChange = new EventEmitter<boolean>();
 
-  levelStep = 0.1;
+  backgroundStep = 0.1;
+  peakStep = 0.1;
 
   stretchModeOptions = [
     { label: "Linear", value: StretchMode.Linear },
@@ -37,8 +38,32 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   ngOnInit() {
   }
 
+  calcStep(percentile: number) {
+    if(percentile > 50) {
+      // return Math.pow(10,-Math.round(1-Math.log10((100-percentile)/0.999999)));
+      return percentile == 100 ? Math.pow(10,-3) : Math.round((100-percentile)*Math.pow(10,-0.5)*Math.pow(10,4))/Math.pow(10,4);
+    }
+    else {
+      // return Math.pow(10,-Math.round(1-Math.log10(percentile/1.000001)));
+      return percentile == 0 ? Math.pow(10,-3) : Math.round((percentile)*Math.pow(10,-0.5)*Math.pow(10,4))/Math.pow(10,4);
+    }
+  }
+
   ngOnChanges() {
-    // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
+    if (!this.normalizer || this.normalizer.peakPercentile == null || this.normalizer.backgroundPercentile == null) {
+      this.backgroundStep = 0.1;
+      this.peakStep = 0.1;
+    }
+    else {
+      
+      this.backgroundStep = this.calcStep(this.normalizer.backgroundPercentile);
+      this.peakStep = this.calcStep(this.normalizer.peakPercentile);
+
+      console.log(this.peakStep, this.normalizer.peakPercentile);
+
+    }
+
+        // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
     // if (!this.normalizer || this.normalizer.peakLevel == null || this.normalizer.backgroundLevel == null) {
     //   this.levelStep = 0.1;
     // }

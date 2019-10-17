@@ -133,7 +133,7 @@ export function calcLevels(
   for (let i = 0; i < hist.data.length-1; i++) {
     x0 += hist.data[i];
     let x1 = x0 + hist.data[i+1];
-    if (!whiteComplete && x1 > maxPixCount) {
+    if (!whiteComplete && x1 >= maxPixCount) {
       let y0 = getBinCenter(hist, i);
       let y1 = getBinCenter(hist, i+1);
       let x = maxPixCount;
@@ -144,7 +144,7 @@ export function calcLevels(
       }
       whiteComplete = true;
     }
-    if (!blackComplete && x1 > minPixCount) {
+    if (!blackComplete && x1 >= minPixCount) {
       let y0 = getBinCenter(hist, i);
       let y1 = getBinCenter(hist, i+1);
       let x = minPixCount;

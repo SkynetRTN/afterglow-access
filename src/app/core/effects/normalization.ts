@@ -29,7 +29,7 @@ export class NormalizationEffects {
         let imageFile = dataFiles[action.payload.file.id] as ImageFile;
         let tile = imageFile.tiles[action.payload.tile.index];
         let normalization = imageFileStates[imageFile.id].normalization;
-        let normPixels = normalize(tile.pixels, normalization.normalizer);
+        let normPixels = normalize(tile.pixels, imageFile.hist, normalization.normalizer);
         return from([
           new normalizationActions.NormalizeImageTileSuccess({
             fileId: imageFile.id,

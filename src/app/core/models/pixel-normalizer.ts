@@ -1,9 +1,10 @@
 import { StretchMode } from './stretch-mode'
 import { ColorMap } from './color-map'
+import { ImageHist, calcLevels } from '../../data-files/models/image-hist';
 
 export interface PixelNormalizer {
-  backgroundLevel: number,
-  peakLevel: number,
+  backgroundPercentile: number,
+  peakPercentile: number,
   colorMap: ColorMap,
   stretchMode: StretchMode,
   inverted: boolean
@@ -16,16 +17,18 @@ export interface PixelNormalizer {
 // }
 
 
-export function normalize(pixels: Float32Array | Uint32Array, normalizer: PixelNormalizer) {
+export function normalize(pixels: Float32Array | Uint32Array, hist: ImageHist, normalizer: PixelNormalizer) {
   let stretchMode = normalizer.stretchMode;
-  let peakLevel = normalizer.peakLevel;
-  let backgroundLevel = normalizer.backgroundLevel;
   let colorMapLookup = normalizer.colorMap.lookup;
   let normalizedPixels = new Uint32Array(pixels.length);
 
+  let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+  let backgroundLevel = levels.backgroundLevel;
+  let peakLevel = levels.peakLevel;
+
   if(normalizer.inverted) {
-    backgroundLevel = normalizer.peakLevel;
-    peakLevel = normalizer.backgroundLevel;
+    backgroundLevel = normalizer.peakPercentile;
+    peakLevel = normalizer.backgroundPercentile;
   }
 
   let stretchFn: (x: number) => number;
