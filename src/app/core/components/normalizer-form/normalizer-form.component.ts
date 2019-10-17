@@ -59,7 +59,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
       this.backgroundStep = this.calcStep(this.normalizer.backgroundPercentile);
       this.peakStep = this.calcStep(this.normalizer.peakPercentile);
 
-      console.log(this.peakStep, this.normalizer.peakPercentile);
+      // console.log(this.peakStep, this.normalizer.peakPercentile);
 
     }
 
