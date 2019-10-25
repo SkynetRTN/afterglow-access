@@ -978,7 +978,7 @@ export class WorkbenchEffects {
     withLatestFrom(
       this.store.select(fromCore.getWorkbenchState)
     ),
-    filter(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) => action.correlationId == workbenchState.surveyImportCorrId),
+    filter(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) => workbenchState.surveyImportCorrId != null && action.correlationId == workbenchState.surveyImportCorrId),
     flatMap(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) =>  {
       if(action.type == dataProviderActions.IMPORT_ASSET_SUCCESS) {
         let successAction = action as dataProviderActions.ImportAssetSuccess;

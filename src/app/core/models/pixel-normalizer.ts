@@ -27,8 +27,8 @@ export function normalize(pixels: Float32Array | Uint32Array, hist: ImageHist, n
   let peakLevel = levels.peakLevel;
 
   if(normalizer.inverted) {
-    backgroundLevel = normalizer.peakPercentile;
-    peakLevel = normalizer.backgroundPercentile;
+    backgroundLevel = levels.peakLevel;
+    peakLevel = levels.backgroundLevel;
   }
 
   let stretchFn: (x: number) => number;
