@@ -21,8 +21,6 @@ export const getSelectedAssets = createSelector(getDataProvidersState, state => 
 export const getCurrentSortField = createSelector(getDataProvidersState, state => state.currentSortField);
 export const getCurrentSortOrder = createSelector(getDataProvidersState, state => state.currentSortOrder);
 export const getImporting = createSelector(getDataProvidersState, state => state.importing);
-export const getPendingImports = createSelector(getDataProvidersState, state => state.pendingImports);
-export const getCompletedImports = createSelector(getDataProvidersState, state => state.completedImports);
 export const getImportErrors = createSelector(getDataProvidersState, state => state.importErrors);
 export const getImportProgress = createSelector(getDataProvidersState, state => state.importProgress);
 export const getLastPath = createSelector(getDataProvidersState, state => state.lastPath);
