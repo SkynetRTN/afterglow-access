@@ -5,6 +5,7 @@ import { CatalogQueryJobResult } from './catalog-query';
 import { PixelOpsJobResult } from './pixel-ops';
 import { AlignmentJobResult } from './alignment';
 import { StackingJobResult } from './stacking';
+import { BatchImportJobResult } from './batch-import';
 
 export type JobResult = 
   SourceExtractionJobResult
@@ -13,4 +14,5 @@ export type JobResult =
 | CatalogQueryJobResult
 | PixelOpsJobResult
 | AlignmentJobResult
-| StackingJobResult;
+| StackingJobResult
+| BatchImportJobResult;

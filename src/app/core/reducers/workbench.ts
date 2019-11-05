@@ -516,7 +516,14 @@ export function reducer(
       }
     }
 
-    case surveyActions.IMPORT_FROM_SURVEY_SUCCESS, surveyActions.IMPORT_FROM_SURVEY_FAIL: {
+    case surveyActions.IMPORT_FROM_SURVEY_SUCCESS: {
+      return {
+        ...state,
+        surveyImportCorrId: null
+      }
+    }
+
+    case surveyActions.IMPORT_FROM_SURVEY_FAIL: {
       return {
         ...state,
         surveyImportCorrId: null

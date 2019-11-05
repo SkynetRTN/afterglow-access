@@ -20,10 +20,13 @@ import { AfterglowDataProviderService } from "../../core/services/afterglow-data
 import * as fromDataProviders from "../reducers";
 import * as dataProviderActions from "../actions/data-provider";
 import * as dataFileActions from "../../data-files/actions/data-file";
+import * as jobActions from "../../jobs/actions/job";
 import { DataProvider } from "../models/data-provider";
 import { DataProviderAsset } from "../models/data-provider-asset";
 import { AfterglowDataFileService } from "../../core/services/afterglow-data-files";
 import { HttpErrorResponse } from '@angular/common/http';
+import { BatchImportJob, BatchImportSettings } from '../../jobs/models/batch-import';
+import { JobType } from '../../jobs/models/job-types';
 
 @Injectable()
 export class DataProviderEffects {
@@ -91,6 +94,8 @@ export class DataProviderEffects {
   );
   //.debounceTime(this.debounce || 300, this.scheduler || async)
 
+
+  /*Used by data provider browse page*/
   @Effect()
   importSelectedAssets$: Observable<Action> = this.actions$.pipe(
     ofType<dataProviderActions.ImportSelectedAssets>(
@@ -98,67 +103,70 @@ export class DataProviderEffects {
     ),
     withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
     switchMap(([action, state]) => {
-      return merge(
-        ...state.pendingImports.map(asset => {
-          return this.afterglowDataFileService
-            .createFromDataProviderAsset(state.currentProvider.id, asset.path)
-            .pipe(
-              map(
-                (resp: any) =>
-                  new dataProviderActions.ImportAssetSuccess({ asset: asset, fileId:  resp[0].id.toString()})
-              ),
-              catchError(err => {
-                return of(
-                  new dataProviderActions.ImportAssetFail({
-                    error: (err as HttpErrorResponse).error.message,
-                    asset: asset
-                  })
-                );
-              })
-            );
-        })
-      );
+      return of(new dataProviderActions.ImportAssets({
+        dataProviderId: state.currentProvider.id,
+        assets: state.selectedAssets
+      }, state.batchImportCorrId))
     })
   );
 
+  /*Used anywhere in app when an asset needs to be imported*/
   @Effect()
   importAssets$: Observable<Action> = this.actions$.pipe(
     ofType<dataProviderActions.ImportAssets>(dataProviderActions.IMPORT_ASSETS),
     withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
-    switchMap(([action, state]) => {
-      return merge(
-        ...state.pendingImports.map(asset => {
-          return this.afterglowDataFileService
-            .createFromDataProviderAsset(action.payload.dataProviderId, asset.path)
-            .pipe(
-              map(
-                (resp: any) =>
-                  new dataProviderActions.ImportAssetSuccess({ asset: asset, fileId:  resp[0].id.toString() }, action.correlationId)
-              ),
-              catchError(err => {
-                return of(
-                  new dataProviderActions.ImportAssetFail({
-                    error: (err as HttpErrorResponse).error.message,
-                    asset: asset
-                  }, action.correlationId)
-                );
-              })
-            );
-        })
-      );
+    flatMap(([action, state]) => {
+      let a: dataProviderActions.ImportAssets = action;
+      let job: BatchImportJob = {
+        id: null,
+        type: JobType.BatchImport,
+        settings: a.payload.assets.map(
+          asset => {
+            return {
+              provider_id: parseInt(action.payload.dataProviderId),
+              path: asset.path,
+              recurse: false
+            } as BatchImportSettings
+          })
+      };
+
+      return of(new jobActions.CreateJob({ job: job }, action.correlationId))
     })
+
+    // switchMap(([action, state]) => {
+    //   return merge(
+    //     ...state.pendingImports.map(asset => {
+    //       return this.afterglowDataFileService
+    //         .createFromDataProviderAsset(action.payload.dataProviderId, asset.path)
+    //         .pipe(
+    //           map(
+    //             (resp: any) =>
+    //               new dataProviderActions.ImportAssetSuccess({ asset: asset, fileId:  resp[0].id.toString() }, action.correlationId)
+    //           ),
+    //           catchError(err => {
+    //             return of(
+    //               new dataProviderActions.ImportAssetFail({
+    //                 error: (err as HttpErrorResponse).error.message,
+    //                 asset: asset
+    //               }, action.correlationId)
+    //             );
+    //           })
+    //         );
+    //     })
+    //   );
+    // })
   );
 
-  @Effect()
-  importSelectedAssetsSuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail>(dataProviderActions.IMPORT_ASSET_SUCCESS, dataProviderActions.IMPORT_ASSET_FAIL),
-    withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
-    filter(([action, state]) => state.pendingImports.length == 0),
-    flatMap(([action, state]) => {
-      this.router.navigate(['/workbench']);
-      return of(new dataFileActions.LoadLibrary());
-    })
-  );
+  // @Effect()
+  // importSelectedAssetsSuccess$: Observable<Action> = this.actions$.pipe(
+  //   ofType<dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail>(dataProviderActions.IMPORT_ASSET_SUCCESS, dataProviderActions.IMPORT_ASSET_FAIL),
+  //   withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
+  //   filter(([action, state]) => state.pendingImports.length == 0),
+  //   flatMap(([action, state]) => {
+  //     this.router.navigate(['/workbench']);
+  //     return of(new dataFileActions.LoadLibrary());
+  //   })
+  // );
 
   constructor(
     private actions$: Actions,
@@ -166,5 +174,5 @@ export class DataProviderEffects {
     private afterglowDataFileService: AfterglowDataFileService,
     private store: Store<fromDataProviders.State>,
     private router: Router
-  ) {}
+  ) { }
 }

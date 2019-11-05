@@ -33,6 +33,7 @@ import {
   ZERO,
   NINE
 } from "@angular/cdk/keycodes";
+import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
 
 export class DataProviderAssetsDataSource
   implements DataSource<DataProviderAsset> {
@@ -74,8 +75,6 @@ export class DataProviderBrowsePageComponent
   sortField$: Observable<string>;
   sortOrder$: Observable<"" | "asc" | "desc">;
   importing$: Observable<boolean>;
-  pendingImports$: Observable<DataProviderAsset[]>;
-  completedImports$: Observable<DataProviderAsset[]>;
   importProgress$: Observable<number>;
   importErrors$: Observable<any[]>;
   currentPathBreadcrumbs$: Observable<Array<{ name: string; url: string }>>;
@@ -106,7 +105,8 @@ export class DataProviderBrowsePageComponent
     private route: ActivatedRoute,
     private location: Location,
     private router: Router,
-    private slufigy: SlugifyPipe
+    private slufigy: SlugifyPipe,
+    private corrGen: CorrelationIdGenerator
   ) {
     let state$ = store.select(fromDataProviders.getDataProvidersState);
     this.dataProviders$ = store.select(fromDataProviders.getDataProviders);
@@ -132,11 +132,7 @@ export class DataProviderBrowsePageComponent
     this.sortOrder$ = store.select(fromDataProviders.getCurrentSortOrder);
     this.importing$ = store.select(fromDataProviders.getImporting);
     this.importProgress$ = store.select(fromDataProviders.getImportProgress);
-    this.pendingImports$ = store.select(fromDataProviders.getPendingImports);
     this.lastPath$ = store.select(fromDataProviders.getLastPath);
-    this.completedImports$ = store.select(
-      fromDataProviders.getCompletedImports
-    );
     this.importErrors$ = store.select(fromDataProviders.getImportErrors);
 
     this.dataSource = new DataProviderAssetsDataSource(store);
@@ -198,20 +194,13 @@ export class DataProviderBrowsePageComponent
     );
 
     this.subs.push(
-      this.completedImports$.subscribe(completedImports => {
-        completedImports.forEach(asset => {
-          this.selection.deselect(asset);
-        });
-      })
-    );
-
-    this.subs.push(
       this.importProgress$
         .pipe(
-          withLatestFrom(this.importErrors$),
-          filter(([progress, errors]) => progress == 1 && errors.length == 0)
+          withLatestFrom(this.importing$, this.importErrors$),
+          filter(([progress, importing, errors]) => !importing && progress == 100 && errors.length == 0)
         )
         .subscribe(v => {
+          console.log(v);
           this.router.navigate(["/workbench"]);
         })
     );
@@ -264,7 +253,7 @@ export class DataProviderBrowsePageComponent
 
   import(provider: DataProvider, assets: DataProviderAsset[]) {
     this.store.dispatch(
-      new dataProviderActions.ImportAssets({ dataProviderId: provider.id, assets: assets })
+      new dataProviderActions.ImportSelectedAssets(this.corrGen.next())
     );
   }
 

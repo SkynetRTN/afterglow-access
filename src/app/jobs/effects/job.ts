@@ -26,13 +26,13 @@ export class JobEffects {
     ofType<jobActions.CreateJob>(jobActions.CREATE_JOB),
     switchMap(action => {
       return this.jobService.createJob(action.payload.job).pipe(
-        map((job: Job) => new jobActions.CreateJobSuccess({ job: job })),
+        map((job: Job) => new jobActions.CreateJobSuccess({ job: job }, action.correlationId)),
         catchError(err =>
           of(
             new jobActions.CreateJobFail({
               job: action.payload.job,
               error: err
-            })
+            }, action.correlationId)
           )
         )
       );
@@ -55,7 +55,7 @@ export class JobEffects {
 
       return interval(2000).pipe(
         takeUntil(stop$),
-        map(v => new jobActions.UpdateJob({ job: action.payload.job }))
+        map(v => new jobActions.UpdateJob({ job: action.payload.job }, action.correlationId))
       );
     })
   );
@@ -65,13 +65,13 @@ export class JobEffects {
     ofType<jobActions.UpdateJob>(jobActions.UPDATE_JOB),
     switchMap(action => {
       return this.jobService.getJob(action.payload.job.id).pipe(
-        map((job: Job) => new jobActions.UpdateJobSuccess({ job: job })),
+        map((job: Job) => new jobActions.UpdateJobSuccess({ job: job }, action.correlationId)),
         catchError(err =>
           of(
             new jobActions.UpdateJobFail({
               job: action.payload.job,
               error: err
-            })
+            }, action.correlationId)
           )
         )
       );
@@ -82,7 +82,7 @@ export class JobEffects {
   jobCompleted$: Observable<Action> = this.actions$.pipe(
     ofType<jobActions.UpdateJobSuccess>(jobActions.UPDATE_JOB_SUCCESS),
     filter(action => action.payload.job.state.status == "completed"),
-    map(action => new jobActions.UpdateJobResult({ job: action.payload.job }))
+    map(action => new jobActions.UpdateJobResult({ job: action.payload.job }, action.correlationId))
   );
 
   @Effect()
@@ -95,14 +95,14 @@ export class JobEffects {
             new jobActions.UpdateJobResultSuccess({
               job: action.payload.job,
               result: result
-            })
+            }, action.correlationId)
         ),
         catchError(err =>
           of(
             new jobActions.UpdateJobResultFail({
               job: action.payload.job,
               error: err
-            })
+            }, action.correlationId)
           )
         )
       );

@@ -89,7 +89,7 @@ export class DeselectAllDataProviderAssets implements Action {
 export class ImportSelectedAssets implements Action {
   readonly type = IMPORT_SELECTED_ASSETS;
 
-  constructor() { }
+  constructor(public correlationId?: string) { }
 }
 
 export class ImportAssets implements CorrelatedAction {

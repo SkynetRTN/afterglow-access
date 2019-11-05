@@ -80,6 +80,7 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   normalizationSyncEnabled$: Observable<boolean>;
 
   surveyDataProvider$: Observable<DataProvider>;
+  surveyImportCorrId$: Observable<string>;
 
   imageFile$: Observable<ImageFile>;
   normalization$: Observable<Normalization>;
@@ -128,6 +129,7 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
         map(fileState => fileState.normalization)
       );
     this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+    this.surveyImportCorrId$ = store.select(fromCore.workbench.getSurveyImportCorrId);
 
     this.subs.push(
       this.imageFile$.subscribe(imageFile => {

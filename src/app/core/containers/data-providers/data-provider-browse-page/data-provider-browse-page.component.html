@@ -23,15 +23,14 @@
         </div>
         <ng-container *ngIf="!(loadingAssets$ | async)">
           <div *ngIf="(importing$ | async)" class="alert alert-info">
-            Importing selected assets... ({{(pendingImports$ | async)?.length}} remaining)
+            Importing selected assets...
           </div>
-          <div [hidden]="(importProgress$ | async) != 1.0" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
+          <div style="max-height: 100px; overflow-y: scroll;" [hidden]="(importProgress$ | async) != 100" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
             Import completed with {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
-            <a [hidden]="(completedImports$ | async).length <= (importErrors$ | async).length" routerLink="/workbench" class="alert-link">View your imported files now.</a>
+            <a *ngIf="(importErrors$ | async).length == 0" routerLink="/workbench" class="alert-link">View your imported files now.</a>
             <div *ngIf="(importErrors$ | async).length != 0">
               <div *ngFor="let e of (importErrors$ | async)">
-                <strong>Error: </strong> Failed to import {{e.asset.name}}.
-                <span *ngIf="e.message">{{e.message}}</span>
+                <strong>Error: </strong> {{e}}
               </div>
             </div>
           </div>
@@ -39,7 +38,7 @@
           <mat-card-header>
             <div class="dp-browser-info">
               <span *ngIf="!(importing$ | async)"><strong>{{selection.selected.length}}</strong> image files selected.</span>
-              <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
+              <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async)" [color]="'accent'"></mat-progress-bar>
             </div>
             <div class="dp-browser-toolbar">
               <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
@@ -114,7 +113,7 @@
 
           <mat-card-header>
             <div class="dp-browser-info">
-                <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async) * 100" [color]="'primary'"></mat-progress-bar>
+                <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async)" [color]="'accent'"></mat-progress-bar>
                 
 
             </div>

@@ -4,6 +4,7 @@ import { DataProvider } from '../models/data-provider';
 import { DataProviderAsset } from '../models/data-provider-asset';
 
 import * as dataProviderActions from '../actions/data-provider';
+import * as jobActions from '../../jobs/actions/job';
 
 export interface State {
   dataProvidersLoaded: boolean;
@@ -19,11 +20,10 @@ export interface State {
   currentSortField: string;
   currentSortOrder: '' | 'asc' | 'desc';
   importing: boolean,
-  pendingImports: DataProviderAsset[];
-  completedImports: DataProviderAsset[];
-  importErrors: Array<{ asset: DataProviderAsset, message: string }>
+  importErrors: Array<string>
   importProgress: number,
-  lastPath: {[id: string]: string}
+  lastPath: {[id: string]: string},
+  batchImportCorrId: string
 }
 
 export const initialState: State = {
@@ -40,16 +40,15 @@ export const initialState: State = {
   currentSortField: null,
   currentSortOrder: 'asc',
   importing: false,
-  pendingImports: [],
-  completedImports: [],
   importErrors: [],
   importProgress: 0,
-  lastPath: {}
+  lastPath: {},
+  batchImportCorrId: null,
 }
 
 export function reducer(
   state = initialState,
-  action: dataProviderActions.Actions
+  action: dataProviderActions.Actions | jobActions.Actions
 ): State {
   switch (action.type) {
     case dataProviderActions.LOAD_DATA_PROVIDERS_SUCCESS: {
@@ -63,11 +62,9 @@ export function reducer(
 
     case dataProviderActions.LOAD_DATA_PROVIDER_ASSETS: {
       let changes: Partial<State> = {};
-      if (state.importProgress == 1) {
+      if (state.importProgress == 100) {
         changes.importProgress = 0;
         changes.importErrors = [];
-        changes.completedImports = [];
-        changes.pendingImports = [];
         changes.importing = false;
       }
 
@@ -255,54 +252,67 @@ export function reducer(
         ...state,
         importing: true,
         importProgress: 0,
-        pendingImports: [...state.selectedAssets],
-        completedImports: [],
+        batchImportCorrId: action.correlationId,
         importErrors: [],
       };
     }
 
-    case dataProviderActions.IMPORT_ASSETS: {
-
-      return {
-        ...state,
-        importing: true,
-        importProgress: 0,
-        pendingImports: [...action.payload.assets],
-        completedImports: [],
-        importErrors: [],
-      };
+    case jobActions.UPDATE_JOB_SUCCESS: {
+      if(state.batchImportCorrId === null || state.batchImportCorrId != action.correlationId) return state;
+      if(action.payload.job.state.status == 'canceled') {
+        return {
+          ...state,
+          importErrors: ['Import was canceled'],
+          importing: false,
+        }
+      }
+      else {
+        return {
+          ...state,
+          importProgress: action.payload.job.state.progress
+        }
+      }
     }
 
-    case dataProviderActions.IMPORT_ASSET_SUCCESS: {
-      let pending = state.pendingImports.filter(asset => asset.path != action.payload.asset.path);
-      let completed = [...state.completedImports, action.payload.asset]
-      let total = pending.length + completed.length;
-      let progress = total == 0 ? 0 : completed.length / total;
+    case jobActions.UPDATE_JOB_RESULT_SUCCESS: {
+      if(state.batchImportCorrId === null || state.batchImportCorrId != action.correlationId) return state;
       return {
         ...state,
-        importing: pending.length != 0,
-        importProgress: progress,
-        selectedAssets: state.selectedAssets.filter(asset => asset.path != action.payload.asset.path),
-        pendingImports: pending,
-        completedImports: completed
-      };
-
+        importErrors: action.payload.result.errors,
+        importing: false
+      }
     }
 
-    case dataProviderActions.IMPORT_ASSET_FAIL: {
-      let pending = state.pendingImports.filter(asset => asset.path != action.payload.asset.path);
-      let completed = [...state.completedImports, action.payload.asset]
-      let total = pending.length + completed.length;
-      let progress = total == 0 ? 0 : completed.length / total;
-      return {
-        ...state,
-        importing: pending.length != 0,
-        importProgress: progress,
-        pendingImports: pending,
-        completedImports: completed,
-        importErrors: [...state.importErrors, { asset: action.payload.asset, message: action.payload.error }]
-      };
-    }
+    // case dataProviderActions.IMPORT_ASSET_SUCCESS: {
+    //   let pending = state.pendingImports.filter(asset => asset.path != action.payload.asset.path);
+    //   let completed = [...state.completedImports, action.payload.asset]
+    //   let total = pending.length + completed.length;
+    //   let progress = total == 0 ? 0 : completed.length / total;
+    //   return {
+    //     ...state,
+    //     importing: pending.length != 0,
+    //     importProgress: progress,
+    //     selectedAssets: state.selectedAssets.filter(asset => asset.path != action.payload.asset.path),
+    //     pendingImports: pending,
+    //     completedImports: completed
+    //   };
+
+    // }
+
+    // case dataProviderActions.IMPORT_ASSET_FAIL: {
+    //   let pending = state.pendingImports.filter(asset => asset.path != action.payload.asset.path);
+    //   let completed = [...state.completedImports, action.payload.asset]
+    //   let total = pending.length + completed.length;
+    //   let progress = total == 0 ? 0 : completed.length / total;
+    //   return {
+    //     ...state,
+    //     importing: pending.length != 0,
+    //     importProgress: progress,
+    //     pendingImports: pending,
+    //     completedImports: completed,
+    //     importErrors: [...state.importErrors, { asset: action.payload.asset, message: action.payload.error }]
+    //   };
+    // }
 
     default: {
       return state;

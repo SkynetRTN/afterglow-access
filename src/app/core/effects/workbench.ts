@@ -53,6 +53,7 @@ import { JobType } from '../../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult } from '../../jobs/models/alignment';
 import { StackingJob, StackingJobResult } from '../../jobs/models/stacking';
 import { ViewMode } from '../models/view-mode';
+import { BatchImportJobResult } from '../../jobs/models/batch-import';
 
 // export const SEARCH_DEBOUNCE = new InjectionToken<number>('Search Debounce');
 // export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
@@ -146,6 +147,35 @@ export class WorkbenchEffects {
   );
 
   @Effect()
+  onLibraryLoadSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<
+      | dataFileActions.LoadLibrarySuccess
+    >(
+      dataFileActions.LOAD_LIBRARY_SUCCESS
+    ),
+    withLatestFrom(
+      this.store.select(fromDataFile.getDataFiles),
+      this.store.select(fromCore.getWorkbenchState),
+      this.store.select(fromCore.getImageFileStates)
+    ),
+    flatMap(([action, dataFiles, workbenchState, imageFileStates]) => {
+      
+      let actions = [];
+      workbenchState.viewers.forEach(
+        (viewer, index) => {
+          if(viewer.pendingFileId !== null) {
+            // viewer has a pending file,  check if it is now in the library
+            //if it is, dispatch set file event so it can be loaded
+            //if not, clear it
+            actions.push(new workbenchActions.SetViewerFile({viewerIndex: index, fileId: (viewer.pendingFileId in dataFiles) ? viewer.pendingFileId : null}));
+          }
+        }
+      )
+      return from(actions);
+    })
+  )
+
+  @Effect()
   onSetViewerFile$: Observable<Action> = this.actions$.pipe(
     ofType<
       | workbenchActions.SetViewerFile
@@ -154,7 +184,7 @@ export class WorkbenchEffects {
     >(
       workbenchActions.SET_VIEWER_FILE,
       dataFileActions.LOAD_DATA_FILE_HDR_SUCCESS,
-      imageFileActions.LOAD_IMAGE_HIST_SUCCESS
+      imageFileActions.LOAD_IMAGE_HIST_SUCCESS,
     ),
     withLatestFrom(
       this.store.select(fromDataFile.getDataFiles),
@@ -974,19 +1004,23 @@ export class WorkbenchEffects {
 
   @Effect()
   importFromSurveySuccess$: Observable<Action> = this.actions$.pipe(
-    ofType<dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail>(dataProviderActions.IMPORT_ASSET_SUCCESS, dataProviderActions.IMPORT_ASSET_FAIL),
+    ofType<jobActions.UpdateJobResultSuccess | jobActions.UpdateJobResultFail>(jobActions.UPDATE_JOB_RESULT_SUCCESS, jobActions.UPDATE_JOB_RESULT_FAIL),
     withLatestFrom(
       this.store.select(fromCore.getWorkbenchState)
     ),
-    filter(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) => workbenchState.surveyImportCorrId != null && action.correlationId == workbenchState.surveyImportCorrId),
-    flatMap(([action, workbenchState]: [dataProviderActions.ImportAssetSuccess | dataProviderActions.ImportAssetFail, WorkbenchState]) =>  {
-      if(action.type == dataProviderActions.IMPORT_ASSET_SUCCESS) {
-        let successAction = action as dataProviderActions.ImportAssetSuccess;
-        return from([
-          new surveyActions.ImportFromSurveySuccess(),
-          new workbenchActions.SetViewMode({viewMode: ViewMode.SPLIT_VERTICAL}),
-          new workbenchActions.SetViewerFile({viewerIndex: 1, fileId: successAction.payload.fileId})
-        ])
+    filter(([action, workbenchState]: [jobActions.UpdateJobResultSuccess | jobActions.UpdateJobResultFail, WorkbenchState]) => workbenchState.surveyImportCorrId != null && action.correlationId == workbenchState.surveyImportCorrId),
+    flatMap(([action, workbenchState]: [jobActions.UpdateJobResultSuccess | jobActions.UpdateJobResultFail, WorkbenchState]) =>  {
+      if(action.type == jobActions.UPDATE_JOB_RESULT_SUCCESS) {
+        let successAction = action as jobActions.UpdateJobResultSuccess;
+        let result = successAction.payload.result as BatchImportJobResult;
+        if(successAction.payload.result.errors.length == 0) {
+          return from([
+            new surveyActions.ImportFromSurveySuccess(),
+            new workbenchActions.SetViewMode({viewMode: ViewMode.SPLIT_VERTICAL}),
+            new workbenchActions.SetViewerFile({viewerIndex: 1, fileId: result.file_ids[0].toString()})
+          ])
+        }
+        
       }
 
       return of(new surveyActions.ImportFromSurveyFail())
