@@ -5,6 +5,7 @@ import { DataProviderAsset } from '../models/data-provider-asset';
 
 import * as dataProviderActions from '../actions/data-provider';
 import * as jobActions from '../../jobs/actions/job';
+import { BatchImportJobResult } from '../../jobs/models/batch-import';
 
 export interface State {
   dataProvidersLoaded: boolean;
@@ -14,7 +15,6 @@ export interface State {
   currentPath: string;
   currentPathBreadcrumbs: Array<{ name: string, url: string }>;
   currentAssets: DataProviderAsset[];
-  selectedAssets: DataProviderAsset[];
   userSortField: string;
   userSortOrder: '' | 'asc' | 'desc';
   currentSortField: string;
@@ -34,7 +34,6 @@ export const initialState: State = {
   currentPath: '',
   currentPathBreadcrumbs: [],
   currentAssets: [],
-  selectedAssets: [],
   userSortField: null,
   userSortOrder: 'asc',
   currentSortField: null,
@@ -43,7 +42,7 @@ export const initialState: State = {
   importErrors: [],
   importProgress: 0,
   lastPath: {},
-  batchImportCorrId: null,
+  batchImportCorrId: null
 }
 
 export function reducer(
@@ -111,7 +110,6 @@ export function reducer(
         currentPath: currentPath,
         currentPathBreadcrumbs: breadcrumbs,
         currentAssets: currentAssets,
-        selectedAssets: [],
         lastPath: lastPath
       };
     }
@@ -212,39 +210,39 @@ export function reducer(
       };
     }
 
-    case dataProviderActions.TOGGLE_DATA_PROVIDER_ASSET_SELECT: {
-      if (action.payload.asset.collection) return state;
+    // case dataProviderActions.TOGGLE_DATA_PROVIDER_ASSET_SELECT: {
+    //   if (action.payload.asset.collection) return state;
 
-      let selectedAssets = [...state.selectedAssets];
-      if (selectedAssets.includes(action.payload.asset)) {
-        selectedAssets.splice(selectedAssets.indexOf(action.payload.asset), 1);
-      }
-      else {
-        selectedAssets.push(action.payload.asset);
-      }
-      return {
-        ...state,
-        selectedAssets: selectedAssets
-      };
-    }
+    //   let selectedAssets = [...state.selectedAssets];
+    //   if (selectedAssets.includes(action.payload.asset)) {
+    //     selectedAssets.splice(selectedAssets.indexOf(action.payload.asset), 1);
+    //   }
+    //   else {
+    //     selectedAssets.push(action.payload.asset);
+    //   }
+    //   return {
+    //     ...state,
+    //     selectedAssets: selectedAssets
+    //   };
+    // }
 
-    case dataProviderActions.SELECT_ALL_DATA_PROVIDER_ASSETS: {
-      let selectedAssets = state.currentAssets.filter(asset => !asset.collection);
-      return {
-        ...state,
-        selectedAssets: selectedAssets
+    // case dataProviderActions.SELECT_ALL_DATA_PROVIDER_ASSETS: {
+    //   let selectedAssets = state.currentAssets.filter(asset => !asset.collection);
+    //   return {
+    //     ...state,
+    //     selectedAssets: selectedAssets
 
-      };
-    }
+    //   };
+    // }
 
-    case dataProviderActions.DESELECT_ALL_DATA_PROVIDER_ASSETS: {
-      let selectedAssets = [];
-      return {
-        ...state,
-        selectedAssets: selectedAssets
+    // case dataProviderActions.DESELECT_ALL_DATA_PROVIDER_ASSETS: {
+    //   let selectedAssets = [];
+    //   return {
+    //     ...state,
+    //     selectedAssets: selectedAssets
 
-      };
-    }
+    //   };
+    // }
 
     case dataProviderActions.IMPORT_SELECTED_ASSETS: {
 
@@ -279,7 +277,7 @@ export function reducer(
       return {
         ...state,
         importErrors: action.payload.result.errors,
-        importing: false
+        importing: false,
       }
     }
 

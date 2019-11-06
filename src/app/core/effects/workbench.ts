@@ -54,6 +54,7 @@ import { AlignmentJob, AlignmentJobResult } from '../../jobs/models/alignment';
 import { StackingJob, StackingJobResult } from '../../jobs/models/stacking';
 import { ViewMode } from '../models/view-mode';
 import { BatchImportJobResult } from '../../jobs/models/batch-import';
+import { Router } from '@angular/router';
 
 // export const SEARCH_DEBOUNCE = new InjectionToken<number>('Search Debounce');
 // export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
@@ -1027,6 +1028,18 @@ export class WorkbenchEffects {
     })
   );
 
+
+  @Effect()
+  importSelectedAssetsSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<dataProviderActions.ImportSelectedAssetsSuccess>(
+      dataProviderActions.IMPORT_SELECTED_ASSETS_SUCCESS
+    ),
+    flatMap((action) => {
+      this.router.navigate(["/workbench"])
+      return of(new workbenchActions.SetViewerFile({viewerIndex: 0, fileId: action.payload.fileIds[0]}))
+    })
+  );
+
  
 
 
@@ -1063,6 +1076,7 @@ export class WorkbenchEffects {
     private afterglowDataFileService: AfterglowDataFileService,
     private afterglowCatalogService: AfterglowCatalogService,
     private afterglowFieldCalService: AfterglowFieldCalService,
+    private router: Router,
     private store: Store<fromCore.State> // @Optional() // @Inject(SEARCH_DEBOUNCE) // private debounce: number, // /** //    * You inject an optional Scheduler that will be undefined //    * in normal application usage, but its injected here so that you can mock out //    * during testing using the RxJS TestScheduler for simulating passages of time.
   ) //    */
   // @Optional()

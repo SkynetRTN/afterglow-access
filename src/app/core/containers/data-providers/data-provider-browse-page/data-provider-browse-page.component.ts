@@ -21,7 +21,7 @@ import { DataProviderAsset } from "../../../../data-providers/models/data-provid
 import * as dataProviderActions from "../../../../data-providers/actions/data-provider";
 
 import { Subscription, Observable, combineLatest } from "rxjs";
-import { filter, map, withLatestFrom } from "rxjs/operators";
+import { filter, map, withLatestFrom, tap } from "rxjs/operators";
 import {
   // UP_ARROW,
   // DOWN_ARROW,
@@ -71,7 +71,6 @@ export class DataProviderBrowsePageComponent
   currentProviderColumns$: Observable<string[]>;
   loadingAssets$: Observable<boolean>;
   currentAssets$: Observable<DataProviderAsset[]>;
-  selectedAssets$: Observable<DataProviderAsset[]>;
   sortField$: Observable<string>;
   sortOrder$: Observable<"" | "asc" | "desc">;
   importing$: Observable<boolean>;
@@ -127,7 +126,6 @@ export class DataProviderBrowsePageComponent
       fromDataProviders.getCurrentPathBreadcrumbs
     );
     this.currentAssets$ = store.select(fromDataProviders.getCurrentAssets);
-    this.selectedAssets$ = store.select(fromDataProviders.getSelectedAssets);
     this.sortField$ = store.select(fromDataProviders.getCurrentSortField);
     this.sortOrder$ = store.select(fromDataProviders.getCurrentSortOrder);
     this.importing$ = store.select(fromDataProviders.getImporting);
@@ -194,14 +192,12 @@ export class DataProviderBrowsePageComponent
     );
 
     this.subs.push(
-      this.importProgress$
+      combineLatest(this.importProgress$, this.importing$, this.importErrors$)
         .pipe(
-          withLatestFrom(this.importing$, this.importErrors$),
           filter(([progress, importing, errors]) => !importing && progress == 100 && errors.length == 0)
         )
         .subscribe(v => {
-          console.log(v);
-          this.router.navigate(["/workbench"]);
+          //this.router.navigate(["/workbench"]);
         })
     );
   }
@@ -253,7 +249,7 @@ export class DataProviderBrowsePageComponent
 
   import(provider: DataProvider, assets: DataProviderAsset[]) {
     this.store.dispatch(
-      new dataProviderActions.ImportSelectedAssets(this.corrGen.next())
+      new dataProviderActions.ImportSelectedAssets({dataProviderId: provider.id, assets: assets}, this.corrGen.next())
     );
   }
 

@@ -22,7 +22,7 @@
           Loading assets...
         </div>
         <ng-container *ngIf="!(loadingAssets$ | async)">
-          <div *ngIf="(importing$ | async)" class="alert alert-info">
+          <div *ngIf="(importing$ | async) && (importProgress$ | async) != 100" class="alert alert-info">
             Importing selected assets...
           </div>
           <div style="max-height: 100px; overflow-y: scroll;" [hidden]="(importProgress$ | async) != 100" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">

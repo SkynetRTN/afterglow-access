@@ -17,7 +17,6 @@ export const getCurrentProvider = createSelector(getDataProvidersState, state =>
 export const getCurrentPath = createSelector(getDataProvidersState, state => state.currentPath);
 export const getCurrentPathBreadcrumbs = createSelector(getDataProvidersState, state => state.currentPathBreadcrumbs);
 export const getCurrentAssets = createSelector(getDataProvidersState, state => state.currentAssets);
-export const getSelectedAssets = createSelector(getDataProvidersState, state => state.selectedAssets);
 export const getCurrentSortField = createSelector(getDataProvidersState, state => state.currentSortField);
 export const getCurrentSortOrder = createSelector(getDataProvidersState, state => state.currentSortOrder);
 export const getImporting = createSelector(getDataProvidersState, state => state.importing);

@@ -21,6 +21,7 @@ export const DESELECT_ALL_DATA_PROVIDER_ASSETS = '[DataProvider] Deselect All Da
 
 export const IMPORT_ASSETS = '[DataProvider] Import Assets';
 export const IMPORT_SELECTED_ASSETS = '[DataProvider] Import Selected Assets';
+export const IMPORT_SELECTED_ASSETS_SUCCESS = '[DataProvider] Import Selected Assets Success';
 export const IMPORT_ASSET_SUCCESS = '[DataProvider] Import Asset Success';
 export const IMPORT_ASSET_FAIL = '[DataProvider] Import Asset Fail';
 export const IMPORT_ASSETS_CANCEL = '[DataProvider] Import Asset Cancel';
@@ -89,7 +90,13 @@ export class DeselectAllDataProviderAssets implements Action {
 export class ImportSelectedAssets implements Action {
   readonly type = IMPORT_SELECTED_ASSETS;
 
-  constructor(public correlationId?: string) { }
+  constructor(public payload: { dataProviderId: string, assets: DataProviderAsset[] }, public correlationId?: string) {  }
+}
+
+export class ImportSelectedAssetsSuccess implements Action {
+  readonly type = IMPORT_SELECTED_ASSETS_SUCCESS;
+
+  constructor(public payload: { fileIds: string[] }, public correlationId?: string) {  }
 }
 
 export class ImportAssets implements CorrelatedAction {
@@ -129,6 +136,7 @@ export type Actions =
   | DeselectAllDataProviderAssets
   | ImportAssets
   | ImportSelectedAssets
+  | ImportSelectedAssetsSuccess
   | ImportAssetSuccess
   | ImportAssetFail
   | ImportAssetsCancel;

@@ -25,7 +25,7 @@ import { DataProvider } from "../models/data-provider";
 import { DataProviderAsset } from "../models/data-provider-asset";
 import { AfterglowDataFileService } from "../../core/services/afterglow-data-files";
 import { HttpErrorResponse } from '@angular/common/http';
-import { BatchImportJob, BatchImportSettings } from '../../jobs/models/batch-import';
+import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../../jobs/models/batch-import';
 import { JobType } from '../../jobs/models/job-types';
 
 @Injectable()
@@ -104,9 +104,27 @@ export class DataProviderEffects {
     withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
     switchMap(([action, state]) => {
       return of(new dataProviderActions.ImportAssets({
-        dataProviderId: state.currentProvider.id,
-        assets: state.selectedAssets
+        dataProviderId: action.payload.dataProviderId,
+        assets: action.payload.assets
       }, state.batchImportCorrId))
+    })
+  );
+
+  @Effect()
+  importSelectedAssetsSuccess$: Observable<Action> = this.actions$.pipe(
+    ofType<jobActions.UpdateJobResultSuccess>(
+      jobActions.UPDATE_JOB_RESULT_SUCCESS
+    ),
+    withLatestFrom(this.store.select(fromDataProviders.getDataProvidersState)),
+    filter(([action, state]) => {
+      let result = (action.payload.result as BatchImportJobResult);
+      return state.batchImportCorrId !== null && action.correlationId == state.batchImportCorrId && result.errors.length == 0 && result.file_ids.length != 0
+    }),
+    flatMap(([action, state]) => {
+      console.log(action, state);
+      return of(new dataProviderActions.ImportSelectedAssetsSuccess({
+        fileIds: (action.payload.result as BatchImportJobResult).file_ids.map(id => id.toString())
+      }, action.correlationId))
     })
   );
 
