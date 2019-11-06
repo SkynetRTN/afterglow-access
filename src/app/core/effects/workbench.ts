@@ -1016,6 +1016,7 @@ export class WorkbenchEffects {
         let result = successAction.payload.result as BatchImportJobResult;
         if(successAction.payload.result.errors.length == 0) {
           return from([
+            new dataFileActions.LoadLibrary(),
             new surveyActions.ImportFromSurveySuccess(),
             new workbenchActions.SetViewMode({viewMode: ViewMode.SPLIT_VERTICAL}),
             new workbenchActions.SetViewerFile({viewerIndex: 1, fileId: result.file_ids[0].toString()})

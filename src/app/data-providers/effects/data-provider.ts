@@ -121,7 +121,6 @@ export class DataProviderEffects {
       return state.batchImportCorrId !== null && action.correlationId == state.batchImportCorrId && result.errors.length == 0 && result.file_ids.length != 0
     }),
     flatMap(([action, state]) => {
-      console.log(action, state);
       return of(new dataProviderActions.ImportSelectedAssetsSuccess({
         fileIds: (action.payload.result as BatchImportJobResult).file_ids.map(id => id.toString())
       }, action.correlationId))
