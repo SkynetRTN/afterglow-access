@@ -1,13 +1,12 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from "@angular/core";
+import { Select, Store } from '@ngxs/store';
 import { Router } from "@angular/router";
 import { Observable, Subscription, combineLatest} from "rxjs";
 import { filter, map, withLatestFrom } from "rxjs/operators";
-import { Store } from "@ngrx/store";
-import * as fromAuth from "../../reducers";
-import * as authActions from "../../actions/auth";
 import { ActivatedRoute } from "@angular/router";
 import { OAuthClient } from "../../models/oauth-client";
-import { environment } from "../../../../environments/environment.prod";
+import { LoadPermittedOAuthClients, LoadOAuthClients, AddPermittedOAuthClient } from '../../auth.actions';
+import { AuthState } from '../../auth.state';
 
 @Component({
   selector: "app-oauth-client-consent-page",
@@ -16,24 +15,31 @@ import { environment } from "../../../../environments/environment.prod";
 })
 export class OauthClientConsentPageComponent implements OnInit, AfterViewInit {
   sub: Subscription;
+
+  @Select(AuthState.permittedOAuthClientIds)
   permittedClientIds$: Observable<string[]>;
+
+  @Select(AuthState.oAuthClients)
   oAuthClients$: Observable<OAuthClient[]>;
+
+  @Select(AuthState.loadingOAuthClients)
+  loadingOAuthClients$: Observable<boolean>;
+
+  @Select(AuthState.loadingPermittedOAuthClientIds)
+  loadingPermittedOAuthClientIds$: Observable<boolean>;
+
   oAuthClient$: Observable<OAuthClient>;
   loading$: Observable<boolean>;
   consented$: Observable<boolean>;
   next$: Observable<string>;
 
   constructor(
-    private store: Store<fromAuth.State>,
+    private store: Store,
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) {
-    this.store.dispatch(new authActions.LoadPermittedOAuthClientIds());
-    this.store.dispatch(new authActions.LoadOAuthClients());
-    this.permittedClientIds$ = this.store.select(
-      fromAuth.getPermittedOAuthClients
-    );
-    this.oAuthClients$ = this.store.select(fromAuth.getOAuthClients);
+    this.store.dispatch(new LoadPermittedOAuthClients());
+    this.store.dispatch(new LoadOAuthClients());
 
     this.oAuthClient$ = combineLatest(
       this.activatedRoute.queryParams,
@@ -84,8 +90,8 @@ export class OauthClientConsentPageComponent implements OnInit, AfterViewInit {
       });
 
     this.loading$ = combineLatest(
-      this.store.select(fromAuth.getLoadingOAuthClients),
-      this.store.select(fromAuth.getLoadingPermittedOAuthClientIds),
+      this.loadingOAuthClients$,
+      this.loadingPermittedOAuthClientIds$,
       this.consented$
     ).pipe(
       map(([loadingClients, loadingPermittedClientIds, consented]) => {
@@ -99,7 +105,7 @@ export class OauthClientConsentPageComponent implements OnInit, AfterViewInit {
 
   addPermittedOAuthClient(client: OAuthClient) {
     this.store.dispatch(
-      new authActions.AddPermittedOAuthClient({ client: client })
+      new AddPermittedOAuthClient(client)
     );
   }
 

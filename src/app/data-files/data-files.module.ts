@@ -15,9 +15,6 @@ import { MaterialModule } from '../material';
 import { SvgModule } from '../svg/svg.module';
 
 import { PipesModule } from '../pipes/pipes.module';
-
-import { DataFileEffects } from './effects/data-file';
-import { reducers } from './reducers';
 import { ImageHistChartComponent } from './components/image-hist-chart/image-hist-chart.component';
 import { DataFileSelectionListComponent, DataFileListItemComponent } from './components/data-file-selection-list/data-file-selection-list.component';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
@@ -32,24 +29,6 @@ import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.modu
     SvgModule,
     AfterglowPlotlyModule,
 
-
-    /**
-     * StoreModule.forFeature is used for composing state
-     * from feature modules. These modules can be loaded
-     * eagerly or lazily and will be dynamically added to
-     * the existing state.
-     */
-    StoreModule.forFeature('dataFiles', reducers),
-
-    /**
-     * Effects.forFeature is used to register effects
-     * from feature modules. Effects can be loaded
-     * eagerly or lazily and will be started immediately.
-     *
-     * All Effects will only be instantiated once regardless of
-     * whether they are registered once or multiple times.
-     */
-    EffectsModule.forFeature([DataFileEffects]),
   ],
   declarations: [
     DataFileListItemComponent,

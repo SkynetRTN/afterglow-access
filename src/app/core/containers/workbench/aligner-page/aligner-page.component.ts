@@ -4,20 +4,17 @@ import { Observable, combineLatest } from 'rxjs';
 import { map, tap } from "rxjs/operators";
 import { ImageFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
-import { Store } from '@ngrx/store';
-
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
-import * as fromCore from '../../../reducers';
-import * as fromJobs from '../../../../jobs/reducers';
-
-import * as workbenchActions from '../../../actions/workbench';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { AlignFormData, WorkbenchTool } from '../../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
 import { AlignmentJob, AlignmentJobResult } from '../../../../jobs/models/alignment';
 import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { UpdateAlignFormData, SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, SelectDataFile, CreateAlignmentJob } from '../../../workbench.actions';
+import { JobsState } from '../../../../jobs/jobs.state';
 
 @Component({
   selector: 'app-aligner-page',
@@ -44,19 +41,15 @@ export class AlignerPageComponent implements OnInit {
     inPlace: new FormControl(false, Validators.required)
   });
 
-  constructor(private store: Store<fromRoot.State>, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-  
+  constructor(private store: Store, router: Router) {
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
+    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
     
 
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
-    
-    this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
-    
-
-    this.allImageFiles$ = store.select(fromDataFiles.getAllDataFiles)
+    this.allImageFiles$ = store.select(DataFilesState.getDataFiles)
     .pipe(
       map(
         files =>
@@ -68,7 +61,7 @@ export class AlignerPageComponent implements OnInit {
 
     
 
-    this.alignFormData$ = store.select(fromCore.getWorkbenchState).pipe(
+    this.alignFormData$ = store.select(WorkbenchState.getState).pipe(
       map(state => state.alignFormData),
       tap(data => {
         this.alignForm.patchValue(data, {emitEvent: false});
@@ -85,7 +78,7 @@ export class AlignerPageComponent implements OnInit {
 
     this.alignForm.valueChanges.subscribe(value => {
       // if(this.imageCalcForm.valid) {
-        this.store.dispatch(new workbenchActions.UpdateAlignFormData({data: this.alignForm.value}));
+        this.store.dispatch(new UpdateAlignFormData(this.alignForm.value));
       // }
     })
 
@@ -99,7 +92,7 @@ export class AlignerPageComponent implements OnInit {
       map(imageFile => imageFile != null && imageFile.headerLoaded && imageFile.wcs.isValid())
     )
 
-    this.alignmentJobRow$ = combineLatest(store.select(fromCore.getWorkbenchState), store.select(fromJobs.getJobs)).pipe(
+    this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getJobs)).pipe(
       map(([state, jobRowLookup]) => {
         if(!state.currentAlignmentJobId || !jobRowLookup[state.currentAlignmentJobId]) return null;
         return jobRowLookup[state.currentAlignmentJobId] as {job: AlignmentJob, result: AlignmentJobResult};
@@ -108,18 +101,18 @@ export class AlignerPageComponent implements OnInit {
     )
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.ALIGNER })
+      new SetActiveTool(WorkbenchTool.ALIGNER)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
 
 
   }
 
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
+    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {
@@ -127,17 +120,18 @@ export class AlignerPageComponent implements OnInit {
   }
 
   onActiveImageChange($event: MatSelectChange) {
-    this.store.dispatch(new workbenchActions.SelectDataFile({fileId: $event.value}));
+    this.store.dispatch(new SelectDataFile($event.value));
   }
   
   selectImageFiles(imageFiles: ImageFile[]) {
-    this.store.dispatch(new workbenchActions.UpdateAlignFormData({data: {
+    this.store.dispatch(new UpdateAlignFormData(
+      {
       ...this.alignForm.value,
       selectedImageFileIds: imageFiles.map(f => f.id)
-    }}));
+    }));
   }
 
   submit(data: AlignFormData) {
-    this.store.dispatch(new workbenchActions.CreateAlignmentJob())
+    this.store.dispatch(new CreateAlignmentJob())
   }
 }

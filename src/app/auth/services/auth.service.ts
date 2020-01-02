@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Location } from "@angular/common";
-import { User, Authenticate } from "../models/user";
+import { User, Credentials } from "../models/user";
 import { AuthMethod } from "../models/auth-method";
 import { environment } from "../../../environments/environment";
 import { OAuthClient } from "../models/oauth-client";
@@ -12,7 +12,7 @@ import { map } from "rxjs/operators";
 export class AuthService {
   constructor(private http: HttpClient, private location: Location) {}
 
-  login({ username, password }: Authenticate) {
+  login({ username, password }: Credentials) {
     /**
      * Simulate a failed login to display the error
      * message for the login form.

@@ -59,14 +59,6 @@ import { SourceExtractorPageComponent } from './containers/workbench/source-extr
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
 import { AlignerPageComponent } from './containers/workbench/aligner-page/aligner-page.component';
-import { WorkbenchEffects } from './effects/workbench';
-import { SonifierEffects } from './effects/sonifier';
-import { TransformationEffects } from './effects/transformation';
-import { NormalizationEffects } from './effects/normalization';
-import { SourceExtractorEffects } from './effects/source-extractor';
-import { reducers } from './reducers';
-
-import { StyleManager } from './services/style-manager';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
@@ -152,24 +144,6 @@ export const COMPONENTS = [
     FlexLayoutModule,
     ThemePickerModule,
     AfterglowPlotlyModule,
-
-    /**
-     * StoreModule.forFeature is used for composing state
-     * from feature modules. These modules can be loaded
-     * eagerly or lazily and will be dynamically added to
-     * the existing state.
-     */
-    StoreModule.forFeature('coreState', reducers),
-
-    /**
-     * Effects.forFeature is used to register effects
-     * from feature modules. Effects can be loaded
-     * eagerly or lazily and will be started immediately.
-     *
-     * All Effects will only be instantiated once regardless of
-     * whether they are registered once or multiple times.
-     */
-    EffectsModule.forFeature([WorkbenchEffects, SonifierEffects, SourceExtractorEffects, NormalizationEffects, TransformationEffects]),
   ],
 
   declarations: COMPONENTS,

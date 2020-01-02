@@ -16,11 +16,6 @@ import {
 
 import { Observable, combineLatest } from "rxjs";
 import { distinctUntilChanged, map, filter } from "rxjs/operators";
-import { Store, select } from "@ngrx/store";
-
-import * as fromRoot from "../../../../reducers";
-import * as fromCore from "../../../reducers";
-import * as fromDataFiles from "../../../../data-files/reducers";
 import { Dictionary } from "@ngrx/entity/src/models";
 import {
   DataFile,
@@ -55,6 +50,12 @@ import { PlotterFileState } from "../../../models/plotter-file-state";
 import { min } from "../../../../../../node_modules/rxjs/operators";
 import { CustomMarker } from "../../../models/custom-marker";
 import { FieldCal } from '../../../models/field-cal';
+import { Store } from '@ngxs/store';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { SourcesState } from '../../../sources.state';
+import { CustomMarkersState } from '../../../custom-markers.state';
+import { WorkbenchState } from '../../../workbench.state';
+import { ImageFilesState } from '../../../image-files.state';
 
 @Component({
   selector: "app-workbench-viewer-panel",
@@ -103,25 +104,17 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   selectedFieldCalId$: Observable<string>;
   fieldCalMarkers$: Observable<Marker[]>;
 
-  constructor(private store: Store<fromRoot.State>, private sanitization:DomSanitizer) {
-    this.files$ = this.store.select(fromDataFiles.getDataFiles);
-    this.sources$ = this.store.select(fromCore.getAllSources);
-    this.customMarkers$ = this.store.select(fromCore.getAllCustomMarkers);
-    this.selectedCustomMarkers$ = this.store.select(
-      fromCore.getSelectedCustomMarkers
-    );
-    this.selectedSources$ = this.store.select(fromCore.getSelectedSources);
+  constructor(private store: Store, private sanitization:DomSanitizer) {
+    this.files$ = this.store.select(DataFilesState.getEntities);
+    this.sources$ = this.store.select(SourcesState.getSources);
+    this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
+    this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
+    this.selectedSources$ = this.store.select(SourcesState.getSelectedSources);
     this.showAllSources$ = this.store
-      .select(fromCore.workbench.getShowAllSources)
+      .select(WorkbenchState.getShowAllSources)
       .pipe(distinctUntilChanged());
 
-    this.activeFileState$ = combineLatest(
-      this.fileId$,
-      store.select(fromCore.getImageFileStates)
-    ).pipe(
-      map(([fileId, imageFileStates]) => imageFileStates[fileId]),
-      filter(state => state !== undefined && state !== null)
-    );
+    this.activeFileState$ = this.store.select(WorkbenchState.getActiveImageFileState);
 
     let lineStart$ = this.activeFileState$.pipe(
       map(state => state.plotter.lineMeasureStart),
@@ -138,7 +131,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       this.files$,
       lineStart$,
       lineEnd$,
-      this.store.select(fromCore.getWorkbenchState)
+      this.store.select(WorkbenchState.getState)
     ).pipe(
       map(([fileId, files, lineMeasureStart, lineMeasureEnd, workbenchState]) => {
         if (!lineMeasureStart || !lineMeasureEnd) return [[]];
@@ -229,52 +222,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
         return result;
       })
     );
-
-    // let sourceExtractorMarkerLayers$ = Observable.combineLatest(
-    //   this.imageFileStates$
-    //     .map(imageFileStates => imageFileStates[this.fileId].sourceExtractor.region)
-    //     .distinctUntilChanged()
-    //     .map(region => {
-    //       if (!region) return [];
-    //       return [{ type: MarkerType.RECTANGLE, ...region } as RectangleMarker];
-    //     }),
-    //   Observable.combineLatest(
-    //     this.imageFileStates$
-    //       .map(imageFileStates => imageFileStates[this.fileId].sourceExtractor.sources)
-    //       .distinctUntilChanged(),
-    //     this.imageFileStates$
-    //       .map(imageFileStates => imageFileStates[this.fileId].sourceExtractor.selectedSourceIds)
-    //       .distinctUntilChanged())
-    //     .map(([sources, selectedSourceIds]) => {
-    //       if (!sources || !selectedSourceIds) return [];
-
-    //       let sourceExtractor
-    //       return sources.map(source => {
-    //         if(source.skyPm || source.pixelPm) {
-    //           return {
-    //             type: MarkerType.TEARDROP,
-    //             x: source.x,
-    //             y: source.y,
-    //             radius: 15,
-    //             theta: source.pixelPmPosAngle,
-    //             selected: selectedSourceIds.find(selectedSourceId => selectedSourceId == source.id) != null,
-    //             data: { id: source.id }
-    //           } as TeardropMarker
-    //         }
-    //         else {
-    //           return {
-    //             type: MarkerType.CIRCLE,
-    //             x: source.x,
-    //             y: source.y,
-    //             radius: 15,
-    //             selected: selectedSourceIds.find(selectedSourceId => selectedSourceId == source.id) != null,
-    //             data: { id: source.id }
-    //           } as CircleMarker
-    //         }
-
-    //       });
-    //     })
-    // );
 
     let sourceMarkers$ = combineLatest(
       this.fileId$,
@@ -371,8 +318,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       })
     );
 
-    this.fieldCals$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.fieldCals));
-    this.selectedFieldCalId$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.selectedFieldCalId));
+    this.fieldCals$ = store.select(WorkbenchState.getState).pipe(map(state => state.fieldCals));
+    this.selectedFieldCalId$ = store.select(WorkbenchState.getState).pipe(map(state => state.selectedFieldCalId));
     this.selectedFieldCal$ = combineLatest(this.fieldCals$, this.selectedFieldCalId$).pipe(
       map(([fieldCals, selectedFieldCalId]) => {
         if(!fieldCals || selectedFieldCalId == null) return null;
@@ -431,7 +378,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     );
 
     let customMarkers$ = combineLatest(
-      this.store.select(fromCore.workbench.getActiveTool),
+      this.store.select(WorkbenchState.getActiveTool),
       this.fileId$,
       this.files$,
       this.customMarkers$,
@@ -462,7 +409,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     );
 
     this.markers$ = combineLatest(
-      this.store.select(fromCore.workbench.getActiveTool),
+      this.store.select(WorkbenchState.getActiveTool),
       plotterMarkers$,
       sonifierMarkers$,
       sourceMarkers$,

@@ -3,19 +3,16 @@ import { Observable, combineLatest } from 'rxjs';
 import { map, tap } from "rxjs/operators";
 import { ImageFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
-import { Store } from '@ngrx/store';
-
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
-import * as fromCore from '../../../reducers';
-import * as fromJobs from '../../../../jobs/reducers';
-
-import * as workbenchActions from '../../../actions/workbench';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { StackFormData, WorkbenchTool } from '../../../models/workbench-state';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { StackingJob, StackingJobResult } from '../../../../jobs/models/stacking';
 import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { JobsState } from '../../../../jobs/jobs.state';
+import { UpdateStackFormData, SetActiveTool, SetLastRouterPath, CreateStackingJob, DisableMultiFileSelection } from '../../../workbench.actions';
 
 @Component({
   selector: 'app-stacker-page',
@@ -44,16 +41,16 @@ export class StackerPageComponent implements OnInit {
     high: new FormControl(''),
   });
 
-  constructor(private store: Store<fromRoot.State>, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile)
-    this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+  constructor(private store: Store, router: Router) {
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
+    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile)
+    this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
 
     
 
-    this.allImageFiles$ = store.select(fromDataFiles.getAllDataFiles)
+    this.allImageFiles$ = store.select(DataFilesState.getDataFiles)
     .pipe(
       map(
         files =>
@@ -81,7 +78,7 @@ export class StackerPageComponent implements OnInit {
       }
     });
 
-    this.stackFormData$ = store.select(fromCore.getWorkbenchState).pipe(
+    this.stackFormData$ = store.select(WorkbenchState.getState).pipe(
       map(state => state.stackFormData),
       tap(data => {
         // console.log("patching values: ", data.selectedImageFileIds)
@@ -95,7 +92,7 @@ export class StackerPageComponent implements OnInit {
       map(([allImageFiles, data]) => data.selectedImageFileIds.map(id => allImageFiles.find(f => f.id == id)))
     )
 
-    this.stackJobRow$ = combineLatest(store.select(fromCore.getWorkbenchState), store.select(fromJobs.getJobs)).pipe(
+    this.stackJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getJobs)).pipe(
       map(([state, jobRowLookup]) => {
         if(!state.currentStackingJobId || !jobRowLookup[state.currentStackingJobId]) return null;
         return jobRowLookup[state.currentStackingJobId] as {job: StackingJob, result: StackingJobResult};
@@ -106,34 +103,34 @@ export class StackerPageComponent implements OnInit {
 
     this.stackForm.valueChanges.subscribe(value => {
       // if(this.imageCalcForm.valid) {
-        this.store.dispatch(new workbenchActions.UpdateStackFormData({data: this.stackForm.value}));
+        this.store.dispatch(new UpdateStackFormData(this.stackForm.value));
       // }
     })
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.STACKER })
+      new SetActiveTool(WorkbenchTool.STACKER)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
 
 
   }
 
   selectImageFiles(imageFiles: ImageFile[]) {
-    this.store.dispatch(new workbenchActions.UpdateStackFormData({data: {
+    this.store.dispatch(new UpdateStackFormData({
       ...this.stackForm.value,
       selectedImageFileIds: imageFiles.map(f => f.id)
-    }}));
+    }));
   }
 
   submit(data: StackFormData) {
-    this.store.dispatch(new workbenchActions.CreateStackingJob());
+    this.store.dispatch(new CreateStackingJob());
   }
 
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
+    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

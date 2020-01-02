@@ -1,29 +1,24 @@
 import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular/core";
-import { CookieService } from "ngx-cookie";
-import { AnyFn } from "@ngrx/store/src/selector";
+import { Select, Store } from '@ngxs/store';
 import { Title } from "@angular/platform-browser";
 import { Router, NavigationEnd, ActivatedRoute } from "@angular/router";
 import { Observable, Subscription, Subscribable } from "rxjs";
-import { Store } from "@ngrx/store";
-import { AuthGuard } from "./auth/services/auth-guard.service";
 
-import * as fromAuth from "./auth/reducers";
-import * as fromRoot from "./reducers";
-import * as fromDataFiles from "./data-files/reducers";
-import * as fromDataProviders from "./data-providers/reducers";
-import * as coreActions from "./core/actions/core";
-import * as authActions from "./auth/actions/auth";
-import * as workbenchActions from "./core/actions/workbench";
-import * as dataFileActions from "./data-files/actions/data-file";
-import * as dataProviderActions from "./data-providers/actions/data-provider";
+import { AuthState } from './auth/auth.state';
+import { InitAuth } from './auth/auth.actions';
+import { AuthGuard } from "./auth/services/auth-guard.service";
 import { User } from "./auth/models/user";
+
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
-import { WorkbenchGuard } from "./core/services/workbench-guard.service";
 import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./core/components/help-dialog/help-dialog.component";
 import { MatDialog } from "@angular/material";
 import { ThemeDialogComponent } from "./core/components/theme-dialog/theme-dialog.component";
+import { DataProvidersState } from './data-providers/data-providers.state';
+import { SetFullScreen, Initialize } from './core/workbench.actions';
+
+
 
 @Component({
   selector: "app-root",
@@ -32,8 +27,14 @@ import { ThemeDialogComponent } from "./core/components/theme-dialog/theme-dialo
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentRoutes: any[] = [];
-  loggedIn$: Observable<boolean>;
-  private user$: Observable<User>;
+
+  @Select(AuthState.loggedIn)
+  loggedIn$: Observable<boolean>
+
+  @Select(AuthState.user)
+  user$: Observable<User>
+
+
   private loggedInSub: Subscription;
   private colorThemeName: string;
   private fontSize: "default" | "large" | "largest";
@@ -43,7 +44,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private hotKeys: Array<Hotkey> = [];
 
   public constructor(
-    private store: Store<fromRoot.State>,
+    private store: Store,
     private authGuard: AuthGuard,
     private router: Router,
     private activatedRoute: ActivatedRoute,
@@ -89,13 +90,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.renderer.addClass(document.body, this.fontWeight);
     });
 
-    this.dataProviders$ = this.store.select(fromDataProviders.getDataProviders);
-
-    this.loggedIn$ = this.store.select(fromAuth.getLoggedIn);
-    this.user$ = this.store.select(fromAuth.getUser);
+    this.dataProviders$ = this.store.select(DataProvidersState.getDataProviders);
 
     if (this.authGuard.isLoggedIn()) {
-      this.store.dispatch(new authActions.Init({ loggedIn: true }));
+      this.store.dispatch(new InitAuth(true));
     }
 
     this.hotKeys.push(
@@ -103,7 +101,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         "W",
         (event: KeyboardEvent): boolean => {
           this.router.navigate(["workbench"]);
-          this.store.dispatch(new workbenchActions.SetFullScreen({value: false}))
+          this.store.dispatch(new SetFullScreen(false))
           return false; // Prevent bubbling
         },
         undefined,
@@ -288,7 +286,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    this.store.dispatch(new coreActions.Initialize());
+    this.store.dispatch(new Initialize());
   }
 
   ngAfterViewInit() {}

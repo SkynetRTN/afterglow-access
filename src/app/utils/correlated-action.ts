@@ -13,7 +13,3 @@ export class CorrelationIdGenerator {
     return this.prefix + this.seed;
   }
 }
-
-export interface CorrelatedAction extends Action {
-  correlationId?: string;
-}

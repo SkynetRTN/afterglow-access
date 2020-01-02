@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
+import { Select, Store } from '@ngxs/store';
 import {
   HttpRequest,
   HttpHandler,
@@ -9,13 +9,13 @@ import {
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import * as fromRoot from './reducers';
-import * as authActions from './auth/actions/auth';
+
+import { Logout } from './auth/auth.actions';
 
 
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
-  constructor(private store: Store<fromRoot.State>) { }
+  constructor(private store: Store) { }
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
     request = request.clone({
@@ -29,7 +29,7 @@ export class TokenInterceptor implements HttpInterceptor {
         if (error instanceof HttpErrorResponse) {
           switch ((<HttpErrorResponse>error).status) {
             case 401: {
-              this.store.dispatch(new authActions.Logout());
+              this.store.dispatch(new Logout());
             }
           }
         }

@@ -9,7 +9,6 @@ import {
   Input
 } from "@angular/core";
 
-import { Store } from "@ngrx/store";
 import * as SVG from "svgjs";
 import { Observable, Subscription, Subject, BehaviorSubject, combineLatest} from "rxjs";
 import { map, filter, debounceTime, tap, withLatestFrom } from "rxjs/operators";
@@ -27,23 +26,16 @@ import {
 } from "../../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import { PlotterSettings } from "../../../models/plotter-settings";
 import { CentroidSettings } from "../../../models/centroid-settings";
-
-import * as fromRoot from "../../../../reducers";
-import * as fromCore from "../../../reducers";
-import * as fromWorkbench from "../../../reducers/workbench";
-import * as fromDataFiles from "../../../../data-files/reducers";
-import * as workbenchActions from "../../../actions/workbench";
-import * as markerActions from "../../../actions/markers";
-import * as plotterActions from "../../../actions/plotter";
 import { ImageFileState } from "../../../models/image-file-state";
-import { Viewer } from "../../../models/viewer";
-import { Dictionary } from "@ngrx/entity/src/models";
-import { Marker, MarkerType, LineMarker } from "../../../models/marker";
 import { WorkbenchTool } from "../../../models/workbench-state";
 import { centroidDisk, centroidPsf } from "../../../models/centroider";
 import { PosType } from "../../../models/source";
 import { Router } from '@angular/router';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, SetPlotMode, SetPlotterSyncEnabled, UpdateCentroidSettings, UpdatePlotterSettings } from '../../../workbench.actions';
+import { UpdateLine, StartLine } from '../../../image-files.actions';
 
 @Component({
   selector: "app-plotter-page",
@@ -125,27 +117,27 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     return { x: x, y: y, raHours: raHours, decDegs: decDegs };
   }
 
-  constructor(private store: Store<fromRoot.State>, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+  constructor(private store: Store, router: Router) {
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
     // console.log("HERE:", this.fullScreenPanel$, this.inFullScreenMode$);
-    this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
+    this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.imageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
     this.plotterState$ = this.imageFileState$.pipe(
       filter(state => state != null),
       map(state => state.plotter)
     );
 
-    let workbenchState$ = store.select(fromCore.getWorkbenchState);
+    let workbenchState$ = store.select(WorkbenchState.getState);
     this.plotterSettings$ = workbenchState$.pipe(
       map(state => state && state.plotterSettings)
     );
     this.centroidSettings$ = workbenchState$.pipe(
       map(state => state && state.centroidSettings)
     );
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
     this.plotterSyncEnabled$ = store.select(
-      fromCore.workbench.getPlotterSyncEnabled
+      WorkbenchState.getPlotterSyncEnabled
     );
 
     this.mode$ = workbenchState$.pipe(
@@ -246,16 +238,16 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.PLOTTER })
+      new SetActiveTool(WorkbenchTool.PLOTTER)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
   }
 
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
+    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngAfterViewInit() {}
@@ -268,13 +260,13 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onModeChange($event) {
     this.store.dispatch(
-      new workbenchActions.SetPlotMode({mode: $event})
+      new SetPlotMode($event)
     )
   }
 
   onPlotterSyncEnabledChange($event) {
     this.store.dispatch(
-      new workbenchActions.SetPlotterSyncEnabled({ enabled: $event.checked })
+      new SetPlotterSyncEnabled($event.checked)
     );
   }
 
@@ -291,14 +283,14 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
         posType = PosType.SKY;
       }
       this.store.dispatch(
-        new plotterActions.UpdateLine({
-          file: $event.targetFile,
-          point: {
+        new UpdateLine(
+          $event.targetFile.id,
+          {
             primaryCoord: primaryCoord,
             secondaryCoord: secondaryCoord,
             posType: posType
           }
-        })
+        )
       );
     }
   }
@@ -337,39 +329,33 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       this.store.dispatch(
-        new plotterActions.StartLine({
-          file: $event.targetFile,
-          point: {
+        new StartLine(
+          $event.targetFile.id,
+          {
             primaryCoord: primaryCoord,
             secondaryCoord: secondaryCoord,
             posType: posType
           }
-        })
+        )
       );
     }
   }
 
   onCentroidClicksChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdateCentroidSettings({
-        changes: { centroidClicks: $event.checked }
-      })
+      new UpdateCentroidSettings({ centroidClicks: $event.checked })
     );
   }
 
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdateCentroidSettings({
-        changes: { useDiskCentroiding: $event.checked }
-      })
+      new UpdateCentroidSettings({useDiskCentroiding: $event.checked })
     );
   }
 
   onInterpolatePixelsChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdatePlotterSettings({
-        changes: { interpolatePixels: $event.checked }
-      })
+      new UpdatePlotterSettings({ interpolatePixels: $event.checked })
     );
   }
 }

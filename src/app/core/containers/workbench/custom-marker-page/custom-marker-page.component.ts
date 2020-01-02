@@ -1,13 +1,6 @@
 import { Component, OnInit, HostListener, Input, HostBinding } from "@angular/core";
-import { Store } from "@ngrx/store";
 import { Observable, Subscription } from "rxjs";
 import { filter, map } from "rxjs/operators";
-
-import * as fromRoot from "../../../../reducers";
-import * as fromCore from "../../../reducers";
-
-import * as workbenchActions from "../../../actions/workbench";
-import * as customMarkerActions from "../../../actions/custom-marker";
 import {
   ViewerGridCanvasMouseEvent,
   ViewerGridMarkerMouseEvent
@@ -15,11 +8,16 @@ import {
 import { ImageFile } from "../../../../data-files/models/data-file";
 import { CircleMarker, MarkerType, RectangleMarker } from "../../../models/marker";
 import { CustomMarker } from "../../../models/custom-marker";
-import { WorkbenchTool, WorkbenchState } from "../../../models/workbench-state";
+import { WorkbenchTool, WorkbenchStateModel } from "../../../models/workbench-state";
 import { centroidPsf, centroidDisk } from "../../../models/centroider";
 import { CentroidSettings } from "../../../models/centroid-settings";
 import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
 import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { CustomMarkersState } from '../../../custom-markers.state';
+import { SetActiveTool, SetLastRouterPath, UpdateCentroidSettings } from '../../../workbench.actions';
+import { RemoveCustomMarkers, SetCustomMarkerSelection, UpdateCustomMarker, AddCustomMarkers, SelectCustomMarkers, DeselectCustomMarkers } from '../../../custom-markers.actions';
 
 @Component({
   selector: "app-custom-marker-page",
@@ -31,34 +29,30 @@ export class CustomMarkerPageComponent implements OnInit {
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   subs: Subscription[] = [];
-  workbenchState$: Observable<WorkbenchState>;
+  workbenchState$: Observable<WorkbenchStateModel>;
   centroidSettings$: Observable<CentroidSettings>;
-  workbenchState: WorkbenchState;
+  workbenchState: WorkbenchStateModel;
   showConfig$: Observable<boolean>;
   activeImageFile$: Observable<ImageFile>;
   activeImageFile: ImageFile;
   customMarkers$: Observable<CustomMarker[]>;
   customMarkers: CustomMarker[];
-  nextCustomMarkerId$: Observable<number>;
   nextCutomMarkerId: number;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers: Array<CustomMarker> = [];
   selectedMarker: CircleMarker = null;
   MarkerType = MarkerType;
 
-  constructor(private store: Store<fromRoot.State>, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.customMarkers$ = store.select(fromCore.getAllCustomMarkers);
-    this.nextCustomMarkerId$ = store.select(fromCore.getNextCustomMarkerId);
-    this.selectedCustomMarkers$ = store.select(
-      fromCore.getSelectedCustomMarkers
-    );
+  constructor(private store: Store, router: Router) {
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
+
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
+    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.customMarkers$ = store.select(CustomMarkersState.getCustomMarkers).pipe(map(entities => Object.values(entities)));
+    this.selectedCustomMarkers$ = store.select(CustomMarkersState.getSelectedCustomMarkers).pipe(map(entities => Object.values(entities)));
     this.workbenchState$ = store
-      .select(fromCore.getWorkbenchState)
+      .select(WorkbenchState.getState)
       .pipe(filter(state => state != null));
     this.centroidSettings$ = this.workbenchState$.pipe(
       map(state => state && state.centroidSettings)
@@ -81,12 +75,6 @@ export class CustomMarkerPageComponent implements OnInit {
     );
 
     this.subs.push(
-      this.nextCustomMarkerId$.subscribe(id => {
-        this.nextCutomMarkerId = id;
-      })
-    );
-
-    this.subs.push(
       this.selectedCustomMarkers$.subscribe(customMarkers => {
         this.selectedCustomMarkers = customMarkers;
         if (this.selectedCustomMarkers.length == 1) {
@@ -99,15 +87,15 @@ export class CustomMarkerPageComponent implements OnInit {
     );
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.CUSTOM_MARKER })
+      new SetActiveTool(WorkbenchTool.CUSTOM_MARKER)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   @HostListener("document:keyup", ["$event"])
   keyEvent($event: KeyboardEvent) {
@@ -117,20 +105,16 @@ export class CustomMarkerPageComponent implements OnInit {
     //   $event.srcElement.tagName != "TEXTAREA"
     // ) {
     if (
-        this.selectedCustomMarkers.length != 0
-      ) {
+      this.selectedCustomMarkers.length != 0
+    ) {
       if ($event.keyCode === DELETE) {
         this.store.dispatch(
-          new customMarkerActions.RemoveCustomMarkers({
-            markers: this.selectedCustomMarkers
-          })
+          new RemoveCustomMarkers(this.selectedCustomMarkers)
         );
       }
       if ($event.keyCode === ESCAPE) {
         this.store.dispatch(
-          new customMarkerActions.SetCustomMarkerSelection({
-            customMarkers: []
-          })
+          new SetCustomMarkerSelection([])
         );
       }
     }
@@ -138,15 +122,15 @@ export class CustomMarkerPageComponent implements OnInit {
 
   onMarkerChange($event, selectedCustomMarker: CustomMarker) {
     this.store.dispatch(
-      new customMarkerActions.UpdateCustomMarker({
-        markerId: selectedCustomMarker.id,
-        changes: {
+      new UpdateCustomMarker(
+        selectedCustomMarker.id,
+        {
           marker: {
             ...selectedCustomMarker.marker,
             ...$event
           }
         }
-      })
+      )
     );
   }
 
@@ -206,7 +190,7 @@ export class CustomMarkerPageComponent implements OnInit {
       //   } as RectangleMarker
       // };
       this.store.dispatch(
-        new customMarkerActions.AddCustomMarkers({ markers: [customMarker] })
+        new AddCustomMarkers([customMarker])
       );
       // } else {
       //   this.store.dispatch(
@@ -220,17 +204,13 @@ export class CustomMarkerPageComponent implements OnInit {
 
   selectCustomMarkers(customMarkers: CustomMarker[]) {
     this.store.dispatch(
-      new customMarkerActions.SelectCustomMarkers({
-        customMarkers: customMarkers
-      })
+      new SelectCustomMarkers(customMarkers)
     );
   }
 
   deselectCustomMarkers(customMarkers: CustomMarker[]) {
     this.store.dispatch(
-      new customMarkerActions.DeselectCustomMarkers({
-        customMarkers: customMarkers
-      })
+      new DeselectCustomMarkers(customMarkers)
     );
   }
 
@@ -258,9 +238,7 @@ export class CustomMarkerPageComponent implements OnInit {
       }
     } else {
       this.store.dispatch(
-        new customMarkerActions.SetCustomMarkerSelection({
-          customMarkers: [customMarker]
-        })
+        new SetCustomMarkerSelection([customMarker])
       );
     }
     $event.mouseEvent.stopImmediatePropagation();
@@ -269,17 +247,13 @@ export class CustomMarkerPageComponent implements OnInit {
 
   onCentroidClicksChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdateCentroidSettings({
-        changes: { centroidClicks: $event.checked }
-      })
+      new UpdateCentroidSettings({ centroidClicks: $event.checked })
     );
   }
 
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdateCentroidSettings({
-        changes: { useDiskCentroiding: $event.checked }
-      })
+      new UpdateCentroidSettings({ useDiskCentroiding: $event.checked })
     );
   }
 }

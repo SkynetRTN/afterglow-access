@@ -50,7 +50,8 @@ export interface StackFormData {
   high?: number;
 }
 
-export interface WorkbenchState {
+export interface WorkbenchStateModel {
+  showSideNav: boolean,
   lastRouterPath: string,
   inFullScreenMode: boolean,
   fullScreenPanel: 'file' | 'viewer' | 'tool';

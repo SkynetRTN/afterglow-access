@@ -4,17 +4,16 @@ import { SelectionModel, DataSource, CollectionViewer, SelectionChange,  } from 
 import { ENTER, SPACE, UP_ARROW, DOWN_ARROW } from '@angular/cdk/keycodes';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Store } from '@ngrx/store';
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
+import { Store } from '@ngxs/store';
+import { DataFilesState } from '../../../../data-files/data-files.state';
 
 export class DataFilesDataSource implements DataSource<DataFile> {
   files$: Observable<DataFile[]>;
   files: DataFile[] = [];
   sub: Subscription;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.files$ = store.select(fromDataFiles.getAllDataFiles);
+  constructor(private store: Store) {
+    this.files$ = store.select(DataFilesState.getDataFiles);
   }
 
   connect(collectionViewer: CollectionViewer): Observable<DataFile[]> {
@@ -43,7 +42,7 @@ export class DataFilesDataSource implements DataSource<DataFile> {
 export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   @Input() allowMultiSelection: boolean = true;
   @Input() set primarySelection(value: DataFile) {
-    if(this.primarySelectionModel.selected.length > 0 && this.primarySelectionModel.selected[0] == value) return;
+    if(this.primarySelectionModel.selected.length > 0 && (this.primarySelectionModel.selected[0] == value || this.primarySelectionModel.selected[0].id == value.id)) return;
     this.primarySelectionModel.select(value);
   }
   @Input() set multiSelection(value: DataFile[]) {
@@ -58,7 +57,7 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   primarySelectionModel = new SelectionModel<DataFile>(false, []);
   multiSelectionModel = new SelectionModel<DataFile>(true, []);
   subs: Subscription[] = [];
-  constructor(private store: Store<fromRoot.State>) {
+  constructor(private store: Store) {
     this.dataSource = new DataFilesDataSource(store);
 
     

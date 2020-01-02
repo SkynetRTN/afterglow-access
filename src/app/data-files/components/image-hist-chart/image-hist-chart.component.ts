@@ -178,80 +178,82 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   updateChart() {
     let x = [];
     let y = [];
-    if (this.hist && this.hist.data != this.lastHistData) {
-      x = Array(this.hist.data.filter(d => d > 1).length);
-      let j = 0;
-      for (let i = 0; i < this.hist.data.length; i++) {
-        if (this.hist.data[i] <= 1) continue;
-        x[j] = getBinCenter(this.hist, i);
-        y[j] = this.hist.data[i];
-        if (this.yMax < y[j]) this.yMax = y[j];
+    if (this.hist) {
+      if (this.hist.data != this.lastHistData) {
+        x = Array(this.hist.data.filter(d => d > 1).length);
+        let j = 0;
+        for (let i = 0; i < this.hist.data.length; i++) {
+          if (this.hist.data[i] <= 1) continue;
+          x[j] = getBinCenter(this.hist, i);
+          y[j] = this.hist.data[i];
+          if (this.yMax < y[j]) this.yMax = y[j];
 
-        j++;
+          j++;
 
+        }
+
+        this.data = [
+          {
+            x: x,
+            y: y,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none"
+          }
+        ];
+
+        this.lastHistData = this.hist.data;
+        //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
+        //console.log(this.chartOptions);
       }
 
-      this.data = [
-        {
-          x: x,
-          y: y,
-          // fill: "tozeroy",
-          type: "scatter",
-          // mode: "none"
-        }
-      ];
+      if (this.layout.width != this.width) this.layout.width = this.width;
+      if (this.layout.height != this.height) this.layout.height = this.height;
 
-      this.lastHistData = this.hist.data;
-      //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
-      //console.log(this.chartOptions);
+      let levels = calcLevels(this.hist, this.backgroundPercentile, this.peakPercentile);
+      this.layout = {
+        ...this.layout,
+        xaxis: {
+          ...this.layout.xaxis,
+          type: this.logarithmicX ? 'log' : 'linear',
+        },
+        yaxis: {
+          ...this.layout.yaxis,
+          type: this.logarithmicY ? 'log' : 'linear',
+        },
+        shapes: [
+          // Line Vertical
+          {
+            type: "line",
+            x0: levels.backgroundLevel,
+            y0: 1,
+            x1: levels.backgroundLevel,
+            y1: this.yMax,
+            line: {
+              color: "red",
+              width: 2,
+              dash: "dot"
+            }
+          },
+          {
+            type: "line",
+            x0: levels.peakLevel,
+            y0: 1,
+            x1: levels.peakLevel,
+            y1: this.yMax,
+            line: {
+              color: "red",
+              width: 2,
+              dash: "dot"
+            }
+          },
+        ]
+      }
+
     }
 
-    if (this.layout.width != this.width) this.layout.width = this.width;
-    if (this.layout.height != this.height) this.layout.height = this.height;
 
-    let levels = calcLevels(this.hist, this.backgroundPercentile, this.peakPercentile);
-    this.layout = {
-      ...this.layout,
-      xaxis: {
-        ...this.layout.xaxis,
-        type: this.logarithmicX ? 'log' : 'linear',
-      },
-      yaxis: {
-        ...this.layout.yaxis,
-        type: this.logarithmicY ? 'log' : 'linear',
-      },
-      shapes: [
-        // Line Vertical
-        {
-          type: "line",
-          x0: levels.backgroundLevel,
-          y0: 1,
-          x1: levels.backgroundLevel,
-          y1: this.yMax,
-          line: {
-            color: "red",
-            width: 2,
-            dash: "dot"
-          }
-        },
-        {
-          type: "line",
-          x0: levels.peakLevel,
-          y0: 1,
-          x1: levels.peakLevel,
-          y1: this.yMax,
-          line: {
-            color: "red",
-            width: 2,
-            dash: "dot"
-          }
-        },
-      ]
-    }
 
-    console.log(this.layout);
-
-    //this.updateChartOptions();
   }
 
   ngOnChanges() {

@@ -1,21 +1,18 @@
-import { Component, OnInit, ViewChild, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Store } from '@ngrx/store';
 
 import { DataFile } from '../../../data-files/models/data-file'
 import { SidebarView } from '../../models/sidebar-view';
-
-import * as fromRoot from '../../../reducers';
-import * as fromDataFiles from '../../../data-files/reducers'
-import * as fromCore from '../../reducers';
-import * as workbenchActions from '../../actions/workbench'
-import * as dataFileActions from '../../../data-files/actions/data-file';
-import * as dataProviderActions from '../../../data-providers/actions/data-provider';
 import { Router } from '@angular/router';
 import { Subscription } from '../../../../../node_modules/rxjs';
 import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
-import { MatDialogRef, MatDialog } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
+import { Store } from '@ngxs/store';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { WorkbenchState } from '../../workbench.state';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetMultiFileSelection, SetSidebarView, ToggleShowConfig } from '../../workbench.actions';
+import { LoadLibrary, RemoveAllDataFiles } from '../../../data-files/data-files.actions';
+import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
 
 
 
@@ -58,77 +55,77 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   SidebarView = SidebarView;
   private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store<fromRoot.State>, private router: Router, private _hotkeysService: HotkeysService, public dialog: MatDialog) {
-    this.files$ = this.store.select(fromDataFiles.getAllDataFiles);
-    this.selectedFile$ = this.store.select(fromCore.workbench.getActiveFile);
+  constructor(private store: Store, private router: Router, private _hotkeysService: HotkeysService, public dialog: MatDialog) {
+    this.files$ = this.store.select(DataFilesState.getDataFiles);
+    this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
 
-    this.multiFileSelectionEnabled$ = this.store.select(fromCore.workbench.getMultiFileSelectionEnabled);
-    this.sidebarView$ = this.store.select(fromCore.workbench.getSidebarView);
-    this.showConfig$ = this.store.select(fromCore.workbench.getShowConfig);
-    this.showSidebar$ = this.store.select(fromCore.workbench.getShowSidebar);
-    this.loading$ = this.store.select(fromDataFiles.getLibraryLoading);
+    this.multiFileSelectionEnabled$ = this.store.select(WorkbenchState.getMultiFileSelectionEnabled);
+    this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
+    this.showConfig$ = this.store.select(WorkbenchState.getShowConfig);
+    this.showSidebar$ = this.store.select(WorkbenchState.getShowSidebar);
+    this.loading$ = this.store.select(DataFilesState.getLoading);
 
     this.subs.push(this.showConfig$.subscribe(showConfig => this.showConfig = showConfig));
 
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
 
     this.hotKeys.push(new Hotkey('d', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.VIEWER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Display Settings'))
 
     this.hotKeys.push(new Hotkey('i', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.FILE_INFO_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'File Info'));
 
     this.hotKeys.push(new Hotkey('m', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.MARKER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Markers'));
 
     this.hotKeys.push(new Hotkey('c', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.PLOTTER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Plotter'));
 
     this.hotKeys.push(new Hotkey('s', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.SONIFIER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Sonifier'));
 
     this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.FIELD_CAL_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Field Calibration'));
 
     this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.SOURCE_EXTRACTOR_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Photometry'));
 
     this.hotKeys.push(new Hotkey('o', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.IMAGE_ARITHMETIC_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Image Arithmetic'));
 
     this.hotKeys.push(new Hotkey('a', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.ALIGNER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Aligning'));
 
     this.hotKeys.push(new Hotkey('z', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.STACKER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Stacking'));
@@ -136,27 +133,27 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     
 
     // this.hotKeys.push(new Hotkey('0', (event: KeyboardEvent): boolean => {
-    //   this.store.dispatch(new workbenchActions.SetFullScreen({value: false}))
+    //   this.store.dispatch(new SetFullScreen({value: false}))
     //   return false; // Prevent bubbling
     // }, undefined, 'Show all workbench panels'));
 
     this.hotKeys.push(new Hotkey('1', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetFullScreen({value: true}));
-      this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'file'}));
-      this.store.dispatch(new workbenchActions.ShowSidebar());
+      this.store.dispatch(new SetFullScreen(true));
+      this.store.dispatch(new SetFullScreenPanel('file'));
+      this.store.dispatch(new ShowSidebar());
       return false; // Prevent bubbling
     }, undefined, 'Show workbench file panel'));
 
     this.hotKeys.push(new Hotkey('2', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetFullScreen({value: true}));
-      this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'viewer'}))
+      this.store.dispatch(new SetFullScreen(true));
+      this.store.dispatch(new SetFullScreenPanel('viewer'))
       return false; // Prevent bubbling
     }, undefined, 'Show workbench file panel'));
 
     this.hotKeys.push(new Hotkey('3', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new workbenchActions.SetFullScreen({value: true}));
-      this.store.dispatch(new workbenchActions.SetFullScreenPanel({panel: 'tool'}))
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetFullScreen(true));
+      this.store.dispatch(new SetFullScreenPanel('tool'))
+      this.store.dispatch(new SetShowConfig(true));
       return false; // Prevent bubbling
     }, undefined, 'Show workbench file panel'));
 
@@ -195,10 +192,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     
-    this.store.dispatch(new dataFileActions.LoadLibrary());
-    this.store.dispatch(new workbenchActions.LoadCatalogs());
-    this.store.dispatch(new workbenchActions.LoadFieldCals());
-    this.store.dispatch(new dataProviderActions.LoadDataProviders());
+    this.store.dispatch([new LoadLibrary(), new LoadCatalogs(), new LoadFieldCals(), new LoadDataProviders()]);
     
   }
 
@@ -208,45 +202,46 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   onFileSelect(file: DataFile) {
     if(!file) return;
-    this.store.dispatch(new workbenchActions.SelectDataFile({fileId: file.id}));
+    
+    this.store.dispatch(new SelectDataFile(file.id));
   }
 
   onMultiFileSelect(files: Array<DataFile>) {
     if(!files) return;
-    this.store.dispatch(new workbenchActions.SetMultiFileSelection({files: files}));
+    this.store.dispatch(new SetMultiFileSelection(files.map(f => f.id)));
   }
 
   removeAllFiles() {
-    this.store.dispatch(new dataFileActions.RemoveAllDataFiles());
+    this.store.dispatch(new RemoveAllDataFiles());
   }
 
   refresh() {
-    this.store.dispatch(new dataFileActions.LoadLibrary());
+    this.store.dispatch(new LoadLibrary());
   }
 
   setSidebarView(value: SidebarView) {
-    this.store.dispatch(new workbenchActions.SetSidebarView({ sidebarView: value }))
+    this.store.dispatch(new SetSidebarView(value))
   }
 
   onClickWorkbenchNav(isActiveUrl: boolean) {
     if (isActiveUrl) {
       // toggle
-      this.store.dispatch(new workbenchActions.ToggleShowConfig());
+      this.store.dispatch(new ToggleShowConfig());
     }
     else {
       // show
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
     }
   }
 
   onWorkbenchNavClick(route: string) {
     if (this.router.isActive(route, false)) {
       // toggle
-      this.store.dispatch(new workbenchActions.ToggleShowConfig());
+      this.store.dispatch(new ToggleShowConfig());
     }
     else {
       // show
-      this.store.dispatch(new workbenchActions.SetShowConfig({ showConfig: true }));
+      this.store.dispatch(new SetShowConfig(true));
     }
     this.router.navigate([route]);
   }

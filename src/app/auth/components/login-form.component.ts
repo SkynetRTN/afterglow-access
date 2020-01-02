@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormGroup, FormControl } from '@angular/forms';
-import { Authenticate } from '../models/user';
+import { Credentials } from '../models/user';
 
 @Component({
   selector: 'app-login-form',
@@ -74,7 +74,7 @@ export class LoginFormComponent implements OnInit {
 
   @Input() errorMessage: string | null;
 
-  @Output() submitted = new EventEmitter<Authenticate>();
+  @Output() submitted = new EventEmitter<Credentials>();
 
   form: FormGroup = new FormGroup({
     username: new FormControl(''),

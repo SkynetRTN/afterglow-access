@@ -10,7 +10,6 @@ import {
 } from "@angular/core";
 
 import { VgAPI } from "videogular2/core";
-import { Store } from "@ngrx/store";
 import { Observable, Subscription, from, merge, interval } from "rxjs";
 import {
   filter,
@@ -32,11 +31,6 @@ import {
   DataFile
 } from "../../../../data-files/models/data-file";
 
-import * as fromRoot from "../../../../reducers";
-import * as fromCore from "../../../reducers";
-import * as fromDataFiles from "../../../../data-files/reducers";
-import * as workbenchActions from "../../../actions/workbench";
-import * as sonifierActions from "../../../actions/sonifier";
 import { ImageFileState } from "../../../models/image-file-state";
 import { Viewer } from "../../../models/viewer";
 import { Dictionary } from "@ngrx/entity/src/models";
@@ -49,6 +43,10 @@ import {
 import { ChangeDetectorRef } from "@angular/core";
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { SetActiveTool, SetLastRouterPath, DisableMultiFileSelection } from '../../../workbench.actions';
+import { AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, SetRegionMode, UpdateSonifierFileState, SetProgressLine } from '../../../image-files.actions';
 
 @Component({
   selector: "app-sonifier-page",
@@ -59,7 +57,7 @@ export class SonifierPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-    inFullScreenMode$: Observable<boolean>;
+  inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   imageFile$: Observable<ImageFile>;
   imageFileState$: Observable<ImageFileState>;
@@ -84,20 +82,20 @@ export class SonifierPageComponent
   activeViewer: Viewer;
 
   constructor(
-    private store: Store<fromRoot.State>,
+    private store: Store,
     private afterglowService: AfterglowDataFileService,
     private _hotkeysService: HotkeysService,
     private ref: ChangeDetectorRef, router: Router
   ) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.imageFileState$ = store.select(fromCore.workbench.getActiveFileState);
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
+    this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.imageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
     this.sonifierState$ = this.imageFileState$.pipe(
       filter(state => state != null),
       map(state => state.sonifier)
     );
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
 
     this.clearProgressLine$ = this.sonifierState$.pipe(
       filter(state => {
@@ -121,11 +119,11 @@ export class SonifierPageComponent
     );
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.SONIFIER })
+      new SetActiveTool(WorkbenchTool.SONIFIER)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
 
     this.hotKeys.push(
@@ -243,45 +241,45 @@ export class SonifierPageComponent
   }
 
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
+    this.store.dispatch(new DisableMultiFileSelection());
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
     this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
 
-  ngOnChanges() {}
+  ngOnChanges() { }
 
   private selectSubregionByFrequency(subregion: number) {
     let region = this.lastSonifierState.region;
     this.store.dispatch(
-      new sonifierActions.AddRegionToHistory({
-        file: this.lastImageFile,
-        region: {
+      new AddRegionToHistory(
+        this.lastImageFile.id,
+        {
           x: region.x + subregion * (region.width / 4),
           y: region.y,
           width: region.width / 2,
           height: region.height
         }
-      })
+      )
     );
   }
 
   private selectSubregionByTime(subregion: number) {
     let region = this.lastSonifierState.region;
     this.store.dispatch(
-      new sonifierActions.AddRegionToHistory({
-        file: this.lastImageFile,
-        region: {
+      new AddRegionToHistory(
+        this.lastImageFile.id,
+        {
           x: region.x,
           y: region.y + subregion * (region.height / 4),
           width: region.width,
           height: region.height / 2
         }
-      })
+      )
     );
   }
 
@@ -290,63 +288,54 @@ export class SonifierPageComponent
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
 
     this.store.dispatch(
-      new sonifierActions.AddRegionToHistory({
-        file: this.lastImageFile,
-        region: {
+      new AddRegionToHistory(
+        this.lastImageFile.id,
+        {
           x: 0.5,
           y: 0.5,
           width: getWidth(this.lastImageFile),
           height: getHeight(this.lastImageFile)
         }
-      })
+      )
     );
   }
 
   private undoRegionSelection() {
     this.store.dispatch(
-      new sonifierActions.UndoRegionSelection({ file: this.lastImageFile })
+      new UndoRegionSelection(this.lastImageFile.id)
     );
   }
 
   private redoRegionSelection() {
     this.store.dispatch(
-      new sonifierActions.RedoRegionSelection({ file: this.lastImageFile })
+      new RedoRegionSelection(this.lastImageFile.id)
     );
   }
 
   private setRegionMode($event: MatButtonToggleChange) {
     this.store.dispatch(
-      new sonifierActions.SetRegionMode({
-        file: this.lastImageFile,
-        mode: $event.value
-      })
+      new SetRegionMode(this.lastImageFile.id, $event.value)
     );
   }
 
   private setDuration(value) {
     this.store.dispatch(
-      new sonifierActions.UpdateFileState({
-        file: this.lastImageFile,
-        changes: { duration: value }
-      })
+      new UpdateSonifierFileState(this.lastImageFile.id, { duration: value })
     );
   }
 
   private setToneCount(value) {
     this.store.dispatch(
-      new sonifierActions.UpdateFileState({
-        file: this.lastImageFile,
-        changes: { toneCount: value }
-      })
+      new UpdateSonifierFileState(this.lastImageFile.id, { toneCount: value })
     );
   }
 
   private setViewportSync(value) {
     this.store.dispatch(
-      new sonifierActions.UpdateFileState({
-        file: this.lastImageFile,
-        changes: { viewportSync: value.checked }
-      })
+      new UpdateSonifierFileState(
+        this.lastImageFile.id,
+        { viewportSync: value.checked }
+      )
     );
   }
 
@@ -384,7 +373,7 @@ export class SonifierPageComponent
       )
     );
 
-    let indexToneDuration = .852/2.0;
+    let indexToneDuration = .852 / 2.0;
     this.progressLine$ = merge(
       start$.pipe(
         flatMap(() =>
@@ -397,9 +386,9 @@ export class SonifierPageComponent
           if (!region) return null;
           let y =
             region.y +
-            Math.max(0, Math.min(1, ((this.api.getDefaultMedia().currentTime-indexToneDuration) /
-              (this.api.getDefaultMedia().duration-(2*indexToneDuration))))) *
-              region.height;
+            Math.max(0, Math.min(1, ((this.api.getDefaultMedia().currentTime - indexToneDuration) /
+              (this.api.getDefaultMedia().duration - (2 * indexToneDuration))))) *
+            region.height;
 
           return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
         })
@@ -411,10 +400,7 @@ export class SonifierPageComponent
     this.subs.push(
       this.progressLine$.pipe(distinctUntilChanged()).subscribe(line => {
         this.store.dispatch(
-          new sonifierActions.SetProgressLine({
-            file: this.lastImageFile,
-            line: line
-          })
+          new SetProgressLine(this.lastImageFile.id, line)
         );
       })
     );

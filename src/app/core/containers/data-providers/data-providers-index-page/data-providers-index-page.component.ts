@@ -3,12 +3,10 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Store } from '@ngrx/store';
-import * as fromRoot from '../../../../reducers';
-import * as fromDataProviders from '../../../../data-providers/reducers'
-import * as dataProviderActions from '../../../../data-providers/actions/data-provider';
-
 import { DataProvider } from '../../../../data-providers/models/data-provider'
+import { Store } from '@ngxs/store';
+import { DataProvidersState } from '../../../../data-providers/data-providers.state';
+import { LoadDataProviders } from '../../../../data-providers/data-providers.actions';
 
 @Component({
   selector: 'app-data-providers-index-page',
@@ -18,12 +16,12 @@ import { DataProvider } from '../../../../data-providers/models/data-provider'
 export class DataProvidersIndexPageComponent implements OnInit, AfterViewInit {
   dataProviders$: Observable<DataProvider[]>;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.dataProviders$ = store.select(fromDataProviders.getDataProvidersState).pipe(map(state => state.dataProviders));
+  constructor(private store: Store) {
+    this.dataProviders$ = store.select(DataProvidersState.getDataProviders);
   }
 
   ngOnInit() {
-    this.store.dispatch(new dataProviderActions.LoadDataProviders());
+    this.store.dispatch(new LoadDataProviders());
   }
 
   ngAfterViewInit() {

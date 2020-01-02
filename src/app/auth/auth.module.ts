@@ -12,8 +12,6 @@ import { OauthAuthorizedPageComponent } from './containers/oauth-authorized-page
 
 import { AuthService } from './services/auth.service';
 import { AuthGuard } from './services/auth-guard.service';
-import { AuthEffects } from './effects/auth.effects';
-import { reducers } from './reducers';
 import { MaterialModule } from '../material';
 import { OauthClientConsentPageComponent } from './containers/oauth-client-consent-page/oauth-client-consent-page.component';
 
@@ -25,8 +23,6 @@ export const COMPONENTS = [LoginPageComponent, LoginFormComponent, LogoutPageCom
     ReactiveFormsModule, 
     MaterialModule,
     CookieModule.forChild(),
-    StoreModule.forFeature('auth', reducers),
-    EffectsModule.forFeature([AuthEffects]),
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS,

@@ -9,26 +9,21 @@ import { Observable, combineLatest } from "rxjs";
 import { map, tap, filter, flatMap } from "rxjs/operators";
 import { ImageFile } from "../../../../data-files/models/data-file";
 import { ImageFileState } from "../../../models/image-file-state";
-import { Store } from "@ngrx/store";
 
-import * as fromRoot from "../../../../reducers";
-import * as fromDataFiles from "../../../../data-files/reducers";
-import * as fromCore from "../../../reducers";
-import * as fromJobs from "../../../../jobs/reducers";
-
-import * as workbenchActions from "../../../actions/workbench";
-import * as jobActions from "../../../../jobs/actions/job";
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { JobType } from '../../../../jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from '../../../../jobs/models/pixel-ops';
-import { PixelOpsFormData, WorkbenchState, WorkbenchTool } from '../../../models/workbench-state';
-import { Job } from '../../../../jobs/models/job';
-import { JobResult } from '../../../../jobs/models/job-result';
+import { PixelOpsFormData, WorkbenchStateModel, WorkbenchTool } from '../../../models/workbench-state';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 import { PixelOpsJobsDialogComponent } from '../../../components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { UpdatePixelOpsFormData, HideCurrentPixelOpsJobState, SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, CreatePixelOpsJob, CreateAdvPixelOpsJob } from '../../../workbench.actions';
+import { JobsState } from '../../../../jobs/jobs.state';
 
 interface PixelOpVariable {
   name: string,
@@ -95,16 +90,16 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
   
 
-  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
+  constructor(private store: Store, public dialog: MatDialog, router: Router) {
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
+    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
     this.activeImageFileState$ = store.select(
-      fromCore.workbench.getActiveFileState
+      WorkbenchState.getActiveImageFileState
     );
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
 
-    this.allImageFiles$ = store.select(fromDataFiles.getAllDataFiles)
+    this.allImageFiles$ = store.select(DataFilesState.getDataFiles)
     .pipe(
       map(
         files =>
@@ -115,7 +110,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     );
 
     this.selectedImageFiles$ = store
-      .select(fromCore.workbench.getSelectedFiles)
+      .select(WorkbenchState.getSelectedFiles)
       .pipe(
         map(
           files =>
@@ -125,7 +120,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
         )
       );
 
-      this.pixelOpsFormData$ = store.select(fromCore.getWorkbenchState).pipe(
+      this.pixelOpsFormData$ = store.select(WorkbenchState.getState).pipe(
         map(state => state.pixelOpsFormData),
         tap(data => {
           this.imageCalcForm.patchValue(data, {emitEvent: false});
@@ -147,15 +142,15 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
       this.imageCalcForm.valueChanges.subscribe(value => {
         // if(this.imageCalcForm.valid) {
-          this.store.dispatch(new workbenchActions.UpdatePixelOpsFormData({data: this.imageCalcForm.value}));
-          this.store.dispatch(new workbenchActions.HideCurrentPixelOpsJobState());
+          this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcForm.value));
+          this.store.dispatch(new HideCurrentPixelOpsJobState());
         // }
       })
 
       this.imageCalcFormAdv.valueChanges.subscribe(value => {
         // if(this.imageCalcFormAdv.valid) {
-          this.store.dispatch(new workbenchActions.UpdatePixelOpsFormData({data: this.imageCalcFormAdv.value}));
-          this.store.dispatch(new workbenchActions.HideCurrentPixelOpsJobState());
+          this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcFormAdv.value));
+          this.store.dispatch(new HideCurrentPixelOpsJobState());
         // }
       })
 
@@ -195,30 +190,30 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
           ]
         })
       )
-      this.pixelOpsJobRows$ = store.select(fromJobs.getAllJobs).pipe(
+      this.pixelOpsJobRows$ = store.select(JobsState.getJobs).pipe(
         map(allJobRows => allJobRows.filter(row => row.job.type == JobType.PixelOps) as {job: PixelOpsJob, result: PixelOpsJobResult}[])
       );
 
-      this.currentPixelOpsJobRow$ = combineLatest(store.select(fromCore.getWorkbenchState), this.pixelOpsJobRows$).pipe(
-        filter(([state, rows] : [WorkbenchState, {job: PixelOpsJob, result: PixelOpsJobResult}[]]) => (state.currentPixelOpsJobId != null && rows.find(r => r.job.id == state.currentPixelOpsJobId) != undefined)),
+      this.currentPixelOpsJobRow$ = combineLatest(store.select(WorkbenchState.getState), this.pixelOpsJobRows$).pipe(
+        filter(([state, rows] : [WorkbenchStateModel, {job: PixelOpsJob, result: PixelOpsJobResult}[]]) => (state.currentPixelOpsJobId != null && rows.find(r => r.job.id == state.currentPixelOpsJobId) != undefined)),
         map(([state, rows]) => rows.find(r => r.job.id == state.currentPixelOpsJobId))
       );
 
-      this.showCurrentPixelOpsJobState$ =  store.select(fromCore.getWorkbenchState).pipe(
+      this.showCurrentPixelOpsJobState$ =  store.select(WorkbenchState.getState).pipe(
         map(state => state.showCurrentPixelOpsJobState)
       );
 
       this.store.dispatch(
-        new workbenchActions.SetActiveTool({ tool: WorkbenchTool.IMAGE_CALC })
+        new SetActiveTool(WorkbenchTool.IMAGE_CALC)
       );
   
       this.store.dispatch(
-        new workbenchActions.SetLastRouterPath({path: router.url})
+        new SetLastRouterPath(router.url)
       )
 
 
       // this.extractionJobRows$ = combineLatest(
-      //   store.select(fromJobs.getAllJobs).pipe(
+      //   store.select(JobsState.getAllJobs).pipe(
       //     map(
       //       rows =>
       //         rows.filter(row => row.job.type == JobType.Photometry) as Array<{
@@ -245,18 +240,18 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
+    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {}
 
   submit(v: any) {
 
-    this.store.dispatch(new workbenchActions.CreatePixelOpsJob());
+    this.store.dispatch(new CreatePixelOpsJob());
   }
 
   submitAdv(v: any) {
-    this.store.dispatch(new workbenchActions.CreateAdvPixelOpsJob());
+    this.store.dispatch(new CreateAdvPixelOpsJob());
   }
 
   openPixelOpsJobsDialog() {
@@ -268,7 +263,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     // dialogRef.afterClosed().subscribe(result => {
     //   if (result) {
     //     this.store.dispatch(
-    //       new workbenchActions.UpdateSourceExtractionSettings({
+    //       new UpdateSourceExtractionSettings({
     //         changes: result
     //       })
     //     );
@@ -277,6 +272,6 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
 
   onTabChange($event: MatTabChangeEvent) {
-    this.store.dispatch(new workbenchActions.HideCurrentPixelOpsJobState());
+    this.store.dispatch(new HideCurrentPixelOpsJobState());
   }
 }

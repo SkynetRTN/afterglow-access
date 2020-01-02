@@ -1,22 +1,20 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Store } from '@ngrx/store';
 import { Viewer } from '../../../models/viewer';
 
-import * as fromCore from '../../../reducers';
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
-import * as workbenchActions from '../../../actions/workbench';
 import { Dictionary } from '@ngrx/entity/src/models';
 import { DataFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
-import { WorkbenchState } from '../../../models/workbench-state';
 import { CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
-import { Marker } from '../../../models/marker';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Subscription } from 'rxjs';
 import { ViewMode } from '../../../models/view-mode';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { ImageFilesState } from '../../../image-files.state';
+import { SetActiveViewer } from '../../../workbench.actions';
 
 export interface ViewerGridCanvasMouseEvent extends CanvasMouseEvent {
   viewerIndex: number,
@@ -49,19 +47,19 @@ export class WorkbenchViewerGridComponent implements OnInit {
   activeViewerIndex: number;
   mouseDownActiveViewerIndex: number;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.viewMode$ = this.store.select(fromCore.workbench.getViewMode);
+  constructor(private store: Store) {
+    this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
 
-    this.viewers$ = combineLatest(this.store.select(fromCore.workbench.getViewers), this.viewMode$)
+    this.viewers$ = combineLatest(this.store.select(WorkbenchState.getViewers), this.viewMode$)
       .pipe(map(([viewers, viewMode]) => {
         if (!viewers || viewers.length == 0) return [];
         if (viewMode == ViewMode.SINGLE) return [viewers[0]];
         return viewers;
       }));
 
-    this.activeViewerIndex$ = this.store.select(fromCore.workbench.getActiveViewerIndex);
-    this.files$ = this.store.select(fromDataFiles.getDataFiles);
-    this.fileStates$ = this.store.select(fromCore.getImageFileStates);
+    this.activeViewerIndex$ = this.store.select(WorkbenchState.getActiveViewerIndex);
+    this.files$ = this.store.select(DataFilesState.getEntities);
+    this.fileStates$ = this.store.select(ImageFilesState.getEntities);
 
     this.subs.push(this.activeViewerIndex$.subscribe(viewerIndex => {
       this.activeViewerIndex = viewerIndex;
@@ -78,7 +76,7 @@ export class WorkbenchViewerGridComponent implements OnInit {
   setActiveViewer($event: Event, viewerIndex: number, viewer: Viewer) {
     this.mouseDownActiveViewerIndex = this.activeViewerIndex;
     if (viewerIndex != this.activeViewerIndex) {
-      this.store.dispatch(new workbenchActions.SetActiveViewer({ viewerIndex: viewerIndex }));
+      this.store.dispatch(new SetActiveViewer(viewerIndex));
       $event.preventDefault();
       $event.stopImmediatePropagation();
     }
