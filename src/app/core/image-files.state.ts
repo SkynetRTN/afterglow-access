@@ -235,8 +235,10 @@ export class ImageFilesState {
       let sourceExtractorState = state.entities[dataFile.id].sourceExtractor;
       //add effects for image file selection
       let imageFile = dataFile as ImageFile;
+      dispatch(new InitImageTiles(fileId));
+      
       if (sonifierState.regionHistoryInitialized) {
-        return dispatch(new AddRegionToHistory(
+        dispatch(new AddRegionToHistory(
           imageFile.id,
           {
             x: 0,
