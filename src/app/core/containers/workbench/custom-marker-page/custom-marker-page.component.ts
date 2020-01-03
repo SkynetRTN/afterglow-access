@@ -37,7 +37,7 @@ export class CustomMarkerPageComponent implements OnInit {
   activeImageFile: ImageFile;
   customMarkers$: Observable<CustomMarker[]>;
   customMarkers: CustomMarker[];
-  nextCutomMarkerId: number;
+  nextCustomMarkerId: number = 0;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers: Array<CustomMarker> = [];
   selectedMarker: CircleMarker = null;
@@ -165,7 +165,7 @@ export class CustomMarkerPageComponent implements OnInit {
         fileId: this.activeImageFile.id,
         marker: {
           type: MarkerType.CIRCLE,
-          label: `M${this.nextCutomMarkerId}`,
+          label: null,
           x: x,
           y: y,
           radius: 10,
@@ -173,6 +173,8 @@ export class CustomMarkerPageComponent implements OnInit {
           labelTheta: 0
         } as CircleMarker
       };
+
+
 
 
       // let customMarker: CustomMarker = {

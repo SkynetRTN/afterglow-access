@@ -70,7 +70,11 @@ export class CustomMarkersState {
     
     setState((state: CustomMarkersStateModel) => {
       markers.forEach(marker => {
-        let id = this.nextId();
+        let nextSeed = this.seed++;
+        if(marker.marker.label == null || marker.marker.label == undefined) {
+          marker.marker.label = `M${nextSeed}`;
+        }
+        let id = this.prefix + nextSeed;
         state.ids.push(id);
         state.entities[id] = {
           ...marker,
