@@ -55,8 +55,7 @@ export interface WorkbenchStateModel {
   lastRouterPath: string,
   inFullScreenMode: boolean,
   fullScreenPanel: 'file' | 'viewer' | 'tool';
-  multiFileSelectionEnabled: boolean;
-  selectedFileIds: Array<string>;
+  selectedFileId: string;
   activeViewerIndex: number;
   activeTool: WorkbenchTool;
   viewMode: ViewMode;

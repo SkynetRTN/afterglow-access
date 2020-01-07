@@ -9,8 +9,8 @@ import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './mod
 import { SourceExtractorModeOption } from './models/source-extractor-mode-option';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrFail, LoadImageHistFail, LoadDataFileHdrSuccess } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, EnableMultiFileSelection, DisableMultiFileSelection, SetMultiFileSelection, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetPlotterSyncEnabled, SetPlotMode, SetShowConfig, ToggleShowConfig, SetActiveTool, SetShowAllSources, UpdateCentroidSettings, UpdatePlotterSettings, SetSourceExtractionMode, UpdatePhotSettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, UpdatePixelOpsFormData, UpdateAlignFormData, UpdateStackFormData, CloseSidenav, OpenSidenav } from './workbench.actions';
-import { ImageFile, getWidth, getHeight, hasOverlap } from '../data-files/models/data-file';
+import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetPlotterSyncEnabled, SetPlotMode, SetShowConfig, ToggleShowConfig, SetActiveTool, SetShowAllSources, UpdateCentroidSettings, UpdatePlotterSettings, SetSourceExtractionMode, UpdatePhotSettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, UpdatePixelOpsFormData, UpdateAlignFormData, UpdateStackFormData, CloseSidenav, OpenSidenav } from './workbench.actions';
+import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime } from '../data-files/models/data-file';
 import { ImageFilesState, ImageFilesStateModel } from './image-files.state';
 import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './image-files.actions';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
@@ -26,6 +26,11 @@ import { StackingJob } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { DataFileType } from '../data-files/models/data-file-type';
+import { PosType } from './models/source';
+import { MarkerType, LineMarker, RectangleMarker, CircleMarker, TeardropMarker, Marker } from './models/marker';
+import { SonifierRegionMode } from './models/sonifier-file-state';
+import { SourcesState, SourcesStateModel } from './sources.state';
+import { CustomMarkersState, CustomMarkersStateModel } from './custom-markers.state';
 
 @State<WorkbenchStateModel>({
   name: 'workbench',
@@ -34,8 +39,7 @@ import { DataFileType } from '../data-files/models/data-file-type';
     lastRouterPath: null,
     inFullScreenMode: false,
     fullScreenPanel: 'file',
-    multiFileSelectionEnabled: false,
-    selectedFileIds: [],
+    selectedFileId: null,
     activeViewerIndex: 0,
     activeTool: WorkbenchTool.VIEWER,
     viewMode: ViewMode.SINGLE,
@@ -170,9 +174,10 @@ export class WorkbenchState {
     return null;
   }
 
+
   @Selector([DataFilesState])
-  public static getSelectedFiles(state: WorkbenchStateModel, dataFilesState: DataFilesStateModel) {
-    return state.selectedFileIds.map(fileId => dataFilesState.entities[fileId]);
+  public static getSelectedFile(state: WorkbenchStateModel, dataFilesState: DataFilesStateModel) {
+    return dataFilesState.entities[state.selectedFileId];
   }
 
   @Selector()
@@ -220,15 +225,214 @@ export class WorkbenchState {
     return state.showSidebar;
   }
 
-  @Selector()
-  public static getMultiFileSelectionEnabled(state: WorkbenchStateModel) {
-    return state.multiFileSelectionEnabled;
-  }
 
   @Selector()
   public static getSidebarView(state: WorkbenchStateModel) {
     return state.sidebarView;
   }
+
+  @Selector([ImageFilesState, DataFilesState])
+  static getPlotterMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel) {
+    return (fileId: string) => {
+      let file = dataFilesState.entities[fileId] as ImageFile;
+      let plotter = imageFilesState.entities[fileId].plotter;
+      let lineMeasureStart = plotter.lineMeasureStart;
+      let lineMeasureEnd = plotter.lineMeasureEnd;
+
+      if (!lineMeasureStart || !lineMeasureEnd) return [[]];
+
+      if (!file) return [[]];
+
+      let startPrimaryCoord = lineMeasureStart.primaryCoord;
+      let startSecondaryCoord = lineMeasureStart.secondaryCoord;
+      let startPosType = lineMeasureStart.posType;
+      let endPrimaryCoord = lineMeasureEnd.primaryCoord;
+      let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
+      let endPosType = lineMeasureEnd.posType;
+
+      let x1 = startPrimaryCoord;
+      let y1 = startSecondaryCoord;
+      let x2 = endPrimaryCoord;
+      let y2 = endSecondaryCoord;
+
+      if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
+        if (!file.headerLoaded || !file.wcs.isValid()) return [[]];
+        let wcs = file.wcs;
+        if (startPosType == PosType.SKY) {
+          let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
+          x1 = Math.max(Math.min(xy[0], getWidth(file)), 0);
+          y1 = Math.max(Math.min(xy[1], getHeight(file)), 0);
+        }
+
+        if (endPosType == PosType.SKY) {
+          let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
+          x2 = Math.max(Math.min(xy[0], getWidth(file)), 0);
+          y2 = Math.max(Math.min(xy[1], getHeight(file)), 0);
+        }
+      }
+
+      if (state.plotterMode == '1D') {
+        return [
+          {
+            type: MarkerType.LINE,
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2
+          } as LineMarker
+        ];
+      }
+      else {
+        return [
+          {
+            type: MarkerType.RECTANGLE,
+            x: Math.min(x1, x2),
+            y: Math.min(y1, y2),
+            width: Math.abs(x2 - x1),
+            height: Math.abs(y2 - y1)
+          } as RectangleMarker
+        ];
+      }
+    };
+  }
+
+  @Selector([ImageFilesState, DataFilesState])
+  static getSonifierMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel) {
+    return (fileId: string) => {
+      let file = dataFilesState.entities[fileId] as ImageFile;
+      let sonifier = imageFilesState.entities[fileId].sonifier;
+      let region = sonifier.region;
+      let regionMode = sonifier.regionMode;
+      let progressLine = sonifier.progressLine;
+      let result: Array<RectangleMarker | LineMarker> = [];
+      if (region && regionMode == SonifierRegionMode.CUSTOM)
+        result.push({
+          type: MarkerType.RECTANGLE,
+          ...region
+        } as RectangleMarker);
+      if (progressLine)
+        result.push({ type: MarkerType.LINE, ...progressLine } as LineMarker);
+      return result;
+    };
+  }
+
+  @Selector([ImageFilesState, DataFilesState, SourcesState])
+  static getSourceMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel, sourcesState: SourcesStateModel) {
+    return (fileId: string) => {
+      let file = dataFilesState.entities[fileId] as ImageFile;
+      let sources = SourcesState.getSources(sourcesState);
+      let selectedSources = SourcesState.getSelectedSources(sourcesState);
+      let markers: Array<CircleMarker | TeardropMarker> = [];
+      if (!file) return [[]];
+      sources.forEach(source => {
+        let primaryCoord = source.primaryCoord;
+        let secondaryCoord = source.secondaryCoord;
+        let pm = source.pm;
+        let posAngle = source.pmPosAngle;
+        let epoch = source.pmEpoch;
+        let selected = selectedSources.includes(source);
+
+        if (pm) {
+          if (!file.headerLoaded) return;
+          let fileEpoch = getCenterTime(file);
+          if (!fileEpoch) return;
+
+          let deltaT = (fileEpoch.getTime() - epoch.getTime()) / 1000.0;
+          let mu = (source.pm * deltaT) / 3600.0;
+          let theta = source.pmPosAngle * (Math.PI / 180.0);
+          let cd = Math.cos((secondaryCoord * Math.PI) / 180);
+
+          primaryCoord += (mu * Math.sin(theta)) / cd / 15;
+          primaryCoord = primaryCoord % 360;
+          secondaryCoord += mu * Math.cos(theta);
+          secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
+
+          // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
+        }
+
+        if (source.fileId != fileId && !state.showAllSources) return;
+
+        let x = primaryCoord;
+        let y = secondaryCoord;
+        let theta = posAngle;
+
+        if (source.posType == PosType.SKY) {
+          if (!file.headerLoaded || !file.wcs.isValid()) return;
+          let wcs = file.wcs;
+          let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
+          x = xy[0];
+          y = xy[1];
+          if (
+            x < 0.5 ||
+            x >= getWidth(file) + 0.5 ||
+            y < 0.5 ||
+            y >= getHeight(file) + 0.5
+          )
+            return;
+
+          if (pm) {
+            theta = posAngle + wcs.positionAngle();
+            theta = theta % 360;
+            if (theta < 0) theta += 360;
+          }
+        }
+
+        if (pm) {
+          markers.push({
+            type: MarkerType.TEARDROP,
+            x: x,
+            y: y,
+            radius: 15,
+            labelGap: 14,
+            labelTheta: 0,
+            theta: theta,
+            selected: selected,
+            data: { id: source.id }
+          } as TeardropMarker);
+        } else {
+          markers.push({
+            type: MarkerType.CIRCLE,
+            x: x,
+            y: y,
+            radius: 15,
+            labelGap: 14,
+            labelTheta: 0,
+            selected: selected,
+            data: { id: source.id }
+          } as CircleMarker);
+        }
+      });
+
+      return markers;
+    };
+  }
+
+  @Selector([ImageFilesState, DataFilesState, CustomMarkersState])
+  static getCustomMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel, customMarkersState: CustomMarkersStateModel) {
+    return (fileId: string) => {
+
+      if (fileId === null) return [[]];
+      let file = dataFilesState.entities[fileId] as ImageFile;
+      let markers: Array<Marker> = [];
+      let selectedCustomMarkers = CustomMarkersState.getSelectedCustomMarkers(customMarkersState);
+      if (!file) return [[]];
+      markers = CustomMarkersState.getCustomMarkers(customMarkersState)
+        .filter(customMarker => customMarker.fileId == file.id)
+        .map(customMarker => {
+          let marker = {
+            ...customMarker.marker,
+            data: { id: customMarker.id },
+            selected:
+              state.activeTool == WorkbenchTool.CUSTOM_MARKER &&
+              selectedCustomMarkers.includes(customMarker)
+          };
+          return marker;
+        });
+
+      return markers;
+    };
+  }
+
 
   @Action(SetLastRouterPath)
   @ImmutableContext()
@@ -262,33 +466,6 @@ export class WorkbenchState {
   public setFullScreenPanel({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { panel }: SetFullScreenPanel) {
     setState((state: WorkbenchStateModel) => {
       state.fullScreenPanel = panel;
-      return state;
-    });
-  }
-
-  @Action(EnableMultiFileSelection)
-  @ImmutableContext()
-  public enableMultiFileSelection({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: EnableMultiFileSelection) {
-    setState((state: WorkbenchStateModel) => {
-      state.multiFileSelectionEnabled = true;
-      return state;
-    });
-  }
-
-  @Action(DisableMultiFileSelection)
-  @ImmutableContext()
-  public disableMultiFileSelection({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: DisableMultiFileSelection) {
-    setState((state: WorkbenchStateModel) => {
-      state.multiFileSelectionEnabled = false;
-      return state;
-    });
-  }
-
-  @Action(SetMultiFileSelection)
-  @ImmutableContext()
-  public setMultiFileSelection({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileIds }: SetMultiFileSelection) {
-    setState((state: WorkbenchStateModel) => {
-      state.selectedFileIds = fileIds;
       return state;
     });
   }
@@ -366,9 +543,9 @@ export class WorkbenchState {
     let actions = [];
     let dataFile = dataFiles[fileId] as ImageFile;
     if (dataFile && viewer) {
-      
+
       if (dataFile.headerLoaded && dataFile.histLoaded) {
-        
+
         let referenceFileId = originalFileId;
         if (referenceFileId == null) {
           let referenceViewer = state.viewers.find(
@@ -443,7 +620,7 @@ export class WorkbenchState {
 
         let loadFail$ = this.actions$.pipe(
           ofActionDispatched(LoadDataFileHdrFail, LoadImageHistFail),
-          filter<LoadDataFileHdrFail | LoadImageHistFail> (action => action.fileId == fileId)
+          filter<LoadDataFileHdrFail | LoadImageHistFail>(action => action.fileId == fileId)
         )
 
         let hdrLoaded$ = this.actions$.pipe(
@@ -725,7 +902,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public removeDataFileSuccess({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: RemoveDataFileSuccess) {
     setState((state: WorkbenchStateModel) => {
-      state.selectedFileIds = state.selectedFileIds.filter(fileId => fileId != fileId);
+      if (state.selectedFileId == fileId) state.selectedFileId = null;
       state.alignFormData.selectedImageFileIds = state.alignFormData.selectedImageFileIds.filter(fileId => fileId != fileId);
       state.pixelOpsFormData.imageFileIds = state.pixelOpsFormData.imageFileIds.filter(fileId => fileId != fileId);
       state.pixelOpsFormData.auxImageFileIds = state.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != fileId);
@@ -753,13 +930,19 @@ export class WorkbenchState {
       let dataFile = dataFiles[fileId];
       if (state.viewers.length != 0) {
         if (!activeViewer) {
-          return dispatch(new SetActiveViewer(0));
+          dispatch(new SetActiveViewer(0));
         }
-        if (activeViewer.fileId != dataFile.id) {
-          return dispatch(new SetViewerFile(state.viewers.indexOf(activeViewer), dataFile.id));
+        else if (activeViewer.fileId != dataFile.id) {
+          dispatch(new SetViewerFile(state.viewers.indexOf(activeViewer), dataFile.id));
         }
       }
     }
+
+    setState((state: WorkbenchStateModel) => {
+      state.selectedFileId = fileId;
+      return state;
+    });
+
   }
 
 

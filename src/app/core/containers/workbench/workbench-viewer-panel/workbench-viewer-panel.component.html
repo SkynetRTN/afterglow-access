@@ -1,10 +1,10 @@
 <div id="image-viewer-wrapper">
   <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]" (downloadSnapshot)="handleDownloadSnapshot()" [class.active]="active"></app-image-viewer-title-bar>
 
-  <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]" [normalization]="(activeFileState$ | async)?.normalization"
-    [transformation]="(activeFileState$ | async)?.transformation" (onImageMove)="handleImageMove($event)" (onImageClick)="handleImageClick($event)">
+  <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]" [normalization]="(imageFileState$ | async)?.normalization"
+    [transformation]="(imageFileState$ | async)?.transformation" (onImageMove)="handleImageMove($event)" (onImageClick)="handleImageClick($event)">
     <app-image-viewer-marker-overlay *ngIf="(files$ | async)[fileId]" [imageFile]="(files$ | async)[fileId]" [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
-      [transform]="(activeFileState$ | async)?.transformation?.imageToViewportTransform" [markers]="markers$ | async" (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;">
+      [transform]="(imageFileState$ | async)?.transformation?.imageToViewportTransform" [markers]="markers$ | async" (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;">
     </app-image-viewer-marker-overlay>
     <app-image-viewer-status-bar [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY"></app-image-viewer-status-bar>
   </div>

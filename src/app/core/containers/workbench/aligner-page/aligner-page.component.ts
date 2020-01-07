@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { UpdateAlignFormData, SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, SelectDataFile, CreateAlignmentJob } from '../../../workbench.actions';
+import { UpdateAlignFormData, SetActiveTool, SetLastRouterPath, SelectDataFile, CreateAlignmentJob } from '../../../workbench.actions';
 import { JobsState } from '../../../../jobs/jobs.state';
 
 @Component({
@@ -112,7 +112,6 @@ export class AlignerPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

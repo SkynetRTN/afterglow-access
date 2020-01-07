@@ -47,8 +47,8 @@
                     <mat-spinner></mat-spinner>
                   </div>
                 </div>
-                <app-workbench-data-file-list [hidden]="(loading$ | async)" [allowMultiSelection]="(multiFileSelectionEnabled$ | async)"
-                  [primarySelection]="(selectedFile$ | async)" (onPrimarySelectionChange)="onFileSelect($event)" (onMultiSelectionChange)="onMultiFileSelect($event)"></app-workbench-data-file-list>
+                <app-workbench-data-file-list [hidden]="(loading$ | async)" [dataFiles]="(files$ | async)"
+                  [selectedFileId]="(selectedFile$ | async)?.id" (onSelectionChange)="onFileSelect($event)"></app-workbench-data-file-list>
               </div>
             </div>
           </div>

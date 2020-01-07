@@ -34,7 +34,7 @@ import { Router } from '@angular/router';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, SetPlotMode, SetPlotterSyncEnabled, UpdateCentroidSettings, UpdatePlotterSettings } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath, SetPlotMode, SetPlotterSyncEnabled, UpdateCentroidSettings, UpdatePlotterSettings } from '../../../workbench.actions';
 import { UpdateLine, StartLine } from '../../../image-files.actions';
 
 @Component({
@@ -247,7 +247,6 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngAfterViewInit() {}

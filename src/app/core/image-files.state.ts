@@ -13,7 +13,7 @@ import { SonifierRegionMode } from './models/sonifier-file-state';
 import { SourceExtractorRegionOption } from './models/source-extractor-file-state';
 import { ImageTile } from '../data-files/models/image-tile';
 import { getYTileDim, getHeight, getXTileDim, getWidth, ImageFile } from '../data-files/models/data-file';
-import { DataFilesState } from '../data-files/data-files.state';
+import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
 import { normalize } from './models/pixel-normalizer';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
@@ -60,6 +60,8 @@ export class ImageFilesState {
   public static getImageFileStates(state: ImageFilesStateModel) {
     return Object.values(state.entities);
   }
+
+  
 
   @Action(InitializeImageFileState)
   @ImmutableContext()
@@ -316,10 +318,47 @@ export class ImageFilesState {
         }
       }
 
+      if(sonifierState.region) {
+        let sonificationUri = this.afterglowDataFileService.getSonificationUri(
+          fileId,
+          sonifierState.region,
+          sonifierState.duration,
+          sonifierState.toneCount
+        );
+        dispatch(new UpdateSonificationUri(fileId, sonificationUri));
+      }
+
 
       return state;
     });
 
+  }
+
+  @Action(UpdateSonifierFileState)
+  @ImmutableContext()
+  public updateSonifierFileState({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, changes }: UpdateSonifierFileState) {
+    setState((state: ImageFilesStateModel) => {
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let imageFile = dataFiles[fileId] as ImageFile;
+      let sonifierState = state.entities[fileId].sonifier;
+      state.entities[fileId].sonifier = {
+        ...state.entities[fileId].sonifier,
+        ...changes
+      }
+
+      if(sonifierState.region) {
+        let sonificationUri = this.afterglowDataFileService.getSonificationUri(
+          fileId,
+          sonifierState.region,
+          sonifierState.duration,
+          sonifierState.toneCount
+        );
+        dispatch(new UpdateSonificationUri(fileId, sonificationUri));
+      }
+
+
+      return state;
+    });
   }
 
   @Action(AddRegionToHistory)
@@ -338,8 +377,6 @@ export class ImageFilesState {
         sonifierState.regionHistory = [...sonifierState.regionHistory.slice(0, sonifierState.regionHistoryIndex + 1), region];
         sonifierState.regionHistoryIndex++;
       }
-
-
       return state;
     });
 
@@ -389,23 +426,17 @@ export class ImageFilesState {
       sonifierState.regionHistoryInitialized = false;
       return state;
     });
-
   }
+
+
 
   @Action(UpdateSonificationUri)
   @ImmutableContext()
   public updateSonifierUri({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, uri }: UpdateSonificationUri) {
     setState((state: ImageFilesStateModel) => {
       let sonifierState = state.entities[fileId].sonifier;
-      if (sonifierState.region) {
-        sonifierState.sonificationUri = this.afterglowDataFileService.getSonificationUri(
-          fileId,
-          sonifierState.region,
-          sonifierState.duration,
-          sonifierState.toneCount
-        );
-        return state;
-      }
+      sonifierState.sonificationUri = uri;
+      return state;
     })
   }
 
@@ -827,19 +858,7 @@ export class ImageFilesState {
     });
   }
 
-  @Action(UpdateSonifierFileState)
-  @ImmutableContext()
-  public updateSonifierFileState({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, changes }: UpdateSonifierFileState) {
-    setState((state: ImageFilesStateModel) => {
-      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      state.entities[fileId].sonifier = {
-        ...state.entities[fileId].sonifier,
-        ...changes
-      }
-      return state;
-    });
-  }
+  
 
 
 

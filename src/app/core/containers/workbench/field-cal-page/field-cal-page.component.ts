@@ -26,7 +26,7 @@ import { CatalogQueryJob } from '../../../../jobs/models/catalog-query';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../../workbench.actions';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -52,7 +52,6 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   fieldCals$: Observable<FieldCal[]>;
   selectedFieldCal$: Observable<FieldCal>;
   selectedFieldCalId$: Observable<string>;
-  selectedImageFiles$: Observable<Array<ImageFile>>;
 
   enableMagLimit: boolean = false;
   magLimitFilter: string = null;
@@ -112,17 +111,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    this.selectedImageFiles$ = store
-      .select(WorkbenchState.getSelectedFiles)
-      .pipe(
-        map(
-          files =>
-            files.filter(file => file.type == DataFileType.IMAGE) as Array<
-              ImageFile
-            >
-        )
-      );
-
+  
 
     this.store.dispatch(
       new SetActiveTool(WorkbenchTool.FIELD_CAL)
@@ -134,7 +123,6 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

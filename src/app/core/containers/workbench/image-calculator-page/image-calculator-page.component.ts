@@ -22,7 +22,7 @@ import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { UpdatePixelOpsFormData, HideCurrentPixelOpsJobState, SetActiveTool, SetLastRouterPath, DisableMultiFileSelection, CreatePixelOpsJob, CreateAdvPixelOpsJob } from '../../../workbench.actions';
+import { UpdatePixelOpsFormData, HideCurrentPixelOpsJobState, SetActiveTool, SetLastRouterPath, CreatePixelOpsJob, CreateAdvPixelOpsJob } from '../../../workbench.actions';
 import { JobsState } from '../../../../jobs/jobs.state';
 
 interface PixelOpVariable {
@@ -38,30 +38,29 @@ interface PixelOpVariable {
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-    inFullScreenMode$: Observable<boolean>;
-    fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
+  inFullScreenMode$: Observable<boolean>;
+  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   activeImageFile$: Observable<ImageFile>;
   allImageFiles$: Observable<Array<ImageFile>>;
-  selectedImageFiles$: Observable<Array<ImageFile>>;
   activeImageFileState$: Observable<ImageFileState>;
-  pixelOpsJobRows$: Observable<{job: PixelOpsJob, result: PixelOpsJobResult}[]>;
-  currentPixelOpsJobRow$: Observable<{job: PixelOpsJob, result: PixelOpsJobResult}>;
+  pixelOpsJobRows$: Observable<{ job: PixelOpsJob, result: PixelOpsJobResult }[]>;
+  currentPixelOpsJobRow$: Observable<{ job: PixelOpsJob, result: PixelOpsJobResult }>;
   showCurrentPixelOpsJobState$: Observable<boolean>;
   showConfig$: Observable<boolean>;
   pixelOpVariables$: Observable<Array<PixelOpVariable>>;
   pixelOpsFormData$: Observable<PixelOpsFormData>;
   panelOpenState: boolean;
-  
+
   operands = [
-    {label: 'Add', symbol: '+'},
-    {label: 'Subtract', symbol: '-'},
-    {label: 'Multiply', symbol: '*'},
-    {label: 'Divide', symbol: '/'},
+    { label: 'Add', symbol: '+' },
+    { label: 'Subtract', symbol: '-' },
+    { label: 'Multiply', symbol: '*' },
+    { label: 'Divide', symbol: '/' },
   ]
 
   modes = [
-    {label: 'Scalar', value: 'scalar'},
-    {label: 'Image', value: 'image'},
+    { label: 'Scalar', value: 'scalar' },
+    { label: 'Image', value: 'image' },
   ]
 
 
@@ -77,9 +76,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     mode: new FormControl('image', Validators.required),
     imageFileIds: new FormControl([], Validators.required),
     auxImageFileId: new FormControl('', Validators.required),
-    scalarValue: new FormControl({disabled: true, value: 0}, Validators.required),
+    scalarValue: new FormControl({ disabled: true, value: 0 }, Validators.required),
     inPlace: new FormControl(false, Validators.required),
-  }, {validators: this.divideByZero});
+  }, { validators: this.divideByZero });
 
   imageCalcFormAdv = new FormGroup({
     opString: new FormControl('', Validators.required),
@@ -88,7 +87,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     inPlace: new FormControl(false, Validators.required),
   });
 
-  
+
 
   constructor(private store: Store, public dialog: MatDialog, router: Router) {
     this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
@@ -100,150 +99,139 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
 
     this.allImageFiles$ = store.select(DataFilesState.getDataFiles)
-    .pipe(
-      map(
-        files =>
-          files.filter(file => file.type == DataFileType.IMAGE) as Array<
-            ImageFile
-          >
-      )
-    );
-
-    this.selectedImageFiles$ = store
-      .select(WorkbenchState.getSelectedFiles)
       .pipe(
         map(
           files =>
             files.filter(file => file.type == DataFileType.IMAGE) as Array<
-              ImageFile
+            ImageFile
             >
         )
       );
 
-      this.pixelOpsFormData$ = store.select(WorkbenchState.getState).pipe(
-        map(state => state.pixelOpsFormData),
-        tap(data => {
-          this.imageCalcForm.patchValue(data, {emitEvent: false});
-          this.imageCalcFormAdv.patchValue(data, {emitEvent: false});
-        })
-      );
 
-      this.pixelOpsFormData$.subscribe();
-
-      this.imageCalcForm.get('mode').valueChanges.subscribe(value => {
-        if (value == 'scalar') {
-          this.imageCalcForm.get('scalarValue').enable();
-          this.imageCalcForm.get('auxImageFileId').disable();
-        } else {
-          this.imageCalcForm.get('scalarValue').disable();
-          this.imageCalcForm.get('auxImageFileId').enable();
-        }
-      });
-
-      this.imageCalcForm.valueChanges.subscribe(value => {
-        // if(this.imageCalcForm.valid) {
-          this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcForm.value));
-          this.store.dispatch(new HideCurrentPixelOpsJobState());
-        // }
+    this.pixelOpsFormData$ = store.select(WorkbenchState.getState).pipe(
+      map(state => state.pixelOpsFormData),
+      tap(data => {
+        this.imageCalcForm.patchValue(data, { emitEvent: false });
+        this.imageCalcFormAdv.patchValue(data, { emitEvent: false });
       })
+    );
 
-      this.imageCalcFormAdv.valueChanges.subscribe(value => {
-        // if(this.imageCalcFormAdv.valid) {
-          this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcFormAdv.value));
-          this.store.dispatch(new HideCurrentPixelOpsJobState());
-        // }
-      })
+    this.pixelOpsFormData$.subscribe();
+
+    this.imageCalcForm.get('mode').valueChanges.subscribe(value => {
+      if (value == 'scalar') {
+        this.imageCalcForm.get('scalarValue').enable();
+        this.imageCalcForm.get('auxImageFileId').disable();
+      } else {
+        this.imageCalcForm.get('scalarValue').disable();
+        this.imageCalcForm.get('auxImageFileId').enable();
+      }
+    });
+
+    this.imageCalcForm.valueChanges.subscribe(value => {
+      // if(this.imageCalcForm.valid) {
+      this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcForm.value));
+      this.store.dispatch(new HideCurrentPixelOpsJobState());
+      // }
+    })
+
+    this.imageCalcFormAdv.valueChanges.subscribe(value => {
+      // if(this.imageCalcFormAdv.valid) {
+      this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcFormAdv.value));
+      this.store.dispatch(new HideCurrentPixelOpsJobState());
+      // }
+    })
 
 
 
-      let auxImageFiles$ = combineLatest(this.pixelOpsFormData$, this.allImageFiles$).pipe(
-        map(([data, allImageFiles]) => data.auxImageFileIds
-          .map(id => allImageFiles.find(f => f.id == id))
-          .filter(f => f != null)
-          .sort((a,b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0))
-      )
+    let auxImageFiles$ = combineLatest(this.pixelOpsFormData$, this.allImageFiles$).pipe(
+      map(([data, allImageFiles]) => data.auxImageFileIds
+        .map(id => allImageFiles.find(f => f.id == id))
+        .filter(f => f != null)
+        .sort((a, b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0))
+    )
 
-      let imageFiles$ = combineLatest(this.pixelOpsFormData$, this.allImageFiles$).pipe(
-        map(([data, allImageFiles]) => data.imageFileIds
-          .map(id => allImageFiles.find(f => f.id == id))
-          .filter(f => f != null)
-          .sort((a,b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0))
-      )
+    let imageFiles$ = combineLatest(this.pixelOpsFormData$, this.allImageFiles$).pipe(
+      map(([data, allImageFiles]) => data.imageFileIds
+        .map(id => allImageFiles.find(f => f.id == id))
+        .filter(f => f != null)
+        .sort((a, b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0))
+    )
 
-      this.pixelOpVariables$ = combineLatest(imageFiles$, auxImageFiles$).pipe(
-        map( ([imageFiles, auxImageFiles]) => {
-          return [
-            {name: 'aux_img', value: auxImageFiles.length == 0 ? 'N/A' : auxImageFiles[0].name},
-            {name: 'img', value: 'for each image file'},
-            
-            ...imageFiles.sort( (a,b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0)
+    this.pixelOpVariables$ = combineLatest(imageFiles$, auxImageFiles$).pipe(
+      map(([imageFiles, auxImageFiles]) => {
+        return [
+          { name: 'aux_img', value: auxImageFiles.length == 0 ? 'N/A' : auxImageFiles[0].name },
+          { name: 'img', value: 'for each image file' },
+
+          ...imageFiles.sort((a, b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0)
             .map((f, index) => {
               return {
                 name: `imgs[${index}]`, value: f.name
               }
             }),
-            ...auxImageFiles.sort( (a,b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0).map((f, index) => {
-              return {
-                name: `aux_imgs[${index}]`, value: f.name
-              }
-            })
-          ]
-        })
-      )
-      this.pixelOpsJobRows$ = store.select(JobsState.getJobs).pipe(
-        map(allJobRows => allJobRows.filter(row => row.job.type == JobType.PixelOps) as {job: PixelOpsJob, result: PixelOpsJobResult}[])
-      );
+          ...auxImageFiles.sort((a, b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0).map((f, index) => {
+            return {
+              name: `aux_imgs[${index}]`, value: f.name
+            }
+          })
+        ]
+      })
+    )
+    this.pixelOpsJobRows$ = store.select(JobsState.getJobs).pipe(
+      map(allJobRows => allJobRows.filter(row => row.job.type == JobType.PixelOps) as { job: PixelOpsJob, result: PixelOpsJobResult }[])
+    );
 
-      this.currentPixelOpsJobRow$ = combineLatest(store.select(WorkbenchState.getState), this.pixelOpsJobRows$).pipe(
-        filter(([state, rows] : [WorkbenchStateModel, {job: PixelOpsJob, result: PixelOpsJobResult}[]]) => (state.currentPixelOpsJobId != null && rows.find(r => r.job.id == state.currentPixelOpsJobId) != undefined)),
-        map(([state, rows]) => rows.find(r => r.job.id == state.currentPixelOpsJobId))
-      );
+    this.currentPixelOpsJobRow$ = combineLatest(store.select(WorkbenchState.getState), this.pixelOpsJobRows$).pipe(
+      filter(([state, rows]: [WorkbenchStateModel, { job: PixelOpsJob, result: PixelOpsJobResult }[]]) => (state.currentPixelOpsJobId != null && rows.find(r => r.job.id == state.currentPixelOpsJobId) != undefined)),
+      map(([state, rows]) => rows.find(r => r.job.id == state.currentPixelOpsJobId))
+    );
 
-      this.showCurrentPixelOpsJobState$ =  store.select(WorkbenchState.getState).pipe(
-        map(state => state.showCurrentPixelOpsJobState)
-      );
+    this.showCurrentPixelOpsJobState$ = store.select(WorkbenchState.getState).pipe(
+      map(state => state.showCurrentPixelOpsJobState)
+    );
 
-      this.store.dispatch(
-        new SetActiveTool(WorkbenchTool.IMAGE_CALC)
-      );
-  
-      this.store.dispatch(
-        new SetLastRouterPath(router.url)
-      )
+    this.store.dispatch(
+      new SetActiveTool(WorkbenchTool.IMAGE_CALC)
+    );
+
+    this.store.dispatch(
+      new SetLastRouterPath(router.url)
+    )
 
 
-      // this.extractionJobRows$ = combineLatest(
-      //   store.select(JobsState.getAllJobs).pipe(
-      //     map(
-      //       rows =>
-      //         rows.filter(row => row.job.type == JobType.Photometry) as Array<{
-      //           job: PhotometryJob;
-      //           result: PhotometryJobResult;
-      //         }>
-      //     )
-      //   ),
-      //   this.activeImageFile$
-      // ).pipe(
-      //   map(([rows, activeImageFile]) =>
-      //     activeImageFile
-      //       ? rows
-      //           .filter(row =>
-      //             row.job.file_ids.includes(parseInt(activeImageFile.id))
-      //           )
-      //           .sort((a, b) => {
-      //             if (a.job.id == b.job.id) return 0;
-      //             return a.job.id > b.job.id ? -1 : 1;
-      //           })
-      //       : []
-      //   )
-      // );
+    // this.extractionJobRows$ = combineLatest(
+    //   store.select(JobsState.getAllJobs).pipe(
+    //     map(
+    //       rows =>
+    //         rows.filter(row => row.job.type == JobType.Photometry) as Array<{
+    //           job: PhotometryJob;
+    //           result: PhotometryJobResult;
+    //         }>
+    //     )
+    //   ),
+    //   this.activeImageFile$
+    // ).pipe(
+    //   map(([rows, activeImageFile]) =>
+    //     activeImageFile
+    //       ? rows
+    //           .filter(row =>
+    //             row.job.file_ids.includes(parseInt(activeImageFile.id))
+    //           )
+    //           .sort((a, b) => {
+    //             if (a.job.id == b.job.id) return 0;
+    //             return a.job.id > b.job.id ? -1 : 1;
+    //           })
+    //       : []
+    //   )
+    // );
   }
 
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() { }
 
   submit(v: any) {
 
@@ -257,7 +245,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   openPixelOpsJobsDialog() {
     let dialogRef = this.dialog.open(PixelOpsJobsDialogComponent, {
       width: "600px",
-      data: {rows$: this.pixelOpsJobRows$, allImageFiles$: this.allImageFiles$}
+      data: { rows$: this.pixelOpsJobRows$, allImageFiles$: this.allImageFiles$ }
     });
 
     // dialogRef.afterClosed().subscribe(result => {

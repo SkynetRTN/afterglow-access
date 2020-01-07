@@ -67,7 +67,7 @@ import { CreateJob } from '../../../../jobs/jobs.actions';
 import { SourcesState } from '../../../sources.state';
 import { WorkbenchState } from '../../../workbench.state';
 import { JobsState } from '../../../../jobs/jobs.state';
-import { SetActiveTool, SetLastRouterPath, EnableMultiFileSelection, SetSourceExtractionMode, UpdatePhotSettings, UpdateCentroidSettings, UpdateSourceExtractionSettings, SetShowAllSources } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath, SetSourceExtractionMode, UpdatePhotSettings, UpdateCentroidSettings, UpdateSourceExtractionSettings, SetShowAllSources } from '../../../workbench.actions';
 import { UpdateSourceExtractorFileState, ExtractSources, SetSourceLabel } from '../../../image-files.actions';
 import { SelectSources, DeselectSources, SetSourceSelection, AddSources, RemoveSources, UpdateSource } from '../../../sources.actions';
 
@@ -134,7 +134,6 @@ export class SourceExtractorPageComponent
   filteredSources$: Observable<Source[]>;
 
   activeImageFile: ImageFile;
-  selectedImageFiles: Array<ImageFile>;
   activeSourceExtractorFileState: SourceExtractorFileState;
   workbenchState: WorkbenchStateModel;
   SourceExtractorModeOption = SourceExtractorModeOption;
@@ -186,16 +185,7 @@ export class SourceExtractorPageComponent
     this.showAllSources$ = store.select(WorkbenchState.getShowAllSources);
 
     this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
-    this.selectedImageFiles$ = store
-      .select(WorkbenchState.getSelectedFiles)
-      .pipe(
-        map(
-          files =>
-            files.filter(file => file.type == DataFileType.IMAGE) as Array<
-              ImageFile
-            >
-        )
-      );
+    
 
     this.activeImageFileState$ = store.select(
       WorkbenchState.getActiveImageFileState
@@ -254,11 +244,7 @@ export class SourceExtractorPageComponent
         this.activeImageFile = imageFile;
       })
     );
-    this.subs.push(
-      this.selectedImageFiles$.subscribe(imageFiles => {
-        this.selectedImageFiles = imageFiles;
-      })
-    );
+    
     this.subs.push(
       this.activeSourceExtractorFileState$.subscribe(
         state => (this.activeSourceExtractorFileState = state)
@@ -285,7 +271,6 @@ export class SourceExtractorPageComponent
   }
 
   ngOnInit() {
-    this.store.dispatch(new EnableMultiFileSelection());
   }
 
   ngAfterViewInit() {}
@@ -605,7 +590,7 @@ export class SourceExtractorPageComponent
     let job: PhotometryJob = {
       type: JobType.Photometry,
       id: null,
-      file_ids: this.selectedImageFiles.map(file => parseInt(file.id)),
+      file_ids: [].map(file => parseInt(file.id)),
       sources: this.selectedSources.map((source, index) => {
         let x = null;
         let y = null;

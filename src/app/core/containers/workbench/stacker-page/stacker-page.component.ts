@@ -12,7 +12,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { JobsState } from '../../../../jobs/jobs.state';
-import { UpdateStackFormData, SetActiveTool, SetLastRouterPath, CreateStackingJob, DisableMultiFileSelection } from '../../../workbench.actions';
+import { UpdateStackFormData, SetActiveTool, SetLastRouterPath, CreateStackingJob } from '../../../workbench.actions';
 
 @Component({
   selector: 'app-stacker-page',
@@ -130,7 +130,6 @@ export class StackerPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

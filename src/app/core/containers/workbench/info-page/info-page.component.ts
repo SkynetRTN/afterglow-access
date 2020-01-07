@@ -23,7 +23,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { ImageFilesState } from '../../../image-files.state';
-import { SetActiveTool, SetLastRouterPath, DisableMultiFileSelection } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath } from '../../../workbench.actions';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -185,7 +185,6 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

@@ -42,7 +42,7 @@ import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { ImageFilesState } from '../../../image-files.state';
 import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../../image-files.actions';
-import { SetActiveTool, SetLastRouterPath, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, DisableMultiFileSelection } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey } from '../../../workbench.actions';
 import { DataProvidersState } from '../../../../data-providers/data-providers.state';
 
 // import { DataFile, ImageFile } from '../../../models'
@@ -281,7 +281,6 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

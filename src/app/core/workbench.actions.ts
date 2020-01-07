@@ -10,10 +10,6 @@ import { SourceExtractionSettings, SourceExtractionJob } from '../jobs/models/so
 import { Catalog } from './models/catalog';
 import { FieldCal } from './models/field-cal';
 import { CatalogQueryJob } from '../jobs/models/catalog-query';
-import { CustomMarker } from './models/custom-marker';
-import { Region } from './models/region';
-import { SourceExtractorFileState } from './models/source-extractor-file-state';
-import { Source } from './models/source';
 
 /* Core */
 
@@ -44,24 +40,10 @@ export class SetFullScreenPanel {
   constructor(public panel: 'file' | 'viewer' | 'tool') { }
 }
 
-export class EnableMultiFileSelection {
-  public static readonly type = '[Workbench] Enable Multi File Selection';
-}
-
-export class DisableMultiFileSelection {
-  public static readonly type = '[Workbench] Disable Multi File Selection';
-}
-
 export class SelectDataFile {
   public static readonly type = '[Workbench] Select Data File';
 
   constructor(public fileId: string) { }
-}
-
-export class SetMultiFileSelection {
-  public static readonly type = '[Workbench] Set Multi File Selection';
-
-  constructor(public fileIds: string[]) { }
 }
 
 export class SetActiveViewer {

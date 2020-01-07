@@ -10,9 +10,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetMultiFileSelection, SetSidebarView, ToggleShowConfig } from '../../workbench.actions';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig } from '../../workbench.actions';
 import { LoadLibrary, RemoveAllDataFiles } from '../../../data-files/data-files.actions';
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
+import { tap } from 'rxjs/operators';
 
 
 
@@ -37,7 +38,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   files$: Observable<Array<DataFile>>;
   private selectedFile$: Observable<DataFile>;
-  private multiFileSelectionEnabled$: Observable<boolean>;
   fxShowSidebar$: Observable<boolean>;
   fxShowTool$: Observable<boolean>;
   showSidebar$: Observable<boolean>;
@@ -59,7 +59,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.files$ = this.store.select(DataFilesState.getDataFiles);
     this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
 
-    this.multiFileSelectionEnabled$ = this.store.select(WorkbenchState.getMultiFileSelectionEnabled);
     this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
     this.showConfig$ = this.store.select(WorkbenchState.getShowConfig);
     this.showSidebar$ = this.store.select(WorkbenchState.getShowSidebar);
@@ -206,10 +205,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new SelectDataFile(file.id));
   }
 
-  onMultiFileSelect(files: Array<DataFile>) {
-    if(!files) return;
-    this.store.dispatch(new SetMultiFileSelection(files.map(f => f.id)));
-  }
+  // onMultiFileSelect(files: Array<DataFile>) {
+  //   if(!files) return;
+  //   this.store.dispatch(new SetMultiFileSelection(files.map(f => f.id)));
+  // }
 
   removeAllFiles() {
     this.store.dispatch(new RemoveAllDataFiles());

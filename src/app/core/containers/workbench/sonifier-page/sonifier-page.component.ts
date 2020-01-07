@@ -45,7 +45,7 @@ import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, DisableMultiFileSelection } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath } from '../../../workbench.actions';
 import { AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, SetRegionMode, UpdateSonifierFileState, SetProgressLine } from '../../../image-files.actions';
 
 @Component({
@@ -241,7 +241,6 @@ export class SonifierPageComponent
   }
 
   ngOnInit() {
-    this.store.dispatch(new DisableMultiFileSelection());
   }
 
   ngAfterViewInit() { }
