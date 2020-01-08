@@ -4,7 +4,7 @@ import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData } from '.
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
 import { PlotterSettings } from './models/plotter-settings';
-import { SourceExtractorModeOption } from './models/source-extractor-mode-option';
+import { SourceIdentificationModeOption } from './models/source-identification-mode-option';
 import { PhotSettings } from '../jobs/models/photometry';
 import { SourceExtractionSettings, SourceExtractionJob } from '../jobs/models/source-extraction';
 import { Catalog } from './models/catalog';
@@ -163,7 +163,7 @@ export class UpdatePlotterSettings {
 export class SetSourceExtractionMode {
   public static readonly type = '[Workbench] Set Source Extraction Mode';
 
-  constructor(public mode: SourceExtractorModeOption) { }
+  constructor(public mode: SourceIdentificationModeOption) { }
 }
 
 export class UpdatePhotSettings {

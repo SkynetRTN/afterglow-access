@@ -1,6 +1,6 @@
-import { State, Action, Selector, StateContext, Store, Actions, ofActionDispatched } from '@ngxs/store';
+import { State, Action, Selector, StateContext, Store, Actions, ofActionDispatched, ofActionSuccessful, ofActionErrored } from '@ngxs/store';
 import { merge } from "rxjs";
-import { flatMap, filter } from 'rxjs/operators';
+import { flatMap, filter, takeUntil, take, tap } from 'rxjs/operators';
 import { Point, Matrix, Rectangle } from 'paper';
 import { RenormalizeImageFile, NormalizeImageTile, UpdateNormalizer, AddRegionToHistory, SetRegionMode, UpdateSonifierRegion, UndoRegionSelection, RedoRegionSelection, CenterRegionInViewport, UpdateSonificationUri, ExtractSources, ExtractSourcesFail, UpdateSourceExtractorRegion, SetSourceExtractorRegion, UpdateSourceExtractorFileState, ResetImageTransform, SetViewportTransform, ZoomTo, ZoomBy, UpdateCurrentViewportSize, SetImageTransform, MoveBy, InitializeImageFileState, RotateBy, Flip, StartLine, UpdateLine, UpdatePlotterFileState, UpdateSonifierFileState, ClearRegionHistory, SetProgressLine } from './image-files.actions';
 import { ImageFileState } from './models/image-file-state';
@@ -10,7 +10,7 @@ import { DataFileType } from '../data-files/models/data-file-type';
 import { grayColorMap } from './models/color-map';
 import { StretchMode } from './models/stretch-mode';
 import { SonifierRegionMode } from './models/sonifier-file-state';
-import { SourceExtractorRegionOption } from './models/source-extractor-file-state';
+import { SourceIdentificationRegionOption } from './models/source-identification-file-state';
 import { ImageTile } from '../data-files/models/image-tile';
 import { getYTileDim, getHeight, getXTileDim, getWidth, ImageFile } from '../data-files/models/data-file';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
@@ -19,11 +19,12 @@ import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CreateJob, CreateJobFail } from '../jobs/jobs.actions';
+import { CreateJob, CreateJobFail, JobCompleted, UpdateJobSuccess } from '../jobs/jobs.actions';
 import { JobActionHandler } from '../jobs/lib/job-action-handler';
 import { PosType, Source } from './models/source';
 import { getViewportRegion, getScale } from './models/transformation';
 import { AddSources } from './sources.actions';
+import { JobsState } from '../jobs/jobs.state';
 
 export interface ImageFilesStateModel {
   ids: string[];
@@ -61,7 +62,7 @@ export class ImageFilesState {
     return Object.values(state.entities);
   }
 
-  
+
 
   @Action(InitializeImageFileState)
   @ImmutableContext()
@@ -105,7 +106,7 @@ export class ImageFilesState {
             progressLine: null,
           },
           sourceExtractor: {
-            regionOption: SourceExtractorRegionOption.VIEWPORT,
+            regionOption: SourceIdentificationRegionOption.VIEWPORT,
             region: null,
             selectedSourceIds: [],
             sourceExtractionJobId: null,
@@ -302,7 +303,7 @@ export class ImageFilesState {
 
       if (
         sourceExtractorState.regionOption ==
-        SourceExtractorRegionOption.SONIFIER_REGION
+        SourceIdentificationRegionOption.SONIFIER_REGION
       )
         dispatch(
           new UpdateSourceExtractorRegion(fileId)
@@ -318,7 +319,7 @@ export class ImageFilesState {
         }
       }
 
-      if(sonifierState.region) {
+      if (sonifierState.region) {
         let sonificationUri = this.afterglowDataFileService.getSonificationUri(
           fileId,
           sonifierState.region,
@@ -346,7 +347,7 @@ export class ImageFilesState {
         ...changes
       }
 
-      if(sonifierState.region) {
+      if (sonifierState.region) {
         let sonificationUri = this.afterglowDataFileService.getSonificationUri(
           fileId,
           sonifierState.region,
@@ -456,9 +457,9 @@ export class ImageFilesState {
   public extractSources({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, settings }: ExtractSources) {
     let state = getState();
     let sourceExtractorState = state.entities[fileId].sourceExtractor;
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
+    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
     let imageFile = dataFiles[fileId] as ImageFile;
-    if (sourceExtractorState.regionOption != SourceExtractorRegionOption.ENTIRE_IMAGE) {
+    if (sourceExtractorState.regionOption != SourceIdentificationRegionOption.ENTIRE_IMAGE) {
       settings = {
         ...settings,
         x: Math.min(getWidth(imageFile), Math.max(0, sourceExtractorState.region.x + 1)),
@@ -477,54 +478,49 @@ export class ImageFilesState {
     };
 
     let correlationId = this.correlationIdGenerator.next();
-    let createJobAction = new CreateJob(job, 1000, correlationId)
-    let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
+    dispatch(new CreateJob(job, 1000, correlationId));
+    return this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as SourceExtractionJobResult;
+        if (result.errors.length != 0) {
+          dispatch(new ExtractSourcesFail(result.errors.join(',')));
+          return;
+        }
+        let sources = result.data.map(d => {
+          let posType = PosType.PIXEL;
+          let primaryCoord = d.x;
+          let secondaryCoord = d.y;
 
-    return merge(
-      dispatch(createJobAction),
-      jobCreated$.pipe(
-        filter(action => action instanceof CreateJobFail),
-        flatMap(action => {
-          return dispatch(new ExtractSourcesFail("Failed to create job"))
-        })
-      ),
-      jobCompleted$.pipe(
-        flatMap(jobCompleted => {
-          let result = jobCompleted.result as SourceExtractionJobResult;
-          if (result.errors.length != 0) return dispatch(new ExtractSourcesFail(result.errors.join(',')));
-          let sources = result.data.map(d => {
-            let posType = PosType.PIXEL;
-            let primaryCoord = d.x;
-            let secondaryCoord = d.y;
+          if (
+            "ra_hours" in d &&
+            d.ra_hours !== null &&
+            "dec_degs" in d &&
+            d.dec_degs !== null
+          ) {
+            posType = PosType.SKY;
+            primaryCoord = d.ra_hours;
+            secondaryCoord = d.dec_degs;
+          }
+          return {
+            id: d.id,
+            label: d.id,
+            objectId: null,
+            fileId: d.file_id,
+            posType: posType,
+            primaryCoord: primaryCoord,
+            secondaryCoord: secondaryCoord,
+            pm: null,
+            pmPosAngle: null,
+            pmEpoch: d.time ? new Date(d.time) : null
+          } as Source;
+        });
 
-            if (
-              "ra_hours" in d &&
-              d.ra_hours !== null &&
-              "dec_degs" in d &&
-              d.dec_degs !== null
-            ) {
-              posType = PosType.SKY;
-              primaryCoord = d.ra_hours;
-              secondaryCoord = d.dec_degs;
-            }
-            return {
-              id: d.id,
-              label: d.id,
-              objectId: null,
-              fileId: d.file_id,
-              posType: posType,
-              primaryCoord: primaryCoord,
-              secondaryCoord: secondaryCoord,
-              pm: null,
-              pmPosAngle: null,
-              pmEpoch: d.time ? new Date(d.time) : null
-            } as Source;
-          });
-
-          return dispatch(new AddSources(sources));
-        })
-      )
-    );
+        dispatch(new AddSources(sources));
+      })
+    )
   }
 
   @Action(UpdateSourceExtractorFileState)
@@ -563,7 +559,7 @@ export class ImageFilesState {
     let region = null;
     if (
       sourceExtractorState.regionOption ==
-      SourceExtractorRegionOption.VIEWPORT
+      SourceIdentificationRegionOption.VIEWPORT
     ) {
       region = getViewportRegion(
         transformationState,
@@ -577,7 +573,7 @@ export class ImageFilesState {
       // }
     } else if (
       sourceExtractorState.regionOption ==
-      SourceExtractorRegionOption.SONIFIER_REGION
+      SourceIdentificationRegionOption.SONIFIER_REGION
     ) {
       region = sonifierState.region;
     } else {
@@ -858,7 +854,7 @@ export class ImageFilesState {
     });
   }
 
-  
+
 
 
 
@@ -881,7 +877,7 @@ export class ImageFilesState {
         result.push(new UpdateSonifierRegion(fileId));
       }
 
-      if (sourceExtractor.regionOption == SourceExtractorRegionOption.VIEWPORT) {
+      if (sourceExtractor.regionOption == SourceIdentificationRegionOption.VIEWPORT) {
         result.push(new UpdateSourceExtractorRegion(fileId));
       }
 

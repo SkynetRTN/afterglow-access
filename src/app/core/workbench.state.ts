@@ -6,7 +6,7 @@ import { WorkbenchStateModel, WorkbenchTool } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
-import { SourceExtractorModeOption } from './models/source-extractor-mode-option';
+import { SourceIdentificationModeOption } from './models/source-identification-mode-option';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrFail, LoadImageHistFail, LoadDataFileHdrSuccess } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
 import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetPlotterSyncEnabled, SetPlotMode, SetShowConfig, ToggleShowConfig, SetActiveTool, SetShowAllSources, UpdateCentroidSettings, UpdatePlotterSettings, SetSourceExtractionMode, UpdatePhotSettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, UpdatePixelOpsFormData, UpdateAlignFormData, UpdateStackFormData, CloseSidenav, OpenSidenav } from './workbench.actions';
@@ -81,7 +81,7 @@ import { CustomMarkersState, CustomMarkersStateModel } from './custom-markers.st
       deblend: false,
       limit: 200,
     },
-    sourceExtractorModeOption: SourceExtractorModeOption.MOUSE,
+    sourceExtractorModeOption: SourceIdentificationModeOption.MOUSE,
     plotterSettings: {
       interpolatePixels: false
     },
@@ -355,6 +355,8 @@ export class WorkbenchState {
         let x = primaryCoord;
         let y = secondaryCoord;
         let theta = posAngle;
+
+        console.log("HERE", file, file.headerLoaded, file.wcs.isValid());
 
         if (source.posType == PosType.SKY) {
           if (!file.headerLoaded || !file.wcs.isValid()) return;

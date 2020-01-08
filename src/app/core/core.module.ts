@@ -55,7 +55,7 @@ import { FieldCalPageComponent } from './containers/workbench/field-cal-page/fie
 import { CustomMarkerPageComponent } from './containers/workbench/custom-marker-page/custom-marker-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
 import { InfoPageComponent } from './containers/workbench/info-page/info-page.component';
-import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
+import { SourceIdentificationPageComponent } from './containers/workbench/source-identification-page/source-identification-page.component';
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
 import { AlignerPageComponent } from './containers/workbench/aligner-page/aligner-page.component';
@@ -77,6 +77,7 @@ import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.modu
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
+import { PhotometryPageComponent } from './containers/workbench/photometry-page/photometry-page.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -102,7 +103,8 @@ export const COMPONENTS = [
   PlotterPageComponent,
   SonifierPageComponent,
   FieldCalPageComponent,
-  SourceExtractorPageComponent,
+  SourceIdentificationPageComponent,
+  PhotometryPageComponent,
   ImageCalculatorPageComponent,
   StackerPageComponent,
   AlignerPageComponent,

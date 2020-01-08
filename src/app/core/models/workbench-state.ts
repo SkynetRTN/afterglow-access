@@ -2,7 +2,7 @@ import { SidebarView } from "./sidebar-view";
 import { ViewMode } from "./view-mode";
 import { Viewer } from "./viewer";
 import { CentroidSettings } from "./centroid-settings";
-import { SourceExtractorModeOption } from "./source-extractor-mode-option";
+import { SourceIdentificationModeOption } from "./source-identification-mode-option";
 import { PlotterSettings } from "./plotter-settings";
 import { SourceExtractionSettings } from "../../jobs/models/source-extraction";
 import { PhotSettings } from "../../jobs/models/photometry";
@@ -71,7 +71,7 @@ export interface WorkbenchStateModel {
   centroidSettings: CentroidSettings;
   photSettings: PhotSettings
   sourceExtractionSettings: SourceExtractionSettings;
-  sourceExtractorModeOption: SourceExtractorModeOption;
+  sourceExtractorModeOption: SourceIdentificationModeOption;
   plotterSettings: PlotterSettings;
   catalogs: Array<Catalog>;
   selectedCatalogId: string;

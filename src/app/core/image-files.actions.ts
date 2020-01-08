@@ -6,7 +6,7 @@ import { SonifierFileState, SonifierRegionMode } from './models/sonifier-file-st
 import { PlotterFileState } from './models/plotter-file-state';
 import { PosType, Source } from './models/source';
 import { Matrix } from 'svgjs';
-import { SourceExtractorFileState } from './models/source-extractor-file-state';
+import { SourceIdentificationFileState } from './models/source-identification-file-state';
 import { SourceExtractionSettings } from '../jobs/models/source-extraction';
 
 export class InitializeImageFileState {
@@ -202,7 +202,7 @@ export class UpdateSourceExtractorRegion {
 export class UpdateSourceExtractorFileState {
   public static readonly type = '[Source Extractor] Update File State';
 
-  constructor(public fileId: string, public changes: Partial<SourceExtractorFileState>) { }
+  constructor(public fileId: string, public changes: Partial<SourceIdentificationFileState>) { }
 }
 
 export class ExtractSources {

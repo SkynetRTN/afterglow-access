@@ -1,0 +1,177 @@
+<div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers" [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
+  ">
+  <app-workbench-viewer-grid (onImageClick)="onImageClick($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-viewer-grid>
+</div>
+
+<span class="resizer"></span>
+<div *ngIf="showConfig$ | async" fxFlex="0 0 auto" class="workbench-config-panel" role="region" aria-labelledby="settings-header"
+  [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
+    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'
+  ">
+  <div class="card workbench-settings-card" style="height: 100%;">
+    <div id="settings-header" class="card-header">
+      <h5>Source Identification</h5>
+    </div>
+
+    <div class="card-body" style="overflow-y: auto;">
+      <div *ngIf="!(activeImageFile$ | async)?.headerLoaded" class="alert alert-info">
+        Select a data file to see options.
+      </div>
+      <div *ngIf="(activeImageFile$ | async)?.headerLoaded">
+        <div class="form-group">
+          <label for="extractionMode">Mode</label>
+          <div>
+            <mat-button-toggle-group name="extractionMode" class="" [value]="(workbenchState$ | async)?.sourceExtractorModeOption" (change)="setModeOption($event)">
+              <mat-button-toggle [value]="SourceExtractorModeOption.MOUSE">
+                <mat-icon>mouse</mat-icon> Manual
+              </mat-button-toggle>
+              <!-- <mat-button-toggle value="{{SourceExtractorModeOption.COORD}}">
+                  <mat-icon>language</mat-icon> Coordinates
+                </mat-button-toggle> -->
+              <mat-button-toggle [value]="SourceExtractorModeOption.AUTO">
+                <mat-icon>brightness_auto</mat-icon> Auto
+              </mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </div>
+        <label></label>
+
+        <div *ngIf="
+            (workbenchState$ | async)?.sourceExtractorModeOption ==
+            SourceExtractorModeOption.MOUSE
+          ">
+          <div class="row pb-1">
+            <div class="col-6">
+              <div class="form-group">
+                <mat-slide-toggle [checked]="(centroidSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)">
+                  Centroid clicks
+                </mat-slide-toggle>
+              </div>
+            </div>
+            <div class="col-6"></div>
+          </div>
+
+          <p>Manually add sources by clicking on them in your image.</p>
+          <p class="pb-2">
+            Tip: Hold
+            <span class="kbd">Alt</span> to click beneath existing markers
+          </p>
+        </div>
+
+        <!-- <div *ngIf="(workbenchState$ | async)?.sourceExtractorModeOption == SourceExtractorModeOption.COORD">
+            <p class="pb-2"> Add sources using either x/y coordinates or right ascension and declination.</p>
+
+            <p>TODO</p>
+
+          </div> -->
+
+        <div *ngIf="
+            (workbenchState$ | async)?.sourceExtractorModeOption ==
+            SourceExtractorModeOption.AUTO
+          ">
+          <p class="pb-2">
+            Add sources by automatically extracting them from your image.
+          </p>
+
+          <div class="row">
+            <div class="col-5">
+              <mat-form-field appearance="outline">
+                <mat-label>Search Region</mat-label>
+                <mat-select [ngModel]="
+                    (activeSourceExtractorFileState$ | async)?.regionOption
+                  " (ngModelChange)="setRegionOption($event)">
+                  <mat-option *ngFor="let regionOption of regionOptions" [value]="regionOption.value">{{ regionOption.label }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="col-4 pt-2">
+              <button mat-raised-button (click)="openSourceExtractionSettings()">
+                Extraction Settings...
+              </button>
+            </div>
+            <div class="col-3 pt-2">
+              <button mat-raised-button (click)="findSources()" [color]="'accent'">
+                Find Sources
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <mat-slide-toggle [checked]="showAllSources$ | async" [labelPosition]="after" (change)="onShowAllSourcesChange($event)">
+          Show Sources From All Files
+        </mat-slide-toggle>
+
+        <div class="mb-3" style="max-height: 200px; overflow: auto;">
+          <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="dataSource" [trackBy]="trackByFn" matSort [matSortDisableClear]="true">
+            <ng-container matColumnDef="select">
+              <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell" [rowIndex]="0" [columnIndex]="0"
+                (focus)="cb?.focus()" [cellInTabOrder]="false">
+                <mat-checkbox #cb [disabled]="!showSelectAll()" (change)="$event ? masterToggle() : null" [checked]="selectionModel.hasValue() && isAllSelected()"
+                  [indeterminate]="
+                    selectionModel.hasValue() && !isAllSelected()
+                  " [tabIndex]="cell.isActiveCell ? 0 : -1">
+                </mat-checkbox>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell" [rowIndex]="rowIndex + 1" [columnIndex]="0"
+                (focus)="cb?.focus()" [cellInTabOrder]="selectionModel.isSelected(row.id)">
+                <mat-checkbox #cb (click)="$event.stopPropagation()" (change)="$event ? toggleSource(row) : null" [checked]="selectionModel.isSelected(row.id)"
+                  [tabIndex]="cell.isActiveCell ? 0 : -1">
+                </mat-checkbox>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="primaryCoord">
+              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="1"
+                [cellInTabOrder]="true">
+                X | RA
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell" [rowIndex]="rowIndex + 1" [columnIndex]="1"
+                [cellInTabOrder]="true">
+                {{ row.posType == SourcePosType.PIXEL ? (row.primaryCoord | number: "0.0-5") : (row.primaryCoord | dms: "0.0-3") }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="secondaryCoord">
+              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="2"
+                [cellInTabOrder]="true">
+                Y | DEC
+              </mat-header-cell>
+              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell" [rowIndex]="rowIndex + 1" [columnIndex]="2"
+                [cellInTabOrder]="true">
+                {{ row.posType == SourcePosType.PIXEL ? (row.secondaryCoord | number: "0.0-5") : (row.secondaryCoord | dms: "0.0-3") }}
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="['select', 'primaryCoord', 'secondaryCoord']"></mat-header-row>
+            <mat-row *matRowDef="
+                let row;
+                columns: ['select', 'primaryCoord', 'secondaryCoord']
+              "></mat-row>
+          </mat-table>
+        </div>
+
+        <div class="button-row">
+          <button mat-raised-button aria-label="Merge Selected Sources" color="primary" (click)="mergeSelectedSources()" [disabled]="selectionModel.selected.length < 2">
+            <mat-icon>merge_type</mat-icon> Merge Selected
+          </button>
+
+        <button mat-raised-button aria-label="Remove Selected Sources" color="warn" (click)="removeSelectedSources()" [disabled]="selectionModel.selected.length == 0">
+          <mat-icon>delete</mat-icon> Remove Selected
+        </button>
+        <button mat-raised-button aria-label="Remove All Sources" color="warn" (click)="removeAllSources()"  [disabled]="dataSource?.sources.length == 0">
+          <mat-icon>delete_sweep</mat-icon> Remove All
+        </button>
+      </div>
+
+        <div *ngIf="selectedSourceActionError" class="alert alert-danger">
+          {{ selectedSourceActionError }}
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+</div>

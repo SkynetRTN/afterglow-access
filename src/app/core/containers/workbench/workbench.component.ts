@@ -30,8 +30,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private FILE_INFO_ROUTE = '/workbench/file-info';
   private PLOTTER_ROUTE = '/workbench/plotter';
   private SONIFIER_ROUTE = '/workbench/sonifier';
-  private SOURCE_EXTRACTOR_ROUTE = '/workbench/source-extractor';
+  private SOURCE_IDENTIFICATION_ROUTE = '/workbench/source-identification';
   private FIELD_CAL_ROUTE = '/workbench/field-cal';
+  private PHOTOMETRY_ROUTE = '/workbench/photometry';
   private IMAGE_ARITHMETIC_ROUTE = '/workbench/image-calculator';
   private ALIGNER_ROUTE = '/workbench/aligner';
   private STACKER_ROUTE = '/workbench/stacker';
@@ -107,7 +108,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.SOURCE_EXTRACTOR_ROUTE]);
+      this.router. navigate([this.SOURCE_IDENTIFICATION_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Photometry'));
 

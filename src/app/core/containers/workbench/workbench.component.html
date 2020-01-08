@@ -91,11 +91,11 @@
             <mat-icon>place</mat-icon>
           </div>
         </button>
-        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(PLOTTER_ROUTE, 'Plotting')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
-          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Plotting')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(PLOTTER_ROUTE, 'Plotter')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Plotter')" [attr.aria-selected]="(showConfig$ | async) && router.isActive(PLOTTER_ROUTE)"
           (click)="onWorkbenchNavClick(PLOTTER_ROUTE)">
           <div class="icon-wrapper">
-            <mat-icon>insert_chart</mat-icon>
+            <mat-icon>straighten</mat-icon>
           </div>
         </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SONIFIER_ROUTE, 'Sonification')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SONIFIER_ROUTE)"
@@ -105,18 +105,26 @@
             <mat-icon>audiotrack</mat-icon>
           </div>
         </button>
-        <!-- <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)"
+       
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SOURCE_IDENTIFICATION_ROUTE, 'Source Identification')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SOURCE_IDENTIFICATION_ROUTE)"
+          [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Source Identification')"
+          [attr.aria-selected]="(showConfig$ | async) && router.isActive(SOURCE_IDENTIFICATION_ROUTE)" (click)="onWorkbenchNavClick(SOURCE_IDENTIFICATION_ROUTE)">
+          <div class="icon-wrapper">
+            <mat-icon>star_border</mat-icon>
+          </div>
+        </button>
+         <!-- <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)"
           [attr.aria-label]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')"
           [attr.aria-selected]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)" (click)="onWorkbenchNavClick(FIELD_CAL_ROUTE)">
           <div class="icon-wrapper">
             <mat-icon>flare</mat-icon>
           </div>
         </button> -->
-        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(SOURCE_EXTRACTOR_ROUTE, 'Photometry')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)"
+        <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(PHOTOMETRY_ROUTE, 'Photometry')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(PHOTOMETRY_ROUTE)"
           [attr.aria-label]="getToolbarTooltip(VIEWER_ROUTE, 'Photometry')"
-          [attr.aria-selected]="(showConfig$ | async) && router.isActive(SOURCE_EXTRACTOR_ROUTE)" (click)="onWorkbenchNavClick(SOURCE_EXTRACTOR_ROUTE)">
+          [attr.aria-selected]="(showConfig$ | async) && router.isActive(PHOTOMETRY_ROUTE)" (click)="onWorkbenchNavClick(PHOTOMETRY_ROUTE)">
           <div class="icon-wrapper">
-            <mat-icon>star_border</mat-icon>
+            <mat-icon>wb_incandescent</mat-icon>
           </div>
         </button>
         <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(IMAGE_ARITHMETIC_ROUTE, 'Image Calculator')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(IMAGE_ARITHMETIC_ROUTE)"

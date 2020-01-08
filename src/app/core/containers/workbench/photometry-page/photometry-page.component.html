@@ -35,7 +35,7 @@
         *ngIf="!(activeImageFile$ | async)?.headerLoaded"
         class="alert alert-info"
       >
-        Select a data file to see source extractor options.
+        Select a data file to see photometry options.
       </div>
       <div *ngIf="(activeImageFile$ | async)?.headerLoaded">
         <div class="form-group">
@@ -82,7 +82,7 @@
             <div class="col-6"></div>
           </div>
 
-          <p>Manually add sources by clicking on them in your image.</p>
+          <p>Manually photometer sources by clicking on them in your image.</p>
           <p class="pb-2">
             Tip: Hold <span class="kbd">Alt</span> to click beneath existing
             markers

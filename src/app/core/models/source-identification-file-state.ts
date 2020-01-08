@@ -1,15 +1,15 @@
 import { Region } from './region';
 import { Source } from './source';
 
-export enum SourceExtractorRegionOption {
+export enum SourceIdentificationRegionOption {
   ENTIRE_IMAGE,
   VIEWPORT,
   SONIFIER_REGION,
 }
 
-export interface SourceExtractorFileState {
+export interface SourceIdentificationFileState {
   sourceExtractionJobId: string;
-  regionOption: SourceExtractorRegionOption,
+  regionOption: SourceIdentificationRegionOption,
   region: Region,
   selectedSourceIds: Array<string>
 }

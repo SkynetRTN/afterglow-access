@@ -17,6 +17,7 @@ import { Select, Store as StoreNxgs, Store } from '@ngxs/store';
 import { Observable, Subscription, combineLatest } from "rxjs";
 import {
   map,
+  tap,
   filter,
   catchError,
   mergeMap,
@@ -32,10 +33,10 @@ import {
 } from "../../../../data-files/models/data-file";
 import { DmsPipe } from "../../../../pipes/dms.pipe";
 import {
-  SourceExtractorFileState,
-  SourceExtractorRegionOption
-} from "../../../models/source-extractor-file-state";
-import { SourceExtractorModeOption } from "../../../models/source-extractor-mode-option";
+  SourceIdentificationFileState,
+  SourceIdentificationRegionOption
+} from "../../../models/source-identification-file-state";
+import { SourceIdentificationModeOption } from "../../../models/source-identification-mode-option";
 import { PhotSettingsDialogComponent } from "../../../components/phot-settings-dialog/phot-settings-dialog.component";
 import { SourceExtractionSettingsDialogComponent } from "../../../components/source-extraction-settings-dialog/source-extraction-settings-dialog.component";
 import { Source, PosType } from "../../../models/source";
@@ -105,11 +106,11 @@ export class SourcesDataSource implements DataSource<Source> {
 }
 
 @Component({
-  selector: "app-source-extractor-page",
-  templateUrl: "./source-extractor-page.component.html",
-  styleUrls: ["./source-extractor-page.component.css"]
+  selector: "app-source-identification-page",
+  templateUrl: "./source-identification-page.component.html",
+  styleUrls: ["./source-identification-page.component.css"]
 })
-export class SourceExtractorPageComponent
+export class SourceIdentificationPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
@@ -127,17 +128,17 @@ export class SourceExtractorPageComponent
   >;
 
   showConfig$: Observable<boolean>;
-  activeSourceExtractorFileState$: Observable<SourceExtractorFileState>;
+  activeSourceExtractorFileState$: Observable<SourceIdentificationFileState>;
   workbenchState$: Observable<WorkbenchStateModel>;
   centroidSettings$: Observable<CentroidSettings>;
   region$: Observable<Region> = null;
   filteredSources$: Observable<Source[]>;
 
   activeImageFile: ImageFile;
-  activeSourceExtractorFileState: SourceExtractorFileState;
+  activeSourceExtractorFileState: SourceIdentificationFileState;
   workbenchState: WorkbenchStateModel;
-  SourceExtractorModeOption = SourceExtractorModeOption;
-  SourceExtractorRegionOption = SourceExtractorRegionOption;
+  SourceExtractorModeOption = SourceIdentificationModeOption;
+  SourceExtractorRegionOption = SourceIdentificationRegionOption;
   subs: Subscription[] = [];
   pixelCoordView: string = "pixel";
   NUMBER_FORMAT: (v: any) => any = (v: number) => (v ? v : "N/A");
@@ -150,11 +151,11 @@ export class SourceExtractorPageComponent
   selectionModel = new SelectionModel<string>(true, []);
 
   private regionOptions = [
-    { label: "Entire Image", value: SourceExtractorRegionOption.ENTIRE_IMAGE },
-    { label: "Current View", value: SourceExtractorRegionOption.VIEWPORT },
+    { label: "Entire Image", value: SourceIdentificationRegionOption.ENTIRE_IMAGE },
+    { label: "Current View", value: SourceIdentificationRegionOption.VIEWPORT },
     {
       label: "Sonification Region",
-      value: SourceExtractorRegionOption.SONIFIER_REGION
+      value: SourceIdentificationRegionOption.SONIFIER_REGION
     }
   ];
 
@@ -184,7 +185,7 @@ export class SourceExtractorPageComponent
     );
     this.showAllSources$ = store.select(WorkbenchState.getShowAllSources);
 
-    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile).pipe(tap(f => console.log('active image file: ', f)));
     
 
     this.activeImageFileState$ = store.select(
@@ -293,24 +294,6 @@ export class SourceExtractorPageComponent
     );
   }
 
-  openPhotSettings() {
-    let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
-      width: "600px",
-      data: { ...this.workbenchState.photSettings }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.store.dispatch(
-          new UpdatePhotSettings(result.phot)
-        );
-        this.store.dispatch(
-          new UpdateCentroidSettings(result.centroid)
-        );
-      }
-    });
-  }
-
   openSourceExtractionSettings() {
     let dialogRef = this.dialog.open(SourceExtractionSettingsDialogComponent, {
       width: "500px",
@@ -410,7 +393,7 @@ export class SourceExtractorPageComponent
     if ($event.hitImage) {
       if (
         this.workbenchState.sourceExtractorModeOption ==
-          SourceExtractorModeOption.MOUSE &&
+          SourceIdentificationModeOption.MOUSE &&
         (this.selectedSources.length == 0 || $event.mouseEvent.altKey)
       ) {
         let primaryCoord = $event.imageX;
@@ -462,6 +445,12 @@ export class SourceExtractorPageComponent
   removeSelectedSources() {
     this.store.dispatch(
       new RemoveSources(this.selectedSources)
+    );
+  }
+
+  removeAllSources() {
+    this.store.dispatch(
+      new RemoveSources(this.dataSource.sources)
     );
   }
 
@@ -584,110 +573,6 @@ export class SourceExtractorPageComponent
     //       skyPmPosAngle: null
     //     }
     //   }
-  }
-
-  photometerSelectedSources() {
-    let job: PhotometryJob = {
-      type: JobType.Photometry,
-      id: null,
-      file_ids: [].map(file => parseInt(file.id)),
-      sources: this.selectedSources.map((source, index) => {
-        let x = null;
-        let y = null;
-        let pmPixel = null;
-        let pmPosAnglePixel = null;
-        let raHours = null;
-        let decDegs = null;
-        let pmSky = null;
-        let pmPosAngleSky = null;
-
-        if (source.posType == PosType.PIXEL) {
-          x = source.primaryCoord;
-          y = source.secondaryCoord;
-          pmPixel = source.pm;
-          pmPosAnglePixel = source.pmPosAngle;
-        } else {
-          raHours = source.primaryCoord;
-          decDegs = source.secondaryCoord;
-          pmSky = source.pm;
-          if (pmSky) pmSky /= 3600.0;
-          pmPosAngleSky = source.pmPosAngle;
-        }
-        return {
-          id: source.id,
-          pm_epoch: source.pmEpoch ? source.pmEpoch.toISOString() : null,
-          x: x,
-          y: y,
-          pm_pixel: pmPixel,
-          pm_pos_angle_pixel: pmPosAnglePixel,
-          ra_hours: raHours,
-          dec_degs: decDegs,
-          pm_sky: pmSky,
-          pm_pos_angle_sky: pmPosAngleSky
-        } as Astrometry & SourceId;
-      }),
-      settings: this.workbenchState.photSettings
-    };
-
-    this.storeNxgs.dispatch(new CreateJob(job, 1));
-  }
-
-  downloadPhotometry(row: { job: PhotometryJob; result: PhotometryJobResult }) {
-    let data = this.papa.unparse(
-      row.result.data
-        .map(d => {
-          let time = d.time
-            ? moment.utc(d.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate()
-            : null;
-          let pmEpoch = d.pm_epoch
-            ? moment.utc(d.pm_epoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate()
-            : null;
-          // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
-          let jd = time
-            ? datetimeToJd(
-                time.getUTCFullYear(),
-                time.getUTCMonth() + 1,
-                time.getUTCDate(),
-                time.getUTCHours(),
-                time.getUTCMinutes(),
-                time.getUTCSeconds()
-              )
-            : null;
-          return {
-            ...d,
-            time: time
-              ? this.datePipe.transform(time, "yyyy-MM-dd HH:mm:ss.SSS")
-              : null,
-            pm_epoch: pmEpoch
-              ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS")
-              : null,
-            jd: jd,
-            mjd: jd ? jdToMjd(jd) : null
-          };
-        })
-        // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
-    );
-    var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
-    saveAs(blob, `afterglow_photometry_${row.job.id}.csv`);
-  }
-
-  setSourceProperMotion(source: Source) {
-    // let dialogRef = this.dialog.open(ProperMotionDialogComponent, {
-    //   width: '600px',
-    //   data: { source: { ...source } }
-    // });
-    // dialogRef.afterClosed().subscribe(result => {
-    //   if (result) {
-    //     // this.store.dispatch(new sourceExtractorActions.UpdateSource({
-    //     //   file: this.activeImageFile, sourceId: source.id, changes: {
-    //     //     skyPm: result.skyPm,
-    //     //     skyPmPosAngle: result.skyPmPosAngle,
-    //     //     pixelPm: result.pixelPm,
-    //     //     pixelPmPosAngle: result.pixelPmPosAngle
-    //     //   }
-    //     // }));
-    //   }
-    // });
   }
 
   showSelectAll() {

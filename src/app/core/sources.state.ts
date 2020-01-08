@@ -84,6 +84,7 @@ export class SourcesState {
     setState((state: SourcesStateModel) => {
       let idsToRemove = sources.map(m => m.id);
       state.ids = state.ids.filter(id => !idsToRemove.includes(id));
+      state.selectedSourceIds = state.selectedSourceIds.filter(id => !idsToRemove.includes(id));
       sources.forEach(marker => {
         if(marker.id in state.entities) delete state.entities[marker.id];
       })

@@ -1,6 +1,6 @@
-import { State, Action, Actions, Selector, StateContext, ofActionDispatched } from '@ngxs/store';
+import { State, Action, Actions, Selector, StateContext, ofActionDispatched, ofActionCompleted, ofActionSuccessful, ofActionErrored } from '@ngxs/store';
 import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap } from 'rxjs/operators';
+import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip } from 'rxjs/operators';
 import { of, merge, interval, Observable } from "rxjs";
 
 import { Job } from './models/job';
@@ -48,50 +48,69 @@ export class JobsState {
 
   @Action(CreateJob)
   @ImmutableContext()
-  public createJob({ setState, dispatch }: StateContext<JobsStateModel>, { job, autoUpdateInterval, correlationId }: CreateJob) {
-    return this.jobService.createJob(job).pipe(
-      tap(result => {
+  public createJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, createJobAction: CreateJob) {
+    return this.jobService.createJob(createJobAction.job).pipe(
+      tap(job => {
+        createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
-          state.entities[result.id] = { job: result, result: null };
-          if (!state.ids.includes(result.id)) {
-            state.ids.push(result.id);
+          state.entities[job.id] = { job: job, result: null };
+          if (!state.ids.includes(job.id)) {
+            state.ids.push(job.id);
           }
           return state;
         });
       }),
-      flatMap(result => {
-        let rtn = [dispatch(new CreateJobSuccess(result, correlationId))];
+      flatMap(job => {
+        dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
+        if (!createJobAction.autoUpdateInterval) createJobAction.autoUpdateInterval = 2500;
 
-        if (autoUpdateInterval) {
-          let stop$ = merge(
-            this.actions$.pipe(
-              ofActionDispatched(UpdateJobSuccess),
-              filter<UpdateJobSuccess>(a => {
-                return a.job.state.status == "canceled" ||
-                  a.job.state.status == "completed";
-              })
-            ),
-            this.actions$.pipe(
-              ofActionDispatched(StopAutoJobUpdate),
-              filter<StopAutoJobUpdate>(a => a.jobId == result.id)),
-            this.actions$.pipe(
-              ofActionDispatched(UpdateJobFail),
-              filter<UpdateJobFail>(a => a.job.id == result.id))
-          ).pipe(
-            take(1)
+        let jobCompleted$ = this.actions$.pipe(
+          ofActionSuccessful(UpdateJob),
+          filter<UpdateJob>(a => {
+            return a.job.id == job.id && ["canceled", "completed"].includes(getState().entities[a.job.id].job.state.status)
+          }),
+        );
+
+        let stop$ = merge(
+          jobCompleted$,
+          this.actions$.pipe(
+            ofActionDispatched(StopAutoJobUpdate),
+            filter<StopAutoJobUpdate>(a => a.jobId == job.id)
+          ),
+          this.actions$.pipe(
+            ofActionErrored(UpdateJob),
+            filter<UpdateJobFail>(a => a.job.id == job.id),
+            skip(5)
           )
+        )
+        .pipe(
+          take(1)
+        )
 
-          let updater$ = interval(autoUpdateInterval).pipe(
-            takeUntil(stop$),
-            flatMap(v => dispatch(new UpdateJob(result)))
-          );
-          rtn.push(updater$);
-        }
-        return merge(...rtn);
+        interval(createJobAction.autoUpdateInterval).pipe(
+          takeUntil(stop$),
+          tap(v => dispatch(new UpdateJob(job, createJobAction.correlationId)))
+        ).subscribe();
 
-      }),
-      catchError(err => {
-        return dispatch(new CreateJobFail(job, err, correlationId));
+
+        return jobCompleted$.pipe(
+          take(1),
+          flatMap(a => {
+            if(getState().entities[a.job.id].job.state.status != 'completed') return of();
+
+            return this.jobService.getJobResult(job).pipe(
+              tap(value => {
+                setState((state: JobsStateModel) => {
+                  state.entities[job.id].result = value;
+                  return state;
+                });
+              })
+            );
+            
+          })
+        )
+
+
       })
     );
   }
@@ -105,21 +124,12 @@ export class JobsState {
           state.entities[job.id].job = value;
           return state;
         });
-      }),
-      flatMap(value => {
-        let rtn = [dispatch(new UpdateJobSuccess(value, correlationId))];
-        if (value.state.status == 'completed') rtn.push(dispatch(new UpdateJobResult(value, correlationId)));
-        return merge(...rtn);
-
-      }),
-      catchError(err => {
-        return dispatch(new UpdateJobFail(job, err, correlationId));
       })
     );
   }
 
 
-  @Action(UpdateJob)
+  @Action(UpdateJobResult)
   @ImmutableContext()
   public updateJobResult({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJobResult) {
     return this.jobService.getJobResult(job).pipe(

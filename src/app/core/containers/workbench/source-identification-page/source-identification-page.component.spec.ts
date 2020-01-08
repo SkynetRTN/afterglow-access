@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SourceExtractorPageComponent } from './source-extractor-page.component';
+import { SourceIdentificationPageComponent } from './source-identification-page.component';
 
 describe('SourceExtractorPageComponent', () => {
-  let component: SourceExtractorPageComponent;
-  let fixture: ComponentFixture<SourceExtractorPageComponent>;
+  let component: SourceIdentificationPageComponent;
+  let fixture: ComponentFixture<SourceIdentificationPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SourceExtractorPageComponent ]
+      declarations: [ SourceIdentificationPageComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SourceExtractorPageComponent);
+    fixture = TestBed.createComponent(SourceIdentificationPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
