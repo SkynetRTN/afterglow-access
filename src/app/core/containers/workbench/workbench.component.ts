@@ -20,8 +20,6 @@ import { Viewer } from '../../models/viewer';
 import { DataProvider } from '../../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { DataProvidersState } from '../../../data-providers/data-providers.state';
-import { BatchImportJob, BatchImportJobResult } from 'src/app/jobs/models/batch-import';
-import { JobEntity, JobsState } from '../../../jobs/jobs.state';
 
 
 
