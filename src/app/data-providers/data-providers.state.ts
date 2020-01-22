@@ -24,6 +24,7 @@ import { Navigate } from '@ngxs/router-plugin';
 import { SetViewerFile, SelectDataFile } from '../core/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
+import { LoadLibrary } from '../data-files/data-files.actions';
 
 export interface DataProvidersStateModel {
   dataProvidersLoaded: boolean;
@@ -343,7 +344,18 @@ export class DataProvidersState {
       }),
       filter(action => action.errors.length == 0),
       flatMap(action => {
-        return dispatch([new Navigate(['/workbench']), new SelectDataFile(action.fileIds[0])]);
+         dispatch(new Navigate(['/workbench']));
+         dispatch(new LoadLibrary());
+         return this.actions$.pipe(
+           ofActionCompleted(LoadLibrary),
+           tap(v => console.log("LOAD LIBRARY COMPLETED", v)),
+           take(1),
+           filter(a => a.result.successful),
+           tap(v => console.log("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")),
+           tap(v => {
+            dispatch(new SelectDataFile(action.fileIds[0]));
+           })
+         )
       })
     )
 

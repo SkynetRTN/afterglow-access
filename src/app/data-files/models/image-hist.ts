@@ -130,6 +130,8 @@ export function calcLevels(
   let blackComplete = false;
   let whiteComplete = false;
   let peakLevel, backgroundLevel;
+
+  console.log(hist, minPixCount, maxPixCount, total);
   for (let i = 0; i < hist.data.length-1; i++) {
     x0 += hist.data[i];
     let x1 = x0 + hist.data[i+1];

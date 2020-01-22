@@ -26,9 +26,9 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   stretchModeOptions = [
     { label: "Linear", value: StretchMode.Linear },
-    { label: "Log", value: StretchMode.Log },
+    { label: "Logarithmic", value: StretchMode.Log },
     { label: "Square Root", value: StretchMode.SquareRoot },
-    { label: "ArcSinh", value: StretchMode.ArcSinh }
+    { label: "Hyperbolic Arcsine", value: StretchMode.ArcSinh }
   ];
 
   colorMaps = [grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap];

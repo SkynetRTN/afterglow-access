@@ -37,7 +37,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   math = Math;
   private lastHistData;
   private yMax = 0;
-  public logarithmicX: boolean = false;
+  public logarithmicX: boolean = true;
   public logarithmicY: boolean = true;
 
   public data: Array<Plotly.Data> = [];
@@ -62,8 +62,47 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   };
   public theme: PlotlyTheme;
 
+  
+
+  public logXButton = {
+    name: 'Toggle Log-X',
+    click: (gd) => {
+      this.logarithmicX = !this.logarithmicX;
+      this.updateChart();
+      this._changeDetectorRef.detectChanges();
+    },
+    icon: {
+      width: 24,
+      height: 24,
+      path: 'M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z',
+    }
+  }
+
+  public logYButton = {
+    name: 'Toggle Log-Y',
+    click: (gd) => {
+      this.logarithmicY = !this.logarithmicY;
+      this.updateChart();
+      this._changeDetectorRef.detectChanges();
+      
+    },
+    icon: {
+      width: 24,
+      height: 24,
+      path: 'M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z',
+      transform: 'rotate(90 12 12)'
+    }
+  }
+
+  // https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
+
   public config: Partial<Plotly.Config> = {
-    scrollZoom: true
+    scrollZoom: true,
+    displaylogo: false,
+    modeBarButtons: [
+      [this.logXButton, this.logYButton],
+      ['toImage', 'zoomIn2d', 'zoomOut2d', 'autoScale2d',]
+    ]
   };
 
   // private backgroundLineData = {
@@ -167,6 +206,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   onXAxisTypeChange($event: MatCheckboxChange) {
     this.logarithmicX = $event.checked;
+    
     this.updateChart();
   }
 

@@ -23,6 +23,7 @@ export function normalize(pixels: Float32Array | Uint32Array, hist: ImageHist, n
   let normalizedPixels = new Uint32Array(pixels.length);
 
   let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+  console.log("LEVELS:", levels);
   let backgroundLevel = levels.backgroundLevel;
   let peakLevel = levels.peakLevel;
 

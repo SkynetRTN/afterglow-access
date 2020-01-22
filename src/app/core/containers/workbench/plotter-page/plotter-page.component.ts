@@ -17,7 +17,8 @@ import {
   ImageFile,
   DataFile,
   getWidth,
-  getHeight
+  getHeight,
+  getDegsPerPixel
 } from "../../../../data-files/models/data-file";
 import { Normalization } from "../../../models/normalization";
 import { PlotterFileState } from "../../../models/plotter-file-state";
@@ -136,6 +137,11 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
           pixelSeparation = Math.sqrt(
             Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
           );
+
+          if(getDegsPerPixel(imageFile) != undefined)  {
+            skySeparation = pixelSeparation*getDegsPerPixel(imageFile)*3600;
+          }
+
         }
 
         if (
@@ -194,9 +200,14 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
         let lineMeasureStart = plotter.lineMeasureStart;
         let lineMeasureEnd = plotter.lineMeasureEnd;
 
-        if (!lineMeasureStart || !lineMeasureEnd) return [[]];
+        if (!lineMeasureStart || !lineMeasureEnd) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
 
-        if (!file) return [[]];
+        if (!file) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+        }
 
         let startPrimaryCoord = lineMeasureStart.primaryCoord;
         let startSecondaryCoord = lineMeasureStart.secondaryCoord;
@@ -211,7 +222,10 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
         let y2 = endSecondaryCoord;
 
         if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-          if (!file.headerLoaded || !file.wcs.isValid()) return [[]];
+          if (!file.headerLoaded || !file.wcs.isValid()) {
+            this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+            return;
+          }
           let wcs = file.wcs;
           if (startPosType == PosType.SKY) {
             let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);

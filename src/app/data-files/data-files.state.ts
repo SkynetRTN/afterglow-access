@@ -97,13 +97,7 @@ export class DataFilesState {
       return state;
     });
 
-    const nextReq$ = this.actions$.pipe(
-      ofActionDispatched(LoadLibrary),
-      skip(1)
-    );
-
     return this.dataFileService.getFiles().pipe(
-      takeUntil(nextReq$),
       tap(files => {
         setState((state: DataFilesStateModel) => {
           let fileIds = files.map(file => file.id);

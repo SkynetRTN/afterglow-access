@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en" datatype="plaintext" original="ng2.template">
     <body>
       <trans-unit id="123caf0019c1de143218fe7813a392dcf20e2850" datatype="html">
         <source>Login Services</source>
-        <target>Servicios de Iniciar Sesión</target>
+        <target state="needs-translation"/>
         <context-group purpose="location">
           <context context-type="sourcefile">app/auth/containers/login-page/login-page.component.html</context>
           <context context-type="linenumber">9</context>
@@ -12,7 +12,7 @@
       </trans-unit>
       <trans-unit id="ab49d5ad79dfd8e6e696e6b3525382d6526a6cd3" datatype="html">
         <source>Login using one of the following services.</source>
-        <target>Inicie sesión con uno de los siguientes servicios</target>
+        <target state="needs-translation"/>
         <context-group purpose="location">
           <context context-type="sourcefile">app/auth/containers/login-page/login-page.component.html</context>
           <context context-type="linenumber">11</context>
@@ -20,7 +20,7 @@
       </trans-unit>
       <trans-unit id="6765b4c916060f6bc42d9bb69e80377dbcb5e4e9" datatype="html">
         <source>Login</source>
-        <target>Iniciar Sesión</target>
+        <target state="needs-translation"/>
         <context-group purpose="location">
           <context context-type="sourcefile">app/auth/components/login-form.component.ts</context>
           <context context-type="linenumber">3</context>
@@ -32,7 +32,7 @@
       </trans-unit>
       <trans-unit id="08c74dc9762957593b91f6eb5d65efdfc975bf48" datatype="html">
         <source>Username</source>
-        <target>nombre de usuario</target>
+        <target state="needs-translation"/>
         <context-group purpose="location">
           <context context-type="sourcefile">app/auth/components/login-form.component.ts</context>
           <context context-type="linenumber">8</context>
@@ -40,7 +40,7 @@
       </trans-unit>
       <trans-unit id="c32ef07f8803a223a83ed17024b38e8d82292407" datatype="html">
         <source>Password</source>
-        <target>contraseña</target>
+        <target state="needs-translation"/>
         <context-group purpose="location">
           <context context-type="sourcefile">app/auth/components/login-form.component.ts</context>
           <context context-type="linenumber">14</context>
