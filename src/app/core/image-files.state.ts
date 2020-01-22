@@ -1,30 +1,20 @@
-import { State, Action, Selector, StateContext, Store, Actions, ofActionDispatched, ofActionSuccessful, ofActionErrored } from '@ngxs/store';
-import { merge } from "rxjs";
-import { flatMap, filter, takeUntil, take, tap } from 'rxjs/operators';
+import { State, Action, Selector, StateContext, Store, Actions} from '@ngxs/store';
 import { Point, Matrix, Rectangle } from 'paper';
-import { RenormalizeImageFile, NormalizeImageTile, UpdateNormalizer, AddRegionToHistory, SetRegionMode, UpdateSonifierRegion, UndoRegionSelection, RedoRegionSelection, CenterRegionInViewport, UpdateSonificationUri, ExtractSources, ExtractSourcesFail, UpdateSourceExtractorRegion, SetSourceExtractorRegion, UpdateSourceExtractorFileState, ResetImageTransform, SetViewportTransform, ZoomTo, ZoomBy, UpdateCurrentViewportSize, SetImageTransform, MoveBy, InitializeImageFileState, RotateBy, Flip, StartLine, UpdateLine, UpdatePlotterFileState, UpdateSonifierFileState, ClearRegionHistory, SetProgressLine } from './image-files.actions';
+import { RenormalizeImageFile, NormalizeImageTile, UpdateNormalizer, AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, CenterRegionInViewport, UpdatePhotometryFileState, ResetImageTransform, SetViewportTransform, ZoomTo, ZoomBy, UpdateCurrentViewportSize, SetImageTransform, MoveBy, InitializeImageFileState, RotateBy, Flip, StartLine, UpdateLine, UpdatePlotterFileState, UpdateSonifierFileState, ClearRegionHistory, SetProgressLine, SonificationRegionChanged } from './image-files.actions';
 import { ImageFileState } from './models/image-file-state';
-import { LoadLibrarySuccess, RemoveDataFileSuccess, InitImageTiles, LoadDataFileHdrSuccess } from '../data-files/data-files.actions';
+import { RemoveDataFileSuccess, InitImageTiles, LoadDataFileHdrSuccess } from '../data-files/data-files.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { DataFileType } from '../data-files/models/data-file-type';
 import { grayColorMap } from './models/color-map';
 import { StretchMode } from './models/stretch-mode';
 import { SonifierRegionMode } from './models/sonifier-file-state';
-import { SourceIdentificationRegionOption } from './models/source-identification-file-state';
 import { ImageTile } from '../data-files/models/image-tile';
 import { getYTileDim, getHeight, getXTileDim, getWidth, ImageFile } from '../data-files/models/data-file';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
 import { normalize } from './models/pixel-normalizer';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
-import { SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
-import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CreateJob, CreateJobFail, JobCompleted, UpdateJobSuccess } from '../jobs/jobs.actions';
-import { JobActionHandler } from '../jobs/lib/job-action-handler';
-import { PosType, Source } from './models/source';
 import { getViewportRegion, getScale } from './models/transformation';
-import { AddSources } from './sources.actions';
-import { JobsState } from '../jobs/jobs.state';
 
 export interface ImageFilesStateModel {
   ids: string[];
@@ -95,7 +85,6 @@ export class ImageFilesState {
           },
           sonifier: {
             sonificationUri: null,
-            region: null,
             regionHistory: [],
             regionHistoryIndex: null,
             regionHistoryInitialized: false,
@@ -105,9 +94,7 @@ export class ImageFilesState {
             toneCount: 22,
             progressLine: null,
           },
-          sourceExtractor: {
-            regionOption: SourceIdentificationRegionOption.VIEWPORT,
-            region: null,
+          photometry: {
             selectedSourceIds: [],
             sourceExtractionJobId: null,
           },
@@ -235,12 +222,12 @@ export class ImageFilesState {
 
     if (dataFile.type == DataFileType.IMAGE) {
       let sonifierState = state.entities[dataFile.id].sonifier;
-      let sourceExtractorState = state.entities[dataFile.id].sourceExtractor;
+      let sourceExtractorState = state.entities[dataFile.id].photometry;
       //add effects for image file selection
       let imageFile = dataFile as ImageFile;
       dispatch(new InitImageTiles(fileId));
 
-      if (sonifierState.regionHistoryInitialized) {
+      if (!sonifierState.regionHistoryInitialized) {
         dispatch(new AddRegionToHistory(
           imageFile.id,
           {
@@ -256,82 +243,37 @@ export class ImageFilesState {
 
   }
 
-  @Action(SetRegionMode)
-  @ImmutableContext()
-  public setRegionMode({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, mode }: SetRegionMode) {
-    setState((state: ImageFilesStateModel) => {
-      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      state.entities[fileId].sonifier.regionMode = mode;
-      return state;
-    });
-
-    dispatch(new UpdateSonifierRegion(fileId));
-  }
 
   @Action([AddRegionToHistory, UndoRegionSelection, RedoRegionSelection])
   @ImmutableContext()
   public regionHistoryChanged({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: AddRegionToHistory | UndoRegionSelection | RedoRegionSelection) {
     let state = getState();
     if (state.entities[fileId].sonifier.regionMode == SonifierRegionMode.CUSTOM) {
-      dispatch(new UpdateSonifierRegion(fileId));
+      dispatch(new SonificationRegionChanged(fileId));
     }
   }
 
-  @Action(UpdateSonifierRegion)
+  @Action(SonificationRegionChanged)
   @ImmutableContext()
-  public updateSonifierRegion({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: UpdateSonifierRegion) {
-    setState((state: ImageFilesStateModel) => {
-      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonifier;
-      let transformationState = state.entities[fileId].transformation;
-      let sourceExtractorState = state.entities[fileId].sourceExtractor;
+  public sonificationRegionChanged({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: SonificationRegionChanged) {
+    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+    let imageFile = dataFiles[fileId] as ImageFile;
+    let sonifierState = getState().entities[fileId].sonifier;
+    let transformationState = getState().entities[fileId].transformation;
+    let sourceExtractorState = getState().entities[fileId].photometry;
 
-      if (
-        sonifierState.regionMode == SonifierRegionMode.CUSTOM &&
-        sonifierState.viewportSync &&
-        sonifierState.region
-      ) {
-        dispatch(
-          new CenterRegionInViewport(
-            fileId,
-            sonifierState.region,
-            transformationState.viewportSize)
-        );
-      }
-
-      if (
-        sourceExtractorState.regionOption ==
-        SourceIdentificationRegionOption.SONIFIER_REGION
-      )
-        dispatch(
-          new UpdateSourceExtractorRegion(fileId)
-        );
-
-
-      if (sonifierState.regionMode == SonifierRegionMode.VIEWPORT) {
-        sonifierState.region = getViewportRegion(state.entities[fileId].transformation, imageFile);
-      }
-      else if (sonifierState.regionMode == SonifierRegionMode.CUSTOM) {
-        if (sonifierState.regionHistoryIndex < sonifierState.regionHistory.length) {
-          sonifierState.region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
-        }
-      }
-
-      if (sonifierState.region) {
-        let sonificationUri = this.afterglowDataFileService.getSonificationUri(
+    if (
+      sonifierState.regionMode == SonifierRegionMode.CUSTOM &&
+      sonifierState.viewportSync
+    ) {
+      let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
+      dispatch(
+        new CenterRegionInViewport(
           fileId,
-          sonifierState.region,
-          sonifierState.duration,
-          sonifierState.toneCount
-        );
-        dispatch(new UpdateSonificationUri(fileId, sonificationUri));
-      }
-
-
-      return state;
-    });
+          region,
+          transformationState.viewportSize)
+      );
+    }
 
   }
 
@@ -347,16 +289,7 @@ export class ImageFilesState {
         ...changes
       }
 
-      if (sonifierState.region) {
-        let sonificationUri = this.afterglowDataFileService.getSonificationUri(
-          fileId,
-          sonifierState.region,
-          sonifierState.duration,
-          sonifierState.toneCount
-        );
-        dispatch(new UpdateSonificationUri(fileId, sonificationUri));
-      }
-
+      dispatch(new SonificationRegionChanged(fileId));
 
       return state;
     });
@@ -392,7 +325,6 @@ export class ImageFilesState {
       let sonifierState = state.entities[fileId].sonifier;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == 0) return state;
       sonifierState.regionHistoryIndex--;
-      sonifierState.region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
       return state;
     });
 
@@ -405,9 +337,8 @@ export class ImageFilesState {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
       let sonifierState = state.entities[fileId].sonifier;
-      if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == 0) return state;
+      if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == sonifierState.regionHistory.length-1) return state;
       sonifierState.regionHistoryIndex++;
-      sonifierState.region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
       return state;
     });
 
@@ -421,24 +352,11 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let sonifierState = state.entities[fileId].sonifier;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == (sonifierState.regionHistory.length - 1)) return state;
-      sonifierState.region = null;
       sonifierState.regionHistoryIndex = null
       sonifierState.regionHistory = [];
       sonifierState.regionHistoryInitialized = false;
       return state;
     });
-  }
-
-
-
-  @Action(UpdateSonificationUri)
-  @ImmutableContext()
-  public updateSonifierUri({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, uri }: UpdateSonificationUri) {
-    setState((state: ImageFilesStateModel) => {
-      let sonifierState = state.entities[fileId].sonifier;
-      sonifierState.sonificationUri = uri;
-      return state;
-    })
   }
 
   @Action(SetProgressLine)
@@ -451,143 +369,69 @@ export class ImageFilesState {
     })
   }
 
-  /* Source Extraction */
-  @Action(ExtractSources)
+  @Action(UpdatePhotometryFileState)
   @ImmutableContext()
-  public extractSources({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, settings }: ExtractSources) {
-    let state = getState();
-    let sourceExtractorState = state.entities[fileId].sourceExtractor;
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    if (sourceExtractorState.regionOption != SourceIdentificationRegionOption.ENTIRE_IMAGE) {
-      settings = {
-        ...settings,
-        x: Math.min(getWidth(imageFile), Math.max(0, sourceExtractorState.region.x + 1)),
-        y: Math.min(getHeight(imageFile), Math.max(0, sourceExtractorState.region.y + 1)),
-        width: Math.min(getWidth(imageFile), Math.max(0, sourceExtractorState.region.width + 1)),
-        height: Math.min(getHeight(imageFile), Math.max(0, sourceExtractorState.region.height + 1))
-      }
-    }
-    let job: SourceExtractionJob = {
-      id: null,
-      type: JobType.SourceExtraction,
-      file_ids: [parseInt(fileId)],
-      source_extraction_settings: settings,
-      merge_sources: false,
-      source_merge_settings: null
-    };
-
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-    return this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>(a => a.correlationId == correlationId),
-      tap(a => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
-        let result = jobEntity.result as SourceExtractionJobResult;
-        if (result.errors.length != 0) {
-          dispatch(new ExtractSourcesFail(result.errors.join(',')));
-          return;
-        }
-        let sources = result.data.map(d => {
-          let posType = PosType.PIXEL;
-          let primaryCoord = d.x;
-          let secondaryCoord = d.y;
-
-          if (
-            "ra_hours" in d &&
-            d.ra_hours !== null &&
-            "dec_degs" in d &&
-            d.dec_degs !== null
-          ) {
-            posType = PosType.SKY;
-            primaryCoord = d.ra_hours;
-            secondaryCoord = d.dec_degs;
-          }
-          return {
-            id: d.id,
-            label: d.id,
-            objectId: null,
-            fileId: d.file_id,
-            posType: posType,
-            primaryCoord: primaryCoord,
-            secondaryCoord: secondaryCoord,
-            pm: null,
-            pmPosAngle: null,
-            pmEpoch: d.time ? new Date(d.time) : null
-          } as Source;
-        });
-
-        dispatch(new AddSources(sources));
-      })
-    )
-  }
-
-  @Action(UpdateSourceExtractorFileState)
-  @ImmutableContext()
-  public updateSourceExtractorFileState({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, changes }: UpdateSourceExtractorFileState) {
+  public updatePhotometryFileState({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, changes }: UpdatePhotometryFileState) {
     setState((state: ImageFilesStateModel) => {
-      state.entities[fileId].sourceExtractor = {
-        ...state.entities[fileId].sourceExtractor,
+      state.entities[fileId].photometry = {
+        ...state.entities[fileId].photometry,
         ...changes
       }
       return state;
     });
-
-    return dispatch(new UpdateSourceExtractorRegion(fileId));
   }
 
-  @Action(SetSourceExtractorRegion)
-  @ImmutableContext()
-  public setSourceExtractorRegion({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, region }: SetSourceExtractorRegion) {
-    setState((state: ImageFilesStateModel) => {
-      state.entities[fileId].sourceExtractor.region = region;
-      return state;
-    });
+  // @Action(SetSourceExtractorRegion)
+  // @ImmutableContext()
+  // public setSourceExtractorRegion({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, region }: SetSourceExtractorRegion) {
+  //   setState((state: ImageFilesStateModel) => {
+  //     state.entities[fileId].sourceExtractor.region = region;
+  //     return state;
+  //   });
 
-  }
+  // }
 
-  @Action(UpdateSourceExtractorRegion)
-  @ImmutableContext()
-  public updateSourceExtractorRegion({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: UpdateSourceExtractorRegion) {
-    let state = getState();
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    let sonifierState = state.entities[fileId].sonifier;
-    let transformationState = state.entities[fileId].transformation;
-    let sourceExtractorState = state.entities[fileId].sourceExtractor;
-    let region = null;
-    if (
-      sourceExtractorState.regionOption ==
-      SourceIdentificationRegionOption.VIEWPORT
-    ) {
-      region = getViewportRegion(
-        transformationState,
-        imageFile
-      );
-      // region = {
-      //   x: imageFileGlobalState.viewport.imageX,
-      //   y: imageFileGlobalState.viewport.imageY,
-      //   width: imageFileGlobalState.viewport.imageWidth,
-      //   height: imageFileGlobalState.viewport.imageHeight
-      // }
-    } else if (
-      sourceExtractorState.regionOption ==
-      SourceIdentificationRegionOption.SONIFIER_REGION
-    ) {
-      region = sonifierState.region;
-    } else {
-      region = {
-        x: 0,
-        y: 0,
-        width: getWidth(imageFile),
-        height: getHeight(imageFile)
-      };
-    }
+  // @Action(UpdateSourceExtractorRegion)
+  // @ImmutableContext()
+  // public updateSourceExtractorRegion({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: UpdateSourceExtractorRegion) {
+  //   let state = getState();
+  //   let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+  //   let imageFile = dataFiles[fileId] as ImageFile;
+  //   let sonifierState = state.entities[fileId].sonifier;
+  //   let transformationState = state.entities[fileId].transformation;
+  //   let sourceExtractorState = state.entities[fileId].sourceExtractor;
+  //   let region = null;
+  //   if (
+  //     sourceExtractorState.regionOption ==
+  //     PhotometryRegionOption.VIEWPORT
+  //   ) {
+  //     region = getViewportRegion(
+  //       transformationState,
+  //       imageFile
+  //     );
+  //     // region = {
+  //     //   x: imageFileGlobalState.viewport.imageX,
+  //     //   y: imageFileGlobalState.viewport.imageY,
+  //     //   width: imageFileGlobalState.viewport.imageWidth,
+  //     //   height: imageFileGlobalState.viewport.imageHeight
+  //     // }
+  //   } else if (
+  //     sourceExtractorState.regionOption ==
+  //     PhotometryRegionOption.SONIFIER_REGION
+  //   ) {
+  //     region = sonifierState.region;
+  //   } else {
+  //     region = {
+  //       x: 0,
+  //       y: 0,
+  //       width: getWidth(imageFile),
+  //       height: getHeight(imageFile)
+  //     };
+  //   }
 
-    return dispatch(new SetSourceExtractorRegion(fileId, region));
+  //   return dispatch(new SetSourceExtractorRegion(fileId, region));
 
-  }
+  // }
 
   /* Transformation */
   @Action(CenterRegionInViewport)
@@ -600,6 +444,8 @@ export class ImageFilesState {
 
     if (!viewportSize)
       viewportSize = transformationState.viewportSize;
+
+      console.log(viewportSize, viewportSize);
 
     let viewportAnchor = new Point(
       viewportSize.width / 2,
@@ -858,30 +704,38 @@ export class ImageFilesState {
 
 
 
-  @Action([MoveBy, ZoomBy, UpdateCurrentViewportSize, ResetImageTransform, SetViewportTransform, SetImageTransform])
-  @ImmutableContext()
-  public viewportChanged({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: MoveBy | ZoomBy | UpdateCurrentViewportSize | ResetImageTransform | SetViewportTransform | SetImageTransform) {
-    let imageFileState = getState().entities[fileId];
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
+//   @Action([MoveBy, ZoomBy, UpdateCurrentViewportSize, ResetImageTransform, SetViewportTransform, SetImageTransform])
+//   @ImmutableContext()
+//   public viewportChanged({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: MoveBy | ZoomBy | UpdateCurrentViewportSize | ResetImageTransform | SetViewportTransform | SetImageTransform) {
+//     let imageFileState = getState().entities[fileId];
+//     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+//     let imageFile = dataFiles[fileId] as ImageFile;
 
-    let result = [];
-    if (
-      imageFile.headerLoaded &&
-      imageFileState &&
-      imageFileState.transformation.viewportSize
-    ) {
-      let sonifier = imageFileState.sonifier;
-      let sourceExtractor = imageFileState.sourceExtractor;
-      if (sonifier.regionMode == SonifierRegionMode.VIEWPORT) {
-        result.push(new UpdateSonifierRegion(fileId));
-      }
+//     let result = [];
+//     if (
+//       imageFile.headerLoaded &&
+//       imageFileState &&
+//       imageFileState.transformation.viewportSize
+//     ) {
+//       let sonifier = imageFileState.sonifier;
+//       let sourceExtractor = imageFileState.sourceExtractor;
+//       if (sonifier.regionMode == SonifierRegionMode.VIEWPORT) {
+//         result.push(new UpdateSonifierRegion(fileId));
+//       }
 
-      if (sourceExtractor.regionOption == SourceIdentificationRegionOption.VIEWPORT) {
-        result.push(new UpdateSourceExtractorRegion(fileId));
-      }
+      
+//             // region = {
+//             //   x: imageFileGlobalState.viewport.imageX,
+//             //   y: imageFileGlobalState.viewport.imageY,
+//             //   width: imageFileGlobalState.viewport.imageWidth,
+//             //   height: imageFileGlobalState.viewport.imageHeight
+//             // }
 
-    }
-    return dispatch(result);
-  }
+//       if (sourceExtractor.regionOption == PhotometryRegionOption.VIEWPORT) {
+//         result.push(new UpdateSourceExtractorRegion(fileId));
+//       }
+
+//     }
+//     return dispatch(result);
+//   }
 }

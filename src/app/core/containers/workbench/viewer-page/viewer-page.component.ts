@@ -30,7 +30,6 @@ import { StretchMode } from "../../../models/stretch-mode";
 import { Dictionary } from "@ngrx/entity/src/models";
 import { ImageFileState } from "../../../models/image-file-state";
 import { Marker, MarkerType } from "../../../models/marker";
-import { ViewMode } from "../../../models/view-mode";
 import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
 import { environment } from "../../../../../environments/environment.prod";
 import { Router } from "@angular/router";
@@ -44,6 +43,7 @@ import { ImageFilesState } from '../../../image-files.state';
 import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../../image-files.actions';
 import { SetActiveTool, SetLastRouterPath, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey } from '../../../workbench.actions';
 import { DataProvidersState } from '../../../../data-providers/data-providers.state';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -55,24 +55,17 @@ import { DataProvidersState } from '../../../../data-providers/data-providers.st
   styleUrls: ["./viewer-page.component.scss"]
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ViewerPageComponent extends WorkbenchPageBaseComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<"file" | "viewer" | "tool">;
-
-  ViewMode = ViewMode;
-  viewers$: Observable<Array<Viewer>>;
-  activeViewerIndex$: Observable<number>;
-  activeViewer$: Observable<Viewer>;
+  
+  
   fileEntities$: Observable<Dictionary<DataFile>>;
   fileStateEntities$: Observable<Dictionary<ImageFileState>>;
   workbenchState$: Observable<WorkbenchStateModel>;
-  viewerSyncEnabled$: Observable<boolean>;
-  normalizationSyncEnabled$: Observable<boolean>;
 
-  surveyDataProvider$: Observable<DataProvider>;
-  surveyImportCorrId$: Observable<string>;
+
+  
 
   imageFile$: Observable<ImageFile>;
   normalization$: Observable<Normalization>;
@@ -92,28 +85,18 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   upperPercentileDefault = environment.upperPercentileDefault;
   lowerPercentileDefault = environment.lowerPercentileDefault;
 
-  constructor(private store: Store, private router: Router, private corrGen: CorrelationIdGenerator) {
-    this.fullScreenPanel$ = this.store.select(
-      WorkbenchState.getFullScreenPanel
-    );
-    this.inFullScreenMode$ = this.store.select(
-      WorkbenchState.getInFullScreenMode
-    );
+  constructor(private corrGen: CorrelationIdGenerator, store: Store, router: Router) {
+    super(store, router);
+
     this.workbenchState$ = this.store.select(WorkbenchState.getState);
     this.fileEntities$ = this.store.select(DataFilesState.getEntities);
     this.fileStateEntities$ = this.store.select(ImageFilesState.getEntities);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers);
-    this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
-    this.activeViewerIndex$ = this.store.select(
-      WorkbenchState.getActiveViewerIndex
+    
+    this.activeViewerId$ = this.store.select(
+      WorkbenchState.getActiveViewerId
     );
     this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
-    this.viewerSyncEnabled$ = store.select(
-      WorkbenchState.getViewerSyncEnabled
-    );
-    this.normalizationSyncEnabled$ = store.select(
-      WorkbenchState.getNormalizationSyncEnabled
-    );
+
     this.normalization$ = store
       .select(WorkbenchState.getActiveImageFileState)
       .pipe(
@@ -121,7 +104,7 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
         map(fileState => fileState.normalization)
       );
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-    this.surveyImportCorrId$ = store.select(WorkbenchState.getSurveyImportCorrId);
+    
 
     this.subs.push(
       this.imageFile$.subscribe(imageFile => {
@@ -165,16 +148,10 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
       new SetLastRouterPath(router.url)
     );
 
-    this.surveyDataProvider$ = this.store.select(DataProvidersState.getDataProviders).pipe(
-      map(dataProviders => dataProviders.find(dp => dp.name == 'Imaging Surveys'))
-    );
+    
   }
 
-  setViewModeOption($event: MatButtonToggleChange) {
-    this.store.dispatch(
-      new SetViewMode($event.value)
-    );
-  }
+  
 
   onBackgroundPercentileChange(value: number) {
     this.backgroundPercentile$.next(value);
@@ -213,7 +190,7 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  onActiveViewerIndexChange(value: number) {
+  onActiveViewerIdChange(value: string) {
     this.store.dispatch(
       new SetActiveViewer(value)
     );
@@ -248,38 +225,9 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  onViewerSyncEnabledChange($event) {
-    this.store.dispatch(
-      new SetViewerSyncEnabled($event.checked)
-    );
-  }
+  
 
-  onNormalizationSyncEnabledChange($event) {
-    this.store.dispatch(
-      new SetNormalizationSyncEnabled($event.checked)
-    );
-  }
-
-  importFromSurvey(surveyDataProvider: DataProvider, imageFile: ImageFile) {
-    let centerRaDec = imageFile.wcs.pixToWorld([
-      getWidth(imageFile) / 2,
-      getHeight(imageFile) / 2
-    ]);
-    let pixelScale = imageFile.wcs.getPixelScale() * 60;
-    let width = pixelScale * getWidth(imageFile);
-    let height = pixelScale * getHeight(imageFile);
-
-    this.store.dispatch(
-      new ImportFromSurvey(
-        surveyDataProvider.id,
-        centerRaDec[0],
-        centerRaDec[1],
-        width,
-        height,
-        this.corrGen.next())
-    );
-  }
-
+  
   ngOnInit() {
   }
 

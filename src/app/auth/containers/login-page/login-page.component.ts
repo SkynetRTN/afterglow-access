@@ -46,7 +46,7 @@ export class LoginPageComponent implements OnInit {
     
 
     params.set('client_id', method.clientId);
-    let redirectUri = window.location.origin + this.location.prepareExternalUrl('oauth_authorized');
+    let redirectUri = window.location.origin + '/oauth_authorized';
     params.set('redirect_uri', redirectUri)
     localStorage.setItem('pendingOauthMethod', JSON.stringify({id: method.id, redirectUri: redirectUri}));
     window.location.href = method.authorizeUrl + '?' + params.toString();

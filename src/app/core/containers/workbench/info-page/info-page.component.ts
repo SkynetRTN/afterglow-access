@@ -24,6 +24,7 @@ import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { ImageFilesState } from '../../../image-files.state';
 import { SetActiveTool, SetLastRouterPath } from '../../../workbench.actions';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -35,42 +36,25 @@ import { SetActiveTool, SetLastRouterPath } from '../../../workbench.actions';
   styleUrls: ["./info-page.component.css"],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
+export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
-  imageFile$: Observable<ImageFile>;
   header$: Observable<Header>;
   headerSummary$: Observable<Header>;
-  viewers$: Observable<Array<Viewer>>;
   showRawHeader: boolean = false;
   useSystemTime$ = new BehaviorSubject<boolean>(true);
-  
-  showConfig$: Observable<boolean>;
   lastImageFile: ImageFile;
-  workbenchState$: Observable<WorkbenchStateModel>;
   fileEntities$: Observable<Dictionary<DataFile>>;
   fileStateEntities$: Observable<Dictionary<ImageFileState>>;
-  activeViewerIndex$: Observable<number>;
-  activeViewer$: Observable<Viewer>;
   subs: Subscription[] = [];
   columnsDisplayed = ['key', 'value', 'comment'];
 
   
-  constructor(private store: Store, private decimalPipe: DecimalPipe, private datePipe: DatePipe, router: Router) {
-    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
-    this.workbenchState$ = this.store.select(WorkbenchState.getState);
+  constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, store: Store, router: Router) {
+    super(store, router);
     this.fileEntities$ = this.store.select(DataFilesState.getEntities);
     this.fileStateEntities$ = this.store.select(ImageFilesState.getEntities);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers);
-    this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
-    this.activeViewerIndex$ = this.store.select(
-      WorkbenchState.getActiveViewerIndex
-    );
-    this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
-    this.header$ = this.imageFile$.pipe(filter(imageFile => imageFile != null), map(imageFile => imageFile.header))
-    this.headerSummary$ = combineLatest(this.useSystemTime$, this.imageFile$.pipe(filter(imageFile => imageFile != null))).pipe(map(([useSystemTime, imageFile]) => {
+    this.header$ = this.activeImageFile$.pipe(filter(imageFile => imageFile != null), map(imageFile => imageFile.header))
+    this.headerSummary$ = combineLatest(this.useSystemTime$, this.activeImageFile$.pipe(filter(imageFile => imageFile != null))).pipe(map(([useSystemTime, imageFile]) => {
       let result: Header = [];
       let width = getWidth(imageFile);
       let height = getHeight(imageFile);
@@ -165,10 +149,8 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
       return result;
     }));
     
-    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-
     this.subs.push(
-      this.imageFile$.subscribe(imageFile => {
+      this.activeImageFile$.subscribe(imageFile => {
         this.lastImageFile = imageFile;
         // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
       })

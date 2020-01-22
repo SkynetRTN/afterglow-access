@@ -22,8 +22,9 @@ import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { UpdatePixelOpsFormData, HideCurrentPixelOpsJobState, SetActiveTool, SetLastRouterPath, CreatePixelOpsJob, CreateAdvPixelOpsJob } from '../../../workbench.actions';
+import { HideCurrentPixelOpsJobState, SetActiveTool, SetLastRouterPath, CreatePixelOpsJob, CreateAdvPixelOpsJob, UpdatePixelOpsPageSettings } from '../../../workbench.actions';
 import { JobsState } from '../../../../jobs/jobs.state';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 interface PixelOpVariable {
   name: string,
@@ -35,18 +36,12 @@ interface PixelOpVariable {
   templateUrl: "./image-calculator-page.component.html",
   styleUrls: ["./image-calculator-page.component.css"]
 })
-export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
+export class ImageCalculatorPageComponent extends WorkbenchPageBaseComponent implements OnInit, OnDestroy {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
-  activeImageFile$: Observable<ImageFile>;
-  allImageFiles$: Observable<Array<ImageFile>>;
-  activeImageFileState$: Observable<ImageFileState>;
   pixelOpsJobRows$: Observable<{ job: PixelOpsJob, result: PixelOpsJobResult }[]>;
   currentPixelOpsJobRow$: Observable<{ job: PixelOpsJob, result: PixelOpsJobResult }>;
   showCurrentPixelOpsJobState$: Observable<boolean>;
-  showConfig$: Observable<boolean>;
   pixelOpVariables$: Observable<Array<PixelOpVariable>>;
   pixelOpsFormData$: Observable<PixelOpsFormData>;
   panelOpenState: boolean;
@@ -89,28 +84,11 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
 
 
-  constructor(private store: Store, public dialog: MatDialog, router: Router) {
-    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
-    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
-    this.activeImageFileState$ = store.select(
-      WorkbenchState.getActiveImageFileState
-    );
-    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-
-    this.allImageFiles$ = store.select(DataFilesState.getDataFiles)
-      .pipe(
-        map(
-          files =>
-            files.filter(file => file.type == DataFileType.IMAGE) as Array<
-            ImageFile
-            >
-        )
-      );
-
+  constructor(public dialog: MatDialog, store: Store, router: Router) {
+    super(store, router);
 
     this.pixelOpsFormData$ = store.select(WorkbenchState.getState).pipe(
-      map(state => state.pixelOpsFormData),
+      map(state => state.pixelOpsPageSettings.pixelOpsFormData),
       tap(data => {
         this.imageCalcForm.patchValue(data, { emitEvent: false });
         this.imageCalcFormAdv.patchValue(data, { emitEvent: false });
@@ -131,14 +109,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
     this.imageCalcForm.valueChanges.subscribe(value => {
       // if(this.imageCalcForm.valid) {
-      this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcForm.value));
+      this.store.dispatch(new UpdatePixelOpsPageSettings({pixelOpsFormData: this.imageCalcForm.value}));
       this.store.dispatch(new HideCurrentPixelOpsJobState());
       // }
     })
 
     this.imageCalcFormAdv.valueChanges.subscribe(value => {
       // if(this.imageCalcFormAdv.valid) {
-      this.store.dispatch(new UpdatePixelOpsFormData(this.imageCalcFormAdv.value));
+      this.store.dispatch(new UpdatePixelOpsPageSettings({pixelOpsFormData: this.imageCalcFormAdv.value}));
       this.store.dispatch(new HideCurrentPixelOpsJobState());
       // }
     })
@@ -184,12 +162,12 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     );
 
     this.currentPixelOpsJobRow$ = combineLatest(store.select(WorkbenchState.getState), this.pixelOpsJobRows$).pipe(
-      filter(([state, rows]: [WorkbenchStateModel, { job: PixelOpsJob, result: PixelOpsJobResult }[]]) => (state.currentPixelOpsJobId != null && rows.find(r => r.job.id == state.currentPixelOpsJobId) != undefined)),
-      map(([state, rows]) => rows.find(r => r.job.id == state.currentPixelOpsJobId))
+      filter(([state, rows]: [WorkbenchStateModel, { job: PixelOpsJob, result: PixelOpsJobResult }[]]) => (state.pixelOpsPageSettings.currentPixelOpsJobId != null && rows.find(r => r.job.id == state.pixelOpsPageSettings.currentPixelOpsJobId) != undefined)),
+      map(([state, rows]) => rows.find(r => r.job.id == state.pixelOpsPageSettings.currentPixelOpsJobId))
     );
 
     this.showCurrentPixelOpsJobState$ = store.select(WorkbenchState.getState).pipe(
-      map(state => state.showCurrentPixelOpsJobState)
+      map(state => state.pixelOpsPageSettings.showCurrentPixelOpsJobState)
     );
 
     this.store.dispatch(

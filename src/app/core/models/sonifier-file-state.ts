@@ -8,7 +8,6 @@ export enum SonifierRegionMode {
 export interface SonifierFileState {
   sonificationUri: string,
   regionHistoryInitialized: boolean;
-  region: Region | null;
   regionHistory: Array<Region>;
   regionHistoryIndex: number | null;
   regionMode: SonifierRegionMode;

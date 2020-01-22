@@ -11,7 +11,7 @@ export interface Photometry {
   flux_error: number;
 }
 
-export interface PhotSettings {
+export interface PhotometryJobSettings {
   mode?: 'aperture' | 'auto';
   a?: number;  // aperture radius/semi-major axis [pixels]
   b?: number; // (optional) semi-minor axis
@@ -28,7 +28,7 @@ export interface PhotometryJob extends JobBase {
   readonly type: JobType.Photometry;
   file_ids: number[];
   sources: Array<Astrometry & SourceId>;
-  settings?: PhotSettings;
+  settings?: PhotometryJobSettings;
 }
 
 export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {

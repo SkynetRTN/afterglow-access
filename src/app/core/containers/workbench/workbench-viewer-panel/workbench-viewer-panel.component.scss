@@ -1,21 +1,28 @@
 #image-viewer-wrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0%;
-  width: 100%;
-  position: absolute;
   outline: none;
   overflow: hidden;
   user-select: text;
-  top: 0px;
-  bottom: 0px;
 }
 
 .viewer {
-  display: flex;
-  flex: 1 1 auto;
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
 }
+
+.viewer-marker-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.marker-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
 
 /* .viewer.mouse-over-image {
   cursor: grab;

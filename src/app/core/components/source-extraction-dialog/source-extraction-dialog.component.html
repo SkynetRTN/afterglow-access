@@ -3,7 +3,7 @@
   <div class="container">
 
   </div>
-  <div class="row">
+  <div class="row  mb-3">
 
     <div class="col-6">
       <mat-form-field class="">
@@ -18,7 +18,7 @@
       </mat-form-field>
     </div>
   </div>
-  <div class="row">
+  <div class="row  mb-3">
     <div class="col-6">
       <div>
         <mat-slide-toggle [checked]="settings?.deblend" [labelPosition]="'before'" (change)="onDeblendChange($event)">
@@ -26,11 +26,15 @@
         </mat-slide-toggle>
       </div>
     </div>
-
+    <div class="col-6">
+      <mat-select placeholder="Search Region" [ngModel]="settings?.region" (ngModelChange)="setRegion($event)">
+        <mat-option *ngFor="let regionOption of regionOptions" [value]="regionOption.value">{{ regionOption.label }}</mat-option>
+      </mat-select>
+    </div>
   </div>
 
 </mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button [mat-dialog-close]="settings">Save</button>
+<mat-dialog-actions class="mt-2" align="end">
   <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button [mat-dialog-close]="settings">Extract Sources</button>
 </mat-dialog-actions>

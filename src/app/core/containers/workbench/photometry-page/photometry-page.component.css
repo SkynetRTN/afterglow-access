@@ -1,5 +1,14 @@
+.form-row button, .form-row a {
+  margin-right: 8px;
+}
+
+.form-row .mat-slide-toggle {
+  margin-right: 24px;
+  margin-top: 5px;
+}
+
 .workbench-config-panel {
-  width: 550px;
+  width: 650px;
 }
 
 .full-screen.workbench-config-panel {

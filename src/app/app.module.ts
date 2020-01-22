@@ -10,6 +10,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { CookieModule } from 'ngx-cookie';
+import localeEs from '@angular/common/locales/es';
+registerLocaleData(localeEs, 'es');
 
 import { TokenInterceptor } from './token.interceptor';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -20,6 +22,8 @@ import { AuthModule } from './auth/auth.module';
 import { HotkeyModule } from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { registerLocaleData } from '@angular/common';
+
 
 
 import { AppComponent } from './app.component';
@@ -35,6 +39,11 @@ import { ImageFilesState } from './core/image-files.state';
 import { WorkbenchState } from './core/workbench.state';
 import { SourcesState } from './core/sources.state';
 import { CustomMarkersState } from './core/custom-markers.state';
+import { PhotDataState } from './core/phot-data.state.';
+
+
+
+
 @NgModule({
   imports: [
     CommonModule,
@@ -54,7 +63,7 @@ import { CustomMarkersState } from './core/custom-markers.state';
       disableCheatSheet: true
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, CustomMarkersState],
+      [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
       { developmentMode: !environment.production }
     ),
     NgxsRouterPluginModule.forRoot(),

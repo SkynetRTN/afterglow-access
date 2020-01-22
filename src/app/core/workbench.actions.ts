@@ -1,15 +1,17 @@
 import { DataFile, ImageFile } from '../data-files/models/data-file';
 import { ViewMode } from './models/view-mode';
-import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData } from './models/workbench-state';
+import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlotterPageSettings, PhotometryPageSettings, AligningPageSettings, PixelOpsPageSettings, StackingPageSettings, CustomMarkerPageSettings } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
-import { PlotterSettings } from './models/plotter-settings';
-import { SourceIdentificationModeOption } from './models/source-identification-mode-option';
-import { PhotSettings } from '../jobs/models/photometry';
-import { SourceExtractionSettings, SourceExtractionJob } from '../jobs/models/source-extraction';
+import { PhotometryJobSettings } from '../jobs/models/photometry';
+import { SourceExtractionJobSettings, SourceExtractionJob } from '../jobs/models/source-extraction';
 import { Catalog } from './models/catalog';
 import { FieldCal } from './models/field-cal';
 import { CatalogQueryJob } from '../jobs/models/catalog-query';
+import { PhotometrySettings } from './models/photometry-settings';
+import { SourceExtractionSettings } from './models/source-extraction-settings';
+import { Source } from './models/source';
+import { Marker } from './models/marker';
 
 /* Core */
 
@@ -49,19 +51,31 @@ export class SelectDataFile {
 export class SetActiveViewer {
   public static readonly type = '[Workbench] Set Active Viewer';
 
-  constructor(public viewerIndex: number) { }
+  constructor(public viewerId: string) { }
 }
 
 export class SetViewerFile {
   public static readonly type = '[Workbench] Set Viewer File';
 
-  constructor(public viewerIndex: number, public fileId: string) { }
+  constructor(public viewerId: string, public fileId: string) { }
+}
+
+export class SetViewerMarkers {
+  public static readonly type = '[Workbench] Set Viewer Markers'
+
+  constructor(public viewerId: string, public markers: Marker[]) {}
+}
+
+export class ClearViewerMarkers {
+  public static readonly type = '[Workbench] Clear Viewer Markers'
+
+  constructor() {}
 }
 
 export class SetViewerFileSuccess {
   public static readonly type = '[Workbench] Set Viewer File Success';
 
-  constructor(public viewerIndex: number) { }
+  constructor(public viewerId: string) { }
 }
 
 export class SetViewMode {
@@ -78,12 +92,6 @@ export class SetViewerSyncEnabled {
 
 export class SetNormalizationSyncEnabled {
   public static readonly type = '[Workbench] Set Normalization Sync Enabled';
-
-  constructor(public value: boolean) { }
-}
-
-export class SetPlotterSyncEnabled {
-  public static readonly type = '[Workbench] Set Plotter Sync Enabled';
 
   constructor(public value: boolean) { }
 }
@@ -106,22 +114,10 @@ export class SyncFilePlotters {
   constructor(public reference: ImageFile, public files: ImageFile[]) { }
 }
 
-export class SetPlotMode {
-  public static readonly type = '[Workbench] Set Plot Mode';
-
-  constructor(public mode: '1D' | '2D' | '3D') { }
-}
-
 export class SetActiveTool {
   public static readonly type = '[Workbench] Set Active Tool';
 
   constructor(public tool: WorkbenchTool) { }
-}
-
-export class SetShowAllSources {
-  public static readonly type = '[Workbench] Set Show All Sources';
-
-  constructor(public showAllSources: boolean) { }
 }
 
 export class SetSidebarView {
@@ -154,28 +150,52 @@ export class UpdateCentroidSettings {
   constructor(public changes: Partial<CentroidSettings>) { }
 }
 
-export class UpdatePlotterSettings {
-  public static readonly type = '[Workbench] Update Plotter Settings'
+export class UpdatePhotometrySettings {
+  public static readonly type = '[Workbench] Update Photometry Settings';
 
-  constructor(public changes: Partial<PlotterSettings>) { }
-}
-
-export class SetSourceExtractionMode {
-  public static readonly type = '[Workbench] Set Source Extraction Mode';
-
-  constructor(public mode: SourceIdentificationModeOption) { }
-}
-
-export class UpdatePhotSettings {
-  public static readonly type = '[Workbench] Update Phot Settings';
-
-  constructor(public changes: Partial<PhotSettings>) { }
+  constructor(public changes: Partial<PhotometrySettings>) { }
 }
 
 export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
   constructor(public changes: Partial<SourceExtractionSettings>) { }
+}
+
+export class UpdateCustomMarkerPageSettings {
+  public static readonly type = '[Workbench] Update Custom Marker Page Settings'
+
+  constructor(public changes: Partial<CustomMarkerPageSettings>) { }
+}
+
+export class UpdatePlotterPageSettings {
+  public static readonly type = '[Workbench] Update Plotter Page Settings'
+
+  constructor(public changes: Partial<PlotterPageSettings>) { }
+}
+
+export class UpdatePhotometryPageSettings {
+  public static readonly type = '[Workbench] Update Photometry Page Settings'
+
+  constructor(public changes: Partial<PhotometryPageSettings>) { }
+}
+
+export class UpdatePixelOpsPageSettings {
+  public static readonly type = '[Workbench] Update Pixel Ops Page Settings'
+
+  constructor(public changes: Partial<PixelOpsPageSettings>) { }
+}
+
+export class UpdateAligningPageSettings {
+  public static readonly type = '[Workbench] Update Aligning Page Settings'
+
+  constructor(public changes: Partial<AligningPageSettings>) { }
+}
+
+export class UpdateStackingPageSettings {
+  public static readonly type = '[Workbench] Update Stacking Page Settings'
+
+  constructor(public changes: Partial<StackingPageSettings>) { }
 }
 
 export class LoadCatalogs {
@@ -264,12 +284,6 @@ export class AddFieldCalSourcesFromCatalog {
   constructor(public fieldCalId: string, public catalogQueryJob: CatalogQueryJob) { }
 }
 
-export class UpdatePixelOpsFormData {
-  public static readonly type = '[Workbench] Update Pixel Ops Form Data';
-
-  constructor(public data: Partial<PixelOpsFormData>) { }
-}
-
 export class CreatePixelOpsJob {
   public static readonly type = '[Workbench] Create Pixel Ops Job';
 }
@@ -282,24 +296,30 @@ export class HideCurrentPixelOpsJobState {
   public static readonly type = '[Workbench] Hide Current Pixel Ops Job State';
 }
 
-export class UpdateAlignFormData {
-  public static readonly type = '[Workbench] Update Align Form Data';
-
-  constructor(public data: Partial<AlignFormData>) { }
-}
-
 export class CreateAlignmentJob {
   public static readonly type = '[Workbench] Create Alignment Job';
 }
 
-export class UpdateStackFormData {
-  public static readonly type = '[Workbench] Update Stack Form Data';
-
-  constructor(public data: Partial<StackFormData>) { }
-}
-
 export class CreateStackingJob {
   public static readonly type = '[Workbench] Create Stacking Job';
+}
+
+export class ExtractSources {
+  public static readonly type = '[Workbench] Extract Sources'
+
+  constructor(public fileId: string, public settings: SourceExtractionSettings) { }
+}
+
+export class ExtractSourcesSuccess {
+  public static readonly type = '[Workbench] Extract Sources Success'
+
+  constructor(public fileId: string, public sources: Source[]) { }
+}
+
+export class ExtractSourcesFail {
+  public static readonly type = '[Workbench] Extract Sources Fail'
+
+  constructor(public error: string) { }
 }
 
 
@@ -333,6 +353,16 @@ export class OpenSidenav {
 export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
+
+
+export class PhotometerSources {
+  public static readonly type = '[Phot Data] Photometer Sources'
+
+  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings, public isBatch: boolean) { }
+}
+
+
+
 
 
 

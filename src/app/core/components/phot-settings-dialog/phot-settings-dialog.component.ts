@@ -1,8 +1,6 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-
-import { CentroidSettings } from '../../models/centroid-settings';
-import { PhotSettings } from '../../../jobs/models/photometry';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { PhotometrySettings } from '../../models/photometry-settings';
 
 @Component({
   selector: 'app-phot-settings-dialog',
@@ -11,17 +9,17 @@ import { PhotSettings } from '../../../jobs/models/photometry';
 })
 export class PhotSettingsDialogComponent implements OnInit {
 
-  settings: PhotSettings;
+  settings: PhotometrySettings;
 
   constructor(public dialogRef: MatDialogRef<PhotSettingsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: PhotSettings) {
+    @Inject(MAT_DIALOG_DATA) public data: PhotometrySettings) {
 
     this.settings = data;
 
   }
 
  setCentroidRadius(value) {
-    this.settings.centroid_radius = value;
+    this.settings.centroidRadius = value;
   }
 
   ngOnInit() {

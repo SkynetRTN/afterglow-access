@@ -16,23 +16,5 @@ export class AddSources {
 export class RemoveSources {
   public static readonly type = '[Sources] Remove Source'
 
-  constructor(public sources: Source[]) { }
-}
-
-export class SelectSources {
-  public static readonly type = '[Sources] Select Sources'
-
-  constructor(public sources: Source[]) { }
-}
-
-export class DeselectSources {
-  public static readonly type = '[Sources] Deselect Sources'
-
-  constructor(public sources: Source[] ) { }
-}
-
-export class SetSourceSelection {
-  public static readonly type = '[Sources] Set Source Selection'
-
-  constructor(public sources: Source[]) { }
+  constructor(public sourceIds: string[]) { }
 }

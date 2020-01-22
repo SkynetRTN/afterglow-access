@@ -5,10 +5,13 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.config.json",
-    "build": "ng build",
+    "start-es": "ng serve --proxy-config proxy.config.json --configuration=es",
+    "build": "ng build --configuration production",
+    "build-es": "ng build --configuration es",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "i18n": "ng xi18n --output-path locale/"
   },
   "private": true,
   "dependencies": {
@@ -53,7 +56,7 @@
     "mathjs": "^5.10.3",
     "moment": "^2.24.0",
     "ngx-cookie": "^4.1.2",
-    "ngx-papaparse": "^3.0.2",
+    "ngx-papaparse": "^4.0.4",
     "ngx-popper": "^6.2.0",
     "ngx-tour-core": "^4.0.1",
     "ngx-tour-md-menu": "^4.0.1",

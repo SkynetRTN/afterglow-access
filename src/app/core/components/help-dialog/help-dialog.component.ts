@@ -42,7 +42,7 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
   {
     name: "Sonification Shortcuts",
     shortcuts: [
-      { key: "enter", description: "play Sonification" },
+      { key: "enter", description: "Play Sonification" },
       { key: "t 1", description: "Time Navigation: Early" },
       { key: "t 2", description: "Time Navigation: Mid" },
       { key: "t 3", description: "Time Navigation: Late" },
@@ -50,6 +50,16 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: "f 2", description: "Frequency Navigation: Mid" },
       { key: "f 3", description: "Frequency Navigation: High" },
       { key: "esc", description: "Reset Sonification Region" },
+    ]
+  },
+  {
+    name: "Image Viewer Shortcuts",
+    shortcuts: [
+      { key: "+", description: "Xoom in" },
+      { key: "-", description: "Zoom out" },
+      { key: "0", description: "Reset zoom" },
+      { key: "z", description: "Zoom to fit" },
+      { key: "del", description: "Delete file from library" },
     ]
   }
 ];
@@ -62,6 +72,10 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
 export class HelpDialogComponent implements OnInit {
   displayedColumns: string[] = ["key", "description"];
   shortcutGroups = KEYBOARD_SHORTCUT_GROUPS;
+
+  shiftModifier(v: string) {
+    return v == v.toUpperCase() && v != v.toLowerCase();
+  }
 
   constructor(
     public dialogRef: MatDialogRef<HelpDialogComponent>,

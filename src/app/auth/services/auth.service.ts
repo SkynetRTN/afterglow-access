@@ -26,9 +26,7 @@ export class AuthService {
 
   loginOAuth(authMethodId: string, redirectUri: string, code: string) {
     return this.http.post(
-      this.location.prepareExternalUrl(
-        `${environment.apiUrl}/auth/login/${authMethodId}`
-      ),
+      `${environment.apiUrl}/auth/login/${authMethodId}`,
       { code: code, redirect_uri: redirectUri }
     );
   }
@@ -36,7 +34,7 @@ export class AuthService {
   getAuthMethods() {
     return this.http
       .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/auth/methods`)
+        `${environment.apiUrl}/auth/methods`
       )
       .pipe(
         map(resp =>
@@ -61,7 +59,7 @@ export class AuthService {
   getOAuthClients() {
     return this.http
       .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/oauth2/clients`)
+        `${environment.apiUrl}/oauth2/clients`
       )
       .pipe(
         map(resp =>
@@ -81,23 +79,19 @@ export class AuthService {
 
   getPermittedOAuthClients() {
     return this.http.get<string[]>(
-      this.location.prepareExternalUrl(
-        `${environment.apiUrl}/oauth2/user-clients`
-      )
+      `${environment.apiUrl}/oauth2/user-clients`
     );
   }
 
   addPermittedOAuthClient(client: OAuthClient) {
     return this.http.post(
-      this.location.prepareExternalUrl(
-        `${environment.apiUrl}/oauth2/user-clients`
-      ),
+      `${environment.apiUrl}/oauth2/user-clients`,
       { client_id: client.clientId }
     );
   }
 
   logout() {
     return of(null);
-    //return this.http.get(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/logout`))
+    //return this.http.get(`${environment.apiUrl}/auth/logout`)
   }
 }

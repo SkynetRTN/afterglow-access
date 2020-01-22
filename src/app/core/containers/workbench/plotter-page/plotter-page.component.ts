@@ -10,12 +10,14 @@ import {
 } from "@angular/core";
 
 import * as SVG from "svgjs";
-import { Observable, Subscription, Subject, BehaviorSubject, combineLatest} from "rxjs";
+import { Observable, Subscription, Subject, BehaviorSubject, combineLatest } from "rxjs";
 import { map, filter, debounceTime, tap, withLatestFrom } from "rxjs/operators";
 
 import {
   ImageFile,
-  DataFile
+  DataFile,
+  getWidth,
+  getHeight
 } from "../../../../data-files/models/data-file";
 import { Normalization } from "../../../models/normalization";
 import { PlotterFileState } from "../../../models/plotter-file-state";
@@ -24,18 +26,22 @@ import {
   ViewportChangeEvent,
   CanvasMouseEvent
 } from "../../../components/pan-zoom-canvas/pan-zoom-canvas.component";
-import { PlotterSettings } from "../../../models/plotter-settings";
 import { CentroidSettings } from "../../../models/centroid-settings";
 import { ImageFileState } from "../../../models/image-file-state";
-import { WorkbenchTool } from "../../../models/workbench-state";
+import { WorkbenchTool, PlotterPageSettings } from "../../../models/workbench-state";
 import { centroidDisk, centroidPsf } from "../../../models/centroider";
 import { PosType } from "../../../models/source";
 import { Router } from '@angular/router';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
-import { Store } from '@ngxs/store';
+import { Store, Actions, ofActionSuccessful } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, SetPlotMode, SetPlotterSyncEnabled, UpdateCentroidSettings, UpdatePlotterSettings } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath, UpdateCentroidSettings, UpdatePlotterPageSettings, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
 import { UpdateLine, StartLine } from '../../../image-files.actions';
+import { ImageFilesState } from '../../../image-files.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
+import { LoadDataFileHdr } from '../../../../data-files/data-files.actions';
+import { MarkerType, LineMarker, RectangleMarker, Marker } from '../../../models/marker';
 
 @Component({
   selector: "app-plotter-page",
@@ -43,27 +49,18 @@ import { UpdateLine, StartLine } from '../../../image-files.actions';
   styleUrls: ["./plotter-page.component.css"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
-
+export class PlotterPageComponent extends WorkbenchPageBaseComponent implements OnInit, AfterViewInit, OnDestroy {
+  PosType = PosType;
 
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
   @ViewChild("plotter", { static: false })
   plotter: PlotterComponent;
-  imageFile$: Observable<ImageFile>;
-  imageFileState$: Observable<ImageFileState>;
-  showConfig$: Observable<boolean>;
-  plotterSettings$: Observable<PlotterSettings>;
-  centroidSettings$: Observable<CentroidSettings>;
-  plotterState$: Observable<PlotterFileState>;
+  plotterFileState$: Observable<PlotterFileState>;
+  plotterPageSettings$: Observable<PlotterPageSettings>;
   plotterSyncEnabled$: Observable<boolean>;
-  PosType = PosType;
-
-  latestImageFile: ImageFile;
-  latestCentroidSettings: CentroidSettings;
-
   mode$: Observable<'1D' | '2D' | '3D'>;
+
+  markerUpdater: Subscription;
 
   lineStart$: Observable<{
     x: number;
@@ -84,79 +81,31 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     skyPosAngle;
   }>;
 
-  measuring: boolean = false;
-  subs: Subscription[] = [];
 
-  private normalizeLine(
-    imageFile: ImageFile,
-    line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) {
-    let x = null;
-    let y = null;
-    let raHours = null;
-    let decDegs = null;
-    if (line.posType == PosType.PIXEL) {
-      x = line.primaryCoord;
-      y = line.secondaryCoord;
-      if (imageFile.wcs.isValid()) {
-        let wcs = imageFile.wcs;
-        let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
-        raHours = raDec[0];
-        decDegs = raDec[1];
-      }
-    } else {
-      raHours = line.primaryCoord;
-      decDegs = line.secondaryCoord;
-      if (imageFile.wcs.isValid()) {
-        let wcs = imageFile.wcs;
-        let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
-        x = xy[0];
-        y = xy[1];
-      }
-    }
-    return { x: x, y: y, raHours: raHours, decDegs: decDegs };
-  }
 
-  constructor(private store: Store, router: Router) {
-    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
-    // console.log("HERE:", this.fullScreenPanel$, this.inFullScreenMode$);
-    this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
-    this.imageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
-    this.plotterState$ = this.imageFileState$.pipe(
+  constructor(private actions$: Actions, store: Store, router: Router) {
+    super(store, router);
+    this.plotterFileState$ = this.activeImageFileState$.pipe(
       filter(state => state != null),
       map(state => state.plotter)
     );
+    this.plotterPageSettings$ = store.select(WorkbenchState.getPlotterPageSettings);
+    this.plotterSyncEnabled$ = this.plotterPageSettings$.pipe(map(settings => settings.plotterSyncEnabled));
+    this.mode$ = this.plotterPageSettings$.pipe(map(settings => settings.plotterMode));
 
-    let workbenchState$ = store.select(WorkbenchState.getState);
-    this.plotterSettings$ = workbenchState$.pipe(
-      map(state => state && state.plotterSettings)
-    );
-    this.centroidSettings$ = workbenchState$.pipe(
-      map(state => state && state.centroidSettings)
-    );
-    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-    this.plotterSyncEnabled$ = store.select(
-      WorkbenchState.getPlotterSyncEnabled
-    );
-
-    this.mode$ = workbenchState$.pipe(
-      map(state => state.plotterMode)
-    );
-
-    this.lineStart$ = this.plotterState$.pipe(
+    this.lineStart$ = this.plotterFileState$.pipe(
       map(state => state.lineMeasureStart),
       filter(line => line !== null),
-      withLatestFrom(this.imageFile$),
+      withLatestFrom(this.activeImageFile$),
       map(([line, imageFile]) => {
         return this.normalizeLine(imageFile, line);
       })
     );
 
-    this.lineEnd$ = this.plotterState$.pipe(
+    this.lineEnd$ = this.plotterFileState$.pipe(
       map(state => state.lineMeasureEnd),
       filter(line => line !== null),
-      withLatestFrom(this.imageFile$),
+      withLatestFrom(this.activeImageFile$),
       map(([line, imageFile]) => {
         return this.normalizeLine(imageFile, line);
       })
@@ -165,7 +114,7 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.vectorInfo$ = combineLatest(
       this.lineStart$,
       this.lineEnd$,
-      this.imageFile$
+      this.activeImageFile$
     ).pipe(
       map(([lineStart, lineEnd, imageFile]) => {
         let pixelSeparation = null;
@@ -219,23 +168,93 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.subs.push(
-      this.plotterState$.subscribe(state => {
-        this.measuring = state.measuring;
-      })
-    );
+    this.markerUpdater = combineLatest(
+      this.viewerFileIds$,
+      this.viewerImageFileHeaders$,
+      this.store.select(WorkbenchState.getPlotterPageSettings),
+      this.store.select(ImageFilesState.getEntities),
+    ).pipe(
+      withLatestFrom(
+        this.store.select(WorkbenchState.getViewers),
+        this.store.select(DataFilesState.getEntities)
+      )
+    ).subscribe(([[fileIds, imageFiles, plotterPageSettings, imageFileStates], viewers, dataFiles]) => {
+      viewers.forEach((viewer) => {
+        let fileId = viewer.fileId;
+        if (fileId == null) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
+        let file = dataFiles[fileId] as ImageFile;
+        if (!file.headerLoaded) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
+        let plotter = imageFileStates[fileId].plotter;
+        let lineMeasureStart = plotter.lineMeasureStart;
+        let lineMeasureEnd = plotter.lineMeasureEnd;
 
-    this.subs.push(
-      this.centroidSettings$.subscribe(settings => {
-        this.latestCentroidSettings = settings;
-      })
-    );
+        if (!lineMeasureStart || !lineMeasureEnd) return [[]];
 
-    this.subs.push(
-      this.imageFile$.subscribe(imageFile => {
-        this.latestImageFile = imageFile;
+        if (!file) return [[]];
+
+        let startPrimaryCoord = lineMeasureStart.primaryCoord;
+        let startSecondaryCoord = lineMeasureStart.secondaryCoord;
+        let startPosType = lineMeasureStart.posType;
+        let endPrimaryCoord = lineMeasureEnd.primaryCoord;
+        let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
+        let endPosType = lineMeasureEnd.posType;
+
+        let x1 = startPrimaryCoord;
+        let y1 = startSecondaryCoord;
+        let x2 = endPrimaryCoord;
+        let y2 = endSecondaryCoord;
+
+        if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
+          if (!file.headerLoaded || !file.wcs.isValid()) return [[]];
+          let wcs = file.wcs;
+          if (startPosType == PosType.SKY) {
+            let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
+            x1 = Math.max(Math.min(xy[0], getWidth(file)), 0);
+            y1 = Math.max(Math.min(xy[1], getHeight(file)), 0);
+          }
+
+          if (endPosType == PosType.SKY) {
+            let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
+            x2 = Math.max(Math.min(xy[0], getWidth(file)), 0);
+            y2 = Math.max(Math.min(xy[1], getHeight(file)), 0);
+          }
+        }
+
+        let markers: Marker[] = [];
+        if (plotterPageSettings.plotterMode == '1D') {
+          markers = [
+            {
+              type: MarkerType.LINE,
+              x1: x1,
+              y1: y1,
+              x2: x2,
+              y2: y2
+            } as LineMarker
+          ];
+        }
+        else {
+          markers = [
+            {
+              type: MarkerType.RECTANGLE,
+              x: Math.min(x1, x2),
+              y: Math.min(y1, y2),
+              width: Math.abs(x2 - x1),
+              height: Math.abs(y2 - y1)
+            } as RectangleMarker
+          ];
+        }
+
+
+        this.store.dispatch(new SetViewerMarkers(viewer.viewerId, markers));
       })
-    );
+    })
+
 
     this.store.dispatch(
       new SetActiveTool(WorkbenchTool.PLOTTER)
@@ -246,36 +265,70 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
     )
   }
 
+  private normalizeLine(
+    imageFile: ImageFile,
+    line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
+  ) {
+    let x = null;
+    let y = null;
+    let raHours = null;
+    let decDegs = null;
+    if (line.posType == PosType.PIXEL) {
+      x = line.primaryCoord;
+      y = line.secondaryCoord;
+      if (imageFile.wcs.isValid()) {
+        let wcs = imageFile.wcs;
+        let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
+        raHours = raDec[0];
+        decDegs = raDec[1];
+      }
+    } else {
+      raHours = line.primaryCoord;
+      decDegs = line.secondaryCoord;
+      if (imageFile.wcs.isValid()) {
+        let wcs = imageFile.wcs;
+        let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
+        x = xy[0];
+        y = xy[1];
+      }
+    }
+    return { x: x, y: y, raHours: raHours, decDegs: decDegs };
+  }
+
   ngOnInit() {
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
-  ngOnChanges() {}
+  ngOnChanges() { }
 
   ngOnDestroy() {
-    this.subs.forEach(sub => sub.unsubscribe());
+    this.store.dispatch(new ClearViewerMarkers());
+
+    this.markerUpdater.unsubscribe();
   }
 
   onModeChange($event) {
     this.store.dispatch(
-      new SetPlotMode($event)
+      new UpdatePlotterPageSettings({ plotterMode: $event })
     )
   }
 
   onPlotterSyncEnabledChange($event) {
     this.store.dispatch(
-      new SetPlotterSyncEnabled($event.checked)
+      new UpdatePlotterPageSettings({ plotterSyncEnabled: $event.checked })
     );
   }
 
   onImageMove($event: CanvasMouseEvent) {
-    if (this.measuring) {
+    let imageFile = this.store.selectSnapshot(DataFilesState.getEntities)[$event.targetFile.id];
+    let measuring = this.store.selectSnapshot(ImageFilesState.getEntities)[$event.targetFile.id].plotter.measuring;
+    if (measuring) {
       let primaryCoord = $event.imageX;
       let secondaryCoord = $event.imageY;
       let posType = PosType.PIXEL;
-      if (this.latestImageFile.wcs.isValid()) {
-        let wcs = this.latestImageFile.wcs;
+      if (imageFile.wcs.isValid()) {
+        let wcs = imageFile.wcs;
         let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
         primaryCoord = raDec[0];
         secondaryCoord = raDec[1];
@@ -298,18 +351,20 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onImageClick($event: CanvasMouseEvent) {
-    if ($event.hitImage && this.latestImageFile) {
+    let imageFile = this.store.selectSnapshot(DataFilesState.getEntities)[$event.targetFile.id] as ImageFile;
+    let plotterPageSettings = this.store.selectSnapshot(WorkbenchState.getPlotterPageSettings);
+    if ($event.hitImage && imageFile) {
       let x = $event.imageX;
       let y = $event.imageY;
       if (
-        this.latestCentroidSettings &&
-        this.latestCentroidSettings.centroidClicks
+        plotterPageSettings &&
+        plotterPageSettings.centroidClicks
       ) {
         let result;
-        if (this.latestCentroidSettings.useDiskCentroiding) {
-          result = centroidDisk(this.latestImageFile, x, y);
+        if (plotterPageSettings.planetCentroiding) {
+          result = centroidDisk(imageFile, x, y);
         } else {
-          result = centroidPsf(this.latestImageFile, x, y);
+          result = centroidPsf(imageFile, x, y);
         }
 
         x = result.x;
@@ -319,8 +374,8 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
       let primaryCoord = x;
       let secondaryCoord = y;
       let posType = PosType.PIXEL;
-      if (this.latestImageFile.wcs.isValid()) {
-        let wcs = this.latestImageFile.wcs;
+      if (imageFile.wcs.isValid()) {
+        let wcs = imageFile.wcs;
         let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
         primaryCoord = raDec[0];
         secondaryCoord = raDec[1];
@@ -342,19 +397,19 @@ export class PlotterPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCentroidClicksChange($event) {
     this.store.dispatch(
-      new UpdateCentroidSettings({ centroidClicks: $event.checked })
+      new UpdatePlotterPageSettings({ centroidClicks: $event.checked })
     );
   }
 
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
-      new UpdateCentroidSettings({useDiskCentroiding: $event.checked })
+      new UpdatePlotterPageSettings({ planetCentroiding: $event.checked })
     );
   }
 
   onInterpolatePixelsChange($event) {
     this.store.dispatch(
-      new UpdatePlotterSettings({ interpolatePixels: $event.checked })
+      new UpdatePlotterPageSettings({ interpolatePixels: $event.checked })
     );
   }
 }

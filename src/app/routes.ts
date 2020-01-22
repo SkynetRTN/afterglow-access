@@ -11,7 +11,6 @@ import { WorkbenchComponent } from './core/containers/workbench/workbench.compon
 import { ViewerPageComponent } from './core/containers/workbench/viewer-page/viewer-page.component'
 import { PlotterPageComponent } from './core/containers/workbench/plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './core/containers/workbench/sonifier-page/sonifier-page.component';
-import { SourceIdentificationPageComponent } from './core/containers/workbench/source-identification-page/source-identification-page.component';
 import { CustomMarkerPageComponent } from './core/containers/workbench/custom-marker-page/custom-marker-page.component';
 import { ImageCalculatorPageComponent } from './core/containers/workbench/image-calculator-page/image-calculator-page.component';
 import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
@@ -109,12 +108,6 @@ export const AFTERGLOW_ROUTES: Routes = [
         component: FieldCalPageComponent,
         data: { title: 'Field Calibration' },
       },
-      {
-        path: 'source-identification',
-        component: SourceIdentificationPageComponent,
-        data: { title: 'Source Identification' },
-      },
-      // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
       {
         path: 'photometry',
         component: PhotometryPageComponent,

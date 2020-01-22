@@ -72,6 +72,18 @@ export class DataFilesState {
   }
 
   @Selector()
+  static getImageFiles(state: DataFilesStateModel) {
+    return Object.values(state.entities).filter(f => f.type == DataFileType.IMAGE) as ImageFile[];
+  }
+
+  @Selector()
+  public static getDataFileById(state: DataFilesStateModel) {
+    return (id: string) => {
+      return state.entities[id];
+    };
+  }
+
+  @Selector()
   static getLoading(state: DataFilesStateModel) {
     return state.loading;
   }
@@ -211,7 +223,12 @@ export class DataFilesState {
           dataFile.header = header;
           dataFile.headerLoading = false;
           dataFile.headerLoaded = true;
-          dataFile.wcs = new Wcs(header);
+
+          let wcsHeader: { [key: string]: any } = {};
+          header.forEach(entry => {
+            wcsHeader[entry.key] = entry.value;
+          });
+          dataFile.wcs = new Wcs(wcsHeader);
 
           /* Initialize Image Tiles*/
           if (dataFile.type == DataFileType.IMAGE) {
@@ -253,7 +270,7 @@ export class DataFilesState {
           return state;
         });
         dispatch(new LoadDataFileHdrSuccess(fileId, header));
-        
+
       }),
       catchError(err => {
         setState((state: DataFilesStateModel) => {

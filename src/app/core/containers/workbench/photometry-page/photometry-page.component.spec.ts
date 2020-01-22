@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SourceExtractorPageComponent } from './photometry-page.component';
+import { PhotometryPageComponent } from './photometry-page.component';
 
 describe('SourceExtractorPageComponent', () => {
-  let component: SourceExtractorPageComponent;
-  let fixture: ComponentFixture<SourceExtractorPageComponent>;
+  let component: PhotometryPageComponent;
+  let fixture: ComponentFixture<PhotometryPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SourceExtractorPageComponent ]
+      declarations: [ PhotometryPageComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SourceExtractorPageComponent);
+    fixture = TestBed.createComponent(PhotometryPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

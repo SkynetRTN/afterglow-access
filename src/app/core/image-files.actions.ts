@@ -6,8 +6,9 @@ import { SonifierFileState, SonifierRegionMode } from './models/sonifier-file-st
 import { PlotterFileState } from './models/plotter-file-state';
 import { PosType, Source } from './models/source';
 import { Matrix } from 'svgjs';
-import { SourceIdentificationFileState } from './models/source-identification-file-state';
-import { SourceExtractionSettings } from '../jobs/models/source-extraction';
+import { PhotometryFileState } from './models/photometry-file-state';
+import { SourceExtractionJobSettings } from '../jobs/models/source-extraction';
+import { SourceExtractionSettings } from './models/source-extraction-settings';
 
 export class InitializeImageFileState {
   public static readonly type = '[Viewer] Initialize Image File State';
@@ -35,8 +36,14 @@ export class UpdateNormalizer {
 }
 
 /* Sonification */
-export class UpdateSonifierRegion {
-  public static readonly type = '[Sonifier] Update Region';
+export class SonificationViewportSync {
+  public static readonly type = '[Sonifier] Sonification Viewport Sync';
+
+  constructor(public fileId: string) { }
+}
+
+export class SonificationRegionChanged {
+  public static readonly type = '[Sonifier] Region Changed';
 
   constructor(public fileId: string) { }
 }
@@ -69,18 +76,6 @@ export class UpdateSonifierFileState {
   public static readonly type = '[Sonifier] Update File State';
 
   constructor(public fileId: string, public changes: Partial<SonifierFileState>) { }
-}
-
-export class SetRegionMode {
-  public static readonly type = '[Sonifier] Set Region Mode';
-
-  constructor(public fileId: string, public mode: SonifierRegionMode) { }
-}
-
-export class UpdateSonificationUri {
-  public static readonly type = '[Sonifier] Update Sonification URI';
-
-  constructor(public fileId: string, public uri: string) { }
 }
 
 export class SetProgressLine {
@@ -187,46 +182,10 @@ export class UpdateFilteredSources {
   constructor(public fileId: string) { }
 }
 
-export class SetSourceExtractorRegion {
-  public static readonly type = '[Source Extractor] Set Region'
-
-  constructor(public fileId: string, public region: Region) { }
-}
-
-export class UpdateSourceExtractorRegion {
-  public static readonly type = '[Source Extractor] Update Region'
-
-  constructor(public fileId: string) { }
-}
-
-export class UpdateSourceExtractorFileState {
+export class UpdatePhotometryFileState {
   public static readonly type = '[Source Extractor] Update File State';
 
-  constructor(public fileId: string, public changes: Partial<SourceIdentificationFileState>) { }
-}
-
-export class ExtractSources {
-  public static readonly type = '[Source Extractor] Extract Sources'
-
-  constructor(public fileId: string, public settings: SourceExtractionSettings) { }
-}
-
-export class ExtractSourcesSuccess {
-  public static readonly type = '[Source Extractor] Extract Sources Success'
-
-  constructor(public fileId: string, public sources: Source[]) { }
-}
-
-export class ExtractSourcesFail {
-  public static readonly type = '[Source Extractor] Extract Sources Fail'
-
-  constructor(public error: string) { }
-}
-
-export class UpdateSourceExtractorSource {
-  public static readonly type = '[Source Extractor] Update Source'
-
-  constructor(public fileId: string, public sourceId: string, public changes: Partial<Source>) { }
+  constructor(public fileId: string, public changes: Partial<PhotometryFileState>) { }
 }
 
 export class RemoveSelectedSources {

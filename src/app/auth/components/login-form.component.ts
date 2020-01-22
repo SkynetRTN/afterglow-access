@@ -6,18 +6,18 @@ import { Credentials } from '../models/user';
   selector: 'app-login-form',
   template: `
     <mat-card>
-      <mat-card-title>Login</mat-card-title>
+      <mat-card-title i18n>Login</mat-card-title>
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="submit()">
           <p>
             <mat-form-field>
-              <input type="text" matInput placeholder="Username" formControlName="username">
+              <input type="text" matInput i18n-placeholder placeholder="Username" formControlName="username">
             </mat-form-field>
           </p>
 
           <p>
             <mat-form-field>
-              <input type="password" matInput placeholder="Password" formControlName="password">
+              <input type="password" matInput i18n-placeholder placeholder="Password" formControlName="password">
             </mat-form-field>
           </p>
 
@@ -26,7 +26,7 @@ import { Credentials } from '../models/user';
           </p>
 
           <p class="loginButtons">
-            <button type="submit" mat-raised-button [color]="'primary'">Login</button>
+            <button type="submit" mat-raised-button [color]="'primary'" i18n>Login</button>
           </p>
 
         </form>

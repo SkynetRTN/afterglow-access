@@ -7,7 +7,8 @@ import {
   SimpleChange,
   OnChanges,
   ViewChild,
-  ElementRef
+  ElementRef,
+  OnDestroy
 } from "@angular/core";
 
 import {
@@ -56,13 +57,14 @@ import { SourcesState } from '../../../sources.state';
 import { CustomMarkersState } from '../../../custom-markers.state';
 import { WorkbenchState } from '../../../workbench.state';
 import { ImageFilesState } from '../../../image-files.state';
+import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-workbench-viewer-panel",
   templateUrl: "./workbench-viewer-panel.component.html",
   styleUrls: ["./workbench-viewer-panel.component.scss"]
 })
-export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
+export class WorkbenchViewerPanelComponent implements OnInit, OnChanges, OnDestroy {
   @Input()
   fileId: string;
   private fileId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
@@ -70,6 +72,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   showInfoBar: boolean = true;
   @Input()
   active: boolean = true;
+  @Input()
+  markers: Marker[] = [];
 
   @Output()
   onImageClick = new EventEmitter<CanvasMouseEvent>();
@@ -84,16 +88,14 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
-  markers$: Observable<Marker[]>;
-
+  // markers$: Observable<Marker[]>;
+  
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-
   files$: Observable<Dictionary<DataFile>>;
   sources$: Observable<Source[]>;
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
-  selectedSources$: Observable<Source[]>;
   showAllSources$: Observable<boolean>;
   imageFileState$: Observable<ImageFileState>;
   imageMouseX: number = null;
@@ -106,14 +108,13 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
   constructor(private store: Store, private sanitization: DomSanitizer) {
     this.files$ = this.store.select(DataFilesState.getEntities);
+    let fileReady$ = combineLatest(this.fileId$, this.files$).pipe(
+      filter(([fileId, files]) => fileId in files && files[fileId].headerLoaded)
+    );
+
     this.sources$ = this.store.select(SourcesState.getSources);
     this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
     this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
-    this.selectedSources$ = this.store.select(SourcesState.getSelectedSources);
-    this.showAllSources$ = this.store
-      .select(WorkbenchState.getShowAllSources)
-      .pipe(distinctUntilChanged());
-
     this.imageFileState$ = combineLatest(
       this.fileId$,
       this.store.select(ImageFilesState.getEntities)
@@ -121,139 +122,20 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       map(([fileId, imageFileStates]) => imageFileStates[fileId]),
     );
 
-    let plotterMarkers$ = this.fileId$.pipe(
-      flatMap(fileId => {
-        return this.store
-          .select(WorkbenchState.getPlotterMarkers)
-          .pipe(map(fn => fn(fileId)));
-      })
-    )
-
-    let sonifierMarkers$ = this.fileId$.pipe(
-      flatMap(fileId => {
-        return this.store
-          .select(WorkbenchState.getSonifierMarkers)
-          .pipe(map(fn => fn(fileId)));
-      })
-    )
-
-    let sourceMarkers$ = this.fileId$.pipe(
-      flatMap(fileId => {
-        return this.store
-          .select(WorkbenchState.getSourceMarkers)
-          .pipe(map(fn => fn(fileId)));
-      })
-    )
-
-    let customMarkers$ = this.fileId$.pipe(
-      flatMap(fileId => {
-        return this.store
-          .select(WorkbenchState.getCustomMarkers)
-          .pipe(map(fn => fn(fileId)));
-      })
-    )
-
-    // this.fieldCals$ = store.select(WorkbenchState.getState).pipe(map(state => state.fieldCals));
-    // this.selectedFieldCalId$ = store.select(WorkbenchState.getState).pipe(map(state => state.selectedFieldCalId));
-    // this.selectedFieldCal$ = combineLatest(this.fieldCals$, this.selectedFieldCalId$).pipe(
-    //   map(([fieldCals, selectedFieldCalId]) => {
-    //     if (!fieldCals || selectedFieldCalId == null) return null;
-    //     let selectedFieldCal = fieldCals.find(fieldCal => fieldCal.id == selectedFieldCalId);
-    //     if (!selectedFieldCal) return null;
-    //     return selectedFieldCal;
-    //   })
-    // );
+    
 
 
-    // let fieldCalMarkers$ = combineLatest(
-    //   this.fileId$,
-    //   this.files$,
-    //   this.selectedFieldCal$
-    // ).pipe(
-    //   map(([fileId, files, fieldCal]) => {
-    //     if (fileId === null || fieldCal == null) return [[]];
-    //     let markers: Array<CircleMarker> = [];
-    //     let file = files[fileId] as ImageFile;
-    //     if (!file || !file.headerLoaded || !file.wcs.isValid()) return [[]];
+    
 
-
-    //     fieldCal.catalogSources.forEach(source => {
-    //       let primaryCoord = source.primaryCoord;
-    //       let secondaryCoord = source.secondaryCoord;
-    //       // let selected = selectedSources.includes(source);
-    //       let selected = false;
-
-    //       let wcs = file.wcs;
-    //       let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
-    //       let x = xy[0];
-    //       let y = xy[1];
-    //       if (
-    //         x < 0.5 ||
-    //         x >= getWidth(file) + 0.5 ||
-    //         y < 0.5 ||
-    //         y >= getHeight(file) + 0.5
-    //       ) return;
-
-    //       markers.push({
-    //         type: MarkerType.CIRCLE,
-    //         x: x,
-    //         y: y,
-    //         radius: 15,
-    //         labelGap: 14,
-    //         labelTheta: 0,
-    //         selected: selected,
-    //         data: { id: source.id }
-    //       } as CircleMarker);
-
-
-    //     });
-
-    //     return markers;
-    //   })
-    // );
-
-   
-    this.markers$ = combineLatest(
-      this.store.select(WorkbenchState.getActiveTool),
-      plotterMarkers$,
-      sonifierMarkers$,
-      sourceMarkers$,
-      customMarkers$,
-      // fieldCalMarkers$
-    ).pipe(
-      map(
-        ([
-          activeTool,
-          plotterMarkers,
-          sonifierMarkers,
-          sourceMarkers,
-          customMarkers,
-          // fieldCalMarkers
-        ]) => {
-          if (!this.fileId) return [];
-          let markers = [];
-          if (activeTool == WorkbenchTool.PLOTTER) {
-            markers.push(...plotterMarkers);
-          }
-          if (activeTool == WorkbenchTool.SONIFIER) {
-            markers.push(...sonifierMarkers);
-          }
-          if (activeTool == WorkbenchTool.SOURCE_EXTRACTOR) {
-            markers.push(...sourceMarkers);
-          }
-          if (activeTool != WorkbenchTool.SOURCE_EXTRACTOR) {
-            markers.push(...customMarkers);
-          }
-          // if (activeTool == WorkbenchTool.FIELD_CAL) {
-          //   markers.push(...fieldCalMarkers);
-          // }
-          return markers;
-        }
-      )
-    );
   }
 
+  
+
   ngOnInit() { }
+
+  ngOnDestroy() {
+    
+  }
 
   ngOnChanges(changes: { [key: string]: SimpleChange }) {
     if (changes.hasOwnProperty("fileId")) {

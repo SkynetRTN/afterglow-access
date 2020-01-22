@@ -7,11 +7,8 @@
     !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
   "
 >
-  <app-workbench-viewer-grid
-    (onImageClick)="onImageClick($event)"
-    (onMarkerClick)="onMarkerClick($event)"
-    (onImageMove)="onImageMove($event)"
-  ></app-workbench-viewer-grid>
+<app-workbench-viewer-grid [viewers]="viewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"
+(onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-viewer-grid>
 </div>
 
 <span class="resizer"></span>
@@ -33,25 +30,25 @@
 
     <div class="card-body" style="overflow-y: auto;">
       <div
-        *ngIf="!(imageFile$ | async) || !(imageFileState$ | async)"
+        *ngIf="!(activeImageFile$ | async) || !(activeImageFileState$ | async)"
         class="alert alert-info"
       >
         Select a data file to see plotter options.
       </div>
 
-      <div *ngIf="(imageFile$ | async) && (imageFileState$ | async)">
+      <div *ngIf="(activeImageFile$ | async) && (activeImageFileState$ | async)">
           <p>Click once on the image to set the measurement's start point,  move your mouse, then click a second time to set the end point.</p>
         
 
         <app-plotter
           #plotter
-          [imageFile]="imageFile$ | async"
+          [imageFile]="activeImageFile$ | async"
           [mode]="mode$ | async"
           [width]="500"
           [height]="350"
           [lineMeasureStart]="lineStart$ | async"
           [lineMeasureEnd]="lineEnd$ | async"
-          [interpolatePixels]="(plotterSettings$ | async)?.interpolatePixels"
+          [interpolatePixels]="(plotterPageSettings$ | async)?.interpolatePixels"
         >
         </app-plotter>
         <mat-form-field appearance="outline" style="width: 300px;">
@@ -69,7 +66,7 @@
           <div class="col-6">
             <div class="form-group">
               <mat-slide-toggle
-                [checked]="(centroidSettings$ | async)?.centroidClicks"
+                [checked]="(plotterPageSettings$ | async)?.centroidClicks"
                 [labelPosition]="before"
                 (change)="onCentroidClicksChange($event)"
                 color="primary"
@@ -81,8 +78,8 @@
           <div class="col-6">
             <div class="form-group">
               <mat-slide-toggle
-                [checked]="(centroidSettings$ | async)?.useDiskCentroiding"
-                [disabled]="!(centroidSettings$ | async)?.centroidClicks"
+                [checked]="(plotterPageSettings$ | async)?.planetCentroiding"
+                [disabled]="!(plotterPageSettings$ | async)?.centroidClicks"
                 color="primary"
                 [labelPosition]="before"
                 (change)="onPlanetCentroidingChange($event)"
@@ -96,7 +93,7 @@
           <div class="col-6">
             <div class="form-group">
               <mat-slide-toggle
-                [checked]="(plotterSettings$ | async)?.interpolatePixels"
+                [checked]="(plotterPageSettings$ | async)?.interpolatePixels"
                 [labelPosition]="before"
                 (change)="onInterpolatePixelsChange($event)"
                 color="primary"

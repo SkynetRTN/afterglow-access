@@ -1,11 +1,8 @@
 .info-bar {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
   height: 36px;
   padding: 5px;
   border-top: 2px solid #FFFFFF;
   background: rgba(0, 0, 0, .9);
   color: #FFF;
+  overflow: hidden;
 }

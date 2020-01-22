@@ -12,8 +12,10 @@
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
               <td mat-cell *matCellDef="let shortcut">
-                <span *ngFor="let key of shortcut.key.split(' ')" class="cfp-hotkeys-key pr-1">
-                  {{ key }}
+                <span *ngFor="let key of shortcut.key.split(' '); let i = index" class="pr-1">
+                  <span *ngIf="i>0">, </span>
+                  <span *ngIf="shiftModifier(key)"><span class="cfp-hotkeys-key">shift</span> + </span>
+                  <span class="cfp-hotkeys-key">{{ key }}</span>
                 </span>
               </td>
             </ng-container>

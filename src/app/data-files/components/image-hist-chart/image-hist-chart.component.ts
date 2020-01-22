@@ -37,8 +37,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   math = Math;
   private lastHistData;
   private yMax = 0;
-  private logarithmicX: boolean = false;
-  private logarithmicY: boolean = true;
+  public logarithmicX: boolean = false;
+  public logarithmicY: boolean = true;
 
   public data: Array<Plotly.Data> = [];
   public layout: Partial<Plotly.Layout> = {

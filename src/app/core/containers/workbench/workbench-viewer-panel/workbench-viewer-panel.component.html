@@ -1,14 +1,27 @@
-<div id="image-viewer-wrapper">
-  <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]" (downloadSnapshot)="handleDownloadSnapshot()" [class.active]="active"></app-image-viewer-title-bar>
+<div id="image-viewer-wrapper" fxLayout="column" class="h-100">
+  <div fxFlex="0 0 auto">
+    <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]" (downloadSnapshot)="handleDownloadSnapshot()"
+      [class.active]="active"></app-image-viewer-title-bar>
+  </div>
+  <div fxFlex="1 1 100%">
+    <div class="viewer-marker-wrapper h-100">
+      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]"
+      [normalization]="(imageFileState$ | async)?.normalization"
+      [transformation]="(imageFileState$ | async)?.transformation" (onImageMove)="handleImageMove($event)"
+      (onImageClick)="handleImageClick($event)">
+      <app-image-viewer-marker-overlay *ngIf="(files$ | async)[fileId]" [imageFile]="(files$ | async)[fileId]"
+        [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
+        [transform]="(imageFileState$ | async)?.transformation?.imageToViewportTransform" [markers]="markers"
+        (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;" class="marker-overlay">
+      </app-image-viewer-marker-overlay>
+    </div>
+    
 
-  <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]" [normalization]="(imageFileState$ | async)?.normalization"
-    [transformation]="(imageFileState$ | async)?.transformation" (onImageMove)="handleImageMove($event)" (onImageClick)="handleImageClick($event)">
-    <app-image-viewer-marker-overlay *ngIf="(files$ | async)[fileId]" [imageFile]="(files$ | async)[fileId]" [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
-      [transform]="(imageFileState$ | async)?.transformation?.imageToViewportTransform" [markers]="markers$ | async" (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;">
-    </app-image-viewer-marker-overlay>
+    </div>
+  </div>
+  <div fxFlex="0 0 auto">
     <app-image-viewer-status-bar [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY"></app-image-viewer-status-bar>
   </div>
-
 </div>
 
 

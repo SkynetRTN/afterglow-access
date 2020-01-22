@@ -12,24 +12,19 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { JobsState } from '../../../../jobs/jobs.state';
-import { UpdateStackFormData, SetActiveTool, SetLastRouterPath, CreateStackingJob } from '../../../workbench.actions';
+import { SetActiveTool, SetLastRouterPath, CreateStackingJob, UpdateStackingPageSettings } from '../../../workbench.actions';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 @Component({
   selector: 'app-stacker-page',
   templateUrl: './stacker-page.component.html',
   styleUrls: ['./stacker-page.component.css']
 })
-export class StackerPageComponent implements OnInit {
+export class StackerPageComponent extends WorkbenchPageBaseComponent implements OnInit {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
-  activeImageFile$: Observable<ImageFile>;
-  activeImageFileState$: Observable<ImageFileState>;
-  allImageFiles$: Observable<Array<ImageFile>>;
   selectedImageFiles$: Observable<Array<ImageFile>>;
   stackFormData$: Observable<StackFormData>;
-  showConfig$: Observable<boolean>;
-  stackJobRow$: Observable<{job: StackingJob, result: StackingJobResult}>;
+  stackJobRow$: Observable<{ job: StackingJob, result: StackingJobResult }>;
 
   stackForm = new FormGroup({
     selectedImageFileIds: new FormControl([], Validators.required),
@@ -41,25 +36,8 @@ export class StackerPageComponent implements OnInit {
     high: new FormControl(''),
   });
 
-  constructor(private store: Store, router: Router) {
-    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
-    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile)
-    this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
-    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-
-    
-
-    this.allImageFiles$ = store.select(DataFilesState.getDataFiles)
-    .pipe(
-      map(
-        files =>
-          files.filter(file => file.type == DataFileType.IMAGE) as Array<
-            ImageFile
-          >
-      )
-    );
-
+  constructor(store: Store, router: Router) {
+    super(store, router);
     this.stackForm.get('mode').valueChanges.subscribe(value => {
       if (value == 'percentile') {
         this.stackForm.get('percentile').enable();
@@ -79,10 +57,10 @@ export class StackerPageComponent implements OnInit {
     });
 
     this.stackFormData$ = store.select(WorkbenchState.getState).pipe(
-      map(state => state.stackFormData),
+      map(state => state.stackingPageSettings.stackFormData),
       tap(data => {
         // console.log("patching values: ", data.selectedImageFileIds)
-        this.stackForm.patchValue(data, {emitEvent: false});
+        this.stackForm.patchValue(data, { emitEvent: false });
       })
     );
 
@@ -92,18 +70,18 @@ export class StackerPageComponent implements OnInit {
       map(([allImageFiles, data]) => data.selectedImageFileIds.map(id => allImageFiles.find(f => f.id == id)))
     )
 
-    this.stackJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getJobs)).pipe(
+    this.stackJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
       map(([state, jobRowLookup]) => {
-        if(!state.currentStackingJobId || !jobRowLookup[state.currentStackingJobId]) return null;
-        return jobRowLookup[state.currentStackingJobId] as {job: StackingJob, result: StackingJobResult};
+        if (!state.stackingPageSettings.currentStackingJobId || !jobRowLookup[state.stackingPageSettings.currentStackingJobId]) return null;
+        return jobRowLookup[state.stackingPageSettings.currentStackingJobId] as { job: StackingJob, result: StackingJobResult };
       })
-      
+
     )
 
 
     this.stackForm.valueChanges.subscribe(value => {
       // if(this.imageCalcForm.valid) {
-        this.store.dispatch(new UpdateStackFormData(this.stackForm.value));
+      this.store.dispatch(new UpdateStackingPageSettings({ stackFormData: this.stackForm.value }));
       // }
     })
 
@@ -119,9 +97,11 @@ export class StackerPageComponent implements OnInit {
   }
 
   selectImageFiles(imageFiles: ImageFile[]) {
-    this.store.dispatch(new UpdateStackFormData({
-      ...this.stackForm.value,
-      selectedImageFileIds: imageFiles.map(f => f.id)
+    this.store.dispatch(new UpdateStackingPageSettings({
+      stackFormData: {
+        ...this.stackForm.value,
+        selectedImageFileIds: imageFiles.map(f => f.id)
+      }
     }));
   }
 
@@ -133,7 +113,7 @@ export class StackerPageComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    
+
   }
 
 }

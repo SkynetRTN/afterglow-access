@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SourceExtractionSettingsDialogComponent } from './source-extraction-settings-dialog.component';
+import { SourceExtractionDialogComponent } from './source-extraction-dialog.component';
 
 describe('SourceExtractionSettingsDialogComponent', () => {
-  let component: SourceExtractionSettingsDialogComponent;
-  let fixture: ComponentFixture<SourceExtractionSettingsDialogComponent>;
+  let component: SourceExtractionDialogComponent;
+  let fixture: ComponentFixture<SourceExtractionDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [SourceExtractionSettingsDialogComponent]
+      declarations: [SourceExtractionDialogComponent]
     })
       .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SourceExtractionSettingsDialogComponent);
+    fixture = TestBed.createComponent(SourceExtractionDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

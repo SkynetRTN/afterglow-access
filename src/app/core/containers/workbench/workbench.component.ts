@@ -1,19 +1,25 @@
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { DataFile } from '../../../data-files/models/data-file'
+import { DataFile, ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file'
 import { SidebarView } from '../../models/sidebar-view';
 import { Router } from '@angular/router';
 import { Subscription } from '../../../../../node_modules/rxjs';
 import { HotkeysService, Hotkey } from '../../../../../node_modules/angular2-hotkeys';
 import { MatDialog } from '@angular/material/dialog';
-import { Store } from '@ngxs/store';
+import { Store, Actions, ofActionCompleted, ofActionSuccessful } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig } from '../../workbench.actions';
-import { LoadLibrary, RemoveAllDataFiles } from '../../../data-files/data-files.actions';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey } from '../../workbench.actions';
+import { LoadLibrary, RemoveAllDataFiles, RemoveDataFile } from '../../../data-files/data-files.actions';
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
-import { tap } from 'rxjs/operators';
+import { tap, map, withLatestFrom, filter } from 'rxjs/operators';
+import { ViewMode } from "../../models/view-mode";
+import { MatButtonToggleChange } from '@angular/material';
+import { Viewer } from '../../models/viewer';
+import { DataProvider } from '../../../data-providers/models/data-provider';
+import { CorrelationIdGenerator } from '../../../utils/correlated-action';
+import { DataProvidersState } from '../../../data-providers/data-providers.state';
 
 
 
@@ -30,24 +36,36 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private FILE_INFO_ROUTE = '/workbench/file-info';
   private PLOTTER_ROUTE = '/workbench/plotter';
   private SONIFIER_ROUTE = '/workbench/sonifier';
-  private SOURCE_IDENTIFICATION_ROUTE = '/workbench/source-identification';
   private FIELD_CAL_ROUTE = '/workbench/field-cal';
   private PHOTOMETRY_ROUTE = '/workbench/photometry';
   private IMAGE_ARITHMETIC_ROUTE = '/workbench/image-calculator';
   private ALIGNER_ROUTE = '/workbench/aligner';
   private STACKER_ROUTE = '/workbench/stacker';
 
+  ViewMode = ViewMode;
+
   files$: Observable<Array<DataFile>>;
   private selectedFile$: Observable<DataFile>;
   fxShowSidebar$: Observable<boolean>;
   fxShowTool$: Observable<boolean>;
   showSidebar$: Observable<boolean>;
+  surveyDataProvider$: Observable<DataProvider>;
+  surveyImportCorrId$: Observable<string>;
+  
+  viewMode$: Observable<ViewMode>;
+  viewers$: Observable<Viewer[]>;
+  viewerSyncEnabled$: Observable<boolean>;
+  normalizationSyncEnabled$: Observable<boolean>;
+  activeViewerId$: Observable<string>;
+  activeViewer$: Observable<Viewer>;
   private showConfig$: Observable<boolean>;
   private showConfig: boolean;
   sidebarView$: Observable<SidebarView>;
   private loading$: Observable<boolean>;
   private fileFilterString: string = '';
   private subs: Subscription[] = [];
+  fileEntities$: Observable<{[id: string]: DataFile}>;
+  imageFile$: Observable<ImageFile>;
 
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
@@ -56,14 +74,32 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   SidebarView = SidebarView;
   private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store, private router: Router, private _hotkeysService: HotkeysService, public dialog: MatDialog) {
-    this.files$ = this.store.select(DataFilesState.getDataFiles);
+  constructor(private actions$: Actions, private store: Store, private router: Router, private _hotkeysService: HotkeysService, public dialog: MatDialog, private corrGen: CorrelationIdGenerator) {
+    this.fileEntities$ = this.store.select(DataFilesState.getEntities);
+    this.files$ = this.store.select(DataFilesState.getDataFiles).pipe(
+      map(files => files.sort((a,b) => a.name.localeCompare(b.name)))
+    );
     this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
-
+    this.viewers$ = this.store.select(WorkbenchState.getViewers).pipe(map(viewer => viewer.filter(viewer => !viewer.hidden)));
     this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
     this.showConfig$ = this.store.select(WorkbenchState.getShowConfig);
     this.showSidebar$ = this.store.select(WorkbenchState.getShowSidebar);
     this.loading$ = this.store.select(DataFilesState.getLoading);
+    this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
+    this.activeViewerId$ = this.store.select(WorkbenchState.getActiveViewerId);
+    this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
+    this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.surveyImportCorrId$ = store.select(WorkbenchState.getSurveyImportCorrId);
+    this.surveyDataProvider$ = this.store.select(DataProvidersState.getDataProviders).pipe(
+      map(dataProviders => dataProviders.find(dp => dp.name == 'Imaging Surveys'))
+    );
+
+    this.viewerSyncEnabled$ = store.select(
+      WorkbenchState.getViewerSyncEnabled
+    );
+    this.normalizationSyncEnabled$ = store.select(
+      WorkbenchState.getNormalizationSyncEnabled
+    );
 
     this.subs.push(this.showConfig$.subscribe(showConfig => this.showConfig = showConfig));
 
@@ -88,7 +124,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       return false; // Prevent bubbling
     }, undefined, 'Markers'));
 
-    this.hotKeys.push(new Hotkey('c', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('P', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.PLOTTER_ROUTE]);
       return false; // Prevent bubbling
@@ -106,13 +142,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       return false; // Prevent bubbling
     }, undefined, 'Field Calibration'));
 
-    this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.SOURCE_IDENTIFICATION_ROUTE]);
-      return false; // Prevent bubbling
-    }, undefined, 'Photometry'));
+    // this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
+    //   this.store.dispatch(new SetShowConfig(true));
+    //   this.router. navigate([this.PHOTOMETRY_ROUTE]);
+    //   return false; // Prevent bubbling
+    // }, undefined, 'Photometry'));
 
-    this.hotKeys.push(new Hotkey('o', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('/', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.IMAGE_ARITHMETIC_ROUTE]);
       return false; // Prevent bubbling
@@ -124,7 +160,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       return false; // Prevent bubbling
     }, undefined, 'Aligning'));
 
-    this.hotKeys.push(new Hotkey('z', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('S', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
       this.router. navigate([this.STACKER_ROUTE]);
       return false; // Prevent bubbling
@@ -132,10 +168,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     
 
-    // this.hotKeys.push(new Hotkey('0', (event: KeyboardEvent): boolean => {
-    //   this.store.dispatch(new SetFullScreen({value: false}))
-    //   return false; // Prevent bubbling
-    // }, undefined, 'Show all workbench panels'));
+    this.hotKeys.push(new Hotkey('R', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new SetFullScreen(false))
+      return false; // Prevent bubbling
+    }, undefined, 'Reset workbench views'));
 
     this.hotKeys.push(new Hotkey('1', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetFullScreen(true));
@@ -223,6 +259,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new SetSidebarView(value))
   }
 
+  setViewModeOption($event: MatButtonToggleChange) {
+    this.store.dispatch(
+      new SetViewMode($event.value)
+    );
+  }
+
+  onActiveViewerIdChange(value: string) {
+    this.store.dispatch(
+      new SetActiveViewer(value)
+    );
+  }
+
   onClickWorkbenchNav(isActiveUrl: boolean) {
     if (isActiveUrl) {
       // toggle
@@ -255,5 +303,38 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   getToolbarTooltip(route: string, base: string) {
     return (this.showConfig && this.router.isActive(route, false) ? 'Hide ' : 'Show ') + base;
   }
+
+  onViewerSyncEnabledChange($event) {
+    this.store.dispatch(
+      new SetViewerSyncEnabled($event.checked)
+    );
+  }
+
+  onNormalizationSyncEnabledChange($event) {
+    this.store.dispatch(
+      new SetNormalizationSyncEnabled($event.checked)
+    );
+  }
+
+  importFromSurvey(surveyDataProvider: DataProvider, imageFile: ImageFile) {
+    let centerRaDec = imageFile.wcs.pixToWorld([
+      getWidth(imageFile) / 2,
+      getHeight(imageFile) / 2
+    ]);
+    let pixelScale = imageFile.wcs.getPixelScale() * 60;
+    let width = pixelScale * getWidth(imageFile);
+    let height = pixelScale * getHeight(imageFile);
+
+    this.store.dispatch(
+      new ImportFromSurvey(
+        surveyDataProvider.id,
+        centerRaDec[0],
+        centerRaDec[1],
+        width,
+        height,
+        this.corrGen.next())
+    );
+  }
+
 
 }

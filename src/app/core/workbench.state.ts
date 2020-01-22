@@ -1,4 +1,4 @@
-import { State, Action, Selector, StateContext, Store, Actions, ofActionDispatched, ofActionSuccessful, ofActionErrored } from '@ngxs/store';
+import { State, Action, Selector, StateContext, Store, Actions, ofActionDispatched, ofActionSuccessful, ofActionErrored, ofActionCompleted, ofActionCanceled } from '@ngxs/store';
 import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap } from 'rxjs/operators';
 import { of, merge, combineLatest, interval, Observable } from "rxjs";
 import { Point, Matrix, Rectangle } from 'paper';
@@ -6,19 +6,18 @@ import { WorkbenchStateModel, WorkbenchTool } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
-import { SourceIdentificationModeOption } from './models/source-identification-mode-option';
-import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrFail, LoadImageHistFail, LoadDataFileHdrSuccess } from '../data-files/data-files.actions';
+import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrFail, LoadImageHistFail, LoadDataFileHdrSuccess, RemoveDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetPlotterSyncEnabled, SetPlotMode, SetShowConfig, ToggleShowConfig, SetActiveTool, SetShowAllSources, UpdateCentroidSettings, UpdatePlotterSettings, SetSourceExtractionMode, UpdatePhotSettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, UpdatePixelOpsFormData, UpdateAlignFormData, UpdateStackFormData, CloseSidenav, OpenSidenav } from './workbench.actions';
-import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime } from '../data-files/models/data-file';
+import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers } from './workbench.actions';
+import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
 import { ImageFilesState, ImageFilesStateModel } from './image-files.state';
 import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './image-files.actions';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CreateJob } from '../jobs/jobs.actions';
+import { CreateJob, UpdateJob } from '../jobs/jobs.actions';
 import { CatalogQueryJobResult } from '../jobs/models/catalog-query';
-import { PixelOpsJob } from '../jobs/models/pixel-ops';
+import { PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
 import { JobActionHandler } from '../jobs/lib/job-action-handler';
 import { AlignmentJob, AlignmentJobResult } from '../jobs/models/alignment';
@@ -26,11 +25,23 @@ import { StackingJob } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { DataFileType } from '../data-files/models/data-file-type';
-import { PosType } from './models/source';
+import { PosType, Source } from './models/source';
 import { MarkerType, LineMarker, RectangleMarker, CircleMarker, TeardropMarker, Marker } from './models/marker';
 import { SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
 import { CustomMarkersState, CustomMarkersStateModel } from './custom-markers.state';
+import { SourceExtractionRegionOption } from './models/source-extraction-settings';
+import { getViewportRegion } from './models/transformation';
+import { SourceExtractionJobSettings, SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
+import { JobsState } from '../jobs/jobs.state';
+import { AddSources } from './sources.actions';
+import { PhotometryJob, PhotometryJobSettings, PhotometryJobResult } from '../jobs/models/photometry';
+import { Astrometry } from '../jobs/models/astrometry';
+import { SourceId } from '../jobs/models/source-id';
+import { PhotDataStateModel, PhotDataState } from './phot-data.state.';
+import { PhotData } from './models/source-phot-data';
+import { AddPhotDatas } from './phot-data.actions';
+import { Viewer } from './models/viewer';
 
 @State<WorkbenchStateModel>({
   name: 'workbench',
@@ -40,86 +51,124 @@ import { CustomMarkersState, CustomMarkersStateModel } from './custom-markers.st
     inFullScreenMode: false,
     fullScreenPanel: 'file',
     selectedFileId: null,
-    activeViewerIndex: 0,
+    activeViewerId: 'VWR1',
     activeTool: WorkbenchTool.VIEWER,
     viewMode: ViewMode.SINGLE,
-    viewers: [
-      {
+    viewerIds: ['VWR1', 'VWR2'],
+    viewers: {
+      'VWR1': {
+        viewerId: 'VWR1',
         fileId: null,
         panEnabled: true,
-        zoomEnabled: true
+        zoomEnabled: true,
+        hidden: false,
+        markers: [],
       },
-      {
+      'VWR2': {
+        viewerId: 'VWR2',
         fileId: null,
         panEnabled: true,
-        zoomEnabled: true
-      },
-    ],
+        zoomEnabled: true,
+        hidden: true,
+        markers: [],
+      }
+    },
     viewerSyncEnabled: false,
     normalizationSyncEnabled: false,
-    plotterSyncEnabled: false,
-    plotterMode: '1D',
     sidebarView: SidebarView.FILES,
     showSidebar: true,
     showConfig: true,
-    showAllSources: true,
     centroidSettings: {
-      centroidClicks: false,
       useDiskCentroiding: false,
       psfCentroiderSettings: createPsfCentroiderSettings(),
       diskCentroiderSettings: createDiskCentroiderSettings()
     },
-    photSettings: {
-      centroid_radius: 4,
+    photometrySettings: {
+      gain: 1,
+      centroidRadius: 5,
+      mode: 'constant',
       a: 5,
-      a_in: 10,
-      a_out: 15
+      b: 5,
+      theta: 0,
+      aIn: 5,
+      aOut: 15,
+      bOut: 15,
+      thetaOut: 0,
+      aKrFactor: 1.0,
+      aInKrFactor: 1.0,
+      aOutKrFactor: 1.5,
     },
     sourceExtractionSettings: {
       threshold: 3,
       fwhm: 0,
       deblend: false,
       limit: 200,
+      region: SourceExtractionRegionOption.ENTIRE_IMAGE
     },
-    sourceExtractorModeOption: SourceIdentificationModeOption.MOUSE,
-    plotterSettings: {
-      interpolatePixels: false
+    customMarkerPageSettings: {
+      centroidClicks: false,
+    },
+    plotterPageSettings: {
+      interpolatePixels: false,
+      centroidClicks: false,
+      planetCentroiding: false,
+      plotterSyncEnabled: false,
+      plotterMode: '1D',
+    },
+    photometryPageSettings: {
+      showSourceLabels: true,
+      centroidClicks: true,
+      showSourcesFromAllFiles: true,
+      selectedSourceIds: [],
+      coordMode: 'sky',
+      autoPhot: true,
+      batchPhotFormData: {
+        selectedImageFileIds: []
+      },
+      batchPhotProgress: null,
+      batchPhotJobId: null
+    },
+    pixelOpsPageSettings: {
+      currentPixelOpsJobId: null,
+      showCurrentPixelOpsJobState: true,
+      pixelOpsFormData: {
+        operand: '+',
+        mode: 'image',
+        auxImageFileId: null,
+        auxImageFileIds: [],
+        imageFileIds: [],
+        scalarValue: 1,
+        inPlace: false,
+        opString: ''
+      },
+    },
+    aligningPageSettings: {
+      alignFormData: {
+        selectedImageFileIds: [],
+        mode: 'astrometric',
+        inPlace: true,
+      },
+      currentAlignmentJobId: null,
+    },
+    stackingPageSettings: {
+      stackFormData: {
+        selectedImageFileIds: [],
+        mode: 'average',
+        scaling: 'none',
+        rejection: 'none',
+        percentile: 50,
+        low: 0,
+        high: 0,
+      },
+      currentStackingJobId: null,
     },
     catalogs: [],
     selectedCatalogId: null,
     fieldCals: [],
     selectedFieldCalId: null,
-    currentPixelOpsJobId: null,
-    showCurrentPixelOpsJobState: true,
     addFieldCalSourcesFromCatalogJobId: null,
     creatingAddFieldCalSourcesFromCatalogJob: false,
     addFieldCalSourcesFromCatalogFieldCalId: null,
-    pixelOpsFormData: {
-      operand: '+',
-      mode: 'image',
-      auxImageFileId: null,
-      auxImageFileIds: [],
-      imageFileIds: [],
-      scalarValue: 1,
-      inPlace: false,
-      opString: ''
-    },
-    alignFormData: {
-      selectedImageFileIds: [],
-      mode: 'astrometric',
-      inPlace: true,
-    },
-    currentAlignmentJobId: null,
-    stackFormData: {
-      selectedImageFileIds: [],
-      mode: 'average',
-      scaling: 'none',
-      rejection: 'none',
-      percentile: 50,
-      low: 0,
-      high: 0,
-    },
-    currentStackingJobId: null,
     surveyImportCorrId: null
   }
 })
@@ -143,35 +192,78 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getViewers(state: WorkbenchStateModel) {
-    return state.viewers;
-  }
-
-  @Selector([DataFilesState])
-  public static getActiveImageFile(state: WorkbenchStateModel, dataFilesState: DataFilesStateModel) {
-    let activeViewer = WorkbenchState.getActiveViewer(state);
-    if (!activeViewer || activeViewer.fileId == null) return null;
-    let dataFile = dataFilesState.entities[activeViewer.fileId];
-    if (dataFile.type != DataFileType.IMAGE) return null;
-    return dataFile as ImageFile;
-  }
-
-  @Selector([DataFilesState, ImageFilesState])
-  public static getActiveImageFileState(state: WorkbenchStateModel, dataFilesState: DataFilesStateModel, imageFilesState: ImageFilesStateModel) {
-    let activeImageFile = WorkbenchState.getActiveImageFile(state, dataFilesState);
-    if (!activeImageFile) return null;
-    return imageFilesState.entities[activeImageFile.id];
+  public static getViewerIds(state: WorkbenchStateModel) {
+    return state.viewerIds;
   }
 
   @Selector()
-  public static getActiveViewerIndex(state: WorkbenchStateModel) {
-    return state.activeViewerIndex;
+  public static getViewerEntities(state: WorkbenchStateModel) {
+    return state.viewers;
+  }
+
+  @Selector()
+  public static getViewers(state: WorkbenchStateModel) {
+    return Object.values(state.viewers);
+  }
+
+  @Selector()
+  public static getViewerById(state: WorkbenchStateModel) {
+    return (id: string) => {
+      return state.viewers[id];
+    };
+  }
+
+  @Selector([WorkbenchState.getViewers])
+  public static getViewerFileIds(state: WorkbenchStateModel, viewers: Viewer[]) {
+    return viewers.map(viewer => viewer.fileId);
+  }
+
+  @Selector([WorkbenchState.getViewerFileIds, DataFilesState.getEntities])
+  public static getViewerFileHeaders(state: WorkbenchStateModel, fileIds: string[], dataFiles: { [id: string]: DataFile }) {
+    return fileIds.map(fileId => dataFiles[fileId].header);
+  }
+
+  @Selector()
+  public static getActiveFileId(state: WorkbenchStateModel) {
+    let activeViewer = WorkbenchState.getActiveViewer(state);
+    if (!activeViewer || activeViewer.fileId == null) return null;
+    return activeViewer.fileId;
+  }
+
+  @Selector([WorkbenchState.getActiveFileId, DataFilesState])
+  public static getActiveFile(state: WorkbenchStateModel, fileId: string, dataFilesState: DataFilesStateModel) {
+    if (fileId == null) return null;
+    return dataFilesState.entities[fileId];
+  }
+
+  @Selector([WorkbenchState.getActiveFile])
+  public static getActiveFileHeader(state: WorkbenchStateModel, file: DataFile) {
+    if (!file || !file.headerLoaded) return null;
+    return file.header;
+  }
+
+  @Selector([WorkbenchState.getActiveFile])
+  public static getActiveImageFile(state: WorkbenchStateModel, file: DataFile) {
+    if (!file) return null;
+    if (file.type != DataFileType.IMAGE) return null;
+    return file as ImageFile;
+  }
+
+  @Selector([WorkbenchState.getActiveImageFile, ImageFilesState])
+  public static getActiveImageFileState(state: WorkbenchStateModel, imageFile: ImageFile, imageFilesState: ImageFilesStateModel) {
+    if (!imageFile) return null;
+    return imageFilesState.entities[imageFile.id];
+  }
+
+
+  @Selector()
+  public static getActiveViewerId(state: WorkbenchStateModel) {
+    return state.activeViewerId;
   }
 
   @Selector()
   public static getActiveViewer(state: WorkbenchStateModel) {
-    if (state.activeViewerIndex < state.viewers.length) return state.viewers[state.activeViewerIndex];
-    return null;
+    return state.viewers[state.activeViewerId];
   }
 
 
@@ -186,13 +278,8 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getPlotterSyncEnabled(state: WorkbenchStateModel) {
-    return state.plotterSyncEnabled;
-  }
-
-  @Selector()
-  public static getShowAllSources(state: WorkbenchStateModel) {
-    return state.showAllSources;
+  public static getShowSourceLabels(state: WorkbenchStateModel) {
+    return state.photometryPageSettings.showSourceLabels;
   }
 
   @Selector()
@@ -231,68 +318,56 @@ export class WorkbenchState {
     return state.sidebarView;
   }
 
+  @Selector()
+  public static getPhotometrySettings(state: WorkbenchStateModel) {
+    return state.photometrySettings;
+  }
+
+  @Selector()
+  public static getSourceExtractionSettings(state: WorkbenchStateModel) {
+    return state.sourceExtractionSettings;
+  }
+
+  @Selector()
+  public static getCentroidSettings(state: WorkbenchStateModel) {
+    return state.centroidSettings;
+  }
+
+  @Selector()
+  public static getPlotterPageSettings(state: WorkbenchStateModel) {
+    return state.plotterPageSettings;
+  }
+
+  @Selector()
+  public static getPhotometryPageSettings(state: WorkbenchStateModel) {
+    return state.photometryPageSettings;
+  }
+
+  @Selector()
+  public static getPhotometrySelectedSourceIds(state: WorkbenchStateModel) {
+    return state.photometryPageSettings.selectedSourceIds;
+  }
+
+  @Selector()
+  public static getPhotometryCoordMode(state: WorkbenchStateModel) {
+    return state.photometryPageSettings.coordMode;
+  }
+
+  @Selector()
+  public static getPhotometryShowSourcesFromAllFiles(state: WorkbenchStateModel) {
+    return state.photometryPageSettings.showSourcesFromAllFiles;
+  }
+
+  @Selector()
+  public static getPhotometryShowSourceLabels(state: WorkbenchStateModel) {
+    return state.photometryPageSettings.showSourceLabels;
+  }
+
   @Selector([ImageFilesState, DataFilesState])
   static getPlotterMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
-      let plotter = imageFilesState.entities[fileId].plotter;
-      let lineMeasureStart = plotter.lineMeasureStart;
-      let lineMeasureEnd = plotter.lineMeasureEnd;
 
-      if (!lineMeasureStart || !lineMeasureEnd) return [[]];
-
-      if (!file) return [[]];
-
-      let startPrimaryCoord = lineMeasureStart.primaryCoord;
-      let startSecondaryCoord = lineMeasureStart.secondaryCoord;
-      let startPosType = lineMeasureStart.posType;
-      let endPrimaryCoord = lineMeasureEnd.primaryCoord;
-      let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
-      let endPosType = lineMeasureEnd.posType;
-
-      let x1 = startPrimaryCoord;
-      let y1 = startSecondaryCoord;
-      let x2 = endPrimaryCoord;
-      let y2 = endSecondaryCoord;
-
-      if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-        if (!file.headerLoaded || !file.wcs.isValid()) return [[]];
-        let wcs = file.wcs;
-        if (startPosType == PosType.SKY) {
-          let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
-          x1 = Math.max(Math.min(xy[0], getWidth(file)), 0);
-          y1 = Math.max(Math.min(xy[1], getHeight(file)), 0);
-        }
-
-        if (endPosType == PosType.SKY) {
-          let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
-          x2 = Math.max(Math.min(xy[0], getWidth(file)), 0);
-          y2 = Math.max(Math.min(xy[1], getHeight(file)), 0);
-        }
-      }
-
-      if (state.plotterMode == '1D') {
-        return [
-          {
-            type: MarkerType.LINE,
-            x1: x1,
-            y1: y1,
-            x2: x2,
-            y2: y2
-          } as LineMarker
-        ];
-      }
-      else {
-        return [
-          {
-            type: MarkerType.RECTANGLE,
-            x: Math.min(x1, x2),
-            y: Math.min(y1, y2),
-            width: Math.abs(x2 - x1),
-            height: Math.abs(y2 - y1)
-          } as RectangleMarker
-        ];
-      }
     };
   }
 
@@ -301,7 +376,7 @@ export class WorkbenchState {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
       let sonifier = imageFilesState.entities[fileId].sonifier;
-      let region = sonifier.region;
+      let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
       let regionMode = sonifier.regionMode;
       let progressLine = sonifier.progressLine;
       let result: Array<RectangleMarker | LineMarker> = [];
@@ -317,88 +392,48 @@ export class WorkbenchState {
   }
 
   @Selector([ImageFilesState, DataFilesState, SourcesState])
-  static getSourceMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel, sourcesState: SourcesStateModel) {
+  static getPhotometrySourceMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel, sourcesState: SourcesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
       let sources = SourcesState.getSources(sourcesState);
-      let selectedSources = SourcesState.getSelectedSources(sourcesState);
+      let selectedSourceIds = state.photometryPageSettings.selectedSourceIds;
       let markers: Array<CircleMarker | TeardropMarker> = [];
       if (!file) return [[]];
+      let mode = state.photometryPageSettings.coordMode;
+      if (!file.wcs.isValid()) mode = 'pixel';
+
       sources.forEach(source => {
-        let primaryCoord = source.primaryCoord;
-        let secondaryCoord = source.secondaryCoord;
-        let pm = source.pm;
-        let posAngle = source.pmPosAngle;
-        let epoch = source.pmEpoch;
-        let selected = selectedSources.includes(source);
+        if (source.fileId != fileId && !state.photometryPageSettings.showSourcesFromAllFiles) return;
+        if (source.posType != mode) return;
+        let selected = selectedSourceIds.includes(source.id);
+        let coord = getSourceCoordinates(file, source);
 
-        if (pm) {
-          if (!file.headerLoaded) return;
-          let fileEpoch = getCenterTime(file);
-          if (!fileEpoch) return;
-
-          let deltaT = (fileEpoch.getTime() - epoch.getTime()) / 1000.0;
-          let mu = (source.pm * deltaT) / 3600.0;
-          let theta = source.pmPosAngle * (Math.PI / 180.0);
-          let cd = Math.cos((secondaryCoord * Math.PI) / 180);
-
-          primaryCoord += (mu * Math.sin(theta)) / cd / 15;
-          primaryCoord = primaryCoord % 360;
-          secondaryCoord += mu * Math.cos(theta);
-          secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
-
-          // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
+        if (coord == null) {
+          return false;
         }
 
-        if (source.fileId != fileId && !state.showAllSources) return;
-
-        let x = primaryCoord;
-        let y = secondaryCoord;
-        let theta = posAngle;
-
-        console.log("HERE", file, file.headerLoaded, file.wcs.isValid());
-
-        if (source.posType == PosType.SKY) {
-          if (!file.headerLoaded || !file.wcs.isValid()) return;
-          let wcs = file.wcs;
-          let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
-          x = xy[0];
-          y = xy[1];
-          if (
-            x < 0.5 ||
-            x >= getWidth(file) + 0.5 ||
-            y < 0.5 ||
-            y >= getHeight(file) + 0.5
-          )
-            return;
-
-          if (pm) {
-            theta = posAngle + wcs.positionAngle();
-            theta = theta % 360;
-            if (theta < 0) theta += 360;
-          }
-        }
-
-        if (pm) {
+        if (source.pm) {
           markers.push({
             type: MarkerType.TEARDROP,
-            x: x,
-            y: y,
+            x: coord.x,
+            y: coord.y,
             radius: 15,
             labelGap: 14,
             labelTheta: 0,
-            theta: theta,
+            label: state.photometryPageSettings.showSourceLabels ? source.label : "",
+            theta: coord.theta,
             selected: selected,
             data: { id: source.id }
           } as TeardropMarker);
         } else {
           markers.push({
             type: MarkerType.CIRCLE,
-            x: x,
-            y: y,
+            x: coord.x,
+            y: coord.y,
             radius: 15,
             labelGap: 14,
             labelTheta: 0,
+            label: state.photometryPageSettings.showSourceLabels ? source.label : "",
             selected: selected,
             data: { id: source.id }
           } as CircleMarker);
@@ -506,9 +541,9 @@ export class WorkbenchState {
 
   @Action(SetActiveViewer)
   @ImmutableContext()
-  public setActiveViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerIndex }: SetActiveViewer) {
+  public setActiveViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: SetActiveViewer) {
     setState((state: WorkbenchStateModel) => {
-      state.activeViewerIndex = viewerIndex;
+      state.activeViewerId = viewerId;
       return state;
     });
   }
@@ -518,28 +553,41 @@ export class WorkbenchState {
   @ImmutableContext()
   public setViewMode({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewMode }: SetViewMode) {
     setState((state: WorkbenchStateModel) => {
-      let activeViewerIndex = state.activeViewerIndex;
-      if (viewMode == ViewMode.SINGLE) {
-        activeViewerIndex = 0;
-      }
+      let primaryViewerId = WorkbenchState.getViewers(state)[0].viewerId;
+      let secondaryViewerId = WorkbenchState.getViewers(state)[1].viewerId;
+      let activeViewerId = state.activeViewerId;
+      if (viewMode == ViewMode.SINGLE) state.activeViewerId = primaryViewerId;
       state.viewMode = viewMode;
-      state.activeViewerIndex = activeViewerIndex;
+      state.viewers[secondaryViewerId].hidden = viewMode == ViewMode.SINGLE;
+      return state;
+    });
+  }
+
+  @Action(SetViewerMarkers)
+  @ImmutableContext()
+  public setViewerMarkers({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId, markers }: SetViewerMarkers) {
+    setState((state: WorkbenchStateModel) => {
+      state.viewers[viewerId].markers = markers;
+      return state;
+    });
+  }
+
+  @Action(ClearViewerMarkers)
+  @ImmutableContext()
+  public clearViewerMarkers({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ClearViewerMarkers) {
+    setState((state: WorkbenchStateModel) => {
+      state.viewerIds.forEach(viewerId => state.viewers[viewerId].markers = []);
       return state;
     });
   }
 
   @Action(SetViewerFile)
   @ImmutableContext()
-  public setViewerFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerIndex, fileId }: SetViewerFile) {
-    let originalFileId;
-    setState((state: WorkbenchStateModel) => {
-      originalFileId = state.viewers[viewerIndex].fileId;
-      state.viewers[viewerIndex].fileId = fileId;
-      return state;
-    });
+  public setViewerFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId, fileId }: SetViewerFile) {
+    
 
     let state = getState();
-    let viewer = state.viewers[viewerIndex];
+    let viewer = state.viewers[viewerId];
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     let actions = [];
@@ -547,12 +595,18 @@ export class WorkbenchState {
     if (dataFile && viewer) {
 
       if (dataFile.headerLoaded && dataFile.histLoaded) {
+        let originalFileId;
+        setState((state: WorkbenchStateModel) => {
+          originalFileId = state.viewers[viewerId].fileId;
+          state.viewers[viewerId].fileId = fileId;
+          return state;
+        });
 
         let referenceFileId = originalFileId;
         if (referenceFileId == null) {
-          let referenceViewer = state.viewers.find(
+          let referenceViewer = WorkbenchState.getViewers(state).find(
             (viewer, index) =>
-              index != viewerIndex && viewer.fileId != null
+              viewer.viewerId != viewerId && viewer.fileId != null
           );
           if (referenceViewer) referenceFileId = referenceViewer.fileId;
         }
@@ -595,7 +649,7 @@ export class WorkbenchState {
             actions.push(
               new SyncFileTransformations(dataFiles[referenceFileId] as ImageFile, [dataFile])
             );
-          if (state.plotterSyncEnabled)
+          if (state.plotterPageSettings.plotterSyncEnabled)
             actions.push(
               new SyncFilePlotters(dataFiles[referenceFileId] as ImageFile, [dataFile])
             );
@@ -642,7 +696,7 @@ export class WorkbenchState {
             return files[fileId].headerLoaded && (files[fileId] as ImageFile).histLoaded;
           }),
           take(1),
-          flatMap(action => dispatch(new SetViewerFile(viewerIndex, fileId)))
+          flatMap(action => dispatch(new SetViewerFile(viewerId, fileId)))
         )
 
         return merge(dispatch(actions), next$);
@@ -663,11 +717,11 @@ export class WorkbenchState {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     let actions = [];
-    let referenceFile = dataFiles[state.viewers[state.activeViewerIndex].fileId] as ImageFile;
-    let files = state.viewers
+    let referenceFile = dataFiles[state.viewers[state.activeViewerId].fileId] as ImageFile;
+    let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          index != state.activeViewerIndex && viewer.fileId !== null
+          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
     if (referenceFile && files.length != 0) {
@@ -685,24 +739,6 @@ export class WorkbenchState {
   public setNormalizationSyncEnabled({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { value }: SetNormalizationSyncEnabled) {
     setState((state: WorkbenchStateModel) => {
       state.normalizationSyncEnabled = value;
-      return state;
-    });
-  }
-
-  @Action(SetPlotterSyncEnabled)
-  @ImmutableContext()
-  public setPlotterSyncEnabled({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { value }: SetPlotterSyncEnabled) {
-    setState((state: WorkbenchStateModel) => {
-      state.plotterSyncEnabled = value;
-      return state;
-    });
-  }
-
-  @Action(SetPlotMode)
-  @ImmutableContext()
-  public setPlotMode({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { mode }: SetPlotMode) {
-    setState((state: WorkbenchStateModel) => {
-      state.plotterMode = mode;
       return state;
     });
   }
@@ -734,15 +770,6 @@ export class WorkbenchState {
     });
   }
 
-  @Action(SetShowAllSources)
-  @ImmutableContext()
-  public setShowAllSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { showAllSources }: SetShowAllSources) {
-    setState((state: WorkbenchStateModel) => {
-      state.showAllSources = showAllSources;
-      return state;
-    });
-  }
-
   @Action(UpdateCentroidSettings)
   @ImmutableContext()
   public updateCentroidSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCentroidSettings) {
@@ -755,24 +782,12 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdatePlotterSettings)
+  @Action(UpdatePhotometrySettings)
   @ImmutableContext()
-  public updatePlotterSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlotterSettings) {
+  public updatePhotometrySettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotometrySettings) {
     setState((state: WorkbenchStateModel) => {
-      state.plotterSettings = {
-        ...state.plotterSettings,
-        ...changes
-      }
-      return state;
-    });
-  }
-
-  @Action(UpdatePhotSettings)
-  @ImmutableContext()
-  public updatePhotSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotSettings) {
-    setState((state: WorkbenchStateModel) => {
-      state.photSettings = {
-        ...state.photSettings,
+      state.photometrySettings = {
+        ...state.photometrySettings,
         ...changes
       }
       return state;
@@ -791,12 +806,74 @@ export class WorkbenchState {
     });
   }
 
-
-  @Action(SetSourceExtractionMode)
+  @Action(UpdateCustomMarkerPageSettings)
   @ImmutableContext()
-  public setSourceExtractionMode({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { mode }: SetSourceExtractionMode) {
+  public updateCustomMarkerPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerPageSettings) {
     setState((state: WorkbenchStateModel) => {
-      state.sourceExtractorModeOption = mode;
+      state.customMarkerPageSettings = {
+        ...state.customMarkerPageSettings,
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(UpdatePlotterPageSettings)
+  @ImmutableContext()
+  public updatePlotterPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlotterPageSettings) {
+    setState((state: WorkbenchStateModel) => {
+      state.plotterPageSettings = {
+        ...state.plotterPageSettings,
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(UpdatePhotometryPageSettings)
+  @ImmutableContext()
+  public updatePhotometryPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotometryPageSettings) {
+    setState((state: WorkbenchStateModel) => {
+      state.photometryPageSettings = {
+        ...state.photometryPageSettings,
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(UpdatePixelOpsPageSettings)
+  @ImmutableContext()
+  public updatePixelOpsPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePixelOpsPageSettings) {
+    setState((state: WorkbenchStateModel) => {
+      state.pixelOpsPageSettings = {
+        ...state.pixelOpsPageSettings,
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(UpdateStackingPageSettings)
+  @ImmutableContext()
+  public updateStackingPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateStackingPageSettings) {
+    setState((state: WorkbenchStateModel) => {
+      state.stackingPageSettings = {
+        ...state.stackingPageSettings,
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(UpdateAligningPageSettings)
+  @ImmutableContext()
+  public updateAligningPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateAligningPageSettings) {
+    setState((state: WorkbenchStateModel) => {
+      state.aligningPageSettings = {
+        ...state.aligningPageSettings,
+        ...changes
+      }
       return state;
     });
   }
@@ -815,42 +892,6 @@ export class WorkbenchState {
   public setSelectedFieldCal({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fieldCalId }: SetSelectedFieldCal) {
     setState((state: WorkbenchStateModel) => {
       state.selectedFieldCalId = fieldCalId;
-      return state;
-    });
-  }
-
-  @Action(UpdatePixelOpsFormData)
-  @ImmutableContext()
-  public updatePixelOpsFormData({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { data }: UpdatePixelOpsFormData) {
-    setState((state: WorkbenchStateModel) => {
-      state.pixelOpsFormData = {
-        ...state.pixelOpsFormData,
-        ...data
-      }
-      return state;
-    });
-  }
-
-  @Action(UpdateAlignFormData)
-  @ImmutableContext()
-  public updateAlignFormData({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { data }: UpdateAlignFormData) {
-    setState((state: WorkbenchStateModel) => {
-      state.alignFormData = {
-        ...state.alignFormData,
-        ...data
-      }
-      return state;
-    });
-  }
-
-  @Action(UpdateStackFormData)
-  @ImmutableContext()
-  public updateStackFormData({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { data }: UpdateStackFormData) {
-    setState((state: WorkbenchStateModel) => {
-      state.stackFormData = {
-        ...state.stackFormData,
-        ...data
-      }
       return state;
     });
   }
@@ -900,15 +941,35 @@ export class WorkbenchState {
 
   }
 
+  @Action(RemoveDataFile)
+  @ImmutableContext()
+  public removeDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: RemoveDataFile) {
+    if (getState().selectedFileId == fileId) {
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
+      let index = dataFiles.map(f => f.id).indexOf(fileId);
+      if(index != -1 && dataFiles.length != 1) {
+        this.actions$.pipe(
+          ofActionCompleted(RemoveDataFile),
+          take(1),
+          filter(a => a.result.successful),
+        ).subscribe(() => {
+          dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
+          dispatch(new SelectDataFile(dataFiles[Math.max(0, Math.min(dataFiles.length-1, index))].id))
+        })
+
+      }
+    }
+  }
+
   @Action(RemoveDataFileSuccess)
   @ImmutableContext()
   public removeDataFileSuccess({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: RemoveDataFileSuccess) {
     setState((state: WorkbenchStateModel) => {
       if (state.selectedFileId == fileId) state.selectedFileId = null;
-      state.alignFormData.selectedImageFileIds = state.alignFormData.selectedImageFileIds.filter(fileId => fileId != fileId);
-      state.pixelOpsFormData.imageFileIds = state.pixelOpsFormData.imageFileIds.filter(fileId => fileId != fileId);
-      state.pixelOpsFormData.auxImageFileIds = state.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != fileId);
-      state.pixelOpsFormData.auxImageFileId = state.pixelOpsFormData.auxImageFileId == fileId ? null : state.pixelOpsFormData.auxImageFileId;
+      state.aligningPageSettings.alignFormData.selectedImageFileIds = state.aligningPageSettings.alignFormData.selectedImageFileIds.filter(fileId => fileId != fileId);
+      state.pixelOpsPageSettings.pixelOpsFormData.imageFileIds = state.pixelOpsPageSettings.pixelOpsFormData.imageFileIds.filter(fileId => fileId != fileId);
+      state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileIds = state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != fileId);
+      state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId = state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId == fileId ? null : state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId;
       return state;
     });
 
@@ -916,9 +977,9 @@ export class WorkbenchState {
     let state = getState();
     let activeViewer = WorkbenchState.getActiveViewer(state);
 
-    if (activeViewer && activeViewer.fileId == fileId) {
-      dispatch(new SelectDataFile(null));
-    }
+    // if (activeViewer && activeViewer.fileId == fileId) {
+    //   dispatch(new SelectDataFile(null));
+    // }
   }
 
   @Action(SelectDataFile)
@@ -930,12 +991,13 @@ export class WorkbenchState {
 
     if (fileId != null) {
       let dataFile = dataFiles[fileId];
-      if (state.viewers.length != 0) {
+      let viewers = WorkbenchState.getViewers(state);
+      if (viewers.length != 0) {
         if (!activeViewer) {
-          dispatch(new SetActiveViewer(0));
+          dispatch(new SetActiveViewer(viewers[0].viewerId));
         }
         else if (activeViewer.fileId != dataFile.id) {
-          dispatch(new SetViewerFile(state.viewers.indexOf(activeViewer), dataFile.id));
+          dispatch(new SetViewerFile(activeViewer.viewerId, dataFile.id));
         }
       }
     }
@@ -969,10 +1031,10 @@ export class WorkbenchState {
 
 
     let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
-    let files = state.viewers
+    let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          index != state.activeViewerIndex && viewer.fileId !== null
+          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -995,10 +1057,10 @@ export class WorkbenchState {
       return;
 
     let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
-    let files = state.viewers
+    let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          index != state.activeViewerIndex && viewer.fileId !== null
+          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -1015,17 +1077,17 @@ export class WorkbenchState {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (
-      !state.plotterSyncEnabled ||
+      !state.plotterPageSettings.plotterSyncEnabled ||
       !activeViewer ||
       activeViewer.fileId != fileId
     )
       return;
 
     let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
-    let files = state.viewers
+    let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          index != state.activeViewerIndex && viewer.fileId !== null
+          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -1038,7 +1100,7 @@ export class WorkbenchState {
   public syncFileNormalizations({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { reference, files }: SyncFileNormalizations) {
 
     let state = getState();
-    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getImageFileStates);
+    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
 
     let srcFile: ImageFile = reference;
     if (!srcFile) return;
@@ -1046,14 +1108,18 @@ export class WorkbenchState {
     let targetFiles: ImageFile[] = files;
     let srcNormalizer = imageFileStates[srcFile.id].normalization.normalizer;
 
+    let actions = [];
     targetFiles.forEach(targetFile => {
+      
       if (!targetFile || targetFile.id == srcFile.id) return;
-      return dispatch(new UpdateNormalizer(targetFile.id, {
+      actions.push(new UpdateNormalizer(targetFile.id, {
         ...srcNormalizer,
         peakPercentile: srcNormalizer.peakPercentile,
         backgroundPercentile: srcNormalizer.backgroundPercentile
       }));
     });
+
+    return dispatch(actions);
   }
 
   @Action(SyncFilePlotters)
@@ -1061,7 +1127,7 @@ export class WorkbenchState {
   public syncFilePlotters({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { reference, files }: SyncFilePlotters) {
 
     let state = getState();
-    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getImageFileStates);
+    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
 
     let srcFile: ImageFile = reference;
     let targetFiles: ImageFile[] = files;
@@ -1078,7 +1144,7 @@ export class WorkbenchState {
   public syncFileTransformations({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { reference, files }: SyncFileTransformations) {
 
     let state = getState();
-    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getImageFileStates);
+    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
 
     let actions = [];
     let srcFile: ImageFile = reference;
@@ -1225,94 +1291,26 @@ export class WorkbenchState {
   @Action(AddFieldCalSourcesFromCatalog)
   @ImmutableContext()
   public addFieldCalSourcesFromCatalog({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fieldCalId, catalogQueryJob }: AddFieldCalSourcesFromCatalog) {
-    let correlationId = this.correlationIdGenerator.next();
-    let createJobAction = new CreateJob(catalogQueryJob, 1000, correlationId)
-    let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
+    // let correlationId = this.correlationIdGenerator.next();
+    // let createJobAction = new CreateJob(catalogQueryJob, 1000, correlationId)
+    // let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
 
-    return merge(
-      dispatch(createJobAction),
-      jobCompleted$.pipe(
-        tap(jobCompleted => {
-          let result = jobCompleted.result as CatalogQueryJobResult;
-          setState((state: WorkbenchStateModel) => {
-            let fieldCal = state.fieldCals.find(c => c.id == fieldCalId);
-            if (fieldCal) {
-              fieldCal.catalogSources = fieldCal.catalogSources.concat(result.data);
-            }
-            return state;
-          });
-        })
-      )
-    );
-
-
-
-    // let createJobCorrId = this.correlationIdGenerator.next();
-    // let job = catalogQueryJob;
-
-    // let createJobSuccess$ = this.actions$.pipe(
-    //   ofActionDispatched(CreateJobSuccess),
-    //   filter<CreateJobSuccess>(action => action.correlationId == createJobCorrId),
-    //   tap(action => {
-
-    //   }),
-    //   flatMap(createJobSuccess => {
-    //     let jobCompleted$ = this.actions$.pipe(
-    //       ofActionDispatched(JobCompleted),
-    //       filter<JobCompleted>(jobCompleted => jobCompleted.job.id == createJobSuccess.job.id),
-    //       take(1),
-    //       tap(jobCompleted => {
-    //         let result = jobCompleted.result as CatalogQueryJobResult;
-    //         setState((state: WorkbenchStateModel) => {
-    //           let fieldCal = state.fieldCals.find(c => c.id == fieldCalId);
-    //           if (fieldCal) {
-    //             fieldCal.catalogSources = fieldCal.catalogSources.concat(result.data);
-    //           }
-    //           return state;
-    //         });
-    //       })
-    //     )
-
-    //     let jobUpdated$ = this.actions$.pipe(
-    //       ofActionDispatched(UpdateJobSuccess),
-    //       filter<UpdateJobSuccess>(updateJobSuccess => updateJobSuccess.job.id == createJobSuccess.job.id),
-    //       takeUntil(jobCompleted$),
-    //       tap(updateJobSuccess => {
-
-    //       }),
-    //       // flatMap(updateJobSuccess => {
-    //       //   return dispatch(new ImportAssetsStatusUpdated(updateJobSuccess.job as BatchImportJob, correlationId))
-    //       // })
-    //     )
-
-    //     return merge(jobUpdated$, jobCompleted$)
-    //   })
-    // )
-
-    // let createJobFailure$ = this.actions$.pipe(
-    //   ofActionDispatched(CreateJobFail),
-    //   filter<CreateJobFail>(action => action.correlationId == createJobCorrId),
-    //   tap(action => {
-
-    //   }),
-    //   // flatMap(action => {
-
-    //   //   return dispatch(new ImportAssetsCompleted(assets, [], [`Unable to create the batch import job.  Please try again later: Error: ${action.error}`], correlationId));
-    //   // })
-    // )
-
-    // // let importAssetsCanceled$ = this.actions$.pipe(
-    // //   ofActionDispatched(ImportAssetsCancel),
-    // //   filter<ImportAssetsCancel>(action => action.correlationId == correlationId),
-    // //   take(1)
-    // // );
-
-    // let result$ = merge(createJobSuccess$, createJobFailure$).pipe(
-    //   take(1),
-    //   // takeUntil(importAssetsCanceled$)
+    // return merge(
+    //   dispatch(createJobAction),
+    //   jobCompleted$.pipe(
+    //     tap(jobCompleted => {
+    //       let result = jobCompleted.result as CatalogQueryJobResult;
+    //       setState((state: WorkbenchStateModel) => {
+    //         let fieldCal = state.fieldCals.find(c => c.id == fieldCalId);
+    //         if (fieldCal) {
+    //           fieldCal.catalogSources = fieldCal.catalogSources.concat(result.data);
+    //         }
+    //         return state;
+    //       });
+    //     })
+    //   )
     // );
 
-    // return merge(dispatch(new CreateJob(job, 1000, createJobCorrId)), result$);
   }
 
 
@@ -1320,9 +1318,8 @@ export class WorkbenchState {
   @ImmutableContext()
   public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreatePixelOpsJob) {
     let state = getState();
-    let correlationId = this.correlationIdGenerator.next();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
-    let data = state.pixelOpsFormData;
+    let data = state.pixelOpsPageSettings.pixelOpsFormData;
     let imageFiles = data.imageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let auxFileIds: number[] = [];
     let op;
@@ -1342,52 +1339,66 @@ export class WorkbenchState {
       inplace: data.inPlace
     };
 
-    let createJobAction = new CreateJob(job, 1000, correlationId)
-    let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
 
-    return merge(
-      dispatch(createJobAction),
-      jobCompleted$.pipe(
-        filter(jobCompleted => jobCompleted.result.errors.length == 0),
-        flatMap(jobCompleted => dispatch(new LoadLibrary()))
-      )
+    let jobCompleted$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
     );
 
+    let jobCanceled$ = this.actions$.pipe(
+      ofActionCanceled(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    );
 
-    // let createJobSuccess$ = this.actions$.pipe(
-    //   ofActionDispatched(CreateJobSuccess),
-    //   filter<CreateJobSuccess>(action => action.correlationId == createJobCorrId),
-    //   flatMap(createJobSuccess => {
-    //     return this.actions$.pipe(
-    //       ofActionDispatched(JobCompleted),
-    //       filter<JobCompleted>(jobCompleted => jobCompleted.job.id == createJobSuccess.job.id),
-    //       take(1),
-    //       filter(jobCompleted => jobCompleted.result.errors.length == 0),
-    //       flatMap(jobCompleted => dispatch(new LoadLibrary()))
-    //     );
-    //   })
-    // )
+    let jobErrored$ = this.actions$.pipe(
+      ofActionErrored(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    )
 
-    // let createJobFailure$ = this.actions$.pipe(
-    //   ofActionDispatched(CreateJobFail),
-    //   filter<CreateJobFail>(action => action.correlationId == createJobCorrId),
-    // )
+    let jobSuccessful$ = this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(merge(jobCanceled$, jobErrored$)),
+      take(1),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as PixelOpsJobResult;
+        if (result.errors.length != 0) {
+          console.error("Errors encountered during pixel ops job: ", result.errors);
+        }
+        if (result.warnings.length != 0) {
+          console.error("Warnings encountered during pixel ops job: ", result.warnings);
+        }
+        dispatch(new LoadLibrary())
+      })
+    )
 
-    // let result$ = merge(createJobSuccess$, createJobFailure$).pipe(
-    //   take(1),
-    // );
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(jobCompleted$),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        setState((state: WorkbenchStateModel) => {
+          state.pixelOpsPageSettings.currentPixelOpsJobId = jobEntity.job.id;
+          return state;
+        });
+      })
+    )
 
-    // return merge(dispatch(new CreateJob(job, 1000, createJobCorrId)), result$);
+    return merge(jobSuccessful$, jobUpdated$);
+
   }
 
   @Action(CreateAdvPixelOpsJob)
   @ImmutableContext()
   public createAdvPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreateAdvPixelOpsJob) {
     let state = getState();
-    let correlationId = this.correlationIdGenerator.next();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
 
-    let data = state.pixelOpsFormData;
+    let data = state.pixelOpsPageSettings.pixelOpsFormData;
     let imageFiles = data.imageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let auxImageFiles = data.auxImageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let job: PixelOpsJob = {
@@ -1399,42 +1410,56 @@ export class WorkbenchState {
       inplace: data.inPlace
     };
 
-    let createJobAction = new CreateJob(job, 1000, correlationId)
-    let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
 
-    return merge(
-      dispatch(createJobAction),
-      jobCompleted$.pipe(
-        filter(jobCompleted => jobCompleted.result.errors.length == 0),
-        flatMap(jobCompleted => dispatch(new LoadLibrary()))
-      )
+    let jobCompleted$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
     );
 
+    let jobCanceled$ = this.actions$.pipe(
+      ofActionCanceled(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    );
 
-    // let createJobSuccess$ = this.actions$.pipe(
-    //   ofActionDispatched(CreateJobSuccess),
-    //   filter<CreateJobSuccess>(action => action.correlationId == createJobCorrId),
-    //   flatMap(createJobSuccess => {
-    //     return this.actions$.pipe(
-    //       ofActionDispatched(JobCompleted),
-    //       filter<JobCompleted>(jobCompleted => jobCompleted.job.id == createJobSuccess.job.id),
-    //       take(1),
-    //       filter(jobCompleted => jobCompleted.result.errors.length == 0),
-    //       flatMap(jobCompleted => dispatch(new LoadLibrary()))
-    //     );
-    //   })
-    // )
+    let jobErrored$ = this.actions$.pipe(
+      ofActionErrored(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    )
 
-    // let createJobFailure$ = this.actions$.pipe(
-    //   ofActionDispatched(CreateJobFail),
-    //   filter<CreateJobFail>(action => action.correlationId == createJobCorrId),
-    // )
+    let jobSuccessful$ = this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(merge(jobCanceled$, jobErrored$)),
+      take(1),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as PixelOpsJobResult;
+        if (result.errors.length != 0) {
+          console.error("Errors encountered during pixel ops: ", result.errors);
+        }
+        if (result.warnings.length != 0) {
+          console.error("Warnings encountered during pixel ops: ", result.warnings);
+        }
+        dispatch(new LoadLibrary())
+      })
+    )
 
-    // let result$ = merge(createJobSuccess$, createJobFailure$).pipe(
-    //   take(1),
-    // );
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(jobCompleted$),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        setState((state: WorkbenchStateModel) => {
+          state.pixelOpsPageSettings.currentPixelOpsJobId = jobEntity.job.id;
+          return state;
+        });
+      })
+    )
 
-    // return merge(dispatch(new CreateJob(job, 1000, createJobCorrId)), result$);
+    return merge(jobSuccessful$, jobUpdated$);
   }
 
 
@@ -1442,8 +1467,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAlignmentJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreateAlignmentJob) {
     let state = getState();
-    let correlationId = this.correlationIdGenerator.next();
-    let data = state.alignFormData;
+    let data = state.aligningPageSettings.alignFormData;
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
     let imageFiles = data.selectedImageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
 
@@ -1454,36 +1478,82 @@ export class WorkbenchState {
       inplace: data.inPlace
     };
 
-    let createJobAction = new CreateJob(job, 1000, correlationId)
-    let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
 
-    return merge(
-      dispatch(createJobAction),
-      jobCompleted$.pipe(
-        filter(jobCompleted => jobCompleted.result.errors.length == 0),
-        flatMap(jobCompleted => {
-          let result = jobCompleted.result as AlignmentJobResult;
-          let fileIds = result.file_ids.map(id => id.toString());
-          let actions = [];
-          actions.push(new ClearImageDataCache(fileIds));
-          getState().viewers.forEach((viewer, index) => {
-            if (fileIds.includes(viewer.fileId)) {
-              actions.push(new SetViewerFile(index, viewer.fileId))
-            }
-          })
-
-          return dispatch(actions);
-        })
-      )
+    let jobCompleted$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
     );
+
+    let jobCanceled$ = this.actions$.pipe(
+      ofActionCanceled(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    );
+
+    let jobErrored$ = this.actions$.pipe(
+      ofActionErrored(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    )
+
+    let jobSuccessful$ = this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(merge(jobCanceled$, jobErrored$)),
+      take(1),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as AlignmentJobResult;
+        if (result.errors.length != 0) {
+          console.error("Errors encountered during aligning: ", result.errors);
+        }
+        if (result.warnings.length != 0) {
+          console.error("Warnings encountered during aligning: ", result.warnings);
+        }
+
+        let fileIds = result.file_ids.map(id => id.toString());
+        let actions = [];
+        if( (jobEntity.job as AlignmentJob).inplace) {
+          actions.push(new ClearImageDataCache(fileIds));
+        }
+        else {
+          actions.push(new LoadLibrary());
+        }
+        WorkbenchState.getViewers(getState()).forEach((viewer, index) => {
+          if (fileIds.includes(viewer.fileId)) {
+            actions.push(new SetViewerFile(viewer.viewerId, viewer.fileId))
+          }
+        })
+
+        return dispatch(actions);
+
+
+      })
+    )
+
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(jobCompleted$),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        setState((state: WorkbenchStateModel) => {
+          state.aligningPageSettings.currentAlignmentJobId = jobEntity.job.id;
+          return state;
+        });
+      })
+    )
+
+    return merge(jobSuccessful$, jobUpdated$);
+
+
   }
 
   @Action(CreateStackingJob)
   @ImmutableContext()
   public createStackingJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreateStackingJob) {
     let state = getState();
-    let correlationId = this.correlationIdGenerator.next();
-    let data = state.stackFormData;
+    let data = state.stackingPageSettings.stackFormData;
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
     let imageFiles = data.selectedImageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let job: StackingJob = {
@@ -1500,18 +1570,56 @@ export class WorkbenchState {
       }
     };
 
-    let createJobAction = new CreateJob(job, 1000, correlationId)
-    let { jobCreated$, jobUpdated$, jobCompleted$ } = JobActionHandler.getJobStreams(correlationId, this.actions$);
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
 
-    return merge(
-      dispatch(createJobAction),
-      jobCompleted$.pipe(
-        filter(jobCompleted => jobCompleted.result.errors.length == 0),
-        flatMap(jobCompleted => {
-          return dispatch(new LoadLibrary());
-        })
-      )
+    let jobCompleted$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
     );
+
+    let jobCanceled$ = this.actions$.pipe(
+      ofActionCanceled(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    );
+
+    let jobErrored$ = this.actions$.pipe(
+      ofActionErrored(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    )
+
+    let jobSuccessful$ = this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(merge(jobCanceled$, jobErrored$)),
+      take(1),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as PixelOpsJobResult;
+        if (result.errors.length != 0) {
+          console.error("Errors encountered during stacking: ", result.errors);
+        }
+        if (result.warnings.length != 0) {
+          console.error("Warnings encountered during stacking: ", result.warnings);
+        }
+        dispatch(new LoadLibrary())
+      })
+    )
+
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(jobCompleted$),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        setState((state: WorkbenchStateModel) => {
+          state.stackingPageSettings.currentStackingJobId = jobEntity.job.id;
+          return state;
+        });
+      })
+    )
+
+    return merge(jobSuccessful$, jobUpdated$);
   }
 
 
@@ -1528,7 +1636,7 @@ export class WorkbenchState {
           new LoadLibrary(),
           new ImportFromSurveySuccess(),
           new SetViewMode(ViewMode.SPLIT_VERTICAL),
-          new SetViewerFile(1, action.fileIds[0].toString())
+          new SetViewerFile(WorkbenchState.getViewers(getState())[0].viewerId, action.fileIds[0].toString())
         ])
       })
     )
@@ -1547,6 +1655,278 @@ export class WorkbenchState {
       )),
       importCompleted$
     );
+  }
+
+
+  /* Source Extraction */
+  @Action(ExtractSources)
+  @ImmutableContext()
+  public extractSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId, settings }: ExtractSources) {
+    let state = getState();
+    let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPageSettings);
+    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+    let imageFile = dataFiles[fileId] as ImageFile;
+    let imageFileState = this.store.selectSnapshot(ImageFilesState.getEntities)[imageFile.id];
+    let sonifier = imageFileState.sonifier;
+
+    let jobSettings: SourceExtractionJobSettings = {
+      threshold: settings.threshold,
+      fwhm: settings.fwhm,
+      deblend: settings.deblend,
+      limit: settings.limit
+    }
+    if (settings.region == SourceExtractionRegionOption.VIEWPORT || (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonifier.regionMode == SonifierRegionMode.VIEWPORT)) {
+      let region = getViewportRegion(
+        imageFileState.transformation,
+        imageFile
+      );
+
+      jobSettings = {
+        ...jobSettings,
+        x: Math.min(getWidth(imageFile), Math.max(0, region.x + 1)),
+        y: Math.min(getHeight(imageFile), Math.max(0, region.y + 1)),
+        width: Math.min(getWidth(imageFile), Math.max(0, region.width + 1)),
+        height: Math.min(getHeight(imageFile), Math.max(0, region.height + 1))
+      }
+    }
+    else if (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonifier.regionMode == SonifierRegionMode.CUSTOM) {
+      let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
+      jobSettings = {
+        ...jobSettings,
+        x: Math.min(getWidth(imageFile), Math.max(0, region.x + 1)),
+        y: Math.min(getHeight(imageFile), Math.max(0, region.y + 1)),
+        width: Math.min(getWidth(imageFile), Math.max(0, region.width + 1)),
+        height: Math.min(getHeight(imageFile), Math.max(0, region.height + 1))
+      }
+
+    }
+    let job: SourceExtractionJob = {
+      id: null,
+      type: JobType.SourceExtraction,
+      file_ids: [parseInt(fileId)],
+      source_extraction_settings: jobSettings,
+      merge_sources: false,
+      source_merge_settings: null
+    };
+
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
+    return this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as SourceExtractionJobResult;
+        if (result.errors.length != 0) {
+          dispatch(new ExtractSourcesFail(result.errors.join(',')));
+          return;
+        }
+        let sources = result.data.map(d => {
+          let posType = PosType.PIXEL;
+          let primaryCoord = d.x;
+          let secondaryCoord = d.y;
+
+          if (
+            photometryPageSettings.coordMode == 'sky' &&
+            "ra_hours" in d &&
+            d.ra_hours !== null &&
+            "dec_degs" in d &&
+            d.dec_degs !== null
+          ) {
+            posType = PosType.SKY;
+            primaryCoord = d.ra_hours;
+            secondaryCoord = d.dec_degs;
+          }
+
+          let pmEpoch = null;
+          if (d.time && Date.parse(d.time + ' GMT')) {
+            pmEpoch = new Date(Date.parse(d.time + ' GMT'));
+          }
+          return {
+            id: null,
+            label: null,
+            objectId: null,
+            fileId: d.file_id.toString(),
+            posType: posType,
+            primaryCoord: primaryCoord,
+            secondaryCoord: secondaryCoord,
+            pm: null,
+            pmPosAngle: null,
+            pmEpoch: pmEpoch,
+          } as Source;
+        });
+
+        dispatch(new AddSources(sources));
+      })
+    )
+  }
+
+
+  @Action(PhotometerSources)
+  @ImmutableContext()
+  public photometerSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { sourceIds, fileIds, settings,isBatch }: PhotometerSources) {
+    let state = getState();
+    let sourcesState = this.store.selectSnapshot(SourcesState.getState);
+
+    sourceIds = sourceIds.filter(id => sourcesState.ids.includes(id))
+
+    let s: PhotometryJobSettings;
+
+    if (settings.mode == 'adaptive') {
+      s = {
+        mode: 'auto',
+        a: settings.aKrFactor,
+        a_in: settings.aInKrFactor,
+        a_out: settings.aOutKrFactor,
+      }
+    }
+    else {
+      s = {
+        mode: 'aperture',
+        a: settings.a,
+        b: settings.b,
+        a_in: settings.aIn,
+        a_out: settings.aOut,
+        b_out: settings.bOut,
+        theta: settings.theta,
+        theta_out: settings.thetaOut,
+      }
+    }
+
+    s.gain = settings.gain;
+    s.centroid_radius = settings.centroidRadius;
+
+    let job: PhotometryJob = {
+      type: JobType.Photometry,
+      settings: s,
+      id: null,
+      file_ids: fileIds.map(id => parseInt(id)),
+      sources: sourceIds.map((id, index) => {
+        let source = sourcesState.entities[id];
+        let x = null;
+        let y = null;
+        let pmPixel = null;
+        let pmPosAnglePixel = null;
+        let raHours = null;
+        let decDegs = null;
+        let pmSky = null;
+        let pmPosAngleSky = null;
+
+        if (source.posType == PosType.PIXEL) {
+          x = source.primaryCoord;
+          y = source.secondaryCoord;
+          pmPixel = source.pm;
+          pmPosAnglePixel = source.pmPosAngle
+        }
+        else {
+          raHours = source.primaryCoord;
+          decDegs = source.secondaryCoord;
+          pmSky = source.pm;
+          if (pmSky) pmSky /= 3600.0;
+          pmPosAngleSky = source.pmPosAngle
+        }
+        return {
+          id: source.id,
+          pm_epoch: source.pmEpoch ? source.pmEpoch.toISOString() : null,
+          x: x,
+          y: y,
+          pm_pixel: pmPixel,
+          pm_pos_angle_pixel: pmPosAnglePixel,
+          ra_hours: raHours,
+          dec_degs: decDegs,
+          pm_sky: pmSky,
+          pm_pos_angle_sky: pmPosAngleSky
+        } as (Astrometry & SourceId)
+      })
+    }
+
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
+
+    setState((state: WorkbenchStateModel) => {
+      if(isBatch) state.photometryPageSettings.batchPhotProgress = 0;
+      return state;
+    });
+
+    let jobCompleted$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    );
+
+    let jobCanceled$ = this.actions$.pipe(
+      ofActionCanceled(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    );
+
+    let jobErrored$ = this.actions$.pipe(
+      ofActionErrored(CreateJob),
+      filter(a => a.action.correlationId == correlationId)
+    )
+
+    let jobSuccessful$ = this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(merge(jobCanceled$, jobErrored$)),
+      take(1),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as PhotometryJobResult;
+        if (result.errors.length != 0) {
+          console.error("Errors encountered while photometering sources: ", result.errors);
+        }
+        if (result.warnings.length != 0) {
+          console.error("Warnings encountered while photometering sources: ", result.warnings);
+        }
+
+        setState((state: WorkbenchStateModel) => {
+          if(isBatch) state.photometryPageSettings.batchPhotProgress = null;
+          return state;
+        });
+
+        dispatch(new AddPhotDatas(result.data.map(d => {
+          let time = null;
+          if (d.time && Date.parse(d.time + ' GMT')) {
+            time = new Date(Date.parse(d.time + ' GMT'));
+          }
+          return {
+            id: null,
+            sourceId: d.id,
+            fileId: d.file_id.toString(),
+            time: time,
+            filter: d.filter,
+            telescope: d.telescope,
+            expLength: d.exp_length,
+            raHours: d.ra_hours,
+            decDegs: d.dec_degs,
+            x: d.x,
+            y: d.y,
+            mag: d.mag,
+            magError: d.mag_error,
+            flux: d.flux,
+            fluxError: d.flux_error
+          } as PhotData;
+        })))
+      })
+    )
+
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>(a => a.correlationId == correlationId),
+      takeUntil(jobCompleted$),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+
+        setState((state: WorkbenchStateModel) => {
+          if(isBatch) {
+            state.photometryPageSettings.batchPhotJobId = a.job.id;
+            state.photometryPageSettings.batchPhotProgress = jobEntity.job.state.progress;
+          }
+          return state;
+        });
+      })
+    )
+
+    return merge(jobSuccessful$, jobUpdated$);
   }
 
 

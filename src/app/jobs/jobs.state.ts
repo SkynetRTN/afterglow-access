@@ -61,7 +61,7 @@ export class JobsState {
         });
       }),
       flatMap(job => {
-        dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
+        //dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
         if (!createJobAction.autoUpdateInterval) createJobAction.autoUpdateInterval = 2500;
 
         let jobCompleted$ = this.actions$.pipe(

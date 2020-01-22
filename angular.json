@@ -51,7 +51,32 @@
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
-              ]
+              ],
+              "outputPath": "dist/afterglow-access",
+              "baseHref": "/"
+            },
+            "es": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "outputPath": "dist/afterglow-access-es/",
+              "baseHref": "/es/",
+              "i18nFile": "src/locale/messages.es.xlf",
+              "i18nFormat": "xlf",
+              "i18nLocale": "es",
+              "i18nMissingTranslation": "warning"
             }
           }
         },
@@ -63,7 +88,11 @@
           "configurations": {
             "production": {
               "browserTarget": "afterglow-access:build:production"
+            },
+            "es": {
+              "browserTarget": "afterglow-access:build:es"
             }
+            
           }
         },
         "extract-i18n": {

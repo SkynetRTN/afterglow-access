@@ -7,7 +7,8 @@
     !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
   "
 >
-  <app-workbench-viewer-grid></app-workbench-viewer-grid>
+<app-workbench-viewer-grid [viewers]="viewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"></app-workbench-viewer-grid>
+
 </div>
 
 <span class="resizer"></span>

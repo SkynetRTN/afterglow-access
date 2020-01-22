@@ -1,4 +1,4 @@
-import { State, Action, Selector, StateContext, Actions, ofActionDispatched, getActionTypeFromInstance } from '@ngxs/store';
+import { State, Action, Selector, StateContext, Actions, ofActionDispatched, getActionTypeFromInstance, ofActionCompleted, ofActionCanceled, ofActionErrored, ofActionSuccessful, Store } from '@ngxs/store';
 import { of, merge, interval, Observable } from "rxjs";
 import {
   tap,
@@ -16,13 +16,14 @@ import { DataProvider } from './models/data-provider';
 import { DataProviderAsset } from './models/data-provider-asset';
 import { LoadDataProviders, LoadDataProvidersSuccess, LoadDataProvidersFail, LoadDataProviderAssets, LoadDataProviderAssetsSuccess, LoadDataProviderAssetsFail, SortDataProviderAssets, ImportSelectedAssets, ImportAssets, ImportAssetsCompleted, ImportAssetsCancel, ImportAssetsStatusUpdated } from './data-providers.actions';
 import { AfterglowDataProviderService } from '../core/services/afterglow-data-providers';
-import { UpdateJobSuccess, CreateJob, CreateJobSuccess, CreateJobFail, UpdateJobResultSuccess, JobCompleted } from '../jobs/jobs.actions';
+import { UpdateJobSuccess, CreateJob, CreateJobSuccess, CreateJobFail, UpdateJobResultSuccess, JobCompleted, UpdateJob } from '../jobs/jobs.actions';
 import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jobs/models/batch-import';
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { Navigate } from '@ngxs/router-plugin';
-import { SetViewerFile } from '../core/workbench.actions';
+import { SetViewerFile, SelectDataFile } from '../core/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { JobsState } from '../jobs/jobs.state';
 
 export interface DataProvidersStateModel {
   dataProvidersLoaded: boolean;
@@ -66,7 +67,7 @@ export interface DataProvidersStateModel {
 })
 export class DataProvidersState {
 
-  constructor(private dataProviderService: AfterglowDataProviderService, private actions$: Actions, private correlationIdGenerator: CorrelationIdGenerator) {
+  constructor(private dataProviderService: AfterglowDataProviderService, private actions$: Actions, private store: Store, private correlationIdGenerator: CorrelationIdGenerator) {
   }
 
   @Selector()
@@ -342,7 +343,7 @@ export class DataProvidersState {
       }),
       filter(action => action.errors.length == 0),
       flatMap(action => {
-        return dispatch([new Navigate(['/workbench']), new SetViewerFile(0, action.fileIds[0])]);
+        return dispatch([new Navigate(['/workbench']), new SelectDataFile(action.fileIds[0])]);
       })
     )
 
@@ -371,8 +372,6 @@ export class DataProvidersState {
   @Action(ImportAssets)
   @ImmutableContext()
   public importAssets({ setState, getState, dispatch }: StateContext<DataProvidersStateModel>, { dataProviderId, assets, correlationId }: ImportAssets) {
-
-    let createJobCorrId = this.correlationIdGenerator.next();
     let job: BatchImportJob = {
       id: null,
       type: JobType.BatchImport,
@@ -386,66 +385,58 @@ export class DataProvidersState {
         })
     };
 
-    let createJobSuccess$ = this.actions$.pipe(
-      ofActionDispatched(CreateJobSuccess),
-      filter<CreateJobSuccess>(action => action.correlationId == createJobCorrId),
-      tap(action => {
 
-      }),
-      flatMap(createJobSuccess => {
-        let jobCompleted$ = this.actions$.pipe(
-          ofActionDispatched(JobCompleted),
-          filter<JobCompleted>(jobCompleted => jobCompleted.job.id == createJobSuccess.job.id),
-          take(1),
-          tap(jobCompleted => {
+    let jobCorrelationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, jobCorrelationId));
 
-          }),
-          flatMap(jobCompleted => {
-            let result = jobCompleted.result as BatchImportJobResult;
-            return dispatch(new ImportAssetsCompleted(assets, result.file_ids.map(id => id.toString()), result.errors, correlationId));
-          })
-        )
+    let jobCompleted$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter(a => a.action.correlationId == jobCorrelationId)
+    );
 
-        let jobUpdated$ = this.actions$.pipe(
-          ofActionDispatched(UpdateJobSuccess),
-          filter<UpdateJobSuccess>(updateJobSuccess => updateJobSuccess.job.id == createJobSuccess.job.id),
-          takeUntil(jobCompleted$),
-          tap(updateJobSuccess => {
+    let jobCanceled$ = this.actions$.pipe(
+      ofActionCanceled(CreateJob),
+      filter(a => a.action.correlationId == jobCorrelationId)
+    );
 
-          }),
-          flatMap(updateJobSuccess => {
-            return dispatch(new ImportAssetsStatusUpdated(updateJobSuccess.job as BatchImportJob, correlationId))
-          })
-        )
-
-        return merge(jobUpdated$, jobCompleted$)
-      })
-    )
-
-    let createJobFailure$ = this.actions$.pipe(
-      ofActionDispatched(CreateJobFail),
-      filter<CreateJobFail>(action => action.correlationId == createJobCorrId),
-      tap(action => {
-
-      }),
-      flatMap(action => {
-
+    let jobErrored$ = this.actions$.pipe(
+      ofActionErrored(CreateJob),
+      filter(a => a.action.correlationId == jobCorrelationId),
+      tap((action) => {
         return dispatch(new ImportAssetsCompleted(assets, [], [`Unable to create the batch import job.  Please try again later: Error: ${action.error}`], correlationId));
       })
     )
 
-    let importAssetsCanceled$ = this.actions$.pipe(
-      ofActionDispatched(ImportAssetsCancel),
-      filter<ImportAssetsCancel>(action => action.correlationId == correlationId),
-      take(1)
-    );
-
-    let result$ = merge(createJobSuccess$, createJobFailure$).pipe(
+    let jobSuccessful$ = this.actions$.pipe(
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>(a => a.correlationId == jobCorrelationId),
+      takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
-      takeUntil(importAssetsCanceled$)
-    );
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let result = jobEntity.result as BatchImportJobResult;
+        if (result.errors.length != 0) {
+          console.error("Errors encountered during stacking: ", result.errors);
+        }
+        if (result.warnings.length != 0) {
+          console.error("Warnings encountered during stacking: ", result.warnings);
+        }
+        return dispatch(new ImportAssetsCompleted(assets, result.file_ids.map(id => id.toString()), result.errors, correlationId));
 
-    return merge(dispatch(new CreateJob(job, 1000, createJobCorrId)), result$);
+      })
+    )
+
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>(a => a.correlationId == jobCorrelationId),
+      takeUntil(jobCompleted$),
+      tap(a => {
+        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        return dispatch(new ImportAssetsStatusUpdated(jobEntity.job as BatchImportJob, correlationId))
+      })
+    )
+
+    return merge(jobSuccessful$, jobUpdated$);
   }
 
 }

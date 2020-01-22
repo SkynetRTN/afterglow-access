@@ -13,10 +13,11 @@ import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
 import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./core/components/help-dialog/help-dialog.component";
-import { MatDialog } from "@angular/material";
+import { MatDialog, MatDialogRef } from "@angular/material";
 import { ThemeDialogComponent } from "./core/components/theme-dialog/theme-dialog.component";
 import { DataProvidersState } from './data-providers/data-providers.state';
 import { SetFullScreen, Initialize } from './core/workbench.actions';
+import { finalize } from 'rxjs/operators';
 
 
 
@@ -26,7 +27,7 @@ import { SetFullScreen, Initialize } from './core/workbench.actions';
   styleUrls: ["./app.component.css"]
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  private currentRoutes: any[] = [];
+  currentRoutes: any[] = [];
 
   @Select(AuthState.loggedIn)
   loggedIn$: Observable<boolean>
@@ -35,13 +36,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   user$: Observable<User>
 
 
-  private loggedInSub: Subscription;
-  private colorThemeName: string;
-  private fontSize: "default" | "large" | "largest";
-  private fontWeight: "default" | "bold" | "boldest";
-  private dataProviders$: Observable<Array<DataProvider>>;
+  loggedInSub: Subscription;
+  colorThemeName: string;
+  fontSize: "default" | "large" | "largest";
+  fontWeight: "default" | "bold" | "boldest";
+  dataProviders$: Observable<Array<DataProvider>>;
 
   private hotKeys: Array<Hotkey> = [];
+  private themeDialog: MatDialogRef<ThemeDialogComponent>;
+  private helpDialog: MatDialogRef<HelpDialogComponent>;
 
   public constructor(
     private store: Store,
@@ -53,6 +56,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private themeStorage: ThemeStorage,
     public dialog: MatDialog,
     private _hotkeysService: HotkeysService
+
   ) {
     let theme = this.themeStorage.getCurrentTheme();
     if (!theme) {
@@ -125,10 +129,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "T",
         (event: KeyboardEvent): boolean => {
-          this.dialog.open(ThemeDialogComponent, {
+          if(this.themeDialog) return;
+          this.themeDialog = this.dialog.open(ThemeDialogComponent, {
             data: {},
             width: "500px",
             height: "400px"
+          });
+          this.themeDialog.afterClosed().subscribe(result => {
+            this.themeDialog = undefined;
           });
           return false; // Prevent bubbling
         },
@@ -141,11 +149,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "?",
         (event: KeyboardEvent): boolean => {
-          this.dialog.open(HelpDialogComponent, {
+          if(this.helpDialog) return;
+          this.helpDialog = this.dialog.open(HelpDialogComponent, {
             data: {},
             width: "800px",
             height: "600px"
           });
+
+          this.helpDialog.afterClosed().subscribe(result => {
+            this.helpDialog = undefined;
+          });
+
           return false; // Prevent bubbling
         },
         undefined,
