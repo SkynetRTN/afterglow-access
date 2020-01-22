@@ -140,21 +140,7 @@ export class WorkbenchViewerGridComponent implements OnInit {
       )
     );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "del",
-        (event: KeyboardEvent): boolean => {
-          let activeViewer = this.viewers.find(v => v.viewerId == this.activeViewerId);
-          if(activeViewer && activeViewer.fileId != null) {
-            this.store.dispatch(new RemoveDataFile(activeViewer.fileId));
-          }
-          
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Reset Zoom"
-      )
-    );
+   
 
     this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
   }

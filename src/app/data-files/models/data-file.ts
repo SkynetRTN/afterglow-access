@@ -4,6 +4,7 @@ import { ImageTile, getTilePixel } from './image-tile';
 import { ImageHist } from './image-hist';
 import { Wcs } from '../../image-tools/wcs';
 import { Source, PosType } from '../../core/models/source';
+import { parseDms } from '../../utils/skynet-astro';
 
 export type Header = Array<HeaderEntry>;
 export type DataFile = ImageFile | TableFile;
@@ -308,6 +309,45 @@ export function getObject(imageFile: ImageFile) {
     return obj.value;
   }
   return undefined;
+}
+
+export function getRaHours(imageFile: ImageFile) {
+  let raEntry = getEntry(imageFile, 'RA');
+  if (!raEntry) {
+    raEntry = getEntry(imageFile, 'RAOBJ');
+    if(!raEntry) return undefined;
+  }
+  let ra;
+  if(typeof(raEntry.value) == 'string' && raEntry.value.includes(':')) {
+    ra = parseDms(raEntry.value);
+  }
+  else {
+    ra = parseFloat(raEntry.value);
+  }
+
+  if(isNaN(ra) || ra == undefined || ra == null) return undefined;
+
+  return ra;
+}
+
+export function getDecDegs(imageFile: ImageFile) {
+  let decEntry = getEntry(imageFile, 'DEC');
+  if (!decEntry) {
+    decEntry = getEntry(imageFile, 'DECOBJ');
+    if(!decEntry) return undefined;
+  }
+
+  let dec;
+  if(typeof(decEntry.value) == 'string' && decEntry.value.includes(':')) {
+    dec = parseDms(decEntry.value);
+  }
+  else {
+    dec = parseFloat(decEntry.value);
+  }
+
+  if(isNaN(dec) || dec == undefined || dec == null) return undefined;
+
+  return dec;
 }
 
 export function getExpNum(imageFile: ImageFile) {

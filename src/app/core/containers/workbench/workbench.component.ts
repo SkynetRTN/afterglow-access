@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { DataFile, ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file'
+import { DataFile, ImageFile, getWidth, getHeight, getRaHours, getDecDegs, getDegsPerPixel } from '../../../data-files/models/data-file'
 import { SidebarView } from '../../models/sidebar-view';
 import { Router } from '@angular/router';
 import { Subscription } from '../../../../../node_modules/rxjs';
@@ -10,16 +10,18 @@ import { MatDialog } from '@angular/material/dialog';
 import { Store, Actions, ofActionCompleted, ofActionSuccessful } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey } from '../../workbench.actions';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings } from '../../workbench.actions';
 import { LoadLibrary, RemoveAllDataFiles, RemoveDataFile } from '../../../data-files/data-files.actions';
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
 import { tap, map, withLatestFrom, filter } from 'rxjs/operators';
 import { ViewMode } from "../../models/view-mode";
-import { MatButtonToggleChange } from '@angular/material';
+import { MatButtonToggleChange, MatCheckboxChange } from '@angular/material';
 import { Viewer } from '../../models/viewer';
 import { DataProvider } from '../../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { DataProvidersState } from '../../../data-providers/data-providers.state';
+import { BatchImportJob, BatchImportJobResult } from 'src/app/jobs/models/batch-import';
+import { JobEntity, JobsState } from '../../../jobs/jobs.state';
 
 
 
@@ -51,7 +53,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   showSidebar$: Observable<boolean>;
   surveyDataProvider$: Observable<DataProvider>;
   surveyImportCorrId$: Observable<string>;
-  
+
+  useWcsCenter: boolean = true;
   viewMode$: Observable<ViewMode>;
   viewers$: Observable<Viewer[]>;
   viewerSyncEnabled$: Observable<boolean>;
@@ -64,11 +67,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private loading$: Observable<boolean>;
   private fileFilterString: string = '';
   private subs: Subscription[] = [];
-  fileEntities$: Observable<{[id: string]: DataFile}>;
+  fileEntities$: Observable<{ [id: string]: DataFile }>;
   imageFile$: Observable<ImageFile>;
 
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
+  dssImportLoading$: Observable<boolean>;
+
 
   private currentSidebarView: SidebarView = SidebarView.FILES;
   SidebarView = SidebarView;
@@ -77,7 +82,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   constructor(private actions$: Actions, private store: Store, private router: Router, private _hotkeysService: HotkeysService, public dialog: MatDialog, private corrGen: CorrelationIdGenerator) {
     this.fileEntities$ = this.store.select(DataFilesState.getEntities);
     this.files$ = this.store.select(DataFilesState.getDataFiles).pipe(
-      map(files => files.sort((a,b) => a.name.localeCompare(b.name)))
+      map(files => files.sort((a, b) => a.name.localeCompare(b.name)))
     );
     this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
     this.viewers$ = this.store.select(WorkbenchState.getViewers).pipe(map(viewer => viewer.filter(viewer => !viewer.hidden)));
@@ -89,7 +94,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.activeViewerId$ = this.store.select(WorkbenchState.getActiveViewerId);
     this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
     this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
-    this.surveyImportCorrId$ = store.select(WorkbenchState.getSurveyImportCorrId);
+    this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
     this.surveyDataProvider$ = this.store.select(DataProvidersState.getDataProviders).pipe(
       map(dataProviders => dataProviders.find(dp => dp.name == 'Imaging Surveys'))
     );
@@ -108,37 +113,37 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('d', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.VIEWER_ROUTE]);
+      this.router.navigate([this.VIEWER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Display Settings'))
 
     this.hotKeys.push(new Hotkey('i', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.FILE_INFO_ROUTE]);
+      this.router.navigate([this.FILE_INFO_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'File Info'));
 
     this.hotKeys.push(new Hotkey('m', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.MARKER_ROUTE]);
+      this.router.navigate([this.MARKER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Markers'));
 
     this.hotKeys.push(new Hotkey('P', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.PLOTTER_ROUTE]);
+      this.router.navigate([this.PLOTTER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Plotter'));
 
     this.hotKeys.push(new Hotkey('s', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.SONIFIER_ROUTE]);
+      this.router.navigate([this.SONIFIER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Sonifier'));
 
     this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.FIELD_CAL_ROUTE]);
+      this.router.navigate([this.FIELD_CAL_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Field Calibration'));
 
@@ -150,23 +155,23 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('/', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.IMAGE_ARITHMETIC_ROUTE]);
+      this.router.navigate([this.IMAGE_ARITHMETIC_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Image Arithmetic'));
 
     this.hotKeys.push(new Hotkey('a', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.ALIGNER_ROUTE]);
+      this.router.navigate([this.ALIGNER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Aligning'));
 
     this.hotKeys.push(new Hotkey('S', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router. navigate([this.STACKER_ROUTE]);
+      this.router.navigate([this.STACKER_ROUTE]);
       return false; // Prevent bubbling
     }, undefined, 'Stacking'));
 
-    
+
 
     this.hotKeys.push(new Hotkey('R', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetFullScreen(false))
@@ -197,7 +202,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
 
-   
+
     // if(localStorage.getItem('previouslyVisited') != 'true') {
     //   localStorage.setItem('previouslyVisited', 'true')
     //   let dialogRef = this.dialog.open(TourDialogComponent);
@@ -206,7 +211,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     //     // console.log('The dialog was closed', result);
     //     if(result) this.tourService.start();
     //   });
-      
+
     // }
 
 
@@ -227,9 +232,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
 
   ngOnInit() {
-    
+
     this.store.dispatch([new LoadLibrary(), new LoadCatalogs(), new LoadFieldCals(), new LoadDataProviders()]);
-    
+
   }
 
   ngOnDestroy() {
@@ -237,8 +242,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onFileSelect(file: DataFile) {
-    if(!file) return;
-    
+    if (!file) return;
+
     this.store.dispatch(new SelectDataFile(file.id));
   }
 
@@ -317,11 +322,29 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   importFromSurvey(surveyDataProvider: DataProvider, imageFile: ImageFile) {
-    let centerRaDec = imageFile.wcs.pixToWorld([
-      getWidth(imageFile) / 2,
-      getHeight(imageFile) / 2
-    ]);
-    let pixelScale = imageFile.wcs.getPixelScale() * 60;
+    let centerRaDec;
+    let pixelScale;
+    
+
+    if (imageFile.wcs && imageFile.wcs.isValid() && this.useWcsCenter) {
+      centerRaDec = imageFile.wcs.pixToWorld([
+        getWidth(imageFile) / 2,
+        getHeight(imageFile) / 2
+      ]);
+      pixelScale = imageFile.wcs.getPixelScale() * 60;
+    }
+    else {
+      let centerRa = getRaHours(imageFile);
+      let centerDec = getDecDegs(imageFile);
+      if (centerRa == undefined || centerDec == undefined) return;
+
+      centerRaDec = [centerRa, centerDec];
+      pixelScale = getDegsPerPixel(imageFile)*60;
+
+      if (pixelScale == undefined) return;
+
+    }
+
     let width = pixelScale * getWidth(imageFile);
     let height = pixelScale * getHeight(imageFile);
 
@@ -334,6 +357,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         height,
         this.corrGen.next())
     );
+  }
+
+  onUseWcsCenterChange($event: MatCheckboxChange) {
+    this.useWcsCenter = $event.checked;
   }
 
 

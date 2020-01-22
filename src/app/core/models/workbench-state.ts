@@ -53,6 +53,7 @@ export interface StackFormData {
 
 export interface CustomMarkerPageSettings {
   centroidClicks: boolean,
+  usePlanetCentroiding: boolean,
 }
 
 export interface PlotterPageSettings {
@@ -123,5 +124,5 @@ export interface WorkbenchStateModel {
   creatingAddFieldCalSourcesFromCatalogJob: boolean;
   addFieldCalSourcesFromCatalogJobId: string;
   addFieldCalSourcesFromCatalogFieldCalId: string;
-  surveyImportCorrId: string;
+  dssImportLoading: boolean;
 }

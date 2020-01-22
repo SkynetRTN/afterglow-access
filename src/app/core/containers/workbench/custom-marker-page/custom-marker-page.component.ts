@@ -33,7 +33,8 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
   subs: Subscription[] = [];
   markerUpdater: Subscription;
   workbenchState$: Observable<WorkbenchStateModel>;
-  centroidSettings$: Observable<CentroidSettings>;
+  centroidClicks$: Observable<boolean>;
+  usePlanetCentroiding$: Observable<boolean>;
   workbenchState: WorkbenchStateModel;
   activeImageFile: ImageFile;
   customMarkers$: Observable<CustomMarker[]>;
@@ -51,8 +52,13 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
     this.workbenchState$ = store
       .select(WorkbenchState.getState)
       .pipe(filter(state => state != null));
-    this.centroidSettings$ = this.workbenchState$.pipe(
-      map(state => state && state.centroidSettings)
+
+    this.centroidClicks$ = this.store.select(WorkbenchState.getCustomMarkerPageSettings).pipe(
+      map(settings => settings.centroidClicks)
+    );
+
+    this.usePlanetCentroiding$ = this.store.select(WorkbenchState.getCustomMarkerPageSettings).pipe(
+      map(settings => settings.usePlanetCentroiding)
     );
 
     this.markerUpdater = combineLatest(
@@ -184,13 +190,14 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
   }
 
   onImageClick($event: ViewerGridCanvasMouseEvent) {
+    let settings = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPageSettings);
     if ($event.hitImage) {
       // if (this.selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
       let x = $event.imageX;
       let y = $event.imageY;
-      if (this.workbenchState.customMarkerPageSettings.centroidClicks) {
+      if (settings.centroidClicks) {
         let result: { x: number; y: number };
-        if (this.workbenchState.centroidSettings.useDiskCentroiding) {
+        if (settings.usePlanetCentroiding) {
           result = centroidDisk(
             this.activeImageFile,
             x,
@@ -304,7 +311,7 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
 
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
-      new UpdateCentroidSettings({ useDiskCentroiding: $event.checked })
+      new UpdateCustomMarkerPageSettings({ usePlanetCentroiding: $event.checked })
     );
   }
 }

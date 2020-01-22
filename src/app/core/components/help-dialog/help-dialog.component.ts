@@ -59,7 +59,6 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: "-", description: "Zoom out" },
       { key: "0", description: "Reset zoom" },
       { key: "z", description: "Zoom to fit" },
-      { key: "del", description: "Delete file from library" },
     ]
   }
 ];

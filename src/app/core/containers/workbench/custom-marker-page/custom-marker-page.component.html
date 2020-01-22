@@ -41,7 +41,7 @@
             <div class="col-6">
               <div class="form-group">
                 <mat-slide-toggle
-                  [checked]="(centroidSettings$ | async)?.centroidClicks"
+                  [checked]="(centroidClicks$ | async)"
                   [labelPosition]="before"
                   (change)="onCentroidClicksChange($event)"
                   color="primary"
@@ -53,8 +53,8 @@
             <div class="col-6">
               <div class="form-group">
                 <mat-slide-toggle
-                  [checked]="(centroidSettings$ | async)?.useDiskCentroiding"
-                  [disabled]="!(centroidSettings$ | async)?.centroidClicks"
+                  [checked]="(usePlanetCentroiding$ | async)"
+                  [disabled]="!(centroidClicks$ | async)"
                   color="primary"
                   [labelPosition]="before"
                   (change)="onPlanetCentroidingChange($event)"

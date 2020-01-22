@@ -107,6 +107,7 @@ import { Viewer } from './models/viewer';
     },
     customMarkerPageSettings: {
       centroidClicks: false,
+      usePlanetCentroiding: false
     },
     plotterPageSettings: {
       interpolatePixels: false,
@@ -169,7 +170,7 @@ import { Viewer } from './models/viewer';
     addFieldCalSourcesFromCatalogJobId: null,
     creatingAddFieldCalSourcesFromCatalogJob: false,
     addFieldCalSourcesFromCatalogFieldCalId: null,
-    surveyImportCorrId: null
+    dssImportLoading: false
   }
 })
 export class WorkbenchState {
@@ -293,8 +294,8 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getSurveyImportCorrId(state: WorkbenchStateModel) {
-    return state.surveyImportCorrId;
+  public static getDssImportLoading(state: WorkbenchStateModel) {
+    return state.dssImportLoading;
   }
 
   @Selector()
@@ -331,6 +332,11 @@ export class WorkbenchState {
   @Selector()
   public static getCentroidSettings(state: WorkbenchStateModel) {
     return state.centroidSettings;
+  }
+
+  @Selector()
+  public static getCustomMarkerPageSettings(state: WorkbenchStateModel) {
+    return state.customMarkerPageSettings;
   }
 
   @Selector()
@@ -1628,33 +1634,65 @@ export class WorkbenchState {
   public importFromSurvey({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { surveyDataProviderId, raHours, decDegs, widthArcmins, heightArcmins, imageFileId, correlationId }: ImportFromSurvey) {
     let importFromSurveyCorrId = this.correlationIdGenerator.next();
 
+    setState((state: WorkbenchStateModel) => {
+      state.dssImportLoading = true; 
+      return state;
+    });
+
     let importCompleted$ = this.actions$.pipe(
       ofActionDispatched(ImportAssetsCompleted),
       filter<ImportAssetsCompleted>(action => action.correlationId == importFromSurveyCorrId),
+      take(1),
       flatMap(action => {
-        return dispatch([
-          new LoadLibrary(),
-          new ImportFromSurveySuccess(),
-          new SetViewMode(ViewMode.SPLIT_VERTICAL),
-          new SetViewerFile(WorkbenchState.getViewers(getState())[0].viewerId, action.fileIds[0].toString())
-        ])
+        
+        dispatch(new LoadLibrary());
+        dispatch(new ImportFromSurveySuccess());
+
+        let state = getState();
+        let viewers = WorkbenchState.getViewers(state);
+        let targetViewer = viewers.find(v => v.viewerId != state.activeViewerId);
+
+        
+        return this.actions$.pipe(
+          ofActionCompleted(LoadLibrary),
+          take(1),
+          filter(loadLibraryAction => loadLibraryAction.result.successful),
+          tap(loadLibraryAction => {
+            setState((state: WorkbenchStateModel) => {
+              state.dssImportLoading = false; 
+              return state;
+            });
+
+            
+            if(targetViewer) {
+              if(getState().viewMode == ViewMode.SINGLE ) {
+                dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
+              }
+              
+              dispatch(new SetActiveViewer(targetViewer.viewerId));
+              dispatch(new SelectDataFile((action.fileIds[0].toString())));
+            }
+          })
+        )
       })
     )
-    return merge(
-      dispatch(new ImportAssets(
-        surveyDataProviderId,
-        [
-          {
-            name: "",
-            collection: false,
-            path: `DSS\\${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
-            metadata: {}
-          }
-        ],
-        importFromSurveyCorrId
-      )),
-      importCompleted$
-    );
+
+    dispatch(new ImportAssets(
+      surveyDataProviderId,
+      [
+        {
+          name: "",
+          collection: false,
+          path: `DSS\\${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
+          metadata: {}
+        }
+      ],
+      importFromSurveyCorrId
+    ))
+
+    return importCompleted$;
+
+
   }
 
 

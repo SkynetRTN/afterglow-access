@@ -119,16 +119,24 @@
 
         <hr>
 
-        <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider">
+        <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
           <div *ngIf="imageFile$ | async; let imageFile">
-            <button mat-raised-button
-              [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid() || (surveyImportCorrId$ | async) !== null"
-              (click)="importFromSurvey(surveyDataProvider, imageFile)">
-              Import DSS Image
-            </button>
+            <div class="pb-3">
+              <mat-slide-toggle [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()"
+                [checked]="useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()" [labelPosition]="after"
+                (change)="onUseWcsCenterChange($event)">
+                Use WCS for image center
+              </mat-slide-toggle>
+            </div>
             <div>
-              <mat-progress-bar *ngIf="(surveyImportCorrId$ | async) !== null" color="accent" mode="indeterminate">
-              </mat-progress-bar>
+              <button mat-raised-button class="mb-2" [disabled]="(surveyImportCorrId$ | async) !== null"
+                (click)="importFromSurvey(surveyDataProvider, imageFile)">
+                Import DSS
+              </button>
+            </div>
+
+            <div *ngIf="(dssImportLoading$ | async);">
+              <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
             </div>
           </div>
 
