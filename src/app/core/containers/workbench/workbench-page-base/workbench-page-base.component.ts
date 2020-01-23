@@ -107,7 +107,7 @@ export class WorkbenchPageBaseComponent {
           ...fileIds.map(fileId => {
             return this.store.select(DataFilesState.getDataFileById).pipe(
               map(fn => {
-                if(fileId == null || fn(fileId).type != DataFileType.IMAGE) return null;
+                if(fileId == null || !fn(fileId) || fn(fileId).type != DataFileType.IMAGE) return null;
                 return fn(fileId) as ImageFile;
               }),
               distinctUntilChanged()
@@ -123,7 +123,7 @@ export class WorkbenchPageBaseComponent {
           ...fileIds.map(fileId => {
             return this.store.select(DataFilesState.getDataFileById).pipe(
               map(fn => {
-                if(fileId == null ||  fn(fileId).type != DataFileType.IMAGE) return null;
+                if(fileId == null ||  !fn(fileId) || fn(fileId).type != DataFileType.IMAGE) return null;
                 return fn(fileId).header;
               }),
               distinctUntilChanged()

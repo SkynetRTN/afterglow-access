@@ -236,7 +236,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
 
       viewers.forEach((viewer) => {
         let fileId = viewer.fileId;
-        if (fileId == null) {
+        if (fileId == null || !dataFiles[fileId]) {
           this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
           return;
         }

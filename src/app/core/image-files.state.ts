@@ -639,7 +639,7 @@ export class ImageFilesState {
     setState((state: ImageFilesStateModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      if (!state.entities[imageFile.id]) return state;
+      if (!imageFile || !state.entities[imageFile.id]) return state;
       let transformation = state.entities[fileId].transformation;
 
       transformation.viewportSize = viewportSize;

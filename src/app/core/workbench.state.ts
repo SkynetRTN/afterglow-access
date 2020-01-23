@@ -950,6 +950,13 @@ export class WorkbenchState {
   @Action(RemoveDataFile)
   @ImmutableContext()
   public removeDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: RemoveDataFile) {
+    setState((state: WorkbenchStateModel) => {
+      WorkbenchState.getViewers(state).forEach(v => {
+        if(v.fileId == fileId) v.fileId = null;
+      })
+      return state;
+    });
+
     if (getState().selectedFileId == fileId) {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
       let index = dataFiles.map(f => f.id).indexOf(fileId);
@@ -960,7 +967,8 @@ export class WorkbenchState {
           filter(a => a.result.successful),
         ).subscribe(() => {
           dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
-          dispatch(new SelectDataFile(dataFiles[Math.max(0, Math.min(dataFiles.length-1, index))].id))
+          let nextFile = dataFiles[Math.max(0, Math.min(dataFiles.length-1, index))];
+          if(nextFile) dispatch(new SelectDataFile(nextFile.id))
         })
 
       }
