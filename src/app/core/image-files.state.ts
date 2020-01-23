@@ -140,8 +140,8 @@ export class ImageFilesState {
           }
           tiles.push({
             index: j * getXTileDim(imageFile) + i,
-            x: i * tw,
-            y: j * th,
+            x: i * imageFile.tileWidth,
+            y: j * imageFile.tileHeight,
             width: tw,
             height: th,
             pixelsLoaded: false,
@@ -444,8 +444,6 @@ export class ImageFilesState {
 
     if (!viewportSize)
       viewportSize = transformationState.viewportSize;
-
-      console.log(viewportSize, viewportSize);
 
     let viewportAnchor = new Point(
       viewportSize.width / 2,

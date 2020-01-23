@@ -5,6 +5,8 @@ import { filter, flatMap, takeUntil } from "rxjs/operators";
 import { Store } from '@ngxs/store';
 import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../image-files.actions';
+import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { MatDialog } from '@angular/material';
 
 @Component({
   selector: 'app-image-viewer-title-bar',
@@ -22,7 +24,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
   private startZoomOut$ = new Subject<boolean>();
   private stopZoomOut$ = new Subject<boolean>();
 
-  constructor(private store: Store) {
+  constructor(private store: Store, private dialog: MatDialog) {
   }
 
   ngOnInit() {
@@ -33,9 +35,26 @@ export class ImageViewerTitleBarComponent implements OnInit {
   }
 
   removeFromLibrary() {
-    if (this.imageFile) {
-      this.store.dispatch(new RemoveDataFile(this.imageFile.id));
-    }
+    if(!this.imageFile) return;
+    let imageFileId = this.imageFile.id;
+
+    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: "300px",
+      data: {
+        message: "Are you sure you want to delete this file from your library?",
+        confirmationBtn: {
+          color: 'warn',
+          label: 'Delete File'
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.store.dispatch(new RemoveDataFile(imageFileId));
+      }
+    });
+
   }
 
   public startZoomIn() {

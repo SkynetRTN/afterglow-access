@@ -1,3 +1,5 @@
+import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
+
 // The file contents for the current environment will overwrite these during build.
 // The build system defaults to the dev environment which uses `environment.ts`, but if you do
 // `ng build --env=prod` then `environment.prod.ts` will be used instead.
@@ -10,4 +12,5 @@ export const environment = {
   tileSize: 512,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,
+  plugins: [NgxsLoggerPluginModule.forRoot()],
 };

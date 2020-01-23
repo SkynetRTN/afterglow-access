@@ -20,6 +20,7 @@ import { Viewer } from '../../models/viewer';
 import { DataProvider } from '../../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { DataProvidersState } from '../../../data-providers/data-providers.state';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 
 
 
@@ -251,7 +252,24 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   // }
 
   removeAllFiles() {
-    this.store.dispatch(new RemoveAllDataFiles());
+    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: "300px",
+      data: {
+        message: "Are you sure you want to delete all files from your library?",
+        confirmationBtn: {
+          color: 'warn',
+          label: 'Delete All Files'
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.store.dispatch(new RemoveAllDataFiles());
+      }
+    });
+
+    
   }
 
   refresh() {

@@ -124,39 +124,34 @@ export function calcLevels(
   }
 
   let x0 = 0;
-  let minPixCount = (lowerPercentile / 100.0) * total;
-  let maxPixCount = (upperPercentile / 100.0) * total;
+  let backgroundTarget = (lowerPercentile / 100.0) * total;
+  let peakTarget = (upperPercentile / 100.0) * total;
 
   let blackComplete = false;
   let whiteComplete = false;
   let peakLevel, backgroundLevel;
 
-  console.log(hist, minPixCount, maxPixCount, total);
-  for (let i = 0; i < hist.data.length-1; i++) {
-    x0 += hist.data[i];
-    let x1 = x0 + hist.data[i+1];
-    if (!whiteComplete && x1 >= maxPixCount) {
-      let y0 = getBinCenter(hist, i);
-      let y1 = getBinCenter(hist, i+1);
-      let x = maxPixCount;
-      let y = (x1 == x0) ? y0 : (y0*(x1-x)+y1*(x-x0))/(x1-x0);
-      peakLevel = y;
-      if (blackComplete) {
-        break;
-      }
-      whiteComplete = true;
-    }
-    if (!blackComplete && x1 >= minPixCount) {
-      let y0 = getBinCenter(hist, i);
-      let y1 = getBinCenter(hist, i+1);
-      let x = minPixCount;
-      let y = (x1 == x0) ? y0 : (y0*(x1-x)+y1*(x-x0))/(x1-x0);
-      backgroundLevel = y;
-      if (blackComplete) {
-        break;
-      }
+  if(lowerPercentile == 100) {
+    blackComplete = true;
+    backgroundLevel = getBinRight(hist, hist.data.length-1)
+  }
+  if(upperPercentile == 100) {
+    whiteComplete = true;
+    peakLevel = getBinRight(hist, hist.data.length-1)
+  }
+
+  let sum = 0;
+  for (let i = 0; i < hist.data.length; i++) {
+    sum += hist.data[i];
+    if (!blackComplete && sum >= backgroundTarget) {
+      backgroundLevel = (backgroundTarget - (sum - hist.data[i])) / hist.data[i] * (getBinRight(hist, i) - getBinLeft(hist, i)) + getBinLeft(hist, i);
       blackComplete = true;
     }
+    if (!whiteComplete && sum >= peakTarget) {
+      peakLevel = (peakTarget - (sum - hist.data[i])) / hist.data[i] * (getBinRight(hist, i) - getBinLeft(hist, i)) + getBinLeft(hist, i);
+      whiteComplete = true;
+    }
+    if(whiteComplete && blackComplete) break;
   }
   let result = { backgroundLevel: backgroundLevel, peakLevel: peakLevel };
   if(round) {

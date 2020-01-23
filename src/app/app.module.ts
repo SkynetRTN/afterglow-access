@@ -67,7 +67,7 @@ import { PhotDataState } from './core/phot-data.state.';
       { developmentMode: !environment.production }
     ),
     NgxsRouterPluginModule.forRoot(),
-    NgxsLoggerPluginModule.forRoot()
+    environment.plugins
   ],
 
   declarations: [

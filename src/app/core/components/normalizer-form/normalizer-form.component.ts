@@ -41,11 +41,11 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   calcStep(percentile: number) {
     if(percentile > 50) {
       // return Math.pow(10,-Math.round(1-Math.log10((100-percentile)/0.999999)));
-      return percentile == 100 ? Math.pow(10,-3) : Math.round((100-percentile)*Math.pow(10,-0.5)*Math.pow(10,4))/Math.pow(10,4);
+      return percentile == 100 ? Math.pow(10,-3) : Math.round((100-percentile)*Math.pow(10,-0.7)*Math.pow(10,4))/Math.pow(10,4);
     }
     else {
       // return Math.pow(10,-Math.round(1-Math.log10(percentile/1.000001)));
-      return percentile == 0 ? Math.pow(10,-3) : Math.round((percentile)*Math.pow(10,-0.5)*Math.pow(10,4))/Math.pow(10,4);
+      return percentile == 0 ? Math.pow(10,-3) : Math.round((percentile)*Math.pow(10,-0.7)*Math.pow(10,4))/Math.pow(10,4);
     }
   }
 

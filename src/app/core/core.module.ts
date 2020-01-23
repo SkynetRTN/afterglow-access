@@ -77,6 +77,7 @@ import { HelpDialogComponent } from './components/help-dialog/help-dialog.compon
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { WorkbenchPageBaseComponent } from './containers/workbench/workbench-page-base/workbench-page-base.component';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -117,7 +118,8 @@ export const COMPONENTS = [
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
   ThemeDialogComponent,
-  WorkbenchPageBaseComponent
+  WorkbenchPageBaseComponent,
+  ConfirmationDialogComponent
 
 ];
 
@@ -154,7 +156,8 @@ export const COMPONENTS = [
     CreateFieldCalDialogComponent,
     PixelOpsJobsDialogComponent,
     HelpDialogComponent,
-    ThemeDialogComponent
+    ThemeDialogComponent,
+    ConfirmationDialogComponent
   ],
 
 })
