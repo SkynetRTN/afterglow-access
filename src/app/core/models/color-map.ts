@@ -195,7 +195,7 @@ export let blueColorMap = createColorMap(
 );
 
 export let aColorMap = createColorMap(
-  "A Color Map",
+  "'A' Color Map",
   [
     { x: 0, y: 0 },
     { x: .25, y: 0 },

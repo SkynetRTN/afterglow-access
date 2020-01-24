@@ -747,6 +747,29 @@ export class WorkbenchState {
       state.normalizationSyncEnabled = value;
       return state;
     });
+
+    let state = getState();
+    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+
+    let actions = [];
+    let referenceFile = dataFiles[state.viewers[state.activeViewerId].fileId] as ImageFile;
+    let files = WorkbenchState.getViewers(state)
+      .filter(
+        (viewer, index) =>
+          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
+      )
+      .map(viewer => dataFiles[viewer.fileId] as ImageFile);
+
+    if (referenceFile && files.length != 0) {
+      if (state.normalizationSyncEnabled)
+        actions.push(
+          new SyncFileNormalizations(referenceFile, files)
+        );
+    }
+
+    return dispatch(actions);
+
   }
 
   @Action(SetShowConfig)

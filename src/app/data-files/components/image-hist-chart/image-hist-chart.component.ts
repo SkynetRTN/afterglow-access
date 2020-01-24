@@ -220,16 +220,11 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     let y = [];
     if (this.hist) {
       if (this.hist.data != this.lastHistData) {
-        x = Array(this.hist.data.filter(d => d > 1).length);
-        let j = 0;
         for (let i = 0; i < this.hist.data.length; i++) {
-          if (this.hist.data[i] <= 1) continue;
-          x[j] = getBinCenter(this.hist, i);
-          y[j] = this.hist.data[i];
-          if (this.yMax < y[j]) this.yMax = y[j];
-
-          j++;
-
+          if (this.hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(this.hist, i) <= 0)) continue;
+          x.push(getBinCenter(this.hist, i));
+          y.push(this.hist.data[i]);
+          if (this.yMax < this.hist.data[i]) this.yMax = this.hist.data[i];
         }
 
         this.data = [
@@ -265,9 +260,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
           // Line Vertical
           {
             type: "line",
-            x0: levels.backgroundLevel,
+            x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
             y0: 1,
-            x1: levels.backgroundLevel,
+            x1: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
             y1: this.yMax,
             line: {
               color: "red",
@@ -277,9 +272,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
           },
           {
             type: "line",
-            x0: levels.peakLevel,
+            x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
             y0: 1,
-            x1: levels.peakLevel,
+            x1: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
             y1: this.yMax,
             line: {
               color: "red",

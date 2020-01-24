@@ -41,7 +41,7 @@ export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnI
   header$: Observable<Header>;
   headerSummary$: Observable<Header>;
   showRawHeader: boolean = false;
-  useSystemTime$ = new BehaviorSubject<boolean>(true);
+  useSystemTime$ = new BehaviorSubject<boolean>(false);
   lastImageFile: ImageFile;
   fileEntities$: Observable<Dictionary<DataFile>>;
   fileStateEntities$: Observable<Dictionary<ImageFileState>>;

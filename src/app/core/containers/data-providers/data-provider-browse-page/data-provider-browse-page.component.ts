@@ -40,7 +40,9 @@ export class DataProviderAssetsDataSource
   sub: Subscription;
 
   constructor(private store: Store) {
-    this.assets$ = this.store.select(DataProvidersState.getCurrentAssets);
+    this.assets$ = this.store.select(DataProvidersState.getCurrentAssets).pipe(
+      map(assets => assets.slice(0).sort((a, b) => a.name.localeCompare(b.name)))
+    );;
   }
 
   connect(collectionViewer: CollectionViewer): Observable<DataProviderAsset[]> {

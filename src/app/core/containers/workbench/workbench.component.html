@@ -6,6 +6,8 @@
         [class.collapsed]="!(showSidebar$ | async)">
         <div class="vertical-icon-nav-item-group">
           <button id="tab-view-file-library" class="vertical-icon-nav-item"
+            [matTooltip]="((showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES ? 'Hide' : 'Show') + ' File Library List'"
+            [matTooltipPosition]="'right'"
             [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES"
             attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES ? 'Hide' : 'Show' }} File Library List"
             [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.FILES"
@@ -15,6 +17,8 @@
             </div>
           </button>
           <button id="tab-view-settings" class="vertical-icon-nav-item"
+          [matTooltip]="((showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SETTINGS ? 'Hide' : 'Show') + ' Workbench Settings'"
+            [matTooltipPosition]="'right'"
             [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SETTINGS"
             attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SETTINGS ? 'Hide' : 'Show' }} Workbench Settings"
             [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SETTINGS"

@@ -183,11 +183,19 @@
                       }}
                       pixels
                     </div>
-                    <div *ngIf="(vectorInfo$ | async)?.skySeparation !== null">
-                      {{
-                        (vectorInfo$ | async)?.skySeparation | number: "1.0-3"
-                      }}
-                      arcsecs
+                    <div *ngIf="(vectorInfo$ | async)?.skySeparation; let skySeparation;">
+                      <div>
+                          {{
+                            skySeparation | number: "1.0-4"
+                          }}
+                          arcsecs
+                      </div>
+                      <div>
+                          {{
+                            skySeparation/60 | number: "1.0-3"
+                          }}
+                          arcmins
+                      </div>
                     </div>
                   </td>
                 </tr>

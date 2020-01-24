@@ -1,14 +1,14 @@
 <div class="row">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
-      <mat-label>Background Level</mat-label>
+      <mat-label>Background Level Percentile</mat-label>
       <input matInput [ngModel]="normalizer?.backgroundPercentile" (ngModelChange)="onBackgroundPercentileChange.emit($event)"
         type="number" [step]="backgroundStep" min="0" max="100">
     </mat-form-field>
   </div>
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
-        <mat-label>Saturation Level</mat-label>
+        <mat-label>Saturation Level Percentile</mat-label>
       <input matInput [ngModel]="normalizer?.peakPercentile" (ngModelChange)="onPeakPercentileChange.emit($event)"
         type="number" [step]="peakStep" min="0" max="100">
     </mat-form-field>
