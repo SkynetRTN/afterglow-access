@@ -348,10 +348,8 @@ export class DataProvidersState {
          dispatch(new LoadLibrary());
          return this.actions$.pipe(
            ofActionCompleted(LoadLibrary),
-           tap(v => console.log("LOAD LIBRARY COMPLETED", v)),
            take(1),
            filter(a => a.result.successful),
-           tap(v => console.log("HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")),
            tap(v => {
             dispatch(new SelectDataFile(action.fileIds[0]));
            })
