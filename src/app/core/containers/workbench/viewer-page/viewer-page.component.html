@@ -53,9 +53,9 @@
 
 
         <div class="pb-4 pt-1">
-          <app-normalizer-form [normalizer]="(normalization$ | async)?.normalizer" (onBackgroundPercentileChange)="onBackgroundPercentileChange($event)"
-            (onPeakPercentileChange)="onPeakPercentileChange($event)" (onColorMapChange)="onColorMapChange($event)" (onStretchModeChange)="onStretchModeChange($event)"
-            (onInvertedChange)="onInvertedChange($event)">
+          <app-normalizer-form [normalizer]="(normalization$ | async)?.normalizer" (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+            (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)" (stretchModeChange)="onStretchModeChange($event)"
+            (invertedChange)="onInvertedChange($event)">
           </app-normalizer-form>
         </div>
 

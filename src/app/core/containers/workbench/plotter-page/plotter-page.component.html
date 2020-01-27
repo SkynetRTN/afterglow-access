@@ -186,13 +186,13 @@
                     <div *ngIf="(vectorInfo$ | async)?.skySeparation; let skySeparation;">
                       <div>
                           {{
-                            skySeparation | number: "1.0-4"
+                            skySeparation | number: "1.0-3"
                           }}
                           arcsecs
                       </div>
                       <div>
                           {{
-                            skySeparation/60 | number: "1.0-3"
+                            skySeparation/60 | number: "1.0-4"
                           }}
                           arcmins
                       </div>

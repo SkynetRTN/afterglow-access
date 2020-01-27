@@ -6,6 +6,7 @@ import {
   heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap
 } from '../../models/color-map';
 import { StretchMode } from '../../models/stretch-mode';
+import { MatSelectChange } from '@angular/material';
 
 @Component({
   selector: 'app-normalizer-form',
@@ -15,11 +16,11 @@ import { StretchMode } from '../../models/stretch-mode';
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
 
-  @Output() onBackgroundPercentileChange = new EventEmitter<number>();
-  @Output() onPeakPercentileChange = new EventEmitter<number>();
-  @Output() onColorMapChange = new EventEmitter<ColorMap>();
-  @Output() onStretchModeChange = new EventEmitter<StretchMode>();
-  @Output() onInvertedChange = new EventEmitter<boolean>();
+  @Output() backgroundPercentileChange = new EventEmitter<number>();
+  @Output() peakPercentileChange = new EventEmitter<number>();
+  @Output() colorMapChange = new EventEmitter<ColorMap>();
+  @Output() stretchModeChange = new EventEmitter<StretchMode>();
+  @Output() invertedChange = new EventEmitter<boolean>();
 
   backgroundStep = 0.1;
   peakStep = 0.1;
@@ -85,6 +86,11 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
     // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
 
+  }
+
+  onColorMapChange($event: MatSelectChange) {
+    console.log("HERE!!!!!!!!!!");
+    this.colorMapChange.emit(this.colorMaps.find(m => m.name == $event.value));
   }
 
 }

@@ -55,7 +55,7 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
   {
     name: "Image Viewer Shortcuts",
     shortcuts: [
-      { key: "+", description: "Xoom in" },
+      { key: "+", description: "Zoom in" },
       { key: "-", description: "Zoom out" },
       { key: "0", description: "Reset zoom" },
       { key: "z", description: "Zoom to fit" },
