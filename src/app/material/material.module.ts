@@ -22,6 +22,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import {  MatRadioModule } from '@angular/material';
 
 @NgModule({
   imports: [
@@ -46,7 +47,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatSortModule,
     MatMenuModule,
     MatTabsModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatRadioModule,
   ],
   exports: [
     MatInputModule,
@@ -70,7 +72,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatSortModule,
     MatMenuModule,
     MatTabsModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatRadioModule
   ],
 })
 export class MaterialModule { }

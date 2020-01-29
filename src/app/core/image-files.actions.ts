@@ -145,13 +145,13 @@ export class SetViewportTransform {
 export class RotateBy {
   public static readonly type = '[Transformation] Rotate By';
 
-  constructor(public fileId: string, public rotationAngle: number) { }
+  constructor(public fileId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }) { }
 }
 
 export class RotateTo {
   public static readonly type = '[Transformation] Rotate To';
 
-  constructor(public fileId: string, public rotationAngle: number) { }
+  constructor(public fileId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }) { }
 }
 
 export class Flip {

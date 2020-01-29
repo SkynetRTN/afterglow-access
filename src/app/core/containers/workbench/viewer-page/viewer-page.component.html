@@ -16,7 +16,7 @@
     </div>
 
     <div class="card-body" style="overflow-y: auto;">
-      
+
       <div class="row">
         <div class="col-12"></div>
       </div>
@@ -27,20 +27,21 @@
       </div>
 
       <div *ngIf="imageFile$ | async; let imageFile">
-        <label>Brightness and Contrast Presets: </label>
-        <div class="pb-1">
-          <button mat-raised-button class="m-1" (click)="onPresetClick(10, 95)">
-            <mat-icon>brightness_3</mat-icon>Faint Target
-          </button>
-          <button mat-raised-button class="m-1" (click)="
-                onPresetClick(10, 99)
-              ">
-            <mat-icon>brightness_2</mat-icon>Default
-          </button>
-          <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)">
-            <mat-icon>brightness_5</mat-icon>Bright Target
-          </button>
+        <div>
+          <h6>Brightness and Contrast Presets</h6>
+          <div class="pb-1">
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 95)" aria-label="Faint Target Preset">
+              <mat-icon>brightness_3</mat-icon>Faint Target
+            </button>
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" aria-label="Default Preset">
+              <mat-icon>brightness_2</mat-icon>Default
+            </button>
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" aria-label="Bright Target Preset">
+              <mat-icon>brightness_5</mat-icon>Bright Target
+            </button>
+          </div>
         </div>
+
 
 
         <div class="pr-3 pl-3 pb-0">
@@ -53,6 +54,7 @@
 
 
         <div class="pb-4 pt-1">
+          <h6>Brightness and Contrast Settings</h6>
           <app-normalizer-form [normalizer]="(normalization$ | async)?.normalizer" (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
             (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)" (stretchModeChange)="onStretchModeChange($event)"
             (invertedChange)="onInvertedChange($event)">
@@ -65,23 +67,25 @@
                 </app-normalizer> -->
 
 
-
-        <label>Image Orientation Options: </label>
-        <div class="pb-4">
-          <button mat-raised-button class="m-1" (click)="onFlipClick()">
-            <mat-icon>flip</mat-icon> Flip
-          </button>
-          <button mat-raised-button class="m-1" (click)="onRotateClick()">
-            <mat-icon>rotate_right</mat-icon> Rotate
-          </button>
-          <button mat-raised-button class="m-1" color="warn" (click)="onResetOrientationClick()">
-            <mat-icon>crop_din</mat-icon> Reset Orientation
-          </button>
+        <div>
+            <h6>Image Orientation Options</h6>
+            <div class="pb-4">
+                <button mat-raised-button class="m-1" (click)="onFlipClick()">
+                  <mat-icon>flip</mat-icon> Flip
+                </button>
+                <button mat-raised-button class="m-1" (click)="onRotateClick()">
+                  <mat-icon>rotate_right</mat-icon> Rotate
+                </button>
+                <button mat-raised-button class="m-1" color="warn" (click)="onResetOrientationClick()">
+                  <mat-icon>crop_din</mat-icon> Reset Orientation
+                </button>
+              </div>
         </div>
-
         
 
-        
+
+
+
       </div>
     </div>
   </div>

@@ -88,7 +88,6 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
       .filter(marker => marker.type == MarkerType.CIRCLE || marker.type == MarkerType.TEARDROP)
       .map(marker => {
         let m = marker as CircleMarker | TeardropMarker;
-        if (!m.label) return null;
         let p = this.transform.transform(new Point(m.x, m.y));
         let mirrored = this.transform.scaling.x < 0;
         let flipped = this.transform.scaling.y >= 0;
@@ -141,7 +140,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
           y: p.y,
           dx: 0,
           dy: 0,
-          text: m.label,
+          text: m.label ? m.label : '',
           transform: `translate(${p.x},${p.y}) scale(${Math.abs(this.transform.scaling.x)}, ${Math.abs(this.transform.scaling.y)}) translate(${-p.x},${-p.y}) translate(${dx},${dy}) `,
           selected: m.selected,
           anchor: anchor,

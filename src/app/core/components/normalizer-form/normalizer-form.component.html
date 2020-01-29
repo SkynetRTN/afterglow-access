@@ -16,20 +16,17 @@
 </div>
 <div class="row">
   <div class="col-6">
-    <mat-form-field>
+    <mat-form-field appearance="outline">
       <mat-label>Color Map</mat-label>
-      <select matNativeControl [value]="normalizer?.colorMap.name" (selectionChange)="onColorMapChange($event)" style="width: 100%;">
-        <option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">{{ colorMap.name }}</option>
-      </select>
-      <!-- <mat-select [ngModel]="normalizer?.colorMap" (ngModelChange)="onColorMapChange.emit($event)" style="width: 100%;">
+      <mat-select [value]="normalizer?.colorMap" (selectionChange)="colorMapChange.emit($event.value)" style="width: 100%;">
         <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap">{{ colorMap.name }}</mat-option>
-      </mat-select> -->
+      </mat-select>
     </mat-form-field>
   </div>
   <div class="col-6">
     <mat-form-field appearance="outline">
       <mat-label>Stretch Mode</mat-label>
-      <mat-select [ngModel]="normalizer?.stretchMode" (ngModelChange)="stretchModeChange.emit($event)" style="width: 100%;">
+      <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)" style="width: 100%;">
         <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{ stretchModeOption.label }}</mat-option>
       </mat-select>
     </mat-form-field>

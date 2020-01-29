@@ -15,7 +15,7 @@ import { LoadLibrary, RemoveAllDataFiles, RemoveDataFile } from '../../../data-f
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
 import { tap, map, withLatestFrom, filter } from 'rxjs/operators';
 import { ViewMode } from "../../models/view-mode";
-import { MatButtonToggleChange, MatCheckboxChange } from '@angular/material';
+import { MatButtonToggleChange, MatCheckboxChange, MatRadioChange } from '@angular/material';
 import { Viewer } from '../../models/viewer';
 import { DataProvider } from '../../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
@@ -53,7 +53,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   surveyDataProvider$: Observable<DataProvider>;
   surveyImportCorrId$: Observable<string>;
 
-  useWcsCenter: boolean = true;
+  useWcsCenter: boolean = false;
   viewMode$: Observable<ViewMode>;
   viewers$: Observable<Viewer[]>;
   viewerSyncEnabled$: Observable<boolean>;
@@ -375,8 +375,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
   }
 
-  onUseWcsCenterChange($event: MatCheckboxChange) {
-    this.useWcsCenter = $event.checked;
+  // onUseWcsCenterChange($event: MatCheckboxChange) {
+  //   this.useWcsCenter = $event.checked;
+  // }
+
+  onUseWcsCenterChange($event: MatRadioChange) {
+    this.useWcsCenter = $event.value == 'wcs';
   }
 
 

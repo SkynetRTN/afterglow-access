@@ -88,9 +88,4 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   }
 
-  onColorMapChange($event: MatSelectChange) {
-    console.log("HERE!!!!!!!!!!");
-    this.colorMapChange.emit(this.colorMaps.find(m => m.name == $event.value));
-  }
-
 }

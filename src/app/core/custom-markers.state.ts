@@ -72,7 +72,8 @@ export class CustomMarkersState {
       markers.forEach(marker => {
         let nextSeed = this.seed++;
         if(marker.marker.label == null || marker.marker.label == undefined) {
-          marker.marker.label = `M${nextSeed}`;
+          // marker.marker.label = `M${nextSeed}`;
+          marker.marker.label = '';
         }
         let id = this.prefix + nextSeed;
         state.ids.push(id);
@@ -94,6 +95,7 @@ export class CustomMarkersState {
     setState((state: CustomMarkersStateModel) => {
       let idsToRemove = markers.map(m => m.id);
       state.ids = state.ids.filter(id => !idsToRemove.includes(id));
+      state.selectedMarkerIds = state.selectedMarkerIds.filter(id => !idsToRemove.includes(id));
       markers.forEach(marker => {
         if(marker.id in state.entities) delete state.entities[marker.id];
       })

@@ -605,14 +605,20 @@ export class ImageFilesState {
 
   @Action(RotateBy)
   @ImmutableContext()
-  public rotateBy({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, rotationAngle }: RotateBy) {
+  public rotateBy({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId, rotationAngle, anchorPoint }: RotateBy) {
     setState((state: ImageFilesStateModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
+      if (anchorPoint == null) {
+        anchorPoint = new Point(transformation.viewportSize.width / 2.0, transformation.viewportSize.height / 2.0);
+      }
+
+      anchorPoint = transformation.imageToViewportTransform.inverted().transform(new Point(anchorPoint.x, anchorPoint.y));
+
       transformation.imageTransform = transformation.imageTransform.clone();
-      transformation.imageTransform.rotate(-rotationAngle, getWidth(imageFile) / 2, getHeight(imageFile) / 2);
+      transformation.imageTransform.rotate(-rotationAngle, anchorPoint);
       transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
       return state;
     });

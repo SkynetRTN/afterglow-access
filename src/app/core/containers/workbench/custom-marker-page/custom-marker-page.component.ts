@@ -45,7 +45,7 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
   selectedMarker: CircleMarker = null;
   MarkerType = MarkerType;
 
-  constructor(private actions$: Actions, store: Store, router: Router,) {
+  constructor(private actions$: Actions, store: Store, router: Router, ) {
     super(store, router);
     this.customMarkers$ = store.select(CustomMarkersState.getCustomMarkers).pipe(map(entities => Object.values(entities)));
     this.selectedCustomMarkers$ = store.select(CustomMarkersState.getSelectedCustomMarkers).pipe(map(entities => Object.values(entities)));
@@ -74,35 +74,35 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
         this.store.select(WorkbenchState.getActiveTool)
       )
     ).subscribe(([[fileIds, imageFiles, customMarkers, selectedCustomMarkers, imageFileStates], viewers, dataFiles, activeTool]) => {
-        viewers.forEach((viewer) => {
-          let fileId = viewer.fileId;
-          if(fileId == null || !dataFiles[fileId]) {
-            this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
-            return;
-          }
-          let file = dataFiles[fileId] as ImageFile;
-          if(!file.headerLoaded) {
-            this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
-            return;
-          }
+      viewers.forEach((viewer) => {
+        let fileId = viewer.fileId;
+        if (fileId == null || !dataFiles[fileId]) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
+        let file = dataFiles[fileId] as ImageFile;
+        if (!file.headerLoaded) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
 
-          let markers = customMarkers
-            .filter(customMarker => customMarker.fileId == file.id)
-            .map(customMarker => {
-              let marker: Marker = {
-                ...customMarker.marker,
-                data: { id: customMarker.id },
-                selected:
-                  activeTool == WorkbenchTool.CUSTOM_MARKER &&
-                  selectedCustomMarkers.includes(customMarker)
-              };
-              return marker;
-            });
+        let markers = customMarkers
+          .filter(customMarker => customMarker.fileId == file.id)
+          .map(customMarker => {
+            let marker: Marker = {
+              ...customMarker.marker,
+              data: { id: customMarker.id },
+              selected:
+                activeTool == WorkbenchTool.CUSTOM_MARKER &&
+                selectedCustomMarkers.includes(customMarker)
+            };
+            return marker;
+          });
 
-          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, markers));
-        })
+        this.store.dispatch(new SetViewerMarkers(viewer.viewerId, markers));
       })
-       
+    })
+
 
 
 
@@ -125,7 +125,7 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
     this.subs.push(
       this.selectedCustomMarkers$.subscribe(customMarkers => {
         this.selectedCustomMarkers = customMarkers;
-        if (this.selectedCustomMarkers.length == 1) {
+        if (this.selectedCustomMarkers[0]) {
           this.selectedMarker = this.selectedCustomMarkers[0]
             .marker as CircleMarker;
         } else {
@@ -192,71 +192,52 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
   onImageClick($event: ViewerGridCanvasMouseEvent) {
     let settings = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPageSettings);
     if ($event.hitImage) {
-      // if (this.selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
-      let x = $event.imageX;
-      let y = $event.imageY;
-      if (settings.centroidClicks) {
-        let result: { x: number; y: number };
-        if (settings.usePlanetCentroiding) {
-          result = centroidDisk(
-            this.activeImageFile,
-            x,
-            y,
-            this.workbenchState.centroidSettings.diskCentroiderSettings
-          );
-        } else {
-          result = centroidPsf(
-            this.activeImageFile,
-            x,
-            y,
-            this.workbenchState.centroidSettings.psfCentroiderSettings
-          );
+      if (this.selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
+        let x = $event.imageX;
+        let y = $event.imageY;
+        if (settings.centroidClicks) {
+          let result: { x: number; y: number };
+          if (settings.usePlanetCentroiding) {
+            result = centroidDisk(
+              this.activeImageFile,
+              x,
+              y,
+              this.workbenchState.centroidSettings.diskCentroiderSettings
+            );
+          } else {
+            result = centroidPsf(
+              this.activeImageFile,
+              x,
+              y,
+              this.workbenchState.centroidSettings.psfCentroiderSettings
+            );
+          }
+          x = result.x;
+          y = result.y;
         }
-        x = result.x;
-        y = result.y;
+
+        let customMarker: CustomMarker = {
+          id: null,
+          fileId: this.activeImageFile.id,
+          marker: {
+            type: MarkerType.CIRCLE,
+            label: null,
+            x: x,
+            y: y,
+            radius: 10,
+            labelGap: 8,
+            labelTheta: 0
+          } as CircleMarker
+        };
+
+        this.store.dispatch(
+          new AddCustomMarkers([customMarker])
+        );
+      } else {
+        this.store.dispatch(
+          new SetCustomMarkerSelection([])
+        );
       }
-
-      let customMarker: CustomMarker = {
-        id: null,
-        fileId: this.activeImageFile.id,
-        marker: {
-          type: MarkerType.CIRCLE,
-          label: null,
-          x: x,
-          y: y,
-          radius: 10,
-          labelGap: 8,
-          labelTheta: 0
-        } as CircleMarker
-      };
-
-
-
-
-      // let customMarker: CustomMarker = {
-      //   id: null,
-      //   fileId: this.activeImageFile.id,
-      //   marker: {
-      //     type: MarkerType.RECTANGLE,
-      //     label: `M${this.nextCutomMarkerId}`,
-      //     x: x-5,
-      //     y: y-5,
-      //     width: 10,
-      //     height: 10,
-      //     labelGap: 8,
-      //     labelTheta: 0
-      //   } as RectangleMarker
-      // };
-      this.store.dispatch(
-        new AddCustomMarkers([customMarker])
-      );
-      // } else {
-      //   this.store.dispatch(
-      //     new customMarkerActions.SetCustomMarkerSelection({
-      //       customMarkers: []
-      //     })
-      //   );
-      // }
     }
   }
 
@@ -312,6 +293,12 @@ export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implem
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
       new UpdateCustomMarkerPageSettings({ usePlanetCentroiding: $event.checked })
+    );
+  }
+
+  deleteSelectedMarkers(markers: CustomMarker[]) {
+    this.store.dispatch(
+      new RemoveCustomMarkers(markers)
     );
   }
 }

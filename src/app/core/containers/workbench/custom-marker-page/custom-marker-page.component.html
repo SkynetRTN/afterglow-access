@@ -75,7 +75,7 @@
         <ng-container
           *ngIf="selectedCustomMarkers$ | async; let selectedCustomMarkers"
         >
-          <ng-container *ngIf="selectedCustomMarkers.length == 1">
+          <ng-container *ngIf="selectedCustomMarkers.length == 1;">
             <hr />
             <h5>Marker Customization</h5>
             <app-circle-marker-editor *ngIf="selectedCustomMarkers[0].marker.type == MarkerType.CIRCLE"
@@ -87,6 +87,10 @@
               (changed)="onMarkerChange($event, selectedCustomMarkers[0])"
             ></app-rectangle-marker-editor>
           </ng-container>
+          <button mat-raised-button aria-label="Delete Selected Markers" matTooltip="Delete Selected Markers" color="warn" (click)="deleteSelectedMarkers(selectedCustomMarkers)"
+            [disabled]="selectedCustomMarkers.length == 0">
+            <mat-icon>delete</mat-icon> Delete Selected Markers
+          </button>
         </ng-container>
       </div>
     </div>
