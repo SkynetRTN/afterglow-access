@@ -11,7 +11,6 @@ import { WorkbenchComponent } from './core/containers/workbench/workbench.compon
 import { ViewerPageComponent } from './core/containers/workbench/viewer-page/viewer-page.component'
 import { PlotterPageComponent } from './core/containers/workbench/plotter-page/plotter-page.component';
 import { SonifierPageComponent } from './core/containers/workbench/sonifier-page/sonifier-page.component';
-import { SourceExtractorPageComponent } from './core/containers/workbench/source-extractor-page/source-extractor-page.component';
 import { CustomMarkerPageComponent } from './core/containers/workbench/custom-marker-page/custom-marker-page.component';
 import { ImageCalculatorPageComponent } from './core/containers/workbench/image-calculator-page/image-calculator-page.component';
 import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
@@ -19,6 +18,7 @@ import { StackerPageComponent } from './core/containers/workbench/stacker-page/s
 import { InfoPageComponent } from './core/containers/workbench/info-page/info-page.component';
 import { FieldCalPageComponent } from './core/containers/workbench/field-cal-page/field-cal-page.component';
 import { WorkbenchGuard } from './core/services/workbench-guard.service';
+import { PhotometryPageComponent } from './core/containers/workbench/photometry-page/photometry-page.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -109,11 +109,10 @@ export const AFTERGLOW_ROUTES: Routes = [
         data: { title: 'Field Calibration' },
       },
       {
-        path: 'source-extractor',
-        component: SourceExtractorPageComponent,
-        data: { title: 'Source Extractor' },
+        path: 'photometry',
+        component: PhotometryPageComponent,
+        data: { title: 'Photometry' },
       },
-      // {path: 'catalog-calibrator', title: 'Catalog Calibrator', component: CatalogCalibratorPageComponent, canActivate: [AuthGuard], menuType: MenuType.LEFT},
       {
         path: 'image-calculator',
         component: ImageCalculatorPageComponent,

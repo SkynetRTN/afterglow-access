@@ -2,19 +2,16 @@ import { SidebarView } from "./sidebar-view";
 import { ViewMode } from "./view-mode";
 import { Viewer } from "./viewer";
 import { CentroidSettings } from "./centroid-settings";
-import { SourceExtractorModeOption } from "./source-extractor-mode-option";
-import { PlotterSettings } from "./plotter-settings";
-import { SourceExtractionSettings } from "../../jobs/models/source-extraction";
-import { PhotSettings } from "../../jobs/models/photometry";
-import { DataFile } from "../../data-files/models/data-file";
 import { Catalog } from "./catalog";
 import { FieldCal } from './field-cal';
+import { PhotometrySettings } from './photometry-settings';
+import { SourceExtractionSettings } from './source-extraction-settings';
 
 export enum WorkbenchTool {
   VIEWER,
   PLOTTER,
   SONIFIER,
-  SOURCE_EXTRACTOR,
+  PHOTOMETRY,
   CUSTOM_MARKER,
   INFO,
   FIELD_CAL,
@@ -40,6 +37,10 @@ export interface AlignFormData {
   inPlace: boolean
 }
 
+export interface BatchPhotometryFormData {
+  selectedImageFileIds: string[];
+}
+
 export interface StackFormData {
   selectedImageFileIds: string[];
   mode: 'average' | 'percentile' | 'mode' | 'sum';
@@ -50,29 +51,72 @@ export interface StackFormData {
   high?: number;
 }
 
-export interface WorkbenchState {
+export interface CustomMarkerPageSettings {
+  centroidClicks: boolean,
+  usePlanetCentroiding: boolean,
+}
+
+export interface PlotterPageSettings {
+  interpolatePixels: boolean,
+  centroidClicks: boolean,
+  planetCentroiding: boolean,
+  plotterSyncEnabled: boolean;
+  plotterMode: '1D' | '2D' | '3D';
+}
+
+export interface PhotometryPageSettings {
+  centroidClicks: boolean,
+  showSourceLabels: boolean;
+  showSourcesFromAllFiles: boolean;
+  selectedSourceIds: string[];
+  coordMode: 'pixel' | 'sky';
+  batchPhotFormData: BatchPhotometryFormData;
+  autoPhot: boolean;
+  batchPhotProgress: number;
+  batchPhotJobId: string;
+}
+
+export interface PixelOpsPageSettings {
+  currentPixelOpsJobId: string;
+  showCurrentPixelOpsJobState: boolean;
+  pixelOpsFormData: PixelOpsFormData;
+}
+
+export interface AligningPageSettings {
+  alignFormData: AlignFormData;
+  currentAlignmentJobId: string;
+}
+
+export interface StackingPageSettings {
+  stackFormData: StackFormData;
+  currentStackingJobId: string;
+}
+
+export interface WorkbenchStateModel {
+  showSideNav: boolean,
   lastRouterPath: string,
   inFullScreenMode: boolean,
   fullScreenPanel: 'file' | 'viewer' | 'tool';
-  multiFileSelectionEnabled: boolean;
-  selectedFileIds: Array<string>;
-  activeViewerIndex: number;
+  selectedFileId: string;
+  activeViewerId: string;
   activeTool: WorkbenchTool;
   viewMode: ViewMode;
-  viewers: Viewer[];
+  viewerIds: string[];
+  viewers: {[id:string]: Viewer};
   viewerSyncEnabled: boolean;
   normalizationSyncEnabled: boolean;
-  plotterSyncEnabled: boolean;
-  plotterMode: '1D' | '2D' | '3D';
   sidebarView: SidebarView
   showSidebar: boolean;
   showConfig: boolean;
-  showAllSources: boolean;
   centroidSettings: CentroidSettings;
-  photSettings: PhotSettings
   sourceExtractionSettings: SourceExtractionSettings;
-  sourceExtractorModeOption: SourceExtractorModeOption;
-  plotterSettings: PlotterSettings;
+  customMarkerPageSettings: CustomMarkerPageSettings;
+  photometrySettings: PhotometrySettings;
+  plotterPageSettings: PlotterPageSettings;
+  photometryPageSettings: PhotometryPageSettings;
+  pixelOpsPageSettings: PixelOpsPageSettings;
+  aligningPageSettings: AligningPageSettings;
+  stackingPageSettings: StackingPageSettings;
   catalogs: Array<Catalog>;
   selectedCatalogId: string;
   fieldCals: Array<FieldCal>;
@@ -80,12 +124,5 @@ export interface WorkbenchState {
   creatingAddFieldCalSourcesFromCatalogJob: boolean;
   addFieldCalSourcesFromCatalogJobId: string;
   addFieldCalSourcesFromCatalogFieldCalId: string;
-  currentPixelOpsJobId: string;
-  showCurrentPixelOpsJobState: boolean;
-  pixelOpsFormData: PixelOpsFormData;
-  alignFormData: AlignFormData;
-  currentAlignmentJobId: string;
-  stackFormData: StackFormData;
-  currentStackingJobId: string;
-  surveyImportCorrId: string;
+  dssImportLoading: boolean;
 }

@@ -108,7 +108,7 @@ addOnPostRun(() => {
       return false;
     });
     headerStr = headerArray.join("\n");
-    console.log(headerStr);
+    // console.log(headerStr);
 
     nkeyrec = headerArray.length;
     header = string2buffer(headerStr);

@@ -1,12 +1,12 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Store } from '@ngrx/store';
-
-import * as dataFileActions from '../../../data-files/actions/data-file';
-import * as transformationActions from '../../actions/transformation';
-import * as fromRoot from '../../../reducers';
 import { ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file';
 import { Subject, BehaviorSubject, Observable, timer, interval } from 'rxjs';
 import { filter, flatMap, takeUntil } from "rxjs/operators";
+import { Store } from '@ngxs/store';
+import { RemoveDataFile } from '../../../data-files/data-files.actions';
+import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../image-files.actions';
+import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { MatDialog } from '@angular/material';
 
 @Component({
   selector: 'app-image-viewer-title-bar',
@@ -24,7 +24,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
   private startZoomOut$ = new Subject<boolean>();
   private stopZoomOut$ = new Subject<boolean>();
 
-  constructor(private store: Store<fromRoot.State>) {
+  constructor(private store: Store, private dialog: MatDialog) {
   }
 
   ngOnInit() {
@@ -35,9 +35,26 @@ export class ImageViewerTitleBarComponent implements OnInit {
   }
 
   removeFromLibrary() {
-    if (this.imageFile) {
-      this.store.dispatch(new dataFileActions.RemoveDataFile({ fileId: this.imageFile.id }));
-    }
+    if(!this.imageFile) return;
+    let imageFileId = this.imageFile.id;
+
+    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: "300px",
+      data: {
+        message: "Are you sure you want to delete this file from your library?",
+        confirmationBtn: {
+          color: 'warn',
+          label: 'Delete File'
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.store.dispatch(new RemoveDataFile(imageFileId));
+      }
+    });
+
   }
 
   public startZoomIn() {
@@ -75,26 +92,26 @@ export class ImageViewerTitleBarComponent implements OnInit {
   }
 
   public zoomTo(value: number) {
-    this.store.dispatch(new transformationActions.ZoomTo({
-      file: this.imageFile,
-      scale: value,
-      anchorPoint: null
-    }));
+    this.store.dispatch(new ZoomTo(
+      this.imageFile.id,
+      value,
+      null
+    ));
   }
 
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
-    this.store.dispatch(new transformationActions.ZoomBy({
-      file: this.imageFile,
-      scaleFactor: factor,
-      viewportAnchor: imageAnchor
-    }));
+    this.store.dispatch(new ZoomBy(
+      this.imageFile.id,
+      factor,
+      imageAnchor
+    ));
   }
 
   public zoomToFit(padding: number = 0) {
-    this.store.dispatch(new transformationActions.CenterRegionInViewport({
-      file: this.imageFile,
-      region: { x: 1, y: 1, width: getWidth(this.imageFile), height: getHeight(this.imageFile) }
-    }))
+    this.store.dispatch(new CenterRegionInViewport(
+      this.imageFile.id,
+      { x: 1, y: 1, width: getWidth(this.imageFile), height: getHeight(this.imageFile) }
+    ))
   }
 
 }

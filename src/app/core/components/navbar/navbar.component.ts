@@ -23,16 +23,14 @@ export class NavbarComponent implements OnInit {
   openQuickStartGuide() {
     this.dialog.open(HelpDialogComponent, {
       data: {},
-      width: '800px',
-      height: '600px',
+      width: '80vw',
+      maxWidth: '600px'
     });
   }
 
   openThemeDialog() {
     this.dialog.open(ThemeDialogComponent, {
       data: {},
-      width: '500px',
-      height: '400px',
     });
   }
 

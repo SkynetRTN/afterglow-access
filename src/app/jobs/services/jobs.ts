@@ -15,23 +15,21 @@ export class JobService {
 
   createJob(job: Job) {
     return this.http.post<Job>(
-      this.location.prepareExternalUrl(`${environment.apiUrl}/jobs`),
+      `${environment.apiUrl}/jobs`,
       job
     );
   }
 
   getJob(jobId: string) {
     return this.http.get<Job>(
-      this.location.prepareExternalUrl(`${environment.apiUrl}/jobs/${jobId}`)
+      `${environment.apiUrl}/jobs/${jobId}`
     );
   }
 
   getJobResult(job: Job): Observable<JobResult> {
     return this.http
       .get<any>(
-        this.location.prepareExternalUrl(
-          `${environment.apiUrl}/jobs/${job.id}/result`
-        )
+        `${environment.apiUrl}/jobs/${job.id}/result`
       )
       .pipe(
         map(resp => {

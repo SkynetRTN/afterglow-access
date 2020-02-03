@@ -5,7 +5,7 @@ import { Astrometry } from './astrometry';
 import { SourceId } from './source-id';
 import { JobType } from './job-types';
 
-export interface SourceExtractionSettings {
+export interface SourceExtractionJobSettings {
   x?: number;
   y?: number;
   width?: number;
@@ -29,7 +29,7 @@ export interface SourceExtractionSettings {
 export interface SourceExtractionJob extends JobBase {
   readonly type: JobType.SourceExtraction;
   file_ids: number[];
-  source_extraction_settings?: SourceExtractionSettings;
+  source_extraction_settings?: SourceExtractionJobSettings;
   merge_sources: boolean;
   source_merge_settings?: SourceMergeSettings;
 }

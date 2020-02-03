@@ -13,7 +13,7 @@ export class AfterglowCatalogService {
   getCatalogs(): Observable<Catalog[]> {
     return this.http
       .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/catalogs`)
+        `${environment.apiUrl}/catalogs`
       )
       .pipe(
         map(res =>

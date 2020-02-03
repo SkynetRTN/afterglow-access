@@ -14,9 +14,7 @@ export class AfterglowDataProviderService {
 
   getDataProviders(): Observable<DataProvider[]> {
     return this.http
-      .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/data-providers`)
-      )
+      .get<any[]>(`${environment.apiUrl}/data-providers`)
       .pipe(
         map(res =>
           res.map(r => {
@@ -50,12 +48,7 @@ export class AfterglowDataProviderService {
     if (path) params = params.set("path", path);
 
     return this.http
-      .get<any[]>(
-        this.location.prepareExternalUrl(
-          `${environment.apiUrl}/data-providers/${dataProviderId}/assets`
-        ),
-        { params: params }
-      )
+      .get<any[]>(`${environment.apiUrl}/data-providers/${dataProviderId}/assets?` + params.toString())
       .pipe(
         map(resp =>
           resp.map(r => {

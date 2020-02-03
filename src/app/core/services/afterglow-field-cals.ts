@@ -13,9 +13,7 @@ export class AfterglowFieldCalService {
 
   getFieldCals(): Observable<FieldCal[]> {
     return this.http
-      .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/field-cals`)
-      )
+      .get<any[]>(`${environment.apiUrl}/field-cals`)
       .pipe(
         map(res =>
           res.map(r => {
@@ -52,7 +50,7 @@ export class AfterglowFieldCalService {
   createFieldCal(c: FieldCal): Observable<FieldCal> {
     return this.http
       .post<any>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/field-cals`),
+        `${environment.apiUrl}/field-cals`,
         {
           name: c.name,
           catalog_sources: JSON.stringify(c.catalogSources),
@@ -85,7 +83,7 @@ export class AfterglowFieldCalService {
   updateFieldCal(c: FieldCal): Observable<FieldCal> {
     return this.http
       .put<any>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/field-cals/${c.id}`),
+        `${environment.apiUrl}/field-cals/${c.id}`,
         {
           id: c.id,
           name: c.name,

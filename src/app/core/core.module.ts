@@ -25,7 +25,6 @@ import { UtilsModule }  from '../utils/utils.module';
 import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
-import { PapaParseModule } from 'ngx-papaparse';
 
 import { WorkbenchViewerPanelComponent } from './containers/workbench/workbench-viewer-panel/workbench-viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
@@ -36,7 +35,7 @@ import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-mar
 import { ImageViewerTitleBarComponent } from './components/image-viewer-title-bar/image-viewer-title-bar.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
-import { SourceExtractionSettingsDialogComponent } from './components/source-extraction-settings-dialog/source-extraction-settings-dialog.component';
+import { SourceExtractionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
@@ -55,18 +54,10 @@ import { FieldCalPageComponent } from './containers/workbench/field-cal-page/fie
 import { CustomMarkerPageComponent } from './containers/workbench/custom-marker-page/custom-marker-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
 import { InfoPageComponent } from './containers/workbench/info-page/info-page.component';
-import { SourceExtractorPageComponent } from './containers/workbench/source-extractor-page/source-extractor-page.component';
+import { PhotometryPageComponent } from './containers/workbench/photometry-page/photometry-page.component';
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
 import { AlignerPageComponent } from './containers/workbench/aligner-page/aligner-page.component';
-import { WorkbenchEffects } from './effects/workbench';
-import { SonifierEffects } from './effects/sonifier';
-import { TransformationEffects } from './effects/transformation';
-import { NormalizationEffects } from './effects/normalization';
-import { SourceExtractorEffects } from './effects/source-extractor';
-import { reducers } from './reducers';
-
-import { StyleManager } from './services/style-manager';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
@@ -85,6 +76,8 @@ import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.modu
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
+import { WorkbenchPageBaseComponent } from './containers/workbench/workbench-page-base/workbench-page-base.component';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -110,12 +103,12 @@ export const COMPONENTS = [
   PlotterPageComponent,
   SonifierPageComponent,
   FieldCalPageComponent,
-  SourceExtractorPageComponent,
+  PhotometryPageComponent,
   ImageCalculatorPageComponent,
   StackerPageComponent,
   AlignerPageComponent,
   PhotSettingsDialogComponent,
-  SourceExtractionSettingsDialogComponent,
+  SourceExtractionDialogComponent,
   CreateFieldCalDialogComponent,
   PlotterComponent,
   CustomMarkerPageComponent,
@@ -124,7 +117,9 @@ export const COMPONENTS = [
   InfoPageComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
-  ThemeDialogComponent
+  ThemeDialogComponent,
+  WorkbenchPageBaseComponent,
+  ConfirmationDialogComponent
 
 ];
 
@@ -147,40 +142,22 @@ export const COMPONENTS = [
     VgOverlayPlayModule,
     VgBufferingModule,
     // NvD3Module,
-    PapaParseModule,
     NgxPopperModule,
     FlexLayoutModule,
     ThemePickerModule,
     AfterglowPlotlyModule,
-
-    /**
-     * StoreModule.forFeature is used for composing state
-     * from feature modules. These modules can be loaded
-     * eagerly or lazily and will be dynamically added to
-     * the existing state.
-     */
-    StoreModule.forFeature('coreState', reducers),
-
-    /**
-     * Effects.forFeature is used to register effects
-     * from feature modules. Effects can be loaded
-     * eagerly or lazily and will be started immediately.
-     *
-     * All Effects will only be instantiated once regardless of
-     * whether they are registered once or multiple times.
-     */
-    EffectsModule.forFeature([WorkbenchEffects, SonifierEffects, SourceExtractorEffects, NormalizationEffects, TransformationEffects]),
   ],
 
   declarations: COMPONENTS,
   exports: COMPONENTS,
   entryComponents: [
     PhotSettingsDialogComponent,
-    SourceExtractionSettingsDialogComponent,
+    SourceExtractionDialogComponent,
     CreateFieldCalDialogComponent,
     PixelOpsJobsDialogComponent,
     HelpDialogComponent,
-    ThemeDialogComponent
+    ThemeDialogComponent,
+    ConfirmationDialogComponent
   ],
 
 })

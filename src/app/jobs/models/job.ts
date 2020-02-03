@@ -5,6 +5,7 @@ import { PixelOpsJob } from './pixel-ops';
 import { CatalogQueryJob } from './catalog-query';
 import { AlignmentJob } from './alignment';
 import { StackingJob } from './stacking';
+import { BatchImportJob } from './batch-import';
 
 export type Job =
 | SourceExtractionJob
@@ -13,5 +14,6 @@ export type Job =
 | PixelOpsJob
 | CatalogQueryJob
 | AlignmentJob
-| StackingJob;
+| StackingJob
+| BatchImportJob;
 

@@ -20,15 +20,10 @@
       </ng-container>
     </g>
     <g>
-      <ng-container *ngFor="let marker of markers;">
-        <ng-container *ngIf="markerToSvgTextData(marker); let data;">
-          <g app-svg-text-marker [x]="data.x" [y]="data.y" [dx]="data.dx"
-            [dy]="data.dy" [text]="data.text"
-            [attr.transform]="data.transform"
-            [selected]="data.selected" [anchor]="data.anchor"
-            (click)="handleMarkerClick($event, marker)" style="pointer-events: fill;">
-          </g>
-        </ng-container>
+      <ng-container *ngFor="let data of markerTexts">
+        <g app-svg-text-marker [x]="data.x" [y]="data.y" [dx]="data.dx" [dy]="data.dy" [text]="data.text" [attr.transform]="data.transform"
+          [selected]="data.selected" [anchor]="data.anchor" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill;">
+        </g>
       </ng-container>
     </g>
   </svg>

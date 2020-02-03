@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { Authenticate } from '../../models/user';
-import * as fromAuth from '../../reducers';
-import * as Auth from '../../actions/auth';
+import { Select, Store } from '@ngxs/store';
+import { Logout } from '../../auth.actions';
 
 @Component({
   selector: 'app-logout-page',
@@ -10,12 +8,12 @@ import * as Auth from '../../actions/auth';
   styles: [],
 })
 export class LogoutPageComponent implements OnInit {
-  constructor(private store: Store<fromAuth.State>) {
+  constructor(private store: Store) {
     
   }
 
   ngOnInit() {
-    this.store.dispatch(new Auth.Logout());
+    this.store.dispatch(new Logout());
   }
 }
 

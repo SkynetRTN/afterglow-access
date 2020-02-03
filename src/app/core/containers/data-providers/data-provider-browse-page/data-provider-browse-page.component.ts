@@ -11,17 +11,12 @@ import { MatSort } from "@angular/material/sort";
 import { SelectionModel } from "@angular/cdk/collections";
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 
-import { Store } from "@ngrx/store";
-import * as fromRoot from "../../../../reducers";
-import * as fromDataProviders from "../../../../data-providers/reducers";
-
 import { SlugifyPipe } from "../../../../pipes/slugify.pipe";
 import { DataProvider } from "../../../../data-providers/models/data-provider";
 import { DataProviderAsset } from "../../../../data-providers/models/data-provider-asset";
-import * as dataProviderActions from "../../../../data-providers/actions/data-provider";
 
 import { Subscription, Observable, combineLatest } from "rxjs";
-import { filter, map, withLatestFrom } from "rxjs/operators";
+import { filter, map, withLatestFrom, tap } from "rxjs/operators";
 import {
   // UP_ARROW,
   // DOWN_ARROW,
@@ -33,6 +28,10 @@ import {
   ZERO,
   NINE
 } from "@angular/cdk/keycodes";
+import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
+import { Store } from '@ngxs/store';
+import { DataProvidersState } from '../../../../data-providers/data-providers.state';
+import { SortDataProviderAssets, LoadDataProviders, LoadDataProviderAssets, ImportSelectedAssets } from '../../../../data-providers/data-providers.actions';
 
 export class DataProviderAssetsDataSource
   implements DataSource<DataProviderAsset> {
@@ -40,8 +39,10 @@ export class DataProviderAssetsDataSource
   assets: DataProviderAsset[] = [];
   sub: Subscription;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.assets$ = store.select(fromDataProviders.getCurrentAssets);
+  constructor(private store: Store) {
+    this.assets$ = this.store.select(DataProvidersState.getCurrentAssets).pipe(
+      map(assets => assets.slice(0).sort((a, b) => a.name.localeCompare(b.name)))
+    );;
   }
 
   connect(collectionViewer: CollectionViewer): Observable<DataProviderAsset[]> {
@@ -70,12 +71,9 @@ export class DataProviderBrowsePageComponent
   currentProviderColumns$: Observable<string[]>;
   loadingAssets$: Observable<boolean>;
   currentAssets$: Observable<DataProviderAsset[]>;
-  selectedAssets$: Observable<DataProviderAsset[]>;
   sortField$: Observable<string>;
   sortOrder$: Observable<"" | "asc" | "desc">;
   importing$: Observable<boolean>;
-  pendingImports$: Observable<DataProviderAsset[]>;
-  completedImports$: Observable<DataProviderAsset[]>;
   importProgress$: Observable<number>;
   importErrors$: Observable<any[]>;
   currentPathBreadcrumbs$: Observable<Array<{ name: string; url: string }>>;
@@ -90,10 +88,10 @@ export class DataProviderBrowsePageComponent
     if (this.sortSub) this.sortSub.unsubscribe();
     this.sortSub = this.sort.sortChange.subscribe(() => {
       this.store.dispatch(
-        new dataProviderActions.SortDataProviderAssets({
-          fieldName: this.sort.active,
-          order: this.sort.direction
-        })
+        new SortDataProviderAssets(
+          this.sort.active,
+          this.sort.direction
+        )
       );
     });
   }
@@ -102,18 +100,16 @@ export class DataProviderBrowsePageComponent
   subs: Subscription[] = [];
 
   constructor(
-    private store: Store<fromRoot.State>,
+    private store: Store,
     private route: ActivatedRoute,
     private location: Location,
     private router: Router,
-    private slufigy: SlugifyPipe
+    private slufigy: SlugifyPipe,
+    private corrGen: CorrelationIdGenerator
   ) {
-    let state$ = store.select(fromDataProviders.getDataProvidersState);
-    this.dataProviders$ = store.select(fromDataProviders.getDataProviders);
-    this.dataProvidersLoaded$ = store.select(
-      fromDataProviders.getDataProvidersLoaded
-    );
-    this.currentProvider$ = store.select(fromDataProviders.getCurrentProvider);
+    this.dataProviders$ = store.select(DataProvidersState.getDataProviders);
+    this.dataProvidersLoaded$ = store.select(DataProvidersState.getDataProvidersLoaded);
+    this.currentProvider$ = store.select(DataProvidersState.getCurrentProvider);
     this.currentProviderColumns$ = this.currentProvider$.pipe(
       filter(provider => provider != null),
       map(provider => [
@@ -122,22 +118,15 @@ export class DataProviderBrowsePageComponent
         ...provider.columns.map(col => col.fieldName)
       ])
     );
-    this.loadingAssets$ = store.select(fromDataProviders.getLoadingAssets);
-    this.currentPathBreadcrumbs$ = store.select(
-      fromDataProviders.getCurrentPathBreadcrumbs
-    );
-    this.currentAssets$ = store.select(fromDataProviders.getCurrentAssets);
-    this.selectedAssets$ = store.select(fromDataProviders.getSelectedAssets);
-    this.sortField$ = store.select(fromDataProviders.getCurrentSortField);
-    this.sortOrder$ = store.select(fromDataProviders.getCurrentSortOrder);
-    this.importing$ = store.select(fromDataProviders.getImporting);
-    this.importProgress$ = store.select(fromDataProviders.getImportProgress);
-    this.pendingImports$ = store.select(fromDataProviders.getPendingImports);
-    this.lastPath$ = store.select(fromDataProviders.getLastPath);
-    this.completedImports$ = store.select(
-      fromDataProviders.getCompletedImports
-    );
-    this.importErrors$ = store.select(fromDataProviders.getImportErrors);
+    this.loadingAssets$ = store.select(DataProvidersState.getLoadingAssets);
+    this.currentPathBreadcrumbs$ = store.select(DataProvidersState.getCurrentPathBreadcrumbs);
+    this.currentAssets$ = store.select(DataProvidersState.getCurrentAssets);
+    this.sortField$ = store.select(DataProvidersState.getCurrentSortField);
+    this.sortOrder$ = store.select(DataProvidersState.getCurrentSortOrder);
+    this.importing$ = store.select(DataProvidersState.getImporting);
+    this.importProgress$ = store.select(DataProvidersState.getImportProgress);
+    this.lastPath$ = store.select(DataProvidersState.getLastPath);
+    this.importErrors$ = store.select(DataProvidersState.getImportErrors);
 
     this.dataSource = new DataProviderAssetsDataSource(store);
   }
@@ -153,7 +142,7 @@ export class DataProviderBrowsePageComponent
         .subscribe(
           ([[params, qparams, dataProviders], dataProvidersLoaded, lastPath]) => {
             if (!dataProvidersLoaded) {
-              this.store.dispatch(new dataProviderActions.LoadDataProviders());
+              this.store.dispatch(new LoadDataProviders());
               return;
             }
             let slug: string = params["slug"];
@@ -185,10 +174,10 @@ export class DataProviderBrowsePageComponent
                 this.location.go(this.router.createUrlTree(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}}).toString())
               }
               this.store.dispatch(
-                new dataProviderActions.LoadDataProviderAssets({
-                  dataProvider: dataProvider,
-                  path: path
-                })
+                new LoadDataProviderAssets(
+                  dataProvider,
+                  path
+                )
               );
               this.selection.clear();
               //this.activeCell = null;
@@ -198,21 +187,12 @@ export class DataProviderBrowsePageComponent
     );
 
     this.subs.push(
-      this.completedImports$.subscribe(completedImports => {
-        completedImports.forEach(asset => {
-          this.selection.deselect(asset);
-        });
-      })
-    );
-
-    this.subs.push(
-      this.importProgress$
+      combineLatest(this.importProgress$, this.importing$, this.importErrors$)
         .pipe(
-          withLatestFrom(this.importErrors$),
-          filter(([progress, errors]) => progress == 1 && errors.length == 0)
+          filter(([progress, importing, errors]) => !importing && progress == 100 && errors.length == 0)
         )
         .subscribe(v => {
-          this.router.navigate(["/workbench"]);
+          //this.router.navigate(["/workbench"]);
         })
     );
   }
@@ -264,7 +244,7 @@ export class DataProviderBrowsePageComponent
 
   import(provider: DataProvider, assets: DataProviderAsset[]) {
     this.store.dispatch(
-      new dataProviderActions.ImportAssets({ dataProviderId: provider.id, assets: assets })
+      new ImportSelectedAssets(provider.id, assets, this.corrGen.next())
     );
   }
 

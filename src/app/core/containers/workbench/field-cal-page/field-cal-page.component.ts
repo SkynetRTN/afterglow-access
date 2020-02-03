@@ -6,7 +6,6 @@ import {
   HostBinding,
   Input,
 } from "@angular/core";
-import { Store } from "@ngrx/store";
 import { Observable, combineLatest } from 'rxjs';
 import {
   map
@@ -14,10 +13,7 @@ import {
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { ImageFile } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
-import * as fromRoot from "../../../../reducers";
-import * as fromCore from '../../../reducers';
-import * as workbenchActions from "../../../actions/workbench";
-import { WorkbenchState, WorkbenchTool } from "../../../models/workbench-state";
+import { WorkbenchTool } from "../../../models/workbench-state";
 import { Catalog } from "../../../models/catalog";
 import { MatDialog } from "@angular/material/dialog";
 import { CreateFieldCalDialogComponent } from "../../../components/create-field-cal-dialog/create-field-cal-dialog.component";
@@ -28,6 +24,9 @@ import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../workbench-viewer-grid/workbench-viewer-grid.component';
 import { CatalogQueryJob } from '../../../../jobs/models/catalog-query';
 import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { SetActiveTool, SetLastRouterPath, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../../workbench.actions';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -53,7 +52,6 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   fieldCals$: Observable<FieldCal[]>;
   selectedFieldCal$: Observable<FieldCal>;
   selectedFieldCalId$: Observable<string>;
-  selectedImageFiles$: Observable<Array<ImageFile>>;
 
   enableMagLimit: boolean = false;
   magLimitFilter: string = null;
@@ -71,16 +69,16 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   });
   
 
-  constructor(private store: Store<fromRoot.State>, public dialog: MatDialog, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
+  constructor(private store: Store, public dialog: MatDialog, router: Router) {
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
+    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
     this.activeImageHasWcs$ = this.activeImageFile$.pipe(map(imageFile => imageFile != null && imageFile.wcs.isValid()));
-    this.activeImageFileState$ = store.select(fromCore.workbench.getActiveFileState);
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
-    this.catalogs$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.catalogs));
-    this.fieldCals$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.fieldCals));
-    this.selectedFieldCalId$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.selectedFieldCalId));
+    this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
+    this.catalogs$ = store.select(WorkbenchState.getState).pipe(map(state => state.catalogs));
+    this.fieldCals$ = store.select(WorkbenchState.getState).pipe(map(state => state.fieldCals));
+    this.selectedFieldCalId$ = store.select(WorkbenchState.getState).pipe(map(state => state.selectedFieldCalId));
     this.selectedFieldCal$ = combineLatest(this.fieldCals$, this.selectedFieldCalId$).pipe(
       map(([fieldCals, selectedFieldCalId]) => {
         if(!fieldCals || selectedFieldCalId == null) return null;
@@ -90,7 +88,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.selectedCatalogId$ = store.select(fromCore.getWorkbenchState).pipe(map(state => state.selectedCatalogId));
+    this.selectedCatalogId$ = store.select(WorkbenchState.getState).pipe(map(state => state.selectedCatalogId));
     this.selectedCatalog$ = combineLatest(this.catalogs$, this.selectedCatalogId$).pipe(
       map(([catalogs, selectedCatalogId]) => {
         if(!catalogs || selectedCatalogId == null) return null;
@@ -113,29 +111,18 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    this.selectedImageFiles$ = store
-      .select(fromCore.workbench.getSelectedFiles)
-      .pipe(
-        map(
-          files =>
-            files.filter(file => file.type == DataFileType.IMAGE) as Array<
-              ImageFile
-            >
-        )
-      );
-
+  
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.FIELD_CAL })
+      new SetActiveTool(WorkbenchTool.FIELD_CAL)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
   }
   
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
   }
 
   ngOnDestroy() {
@@ -156,11 +143,11 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onFieldCalChange(value) {
-    this.store.dispatch(new workbenchActions.SetSelectedFieldCal({fieldCalId: value}));
+    this.store.dispatch(new SetSelectedFieldCal(value));
   }
 
   onCatalogChange(value) {
-    this.store.dispatch(new workbenchActions.SetSelectedCatalog({catalogId: value}) )
+    this.store.dispatch(new SetSelectedCatalog(value) )
   }
 
   onMagLimitFilterChange(filter) {
@@ -181,7 +168,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
       constraints: constraints
     }
 
-    this.store.dispatch(new workbenchActions.AddFieldCalSourcesFromCatalog({fieldCalId: fieldCalId, catalogQueryJob: catalogQueryJob}));
+    this.store.dispatch(new AddFieldCalSourcesFromCatalog(fieldCalId, catalogQueryJob));
   }
 
   openCreateFieldCalDialog() {
@@ -193,7 +180,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.store.dispatch(
-          new workbenchActions.CreateFieldCal({ fieldCal: {
+          new CreateFieldCal({
             id: null,
             name: result.name,
             catalogSources: [],
@@ -202,7 +189,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
             sourceMatchTol: 5.0,
             minSnr: 3.0,
             maxSnr: 0
-          } })
+          })
         );
       }
     });

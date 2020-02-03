@@ -7,25 +7,24 @@ import {
   ActivatedRoute,
   CanActivateChild
 } from "@angular/router";
-import { Store } from "@ngrx/store";
 import { CookieService } from "ngx-cookie";
 import { Observable } from "rxjs";
 import { map, take } from "rxjs/operators";
-import * as fromCore from "../reducers";
 import { environment } from "../../../environments/environment";
-import { SetLastRouterPath } from "../actions/workbench";
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../workbench.state';
 
 @Injectable()
 export class WorkbenchGuard implements CanActivate, CanActivateChild {
   lastRouterPath: string;
   constructor(
-    private store: Store<fromCore.State>,
+    private store: Store,
     private cookieService: CookieService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     store
-      .select(fromCore.getWorkbenchState)
+      .select(WorkbenchState.getState)
       .pipe(map(state => state.lastRouterPath))
       .subscribe(v => {
         this.lastRouterPath = v;

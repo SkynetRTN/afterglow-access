@@ -233,13 +233,6 @@ label.mat-button-toggle-label {
   margin-bottom: 0px;
 }
 
-/* fix bug in material2 dialog content */
-.mat-dialog-content {
-  max-width: none !important;
-  max-height: none !important;
-  overflow: initial !important;
-}
-
 
 .no-axis-labels .tick text,  .no-axis-labels .nv-axisMaxMin text{
   display: none;

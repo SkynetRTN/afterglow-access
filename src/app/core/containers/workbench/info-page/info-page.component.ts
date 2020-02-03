@@ -9,26 +9,22 @@ import {
 } from "@angular/core";
 import { Observable, Subscription, Subject, BehaviorSubject, combineLatest} from "rxjs";
 import { map, filter, debounceTime, tap } from "rxjs/operators";
-import { Store } from "@ngrx/store";
 
 import { ImageFile, DataFile, Header, getWidth, getHeight, getDegsPerPixel, getStartTime, getCenterTime, getExpLength, getObject, getTelescope, getFilter } from "../../../../data-files/models/data-file";
 
-import * as fromCore from "../../../reducers";
-import * as fromRoot from "../../../../reducers";
-import * as fromDataFiles from "../../../../data-files/reducers";
-import * as workbenchActions from "../../../actions/workbench";
-import * as transformationActions from "../../../actions/transformation";
-import * as normalizationActions from "../../../actions/normalization";
 import { Dictionary } from "@ngrx/entity/src/models";
 import { ImageFileState } from "../../../models/image-file-state";
-import { Marker, MarkerType } from "../../../models/marker";
-import { ViewMode } from "../../../models/view-mode";
-import { WorkbenchState, WorkbenchTool } from "../../../models/workbench-state";
-import { environment } from "../../../../../environments/environment.prod";
+import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
 import { Viewer } from "../../../models/viewer";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { ImageFilesState } from '../../../image-files.state';
+import { SetActiveTool, SetLastRouterPath } from '../../../workbench.actions';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -40,42 +36,25 @@ import { Router } from '@angular/router';
   styleUrls: ["./info-page.component.css"],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
+export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
-  imageFile$: Observable<ImageFile>;
   header$: Observable<Header>;
   headerSummary$: Observable<Header>;
-  viewers$: Observable<Array<Viewer>>;
   showRawHeader: boolean = false;
-  useSystemTime$ = new BehaviorSubject<boolean>(true);
-  
-  showConfig$: Observable<boolean>;
+  useSystemTime$ = new BehaviorSubject<boolean>(false);
   lastImageFile: ImageFile;
-  workbenchState$: Observable<WorkbenchState>;
   fileEntities$: Observable<Dictionary<DataFile>>;
   fileStateEntities$: Observable<Dictionary<ImageFileState>>;
-  activeViewerIndex$: Observable<number>;
-  activeViewer$: Observable<Viewer>;
   subs: Subscription[] = [];
   columnsDisplayed = ['key', 'value', 'comment'];
 
   
-  constructor(private store: Store<fromRoot.State>, private decimalPipe: DecimalPipe, private datePipe: DatePipe, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    this.workbenchState$ = this.store.select(fromCore.getWorkbenchState);
-    this.fileEntities$ = this.store.select(fromDataFiles.getDataFiles);
-    this.fileStateEntities$ = this.store.select(fromCore.getImageFileStates);
-    this.viewers$ = this.store.select(fromCore.workbench.getViewers);
-    this.activeViewer$ = this.store.select(fromCore.workbench.getActiveViewer);
-    this.activeViewerIndex$ = this.store.select(
-      fromCore.workbench.getActiveViewerIndex
-    );
-    this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.header$ = this.imageFile$.pipe(filter(imageFile => imageFile != null), map(imageFile => imageFile.header))
-    this.headerSummary$ = combineLatest(this.useSystemTime$, this.imageFile$.pipe(filter(imageFile => imageFile != null))).pipe(map(([useSystemTime, imageFile]) => {
+  constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, store: Store, router: Router) {
+    super(store, router);
+    this.fileEntities$ = this.store.select(DataFilesState.getEntities);
+    this.fileStateEntities$ = this.store.select(ImageFilesState.getEntities);
+    this.header$ = this.activeImageFile$.pipe(filter(imageFile => imageFile != null), map(imageFile => imageFile.header))
+    this.headerSummary$ = combineLatest(this.useSystemTime$, this.activeImageFile$.pipe(filter(imageFile => imageFile != null))).pipe(map(([useSystemTime, imageFile]) => {
       let result: Header = [];
       let width = getWidth(imageFile);
       let height = getHeight(imageFile);
@@ -170,27 +149,24 @@ export class InfoPageComponent implements OnInit, AfterViewInit, OnDestroy {
       return result;
     }));
     
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
-
     this.subs.push(
-      this.imageFile$.subscribe(imageFile => {
+      this.activeImageFile$.subscribe(imageFile => {
         this.lastImageFile = imageFile;
         // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
       })
     );
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.INFO })
+      new SetActiveTool(WorkbenchTool.INFO)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
   }
 
   
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
   }
 
   ngOnDestroy() {

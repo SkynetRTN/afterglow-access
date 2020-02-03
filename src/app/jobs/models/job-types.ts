@@ -5,5 +5,6 @@ export enum JobType {
   PixelOps = 'pixel_ops',
   CatalogQuery = 'catalog_query',
   Alignment = 'alignment',
-  Stacking = 'stacking'
+  Stacking = 'stacking',
+  BatchImport = 'batch_import'
 }

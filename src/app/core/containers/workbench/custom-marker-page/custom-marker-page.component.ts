@@ -1,68 +1,110 @@
-import { Component, OnInit, HostListener, Input, HostBinding } from "@angular/core";
-import { Store } from "@ngrx/store";
-import { Observable, Subscription } from "rxjs";
-import { filter, map } from "rxjs/operators";
-
-import * as fromRoot from "../../../../reducers";
-import * as fromCore from "../../../reducers";
-
-import * as workbenchActions from "../../../actions/workbench";
-import * as customMarkerActions from "../../../actions/custom-marker";
+import { Component, OnInit, HostListener, Input, HostBinding, OnDestroy } from "@angular/core";
+import { Observable, Subscription, combineLatest } from "rxjs";
+import { filter, map, withLatestFrom, tap } from "rxjs/operators";
 import {
   ViewerGridCanvasMouseEvent,
   ViewerGridMarkerMouseEvent
 } from "../workbench-viewer-grid/workbench-viewer-grid.component";
 import { ImageFile } from "../../../../data-files/models/data-file";
-import { CircleMarker, MarkerType, RectangleMarker } from "../../../models/marker";
+import { CircleMarker, MarkerType, RectangleMarker, Marker } from "../../../models/marker";
 import { CustomMarker } from "../../../models/custom-marker";
-import { WorkbenchTool, WorkbenchState } from "../../../models/workbench-state";
+import { WorkbenchTool, WorkbenchStateModel } from "../../../models/workbench-state";
 import { centroidPsf, centroidDisk } from "../../../models/centroider";
 import { CentroidSettings } from "../../../models/centroid-settings";
 import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
 import { Router } from '@angular/router';
+import { Store, ofActionSuccessful, Actions } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { CustomMarkersState } from '../../../custom-markers.state';
+import { SetActiveTool, SetLastRouterPath, UpdateCentroidSettings, UpdateCustomMarkerPageSettings, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
+import { RemoveCustomMarkers, SetCustomMarkerSelection, UpdateCustomMarker, AddCustomMarkers, SelectCustomMarkers, DeselectCustomMarkers } from '../../../custom-markers.actions';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
+import { LoadDataFileHdr } from '../../../../data-files/data-files.actions';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { ImageFilesState } from '../../../image-files.state';
 
 @Component({
   selector: "app-custom-marker-page",
   templateUrl: "./custom-marker-page.component.html",
   styleUrls: ["./custom-marker-page.component.css"]
 })
-export class CustomMarkerPageComponent implements OnInit {
+export class CustomMarkerPageComponent extends WorkbenchPageBaseComponent implements OnInit, OnDestroy {
   @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   subs: Subscription[] = [];
-  workbenchState$: Observable<WorkbenchState>;
-  centroidSettings$: Observable<CentroidSettings>;
-  workbenchState: WorkbenchState;
-  showConfig$: Observable<boolean>;
-  activeImageFile$: Observable<ImageFile>;
+  markerUpdater: Subscription;
+  workbenchState$: Observable<WorkbenchStateModel>;
+  centroidClicks$: Observable<boolean>;
+  usePlanetCentroiding$: Observable<boolean>;
+  workbenchState: WorkbenchStateModel;
   activeImageFile: ImageFile;
   customMarkers$: Observable<CustomMarker[]>;
   customMarkers: CustomMarker[];
-  nextCustomMarkerId$: Observable<number>;
-  nextCutomMarkerId: number;
+  nextCustomMarkerId: number = 0;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers: Array<CustomMarker> = [];
   selectedMarker: CircleMarker = null;
   MarkerType = MarkerType;
 
-  constructor(private store: Store<fromRoot.State>, router: Router) {
-    this.fullScreenPanel$ = this.store.select(fromCore.workbench.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(fromCore.workbench.getInFullScreenMode);
-    
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
-    this.activeImageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.customMarkers$ = store.select(fromCore.getAllCustomMarkers);
-    this.nextCustomMarkerId$ = store.select(fromCore.getNextCustomMarkerId);
-    this.selectedCustomMarkers$ = store.select(
-      fromCore.getSelectedCustomMarkers
-    );
+  constructor(private actions$: Actions, store: Store, router: Router, ) {
+    super(store, router);
+    this.customMarkers$ = store.select(CustomMarkersState.getCustomMarkers).pipe(map(entities => Object.values(entities)));
+    this.selectedCustomMarkers$ = store.select(CustomMarkersState.getSelectedCustomMarkers).pipe(map(entities => Object.values(entities)));
     this.workbenchState$ = store
-      .select(fromCore.getWorkbenchState)
+      .select(WorkbenchState.getState)
       .pipe(filter(state => state != null));
-    this.centroidSettings$ = this.workbenchState$.pipe(
-      map(state => state && state.centroidSettings)
+
+    this.centroidClicks$ = this.store.select(WorkbenchState.getCustomMarkerPageSettings).pipe(
+      map(settings => settings.centroidClicks)
     );
+
+    this.usePlanetCentroiding$ = this.store.select(WorkbenchState.getCustomMarkerPageSettings).pipe(
+      map(settings => settings.usePlanetCentroiding)
+    );
+
+    this.markerUpdater = combineLatest(
+      this.viewerFileIds$,
+      this.viewerImageFileHeaders$,
+      this.store.select(CustomMarkersState.getCustomMarkers),
+      this.store.select(CustomMarkersState.getSelectedCustomMarkers),
+      this.store.select(ImageFilesState.getEntities),
+    ).pipe(
+      withLatestFrom(
+        this.store.select(WorkbenchState.getViewers),
+        this.store.select(DataFilesState.getEntities),
+        this.store.select(WorkbenchState.getActiveTool)
+      )
+    ).subscribe(([[fileIds, imageFiles, customMarkers, selectedCustomMarkers, imageFileStates], viewers, dataFiles, activeTool]) => {
+      viewers.forEach((viewer) => {
+        let fileId = viewer.fileId;
+        if (fileId == null || !dataFiles[fileId]) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
+        let file = dataFiles[fileId] as ImageFile;
+        if (!file.headerLoaded) {
+          this.store.dispatch(new SetViewerMarkers(viewer.viewerId, []));
+          return;
+        }
+
+        let markers = customMarkers
+          .filter(customMarker => customMarker.fileId == file.id)
+          .map(customMarker => {
+            let marker: Marker = {
+              ...customMarker.marker,
+              data: { id: customMarker.id },
+              selected:
+                activeTool == WorkbenchTool.CUSTOM_MARKER &&
+                selectedCustomMarkers.includes(customMarker)
+            };
+            return marker;
+          });
+
+        this.store.dispatch(new SetViewerMarkers(viewer.viewerId, markers));
+      })
+    })
+
+
+
 
     this.subs.push(
       this.workbenchState$.subscribe(state => (this.workbenchState = state))
@@ -81,15 +123,9 @@ export class CustomMarkerPageComponent implements OnInit {
     );
 
     this.subs.push(
-      this.nextCustomMarkerId$.subscribe(id => {
-        this.nextCutomMarkerId = id;
-      })
-    );
-
-    this.subs.push(
       this.selectedCustomMarkers$.subscribe(customMarkers => {
         this.selectedCustomMarkers = customMarkers;
-        if (this.selectedCustomMarkers.length == 1) {
+        if (this.selectedCustomMarkers[0]) {
           this.selectedMarker = this.selectedCustomMarkers[0]
             .marker as CircleMarker;
         } else {
@@ -99,15 +135,22 @@ export class CustomMarkerPageComponent implements OnInit {
     );
 
     this.store.dispatch(
-      new workbenchActions.SetActiveTool({ tool: WorkbenchTool.CUSTOM_MARKER })
+      new SetActiveTool(WorkbenchTool.CUSTOM_MARKER)
     );
 
     this.store.dispatch(
-      new workbenchActions.SetLastRouterPath({path: router.url})
+      new SetLastRouterPath(router.url)
     )
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
+
+  ngOnDestroy() {
+    this.store.dispatch(new ClearViewerMarkers());
+
+    this.subs.forEach(sub => sub.unsubscribe());
+    this.markerUpdater.unsubscribe();
+  }
 
   @HostListener("document:keyup", ["$event"])
   keyEvent($event: KeyboardEvent) {
@@ -117,20 +160,16 @@ export class CustomMarkerPageComponent implements OnInit {
     //   $event.srcElement.tagName != "TEXTAREA"
     // ) {
     if (
-        this.selectedCustomMarkers.length != 0
-      ) {
+      this.selectedCustomMarkers.length != 0
+    ) {
       if ($event.keyCode === DELETE) {
         this.store.dispatch(
-          new customMarkerActions.RemoveCustomMarkers({
-            markers: this.selectedCustomMarkers
-          })
+          new RemoveCustomMarkers(this.selectedCustomMarkers)
         );
       }
       if ($event.keyCode === ESCAPE) {
         this.store.dispatch(
-          new customMarkerActions.SetCustomMarkerSelection({
-            customMarkers: []
-          })
+          new SetCustomMarkerSelection([])
         );
       }
     }
@@ -138,99 +177,79 @@ export class CustomMarkerPageComponent implements OnInit {
 
   onMarkerChange($event, selectedCustomMarker: CustomMarker) {
     this.store.dispatch(
-      new customMarkerActions.UpdateCustomMarker({
-        markerId: selectedCustomMarker.id,
-        changes: {
+      new UpdateCustomMarker(
+        selectedCustomMarker.id,
+        {
           marker: {
             ...selectedCustomMarker.marker,
             ...$event
           }
         }
-      })
+      )
     );
   }
 
   onImageClick($event: ViewerGridCanvasMouseEvent) {
+    let settings = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPageSettings);
     if ($event.hitImage) {
-      // if (this.selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
-      let x = $event.imageX;
-      let y = $event.imageY;
-      if (this.workbenchState.centroidSettings.centroidClicks) {
-        let result: { x: number; y: number };
-        if (this.workbenchState.centroidSettings.useDiskCentroiding) {
-          result = centroidDisk(
-            this.activeImageFile,
-            x,
-            y,
-            this.workbenchState.centroidSettings.diskCentroiderSettings
-          );
-        } else {
-          result = centroidPsf(
-            this.activeImageFile,
-            x,
-            y,
-            this.workbenchState.centroidSettings.psfCentroiderSettings
-          );
+      if (this.selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
+        let x = $event.imageX;
+        let y = $event.imageY;
+        if (settings.centroidClicks) {
+          let result: { x: number; y: number };
+          if (settings.usePlanetCentroiding) {
+            result = centroidDisk(
+              this.activeImageFile,
+              x,
+              y,
+              this.workbenchState.centroidSettings.diskCentroiderSettings
+            );
+          } else {
+            result = centroidPsf(
+              this.activeImageFile,
+              x,
+              y,
+              this.workbenchState.centroidSettings.psfCentroiderSettings
+            );
+          }
+          x = result.x;
+          y = result.y;
         }
-        x = result.x;
-        y = result.y;
+
+        let customMarker: CustomMarker = {
+          id: null,
+          fileId: this.activeImageFile.id,
+          marker: {
+            type: MarkerType.CIRCLE,
+            label: null,
+            x: x,
+            y: y,
+            radius: 10,
+            labelGap: 8,
+            labelTheta: 0
+          } as CircleMarker
+        };
+
+        this.store.dispatch(
+          new AddCustomMarkers([customMarker])
+        );
+      } else {
+        this.store.dispatch(
+          new SetCustomMarkerSelection([])
+        );
       }
-
-      let customMarker: CustomMarker = {
-        id: null,
-        fileId: this.activeImageFile.id,
-        marker: {
-          type: MarkerType.CIRCLE,
-          label: `M${this.nextCutomMarkerId}`,
-          x: x,
-          y: y,
-          radius: 10,
-          labelGap: 8,
-          labelTheta: 0
-        } as CircleMarker
-      };
-
-
-      // let customMarker: CustomMarker = {
-      //   id: null,
-      //   fileId: this.activeImageFile.id,
-      //   marker: {
-      //     type: MarkerType.RECTANGLE,
-      //     label: `M${this.nextCutomMarkerId}`,
-      //     x: x-5,
-      //     y: y-5,
-      //     width: 10,
-      //     height: 10,
-      //     labelGap: 8,
-      //     labelTheta: 0
-      //   } as RectangleMarker
-      // };
-      this.store.dispatch(
-        new customMarkerActions.AddCustomMarkers({ markers: [customMarker] })
-      );
-      // } else {
-      //   this.store.dispatch(
-      //     new customMarkerActions.SetCustomMarkerSelection({
-      //       customMarkers: []
-      //     })
-      //   );
-      // }
     }
   }
 
   selectCustomMarkers(customMarkers: CustomMarker[]) {
     this.store.dispatch(
-      new customMarkerActions.SelectCustomMarkers({
-        customMarkers: customMarkers
-      })
+      new SelectCustomMarkers(customMarkers)
     );
   }
 
   deselectCustomMarkers(customMarkers: CustomMarker[]) {
     this.store.dispatch(
-      new customMarkerActions.DeselectCustomMarkers({
-        customMarkers: customMarkers
-      })
+      new DeselectCustomMarkers(customMarkers)
     );
   }
 
@@ -258,9 +277,7 @@ export class CustomMarkerPageComponent implements OnInit {
       }
     } else {
       this.store.dispatch(
-        new customMarkerActions.SetCustomMarkerSelection({
-          customMarkers: [customMarker]
-        })
+        new SetCustomMarkerSelection([customMarker])
       );
     }
     $event.mouseEvent.stopImmediatePropagation();
@@ -269,17 +286,19 @@ export class CustomMarkerPageComponent implements OnInit {
 
   onCentroidClicksChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdateCentroidSettings({
-        changes: { centroidClicks: $event.checked }
-      })
+      new UpdateCustomMarkerPageSettings({ centroidClicks: $event.checked })
     );
   }
 
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
-      new workbenchActions.UpdateCentroidSettings({
-        changes: { useDiskCentroiding: $event.checked }
-      })
+      new UpdateCustomMarkerPageSettings({ usePlanetCentroiding: $event.checked })
+    );
+  }
+
+  deleteSelectedMarkers(markers: CustomMarker[]) {
+    this.store.dispatch(
+      new RemoveCustomMarkers(markers)
     );
   }
 }

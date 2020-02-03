@@ -1,4 +1,8 @@
 import { NgModule } from '@angular/core';
+import { NgxsModule } from '@ngxs/store';
+import { NgxsRouterPluginModule } from '@ngxs/router-plugin';
+import { NgxsReduxDevtoolsPluginModule } from '@ngxs/devtools-plugin';
+import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -6,26 +10,40 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { CookieModule } from 'ngx-cookie';
+import localeEs from '@angular/common/locales/es';
+registerLocaleData(localeEs, 'es');
 
 import { TokenInterceptor } from './token.interceptor';
-import { StoreModule } from '@ngrx/store';
-import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { MaterialModule } from './material';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './auth/auth.module';
-import { reducers, metaReducers } from './reducers';
-import {HotkeyModule} from 'angular2-hotkeys';
+import { HotkeyModule } from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { registerLocaleData } from '@angular/common';
+
 
 
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
 import { environment } from '../environments/environment';
-import {NgxPopperModule} from 'ngx-popper';
+import { NgxPopperModule } from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
+import { AuthState } from './auth/auth.state';
+import { JobsState } from './jobs/jobs.state';
+import { DataProvidersState } from './data-providers/data-providers.state';
+import { DataFilesState } from './data-files/data-files.state';
+import { ImageFilesState } from './core/image-files.state';
+import { WorkbenchState } from './core/workbench.state';
+import { SourcesState } from './core/sources.state';
+import { CustomMarkersState } from './core/custom-markers.state';
+import { PhotDataState } from './core/phot-data.state.';
+
+
+
+
 @NgModule({
   imports: [
     CommonModule,
@@ -39,52 +57,17 @@ import { ThemePickerModule } from './theme-picker';
     CookieModule.forRoot(),
     NgxPopperModule,
     ThemePickerModule,
-
-    /**
-     * StoreModule.forRoot is imported once in the root module, accepting a reducer
-     * function or object map of reducer functions. If passed an object of
-     * reducers, combineReducers will be run creating your application
-     * meta-reducer. This returns all providers for an @ngrx/store
-     * based application.
-     */
-
-     // Can't enable strict immutability because we hold array buffers in within the state which cannot be frozen
-    StoreModule.forRoot(reducers, { metaReducers, runtimeChecks: { strictStateImmutability: false, strictActionImmutability: false } }),
-
-
-    /**
-     * Store devtools instrument the store retaining past versions of state
-     * and recalculating new states. This enables powerful time-travel
-     * debugging.
-     *
-     * To use the debugger, install the Redux Devtools extension for either
-     * Chrome or Firefox
-     *
-     * See: https://github.com/zalmoxisus/redux-devtools-extension
-     */
-    !environment.production
-      ? StoreDevtoolsModule.instrument()
-      : [],
-
-    /**
-     * EffectsModule.forRoot() is imported once in the root module and
-     * sets up the effects class to be initialized immediately when the
-     * application starts.
-     *
-     * See: https://github.com/ngrx/platform/blob/master/docs/effects/api.md#forroot
-     */
-    EffectsModule.forRoot([]),
-
-    /**
-     * `provideDB` sets up @ngrx/db with the provided schema and makes the Database
-     * service available.
-     */
-
     CoreModule.forRoot(),
     AuthModule.forRoot(),
     HotkeyModule.forRoot({
       disableCheatSheet: true
-    })
+    }),
+    NgxsModule.forRoot(
+      [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
+      { developmentMode: !environment.production }
+    ),
+    NgxsRouterPluginModule.forRoot(),
+    environment.plugins
   ],
 
   declarations: [

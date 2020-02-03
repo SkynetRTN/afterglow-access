@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Location } from "@angular/common";
-import { User, Authenticate } from "../models/user";
+import { User, Credentials } from "../models/user";
 import { AuthMethod } from "../models/auth-method";
 import { environment } from "../../../environments/environment";
 import { OAuthClient } from "../models/oauth-client";
@@ -12,7 +12,7 @@ import { map } from "rxjs/operators";
 export class AuthService {
   constructor(private http: HttpClient, private location: Location) {}
 
-  login({ username, password }: Authenticate) {
+  login({ username, password }: Credentials) {
     /**
      * Simulate a failed login to display the error
      * message for the login form.
@@ -26,9 +26,7 @@ export class AuthService {
 
   loginOAuth(authMethodId: string, redirectUri: string, code: string) {
     return this.http.post(
-      this.location.prepareExternalUrl(
-        `${environment.apiUrl}/auth/login/${authMethodId}`
-      ),
+      `${environment.apiUrl}/auth/login/${authMethodId}`,
       { code: code, redirect_uri: redirectUri }
     );
   }
@@ -36,7 +34,7 @@ export class AuthService {
   getAuthMethods() {
     return this.http
       .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/auth/methods`)
+        `${environment.apiUrl}/auth/methods`
       )
       .pipe(
         map(resp =>
@@ -61,7 +59,7 @@ export class AuthService {
   getOAuthClients() {
     return this.http
       .get<any[]>(
-        this.location.prepareExternalUrl(`${environment.apiUrl}/oauth2/clients`)
+        `${environment.apiUrl}/oauth2/clients`
       )
       .pipe(
         map(resp =>
@@ -81,23 +79,19 @@ export class AuthService {
 
   getPermittedOAuthClients() {
     return this.http.get<string[]>(
-      this.location.prepareExternalUrl(
-        `${environment.apiUrl}/oauth2/user-clients`
-      )
+      `${environment.apiUrl}/oauth2/user-clients`
     );
   }
 
   addPermittedOAuthClient(client: OAuthClient) {
     return this.http.post(
-      this.location.prepareExternalUrl(
-        `${environment.apiUrl}/oauth2/user-clients`
-      ),
+      `${environment.apiUrl}/oauth2/user-clients`,
       { client_id: client.clientId }
     );
   }
 
   logout() {
     return of(null);
-    //return this.http.get(this.location.prepareExternalUrl(`${environment.apiUrl}/auth/logout`))
+    //return this.http.get(`${environment.apiUrl}/auth/logout`)
   }
 }

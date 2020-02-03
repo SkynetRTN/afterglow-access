@@ -5,4 +5,5 @@ export const environment = {
   tileSize: 512,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,
+  plugins: [],
 };
