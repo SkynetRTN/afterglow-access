@@ -92,11 +92,13 @@ export class DataFileListItemComponent
     }
   }
 
+  public selectionList: DataFileSelectionListComponent;
+
   constructor(private _element: ElementRef,
     private _changeDetector: ChangeDetectorRef,
     /** @docs-private */ @Optional() @Inject(forwardRef(() => DataFileSelectionListComponent))
-    public selectionList: DataFileSelectionListComponent) {
-
+    selectionList) {
+      this.selectionList = selectionList as DataFileSelectionListComponent;
   }
 
   getLabel() {

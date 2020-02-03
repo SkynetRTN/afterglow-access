@@ -1,0 +1,39 @@
+<div class="container">
+  <mat-form-field>
+    <mat-label>Select your color theme</mat-label>
+    <mat-select
+      (selectionChange)="setColorTheme($event.value)"
+      [value]="currentTheme?.colorThemeName"
+    >
+      <mat-option
+        *ngFor="let colorTheme of availableColorThemes"
+        [value]="colorTheme.name"
+      >
+        {{ colorTheme.displayName }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Select your font weight</mat-label>
+    <mat-select
+      (selectionChange)="setFontWeight($event.value)"
+      [value]="currentTheme?.fontWeight"
+    >
+      <mat-option value="default">Default</mat-option>
+      <mat-option value="bold">Bold</mat-option>
+      <mat-option value="boldest">Extra Bold</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Select your font size</mat-label>
+    <mat-select
+      (selectionChange)="setFontSize($event.value)"
+      [value]="currentTheme?.fontSize"
+    >
+      <mat-option value="default">Default</mat-option>
+      <mat-option value="large">Large</mat-option>
+      <mat-option value="largest">Extra Large</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>

@@ -1,4 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { MatDialog } from '@angular/material';
+import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
+import { DataProvider } from '../../../data-providers/models/data-provider';
+import { ThemeDialogComponent } from '../theme-dialog/theme-dialog.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -7,11 +12,30 @@ import { Component, OnInit, Input } from '@angular/core';
 })
 export class NavbarComponent implements OnInit {
   @Input() authenticated: boolean = false;
+  @Input() dataProviders: Array<DataProvider>;
 
 
-  constructor() { }
+  constructor(public dialog: MatDialog, private router: Router) { }
 
   ngOnInit() {
+  }
+
+  openQuickStartGuide() {
+    this.dialog.open(HelpDialogComponent, {
+      data: {},
+      width: '80vw',
+      maxWidth: '600px'
+    });
+  }
+
+  openThemeDialog() {
+    this.dialog.open(ThemeDialogComponent, {
+      data: {},
+    });
+  }
+
+  logout() {
+    this.router.navigate(['logout']);
   }
 
 }

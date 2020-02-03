@@ -1,29 +1,31 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Store } from '@ngrx/store';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Viewer } from '../../../models/viewer';
 
-import * as fromCore from '../../../reducers';
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
-import * as workbenchActions from '../../../actions/workbench';
 import { Dictionary } from '@ngrx/entity/src/models';
-import { DataFile } from '../../../../data-files/models/data-file';
+import { DataFile, ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
-import { WorkbenchState } from '../../../models/workbench-state';
 import { CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
-import { Marker } from '../../../models/marker';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Subscription } from 'rxjs';
 import { ViewMode } from '../../../models/view-mode';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { ImageFilesState } from '../../../image-files.state';
+import { SetActiveViewer } from '../../../workbench.actions';
+import { HotkeysService, Hotkey } from 'angular2-hotkeys';
+import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../image-files.actions';
+import { RemoveDataFile } from '../../../../data-files/data-files.actions';
 
 export interface ViewerGridCanvasMouseEvent extends CanvasMouseEvent {
-  viewerIndex: number,
+  viewerId: string,
   viewer: Viewer
 }
 
 export interface ViewerGridMarkerMouseEvent extends MarkerMouseEvent {
-  viewerIndex: number,
+  viewerId: string,
   viewer: Viewer
 }
 
@@ -35,77 +37,194 @@ export interface ViewerGridMarkerMouseEvent extends MarkerMouseEvent {
 export class WorkbenchViewerGridComponent implements OnInit {
   ViewMode = ViewMode;
 
+  @Input() viewers: Viewer[];
+  @Input() activeViewerId: string;
+  @Input() viewMode: ViewMode;
+
   @Output() onImageClick = new EventEmitter<ViewerGridCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerGridCanvasMouseEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerGridMarkerMouseEvent>();
 
-  viewers$: Observable<Viewer[]>;
-  viewMode$: Observable<ViewMode>;
-  activeViewerIndex$: Observable<number>;
+
+  private hotKeys: Array<Hotkey> = [];
+  // viewers$: Observable<Viewer[]>;
+  // viewMode$: Observable<ViewMode>;
+  // activeViewerIndex$: Observable<number>;
   files$: Observable<Dictionary<DataFile>>;
   fileStates$: Observable<Dictionary<ImageFileState>>;
   subs: Subscription[] = [];
-  activeViewerIndex: number;
-  mouseDownActiveViewerIndex: number;
+  // activeViewerIndex: number;
+  mouseDownActiveViewerId: string;
+  zoomStepFactor: number = 0.75;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.viewMode$ = this.store.select(fromCore.workbench.getViewMode);
+  constructor(private store: Store, private _hotkeysService: HotkeysService) {
+    // this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
 
-    this.viewers$ = Observable.combineLatest(this.store.select(fromCore.workbench.getViewers), this.viewMode$)
-      .map(([viewers, viewMode]) => {
-        if (!viewers || viewers.length == 0) return [];
-        if (viewMode == ViewMode.SINGLE) return [viewers[0]];
-        return viewers;
-      });
+    // this.viewers$ = combineLatest(this.store.select(WorkbenchState.getViewers), this.viewMode$)
+    //   .pipe(map(([viewers, viewMode]) => {
+    //     if (!viewers || viewers.length == 0) return [];
+    //     if (viewMode == ViewMode.SINGLE) return [viewers[0]];
+    //     return viewers;
+    //   }));
 
-    this.activeViewerIndex$ = this.store.select(fromCore.workbench.getActiveViewerIndex);
-    this.files$ = this.store.select(fromDataFiles.getDataFiles);
-    this.fileStates$ = this.store.select(fromCore.getImageFileStates);
+    // this.activeViewerIndex$ = this.store.select(WorkbenchState.getActiveViewerIndex);
+    this.files$ = this.store.select(DataFilesState.getEntities);
+    this.fileStates$ = this.store.select(ImageFilesState.getEntities);
 
-    this.subs.push(this.activeViewerIndex$.subscribe(viewerIndex => {
-      this.activeViewerIndex = viewerIndex;
-    }))
+    // this.subs.push(this.activeViewerIndex$.subscribe(viewerIndex => {
+    //   this.activeViewerIndex = viewerIndex;
+    // }))
+
+
+    this.hotKeys.push(
+      new Hotkey(
+        "=",
+        (event: KeyboardEvent): boolean => {
+          let activeViewer = this.viewers.find(v => v.viewerId == this.activeViewerId);
+          if(activeViewer && activeViewer.fileId != null) {
+            this.zoomIn(activeViewer.fileId);
+          }
+          
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Zoom In"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "-",
+        (event: KeyboardEvent): boolean => {
+          let activeViewer = this.viewers.find(v => v.viewerId == this.activeViewerId);
+          if(activeViewer && activeViewer.fileId != null) {
+            this.zoomOut(activeViewer.fileId);
+          }
+          
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Zoom In"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "0",
+        (event: KeyboardEvent): boolean => {
+          let activeViewer = this.viewers.find(v => v.viewerId == this.activeViewerId);
+          if(activeViewer && activeViewer.fileId != null) {
+            this.zoomTo(activeViewer.fileId, 1);
+          }
+          
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Reset Zoom"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "z",
+        (event: KeyboardEvent): boolean => {
+          let activeViewer = this.viewers.find(v => v.viewerId == this.activeViewerId);
+          if(activeViewer && activeViewer.fileId != null) {
+            this.zoomToFit(activeViewer.fileId);
+          }
+          
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Zoom To Fit"
+      )
+    );
+
+   
+
+    this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
+  }
+
+  public zoomIn(fileId: string, imageAnchor: { x: number, y: number } = null) {
+    this.zoomBy(fileId, 1.0 / this.zoomStepFactor, imageAnchor);
+  }
+
+  public zoomOut(fileId: string, imageAnchor: { x: number, y: number } = null) {
+    this.zoomBy(fileId, this.zoomStepFactor, imageAnchor);
+  }
+
+
+  public zoomBy(fileId: string, factor: number, imageAnchor: { x: number, y: number } = null) {
+    this.store.dispatch(new ZoomBy(
+      fileId,
+      factor,
+      imageAnchor
+    ));
+  }
+
+  public zoomToFit(fileId: string, padding: number = 0) {
+    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+    let imageFile = dataFiles[fileId] as ImageFile;
+    if(imageFile) {
+      this.store.dispatch(new CenterRegionInViewport(
+        fileId,
+        { x: 1, y: 1, width: getWidth(imageFile), height: getHeight(imageFile) }
+      ))
+    }
+    
+  }
+
+  public zoomTo(fileId: string, value: number) {
+    this.store.dispatch(new ZoomTo(
+      fileId,
+      value,
+      null
+    ));
   }
 
   ngOnInit() {
+  }
+
+  ngOnDestroy() {
+    this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
 
   viewerTrackByFn(index, item) {
     return index;
   }
 
-  setActiveViewer($event: Event, viewerIndex: number, viewer: Viewer) {
-    this.mouseDownActiveViewerIndex = this.activeViewerIndex;
-    if (viewerIndex != this.activeViewerIndex) {
-      this.store.dispatch(new workbenchActions.SetActiveViewer({ viewerIndex: viewerIndex }));
+  setActiveViewer($event: Event, viewerId: string, viewer: Viewer) {
+    this.mouseDownActiveViewerId = this.activeViewerId;
+    if (viewerId != this.activeViewerId) {
+      this.store.dispatch(new SetActiveViewer(viewerId));
       $event.preventDefault();
       $event.stopImmediatePropagation();
     }
   }
 
-  handleImageMove($event: CanvasMouseEvent, viewerIndex: number, viewer: Viewer) {
+  handleImageMove($event: CanvasMouseEvent, viewerId: string, viewer: Viewer) {
     this.onImageMove.emit({
-      viewerIndex: viewerIndex,
+      viewerId: viewerId,
       viewer: viewer,
       ...$event
     });
   }
 
-  handleImageClick($event: CanvasMouseEvent, viewerIndex: number, viewer: Viewer) {
-    if(viewerIndex != this.mouseDownActiveViewerIndex) return;
+  handleImageClick($event: CanvasMouseEvent, viewerId: string, viewer: Viewer) {
+    if(viewerId != this.mouseDownActiveViewerId) return;
 
     this.onImageClick.emit({
-      viewerIndex: viewerIndex,
+      viewerId: viewerId,
       viewer: viewer,
       ...$event
     });
   }
 
-  handleMarkerClick($event: MarkerMouseEvent, viewerIndex: number, viewer: Viewer) {
-    if(viewerIndex != this.mouseDownActiveViewerIndex) return;
+  handleMarkerClick($event: MarkerMouseEvent, viewerId: string, viewer: Viewer) {
+    if(viewerId != this.mouseDownActiveViewerId) return;
 
     this.onMarkerClick.emit({
-      viewerIndex: viewerIndex,
+      viewerId: viewerId,
       viewer: viewer,
       ...$event
     });

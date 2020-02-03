@@ -1,24 +1,24 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormGroup, FormControl } from '@angular/forms';
-import { Authenticate } from '../models/user';
+import { Credentials } from '../models/user';
 
 @Component({
   selector: 'app-login-form',
   template: `
     <mat-card>
-      <mat-card-title>Login</mat-card-title>
+      <mat-card-title i18n>Login</mat-card-title>
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="submit()">
           <p>
-            <mat-input-container>
-              <input type="text" matInput placeholder="Username" formControlName="username">
-            </mat-input-container>
+            <mat-form-field>
+              <input type="text" matInput i18n-placeholder placeholder="Username" formControlName="username">
+            </mat-form-field>
           </p>
 
           <p>
-            <mat-input-container>
-              <input type="password" matInput placeholder="Password" formControlName="password">
-            </mat-input-container>
+            <mat-form-field>
+              <input type="password" matInput i18n-placeholder placeholder="Password" formControlName="password">
+            </mat-form-field>
           </p>
 
           <p *ngIf="errorMessage" class="loginError">
@@ -26,7 +26,7 @@ import { Authenticate } from '../models/user';
           </p>
 
           <p class="loginButtons">
-            <button type="submit" mat-raised-button [color]="'primary'">Login</button>
+            <button type="submit" mat-raised-button [color]="'primary'" i18n>Login</button>
           </p>
 
         </form>
@@ -74,7 +74,7 @@ export class LoginFormComponent implements OnInit {
 
   @Input() errorMessage: string | null;
 
-  @Output() submitted = new EventEmitter<Authenticate>();
+  @Output() submitted = new EventEmitter<Credentials>();
 
   form: FormGroup = new FormGroup({
     username: new FormControl(''),

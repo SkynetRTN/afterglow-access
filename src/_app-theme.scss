@@ -1,5 +1,12 @@
-@import '~@angular/material/theming';
-@import './app/core/components/navbar/navbar-theme';
+@import "~@angular/material/theming";
+@import "./app/core/components/navbar/navbar-theme";
+@import "./app/core/containers/workbench/workbench-theme";
+@import "./app/core/containers/workbench/viewer-page/viewer-theme";
+@import "./app/core/containers/workbench/workbench-viewer-panel/workbench-viewer-panel-theme";
+@import "./app/core/components/image-viewer-title-bar/image-viewer-title-bar-theme";
+@import "./app/core/containers/workbench/workbench-viewer-grid/workbench-viewer-grid-theme";
+@import "./app/core/containers/workbench/workbench-data-file-list/workbench-data-file-list-theme";
+@import "./app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page-theme";
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -9,22 +16,141 @@
   $background: map-get($theme, background);
   $foreground: map-get($theme, foreground);
 
-  .app-background {
-    background: mat-color($background, background);
+  // .app-background {
+  //   background: mat-color($background, background);
+  // }
+
+  // .primary-header {
+  //   background: mat-color($primary);
+
+  //   h1 {
+  //     color: mat-color($primary, default-contrast);
+  //   }
+  // }
+
+  // .footer {
+  //   background: mat-color($primary);
+  //   color: mat-color($primary, default-contrast);
+  // }
+
+  @include nav-bar-theme($theme);
+  @include workbench-theme($theme);
+  @include viewer-theme($theme);
+  @include workbench-viewer-panel-theme($theme);
+  @include image-viewer-title-bar-theme($theme);
+  @include workbench-viewer-grid-theme($theme);
+  @include workbench-data-file-list-theme($theme);
+  @include data-provider-browse-page-theme($theme);
+
+  header {
+    box-shadow: 0 10px 6px -6px mat-color($foreground, divider);
   }
 
-  .primary-header {
-    background: mat-color($primary);
+  .mat-input-element {
+    color: mat-color($foreground, text);
+  }
 
-    h1 {
+  theme-picker {
+    .mat-button, .mat-icon-button {
       color: mat-color($primary, default-contrast);
+      opacity: 0.8;
+    }
+
+    a.active {
+      opacity: 1.0;
     }
   }
 
-  .footer {
-    background: mat-color($primary);
+  .mat-dialog-container {
+    background: mat-color($background, card);
+    color: mat-color($foreground, text);
+  }
+
+  .kbd {
+    display: inline-block;
+    border: 1px solid mat-color($primary, 0.5);
+    border-radius: 4px;
+    padding: 0.1em 0.5em;
+    margin: 0 0.2em;
+    box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff inset;
+    background-color: mat-color($primary);
     color: mat-color($primary, default-contrast);
   }
 
-  @include nav-bar-theme($theme);
+  .cfp-hotkeys-container {
+    background-color: mat-color($background, card) !important;
+  }
+
+  .cfp-hotkeys-key {
+    display: inline-block;
+    color: #fff;
+    background-color: #333;
+    border: 1px solid #333;
+    border-radius: 5px;
+    text-align: center;
+    margin-right: 5px;
+    box-shadow: inset 0 1px 0 #666, 0 1px 0 #bbb;
+    padding: 5px 9px;
+    font-size: 1em;
+  }
+
+
+
+  /* override bootstrap */
+  .app-root {
+    color: mat-color($foreground, text);
+  }
+
+  .main-content {
+    background: mat-color($background, background, 0.8);
+  }
+
+  .card {
+    background: mat-color($background, card);
+  }
+
+  label,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  th,
+  td,
+  p {
+    color: mat-color($foreground, text);
+  }
+
+  svg text {
+    fill: mat-color($foreground, text);
+  }
+
+  .breadcrumb {
+    background: mat-color($background, card);
+  }
+
+  a {
+    color: mat-color($accent);
+  }
+
+  .alert-info a {
+    color: #0c5460;
+  }
+
+  .alert-success a {
+    color: #155724;
+  }
+
+  // .plotly {
+  //   svg {
+  //     background-color: #ABABAB;
+  //   }
+  // }
 }

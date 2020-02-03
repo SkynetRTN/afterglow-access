@@ -6,10 +6,35 @@
   $foreground: map-get($theme, foreground);
 
   app-navbar {
-    color: mat-color($primary, default-contrast);
+    // .mat-button {
+    //   color: map-get($foreground, text);
+    // }
 
-    .navbar, .navbar-header {
+    // .mat-button:not(.active) {
+    //   opacity: 0.5;
+    // }
+
+    // .mat-button:not(.active):hover {
+    //   opacity: 1.0;
+    // }
+
+    .navbar,
+    .navbar-header {
       background: mat-color($primary);
     }
+
+    a.mat-button,
+    a.mat-icon-button,
+    .mat-button,
+    .mat-icon-button {
+      color: mat-color($primary, default-contrast);
+      opacity: 0.8;
+    }
+
+    a.active {
+      opacity: 1;
+    }
+
+    
   }
 }

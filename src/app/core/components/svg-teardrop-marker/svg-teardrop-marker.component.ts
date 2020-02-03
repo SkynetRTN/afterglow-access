@@ -16,7 +16,7 @@ export class SvgTeardropMarkerComponent implements OnInit, OnChanges {
   @Input() showShadow: boolean = true;
   @Input() selected: boolean = false;
 
-  @ViewChild('svgGroup') svgGroup: ElementRef;
+  @ViewChild('svgGroup', { static: true }) svgGroup: ElementRef;
   lastTheta:number;
 
   constructor() {

@@ -3,30 +3,18 @@ import {
   ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Directive
 } from '@angular/core';
 
-import { Store } from '@ngrx/store';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Point, Rectangle } from "paper";
-import { Observable } from 'rxjs/Observable';
 import * as SVG from 'svgjs'
 import * as normalizeWheel from 'normalize-wheel';
 
-import { ImageFile, getWidth, getHeight, findTiles, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
+import { ImageFile, getWidth, getHeight, findTiles } from '../../../data-files/models/data-file';
 import { Normalization } from '../../models/normalization';
 import { Transformation, getViewportRegion } from '../../models/transformation';
-import { Marker, RectangleMarker, CircleMarker, LineMarker, MarkerType } from '../../models/marker';
-import { Region } from '../../models/region';
 import { Source } from '../../models/source';
-
-import * as fromRoot from '../../../reducers';
-import * as fromCore from '../../reducers';
-import * as workbenchActions from '../../actions/workbench';
-import * as transformationActions from '../../actions/transformation';
-import * as normalizationActions from '../../actions/normalization';
-import * as imageFileActions from '../../../data-files/actions/image-file';
-import * as dataFileActions from '../../../data-files/actions/data-file';
-import { Subscription } from 'rxjs/Subscription';
 import { ImageTile } from '../../../data-files/models/image-tile';
-import { Viewer } from '../../models/viewer';
+import { Store } from '@ngxs/store';
+import { MoveBy, ZoomBy, UpdateCurrentViewportSize, NormalizeImageTile } from '../../image-files.actions';
+import { LoadImageTilePixels } from '../../../data-files/data-files.actions';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -111,7 +99,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   private resizeMonitor: any;
 
-  constructor(private store: Store<fromRoot.State>, protected viewerPlaceholder: ElementRef) {
+  constructor(private store: Store, protected viewerPlaceholder: ElementRef) {
   }
 
   ngOnInit() { }
@@ -181,10 +169,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private setSmoothing(ctx: CanvasRenderingContext2D, value: boolean) {
-    ctx.mozImageSmoothingEnabled = value;
+    //ctx.mozImageSmoothingEnabled = value;
     // ctx.msImageSmoothingEnabled = value;
-    ctx.oImageSmoothingEnabled = value;
-    ctx.webkitImageSmoothingEnabled = value;
+    //ctx.oImageSmoothingEnabled = value;
+    //ctx.webkitImageSmoothingEnabled = value;
     ctx.imageSmoothingEnabled = value;
   }
 
@@ -229,6 +217,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     //return new Point(e.pageX - this._targetCanvas.offsetLeft, e.pageY - this._targetCanvas.offsetTop);
   }
 
+  get canvas() {
+    return this.targetCanvas;
+  }
+
   get canvasWidth() {
     return this.targetCanvas ? this.targetCanvas.width : 0;
   }
@@ -256,11 +248,11 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public moveBy(xShift: number, yShift: number) {
-    this.store.dispatch(new transformationActions.MoveBy({
-      file: this.imageFile,
-      xShift: xShift,
-      yShift: yShift
-    }));
+    this.store.dispatch(new MoveBy(
+      this.imageFile.id,
+      xShift,
+      yShift
+    ));
   }
 
   public moveToCenter() {
@@ -277,11 +269,11 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
-    this.store.dispatch(new transformationActions.ZoomBy({
-      file: this.imageFile,
-      scaleFactor: factor,
-      viewportAnchor: imageAnchor
-    }));
+    this.store.dispatch(new ZoomBy(
+      this.imageFile.id,
+      factor,
+      imageAnchor
+    ));
   }
 
   public get viewportToImageTransform() {
@@ -330,7 +322,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     }
     if (JSON.stringify(this.lastViewportSize) !== JSON.stringify(viewportSize)) {
       this.onViewportSizeChange.emit({ width: viewportSize.width, height: viewportSize.height })
-      if(this.imageFile) this.store.dispatch(new transformationActions.UpdateCurrentViewportSize({ file: this.imageFile, viewportSize: { width: viewportSize.width, height: viewportSize.height } }));
+      if(this.imageFile) this.store.dispatch(new UpdateCurrentViewportSize(
+        this.imageFile.id,
+        { width: viewportSize.width, height: viewportSize.height }
+      ));
       this.lastViewportSize = viewportSize;
     }
 
@@ -499,7 +494,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     this.bufferedTiles = {};
 
     let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
-    this.store.dispatch(new transformationActions.UpdateCurrentViewportSize({ file: this.imageFile, viewportSize: { width: viewportSize.width, height: viewportSize.height } }));
+    this.store.dispatch(new UpdateCurrentViewportSize(
+      this.imageFile.id,
+      { width: viewportSize.width, height: viewportSize.height }
+    ));
   }
 
   checkForResize() {
@@ -542,16 +540,16 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     tiles.forEach(tile => {
       let normTile = this.normalization.normalizedTiles[tile.index];
       if (!tile.pixelsLoaded && !tile.pixelsLoading && !tile.pixelLoadingFailed) {
-        this.store.dispatch(new imageFileActions.LoadImageTilePixels({
-          file: this.imageFile,
-          tile: tile
-        }));
+        this.store.dispatch(new LoadImageTilePixels(
+          this.imageFile.id,
+          tile.index
+        ));
       }
       else if (tile.pixelsLoaded && !normTile.pixelsLoaded && !normTile.pixelsLoading && !normTile.pixelLoadingFailed) {
-        this.store.dispatch(new normalizationActions.NormalizeImageTile({
-          file: this.imageFile,
-          tile: tile
-        }));
+        this.store.dispatch(new NormalizeImageTile(
+          this.imageFile.id,
+          tile.index
+        ));
       }
     })
 

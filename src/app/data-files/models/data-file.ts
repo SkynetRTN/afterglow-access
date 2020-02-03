@@ -3,6 +3,8 @@ import { HeaderEntry } from './header-entry';
 import { ImageTile, getTilePixel } from './image-tile';
 import { ImageHist } from './image-hist';
 import { Wcs } from '../../image-tools/wcs';
+import { Source, PosType } from '../../core/models/source';
+import { parseDms } from '../../utils/skynet-astro';
 
 export type Header = Array<HeaderEntry>;
 export type DataFile = ImageFile | TableFile;
@@ -12,6 +14,7 @@ export interface IDataFile {
   id: string;
   name: string;
   header: Header;
+  wcs: Wcs;
   headerLoaded: boolean;
   headerLoading: boolean;
   layer: string;
@@ -70,20 +73,32 @@ export interface ImageFile extends IDataFile {
   histLoading: boolean;
 }
 
-export function getWidth(imageFile: ImageFile) {
-  let naxis1 = getEntry(imageFile, 'NAXIS1');
+export function getWidth(file: DataFile) {
+  let naxis1 = getEntry(file, 'NAXIS1');
   if (naxis1) {
     return naxis1.value;
   }
   return undefined;
 }
 
-export function getHeight(imageFile: ImageFile) {
-  let naxis2 = getEntry(imageFile, 'NAXIS2');
+export function getHeight(file: DataFile) {
+  let naxis2 = getEntry(file, 'NAXIS2');
   if (naxis2) {
     return naxis2.value;
   }
   return undefined;
+}
+
+export function getPixels(imageFile: ImageFile, x: number, y: number, width: number, height: number) {
+  let result: Array<Array<number>> = [];
+  for(let j=0; j<height; j++) {
+    let row = Array(width)
+    for(let i=0; i<width; i++) {
+      row[i] = getPixel(imageFile, x+i, y+j);
+    }
+    result[j] = row;
+  }
+  return result;
 }
 
 export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate: boolean = false) {
@@ -218,14 +233,14 @@ export function findTiles(imageFile: ImageFile, x: number, y: number, width: num
   return result;
 }
 
-export function getWcs(imageFile: ImageFile) {
-  return new Wcs(toKeyValueHash(imageFile));
-}
+// export function getWcs(imageFile: ImageFile) {
+//   return new Wcs(toKeyValueHash(imageFile));
+// }
 
-export function getHasWcs(imageFile: ImageFile) {
-  let wcs = new Wcs(toKeyValueHash(imageFile));
-  return wcs.hasWcs();
-}
+// export function getHasWcs(imageFile: ImageFile) {
+//   let wcs = new Wcs(toKeyValueHash(imageFile));
+//   return wcs.hasWcs();
+// }
 
 export function getDegsPerPixel(imageFile: ImageFile) {
   let secpix = getEntry(imageFile, 'SECPIX');
@@ -236,10 +251,10 @@ export function getDegsPerPixel(imageFile: ImageFile) {
   return undefined;
 }
 
-export function getStartTime(imageFile: ImageFile) {
+export function getStartTime(file: DataFile) {
   let imageDateStr = '';
   let imageTimeStr = '';
-  let dateObs = getEntry(imageFile, 'DATE-OBS');
+  let dateObs = getEntry(file, 'DATE-OBS');
   if (dateObs) {
     imageDateStr = dateObs.value;
     if(imageDateStr.includes('T')) {
@@ -251,7 +266,7 @@ export function getStartTime(imageFile: ImageFile) {
     }
   }
 
-  let timeObs = getEntry(imageFile, 'TIME-OBS');
+  let timeObs = getEntry(file, 'TIME-OBS');
   if (timeObs) {
     imageTimeStr = timeObs.value;
   }
@@ -263,19 +278,19 @@ export function getStartTime(imageFile: ImageFile) {
   return undefined;
 }
 
-export function getExpLength(imageFile: ImageFile) {
-  let expLength = getEntry(imageFile, 'EXPTIME');
+export function getExpLength(file: DataFile) {
+  let expLength = getEntry(file, 'EXPTIME');
   if (expLength) {
     return expLength.value;
   }
   return undefined;
 }
 
-export function getCenterTime(imageFile: ImageFile) {
-  let expLength = getExpLength(imageFile);
-  let startTime = getStartTime(imageFile);
+export function getCenterTime(file: DataFile) {
+  let expLength = getExpLength(file);
+  let startTime = getStartTime(file);
   if (expLength !== undefined || startTime !== undefined) {
-    return new Date(startTime.getTime() + expLength / 2.0);
+    return new Date(startTime.getTime() + expLength * 1000.0 / 2.0);
   }
   return undefined;
 }
@@ -296,6 +311,45 @@ export function getObject(imageFile: ImageFile) {
   return undefined;
 }
 
+export function getRaHours(imageFile: ImageFile) {
+  let raEntry = getEntry(imageFile, 'RA');
+  if (!raEntry) {
+    raEntry = getEntry(imageFile, 'RAOBJ');
+    if(!raEntry) return undefined;
+  }
+  let ra;
+  if(typeof(raEntry.value) == 'string' && raEntry.value.includes(':')) {
+    ra = parseDms(raEntry.value);
+  }
+  else {
+    ra = parseFloat(raEntry.value);
+  }
+
+  if(isNaN(ra) || ra == undefined || ra == null) return undefined;
+
+  return ra;
+}
+
+export function getDecDegs(imageFile: ImageFile) {
+  let decEntry = getEntry(imageFile, 'DEC');
+  if (!decEntry) {
+    decEntry = getEntry(imageFile, 'DECOBJ');
+    if(!decEntry) return undefined;
+  }
+
+  let dec;
+  if(typeof(decEntry.value) == 'string' && decEntry.value.includes(':')) {
+    dec = parseDms(decEntry.value);
+  }
+  else {
+    dec = parseFloat(decEntry.value);
+  }
+
+  if(isNaN(dec) || dec == undefined || dec == null) return undefined;
+
+  return dec;
+}
+
 export function getExpNum(imageFile: ImageFile) {
   let expNum = getEntry(imageFile, 'EXPNUM');
   if (expNum) {
@@ -312,17 +366,83 @@ export function getFilter(imageFile: ImageFile) {
   return undefined;
 }
 
-export function hasOverlap(imageFile1: ImageFile, imageFile2: ImageFile) {
-  if(!imageFile1.headerLoaded || !imageFile2.headerLoaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
+export function getSourceCoordinates(file: DataFile, source: Source) {
+  let primaryCoord = source.primaryCoord;
+  let secondaryCoord = source.secondaryCoord;
+  let pm = source.pm;
+  let posAngle = source.pmPosAngle;
+  let epoch = source.pmEpoch;
+  
 
-  let wcsA = getWcs(imageFile1);
+  if (pm) {
+    if (!file.headerLoaded) return null;
+    let fileEpoch = getCenterTime(file);
+    if (!fileEpoch) return null;
+
+    let deltaT = (fileEpoch.getTime() - epoch.getTime()) / 1000.0;
+    let mu = (source.pm * deltaT) / 3600.0;
+    let theta = source.pmPosAngle * (Math.PI / 180.0);
+    let cd = Math.cos((secondaryCoord * Math.PI) / 180);
+
+    primaryCoord += (mu * Math.sin(theta)) / cd / 15;
+    primaryCoord = primaryCoord % 360;
+    secondaryCoord += mu * Math.cos(theta);
+    secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
+
+    // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
+  }
+
+  let x = primaryCoord;
+  let y = secondaryCoord;
+  let theta = posAngle;
+
+  if (source.posType == PosType.SKY) {
+    if (!file.headerLoaded || !file.wcs.isValid()) return null;
+    let wcs = file.wcs;
+    let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
+    x = xy[0];
+    y = xy[1];
+    
+    if (pm) {
+      theta = posAngle + wcs.positionAngle();
+      theta = theta % 360;
+      if (theta < 0) theta += 360;
+    }
+  }
+
+  if (
+    x < 0.5 ||
+    x >= getWidth(file) + 0.5 ||
+    y < 0.5 ||
+    y >= getHeight(file) + 0.5
+  ) {
+    return null;
+  }
+
+  return {
+    x: x,
+    y: y,
+    theta: theta,
+    raHours: source.posType != PosType.SKY ? null : primaryCoord,
+    decDegs: source.posType != PosType.SKY ? null : secondaryCoord,
+  }
+    
+  
+  
+}
+
+export function hasOverlap(imageFileA: ImageFile, imageFileB: ImageFile) {
+  // if(!imageFile1.headerLoaded || !imageFile2.headerLoaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
+  if(!imageFileA.headerLoaded || !imageFileB.headerLoaded || !imageFileA.wcs || !imageFileB.wcs) return false;
+
+  let wcsA = imageFileA.wcs;
   let worldLowerLeft = wcsA.pixToWorld([0, 0]);
-  let worldUpperRight = wcsA.pixToWorld([getWidth(imageFile1), getHeight(imageFile1)]);
-  let wcsB = getWcs(imageFile2);
+  let worldUpperRight = wcsA.pixToWorld([getWidth(imageFileA), getHeight(imageFileA)]);
+  let wcsB = imageFileB.wcs;
   let pixelLowerLeft = wcsB.worldToPix(worldLowerLeft);
   let pixelUpperRight = wcsB.worldToPix(worldUpperRight);
   let regionA = { x1: Math.min(pixelLowerLeft[0], pixelUpperRight[0]), y1: Math.max(pixelLowerLeft[1], pixelUpperRight[1]), x2: Math.max(pixelLowerLeft[0], pixelUpperRight[0]), y2: Math.min(pixelLowerLeft[1], pixelUpperRight[1]) };
-  let regionB = { x1: 0, y1: getHeight(imageFile2), x2: getWidth(imageFile2), y2: 0 };
+  let regionB = { x1: 0, y1: getHeight(imageFileB), x2: getWidth(imageFileB), y2: 0 };
   let overlap = (regionA.x1 < regionB.x2 && regionA.x2 > regionB.x1 && regionA.y1 > regionB.y2 && regionA.y2 < regionB.y1);
   return overlap;
 }

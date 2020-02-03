@@ -1,23 +1,7 @@
 .workbench-config-panel {
-  flex: 0 0 auto;
-  position: relative;
-  outline: none;
   width: 550px;
 }
 
-.workbench-outlet-wrapper {
-  display: flex;
-  flex: 1 1 0%;
-  height: 100%;
+.full-screen.workbench-config-panel {
   width: 100%;
-  outline: none;
-  overflow: hidden;
-  user-select: text;
-  flex-direction: row;
-}
-
-.image-viewer-grid-panel {
-  flex: 1 1 0%;
-  position: relative;
-  outline: none;
 }

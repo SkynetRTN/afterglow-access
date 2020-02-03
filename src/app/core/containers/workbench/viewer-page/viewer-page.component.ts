@@ -1,63 +1,71 @@
 import {
-  Component, OnInit, OnDestroy, AfterViewInit, ViewChild, Input,
-  ChangeDetectionStrategy
-} from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Store } from '@ngrx/store';
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  Input,
+  ChangeDetectionStrategy,
+  ViewEncapsulation,
+  HostBinding
+} from "@angular/core";
+import { Observable, Subscription, Subject } from "rxjs";
+import { map, filter, auditTime, tap } from "rxjs/operators";
 
 declare let d3: any;
 
-import { Subscription } from 'rxjs/Subscription';
-import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
+import { calcLevels } from "../../../../data-files/models/image-hist";
+import {
+  ImageFile,
+  DataFile,
+  getWidth,
+  getHeight
+} from "../../../../data-files/models/data-file";
 
-import { calcLevels } from '../../../../data-files/models/image-hist';
-import { ImageFile, DataFile } from '../../../../data-files/models/data-file';
-
-import { Normalization } from '../../../models/normalization';
-import { Viewer } from '../../../models/viewer';
-import { Transformation } from '../../../models/transformation';
-import { ColorMap } from '../../../models/color-map';
-import { StretchMode } from '../../../models/stretch-mode';
-
-import * as fromCore from '../../../reducers';
-import * as fromRoot from '../../../../reducers';
-import * as fromDataFiles from '../../../../data-files/reducers';
-import * as workbenchActions from '../../../actions/workbench';
-import * as transformationActions from '../../../actions/transformation';
-import * as markerActions from '../../../actions/markers';
-import * as normalizationActions from '../../../actions/normalization';
-import * as dataFileActions from '../../../../data-files/actions/data-file';
-import * as imageFileActions from '../../../../data-files/actions/image-file';
-import { Dictionary } from '@ngrx/entity/src/models';
-import { ImageFileState } from '../../../models/image-file-state';
-import { Marker, MarkerType } from '../../../models/marker';
-import { ViewMode } from '../../../models/view-mode';
-import { WorkbenchState, WorkbenchTool } from '../../../models/workbench-state';
-import { environment } from '../../../../../environments/environment.prod';
-
+import { Normalization } from "../../../models/normalization";
+import { Viewer } from "../../../models/viewer";
+import { Transformation } from "../../../models/transformation";
+import { ColorMap } from "../../../models/color-map";
+import { StretchMode } from "../../../models/stretch-mode";
+import { Dictionary } from "@ngrx/entity/src/models";
+import { ImageFileState } from "../../../models/image-file-state";
+import { Marker, MarkerType } from "../../../models/marker";
+import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
+import { environment } from "../../../../../environments/environment.prod";
+import { Router } from "@angular/router";
+import { MatButtonToggleChange } from "@angular/material";
+import { DataProvider } from '../../../../data-providers/models/data-provider';
+import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { ImageFilesState } from '../../../image-files.state';
+import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../../image-files.actions';
+import { SetActiveTool, SetLastRouterPath, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey } from '../../../workbench.actions';
+import { DataProvidersState } from '../../../../data-providers/data-providers.state';
+import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
 // import { ImageViewerComponent } from '../../../components/image-viewer/image-viewer.component'
 
 @Component({
-  selector: 'app-viewer-page',
-  templateUrl: './viewer-page.component.html',
-  styleUrls: ['./viewer-page.component.css'],
+  selector: "app-viewer-page",
+  templateUrl: "./viewer-page.component.html",
+  styleUrls: ["./viewer-page.component.scss"]
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
-  ViewMode = ViewMode;
-  viewers$: Observable<Array<Viewer>>;
-  activeViewerIndex$: Observable<number>;
-  activeViewer$: Observable<Viewer>;
+export class ViewerPageComponent extends WorkbenchPageBaseComponent implements OnInit, AfterViewInit, OnDestroy {
+  @HostBinding("class") @Input("class") classList: string =
+    "fx-workbench-outlet";
+  
+  
   fileEntities$: Observable<Dictionary<DataFile>>;
   fileStateEntities$: Observable<Dictionary<ImageFileState>>;
-  workbenchState$: Observable<WorkbenchState>;
-  viewerSyncEnabled$: Observable<boolean>;
-  normalizationSyncEnabled$: Observable<boolean>;
+  workbenchState$: Observable<WorkbenchStateModel>;
+
+
+  
 
   imageFile$: Observable<ImageFile>;
   normalization$: Observable<Normalization>;
@@ -67,132 +75,165 @@ export class ViewerPageComponent implements OnInit, AfterViewInit, OnDestroy {
   markers: Marker[] = [];
   subs: Subscription[] = [];
 
-  levels$: Subject<{ background: number, peak: number }> = new Subject<{ background: number, peak: number }>();
-  backgroundLevel$: Subject<number> = new Subject<number>();
-  peakLevel$: Subject<number> = new Subject<number>();
+  levels$: Subject<{ background: number; peak: number }> = new Subject<{
+    background: number;
+    peak: number;
+  }>();
+  backgroundPercentile$: Subject<number> = new Subject<number>();
+  peakPercentile$: Subject<number> = new Subject<number>();
 
   upperPercentileDefault = environment.upperPercentileDefault;
   lowerPercentileDefault = environment.lowerPercentileDefault;
 
-  constructor(private store: Store<fromRoot.State>) {
-    this.workbenchState$ = this.store.select(fromCore.getWorkbenchState);
-    this.fileEntities$ = this.store.select(fromDataFiles.getDataFiles);
-    this.fileStateEntities$ = this.store.select(fromCore.getImageFileStates);
-    this.viewers$ = this.store.select(fromCore.workbench.getViewers);
-    this.activeViewer$ = this.store.select(fromCore.workbench.getActiveViewer);
-    this.activeViewerIndex$ = this.store.select(fromCore.workbench.getActiveViewerIndex);
-    this.imageFile$ = store.select(fromCore.workbench.getActiveFile);
-    this.viewerSyncEnabled$ = store.select(fromCore.workbench.getViewerSyncEnabled);
-    this.normalizationSyncEnabled$ = store.select(fromCore.workbench.getNormalizationSyncEnabled)
-    this.normalization$ = store.select(fromCore.workbench.getActiveFileState).filter(fileState => fileState != null).map(fileState => fileState.normalization);
-    this.showConfig$ = store.select(fromCore.workbench.getShowConfig);
+  constructor(private corrGen: CorrelationIdGenerator, store: Store, router: Router) {
+    super(store, router);
 
-    this.subs.push(this.imageFile$.subscribe(imageFile => {
-      this.lastImageFile = imageFile;
-      // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
-    }));
+    this.workbenchState$ = this.store.select(WorkbenchState.getState);
+    this.fileEntities$ = this.store.select(DataFilesState.getEntities);
+    this.fileStateEntities$ = this.store.select(ImageFilesState.getEntities);
+    
+    this.activeViewerId$ = this.store.select(
+      WorkbenchState.getActiveViewerId
+    );
+    this.imageFile$ = store.select(WorkbenchState.getActiveImageFile);
 
-    this.subs.push(this.normalization$.subscribe(normalization => {
-      this.lastViewerState = normalization;
-    }));
+    this.normalization$ = store
+      .select(WorkbenchState.getActiveImageFileState)
+      .pipe(
+        filter(fileState => fileState != null),
+        map(fileState => fileState.normalization)
+      );
+    this.showConfig$ = store.select(WorkbenchState.getShowConfig);
+    
 
-    this.levels$
-      .debounceTime(50) // wait 300ms after the last event before emitting last event
+    this.subs.push(
+      this.imageFile$.subscribe(imageFile => {
+        this.lastImageFile = imageFile;
+        // if(imageFile) this.store.dispatch(new markerActions.ClearMarkers({file: imageFile}));
+      })
+    );
+
+    this.subs.push(
+      this.normalization$.subscribe(normalization => {
+        this.lastViewerState = normalization;
+      })
+    );
+
+    this.levels$.pipe(auditTime(25)).subscribe(value => {
+      this.store.dispatch(
+        new UpdateNormalizer(this.lastImageFile.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
+      );
+    });
+
+    this.backgroundPercentile$.pipe(auditTime(25)).subscribe(value => {
+      this.store.dispatch(
+        new UpdateNormalizer(this.lastImageFile.id, { backgroundPercentile: value })
+      );
+    });
+
+    this.peakPercentile$
+      .pipe(auditTime(25))
+
       .subscribe(value => {
-        this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { backgroundLevel: value.background, peakLevel: value.peak } }));
+        this.store.dispatch(
+          new UpdateNormalizer(this.lastImageFile.id, { peakPercentile: value })
+        );
       });
 
+    this.store.dispatch(
+      new SetActiveTool(WorkbenchTool.VIEWER)
+    );
 
-    this.backgroundLevel$
-      .debounceTime(50) // wait 300ms after the last event before emitting last event
-      .subscribe(value => {
-        this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { backgroundLevel: value } }));
-      });
+    this.store.dispatch(
+      new SetLastRouterPath(router.url)
+    );
 
-    this.peakLevel$
-      .debounceTime(50) // wait 300ms after the last event before emitting last event
-      .subscribe(value => {
-        this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { peakLevel: value } }));
-      });
-
-
-    this.store.dispatch(new workbenchActions.SetActiveTool({ tool: WorkbenchTool.VIEWER }));
-
+    
   }
 
-  setViewModeOption(value) {
-    this.store.dispatch(new workbenchActions.SetViewMode({ viewMode: value }));
+  
+
+  onBackgroundPercentileChange(value: number) {
+    this.backgroundPercentile$.next(value);
   }
 
-  onBackgroundLevelChange(value: number) {
-    this.backgroundLevel$.next(value);
-  }
-
-  onPeakLevelChange(value: number) {
-    this.peakLevel$.next(value);
+  onPeakPercentileChange(value: number) {
+    this.peakPercentile$.next(value);
   }
 
   onColorMapChange(value: ColorMap) {
-    this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { colorMap: value } }))
+    this.store.dispatch(
+      new UpdateNormalizer(this.lastImageFile.id, { colorMap: value })
+    );
   }
 
   onStretchModeChange(value: StretchMode) {
-    this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { stretchMode: value } }))
+    this.store.dispatch(
+      new UpdateNormalizer(this.lastImageFile.id, { stretchMode: value })
+    );
   }
 
   onInvertedChange(value: boolean) {
-    console.log('inverted change', value);
-    this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { inverted: value } }))
+    this.store.dispatch(
+      new UpdateNormalizer(this.lastImageFile.id, { inverted: value })
+    );
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {
-    let result = calcLevels(this.lastImageFile.hist, lowerPercentile, upperPercentile)
-    this.store.dispatch(new normalizationActions.UpdateNormalizer({ file: this.lastImageFile, changes: { backgroundLevel: result.backgroundLevel, peakLevel: result.peakLevel } }));
+    this.store.dispatch(
+      new UpdateNormalizer(this.lastImageFile.id,
+        {
+          backgroundPercentile: lowerPercentile,
+          peakPercentile: upperPercentile
+        }
+      )
+    );
   }
 
-  onActiveViewerIndexChange(value: number) {
-    this.store.dispatch(new workbenchActions.SetActiveViewer({ viewerIndex: value }));
+  onActiveViewerIdChange(value: string) {
+    this.store.dispatch(
+      new SetActiveViewer(value)
+    );
   }
 
   onInvertClick() {
-    this.store.dispatch(new normalizationActions.UpdateNormalizer({
-      file: this.lastImageFile, changes: {
-        backgroundLevel: this.lastViewerState.normalizer.peakLevel,
-        peakLevel: this.lastViewerState.normalizer.backgroundLevel
-      }
-    }));
+    this.store.dispatch(
+      new UpdateNormalizer(this.lastImageFile.id,
+        {
+          backgroundPercentile: this.lastViewerState.normalizer.peakPercentile,
+          peakPercentile: this.lastViewerState.normalizer.backgroundPercentile
+        }
+      )
+    );
   }
 
   onFlipClick() {
-    this.store.dispatch(new transformationActions.Flip({ file: this.lastImageFile }));
+    this.store.dispatch(
+      new Flip(this.lastImageFile.id)
+    );
   }
 
   onRotateClick() {
-    this.store.dispatch(new transformationActions.RotateBy({ file: this.lastImageFile, rotationAngle: 90 }));
+    this.store.dispatch(
+      new RotateBy(this.lastImageFile.id, 90)
+    );
   }
 
   onResetOrientationClick() {
-    this.store.dispatch(new transformationActions.ResetImageTransform({ file: this.lastImageFile }));
+    this.store.dispatch(
+      new ResetImageTransform(this.lastImageFile.id)
+    );
   }
 
-  onViewerSyncEnabledChange($event) {
-    this.store.dispatch(new workbenchActions.SetViewerSyncEnabled({ enabled: $event.checked }));
-  }
+  
 
-  onNormalizationSyncEnabledChange($event) {
-    this.store.dispatch(new workbenchActions.SetNormalizationSyncEnabled({ enabled: $event.checked }));
-  }
-
+  
   ngOnInit() {
-    this.store.dispatch(new workbenchActions.DisableMultiFileSelection());
   }
 
   ngOnDestroy() {
     this.subs.forEach(sub => sub.unsubscribe());
   }
 
-  ngAfterViewInit() {
-
-  }
-
+  ngAfterViewInit() { }
 }

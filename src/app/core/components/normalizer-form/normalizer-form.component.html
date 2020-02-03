@@ -1,29 +1,32 @@
 <div class="row">
   <div class="col-6">
-    <mat-form-field class="">
-      <input matInput placeholder="Background Level" [ngModel]="normalizer?.backgroundLevel" (ngModelChange)="onBackgroundLevelChange.emit($event)"
-        type="number" [step]="levelStep">
+    <mat-form-field class="" appearance="outline">
+      <mat-label>Background Level Percentile</mat-label>
+      <input matInput [ngModel]="normalizer?.backgroundPercentile" (ngModelChange)="backgroundPercentileChange.emit($event)"
+        type="number" [step]="backgroundStep" min="0" max="100">
     </mat-form-field>
   </div>
   <div class="col-6">
-    <mat-form-field class="">
-      <input matInput placeholder="Peak Level" [ngModel]="normalizer?.peakLevel" (ngModelChange)="onPeakLevelChange.emit($event)"
-        type="number" [step]="levelStep">
+    <mat-form-field class="" appearance="outline">
+      <mat-label>Saturation Level Percentile</mat-label>
+      <input matInput [ngModel]="normalizer?.peakPercentile" (ngModelChange)="peakPercentileChange.emit($event)" type="number"
+        [step]="peakStep" min="0" max="100">
     </mat-form-field>
   </div>
 </div>
 <div class="row">
   <div class="col-6">
-    <mat-form-field>
-      <mat-select placeholder="Color Map" [ngModel]="normalizer?.colorMap" (ngModelChange)="onColorMapChange.emit($event)" style="width: 100%;">
+    <mat-form-field appearance="outline">
+      <mat-label>Color Map</mat-label>
+      <mat-select [value]="normalizer?.colorMap" (selectionChange)="colorMapChange.emit($event.value)" style="width: 100%;">
         <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap">{{ colorMap.name }}</mat-option>
       </mat-select>
     </mat-form-field>
   </div>
   <div class="col-6">
-    <mat-form-field>
-      <mat-select placeholder="Stretch Mode" [ngModel]="normalizer?.stretchMode" (ngModelChange)="onStretchModeChange.emit($event)"
-        style="width: 100%;">
+    <mat-form-field appearance="outline">
+      <mat-label>Stretch Mode</mat-label>
+      <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)" style="width: 100%;">
         <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{ stretchModeOption.label }}</mat-option>
       </mat-select>
     </mat-form-field>
@@ -31,7 +34,8 @@
 </div>
 <div class="row">
   <div class="col-6">
-    <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="before" (change)="onInvertedChange.emit($event.checked)">
+    <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="'before'" (change)="invertedChange.emit($event.checked)"
+      color="primary">
       Inverted
     </mat-slide-toggle>
   </div>

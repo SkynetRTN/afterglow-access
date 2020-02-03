@@ -6,6 +6,7 @@ import {
   heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap
 } from '../../models/color-map';
 import { StretchMode } from '../../models/stretch-mode';
+import { MatSelectChange } from '@angular/material';
 
 @Component({
   selector: 'app-normalizer-form',
@@ -15,30 +16,55 @@ import { StretchMode } from '../../models/stretch-mode';
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
 
-  @Output() onBackgroundLevelChange = new EventEmitter<number>();
-  @Output() onPeakLevelChange = new EventEmitter<number>();
-  @Output() onColorMapChange = new EventEmitter<ColorMap>();
-  @Output() onStretchModeChange = new EventEmitter<StretchMode>();
-  @Output() onInvertedChange = new EventEmitter<boolean>();
+  @Output() backgroundPercentileChange = new EventEmitter<number>();
+  @Output() peakPercentileChange = new EventEmitter<number>();
+  @Output() colorMapChange = new EventEmitter<ColorMap>();
+  @Output() stretchModeChange = new EventEmitter<StretchMode>();
+  @Output() invertedChange = new EventEmitter<boolean>();
 
-  levelStep = 0.1;
+  backgroundStep = 0.1;
+  peakStep = 0.1;
 
-  private stretchModeOptions = [
+  stretchModeOptions = [
     { label: "Linear", value: StretchMode.Linear },
-    { label: "Log", value: StretchMode.Log },
+    { label: "Logarithmic", value: StretchMode.Log },
     { label: "Square Root", value: StretchMode.SquareRoot },
-    { label: "ArcSinh", value: StretchMode.ArcSinh }
+    { label: "Hyperbolic Arcsine", value: StretchMode.ArcSinh }
   ];
 
-  private colorMaps = [grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap];
+  colorMaps = [grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap];
 
   constructor() { }
 
   ngOnInit() {
   }
 
+  calcStep(percentile: number) {
+    if(percentile > 50) {
+      // return Math.pow(10,-Math.round(1-Math.log10((100-percentile)/0.999999)));
+      return percentile == 100 ? Math.pow(10,-3) : Math.round((100-percentile)*Math.pow(10,-1.0)*Math.pow(10,4))/Math.pow(10,4);
+    }
+    else {
+      // return Math.pow(10,-Math.round(1-Math.log10(percentile/1.000001)));
+      return percentile == 0 ? Math.pow(10,-3) : Math.round((percentile)*Math.pow(10,-1.0)*Math.pow(10,4))/Math.pow(10,4);
+    }
+  }
+
   ngOnChanges() {
-    // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
+    if (!this.normalizer || this.normalizer.peakPercentile == null || this.normalizer.backgroundPercentile == null) {
+      this.backgroundStep = 0.1;
+      this.peakStep = 0.1;
+    }
+    else {
+      
+      this.backgroundStep = this.calcStep(this.normalizer.backgroundPercentile);
+      this.peakStep = this.calcStep(this.normalizer.peakPercentile);
+
+      // console.log(this.peakStep, this.normalizer.peakPercentile);
+
+    }
+
+        // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
     // if (!this.normalizer || this.normalizer.peakLevel == null || this.normalizer.backgroundLevel == null) {
     //   this.levelStep = 0.1;
     // }

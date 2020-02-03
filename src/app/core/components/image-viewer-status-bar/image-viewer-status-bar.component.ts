@@ -1,5 +1,5 @@
 import { Component, OnInit, OnChanges, Input } from '@angular/core';
-import { ImageFile, getPixel, getHasWcs, getWcs } from '../../../data-files/models/data-file';
+import { ImageFile, getPixel } from '../../../data-files/models/data-file';
 
 @Component({
   selector: 'app-image-viewer-status-bar',
@@ -31,8 +31,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   
     if(this.imageFile.headerLoaded) {
       this.pixelValue = getPixel(this.imageFile, this.imageMouseX, this.imageMouseY);
-      if(getHasWcs(this.imageFile)) {
-        let wcs = getWcs(this.imageFile);
+      if(this.imageFile.wcs.isValid()) {
+        let wcs = this.imageFile.wcs;
         let raDec = wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
         this.raHours = raDec[0];
         this.decDegs = raDec[1];

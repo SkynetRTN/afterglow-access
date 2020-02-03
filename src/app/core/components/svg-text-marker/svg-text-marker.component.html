@@ -1,0 +1,33 @@
+<svg:g class="svg-text-marker" [class.selected]="selected">
+  <!--
+    <svg:g [style.text-anchor]="anchor">
+            <defs>
+                    <filter id="glow" x="-10%" y="-10%" width="110%" height="110%">
+                    <feGaussianBlur stdDeviation="10 10" result="glow"/>
+                    <feMerge>
+                    <feMergeNode in="glow"/>
+                    <feMergeNode in="glow"/>
+                    <feMergeNode in="glow"/>
+                    </feMerge>
+                    </filter>
+                    </defs>
+        <text style="filter: url(#glow); fill: black"  [attr.x]="x" [attr.y]="y" [attr.dx]="dx" [attr.dy]="dy"> {{text}} </text>
+        <text [attr.x]="x" [attr.y]="y" [attr.dx]="dx" [attr.dy]="dy" style="fill: white"> {{text}} </text>
+    </g>
+  -->
+
+  <svg:text
+    #textSvgElement
+    [attr.x]="x"
+    [attr.y]="y"
+    [attr.dx]="dx"
+    [attr.dy]="dy"
+    [style.text-anchor]="anchor"
+    style="fill: #ffffff; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none;
+ user-select: none; stroke: #000000; text-rendering: optimizeLegibility; font-family: Arial,sans-serif"
+    stroke-width="3"
+    paint-order="stroke"
+  >
+    {{ text }}
+  </svg:text>
+</svg:g>

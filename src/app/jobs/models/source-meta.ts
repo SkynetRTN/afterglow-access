@@ -1,5 +1,5 @@
 export interface SourceMeta {
-  file_id: string;
+  file_id: number;
   time: string;
   filter: string;
   telescope: string;
