@@ -140,17 +140,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       return false; // Prevent bubbling
     }, undefined, 'Sonifier'));
 
-    this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
-      this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.FIELD_CAL_ROUTE]);
-      return false; // Prevent bubbling
-    }, undefined, 'Field Calibration'));
-
-    // this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
+    // this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
     //   this.store.dispatch(new SetShowConfig(true));
-    //   this.router. navigate([this.PHOTOMETRY_ROUTE]);
+    //   this.router.navigate([this.FIELD_CAL_ROUTE]);
     //   return false; // Prevent bubbling
-    // }, undefined, 'Photometry'));
+    // }, undefined, 'Field Calibration'));
+
+    this.hotKeys.push(new Hotkey('p', (event: KeyboardEvent): boolean => {
+      this.store.dispatch(new SetShowConfig(true));
+      this.router. navigate([this.PHOTOMETRY_ROUTE]);
+      return false; // Prevent bubbling
+    }, undefined, 'Photometry'));
 
     this.hotKeys.push(new Hotkey('/', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
@@ -172,7 +172,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
 
 
-    this.hotKeys.push(new Hotkey('R', (event: KeyboardEvent): boolean => {
+    this.hotKeys.push(new Hotkey('esc', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetFullScreen(false))
       return false; // Prevent bubbling
     }, undefined, 'Reset workbench views'));

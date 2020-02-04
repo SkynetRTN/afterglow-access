@@ -16,22 +16,22 @@
           co-developers in the project. Below are some highlights of their work and features that have been integrated because
           of their invaluable contribution.</p>
 
-      
+
         <h4>Shortcuts & Navigations</h4>
-      
+
         <p>BVI users often rely on keyboard navigation to explore the digital space. IDATA students and teachers were instrumental
           in creating intuitive shortcuts that allow users to move through Afterglow Access easily without having to use
           a mouse. You can find these shortcuts in the “Shortcuts” Tab above. </p>
-      
+
         <h4>Screenreaders</h4>
-      
+
         <p>Afterglow Access follows the guidelines to be as screenreader compliant. In addition, IDATA worked with BVI students
           and BVI astronomers associated with IDATA to learn how Afterglow Access worked with their screen reader of choice.
           We tested Afterglow Access with NVDA and Apple VoiceOver. </p>
 
-      
+
         <h4>Themes</h4>
-      
+
         <p>In UCD activities held by IDATA participants and co-designers, the team discovered that the tool could be much more
           accessible to BVI users if Afterglow Access were customizable. One such customization that IDATA students shared
           with us was the ability to change the look and feel of the software. Depending on their BVI condition and person
@@ -41,9 +41,9 @@
           the same layout which is helpful for BVI students who often “lose their place” when Zoomed in on a part of the
           screen. Using student feedback, we developed three colored themes and offered the ability to select font weight
           and font size. These settings can be found in the top right “hamburger menu” with the title “Theme editor.”</p>
-      
+
         <h4>Sonification tool</h4>
-      
+
         <p>The Sonification tool was developed as an innovative way to translate astronomical images into informative sounds
           for BVI users. This tool can be found under “sonification” which uses a musical note as its symbol. Once you have
           an image uploaded to your viewer. You may push the “Sonify” button to “hear” the image. The sounds start at the
@@ -60,11 +60,31 @@
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef>Key</th>
               <td mat-cell *matCellDef="let shortcut">
-                <span *ngFor="let key of shortcut.key.split(' '); let i = index" class="pr-1">
+                <span *ngFor="let key of shortcut.key.split(','); let i = index" class="pr-1">
                   <span *ngIf="i>0">, </span>
-                  <span *ngIf="shiftModifier(key)">
-                    <span class="cfp-hotkeys-key">shift</span> + </span>
-                  <span class="cfp-hotkeys-key">{{ key }}</span>
+                  <ng-container *ngIf="key != '+'; else showPlus">
+                    <span *ngFor="let subKey of key.split('+'); let j = index" class="pr-1">
+                      <span *ngIf="j>0"> + </span>
+
+                      <span class="cfp-hotkeys-key">
+                        <span *ngIf="shiftModifier(subKey)">
+                          shift +
+                        </span>
+                        {{ subKey }}
+                      </span>
+
+
+                    </span>
+                  </ng-container>
+
+                  <ng-template #showPlus>
+                    <span class="cfp-hotkeys-key">
+                      +
+                    </span>
+                  </ng-template>
+
+
+
                 </span>
               </td>
             </ng-container>
