@@ -4,24 +4,26 @@ import { PhotData } from './models/source-phot-data';
 import { RemoveAllPhotDatas, RemovePhotDatas, UpdatePhotData, AddPhotDatas } from './phot-data.actions';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { DataFilesStateModel, DataFilesState } from '../data-files/data-files.state';
+import { ResetState } from '../auth/auth.actions';
 
 export interface PhotDataStateModel {
+  version: number;
   ids: string[];
   entities: { [id: string]: PhotData };
 }
 
+const photDataDefaultState: PhotDataStateModel = {
+  version: 1,
+  ids: [],
+  entities: {},
+}
+
 @State<PhotDataStateModel>({
   name: 'sourcesPhotData',
-  defaults: {
-    ids: [],
-    entities: {},
-  }
+  defaults: photDataDefaultState
 })
 
 export class PhotDataState {
-  protected seed = 0;
-  protected prefix = 'SRCPHOTDATA';
-  /** Return the next correlation id */
 
   constructor(private store: Store, private correlationIdGenerator: CorrelationIdGenerator, private actions$: Actions) { }
 
@@ -38,6 +40,14 @@ export class PhotDataState {
   @Selector()
   public static getSourcesPhotData(state: PhotDataStateModel) {
     return Object.values(state.entities);
+  }
+
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<PhotDataStateModel>, { }: ResetState) {
+    setState((state: PhotDataStateModel) => {
+      return photDataDefaultState
+    });
   }
 
   @Action(UpdatePhotData)

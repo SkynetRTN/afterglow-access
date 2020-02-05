@@ -1,7 +1,7 @@
-import { State, Action, Selector, StateContext, Actions, ofActionDispatched, ofActionSuccessful } from '@ngxs/store';
+import { State, Action, Selector, StateContext, Actions, ofActionDispatched, ofActionSuccessful, ofActionCompleted } from '@ngxs/store';
 import { DataFile, Header, ImageFile, getYTileDim, getXTileDim, getWidth, getHeight } from './models/data-file';
 import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { of, merge, interval, Observable } from "rxjs";
+import { of, merge, interval, Observable, combineLatest } from "rxjs";
 import {
   tap,
   skip,
@@ -9,7 +9,8 @@ import {
   flatMap,
   map,
   filter,
-  catchError
+  catchError,
+  take
 } from "rxjs/operators";
 
 import {
@@ -22,34 +23,38 @@ import {
   RemoveDataFileSuccess,
   LoadDataFileHdr,
   LoadDataFileHdrSuccess,
-  LoadDataFileHdrFail,
   LoadImageHist,
   LoadImageHistSuccess,
-  LoadImageHistFail,
   LoadImageTilePixels,
-  LoadImageTilePixelsSuccess
+  LoadImageTilePixelsSuccess,
+  LoadDataFile
 } from './data-files.actions';
 import { AfterglowDataFileService } from '../core/services/afterglow-data-files';
 import { mergeDelayError } from '../utils/rxjs-extensions';
 import { DataFileType } from './models/data-file-type';
 import { ImageTile } from './models/image-tile';
 import { Wcs } from '../image-tools/wcs';
+import { ResetState } from '../auth/auth.actions';
 
 export interface DataFilesStateModel {
+  version: number;
   ids: string[];
   entities: { [id: string]: DataFile };
   loading: boolean,
   removingAll: boolean
 }
 
+const dataFilesDefaultState: DataFilesStateModel = {
+  version: 1,
+  ids: [],
+  entities: {},
+  loading: false,
+  removingAll: false
+}
+
 @State<DataFilesStateModel>({
   name: 'dataFiles',
-  defaults: {
-    ids: [],
-    entities: {},
-    loading: false,
-    removingAll: false
-  }
+  defaults: dataFilesDefaultState
 })
 export class DataFilesState {
 
@@ -88,6 +93,14 @@ export class DataFilesState {
     return state.loading;
   }
 
+
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { }: ResetState) {
+    setState((state: DataFilesStateModel) => {
+      return dataFilesDefaultState
+    });
+  }
 
   @Action(LoadLibrary)
   @ImmutableContext()
@@ -180,6 +193,48 @@ export class DataFilesState {
       );
   }
 
+  @Action(LoadDataFile)
+  @ImmutableContext()
+  public loadDataFile({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { fileId }: LoadDataFile) {
+    let state = getState();
+    let dataFile = state.entities[fileId] as DataFile;
+
+    // let hdrNext$ = this.actions$.pipe(
+    //   ofActionCompleted(LoadDataFileHdr),
+    //   filter(r => r.action.fileId == fileId),
+    //   take(1),
+    //   filter(r => r.result.successful)
+    // )
+
+    // let histNext$ = this.actions$.pipe(
+    //   ofActionCompleted(LoadImageHist),
+    //   filter(r => r.action.fileId == fileId),
+    //   take(1),
+    //   filter(r => r.result.successful)
+    // )
+    let actions = [];
+
+    if (!dataFile.headerLoaded && !dataFile.headerLoading ) {
+      actions.push(
+        new LoadDataFileHdr(dataFile.id)
+      );
+    }
+    if(dataFile.type == DataFileType.IMAGE) {
+      let imageFile = dataFile as ImageFile;
+      if (!imageFile.histLoaded && !imageFile.histLoading) {
+        actions.push(
+          new LoadImageHist(dataFile.id)
+        );
+      }
+    }
+    
+
+
+    return merge(
+      dispatch(actions),
+    )
+
+  }
 
 
   @Action(LoadDataFileHdr)
@@ -265,13 +320,6 @@ export class DataFilesState {
         });
         dispatch(new LoadDataFileHdrSuccess(fileId, header));
 
-      }),
-      catchError(err => {
-        setState((state: DataFilesStateModel) => {
-          state.entities[fileId].headerLoading = false;
-          return state;
-        });
-        return dispatch(new LoadDataFileHdrFail(fileId, err));
       })
     );
   }
@@ -323,7 +371,7 @@ export class DataFilesState {
           (state.entities[fileId] as ImageFile).histLoading = false;
           return state;
         });
-        return dispatch(new LoadImageHistFail(fileId, err));
+        throw err;
       })
     );
   }
@@ -374,7 +422,7 @@ export class DataFilesState {
           tile.pixelLoadingFailed = true;
           return state;
         });
-        return dispatch(new LoadImageHistFail(fileId, err));
+        throw err;
       })
     );
   }

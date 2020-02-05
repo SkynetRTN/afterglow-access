@@ -9,6 +9,7 @@ import { Matrix } from 'svgjs';
 import { PhotometryFileState } from './models/photometry-file-state';
 import { SourceExtractionJobSettings } from '../jobs/models/source-extraction';
 import { SourceExtractionSettings } from './models/source-extraction-settings';
+import { Transform } from './models/transformation';
 
 export class InitializeImageFileState {
   public static readonly type = '[Viewer] Initialize Image File State';
@@ -127,7 +128,7 @@ export class MoveBy {
 export class SetImageTransform {
   public static readonly type = '[Transformation] Set Image Transform';
 
-  constructor(public fileId: string, public transform: Matrix) { }
+  constructor(public fileId: string, public transform: Transform) { }
 }
 
 export class ResetImageTransform {
@@ -139,7 +140,7 @@ export class ResetImageTransform {
 export class SetViewportTransform {
   public static readonly type = '[Transformation] Set Viewport Transform';
 
-  constructor(public fileId: string, public transform: Matrix) { }
+  constructor(public fileId: string, public transform: Transform) { }
 }
 
 export class RotateBy {

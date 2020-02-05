@@ -35,7 +35,6 @@ import {
 
 import { ImageFileState } from "../../../models/image-file-state";
 import { Viewer } from "../../../models/viewer";
-import { Dictionary } from "@ngrx/entity/src/models";
 import { Marker, MarkerType, RectangleMarker, LineMarker } from "../../../models/marker";
 import { WorkbenchTool } from "../../../models/workbench-state";
 import {

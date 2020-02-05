@@ -14,19 +14,24 @@ import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.st
 import { normalize } from './models/pixel-normalizer';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { getViewportRegion, getScale } from './models/transformation';
+import { getViewportRegion, getScale, matrixToTransform, transformToMatrix } from './models/transformation';
+import { ResetState } from '../auth/auth.actions';
 
 export interface ImageFilesStateModel {
+  version: number;
   ids: string[];
   entities: { [id: string]: ImageFileState };
 }
 
+const imageFilesDefaultState : ImageFilesStateModel = {
+  version: 1,
+  ids: [],
+  entities: {}
+}
+
 @State<ImageFilesStateModel>({
   name: 'imageFiles',
-  defaults: {
-    ids: [],
-    entities: {}
-  }
+  defaults: imageFilesDefaultState
 })
 export class ImageFilesState {
 
@@ -53,6 +58,15 @@ export class ImageFilesState {
   }
 
 
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { }: ResetState) {
+    setState((state: ImageFilesStateModel) => {
+      return imageFilesDefaultState
+    });
+  }
+
+
 
   @Action(InitializeImageFileState)
   @ImmutableContext()
@@ -67,7 +81,7 @@ export class ImageFilesState {
             normalizer: {
               backgroundPercentile: 10,
               peakPercentile: 99,
-              colorMap: grayColorMap,
+              colorMapName: grayColorMap.name,
               stretchMode: StretchMode.Linear,
               inverted: false
             }
@@ -156,10 +170,15 @@ export class ImageFilesState {
       // also initialize the transformation matrix since it requires the 
       // image height
       let transformation = state.entities[fileId].transformation;
-      transformation.imageTransform = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
-      transformation.viewportTransform = new Matrix(1, 0, 0, 1, 0, 0);
+      let imageMatrix = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
+      let viewportMatrix = new Matrix(1, 0, 0, 1, 0, 0);
+      let imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
 
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      if(!transformation.imageTransform || !transformation.viewportTransform || !transformation.imageToViewportTransform) {
+        transformation.imageTransform = matrixToTransform(imageMatrix);
+        transformation.viewportTransform = matrixToTransform(viewportMatrix);
+        transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
+      }
       return state;
     });
   }
@@ -486,17 +505,19 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
-      transformation.viewportTransform = transformation.viewportTransform.clone();
+      let viewportMatrix = transformToMatrix(transformation.viewportTransform);
+      let imageMatrix = transformToMatrix(transformation.imageTransform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
 
       // max zoom reached when 1 pixel fills viewport
-      let viewportULP = transformation.imageToViewportTransform.transform(new Point(0.5, 0.5));
-      let viewportLRP = transformation.imageToViewportTransform.transform(new Point(1.5, 1.5));
+      let viewportULP = imageToViewportMatrix.transform(new Point(0.5, 0.5));
+      let viewportLRP = imageToViewportMatrix.transform(new Point(1.5, 1.5));
 
       let d = viewportULP.getDistance(viewportLRP);
       let reachedMaxZoom = d > transformation.viewportSize.width || d > transformation.viewportSize.height;
 
       // min zoom reached when image fits in viewer
-      viewportLRP = transformation.imageToViewportTransform.transform(new Point(getWidth(imageFile) - 0.5, getHeight(imageFile) - 0.5));
+      viewportLRP = imageToViewportMatrix.transform(new Point(getWidth(imageFile) - 0.5, getHeight(imageFile) - 0.5));
       d = viewportULP.getDistance(viewportLRP);
       let reachedMinZoom = d < transformation.viewportSize.width && d < transformation.viewportSize.height;
 
@@ -509,15 +530,19 @@ export class ImageFilesState {
       if (anchorPoint == null) {
         anchorPoint = { x: transformation.viewportSize.width / 2.0, y: transformation.viewportSize.height / 2.0 };
         // let centerViewerPoint = new Point(transformation.viewportSize.width / 2.0, transformation.viewportSize.height / 2.0);
-        //let newAnchor = transformation.imageToViewportTransform.inverted().transform(centerViewerPoint);
+        //let newAnchor = imageToViewportMatrix.inverted().transform(centerViewerPoint);
         //anchorPoint = {x: newAnchor.x+0.5, y: newAnchor.y+0.5};
       }
 
-      anchorPoint = transformation.viewportTransform.inverted().transform(new Point(anchorPoint.x, anchorPoint.y));
+      anchorPoint = viewportMatrix.inverted().transform(new Point(anchorPoint.x, anchorPoint.y));
 
-      transformation.viewportTransform.scale(scaleFactor, anchorPoint);
+      viewportMatrix.scale(scaleFactor, anchorPoint);
 
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
 
       return state;
     });
@@ -531,13 +556,17 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
-      let imageToViewportTransform = transformation.imageToViewportTransform;
+      let viewportMatrix = transformToMatrix(transformation.viewportTransform);
+      let imageMatrix = transformToMatrix(transformation.imageTransform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
+
+
       // test if image is almost entirely out of viewer
       let buffer = 50;
-      let c1 = imageToViewportTransform.transform(new Point(getWidth(imageFile), getHeight(imageFile)));
-      let c2 = imageToViewportTransform.transform(new Point(0, 0));
-      let c3 = imageToViewportTransform.transform(new Point(0, getHeight(imageFile)));
-      let c4 = imageToViewportTransform.transform(new Point(getWidth(imageFile), 0));
+      let c1 = imageToViewportMatrix.transform(new Point(getWidth(imageFile), getHeight(imageFile)));
+      let c2 = imageToViewportMatrix.transform(new Point(0, 0));
+      let c3 = imageToViewportMatrix.transform(new Point(0, getHeight(imageFile)));
+      let c4 = imageToViewportMatrix.transform(new Point(getWidth(imageFile), 0));
       let maxPoint = new Point(Math.max(c1.x, c2.x, c3.x, c4.x), Math.max(c1.y, c2.y, c3.y, c4.y));
       let minPoint = new Point(Math.min(c1.x, c2.x, c3.x, c4.x), Math.min(c1.y, c2.y, c3.y, c4.y));
       let imageRect = new Rectangle(minPoint.x + buffer + xShift,
@@ -552,11 +581,16 @@ export class ImageFilesState {
         return state;
       }
 
-      transformation.viewportTransform = transformation.viewportTransform.clone();
       let xScale = Math.abs(transformation.viewportTransform.a);
       let yScale = Math.abs(transformation.viewportTransform.d);
-      transformation.viewportTransform.translate(xShift / xScale, yShift / yScale);
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      viewportMatrix.translate(xShift / xScale, yShift / yScale);
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
+
+
       return state;
     });
   }
@@ -569,8 +603,15 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
-      transformation.viewportTransform = transform.clone();
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      let viewportMatrix = transformToMatrix(transform);
+      let imageMatrix = transformToMatrix(transformation.imageTransform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
+
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
       return state;
     });
   }
@@ -583,8 +624,15 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
-      transformation.imageTransform = transform.clone();
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      let viewportMatrix = transformToMatrix(transformation.viewportTransform);
+      let imageMatrix = transformToMatrix(transform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
+
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
       return state;
     });
   }
@@ -597,8 +645,16 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
-      transformation.imageTransform = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      let viewportMatrix = transformToMatrix(transformation.viewportTransform);
+      let imageMatrix = transformToMatrix(transformation.imageTransform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
+
+      imageMatrix = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
       return state;
     });
   }
@@ -611,15 +667,23 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
+      let viewportMatrix = transformToMatrix(transformation.viewportTransform);
+      let imageMatrix = transformToMatrix(transformation.imageTransform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
+
       if (anchorPoint == null) {
         anchorPoint = new Point(transformation.viewportSize.width / 2.0, transformation.viewportSize.height / 2.0);
       }
 
-      anchorPoint = transformation.imageToViewportTransform.inverted().transform(new Point(anchorPoint.x, anchorPoint.y));
+      anchorPoint = imageToViewportMatrix.inverted().transform(new Point(anchorPoint.x, anchorPoint.y));
 
-      transformation.imageTransform = transformation.imageTransform.clone();
-      transformation.imageTransform.rotate(-rotationAngle, anchorPoint);
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      imageMatrix.rotate(-rotationAngle, anchorPoint);
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
+
       return state;
     });
   }
@@ -632,9 +696,17 @@ export class ImageFilesState {
       let imageFile = dataFiles[fileId] as ImageFile;
       let transformation = state.entities[fileId].transformation;
 
-      transformation.imageTransform = transformation.imageTransform.clone();
-      transformation.imageTransform.scale(-1, 1, getWidth(imageFile) / 2, getHeight(imageFile) / 2);
-      transformation.imageToViewportTransform = transformation.viewportTransform.appended(transformation.imageTransform);
+      let viewportMatrix = transformToMatrix(transformation.viewportTransform);
+      let imageMatrix = transformToMatrix(transformation.imageTransform);
+      let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
+
+      imageMatrix.scale(-1, 1, getWidth(imageFile) / 2, getHeight(imageFile) / 2);
+      imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
+
+      transformation.imageTransform = matrixToTransform(imageMatrix);
+      transformation.viewportTransform = matrixToTransform(viewportMatrix);
+      transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
+
       return state;
     });
   }

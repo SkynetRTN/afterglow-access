@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CookieModule } from 'ngx-cookie';
 import { ReactiveFormsModule } from '@angular/forms';
-import { StoreModule } from '@ngrx/store';
-import { EffectsModule } from '@ngrx/effects';
 import { LoginPageComponent } from './containers/login-page/login-page.component';
 import { LogoutPageComponent } from './containers/logout-page/logout-page.component';
 import { LoginFormComponent } from './components/login-form.component';

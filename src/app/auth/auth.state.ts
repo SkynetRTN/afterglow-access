@@ -4,13 +4,16 @@ import { CookieService } from 'ngx-cookie';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { of } from "rxjs";
 
-import { InitAuth, Login, LoginSuccess, Logout, LoginOAuth, LoadAuthMethods, LoadPermittedOAuthClients, AddPermittedOAuthClient, LoadOAuthClients } from './auth.actions';
+import { InitAuth, Login, LoginSuccess, Logout, LoginOAuth, LoadAuthMethods, LoadPermittedOAuthClients, AddPermittedOAuthClient, LoadOAuthClients, ResetState } from './auth.actions';
 import { OAuthClient } from './models/oauth-client';
 import { User } from './models/user';
 import { AuthService } from './services/auth.service';
 import { environment } from "../../environments/environment";
 import { AuthMethod } from './models/auth-method';
 import { Navigate } from '@ngxs/router-plugin';
+import { AuthGuard } from './services/auth-guard.service';
+
+import jwt_decode from 'jwt-decode';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -41,7 +44,8 @@ export interface AuthStateModel {
 export class AuthState {
   constructor(private authService: AuthService,
     private router: Router,
-    private cookieService: CookieService) { }
+    private cookieService: CookieService,
+    private authGuard: AuthGuard) { }
 
   @Selector()
   public static state(state: AuthStateModel) {
@@ -130,14 +134,38 @@ export class AuthState {
 
   @Action(LoginSuccess)
   public loginSuccess(ctx: StateContext<AuthStateModel>, { method }: LoginSuccess) {
-    ctx.patchState({ loginPending: false, loggedIn: true, loginError: '' });
+    if(this.authGuard.isLoggedIn()) {
+      let decoded = jwt_decode(this.cookieService.get(environment.accessTokenCookieName));
+      
+      let state = ctx.getState();
+      if(state.user && state.user.id != decoded.identity) {
+        //different user, clear state
+        ctx.dispatch(new ResetState());
+      }
+      ctx.patchState({
+        loginPending: false,
+        loggedIn: true,
+        loginError: '',
+        user: {
+          firstName: '',
+          lastName: '',
+          id: decoded.identity,
+          email: ''
+        }
+      });
 
-    let nextUrl = localStorage.getItem("nextUrl");
-    localStorage.removeItem("nextUrl");
-    //if redirecting from oauth authorize page,  remove from navigation history so back button skips page
-    ctx.dispatch(new Navigate([nextUrl && nextUrl != "" ? nextUrl : "/"], {}, {
-      replaceUrl: method == 'oauth'
-    }));
+      let nextUrl = localStorage.getItem("nextUrl");
+      localStorage.removeItem("nextUrl");
+      //if redirecting from oauth authorize page,  remove from navigation history so back button skips page
+      ctx.dispatch(new Navigate([nextUrl && nextUrl != "" ? nextUrl : "/"], {}, {
+        replaceUrl: method == 'oauth'
+      }));
+    }
+    else {
+      ctx.patchState({ loginPending: false, loggedIn: false, loginError: 'We encountered an unexpected error.  Please try again later.' });
+    }
+
+    
   }
 
   @Action(Logout)
@@ -145,6 +173,7 @@ export class AuthState {
     this.cookieService.put(environment.accessTokenCookieName, "", {
       expires: new Date()
     });
+    ctx.dispatch(new ResetState());
 
     return this.authService.logout().pipe(
       tap(result => {
@@ -161,7 +190,7 @@ export class AuthState {
   public loadAuthMethods(ctx: StateContext<AuthStateModel>, { }: LoadAuthMethods) {
     return this.authService.getAuthMethods().pipe(
       tap(result => {
-        ctx.patchState({authMethods: result})
+        ctx.patchState({ authMethods: result })
       }),
       catchError(err => {
         return of('')
@@ -174,10 +203,10 @@ export class AuthState {
     ctx.patchState({ loadingPermittedOAuthClientIds: true });
     return this.authService.getPermittedOAuthClients().pipe(
       tap(result => {
-        ctx.patchState({permittedOAuthClientIds: result})
+        ctx.patchState({ permittedOAuthClientIds: result })
       }),
       catchError(err => {
-        
+
         return of('')
       }),
       finalize(() => ctx.patchState({ loadingPermittedOAuthClientIds: false }))
@@ -198,15 +227,15 @@ export class AuthState {
 
   @Action(LoadOAuthClients)
   public loadOAuthClients(ctx: StateContext<AuthStateModel>, { }: LoadOAuthClients) {
-    ctx.patchState({loadingOAuthClients: true})
+    ctx.patchState({ loadingOAuthClients: true })
     return this.authService.getOAuthClients().pipe(
       tap(result => {
-        ctx.patchState({oAuthClients: result})
+        ctx.patchState({ oAuthClients: result })
       }),
       catchError(err => {
         return of('')
       }),
-      finalize(() => ctx.patchState({loadingOAuthClients: false}))
+      finalize(() => ctx.patchState({ loadingOAuthClients: false }))
     );
   }
 }

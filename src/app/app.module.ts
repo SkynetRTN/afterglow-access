@@ -14,7 +14,6 @@ import localeEs from '@angular/common/locales/es';
 registerLocaleData(localeEs, 'es');
 
 import { TokenInterceptor } from './token.interceptor';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { MaterialModule } from './material';
 import { CoreModule } from './core/core.module';
@@ -34,12 +33,15 @@ import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
-import { DataFilesState } from './data-files/data-files.state';
-import { ImageFilesState } from './core/image-files.state';
+import { DataFilesState, DataFilesStateModel } from './data-files/data-files.state';
+import { ImageFilesState, ImageFilesStateModel } from './core/image-files.state';
 import { WorkbenchState } from './core/workbench.state';
 import { SourcesState } from './core/sources.state';
 import { CustomMarkersState } from './core/custom-markers.state';
 import { PhotDataState } from './core/phot-data.state.';
+import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
+import { DataFileType } from './data-files/models/data-file-type';
+import { ImageFile } from './data-files/models/data-file';
 
 
 
@@ -66,6 +68,86 @@ import { PhotDataState } from './core/phot-data.state.';
       [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
       { developmentMode: !environment.production }
     ),
+    AfterglowStoragePluginModule.forRoot({
+      key: [
+        AuthState,
+        JobsState,
+        DataProvidersState,
+        DataFilesState,
+        ImageFilesState,
+        WorkbenchState,
+        SourcesState,
+        PhotDataState,
+        CustomMarkersState
+      ],
+      sanitizations: [
+        {
+          key: DataFilesState,
+          sanitize: (v) => {
+            let state = {
+              ...v
+             } as DataFilesStateModel;
+
+            state.entities = {
+              ...state.entities
+            }
+
+            Object.keys(state.entities).forEach(key => {
+              let dataFile = {
+                ...state.entities[key]
+              };
+
+              dataFile.header = null;
+              dataFile.headerLoaded = false;
+              dataFile.headerLoading = false;
+              dataFile.wcs = null;
+              
+
+              if(dataFile.type == DataFileType.IMAGE) {
+                let imageFile = dataFile as ImageFile;
+                imageFile.hist = null;
+                imageFile.histLoaded = false;
+                imageFile.histLoading = false;
+                imageFile.tilesInitialized = false;
+                imageFile.tiles = [];
+              }
+              state.entities[key] = dataFile;
+
+            })
+            return state;
+          }
+        },
+        {
+          key: ImageFilesState,
+          sanitize: (v) => {
+            let state = {
+              ...v
+             } as ImageFilesStateModel;
+
+            state.entities = {
+              ...state.entities
+            }
+
+            Object.keys(state.entities).forEach(key => {
+              let imageFileState = {
+                ...state.entities[key]
+              };
+
+              imageFileState.normalization = {
+                ...imageFileState.normalization,
+                initialized: false,
+                normalizedTiles: []
+              }
+
+              state.entities[key] = imageFileState;
+
+            })
+            return state;
+          }
+        }
+      ],
+      storage: StorageOption.SessionStorage
+    }),
     NgxsRouterPluginModule.forRoot(),
     environment.plugins
   ],

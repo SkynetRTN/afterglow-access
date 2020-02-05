@@ -2,30 +2,33 @@ import { State, Action, Selector, StateContext } from '@ngxs/store';
 import { UpdateCustomMarker, AddCustomMarkers, RemoveCustomMarkers, SelectCustomMarkers, DeselectCustomMarkers, SetCustomMarkerSelection } from './custom-markers.actions';
 import { CustomMarker } from './models/custom-marker';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { ResetState } from '../auth/auth.actions';
 
 export interface CustomMarkersStateModel {
+  version: number;
+  nextIdSeed: number;
   ids: string[];
   entities: { [id: string]: CustomMarker };
   selectedMarkerIds: string[];
 }
 
+const customMarkersDefaultState: CustomMarkersStateModel = {
+  version: 1,
+  nextIdSeed: 0,
+  ids: [],
+  entities: {},
+  selectedMarkerIds: []
+}
+
 @State<CustomMarkersStateModel>({
   name: 'customMarkers',
-  defaults: {
-    ids: [],
-    entities: {},
-    selectedMarkerIds: []
-  }
+  defaults: customMarkersDefaultState
 })
 
+
+
 export class CustomMarkersState {
-  protected seed = 0;
   protected prefix = 'MARKER';
-  /** Return the next correlation id */
-  protected nextId() {
-    this.seed += 1;
-    return this.prefix + this.seed;
-  }
 
   @Selector()
   public static getState(state: CustomMarkersStateModel) {
@@ -45,6 +48,14 @@ export class CustomMarkersState {
   @Selector()
   public static getSelectedCustomMarkers(state: CustomMarkersStateModel) {
     return Object.values(state.selectedMarkerIds.map(id => state.entities[id]));
+  }
+
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<CustomMarkersStateModel>, { }: ResetState) {
+    setState((state: CustomMarkersStateModel) => {
+      return customMarkersDefaultState
+    });
   }
 
   @Action(UpdateCustomMarker)
@@ -70,7 +81,7 @@ export class CustomMarkersState {
     
     setState((state: CustomMarkersStateModel) => {
       markers.forEach(marker => {
-        let nextSeed = this.seed++;
+        let nextSeed = state.nextIdSeed++;
         if(marker.marker.label == null || marker.marker.label == undefined) {
           // marker.marker.label = `M${nextSeed}`;
           marker.marker.label = '';

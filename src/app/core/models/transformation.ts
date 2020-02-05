@@ -3,11 +3,36 @@ import { Point, Matrix, Rectangle } from "paper"
 import { Region } from './region';
 import { getWidth, getHeight, ImageFile } from "../../data-files/models/data-file";
 
+export interface Transform {
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  tx: number,
+  ty: number
+}
+
 export interface Transformation {
   viewportSize: {width: number, height: number};
-  imageTransform: Matrix;
-  viewportTransform: Matrix;
-  imageToViewportTransform: Matrix;
+  imageTransform: Transform;
+  viewportTransform: Transform;
+  imageToViewportTransform: Transform;
+}
+
+
+export function transformToMatrix(t: Transform): Matrix {
+  return new Matrix(t.a, t.b, t.c, t.d, t.tx, t.ty);
+}
+
+export function matrixToTransform(m: Matrix) {
+  return {
+    a: m.a,
+    b: m.b,
+    c: m.c,
+    d: m.d,
+    tx: m.tx,
+    ty: m.ty
+  } as Transform;
 }
 
 export function getScale(transformation: Transformation) {
@@ -20,7 +45,7 @@ export function getViewportRegion(transformation: Transformation, imageFile: Ima
   let imageHeight = getHeight(imageFile);
   let viewportWidth = transformation.viewportSize.width;
   let viewportHeight = transformation.viewportSize.height;
-  let transform = transformation.imageToViewportTransform.inverted();
+  let transform = transformToMatrix(transformation.imageToViewportTransform).inverted();
   let c1 = transform.transform(new Point(0.5, 0.5));
   let c2 = transform.transform(new Point(viewportWidth + 0.5, 0.5));
   let c3 = transform.transform(new Point(0.5,viewportHeight + 0.5));

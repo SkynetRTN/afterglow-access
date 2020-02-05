@@ -62,6 +62,12 @@ export class RemoveAllDataFilesFail {
  * Load File Actions
  */
 
+ export class LoadDataFile {
+  public static readonly type = '[DataFile] Load Data File';
+
+  constructor(public fileId: string) { }
+ }
+
 export class LoadDataFileHdr {
   public static readonly type = '[DataFile] Load Data File Hdr';
 
@@ -72,12 +78,6 @@ export class LoadDataFileHdrSuccess {
   public static readonly type = '[DataFile] Load Data File Hdr Success';
 
   constructor(public fileId: string, public header: Header) { }
-}
-
-export class LoadDataFileHdrFail {
-  public static readonly type = '[DataFile] Load Data File Hdr Fail';
-
-  constructor(public fileId: string, error: any) { }
 }
 
 /**
@@ -94,12 +94,6 @@ export class LoadImageHistSuccess {
   public static readonly type = '[Image File] Load Image Hist Success';
 
   constructor(public fileId: string, public hist: ImageHist) { }
-}
-
-export class LoadImageHistFail {
-  public static readonly type = '[Image File] Load Image Hist Fail';
-
-  constructor(public fileId: string, public error: any) { }
 }
 
 export class InitImageTiles {

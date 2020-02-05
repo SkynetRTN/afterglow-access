@@ -12,7 +12,6 @@ import { map, filter, debounceTime, tap } from "rxjs/operators";
 
 import { ImageFile, DataFile, Header, getWidth, getHeight, getDegsPerPixel, getStartTime, getCenterTime, getExpLength, getObject, getTelescope, getFilter } from "../../../../data-files/models/data-file";
 
-import { Dictionary } from "@ngrx/entity/src/models";
 import { ImageFileState } from "../../../models/image-file-state";
 import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
 import { Viewer } from "../../../models/viewer";
@@ -43,8 +42,8 @@ export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnI
   showRawHeader: boolean = false;
   useSystemTime$ = new BehaviorSubject<boolean>(false);
   lastImageFile: ImageFile;
-  fileEntities$: Observable<Dictionary<DataFile>>;
-  fileStateEntities$: Observable<Dictionary<ImageFileState>>;
+  fileEntities$: Observable<{[id: string]: DataFile}>;
+  fileStateEntities$: Observable<{[id: string]: ImageFileState}>;
   subs: Subscription[] = [];
   columnsDisplayed = ['key', 'value', 'comment'];
 

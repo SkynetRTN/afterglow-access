@@ -27,7 +27,6 @@ import { Viewer } from "../../../models/viewer";
 import { Transformation } from "../../../models/transformation";
 import { ColorMap } from "../../../models/color-map";
 import { StretchMode } from "../../../models/stretch-mode";
-import { Dictionary } from "@ngrx/entity/src/models";
 import { ImageFileState } from "../../../models/image-file-state";
 import { Marker, MarkerType } from "../../../models/marker";
 import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
@@ -58,14 +57,14 @@ import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-pag
 export class ViewerPageComponent extends WorkbenchPageBaseComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-  
-  
-  fileEntities$: Observable<Dictionary<DataFile>>;
-  fileStateEntities$: Observable<Dictionary<ImageFileState>>;
+
+
+  fileEntities$: Observable<{ [id: string]: DataFile }>;
+  fileStateEntities$: Observable<{ [id: string]: ImageFileState }>;
   workbenchState$: Observable<WorkbenchStateModel>;
 
 
-  
+
 
   imageFile$: Observable<ImageFile>;
   normalization$: Observable<Normalization>;
@@ -91,7 +90,7 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
     this.workbenchState$ = this.store.select(WorkbenchState.getState);
     this.fileEntities$ = this.store.select(DataFilesState.getEntities);
     this.fileStateEntities$ = this.store.select(ImageFilesState.getEntities);
-    
+
     this.activeViewerId$ = this.store.select(
       WorkbenchState.getActiveViewerId
     );
@@ -104,7 +103,7 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
         map(fileState => fileState.normalization)
       );
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-    
+
 
     this.subs.push(
       this.imageFile$.subscribe(imageFile => {
@@ -148,10 +147,10 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
       new SetLastRouterPath(router.url)
     );
 
-    
+
   }
 
-  
+
 
   onBackgroundPercentileChange(value: number) {
     this.backgroundPercentile$.next(value);
@@ -163,7 +162,7 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
 
   onColorMapChange(value: ColorMap) {
     this.store.dispatch(
-      new UpdateNormalizer(this.lastImageFile.id, { colorMap: value })
+      new UpdateNormalizer(this.lastImageFile.id, { colorMapName: value.name })
     );
   }
 
@@ -225,9 +224,9 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
     );
   }
 
-  
 
-  
+
+
   ngOnInit() {
   }
 

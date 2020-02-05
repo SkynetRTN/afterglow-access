@@ -7,6 +7,7 @@ import { Job } from './models/job';
 import { JobResult } from './models/job-result';
 import { CreateJob, CreateJobSuccess, CreateJobFail, UpdateJob, UpdateJobSuccess, UpdateJobFail, StopAutoJobUpdate, UpdateJobResult, UpdateJobResultSuccess, UpdateJobResultFail } from './jobs.actions';
 import { JobService } from './services/jobs';
+import { ResetState } from '../auth/auth.actions';
 
 export interface JobEntity {
   job: Job,
@@ -18,12 +19,14 @@ export interface JobsStateModel {
   entities: { [id: string]: JobEntity };
 }
 
+const jobsDefaultState: JobsStateModel = {
+  ids: [],
+  entities: {}
+}
+
 @State<JobsStateModel>({
   name: 'jobs',
-  defaults: {
-    ids: [],
-    entities: {}
-  }
+  defaults: jobsDefaultState
 })
 export class JobsState {
 
@@ -44,6 +47,14 @@ export class JobsState {
   @ImmutableSelector()
   public static getJobs(state: JobsStateModel) {
     return Object.values(state.entities);
+  }
+
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<JobsStateModel>, { }: ResetState) {
+    setState((state: JobsStateModel) => {
+      return jobsDefaultState;
+    });
   }
 
   @Action(CreateJob)

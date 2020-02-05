@@ -219,4 +219,7 @@ export let aColorMap = createColorMap(
   ],
 );
 
+export let COLOR_MAPS: {[name: string]: ColorMap} = {};
+[grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap].forEach(cm => COLOR_MAPS[cm.name] = cm);
+
 

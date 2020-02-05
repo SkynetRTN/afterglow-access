@@ -41,3 +41,7 @@ export class AddPermittedOAuthClient {
 export class LoadOAuthClients {
   public static readonly type = '[Auth] Load OAuth Clients';
 }
+
+export class ResetState {
+  public static readonly type = '[Auth] Reset State';
+}

@@ -3,7 +3,6 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Viewer } from '../../../models/viewer';
 
-import { Dictionary } from '@ngrx/entity/src/models';
 import { DataFile, ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
 import { ImageFileState } from '../../../models/image-file-state';
 import { CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
@@ -50,8 +49,9 @@ export class WorkbenchViewerGridComponent implements OnInit {
   // viewers$: Observable<Viewer[]>;
   // viewMode$: Observable<ViewMode>;
   // activeViewerIndex$: Observable<number>;
-  files$: Observable<Dictionary<DataFile>>;
-  fileStates$: Observable<Dictionary<ImageFileState>>;
+
+  files$: Observable<{[id: string]: DataFile}>;
+  fileStates$: Observable<{[id: string]: ImageFileState}>;
   subs: Subscription[] = [];
   // activeViewerIndex: number;
   mouseDownActiveViewerId: string;

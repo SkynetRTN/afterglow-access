@@ -2,6 +2,7 @@ import { Component, OnInit, Input, ViewChild, ElementRef, OnChanges, Output, Eve
 import { Point, Matrix, Rectangle } from "paper"
 import { ImageFile } from '../../../data-files/models/data-file';
 import { Marker, MarkerType, CircleMarker, TeardropMarker } from '../../models/marker';
+import { Transform, transformToMatrix } from '../../models/transformation';
 
 export type MarkerMouseEvent = {
   targetFile: ImageFile;
@@ -19,7 +20,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   MarkerType = MarkerType;
 
   @Input() imageFile: ImageFile;
-  @Input() transform: Matrix;
+  @Input() transform: Transform;
   @Input() markers: Marker[];
   @Input() svgWidth: number;
   @Input() svgHeight: number;
@@ -30,7 +31,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   @ViewChild('svgTextGroup', { static: false }) svgTextGroup: ElementRef;
   @ViewChild('svgElementRef', { static: true }) svgElementRef: ElementRef;
 
-  private lastTransform: Matrix;
+  private lastTransform: Transform;
   public markerTexts: Array<{
     x: number,
     y: number,
@@ -88,9 +89,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
       .filter(marker => marker.type == MarkerType.CIRCLE || marker.type == MarkerType.TEARDROP)
       .map(marker => {
         let m = marker as CircleMarker | TeardropMarker;
-        let p = this.transform.transform(new Point(m.x, m.y));
-        let mirrored = this.transform.scaling.x < 0;
-        let flipped = this.transform.scaling.y >= 0;
+        let matrix = transformToMatrix(this.transform);
+        let p = matrix.transform(new Point(m.x, m.y));
+        let mirrored = matrix.scaling.x < 0;
+        let flipped = matrix.scaling.y >= 0;
         let rotation = Math.round(-Math.atan2(-this.transform.b, this.transform.a) * 180.0 / Math.PI);
 
 
@@ -141,7 +143,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
           dx: 0,
           dy: 0,
           text: m.label ? m.label : '',
-          transform: `translate(${p.x},${p.y}) scale(${Math.abs(this.transform.scaling.x)}, ${Math.abs(this.transform.scaling.y)}) translate(${-p.x},${-p.y}) translate(${dx},${dy}) `,
+          transform: `translate(${p.x},${p.y}) scale(${Math.abs(matrix.scaling.x)}, ${Math.abs(matrix.scaling.y)}) translate(${-p.x},${-p.y}) translate(${dx},${dy}) `,
           selected: m.selected,
           anchor: anchor,
         }

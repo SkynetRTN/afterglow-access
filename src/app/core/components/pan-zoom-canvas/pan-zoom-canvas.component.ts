@@ -9,7 +9,7 @@ import * as normalizeWheel from 'normalize-wheel';
 
 import { ImageFile, getWidth, getHeight, findTiles } from '../../../data-files/models/data-file';
 import { Normalization } from '../../models/normalization';
-import { Transformation, getViewportRegion } from '../../models/transformation';
+import { Transformation, getViewportRegion, transformToMatrix } from '../../models/transformation';
 import { Source } from '../../models/source';
 import { ImageTile } from '../../../data-files/models/image-tile';
 import { Store } from '@ngxs/store';
@@ -277,7 +277,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public get viewportToImageTransform() {
-    return this.transformation.imageToViewportTransform.inverted();
+    return transformToMatrix(this.transformation.imageToViewportTransform).inverted();
   }
 
   public viewportCoordToImageCoord(p: { x: number, y: number }) {
@@ -286,7 +286,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public imageCoordToViewportCoord(p: { x: number, y: number }) {
-    let result = this.transformation.imageToViewportTransform.transform(new Point(p.x - 0.5, p.y - 0.5));
+    let result = transformToMatrix(this.transformation.imageToViewportTransform).transform(new Point(p.x - 0.5, p.y - 0.5));
     return { x: result.x, y: result.y };
   }
 
@@ -590,7 +590,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
         }
 
       })
-      this.transformation.imageToViewportTransform.applyToContext(this.targetCtx);
+      transformToMatrix(this.transformation.imageToViewportTransform).applyToContext(this.targetCtx);
       this.targetCtx.drawImage(this.imageCanvas, 0, 0);
     }
     this.setSmoothing(this.targetCtx, true);

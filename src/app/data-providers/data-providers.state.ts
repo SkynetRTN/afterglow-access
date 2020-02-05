@@ -25,8 +25,10 @@ import { SetViewerFile, SelectDataFile } from '../core/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
 import { LoadLibrary } from '../data-files/data-files.actions';
+import { ResetState } from '../auth/auth.actions';
 
 export interface DataProvidersStateModel {
+  version: number;
   dataProvidersLoaded: boolean;
   dataProviders: DataProvider[];
   loadingAssets: boolean;
@@ -45,26 +47,29 @@ export interface DataProvidersStateModel {
   selectedAssetImportCorrId: string
 }
 
+const dataProvidersDefaultState: DataProvidersStateModel = {
+  version: 1,
+  dataProvidersLoaded: false,
+  dataProviders: [],
+  loadingAssets: false,
+  currentProvider: null,
+  currentPath: '',
+  currentPathBreadcrumbs: [],
+  currentAssets: [],
+  userSortField: null,
+  userSortOrder: 'asc',
+  currentSortField: null,
+  currentSortOrder: 'asc',
+  importing: false,
+  importErrors: [],
+  importProgress: 0,
+  lastPath: {},
+  selectedAssetImportCorrId: null
+}
+
 @State<DataProvidersStateModel>({
   name: 'dataProviders',
-  defaults: {
-    dataProvidersLoaded: false,
-    dataProviders: [],
-    loadingAssets: false,
-    currentProvider: null,
-    currentPath: '',
-    currentPathBreadcrumbs: [],
-    currentAssets: [],
-    userSortField: null,
-    userSortOrder: 'asc',
-    currentSortField: null,
-    currentSortOrder: 'asc',
-    importing: false,
-    importErrors: [],
-    importProgress: 0,
-    lastPath: {},
-    selectedAssetImportCorrId: null
-  }
+  defaults: dataProvidersDefaultState
 })
 export class DataProvidersState {
 
@@ -134,6 +139,14 @@ export class DataProvidersState {
   @Selector()
   public static getImportErrors(state: DataProvidersStateModel) {
     return state.importErrors;
+  }
+
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, { }: ResetState) {
+    setState((state: DataProvidersStateModel) => {
+      return dataProvidersDefaultState;
+    });
   }
 
   @Action(LoadDataProviders)

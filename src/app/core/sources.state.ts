@@ -2,28 +2,29 @@ import { State, Action, Selector, StateContext } from '@ngxs/store';
 import { UpdateSource, AddSources, RemoveSources } from './sources.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { Source } from './models/source';
+import { ResetState } from '../auth/auth.actions';
 
 export interface SourcesStateModel {
+  version: number;
+  nextIdSeed: number;
   ids: string[];
   entities: { [id: string]: Source };
 }
 
+const sourcesDefaultState : SourcesStateModel = {
+  version: 1,
+  nextIdSeed: 0,
+  ids: [],
+  entities: {},
+}
+
 @State<SourcesStateModel>({
   name: 'sources',
-  defaults: {
-    ids: [],
-    entities: {},
-  }
+  defaults: sourcesDefaultState
 })
 
 export class SourcesState {
-  protected seed = 0;
   protected prefix = 'SRC';
-  /** Return the next correlation id */
-  protected nextId() {
-    this.seed += 1;
-    return this.prefix + this.seed;
-  }
 
   @Selector()
   public static getState(state: SourcesStateModel) {
@@ -45,6 +46,14 @@ export class SourcesState {
     return Object.values(state.entities);
   }
 
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<SourcesStateModel>, { }: ResetState) {
+    setState((state: SourcesStateModel) => {
+      return sourcesDefaultState
+    });
+  }
+
   @Action(UpdateSource)
   @ImmutableContext()
   public updateSource({ getState, setState, dispatch }: StateContext<SourcesStateModel>, { sourceId, changes }: UpdateSource) {
@@ -62,14 +71,15 @@ export class SourcesState {
   public addSources({ getState, setState, dispatch }: StateContext<SourcesStateModel>, { sources }: AddSources) {
     setState((state: SourcesStateModel) => {
       sources.forEach(source => {
-        let id = this.nextId();
+        let nextSeed = state.nextIdSeed++;
+        let id = this.prefix + nextSeed;
         state.ids.push(id);
         state.entities[id] = {
           ...source,
           id: id
         }
         if(state.entities[id].label == null) {
-          state.entities[id].label = 'M' + this.seed;
+          state.entities[id].label = '' + nextSeed;
         }
       });
       

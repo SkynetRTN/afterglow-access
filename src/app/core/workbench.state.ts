@@ -6,7 +6,7 @@ import { WorkbenchStateModel, WorkbenchTool } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
-import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrFail, LoadImageHistFail, LoadDataFileHdrSuccess, RemoveDataFile } from '../data-files/data-files.actions';
+import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
 import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
@@ -31,7 +31,7 @@ import { SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
 import { CustomMarkersState, CustomMarkersStateModel } from './custom-markers.state';
 import { SourceExtractionRegionOption } from './models/source-extraction-settings';
-import { getViewportRegion } from './models/transformation';
+import { getViewportRegion, transformToMatrix, matrixToTransform } from './models/transformation';
 import { SourceExtractionJobSettings, SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
 import { JobsState } from '../jobs/jobs.state';
 import { AddSources } from './sources.actions';
@@ -42,136 +42,140 @@ import { PhotDataStateModel, PhotDataState } from './phot-data.state.';
 import { PhotData } from './models/source-phot-data';
 import { AddPhotDatas } from './phot-data.actions';
 import { Viewer } from './models/viewer';
+import { ResetState } from '../auth/auth.actions';
+
+const workbenchStateDefaults: WorkbenchStateModel = {
+  version: 1,
+  showSideNav: false,
+  lastRouterPath: null,
+  inFullScreenMode: false,
+  fullScreenPanel: 'file',
+  selectedFileId: null,
+  activeViewerId: 'VWR1',
+  activeTool: WorkbenchTool.VIEWER,
+  viewMode: ViewMode.SINGLE,
+  viewerIds: ['VWR1', 'VWR2'],
+  viewers: {
+    'VWR1': {
+      viewerId: 'VWR1',
+      fileId: null,
+      panEnabled: true,
+      zoomEnabled: true,
+      hidden: false,
+      markers: [],
+    },
+    'VWR2': {
+      viewerId: 'VWR2',
+      fileId: null,
+      panEnabled: true,
+      zoomEnabled: true,
+      hidden: true,
+      markers: [],
+    }
+  },
+  viewerSyncEnabled: false,
+  normalizationSyncEnabled: false,
+  sidebarView: SidebarView.FILES,
+  showSidebar: true,
+  showConfig: true,
+  centroidSettings: {
+    useDiskCentroiding: false,
+    psfCentroiderSettings: createPsfCentroiderSettings(),
+    diskCentroiderSettings: createDiskCentroiderSettings()
+  },
+  photometrySettings: {
+    gain: 1,
+    centroidRadius: 5,
+    mode: 'constant',
+    a: 5,
+    b: 5,
+    theta: 0,
+    aIn: 5,
+    aOut: 15,
+    bOut: 15,
+    thetaOut: 0,
+    aKrFactor: 1.0,
+    aInKrFactor: 1.0,
+    aOutKrFactor: 1.5,
+  },
+  sourceExtractionSettings: {
+    threshold: 3,
+    fwhm: 0,
+    deblend: false,
+    limit: 200,
+    region: SourceExtractionRegionOption.ENTIRE_IMAGE
+  },
+  customMarkerPageSettings: {
+    centroidClicks: false,
+    usePlanetCentroiding: false
+  },
+  plotterPageSettings: {
+    interpolatePixels: false,
+    centroidClicks: false,
+    planetCentroiding: false,
+    plotterSyncEnabled: false,
+    plotterMode: '1D',
+  },
+  photometryPageSettings: {
+    showSourceLabels: true,
+    centroidClicks: true,
+    showSourcesFromAllFiles: true,
+    selectedSourceIds: [],
+    coordMode: 'sky',
+    autoPhot: true,
+    batchPhotFormData: {
+      selectedImageFileIds: []
+    },
+    batchPhotProgress: null,
+    batchPhotJobId: null
+  },
+  pixelOpsPageSettings: {
+    currentPixelOpsJobId: null,
+    showCurrentPixelOpsJobState: true,
+    pixelOpsFormData: {
+      operand: '+',
+      mode: 'image',
+      auxImageFileId: null,
+      auxImageFileIds: [],
+      imageFileIds: [],
+      scalarValue: 1,
+      inPlace: false,
+      opString: ''
+    },
+  },
+  aligningPageSettings: {
+    alignFormData: {
+      selectedImageFileIds: [],
+      mode: 'astrometric',
+      inPlace: true,
+    },
+    currentAlignmentJobId: null,
+  },
+  stackingPageSettings: {
+    stackFormData: {
+      selectedImageFileIds: [],
+      mode: 'average',
+      scaling: 'none',
+      rejection: 'none',
+      percentile: 50,
+      low: 0,
+      high: 0,
+    },
+    currentStackingJobId: null,
+  },
+  catalogs: [],
+  selectedCatalogId: null,
+  fieldCals: [],
+  selectedFieldCalId: null,
+  addFieldCalSourcesFromCatalogJobId: null,
+  creatingAddFieldCalSourcesFromCatalogJob: false,
+  addFieldCalSourcesFromCatalogFieldCalId: null,
+  dssImportLoading: false
+}
 
 @State<WorkbenchStateModel>({
   name: 'workbench',
-  defaults: {
-    showSideNav: false,
-    lastRouterPath: null,
-    inFullScreenMode: false,
-    fullScreenPanel: 'file',
-    selectedFileId: null,
-    activeViewerId: 'VWR1',
-    activeTool: WorkbenchTool.VIEWER,
-    viewMode: ViewMode.SINGLE,
-    viewerIds: ['VWR1', 'VWR2'],
-    viewers: {
-      'VWR1': {
-        viewerId: 'VWR1',
-        fileId: null,
-        panEnabled: true,
-        zoomEnabled: true,
-        hidden: false,
-        markers: [],
-      },
-      'VWR2': {
-        viewerId: 'VWR2',
-        fileId: null,
-        panEnabled: true,
-        zoomEnabled: true,
-        hidden: true,
-        markers: [],
-      }
-    },
-    viewerSyncEnabled: false,
-    normalizationSyncEnabled: false,
-    sidebarView: SidebarView.FILES,
-    showSidebar: true,
-    showConfig: true,
-    centroidSettings: {
-      useDiskCentroiding: false,
-      psfCentroiderSettings: createPsfCentroiderSettings(),
-      diskCentroiderSettings: createDiskCentroiderSettings()
-    },
-    photometrySettings: {
-      gain: 1,
-      centroidRadius: 5,
-      mode: 'constant',
-      a: 5,
-      b: 5,
-      theta: 0,
-      aIn: 5,
-      aOut: 15,
-      bOut: 15,
-      thetaOut: 0,
-      aKrFactor: 1.0,
-      aInKrFactor: 1.0,
-      aOutKrFactor: 1.5,
-    },
-    sourceExtractionSettings: {
-      threshold: 3,
-      fwhm: 0,
-      deblend: false,
-      limit: 200,
-      region: SourceExtractionRegionOption.ENTIRE_IMAGE
-    },
-    customMarkerPageSettings: {
-      centroidClicks: false,
-      usePlanetCentroiding: false
-    },
-    plotterPageSettings: {
-      interpolatePixels: false,
-      centroidClicks: false,
-      planetCentroiding: false,
-      plotterSyncEnabled: false,
-      plotterMode: '1D',
-    },
-    photometryPageSettings: {
-      showSourceLabels: true,
-      centroidClicks: true,
-      showSourcesFromAllFiles: true,
-      selectedSourceIds: [],
-      coordMode: 'sky',
-      autoPhot: true,
-      batchPhotFormData: {
-        selectedImageFileIds: []
-      },
-      batchPhotProgress: null,
-      batchPhotJobId: null
-    },
-    pixelOpsPageSettings: {
-      currentPixelOpsJobId: null,
-      showCurrentPixelOpsJobState: true,
-      pixelOpsFormData: {
-        operand: '+',
-        mode: 'image',
-        auxImageFileId: null,
-        auxImageFileIds: [],
-        imageFileIds: [],
-        scalarValue: 1,
-        inPlace: false,
-        opString: ''
-      },
-    },
-    aligningPageSettings: {
-      alignFormData: {
-        selectedImageFileIds: [],
-        mode: 'astrometric',
-        inPlace: true,
-      },
-      currentAlignmentJobId: null,
-    },
-    stackingPageSettings: {
-      stackFormData: {
-        selectedImageFileIds: [],
-        mode: 'average',
-        scaling: 'none',
-        rejection: 'none',
-        percentile: 50,
-        low: 0,
-        high: 0,
-      },
-      currentStackingJobId: null,
-    },
-    catalogs: [],
-    selectedCatalogId: null,
-    fieldCals: [],
-    selectedFieldCalId: null,
-    addFieldCalSourcesFromCatalogJobId: null,
-    creatingAddFieldCalSourcesFromCatalogJob: false,
-    addFieldCalSourcesFromCatalogFieldCalId: null,
-    dssImportLoading: false
-  }
+  defaults: workbenchStateDefaults
 })
 export class WorkbenchState {
 
@@ -476,6 +480,13 @@ export class WorkbenchState {
     };
   }
 
+  @Action(ResetState)
+  @ImmutableContext()
+  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ResetState) {
+    setState((state: WorkbenchStateModel) => {
+      return workbenchStateDefaults
+    });
+  }
 
   @Action(SetLastRouterPath)
   @ImmutableContext()
@@ -664,44 +675,19 @@ export class WorkbenchState {
         return dispatch(actions);
       }
       else {
-        if (!dataFile.headerLoaded && !dataFile.headerLoading) {
-          actions.push(
-            new LoadDataFileHdr(dataFile.id)
-          );
-        }
-        if (!dataFile.histLoaded && !dataFile.histLoading) {
-          actions.push(
-            new LoadImageHist(dataFile.id)
-          );
-        }
 
-
+        actions.push(new LoadDataFile(fileId));
+        
         let cancel$ = this.actions$.pipe(
           ofActionDispatched(SetViewerFile)
         )
 
-        let loadFail$ = this.actions$.pipe(
-          ofActionDispatched(LoadDataFileHdrFail, LoadImageHistFail),
-          filter<LoadDataFileHdrFail | LoadImageHistFail>(action => action.fileId == fileId)
-        )
-
-        let hdrLoaded$ = this.actions$.pipe(
-          ofActionDispatched(LoadDataFileHdrSuccess),
-          filter(action => action.fileId == fileId)
-        )
-
-        let histLoaded$ = this.actions$.pipe(
-          ofActionDispatched(LoadImageHistSuccess),
-          filter(action => action.fileId == fileId)
-        )
-
-        let next$ = combineLatest(hdrLoaded$, histLoaded$).pipe(
-          takeUntil(merge(cancel$, loadFail$)),
-          filter(action => {
-            let files = this.store.selectSnapshot(DataFilesState.getEntities);
-            return files[fileId].headerLoaded && (files[fileId] as ImageFile).histLoaded;
-          }),
+        let next$ = this.actions$.pipe(
+          ofActionCompleted(LoadDataFile),
+          takeUntil(cancel$),
+          filter(r => r.action.fileId == fileId),
           take(1),
+          filter(r => r.result.successful),
           flatMap(action => dispatch(new SetViewerFile(viewerId, fileId)))
         )
 
@@ -950,6 +936,8 @@ export class WorkbenchState {
   public loadLibrarySuccess({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { dataFiles, correlationId }: LoadLibrarySuccess) {
     let state = getState();
     let existingIds = this.store.selectSnapshot(ImageFilesState.getIds);
+    let dataFileEntities = this.store.selectSnapshot(DataFilesState.getEntities);
+    let imageFileStateEntities = this.store.selectSnapshot(ImageFilesState.getEntities);
     let newIds = dataFiles.filter(dataFile => dataFile.type == DataFileType.IMAGE)
       .map(imageFile => imageFile.id)
       .filter(id => !existingIds.includes(id));
@@ -961,7 +949,8 @@ export class WorkbenchState {
       !activeViewer ||
       !activeViewer.fileId ||
       (dataFiles.map(f => f.id).indexOf(activeViewer.fileId) == -1 &&
-        dataFiles.length != 0)
+        dataFiles.length != 0) ||
+        (dataFileEntities[activeViewer.fileId] && dataFileEntities[activeViewer.fileId].type == DataFileType.IMAGE && !imageFileStateEntities[activeViewer.fileId].normalization.initialized)
     ) {
       if (dataFiles[0]) {
         dispatch(new SelectDataFile(dataFiles[0].id));
@@ -1033,7 +1022,7 @@ export class WorkbenchState {
         if (!activeViewer) {
           dispatch(new SetActiveViewer(viewers[0].viewerId));
         }
-        else if (activeViewer.fileId != dataFile.id) {
+        else {
           dispatch(new SetViewerFile(activeViewer.viewerId, dataFile.id));
         }
       }
@@ -1228,8 +1217,8 @@ export class WorkbenchState {
             .inverted()
             .appended(targetWcsTransform)
             .translate(-originPixels[0], -originPixels[1]);
-          let targetImageTransform = imageFileStates[srcFile.id].transformation.imageTransform.appended(srcToTargetTransform);
-          actions.push(new SetImageTransform(targetFile.id, targetImageTransform));
+          let targetImageMatrix = transformToMatrix(imageFileStates[srcFile.id].transformation.imageTransform).appended(srcToTargetTransform);
+          actions.push(new SetImageTransform(targetFile.id, matrixToTransform(targetImageMatrix)));
           actions.push(new SetViewportTransform(targetFile.id, imageFileStates[srcFile.id].transformation.viewportTransform));
         }
       } else {

@@ -93,6 +93,7 @@ export interface StackingPageSettings {
 }
 
 export interface WorkbenchStateModel {
+  version: number,
   showSideNav: boolean,
   lastRouterPath: string,
   inFullScreenMode: boolean,

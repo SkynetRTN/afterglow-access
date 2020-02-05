@@ -17,7 +17,6 @@ import {
 
 import { Observable, combineLatest } from "rxjs";
 import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap } from "rxjs/operators";
-import { Dictionary } from "@ngrx/entity/src/models";
 import {
   DataFile,
   ImageFile,
@@ -92,7 +91,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges, OnDestr
   
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-  files$: Observable<Dictionary<DataFile>>;
+  files$: Observable<{[id: string]: DataFile}>;
   sources$: Observable<Source[]>;
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
