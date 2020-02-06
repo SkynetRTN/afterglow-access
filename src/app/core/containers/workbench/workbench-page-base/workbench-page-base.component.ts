@@ -65,7 +65,8 @@ export class WorkbenchPageBaseComponent {
   activeImageFile$: Observable<ImageFile>;
   activeImageFileState$: Observable<ImageFileState>;
   allImageFiles$: Observable<Array<ImageFile>>;
-  viewers$: Observable<Viewer[]>;
+  primaryViewers$: Observable<Viewer[]>;
+  secondaryViewers$: Observable<Viewer[]>;
   viewMode$: Observable<ViewMode>;
   activeViewerId$: Observable<string>;
   activeViewer$: Observable<Viewer>;
@@ -84,7 +85,8 @@ export class WorkbenchPageBaseComponent {
     this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
     this.allImageFiles$ = store.select(DataFilesState.getImageFiles);
     this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers).pipe(map(viewer => viewer.filter(viewer => !viewer.hidden)));
+    this.primaryViewers$ = this.store.select(WorkbenchState.getPrimaryViewers);
+    this.secondaryViewers$ = this.store.select(WorkbenchState.getSecondaryViewers);
     this.activeViewerId$ = this.store.select(WorkbenchState.getActiveViewerId);
     this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
 

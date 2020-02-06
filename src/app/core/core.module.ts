@@ -76,6 +76,7 @@ import { RectangleMarkerEditorComponent } from './components/rectangle-marker-ed
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { WorkbenchPageBaseComponent } from './containers/workbench/workbench-page-base/workbench-page-base.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
+import { WorkbenchViewManagerComponent } from './containers/workbench/window-manager/workbench-view-manager.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -117,7 +118,8 @@ export const COMPONENTS = [
   HelpDialogComponent,
   ThemeDialogComponent,
   WorkbenchPageBaseComponent,
-  ConfirmationDialogComponent
+  ConfirmationDialogComponent,
+  WorkbenchViewManagerComponent
 
 ];
 

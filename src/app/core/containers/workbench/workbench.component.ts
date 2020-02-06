@@ -84,7 +84,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       map(files => files.sort((a, b) => a.name.localeCompare(b.name)))
     );
     this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers).pipe(map(viewer => viewer.filter(viewer => !viewer.hidden)));
+    this.viewers$ = this.store.select(WorkbenchState.getViewers);
     this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
     this.showConfig$ = this.store.select(WorkbenchState.getShowConfig);
     this.showSidebar$ = this.store.select(WorkbenchState.getShowSidebar);

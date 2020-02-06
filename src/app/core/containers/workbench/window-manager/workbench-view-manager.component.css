@@ -1,0 +1,21 @@
+.view-manager-wrapper {
+  display: flex;
+  flex: 1 1 0%;
+  height: 100%;
+  width: 100%;
+  outline: none;
+  overflow: hidden;
+}
+
+.view-manager-panel {
+  flex: 1 1 0%;
+  position: relative;
+  outline: none;
+}
+
+.close-button {
+  line-height: 18px;
+  height: 18px;
+  width: 18px;
+  font-size: 18px;
+}

@@ -51,28 +51,13 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   inFullScreenMode: false,
   fullScreenPanel: 'file',
   selectedFileId: null,
-  activeViewerId: 'VWR1',
+  activeViewerId: null,
   activeTool: WorkbenchTool.VIEWER,
-  viewMode: ViewMode.SINGLE,
-  viewerIds: ['VWR1', 'VWR2'],
-  viewers: {
-    'VWR1': {
-      viewerId: 'VWR1',
-      fileId: null,
-      panEnabled: true,
-      zoomEnabled: true,
-      hidden: false,
-      markers: [],
-    },
-    'VWR2': {
-      viewerId: 'VWR2',
-      fileId: null,
-      panEnabled: true,
-      zoomEnabled: true,
-      hidden: true,
-      markers: [],
-    }
-  },
+  viewMode: ViewMode.SPLIT_VERTICAL,
+  viewerIds: [],
+  viewers: {},
+  primaryViewerIds: [],
+  secondaryViewerIds: [],
   viewerSyncEnabled: false,
   normalizationSyncEnabled: false,
   sidebarView: SidebarView.FILES,
@@ -209,6 +194,26 @@ export class WorkbenchState {
   @Selector()
   public static getViewers(state: WorkbenchStateModel) {
     return Object.values(state.viewers);
+  }
+
+  @Selector()
+  public static getPrimaryViewerIds(state: WorkbenchStateModel) {
+    return state.primaryViewerIds;
+  }
+
+  @Selector([WorkbenchState.getPrimaryViewerIds, WorkbenchState.getViewerEntities])
+  public static getPrimaryViewers(state: WorkbenchStateModel, primaryViewerIds: string[], viewerEntities: {[id:string]: Viewer}) {
+    return primaryViewerIds.map(id => viewerEntities[id]);
+  }
+
+  @Selector()
+  public static getSecondaryViewerIds(state: WorkbenchStateModel) {
+    return state.secondaryViewerIds;
+  }
+
+  @Selector([WorkbenchState.getSecondaryViewerIds, WorkbenchState.getViewerEntities])
+  public static getSecondaryViewers(state: WorkbenchStateModel, secondaryViewerIds: string[], viewerEntities: {[id:string]: Viewer}) {
+    return secondaryViewerIds.map(id => viewerEntities[id]);
   }
 
   @Selector()
@@ -570,12 +575,12 @@ export class WorkbenchState {
   @ImmutableContext()
   public setViewMode({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewMode }: SetViewMode) {
     setState((state: WorkbenchStateModel) => {
-      let primaryViewerId = WorkbenchState.getViewers(state)[0].viewerId;
-      let secondaryViewerId = WorkbenchState.getViewers(state)[1].viewerId;
-      let activeViewerId = state.activeViewerId;
-      if (viewMode == ViewMode.SINGLE) state.activeViewerId = primaryViewerId;
+      // let primaryViewerId = WorkbenchState.getViewers(state)[0].viewerId;
+      // let secondaryViewerId = WorkbenchState.getViewers(state)[1].viewerId;
+      // let activeViewerId = state.activeViewerId;
+      // if (viewMode == ViewMode.SINGLE) state.activeViewerId = primaryViewerId;
       state.viewMode = viewMode;
-      state.viewers[secondaryViewerId].hidden = viewMode == ViewMode.SINGLE;
+      // state.viewers[secondaryViewerId].hidden = viewMode == ViewMode.SINGLE;
       return state;
     });
   }
@@ -1685,9 +1690,9 @@ export class WorkbenchState {
 
             
             if(targetViewer) {
-              if(getState().viewMode == ViewMode.SINGLE ) {
-                dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
-              }
+              // if(getState().viewMode == ViewMode.SINGLE ) {
+              //   dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
+              // }
               
               dispatch(new SetActiveViewer(targetViewer.viewerId));
               dispatch(new SelectDataFile((action.fileIds[0].toString())));

@@ -320,3 +320,11 @@ div.ui-datatable-scrollable-body {
   right: -10px !important;
   border-color: transparent transparent transparent #fc5722;
 }
+
+
+
+/* Angular Material Tabs Full Height in Workbench View Manager */
+
+.mat-tab-group.mat-tab-fill-height .mat-tab-body-wrapper {
+  flex: 1 1 100%;
+}

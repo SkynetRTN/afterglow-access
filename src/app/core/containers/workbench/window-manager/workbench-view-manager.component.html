@@ -1,0 +1,37 @@
+<div class="view-manager-wrapper" [style.flex-direction]="viewMode==ViewMode.SPLIT_VERTICAL ? 'row' : 'column'">
+  <div class="view-manager-panel" style="height: 100%;" >
+    <mat-tab-group class="mat-tab-fill-height" style="height: 100%" [animationDuration]="'0ms'">
+      <mat-tab [class.active]="activeViewerId == viewer.viewerId" [class.inactive]="activeViewerId != viewer.viewerId"
+        *ngFor="let viewer of primaryViewers; trackBy: viewerTrackByFn" (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)">
+        <ng-template mat-tab-label>
+            {{(files$ | async)[viewer.fileId]?.name}}
+            <button mat-icon-button aria-label="Close">
+              <mat-icon class="close-button">close</mat-icon>
+            </button>
+          </ng-template>
+        <app-workbench-viewer-panel [fileId]="viewer.fileId" [active]="activeViewerId == viewer.viewerId" [markers]="viewer.markers"
+          (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)" (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"
+          (onMarkerClick)="handleMarkerClick($event, viewer.viewerId, viewer)">
+        </app-workbench-viewer-panel>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+  <div class="view-manager-panel" *ngIf="secondaryViewers && secondaryViewers.length != 0" style="height: 100%;"
+    >
+    <mat-tab-group class="mat-tab-fill-height" style="height: 100%" [animationDuration]="'0ms'">
+      <mat-tab [class.active]="activeViewerId == viewer.viewerId" [class.inactive]="activeViewerId != viewer.viewerId"
+        *ngFor="let viewer of secondaryViewers; trackBy: viewerTrackByFn" (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)">
+        <ng-template mat-tab-label>
+            {{(files$ | async)[viewer.fileId]?.name}}
+            <button mat-icon-button aria-label="Close">
+              <mat-icon class="close-button">close</mat-icon>
+            </button>
+          </ng-template>
+        <app-workbench-viewer-panel [fileId]="viewer.fileId" [active]="activeViewerId == viewer.viewerId" [markers]="viewer.markers"
+          (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)" (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"
+          (onMarkerClick)="handleMarkerClick($event, viewer.viewerId, viewer)">
+        </app-workbench-viewer-panel>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
