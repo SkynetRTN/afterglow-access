@@ -22,6 +22,7 @@
       aria-label="Login"
       routerLinkActive="active"
       mat-button
+      i18n
     >
       Login
     </a>
@@ -38,6 +39,7 @@
         aria-label="Workbench"
         routerLinkActive="active"
         mat-button
+        i18n
       >
         Workbench
       </a>
@@ -47,7 +49,7 @@
         [matMenuTriggerFor]="dataProviderMenu"
         aria-label="Data Provider Menu"
       >
-        Data Providers <mat-icon>keyboard_arrow_down</mat-icon>
+        <span i18n>Data Providers</span> <mat-icon>keyboard_arrow_down</mat-icon>
       </button>
       <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
         <a
@@ -56,6 +58,7 @@
           aria-label="View All"
           routerLinkActive="active"
           mat-menu-item
+          i18n
         >
           View All
         </a>
@@ -79,6 +82,7 @@
         mat-button
         [matMenuTriggerFor]="actionMenu"
         aria-label="Option Menu"
+        i18n-aria-label
       >
         <mat-icon>menu</mat-icon>
       </button>
@@ -87,9 +91,10 @@
           mat-menu-item
           (click)="openThemeDialog()"
           aria-label="Open Theme Editor"
+          i18n-aria-label
         >
           <mat-icon>format_color_fill</mat-icon>
-          Theme Editor...
+          <span i18n>Theme Editor...</span>
         </button>
         <button
           mat-menu-item
@@ -97,11 +102,11 @@
           aria-label="Open Quick Start Guide"
         >
           <mat-icon>help</mat-icon>
-          Quick Start Guide...
+          <span i18n>Quick Start Guide...</span>
         </button>
-        <button mat-menu-item (click)="logout()" aria-label="Logout">
+        <button mat-menu-item (click)="logout()" aria-label="Logout" i18n-aria-label>
           <mat-icon>exit_to_app</mat-icon>
-          Logout
+          <span i18n>Logout</span>
         </button>
       </mat-menu>
 

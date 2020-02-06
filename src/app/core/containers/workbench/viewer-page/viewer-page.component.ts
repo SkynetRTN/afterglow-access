@@ -160,9 +160,9 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
     this.peakPercentile$.next(value);
   }
 
-  onColorMapChange(value: ColorMap) {
+  onColorMapChange(value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.lastImageFile.id, { colorMapName: value.name })
+      new UpdateNormalizer(this.lastImageFile.id, { colorMapName: value })
     );
   }
 

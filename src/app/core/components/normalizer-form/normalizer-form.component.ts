@@ -18,7 +18,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   @Output() backgroundPercentileChange = new EventEmitter<number>();
   @Output() peakPercentileChange = new EventEmitter<number>();
-  @Output() colorMapChange = new EventEmitter<ColorMap>();
+  @Output() colorMapChange = new EventEmitter<string>();
   @Output() stretchModeChange = new EventEmitter<StretchMode>();
   @Output() invertedChange = new EventEmitter<boolean>();
 

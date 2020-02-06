@@ -173,7 +173,7 @@
                   </td>
                 </tr>
                 <tr *ngIf="vectorInfo$ | async">
-                  <th scope="row">Separation</th>
+                  <th scope="row">Length</th>
                   <td>
                     <div
                       *ngIf="(vectorInfo$ | async)?.pixelSeparation !== null"
@@ -200,7 +200,7 @@
                   </td>
                 </tr>
                 <tr *ngIf="vectorInfo$ | async">
-                  <th scope="row">Angle</th>
+                  <th scope="row">Orientation</th>
                   <td>
                     <div *ngIf="(vectorInfo$ | async)?.pixelPosAngle !== null">
                       {{

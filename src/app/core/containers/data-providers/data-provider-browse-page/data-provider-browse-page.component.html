@@ -2,7 +2,7 @@
   <div class="header-panel container pt-1">
     <ol class="breadcrumb data-provider-nav">
       <li class="breadcrumb-item">
-        <a [routerLink]="['/data-providers']">Data Providers</a>
+        <a [routerLink]="['/data-providers']" i18n>Data Providers</a>
       </li>
       <li class="breadcrumb-item" *ngFor="let breadcrumb of (currentPathBreadcrumbs$ | async)">
         <span *ngIf="breadcrumb.url != null">
@@ -18,32 +18,32 @@
   <div class="content-panel container">
     <div class="content-wrapper">
       <mat-card class="pb-3">
-        <div *ngIf="(loadingAssets$ | async)" class="alert alert-info">
+        <div *ngIf="(loadingAssets$ | async)" class="alert alert-info" i18n>
           Loading assets...
         </div>
         <ng-container *ngIf="!(loadingAssets$ | async)">
-          <div *ngIf="(importing$ | async) && (importProgress$ | async) != 100" class="alert alert-info">
+          <div *ngIf="(importing$ | async) && (importProgress$ | async) != 100" class="alert alert-info" i18n>
             Importing selected assets...
           </div>
           <div style="max-height: 100px; overflow-y: scroll;" [hidden]="(importProgress$ | async) != 100" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
-            Import completed with {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
+            <span i18n>Import completed with</span> {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
             <a *ngIf="(importErrors$ | async).length == 0" routerLink="/workbench" class="alert-link">View your imported files now.</a>
             <div *ngIf="(importErrors$ | async).length != 0">
               <div *ngFor="let e of (importErrors$ | async)">
-                <strong>Error: </strong> {{e}}
+                <strong i18n>Error: </strong> {{e}}
               </div>
             </div>
           </div>
 
           <mat-card-header>
             <div class="dp-browser-info">
-              <span *ngIf="!(importing$ | async)"><strong>{{selection.selected.length}}</strong> image files selected.</span>
+              <span *ngIf="!(importing$ | async)"><strong>{{selection.selected.length}}</strong> <span i18n>image files selected.</span></span>
               <mat-progress-bar *ngIf="(importing$ | async)" mode="determinate" [value]="(importProgress$ | async)" [color]="'accent'"></mat-progress-bar>
             </div>
             <div class="dp-browser-toolbar">
               <!-- <button mat-raised-button (click)="onSelectAll(true)" [disabled]="(importing$ | async)">Select All</button>
                   <button mat-raised-button (click)="onSelectAll(false)" [disabled]="(selectedAssets$ | async)?.length == 0 || (importing$ | async)">Deselect All</button> -->
-                  <button mat-raised-button (click)="import(currentProvider, selection.selected)" [disabled]="selection.selected.length == 0 || (importing$ | async)">Import</button>
+                  <button mat-raised-button (click)="import(currentProvider, selection.selected)" [disabled]="selection.selected.length == 0 || (importing$ | async)" i18n>Import</button>
             </div>
           </mat-card-header>
 
@@ -75,7 +75,7 @@
               <!-- Name Column -->
               <ng-container matColumnDef="name">
                 <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="1" aria-label="name"
-                  [cellInTabOrder]="false">
+                  [cellInTabOrder]="false" i18n>
                   Name
                 </mat-header-cell>
                 <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex+1" [columnIndex]="1"

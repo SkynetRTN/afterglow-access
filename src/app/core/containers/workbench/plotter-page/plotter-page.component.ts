@@ -123,6 +123,8 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
         let pixelPosAngle = null;
         let skyPosAngle = null;
 
+        if(!lineStart || !lineEnd) return;
+
         if (
           lineStart.x !== null &&
           lineStart.y !== null &&
@@ -283,6 +285,8 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
     imageFile: ImageFile,
     line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
   ) {
+    if(!imageFile.headerLoaded) return;
+
     let x = null;
     let y = null;
     let raHours = null;

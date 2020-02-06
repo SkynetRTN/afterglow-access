@@ -43,7 +43,65 @@ import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/pu
 import { DataFileType } from './data-files/models/data-file-type';
 import { ImageFile } from './data-files/models/data-file';
 
+export function dataFileSanitizer(v) {
+  let state = {
+    ...v
+   } as DataFilesStateModel;
 
+  state.entities = {
+    ...state.entities
+  }
+
+  Object.keys(state.entities).forEach(key => {
+    let dataFile = {
+      ...state.entities[key]
+    };
+
+    dataFile.header = null;
+    dataFile.headerLoaded = false;
+    dataFile.headerLoading = false;
+    dataFile.wcs = null;
+    
+
+    if(dataFile.type == DataFileType.IMAGE) {
+      let imageFile = dataFile as ImageFile;
+      imageFile.hist = null;
+      imageFile.histLoaded = false;
+      imageFile.histLoading = false;
+      imageFile.tilesInitialized = false;
+      imageFile.tiles = [];
+    }
+    state.entities[key] = dataFile;
+
+  })
+  return state;
+}
+
+export function imageFileStateSanitizer(v) {
+  let state = {
+    ...v
+   } as ImageFilesStateModel;
+
+  state.entities = {
+    ...state.entities
+  }
+
+  Object.keys(state.entities).forEach(key => {
+    let imageFileState = {
+      ...state.entities[key]
+    };
+
+    imageFileState.normalization = {
+      ...imageFileState.normalization,
+      initialized: false,
+      normalizedTiles: []
+    }
+
+    state.entities[key] = imageFileState;
+
+  })
+  return state;
+}
 
 
 @NgModule({
@@ -83,67 +141,11 @@ import { ImageFile } from './data-files/models/data-file';
       sanitizations: [
         {
           key: DataFilesState,
-          sanitize: (v) => {
-            let state = {
-              ...v
-             } as DataFilesStateModel;
-
-            state.entities = {
-              ...state.entities
-            }
-
-            Object.keys(state.entities).forEach(key => {
-              let dataFile = {
-                ...state.entities[key]
-              };
-
-              dataFile.header = null;
-              dataFile.headerLoaded = false;
-              dataFile.headerLoading = false;
-              dataFile.wcs = null;
-              
-
-              if(dataFile.type == DataFileType.IMAGE) {
-                let imageFile = dataFile as ImageFile;
-                imageFile.hist = null;
-                imageFile.histLoaded = false;
-                imageFile.histLoading = false;
-                imageFile.tilesInitialized = false;
-                imageFile.tiles = [];
-              }
-              state.entities[key] = dataFile;
-
-            })
-            return state;
-          }
+          sanitize: dataFileSanitizer
         },
         {
           key: ImageFilesState,
-          sanitize: (v) => {
-            let state = {
-              ...v
-             } as ImageFilesStateModel;
-
-            state.entities = {
-              ...state.entities
-            }
-
-            Object.keys(state.entities).forEach(key => {
-              let imageFileState = {
-                ...state.entities[key]
-              };
-
-              imageFileState.normalization = {
-                ...imageFileState.normalization,
-                initialized: false,
-                normalizedTiles: []
-              }
-
-              state.entities[key] = imageFileState;
-
-            })
-            return state;
-          }
+          sanitize: imageFileStateSanitizer,
         }
       ],
       storage: StorageOption.SessionStorage

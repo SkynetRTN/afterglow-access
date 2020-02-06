@@ -4,20 +4,20 @@
       <span>{{imageFile?.name}}</span>
     </div>
     <div class="tool-bar">
-      <button mat-icon-button aria-label="Zoom In"   (mousedown)="startZoomIn()" (mouseup)="stopZoomIn()" matTooltip="Zoom In">
+      <button mat-icon-button i18n-aria-label aria-label="Zoom In"   (mousedown)="startZoomIn()" (mouseup)="stopZoomIn()" i18n-matTooltip matTooltip="Zoom In">
         <mat-icon>zoom_in</mat-icon>
       </button>
-      <button mat-icon-button aria-label="Zoom Out"   (mousedown)="startZoomOut()" (mouseup)="stopZoomOut()"   matTooltip="Zoom Out">
+      <button mat-icon-button i18n-aria-label aria-label="Zoom Out"   (mousedown)="startZoomOut()" (mouseup)="stopZoomOut()"  i18n-matTooltip  matTooltip="Zoom Out">
         <mat-icon>zoom_out</mat-icon>
       </button>
-      <button mat-icon-button aria-label="Zoom to Fit" (click)="zoomToFit()"  matTooltip="Zoom To Fit">
+      <button mat-icon-button i18n-aria-label aria-label="Zoom to Fit" (click)="zoomToFit()" i18n-matTooltip  matTooltip="Zoom To Fit">
         <mat-icon>settings_overscan</mat-icon>
       </button>
-      <button mat-icon-button aria-label="Reset Zoom" (click)="zoomTo(1)"  matTooltip="Reset Zoom">
+      <button mat-icon-button i18n-aria-label aria-label="Reset Zoom" (click)="zoomTo(1)" i18n-matTooltip  matTooltip="Reset Zoom">
           <mat-icon>all_out</mat-icon>
         </button>
-      <button mat-icon-button aria-label="Download Viewer Snapshot" (click)="onDownloadSnapshotClick()"   matTooltip="Download Viewer Snapshot"><mat-icon>photo_camera</mat-icon></button>
-      <button mat-icon-button aria-label="Remove From Library" (click)="removeFromLibrary()"   matTooltip="Remove Image From Library">
+      <button mat-icon-button i18n-aria-label aria-label="Download Viewer Snapshot" (click)="onDownloadSnapshotClick()" i18n-matTooltip   matTooltip="Download Viewer Snapshot"><mat-icon>photo_camera</mat-icon></button>
+      <button mat-icon-button i18n-aria-label aria-label="Remove From Library" (click)="removeFromLibrary()" i18n-matTooltip   matTooltip="Remove Image From Library">
         <mat-icon>delete</mat-icon>
       </button>
     </div>

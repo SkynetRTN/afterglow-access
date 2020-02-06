@@ -11,11 +11,11 @@
   ">
   <div class="card workbench-settings-card" style="height: 100%;">
     <div id="settings-header" class="card-header">
-      <h5>Photometry</h5>
+      <h5 i18n>Photometry</h5>
     </div>
 
     <div class="card-body" style="overflow-y: auto;">
-      <div *ngIf="!(activeImageFile$ | async)?.headerLoaded" class="alert alert-info">
+      <div *ngIf="!(activeImageFile$ | async)?.headerLoaded" class="alert alert-info" i18n>
         Select a data file to see options.
       </div>
       <div *ngIf="activeImageFile$ | async; let activeImageFile">
@@ -193,7 +193,7 @@
             </button>
             <button mat-raised-button aria-label="Export Data" matTooltip="Export Data" color="primary" (click)="exportSourceData()"
               [disabled]="dataSource?.sources.length == 0">
-              <mat-icon>import_export</mat-icon>
+              <mat-icon>get_app</mat-icon>
             </button>
 
 

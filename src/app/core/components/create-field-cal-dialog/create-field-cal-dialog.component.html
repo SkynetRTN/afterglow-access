@@ -7,7 +7,7 @@
       appearance="outline"
       style="width: 100%;"
     >
-      <mat-label>Name</mat-label>
+      <mat-label i18n>Name</mat-label>
       <input matInput formControlName="name" />
     </mat-form-field>
   </form>
@@ -20,9 +20,9 @@
       [mat-dialog-close]="createForm.value"
       [disabled]="!createForm.valid"
       class="float-right"
-    >
+      i18n>
       Create
     </button>
-    <button mat-button mat-dialog-close class="float-right">Cancel</button>
+    <button mat-button mat-dialog-close class="float-right" i18n>Cancel</button>
   </div>
 </mat-dialog-actions>

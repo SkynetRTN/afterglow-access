@@ -7,13 +7,13 @@
 
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput placeholder="Threshold" [ngModel]="settings?.threshold" (ngModelChange)="setThreshold($event)" type="number"
+        <input matInput i18n-placeholder placeholder="Threshold" [ngModel]="settings?.threshold" (ngModelChange)="setThreshold($event)" type="number"
           step="0.1" min="2" max="20">
       </mat-form-field>
     </div>
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput placeholder="FWHM" [ngModel]="settings?.fwhm" (ngModelChange)="setFwhm($event)" type="number" step=".1" min="1"
+        <input matInput i18n-placeholder placeholder="FWHM" [ngModel]="settings?.fwhm" (ngModelChange)="setFwhm($event)" type="number" step=".1" min="1"
           max="25">
       </mat-form-field>
     </div>
@@ -21,13 +21,13 @@
   <div class="row  mb-3">
     <div class="col-6">
       <div>
-        <mat-slide-toggle [checked]="settings?.deblend" [labelPosition]="'before'" (change)="onDeblendChange($event)">
+        <mat-slide-toggle [checked]="settings?.deblend" [labelPosition]="'before'" (change)="onDeblendChange($event)" i18n>
           Deblend
         </mat-slide-toggle>
       </div>
     </div>
     <div class="col-6">
-      <mat-select placeholder="Search Region" [ngModel]="settings?.region" (ngModelChange)="setRegion($event)">
+      <mat-select i18n-placeholder placeholder="Search Region" [ngModel]="settings?.region" (ngModelChange)="setRegion($event)">
         <mat-option *ngFor="let regionOption of regionOptions" [value]="regionOption.value">{{ regionOption.label }}</mat-option>
       </mat-select>
     </div>
@@ -35,6 +35,6 @@
 
 </mat-dialog-content>
 <mat-dialog-actions class="mt-2" align="end">
-  <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-button [mat-dialog-close]="settings">Extract Sources</button>
+  <button mat-button mat-dialog-close i18n>Cancel</button>
+  <button mat-button [mat-dialog-close]="settings" i18n>Extract Sources</button>
 </mat-dialog-actions>
