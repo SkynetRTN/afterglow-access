@@ -1,14 +1,38 @@
-@mixin workbench-viewer-grid-theme($theme) {
+@mixin workbench-view-manager-theme($theme) {
     $primary: map-get($theme, primary);
     $accent: map-get($theme, accent);
     $warn: map-get($theme, warn);
     $background: map-get($theme, background);
     $foreground: map-get($theme, foreground);
-  
-    app-workbench-viewer-grid {
 
-        .workbench-viewer-panel {
-            border: 2px solid map-get($foreground, dividers);
-          }
+    .workbench-viewer-panel {
+      border: 1px solid rgba(0, 0, 0, 0.12);
     }
+
+    .view-manager-panel .mat-tab-label  {
+      opacity: 1.0;
+      border-right: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    .view-manager-panel .mat-tab-label .mat-tab-label-content div:not(.active-viewer) .label  {
+      opacity: 0.6;
+    }
+
+    .handler {
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+
+    @if map-get($theme, is-dark)  {
+     
+    }
+    @else {
+
+    }
+
+    
+
+    
+
+      
   }
