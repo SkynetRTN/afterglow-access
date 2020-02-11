@@ -1,0 +1,61 @@
+<div class="view-manager-wrapper" [style.flex-direction]="viewMode==ViewMode.SPLIT_VERTICAL ? 'row' : 'column'">
+  <div *ngIf="primaryViewers.length == 0 && secondaryViewers.length == 0; else viewers" class="no-viewers-message" style="height: 100%;">
+    <img class="p-4" src="assets/img/logo_large.png" style="opacity: 0.5;">
+    <!-- <p class="p-4">Select a file from your library to begin.</p> -->
+  </div>
+  <ng-template #viewers>
+    <div class="view-manager-panel" style="height: 100%;">
+      <mat-tab-group class="mat-tab-fill-height" style="height: 100%" [animationDuration]="'0ms'" [selectedIndex]="primarySelectedTabIndex"
+        (selectedIndexChange)="onPrimarySelectedTabIndexChange($event)">
+        <mat-tab *ngFor="let viewer of primaryViewers; trackBy: viewerTrackByFn">
+          <ng-template mat-tab-label>
+            <div [class.active-viewer]="activeViewerId == viewer.viewerId" [class.inactive-viewer]="activeViewerId != viewer.viewerId" (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null">
+              <span class="label" [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'" (contextmenu)="onContextMenu($event, viewer)">{{(files$ | async)[viewer.fileId]?.name}}</span>
+              <button mat-icon-button aria-label="Close" (click)="closeViewer(viewer.viewerId)">
+                <mat-icon class="close-button">close</mat-icon>
+              </button>
+            </div>
+
+          </ng-template>
+          <app-workbench-viewer-panel (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)" [fileId]="viewer.fileId" [active]="activeViewerId == viewer.viewerId" [markers]="viewer.markers"
+            (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)" (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"
+            (onMarkerClick)="handleMarkerClick($event, viewer.viewerId, viewer)">
+          </app-workbench-viewer-panel>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+    <div *ngIf="viewMode==ViewMode.SPLIT_VERTICAL && secondaryViewers && secondaryViewers.length != 0" class="handler"></div>
+    <div class="view-manager-panel" *ngIf="secondaryViewers && secondaryViewers.length != 0" style="height: 100%;">
+      <mat-tab-group class="mat-tab-fill-height" style="height: 100%" [animationDuration]="'0ms'" [selectedIndex]="primarySelectedTabIndex"
+        (selectedIndexChange)="onPrimarySelectedTabIndexChange($event)">
+        <mat-tab *ngFor="let viewer of secondaryViewers; trackBy: viewerTrackByFn">
+          <ng-template mat-tab-label>
+            <div [class.active-viewer]="activeViewerId == viewer.viewerId" [class.inactive-viewer]="activeViewerId != viewer.viewerId" (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null">
+              <span class="label" [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'" (contextmenu)="onContextMenu($event, viewer)">{{(files$ | async)[viewer.fileId]?.name}}</span>
+              <button mat-icon-button aria-label="Close" (click)="closeViewer(viewer.viewerId)" >
+                <mat-icon class="close-button">close</mat-icon>
+              </button>
+            </div>
+
+          </ng-template>
+          <app-workbench-viewer-panel  (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)" [fileId]="viewer.fileId" [active]="activeViewerId == viewer.viewerId" [markers]="viewer.markers"
+            (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)" (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"
+            (onMarkerClick)="handleMarkerClick($event, viewer.viewerId, viewer)">
+          </app-workbench-viewer-panel>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </ng-template>
+
+</div>
+
+<div style="visibility: hidden; position: fixed" [style.left]="contextMenuPosition.x" [style.top]="contextMenuPosition.y"
+  [matMenuTriggerFor]="contextMenu">
+</div>
+
+<mat-menu #contextMenu="matMenu">
+  <ng-template matMenuContent let-viewer="viewer">
+    <button mat-menu-item [hidden]="viewer.keepOpen" (click)="keepViewerOpen(viewer.viewerId)">Keep Open</button>
+    <button mat-menu-item [disabled]="primaryViewers.includes(viewer) && primaryViewers.length==1" (click)="moveToOtherView(viewer.viewerId)">Move to Other View</button>
+  </ng-template>
+</mat-menu>

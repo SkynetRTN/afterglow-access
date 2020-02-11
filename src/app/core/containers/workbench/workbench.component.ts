@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Store, Actions, ofActionCompleted, ofActionSuccessful } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings } from '../../workbench.actions';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings, MoveToOtherView } from '../../workbench.actions';
 import { LoadLibrary, RemoveAllDataFiles, RemoveDataFile } from '../../../data-files/data-files.actions';
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
 import { tap, map, withLatestFrom, filter } from 'rxjs/operators';
@@ -68,6 +68,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private subs: Subscription[] = [];
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   imageFile$: Observable<ImageFile>;
+  primaryViewers$: Observable<Viewer[]>;
+  secondaryViewers$: Observable<Viewer[]>;
 
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
@@ -83,6 +85,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.files$ = this.store.select(DataFilesState.getDataFiles).pipe(
       map(files => files.sort((a, b) => a.name.localeCompare(b.name)))
     );
+    this.primaryViewers$ = this.store.select(WorkbenchState.getPrimaryViewers);
+    this.secondaryViewers$ = this.store.select(WorkbenchState.getSecondaryViewers);
     this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
     this.viewers$ = this.store.select(WorkbenchState.getViewers);
     this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
@@ -240,10 +244,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
 
-  onFileSelect(file: DataFile) {
-    if (!file) return;
+  onFileSelect($event: {file: DataFile, doubleClick: boolean}) {
+    if (!$event.file) return;
 
-    this.store.dispatch(new SelectDataFile(file.id));
+    this.store.dispatch(new SelectDataFile($event.file.id, $event.doubleClick));
   }
 
   // onMultiFileSelect(files: Array<DataFile>) {
@@ -381,6 +385,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   onUseWcsCenterChange($event: MatRadioChange) {
     this.useWcsCenter = $event.value == 'wcs';
+  }
+
+  moveToOtherView(viewer: Viewer) {
+    this.store.dispatch(new MoveToOtherView(viewer.viewerId));
   }
 
 

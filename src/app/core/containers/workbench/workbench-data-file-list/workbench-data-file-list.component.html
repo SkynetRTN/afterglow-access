@@ -47,12 +47,12 @@
       Name
     </mat-header-cell>
     <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex"
-      [columnIndex]="0" [cellInTabOrder]="true" (click)="onRowClick(row)" (keydown.space)="$event.preventDefault();"
+      [columnIndex]="0" [cellInTabOrder]="true" (click)="onRowClick(row)" (dblclick)="onRowDoubleClick(row)" (keydown.space)="$event.preventDefault();"
       (keyup)="onRowKeyup($event, row);">
       <div class="item-row" [class.selected]="selectedFileId == row.id">
         <div class="valign-center">
           <!-- <mat-icon style="margin-top: 4px;">photo</mat-icon> -->
-          <span class="filename">{{row.name}}</span>
+          <span class="filename" style="user-select: none">{{row.name}}</span>
         </div>
       </div>
     </mat-cell>

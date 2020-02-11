@@ -6,4 +6,5 @@ export interface Viewer {
   panEnabled: boolean;
   zoomEnabled: boolean;
   markers: Marker[];
+  keepOpen: boolean;
 }

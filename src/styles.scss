@@ -328,3 +328,13 @@ div.ui-datatable-scrollable-body {
 .mat-tab-group.mat-tab-fill-height .mat-tab-body-wrapper {
   flex: 1 1 100%;
 }
+
+/* style active image viewer tab */
+.view-manager-panel .mat-tab-label  {
+  opacity: 1.0;
+  border-right: 1px solid #484747;
+}
+
+.view-manager-panel .mat-tab-label .mat-tab-label-content div:not(.active-viewer) .label  {
+  opacity: 0.6;
+}

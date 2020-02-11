@@ -248,13 +248,13 @@ export class DataFilesState {
             cancelAction.fileId == fileId
         )
       ),
-      this.actions$.pipe(
-        ofActionDispatched(LoadDataFileHdr),
-        filter<LoadDataFileHdr>(
-          cancelAction =>
-            cancelAction.fileId != fileId
-        )
-      )
+      // this.actions$.pipe(
+      //   ofActionDispatched(LoadDataFileHdr),
+      //   filter<LoadDataFileHdr>(
+      //     cancelAction =>
+      //       cancelAction.fileId != fileId
+      //   )
+      // )
     );
 
     setState((state: DataFilesStateModel) => {
@@ -336,13 +336,13 @@ export class DataFilesState {
             cancelAction.fileId == fileId
         )
       ),
-      this.actions$.pipe(
-        ofActionDispatched(LoadImageHist),
-        filter<LoadImageHist>(
-          cancelAction =>
-            cancelAction.fileId != fileId
-        )
-      )
+      // this.actions$.pipe(
+      //   ofActionDispatched(LoadImageHist),
+      //   filter<LoadImageHist>(
+      //     cancelAction =>
+      //       cancelAction.fileId != fileId
+      //   )
+      // )
     );
 
     setState((state: DataFilesStateModel) => {

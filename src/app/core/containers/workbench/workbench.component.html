@@ -67,9 +67,6 @@
         <h6>Display Settings</h6>
         <div class="form-group pt-2">
           <mat-button-toggle-group name="viewMode" [value]="(viewMode$ | async)" (change)="setViewModeOption($event)">
-            <mat-button-toggle aria-label="Single Viewer" [value]="ViewMode.SINGLE" matTooltip="Single Viewer" [matTooltipPosition]="'below'">
-              <mat-icon>crop_din</mat-icon>
-            </mat-button-toggle>
             <mat-button-toggle aria-label="Dual Viewer Split Horizontally" [value]="ViewMode.SPLIT_HORIZONTAL" matTooltip="Split Viewer Horizontally"
               [matTooltipPosition]="'below'">
               <mat-icon>view_stream</mat-icon>
@@ -79,10 +76,14 @@
               <mat-icon style="transform: rotate(90deg) translate(-3px,2px);">view_stream</mat-icon>
             </mat-button-toggle>
           </mat-button-toggle-group>
+          <div *ngIf="(activeViewer$ | async); let activeViewer">
+            <button [disabled]="!activeViewer" (click)="moveToOtherView(activeViewer)" class="mt-2" mat-raised-button>Move actve viewer to split display</button>
+          </div>
+          
         </div>
         <div>
           <mat-form-field style="width: 100%;">
-            <mat-select [disabled]="(viewMode$ | async) == ViewMode.SINGLE" placeholder="Active Viewer" [ngModel]="activeViewerId$ | async"
+            <mat-select placeholder="Active Viewer" [ngModel]="activeViewerId$ | async"
               (ngModelChange)="onActiveViewerIdChange($event)" style="width: 200px;">
               <mat-option *ngFor="let viewer of viewers$ | async; index as viewerIndex" [value]="viewer.viewerId">
                 Viewer {{ viewerIndex + 1 }} {{ (fileEntities$ | async)[viewer.fileId] ? "- " + (fileEntities$ | async)[viewer.fileId].name
@@ -111,9 +112,7 @@
           <div *ngIf="imageFile$ | async; let imageFile">
             <h6>DSS Catalog Import</h6>
             <div class="pb-3">
-              <mat-radio-group aria-label="DSS Import Image Center"
-              [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()"
-                [value]="(useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()) ? 'wcs' : 'header'"
+              <mat-radio-group aria-label="DSS Import Image Center" [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [value]="(useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()) ? 'wcs' : 'header'"
                 (change)="onUseWcsCenterChange($event)">
                 <mat-radio-button value="header">Use intended pointing for image center</mat-radio-button>
                 <mat-radio-button value="wcs">Use WCS for image center</mat-radio-button>
@@ -143,7 +142,8 @@
 
   </div>
   <span class="resizer"></span>
-  <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0">
+  <!-- <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0" style="overflow: hidden;"> -->
+  <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0" style="overflow: hidden;">
 
     <router-outlet></router-outlet>
 

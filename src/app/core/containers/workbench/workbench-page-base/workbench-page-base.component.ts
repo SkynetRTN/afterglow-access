@@ -53,12 +53,13 @@ import { DataFilesState } from '../../../../data-files/data-files.state';
 import { Viewer } from '../../../models/viewer';
 import { ViewMode } from '../../../models/view-mode';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
+import { LoadDataFile } from '../../../../data-files/data-files.actions';
 @Component({
   selector: "app-workbench-page-base",
   template: ``,
   styleUrls: ["./workbench-page-base.component.css"]
 })
-export class WorkbenchPageBaseComponent {
+export class WorkbenchPageBaseComponent implements OnDestroy {
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<"file" | "viewer" | "tool">;
   showConfig$: Observable<boolean>;
@@ -73,6 +74,7 @@ export class WorkbenchPageBaseComponent {
   viewerFileIds$: Observable<string[]>;
   viewerImageFiles$: Observable<ImageFile[]>;
   viewerImageFileHeaders$: Observable<Header[]>;
+  fileLoaderSub: Subscription;
 
   constructor(
     protected store: Store,
@@ -135,9 +137,23 @@ export class WorkbenchPageBaseComponent {
       })
     )
 
+    this.fileLoaderSub = this.viewerFileIds$.subscribe(ids => {
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      ids.forEach(id => {
+        let f = dataFiles[id];
+        if(f && (!f.headerLoaded && !f.headerLoading) || (f.type == DataFileType.IMAGE || !(f as ImageFile).histLoaded) && !(f as ImageFile).histLoading) {
+          this.store.dispatch(new LoadDataFile(id));
+        }
+      })
+    })
+
     this.store.dispatch(
       new SetLastRouterPath(router.url)
     );
+  }
+
+  ngOnDestroy() {
+    this.fileLoaderSub.unsubscribe();
   }
 }
 

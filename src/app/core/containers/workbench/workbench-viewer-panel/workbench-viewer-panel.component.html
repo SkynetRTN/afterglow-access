@@ -20,7 +20,7 @@
     </div>
   </div>
   <div fxFlex="0 0 auto">
-    <app-image-viewer-status-bar [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY"></app-image-viewer-status-bar>
+    <app-image-viewer-status-bar [class.active]="active" [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
   </div>
 </div>
 

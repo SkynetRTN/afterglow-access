@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="650"
+   height="875"
+   viewBox="0 0 171.97917 231.51041"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.1 r15371"
+   sodipodi:docname="logo1.svg"
+   inkscape:export-filename="C:\Users\Joshua Haislip\Dropbox\programming\skynet\afterglow\afterglow-access\src\assets\img\logo_large.png"
+   inkscape:export-xdpi="37.268925"
+   inkscape:export-ydpi="37.268925">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.90401245"
+     inkscape:cx="472.44094"
+     inkscape:cy="236.87771"
+     inkscape:document-units="mm"
+     inkscape:current-layer="g4639"
+     showgrid="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="2560"
+     inkscape:window-height="1377"
+     inkscape:window-x="1672"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     units="px"
+     inkscape:pagecheckerboard="false" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-65.489608)">
+    <g
+       id="g4639"
+       transform="matrix(0.9493918,0,0,0.9493918,-37.51298,18.370702)">
+      <path
+         sodipodi:nodetypes="cccccccccc"
+         inkscape:connector-curvature="0"
+         id="path4489"
+         d="M 129.6715,51.471949 84.947844,171.51753 h 89.447306 z m -52.818683,141.997281 -36.45944,99.42112 89.278123,-62.76956 90.18751,62.38119 -36.66187,-99.03275 z"
+         style="opacity:1;fill:#424242;fill-opacity:1;stroke:none;stroke-width:0.53449672;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         inkscape:export-filename="C:\Users\Joshua Haislip\Dropbox\programming\skynet\afterglow\afterglow-access\src\assets\img\path4489.png"
+         inkscape:export-xdpi="37.268925"
+         inkscape:export-ydpi="37.268925" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4633"
+         d="M 129.6715,51.471949 84.947844,171.51753 h 89.447306 z"
+         style="opacity:0.02;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         style="opacity:0.02;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.53449672;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 138.47163,193.46914 81.38701,99.03193 -36.66152,-99.03193 z"
+         id="path4489-1" />
+      <path
+         inkscape:connector-curvature="0"
+         style="opacity:0.02;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.53449672;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="M 76.852917,193.46914 40.393339,292.89025 120.99109,193.46914 Z"
+         id="path4489-7" />
+    </g>
+  </g>
+</svg>

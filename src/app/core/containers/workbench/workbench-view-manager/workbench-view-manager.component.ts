@@ -1,6 +1,6 @@
-import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Component, OnInit, Output, EventEmitter, Input, ViewChild, TemplateRef, ViewContainerRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Observable, combineLatest, fromEvent } from 'rxjs';
+import { map, filter, take } from 'rxjs/operators';
 import { Viewer } from '../../../models/viewer';
 
 import { DataFile, ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
@@ -13,10 +13,13 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { ImageFilesState } from '../../../image-files.state';
-import { SetActiveViewer } from '../../../workbench.actions';
+import { SetActiveViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from '../../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../image-files.actions';
 import { RemoveDataFile } from '../../../../data-files/data-files.actions';
+import { OverlayRef, Overlay } from '@angular/cdk/overlay';
+import { TemplatePortal } from '@angular/cdk/portal';
+import { MatMenuTrigger } from '@angular/material';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string,
@@ -33,7 +36,24 @@ export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
   templateUrl: './workbench-view-manager.component.html',
   styleUrls: ['./workbench-view-manager.component.css']
 })
-export class WorkbenchViewManagerComponent implements OnInit {
+export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
+  @ViewChild(MatMenuTrigger, {static: false})
+  contextMenu: MatMenuTrigger;
+  contextMenuPosition = { x: '0px', y: '0px' };
+
+  onContextMenu(event: MouseEvent, viewer: Viewer) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = { 'viewer': viewer };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
+  moveToOtherView(viewerId: string) {
+    this.store.dispatch(new MoveToOtherView(viewerId));
+  }
+  
   ViewMode = ViewMode;
 
   @Input() primaryViewers: Viewer[];
@@ -44,6 +64,9 @@ export class WorkbenchViewManagerComponent implements OnInit {
   @Output() onImageClick = new EventEmitter<ViewerCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerCanvasMouseEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerMarkerMouseEvent>();
+
+  primarySelectedTabIndex = 0;
+  secondarySelectedTabIndex = 0;
 
 
   private hotKeys: Array<Hotkey> = [];
@@ -66,7 +89,8 @@ export class WorkbenchViewManagerComponent implements OnInit {
     return this.viewers.find(v => v.viewerId == this.activeViewerId);
   }
 
-  constructor(private store: Store, private _hotkeysService: HotkeysService) {
+  constructor(private store: Store, private _hotkeysService: HotkeysService, public overlay: Overlay,
+    public viewContainerRef: ViewContainerRef) {
     // this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
 
     // this.viewers$ = combineLatest(this.store.select(WorkbenchState.getViewers), this.viewMode$)
@@ -154,6 +178,7 @@ export class WorkbenchViewManagerComponent implements OnInit {
     this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
   }
 
+
   public zoomIn(fileId: string, imageAnchor: { x: number, y: number } = null) {
     this.zoomBy(fileId, 1.0 / this.zoomStepFactor, imageAnchor);
   }
@@ -194,6 +219,17 @@ export class WorkbenchViewManagerComponent implements OnInit {
   ngOnInit() {
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.activeViewerId && changes.activeViewerId.previousValue != changes.activeViewerId.currentValue) {
+      let primaryViewer = this.primaryViewers.find(v => v.viewerId == changes.activeViewerId.currentValue);
+      if(primaryViewer) this.primarySelectedTabIndex = this.primaryViewers.indexOf(primaryViewer);
+
+      let secondaryViewer = this.secondaryViewers.find(v => v.viewerId == changes.activeViewerId.currentValue);
+      if(secondaryViewer) this.secondarySelectedTabIndex = this.secondaryViewers.indexOf(secondaryViewer);
+
+    }
+  }
+
   ngOnDestroy() {
     this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
@@ -202,7 +238,16 @@ export class WorkbenchViewManagerComponent implements OnInit {
     return index;
   }
 
+  closeViewer(viewerId: string) {
+    this.store.dispatch(new CloseViewer(viewerId));
+  }
+
+  keepViewerOpen(viewerId: string) {
+    this.store.dispatch(new KeepViewerOpen(viewerId));
+  }
+
   setActiveViewer($event: Event, viewerId: string, viewer: Viewer) {
+    console.log("SETTING ACTIVE VIEWER!!!");
     this.mouseDownActiveViewerId = this.activeViewerId;
     if (viewerId != this.activeViewerId) {
       this.store.dispatch(new SetActiveViewer(viewerId));
@@ -238,6 +283,15 @@ export class WorkbenchViewManagerComponent implements OnInit {
       ...$event
     });
   }
-
+  
+  onPrimarySelectedTabIndexChange(index) {
+    this.primarySelectedTabIndex = index;
+    this.store.dispatch(new SetActiveViewer(this.primaryViewers[index].viewerId));
+  }
+  
+  onSecondarySelectedTabIndexChange(index) {
+    this.secondarySelectedTabIndex = index;
+    this.store.dispatch(new SetActiveViewer(this.secondaryViewers[index].viewerId));
+  }
 
 }

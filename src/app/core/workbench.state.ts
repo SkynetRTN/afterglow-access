@@ -8,7 +8,7 @@ import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers } from './workbench.actions';
+import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
 import { ImageFilesState, ImageFilesStateModel } from './image-files.state';
 import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './image-files.actions';
@@ -54,6 +54,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   activeViewerId: null,
   activeTool: WorkbenchTool.VIEWER,
   viewMode: ViewMode.SPLIT_VERTICAL,
+  nextViewerIdSeed: 0,
   viewerIds: [],
   viewers: {},
   primaryViewerIds: [],
@@ -163,6 +164,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   defaults: workbenchStateDefaults
 })
 export class WorkbenchState {
+  protected viewerIdPrefix = 'VWR';
 
   constructor(private store: Store, private afterglowCatalogService: AfterglowCatalogService, private afterglowFieldCalService: AfterglowFieldCalService, private correlationIdGenerator: CorrelationIdGenerator, private actions$: Actions) { }
 
@@ -566,6 +568,77 @@ export class WorkbenchState {
   public setActiveViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: SetActiveViewer) {
     setState((state: WorkbenchStateModel) => {
       state.activeViewerId = viewerId;
+      return state;
+    });
+  }
+
+  @Action(CreateViewer)
+  @ImmutableContext()
+  public createViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewer, usePrimary }: CreateViewer) {
+    setState((state: WorkbenchStateModel) => {
+      let id = this.viewerIdPrefix + state.nextViewerIdSeed++;
+      state.viewers[id] = {
+        ...viewer,
+        viewerId: id
+      }
+      state.viewerIds.push(id);
+      if(usePrimary) {
+        state.primaryViewerIds.push(id);
+      }
+      else {
+        state.secondaryViewerIds.push(id);
+      }
+      state.activeViewerId = id;
+      if(viewer.fileId) dispatch(new SetViewerFile(id, viewer.fileId));
+
+      return state;
+    });
+
+    
+  }
+
+  @Action(CloseViewer)
+  @ImmutableContext()
+  public closeViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: CloseViewer) {
+    setState((state: WorkbenchStateModel) => {
+      let activeViewerIndex = state.viewerIds.indexOf(state.activeViewerId);
+
+      state.viewerIds = state.viewerIds.filter(id => id != viewerId);
+      if(viewerId in state.viewers) delete state.viewers[viewerId];
+
+      state.primaryViewerIds = state.primaryViewerIds.filter(id => id != viewerId);
+      state.secondaryViewerIds = state.secondaryViewerIds.filter(id => id != viewerId);
+      state.activeViewerId = state.viewerIds.length == 0 ? null : state.viewerIds[Math.max(0, Math.min(state.viewerIds.length-1, activeViewerIndex))];
+
+      if(state.primaryViewerIds.length == 0) {
+        state.primaryViewerIds = [...state.secondaryViewerIds];
+        state.secondaryViewerIds = [];
+      }
+      return state;
+    });
+  }
+
+  @Action(KeepViewerOpen)
+  @ImmutableContext()
+  public keepViewerOpen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: KeepViewerOpen) {
+    setState((state: WorkbenchStateModel) => {
+      if(viewerId in state.viewers) state.viewers[viewerId].keepOpen = true;
+      return state;
+    });
+  }
+
+  @Action(MoveToOtherView)
+  @ImmutableContext()
+  public moveToOtherView({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: MoveToOtherView) {
+    setState((state: WorkbenchStateModel) => {
+      if(state.primaryViewerIds.includes(viewerId)) {
+        state.primaryViewerIds = state.primaryViewerIds.filter(id => id != viewerId);
+        state.secondaryViewerIds.push(viewerId);
+      }
+      else if(state.secondaryViewerIds.includes(viewerId)) {
+        state.secondaryViewerIds = state.secondaryViewerIds.filter(id => id != viewerId);
+        state.primaryViewerIds.push(viewerId);
+      }
       return state;
     });
   }
@@ -1015,23 +1088,57 @@ export class WorkbenchState {
 
   @Action(SelectDataFile)
   @ImmutableContext()
-  public selectDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: SelectDataFile) {
+  public selectDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId, keepOpen }: SelectDataFile) {
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (fileId != null) {
       let dataFile = dataFiles[fileId];
       let viewers = WorkbenchState.getViewers(state);
-      if (viewers.length != 0) {
-        if (!activeViewer) {
-          dispatch(new SetActiveViewer(viewers[0].viewerId));
+
+      //check if file is already open
+      let targetViewer = viewers.find(viewer => viewer.fileId == fileId);
+      if(targetViewer) {
+        if(keepOpen && !targetViewer.keepOpen) {
+          setState((state: WorkbenchStateModel) => {
+            state.viewers[targetViewer.viewerId].keepOpen = true;
+            return state;
+          });
         }
-        else {
-          dispatch(new SetViewerFile(activeViewer.viewerId, dataFile.id));
-        }
+        dispatch(new SetActiveViewer(targetViewer.viewerId));
+        return;
       }
+
+      //check if existing viewer is available
+      targetViewer = viewers.find(viewer => !viewer.keepOpen);
+      if(targetViewer) {
+        //temporary viewer exists
+        if(keepOpen) {
+          setState((state: WorkbenchStateModel) => {
+            state.viewers[targetViewer.viewerId].keepOpen = true;
+            return state;
+          });
+        }
+        dispatch(new SetViewerFile(targetViewer.viewerId, dataFile.id));
+        dispatch(new SetActiveViewer(targetViewer.viewerId));
+        return;
+      }
+      
+      let useSecondary = state.secondaryViewerIds.includes(state.activeViewerId);
+      let viewer: Viewer = {
+        viewerId: null,
+        fileId: fileId,
+        panEnabled: true,
+        zoomEnabled: true,
+        markers: [],
+        keepOpen: keepOpen,
+      }
+      dispatch(new CreateViewer(viewer, !useSecondary));
     }
+
+    
+
 
     setState((state: WorkbenchStateModel) => {
       state.selectedFileId = fileId;
