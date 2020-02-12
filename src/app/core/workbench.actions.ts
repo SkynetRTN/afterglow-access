@@ -46,7 +46,7 @@ export class SetFullScreenPanel {
 export class SelectDataFile {
   public static readonly type = '[Workbench] Select Data File';
 
-  constructor(public fileId: string, public keepOpen=false) { }
+  constructor(public fileId: string) { }
 }
 
 export class SetActiveViewer {

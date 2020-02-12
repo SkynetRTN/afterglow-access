@@ -688,15 +688,14 @@ export class WorkbenchState {
     let actions = [];
     let dataFile = dataFiles[fileId] as ImageFile;
     if (dataFile && viewer) {
+      let originalFileId;
+      setState((state: WorkbenchStateModel) => {
+        originalFileId = state.viewers[viewerId].fileId;
+        state.viewers[viewerId].fileId = fileId;
+        return state;
+      });
 
       if (dataFile.headerLoaded && dataFile.histLoaded) {
-        let originalFileId;
-        setState((state: WorkbenchStateModel) => {
-          originalFileId = state.viewers[viewerId].fileId;
-          state.viewers[viewerId].fileId = fileId;
-          return state;
-        });
-
         let referenceFileId = originalFileId;
         if (referenceFileId == null) {
           let referenceViewer = WorkbenchState.getViewers(state).find(
@@ -757,7 +756,8 @@ export class WorkbenchState {
         actions.push(new LoadDataFile(fileId));
         
         let cancel$ = this.actions$.pipe(
-          ofActionDispatched(SetViewerFile)
+          ofActionDispatched(SetViewerFile),
+          filter<SetViewerFile>(action => action.viewerId == viewerId && action.fileId != fileId),
         )
 
         let next$ = this.actions$.pipe(
@@ -1088,7 +1088,7 @@ export class WorkbenchState {
 
   @Action(SelectDataFile)
   @ImmutableContext()
-  public selectDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId, keepOpen }: SelectDataFile) {
+  public selectDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: SelectDataFile) {
     let state = getState();
     
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
@@ -1100,12 +1100,6 @@ export class WorkbenchState {
       //check if file is already open
       let targetViewer = viewers.find(viewer => viewer.fileId == fileId);
       if(targetViewer) {
-        if(keepOpen && !targetViewer.keepOpen) {
-          setState((state: WorkbenchStateModel) => {
-            state.viewers[targetViewer.viewerId].keepOpen = true;
-            return state;
-          });
-        }
         dispatch(new SetActiveViewer(targetViewer.viewerId));
         return;
       }
@@ -1114,12 +1108,6 @@ export class WorkbenchState {
       targetViewer = viewers.find(viewer => !viewer.keepOpen);
       if(targetViewer) {
         //temporary viewer exists
-        if(keepOpen) {
-          setState((state: WorkbenchStateModel) => {
-            state.viewers[targetViewer.viewerId].keepOpen = true;
-            return state;
-          });
-        }
         dispatch(new SetViewerFile(targetViewer.viewerId, dataFile.id));
         dispatch(new SetActiveViewer(targetViewer.viewerId));
         return;
@@ -1132,7 +1120,7 @@ export class WorkbenchState {
         panEnabled: true,
         zoomEnabled: true,
         markers: [],
-        keepOpen: keepOpen,
+        keepOpen: false,
       }
       dispatch(new CreateViewer(viewer, !useSecondary));
     }

@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Store, Actions, ofActionCompleted, ofActionSuccessful } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings, MoveToOtherView } from '../../workbench.actions';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings, MoveToOtherView, KeepViewerOpen } from '../../workbench.actions';
 import { LoadLibrary, RemoveAllDataFiles, RemoveDataFile } from '../../../data-files/data-files.actions';
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
 import { tap, map, withLatestFrom, filter } from 'rxjs/operators';
@@ -247,7 +247,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   onFileSelect($event: {file: DataFile, doubleClick: boolean}) {
     if (!$event.file) return;
 
-    this.store.dispatch(new SelectDataFile($event.file.id, $event.doubleClick));
+    if(!$event.doubleClick) {
+      this.store.dispatch(new SelectDataFile($event.file.id));
+    }
+    else {
+      this.store.dispatch(new KeepViewerOpen(this.store.selectSnapshot(WorkbenchState.getActiveViewerId)));
+    }
+
   }
 
   // onMultiFileSelect(files: Array<DataFile>) {

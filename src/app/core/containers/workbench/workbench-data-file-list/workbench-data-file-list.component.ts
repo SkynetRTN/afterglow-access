@@ -51,6 +51,8 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   }
 
   onRowClick(file: DataFile) {
+    if(file.id == this.selectedFileId) return;
+
     this.selectedFileId = file.id;
     this.onSelectionChange.emit({file: file, doubleClick: false});
     // this.preventSingleClick = false;
@@ -64,6 +66,7 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   }
 
   onRowDoubleClick(file: DataFile) {
+    
       // this.preventSingleClick = true;
       // clearTimeout(this.timer);
       this.selectedFileId = file.id;
