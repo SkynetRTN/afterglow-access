@@ -557,7 +557,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
           posType: posType,
           pm: null,
           pmPosAngle: null,
-          pmEpoch: getCenterTime(activeImageFile)
+          pmEpoch: JSON.stringify(getCenterTime(activeImageFile))
         };
         this.store.dispatch(
           new AddSources([source])
@@ -617,14 +617,14 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
       }
     }
 
-    let t0 = selectedSources[0].pmEpoch.getTime();
+    let t0 = new Date(selectedSources[0].pmEpoch).getTime();
     let primaryCoord0 = selectedSources[0].primaryCoord;
     let secondaryCoord0 = selectedSources[0].secondaryCoord;
     let data = selectedSources.map(source => {
       let centerSecondaryCoord =
         (source.secondaryCoord + secondaryCoord0) / 2.0;
       return [
-        (source.pmEpoch.getTime() - t0) / 1000.0,
+        (new Date(source.pmEpoch).getTime() - t0) / 1000.0,
         (source.primaryCoord - primaryCoord0) *
         (source.posType == PosType.PIXEL
           ? 1

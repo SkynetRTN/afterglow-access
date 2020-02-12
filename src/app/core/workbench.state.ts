@@ -1898,6 +1898,7 @@ export class WorkbenchState {
 
           if (
             photometryPageSettings.coordMode == 'sky' &&
+            dataFiles[fileId].wcs && dataFiles[fileId].wcs.isValid() &&
             "ra_hours" in d &&
             d.ra_hours !== null &&
             "dec_degs" in d &&
@@ -1997,7 +1998,7 @@ export class WorkbenchState {
         }
         return {
           id: source.id,
-          pm_epoch: source.pmEpoch ? source.pmEpoch.toISOString() : null,
+          pm_epoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
           x: x,
           y: y,
           pm_pixel: pmPixel,

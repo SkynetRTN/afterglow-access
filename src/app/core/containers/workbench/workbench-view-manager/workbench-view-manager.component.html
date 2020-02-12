@@ -57,5 +57,6 @@
   <ng-template matMenuContent let-viewer="viewer">
     <button mat-menu-item [hidden]="viewer.keepOpen" (click)="keepViewerOpen(viewer.viewerId)">Keep Open</button>
     <button mat-menu-item [disabled]="primaryViewers.includes(viewer) && primaryViewers.length==1" (click)="moveToOtherView(viewer.viewerId)">Move to Other View</button>
+    <button mat-menu-item (click)="closeAll()">Close All</button>
   </ng-template>
 </mat-menu>
