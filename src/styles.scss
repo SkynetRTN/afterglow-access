@@ -329,3 +329,10 @@ div.ui-datatable-scrollable-body {
   flex: 1 1 100%;
 }
 
+
+/* Important.  Prevents central view manager from pushing tool panel to the right. */
+/* This allows the mat-tabs to overflow with scrolling */
+.workbench-outlet-panel .image-viewer-grid-panel {
+  min-width: 250px;
+}
+

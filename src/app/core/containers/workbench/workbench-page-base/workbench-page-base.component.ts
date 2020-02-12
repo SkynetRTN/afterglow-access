@@ -93,7 +93,7 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
     this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
 
     this.viewerFileIds$ = this.store.select(WorkbenchState.getViewerIds).pipe(
-      flatMap(viewerIds => {
+      switchMap(viewerIds => {
         return combineLatest(
           ...viewerIds.map(viewerId => {
             return this.store.select(WorkbenchState.getViewerById).pipe(
@@ -106,7 +106,7 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
     )
 
     this.viewerImageFiles$ = this.viewerFileIds$.pipe(
-      flatMap(fileIds => {
+      switchMap(fileIds => {
         return combineLatest(
           ...fileIds.map(fileId => {
             return this.store.select(DataFilesState.getDataFileById).pipe(
@@ -122,7 +122,7 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
     )
 
     this.viewerImageFileHeaders$ = this.viewerFileIds$.pipe(
-      flatMap(fileIds => {
+      switchMap(fileIds => {
         return combineLatest(
           ...fileIds.map(fileId => {
             return this.store.select(DataFilesState.getDataFileById).pipe(
@@ -141,9 +141,10 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       ids.forEach(id => {
         let f = dataFiles[id];
-        if(f && (!f.headerLoaded && !f.headerLoading) || (f.type == DataFileType.IMAGE || !(f as ImageFile).histLoaded) && !(f as ImageFile).histLoading) {
-          this.store.dispatch(new LoadDataFile(id));
-        }
+        if(!f || ( (f.headerLoaded || f.headerLoading) && (f.type != DataFileType.IMAGE || ((f as ImageFile).histLoaded || (f as ImageFile).histLoading)))) return;
+
+        this.store.dispatch(new LoadDataFile(id));
+
       })
     })
 
