@@ -9,7 +9,7 @@
         (selectedIndexChange)="onPrimarySelectedTabIndexChange($event)">
         <mat-tab *ngFor="let viewer of primaryViewers; trackBy: viewerTrackByFn">
           <ng-template mat-tab-label>
-            <div [class.active-viewer]="activeViewerId == viewer.viewerId" [class.inactive-viewer]="activeViewerId != viewer.viewerId" (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null">
+            <div [class.active-viewer]="activeViewerId == viewer.viewerId" [class.inactive-viewer]="activeViewerId != viewer.viewerId" (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null" (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)">
               <span class="label" [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'" (contextmenu)="onContextMenu($event, viewer)">{{(files$ | async)[viewer.fileId]?.name}}</span>
               <button mat-icon-button aria-label="Close" (click)="closeViewer(viewer.viewerId)">
                 <mat-icon class="close-button">close</mat-icon>
@@ -30,7 +30,7 @@
         (selectedIndexChange)="onPrimarySelectedTabIndexChange($event)">
         <mat-tab *ngFor="let viewer of secondaryViewers; trackBy: viewerTrackByFn">
           <ng-template mat-tab-label>
-            <div [class.active-viewer]="activeViewerId == viewer.viewerId" [class.inactive-viewer]="activeViewerId != viewer.viewerId" (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null">
+            <div [class.active-viewer]="activeViewerId == viewer.viewerId" [class.inactive-viewer]="activeViewerId != viewer.viewerId" (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null" (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)">
               <span class="label" [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'" (contextmenu)="onContextMenu($event, viewer)">{{(files$ | async)[viewer.fileId]?.name}}</span>
               <button mat-icon-button aria-label="Close" (click)="closeViewer(viewer.viewerId)" >
                 <mat-icon class="close-button">close</mat-icon>

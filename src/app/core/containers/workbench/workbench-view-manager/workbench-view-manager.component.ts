@@ -251,7 +251,6 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
   }
 
   setActiveViewer($event: Event, viewerId: string, viewer: Viewer) {
-    console.log("SETTING ACTIVE VIEWER!!!");
     this.mouseDownActiveViewerId = this.activeViewerId;
     if (viewerId != this.activeViewerId) {
       this.store.dispatch(new SetActiveViewer(viewerId));
