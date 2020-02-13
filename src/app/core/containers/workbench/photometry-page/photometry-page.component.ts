@@ -547,6 +547,8 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
           posType = PosType.SKY;
         }
 
+        let centerEpoch = getCenterTime(activeImageFile);
+
         let source: Source = {
           id: null,
           label: null,
@@ -557,7 +559,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
           posType: posType,
           pm: null,
           pmPosAngle: null,
-          pmEpoch: JSON.stringify(getCenterTime(activeImageFile))
+          pmEpoch: centerEpoch ? centerEpoch.toISOString() : null
         };
         this.store.dispatch(
           new AddSources([source])
@@ -605,9 +607,10 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
       return;
     }
 
+
     //verify unique epochs
     let sortedEpochs = selectedSources
-      .map(source => source.pmEpoch)
+      .map(source => new Date(source.pmEpoch))
       .sort();
     for (let i = 0; i < sortedEpochs.length - 1; i++) {
       if (sortedEpochs[i + 1] == sortedEpochs[i]) {
@@ -623,8 +626,9 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
     let data = selectedSources.map(source => {
       let centerSecondaryCoord =
         (source.secondaryCoord + secondaryCoord0) / 2.0;
+        console.log(source.pmEpoch, new Date(source.pmEpoch));
       return [
-        (new Date(source.pmEpoch).getTime() - t0) / 1000.0,
+        ((new Date(source.pmEpoch)).getTime() - t0) / 1000.0,
         (source.primaryCoord - primaryCoord0) *
         (source.posType == PosType.PIXEL
           ? 1
@@ -633,6 +637,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
         (source.posType == PosType.PIXEL ? 1 : 3600)
       ];
     });
+
 
     let x = data.map(d => [1, d[0]]);
     let primaryY = data.map(d => d[1]);
@@ -720,6 +725,47 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
     const numSelected = this.selectionModel.selected.length;
     const numRows = this.dataSource.sources.length;
     return numSelected === numRows;
+  }
+
+  exportSourceData() {
+    let data = this.papa.unparse(
+      this.dataSource.rows
+        .map(d => {
+          
+          let time = d.photData.time
+            ? moment.utc(d.photData.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate()
+            : null;
+          let pmEpoch = d.source.pmEpoch
+            ? moment.utc(d.source.pmEpoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate()
+            : null;
+          // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
+          let jd = time
+            ? datetimeToJd(
+                time.getUTCFullYear(),
+                time.getUTCMonth() + 1,
+                time.getUTCDate(),
+                time.getUTCHours(),
+                time.getUTCMinutes(),
+                time.getUTCSeconds()
+              )
+            : null;
+          return {
+            ...d.source,
+            ...d.photData,
+            time: time
+              ? this.datePipe.transform(time, "yyyy-MM-dd HH:mm:ss.SSS")
+              : null,
+            pm_epoch: pmEpoch
+              ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS")
+              : null,
+            jd: jd,
+            mjd: jd ? jdToMjd(jd) : null
+          };
+        })
+        // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
+    );
+    var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
+    saveAs(blob, `afterglow_sources.csv`);
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */

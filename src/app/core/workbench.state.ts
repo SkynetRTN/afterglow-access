@@ -1899,7 +1899,7 @@ export class WorkbenchState {
 
           let pmEpoch = null;
           if (d.time && Date.parse(d.time + ' GMT')) {
-            pmEpoch = new Date(Date.parse(d.time + ' GMT'));
+            pmEpoch = new Date(Date.parse(d.time + ' GMT')).toISOString();
           }
           return {
             id: null,
