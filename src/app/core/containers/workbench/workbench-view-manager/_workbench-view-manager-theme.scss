@@ -18,6 +18,10 @@
       opacity: 0.6;
     }
 
+    .view-manager-panel:not(.active-viewer-group) .mat-ink-bar  {
+      visibility: hidden !important;
+    }
+
     .handler {
       background: rgba(0, 0, 0, 0.12);
     }

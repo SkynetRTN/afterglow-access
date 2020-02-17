@@ -11,5 +11,8 @@ module.exports = {
         type: "json"
       }
     ]
+  },
+  node: {
+    fs: 'empty'
   }
 };

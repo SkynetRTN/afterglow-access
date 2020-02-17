@@ -85,6 +85,10 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
     return this.primaryViewers.concat(this.secondaryViewers);
   }
 
+  private get primaryViewerGroupIsActive() {
+    return this.activeViewer && this.primaryViewers.includes(this.activeViewer);
+  }
+
   private get activeViewer() {
     return this.viewers.find(v => v.viewerId == this.activeViewerId);
   }
