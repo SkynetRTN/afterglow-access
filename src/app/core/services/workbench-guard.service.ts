@@ -10,7 +10,7 @@ import {
 import { CookieService } from "ngx-cookie";
 import { Observable } from "rxjs";
 import { map, take } from "rxjs/operators";
-import { environment } from "../../../environments/environment";
+import { AppConfig } from "../../../environments/environment";
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../workbench.state';
 

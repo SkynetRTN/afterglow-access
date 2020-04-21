@@ -3,7 +3,7 @@ import { Location } from "@angular/common";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { environment } from "../../../environments/environment";
+import { AppConfig } from "../../../environments/environment";
 import { FieldCal } from '../models/field-cal';
 import { PosType, CatalogSource } from '../models/source';
 
@@ -13,7 +13,7 @@ export class AfterglowFieldCalService {
 
   getFieldCals(): Observable<FieldCal[]> {
     return this.http
-      .get<any[]>(`${environment.apiUrl}/field-cals`)
+      .get<any[]>(`${AppConfig.baseUrl}/field-cals`)
       .pipe(
         map(res =>
           res.map(r => {
@@ -50,7 +50,7 @@ export class AfterglowFieldCalService {
   createFieldCal(c: FieldCal): Observable<FieldCal> {
     return this.http
       .post<any>(
-        `${environment.apiUrl}/field-cals`,
+        `${AppConfig.baseUrl}/field-cals`,
         {
           name: c.name,
           catalog_sources: JSON.stringify(c.catalogSources),
@@ -83,7 +83,7 @@ export class AfterglowFieldCalService {
   updateFieldCal(c: FieldCal): Observable<FieldCal> {
     return this.http
       .put<any>(
-        `${environment.apiUrl}/field-cals/${c.id}`,
+        `${AppConfig.baseUrl}/field-cals/${c.id}`,
         {
           id: c.id,
           name: c.name,

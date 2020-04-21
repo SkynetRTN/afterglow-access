@@ -32,7 +32,7 @@
 
 
           <div>
-            <p>Manually add sources by clicking on them in your image or automatically add them using the options below.</p>
+            <p i18n>Manually add sources by clicking on them in your image or automatically add them using the options below.</p>
             <p class="pb-2">
               Tip: Hold
               <span class="kbd">Alt</span> to click beneath existing markers
@@ -41,20 +41,20 @@
 
 
             <div class="form-row mt-3">
-              <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)">
+              <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)" i18n>
                 Centroid clicks
               </mat-slide-toggle>
-              <button class="" mat-raised-button (click)="openPhotSettings()">
+              <button class="" mat-raised-button (click)="openPhotSettings()" i18n>
                 Photometry Settings...
               </button>
               <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
                 <mat-icon>add</mat-icon>
-                <span>Add Sources...</span>
+                <span i18n>Add Sources...</span>
               </button>
               <mat-menu #menu="matMenu">
                 <button mat-menu-item (click)="openSourceExtractionSettings(activeImageFile.id)">
                   <mat-icon>location_searching</mat-icon>
-                  <span>Source Extraction...</span>
+                  <span i18n>Source Extraction...</span>
                 </button>
                 <!-- <button mat-menu-item>
                       <mat-icon>import_export</mat-icon>
@@ -76,15 +76,15 @@
 
 
           <div class="form-row mb-2">
-            <mat-slide-toggle [checked]="showAllSources$ | async" [labelPosition]="after" (change)="onShowAllSourcesChange($event)">
+            <mat-slide-toggle [checked]="showAllSources$ | async" [labelPosition]="after" (change)="onShowAllSourcesChange($event)" i18n>
               Show Sources From All Files
             </mat-slide-toggle>
 
-            <mat-slide-toggle [checked]="showSourceLabels$ | async" [labelPosition]="after" (change)="onShowSourceLabelsChange($event)">
+            <mat-slide-toggle [checked]="showSourceLabels$ | async" [labelPosition]="after" (change)="onShowSourceLabelsChange($event)" i18n>
               Source Labels
             </mat-slide-toggle>
 
-            <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.autoPhot" [labelPosition]="after" (change)="onAutoPhotChange($event)">
+            <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.autoPhot" [labelPosition]="after" (change)="onAutoPhotChange($event)" i18n>
               Auto-phot
             </mat-slide-toggle>
           </div>
@@ -207,14 +207,14 @@
 
           <hr>
           <div>
-            <p>Use batch photometry to photometer your sources in multiple files.</p>
+            <p i18n>Use batch photometry to photometer your sources in multiple files.</p>
 
 
             <div *ngIf="allImageFiles$ | async; let allImageFiles">
               <form [formGroup]="batchPhotForm">
                 <div>
                   <mat-form-field appearance="outline" style="width: 300px;">
-                    <mat-label>Select Image(s) to Photometer</mat-label>
+                    <mat-label i18n>Select Image(s) to Photometer</mat-label>
                     <mat-select multiple formControlName="selectedImageFileIds">
                       <mat-option *ngFor="let imageFile of allImageFiles" [value]="imageFile.id">{{ imageFile.name }}</mat-option>
                     </mat-select>
@@ -241,7 +241,7 @@
               <div class="mb-3" *ngIf="(batchPhotJobEntity$ | async); let batchPhotJobEntity;">
                 <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobEntity)">
                   <mat-icon>save_alt</mat-icon>
-                  <span>Download Batch Photometry Data - {{batchPhotJobEntity.job.sources.length}} source(s) in {{batchPhotJobEntity.job.file_ids.length}} file(s)</span>
+                  <span i18n>Download Batch Photometry Data - {{batchPhotJobEntity.job.sources.length}} source(s) in {{batchPhotJobEntity.job.file_ids.length}} file(s)</span>
                 </button>
               </div>
             </ng-template>

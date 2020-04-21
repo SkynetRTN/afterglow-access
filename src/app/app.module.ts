@@ -27,7 +27,7 @@ import { registerLocaleData } from '@angular/common';
 
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
-import { environment } from '../environments/environment';
+import { AppConfig } from '../environments/environment';
 import { NgxPopperModule } from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
@@ -124,7 +124,7 @@ export function imageFileStateSanitizer(v) {
     }),
     NgxsModule.forRoot(
       [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
-      { developmentMode: !environment.production }
+      { developmentMode: !AppConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
       key: [
@@ -151,7 +151,7 @@ export function imageFileStateSanitizer(v) {
       storage: StorageOption.SessionStorage
     }),
     NgxsRouterPluginModule.forRoot(),
-    environment.plugins
+    AppConfig.plugins
   ],
 
   declarations: [

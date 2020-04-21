@@ -3,7 +3,7 @@ import { Location } from "@angular/common";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { environment } from "../../../environments/environment";
+import { AppConfig } from "../../../environments/environment";
 import { Catalog } from "../models/catalog";
 
 @Injectable()
@@ -13,7 +13,7 @@ export class AfterglowCatalogService {
   getCatalogs(): Observable<Catalog[]> {
     return this.http
       .get<any[]>(
-        `${environment.apiUrl}/catalogs`
+        `${AppConfig.baseUrl}/catalogs`
       )
       .pipe(
         map(res =>

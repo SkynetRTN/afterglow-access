@@ -2,7 +2,7 @@ import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
 
 export const AppConfig = {
   production: false,
-  environment: 'LOCAL',
+  environment: 'DEV',
   baseUrl: 'http://127.0.0.1:4200/api/v1.0',
   accessTokenCookieName: 'access_token',
   tileSize: 512,

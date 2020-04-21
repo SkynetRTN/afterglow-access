@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Location } from "@angular/common";
 import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
-import { environment } from "../../../environments/environment";
+import { AppConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { Job } from "../models/job";
@@ -15,21 +15,21 @@ export class JobService {
 
   createJob(job: Job) {
     return this.http.post<Job>(
-      `${environment.apiUrl}/jobs`,
+      `${AppConfig.baseUrl}/jobs`,
       job
     );
   }
 
   getJob(jobId: string) {
     return this.http.get<Job>(
-      `${environment.apiUrl}/jobs/${jobId}`
+      `${AppConfig.baseUrl}/jobs/${jobId}`
     );
   }
 
   getJobResult(job: Job): Observable<JobResult> {
     return this.http
       .get<any>(
-        `${environment.apiUrl}/jobs/${job.id}/result`
+        `${AppConfig.baseUrl}/jobs/${job.id}/result`
       )
       .pipe(
         map(resp => {

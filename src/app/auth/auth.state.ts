@@ -8,7 +8,7 @@ import { InitAuth, Login, LoginSuccess, Logout, LoginOAuth, LoadAuthMethods, Loa
 import { OAuthClient } from './models/oauth-client';
 import { User } from './models/user';
 import { AuthService } from './services/auth.service';
-import { environment } from "../../environments/environment";
+import { AppConfig } from "../../environments/environment";
 import { AuthMethod } from './models/auth-method';
 import { Navigate } from '@ngxs/router-plugin';
 import { AuthGuard } from './services/auth-guard.service';
@@ -135,7 +135,7 @@ export class AuthState {
   @Action(LoginSuccess)
   public loginSuccess(ctx: StateContext<AuthStateModel>, { method }: LoginSuccess) {
     if(this.authGuard.isLoggedIn()) {
-      let decoded = jwt_decode(this.cookieService.get(environment.accessTokenCookieName));
+      let decoded = jwt_decode(this.cookieService.get(AppConfig.accessTokenCookieName));
       
       let state = ctx.getState();
       if(state.user && state.user.id != decoded.identity) {
@@ -170,7 +170,7 @@ export class AuthState {
 
   @Action(Logout)
   public logout(ctx: StateContext<AuthStateModel>, { }: Logout) {
-    this.cookieService.put(environment.accessTokenCookieName, "", {
+    this.cookieService.put(AppConfig.accessTokenCookieName, "", {
       expires: new Date()
     });
     ctx.dispatch(new ResetState());

@@ -12,7 +12,7 @@
   ">
   <div class="card workbench-settings-card" style="height: 100%;">
     <div id="settings-header" class="card-header">
-      <h5>Display Settings</h5>
+      <h5 i18n>Display Settings</h5>
     </div>
 
     <div class="card-body" style="overflow-y: auto;">
@@ -23,20 +23,20 @@
 
 
       <div *ngIf="!(imageFile$ | async)" class="alert alert-info">
-        Select a data file to see viewer options.
+        <ng-container i18n>Select a data file to see viewer options.</ng-container>
       </div>
 
       <div *ngIf="imageFile$ | async; let imageFile">
         <div>
-          <h6>Brightness and Contrast Presets</h6>
+          <h6 i18n>Brightness and Contrast Presets</h6>
           <div class="pb-1">
-            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 95)" aria-label="Faint Target Preset">
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 95)" i18n-aria-label aria-label="Faint Target Preset">
               <mat-icon>brightness_3</mat-icon>Faint Target
             </button>
-            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" aria-label="Default Preset">
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label aria-label="Default Preset">
               <mat-icon>brightness_2</mat-icon>Default
             </button>
-            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" aria-label="Bright Target Preset">
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label aria-label="Bright Target Preset">
               <mat-icon>brightness_5</mat-icon>Bright Target
             </button>
           </div>
@@ -54,7 +54,7 @@
 
 
         <div class="pb-4 pt-1">
-          <h6>Brightness and Contrast Settings</h6>
+          <h6 i18n>Brightness and Contrast Settings</h6>
           <app-normalizer-form [normalizer]="(normalization$ | async)?.normalizer" (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
             (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)" (stretchModeChange)="onStretchModeChange($event)"
             (invertedChange)="onInvertedChange($event)">
@@ -68,16 +68,16 @@
 
 
         <div>
-            <h6>Image Orientation Options</h6>
+            <h6 i18n>Image Orientation Options</h6>
             <div class="pb-4">
                 <button mat-raised-button class="m-1" (click)="onFlipClick()">
-                  <mat-icon>flip</mat-icon> Flip
+                  <mat-icon>flip</mat-icon><ng-container i18n>Flip</ng-container> 
                 </button>
                 <button mat-raised-button class="m-1" (click)="onRotateClick()">
-                  <mat-icon>rotate_right</mat-icon> Rotate
+                  <mat-icon>rotate_right</mat-icon><ng-container i18n>Rotate</ng-container> 
                 </button>
                 <button mat-raised-button class="m-1" color="warn" (click)="onResetOrientationClick()">
-                  <mat-icon>crop_din</mat-icon> Reset Orientation
+                  <mat-icon>crop_din</mat-icon><ng-container i18n>Reset Orientation</ng-container> 
                 </button>
               </div>
         </div>

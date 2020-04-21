@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Location } from "@angular/common";
 import { User, Credentials } from "../models/user";
 import { AuthMethod } from "../models/auth-method";
-import { environment } from "../../../environments/environment";
+import { AppConfig } from "../../../environments/environment";
 import { OAuthClient } from "../models/oauth-client";
 import { of, throwError } from "rxjs";
 import { map } from "rxjs/operators";
@@ -26,7 +26,7 @@ export class AuthService {
 
   loginOAuth(authMethodId: string, redirectUri: string, code: string) {
     return this.http.post(
-      `${environment.apiUrl}/auth/login/${authMethodId}`,
+      `${AppConfig.baseUrl}/auth/login/${authMethodId}`,
       { code: code, redirect_uri: redirectUri }
     );
   }
@@ -34,7 +34,7 @@ export class AuthService {
   getAuthMethods() {
     return this.http
       .get<any[]>(
-        `${environment.apiUrl}/auth/methods`
+        `${AppConfig.baseUrl}/auth/methods`
       )
       .pipe(
         map(resp =>
@@ -59,7 +59,7 @@ export class AuthService {
   getOAuthClients() {
     return this.http
       .get<any[]>(
-        `${environment.apiUrl}/oauth2/clients`
+        `${AppConfig.baseUrl}/oauth2/clients`
       )
       .pipe(
         map(resp =>
@@ -79,13 +79,13 @@ export class AuthService {
 
   getPermittedOAuthClients() {
     return this.http.get<string[]>(
-      `${environment.apiUrl}/oauth2/user-clients`
+      `${AppConfig.baseUrl}/oauth2/user-clients`
     );
   }
 
   addPermittedOAuthClient(client: OAuthClient) {
     return this.http.post(
-      `${environment.apiUrl}/oauth2/user-clients`,
+      `${AppConfig.baseUrl}/oauth2/user-clients`,
       { client_id: client.clientId }
     );
   }

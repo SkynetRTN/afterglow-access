@@ -30,7 +30,7 @@ import { StretchMode } from "../../../models/stretch-mode";
 import { ImageFileState } from "../../../models/image-file-state";
 import { Marker, MarkerType } from "../../../models/marker";
 import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
-import { environment } from "../../../../../environments/environment.prod";
+import { AppConfig } from "../../../../../environments/environment.prod";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material";
 import { DataProvider } from '../../../../data-providers/models/data-provider';
@@ -81,8 +81,8 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
   backgroundPercentile$: Subject<number> = new Subject<number>();
   peakPercentile$: Subject<number> = new Subject<number>();
 
-  upperPercentileDefault = environment.upperPercentileDefault;
-  lowerPercentileDefault = environment.lowerPercentileDefault;
+  upperPercentileDefault = AppConfig.upperPercentileDefault;
+  lowerPercentileDefault = AppConfig.lowerPercentileDefault;
 
   constructor(private corrGen: CorrelationIdGenerator, store: Store, router: Router) {
     super(store, router);
