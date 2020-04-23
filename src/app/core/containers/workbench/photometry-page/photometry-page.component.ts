@@ -205,7 +205,8 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
       map(s => s.batchPhotJobId),
       withLatestFrom(this.store.select(JobsState.getEntities)),
       map(([jobId, jobEntities]) => jobEntities[jobId]),
-      filter(job => job != null && job != undefined)
+      filter(job => job != null && job != undefined),
+      tap((job) => console.log('batch phot job', job))
     );
 
     this.batchPhotJob$ = this.batchPhotJobEntity$.pipe(

@@ -1,8 +1,8 @@
 <div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers" [fxShow]="
     !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
   ">
-  <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async" [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"
-  (onImageClick)="onImageClick($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-view-manager>
+  <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async" [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async"
+    [viewMode]="viewMode$ | async" (onImageClick)="onImageClick($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-view-manager>
 </div>
 
 <span class="resizer"></span>
@@ -41,7 +41,8 @@
 
 
             <div class="form-row mt-3">
-              <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)" i18n>
+              <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.centroidClicks" [labelPosition]="before" (change)="onCentroidClicksChange($event)"
+                i18n>
                 Centroid clicks
               </mat-slide-toggle>
               <button class="" mat-raised-button (click)="openPhotSettings()" i18n>
@@ -80,11 +81,13 @@
               Show Sources From All Files
             </mat-slide-toggle>
 
-            <mat-slide-toggle [checked]="showSourceLabels$ | async" [labelPosition]="after" (change)="onShowSourceLabelsChange($event)" i18n>
+            <mat-slide-toggle [checked]="showSourceLabels$ | async" [labelPosition]="after" (change)="onShowSourceLabelsChange($event)"
+              i18n>
               Source Labels
             </mat-slide-toggle>
 
-            <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.autoPhot" [labelPosition]="after" (change)="onAutoPhotChange($event)" i18n>
+            <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.autoPhot" [labelPosition]="after" (change)="onAutoPhotChange($event)"
+              i18n>
               Auto-phot
             </mat-slide-toggle>
           </div>
@@ -234,26 +237,36 @@
               </form>
             </div>
 
-            <div *ngIf="(photometryPageSettings$ | async)?.batchPhotProgress != null && (photometryPageSettings$ | async)?.batchPhotProgress != 100;else elseBlock">
+            <div *ngIf="(photometryPageSettings$ | async)?.batchPhotProgress != null && (photometryPageSettings$ | async)?.batchPhotProgress != 100;else downloadBatchResultsBlock">
               <mat-progress-bar mode="determinate" [value]="(photometryPageSettings$ | async)?.batchPhotProgress" [color]="'accent'"></mat-progress-bar>
             </div>
-            <ng-template #elseBlock>
+            <ng-template #downloadBatchResultsBlock>
               <div class="mb-3" *ngIf="(batchPhotJobEntity$ | async); let batchPhotJobEntity;">
-                <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobEntity)">
-                  <mat-icon>save_alt</mat-icon>
-                  <span i18n>Download Batch Photometry Data - {{batchPhotJobEntity.job.sources.length}} source(s) in {{batchPhotJobEntity.job.file_ids.length}} file(s)</span>
-                </button>
+                <div *ngIf="batchPhotJobEntity.job.result.errors.length != 0 && batchPhotJobEntity.job.result.data.length == 0;else resultsBlock">
+                  <div class="alert alert-danger">
+                    An unexpected error occurred during batch photometry.
+
+                  </div>
+                </div>
+                <ng-template #resultsBlock>
+                  <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobEntity)">
+                    <mat-icon>save_alt</mat-icon>
+                    <span i18n>Download Batch Photometry Data - {{batchPhotJobEntity.job.sources.length}} source(s) in {{batchPhotJobEntity.job.file_ids.length}}
+                      file(s)</span>
+                  </button>
+                </ng-template>
+
               </div>
             </ng-template>
 
-           
-            
+
+
           </div>
 
           <hr>
 
-          
-<!-- 
+
+          <!-- 
           <div>
             <button class="" mat-raised-button color="warn" (click)="clearPhotDataFromAllFiles()">
               <mat-icon>wb_incandescent</mat-icon>
