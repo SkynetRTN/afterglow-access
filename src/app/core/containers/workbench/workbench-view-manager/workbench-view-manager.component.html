@@ -1,7 +1,14 @@
 <div class="view-manager-wrapper" [style.flex-direction]="viewMode==ViewMode.SPLIT_VERTICAL ? 'row' : 'column'">
   <div *ngIf="primaryViewers.length == 0 && secondaryViewers.length == 0; else viewers" class="no-viewers-message" style="height: 100%;">
-    <img class="p-4" src="assets/img/logo_large.png" style="opacity: 0.5;">
-    <!-- <p class="p-4">Select a file from your library to begin.</p> -->
+      <mat-card class="" style="opacity: 0.6;">
+        <mat-card-content style="text-align: center">
+            <img class="p-3" src="assets/img/logo_large.png" style="opacity: 0.7; max-width:150px; max-height:150px; width: auto; height: auto;">
+            <p class="p-3">Select a file from your library to begin.</p>
+        </mat-card-content>
+      </mat-card>
+
+      
+    
   </div>
   <ng-template #viewers>
     <div class="view-manager-panel" [class.active-viewer-group]="primaryViewerGroupIsActive"  style="height: 100%;">
