@@ -283,8 +283,11 @@ export function centroidPsf(imageFile: ImageFile, x: number, y: number, settings
 }
 
 function getSubframe(size: number, imageFile: ImageFile, x: number, y: number) {
-  // Test for out of bounds pixels
-  let halfCenteringBoxWidth = (size - 1.0) / 2.0;
+  // convert to zero-based indexing
+  x -= 1;
+  y -= 1;
+
+  let halfCenteringBoxWidth = (size-1) / 2.0;
   let ncols = getWidth(imageFile);
   let nlines = getHeight(imageFile);
 
@@ -303,18 +306,18 @@ function getSubframe(size: number, imageFile: ImageFile, x: number, y: number) {
   let l1 = Math.max(0.0, Math.min(nlines - 1, xl1));
   let l2 = Math.max(0.0, Math.min(nlines - 1, xl2));
 
-  let cnx = Math.round(c2 - c1) + 1;
-  let cny = Math.round(l2 - l1) + 1;
+  let cnx = (c2 - c1) + 1;
+  let cny = (l2 - l1) + 1;
   let cxc = x - c1;
   let cyc = y - l1;
 
   let result = Array(cnx * cny);
 
-
   for (let j = l1; j <= l2; j++) {
     for (let i = c1; i <= c2; i++) {
       let index = (j - l1) * cnx + (i - c1);
-      result[index] = getPixel(imageFile, i, j);
+      //convert to ones-based indexing
+      result[index] = getPixel(imageFile, i+1, j+1);
       //printf("(%d,%d): %f\n",i,j,image.pixel(i,j));
     }
   }
