@@ -64,6 +64,7 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
   fullScreenPanel$: Observable<"file" | "viewer" | "tool">;
   showConfig$: Observable<boolean>;
   activeImageFile$: Observable<ImageFile>;
+  activeImageFileLoaded$: Observable<ImageFile>;
   activeImageFileState$: Observable<ImageFileState>;
   allImageFiles$: Observable<Array<ImageFile>>;
   primaryViewers$: Observable<Viewer[]>;
@@ -84,6 +85,9 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
     this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
     this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.activeImageFileLoaded$ = this.activeImageFile$.pipe(
+      filter(f => f.headerLoaded && f.histLoaded)
+    )
     this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
     this.allImageFiles$ = store.select(DataFilesState.getImageFiles);
     this.viewMode$ = this.store.select(WorkbenchState.getViewMode);

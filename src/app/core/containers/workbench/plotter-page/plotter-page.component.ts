@@ -115,7 +115,7 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
     this.vectorInfo$ = combineLatest(
       this.lineStart$,
       this.lineEnd$,
-      this.activeImageFile$
+      this.activeImageFileLoaded$
     ).pipe(
       map(([lineStart, lineEnd, imageFile]) => {
         let pixelSeparation = null;
