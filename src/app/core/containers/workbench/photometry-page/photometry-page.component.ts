@@ -741,14 +741,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
             : null;
           // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
           let jd = time
-            ? datetimeToJd(
-                time.getUTCFullYear(),
-                time.getUTCMonth() + 1,
-                time.getUTCDate(),
-                time.getUTCHours(),
-                time.getUTCMinutes(),
-                time.getUTCSeconds()
-              )
+            ? datetimeToJd(time)
             : null;
           return {
             ...d.source,
@@ -838,14 +831,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
             : null;
           // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
           let jd = time
-            ? datetimeToJd(
-                time.getUTCFullYear(),
-                time.getUTCMonth() + 1,
-                time.getUTCDate(),
-                time.getUTCHours(),
-                time.getUTCMinutes(),
-                time.getUTCSeconds()
-              )
+            ? datetimeToJd(time)
             : null;
           return {
             ...d,
