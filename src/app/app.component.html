@@ -2,7 +2,7 @@
     
     <div fxLayout="column" fxFill>
       <header fxFlex="0 0 auto" class="main-header">
-        <app-navbar [authenticated]="(loggedIn$ | async)" [dataProviders]="dataProviders$ | async" class="mat-elevation-z6"></app-navbar>
+        <app-navbar [dataProviders]="dataProviders$ | async" class="mat-elevation-z6" [user]="user$ | async"></app-navbar>
         <!-- <navbar [routes]=currentRoutes></navbar> -->
         <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
       </header>

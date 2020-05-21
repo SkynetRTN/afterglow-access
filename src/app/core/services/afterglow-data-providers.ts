@@ -3,10 +3,11 @@ import { Location } from "@angular/common";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { AppConfig } from "../../../environments/environment";
+import { appConfig } from "../../../environments/environment";
 
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
+import { getCoreApiUrl } from '../../../environments/app-config';
 
 @Injectable()
 export class AfterglowDataProviderService {
@@ -14,10 +15,10 @@ export class AfterglowDataProviderService {
 
   getDataProviders(): Observable<DataProvider[]> {
     return this.http
-      .get<any[]>(`${AppConfig.baseUrl}/data-providers`)
+      .get<any>(`${getCoreApiUrl(appConfig)}/data-providers`)
       .pipe(
         map(res =>
-          res.map(r => {
+          res.items.map(r => {
             return {
               id: r.id,
               name: r.display_name,
@@ -48,10 +49,10 @@ export class AfterglowDataProviderService {
     if (path) params = params.set("path", path);
 
     return this.http
-      .get<any[]>(`${AppConfig.baseUrl}/data-providers/${dataProviderId}/assets?` + params.toString())
+      .get<any>(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString())
       .pipe(
         map(resp =>
-          resp.map(r => {
+          resp.items.map(r => {
             let asset: DataProviderAsset = {
               name: r.name,
               collection: r.collection,

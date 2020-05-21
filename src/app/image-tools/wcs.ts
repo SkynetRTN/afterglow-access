@@ -1,7 +1,7 @@
 import { Matrix } from 'paper';
 
 declare var WCS: any;
-import "!!file-loader?name=wcslib.wasm!../../../wasm/wcsjs/wcslib.wasm"
+// import "!!file-loader?name=wcslib.wasm!../../../wasm/wcsjs/wcslib.wasm"
 
 
 // declare let wcs: any;

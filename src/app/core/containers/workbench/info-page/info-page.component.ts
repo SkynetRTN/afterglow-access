@@ -100,7 +100,7 @@ export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnI
           if(startTime) {
             result.push({
               key: 'Start',
-              value: `${datePipe.transform(startTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')} ( ${datetimeToJd(startTime)} JD )`,
+              value: `${datePipe.transform(startTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')} (${datetimeToJd(startTime)} JD)`,
               comment: ''
             })
           }
@@ -108,7 +108,7 @@ export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnI
           if(centerTime) {
             result.push({
               key: 'Center',
-              value: `${datePipe.transform(centerTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')} ( ${datetimeToJd(centerTime)} JD )`,
+              value: `${datePipe.transform(centerTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')} (${datetimeToJd(centerTime)} JD)`,
               comment: ''
             })
           }

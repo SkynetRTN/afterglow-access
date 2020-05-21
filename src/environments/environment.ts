@@ -1,10 +1,15 @@
 import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
+import { AppConfig } from './app-config';
 
-export const AppConfig = {
+export const appConfig: AppConfig = {
   production: false,
   environment: 'LOCAL',
-  baseUrl: 'http://127.0.0.1:4200/api/v1.0',
-  accessTokenCookieName: 'access_token',
+  coreServerUrl: 'http://127.0.0.1:4200/core',
+  coreApiVersion: 'v1',
+  authMethod: 'cookie',
+  authCookieName: 'afterglow_core_access_token',
+  oauth2ClientId: '',
+  oauth2ClientSecret: '',
   tileSize: 512,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,

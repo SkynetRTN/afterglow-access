@@ -21,7 +21,8 @@
             "polyfills": "src/polyfills.ts",
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/wasm/wcslib.wasm"
             ],
             "styles": [
               "node_modules/bootstrap-css-only/css/bootstrap.min.css",
@@ -31,7 +32,7 @@
             ],
             "scripts": [
               "node_modules/downloadjs/download.js",
-              "wasm/wcsjs/wcs.js",
+              "src/wasm/wcs.js",
               "node_modules/plotly.js/dist/plotly.min.js"
             ]
           },
@@ -120,6 +121,9 @@
             "browserTarget": "afterglow-access:build"
           },
           "configurations": {
+            "dev": {
+              "browserTarget": "afterglow-access:build:dev"
+            },
             "production": {
               "browserTarget": "afterglow-access:build:production"
             },

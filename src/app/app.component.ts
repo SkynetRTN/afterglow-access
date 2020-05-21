@@ -7,7 +7,7 @@ import { Observable, Subscription, Subscribable } from "rxjs";
 import { AuthState } from './auth/auth.state';
 import { InitAuth } from './auth/auth.actions';
 import { AuthGuard } from "./auth/services/auth-guard.service";
-import { User } from "./auth/models/user";
+import { CoreUser } from "./auth/models/user";
 
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
@@ -29,11 +29,8 @@ import { finalize } from 'rxjs/operators';
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   currentRoutes: any[] = [];
 
-  @Select(AuthState.loggedIn)
-  loggedIn$: Observable<boolean>
-
   @Select(AuthState.user)
-  user$: Observable<User>
+  user$: Observable<CoreUser>
 
 
   loggedInSub: Subscription;
@@ -96,9 +93,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.dataProviders$ = this.store.select(DataProvidersState.getDataProviders);
 
-    if (this.authGuard.isLoggedIn()) {
-      this.store.dispatch(new InitAuth(true));
-    }
+    this.store.dispatch(new InitAuth());
 
     this.hotKeys.push(
       new Hotkey(

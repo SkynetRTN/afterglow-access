@@ -22,12 +22,12 @@ import { HotkeyModule } from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { registerLocaleData } from '@angular/common';
-
+import { AvatarModule } from 'ngx-avatar';
 
 
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
-import { AppConfig } from '../environments/environment';
+import { appConfig } from '../environments/environment';
 import { NgxPopperModule } from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
@@ -116,6 +116,7 @@ export function imageFileStateSanitizer(v) {
     FlexLayoutModule,
     CookieModule.forRoot(),
     NgxPopperModule,
+    AvatarModule,
     ThemePickerModule,
     CoreModule.forRoot(),
     AuthModule.forRoot(),
@@ -124,7 +125,7 @@ export function imageFileStateSanitizer(v) {
     }),
     NgxsModule.forRoot(
       [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
-      { developmentMode: !AppConfig.production }
+      { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
       key: [
@@ -151,7 +152,7 @@ export function imageFileStateSanitizer(v) {
       storage: StorageOption.SessionStorage
     }),
     NgxsRouterPluginModule.forRoot(),
-    AppConfig.plugins
+    appConfig.plugins
   ],
 
   declarations: [

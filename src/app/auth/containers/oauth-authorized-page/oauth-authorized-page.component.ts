@@ -3,8 +3,13 @@ import { Select, Store } from '@ngxs/store';
 import { Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { LoginOAuth } from '../../auth.actions';
+import { GetOAuthToken, LoginSuccess, CheckSession } from '../../auth.actions';
 import { Navigate } from '@ngxs/router-plugin';
+
+import * as moment from "moment";
+import * as qs from "query-string";
+import { HttpParams } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-oauth-authorized-page',
@@ -14,24 +19,38 @@ import { Navigate } from '@ngxs/router-plugin';
 export class OauthAuthorizedPageComponent implements OnInit, OnDestroy {
   private sub: Subscription;
 
-  constructor(private store: Store, private activatedRoute: ActivatedRoute, private router: Router) { }
+  constructor(private store: Store, private activatedRoute: ActivatedRoute, private router: Router, private authService: AuthService) { }
 
   ngOnInit() {
-    this.sub = this.activatedRoute.queryParams.subscribe(queryParams => {
-      if(!localStorage.getItem('pendingOauthMethod')) {
-        this.store.dispatch(new Navigate(["/login"], {}, {replaceUrl:true}));
+    this.sub = this.activatedRoute.fragment.subscribe(fragment => {
+      let params = qs.parse(fragment);
+      
+      let nonce = localStorage.getItem('aa_oauth_nonce');
+      if(nonce !== null && params['access_token'] && params['expires_in'] && params['state']) {
+        let state = JSON.parse(params['state'] as string);
+        if(state['nonce'] && state['nonce'] == nonce) {
+          let expiresIn = parseInt(params['expires_in'] as string);
+          localStorage.setItem('aa_access_token', params['access_token'] as string)
+          localStorage.setItem('aa_expires_at', moment().add(expiresIn, 'seconds').toJSON());
+
+          //get user
+          this.authService.getUser().subscribe(
+            (user) => {
+              localStorage.setItem('aa_user', JSON.stringify(user));
+              this.store.dispatch(new CheckSession());
+            },
+            (error) => {
+              localStorage.removeItem('aa_access_token');
+              localStorage.removeItem('aa_expires_at');
+            }
+          )
+          
+        }
       }
       else {
-        if(queryParams['code']) {
-          let pendingOAuth = JSON.parse(localStorage.getItem('pendingOauthMethod'));
-          this.store.dispatch(new LoginOAuth(pendingOAuth.id, pendingOAuth.redirectUri, queryParams['code']));
-        }
-        else {
-          //TODO show error
-        }
-        localStorage.removeItem('pendingOauthMethod');
-
+        
       }
+      localStorage.removeItem('aa_oauth_nonce');
     })
   }
 
