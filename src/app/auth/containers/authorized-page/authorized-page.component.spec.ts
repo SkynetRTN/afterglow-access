@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { OauthAuthorizedPageComponent } from './oauth-authorized-page.component';
+import { AuthorizedPageComponent } from './authorized-page.component';
 
 describe('OauthAuthorizedPageComponent', () => {
-  let component: OauthAuthorizedPageComponent;
-  let fixture: ComponentFixture<OauthAuthorizedPageComponent>;
+  let component: AuthorizedPageComponent;
+  let fixture: ComponentFixture<AuthorizedPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ OauthAuthorizedPageComponent ]
+      declarations: [ AuthorizedPageComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(OauthAuthorizedPageComponent);
+    fixture = TestBed.createComponent(AuthorizedPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

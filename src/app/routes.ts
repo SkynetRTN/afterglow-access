@@ -1,6 +1,6 @@
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './auth/services/auth-guard.service'
-import { OauthAuthorizedPageComponent } from './auth/containers/oauth-authorized-page/oauth-authorized-page.component';
+import { AuthorizedPageComponent as AuthorizedPageComponent } from './auth/containers/authorized-page/authorized-page.component';
 import { DataProvidersComponent } from './core/containers/data-providers/data-providers.component';
 import { DataProvidersIndexPageComponent } from './core/containers/data-providers/data-providers-index-page/data-providers-index-page.component';
 import { DataProviderBrowsePageComponent } from './core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
@@ -36,8 +36,8 @@ export const AFTERGLOW_ROUTES: Routes = [
     data: { title: 'Authorizing Please Wait' }
   },
   {
-    path: 'oauth2/authorized',
-    component: OauthAuthorizedPageComponent,
+    path: 'authorized',
+    component: AuthorizedPageComponent,
     data: { title: 'Authorizing Please Wait' }
   },
   {

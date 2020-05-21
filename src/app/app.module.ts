@@ -110,7 +110,7 @@ export function imageFileStateSanitizer(v) {
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot(AFTERGLOW_ROUTES, { enableTracing: false }),
+    RouterModule.forRoot(AFTERGLOW_ROUTES),
     MaterialModule,
     ReactiveFormsModule,
     FlexLayoutModule,

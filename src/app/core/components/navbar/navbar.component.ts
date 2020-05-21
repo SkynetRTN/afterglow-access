@@ -52,7 +52,7 @@ export class NavbarComponent implements OnInit, OnChanges {
   }
 
   login() {
-    this.store.dispatch(new Login());
+    this.store.dispatch(new Navigate(['/login']));
   }
 
   logout() {

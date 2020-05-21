@@ -21,6 +21,7 @@ import { DataProvider } from '../../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { DataProvidersState } from '../../../data-providers/data-providers.state';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { Navigate } from '@ngxs/router-plugin';
 
 
 
@@ -116,37 +117,37 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('d', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.VIEWER_ROUTE]);
+      this.store.dispatch(new Navigate([this.VIEWER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Display Settings'))
 
     this.hotKeys.push(new Hotkey('i', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.FILE_INFO_ROUTE]);
+      this.store.dispatch(new Navigate([this.FILE_INFO_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'File Info'));
 
     this.hotKeys.push(new Hotkey('m', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.MARKER_ROUTE]);
+      this.store.dispatch(new Navigate([this.MARKER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Markers'));
 
     this.hotKeys.push(new Hotkey('P', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.PLOTTER_ROUTE]);
+      this.store.dispatch(new Navigate([this.PLOTTER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Plotter'));
 
     this.hotKeys.push(new Hotkey('s', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.SONIFIER_ROUTE]);
+      this.store.dispatch(new Navigate([this.SONIFIER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Sonifier'));
 
     // this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
     //   this.store.dispatch(new SetShowConfig(true));
-    //   this.router.navigate([this.FIELD_CAL_ROUTE]);
+    //   this.store.dispatch(new Navigate([this.FIELD_CAL_ROUTE]);
     //   return false; // Prevent bubbling
     // }, undefined, 'Field Calibration'));
 
@@ -158,19 +159,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('/', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.IMAGE_ARITHMETIC_ROUTE]);
+      this.store.dispatch(new Navigate([this.IMAGE_ARITHMETIC_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Image Arithmetic'));
 
     this.hotKeys.push(new Hotkey('a', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.ALIGNER_ROUTE]);
+      this.store.dispatch(new Navigate([this.ALIGNER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Aligning'));
 
     this.hotKeys.push(new Hotkey('S', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.STACKER_ROUTE]);
+      this.store.dispatch(new Navigate([this.STACKER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Stacking'));
 
@@ -322,7 +323,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       // show
       this.store.dispatch(new SetShowConfig(true));
     }
-    this.router.navigate([route]);
+    this.store.dispatch(new Navigate([route]));
   }
 
 

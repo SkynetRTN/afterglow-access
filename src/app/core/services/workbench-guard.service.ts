@@ -13,6 +13,7 @@ import { map, take } from "rxjs/operators";
 import { appConfig } from "../../../environments/environment";
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../workbench.state';
+import { Navigate } from '@ngxs/router-plugin';
 
 @Injectable()
 export class WorkbenchGuard implements CanActivate, CanActivateChild {
@@ -37,7 +38,7 @@ export class WorkbenchGuard implements CanActivate, CanActivateChild {
       if (this.lastRouterPath && state.url != this.lastRouterPath) {
         routePath = this.lastRouterPath;
       }
-      this.router.navigate([routePath]);
+      this.store.dispatch(new Navigate([routePath]));
 
       return false;
     }

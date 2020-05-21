@@ -33,7 +33,7 @@ export class TokenInterceptor implements HttpInterceptor {
         if (error instanceof HttpErrorResponse) {
           switch ((<HttpErrorResponse>error).status) {
             case 401: {
-              this.store.dispatch(new Logout());
+              //this.store.dispatch(new Navigate());
             }
           }
         }

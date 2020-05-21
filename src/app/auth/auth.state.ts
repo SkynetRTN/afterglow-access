@@ -14,7 +14,7 @@ import { Navigate } from '@ngxs/router-plugin';
 import { AuthGuard } from './services/auth-guard.service';
 
 import jwt_decode from 'jwt-decode';
-import * as uuid from 'uuid';
+
 import { HttpParams } from '@angular/common/http';
 import { LocationStrategy } from '@angular/common';
 import { RedoRegionSelection } from '../core/image-files.actions';
@@ -103,76 +103,58 @@ export class AuthState {
     //redirect to authorizing page to get user info 
     //watch for localstorage changes
     window.addEventListener('storage', (event: StorageEvent) => {
-      if (event.key == 'aa_user') {
-        ctx.dispatch(new CheckSession());
+      if (['aa_user', 'aa_access_token'].includes(event.key)) {
+        let state = ctx.getState();
+        if( state.user && this.authGuard.user) {
+          if(state.user.id != this.authGuard.user.id) {
+            //local storage user does not match user in application state
+            ctx.dispatch(new ResetState());
+            ctx.patchState({
+              user: null
+            });
+            ctx.dispatch(new Navigate(['/login']));
+          }
+        }
+        else if (state.user) {
+          //user no longer exists in local storage/cookie
+          //login could be in-progress at the oauth authorized endpoint or the login endpoint of the app
+          console.log("LOGGIN OUT");
+          ctx.dispatch(new Navigate(['/logout']));
+        }
+        else {
+          //app state user is logged out
+          //local storage/cookie user is not null
+          ctx.dispatch(new LoginSuccess());
+        }
       }
     });
 
-    ctx.dispatch(new CheckSession());
   }
 
   @Action(CheckSession)
   public checkSession(ctx: StateContext<AuthStateModel>, action: CheckSession) {
-    let state = ctx.getState();
-    if (state.user) {
-      //user is logged in
-      if (!this.authGuard.user) {
-        //user logged out
-        ctx.dispatch(new Navigate(['/logout']));
-      }
-      else if(state.user.id != this.authGuard.user.id) {
-        //logged in as different user
-        ctx.dispatch(new ResetState());
-        ctx.dispatch(new LoginSuccess());
-      }
-    }
-    else if(this.authGuard.user) {
-      //logged in inside different tab
-      ctx.dispatch(new LoginSuccess());
-    }
+    
 
-    ctx.patchState({ user: this.authGuard.user });
   }
 
   @Action(Login)
   public login(ctx: StateContext<AuthStateModel>, action: Login) {
-    if (action.nextUrl) localStorage.setItem('nextUrl', action.nextUrl);
-
-    if (appConfig.authMethod == 'oauth2') {
-      let nonce = uuid.v4();
-      localStorage.setItem('aa_oauth_nonce', nonce);
-
-      let redirectUri = location.origin + '/oauth2/authorized';
-
-      let params: HttpParams = new HttpParams();
-      params = params.set('client_id', appConfig.oauth2ClientId);
-      params = params.set('redirect_uri', redirectUri);
-      params = params.set('response_type', 'token');
-      params = params.set('state', JSON.stringify({
-        nonce: nonce
-      }));
-      params = params.set('scope', 'email');
-
-      window.location.href = appConfig.coreServerUrl + '/oauth2/authorize?' + params.toString();
-
-    }
-    else {
-      // cookie-based login
-      let redirectUri = location.origin + '/login'
-      let params: HttpParams = new HttpParams();
-      params = params.set('next', redirectUri);
-
-      window.location.href = appConfig.coreServerUrl + '/login?' + params.toString();
-    }
+    
   }
 
   @Action(LoginSuccess)
   public loginSuccess(ctx: StateContext<AuthStateModel>, action: LoginSuccess) {
     if (this.authGuard.user) {
+      let state = ctx.getState();
+      if(state.user && this.authGuard.user.id != state.user.id) {
+        //different user has logged in
+        ctx.dispatch(new ResetState());
+      }
 
       ctx.patchState({
         loginPending: false,
         loginError: '',
+        user: this.authGuard.user
       });
 
       let nextUrl = localStorage.getItem("nextUrl");
@@ -185,23 +167,21 @@ export class AuthState {
     else {
       ctx.patchState({ loginPending: false, user: null, loginError: 'We encountered an unexpected error.  Please try again later.' });
     }
-
-
   }
 
   @Action(Logout)
   public logout(ctx: StateContext<AuthStateModel>, { }: Logout) {
     if (appConfig.authMethod == 'cookie') {
-      localStorage.removeItem('aa_user');
       this.cookieService.remove(appConfig.authCookieName);
     }
-    if (appConfig.authMethod == 'oauth2') {
-      localStorage.removeItem('aa_user');
-      localStorage.removeItem('aa_expires_at');
-      localStorage.removeItem('aa_access_token');
+    else if (appConfig.authMethod == 'oauth2') {
+      
     }
+    localStorage.removeItem('aa_user');
+    localStorage.removeItem('aa_expires_at');
+    localStorage.removeItem('aa_access_token');
 
     ctx.dispatch(new ResetState());
-    ctx.patchState({ user: this.authGuard.user });
+    ctx.patchState({ user: null });
   }
 }

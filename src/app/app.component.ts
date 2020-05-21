@@ -18,6 +18,7 @@ import { ThemeDialogComponent } from "./core/components/theme-dialog/theme-dialo
 import { DataProvidersState } from './data-providers/data-providers.state';
 import { SetFullScreen, Initialize } from './core/workbench.actions';
 import { finalize } from 'rxjs/operators';
+import { Navigate } from '@ngxs/router-plugin';
 
 
 
@@ -99,7 +100,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "W",
         (event: KeyboardEvent): boolean => {
-          this.router.navigate(["workbench"]);
+          this.store.dispatch(new Navigate(["workbench"]));
           this.store.dispatch(new SetFullScreen(false))
           return false; // Prevent bubbling
         },
@@ -112,7 +113,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "D",
         (event: KeyboardEvent): boolean => {
-          this.router.navigate(["data-providers"]);
+          this.store.dispatch(new Navigate(["data-providers"]));
           return false; // Prevent bubbling
         },
         undefined,

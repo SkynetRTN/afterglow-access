@@ -6,7 +6,7 @@ export const appConfig: AppConfig = {
   environment: 'DEV',
   coreServerUrl: 'http://127.0.0.1:4200/core',
   coreApiVersion: 'v1',
-  authMethod: 'oauth2',
+  authMethod: 'cookie',
   authCookieName: 'afterglow_core_access_token',
   oauth2ClientId: 'baz',
   oauth2ClientSecret: 'qux',

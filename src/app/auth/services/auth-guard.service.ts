@@ -9,6 +9,8 @@ import * as uuid from 'uuid';
 import { LocationStrategy } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { Login, ResetState } from '../auth.actions';
+import { AuthState } from '../auth.state';
+import { Navigate } from '@ngxs/router-plugin';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanActivateChild {
@@ -25,8 +27,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
         return null;
       }
       else if(this.cookieService.get(appConfig.authCookieName) != localStorage.getItem('aa_access_token')) {
-        //unexpected cookie change.  //could be a different user has logged in
-        this.store.dispatch(new ResetState());
+        //unexpected cookie change.  //could be that a different user has logged in
         return null;
       }
     }
@@ -49,9 +50,13 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   canActivate(route: ActivatedRouteSnapshot, routerState: RouterStateSnapshot) {
     if (this.user) return true;
     
-    this.store.dispatch(new Login(routerState.url));
-    return false;
+    localStorage.setItem('nextUrl', routerState.url);
 
+    //without running async,  we enter an endless loop of router cancelations
+    //TODO:  Understand this more.
+    setTimeout(() => { this.store.dispatch(new Navigate(['/login'])); });
+    
+    return false;
   }
 
   canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
