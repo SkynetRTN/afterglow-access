@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CookieModule } from 'ngx-cookie';
 import { ReactiveFormsModule } from '@angular/forms';
-import { LoginFormComponent } from './components/login-form.component';
 import { AuthorizedPageComponent } from './containers/authorized-page/authorized-page.component';
 
 import { AuthService } from './services/auth.service';
@@ -12,7 +11,7 @@ import { MaterialModule } from '../material';
 import { LoginPageComponent } from './containers/login-page/login-page.component';
 import { LogoutPageComponent } from './containers/logout-page/logout-page.component';
 
-export const COMPONENTS = [LoginFormComponent, AuthorizedPageComponent, LoginPageComponent, LogoutPageComponent];
+export const COMPONENTS = [AuthorizedPageComponent, LoginPageComponent, LogoutPageComponent];
 
 @NgModule({
   imports: [
