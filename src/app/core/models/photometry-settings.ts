@@ -1,6 +1,7 @@
 export interface PhotometrySettings {
     gain: number;
     centroidRadius: number;
+    zeroPoint: number;
     mode: 'adaptive' | 'constant';
     //constant
     a: number;
@@ -10,6 +11,7 @@ export interface PhotometrySettings {
     aOut: number;
     bOut: number;
     thetaOut: number;
+    
 
     //adaptive
     aKrFactor: number;
