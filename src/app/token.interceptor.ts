@@ -12,6 +12,7 @@ import { catchError } from 'rxjs/operators';
 
 import { Logout } from './auth/auth.actions';
 import { appConfig } from '../environments/environment';
+import { Navigate } from '@ngxs/router-plugin';
 
 
 @Injectable()
@@ -33,7 +34,10 @@ export class TokenInterceptor implements HttpInterceptor {
         if (error instanceof HttpErrorResponse) {
           switch ((<HttpErrorResponse>error).status) {
             case 401: {
-              //this.store.dispatch(new Navigate());
+              //user authentication has expired
+
+              this.store.dispatch([new Logout(), new Navigate(['/login'])]);
+
             }
           }
         }
