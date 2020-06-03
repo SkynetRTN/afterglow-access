@@ -42,6 +42,7 @@ import { PhotDataState } from './core/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { DataFileType } from './data-files/models/data-file-type';
 import { ImageFile } from './data-files/models/data-file';
+import { WasmService } from './wasm.service';
 
 export function dataFileSanitizer(v) {
   let state = {
@@ -159,6 +160,7 @@ export function imageFileStateSanitizer(v) {
     AppComponent
   ],
   providers: [
+    WasmService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: TokenInterceptor,

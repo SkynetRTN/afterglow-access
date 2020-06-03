@@ -1,4 +1,4 @@
-import { Matrix } from 'paper';
+import { WcsLib } from '../wasm.service';
 
 declare var WCS: any;
 // import "!!file-loader?name=wcslib.wasm!../../../wasm/wcsjs/wcslib.wasm"
@@ -168,8 +168,7 @@ export class Wcs {
 
   constructor(params: { [key: string]: any }) {
     this.params = params;
-    this.wcs = new WCS();
-    this.wcs.init(toHeader(params));
+    this.wcs = new WcsLib(params);
   }
 
   public isValid() {

@@ -21,8 +21,7 @@
             "polyfills": "src/polyfills.ts",
             "assets": [
               "src/assets",
-              "src/favicon.ico",
-              "src/wasm/wcslib.wasm"
+              "src/favicon.ico"
             ],
             "styles": [
               "node_modules/bootstrap-css-only/css/bootstrap.min.css",
@@ -32,7 +31,6 @@
             ],
             "scripts": [
               "node_modules/downloadjs/download.js",
-              "src/wasm/wcs.js",
               "node_modules/plotly.js/dist/plotly.min.js"
             ]
           },
