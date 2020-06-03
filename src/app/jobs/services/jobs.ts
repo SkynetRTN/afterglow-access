@@ -5,6 +5,7 @@ import { appConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { Job } from "../models/job";
+import { JobStateBase } from "../models/job-base";
 import { JobResult } from "../models/job-result";
 import { getCoreApiUrl } from '../../../environments/app-config';
 
@@ -24,6 +25,12 @@ export class JobService {
   getJob(jobId: string) {
     return this.http.get<Job>(
       `${getCoreApiUrl(appConfig)}/jobs/${jobId}`
+    );
+  }
+
+  getJobState(jobId: string) {
+    return this.http.get<JobStateBase>(
+      `${getCoreApiUrl(appConfig)}/jobs/${jobId}/state`
     );
   }
 

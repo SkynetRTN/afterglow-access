@@ -129,10 +129,10 @@ export class JobsState {
   @Action(UpdateJob)
   @ImmutableContext()
   public updateJob({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJob) {
-    return this.jobService.getJob(job.id).pipe(
+    return this.jobService.getJobState(job.id).pipe(
       tap(value => {
         setState((state: JobsStateModel) => {
-          state.entities[job.id].job = value;
+          state.entities[job.id].job.state = value;
           return state;
         });
       })
