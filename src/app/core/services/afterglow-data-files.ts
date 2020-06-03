@@ -69,7 +69,7 @@ export class AfterglowDataFileService {
       )
       .pipe(
         map(res =>
-          res.items
+          res
             .map(r => {
               switch (r.type) {
                 case "image": {

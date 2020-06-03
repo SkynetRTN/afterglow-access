@@ -17,7 +17,7 @@ export class AfterglowCatalogService {
     )
     .pipe(
       map(res =>
-        res.items.map(c => {
+        res.map(c => {
           return {
             name: c.name,
             displayName: c.display_name,

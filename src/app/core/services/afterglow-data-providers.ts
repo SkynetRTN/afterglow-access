@@ -18,7 +18,7 @@ export class AfterglowDataProviderService {
       .get<any>(`${getCoreApiUrl(appConfig)}/data-providers`)
       .pipe(
         map(res =>
-          res.items.map(r => {
+          res.map(r => {
             return {
               id: r.id,
               name: r.display_name,
@@ -52,7 +52,7 @@ export class AfterglowDataProviderService {
       .get<any>(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString())
       .pipe(
         map(resp =>
-          resp.items.map(r => {
+          resp.map(r => {
             let asset: DataProviderAsset = {
               name: r.name,
               collection: r.collection,

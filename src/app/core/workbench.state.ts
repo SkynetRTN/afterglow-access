@@ -71,12 +71,13 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   },
   photometrySettings: {
     gain: 1,
+    zeroPoint: 20,
     centroidRadius: 5,
     mode: 'constant',
     a: 5,
     b: 5,
     theta: 0,
-    aIn: 5,
+    aIn: 10,
     aOut: 15,
     bOut: 15,
     thetaOut: 0,
@@ -1954,6 +1955,7 @@ export class WorkbenchState {
 
     s.gain = settings.gain;
     s.centroid_radius = settings.centroidRadius;
+    s.zero_point = settings.zeroPoint;
 
     let job: PhotometryJob = {
       type: JobType.Photometry,

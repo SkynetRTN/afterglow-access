@@ -17,7 +17,7 @@ export class AfterglowFieldCalService {
       .get<any>(`${getCoreApiUrl(appConfig)}/field-cals`)
       .pipe(
         map(res =>
-          res.items.map(r => {
+          res.map(r => {
             return {
               id: r.id,
               name: r.name,
