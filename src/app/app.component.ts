@@ -47,7 +47,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private hotKeys: Array<Hotkey> = [];
   private themeDialog: MatDialogRef<ThemeDialogComponent>;
   private helpDialog: MatDialogRef<HelpDialogComponent>;
-  private loaded$: Observable<boolean>;
+  loaded$: Observable<boolean>;
 
   public constructor(
     private store: Store,
