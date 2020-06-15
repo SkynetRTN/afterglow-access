@@ -1,13 +1,19 @@
-import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular/core";
-import { Select, Store } from '@ngxs/store';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  Renderer2,
+  OnDestroy,
+} from "@angular/core";
+import { Select, Store } from "@ngxs/store";
 import { Title } from "@angular/platform-browser";
 import { Router, NavigationEnd, ActivatedRoute } from "@angular/router";
 import { Observable, Subscription, Subscribable } from "rxjs";
 
-import { AuthState } from './auth/auth.state';
-import { InitAuth } from './auth/auth.actions';
+import { AuthState } from "./auth/auth.state";
+import { InitAuth } from "./auth/auth.actions";
 import { AuthGuard } from "./auth/services/auth-guard.service";
-import { User } from "./auth/models/user";
+import { CoreUser } from "./auth/models/user";
 
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
@@ -15,26 +21,22 @@ import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./core/components/help-dialog/help-dialog.component";
 import { MatDialog, MatDialogRef } from "@angular/material";
 import { ThemeDialogComponent } from "./core/components/theme-dialog/theme-dialog.component";
-import { DataProvidersState } from './data-providers/data-providers.state';
-import { SetFullScreen, Initialize } from './core/workbench.actions';
-import { finalize } from 'rxjs/operators';
-
-
+import { DataProvidersState } from "./data-providers/data-providers.state";
+import { SetFullScreen, Initialize } from "./core/workbench.actions";
+import { finalize, map, tap, filter, take } from "rxjs/operators";
+import { Navigate } from "@ngxs/router-plugin";
+import { WasmService } from "./wasm.service";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.css"]
+  styleUrls: ["./app.component.css"],
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   currentRoutes: any[] = [];
 
-  @Select(AuthState.loggedIn)
-  loggedIn$: Observable<boolean>
-
   @Select(AuthState.user)
-  user$: Observable<User>
-
+  user$: Observable<CoreUser>;
 
   loggedInSub: Subscription;
   colorThemeName: string;
@@ -45,6 +47,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private hotKeys: Array<Hotkey> = [];
   private themeDialog: MatDialogRef<ThemeDialogComponent>;
   private helpDialog: MatDialogRef<HelpDialogComponent>;
+  loaded$: Observable<boolean>;
 
   public constructor(
     private store: Store,
@@ -55,15 +58,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private renderer: Renderer2,
     private themeStorage: ThemeStorage,
     public dialog: MatDialog,
-    private _hotkeysService: HotkeysService
-
+    private _hotkeysService: HotkeysService,
+    private wasmService: WasmService
   ) {
+    this.loaded$ = this.wasmService.wasmReady$;
+
     let theme = this.themeStorage.getCurrentTheme();
     if (!theme) {
       theme = {
         colorThemeName: this.themeStorage.colorThemes[0].name,
         fontSize: "default",
-        fontWeight: "default"
+        fontWeight: "default",
       };
       this.themeStorage.storeTheme(theme);
     }
@@ -76,7 +81,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.fontWeight != "default")
       this.renderer.addClass(document.body, this.fontWeight);
 
-    this.themeStorage.onThemeUpdate.subscribe(theme => {
+    this.themeStorage.onThemeUpdate.subscribe((theme) => {
       this.renderer.removeClass(document.body, this.colorThemeName);
       this.colorThemeName = theme.colorThemeName;
       this.renderer.addClass(document.body, this.colorThemeName);
@@ -94,18 +99,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.renderer.addClass(document.body, this.fontWeight);
     });
 
-    this.dataProviders$ = this.store.select(DataProvidersState.getDataProviders);
-
-    if (this.authGuard.isLoggedIn()) {
-      this.store.dispatch(new InitAuth(true));
-    }
-
     this.hotKeys.push(
       new Hotkey(
         "W",
         (event: KeyboardEvent): boolean => {
-          this.router.navigate(["workbench"]);
-          this.store.dispatch(new SetFullScreen(false))
+          this.store.dispatch(new Navigate(["workbench"]));
+          this.store.dispatch(new SetFullScreen(false));
           return false; // Prevent bubbling
         },
         undefined,
@@ -117,7 +116,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "D",
         (event: KeyboardEvent): boolean => {
-          this.router.navigate(["data-providers"]);
+          this.store.dispatch(new Navigate(["data-providers"]));
           return false; // Prevent bubbling
         },
         undefined,
@@ -129,13 +128,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "T",
         (event: KeyboardEvent): boolean => {
-          if(this.themeDialog) return;
+          if (this.themeDialog) return;
           this.themeDialog = this.dialog.open(ThemeDialogComponent, {
             data: {},
             width: "500px",
-            height: "400px"
+            height: "400px",
           });
-          this.themeDialog.afterClosed().subscribe(result => {
+          this.themeDialog.afterClosed().subscribe((result) => {
             this.themeDialog = undefined;
           });
           return false; // Prevent bubbling
@@ -149,14 +148,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "?",
         (event: KeyboardEvent): boolean => {
-          if(this.helpDialog) return;
+          if (this.helpDialog) return;
           this.helpDialog = this.dialog.open(HelpDialogComponent, {
             data: {},
             width: "800px",
-            height: "600px"
+            height: "600px",
           });
 
-          this.helpDialog.afterClosed().subscribe(result => {
+          this.helpDialog.afterClosed().subscribe((result) => {
             this.helpDialog = undefined;
           });
 
@@ -167,8 +166,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       )
     );
 
-    
-    this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
+    this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
 
     // localStorage.setItem("previouslyVisited", "false");
     // this.tourService.events$.subscribe(x => console.log(x));
@@ -287,27 +285,36 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.router.events.subscribe(event => {
+    this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         var title = [
           ...this.getTitle(
             this.router.routerState,
             this.router.routerState.root
           ).reverse(),
-          "Afterglow Access"
+          "Afterglow Access",
         ].join(" | ");
         this.titleService.setTitle(title);
       }
     });
 
-    this.store.dispatch(new Initialize());
+    this.loaded$
+      .pipe(
+        filter((v) => v === true),
+        take(1)
+      )
+      .subscribe(() => {
+        this.dataProviders$ = this.store.select(
+          DataProvidersState.getDataProviders
+        );
+        this.store.dispatch(new InitAuth());
+        this.store.dispatch(new Initialize());
+      });
   }
 
   ngAfterViewInit() {}
 
-  
   ngOnDestroy() {
-    this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
+    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
   }
-
 }

@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Store, Actions, ofActionCompleted, ofActionSuccessful } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings } from '../../workbench.actions';
+import { SetShowConfig, SetFullScreen, SetFullScreenPanel, ShowSidebar, LoadCatalogs, LoadFieldCals, SelectDataFile, SetSidebarView, ToggleShowConfig, SetViewMode, SetActiveViewer, SetViewerSyncEnabled, SetNormalizationSyncEnabled, ImportFromSurvey, UpdatePhotometryPageSettings, MoveToOtherView, KeepViewerOpen } from '../../workbench.actions';
 import { LoadLibrary, RemoveAllDataFiles, RemoveDataFile } from '../../../data-files/data-files.actions';
 import { LoadDataProviders } from '../../../data-providers/data-providers.actions';
 import { tap, map, withLatestFrom, filter } from 'rxjs/operators';
@@ -21,6 +21,7 @@ import { DataProvider } from '../../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { DataProvidersState } from '../../../data-providers/data-providers.state';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { Navigate } from '@ngxs/router-plugin';
 
 
 
@@ -68,6 +69,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   private subs: Subscription[] = [];
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   imageFile$: Observable<ImageFile>;
+  primaryViewers$: Observable<Viewer[]>;
+  secondaryViewers$: Observable<Viewer[]>;
 
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
@@ -83,8 +86,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.files$ = this.store.select(DataFilesState.getDataFiles).pipe(
       map(files => files.sort((a, b) => a.name.localeCompare(b.name)))
     );
+    this.primaryViewers$ = this.store.select(WorkbenchState.getPrimaryViewers);
+    this.secondaryViewers$ = this.store.select(WorkbenchState.getSecondaryViewers);
     this.selectedFile$ = this.store.select(WorkbenchState.getActiveImageFile);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers).pipe(map(viewer => viewer.filter(viewer => !viewer.hidden)));
+    this.viewers$ = this.store.select(WorkbenchState.getViewers);
     this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
     this.showConfig$ = this.store.select(WorkbenchState.getShowConfig);
     this.showSidebar$ = this.store.select(WorkbenchState.getShowSidebar);
@@ -112,37 +117,37 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('d', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.VIEWER_ROUTE]);
+      this.store.dispatch(new Navigate([this.VIEWER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Display Settings'))
 
     this.hotKeys.push(new Hotkey('i', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.FILE_INFO_ROUTE]);
+      this.store.dispatch(new Navigate([this.FILE_INFO_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'File Info'));
 
     this.hotKeys.push(new Hotkey('m', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.MARKER_ROUTE]);
+      this.store.dispatch(new Navigate([this.MARKER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Markers'));
 
     this.hotKeys.push(new Hotkey('P', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.PLOTTER_ROUTE]);
+      this.store.dispatch(new Navigate([this.PLOTTER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Plotter'));
 
     this.hotKeys.push(new Hotkey('s', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.SONIFIER_ROUTE]);
+      this.store.dispatch(new Navigate([this.SONIFIER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Sonifier'));
 
     // this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
     //   this.store.dispatch(new SetShowConfig(true));
-    //   this.router.navigate([this.FIELD_CAL_ROUTE]);
+    //   this.store.dispatch(new Navigate([this.FIELD_CAL_ROUTE]);
     //   return false; // Prevent bubbling
     // }, undefined, 'Field Calibration'));
 
@@ -154,19 +159,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(new Hotkey('/', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.IMAGE_ARITHMETIC_ROUTE]);
+      this.store.dispatch(new Navigate([this.IMAGE_ARITHMETIC_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Image Arithmetic'));
 
     this.hotKeys.push(new Hotkey('a', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.ALIGNER_ROUTE]);
+      this.store.dispatch(new Navigate([this.ALIGNER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Aligning'));
 
     this.hotKeys.push(new Hotkey('S', (event: KeyboardEvent): boolean => {
       this.store.dispatch(new SetShowConfig(true));
-      this.router.navigate([this.STACKER_ROUTE]);
+      this.store.dispatch(new Navigate([this.STACKER_ROUTE]));
       return false; // Prevent bubbling
     }, undefined, 'Stacking'));
 
@@ -240,10 +245,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.hotKeys.forEach(hotKey => this._hotkeysService.remove(hotKey));
   }
 
-  onFileSelect(file: DataFile) {
-    if (!file) return;
+  onFileSelect($event: {file: DataFile, doubleClick: boolean}) {
+    if (!$event.file) return;
 
-    this.store.dispatch(new SelectDataFile(file.id));
+    if(!$event.doubleClick) {
+      this.store.dispatch(new SelectDataFile($event.file.id));
+    }
+    else {
+      this.store.dispatch(new KeepViewerOpen(this.store.selectSnapshot(WorkbenchState.getActiveViewerId)));
+    }
+
   }
 
   // onMultiFileSelect(files: Array<DataFile>) {
@@ -312,7 +323,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       // show
       this.store.dispatch(new SetShowConfig(true));
     }
-    this.router.navigate([route]);
+    this.store.dispatch(new Navigate([route]));
   }
 
 
@@ -381,6 +392,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   onUseWcsCenterChange($event: MatRadioChange) {
     this.useWcsCenter = $event.value == 'wcs';
+  }
+
+  moveToOtherView(viewer: Viewer) {
+    this.store.dispatch(new MoveToOtherView(viewer.viewerId));
   }
 
 

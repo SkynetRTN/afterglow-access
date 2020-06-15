@@ -32,6 +32,7 @@ import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
 import { DataProvidersState } from '../../../../data-providers/data-providers.state';
 import { SortDataProviderAssets, LoadDataProviders, LoadDataProviderAssets, ImportSelectedAssets } from '../../../../data-providers/data-providers.actions';
+import { Navigate } from '@ngxs/router-plugin';
 
 export class DataProviderAssetsDataSource
   implements DataSource<DataProviderAsset> {
@@ -152,7 +153,7 @@ export class DataProviderBrowsePageComponent
             if (dataProvider) {
               // if(!('path' in qparams) && dataProvider.id in lastPath) {
               //   console.log("navigating!!!");
-              //   this.router.navigate(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}});
+              //   this.store.dispatch(new Navigate(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}});
               // }
               // else {
               //   let path = qparams['path'];
@@ -192,7 +193,7 @@ export class DataProviderBrowsePageComponent
           filter(([progress, importing, errors]) => !importing && progress == 100 && errors.length == 0)
         )
         .subscribe(v => {
-          //this.router.navigate(["/workbench"]);
+          //this.store.dispatch(new Navigate(["/workbench"]);
         })
     );
   }
@@ -249,6 +250,6 @@ export class DataProviderBrowsePageComponent
   }
 
   navigateToCollection(path: string) {
-    this.router.navigate([], { queryParams: { path: path } });
+    this.store.dispatch(new Navigate([], { queryParams: { path: path } }));
   }
 }

@@ -22,12 +22,12 @@ import { HotkeyModule } from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { registerLocaleData } from '@angular/common';
-
+import { AvatarModule } from 'ngx-avatar';
 
 
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
-import { environment } from '../environments/environment';
+import { appConfig } from '../environments/environment';
 import { NgxPopperModule } from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
@@ -42,8 +42,67 @@ import { PhotDataState } from './core/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { DataFileType } from './data-files/models/data-file-type';
 import { ImageFile } from './data-files/models/data-file';
+import { WasmService } from './wasm.service';
 
+export function dataFileSanitizer(v) {
+  let state = {
+    ...v
+   } as DataFilesStateModel;
 
+  state.entities = {
+    ...state.entities
+  }
+
+  Object.keys(state.entities).forEach(key => {
+    let dataFile = {
+      ...state.entities[key]
+    };
+
+    dataFile.header = null;
+    dataFile.headerLoaded = false;
+    dataFile.headerLoading = false;
+    dataFile.wcs = null;
+    
+
+    if(dataFile.type == DataFileType.IMAGE) {
+      let imageFile = dataFile as ImageFile;
+      imageFile.hist = null;
+      imageFile.histLoaded = false;
+      imageFile.histLoading = false;
+      imageFile.tilesInitialized = false;
+      imageFile.tiles = [];
+    }
+    state.entities[key] = dataFile;
+
+  })
+  return state;
+}
+
+export function imageFileStateSanitizer(v) {
+  let state = {
+    ...v
+   } as ImageFilesStateModel;
+
+  state.entities = {
+    ...state.entities
+  }
+
+  Object.keys(state.entities).forEach(key => {
+    let imageFileState = {
+      ...state.entities[key]
+    };
+
+    imageFileState.normalization = {
+      ...imageFileState.normalization,
+      initialized: false,
+      normalizedTiles: []
+    }
+
+    state.entities[key] = imageFileState;
+
+  })
+  return state;
+}
 
 
 @NgModule({
@@ -52,12 +111,13 @@ import { ImageFile } from './data-files/models/data-file';
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot(AFTERGLOW_ROUTES, { enableTracing: false }),
+    RouterModule.forRoot(AFTERGLOW_ROUTES),
     MaterialModule,
     ReactiveFormsModule,
     FlexLayoutModule,
     CookieModule.forRoot(),
     NgxPopperModule,
+    AvatarModule,
     ThemePickerModule,
     CoreModule.forRoot(),
     AuthModule.forRoot(),
@@ -66,7 +126,7 @@ import { ImageFile } from './data-files/models/data-file';
     }),
     NgxsModule.forRoot(
       [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
-      { developmentMode: !environment.production }
+      { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
       key: [
@@ -83,79 +143,24 @@ import { ImageFile } from './data-files/models/data-file';
       sanitizations: [
         {
           key: DataFilesState,
-          sanitize: (v) => {
-            let state = {
-              ...v
-             } as DataFilesStateModel;
-
-            state.entities = {
-              ...state.entities
-            }
-
-            Object.keys(state.entities).forEach(key => {
-              let dataFile = {
-                ...state.entities[key]
-              };
-
-              dataFile.header = null;
-              dataFile.headerLoaded = false;
-              dataFile.headerLoading = false;
-              dataFile.wcs = null;
-              
-
-              if(dataFile.type == DataFileType.IMAGE) {
-                let imageFile = dataFile as ImageFile;
-                imageFile.hist = null;
-                imageFile.histLoaded = false;
-                imageFile.histLoading = false;
-                imageFile.tilesInitialized = false;
-                imageFile.tiles = [];
-              }
-              state.entities[key] = dataFile;
-
-            })
-            return state;
-          }
+          sanitize: dataFileSanitizer
         },
         {
           key: ImageFilesState,
-          sanitize: (v) => {
-            let state = {
-              ...v
-             } as ImageFilesStateModel;
-
-            state.entities = {
-              ...state.entities
-            }
-
-            Object.keys(state.entities).forEach(key => {
-              let imageFileState = {
-                ...state.entities[key]
-              };
-
-              imageFileState.normalization = {
-                ...imageFileState.normalization,
-                initialized: false,
-                normalizedTiles: []
-              }
-
-              state.entities[key] = imageFileState;
-
-            })
-            return state;
-          }
+          sanitize: imageFileStateSanitizer,
         }
       ],
       storage: StorageOption.SessionStorage
     }),
     NgxsRouterPluginModule.forRoot(),
-    environment.plugins
+    appConfig.plugins
   ],
 
   declarations: [
     AppComponent
   ],
   providers: [
+    WasmService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: TokenInterceptor,

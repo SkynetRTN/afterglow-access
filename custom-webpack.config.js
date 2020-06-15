@@ -1,6 +1,8 @@
+//needed to prevent error when loading wasm via file-loader import
+//see: https://github.com/webpack/webpack/issues/6725
+
 module.exports = {
   module: {
-    //originally required when using WASM for wcslib.  Not needed now.
     defaultRules: [
       {
         type: "javascript/auto",

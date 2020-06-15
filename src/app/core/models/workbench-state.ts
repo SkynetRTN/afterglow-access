@@ -102,8 +102,11 @@ export interface WorkbenchStateModel {
   activeViewerId: string;
   activeTool: WorkbenchTool;
   viewMode: ViewMode;
+  nextViewerIdSeed: number;
   viewerIds: string[];
   viewers: {[id:string]: Viewer};
+  primaryViewerIds: string[];
+  secondaryViewerIds: string[];
   viewerSyncEnabled: boolean;
   normalizationSyncEnabled: boolean;
   sidebarView: SidebarView

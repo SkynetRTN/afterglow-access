@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Location } from "@angular/common";
 import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
-import { environment } from "../../../environments/environment";
+import { appConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { DataFile, ImageFile, Header } from "../../data-files/models/data-file";
@@ -9,8 +9,7 @@ import { ImageHist } from "../../data-files/models/image-hist";
 import { DataFileType } from "../../data-files/models/data-file-type";
 import { Region } from "../models/region";
 import { Source, PosType } from "../models/source";
-import { DataProvider } from "../../data-providers/models/data-provider";
-import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
+import { getCoreApiUrl } from '../../../environments/app-config';
 
 function createImageHist(
   data: Uint32Array,
@@ -42,8 +41,8 @@ function createImageFile(id: string, name: string, layer: string): ImageFile {
     hist: null,
     histLoaded: false,
     histLoading: false,
-    tileWidth: environment.tileSize,
-    tileHeight: environment.tileSize
+    tileWidth: appConfig.tileSize,
+    tileHeight: appConfig.tileSize
     // markerEntities: {},
     // markerIds: []
   };
@@ -57,7 +56,7 @@ export class AfterglowDataFileService {
 
   removeFile(fileId: string): Observable<null> {
     return this.http
-      .delete(`${environment.apiUrl}/data-files/${fileId}`)
+      .delete(`${getCoreApiUrl(appConfig)}/data-files/${fileId}`)
       .pipe(
         map(res => null)
       )
@@ -65,8 +64,8 @@ export class AfterglowDataFileService {
 
   getFiles(): Observable<DataFile[]> {
     return this.http
-      .get<any[]>(
-        `${environment.apiUrl}/data-files`
+      .get<any>(
+        `${getCoreApiUrl(appConfig)}/data-files`
       )
       .pipe(
         map(res =>
@@ -98,18 +97,18 @@ export class AfterglowDataFileService {
     // assetPath = assetPath.replace("\\", "/");
     let body = { provider_id: providerId, path: assetPath };
     return this.http.post(
-      `${environment.apiUrl}/data-files`,
+      `${getCoreApiUrl(appConfig)}/data-files`,
       body
     );
   }
 
   getHeader(fileId: string): Observable<Header> {
-    return this.http.get<Header>(`${environment.apiUrl}/data-files/${fileId}/header`);
+    return this.http.get<Header>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
   }
 
   getHist(fileId: string): Observable<ImageHist> {
     return this.http
-      .get<any>(`${environment.apiUrl}/data-files/${fileId}/hist`)
+      .get<any>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/hist`)
       .pipe(
         map(res => {
           return createImageHist(res.data, res.min_bin, res.max_bin);
@@ -129,7 +128,7 @@ export class AfterglowDataFileService {
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
-      .get(`${environment.apiUrl}/data-files/${fileId}/pixels`,
+      .get(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/pixels`,
         { headers: headers, responseType: "arraybuffer", params: params }
       )
       .pipe(
@@ -146,7 +145,7 @@ export class AfterglowDataFileService {
     duration: number,
     toneCount: number
   ) {
-    return `${environment.apiUrl}/data-files/${fileId}/sonification?x=${Math.floor(
+    return `${getCoreApiUrl(appConfig)}/data-files/${fileId}/sonification?x=${Math.floor(
       region.x
     ) + 1}&y=${Math.floor(region.y) + 1}&width=${Math.floor(
       region.width

@@ -1,25 +1,29 @@
 import { State, Action, Selector, StateContext } from '@ngxs/store';
-import { Router } from '@angular/router';
+import { Router, UrlSerializer } from '@angular/router';
 import { CookieService } from 'ngx-cookie';
 import { tap, catchError, finalize } from 'rxjs/operators';
-import { of } from "rxjs";
+import { of, config } from "rxjs";
 
-import { InitAuth, Login, LoginSuccess, Logout, LoginOAuth, LoadAuthMethods, LoadPermittedOAuthClients, AddPermittedOAuthClient, LoadOAuthClients, ResetState } from './auth.actions';
+import { InitAuth, Login, LoginSuccess, Logout, CheckSession, ResetState } from './auth.actions';
 import { OAuthClient } from './models/oauth-client';
-import { User } from './models/user';
+import { CoreUser } from './models/user';
 import { AuthService } from './services/auth.service';
-import { environment } from "../../environments/environment";
+import { appConfig } from "../../environments/environment";
 import { AuthMethod } from './models/auth-method';
 import { Navigate } from '@ngxs/router-plugin';
 import { AuthGuard } from './services/auth-guard.service';
 
 import jwt_decode from 'jwt-decode';
 
+import { HttpParams } from '@angular/common/http';
+import { LocationStrategy } from '@angular/common';
+import { RedoRegionSelection } from '../core/image-files.actions';
+import { local } from 'd3-selection';
+
 export interface AuthStateModel {
   loginPending: boolean;
   loginError: string;
-  loggedIn: boolean;
-  user: User | null;
+  user: CoreUser | null;
   loadingOAuthClients: boolean;
   loadingPermittedOAuthClientIds: boolean;
   permittedOAuthClientIds: string[];
@@ -32,7 +36,6 @@ export interface AuthStateModel {
   defaults: {
     loginPending: false,
     loginError: '',
-    loggedIn: false,
     user: null,
     loadingOAuthClients: false,
     loadingPermittedOAuthClientIds: false,
@@ -44,8 +47,11 @@ export interface AuthStateModel {
 export class AuthState {
   constructor(private authService: AuthService,
     private router: Router,
+    private location: LocationStrategy,
+    private urlSerializer: UrlSerializer,
     private cookieService: CookieService,
-    private authGuard: AuthGuard) { }
+    private authGuard: AuthGuard) {
+  }
 
   @Selector()
   public static state(state: AuthStateModel) {
@@ -60,11 +66,6 @@ export class AuthState {
   @Selector()
   public static loginError(state: AuthStateModel) {
     return state.loginError;
-  }
-
-  @Selector()
-  public static loggedIn(state: AuthStateModel) {
-    return state.loggedIn;
   }
 
   @Selector()
@@ -98,144 +99,89 @@ export class AuthState {
   }
 
   @Action(InitAuth)
-  public init(ctx: StateContext<AuthStateModel>, { loggedIn }: InitAuth) {
-    ctx.patchState({ loggedIn: loggedIn, user: null });
+  public init(ctx: StateContext<AuthStateModel>, action: InitAuth) {
+    //redirect to authorizing page to get user info 
+    //watch for localstorage changes
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (['aa_user', 'aa_access_token'].includes(event.key)) {
+        let state = ctx.getState();
+        if( state.user && this.authGuard.user) {
+          if(state.user.id != this.authGuard.user.id) {
+            //local storage user does not match user in application state
+            ctx.dispatch(new ResetState());
+            ctx.patchState({
+              user: null
+            });
+            ctx.dispatch(new Navigate(['/login']));
+          }
+        }
+        else if (state.user) {
+          //user no longer exists in local storage/cookie
+          //login could be in-progress at the oauth authorized endpoint or the login endpoint of the app
+          console.log("LOGGIN OUT");
+          ctx.dispatch(new Navigate(['/logout']));
+        }
+        else {
+          //app state user is logged out
+          //local storage/cookie user is not null
+          ctx.dispatch(new LoginSuccess());
+        }
+      }
+    });
+
+  }
+
+  @Action(CheckSession)
+  public checkSession(ctx: StateContext<AuthStateModel>, action: CheckSession) {
+    
+
   }
 
   @Action(Login)
-  public login(ctx: StateContext<AuthStateModel>, { credentials }: Login) {
-    ctx.patchState({ loginPending: true });
-    return this.authService.login(credentials).pipe(
-      tap(result => {
-        return ctx.dispatch(new LoginSuccess('http'));
-      }),
-      catchError(err => {
-        ctx.patchState({ loginPending: false, loginError: err });
-        return of('');
-      }
-
-      ));
-  }
-
-  @Action(LoginOAuth)
-  public loginOAuth(ctx: StateContext<AuthStateModel>, { authMethodId, redirectUri, authCode }: LoginOAuth) {
-    ctx.patchState({ loginPending: true });
-    return this.authService.loginOAuth(authMethodId, redirectUri, authCode).pipe(
-      tap(result => {
-        return ctx.dispatch(new LoginSuccess('oauth'));
-      }),
-      catchError(err => {
-        ctx.patchState({ loginPending: false, loginError: err });
-        return of('');
-      }
-
-      ));
+  public login(ctx: StateContext<AuthStateModel>, action: Login) {
+    
   }
 
   @Action(LoginSuccess)
-  public loginSuccess(ctx: StateContext<AuthStateModel>, { method }: LoginSuccess) {
-    if(this.authGuard.isLoggedIn()) {
-      let decoded = jwt_decode(this.cookieService.get(environment.accessTokenCookieName));
-      
+  public loginSuccess(ctx: StateContext<AuthStateModel>, action: LoginSuccess) {
+    if (this.authGuard.user) {
       let state = ctx.getState();
-      if(state.user && state.user.id != decoded.identity) {
-        //different user, clear state
+      if(state.user && this.authGuard.user.id != state.user.id) {
+        //different user has logged in
         ctx.dispatch(new ResetState());
       }
+
       ctx.patchState({
         loginPending: false,
-        loggedIn: true,
         loginError: '',
-        user: {
-          firstName: '',
-          lastName: '',
-          id: decoded.identity,
-          email: ''
-        }
+        user: this.authGuard.user
       });
 
       let nextUrl = localStorage.getItem("nextUrl");
       localStorage.removeItem("nextUrl");
       //if redirecting from oauth authorize page,  remove from navigation history so back button skips page
-      ctx.dispatch(new Navigate([nextUrl && nextUrl != "" ? nextUrl : "/"], {}, {
-        replaceUrl: method == 'oauth'
+      ctx.dispatch(new Navigate([(nextUrl && nextUrl != "") ? nextUrl : "/"], {}, {
+        replaceUrl: true
       }));
     }
     else {
-      ctx.patchState({ loginPending: false, loggedIn: false, loginError: 'We encountered an unexpected error.  Please try again later.' });
+      ctx.patchState({ loginPending: false, user: null, loginError: 'We encountered an unexpected error.  Please try again later.' });
     }
-
-    
   }
 
   @Action(Logout)
   public logout(ctx: StateContext<AuthStateModel>, { }: Logout) {
-    this.cookieService.put(environment.accessTokenCookieName, "", {
-      expires: new Date()
-    });
+    if (appConfig.authMethod == 'cookie') {
+      this.cookieService.remove(appConfig.authCookieName);
+    }
+    else if (appConfig.authMethod == 'oauth2') {
+      
+    }
+    localStorage.removeItem('aa_user');
+    localStorage.removeItem('aa_expires_at');
+    localStorage.removeItem('aa_access_token');
+
     ctx.dispatch(new ResetState());
-
-    return this.authService.logout().pipe(
-      tap(result => {
-        ctx.dispatch(new Navigate(["/login"]));
-      }),
-      catchError(err => {
-        ctx.dispatch(new Navigate(["/login"]));
-        return of('')
-      })
-    );
-  }
-
-  @Action(LoadAuthMethods)
-  public loadAuthMethods(ctx: StateContext<AuthStateModel>, { }: LoadAuthMethods) {
-    return this.authService.getAuthMethods().pipe(
-      tap(result => {
-        ctx.patchState({ authMethods: result })
-      }),
-      catchError(err => {
-        return of('')
-      })
-    );
-  }
-
-  @Action(LoadPermittedOAuthClients)
-  public loadPermittedOAuthClients(ctx: StateContext<AuthStateModel>, { }: LoadPermittedOAuthClients) {
-    ctx.patchState({ loadingPermittedOAuthClientIds: true });
-    return this.authService.getPermittedOAuthClients().pipe(
-      tap(result => {
-        ctx.patchState({ permittedOAuthClientIds: result })
-      }),
-      catchError(err => {
-
-        return of('')
-      }),
-      finalize(() => ctx.patchState({ loadingPermittedOAuthClientIds: false }))
-    );
-  }
-
-  @Action(AddPermittedOAuthClient)
-  public addPermittedOAuthClient(ctx: StateContext<AuthStateModel>, { client }: AddPermittedOAuthClient) {
-    return this.authService.addPermittedOAuthClient(client).pipe(
-      tap(result => {
-
-      }),
-      catchError(err => {
-        return of('')
-      })
-    );
-  }
-
-  @Action(LoadOAuthClients)
-  public loadOAuthClients(ctx: StateContext<AuthStateModel>, { }: LoadOAuthClients) {
-    ctx.patchState({ loadingOAuthClients: true })
-    return this.authService.getOAuthClients().pipe(
-      tap(result => {
-        ctx.patchState({ oAuthClients: result })
-      }),
-      catchError(err => {
-        return of('')
-      }),
-      finalize(() => ctx.patchState({ loadingOAuthClients: false }))
-    );
+    ctx.patchState({ user: null });
   }
 }

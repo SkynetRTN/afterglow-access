@@ -15,7 +15,7 @@ export interface Source {
   secondaryCoord: number;
   pm: number;
   pmPosAngle: number;
-  pmEpoch: Date;
+  pmEpoch: string;
 }
 
 

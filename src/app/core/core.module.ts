@@ -76,6 +76,8 @@ import { RectangleMarkerEditorComponent } from './components/rectangle-marker-ed
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { WorkbenchPageBaseComponent } from './containers/workbench/workbench-page-base/workbench-page-base.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
+import { WorkbenchViewManagerComponent } from './containers/workbench/workbench-view-manager/workbench-view-manager.component';
+import { AvatarModule } from 'ngx-avatar';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -117,8 +119,8 @@ export const COMPONENTS = [
   HelpDialogComponent,
   ThemeDialogComponent,
   WorkbenchPageBaseComponent,
-  ConfirmationDialogComponent
-
+  ConfirmationDialogComponent,
+  WorkbenchViewManagerComponent
 ];
 
 
@@ -144,6 +146,7 @@ export const COMPONENTS = [
     FlexLayoutModule,
     ThemePickerModule,
     AfterglowPlotlyModule,
+    AvatarModule
   ],
 
   declarations: COMPONENTS,

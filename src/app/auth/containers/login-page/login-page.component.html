@@ -1,25 +1,14 @@
 <div class="login-panels">
-  <app-login-form
-    *ngIf="(showHttpAuth$ | async)"
-    (submitted)="onSubmit($event)"
-    [pending]="pending$ | async"
-    [errorMessage]="error$ | async">
-  </app-login-form>
-  <mat-card class="mat-card ml-3" *ngIf="(oauthServerMethods$ | async)?.length != 0">
-    <mat-card-title class="mat-card-title flex-center" i18n>Login Services</mat-card-title>
+  <mat-card class="mat-card ml-3">
+    <mat-card-title class="mat-card-title flex-center" i18n>Logging In...</mat-card-title>
     <mat-card-content class="mat-card-content">
-      <p i18n>Login using one of the following services.</p>
+      <p i18n>Please wait while we complete the login process.</p>
       <div class="flex-center">
-        <div class="oauth2-server p-2" *ngFor="let method of (oauthServerMethods$ | async)">
-          <button mat-raised-button [color]="'primary'" (click)="onOauthMethodClick(method)">{{method.description}}</button>
-        </div>
+          <mat-spinner></mat-spinner>
       </div>
       
     </mat-card-content>
   </mat-card>
-
-
-  
 </div>
-
-
+  
+  

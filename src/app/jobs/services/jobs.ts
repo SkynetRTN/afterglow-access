@@ -1,11 +1,13 @@
 import { Injectable } from "@angular/core";
 import { Location } from "@angular/common";
 import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
-import { environment } from "../../../environments/environment";
+import { appConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { Job } from "../models/job";
+import { JobStateBase } from "../models/job-base";
 import { JobResult } from "../models/job-result";
+import { getCoreApiUrl } from '../../../environments/app-config';
 
 @Injectable()
 export class JobService {
@@ -15,21 +17,27 @@ export class JobService {
 
   createJob(job: Job) {
     return this.http.post<Job>(
-      `${environment.apiUrl}/jobs`,
+      `${getCoreApiUrl(appConfig)}/jobs`,
       job
     );
   }
 
   getJob(jobId: string) {
     return this.http.get<Job>(
-      `${environment.apiUrl}/jobs/${jobId}`
+      `${getCoreApiUrl(appConfig)}/jobs/${jobId}`
+    );
+  }
+
+  getJobState(jobId: string) {
+    return this.http.get<JobStateBase>(
+      `${getCoreApiUrl(appConfig)}/jobs/${jobId}/state`
     );
   }
 
   getJobResult(job: Job): Observable<JobResult> {
     return this.http
       .get<any>(
-        `${environment.apiUrl}/jobs/${job.id}/result`
+        `${getCoreApiUrl(appConfig)}/jobs/${job.id}/result`
       )
       .pipe(
         map(resp => {

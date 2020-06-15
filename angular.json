@@ -31,11 +31,44 @@
             ],
             "scripts": [
               "node_modules/downloadjs/download.js",
-              "wasm/wcsjs/wcs.js",
               "node_modules/plotly.js/dist/plotly.min.js"
             ]
           },
           "configurations": {
+            "dev": {
+              "optimization": false,
+              "outputHashing": "all",
+              "sourceMap": true,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ]
+            },
+            "web": {
+              "optimization": false,
+              "outputHashing": "all",
+              "sourceMap": true,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.web.ts"
+                }
+              ]
+            },
             "production": {
               "optimization": true,
               "outputHashing": "all",
@@ -86,6 +119,9 @@
             "browserTarget": "afterglow-access:build"
           },
           "configurations": {
+            "dev": {
+              "browserTarget": "afterglow-access:build:dev"
+            },
             "production": {
               "browserTarget": "afterglow-access:build:production"
             },

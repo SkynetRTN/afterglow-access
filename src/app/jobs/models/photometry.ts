@@ -22,6 +22,7 @@ export interface PhotometryJobSettings {
   theta_out?: number; // (optional) annulus position angle
   gain?: number; // (optional) default gain if not present in FITS headers
   centroid_radius?: number; // 0 = disable centroiding
+  zero_point?: number;
 }
 
 export interface PhotometryJob extends JobBase {

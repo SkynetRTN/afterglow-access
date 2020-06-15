@@ -8,7 +8,7 @@ import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers } from './workbench.actions';
+import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
 import { ImageFilesState, ImageFilesStateModel } from './image-files.state';
 import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './image-files.actions';
@@ -51,28 +51,14 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   inFullScreenMode: false,
   fullScreenPanel: 'file',
   selectedFileId: null,
-  activeViewerId: 'VWR1',
+  activeViewerId: null,
   activeTool: WorkbenchTool.VIEWER,
-  viewMode: ViewMode.SINGLE,
-  viewerIds: ['VWR1', 'VWR2'],
-  viewers: {
-    'VWR1': {
-      viewerId: 'VWR1',
-      fileId: null,
-      panEnabled: true,
-      zoomEnabled: true,
-      hidden: false,
-      markers: [],
-    },
-    'VWR2': {
-      viewerId: 'VWR2',
-      fileId: null,
-      panEnabled: true,
-      zoomEnabled: true,
-      hidden: true,
-      markers: [],
-    }
-  },
+  viewMode: ViewMode.SPLIT_VERTICAL,
+  nextViewerIdSeed: 0,
+  viewerIds: [],
+  viewers: {},
+  primaryViewerIds: [],
+  secondaryViewerIds: [],
   viewerSyncEnabled: false,
   normalizationSyncEnabled: false,
   sidebarView: SidebarView.FILES,
@@ -85,12 +71,13 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   },
   photometrySettings: {
     gain: 1,
+    zeroPoint: 20,
     centroidRadius: 5,
     mode: 'constant',
     a: 5,
     b: 5,
     theta: 0,
-    aIn: 5,
+    aIn: 10,
     aOut: 15,
     bOut: 15,
     thetaOut: 0,
@@ -178,6 +165,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   defaults: workbenchStateDefaults
 })
 export class WorkbenchState {
+  protected viewerIdPrefix = 'VWR';
 
   constructor(private store: Store, private afterglowCatalogService: AfterglowCatalogService, private afterglowFieldCalService: AfterglowFieldCalService, private correlationIdGenerator: CorrelationIdGenerator, private actions$: Actions) { }
 
@@ -209,6 +197,26 @@ export class WorkbenchState {
   @Selector()
   public static getViewers(state: WorkbenchStateModel) {
     return Object.values(state.viewers);
+  }
+
+  @Selector()
+  public static getPrimaryViewerIds(state: WorkbenchStateModel) {
+    return state.primaryViewerIds;
+  }
+
+  @Selector([WorkbenchState.getPrimaryViewerIds, WorkbenchState.getViewerEntities])
+  public static getPrimaryViewers(state: WorkbenchStateModel, primaryViewerIds: string[], viewerEntities: {[id:string]: Viewer}) {
+    return primaryViewerIds.map(id => viewerEntities[id]);
+  }
+
+  @Selector()
+  public static getSecondaryViewerIds(state: WorkbenchStateModel) {
+    return state.secondaryViewerIds;
+  }
+
+  @Selector([WorkbenchState.getSecondaryViewerIds, WorkbenchState.getViewerEntities])
+  public static getSecondaryViewers(state: WorkbenchStateModel, secondaryViewerIds: string[], viewerEntities: {[id:string]: Viewer}) {
+    return secondaryViewerIds.map(id => viewerEntities[id]);
   }
 
   @Selector()
@@ -565,17 +573,88 @@ export class WorkbenchState {
     });
   }
 
+  @Action(CreateViewer)
+  @ImmutableContext()
+  public createViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewer, usePrimary }: CreateViewer) {
+    setState((state: WorkbenchStateModel) => {
+      let id = this.viewerIdPrefix + state.nextViewerIdSeed++;
+      state.viewers[id] = {
+        ...viewer,
+        viewerId: id
+      }
+      state.viewerIds.push(id);
+      if(usePrimary) {
+        state.primaryViewerIds.push(id);
+      }
+      else {
+        state.secondaryViewerIds.push(id);
+      }
+      state.activeViewerId = id;
+      if(viewer.fileId) dispatch(new SetViewerFile(id, viewer.fileId));
+
+      return state;
+    });
+
+    
+  }
+
+  @Action(CloseViewer)
+  @ImmutableContext()
+  public closeViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: CloseViewer) {
+    setState((state: WorkbenchStateModel) => {
+      let activeViewerIndex = state.viewerIds.indexOf(state.activeViewerId);
+
+      state.viewerIds = state.viewerIds.filter(id => id != viewerId);
+      if(viewerId in state.viewers) delete state.viewers[viewerId];
+
+      state.primaryViewerIds = state.primaryViewerIds.filter(id => id != viewerId);
+      state.secondaryViewerIds = state.secondaryViewerIds.filter(id => id != viewerId);
+      state.activeViewerId = state.viewerIds.length == 0 ? null : state.viewerIds[Math.max(0, Math.min(state.viewerIds.length-1, activeViewerIndex))];
+
+      if(state.primaryViewerIds.length == 0) {
+        state.primaryViewerIds = [...state.secondaryViewerIds];
+        state.secondaryViewerIds = [];
+      }
+      return state;
+    });
+  }
+
+  @Action(KeepViewerOpen)
+  @ImmutableContext()
+  public keepViewerOpen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: KeepViewerOpen) {
+    setState((state: WorkbenchStateModel) => {
+      if(viewerId in state.viewers) state.viewers[viewerId].keepOpen = true;
+      return state;
+    });
+  }
+
+  @Action(MoveToOtherView)
+  @ImmutableContext()
+  public moveToOtherView({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: MoveToOtherView) {
+    setState((state: WorkbenchStateModel) => {
+      if(state.primaryViewerIds.includes(viewerId)) {
+        state.primaryViewerIds = state.primaryViewerIds.filter(id => id != viewerId);
+        state.secondaryViewerIds.push(viewerId);
+      }
+      else if(state.secondaryViewerIds.includes(viewerId)) {
+        state.secondaryViewerIds = state.secondaryViewerIds.filter(id => id != viewerId);
+        state.primaryViewerIds.push(viewerId);
+      }
+      return state;
+    });
+  }
+
 
   @Action(SetViewMode)
   @ImmutableContext()
   public setViewMode({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewMode }: SetViewMode) {
     setState((state: WorkbenchStateModel) => {
-      let primaryViewerId = WorkbenchState.getViewers(state)[0].viewerId;
-      let secondaryViewerId = WorkbenchState.getViewers(state)[1].viewerId;
-      let activeViewerId = state.activeViewerId;
-      if (viewMode == ViewMode.SINGLE) state.activeViewerId = primaryViewerId;
+      // let primaryViewerId = WorkbenchState.getViewers(state)[0].viewerId;
+      // let secondaryViewerId = WorkbenchState.getViewers(state)[1].viewerId;
+      // let activeViewerId = state.activeViewerId;
+      // if (viewMode == ViewMode.SINGLE) state.activeViewerId = primaryViewerId;
       state.viewMode = viewMode;
-      state.viewers[secondaryViewerId].hidden = viewMode == ViewMode.SINGLE;
+      // state.viewers[secondaryViewerId].hidden = viewMode == ViewMode.SINGLE;
       return state;
     });
   }
@@ -610,15 +689,14 @@ export class WorkbenchState {
     let actions = [];
     let dataFile = dataFiles[fileId] as ImageFile;
     if (dataFile && viewer) {
+      let originalFileId;
+      setState((state: WorkbenchStateModel) => {
+        originalFileId = state.viewers[viewerId].fileId;
+        state.viewers[viewerId].fileId = fileId;
+        return state;
+      });
 
       if (dataFile.headerLoaded && dataFile.histLoaded) {
-        let originalFileId;
-        setState((state: WorkbenchStateModel) => {
-          originalFileId = state.viewers[viewerId].fileId;
-          state.viewers[viewerId].fileId = fileId;
-          return state;
-        });
-
         let referenceFileId = originalFileId;
         if (referenceFileId == null) {
           let referenceViewer = WorkbenchState.getViewers(state).find(
@@ -679,7 +757,8 @@ export class WorkbenchState {
         actions.push(new LoadDataFile(fileId));
         
         let cancel$ = this.actions$.pipe(
-          ofActionDispatched(SetViewerFile)
+          ofActionDispatched(SetViewerFile),
+          filter<SetViewerFile>(action => action.viewerId == viewerId && action.fileId != fileId),
         )
 
         let next$ = this.actions$.pipe(
@@ -1012,21 +1091,43 @@ export class WorkbenchState {
   @ImmutableContext()
   public selectDataFile({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: SelectDataFile) {
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (fileId != null) {
       let dataFile = dataFiles[fileId];
       let viewers = WorkbenchState.getViewers(state);
-      if (viewers.length != 0) {
-        if (!activeViewer) {
-          dispatch(new SetActiveViewer(viewers[0].viewerId));
-        }
-        else {
-          dispatch(new SetViewerFile(activeViewer.viewerId, dataFile.id));
-        }
+
+      //check if file is already open
+      let targetViewer = viewers.find(viewer => viewer.fileId == fileId);
+      if(targetViewer) {
+        dispatch(new SetActiveViewer(targetViewer.viewerId));
+        return;
       }
+
+      //check if existing viewer is available
+      targetViewer = viewers.find(viewer => !viewer.keepOpen);
+      if(targetViewer) {
+        //temporary viewer exists
+        dispatch(new SetViewerFile(targetViewer.viewerId, dataFile.id));
+        dispatch(new SetActiveViewer(targetViewer.viewerId));
+        return;
+      }
+      
+      let useSecondary = state.secondaryViewerIds.includes(state.activeViewerId);
+      let viewer: Viewer = {
+        viewerId: null,
+        fileId: fileId,
+        panEnabled: true,
+        zoomEnabled: true,
+        markers: [],
+        keepOpen: false,
+      }
+      dispatch(new CreateViewer(viewer, !useSecondary));
     }
+
+    
+
 
     setState((state: WorkbenchStateModel) => {
       state.selectedFileId = fileId;
@@ -1685,9 +1786,9 @@ export class WorkbenchState {
 
             
             if(targetViewer) {
-              if(getState().viewMode == ViewMode.SINGLE ) {
-                dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
-              }
+              // if(getState().viewMode == ViewMode.SINGLE ) {
+              //   dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
+              // }
               
               dispatch(new SetActiveViewer(targetViewer.viewerId));
               dispatch(new SelectDataFile((action.fileIds[0].toString())));
@@ -1786,6 +1887,7 @@ export class WorkbenchState {
 
           if (
             photometryPageSettings.coordMode == 'sky' &&
+            dataFiles[fileId].wcs && dataFiles[fileId].wcs.isValid() &&
             "ra_hours" in d &&
             d.ra_hours !== null &&
             "dec_degs" in d &&
@@ -1798,7 +1900,7 @@ export class WorkbenchState {
 
           let pmEpoch = null;
           if (d.time && Date.parse(d.time + ' GMT')) {
-            pmEpoch = new Date(Date.parse(d.time + ' GMT'));
+            pmEpoch = new Date(Date.parse(d.time + ' GMT')).toISOString();
           }
           return {
             id: null,
@@ -1853,6 +1955,7 @@ export class WorkbenchState {
 
     s.gain = settings.gain;
     s.centroid_radius = settings.centroidRadius;
+    s.zero_point = settings.zeroPoint;
 
     let job: PhotometryJob = {
       type: JobType.Photometry,
@@ -1885,7 +1988,7 @@ export class WorkbenchState {
         }
         return {
           id: source.id,
-          pm_epoch: source.pmEpoch ? source.pmEpoch.toISOString() : null,
+          pm_epoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
           x: x,
           y: y,
           pm_pixel: pmPixel,

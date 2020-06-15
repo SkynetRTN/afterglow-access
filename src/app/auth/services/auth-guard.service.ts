@@ -1,29 +1,62 @@
 import { Injectable } from '@angular/core';
 import { Select, Store } from '@ngxs/store';
-import { CanActivate, Router, RouterStateSnapshot, ActivatedRouteSnapshot, CanActivateChild } from '@angular/router';
+import { CanActivate, Router, RouterStateSnapshot, ActivatedRouteSnapshot, CanActivateChild, UrlSerializer } from '@angular/router';
 import { CookieService } from 'ngx-cookie';
-import { environment } from '../../../environments/environment';
+import { appConfig } from '../../../environments/environment';
+
+import * as moment from "moment";
+import * as uuid from 'uuid';
+import { LocationStrategy } from '@angular/common';
+import { HttpParams } from '@angular/common/http';
+import { Login, ResetState } from '../auth.actions';
+import { AuthState } from '../auth.state';
 import { Navigate } from '@ngxs/router-plugin';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanActivateChild {
-  constructor(private store: Store, private cookieService: CookieService, private router: Router) {}
+  constructor(private store: Store,
+    private cookieService: CookieService,
+    private router: Router,
+    private location: LocationStrategy, 
+    private urlSerializer: UrlSerializer) { }
 
-  isLoggedIn() {
-    if (this.cookieService.get(environment.accessTokenCookieName)) {
-      // logged in so return true
-      return true;
+  get user() {
+    if(!localStorage.getItem('aa_user')) return null;
+    if (appConfig.authMethod == 'cookie') {
+      if(!this.cookieService.get(appConfig.authCookieName)) {
+        return null;
+      }
+      else if(this.cookieService.get(appConfig.authCookieName) != localStorage.getItem('aa_access_token')) {
+        //unexpected cookie change.  //could be that a different user has logged in
+        return null;
+      }
     }
-    return false;
+    if (appConfig.authMethod == 'oauth2') {
+      let expiresAt = moment(localStorage.getItem('aa_expires_at'));
+      if(moment().isSameOrAfter(expiresAt)) {
+        localStorage.removeItem('aa_user');
+        return null;
+      }
+    }
+
+    try {
+      return JSON.parse(localStorage.getItem('aa_user'));
+    }
+    catch(err) {
+      return null;
+    }
   }
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    if (this.isLoggedIn()) {
-      // logged in so return true
-      return true;
-    }
-    localStorage.setItem('nextUrl', state.url);
-    return this.router.parseUrl('/login');
+  canActivate(route: ActivatedRouteSnapshot, routerState: RouterStateSnapshot) {
+    if (this.user) return true;
+    
+    localStorage.setItem('nextUrl', routerState.url);
+
+    //without running async,  we enter an endless loop of router cancelations
+    //TODO:  Understand this more.
+    setTimeout(() => { this.store.dispatch(new Navigate(['/login'])); });
+    
+    return false;
   }
 
   canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {

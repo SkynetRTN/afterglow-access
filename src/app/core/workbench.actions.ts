@@ -12,6 +12,7 @@ import { PhotometrySettings } from './models/photometry-settings';
 import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Source } from './models/source';
 import { Marker } from './models/marker';
+import { Viewer } from './models/viewer';
 
 /* Core */
 
@@ -50,6 +51,30 @@ export class SelectDataFile {
 
 export class SetActiveViewer {
   public static readonly type = '[Workbench] Set Active Viewer';
+
+  constructor(public viewerId: string) { }
+}
+
+export class CreateViewer {
+  public static readonly type = '[Workbench] Create Viewer';
+
+  constructor(public viewer: Viewer, public usePrimary = true) { }
+}
+
+export class CloseViewer {
+  public static readonly type = '[Workbench] Close Viewer';
+
+  constructor(public viewerId: string) { }
+}
+
+export class KeepViewerOpen {
+  public static readonly type = '[Workbench] Keep Viewer Open ';
+
+  constructor(public viewerId: string) { }
+}
+
+export class MoveToOtherView {
+  public static readonly type = '[Workbench] Move To Other View ';
 
   constructor(public viewerId: string) { }
 }

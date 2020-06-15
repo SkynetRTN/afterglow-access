@@ -32,7 +32,7 @@
       </div>
       <div fxFlex="1 1 0%" *ngIf="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES" class="file-list-panel h-100">
         <div *ngIf="!(files$ | async) || (files$ | async)?.length == 0" class="empty-library-info alert alert-info" style="margin: 10px;">
-          Your library is empty. Import files from your
+          <ng-container i18n>Your library is empty. Import files from your</ng-container>
           <a [routerLink]="['/data-providers']">data providers</a>.
         </div>
         <ng-container *ngIf="(files$ | async)?.length != 0">
@@ -50,7 +50,7 @@
             <div fxFlex="1 1 auto" class="file-list-panel-content">
               <div class="file-list-content">
                 <div [hidden]="!(loading$ | async)">
-                  <p>Loading library...</p>
+                  <p i18n>Loading library...</p>
                   <div class="flex-center">
                     <mat-spinner></mat-spinner>
                   </div>
@@ -64,25 +64,26 @@
 
       </div>
       <div fxFlex="1 1 0%" *ngIf="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.SETTINGS" class="file-list-panel h-100 p-3">
-        <h6>Display Settings</h6>
+        <h6 i18n>Display Settings</h6>
         <div class="form-group pt-2">
           <mat-button-toggle-group name="viewMode" [value]="(viewMode$ | async)" (change)="setViewModeOption($event)">
-            <mat-button-toggle aria-label="Single Viewer" [value]="ViewMode.SINGLE" matTooltip="Single Viewer" [matTooltipPosition]="'below'">
-              <mat-icon>crop_din</mat-icon>
-            </mat-button-toggle>
-            <mat-button-toggle aria-label="Dual Viewer Split Horizontally" [value]="ViewMode.SPLIT_VERTICAL" matTooltip="Split Viewer Horizontally"
+            <mat-button-toggle aria-label="Dual Viewer Split Horizontally" [value]="ViewMode.SPLIT_HORIZONTAL" matTooltip="Split Viewer Horizontally"
               [matTooltipPosition]="'below'">
               <mat-icon>view_stream</mat-icon>
             </mat-button-toggle>
-            <mat-button-toggle aria-label="Dual Viewer Split Vertically" [value]="ViewMode.SPLIT_HORIZONTAL" matTooltip="Split Viewer Vertically"
+            <mat-button-toggle aria-label="Dual Viewer Split Vertically" [value]="ViewMode.SPLIT_VERTICAL" matTooltip="Split Viewer Vertically"
               [matTooltipPosition]="'below'">
               <mat-icon style="transform: rotate(90deg) translate(-3px,2px);">view_stream</mat-icon>
             </mat-button-toggle>
           </mat-button-toggle-group>
+          <div *ngIf="(activeViewer$ | async); let activeViewer">
+            <button [disabled]="!activeViewer" (click)="moveToOtherView(activeViewer)" class="mt-2" mat-raised-button>Move actve viewer to split display</button>
+          </div>
+          
         </div>
         <div>
           <mat-form-field style="width: 100%;">
-            <mat-select [disabled]="(viewMode$ | async) == ViewMode.SINGLE" placeholder="Active Viewer" [ngModel]="activeViewerId$ | async"
+            <mat-select placeholder="Active Viewer" [ngModel]="activeViewerId$ | async"
               (ngModelChange)="onActiveViewerIdChange($event)" style="width: 200px;">
               <mat-option *ngFor="let viewer of viewers$ | async; index as viewerIndex" [value]="viewer.viewerId">
                 Viewer {{ viewerIndex + 1 }} {{ (fileEntities$ | async)[viewer.fileId] ? "- " + (fileEntities$ | async)[viewer.fileId].name
@@ -94,14 +95,14 @@
         <div class="form-group pt-2">
           <mat-slide-toggle [checked]="viewerSyncEnabled$ | async" [labelPosition]="after" (change)="onViewerSyncEnabledChange($event)"
             color="primary">
-            Sync orientations
+            <ng-container i18n>Sync orientations</ng-container>
           </mat-slide-toggle>
         </div>
 
         <div class="form-group pt-2">
           <mat-slide-toggle [checked]="normalizationSyncEnabled$ | async" [labelPosition]="after" (change)="onNormalizationSyncEnabledChange($event)"
             color="primary">
-            Sync display settings
+            <ng-container>Sync display settings</ng-container>
           </mat-slide-toggle>
         </div>
 
@@ -109,14 +110,12 @@
 
         <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
           <div *ngIf="imageFile$ | async; let imageFile">
-            <h6>DSS Catalog Import</h6>
+            <h6 i18n>DSS Catalog Import</h6>
             <div class="pb-3">
-              <mat-radio-group aria-label="DSS Import Image Center"
-              [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()"
-                [value]="(useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()) ? 'wcs' : 'header'"
+              <mat-radio-group aria-label="DSS Import Image Center" [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [value]="(useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()) ? 'wcs' : 'header'"
                 (change)="onUseWcsCenterChange($event)">
-                <mat-radio-button value="header">Use intended pointing for image center</mat-radio-button>
-                <mat-radio-button value="wcs">Use WCS for image center</mat-radio-button>
+                <mat-radio-button value="header" i18n>Use intended pointing for image center</mat-radio-button>
+                <mat-radio-button value="wcs" i18n>Use WCS for image center</mat-radio-button>
               </mat-radio-group>
 
               <!-- <mat-slide-toggle [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [checked]="useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()"
@@ -125,7 +124,7 @@
               </mat-slide-toggle> -->
             </div>
             <div>
-              <button mat-raised-button class="mb-2" [disabled]="(surveyImportCorrId$ | async) !== null" (click)="importFromSurvey(surveyDataProvider, imageFile)">
+              <button mat-raised-button class="mb-2" [disabled]="(surveyImportCorrId$ | async) !== null" (click)="importFromSurvey(surveyDataProvider, imageFile)" i18n>
                 Import DSS
               </button>
             </div>
@@ -143,7 +142,8 @@
 
   </div>
   <span class="resizer"></span>
-  <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0">
+  <!-- <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0" style="overflow: hidden;"> -->
+  <div fxFlex="1 1 0%" fxFill fxLayout="row" class="workbench-outlet-panel" *ngIf="(files$ | async)?.length != 0" style="overflow: hidden;">
 
     <router-outlet></router-outlet>
 

@@ -1,9 +1,6 @@
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './auth/services/auth-guard.service'
-import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
-import { OauthAuthorizedPageComponent } from './auth/containers/oauth-authorized-page/oauth-authorized-page.component';
-import { OauthClientConsentPageComponent } from './auth/containers/oauth-client-consent-page/oauth-client-consent-page.component';
-import { LogoutPageComponent } from './auth/containers/logout-page/logout-page.component';
+import { AuthorizedPageComponent as AuthorizedPageComponent } from './auth/containers/authorized-page/authorized-page.component';
 import { DataProvidersComponent } from './core/containers/data-providers/data-providers.component';
 import { DataProvidersIndexPageComponent } from './core/containers/data-providers/data-providers-index-page/data-providers-index-page.component';
 import { DataProviderBrowsePageComponent } from './core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
@@ -19,6 +16,8 @@ import { InfoPageComponent } from './core/containers/workbench/info-page/info-pa
 import { FieldCalPageComponent } from './core/containers/workbench/field-cal-page/field-cal-page.component';
 import { WorkbenchGuard } from './core/services/workbench-guard.service';
 import { PhotometryPageComponent } from './core/containers/workbench/photometry-page/photometry-page.component';
+import { LogoutPageComponent } from './auth/containers/logout-page/logout-page.component';
+import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -27,26 +26,19 @@ export const AFTERGLOW_ROUTES: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'logout',
+    component: LogoutPageComponent,
+    data: { title: 'Logging out' }
+  },
+  {
     path: 'login',
     component: LoginPageComponent,
-    data: { title: 'Login' }
-  },
-  {
-    path: 'oauth_client_consent',
-    component: OauthClientConsentPageComponent,
-    canActivate: [AuthGuard],
-    data: { title: 'Grant Access' }
-  },
-  {
-    path: 'oauth_authorized',
-    component: OauthAuthorizedPageComponent,
     data: { title: 'Authorizing Please Wait' }
   },
   {
-    path: 'logout',
-    component: LogoutPageComponent,
-    canActivate: [AuthGuard],
-    data: { title: 'Logout' }
+    path: 'authorized',
+    component: AuthorizedPageComponent,
+    data: { title: 'Authorizing Please Wait' }
   },
   {
     path: 'data-providers',

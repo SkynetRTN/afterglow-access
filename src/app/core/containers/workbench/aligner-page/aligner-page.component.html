@@ -1,14 +1,7 @@
-<div
-  fxFlex="1 1 0%"
-  class="image-viewer-grid-panel"
-  role="region"
-  aria-label="image viewers"
-  [fxShow]="
+<div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers" [fxShow]="
     !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
-  "
->
-<app-workbench-viewer-grid [viewers]="viewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"></app-workbench-viewer-grid>
-
+  ">
+  <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async" [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"></app-workbench-view-manager>
 </div>
 
 <span class="resizer"></span>
@@ -25,7 +18,7 @@
 >
   <div class="card workbench-settings-card" style="height: 100%;">
     <div id="settings-header" class="card-header">
-      <h5>Aligner</h5>
+      <h5 i18n>Aligner</h5>
     </div>
 
     <div class="card-body" style="overflow-y: auto;">
@@ -33,7 +26,7 @@
         <form [formGroup]="alignForm">
           <div>
             <mat-form-field appearance="outline" style="width: 300px;">
-              <mat-label>Select Image(s) to Align</mat-label>
+              <mat-label i18n>Select Image(s) to Align</mat-label>
               <mat-select multiple formControlName="selectedImageFileIds">
                 <mat-option
                   *ngFor="let imageFile of allImageFiles"
@@ -43,18 +36,18 @@
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="selectImageFiles(allImageFiles)">
+            <button mat-icon-button (click)="selectImageFiles(allImageFiles)" i18n-aria-label aria-label="Select All Files">
               <mat-icon>select_all</mat-icon>
             </button>
 
-            <button mat-icon-button (click)="selectImageFiles([])">
+            <button mat-icon-button (click)="selectImageFiles([])" i18n-aria-label aria-label="Clear Selection">
               <mat-icon>clear</mat-icon>
             </button>
           </div>
 
           <div>
             <mat-form-field appearance="outline" style="width: 300px;">
-              <mat-label>Active Image File</mat-label>
+              <mat-label i18n>Active Image File</mat-label>
               <mat-select
                 [value]="(activeImageFile$ | async)?.id"
                 (selectionChange)="onActiveImageChange($event)"
@@ -69,14 +62,14 @@
           </div>
           <div>
             <mat-form-field appearance="outline" style="width: 300px;">
-              <mat-label>Mode</mat-label>
+              <mat-label i18n>Mode</mat-label>
               <mat-select formControlName="mode">
                 <mat-option [value]="'astrometric'">astrometric</mat-option>
                 <!-- <mat-option  [value]="'manual_source'">manual</mat-option> -->
               </mat-select>
             </mat-form-field>
             <div>
-              <mat-checkbox formControlName="inPlace">
+              <mat-checkbox formControlName="inPlace" i18n>
                 Overwrite Files</mat-checkbox
               >
             </div>
@@ -85,7 +78,7 @@
           <div *ngIf="activeImageIsSelected$ | async">
             <div *ngIf="(alignFormData$ | async)?.mode == 'astrometric'">
               <div *ngIf="!(activeImageHasWcs$ | async); else hasWcs">
-                <div class="alert alert-warning" style="margin-top: 10px;">
+                <div class="alert alert-warning" style="margin-top: 10px;" i18n>
                   This image does not have astrometric data in its header and
                   cannot be aligned using the selected mode.
                 </div>
@@ -105,6 +98,7 @@
             (click)="submit(alignForm.value)"
             [disabled]="!alignForm.valid"
             class="float-right"
+            i18n
           >
             Submit
           </button>
@@ -124,7 +118,7 @@
               else jobComplete
             "
           >
-            Processing job {{ jobRow.job.id }} ... ({{
+            <span i18n>Processing job</span> {{ jobRow.job.id }} ... ({{
               jobRow.job.state.progress | number: "1.0-0"
             }}%)
 
@@ -146,7 +140,7 @@
               {{ jobRow.result.errors }}
             </div>
             <ng-template #noErrors>
-              <div class="alert alert-success">
+              <div class="alert alert-success" i18n>
                 Processing is complete.
               </div>
             </ng-template>

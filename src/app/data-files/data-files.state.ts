@@ -35,6 +35,7 @@ import { DataFileType } from './models/data-file-type';
 import { ImageTile } from './models/image-tile';
 import { Wcs } from '../image-tools/wcs';
 import { ResetState } from '../auth/auth.actions';
+import { WasmService } from '../wasm.service';
 
 export interface DataFilesStateModel {
   version: number;
@@ -58,7 +59,7 @@ const dataFilesDefaultState: DataFilesStateModel = {
 })
 export class DataFilesState {
 
-  constructor(private dataFileService: AfterglowDataFileService, private actions$: Actions) {
+  constructor(private dataFileService: AfterglowDataFileService, private actions$: Actions, private wasmService: WasmService) {
   }
 
   @Selector()
@@ -248,13 +249,13 @@ export class DataFilesState {
             cancelAction.fileId == fileId
         )
       ),
-      this.actions$.pipe(
-        ofActionDispatched(LoadDataFileHdr),
-        filter<LoadDataFileHdr>(
-          cancelAction =>
-            cancelAction.fileId != fileId
-        )
-      )
+      // this.actions$.pipe(
+      //   ofActionDispatched(LoadDataFileHdr),
+      //   filter<LoadDataFileHdr>(
+      //     cancelAction =>
+      //       cancelAction.fileId != fileId
+      //   )
+      // )
     );
 
     setState((state: DataFilesStateModel) => {
@@ -336,13 +337,13 @@ export class DataFilesState {
             cancelAction.fileId == fileId
         )
       ),
-      this.actions$.pipe(
-        ofActionDispatched(LoadImageHist),
-        filter<LoadImageHist>(
-          cancelAction =>
-            cancelAction.fileId != fileId
-        )
-      )
+      // this.actions$.pipe(
+      //   ofActionDispatched(LoadImageHist),
+      //   filter<LoadImageHist>(
+      //     cancelAction =>
+      //       cancelAction.fileId != fileId
+      //   )
+      // )
     );
 
     setState((state: DataFilesStateModel) => {

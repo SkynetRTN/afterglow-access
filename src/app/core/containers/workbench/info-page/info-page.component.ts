@@ -24,6 +24,7 @@ import { DataFilesState } from '../../../../data-files/data-files.state';
 import { ImageFilesState } from '../../../image-files.state';
 import { SetActiveTool, SetLastRouterPath } from '../../../workbench.actions';
 import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
+import { datetimeToJd } from '../../../../utils/skynet-astro';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -99,7 +100,7 @@ export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnI
           if(startTime) {
             result.push({
               key: 'Start',
-              value: `${datePipe.transform(startTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')}`,
+              value: `${datePipe.transform(startTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')} (${datetimeToJd(startTime)} JD)`,
               comment: ''
             })
           }
@@ -107,7 +108,7 @@ export class InfoPageComponent extends WorkbenchPageBaseComponent implements OnI
           if(centerTime) {
             result.push({
               key: 'Center',
-              value: `${datePipe.transform(centerTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')}`,
+              value: `${datePipe.transform(centerTime, 'yyyy-MM-dd HH:mm:ss z', useSystemTime ? systemTimeZone : 'UTC')} (${datetimeToJd(centerTime)} JD)`,
               comment: ''
             })
           }

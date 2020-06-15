@@ -17,7 +17,11 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   @Input()
   dataFiles: DataFile[];
 
-  @Output() onSelectionChange = new EventEmitter<DataFile>();
+  @Output() onSelectionChange = new EventEmitter<{file: DataFile, doubleClick: boolean}>();
+
+  // preventSingleClick = false;
+  // timer: any;
+  // delay: Number;
 
   constructor(private store: Store) {
   }
@@ -33,21 +37,39 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
     switch($event.keyCode) {
       case SPACE: {
         this.selectedFileId = file.id;
-        this.onSelectionChange.emit(file);
+        this.onSelectionChange.emit({file: file, doubleClick: false});
       }
       case ENTER: {
         this.selectedFileId = file.id;
-        this.onSelectionChange.emit(file);
+        this.onSelectionChange.emit({file: file, doubleClick: false});
       }
     }
-  }
-
-  onRowClick(file: DataFile) {
-    this.selectedFileId = file.id;
-    this.onSelectionChange.emit(file);
   }
   
   trackByFn(index: number, value: DataFile) {
     return value.id;
   }
+
+  onRowClick(file: DataFile) {
+    if(file.id == this.selectedFileId) return;
+
+    this.selectedFileId = file.id;
+    this.onSelectionChange.emit({file: file, doubleClick: false});
+    // this.preventSingleClick = false;
+    //  const delay = 200;
+    //   this.timer = setTimeout(() => {
+    //     if (!this.preventSingleClick) {
+    //       this.selectedFileId = file.id;
+    //       this.onSelectionChange.emit({file: file, doubleClick: false});
+    //     }
+    //   }, delay);
+  }
+
+  onRowDoubleClick(file: DataFile) {
+    
+      // this.preventSingleClick = true;
+      // clearTimeout(this.timer);
+      this.selectedFileId = file.id;
+      this.onSelectionChange.emit({file: file, doubleClick: true});
+    }
 }

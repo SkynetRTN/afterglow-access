@@ -53,25 +53,29 @@ import { DataFilesState } from '../../../../data-files/data-files.state';
 import { Viewer } from '../../../models/viewer';
 import { ViewMode } from '../../../models/view-mode';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
+import { LoadDataFile } from '../../../../data-files/data-files.actions';
 @Component({
   selector: "app-workbench-page-base",
   template: ``,
   styleUrls: ["./workbench-page-base.component.css"]
 })
-export class WorkbenchPageBaseComponent {
+export class WorkbenchPageBaseComponent implements OnDestroy {
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<"file" | "viewer" | "tool">;
   showConfig$: Observable<boolean>;
   activeImageFile$: Observable<ImageFile>;
+  activeImageFileLoaded$: Observable<ImageFile>;
   activeImageFileState$: Observable<ImageFileState>;
   allImageFiles$: Observable<Array<ImageFile>>;
-  viewers$: Observable<Viewer[]>;
+  primaryViewers$: Observable<Viewer[]>;
+  secondaryViewers$: Observable<Viewer[]>;
   viewMode$: Observable<ViewMode>;
   activeViewerId$: Observable<string>;
   activeViewer$: Observable<Viewer>;
   viewerFileIds$: Observable<string[]>;
   viewerImageFiles$: Observable<ImageFile[]>;
   viewerImageFileHeaders$: Observable<Header[]>;
+  fileLoaderSub: Subscription;
 
   constructor(
     protected store: Store,
@@ -81,15 +85,19 @@ export class WorkbenchPageBaseComponent {
     this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
     this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.activeImageFileLoaded$ = this.activeImageFile$.pipe(
+      filter(f => f.headerLoaded && f.histLoaded)
+    )
     this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
     this.allImageFiles$ = store.select(DataFilesState.getImageFiles);
     this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers).pipe(map(viewer => viewer.filter(viewer => !viewer.hidden)));
+    this.primaryViewers$ = this.store.select(WorkbenchState.getPrimaryViewers);
+    this.secondaryViewers$ = this.store.select(WorkbenchState.getSecondaryViewers);
     this.activeViewerId$ = this.store.select(WorkbenchState.getActiveViewerId);
     this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
 
     this.viewerFileIds$ = this.store.select(WorkbenchState.getViewerIds).pipe(
-      flatMap(viewerIds => {
+      switchMap(viewerIds => {
         return combineLatest(
           ...viewerIds.map(viewerId => {
             return this.store.select(WorkbenchState.getViewerById).pipe(
@@ -102,7 +110,7 @@ export class WorkbenchPageBaseComponent {
     )
 
     this.viewerImageFiles$ = this.viewerFileIds$.pipe(
-      flatMap(fileIds => {
+      switchMap(fileIds => {
         return combineLatest(
           ...fileIds.map(fileId => {
             return this.store.select(DataFilesState.getDataFileById).pipe(
@@ -118,7 +126,7 @@ export class WorkbenchPageBaseComponent {
     )
 
     this.viewerImageFileHeaders$ = this.viewerFileIds$.pipe(
-      flatMap(fileIds => {
+      switchMap(fileIds => {
         return combineLatest(
           ...fileIds.map(fileId => {
             return this.store.select(DataFilesState.getDataFileById).pipe(
@@ -133,9 +141,24 @@ export class WorkbenchPageBaseComponent {
       })
     )
 
+    this.fileLoaderSub = this.viewerFileIds$.subscribe(ids => {
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      ids.forEach(id => {
+        let f = dataFiles[id];
+        if(!f || ( (f.headerLoaded || f.headerLoading) && (f.type != DataFileType.IMAGE || ((f as ImageFile).histLoaded || (f as ImageFile).histLoading)))) return;
+
+        this.store.dispatch(new LoadDataFile(id));
+
+      })
+    })
+
     this.store.dispatch(
       new SetLastRouterPath(router.url)
     );
+  }
+
+  ngOnDestroy() {
+    this.fileLoaderSub.unsubscribe();
   }
 }
 

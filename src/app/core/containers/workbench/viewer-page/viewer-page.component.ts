@@ -30,7 +30,7 @@ import { StretchMode } from "../../../models/stretch-mode";
 import { ImageFileState } from "../../../models/image-file-state";
 import { Marker, MarkerType } from "../../../models/marker";
 import { WorkbenchStateModel, WorkbenchTool } from "../../../models/workbench-state";
-import { environment } from "../../../../../environments/environment.prod";
+import { appConfig } from "../../../../../environments/environment.prod";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material";
 import { DataProvider } from '../../../../data-providers/models/data-provider';
@@ -81,8 +81,8 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
   backgroundPercentile$: Subject<number> = new Subject<number>();
   peakPercentile$: Subject<number> = new Subject<number>();
 
-  upperPercentileDefault = environment.upperPercentileDefault;
-  lowerPercentileDefault = environment.lowerPercentileDefault;
+  upperPercentileDefault = appConfig.upperPercentileDefault;
+  lowerPercentileDefault = appConfig.lowerPercentileDefault;
 
   constructor(private corrGen: CorrelationIdGenerator, store: Store, router: Router) {
     super(store, router);
@@ -160,9 +160,9 @@ export class ViewerPageComponent extends WorkbenchPageBaseComponent implements O
     this.peakPercentile$.next(value);
   }
 
-  onColorMapChange(value: ColorMap) {
+  onColorMapChange(value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.lastImageFile.id, { colorMapName: value.name })
+      new UpdateNormalizer(this.lastImageFile.id, { colorMapName: value })
     );
   }
 

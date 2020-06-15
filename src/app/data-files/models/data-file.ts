@@ -379,7 +379,7 @@ export function getSourceCoordinates(file: DataFile, source: Source) {
     let fileEpoch = getCenterTime(file);
     if (!fileEpoch) return null;
 
-    let deltaT = (fileEpoch.getTime() - epoch.getTime()) / 1000.0;
+    let deltaT = (fileEpoch.getTime() - (new Date(epoch)).getTime()) / 1000.0;
     let mu = (source.pm * deltaT) / 3600.0;
     let theta = source.pmPosAngle * (Math.PI / 180.0);
     let cd = Math.cos((secondaryCoord * Math.PI) / 180);

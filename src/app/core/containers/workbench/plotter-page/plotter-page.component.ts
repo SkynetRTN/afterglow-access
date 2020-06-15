@@ -94,20 +94,20 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
     this.plotterSyncEnabled$ = this.plotterPageSettings$.pipe(map(settings => settings.plotterSyncEnabled));
     this.mode$ = this.plotterPageSettings$.pipe(map(settings => settings.plotterMode));
 
-    this.lineStart$ = this.plotterFileState$.pipe(
-      map(state => state.lineMeasureStart),
-      filter(line => line !== null),
+    this.lineStart$ = combineLatest(this.plotterFileState$, this.activeImageFile$).pipe(
+      map(([state, activeImageFile]) => state.lineMeasureStart),
       withLatestFrom(this.activeImageFile$),
       map(([line, imageFile]) => {
+        if(!line) return null;
         return this.normalizeLine(imageFile, line);
       })
     );
 
-    this.lineEnd$ = this.plotterFileState$.pipe(
-      map(state => state.lineMeasureEnd),
-      filter(line => line !== null),
+    this.lineEnd$ = combineLatest(this.plotterFileState$, this.activeImageFile$).pipe(
+      map(([state, activeImageFile]) => state.lineMeasureEnd),
       withLatestFrom(this.activeImageFile$),
       map(([line, imageFile]) => {
+        if(!line) return null;
         return this.normalizeLine(imageFile, line);
       })
     );
@@ -115,13 +115,15 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
     this.vectorInfo$ = combineLatest(
       this.lineStart$,
       this.lineEnd$,
-      this.activeImageFile$
+      this.activeImageFileLoaded$
     ).pipe(
       map(([lineStart, lineEnd, imageFile]) => {
         let pixelSeparation = null;
         let skySeparation = null;
         let pixelPosAngle = null;
         let skyPosAngle = null;
+
+        if(!lineStart || !lineEnd) return;
 
         if (
           lineStart.x !== null &&
@@ -283,6 +285,8 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
     imageFile: ImageFile,
     line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
   ) {
+    if(!imageFile.headerLoaded) return;
+
     let x = null;
     let y = null;
     let raHours = null;

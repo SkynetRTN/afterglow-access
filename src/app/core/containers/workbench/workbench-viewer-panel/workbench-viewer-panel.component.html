@@ -1,8 +1,8 @@
 <div id="image-viewer-wrapper" fxLayout="column" class="h-100">
-  <div fxFlex="0 0 auto">
+  <!-- <div fxFlex="0 0 auto">
     <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]" (downloadSnapshot)="handleDownloadSnapshot()"
       [class.active]="active"></app-image-viewer-title-bar>
-  </div>
+  </div> -->
   <div fxFlex="1 1 100%">
     <div class="viewer-marker-wrapper h-100">
       <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]"
@@ -20,7 +20,7 @@
     </div>
   </div>
   <div fxFlex="0 0 auto">
-    <app-image-viewer-status-bar [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY"></app-image-viewer-status-bar>
+    <app-image-viewer-status-bar [class.active]="active" [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
   </div>
 </div>
 

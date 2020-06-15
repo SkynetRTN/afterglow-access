@@ -1,14 +1,7 @@
-<div
-  fxFlex="1 1 0%"
-  class="image-viewer-grid-panel"
-  role="region"
-  aria-label="image viewers"
-  [fxShow]="
+<div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers" [fxShow]="
     !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
-  "
->
-<app-workbench-viewer-grid [viewers]="viewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"></app-workbench-viewer-grid>
-
+  ">
+  <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async" [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"></app-workbench-view-manager>
 </div>
 
 <span class="resizer"></span>
@@ -25,11 +18,11 @@
 >
   <div class="card workbench-settings-card" style="height: 100%;">
     <div id="settings-header" class="card-header">
-      <h5>Image Calculator</h5>
+      <h5 i18n>Image Calculator</h5>
     </div>
 
     <div class="card-body" style="overflow-y: auto;">
-      <div *ngIf="!(activeImageFile$ | async)" class="alert alert-info">
+      <div *ngIf="!(activeImageFile$ | async)" class="alert alert-info" i18n>
         Select a data file to see image calculator options.
       </div>
       <div *ngIf="activeImageFile$ | async as activeImageFile">
@@ -49,8 +42,8 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" style="width: 300px;">
-                  <mat-label>Image(s)</mat-label>
-                  <mat-select multiple formControlName="imageFileIds">
+                  <mat-label i18n>Image(s)</mat-label>
+                  <mat-select multiple formControlName="imageFileIds" i18n-aria-label aria-label="images">
                     <mat-option
                       *ngFor="let imageFile of allImageFiles$ | async"
                       [value]="imageFile.id"
@@ -60,8 +53,8 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>Select a operand</mat-label>
-                  <mat-select formControlName="operand">
+                  <mat-label i18n>Select a operand</mat-label>
+                  <mat-select formControlName="operand" i18n-aria-label aria-label="operand">
                     <mat-option
                       *ngFor="let operand of operands"
                       [value]="operand.symbol"
@@ -74,11 +67,11 @@
                   appearance="outline"
                   [hidden]="imageCalcForm.value?.mode != 'image'"
                 >
-                  <mat-label>Select an image</mat-label>
+                  <mat-label i18n>Select an image</mat-label>
                   <mat-select formControlName="auxImageFileId">
                     <mat-option
                       *ngFor="let imageFile of allImageFiles$ | async"
-                      [value]="imageFile.id"
+                      [value]="imageFile.id" i18n-aria-label aria-label="Image"
                       >{{ imageFile.name }}</mat-option
                     >
                   </mat-select>
@@ -88,11 +81,11 @@
                   appearance="outline"
                   [hidden]="imageCalcForm.value?.mode != 'scalar'"
                 >
-                  <mat-label>Specify a scalar value</mat-label>
+                  <mat-label i18n>Specify a scalar value</mat-label>
                   <input matInput formControlName="scalarValue" type="number" />
                 </mat-form-field>
 
-                <mat-checkbox formControlName="inPlace"
+                <mat-checkbox formControlName="inPlace" i18n
                   >Overwrite Files</mat-checkbox
                 >
 
@@ -102,7 +95,7 @@
                     (imageCalcForm.touched || imageCalcForm.dirty)
                   "
                   class="cross-validation-error-message alert alert-danger"
-                  style="margin: 10px;"
+                  style="margin: 10px;" i18n
                 >
                   Dividing by zero would result in a catastrophic server
                   meltdown
@@ -114,6 +107,7 @@
                   (click)="submit(imageCalcForm.value)"
                   [disabled]="!imageCalcForm.valid"
                   class="float-right"
+                  i18n
                 >
                   Submit
                 </button>
@@ -123,8 +117,8 @@
           <mat-tab label="Advanced">
             <form [formGroup]="imageCalcFormAdv">
               <mat-form-field appearance="outline" style="width: 300px;">
-                <mat-label>Image(s)</mat-label>
-                <mat-select multiple formControlName="imageFileIds">
+                <mat-label i18n>Image(s)</mat-label>
+                <mat-select multiple formControlName="imageFileIds" i18n-aria-label aria-label="Images">
                   <mat-option
                     *ngFor="let imageFile of allImageFiles$ | async"
                     [value]="imageFile.id"
@@ -134,8 +128,8 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline" style="width: 300px;">
-                <mat-label>Auxillary image(s)</mat-label>
-                <mat-select multiple formControlName="auxImageFileIds">
+                <mat-label i18n>Auxillary image(s)</mat-label>
+                <mat-select multiple formControlName="auxImageFileIds" i18n-aria-label aria-label="Auxillary image(s)">
                   <mat-option
                     *ngFor="let imageFile of allImageFiles$ | async"
                     [value]="imageFile.id"
@@ -145,11 +139,11 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline" style="width: 300px">
-                <mat-label>Operation String</mat-label>
-                <input matInput formControlName="opString" />
+                <mat-label i18n>Operation String</mat-label>
+                <input matInput formControlName="opString"  i18n-aria-label aria-label="Operation String"/>
               </mat-form-field>
 
-              <mat-checkbox formControlName="inPlace"
+              <mat-checkbox formControlName="inPlace" i18n
                 >Overwrite Files</mat-checkbox
               >
 
@@ -174,6 +168,7 @@
                       [rowIndex]="0"
                       [columnIndex]="0"
                       [cellInTabOrder]="true"
+                      i18n
                     >
                       Variable Name
                     </mat-header-cell>
@@ -198,6 +193,7 @@
                       [rowIndex]="0"
                       [columnIndex]="1"
                       [cellInTabOrder]="true"
+                      i18n
                     >
                       Value
                     </mat-header-cell>
@@ -228,6 +224,7 @@
                 (click)="submitAdv(imageCalcFormAdv.value)"
                 [disabled]="!imageCalcFormAdv.valid"
                 class="float-right"
+                i18n
               >
                 Submit
               </button>
@@ -246,7 +243,7 @@
                     else jobComplete
                   "
                 >
-                  Processing job {{ jobRow.job.id }}
+                  <span i18n>Processing job</span> {{ jobRow.job.id }}
                 </div>
                 <ng-template #jobComplete>
                   <div
@@ -257,13 +254,13 @@
                   </div>
                   <ng-template #noErrors>
                     <div class="alert alert-success">
-                      Processing is complete.
+                      <span i18n>Processing is complete.</span>
                       <div *ngIf="jobRow.result.file_ids.length != 0">
-                        Your operation resulted in
-                        {{ jobRow.result.file_ids.length }} new file(s)
+                        <span i18n>Your operation resulted in</span>
+                        {{ jobRow.result.file_ids.length }} <span i18n>new file(s)</span>
                       </div>
                       <div *ngIf="jobRow.result.data.length != 0">
-                        Your operation resulted in the following scalar values:
+                        <span i18n>Your operation resulted in the following scalar values:</span>
                         {{ jobRow.result.data }}
                       </div>
                     </div>
@@ -274,7 +271,7 @@
         
 
 <div style="padding-top: 10px;">
-  <button mat-raised-button (click)="openPixelOpsJobsDialog()">Show All Pixel Operation Jobs...</button>
+  <button mat-raised-button (click)="openPixelOpsJobsDialog()" i18n>Show All Pixel Operation Jobs...</button>
 </div>
 
       </div>
