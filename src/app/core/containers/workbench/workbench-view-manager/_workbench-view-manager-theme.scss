@@ -12,6 +12,7 @@
     .view-manager-panel .mat-tab-label  {
       opacity: 1.0;
       border-right: 1px solid rgba(0, 0, 0, 0.12);
+      padding: 0px !important;
     }
 
     .view-manager-panel .mat-tab-label .mat-tab-label-content div:not(.active-viewer) .label  {

@@ -37,26 +37,69 @@
   <mat-row *matRowDef="let row; columns: allowMultiSelection ? ['select', 'name'] : ['name'];"></mat-row>
 </mat-table> -->
 
-
-<mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="dataFiles" [trackBy]="trackByFn">
-
+<mat-table
+  app-cell-focuser
+  #cellFocuser="cellFocuser"
+  #table
+  [dataSource]="dataFiles"
+  [trackBy]="trackByFn"
+>
   <!-- Name Column -->
   <ng-container matColumnDef="name">
-    <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell [rowIndex]="0" [columnIndex]="0"
-      [cellInTabOrder]="true">
+    <mat-header-cell
+      *matHeaderCellDef
+      class="select-header-cell"
+      app-focusable-cell
+      [rowIndex]="0"
+      [columnIndex]="0"
+      [cellInTabOrder]="true"
+    >
       Name
     </mat-header-cell>
-    <mat-cell *matCellDef="let row; let rowIndex = index;" app-focusable-cell #cell="cell" [rowIndex]="rowIndex"
-      [columnIndex]="0" [cellInTabOrder]="true" (click)="onRowClick(row)" (dblclick)="onRowDoubleClick(row)" (keydown.space)="$event.preventDefault();"
-      (keyup)="onRowKeyup($event, row);">
-      <div class="item-row" [class.selected]="selectedFileId == row.id">
-        <div class="valign-center">
-          <!-- <mat-icon style="margin-top: 4px;">photo</mat-icon> -->
-          <span class="filename" style="user-select: none">{{row.name}}</span>
+    <mat-cell
+      *matCellDef="let row; let rowIndex = index"
+      app-focusable-cell
+      #cell="cell"
+      [rowIndex]="rowIndex"
+      [columnIndex]="0"
+      [cellInTabOrder]="true"
+      (click)="onRowClick(row)"
+      (dblclick)="onRowDoubleClick(row)"
+      (keydown.space)="$event.preventDefault()"
+      (keyup)="onRowKeyup($event, row)"
+      (mouseenter)="mouseOverFileId = row.id"
+      (mouseleave)="mouseOverFileId = null"
+    >
+      <div
+        fxLayout="row"
+        fxLayoutAlign="start center"
+        fxFlexFill
+        class="item-row"
+        [class.selected]="selectedFileId == row.id"
+      >
+        <div fxFlex="1 1 auto">
+          <span class="filename" style="user-select: none">{{ row.name }}</span>
+        </div>
+        <div fxFlex="0 0 auto">
+          <button
+            *ngIf="mouseOverFileId == row.id || row.modified"
+            class="remove-button"
+            mat-icon-button
+            aria-label="Remove File"
+            (click)="removeFile(row.id)"
+            matTooltip="Remove File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>{{
+              mouseOverFileId === row.id || !row.modified
+                ? "clear"
+                : "fiber_manual_record"
+            }}</mat-icon>
+          </button>
         </div>
       </div>
     </mat-cell>
   </ng-container>
-  
-  <mat-row *matRowDef="let row; columns: ['name'];"></mat-row>
+
+  <mat-row *matRowDef="let row; columns: ['name']"></mat-row>
 </mat-table>

@@ -26,12 +26,15 @@ function createImageHist(
   };
 }
 
-function createImageFile(id: string, name: string, layer: string): ImageFile {
+function createImageFile(id: string, name: string, layer: string, dataProviderId: string, assetPath: string): ImageFile {
   return {
     type: DataFileType.IMAGE,
     id: id,
     name: name,
     layer: layer,
+    dataProviderId: dataProviderId,
+    assetPath: assetPath,
+    modified: Math.random() < 0.5 ? true : false,
     header: null,
     wcs: null,
     headerLoaded: false,
@@ -76,7 +79,9 @@ export class AfterglowDataFileService {
                   let file: ImageFile = createImageFile(
                     r.id.toString(),
                     r.name,
-                    r.layer
+                    r.layer,
+                    r.data_provider,
+                    r.asset_path,
                   );
                   return file;
                 }

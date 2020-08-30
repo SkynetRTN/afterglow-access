@@ -8,8 +8,7 @@ import {
   Input
 } from "@angular/core";
 
-import * as moment_ from "moment";
-const moment = moment_;
+import * as moment from 'moment';
 
 import { MatCheckboxChange } from "@angular/material/checkbox";
 import { MatDialog } from "@angular/material/dialog";
@@ -844,7 +843,10 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
             jd: jd,
             mjd: jd ? jdToMjd(jd) : null
           };
-        })
+        }),
+        {
+          columns: ['pm_sky', 'dec_degs', 'telescope', 'pm_epoch', 'ra_hours', 'y', 'filter', 'flux', 'file_id', 'mag', 'time', 'pm_pos_angle_sky', 'x', 'mag_error', 'id', 'exp_length', 'jd', 'mjd']
+        }
         // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
     );
     var blob = new Blob([data], { type: "text/plain;charset=utf-8" });

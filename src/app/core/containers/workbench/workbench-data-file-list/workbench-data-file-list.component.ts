@@ -22,6 +22,7 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
   // preventSingleClick = false;
   // timer: any;
   // delay: Number;
+  mouseOverFileId: string = null;
 
   constructor(private store: Store) {
   }

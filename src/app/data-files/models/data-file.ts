@@ -1,3 +1,5 @@
+import * as moment from 'moment';
+
 import { DataFileType } from './data-file-type';
 import { HeaderEntry } from './header-entry';
 import { ImageTile, getTilePixel } from './image-tile';
@@ -18,6 +20,9 @@ export interface IDataFile {
   headerLoaded: boolean;
   headerLoading: boolean;
   layer: string;
+  dataProviderId: string;
+  assetPath: string;
+  modified: boolean;
 }
 
 export function getEntry(dataFile: DataFile, key: string) {
@@ -252,15 +257,16 @@ export function getDegsPerPixel(imageFile: ImageFile) {
 }
 
 export function getStartTime(file: DataFile) {
+  console.log("HERE");
   let imageDateStr = '';
   let imageTimeStr = '';
   let dateObs = getEntry(file, 'DATE-OBS');
   if (dateObs) {
     imageDateStr = dateObs.value;
     if(imageDateStr.includes('T')) {
-      let s = Date.parse(imageDateStr.replace('T', ' ') + ' GMT');
-      if (!isNaN(s)) {
-        return new Date(s);
+      let s = moment.utc(imageDateStr, "YYYY-MM-DDTHH:mm:ss.SSS", false)
+      if (s.isValid()) {
+        return s.toDate();
       }
       return undefined;
     }
@@ -271,9 +277,9 @@ export function getStartTime(file: DataFile) {
     imageTimeStr = timeObs.value;
   }
 
-  let s = Date.parse(imageDateStr + ' ' + imageTimeStr + ' GMT');
-  if (!isNaN(s)) {
-    return new Date(s);
+  let s = moment.utc(imageDateStr + ' ' + imageTimeStr, "YYYY-MM-DD HH:mm:ss.SSS", false)
+  if (s.isValid()) {
+    return s.toDate();
   }
   return undefined;
 }
@@ -289,7 +295,7 @@ export function getExpLength(file: DataFile) {
 export function getCenterTime(file: DataFile) {
   let expLength = getExpLength(file);
   let startTime = getStartTime(file);
-  if (expLength !== undefined || startTime !== undefined) {
+  if (expLength !== undefined && startTime !== undefined) {
     return new Date(startTime.getTime() + expLength * 1000.0 / 2.0);
   }
   return undefined;

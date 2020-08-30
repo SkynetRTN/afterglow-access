@@ -199,12 +199,13 @@
               [disabled]="dataSource?.sources.length == 0">
               <mat-icon>get_app</mat-icon>
             </button>
-
-
-
           </div>
 
-          <div *ngIf="selectedSourceActionError" class="alert alert-danger">
+          <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+            {{mergeError}}
+          </div>
+
+          <div *ngIf="selectedSourceActionError" class="mt-2  alert alert-danger">
             {{ selectedSourceActionError }}
           </div>
 

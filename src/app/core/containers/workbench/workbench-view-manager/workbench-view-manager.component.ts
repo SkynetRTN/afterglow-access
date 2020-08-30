@@ -40,6 +40,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
   @ViewChild(MatMenuTrigger, {static: false})
   contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: '0px', y: '0px' };
+  mouseOverCloseViewerId: string = null;
 
   onContextMenu(event: MouseEvent, viewer: Viewer) {
     event.preventDefault();
