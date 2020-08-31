@@ -80,12 +80,7 @@
                     matTooltip="Close Viewer"
                     matTooltipShowDelay="500"
                   >
-                    <mat-icon class="close-button">{{
-                      mouseOverCloseViewerId === viewer.viewerId ||
-                      !(files$ | async)[viewer.fileId]?.modified
-                        ? "close"
-                        : "fiber_manual_record"
-                    }}</mat-icon>
+                    <mat-icon class="close-button">close</mat-icon>
                   </button>
                 </span>
               </div>

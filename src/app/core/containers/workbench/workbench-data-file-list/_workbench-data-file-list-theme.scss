@@ -1,15 +1,29 @@
 @mixin workbench-data-file-list-theme($theme) {
-    $primary: map-get($theme, primary);
-    $accent: map-get($theme, accent);
-    $warn: map-get($theme, warn);
-    $background: map-get($theme, background);
-    $foreground: map-get($theme, foreground);
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
 
-    app-workbench-data-file-list {
+  app-workbench-data-file-list {
 
-        .item-row.selected  {
-            background: mat-color($primary);
-            color: mat-color($primary, default-contrast);
-          }
+    .item-row.selected {
+      background: mat-color($primary);
+      color: mat-color($primary, default-contrast);
+    }
+
+    .mat-icon-button.small {
+
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+  
+      .mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+      }
     }
   }
+}

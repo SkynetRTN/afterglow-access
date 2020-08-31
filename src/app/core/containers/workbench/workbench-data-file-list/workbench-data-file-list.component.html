@@ -43,6 +43,7 @@
   #table
   [dataSource]="dataFiles"
   [trackBy]="trackByFn"
+  class="data-file-list"
 >
   <!-- Name Column -->
   <ng-container matColumnDef="name">
@@ -74,20 +75,31 @@
         fxLayout="row"
         fxLayoutAlign="start center"
         fxFlexFill
-        class="item-row"
+        class="item-row data-file-list-item"
         [class.selected]="selectedFileId == row.id"
       >
         <div fxFlex="1 1 auto">
           <span class="filename" style="user-select: none">{{ row.name }}</span>
         </div>
-        <div fxFlex="0 0 auto">
+        <!-- <div fxFlex="0 0 60px" style="text-align: right;">
           <button
-            *ngIf="mouseOverFileId == row.id || row.modified"
-            class="remove-button"
+            [hidden]="mouseOverFileId != row.id || !row.modified"
             mat-icon-button
-            aria-label="Remove File"
-            (click)="removeFile(row.id)"
-            matTooltip="Remove File"
+            class="small mr-2"
+            aria-label="Save File"
+            (click)="saveFile(row.id)"
+            matTooltip="Save File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>save</mat-icon>
+          </button>
+          <button
+            [hidden]="mouseOverFileId != row.id && !row.modified"
+            mat-icon-button
+            class="small"
+            aria-label="Close File"
+            (click)="closeFile(row.id)"
+            matTooltip="Close File"
             matTooltipShowDelay="500"
           >
             <mat-icon>{{
@@ -96,7 +108,7 @@
                 : "fiber_manual_record"
             }}</mat-icon>
           </button>
-        </div>
+        </div> -->
       </div>
     </mat-cell>
   </ng-container>
