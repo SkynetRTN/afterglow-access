@@ -845,7 +845,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
           };
         }),
         {
-          columns: ['pm_sky', 'dec_degs', 'telescope', 'pm_epoch', 'ra_hours', 'y', 'filter', 'flux', 'file_id', 'mag', 'time', 'pm_pos_angle_sky', 'x', 'mag_error', 'id', 'exp_length', 'jd', 'mjd']
+          columns: ['file_id', 'id', 'time', 'jd', 'mjd', 'ra_hours', 'dec_degs', 'x', 'y', 'telescope', 'filter', 'exp_length', 'mag', 'mag_error', 'flux', 'flux_error', 'pm_sky', 'pm_epoch', 'pm_pos_angle_sky']
         }
         // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
     );
