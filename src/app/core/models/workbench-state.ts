@@ -8,16 +8,16 @@ import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
 
 export enum WorkbenchTool {
-  VIEWER,
-  PLOTTER,
-  SONIFIER,
-  PHOTOMETRY,
-  CUSTOM_MARKER,
-  INFO,
-  FIELD_CAL,
-  IMAGE_CALC,
-  STACKER,
-  ALIGNER
+  VIEWER = 'display',
+  PLOTTER = 'plotter',
+  SONIFIER = 'sonfiier',
+  PHOTOMETRY = 'photometry',
+  CUSTOM_MARKER = 'marker',
+  INFO = 'info',
+  FIELD_CAL = 'field-cal',
+  IMAGE_CALC = 'image-calculator',
+  STACKER = 'stacker',
+  ALIGNER = 'aligner'
 }
 
 export interface PixelOpsFormData {

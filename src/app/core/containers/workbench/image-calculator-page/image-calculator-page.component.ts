@@ -8,7 +8,7 @@ import {
 import { Observable, combineLatest } from "rxjs";
 import { map, tap, filter, flatMap } from "rxjs/operators";
 import { ImageFile } from "../../../../data-files/models/data-file";
-import { ImageFileState } from "../../../models/image-file-state";
+import { WorkbenchFileState } from "../../../models/workbench-file-state";
 
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from '@angular/forms';
@@ -22,7 +22,7 @@ import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { HideCurrentPixelOpsJobState, SetActiveTool, SetLastRouterPath, CreatePixelOpsJob, CreateAdvPixelOpsJob, UpdatePixelOpsPageSettings } from '../../../workbench.actions';
+import { HideCurrentPixelOpsJobState, SetActiveTool, CreatePixelOpsJob, CreateAdvPixelOpsJob, UpdatePixelOpsPageSettings } from '../../../workbench.actions';
 import { JobsState } from '../../../../jobs/jobs.state';
 import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
@@ -169,14 +169,6 @@ export class ImageCalculatorPageComponent extends WorkbenchPageBaseComponent imp
     this.showCurrentPixelOpsJobState$ = store.select(WorkbenchState.getState).pipe(
       map(state => state.pixelOpsPageSettings.showCurrentPixelOpsJobState)
     );
-
-    this.store.dispatch(
-      new SetActiveTool(WorkbenchTool.IMAGE_CALC)
-    );
-
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    )
 
 
     // this.extractionJobRows$ = combineLatest(

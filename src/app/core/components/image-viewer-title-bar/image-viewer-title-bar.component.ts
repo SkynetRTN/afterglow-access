@@ -4,7 +4,7 @@ import { Subject, BehaviorSubject, Observable, timer, interval } from 'rxjs';
 import { filter, flatMap, takeUntil } from "rxjs/operators";
 import { Store } from '@ngxs/store';
 import { RemoveDataFile } from '../../../data-files/data-files.actions';
-import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../image-files.actions';
+import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { MatDialog } from '@angular/material';
 

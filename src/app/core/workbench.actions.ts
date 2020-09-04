@@ -21,12 +21,6 @@ export class Initialize {
 }
 
 /* Workbench */
-export class SetLastRouterPath {
-  public static readonly type = '[Workbench] Set Last Router Path';
-
-  constructor(public path: string) { }
-}
-
 export class ToggleFullScreen {
   public static readonly type = '[Workbench] Toggle Full Screen';
 }

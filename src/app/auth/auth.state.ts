@@ -17,7 +17,7 @@ import jwt_decode from 'jwt-decode';
 
 import { HttpParams } from '@angular/common/http';
 import { LocationStrategy } from '@angular/common';
-import { RedoRegionSelection } from '../core/image-files.actions';
+import { RedoRegionSelection } from '../core/workbench-file-states.actions';
 import { local } from 'd3-selection';
 
 export interface AuthStateModel {

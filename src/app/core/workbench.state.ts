@@ -8,10 +8,10 @@ import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, SetLastRouterPath, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
+import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
-import { ImageFilesState, ImageFilesStateModel } from './image-files.state';
-import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './image-files.actions';
+import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench-file-states.state';
+import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './workbench-file-states.actions';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
@@ -29,7 +29,6 @@ import { PosType, Source } from './models/source';
 import { MarkerType, LineMarker, RectangleMarker, CircleMarker, TeardropMarker, Marker } from './models/marker';
 import { SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
-import { CustomMarkersState, CustomMarkersStateModel } from './custom-markers.state';
 import { SourceExtractionRegionOption } from './models/source-extraction-settings';
 import { getViewportRegion, transformToMatrix, matrixToTransform } from './models/transformation';
 import { SourceExtractionJobSettings, SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
@@ -262,8 +261,8 @@ export class WorkbenchState {
     return file as ImageFile;
   }
 
-  @Selector([WorkbenchState.getActiveImageFile, ImageFilesState])
-  public static getActiveImageFileState(state: WorkbenchStateModel, imageFile: ImageFile, imageFilesState: ImageFilesStateModel) {
+  @Selector([WorkbenchState.getActiveImageFile, WorkbenchFileStates])
+  public static getActiveImageFileState(state: WorkbenchStateModel, imageFile: ImageFile, imageFilesState: WorkbenchFileStatesModel) {
     if (!imageFile) return null;
     return imageFilesState.entities[imageFile.id];
   }
@@ -381,16 +380,16 @@ export class WorkbenchState {
     return state.photometryPageSettings.showSourceLabels;
   }
 
-  @Selector([ImageFilesState, DataFilesState])
-  static getPlotterMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel) {
+  @Selector([WorkbenchFileStates, DataFilesState])
+  static getPlotterMarkers(state: WorkbenchStateModel, imageFilesState: WorkbenchFileStatesModel, dataFilesState: DataFilesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
 
     };
   }
 
-  @Selector([ImageFilesState, DataFilesState])
-  static getSonifierMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel) {
+  @Selector([WorkbenchFileStates, DataFilesState])
+  static getSonifierMarkers(state: WorkbenchStateModel, imageFilesState: WorkbenchFileStatesModel, dataFilesState: DataFilesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
       let sonifier = imageFilesState.entities[fileId].sonifier;
@@ -409,8 +408,8 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([ImageFilesState, DataFilesState, SourcesState])
-  static getPhotometrySourceMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel, sourcesState: SourcesStateModel) {
+  @Selector([WorkbenchFileStates, DataFilesState, SourcesState])
+  static getPhotometrySourceMarkers(state: WorkbenchStateModel, imageFilesState: WorkbenchFileStatesModel, dataFilesState: DataFilesStateModel, sourcesState: SourcesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
       let sources = SourcesState.getSources(sourcesState);
@@ -462,46 +461,11 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([ImageFilesState, DataFilesState, CustomMarkersState])
-  static getCustomMarkers(state: WorkbenchStateModel, imageFilesState: ImageFilesStateModel, dataFilesState: DataFilesStateModel, customMarkersState: CustomMarkersStateModel) {
-    return (fileId: string) => {
-
-      if (fileId === null) return [[]];
-      let file = dataFilesState.entities[fileId] as ImageFile;
-      let markers: Array<Marker> = [];
-      let selectedCustomMarkers = CustomMarkersState.getSelectedCustomMarkers(customMarkersState);
-      if (!file) return [[]];
-      markers = CustomMarkersState.getCustomMarkers(customMarkersState)
-        .filter(customMarker => customMarker.fileId == file.id)
-        .map(customMarker => {
-          let marker = {
-            ...customMarker.marker,
-            data: { id: customMarker.id },
-            selected:
-              state.activeTool == WorkbenchTool.CUSTOM_MARKER &&
-              selectedCustomMarkers.includes(customMarker)
-          };
-          return marker;
-        });
-
-      return markers;
-    };
-  }
-
   @Action(ResetState)
   @ImmutableContext()
   public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ResetState) {
     setState((state: WorkbenchStateModel) => {
       return workbenchStateDefaults
-    });
-  }
-
-  @Action(SetLastRouterPath)
-  @ImmutableContext()
-  public setLastRouterPath({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { path }: SetLastRouterPath) {
-    setState((state: WorkbenchStateModel) => {
-      state.lastRouterPath = path;
-      return state;
     });
   }
 
@@ -707,7 +671,7 @@ export class WorkbenchState {
         }
 
         //normalization
-        let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
+        let imageFileStates = this.store.selectSnapshot(WorkbenchFileStates.getEntities);
         let normalization = imageFileStates[dataFile.id].normalization;
         if (state.normalizationSyncEnabled && referenceFileId) {
           actions.push(
@@ -1014,9 +978,9 @@ export class WorkbenchState {
   @ImmutableContext()
   public loadLibrarySuccess({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { dataFiles, correlationId }: LoadLibrarySuccess) {
     let state = getState();
-    let existingIds = this.store.selectSnapshot(ImageFilesState.getIds);
+    let existingIds = this.store.selectSnapshot(WorkbenchFileStates.getIds);
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFileStateEntities = this.store.selectSnapshot(ImageFilesState.getEntities);
+    let imageFileStateEntities = this.store.selectSnapshot(WorkbenchFileStates.getEntities);
     let newIds = dataFiles.filter(dataFile => dataFile.type == DataFileType.IMAGE)
       .map(imageFile => imageFile.id)
       .filter(id => !existingIds.includes(id));
@@ -1227,7 +1191,7 @@ export class WorkbenchState {
   public syncFileNormalizations({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { reference, files }: SyncFileNormalizations) {
 
     let state = getState();
-    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
+    let imageFileStates = this.store.selectSnapshot(WorkbenchFileStates.getEntities);
 
     let srcFile: ImageFile = reference;
     if (!srcFile) return;
@@ -1254,7 +1218,7 @@ export class WorkbenchState {
   public syncFilePlotters({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { reference, files }: SyncFilePlotters) {
 
     let state = getState();
-    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
+    let imageFileStates = this.store.selectSnapshot(WorkbenchFileStates.getEntities);
 
     let srcFile: ImageFile = reference;
     let targetFiles: ImageFile[] = files;
@@ -1271,7 +1235,7 @@ export class WorkbenchState {
   public syncFileTransformations({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { reference, files }: SyncFileTransformations) {
 
     let state = getState();
-    let imageFileStates = this.store.selectSnapshot(ImageFilesState.getEntities);
+    let imageFileStates = this.store.selectSnapshot(WorkbenchFileStates.getEntities);
 
     let actions = [];
     let srcFile: ImageFile = reference;
@@ -1825,7 +1789,7 @@ export class WorkbenchState {
     let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPageSettings);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
     let imageFile = dataFiles[fileId] as ImageFile;
-    let imageFileState = this.store.selectSnapshot(ImageFilesState.getEntities)[imageFile.id];
+    let imageFileState = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[imageFile.id];
     let sonifier = imageFileState.sonifier;
 
     let jobSettings: SourceExtractionJobSettings = {

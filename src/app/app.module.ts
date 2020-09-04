@@ -34,10 +34,9 @@ import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
 import { DataFilesState, DataFilesStateModel } from './data-files/data-files.state';
-import { ImageFilesState, ImageFilesStateModel } from './core/image-files.state';
+import { WorkbenchFileStates, WorkbenchFileStatesModel } from './core/workbench-file-states.state';
 import { WorkbenchState } from './core/workbench.state';
 import { SourcesState } from './core/sources.state';
-import { CustomMarkersState } from './core/custom-markers.state';
 import { PhotDataState } from './core/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { DataFileType } from './data-files/models/data-file-type';
@@ -81,7 +80,7 @@ export function dataFileSanitizer(v) {
 export function imageFileStateSanitizer(v) {
   let state = {
     ...v
-   } as ImageFilesStateModel;
+   } as WorkbenchFileStatesModel;
 
   state.entities = {
     ...state.entities
@@ -125,7 +124,7 @@ export function imageFileStateSanitizer(v) {
       disableCheatSheet: true
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
+      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchFileStates, WorkbenchState, SourcesState, PhotDataState],
       { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -134,11 +133,10 @@ export function imageFileStateSanitizer(v) {
         JobsState,
         DataProvidersState,
         DataFilesState,
-        ImageFilesState,
+        WorkbenchFileStates,
         WorkbenchState,
         SourcesState,
-        PhotDataState,
-        CustomMarkersState
+        PhotDataState
       ],
       sanitizations: [
         {
@@ -146,7 +144,7 @@ export function imageFileStateSanitizer(v) {
           sanitize: dataFileSanitizer
         },
         {
-          key: ImageFilesState,
+          key: WorkbenchFileStates,
           sanitize: imageFileStateSanitizer,
         }
       ],

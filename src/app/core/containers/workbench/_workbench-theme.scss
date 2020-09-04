@@ -10,15 +10,16 @@
 
         .file-list-toolbar-panel {
           background: mat-color($background, background);
+          color: mat-color($foreground, text);
         }
 
         .file-list-panel {
           background: mat-color($background, card);
         }
 
-        .mat-icon {
-          color: mat-color($foreground, icon);
-        }
+        // .mat-icon {
+        //   color: mat-color($foreground, icon);
+        // }
 
         .toolbar-panel .mat-raised-button {
           background: mat-color($background, card);
@@ -33,6 +34,56 @@
           border: 1px solid mat-color($foreground, divider);
           color: mat-color($foreground, text);
         }
+
+        .rotate-90 {
+          -webkit-transform: rotate(90deg);
+          -moz-transform: rotate(90deg);
+          -ms-transform: rotate(90deg);
+          -o-transform: rotate(90deg);
+          transform: rotate(90deg);
+        }
+
+        .workbench-config-panel.display {
+          width: 550px;
+        }
+
+        .workbench-config-panel.info {
+          width: 500px;
+        }
+
+        .workbench-config-panel.marker {
+          width: 550px;
+        }
+
+        .workbench-config-panel.plotter {
+          width: 550px;
+        }
+
+        .workbench-config-panel.sonifier {
+          width: 500px;
+        }
+
+        .workbench-config-panel.photometry {
+          width: 650px;
+        }
+
+        .workbench-config-panel.image-calculator {
+          width: 375px;
+        }
+
+        .workbench-config-panel.aligner {
+          width: 550px;
+        }
+
+        .workbench-config-panel.stacker {
+          width: 550px;
+        }
+        
+        .full-screen.workbench-config-panel {
+          width: 100%;
+        }
+
+
 
         .workbench-settings-card {
           border-radius: 0px;
@@ -51,14 +102,16 @@
         .workbench-settings-card .card-header:first-child {
           border-radius: 0px;
         }
-        
+
         .workbench-settings-card .plotter svg {
           width: 200px;
         }
 
+
         .vertical-icon-nav-item {
           border: none;
           opacity: 0.9;
+          padding: 5px;
           @if($is-dark-theme) {
             background: rgba(white, 0.2);
             border-bottom: 2px solid rgba(white, 0.1);

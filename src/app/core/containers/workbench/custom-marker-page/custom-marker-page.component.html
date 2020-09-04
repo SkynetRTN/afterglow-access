@@ -1,29 +1,4 @@
-<div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers" [fxShow]="
-    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
-  ">
-  <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async" [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async" [viewMode]="viewMode$ | async"
-  (onImageClick)="onImageClick($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-view-manager>
-</div>
-
-<span class="resizer"></span>
 <div
-  *ngIf="showConfig$ | async"
-  fxFlex="0 0 auto"
-  class="workbench-config-panel"
-  role="region"
-  aria-labelledby="settings-header"
-  [ngClass]="{ 'full-screen': inFullScreenMode$ | async }"
-  [fxShow]="
-    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'
-  "
->
-  <div class="card workbench-settings-card" style="height: 100%;">
-    <div id="settings-header" class="card-header">
-      <h5 i18n>Custom Markers</h5>
-    </div>
-
-    <div class="card-body" style="overflow-y: auto;">
-      <div
         *ngIf="!(activeImageFile$ | async)?.headerLoaded"
         class="alert alert-info"
         i18n
@@ -90,6 +65,3 @@
           </button>
         </ng-container>
       </div>
-    </div>
-  </div>
-</div>

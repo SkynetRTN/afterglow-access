@@ -34,7 +34,7 @@ function createImageFile(id: string, name: string, layer: string, dataProviderId
     layer: layer,
     dataProviderId: dataProviderId,
     assetPath: assetPath,
-    modified: Math.random() < 0.5 ? true : false,
+    modified: false,
     header: null,
     wcs: null,
     headerLoaded: false,

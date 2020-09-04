@@ -13,7 +13,7 @@ import { Transformation, getViewportRegion, transformToMatrix } from '../../mode
 import { Source } from '../../models/source';
 import { ImageTile } from '../../../data-files/models/image-tile';
 import { Store } from '@ngxs/store';
-import { MoveBy, ZoomBy, UpdateCurrentViewportSize, NormalizeImageTile } from '../../image-files.actions';
+import { MoveBy, ZoomBy, UpdateCurrentViewportSize, NormalizeImageTile } from '../../workbench-file-states.actions';
 import { LoadImageTilePixels } from '../../../data-files/data-files.actions';
 
 export type ViewportChangeEvent = {

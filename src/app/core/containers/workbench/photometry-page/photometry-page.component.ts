@@ -41,7 +41,7 @@ import {
 import { PhotSettingsDialogComponent } from "../../../components/phot-settings-dialog/phot-settings-dialog.component";
 import { SourceExtractionDialogComponent } from "../../../components/source-extraction-dialog/source-extraction-dialog.component";
 import { Source, PosType } from "../../../models/source";
-import { ImageFileState } from "../../../models/image-file-state";
+import { WorkbenchFileState } from "../../../models/workbench-file-state";
 import {
   ViewerGridCanvasMouseEvent,
   ViewerGridMarkerMouseEvent
@@ -60,7 +60,7 @@ import { Router } from "@angular/router";
 import { MatButtonToggleChange } from '@angular/material';
 import { SourcesState } from '../../../sources.state';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, UpdateSourceExtractionSettings, UpdatePhotometrySettings, UpdatePhotometryPageSettings, ExtractSources, PhotometerSources, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
+import { SetActiveTool, UpdateSourceExtractionSettings, UpdatePhotometrySettings, UpdatePhotometryPageSettings, ExtractSources, PhotometerSources, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
 import { AddSources, RemoveSources, UpdateSource } from '../../../sources.actions';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { RemoveAllPhotDatas, RemovePhotDatas } from '../../../phot-data.actions';
@@ -226,9 +226,11 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
     ).pipe(
       withLatestFrom(
         this.store.select(WorkbenchState.getViewers),
-        this.store.select(DataFilesState.getEntities)
+        this.store.select(DataFilesState.getEntities),
+        this.store.select(WorkbenchState.getActiveTool)
       )
-    ).subscribe(([[viewerFileIds, viewerImageFileHeaders, sources, photPageSettings], viewers, dataFiles]) => {
+    ).subscribe(([[viewerFileIds, viewerImageFileHeaders, sources, photPageSettings], viewers, dataFiles, activeTool]) => {
+      if(activeTool != WorkbenchTool.PHOTOMETRY) return;
       let selectedSourceIds = photPageSettings.selectedSourceIds;
       let coordMode = photPageSettings.coordMode;
       let showSourcesFromAllFiles = photPageSettings.showSourcesFromAllFiles;
@@ -342,14 +344,6 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
       })
     ).subscribe();
 
-
-    this.store.dispatch(
-      new SetActiveTool(WorkbenchTool.PHOTOMETRY)
-    );
-
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    );
   }
 
   ngOnInit() {
@@ -845,7 +839,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
           };
         }),
         {
-          columns: ['pm_sky', 'dec_degs', 'telescope', 'pm_epoch', 'ra_hours', 'y', 'filter', 'flux', 'file_id', 'mag', 'time', 'pm_pos_angle_sky', 'x', 'mag_error', 'id', 'exp_length', 'jd', 'mjd']
+          columns: ['file_id', 'id', 'time', 'jd', 'mjd', 'ra_hours', 'dec_degs', 'x', 'y', 'telescope', 'filter', 'exp_length', 'mag', 'mag_error', 'flux', 'flux_error', 'pm_sky', 'pm_epoch', 'pm_pos_angle_sky']
         }
         // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
     );

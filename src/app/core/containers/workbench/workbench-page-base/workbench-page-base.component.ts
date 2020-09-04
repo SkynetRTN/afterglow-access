@@ -36,7 +36,7 @@ import {
 import {
   PhotometryFileState,
 } from "../../../models/photometry-file-state";
-import { ImageFileState } from "../../../models/image-file-state";
+import { WorkbenchFileState } from "../../../models/workbench-file-state";
 import {
   ViewerGridCanvasMouseEvent,
   ViewerGridMarkerMouseEvent
@@ -48,7 +48,6 @@ import {
 } from "../../../../jobs/models/photometry";
 import { Router } from "@angular/router";
 import { WorkbenchState } from '../../../workbench.state';
-import { SetLastRouterPath } from '../../../workbench.actions';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { Viewer } from '../../../models/viewer';
 import { ViewMode } from '../../../models/view-mode';
@@ -65,7 +64,7 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
   showConfig$: Observable<boolean>;
   activeImageFile$: Observable<ImageFile>;
   activeImageFileLoaded$: Observable<ImageFile>;
-  activeImageFileState$: Observable<ImageFileState>;
+  activeImageFileState$: Observable<WorkbenchFileState>;
   allImageFiles$: Observable<Array<ImageFile>>;
   primaryViewers$: Observable<Viewer[]>;
   secondaryViewers$: Observable<Viewer[]>;
@@ -141,24 +140,21 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
       })
     )
 
-    this.fileLoaderSub = this.viewerFileIds$.subscribe(ids => {
-      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      ids.forEach(id => {
-        let f = dataFiles[id];
-        if(!f || ( (f.headerLoaded || f.headerLoading) && (f.type != DataFileType.IMAGE || ((f as ImageFile).histLoaded || (f as ImageFile).histLoading)))) return;
+    // this.fileLoaderSub = this.viewerFileIds$.subscribe(ids => {
+    //   let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+    //   ids.forEach(id => {
+    //     let f = dataFiles[id];
+    //     if(!f || ( (f.headerLoaded || f.headerLoading) && (f.type != DataFileType.IMAGE || ((f as ImageFile).histLoaded || (f as ImageFile).histLoading)))) return;
 
-        this.store.dispatch(new LoadDataFile(id));
+    //     this.store.dispatch(new LoadDataFile(id));
 
-      })
-    })
+    //   })
+    // })
 
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    );
   }
 
   ngOnDestroy() {
-    this.fileLoaderSub.unsubscribe();
+    // this.fileLoaderSub.unsubscribe();
   }
 }
 

@@ -12,7 +12,7 @@ import {
 } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { ImageFile } from '../../../../data-files/models/data-file';
-import { ImageFileState } from '../../../models/image-file-state';
+import { WorkbenchFileState } from '../../../models/workbench-file-state';
 import { WorkbenchTool } from "../../../models/workbench-state";
 import { Catalog } from "../../../models/catalog";
 import { MatDialog } from "@angular/material/dialog";
@@ -26,7 +26,7 @@ import { CatalogQueryJob } from '../../../../jobs/models/catalog-query';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../../workbench.actions';
+import { SetActiveTool, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../../workbench.actions';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
@@ -44,7 +44,7 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   activeImageFile$: Observable<ImageFile>;
   activeImageHasWcs$: Observable<boolean>;
-  activeImageFileState$: Observable<ImageFileState>;
+  activeImageFileState$: Observable<WorkbenchFileState>;
   showConfig$: Observable<boolean>;
   catalogs$: Observable<Catalog[]>;
   selectedCatalog$: Observable<Catalog>;
@@ -111,15 +111,6 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-  
-
-    this.store.dispatch(
-      new SetActiveTool(WorkbenchTool.FIELD_CAL)
-    );
-
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    )
   }
   
   ngOnInit() {

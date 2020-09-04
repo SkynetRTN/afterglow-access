@@ -25,7 +25,7 @@ import {
   getDegsPerPixel,
   getCenterTime
 } from "../../../../data-files/models/data-file";
-import { ImageFileState } from "../../../models/image-file-state";
+import { WorkbenchFileState } from "../../../models/workbench-file-state";
 import {
   Marker,
   LineMarker,
@@ -53,9 +53,8 @@ import { FieldCal } from '../../../models/field-cal';
 import { Store } from '@ngxs/store';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { SourcesState } from '../../../sources.state';
-import { CustomMarkersState } from '../../../custom-markers.state';
 import { WorkbenchState } from '../../../workbench.state';
-import { ImageFilesState } from '../../../image-files.state';
+import { WorkbenchFileStates } from '../../../workbench-file-states.state';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 
 @Component({
@@ -96,7 +95,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges, OnDestr
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   showAllSources$: Observable<boolean>;
-  imageFileState$: Observable<ImageFileState>;
+  imageFileState$: Observable<WorkbenchFileState>;
   imageMouseX: number = null;
   imageMouseY: number = null;
 
@@ -112,11 +111,11 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.sources$ = this.store.select(SourcesState.getSources);
-    this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
-    this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
+    // this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
+    // this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
     this.imageFileState$ = combineLatest(
       this.fileId$,
-      this.store.select(ImageFilesState.getEntities)
+      this.store.select(WorkbenchFileStates.getEntities)
     ).pipe(
       map(([fileId, imageFileStates]) => imageFileStates[fileId]),
     );

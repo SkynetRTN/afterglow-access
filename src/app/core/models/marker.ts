@@ -48,7 +48,7 @@ export interface TextMarker extends IMarker {
 }
 
 export type Marker =
-  | LineMarker
+    LineMarker
   | RectangleMarker
   | CircleMarker
   | TeardropMarker

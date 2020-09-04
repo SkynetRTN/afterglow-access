@@ -4,7 +4,7 @@ import { map, filter, take } from 'rxjs/operators';
 import { Viewer } from '../../../models/viewer';
 
 import { DataFile, ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
-import { ImageFileState } from '../../../models/image-file-state';
+import { WorkbenchFileState } from '../../../models/workbench-file-state';
 import { CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Subscription } from 'rxjs';
@@ -12,10 +12,10 @@ import { ViewMode } from '../../../models/view-mode';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { ImageFilesState } from '../../../image-files.state';
+import { WorkbenchFileStates } from '../../../workbench-file-states.state';
 import { SetActiveViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from '../../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
-import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../image-files.actions';
+import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../workbench-file-states.actions';
 import { RemoveDataFile } from '../../../../data-files/data-files.actions';
 import { OverlayRef, Overlay } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
@@ -76,7 +76,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
   // activeViewerIndex$: Observable<number>;
 
   files$: Observable<{[id: string]: DataFile}>;
-  fileStates$: Observable<{[id: string]: ImageFileState}>;
+  fileStates$: Observable<{[id: string]: WorkbenchFileState}>;
   subs: Subscription[] = [];
   // activeViewerIndex: number;
   mouseDownActiveViewerId: string;
@@ -107,7 +107,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
 
     // this.activeViewerIndex$ = this.store.select(WorkbenchState.getActiveViewerIndex);
     this.files$ = this.store.select(DataFilesState.getEntities);
-    this.fileStates$ = this.store.select(ImageFilesState.getEntities);
+    this.fileStates$ = this.store.select(WorkbenchFileStates.getEntities);
 
     // this.subs.push(this.activeViewerIndex$.subscribe(viewerIndex => {
     //   this.activeViewerIndex = viewerIndex;

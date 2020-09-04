@@ -27,7 +27,7 @@
           </div>
           <div style="max-height: 100px; overflow-y: scroll;" [hidden]="(importProgress$ | async) != 100" class="alert" role="alert" [ngClass]="(importErrors$ | async).length != 0 ? 'alert-danger' : 'alert-success'">
             <span i18n>Import completed with</span> {{(importErrors$ | async).length == 0 ? 'no errors' : (importErrors$ | async).length + ' errors'}}.
-            <a *ngIf="(importErrors$ | async).length == 0" routerLink="/workbench" class="alert-link">View your imported files now.</a>
+            <a *ngIf="(importErrors$ | async).length == 0" routerLink="/" class="alert-link">View your imported files now.</a>
             <div *ngIf="(importErrors$ | async).length != 0">
               <div *ngFor="let e of (importErrors$ | async)">
                 <strong i18n>Error: </strong> {{e}}

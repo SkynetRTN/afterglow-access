@@ -28,7 +28,7 @@ import {
   CanvasMouseEvent
 } from "../../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import { CentroidSettings } from "../../../models/centroid-settings";
-import { ImageFileState } from "../../../models/image-file-state";
+import { WorkbenchFileState } from "../../../models/workbench-file-state";
 import { WorkbenchTool, PlotterPageSettings } from "../../../models/workbench-state";
 import { centroidDisk, centroidPsf } from "../../../models/centroider";
 import { PosType } from "../../../models/source";
@@ -36,9 +36,9 @@ import { Router } from '@angular/router';
 import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Store, Actions, ofActionSuccessful } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, UpdateCentroidSettings, UpdatePlotterPageSettings, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
-import { UpdateLine, StartLine } from '../../../image-files.actions';
-import { ImageFilesState } from '../../../image-files.state';
+import { SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
+import { UpdateLine, StartLine } from '../../../workbench-file-states.actions';
+import { WorkbenchFileStates } from '../../../workbench-file-states.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 import { LoadDataFileHdr } from '../../../../data-files/data-files.actions';
@@ -180,13 +180,16 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
       this.viewerFileIds$,
       this.viewerImageFileHeaders$,
       this.store.select(WorkbenchState.getPlotterPageSettings),
-      this.store.select(ImageFilesState.getEntities),
+      this.store.select(WorkbenchFileStates.getEntities),
     ).pipe(
       withLatestFrom(
         this.store.select(WorkbenchState.getViewers),
-        this.store.select(DataFilesState.getEntities)
+        this.store.select(DataFilesState.getEntities),
+        this.store.select(WorkbenchState.getActiveTool),
+        this.store.select(WorkbenchState.getActiveTool)
       )
-    ).subscribe(([[fileIds, imageFiles, plotterPageSettings, imageFileStates], viewers, dataFiles]) => {
+    ).subscribe(([[fileIds, imageFiles, plotterPageSettings, imageFileStates], viewers, dataFiles, activeTool]) => {
+      if(activeTool != WorkbenchTool.PLOTTER) return;
       viewers.forEach((viewer) => {
         let fileId = viewer.fileId;
         if (fileId == null || !dataFiles[fileId]) {
@@ -271,14 +274,6 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
       })
     })
 
-
-    this.store.dispatch(
-      new SetActiveTool(WorkbenchTool.PLOTTER)
-    );
-
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    )
   }
 
   private normalizeLine(
@@ -340,7 +335,7 @@ export class PlotterPageComponent extends WorkbenchPageBaseComponent implements 
 
   onImageMove($event: CanvasMouseEvent) {
     let imageFile = this.store.selectSnapshot(DataFilesState.getEntities)[$event.targetFile.id];
-    let measuring = this.store.selectSnapshot(ImageFilesState.getEntities)[$event.targetFile.id].plotter.measuring;
+    let measuring = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[$event.targetFile.id].plotter.measuring;
     if (measuring) {
       let primaryCoord = $event.imageX;
       let secondaryCoord = $event.imageY;

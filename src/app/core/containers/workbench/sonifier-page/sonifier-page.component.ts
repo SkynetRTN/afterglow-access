@@ -33,7 +33,7 @@ import {
   DataFile
 } from "../../../../data-files/models/data-file";
 
-import { ImageFileState } from "../../../models/image-file-state";
+import { WorkbenchFileState } from "../../../models/workbench-file-state";
 import { Viewer } from "../../../models/viewer";
 import { Marker, MarkerType, RectangleMarker, LineMarker } from "../../../models/marker";
 import { WorkbenchTool } from "../../../models/workbench-state";
@@ -46,11 +46,11 @@ import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material';
 import { Store, Actions, ofActionSuccessful } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetLastRouterPath, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
-import { AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, UpdateSonifierFileState, SetProgressLine } from '../../../image-files.actions';
+import { SetActiveTool, SetViewerFile, SetViewerMarkers, ClearViewerMarkers } from '../../../workbench.actions';
+import { AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, UpdateSonifierFileState, SetProgressLine } from '../../../workbench-file-states.actions';
 import { Region } from '../../../models/region';
 import { getViewportRegion } from '../../../models/transformation';
-import { ImageFilesState } from '../../../image-files.state';
+import { WorkbenchFileStates } from '../../../workbench-file-states.state';
 import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 import { LoadDataFileHdr } from '../../../../data-files/data-files.actions';
 import { DataFilesState } from '../../../../data-files/data-files.state';
@@ -134,13 +134,16 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
     this.markerUpdater = combineLatest(
       this.viewerFileIds$,
       this.viewerImageFileHeaders$,
-      this.store.select(ImageFilesState.getEntities),
+      this.store.select(WorkbenchFileStates.getEntities),
     ).pipe(
       withLatestFrom(
         this.store.select(WorkbenchState.getViewers),
-        this.store.select(DataFilesState.getEntities)
+        this.store.select(DataFilesState.getEntities),
+        this.store.select(WorkbenchState.getActiveTool)
+
       )
-    ).subscribe(([[fileIds, imageFiles, imageFileStates], viewers, dataFiles]) => {
+    ).subscribe(([[fileIds, imageFiles, imageFileStates], viewers, dataFiles, activeTool]) => {
+      if(activeTool != WorkbenchTool.SONIFIER) return;
       viewers.forEach((viewer) => {
         let fileId = viewer.fileId;
         if (fileId == null || !dataFiles[fileId]) {
@@ -190,19 +193,11 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
     //   })
     // );
 
-    this.store.dispatch(
-      new SetActiveTool(WorkbenchTool.SONIFIER)
-    );
-
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    )
-
     this.hotKeys.push(
       new Hotkey(
         "t 1",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.selectSubregionByTime(0);
           return false; // Prevent bubbling
@@ -216,7 +211,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
       new Hotkey(
         "t 2",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.selectSubregionByTime(1);
           return false; // Prevent bubbling
@@ -230,7 +225,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
       new Hotkey(
         "t 3",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.selectSubregionByTime(2);
           return false; // Prevent bubbling
@@ -244,7 +239,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
       new Hotkey(
         "f 1",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.selectSubregionByFrequency(0);
           return false; // Prevent bubbling
@@ -258,7 +253,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
       new Hotkey(
         "f 2",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.selectSubregionByFrequency(1);
           return false; // Prevent bubbling
@@ -272,7 +267,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
       new Hotkey(
         "f 3",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.selectSubregionByFrequency(2);
           return false; // Prevent bubbling
@@ -312,7 +307,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
       new Hotkey(
         "esc",
         (event: KeyboardEvent): boolean => {
-          if (this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
+          if (this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier.regionMode != SonifierRegionMode.CUSTOM)
             return true;
           this.resetRegionSelection();
           return false; // Prevent bubbling
@@ -365,7 +360,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
   ngOnChanges() { }
 
   private selectSubregionByFrequency(subregion: number) {
-    let sonifierState = this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier;
+    let sonifierState = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier;
     let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
     this.store.dispatch(
       new AddRegionToHistory(
@@ -381,7 +376,7 @@ export class SonifierPageComponent extends WorkbenchPageBaseComponent
   }
 
   private selectSubregionByTime(subregion: number) {
-    let sonifierState = this.store.selectSnapshot(ImageFilesState.getEntities)[this.lastImageFile.id].sonifier;
+    let sonifierState = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[this.lastImageFile.id].sonifier;
     let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
     this.store.dispatch(
       new AddRegionToHistory(

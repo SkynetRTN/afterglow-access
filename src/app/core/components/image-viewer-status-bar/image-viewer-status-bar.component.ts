@@ -6,7 +6,7 @@ import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation
 import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
-import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../image-files.actions';
+import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
 
 @Component({
   selector: 'app-image-viewer-status-bar',

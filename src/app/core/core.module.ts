@@ -46,12 +46,12 @@ import { DataProvidersComponent } from './containers/data-providers/data-provide
 import { DataProvidersIndexPageComponent } from './containers/data-providers/data-providers-index-page/data-providers-index-page.component'
 import { DataProviderBrowsePageComponent} from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
 import { WorkbenchComponent } from './containers/workbench/workbench.component';
-import { ViewerPageComponent } from './containers/workbench/viewer-page/viewer-page.component';
+import { DisplayToolComponent } from './components/display-tool/display-tool.component';
 import { PlotterPageComponent } from './containers/workbench/plotter-page/plotter-page.component';
 import { FieldCalPageComponent } from './containers/workbench/field-cal-page/field-cal-page.component';
 import { CustomMarkerPageComponent } from './containers/workbench/custom-marker-page/custom-marker-page.component';
 import { SonifierPageComponent } from './containers/workbench/sonifier-page/sonifier-page.component';
-import { InfoPageComponent } from './containers/workbench/info-page/info-page.component';
+import { InfoToolComponent } from './components/info-tool/info-tool.component';
 import { PhotometryPageComponent } from './containers/workbench/photometry-page/photometry-page.component';
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
@@ -99,7 +99,7 @@ export const COMPONENTS = [
   DataProvidersIndexPageComponent,
   DataProviderBrowsePageComponent,
   WorkbenchComponent,
-  ViewerPageComponent,
+  DisplayToolComponent,
   PlotterPageComponent,
   SonifierPageComponent,
   FieldCalPageComponent,
@@ -114,7 +114,7 @@ export const COMPONENTS = [
   CustomMarkerPageComponent,
   CircleMarkerEditorComponent,
   RectangleMarkerEditorComponent,
-  InfoPageComponent,
+  InfoToolComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
   ThemeDialogComponent,

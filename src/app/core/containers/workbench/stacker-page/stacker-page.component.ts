@@ -2,7 +2,7 @@ import { Component, OnInit, HostBinding, Input } from '@angular/core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, tap } from "rxjs/operators";
 import { ImageFile } from '../../../../data-files/models/data-file';
-import { ImageFileState } from '../../../models/image-file-state';
+import { WorkbenchFileState } from '../../../models/workbench-file-state';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { StackFormData, WorkbenchTool } from '../../../models/workbench-state';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
@@ -12,7 +12,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { JobsState } from '../../../../jobs/jobs.state';
-import { SetActiveTool, SetLastRouterPath, CreateStackingJob, UpdateStackingPageSettings } from '../../../workbench.actions';
+import { SetActiveTool, CreateStackingJob, UpdateStackingPageSettings } from '../../../workbench.actions';
 import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 @Component({
@@ -84,14 +84,6 @@ export class StackerPageComponent extends WorkbenchPageBaseComponent implements 
       this.store.dispatch(new UpdateStackingPageSettings({ stackFormData: this.stackForm.value }));
       // }
     })
-
-    this.store.dispatch(
-      new SetActiveTool(WorkbenchTool.STACKER)
-    );
-
-    this.store.dispatch(
-      new SetLastRouterPath(router.url)
-    )
 
 
   }

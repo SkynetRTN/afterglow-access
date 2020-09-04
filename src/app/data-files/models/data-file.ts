@@ -257,7 +257,6 @@ export function getDegsPerPixel(imageFile: ImageFile) {
 }
 
 export function getStartTime(file: DataFile) {
-  console.log("HERE");
   let imageDateStr = '';
   let imageTimeStr = '';
   let dateObs = getEntry(file, 'DATE-OBS');
