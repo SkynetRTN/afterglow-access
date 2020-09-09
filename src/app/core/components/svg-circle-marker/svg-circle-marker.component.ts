@@ -25,7 +25,6 @@ export class SvgCircleMarkerComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.cdr.detach();
   }
 
 }

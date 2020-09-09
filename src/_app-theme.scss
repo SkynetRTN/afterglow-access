@@ -1,7 +1,7 @@
 @import "~@angular/material/theming";
 @import "./app/core/components/navbar/navbar-theme";
 @import "./app/core/containers/workbench/workbench-theme";
-@import "./app/core/components/display-tool/display-tool-theme";
+@import "./app/core/components/display-toolset/display-toolset-theme";
 @import "./app/core/containers/workbench/workbench-viewer-panel/workbench-viewer-panel-theme";
 @import "./app/core/components/image-viewer-title-bar/image-viewer-title-bar-theme";
 @import "./app/core/components/image-viewer-status-bar/image-viewer-status-bar-theme";
@@ -36,7 +36,7 @@
 
   @include nav-bar-theme($theme);
   @include workbench-theme($theme);
-  @include display-tool-theme($theme);
+  @include display-toolset-theme($theme);
   @include workbench-viewer-panel-theme($theme);
   @include image-viewer-title-bar-theme($theme);
   @include image-viewer-status-bar-theme($theme);

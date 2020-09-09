@@ -1,21 +1,11 @@
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { AuthGuard } from './auth/services/auth-guard.service'
 import { AuthorizedPageComponent as AuthorizedPageComponent } from './auth/containers/authorized-page/authorized-page.component';
 import { DataProvidersComponent } from './core/containers/data-providers/data-providers.component';
 import { DataProvidersIndexPageComponent } from './core/containers/data-providers/data-providers-index-page/data-providers-index-page.component';
 import { DataProviderBrowsePageComponent } from './core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
 import { WorkbenchComponent } from './core/containers/workbench/workbench.component';
-import { DisplayToolComponent } from './core/components/display-tool/display-tool.component'
-import { PlotterPageComponent } from './core/containers/workbench/plotter-page/plotter-page.component';
-import { SonifierPageComponent } from './core/containers/workbench/sonifier-page/sonifier-page.component';
-import { CustomMarkerPageComponent } from './core/containers/workbench/custom-marker-page/custom-marker-page.component';
-import { ImageCalculatorPageComponent } from './core/containers/workbench/image-calculator-page/image-calculator-page.component';
-import { AlignerPageComponent } from './core/containers/workbench/aligner-page/aligner-page.component';
-import { StackerPageComponent } from './core/containers/workbench/stacker-page/stacker-page.component';
-import { InfoToolComponent } from './core/components/info-tool/info-tool.component';
-import { FieldCalPageComponent } from './core/containers/workbench/field-cal-page/field-cal-page.component';
 import { WorkbenchGuard } from './core/services/workbench-guard.service';
-import { PhotometryPageComponent } from './core/containers/workbench/photometry-page/photometry-page.component';
 import { LogoutPageComponent } from './auth/containers/logout-page/logout-page.component';
 import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
 

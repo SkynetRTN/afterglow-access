@@ -294,7 +294,7 @@ export class PhotometryPageComponent extends WorkbenchPageBaseComponent
     })
 
 
-    this.photometryFileState$ = this.activeImageFileState$.pipe(map(state => state.photometry));
+    this.photometryFileState$ = this.activeImageFileState$.pipe(map(state => state.photometryState));
     this.dataSource = new SourcesDataSource(store);
     this.batchPhotFormData$ = store.select(WorkbenchState.getState).pipe(
       map(state => state.photometryPageSettings.batchPhotFormData),

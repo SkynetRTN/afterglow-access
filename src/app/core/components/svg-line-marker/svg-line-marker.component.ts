@@ -1,11 +1,11 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnChanges } from '@angular/core';
 
 @Component({
   selector: '[app-svg-line-marker]',
   templateUrl: './svg-line-marker.component.html',
   styleUrls: ['./svg-line-marker.component.css']
 })
-export class SvgLineMarkerComponent implements OnInit {
+export class SvgLineMarkerComponent implements OnInit, OnChanges {
   @Input() x1: number;
   @Input() y1: number;
   @Input() x2: number;
@@ -17,6 +17,9 @@ export class SvgLineMarkerComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
+  }
+
+  ngOnChanges() {
   }
 
 }

@@ -317,15 +317,15 @@ export class DataProvidersState {
     };
 
 
-    setState((state: DataProvidersStateModel) => {
-      state.currentAssets = currentAssets;
-      state.userSortField = userSortField;
-      state.userSortOrder = userSortOrder;
-      state.currentSortField = currentSortField;
-      state.currentSortOrder = currentSortOrder;
+    // setState((state: DataProvidersStateModel) => {
+    //   state.currentAssets = currentAssets;
+    //   state.userSortField = userSortField;
+    //   state.userSortOrder = userSortOrder;
+    //   state.currentSortField = currentSortField;
+    //   state.currentSortOrder = currentSortOrder;
 
-      return state;
-    });
+    //   return state;
+    // });
   }
 
 

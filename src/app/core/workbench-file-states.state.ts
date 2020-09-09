@@ -67,6 +67,48 @@ export class WorkbenchFileStates {
     };
   }
 
+  @Selector()
+  public static getNormalization(state: WorkbenchFileStatesModel) {
+    return (id: string) => {
+      return state.entities[id].normalization;
+    };
+  }
+
+  @Selector()
+  public static getTransformation(state: WorkbenchFileStatesModel) {
+    return (id: string) => {
+      return state.entities[id].transformation;
+    };
+  }
+
+  @Selector()
+  public static getPlottingState(state: WorkbenchFileStatesModel) {
+    return (id: string) => {
+      return state.entities[id].plottingState;
+    };
+  }
+
+  @Selector()
+  public static getSonificationState(state: WorkbenchFileStatesModel) {
+    return (id: string) => {
+      return state.entities[id].sonificationState;
+    };
+  }
+
+  @Selector()
+  public static getPhotometryState(state: WorkbenchFileStatesModel) {
+    return (id: string) => {
+      return state.entities[id].photometryState;
+    };
+  }
+
+  @Selector()
+  public static getCustomMarkerState(state: WorkbenchFileStatesModel) {
+    return (id: string) => {
+      return state.entities[id].customMarkerState;
+    };
+  }
+
 
   @Action(ResetState)
   @ImmutableContext()
@@ -102,12 +144,12 @@ export class WorkbenchFileStates {
             imageToViewportTransform: null,
             viewportSize: null
           },
-          plotter: {
+          plottingState: {
             measuring: false,
             lineMeasureStart: null,
             lineMeasureEnd: null,
           },
-          sonifier: {
+          sonificationState: {
             sonificationUri: null,
             regionHistory: [],
             regionHistoryIndex: null,
@@ -118,11 +160,11 @@ export class WorkbenchFileStates {
             toneCount: 22,
             progressLine: null,
           },
-          photometry: {
+          photometryState: {
             selectedSourceIds: [],
             sourceExtractionJobId: null,
           },
-          marker: {
+          customMarkerState: {
             entities: {},
             ids: [],
           }
@@ -253,8 +295,8 @@ export class WorkbenchFileStates {
     let result = [];
 
     if (dataFile.type == DataFileType.IMAGE) {
-      let sonifierState = state.entities[dataFile.id].sonifier;
-      let sourceExtractorState = state.entities[dataFile.id].photometry;
+      let sonifierState = state.entities[dataFile.id].sonificationState;
+      let sourceExtractorState = state.entities[dataFile.id].photometryState;
       //add effects for image file selection
       let imageFile = dataFile as ImageFile;
       dispatch(new InitImageTiles(fileId));
@@ -280,7 +322,7 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public regionHistoryChanged({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: AddRegionToHistory | UndoRegionSelection | RedoRegionSelection) {
     let state = getState();
-    if (state.entities[fileId].sonifier.regionMode == SonifierRegionMode.CUSTOM) {
+    if (state.entities[fileId].sonificationState.regionMode == SonifierRegionMode.CUSTOM) {
       dispatch(new SonificationRegionChanged(fileId));
     }
   }
@@ -290,9 +332,9 @@ export class WorkbenchFileStates {
   public sonificationRegionChanged({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: SonificationRegionChanged) {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
     let imageFile = dataFiles[fileId] as ImageFile;
-    let sonifierState = getState().entities[fileId].sonifier;
+    let sonifierState = getState().entities[fileId].sonificationState;
     let transformationState = getState().entities[fileId].transformation;
-    let sourceExtractorState = getState().entities[fileId].photometry;
+    let sourceExtractorState = getState().entities[fileId].photometryState;
 
     if (
       sonifierState.regionMode == SonifierRegionMode.CUSTOM &&
@@ -315,9 +357,9 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonifier;
-      state.entities[fileId].sonifier = {
-        ...state.entities[fileId].sonifier,
+      let sonifierState = state.entities[fileId].sonificationState;
+      state.entities[fileId].sonificationState = {
+        ...state.entities[fileId].sonificationState,
         ...changes
       }
 
@@ -333,7 +375,7 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonifier;
+      let sonifierState = state.entities[fileId].sonificationState;
       if (!sonifierState.regionHistoryInitialized) {
         sonifierState.regionHistoryIndex = 0;
         sonifierState.regionHistory = [region];
@@ -354,7 +396,7 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonifier;
+      let sonifierState = state.entities[fileId].sonificationState;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == 0) return state;
       sonifierState.regionHistoryIndex--;
       return state;
@@ -368,7 +410,7 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonifier;
+      let sonifierState = state.entities[fileId].sonificationState;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == sonifierState.regionHistory.length-1) return state;
       sonifierState.regionHistoryIndex++;
       return state;
@@ -382,7 +424,7 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonifier;
+      let sonifierState = state.entities[fileId].sonificationState;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == (sonifierState.regionHistory.length - 1)) return state;
       sonifierState.regionHistoryIndex = null
       sonifierState.regionHistory = [];
@@ -395,7 +437,7 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public setProgressLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, line }: SetProgressLine) {
     setState((state: WorkbenchFileStatesModel) => {
-      let sonifierState = state.entities[fileId].sonifier;
+      let sonifierState = state.entities[fileId].sonificationState;
       sonifierState.progressLine = line;
       return state;
     })
@@ -405,8 +447,8 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public updatePhotometryFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, changes }: UpdatePhotometryFileState) {
     setState((state: WorkbenchFileStatesModel) => {
-      state.entities[fileId].photometry = {
-        ...state.entities[fileId].photometry,
+      state.entities[fileId].photometryState = {
+        ...state.entities[fileId].photometryState,
         ...changes
       }
       return state;
@@ -744,7 +786,7 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let plotterState = state.entities[fileId].plotter;
+      let plotterState = state.entities[fileId].plottingState;
 
       if (!plotterState.measuring) {
         plotterState.lineMeasureStart = { ...point };
@@ -765,7 +807,7 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      let plotterState = state.entities[fileId].plotter;
+      let plotterState = state.entities[fileId].plottingState;
 
       if (!plotterState.measuring) return state;
 
@@ -781,8 +823,8 @@ export class WorkbenchFileStates {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
       let imageFile = dataFiles[fileId] as ImageFile;
-      state.entities[fileId].plotter = {
-        ...state.entities[fileId].plotter,
+      state.entities[fileId].plottingState = {
+        ...state.entities[fileId].plottingState,
         ...changes
       }
       return state;
@@ -836,7 +878,7 @@ export class WorkbenchFileStates {
     let state = getState();
    
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].marker
+      let markerState = state.entities[fileId].customMarkerState
       if(markerState.ids.includes(markerId)) {
         markerState.entities[markerId] = {
           ...markerState.entities[markerId],
@@ -853,7 +895,7 @@ export class WorkbenchFileStates {
     let state = getState();
    
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].marker
+      let markerState = state.entities[fileId].customMarkerState
 
       markers.forEach(marker => {
         let nextSeed = state.nextMarkerId++;
@@ -861,7 +903,7 @@ export class WorkbenchFileStates {
           // marker.marker.label = `M${nextSeed}`;
           marker.label = '';
         }
-        let id =  nextSeed.toString();
+        let id =  `CUSTOM_MARKER_${fileId}_${nextSeed.toString()}`;
         markerState.ids.push(id);
         markerState.entities[id] = {
           ...marker,
@@ -879,7 +921,7 @@ export class WorkbenchFileStates {
     let state = getState();
    
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].marker
+      let markerState = state.entities[fileId].customMarkerState
 
       let idsToRemove = markers.map(m => m.id);
       markerState.ids = markerState.ids.filter(id => !idsToRemove.includes(id));
@@ -897,7 +939,7 @@ export class WorkbenchFileStates {
     let state = getState();
    
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].marker
+      let markerState = state.entities[fileId].customMarkerState
       markers.forEach(marker => {
         if(markerState.ids.includes(marker.id)) {
           markerState.entities[marker.id].selected = true
@@ -913,7 +955,7 @@ export class WorkbenchFileStates {
     let state = getState();
    
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].marker
+      let markerState = state.entities[fileId].customMarkerState
       markers.forEach(marker => {
         if(markerState.ids.includes(marker.id)) {
           markerState.entities[marker.id].selected = false
@@ -926,10 +968,8 @@ export class WorkbenchFileStates {
   @Action(SetCustomMarkerSelection)
   @ImmutableContext()
   public setCustomMarkerSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markers }: SetCustomMarkerSelection) {
-    let state = getState();
-   
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].marker
+      let markerState = state.entities[fileId].customMarkerState
       let selectedMarkerIds = markers.map(m => m.id);
       markerState.ids.forEach(markerId => {
         markerState.entities[markerId].selected = selectedMarkerIds.includes(markerId);

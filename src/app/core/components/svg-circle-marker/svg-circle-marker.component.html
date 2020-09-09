@@ -1,9 +1,34 @@
 <svg:g class="svg-circle-marker" [class.selected]="selected">
-    <svg:circle *ngIf="showShadow" class="shadow" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0.0; stroke: #5A5A5A;" [style.stroke-width]="strokeWidth+4"
+  <svg:circle
+    *ngIf="showShadow"
+    class="shadow"
+    [attr.cx]="x"
+    [attr.cy]="y"
+    [attr.r]="radius"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    style="fill-opacity: 0; stroke: #5a5a5a"
+    [style.stroke-width]="strokeWidth + 4"
   />
-  <svg:circle *ngIf="showOutline" class="outline" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0.0; stroke: #FFFFFF;" [style.stroke-width]="strokeWidth+6"
+  <svg:circle
+    *ngIf="showOutline"
+    class="outline"
+    [attr.cx]="x"
+    [attr.cy]="y"
+    [attr.r]="radius"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    style="fill-opacity: 0; stroke: #ffffff"
+    [style.stroke-width]="strokeWidth + 6"
   />
-  <svg:circle class="stroke" [attr.cx]="x" [attr.cy]="y" [attr.r]="radius" [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0.0;" [style.stroke-width]="strokeWidth" [style.stroke]="selected ? selectedStroke : stroke" />
+  <svg:circle
+    class="stroke"
+    [attr.cx]="x"
+    [attr.cy]="y"
+    [attr.r]="radius"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    style="fill-opacity: 0"
+    [style.stroke-width]="strokeWidth"
+    [style.stroke]="selected ? selectedStroke : stroke"
+  />
 
   <!-- <svg:text *ngIf="label" class="label" [attr.x]="x" [attr.y]="y" [attr.dy]="radius*-1.2" [attr.transform]="'translate(' + x + ',' + y + ') rotate(180) scale(-1,1)' + 'translate(' + -x + ',' + -y + ')'">
     {{label}}

@@ -3,7 +3,7 @@ import { ImageTile } from '../data-files/models/image-tile';
 import { PixelNormalizer } from './models/pixel-normalizer';
 import { Region } from './models/region';
 import { SonifierFileState, SonifierRegionMode } from './models/sonifier-file-state';
-import { PlotterFileState } from './models/plotter-file-state';
+import { PlottingState } from './models/plotter-file-state';
 import { PosType, Source } from './models/source';
 import { Matrix } from 'svgjs';
 import { PhotometryFileState } from './models/photometry-file-state';
@@ -92,7 +92,7 @@ export class SetProgressLine {
 export class UpdatePlotterFileState {
   public static readonly type = '[Plotter] Update Plotter File State'
 
-  constructor(public fileId: string, public changes: Partial<PlotterFileState>) { }
+  constructor(public fileId: string, public changes: Partial<PlottingState>) { }
 }
 
 export class StartLine {

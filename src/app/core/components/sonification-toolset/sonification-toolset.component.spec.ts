@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SonifierPageComponent } from './sonifier-page.component';
+import { SonifierPageComponent } from './sonification-toolset.component';
 
 describe('SonifierPageComponent', () => {
   let component: SonifierPageComponent;

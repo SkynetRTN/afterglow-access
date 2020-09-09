@@ -1,7 +1,7 @@
 import { LineMarker } from "./marker";
 import { PosType } from "./source";
 
-export interface PlotterFileState {
+export interface PlottingState {
   measuring: boolean,
   lineMeasureStart: { primaryCoord: number, secondaryCoord: number, posType: PosType }
   lineMeasureEnd: { primaryCoord: number, secondaryCoord: number, posType: PosType },

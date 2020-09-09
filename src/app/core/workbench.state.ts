@@ -1,6 +1,7 @@
 import { State, Action, Selector, StateContext, Store, Actions, ofActionDispatched, ofActionSuccessful, ofActionErrored, ofActionCompleted, ofActionCanceled } from '@ngxs/store';
 import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap } from 'rxjs/operators';
 import { of, merge, combineLatest, interval, Observable } from "rxjs";
+import { produce } from '@ngxs-labs/immer-adapter';
 import { Point, Matrix, Rectangle } from 'paper';
 import { WorkbenchStateModel, WorkbenchTool } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
@@ -8,7 +9,7 @@ import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlotterPageSettings, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPageSettings, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
+import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlottingToolsetConfig, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerToolsetConfig, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
 import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench-file-states.state';
 import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './workbench-file-states.actions';
@@ -95,7 +96,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     centroidClicks: false,
     usePlanetCentroiding: false
   },
-  plotterPageSettings: {
+  plottingToolsetConfig: {
     interpolatePixels: false,
     centroidClicks: false,
     planetCentroiding: false,
@@ -346,13 +347,13 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getCustomMarkerPageSettings(state: WorkbenchStateModel) {
+  public static getCustomMarkerToolsetConfig(state: WorkbenchStateModel) {
     return state.customMarkerPageSettings;
   }
 
   @Selector()
-  public static getPlotterPageSettings(state: WorkbenchStateModel) {
-    return state.plotterPageSettings;
+  public static getPlottingToolsetConfig(state: WorkbenchStateModel) {
+    return state.plottingToolsetConfig;
   }
 
   @Selector()
@@ -392,7 +393,7 @@ export class WorkbenchState {
   static getSonifierMarkers(state: WorkbenchStateModel, imageFilesState: WorkbenchFileStatesModel, dataFilesState: DataFilesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
-      let sonifier = imageFilesState.entities[fileId].sonifier;
+      let sonifier = imageFilesState.entities[fileId].sonificationState;
       let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
       let regionMode = sonifier.regionMode;
       let progressLine = sonifier.progressLine;
@@ -690,7 +691,7 @@ export class WorkbenchState {
           );
         }
 
-        let sonifierState = imageFileStates[dataFile.id].sonifier;
+        let sonifierState = imageFileStates[dataFile.id].sonificationState;
         if (!sonifierState.regionHistoryInitialized) {
           actions.push(
             new AddRegionToHistory(dataFile.id, {
@@ -708,7 +709,7 @@ export class WorkbenchState {
             actions.push(
               new SyncFileTransformations(dataFiles[referenceFileId] as ImageFile, [dataFile])
             );
-          if (state.plotterPageSettings.plotterSyncEnabled)
+          if (state.plottingToolsetConfig.plotterSyncEnabled)
             actions.push(
               new SyncFilePlotters(dataFiles[referenceFileId] as ImageFile, [dataFile])
             );
@@ -864,9 +865,9 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdateCustomMarkerPageSettings)
+  @Action(UpdateCustomMarkerToolsetConfig)
   @ImmutableContext()
-  public updateCustomMarkerPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerPageSettings) {
+  public updateCustomMarkerPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerToolsetConfig) {
     setState((state: WorkbenchStateModel) => {
       state.customMarkerPageSettings = {
         ...state.customMarkerPageSettings,
@@ -876,12 +877,12 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdatePlotterPageSettings)
+  @Action(UpdatePlottingToolsetConfig)
   @ImmutableContext()
-  public updatePlotterPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlotterPageSettings) {
+  public updatePlotterPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlottingToolsetConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.plotterPageSettings = {
-        ...state.plotterPageSettings,
+      state.plottingToolsetConfig = {
+        ...state.plottingToolsetConfig,
         ...changes
       }
       return state;
@@ -1168,7 +1169,7 @@ export class WorkbenchState {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (
-      !state.plotterPageSettings.plotterSyncEnabled ||
+      !state.plottingToolsetConfig.plotterSyncEnabled ||
       !activeViewer ||
       activeViewer.fileId != fileId
     )
@@ -1222,7 +1223,7 @@ export class WorkbenchState {
 
     let srcFile: ImageFile = reference;
     let targetFiles: ImageFile[] = files;
-    let srcPlotter = imageFileStates[srcFile.id].plotter;
+    let srcPlotter = imageFileStates[srcFile.id].plottingState;
 
     targetFiles.forEach(targetFile => {
       if (!targetFile || targetFile.id == srcFile.id) return;
@@ -1790,7 +1791,7 @@ export class WorkbenchState {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
     let imageFile = dataFiles[fileId] as ImageFile;
     let imageFileState = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[imageFile.id];
-    let sonifier = imageFileState.sonifier;
+    let sonifier = imageFileState.sonificationState;
 
     let jobSettings: SourceExtractionJobSettings = {
       threshold: settings.threshold,
@@ -1798,7 +1799,7 @@ export class WorkbenchState {
       deblend: settings.deblend,
       limit: settings.limit
     }
-    if (settings.region == SourceExtractionRegionOption.VIEWPORT || (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonifier.regionMode == SonifierRegionMode.VIEWPORT)) {
+    if (settings.region == SourceExtractionRegionOption.VIEWPORT || (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonificationState.regionMode == SonifierRegionMode.VIEWPORT)) {
       let region = getViewportRegion(
         imageFileState.transformation,
         imageFile
@@ -1812,7 +1813,7 @@ export class WorkbenchState {
         height: Math.min(getHeight(imageFile), Math.max(0, region.height + 1))
       }
     }
-    else if (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonifier.regionMode == SonifierRegionMode.CUSTOM) {
+    else if (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonificationState.regionMode == SonifierRegionMode.CUSTOM) {
       let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
       jobSettings = {
         ...jobSettings,

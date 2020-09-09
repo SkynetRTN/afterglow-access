@@ -11,7 +11,6 @@ import { auditTime } from "rxjs/operators";
 
 declare let d3: any;
 
-import { calcLevels } from "../../../data-files/models/image-hist";
 import {
   ImageFile,
 } from "../../../data-files/models/data-file";
@@ -24,25 +23,22 @@ import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
 import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../workbench-file-states.actions';
 
-// import { DataFile, ImageFile } from '../../../models'
-// import { DataFileLibraryStore } from '../../../stores/data-file-library.store'
-// import { ImageViewerComponent } from '../../../components/image-viewer/image-viewer.component'
+export interface DisplayToolsetFileState  {
+  file: ImageFile;
+  normalization: Normalization;
+}
 
 @Component({
-  selector: "app-display-tool",
-  templateUrl: "./display-tool.component.html",
-  styleUrls: ["./display-tool.component.scss"]
+  selector: "app-display-toolset",
+  templateUrl: "./display-toolset.component.html",
+  styleUrls: ["./display-toolset.component.scss"]
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DisplayToolComponent implements OnInit, AfterViewInit, OnDestroy {
+export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
 
-  @Input()
-  imageFile: ImageFile
-  
-  @Input()
-  normalization: Normalization;
+  @Input() state: DisplayToolsetFileState;
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -57,13 +53,13 @@ export class DisplayToolComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router) {
     this.levels$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.imageFile.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
+        new UpdateNormalizer(this.state.file.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
       );
     });
 
     this.backgroundPercentile$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.imageFile.id, { backgroundPercentile: value })
+        new UpdateNormalizer(this.state.file.id, { backgroundPercentile: value })
       );
     });
 
@@ -72,7 +68,7 @@ export class DisplayToolComponent implements OnInit, AfterViewInit, OnDestroy {
 
       .subscribe(value => {
         this.store.dispatch(
-          new UpdateNormalizer(this.imageFile.id, { peakPercentile: value })
+          new UpdateNormalizer(this.state.file.id, { peakPercentile: value })
         );
       });
 
@@ -90,25 +86,25 @@ export class DisplayToolComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onColorMapChange(value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageFile.id, { colorMapName: value })
+      new UpdateNormalizer(this.state.file.id, { colorMapName: value })
     );
   }
 
   onStretchModeChange(value: StretchMode) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageFile.id, { stretchMode: value })
+      new UpdateNormalizer(this.state.file.id, { stretchMode: value })
     );
   }
 
   onInvertedChange(value: boolean) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageFile.id, { inverted: value })
+      new UpdateNormalizer(this.state.file.id, { inverted: value })
     );
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageFile.id,
+      new UpdateNormalizer(this.state.file.id,
         {
           backgroundPercentile: lowerPercentile,
           peakPercentile: upperPercentile
@@ -119,10 +115,10 @@ export class DisplayToolComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onInvertClick() {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageFile.id,
+      new UpdateNormalizer(this.state.file.id,
         {
-          backgroundPercentile: this.normalization.normalizer.peakPercentile,
-          peakPercentile: this.normalization.normalizer.backgroundPercentile
+          backgroundPercentile: this.state.normalization.normalizer.peakPercentile,
+          peakPercentile: this.state.normalization.normalizer.backgroundPercentile
         }
       )
     );
@@ -130,19 +126,19 @@ export class DisplayToolComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onFlipClick() {
     this.store.dispatch(
-      new Flip(this.imageFile.id)
+      new Flip(this.state.file.id)
     );
   }
 
   onRotateClick() {
     this.store.dispatch(
-      new RotateBy(this.imageFile.id, 90)
+      new RotateBy(this.state.file.id, 90)
     );
   }
 
   onResetOrientationClick() {
     this.store.dispatch(
-      new ResetImageTransform(this.imageFile.id)
+      new ResetImageTransform(this.state.file.id)
     );
   }
 

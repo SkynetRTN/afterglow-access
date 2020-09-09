@@ -45,6 +45,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   constructor(private cdr: ChangeDetectorRef) { }
 
+  trackById(m: Marker) {
+    return m.id;
+  }
+
   ngOnInit() {
   }
 
@@ -75,9 +79,6 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
     })
   }
 
-  trackByFn(index, item) {
-    return index;
-  }
 
   get svg(): SVGElement {
     return this.svgElementRef.nativeElement;

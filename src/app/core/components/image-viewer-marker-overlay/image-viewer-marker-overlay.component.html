@@ -1,7 +1,7 @@
 <div id="svg-placeholder">
   <svg [attr.width]="svgWidth" [attr.height]="svgHeight" #svgElementRef>
     <g #svgGroup>
-      <ng-container *ngFor="let marker of markers;">
+      <ng-container *ngFor="let marker of markers; trackBy: trackById">
         <ng-container [ngSwitch]="marker.type">
           <g *ngSwitchCase="MarkerType.RECTANGLE" app-svg-rectangle-marker class="region-marker" [x]="marker.x-0.5" [y]="marker.y-0.5"
             [width]="marker.width" [height]="marker.height" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill;">

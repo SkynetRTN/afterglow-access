@@ -1,6 +1,6 @@
 import { DataFile, ImageFile } from '../data-files/models/data-file';
 import { ViewMode } from './models/view-mode';
-import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlotterPageSettings, PhotometryPageSettings, AligningPageSettings, PixelOpsPageSettings, StackingPageSettings, CustomMarkerPageSettings } from './models/workbench-state';
+import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingToolsetConfig, PhotometryPageSettings, AligningPageSettings, PixelOpsPageSettings, StackingPageSettings, CustomMarkerToolsetConfig } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
 import { PhotometryJobSettings } from '../jobs/models/photometry';
@@ -181,16 +181,16 @@ export class UpdateSourceExtractionSettings {
   constructor(public changes: Partial<SourceExtractionSettings>) { }
 }
 
-export class UpdateCustomMarkerPageSettings {
+export class UpdateCustomMarkerToolsetConfig {
   public static readonly type = '[Workbench] Update Custom Marker Page Settings'
 
-  constructor(public changes: Partial<CustomMarkerPageSettings>) { }
+  constructor(public changes: Partial<CustomMarkerToolsetConfig>) { }
 }
 
-export class UpdatePlotterPageSettings {
+export class UpdatePlottingToolsetConfig {
   public static readonly type = '[Workbench] Update Plotter Page Settings'
 
-  constructor(public changes: Partial<PlotterPageSettings>) { }
+  constructor(public changes: Partial<PlottingToolsetConfig>) { }
 }
 
 export class UpdatePhotometryPageSettings {

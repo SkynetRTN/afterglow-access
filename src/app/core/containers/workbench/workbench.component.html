@@ -186,7 +186,12 @@
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'">
     <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async"
       [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async"
-      [viewMode]="viewMode$ | async" (onImageClick)="onImageClick($event)" (onMarkerClick)="onMarkerClick($event)"></app-workbench-view-manager>
+      [viewMode]="viewMode$ | async"
+      (onImageClick)="onImageClick($event)"
+      (onImageMove)="onImageMove($event)"
+      (onMarkerClick)="onMarkerClick($event)"
+    >
+    </app-workbench-view-manager>
   </div>
   <div fxFlex="0 0 auto" fxLayout="row" class="workbench-outlet-panel" [hidden]="!(activeImageFile$ | async)"
     style="overflow: hidden;">
@@ -209,15 +214,38 @@
         </div>
 
         <div class="card-body" style="overflow-y: auto;" [ngSwitch]="activeTool">
-          <app-display-tool *ngSwitchCase="WorkbenchTool.VIEWER" [imageFile]="(activeImageFile$ | async)"
-            [normalization]="(activeImageFileState$ | async)?.normalization"></app-display-tool>
+          <app-display-toolset
+            *ngSwitchCase="WorkbenchTool.VIEWER"
+            [state]="(displayToolsetFileState$ | async)">
+          </app-display-toolset>
 
-          <app-info-tool *ngSwitchCase="WorkbenchTool.INFO" [imageFile]="(activeImageFile$ | async)"></app-info-tool>
+          <app-file-info-toolset
+            *ngSwitchCase="WorkbenchTool.INFO"
+            [state]="fileInfoToolsetState$ | async"
+            [config]="fileInfoToolsetConfig">
+          </app-file-info-toolset>
 
-          <app-custom-marker-page *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER">
-          </app-custom-marker-page>
-          <app-plotter-page *ngSwitchCase="WorkbenchTool.PLOTTER"></app-plotter-page>
-          <app-sonifier-page *ngSwitchCase="WorkbenchTool.SONIFIER"></app-sonifier-page>
+          <app-custom-marker-toolset
+            *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER"
+            [state]="(customMarkerToolsetFileState$ | async)"
+            [config]="(customMarkerToolsetConfig$ | async)"
+            (configChange)="onCustomMarkerToolsetConfigChange($event)"
+            (markerChange)="onCustomMarkerChange($event)"
+            (markerDelete)="onCustomMarkerDelete($event)">
+          </app-custom-marker-toolset>
+
+          <app-plotting-toolset
+            *ngSwitchCase="WorkbenchTool.PLOTTER"
+            [state]="(plottingToolsetFileState$ | async)"
+            [config]="(plottingToolsetConfig$ | async)"
+            (configChange)="onPlottingToolsetConfigChange($event)">
+          </app-plotting-toolset>
+
+          <app-sonification-toolset
+            *ngSwitchCase="WorkbenchTool.SONIFIER"
+            [state]="(sonificationToolsetFileState$ | async)">
+          </app-sonification-toolset>
+
           <app-photometry-page *ngSwitchCase="WorkbenchTool.PHOTOMETRY"></app-photometry-page>
           <app-image-calculator-page *ngSwitchCase="WorkbenchTool.IMAGE_CALC">
           </app-image-calculator-page>

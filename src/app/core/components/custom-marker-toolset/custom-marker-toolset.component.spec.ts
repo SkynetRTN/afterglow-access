@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CustomMarkerPageComponent } from './custom-marker-page.component';
+import { CustomMarkerToolsetComponent } from './custom-marker-toolset.component';
 
 describe('CustomMarkerPageComponent', () => {
-  let component: CustomMarkerPageComponent;
-  let fixture: ComponentFixture<CustomMarkerPageComponent>;
+  let component: CustomMarkerToolsetComponent;
+  let fixture: ComponentFixture<CustomMarkerToolsetComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CustomMarkerPageComponent ]
+      declarations: [ CustomMarkerToolsetComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CustomMarkerPageComponent);
+    fixture = TestBed.createComponent(CustomMarkerToolsetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

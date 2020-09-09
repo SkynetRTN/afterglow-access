@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { InfoToolComponent } from './info-tool.component';
+import { FileInfoToolsetComponent } from './file-info-toolset.component';
 
 describe('InfoToolComponent', () => {
-  let component: InfoToolComponent;
-  let fixture: ComponentFixture<InfoToolComponent>;
+  let component: FileInfoToolsetComponent;
+  let fixture: ComponentFixture<FileInfoToolsetComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ InfoToolComponent ]
+      declarations: [ FileInfoToolsetComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(InfoToolComponent);
+    fixture = TestBed.createComponent(FileInfoToolsetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

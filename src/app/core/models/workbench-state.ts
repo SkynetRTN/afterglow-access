@@ -51,12 +51,12 @@ export interface StackFormData {
   high?: number;
 }
 
-export interface CustomMarkerPageSettings {
+export interface CustomMarkerToolsetConfig {
   centroidClicks: boolean,
   usePlanetCentroiding: boolean,
 }
 
-export interface PlotterPageSettings {
+export interface PlottingToolsetConfig {
   interpolatePixels: boolean,
   centroidClicks: boolean,
   planetCentroiding: boolean,
@@ -114,9 +114,9 @@ export interface WorkbenchStateModel {
   showConfig: boolean;
   centroidSettings: CentroidSettings;
   sourceExtractionSettings: SourceExtractionSettings;
-  customMarkerPageSettings: CustomMarkerPageSettings;
+  customMarkerPageSettings: CustomMarkerToolsetConfig;
   photometrySettings: PhotometrySettings;
-  plotterPageSettings: PlotterPageSettings;
+  plottingToolsetConfig: PlottingToolsetConfig;
   photometryPageSettings: PhotometryPageSettings;
   pixelOpsPageSettings: PixelOpsPageSettings;
   aligningPageSettings: AligningPageSettings;
