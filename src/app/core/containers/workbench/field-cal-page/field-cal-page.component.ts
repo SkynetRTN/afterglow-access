@@ -72,9 +72,9 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(private store: Store, public dialog: MatDialog, router: Router) {
     this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
     this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
-    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.activeImageFile$ = store.select(WorkbenchState.getFocusedImageFile);
     this.activeImageHasWcs$ = this.activeImageFile$.pipe(map(imageFile => imageFile != null && imageFile.wcs.isValid()));
-    this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
+    this.activeImageFileState$ = store.select(WorkbenchState.getFocusedImageFileState);
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
     this.catalogs$ = store.select(WorkbenchState.getState).pipe(map(state => state.catalogs));
     this.fieldCals$ = store.select(WorkbenchState.getState).pipe(map(state => state.fieldCals));

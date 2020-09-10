@@ -26,26 +26,20 @@ import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { datetimeToJd } from "../../../utils/skynet-astro";
-
-export interface FileInfoToolsetState  {
-  file: ImageFile;
-}
-
-export interface FileInfoToolsetConfig  {
-  useSystemTime: boolean;
-  showRawHeader: boolean;
-}
+import { FileInfoPanelConfig } from '../../models/file-info-panel';
 
 @Component({
-  selector: "app-file-info-toolset",
-  templateUrl: "./file-info-toolset.component.html",
-  styleUrls: ["./file-info-toolset.component.css"],
+  selector: "app-file-info-panel",
+  templateUrl: "./file-info-panel.component.html",
+  styleUrls: ["./file-info-panel.component.css"],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-  @Input() state: FileInfoToolsetState;
-  @Input() config: FileInfoToolsetConfig;
+  @Input() file: ImageFile;
+  @Input() config: FileInfoPanelConfig;
+
+  @Output() configChange: EventEmitter<Partial<FileInfoPanelConfig>> = new EventEmitter();
 
   columnsDisplayed = ["key", "value", "comment"];
 
@@ -57,24 +51,24 @@ export class FileInfoToolsetComponent
   ) {}
 
   getHeaderSummary() {
-    if (!this.state.file || !this.state.file.header) return [];
+    if (!this.file || !this.file.header) return [];
     let result: Header = [];
-    let width = getWidth(this.state.file);
-    let height = getHeight(this.state.file);
-    let hasWcs = this.state.file.wcs.isValid();
-    let degsPerPixel = getDegsPerPixel(this.state.file);
-    let startTime = getStartTime(this.state.file);
-    let expLength = getExpLength(this.state.file);
-    let centerTime = getCenterTime(this.state.file);
-    let telescope = getTelescope(this.state.file);
-    let object = getObject(this.state.file);
-    let filter = getFilter(this.state.file);
+    let width = getWidth(this.file);
+    let height = getHeight(this.file);
+    let hasWcs = this.file.wcs.isValid();
+    let degsPerPixel = getDegsPerPixel(this.file);
+    let startTime = getStartTime(this.file);
+    let expLength = getExpLength(this.file);
+    let centerTime = getCenterTime(this.file);
+    let telescope = getTelescope(this.file);
+    let object = getObject(this.file);
+    let filter = getFilter(this.file);
 
     let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 
     result.push({
       key: "ID",
-      value: `${this.state.file.id}`,
+      value: `${this.file.id}`,
       comment: "",
     });
 
@@ -169,12 +163,10 @@ export class FileInfoToolsetComponent
   ngAfterViewInit() {}
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
-    this.config.showRawHeader = $event.checked;
-    // this.config.showRawHeaderChange.emit(this.config.showRawHeader);
+    this.configChange.emit({showRawHeader: $event.checked})
   }
 
   onUseSystemTimeChange($event: MatSlideToggleChange) {
-    this.config.useSystemTime = $event.checked;
-    // this.config.useSystemTimeChange.emit(this.config.useSystemTime);
+    this.configChange.emit({useSystemTime: $event.checked})
   }
 }

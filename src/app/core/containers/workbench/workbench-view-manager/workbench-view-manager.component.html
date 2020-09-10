@@ -26,15 +26,15 @@
   <ng-template #viewers>
     <div
       class="view-manager-panel"
-      [class.active-viewer-group]="primaryViewerGroupIsActive"
+      [class.active-viewer-group]="primaryViewerHasFocus"
       style="height: 100%"
     >
       <mat-tab-group
         class="mat-tab-fill-height"
         style="height: 100%"
         [animationDuration]="'0ms'"
-        [selectedIndex]="primarySelectedTabIndex"
-        (selectedIndexChange)="onPrimarySelectedTabIndexChange($event)"
+        [selectedIndex]="selectedPrimaryViewerIndex"
+        (selectedIndexChange)="onSelectedPrimaryViewerIndexChange($event)"
       >
         <mat-tab
           *ngFor="let viewer of primaryViewers; trackBy: viewerTrackByFn"
@@ -42,12 +42,12 @@
           <ng-template mat-tab-label>
             <div
               class="file-path-tab-label"
-              [class.active-viewer]="activeViewerId == viewer.viewerId"
-              [class.inactive-viewer]="activeViewerId != viewer.viewerId"
+              [class.active-viewer]="selectedPrimaryViewerId == viewer.viewerId && primaryViewerHasFocus"
+              [class.inactive-viewer]="selectedPrimaryViewerId != viewer.viewerId || !primaryViewerHasFocus"
               (mouseup)="
                 $event.which === 2 ? closeViewer(viewer.viewerId) : null
               "
-              (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)"
+              (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)"
               fxLayout="row"
               fxFlexFill
             >
@@ -87,9 +87,9 @@
             </div>
           </ng-template>
           <app-workbench-viewer-panel
-            (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)"
+            (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)"
             [fileId]="viewer.fileId"
-            [active]="activeViewerId == viewer.viewerId"
+            [active]="selectedPrimaryViewerId == viewer.viewerId && primaryViewerHasFocus"
             [markers]="viewer.markers"
             (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"
             (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"
@@ -109,7 +109,7 @@
     ></div>
     <div
       class="view-manager-panel"
-      [class.active-viewer-group]="!primaryViewerGroupIsActive"
+      [class.active-viewer-group]="!primaryViewerHasFocus"
       *ngIf="secondaryViewers && secondaryViewers.length != 0"
       style="height: 100%"
     >
@@ -117,20 +117,20 @@
         class="mat-tab-fill-height"
         style="height: 100%"
         [animationDuration]="'0ms'"
-        [selectedIndex]="secondarySelectedTabIndex"
-        (selectedIndexChange)="onSecondarySelectedTabIndexChange($event)"
+        [selectedIndex]="selectedSecondaryViewerIndex"
+        (selectedIndexChange)="onSelectedSecondaryViewerIndexChange($event)"
       >
         <mat-tab
           *ngFor="let viewer of secondaryViewers; trackBy: viewerTrackByFn"
         >
           <ng-template mat-tab-label>
             <div
-              [class.active-viewer]="activeViewerId == viewer.viewerId"
-              [class.inactive-viewer]="activeViewerId != viewer.viewerId"
+            [class.active-viewer]="selectedSecondaryViewerId == viewer.viewerId && !primaryViewerHasFocus"
+            [class.inactive-viewer]="selectedSecondaryViewerId != viewer.viewerId || primaryViewerHasFocus"
               (mouseup)="
                 $event.which === 2 ? closeViewer(viewer.viewerId) : null
               "
-              (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)"
+              (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)"
             >
               <span
                 class="label"
@@ -148,9 +148,9 @@
             </div>
           </ng-template>
           <app-workbench-viewer-panel
-            (mousedown)="setActiveViewer($event, viewer.viewerId, viewer)"
+            (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)"
             [fileId]="viewer.fileId"
-            [active]="activeViewerId == viewer.viewerId"
+            [active]="selectedSecondaryViewerId == viewer.viewerId && !primaryViewerHasFocus"
             [markers]="viewer.markers"
             (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"
             (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"

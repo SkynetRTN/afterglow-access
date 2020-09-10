@@ -11,10 +11,10 @@
 
   <app-plotter
     #plotter
-    [imageFile]="state?.file"
+    [imageFile]="file"
     [mode]="config?.plotterMode"
     [width]="500"
-    [height]="350"
+    [height]="275"
     [lineMeasureStart]="lineStart$ | async"
     [lineMeasureEnd]="lineEnd$ | async"
     [interpolatePixels]="config?.interpolatePixels"

@@ -46,12 +46,12 @@ import { DataProvidersComponent } from './containers/data-providers/data-provide
 import { DataProvidersIndexPageComponent } from './containers/data-providers/data-providers-index-page/data-providers-index-page.component'
 import { DataProviderBrowsePageComponent} from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
 import { WorkbenchComponent } from './containers/workbench/workbench.component';
-import { DisplayToolsetComponent } from './components/display-toolset/display-toolset.component';
-import { PlottingPanelComponent } from './components/plotting-toolset/plotting-toolset.component';
+import { DisplayToolsetComponent } from './components/display-panel/display-panel.component';
+import { PlottingPanelComponent } from './components/plotting-panel/plotting-panel.component';
 import { FieldCalPageComponent } from './containers/workbench/field-cal-page/field-cal-page.component';
-import { CustomMarkerToolsetComponent } from './components/custom-marker-toolset/custom-marker-toolset.component';
-import { SonifierPageComponent } from './components/sonification-toolset/sonification-toolset.component';
-import { FileInfoToolsetComponent } from './components/file-info-toolset/file-info-toolset.component';
+import { CustomMarkerPanelComponent } from './components/custom-marker-panel/custom-marker-panel.component';
+import { SonificationPanelComponent } from './components/sonification-panel/sonification-panel.component';
+import { FileInfoToolsetComponent } from './components/file-info-panel/file-info-panel.component';
 import { PhotometryPageComponent } from './containers/workbench/photometry-page/photometry-page.component';
 import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
@@ -69,7 +69,6 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { ThemePickerModule } from '../theme-picker';
 import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
-import { WorkbenchGuard } from './services/workbench-guard.service';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
@@ -101,7 +100,7 @@ export const COMPONENTS = [
   WorkbenchComponent,
   DisplayToolsetComponent,
   PlottingPanelComponent,
-  SonifierPageComponent,
+  SonificationPanelComponent,
   FieldCalPageComponent,
   PhotometryPageComponent,
   ImageCalculatorPageComponent,
@@ -111,7 +110,7 @@ export const COMPONENTS = [
   SourceExtractionDialogComponent,
   CreateFieldCalDialogComponent,
   PlotterComponent,
-  CustomMarkerToolsetComponent,
+  CustomMarkerPanelComponent,
   CircleMarkerEditorComponent,
   RectangleMarkerEditorComponent,
   FileInfoToolsetComponent,
@@ -166,7 +165,7 @@ export class CoreModule {
   static forRoot() {
     return {
       ngModule: CoreModule,
-      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService, WorkbenchGuard],
+      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
     };
   }
 }

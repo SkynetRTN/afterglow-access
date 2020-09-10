@@ -6,6 +6,7 @@ import { Catalog } from "./catalog";
 import { FieldCal } from './field-cal';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
+import { FileInfoPanelConfig } from './file-info-panel';
 
 export enum WorkbenchTool {
   VIEWER = 'display',
@@ -51,12 +52,12 @@ export interface StackFormData {
   high?: number;
 }
 
-export interface CustomMarkerToolsetConfig {
+export interface CustomMarkerPanelConfig {
   centroidClicks: boolean,
   usePlanetCentroiding: boolean,
 }
 
-export interface PlottingToolsetConfig {
+export interface PlottingPanelConfig {
   interpolatePixels: boolean,
   centroidClicks: boolean,
   planetCentroiding: boolean,
@@ -64,7 +65,7 @@ export interface PlottingToolsetConfig {
   plotterMode: '1D' | '2D' | '3D';
 }
 
-export interface PhotometryPageSettings {
+export interface PhotometryPanelConfig {
   centroidClicks: boolean,
   showSourceLabels: boolean;
   showSourcesFromAllFiles: boolean;
@@ -95,32 +96,30 @@ export interface StackingPageSettings {
 export interface WorkbenchStateModel {
   version: number,
   showSideNav: boolean,
-  lastRouterPath: string,
   inFullScreenMode: boolean,
+  sidebarView: SidebarView
+  showSidebar: boolean;
+  showConfig: boolean;
   fullScreenPanel: 'file' | 'viewer' | 'tool';
-  selectedFileId: string;
-  activeViewerId: string;
+  // selectedFileId: string;
+  
   activeTool: WorkbenchTool;
   viewMode: ViewMode;
   nextViewerIdSeed: number;
   viewerIds: string[];
   viewers: {[id:string]: Viewer};
+  primaryViewerHasFocus: boolean;
   primaryViewerIds: string[];
+  selectedPrimaryViewerId: string;
   secondaryViewerIds: string[];
+  selectedSecondaryViewerId: string;
   viewerSyncEnabled: boolean;
   normalizationSyncEnabled: boolean;
-  sidebarView: SidebarView
-  showSidebar: boolean;
-  showConfig: boolean;
+  
   centroidSettings: CentroidSettings;
   sourceExtractionSettings: SourceExtractionSettings;
-  customMarkerPageSettings: CustomMarkerToolsetConfig;
   photometrySettings: PhotometrySettings;
-  plottingToolsetConfig: PlottingToolsetConfig;
-  photometryPageSettings: PhotometryPageSettings;
-  pixelOpsPageSettings: PixelOpsPageSettings;
-  aligningPageSettings: AligningPageSettings;
-  stackingPageSettings: StackingPageSettings;
+  
   catalogs: Array<Catalog>;
   selectedCatalogId: string;
   fieldCals: Array<FieldCal>;
@@ -129,4 +128,12 @@ export interface WorkbenchStateModel {
   addFieldCalSourcesFromCatalogJobId: string;
   addFieldCalSourcesFromCatalogFieldCalId: string;
   dssImportLoading: boolean;
+
+  fileInfoPanelConfig: FileInfoPanelConfig;
+  customMarkerPanelConfig: CustomMarkerPanelConfig;
+  plottingPanelConfig: PlottingPanelConfig;
+  photometryPageSettings: PhotometryPanelConfig;
+  pixelOpsPageSettings: PixelOpsPageSettings;
+  aligningPageSettings: AligningPageSettings;
+  stackingPageSettings: StackingPageSettings;
 }

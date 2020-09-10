@@ -29,7 +29,7 @@ import {
   tap,
 } from "rxjs/operators";
 
-import { SonifierRegionMode } from "../../models/sonifier-file-state";
+import { SonifierRegionMode, SonificationPanelState } from "../../models/sonifier-file-state";
 import { AfterglowDataFileService } from "../../services/afterglow-data-files";
 import {
   ImageFile,
@@ -57,35 +57,39 @@ import {
   Transformation,
 } from "../../models/transformation";
 
-export interface SonificationToolsetState {
-  file: ImageFile;
-  transformation: Transformation;
-  sonificationUri: string;
-  regionHistoryInitialized: boolean;
-  regionHistory: Array<Region>;
-  regionHistoryIndex: number | null;
-  regionMode: SonifierRegionMode;
-  viewportSync: boolean;
-  duration: number;
-  toneCount: number;
-  progressLine: { x1: number; y1: number; x2: number; y2: number };
-}
-
 @Component({
-  selector: "app-sonification-toolset",
-  templateUrl: "./sonification-toolset.component.html",
-  styleUrls: ["./sonification-toolset.component.css"],
+  selector: "app-sonification-panel",
+  templateUrl: "./sonification-panel.component.html",
+  styleUrls: ["./sonification-panel.component.css"],
 })
-export class SonifierPageComponent
+export class SonificationPanelComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+  @Input("file")
+  set file(file: ImageFile) {
+    this.file$.next(file);
+  }
+  get file() {
+    return this.file$.getValue();
+  }
+  private file$ = new BehaviorSubject<ImageFile>(null);
+
+  @Input("transformation")
+  set transformation(transformation: Transformation) {
+    this.transformation$.next(transformation);
+  }
+  get transformation() {
+    return this.transformation$.getValue();
+  }
+  private transformation$ = new BehaviorSubject<Transformation>(null);
+
   @Input("state")
-  set state(state: SonificationToolsetState) {
+  set state(state: SonificationPanelState) {
     this.state$.next(state);
   }
   get state() {
     return this.state$.getValue();
   }
-  private state$ = new BehaviorSubject<SonificationToolsetState>(null);
+  private state$ = new BehaviorSubject<SonificationPanelState>(null);
 
   SonifierRegionMode = SonifierRegionMode;
   region$: Observable<Region>;
@@ -110,31 +114,31 @@ export class SonifierPageComponent
     private store: Store,
     private router: Router
   ) {
-    this.region$ = this.state$.pipe(
-      filter((state) => state !== null),
-      map((state) => {
+    this.region$ = combineLatest(this.file$, this.transformation$, this.state$).pipe(
+      filter(([file, transformation, state]) => state !== null && file !== null),
+      map(([file, transformation, state]) => {
         if (state.regionMode == SonifierRegionMode.CUSTOM)
           return state.regionHistory[state.regionHistoryIndex];
         if (
-          !state.file ||
-          !state.file.headerLoaded ||
-          !state.transformation ||
-          !state.transformation.viewportSize ||
-          !state.transformation.imageToViewportTransform
+          !file ||
+          !file.headerLoaded ||
+          !transformation ||
+          !transformation.viewportSize ||
+          !transformation.imageToViewportTransform
         )
           return null;
-        return getViewportRegion(state.transformation, state.file);
+        return getViewportRegion(transformation, file);
       })
     );
 
-    this.sonificationUri$ = combineLatest(this.region$, this.state$).pipe(
-      map(([region, state]) => {
+    this.sonificationUri$ = this.region$.pipe(
+      map(region => {
         if (!region) return null;
         this.sonificationUri = this.afterglowDataFileService.getSonificationUri(
-          state.file.id,
+          this.file.id,
           region,
-          state.duration,
-          state.toneCount
+          this.state.duration,
+          this.state.toneCount
         );
         return this.sonificationUri;
       }),
@@ -306,7 +310,7 @@ export class SonifierPageComponent
   private selectSubregionByFrequency(subregion: number) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
     this.store.dispatch(
-      new AddRegionToHistory(this.state.file.id, {
+      new AddRegionToHistory(this.file.id, {
         x: region.x + subregion * (region.width / 4),
         y: region.y,
         width: region.width / 2,
@@ -318,7 +322,7 @@ export class SonifierPageComponent
   private selectSubregionByTime(subregion: number) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
     this.store.dispatch(
-      new AddRegionToHistory(this.state.file.id, {
+      new AddRegionToHistory(this.file.id, {
         x: region.x,
         y: region.y + subregion * (region.height / 4),
         width: region.width,
@@ -332,26 +336,26 @@ export class SonifierPageComponent
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
 
     this.store.dispatch(
-      new AddRegionToHistory(this.state.file.id, {
+      new AddRegionToHistory(this.file.id, {
         x: 0.5,
         y: 0.5,
-        width: getWidth(this.state.file),
-        height: getHeight(this.state.file),
+        width: getWidth(this.file),
+        height: getHeight(this.file),
       })
     );
   }
 
   private undoRegionSelection() {
-    this.store.dispatch(new UndoRegionSelection(this.state.file.id));
+    this.store.dispatch(new UndoRegionSelection(this.file.id));
   }
 
   private redoRegionSelection() {
-    this.store.dispatch(new RedoRegionSelection(this.state.file.id));
+    this.store.dispatch(new RedoRegionSelection(this.file.id));
   }
 
   private setRegionMode($event: MatButtonToggleChange) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.state.file.id, {
+      new UpdateSonifierFileState(this.file.id, {
         regionMode: $event.value,
       })
     );
@@ -359,19 +363,19 @@ export class SonifierPageComponent
 
   private setDuration(value) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.state.file.id, { duration: value })
+      new UpdateSonifierFileState(this.file.id, { duration: value })
     );
   }
 
   private setToneCount(value) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.state.file.id, { toneCount: value })
+      new UpdateSonifierFileState(this.file.id, { toneCount: value })
     );
   }
 
   private setViewportSync(value) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.state.file.id, {
+      new UpdateSonifierFileState(this.file.id, {
         viewportSync: value.checked,
       })
     );
@@ -445,7 +449,7 @@ export class SonifierPageComponent
 
     this.subs.push(
       this.progressLine$.pipe(distinctUntilChanged()).subscribe((line) => {
-        this.store.dispatch(new SetProgressLine(this.state.file.id, line));
+        this.store.dispatch(new SetProgressLine(this.file.id, line));
       })
     );
   }

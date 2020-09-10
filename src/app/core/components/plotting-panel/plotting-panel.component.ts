@@ -23,36 +23,30 @@ import {
   ImageFile,
   getDegsPerPixel,
 } from "../../../data-files/models/data-file";
-import { PlottingState } from "../../models/plotter-file-state";
+import { PlottingPanelState } from "../../models/plotter-file-state";
 import { PlotterComponent } from "../plotter/plotter.component";
 import { CanvasMouseEvent } from "../pan-zoom-canvas/pan-zoom-canvas.component";
-import { PlottingToolsetConfig } from "../../models/workbench-state";
+import { PlottingPanelConfig } from "../../models/workbench-state";
 import { PosType } from "../../models/source";
 import { Router } from "@angular/router";
 import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Store, Actions } from "@ngxs/store";
 
-export interface PlottingPanelState {
-  file: ImageFile;
-  measuring: boolean;
-  lineMeasureStart: {
-    primaryCoord: number;
-    secondaryCoord: number;
-    posType: PosType;
-  };
-  lineMeasureEnd: {
-    primaryCoord: number;
-    secondaryCoord: number;
-    posType: PosType;
-  };
-}
-
 @Component({
-  selector: "app-plotting-toolset",
-  templateUrl: "./plotting-toolset.component.html",
-  styleUrls: ["./plotting-toolset.component.css"],
+  selector: "app-plotting-panel",
+  templateUrl: "./plotting-panel.component.html",
+  styleUrls: ["./plotting-panel.component.css"],
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input("file")
+  set file(file: ImageFile) {
+    this.file$.next(file);
+  }
+  get file() {
+    return this.file$.getValue();
+  }
+  private file$ = new BehaviorSubject<ImageFile>(null);
+
   @Input("state")
   set state(state: PlottingPanelState) {
     this.state$.next(state);
@@ -62,9 +56,9 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
   private state$ = new BehaviorSubject<PlottingPanelState>(null);
 
-  @Input() config: PlottingToolsetConfig;
+  @Input() config: PlottingPanelConfig;
 
-  @Output() configChange: EventEmitter<Partial<PlottingToolsetConfig>> = new EventEmitter();
+  @Output() configChange: EventEmitter<Partial<PlottingPanelConfig>> = new EventEmitter();
 
   PosType = PosType;
   @HostBinding("class") @Input("class") classList: string =
@@ -91,24 +85,23 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
-    this.lineStart$ = this.state$.pipe(
-      map((state) => {
-        if (!state || !state.lineMeasureStart || !state.file) return null;
-        return this.normalizeLine(state.file, state.lineMeasureStart);
+    this.lineStart$ = combineLatest(this.file$, this.state$).pipe(
+      map(([file, state]) => {
+        if (!state || !state.lineMeasureStart || !file) return null;
+        return this.normalizeLine(file, state.lineMeasureStart);
       })
     );
 
-    this.lineEnd$ = this.state$.pipe(
-      map((state) => {
-        if (!state || !state.lineMeasureEnd || !state.file) return null;
+    this.lineEnd$ = combineLatest(this.file$, this.state$).pipe(
+      map(([file, state]) => {
+        if (!state || !state.lineMeasureEnd || !file) return null;
 
-        return this.normalizeLine(state.file, state.lineMeasureEnd);
+        return this.normalizeLine(file, state.lineMeasureEnd);
       })
     );
 
     this.vectorInfo$ = combineLatest(this.lineStart$, this.lineEnd$).pipe(
-      withLatestFrom(this.state$),
-      map(([[lineStart, lineEnd], state]) => {
+      map(([lineStart, lineEnd]) => {
         let pixelSeparation = null;
         let skySeparation = null;
         let pixelPosAngle = null;
@@ -131,9 +124,9 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
             Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
           );
 
-          if (getDegsPerPixel(state.file) != undefined) {
+          if (getDegsPerPixel(this.file) != undefined) {
             skySeparation =
-              pixelSeparation * getDegsPerPixel(state.file) * 3600;
+              pixelSeparation * getDegsPerPixel(this.file) * 3600;
           }
         }
 

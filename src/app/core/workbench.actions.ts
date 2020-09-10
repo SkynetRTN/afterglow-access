@@ -1,6 +1,6 @@
 import { DataFile, ImageFile } from '../data-files/models/data-file';
 import { ViewMode } from './models/view-mode';
-import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingToolsetConfig, PhotometryPageSettings, AligningPageSettings, PixelOpsPageSettings, StackingPageSettings, CustomMarkerToolsetConfig } from './models/workbench-state';
+import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingPanelConfig, PhotometryPanelConfig, AligningPageSettings, PixelOpsPageSettings, StackingPageSettings, CustomMarkerPanelConfig } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
 import { PhotometryJobSettings } from '../jobs/models/photometry';
@@ -13,6 +13,7 @@ import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Source } from './models/source';
 import { Marker } from './models/marker';
 import { Viewer } from './models/viewer';
+import { FileInfoPanelConfig } from './models/file-info-panel';
 
 /* Core */
 
@@ -43,8 +44,8 @@ export class SelectDataFile {
   constructor(public fileId: string) { }
 }
 
-export class SetActiveViewer {
-  public static readonly type = '[Workbench] Set Active Viewer';
+export class SetFocusedViewer {
+  public static readonly type = '[Workbench] Set Focused Viewer';
 
   constructor(public viewerId: string) { }
 }
@@ -181,22 +182,28 @@ export class UpdateSourceExtractionSettings {
   constructor(public changes: Partial<SourceExtractionSettings>) { }
 }
 
-export class UpdateCustomMarkerToolsetConfig {
+export class UpdateCustomMarkerPanelConfig {
   public static readonly type = '[Workbench] Update Custom Marker Page Settings'
 
-  constructor(public changes: Partial<CustomMarkerToolsetConfig>) { }
+  constructor(public changes: Partial<CustomMarkerPanelConfig>) { }
 }
 
-export class UpdatePlottingToolsetConfig {
+export class UpdateFileInfoPanelConfig {
+  public static readonly type = '[Workbench] Update File Info Panel Config'
+
+  constructor(public changes: Partial<FileInfoPanelConfig>) { }
+}
+
+export class UpdatePlottingPanelConfig {
   public static readonly type = '[Workbench] Update Plotter Page Settings'
 
-  constructor(public changes: Partial<PlottingToolsetConfig>) { }
+  constructor(public changes: Partial<PlottingPanelConfig>) { }
 }
 
-export class UpdatePhotometryPageSettings {
+export class UpdatePhotometryPanelConfig {
   public static readonly type = '[Workbench] Update Photometry Page Settings'
 
-  constructor(public changes: Partial<PhotometryPageSettings>) { }
+  constructor(public changes: Partial<PhotometryPanelConfig>) { }
 }
 
 export class UpdatePixelOpsPageSettings {
@@ -379,6 +386,10 @@ export class PhotometerSources {
 
   constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings, public isBatch: boolean) { }
 }
+
+
+
+
 
 
 

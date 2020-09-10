@@ -13,7 +13,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { WorkbenchFileStates } from '../../../workbench-file-states.state';
-import { SetActiveViewer } from '../../../workbench.actions';
+import { SetFocusedViewer } from '../../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../workbench-file-states.actions';
 import { RemoveDataFile } from '../../../../data-files/data-files.actions';
@@ -196,7 +196,7 @@ export class WorkbenchViewerGridComponent implements OnInit {
   setActiveViewer($event: Event, viewerId: string, viewer: Viewer) {
     this.mouseDownActiveViewerId = this.activeViewerId;
     if (viewerId != this.activeViewerId) {
-      this.store.dispatch(new SetActiveViewer(viewerId));
+      this.store.dispatch(new SetFocusedViewer(viewerId));
       $event.preventDefault();
       $event.stopImmediatePropagation();
     }

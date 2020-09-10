@@ -1,20 +1,21 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PlottingPanelComponent } from './plotting-toolset.component';
 
-describe('PlotterPageComponent', () => {
-  let component: PlottingPanelComponent;
-  let fixture: ComponentFixture<PlottingPanelComponent>;
+import { DisplayToolsetComponent } from './display-panel.component';
+
+describe('ViewerPageComponent', () => {
+  let component: DisplayToolsetComponent;
+  let fixture: ComponentFixture<DisplayToolsetComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PlottingPanelComponent ]
+      declarations: [ DisplayToolsetComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PlottingPanelComponent);
+    fixture = TestBed.createComponent(DisplayToolsetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

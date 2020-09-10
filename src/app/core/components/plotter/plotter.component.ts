@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 
 import { Subject } from "rxjs";
-import { debounceTime } from "rxjs/operators";
+import { debounceTime, throttleTime } from "rxjs/operators";
 
 import {
   ImageFile,
@@ -144,7 +144,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   ngOnInit() {
     let self = this;
 
-    this.chartDebouncer$.pipe(debounceTime(200)).subscribe(value => {
+    this.chartDebouncer$.pipe(throttleTime(50)).subscribe(value => {
       this.updateChart();
     });
 

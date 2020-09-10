@@ -2,16 +2,17 @@ import { ImageFile } from '../data-files/models/data-file';
 import { ImageTile } from '../data-files/models/image-tile';
 import { PixelNormalizer } from './models/pixel-normalizer';
 import { Region } from './models/region';
-import { SonifierFileState, SonifierRegionMode } from './models/sonifier-file-state';
-import { PlottingState } from './models/plotter-file-state';
+import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
+import { PlottingPanelState } from './models/plotter-file-state';
 import { PosType, Source } from './models/source';
 import { Matrix } from 'svgjs';
-import { PhotometryFileState } from './models/photometry-file-state';
+import { PhotometryPanelState } from './models/photometry-file-state';
 import { SourceExtractionJobSettings } from '../jobs/models/source-extraction';
 import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Transform } from './models/transformation';
 import { CustomMarker } from './models/custom-marker';
 import { Marker } from './models/marker';
+import { PhotData } from './models/source-phot-data';
 
 export class InitializeImageFileState {
   public static readonly type = '[Viewer] Initialize Image File State';
@@ -78,7 +79,7 @@ export class RedoRegionSelection {
 export class UpdateSonifierFileState {
   public static readonly type = '[Sonifier] Update File State';
 
-  constructor(public fileId: string, public changes: Partial<SonifierFileState>) { }
+  constructor(public fileId: string, public changes: Partial<SonificationPanelState>) { }
 }
 
 export class SetProgressLine {
@@ -92,7 +93,7 @@ export class SetProgressLine {
 export class UpdatePlotterFileState {
   public static readonly type = '[Plotter] Update Plotter File State'
 
-  constructor(public fileId: string, public changes: Partial<PlottingState>) { }
+  constructor(public fileId: string, public changes: Partial<PlottingPanelState>) { }
 }
 
 export class StartLine {
@@ -188,7 +189,7 @@ export class UpdateFilteredSources {
 export class UpdatePhotometryFileState {
   public static readonly type = '[Source Extractor] Update File State';
 
-  constructor(public fileId: string, public changes: Partial<PhotometryFileState>) { }
+  constructor(public fileId: string, public changes: Partial<PhotometryPanelState>) { }
 }
 
 export class RemoveSelectedSources {
@@ -245,5 +246,23 @@ export class SetCustomMarkerSelection {
   public static readonly type = '[Markers] Set Custom Marker Selection'
 
   constructor(public fileId: string, public markers: Marker[]) { }
+}
+
+export class AddPhotDatas {
+  public static readonly type = '[Sources Phot Data] Add Source Phot Datas'
+
+  constructor(public photDatas: PhotData[]) { }
+}
+
+export class RemoveAllPhotDatas {
+  public static readonly type = '[Phot Data] Remove All Phot Data'
+
+  constructor() { }
+}
+
+export class RemovePhotDatas {
+  public static readonly type = '[Phot Data] Remove Source Phot Datas'
+
+  constructor(public sourceId: string) { }
 }
 

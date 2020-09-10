@@ -88,7 +88,7 @@
                     </div>
                   </div>
                   <app-workbench-data-file-list [dataFiles]="(files$ | async)"
-                    [selectedFileId]="(selectedFile$ | async)?.id" (onSelectionChange)="onFileSelect($event)">
+                    [selectedFileId]="(focusedFile$ | async)?.id" (onSelectionChange)="onFileSelect($event)">
                   </app-workbench-data-file-list>
                 </div>
               </div>
@@ -147,7 +147,7 @@
         <hr>
 
         <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
-          <div *ngIf="activeImageFile$ | async; let imageFile">
+          <div *ngIf="focusedImageFile$ | async; let imageFile">
             <h6 i18n>DSS Catalog Import</h6>
             <div class="pb-3">
               <mat-radio-group aria-label="DSS Import Image Center"
@@ -184,8 +184,12 @@
   </div>
   <div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers"
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'">
-    <app-workbench-view-manager [primaryViewers]="primaryViewers$ | async"
-      [secondaryViewers]="secondaryViewers$ | async" [activeViewerId]="activeViewerId$ | async"
+    <app-workbench-view-manager
+      [primaryViewers]="primaryViewers$ | async"
+      [selectedPrimaryViewerId]="selectedPrimaryViewerId$ | async"
+      [secondaryViewers]="secondaryViewers$ | async" 
+      [selectedSecondaryViewerId]="selectedSecondaryViewerId$ | async"
+      [primaryViewerHasFocus]="primaryViewerHasFocus$ | async"
       [viewMode]="viewMode$ | async"
       (onImageClick)="onImageClick($event)"
       (onImageMove)="onImageMove($event)"
@@ -193,12 +197,12 @@
     >
     </app-workbench-view-manager>
   </div>
-  <div fxFlex="0 0 auto" fxLayout="row" class="workbench-outlet-panel" [hidden]="!(activeImageFile$ | async)"
+  <div fxFlex="0 0 auto" fxLayout="row" class="workbench-outlet-panel" [hidden]="!(focusedImageFile$ | async)"
     style="overflow: hidden;">
     <div fxFlex="0 0 auto" class="workbench-config-panel" *ngIf="(activeTool$ | async); let activeTool"
       [class]="activeTool$ | async" role="region" aria-labelledby="settings-header"
       [ngClass]="{ 'full-screen': inFullScreenMode$ | async }"
-      [fxShow]="((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') || (!(inFullScreenMode$ | async) && (showConfig$ | async) && (activeImageFile$ | async))">
+      [fxShow]="((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') || (!(inFullScreenMode$ | async) && (showConfig$ | async) && (focusedImageFile$ | async))">
 
       <div class="card workbench-settings-card" style="height: 100%;">
         <div id="settings-header" class="card-header" [ngSwitch]="activeTool">
@@ -214,39 +218,58 @@
         </div>
 
         <div class="card-body" style="overflow-y: auto;" [ngSwitch]="activeTool">
-          <app-display-toolset
+          <app-display-panel
             *ngSwitchCase="WorkbenchTool.VIEWER"
-            [state]="(displayToolsetFileState$ | async)">
-          </app-display-toolset>
+            [file]="(focusedImageFile$ | async)"
+            [normalization]="(focusedImageFileNormalization$ | async)">
+          </app-display-panel>
 
-          <app-file-info-toolset
+          <app-file-info-panel
             *ngSwitchCase="WorkbenchTool.INFO"
-            [state]="fileInfoToolsetState$ | async"
-            [config]="fileInfoToolsetConfig">
-          </app-file-info-toolset>
+            [file]="(focusedImageFile$ | async)"
+            [config]="(fileInfoPanelConfig$ | async)"
+            (configChange)="onFileInfoPanelConfigChange($event)">
+          </app-file-info-panel>
 
-          <app-custom-marker-toolset
+          <app-custom-marker-panel
             *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER"
-            [state]="(customMarkerToolsetFileState$ | async)"
-            [config]="(customMarkerToolsetConfig$ | async)"
-            (configChange)="onCustomMarkerToolsetConfigChange($event)"
+            [file]="(focusedImageFile$ | async)"
+            [state]="(customMarkerPanelState$ | async)"
+            [config]="(customMarkerPanelConfig$ | async)"
+            (configChange)="onCustomMarkerPanelConfigChange($event)"
             (markerChange)="onCustomMarkerChange($event)"
             (markerDelete)="onCustomMarkerDelete($event)">
-          </app-custom-marker-toolset>
+          </app-custom-marker-panel>
 
-          <app-plotting-toolset
+          <app-plotting-panel
             *ngSwitchCase="WorkbenchTool.PLOTTER"
-            [state]="(plottingToolsetFileState$ | async)"
-            [config]="(plottingToolsetConfig$ | async)"
-            (configChange)="onPlottingToolsetConfigChange($event)">
-          </app-plotting-toolset>
+            [file]="(focusedImageFile$ | async)"
+            [state]="(plottingPanelState$ | async)"
+            [config]="(plottingPanelConfig$ | async)"
+            (configChange)="onPlottingPanelConfigChange($event)">
+          </app-plotting-panel>
 
-          <app-sonification-toolset
+          <app-sonification-panel
             *ngSwitchCase="WorkbenchTool.SONIFIER"
-            [state]="(sonificationToolsetFileState$ | async)">
-          </app-sonification-toolset>
+            [file]="(focusedImageFile$ | async)"
+            [transformation]="(focusedImageFileTransformation$ | async)"
+            [state]="(sonificationPanelState$ | async)">
+          </app-sonification-panel>
 
-          <app-photometry-page *ngSwitchCase="WorkbenchTool.PHOTOMETRY"></app-photometry-page>
+          <app-photometry-page
+            *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
+            [selectedFile]="(focusedImageFile$ | async)"
+            [state]="(photometryPanelState$ | async)"
+            [sources]="(photometryPanelSources$ | async)"
+            [files]="(files$ | async)"
+            [config]="(photometryPanelConfig$ | async)"
+            [centroidSettings]="(centroidSettings$ | async)"
+            [photometrySettings]="(photometrySettings$ | async)"
+            [sourceExtractionSettings]="(sourceExtractionSettings$ | async)"
+            (configChange)="onPhotometryPanelConfigChange($event)"
+            (photometrySettingsChange)="onPhotometrySettingsChange($event)"
+            (sourceExtractionSettingsChange)="onSourceExtractionSettingsChange($event)">
+          </app-photometry-page>
           <app-image-calculator-page *ngSwitchCase="WorkbenchTool.IMAGE_CALC">
           </app-image-calculator-page>
           <app-aligner-page *ngSwitchCase="WorkbenchTool.ALIGNER"></app-aligner-page>

@@ -34,7 +34,7 @@ import {
   ImageFile, DataFile, Header
 } from "../../../../data-files/models/data-file";
 import {
-  PhotometryFileState,
+  PhotometryPanelState,
 } from "../../../models/photometry-file-state";
 import { WorkbenchFileState } from "../../../models/workbench-file-state";
 import {
@@ -83,17 +83,17 @@ export class WorkbenchPageBaseComponent implements OnDestroy {
     this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
     this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
     this.showConfig$ = store.select(WorkbenchState.getShowConfig);
-    this.activeImageFile$ = store.select(WorkbenchState.getActiveImageFile);
+    this.activeImageFile$ = store.select(WorkbenchState.getFocusedImageFile);
     this.activeImageFileLoaded$ = this.activeImageFile$.pipe(
       filter(f => f.headerLoaded && f.histLoaded)
     )
-    this.activeImageFileState$ = store.select(WorkbenchState.getActiveImageFileState);
+    this.activeImageFileState$ = store.select(WorkbenchState.getFocusedImageFileState);
     this.allImageFiles$ = store.select(DataFilesState.getImageFiles);
     this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
     this.primaryViewers$ = this.store.select(WorkbenchState.getPrimaryViewers);
     this.secondaryViewers$ = this.store.select(WorkbenchState.getSecondaryViewers);
-    this.activeViewerId$ = this.store.select(WorkbenchState.getActiveViewerId);
-    this.activeViewer$ = this.store.select(WorkbenchState.getActiveViewer);
+    this.activeViewerId$ = this.store.select(WorkbenchState.getSelectedPrimaryViewerId);
+    this.activeViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
 
     this.viewerFileIds$ = this.store.select(WorkbenchState.getViewerIds).pipe(
       switchMap(viewerIds => {

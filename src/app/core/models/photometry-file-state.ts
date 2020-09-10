@@ -1,4 +1,6 @@
-export interface PhotometryFileState {
+import { PhotData } from './source-phot-data';
+
+export interface PhotometryPanelState {
   sourceExtractionJobId: string;
-  selectedSourceIds: Array<string>
+  sourcePhotometryData: { [sourceId: string]: PhotData };
 }

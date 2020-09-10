@@ -4,26 +4,22 @@ import { MarkerType, Marker } from "../../models/marker";
 import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
 import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
-import { CustomMarkerToolsetConfig } from '../../models/workbench-state';
+import { CustomMarkerPanelConfig } from '../../models/workbench-state';
 import { ImageFile } from '../../../data-files/models/data-file';
-import { CustomMarkerState } from '../../models/marker-file-state';
+import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-export interface CustomMarkerToolsetFileState  {
-  file: ImageFile;
-  markers: Marker[]
-}
-
 @Component({
-  selector: "app-custom-marker-toolset",
-  templateUrl: "./custom-marker-toolset.component.html",
-  styleUrls: ["./custom-marker-toolset.component.css"]
+  selector: "app-custom-marker-panel",
+  templateUrl: "./custom-marker-panel.component.html",
+  styleUrls: ["./custom-marker-panel.component.css"]
 })
-export class CustomMarkerToolsetComponent implements OnInit, OnDestroy {
-  @Input() state: CustomMarkerToolsetFileState;
-  @Input() config: CustomMarkerToolsetConfig;
+export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
+  @Input() file: ImageFile;
+  @Input() state: CustomMarkerPanelState;
+  @Input() config: CustomMarkerPanelConfig;
   
-  @Output() configChange: EventEmitter<Partial<CustomMarkerToolsetConfig>> = new EventEmitter();
+  @Output() configChange: EventEmitter<Partial<CustomMarkerPanelConfig>> = new EventEmitter();
   @Output() markerChange: EventEmitter<{id: string, changes: Partial<Marker>}> = new EventEmitter();
   @Output() markerDelete: EventEmitter<Marker[]> = new EventEmitter();
 
@@ -58,8 +54,9 @@ export class CustomMarkerToolsetComponent implements OnInit, OnDestroy {
   }
 
   getSelectedMarkers() {
-    if(!this.state || !this.state.markers) return [];
-    return this.state.markers.filter(m => m.selected);
+    let markers = Object.values(this.state.entities);
+    if(!this.state || !markers) return [];
+    return markers.filter(m => m.selected);
   }
 
   onMarkerChange($event, marker: Marker) {

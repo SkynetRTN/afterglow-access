@@ -13,7 +13,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import { WorkbenchFileStates } from '../../../workbench-file-states.state';
-import { SetActiveViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from '../../../workbench.actions';
+import { SetFocusedViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from '../../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../workbench-file-states.actions';
 import { RemoveDataFile } from '../../../../data-files/data-files.actions';
@@ -58,16 +58,18 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
   ViewMode = ViewMode;
 
   @Input() primaryViewers: Viewer[];
+  @Input() selectedPrimaryViewerId: string;
   @Input() secondaryViewers: Viewer[];
-  @Input() activeViewerId: string;
-  @Input() viewMode: ViewMode;
+  @Input() selectedSecondaryViewerId: string;
+  @Input() primaryViewerHasFocus: boolean = true;
+  @Input() viewMode: ViewMode = ViewMode.SPLIT_VERTICAL;
 
   @Output() onImageClick = new EventEmitter<ViewerCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerCanvasMouseEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerMarkerMouseEvent>();
 
-  primarySelectedTabIndex = 0;
-  secondarySelectedTabIndex = 0;
+  selectedPrimaryViewerIndex = 0;
+  selectedSecondaryViewerIndex = 0;
 
 
   private hotKeys: Array<Hotkey> = [];
@@ -86,12 +88,9 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
     return this.primaryViewers.concat(this.secondaryViewers);
   }
 
-  private get primaryViewerGroupIsActive() {
-    return this.activeViewer && this.primaryViewers.includes(this.activeViewer);
-  }
-
-  private get activeViewer() {
-    return this.viewers.find(v => v.viewerId == this.activeViewerId);
+  private get focusedViewer() {
+    let focusedViewerId = this.primaryViewerHasFocus ? this.selectedPrimaryViewerId : this.selectedSecondaryViewerId;
+    return this.viewers.find(v => v.viewerId == focusedViewerId);
   }
 
   constructor(private store: Store, private _hotkeysService: HotkeysService, public overlay: Overlay,
@@ -118,7 +117,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
       new Hotkey(
         "=",
         (event: KeyboardEvent): boolean => {
-          let activeViewer = this.activeViewer;
+          let activeViewer = this.focusedViewer;
           if(activeViewer && activeViewer.fileId != null) {
             this.zoomIn(activeViewer.fileId);
           }
@@ -134,7 +133,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
       new Hotkey(
         "-",
         (event: KeyboardEvent): boolean => {
-          let activeViewer = this.activeViewer;
+          let activeViewer = this.focusedViewer;
           if(activeViewer && activeViewer.fileId != null) {
             this.zoomOut(activeViewer.fileId);
           }
@@ -150,7 +149,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
       new Hotkey(
         "0",
         (event: KeyboardEvent): boolean => {
-          let activeViewer = this.activeViewer;
+          let activeViewer = this.focusedViewer;
           if(activeViewer && activeViewer.fileId != null) {
             this.zoomTo(activeViewer.fileId, 1);
           }
@@ -166,7 +165,7 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
       new Hotkey(
         "z",
         (event: KeyboardEvent): boolean => {
-          let activeViewer = this.activeViewer;
+          let activeViewer = this.focusedViewer;
           if(activeViewer && activeViewer.fileId != null) {
             this.zoomToFit(activeViewer.fileId);
           }
@@ -225,13 +224,14 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.activeViewerId && changes.activeViewerId.previousValue != changes.activeViewerId.currentValue) {
-      let primaryViewer = this.primaryViewers.find(v => v.viewerId == changes.activeViewerId.currentValue);
-      if(primaryViewer) this.primarySelectedTabIndex = this.primaryViewers.indexOf(primaryViewer);
+    if (changes.selectedPrimaryViewerId) {
+      let primaryViewer = this.primaryViewers.find(v => v.viewerId == changes.selectedPrimaryViewerId.currentValue);
+      this.selectedPrimaryViewerIndex = primaryViewer ? this.primaryViewers.indexOf(primaryViewer) : 0;
+    }
 
-      let secondaryViewer = this.secondaryViewers.find(v => v.viewerId == changes.activeViewerId.currentValue);
-      if(secondaryViewer) this.secondarySelectedTabIndex = this.secondaryViewers.indexOf(secondaryViewer);
-
+    if (changes.selectedSecondaryViewerId) {
+      let secondaryViewer = this.secondaryViewers.find(v => v.viewerId == changes.selectedSecondaryViewerId.currentValue);
+      this.selectedSecondaryViewerIndex = secondaryViewer ? this.secondaryViewers.indexOf(secondaryViewer) : 0;
     }
   }
 
@@ -255,10 +255,11 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
     this.store.dispatch(this.viewers.map(v => new CloseViewer(v.viewerId)));
   }
 
-  setActiveViewer($event: Event, viewerId: string, viewer: Viewer) {
-    this.mouseDownActiveViewerId = this.activeViewerId;
-    if (viewerId != this.activeViewerId) {
-      this.store.dispatch(new SetActiveViewer(viewerId));
+  setFocusedViewer($event: Event, viewerId: string, viewer: Viewer) {
+    let focusedViewerId = this.primaryViewerHasFocus ? this.selectedPrimaryViewerId : this.selectedSecondaryViewerId;
+    this.mouseDownActiveViewerId = focusedViewerId;
+    if (viewerId != focusedViewerId) {
+      this.store.dispatch(new SetFocusedViewer(viewerId));
       $event.preventDefault();
       $event.stopImmediatePropagation();
     }
@@ -292,14 +293,14 @@ export class WorkbenchViewManagerComponent implements OnInit, OnChanges {
     });
   }
   
-  onPrimarySelectedTabIndexChange(index) {
-    this.primarySelectedTabIndex = index;
-    this.store.dispatch(new SetActiveViewer(this.primaryViewers[index].viewerId));
+  onSelectedPrimaryViewerIndexChange(index) {
+    this.selectedPrimaryViewerIndex = index;
+    this.store.dispatch(new SetFocusedViewer(this.primaryViewers[index].viewerId));
   }
   
-  onSecondarySelectedTabIndexChange(index) {
-    this.secondarySelectedTabIndex = index;
-    this.store.dispatch(new SetActiveViewer(this.secondaryViewers[index].viewerId));
+  onSelectedSecondaryViewerIndexChange(index) {
+    this.selectedSecondaryViewerIndex = index;
+    this.store.dispatch(new SetFocusedViewer(this.secondaryViewers[index].viewerId));
   }
 
 }

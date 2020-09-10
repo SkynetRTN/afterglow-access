@@ -90,6 +90,13 @@ export class DataFilesState {
   }
 
   @Selector()
+  public static getHeader(state: DataFilesStateModel) {
+    return (id: string) => {
+      return state.entities[id].header;
+    };
+  }
+
+  @Selector()
   static getLoading(state: DataFilesStateModel) {
     return state.loading;
   }

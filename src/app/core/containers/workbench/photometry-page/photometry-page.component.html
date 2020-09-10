@@ -1,12 +1,12 @@
-<div *ngIf="!(activeImageFile$ | async)?.headerLoaded" class="alert alert-info" i18n>
+<div *ngIf="!selectedFile?.headerLoaded" class="alert alert-info" i18n>
   Select a data file to see options.
 </div>
-<div *ngIf="activeImageFile$ | async; let activeImageFile">
-  <div *ngIf="(activeImageFile$ | async)?.headerLoaded">
+<div *ngIf="selectedFile; let activeImageFile">
+  <div *ngIf="selectedFile?.headerLoaded">
     <div class="mb-3">
       <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
-        [value]="(activeImageFile$ | async)?.wcs?.isValid() ? (photometryPageSettings$ | async)?.coordMode : 'pixel'"
-        [disabled]="!(activeImageFile$ | async)?.wcs?.isValid()" (change)="onCoordModeChange($event)">
+        [value]="selectedFile?.wcs?.isValid() ? config?.coordMode : 'pixel'"
+        [disabled]="!selectedFile?.wcs?.isValid()" (change)="onCoordModeChange($event)">
         <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
         <mat-button-toggle value="sky">Sky Coordinate Mode</mat-button-toggle>
       </mat-button-toggle-group>
@@ -25,11 +25,11 @@
 
 
       <div class="form-row mt-3">
-        <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.centroidClicks" [labelPosition]="before"
+        <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="before"
           (change)="onCentroidClicksChange($event)" i18n>
           Centroid clicks
         </mat-slide-toggle>
-        <button class="" mat-raised-button (click)="openPhotSettings()" i18n>
+        <button class="" mat-raised-button (click)="openPhotometrySettingsDialog()" i18n>
           Photometry Settings...
         </button>
         <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
@@ -37,7 +37,7 @@
           <span i18n>Add Sources...</span>
         </button>
         <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="openSourceExtractionSettings(activeImageFile.id)">
+          <button mat-menu-item (click)="openSourceExtractionDialog()">
             <mat-icon>location_searching</mat-icon>
             <span i18n>Source Extraction...</span>
           </button>
@@ -61,17 +61,17 @@
 
 
     <div class="form-row mb-2">
-      <mat-slide-toggle [checked]="showAllSources$ | async" [labelPosition]="after"
-        (change)="onShowAllSourcesChange($event)" i18n>
+      <mat-slide-toggle [checked]="config?.showSourcesFromAllFiles" [labelPosition]="after"
+        (change)="onShowSourcesFromAllFilesChange($event)" i18n>
         Show Sources From All Files
       </mat-slide-toggle>
 
-      <mat-slide-toggle [checked]="showSourceLabels$ | async" [labelPosition]="after"
+      <mat-slide-toggle [checked]="config?.showSourceLabels" [labelPosition]="after"
         (change)="onShowSourceLabelsChange($event)" i18n>
         Source Labels
       </mat-slide-toggle>
 
-      <mat-slide-toggle [checked]="(photometryPageSettings$ | async)?.autoPhot" [labelPosition]="after"
+      <mat-slide-toggle [checked]="config?.autoPhot" [labelPosition]="after"
         (change)="onAutoPhotChange($event)" i18n>
         Auto-phot
       </mat-slide-toggle>
@@ -79,7 +79,7 @@
 
 
     <div class="mb-3" style="max-height: 300px; overflow: auto;">
-      <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="dataSource" matSort
+      <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$" matSort
         [matSortDisableClear]="true">
         <ng-container matColumnDef="select">
           <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell" [rowIndex]="0"
@@ -141,7 +141,7 @@
           </mat-header-cell>
           <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
             [rowIndex]="rowIndex + 1" [columnIndex]="4" [cellInTabOrder]="true">
-            {{ row.photData?.mag | number:'1.0-3' }}
+            {{ row.data?.mag | number:'1.0-3' }}
           </mat-cell>
         </ng-container>
 
@@ -152,7 +152,7 @@
           </mat-header-cell>
           <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
             [rowIndex]="rowIndex + 1" [columnIndex]="5" [cellInTabOrder]="true">
-            {{ row.photData?.magError | number:'1.0-3' }}
+            {{ row.data?.magError | number:'1.0-3' }}
           </mat-cell>
         </ng-container>
 
@@ -165,7 +165,7 @@
       </mat-table>
     </div>
 
-    <div class="form-row">
+    <div class="form-row"  *ngIf="tableData$ | async; let tableData">
       <button mat-raised-button aria-label="Merge Selected Sources" matTooltip="Merge Selected Sources" color="primary"
         (click)="mergeSelectedSources()" [disabled]="selectionModel.selected.length < 2">
         <mat-icon>merge_type</mat-icon>
@@ -176,15 +176,15 @@
         <mat-icon>delete</mat-icon>
       </button>
       <button mat-raised-button aria-label="Remove All Sources" matTooltip="Remove All Sources" color="warn"
-        (click)="removeAllSources()" [disabled]="dataSource?.sources.length == 0">
+        (click)="removeAllSources()" [disabled]="sources?.length == 0">
         <mat-icon>delete_sweep</mat-icon>
       </button>
       <button mat-raised-button aria-label="Update Photometry" matTooltip="Update Photometry" color="primary"
-        (click)="photometerAllSources(activeImageFile)" [disabled]="dataSource?.sources.length == 0">
+        (click)="photometerAllSources(activeImageFile)" [disabled]="sources?.length == 0">
         <mat-icon>wb_incandescent</mat-icon>
       </button>
       <button mat-raised-button aria-label="Export Data" matTooltip="Export Data" color="primary"
-        (click)="exportSourceData()" [disabled]="dataSource?.sources.length == 0">
+        (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
         <mat-icon>get_app</mat-icon>
       </button>
     </div>
@@ -199,28 +199,28 @@
 
     <hr>
     <div>
-      <p i18n>Use batch photometry to photometer your sources in multiple files.</p>
+      <p i18n>Use batch photometry to photometer all of your sources in multiple files.</p>
 
 
-      <div *ngIf="allImageFiles$ | async; let allImageFiles">
+      <div *ngIf="files">
         <form [formGroup]="batchPhotForm">
           <div>
             <mat-form-field appearance="outline" style="width: 300px;">
               <mat-label i18n>Select Image(s) to Photometer</mat-label>
               <mat-select multiple formControlName="selectedImageFileIds">
-                <mat-option *ngFor="let imageFile of allImageFiles" [value]="imageFile.id">{{ imageFile.name }}
+                <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="selectImageFiles(allImageFiles)">
+            <button mat-icon-button (click)="selectImageFiles(files)">
               <mat-icon>select_all</mat-icon>
             </button>
 
             <button mat-icon-button (click)="selectImageFiles([])">
               <mat-icon>clear</mat-icon>
             </button>
-            <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()">
+            <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()" [disabled]="config?.batchPhotFormData?.selectedImageFileIds?.length == 0 || sources?.length == 0">
               <mat-icon>wb_incandescent</mat-icon>
             </button>
           </div>
@@ -228,8 +228,8 @@
       </div>
 
       <div
-        *ngIf="(photometryPageSettings$ | async)?.batchPhotProgress != null && (photometryPageSettings$ | async)?.batchPhotProgress != 100;else downloadBatchResultsBlock">
-        <mat-progress-bar mode="determinate" [value]="(photometryPageSettings$ | async)?.batchPhotProgress"
+        *ngIf="config?.batchPhotProgress != null && config?.batchPhotProgress != 100;else downloadBatchResultsBlock">
+        <mat-progress-bar mode="determinate" [value]="config?.batchPhotProgress"
           [color]="'accent'"></mat-progress-bar>
       </div>
       <ng-template #downloadBatchResultsBlock>

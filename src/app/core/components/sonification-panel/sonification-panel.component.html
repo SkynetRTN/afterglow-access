@@ -1,8 +1,8 @@
-<div *ngIf="!state?.file" class="alert alert-info">
+<div *ngIf="!file" class="alert alert-info">
   <ng-container i18n>Select a data file to see sonifier options.</ng-container>
 
 </div>
-<div *ngIf="state?.file">
+<div *ngIf="file">
   <table class="table header-value-table">
     <tbody>
       <tr>

@@ -5,7 +5,7 @@ export enum SonifierRegionMode {
   CUSTOM
 }
 
-export interface SonifierFileState {
+export interface SonificationPanelState {
   sonificationUri: string,
   regionHistoryInitialized: boolean;
   regionHistory: Array<Region>;

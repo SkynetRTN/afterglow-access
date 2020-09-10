@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SonifierPageComponent } from './sonification-toolset.component';
+import { FileInfoToolsetComponent } from './file-info-panel.component';
 
-describe('SonifierPageComponent', () => {
-  let component: SonifierPageComponent;
-  let fixture: ComponentFixture<SonifierPageComponent>;
+describe('InfoToolComponent', () => {
+  let component: FileInfoToolsetComponent;
+  let fixture: ComponentFixture<FileInfoToolsetComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SonifierPageComponent ]
+      declarations: [ FileInfoToolsetComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SonifierPageComponent);
+    fixture = TestBed.createComponent(FileInfoToolsetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

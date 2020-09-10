@@ -1,7 +1,7 @@
 import { State, Action, Selector, StateContext, Store, Actions, ofActionSuccessful } from '@ngxs/store';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PhotData } from './models/source-phot-data';
-import { RemoveAllPhotDatas, RemovePhotDatas, UpdatePhotData, AddPhotDatas } from './phot-data.actions';
+import { UpdatePhotData } from './phot-data.actions';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { DataFilesStateModel, DataFilesState } from '../data-files/data-files.state';
 import { ResetState } from '../auth/auth.actions';
@@ -62,42 +62,6 @@ export class PhotDataState {
     });
   }
 
-  @Action(AddPhotDatas)
-  @ImmutableContext()
-  public addPhotDatas({ getState, setState, dispatch }: StateContext<PhotDataStateModel>, { photDatas }: AddPhotDatas) {
-    setState((state: PhotDataStateModel) => {
-      photDatas.forEach(d => {
-        let id = `${d.sourceId}-${d.fileId}`;
-        if(!state.ids.includes(id)) state.ids.push(id);
-        state.entities[id] = {
-          ...d,
-          id: id
-        }
-      });
-      
-      return state;
-    });
-  }
-
-  @Action(RemovePhotDatas)
-  @ImmutableContext()
-  public removePhotDatas({ getState, setState, dispatch }: StateContext<PhotDataStateModel>, {ids}: RemovePhotDatas) {
-    setState((state: PhotDataStateModel) => {
-      state.ids = state.ids.filter(id => !ids.includes(id));
-      ids.forEach(id => delete state.entities[id]);
-      return state;
-    });
-  }
-
-  @Action(RemoveAllPhotDatas)
-  @ImmutableContext()
-  public removeAllPhotDatas({ getState, setState, dispatch }: StateContext<PhotDataStateModel>, { }: RemoveAllPhotDatas) {
-    setState((state: PhotDataStateModel) => {
-      state.ids = [];
-      state.entities = {};
-      return state;
-    });
-  }
 
 
 

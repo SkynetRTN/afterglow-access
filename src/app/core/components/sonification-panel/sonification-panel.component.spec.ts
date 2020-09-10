@@ -1,21 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { SonificationPanelComponent } from './sonification-panel.component';
 
-import { DisplayToolsetComponent } from './display-toolset.component';
-
-describe('ViewerPageComponent', () => {
-  let component: DisplayToolsetComponent;
-  let fixture: ComponentFixture<DisplayToolsetComponent>;
+describe('SonifierPageComponent', () => {
+  let component: SonificationPanelComponent;
+  let fixture: ComponentFixture<SonificationPanelComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DisplayToolsetComponent ]
+      declarations: [ SonificationPanelComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DisplayToolsetComponent);
+    fixture = TestBed.createComponent(SonificationPanelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

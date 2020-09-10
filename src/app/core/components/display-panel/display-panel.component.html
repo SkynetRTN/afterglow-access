@@ -1,8 +1,8 @@
-<div *ngIf="!state" class="alert alert-info">
-  <ng-container i18n>Select a data file to see viewer options.</ng-container>
+<div *ngIf="!file || !normalization" class="alert alert-info">
+  <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 
-<div *ngIf="state">
+<div *ngIf="file && normalization">
   <div>
     <h6 i18n>Brightness and Contrast Presets</h6>
     <div class="pb-1">
@@ -23,9 +23,9 @@
 
 
   <div class="pr-3 pl-3 pb-0">
-    <app-image-hist-chart [width]="440" [height]="250" [hist]="state?.file?.hist" [backgroundPercentile]="
-                state?.normalization?.normalizer?.backgroundPercentile
-              " [peakPercentile]="state?.normalization?.normalizer?.peakPercentile">
+    <app-image-hist-chart [width]="440" [height]="250" [hist]="file?.hist" [backgroundPercentile]="
+                normalization?.normalizer?.backgroundPercentile
+              " [peakPercentile]="normalization?.normalizer?.peakPercentile">
     </app-image-hist-chart>
     <div style="clear: both;"></div>
   </div>
@@ -33,7 +33,7 @@
 
   <div class="pb-4 pt-1">
     <h6 i18n>Brightness and Contrast Settings</h6>
-    <app-normalizer-form [normalizer]="state?.normalization?.normalizer"
+    <app-normalizer-form [normalizer]="normalization?.normalizer"
       (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
       (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)"
       (stretchModeChange)="onStretchModeChange($event)" (invertedChange)="onInvertedChange($event)">
@@ -41,8 +41,8 @@
   </div>
 
   <!-- <app-normalizer
-                  [normalizer]="state?.file?.normalizer"
-                  [hist]="state?.file?.hist">
+                  [normalizer]="file?.normalizer"
+                  [hist]="file?.hist">
                 </app-normalizer> -->
 
 

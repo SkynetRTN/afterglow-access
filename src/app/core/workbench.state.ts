@@ -9,10 +9,10 @@ import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetActiveViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlottingToolsetConfig, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerToolsetConfig, UpdatePhotometryPageSettings, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView } from './workbench.actions';
+import { SelectDataFile, SetFocusedViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlottingPanelConfig, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPanelConfig, UpdatePhotometryPanelConfig, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView, UpdateFileInfoPanelConfig } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
 import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench-file-states.state';
-import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState } from './workbench-file-states.actions';
+import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState, AddPhotDatas } from './workbench-file-states.actions';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
@@ -40,25 +40,25 @@ import { Astrometry } from '../jobs/models/astrometry';
 import { SourceId } from '../jobs/models/source-id';
 import { PhotDataStateModel, PhotDataState } from './phot-data.state.';
 import { PhotData } from './models/source-phot-data';
-import { AddPhotDatas } from './phot-data.actions';
 import { Viewer } from './models/viewer';
 import { ResetState } from '../auth/auth.actions';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: 1,
   showSideNav: false,
-  lastRouterPath: null,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
-  selectedFileId: null,
-  activeViewerId: null,
+  // selectedFileId: null,
   activeTool: WorkbenchTool.VIEWER,
   viewMode: ViewMode.SPLIT_VERTICAL,
   nextViewerIdSeed: 0,
   viewerIds: [],
   viewers: {},
   primaryViewerIds: [],
+  selectedPrimaryViewerId: null,
   secondaryViewerIds: [],
+  selectedSecondaryViewerId: null,
+  primaryViewerHasFocus: true,
   viewerSyncEnabled: false,
   normalizationSyncEnabled: false,
   sidebarView: SidebarView.FILES,
@@ -92,11 +92,15 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     limit: 200,
     region: SourceExtractionRegionOption.ENTIRE_IMAGE
   },
-  customMarkerPageSettings: {
+  fileInfoPanelConfig: {
+    showRawHeader: false,
+    useSystemTime: true
+  },
+  customMarkerPanelConfig: {
     centroidClicks: false,
     usePlanetCentroiding: false
   },
-  plottingToolsetConfig: {
+  plottingPanelConfig: {
     interpolatePixels: false,
     centroidClicks: false,
     planetCentroiding: false,
@@ -200,6 +204,19 @@ export class WorkbenchState {
   }
 
   @Selector()
+  public static getViewerById(state: WorkbenchStateModel) {
+    return (id: string) => {
+      return state.viewers[id];
+    };
+  }
+  
+
+  @Selector()
+  public static getPrimaryViewerHasFocus(state: WorkbenchStateModel) {
+    return state.primaryViewerHasFocus;
+  }
+
+  @Selector()
   public static getPrimaryViewerIds(state: WorkbenchStateModel) {
     return state.primaryViewerIds;
   }
@@ -207,6 +224,16 @@ export class WorkbenchState {
   @Selector([WorkbenchState.getPrimaryViewerIds, WorkbenchState.getViewerEntities])
   public static getPrimaryViewers(state: WorkbenchStateModel, primaryViewerIds: string[], viewerEntities: {[id:string]: Viewer}) {
     return primaryViewerIds.map(id => viewerEntities[id]);
+  }
+
+  @Selector()
+  public static getSelectedPrimaryViewerId(state: WorkbenchStateModel) {
+    return state.selectedPrimaryViewerId;
+  }
+
+  @Selector([WorkbenchState.getSelectedPrimaryViewerId, WorkbenchState.getViewerEntities])
+  public static getSelectedPrimaryViewer(state: WorkbenchStateModel, selectedPrimaryViewerId: string, viewerEntities: {[id:string]: Viewer}) {
+    return viewerEntities[selectedPrimaryViewerId];
   }
 
   @Selector()
@@ -220,70 +247,61 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getViewerById(state: WorkbenchStateModel) {
-    return (id: string) => {
-      return state.viewers[id];
-    };
+  public static getSelectedSecondaryViewerId(state: WorkbenchStateModel) {
+    return state.selectedSecondaryViewerId;
   }
 
-  @Selector([WorkbenchState.getViewers])
-  public static getViewerFileIds(state: WorkbenchStateModel, viewers: Viewer[]) {
-    return viewers.map(viewer => viewer.fileId);
+  @Selector([WorkbenchState.getSelectedSecondaryViewerId, WorkbenchState.getViewerEntities])
+  public static getSelectedSecondaryViewer(state: WorkbenchStateModel, selectedSecondaryViewerId: string, viewerEntities: {[id:string]: Viewer}) {
+    return viewerEntities[selectedSecondaryViewerId];
   }
 
-  @Selector([WorkbenchState.getViewerFileIds, DataFilesState.getEntities])
-  public static getViewerFileHeaders(state: WorkbenchStateModel, fileIds: string[], dataFiles: { [id: string]: DataFile }) {
-    return fileIds.map(fileId => dataFiles[fileId].header);
+  @Selector([WorkbenchState.getPrimaryViewerHasFocus, WorkbenchState.getSelectedPrimaryViewerId, WorkbenchState.getSelectedSecondaryViewerId])
+  public static getFocusedViewerId(state: WorkbenchStateModel, primaryViewerHasFocus: boolean, selectedPrimaryViewerId: string, selectedSecondaryViewerId: string) {
+    return primaryViewerHasFocus ? selectedPrimaryViewerId : selectedSecondaryViewerId;
   }
 
-  @Selector()
-  public static getActiveFileId(state: WorkbenchStateModel) {
-    let activeViewer = WorkbenchState.getActiveViewer(state);
-    if (!activeViewer || activeViewer.fileId == null) return null;
-    return activeViewer.fileId;
+  @Selector([WorkbenchState.getFocusedViewerId])
+  public static getFocusedViewer(state: WorkbenchStateModel, focusedViewerId: string) {
+    if(!focusedViewerId || !state.viewerIds.includes(focusedViewerId)) return null;
+    return state.viewers[focusedViewerId];
   }
 
-  @Selector([WorkbenchState.getActiveFileId, DataFilesState])
-  public static getActiveFile(state: WorkbenchStateModel, fileId: string, dataFilesState: DataFilesStateModel) {
-    if (fileId == null) return null;
+  @Selector([WorkbenchState.getFocusedViewer])
+  public static getFocusedFileId(state: WorkbenchStateModel, focusedViewer: Viewer) {
+    if(!focusedViewer) return null;
+    return focusedViewer.fileId;
+  }
+
+  @Selector([WorkbenchState.getFocusedFileId, DataFilesState])
+  public static getFocusedFile(state: WorkbenchStateModel, fileId: string, dataFilesState: DataFilesStateModel) {
+    if (!fileId || !dataFilesState.ids.includes(fileId)) return null;
     return dataFilesState.entities[fileId];
   }
 
-  @Selector([WorkbenchState.getActiveFile])
-  public static getActiveFileHeader(state: WorkbenchStateModel, file: DataFile) {
+  @Selector([WorkbenchState.getFocusedFile])
+  public static getFocusedFileHeader(state: WorkbenchStateModel, file: DataFile) {
     if (!file || !file.headerLoaded) return null;
     return file.header;
   }
 
-  @Selector([WorkbenchState.getActiveFile])
-  public static getActiveImageFile(state: WorkbenchStateModel, file: DataFile) {
-    if (!file) return null;
-    if (file.type != DataFileType.IMAGE) return null;
+  @Selector([WorkbenchState.getFocusedFile])
+  public static getFocusedImageFile(state: WorkbenchStateModel, file: DataFile) {
+    if (!file || file.type != DataFileType.IMAGE) return null;
     return file as ImageFile;
   }
 
-  @Selector([WorkbenchState.getActiveImageFile, WorkbenchFileStates])
-  public static getActiveImageFileState(state: WorkbenchStateModel, imageFile: ImageFile, imageFilesState: WorkbenchFileStatesModel) {
-    if (!imageFile) return null;
+  @Selector([WorkbenchState.getFocusedImageFile, WorkbenchFileStates])
+  public static getFocusedImageFileState(state: WorkbenchStateModel, imageFile: ImageFile, imageFilesState: WorkbenchFileStatesModel) {
+    if (!imageFile || !imageFilesState.ids.includes(imageFile.id)) return null;
     return imageFilesState.entities[imageFile.id];
   }
 
 
-  @Selector()
-  public static getActiveViewerId(state: WorkbenchStateModel) {
-    return state.activeViewerId;
-  }
-
-  @Selector()
-  public static getActiveViewer(state: WorkbenchStateModel) {
-    return state.viewers[state.activeViewerId];
-  }
-
-
-  @Selector([DataFilesState])
-  public static getSelectedFile(state: WorkbenchStateModel, dataFilesState: DataFilesStateModel) {
-    return dataFilesState.entities[state.selectedFileId];
-  }
+  // @Selector([DataFilesState])
+  // public static getSelectedFile(state: WorkbenchStateModel, dataFilesState: DataFilesStateModel) {
+  //   return dataFilesState.entities[state.selectedFileId];
+  // }
 
   @Selector()
   public static getShowConfig(state: WorkbenchStateModel) {
@@ -347,17 +365,22 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getCustomMarkerToolsetConfig(state: WorkbenchStateModel) {
-    return state.customMarkerPageSettings;
+  public static getCustomMarkerPanelConfig(state: WorkbenchStateModel) {
+    return state.customMarkerPanelConfig;
   }
 
   @Selector()
-  public static getPlottingToolsetConfig(state: WorkbenchStateModel) {
-    return state.plottingToolsetConfig;
+  public static getFileInfoPanelConfig(state: WorkbenchStateModel) {
+    return state.fileInfoPanelConfig;
   }
 
   @Selector()
-  public static getPhotometryPageSettings(state: WorkbenchStateModel) {
+  public static getPlottingPanelConfig(state: WorkbenchStateModel) {
+    return state.plottingPanelConfig;
+  }
+
+  @Selector()
+  public static getPhotometryPanelConfig(state: WorkbenchStateModel) {
     return state.photometryPageSettings;
   }
 
@@ -393,7 +416,7 @@ export class WorkbenchState {
   static getSonifierMarkers(state: WorkbenchStateModel, imageFilesState: WorkbenchFileStatesModel, dataFilesState: DataFilesStateModel) {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
-      let sonifier = imageFilesState.entities[fileId].sonificationState;
+      let sonifier = imageFilesState.entities[fileId].sonificationPanelState;
       let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
       let regionMode = sonifier.regionMode;
       let progressLine = sonifier.progressLine;
@@ -529,11 +552,18 @@ export class WorkbenchState {
     });
   }
 
-  @Action(SetActiveViewer)
+  @Action(SetFocusedViewer)
   @ImmutableContext()
-  public setActiveViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: SetActiveViewer) {
+  public setFocusedViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: SetFocusedViewer) {
     setState((state: WorkbenchStateModel) => {
-      state.activeViewerId = viewerId;
+      if(state.primaryViewerIds.includes(viewerId)) {
+        state.selectedPrimaryViewerId = viewerId;
+        state.primaryViewerHasFocus = true;
+      }
+      else {
+        state.selectedSecondaryViewerId = viewerId;
+        state.primaryViewerHasFocus = false;
+      }
       return state;
     });
   }
@@ -554,7 +584,7 @@ export class WorkbenchState {
       else {
         state.secondaryViewerIds.push(id);
       }
-      state.activeViewerId = id;
+      state.selectedPrimaryViewerId = id;
       if(viewer.fileId) dispatch(new SetViewerFile(id, viewer.fileId));
 
       return state;
@@ -567,14 +597,14 @@ export class WorkbenchState {
   @ImmutableContext()
   public closeViewer({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { viewerId }: CloseViewer) {
     setState((state: WorkbenchStateModel) => {
-      let activeViewerIndex = state.viewerIds.indexOf(state.activeViewerId);
+      let activeViewerIndex = state.viewerIds.indexOf(state.selectedPrimaryViewerId);
 
       state.viewerIds = state.viewerIds.filter(id => id != viewerId);
       if(viewerId in state.viewers) delete state.viewers[viewerId];
 
       state.primaryViewerIds = state.primaryViewerIds.filter(id => id != viewerId);
       state.secondaryViewerIds = state.secondaryViewerIds.filter(id => id != viewerId);
-      state.activeViewerId = state.viewerIds.length == 0 ? null : state.viewerIds[Math.max(0, Math.min(state.viewerIds.length-1, activeViewerIndex))];
+      state.selectedPrimaryViewerId = state.viewerIds.length == 0 ? null : state.viewerIds[Math.max(0, Math.min(state.viewerIds.length-1, activeViewerIndex))];
 
       if(state.primaryViewerIds.length == 0) {
         state.primaryViewerIds = [...state.secondaryViewerIds];
@@ -691,7 +721,7 @@ export class WorkbenchState {
           );
         }
 
-        let sonifierState = imageFileStates[dataFile.id].sonificationState;
+        let sonifierState = imageFileStates[dataFile.id].sonificationPanelState;
         if (!sonifierState.regionHistoryInitialized) {
           actions.push(
             new AddRegionToHistory(dataFile.id, {
@@ -709,7 +739,7 @@ export class WorkbenchState {
             actions.push(
               new SyncFileTransformations(dataFiles[referenceFileId] as ImageFile, [dataFile])
             );
-          if (state.plottingToolsetConfig.plotterSyncEnabled)
+          if (state.plottingPanelConfig.plotterSyncEnabled)
             actions.push(
               new SyncFilePlotters(dataFiles[referenceFileId] as ImageFile, [dataFile])
             );
@@ -749,15 +779,15 @@ export class WorkbenchState {
     });
 
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     let actions = [];
-    let referenceFile = dataFiles[state.viewers[state.activeViewerId].fileId] as ImageFile;
+    let referenceFile = dataFiles[state.viewers[state.selectedPrimaryViewerId].fileId] as ImageFile;
     let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
+          viewer.viewerId != state.selectedPrimaryViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
     if (referenceFile && files.length != 0) {
@@ -779,15 +809,15 @@ export class WorkbenchState {
     });
 
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     let actions = [];
-    let referenceFile = dataFiles[state.viewers[state.activeViewerId].fileId] as ImageFile;
+    let referenceFile = dataFiles[state.viewers[state.selectedPrimaryViewerId].fileId] as ImageFile;
     let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
+          viewer.viewerId != state.selectedPrimaryViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -865,33 +895,45 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdateCustomMarkerToolsetConfig)
+  @Action(UpdateCustomMarkerPanelConfig)
   @ImmutableContext()
-  public updateCustomMarkerPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerToolsetConfig) {
+  public updateCustomMarkerPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerPanelConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.customMarkerPageSettings = {
-        ...state.customMarkerPageSettings,
+      state.customMarkerPanelConfig = {
+        ...state.customMarkerPanelConfig,
         ...changes
       }
       return state;
     });
   }
 
-  @Action(UpdatePlottingToolsetConfig)
+  @Action(UpdateFileInfoPanelConfig)
   @ImmutableContext()
-  public updatePlotterPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlottingToolsetConfig) {
+  public updateFileInfoPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateFileInfoPanelConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.plottingToolsetConfig = {
-        ...state.plottingToolsetConfig,
+      state.fileInfoPanelConfig = {
+        ...state.fileInfoPanelConfig,
         ...changes
       }
       return state;
     });
   }
 
-  @Action(UpdatePhotometryPageSettings)
+  @Action(UpdatePlottingPanelConfig)
   @ImmutableContext()
-  public updatePhotometryPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotometryPageSettings) {
+  public updatePlotterPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlottingPanelConfig) {
+    setState((state: WorkbenchStateModel) => {
+      state.plottingPanelConfig = {
+        ...state.plottingPanelConfig,
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(UpdatePhotometryPanelConfig)
+  @ImmutableContext()
+  public updatePhotometryPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotometryPanelConfig) {
     setState((state: WorkbenchStateModel) => {
       state.photometryPageSettings = {
         ...state.photometryPageSettings,
@@ -988,13 +1030,13 @@ export class WorkbenchState {
 
     dispatch(new InitializeImageFileState(newIds));
 
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     if (
-      !activeViewer ||
-      !activeViewer.fileId ||
-      (dataFiles.map(f => f.id).indexOf(activeViewer.fileId) == -1 &&
+      !focusedViewer ||
+      !focusedViewer.fileId ||
+      (dataFiles.map(f => f.id).indexOf(focusedViewer.fileId) == -1 &&
         dataFiles.length != 0) ||
-        (dataFileEntities[activeViewer.fileId] && dataFileEntities[activeViewer.fileId].type == DataFileType.IMAGE && !imageFileStateEntities[activeViewer.fileId].normalization.initialized)
+        (dataFileEntities[focusedViewer.fileId] && dataFileEntities[focusedViewer.fileId].type == DataFileType.IMAGE && !imageFileStateEntities[focusedViewer.fileId].normalization.initialized)
     ) {
       if (dataFiles[0]) {
         dispatch(new SelectDataFile(dataFiles[0].id));
@@ -1013,7 +1055,8 @@ export class WorkbenchState {
       return state;
     });
 
-    if (getState().selectedFileId == fileId) {
+    let focusedFileId = this.store.selectSnapshot(WorkbenchState.getFocusedFileId);
+    if (focusedFileId == fileId) {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
       let index = dataFiles.map(f => f.id).indexOf(fileId);
       if(index != -1 && dataFiles.length != 1) {
@@ -1035,21 +1078,12 @@ export class WorkbenchState {
   @ImmutableContext()
   public removeDataFileSuccess({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: RemoveDataFileSuccess) {
     setState((state: WorkbenchStateModel) => {
-      if (state.selectedFileId == fileId) state.selectedFileId = null;
       state.aligningPageSettings.alignFormData.selectedImageFileIds = state.aligningPageSettings.alignFormData.selectedImageFileIds.filter(fileId => fileId != fileId);
       state.pixelOpsPageSettings.pixelOpsFormData.imageFileIds = state.pixelOpsPageSettings.pixelOpsFormData.imageFileIds.filter(fileId => fileId != fileId);
       state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileIds = state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != fileId);
       state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId = state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId == fileId ? null : state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId;
       return state;
     });
-
-
-    let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
-
-    // if (activeViewer && activeViewer.fileId == fileId) {
-    //   dispatch(new SelectDataFile(null));
-    // }
   }
 
   @Action(SelectDataFile)
@@ -1066,7 +1100,7 @@ export class WorkbenchState {
       //check if file is already open
       let targetViewer = viewers.find(viewer => viewer.fileId == fileId);
       if(targetViewer) {
-        dispatch(new SetActiveViewer(targetViewer.viewerId));
+        dispatch(new SetFocusedViewer(targetViewer.viewerId));
         return;
       }
 
@@ -1075,11 +1109,11 @@ export class WorkbenchState {
       if(targetViewer) {
         //temporary viewer exists
         dispatch(new SetViewerFile(targetViewer.viewerId, dataFile.id));
-        dispatch(new SetActiveViewer(targetViewer.viewerId));
+        dispatch(new SetFocusedViewer(targetViewer.viewerId));
         return;
       }
       
-      let useSecondary = state.secondaryViewerIds.includes(state.activeViewerId);
+      let useSecondary = state.secondaryViewerIds.includes(state.selectedPrimaryViewerId);
       let viewer: Viewer = {
         viewerId: null,
         fileId: fileId,
@@ -1090,43 +1124,30 @@ export class WorkbenchState {
       }
       dispatch(new CreateViewer(viewer, !useSecondary));
     }
-
-    
-
-
-    setState((state: WorkbenchStateModel) => {
-      state.selectedFileId = fileId;
-      return state;
-    });
-
   }
-
-
-
-
 
 
   @Action([MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform])
   @ImmutableContext()
   public onTransformChange({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: MoveBy | ZoomBy | RotateBy | Flip | ResetImageTransform | SetViewportTransform | SetImageTransform) {
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (
       !state.viewerSyncEnabled ||
-      !activeViewer ||
-      activeViewer.fileId != fileId
+      !focusedViewer ||
+      focusedViewer.fileId != fileId
     ) {
       return;
     }
 
 
-    let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
+    let referenceFile = dataFiles[focusedViewer.fileId] as ImageFile;
     let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
+          viewer.viewerId != state.selectedPrimaryViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -1138,21 +1159,21 @@ export class WorkbenchState {
   @ImmutableContext()
   public onNormalizationChange({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId, changes }: UpdateNormalizer) {
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (
       !state.normalizationSyncEnabled ||
-      !activeViewer ||
-      activeViewer.fileId != fileId
+      !focusedViewer ||
+      focusedViewer.fileId != fileId
     )
       return;
 
-    let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
+    let referenceFile = dataFiles[focusedViewer.fileId] as ImageFile;
     let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
+          viewer.viewerId != state.selectedPrimaryViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -1165,21 +1186,21 @@ export class WorkbenchState {
   @ImmutableContext()
   public onPlotterChange({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: StartLine | UpdateLine | UpdatePlotterFileState) {
     let state = getState();
-    let activeViewer = WorkbenchState.getActiveViewer(state);
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     if (
-      !state.plottingToolsetConfig.plotterSyncEnabled ||
-      !activeViewer ||
-      activeViewer.fileId != fileId
+      !state.plottingPanelConfig.plotterSyncEnabled ||
+      !focusedViewer ||
+      focusedViewer.fileId != fileId
     )
       return;
 
-    let referenceFile = dataFiles[activeViewer.fileId] as ImageFile;
+    let referenceFile = dataFiles[focusedViewer.fileId] as ImageFile;
     let files = WorkbenchState.getViewers(state)
       .filter(
         (viewer, index) =>
-          viewer.viewerId != state.activeViewerId && viewer.fileId !== null
+          viewer.viewerId != state.selectedPrimaryViewerId && viewer.fileId !== null
       )
       .map(viewer => dataFiles[viewer.fileId] as ImageFile);
 
@@ -1223,7 +1244,7 @@ export class WorkbenchState {
 
     let srcFile: ImageFile = reference;
     let targetFiles: ImageFile[] = files;
-    let srcPlotter = imageFileStates[srcFile.id].plottingState;
+    let srcPlotter = imageFileStates[srcFile.id].plottingPanelState;
 
     targetFiles.forEach(targetFile => {
       if (!targetFile || targetFile.id == srcFile.id) return;
@@ -1736,7 +1757,7 @@ export class WorkbenchState {
 
         let state = getState();
         let viewers = WorkbenchState.getViewers(state);
-        let targetViewer = viewers.find(v => v.viewerId != state.activeViewerId);
+        let targetViewer = viewers.find(v => v.viewerId != state.selectedPrimaryViewerId);
 
         
         return this.actions$.pipe(
@@ -1755,7 +1776,7 @@ export class WorkbenchState {
               //   dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
               // }
               
-              dispatch(new SetActiveViewer(targetViewer.viewerId));
+              dispatch(new SetFocusedViewer(targetViewer.viewerId));
               dispatch(new SelectDataFile((action.fileIds[0].toString())));
             }
           })
@@ -1787,11 +1808,11 @@ export class WorkbenchState {
   @ImmutableContext()
   public extractSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId, settings }: ExtractSources) {
     let state = getState();
-    let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPageSettings);
+    let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
     let imageFile = dataFiles[fileId] as ImageFile;
     let imageFileState = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[imageFile.id];
-    let sonifier = imageFileState.sonificationState;
+    let sonifier = imageFileState.sonificationPanelState;
 
     let jobSettings: SourceExtractionJobSettings = {
       threshold: settings.threshold,
@@ -1799,7 +1820,7 @@ export class WorkbenchState {
       deblend: settings.deblend,
       limit: settings.limit
     }
-    if (settings.region == SourceExtractionRegionOption.VIEWPORT || (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonificationState.regionMode == SonifierRegionMode.VIEWPORT)) {
+    if (settings.region == SourceExtractionRegionOption.VIEWPORT || (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonificationPanelState.regionMode == SonifierRegionMode.VIEWPORT)) {
       let region = getViewportRegion(
         imageFileState.transformation,
         imageFile
@@ -1813,7 +1834,7 @@ export class WorkbenchState {
         height: Math.min(getHeight(imageFile), Math.max(0, region.height + 1))
       }
     }
-    else if (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonificationState.regionMode == SonifierRegionMode.CUSTOM) {
+    else if (settings.region == SourceExtractionRegionOption.SONIFIER_REGION && imageFileState.sonificationPanelState.regionMode == SonifierRegionMode.CUSTOM) {
       let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
       jobSettings = {
         ...jobSettings,
@@ -2054,6 +2075,9 @@ export class WorkbenchState {
 
     return merge(jobSuccessful$, jobUpdated$);
   }
+
+
+
 
 
 

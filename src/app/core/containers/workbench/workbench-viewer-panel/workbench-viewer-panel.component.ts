@@ -46,7 +46,7 @@ import {
 import { WorkbenchTool } from "../../../models/workbench-state";
 import { SonifierRegionMode } from "../../../models/sonifier-file-state";
 import { Source, PosType } from "../../../models/source";
-import { PlottingState } from "../../../models/plotter-file-state";
+import { PlottingPanelState } from "../../../models/plotter-file-state";
 import { min } from "../../../../../../node_modules/rxjs/operators";
 import { CustomMarker } from "../../../models/custom-marker";
 import { FieldCal } from '../../../models/field-cal';
