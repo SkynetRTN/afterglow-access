@@ -256,7 +256,7 @@
             [state]="(sonificationPanelState$ | async)">
           </app-sonification-panel>
 
-          <app-photometry-page
+          <app-photometry-panel
             *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
             [selectedFile]="(focusedImageFile$ | async)"
             [state]="(photometryPanelState$ | async)"
@@ -269,11 +269,29 @@
             (configChange)="onPhotometryPanelConfigChange($event)"
             (photometrySettingsChange)="onPhotometrySettingsChange($event)"
             (sourceExtractionSettingsChange)="onSourceExtractionSettingsChange($event)">
-          </app-photometry-page>
-          <app-image-calculator-page *ngSwitchCase="WorkbenchTool.IMAGE_CALC">
-          </app-image-calculator-page>
-          <app-aligner-page *ngSwitchCase="WorkbenchTool.ALIGNER"></app-aligner-page>
-          <app-stacker-page *ngSwitchCase="WorkbenchTool.STACKER"></app-stacker-page>
+          </app-photometry-panel>
+          
+          <app-pixel-ops-panel
+            *ngSwitchCase="WorkbenchTool.IMAGE_CALC"
+            [selectedFile]="(focusedImageFile$ | async)"
+            [files]="(files$ | async)"
+            [config]="(pixelOpsPanelConfig$ | async)"
+            >
+          </app-pixel-ops-panel>
+
+          <app-aligner-page
+            *ngSwitchCase="WorkbenchTool.ALIGNER"
+            [selectedFile]="(focusedImageFile$ | async)"
+            [files]="(files$ | async)"
+            [config]="(aligningPanelConfig$ | async)"
+            ></app-aligner-page>
+
+          <app-stacker-page
+            *ngSwitchCase="WorkbenchTool.STACKER"
+            [selectedFile]="(focusedImageFile$ | async)"
+            [files]="(files$ | async)"
+            [config]="(stackingPanelConfig$ | async)">
+          </app-stacker-page>
         </div>
       </div>
     </div>

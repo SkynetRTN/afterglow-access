@@ -1,29 +1,57 @@
 import { Component, OnInit, HostBinding, Input } from '@angular/core';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
-import { map, tap } from "rxjs/operators";
+import { map, tap, takeUntil } from "rxjs/operators";
 import { ImageFile } from '../../../../data-files/models/data-file';
 import { WorkbenchFileState } from '../../../models/workbench-file-state';
 import { DataFileType } from '../../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { AlignFormData, WorkbenchTool } from '../../../models/workbench-state';
+import { AlignFormData, WorkbenchTool, AligningPanelConfig } from '../../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
 import { AlignmentJob, AlignmentJobResult } from '../../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { SetActiveTool, SelectDataFile, CreateAlignmentJob, UpdateAligningPageSettings } from '../../../workbench.actions';
+import { SetActiveTool, SelectDataFile, CreateAlignmentJob, UpdateAligningPanelConfig } from '../../../workbench.actions';
 import { JobsState } from '../../../../jobs/jobs.state';
-import { WorkbenchPageBaseComponent } from '../workbench-page-base/workbench-page-base.component';
 
 @Component({
   selector: 'app-aligner-page',
   templateUrl: './aligner-page.component.html',
   styleUrls: ['./aligner-page.component.css']
 })
-export class AlignerPageComponent extends WorkbenchPageBaseComponent implements OnInit {
-  @HostBinding('class') @Input('class') classList: string = 'fx-workbench-outlet';
+export class AlignerPageComponent implements OnInit {
+  @Input("selectedFile")
+  set selectedFile(selectedFile: ImageFile) {
+    this.selectedFile$.next(selectedFile);
+  }
+  get selectedFile() {
+    return this.selectedFile$.getValue();
+  }
+  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+
+  @Input("files")
+  set files(files: ImageFile[]) {
+    this.files$.next(files);
+  }
+  get files() {
+    return this.files$.getValue();
+  }
+  private files$ = new BehaviorSubject<ImageFile[]>(null);
+
+  @Input("config")
+  set config(config: AligningPanelConfig) {
+    this.config$.next(config);
+  }
+  get config() {
+    return this.config$.getValue();
+  }
+  private config$ = new BehaviorSubject<AligningPanelConfig>(null);
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+
+  
   selectedImageFiles$: Observable<Array<ImageFile>>;
   alignFormData$: Observable<AlignFormData>;
   activeImageIsSelected$: Observable<boolean>;
@@ -36,43 +64,40 @@ export class AlignerPageComponent extends WorkbenchPageBaseComponent implements 
     inPlace: new FormControl(false, Validators.required)
   });
 
-  constructor(store: Store, router: Router) {
-    super(store, router);
+  constructor(private store: Store, private router: Router) {
     this.alignFormData$ = store.select(WorkbenchState.getState).pipe(
-      map(state => state.aligningPageSettings.alignFormData),
-      tap(data => {
-        this.alignForm.patchValue(data, { emitEvent: false });
-      })
+      map(state => state.aligningPanelConfig.alignFormData),
+      takeUntil(this.destroy$)
     );
 
-    this.alignFormData$.subscribe();
+    this.alignFormData$.subscribe(data => {
+      this.alignForm.patchValue(data, { emitEvent: false });
+    });
 
-
-
-    this.selectedImageFiles$ = combineLatest(this.allImageFiles$, this.alignFormData$).pipe(
+    this.selectedImageFiles$ = combineLatest(this.files$, this.alignFormData$).pipe(
       map(([allImageFiles, alignFormData]) => alignFormData.selectedImageFileIds.map(id => allImageFiles.find(f => f.id == id)))
     )
 
     this.alignForm.valueChanges.subscribe(value => {
       // if(this.imageCalcForm.valid) {
-      this.store.dispatch(new UpdateAligningPageSettings({ alignFormData: this.alignForm.value }));
+      this.store.dispatch(new UpdateAligningPanelConfig({ alignFormData: this.alignForm.value }));
       // }
     })
 
-    this.activeImageIsSelected$ = combineLatest(this.activeImageFile$, this.selectedImageFiles$).pipe(
+    this.activeImageIsSelected$ = combineLatest(this.selectedFile$, this.selectedImageFiles$).pipe(
       map(([activeImageFile, selectedImageFiles]) => {
         return selectedImageFiles.find(f => activeImageFile && f.id == activeImageFile.id) != undefined;
       })
     )
 
-    this.activeImageHasWcs$ = this.activeImageFile$.pipe(
+    this.activeImageHasWcs$ = this.selectedFile$.pipe(
       map(imageFile => imageFile != null && imageFile.headerLoaded && imageFile.wcs.isValid())
     )
 
     this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
       map(([state, jobRowLookup]) => {
-        if (!state.aligningPageSettings.currentAlignmentJobId || !jobRowLookup[state.aligningPageSettings.currentAlignmentJobId]) return null;
-        return jobRowLookup[state.aligningPageSettings.currentAlignmentJobId] as { job: AlignmentJob, result: AlignmentJobResult };
+        if (!state.aligningPanelConfig.currentAlignmentJobId || !jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId]) return null;
+        return jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId] as { job: AlignmentJob, result: AlignmentJobResult };
       })
 
     )
@@ -83,7 +108,9 @@ export class AlignerPageComponent extends WorkbenchPageBaseComponent implements 
   }
 
   ngOnDestroy() {
-
+    this.destroy$.next(true);
+    // Now let's also unsubscribe from the subject itself:
+    this.destroy$.unsubscribe();
   }
 
   onActiveImageChange($event: MatSelectChange) {
@@ -91,7 +118,7 @@ export class AlignerPageComponent extends WorkbenchPageBaseComponent implements 
   }
 
   selectImageFiles(imageFiles: ImageFile[]) {
-    this.store.dispatch(new UpdateAligningPageSettings(
+    this.store.dispatch(new UpdateAligningPanelConfig(
       {
         alignFormData: {
           ...this.alignForm.value,

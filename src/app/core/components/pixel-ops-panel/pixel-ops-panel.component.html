@@ -1,7 +1,7 @@
-<div *ngIf="!(activeImageFile$ | async)" class="alert alert-info" i18n>
+<div *ngIf="!selectedFile" class="alert alert-info" i18n>
   Select a data file to see image calculator options.
 </div>
-<div *ngIf="activeImageFile$ | async as activeImageFile">
+<div *ngIf="selectedFile">
   <mat-tab-group (selectedTabChange)="onTabChange($event)">
     <mat-tab label="Simple">
       <div class="tab-contents">
@@ -16,7 +16,7 @@
           <mat-form-field appearance="outline" style="width: 300px;">
             <mat-label i18n>Image(s)</mat-label>
             <mat-select multiple formControlName="imageFileIds" i18n-aria-label aria-label="images">
-              <mat-option *ngFor="let imageFile of allImageFiles$ | async" [value]="imageFile.id">{{ imageFile.name }}
+              <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -32,7 +32,7 @@
           <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'image'">
             <mat-label i18n>Select an image</mat-label>
             <mat-select formControlName="auxImageFileId">
-              <mat-option *ngFor="let imageFile of allImageFiles$ | async" [value]="imageFile.id" i18n-aria-label
+              <mat-option *ngFor="let imageFile of files" [value]="imageFile.id" i18n-aria-label
                 aria-label="Image">{{ imageFile.name }}</mat-option>
             </mat-select>
           </mat-form-field>
@@ -65,7 +65,7 @@
         <mat-form-field appearance="outline" style="width: 300px;">
           <mat-label i18n>Image(s)</mat-label>
           <mat-select multiple formControlName="imageFileIds" i18n-aria-label aria-label="Images">
-            <mat-option *ngFor="let imageFile of allImageFiles$ | async" [value]="imageFile.id">{{ imageFile.name }}
+            <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -73,7 +73,7 @@
         <mat-form-field appearance="outline" style="width: 300px;">
           <mat-label i18n>Auxillary image(s)</mat-label>
           <mat-select multiple formControlName="auxImageFileIds" i18n-aria-label aria-label="Auxillary image(s)">
-            <mat-option *ngFor="let imageFile of allImageFiles$ | async" [value]="imageFile.id">{{ imageFile.name }}
+            <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}
             </mat-option>
           </mat-select>
         </mat-form-field>

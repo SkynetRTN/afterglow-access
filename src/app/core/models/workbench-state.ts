@@ -77,18 +77,18 @@ export interface PhotometryPanelConfig {
   batchPhotJobId: string;
 }
 
-export interface PixelOpsPageSettings {
+export interface PixelOpsPanelConfig {
   currentPixelOpsJobId: string;
   showCurrentPixelOpsJobState: boolean;
   pixelOpsFormData: PixelOpsFormData;
 }
 
-export interface AligningPageSettings {
+export interface AligningPanelConfig {
   alignFormData: AlignFormData;
   currentAlignmentJobId: string;
 }
 
-export interface StackingPageSettings {
+export interface StackingPanelConfig {
   stackFormData: StackFormData;
   currentStackingJobId: string;
 }
@@ -132,8 +132,8 @@ export interface WorkbenchStateModel {
   fileInfoPanelConfig: FileInfoPanelConfig;
   customMarkerPanelConfig: CustomMarkerPanelConfig;
   plottingPanelConfig: PlottingPanelConfig;
-  photometryPageSettings: PhotometryPanelConfig;
-  pixelOpsPageSettings: PixelOpsPageSettings;
-  aligningPageSettings: AligningPageSettings;
-  stackingPageSettings: StackingPageSettings;
+  photometryPanelConfig: PhotometryPanelConfig;
+  pixelOpsPanelConfig: PixelOpsPanelConfig;
+  aligningPanelConfig: AligningPanelConfig;
+  stackingPanelConfig: StackingPanelConfig;
 }

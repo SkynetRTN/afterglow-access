@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PhotometryPageComponent } from './photometry-page.component';
+import { ImageCalculatorPageComponent } from './pixel-ops-panel.component';
 
-describe('SourceExtractorPageComponent', () => {
-  let component: PhotometryPageComponent;
-  let fixture: ComponentFixture<PhotometryPageComponent>;
+describe('ImageCalculatorPageComponent', () => {
+  let component: ImageCalculatorPageComponent;
+  let fixture: ComponentFixture<ImageCalculatorPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhotometryPageComponent ]
+      declarations: [ ImageCalculatorPageComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PhotometryPageComponent);
+    fixture = TestBed.createComponent(ImageCalculatorPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

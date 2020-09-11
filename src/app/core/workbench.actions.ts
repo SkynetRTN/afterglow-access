@@ -1,6 +1,6 @@
 import { DataFile, ImageFile } from '../data-files/models/data-file';
 import { ViewMode } from './models/view-mode';
-import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingPanelConfig, PhotometryPanelConfig, AligningPageSettings, PixelOpsPageSettings, StackingPageSettings, CustomMarkerPanelConfig } from './models/workbench-state';
+import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingPanelConfig, PhotometryPanelConfig, AligningPanelConfig as AligningPanelConfig, PixelOpsPanelConfig, StackingPanelConfig as StackingPanelConfig, CustomMarkerPanelConfig } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
 import { PhotometryJobSettings } from '../jobs/models/photometry';
@@ -209,19 +209,19 @@ export class UpdatePhotometryPanelConfig {
 export class UpdatePixelOpsPageSettings {
   public static readonly type = '[Workbench] Update Pixel Ops Page Settings'
 
-  constructor(public changes: Partial<PixelOpsPageSettings>) { }
+  constructor(public changes: Partial<PixelOpsPanelConfig>) { }
 }
 
-export class UpdateAligningPageSettings {
+export class UpdateAligningPanelConfig {
   public static readonly type = '[Workbench] Update Aligning Page Settings'
 
-  constructor(public changes: Partial<AligningPageSettings>) { }
+  constructor(public changes: Partial<AligningPanelConfig>) { }
 }
 
-export class UpdateStackingPageSettings {
+export class UpdateStackingPanelConfig {
   public static readonly type = '[Workbench] Update Stacking Page Settings'
 
-  constructor(public changes: Partial<StackingPageSettings>) { }
+  constructor(public changes: Partial<StackingPanelConfig>) { }
 }
 
 export class LoadCatalogs {
@@ -380,6 +380,11 @@ export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
 
+export class BatchPhotometerSources {
+  public static readonly type = '[Phot Data] Batch Photometer Sources'
+
+  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings) { }
+}
 
 export class PhotometerSources {
   public static readonly type = '[Phot Data] Photometer Sources'

@@ -52,8 +52,8 @@ import { FieldCalPageComponent } from './containers/workbench/field-cal-page/fie
 import { CustomMarkerPanelComponent } from './components/custom-marker-panel/custom-marker-panel.component';
 import { SonificationPanelComponent } from './components/sonification-panel/sonification-panel.component';
 import { FileInfoToolsetComponent } from './components/file-info-panel/file-info-panel.component';
-import { PhotometryPageComponent } from './containers/workbench/photometry-page/photometry-page.component';
-import { ImageCalculatorPageComponent } from './containers/workbench/image-calculator-page/image-calculator-page.component';
+import { PhotometryPageComponent } from './components/photometry-panel/photometry-panel.component';
+import { ImageCalculatorPageComponent } from './components/pixel-ops-panel/pixel-ops-panel.component';
 import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
 import { AlignerPageComponent } from './containers/workbench/aligner-page/aligner-page.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
@@ -73,7 +73,6 @@ import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.modu
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
-import { WorkbenchPageBaseComponent } from './containers/workbench/workbench-page-base/workbench-page-base.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 import { WorkbenchViewManagerComponent } from './containers/workbench/workbench-view-manager/workbench-view-manager.component';
 import { AvatarModule } from 'ngx-avatar';
@@ -117,7 +116,6 @@ export const COMPONENTS = [
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
   ThemeDialogComponent,
-  WorkbenchPageBaseComponent,
   ConfirmationDialogComponent,
   WorkbenchViewManagerComponent
 ];

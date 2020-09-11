@@ -589,7 +589,7 @@
           <context context-type="linenumber">45</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
@@ -984,7 +984,7 @@
       <trans-unit id="a35da9eda7352875aadbeb431d43177b3cd887f5" datatype="html">
         <source>Photometry</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
@@ -993,14 +993,14 @@
         Select a data file to see options.
       </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
       <trans-unit id="c0f5bb0c3e8360744f5ec375b777d465caed5dcf" datatype="html">
         <source>Manually add sources by clicking on them in your image or automatically add them using the options below.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">35</context>
         </context-group>
       </trans-unit>
@@ -1009,21 +1009,21 @@
                 Photometry Settings...
               </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">47</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5480f78821a376749380b3c42ebbfb6ec73aa1d4" datatype="html">
         <source>Add Sources...</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">52</context>
         </context-group>
       </trans-unit>
       <trans-unit id="644ef5983f9361040bb1b02a207de2150ab72627" datatype="html">
         <source>Source Extraction...</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
@@ -1032,7 +1032,7 @@
               Show Sources From All Files
             </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">79</context>
         </context-group>
       </trans-unit>
@@ -1041,7 +1041,7 @@
               Source Labels
             </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">83</context>
         </context-group>
       </trans-unit>
@@ -1050,28 +1050,28 @@
               Auto-phot
             </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">87</context>
         </context-group>
       </trans-unit>
       <trans-unit id="b2a34de3320c21464ae3cf2e7f447161874bf1b6" datatype="html">
         <source>Use batch photometry to photometer your sources in multiple files.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">210</context>
         </context-group>
       </trans-unit>
       <trans-unit id="c2844a07c41506ed37fd21c61cb97ee27e359a09" datatype="html">
         <source>Select Image(s) to Photometer</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">217</context>
         </context-group>
       </trans-unit>
       <trans-unit id="93f39d924a9543651df4c473281bc7394bea500a" datatype="html">
         <source>Download Batch Photometry Data - <x id="INTERPOLATION" equiv-text="{{batchPhotJobEntity.job.sources.length}}"/> source(s) in <x id="INTERPOLATION_1" equiv-text="{{batchPhotJobEntity.job.file_ids.length}}"/> file(s)</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/photometry-page/photometry-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
           <context context-type="linenumber">244</context>
         </context-group>
       </trans-unit>
@@ -1114,7 +1114,7 @@
       <trans-unit id="0cf582f05de479012cde01d984e13cb776af225e" datatype="html">
         <source>Image Calculator</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">21</context>
         </context-group>
       </trans-unit>
@@ -1123,71 +1123,71 @@
         Select a data file to see image calculator options.
       </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7a655b80add56e49b5912e9be79ce4af757ce030" datatype="html">
         <source>Image(s)</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">45</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="804d1ef6f7bbba23f8c8594d310d5e2185d03243" datatype="html">
         <source>images</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a34ecb324d9a38bd636e42a1cda1fc6da6d857b0" datatype="html">
         <source>Select a operand</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">56</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4f65a0c841266aec27a2fdd8bbf515a423bbdefe" datatype="html">
         <source>operand</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
       <trans-unit id="db929f007c69ebc64e179f735ab466b8b6fd588a" datatype="html">
         <source>Select an image</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">70</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a5f9ba9bb9faa8284bcadb1cdbc6aaf969e9c4bb" datatype="html">
         <source>Image</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">74</context>
         </context-group>
       </trans-unit>
       <trans-unit id="768fb7bd717335ba784fe389648085a1cc9bd1d6" datatype="html">
         <source>Specify a scalar value</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="13096f0d158d7e364a32d5038bb28f8500ee04fb" datatype="html">
         <source>Overwrite Files</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">89</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">147</context>
         </context-group>
       </trans-unit>
@@ -1197,7 +1197,7 @@
                   meltdown
                 </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">99</context>
         </context-group>
       </trans-unit>
@@ -1206,36 +1206,36 @@
                   Submit
                 </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">111</context>
         </context-group>
       </trans-unit>
       <trans-unit id="b73f7f5060fb22a1e9ec462b1bb02493fa3ab866" datatype="html">
         <source>Images</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">121</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2ff10f69a9ebdb954f101434b43b601c9424b3f6" datatype="html">
         <source>Auxillary image(s)</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">131</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">132</context>
         </context-group>
       </trans-unit>
       <trans-unit id="64bd3d15b1be667c730307253f3bfe49c6b6a93b" datatype="html">
         <source>Operation String</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">142</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">143</context>
         </context-group>
       </trans-unit>
@@ -1244,7 +1244,7 @@
                       Variable Name
                     </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">172</context>
         </context-group>
       </trans-unit>
@@ -1253,7 +1253,7 @@
                       Value
                     </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">197</context>
         </context-group>
       </trans-unit>
@@ -1262,14 +1262,14 @@
                 Submit
               </source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">228</context>
         </context-group>
       </trans-unit>
       <trans-unit id="33127df18aa3a71356606c2bd0160fbd3087d7d7" datatype="html">
         <source>Processing job</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">246</context>
         </context-group>
         <context-group purpose="location">
@@ -1280,35 +1280,35 @@
       <trans-unit id="be74bb2ae8ed2e3c2fafceae6f604c0014713a9f" datatype="html">
         <source>Processing is complete.</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">257</context>
         </context-group>
       </trans-unit>
       <trans-unit id="d15476410a1ecb99d81f887b063eb8c487c479f3" datatype="html">
         <source>Your operation resulted in</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">259</context>
         </context-group>
       </trans-unit>
       <trans-unit id="0406ea39dbd352f81eed82f89df33f19f65472e7" datatype="html">
         <source>new file(s)</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">260</context>
         </context-group>
       </trans-unit>
       <trans-unit id="e1975896ac57a64951d4649df85926851faaf25c" datatype="html">
         <source>Your operation resulted in the following scalar values:</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">263</context>
         </context-group>
       </trans-unit>
       <trans-unit id="bb63777d6928bbe0cbf84e2295efc4ea662babdb" datatype="html">
         <source>Show All Pixel Operation Jobs...</source>
         <context-group purpose="location">
-          <context context-type="sourcefile">app/core/containers/workbench/image-calculator-page/image-calculator-page.component.html</context>
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
           <context context-type="linenumber">274</context>
         </context-group>
       </trans-unit>

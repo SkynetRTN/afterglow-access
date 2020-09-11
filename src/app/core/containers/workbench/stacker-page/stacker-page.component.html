@@ -1,14 +1,14 @@
-<div *ngIf="allImageFiles$ | async; let allImageFiles">
+<div *ngIf="files">
   <form [formGroup]="stackForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Select Image(s) to Stack</mat-label>
         <mat-select multiple formControlName="selectedImageFileIds">
-          <mat-option *ngFor="let imageFile of allImageFiles" [value]="imageFile.id">{{ imageFile.name }}</mat-option>
+          <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}</mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectImageFiles(allImageFiles)">
+      <button mat-icon-button (click)="selectImageFiles(files)">
         <mat-icon>select_all</mat-icon>
       </button>
 

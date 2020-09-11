@@ -1,18 +1,18 @@
-<div *ngIf="allImageFiles$ | async; let allImageFiles">
+<div *ngIf="files">
   <form [formGroup]="alignForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Select Image(s) to Align</mat-label>
         <mat-select multiple formControlName="selectedImageFileIds">
           <mat-option
-            *ngFor="let imageFile of allImageFiles"
+            *ngFor="let imageFile of files"
             [value]="imageFile.id"
             >{{ imageFile.name }}</mat-option
           >
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectImageFiles(allImageFiles)" i18n-aria-label aria-label="Select All Files">
+      <button mat-icon-button (click)="selectImageFiles(files)" i18n-aria-label aria-label="Select All Files">
         <mat-icon>select_all</mat-icon>
       </button>
 
@@ -25,7 +25,7 @@
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Active Image File</mat-label>
         <mat-select
-          [value]="(activeImageFile$ | async)?.id"
+          [value]="selectedFile?.id"
           (selectionChange)="onActiveImageChange($event)"
         >
           <mat-option

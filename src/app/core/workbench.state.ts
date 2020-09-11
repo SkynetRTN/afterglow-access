@@ -9,7 +9,7 @@ import { SidebarView } from './models/sidebar-view';
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import { LoadLibrarySuccess, RemoveDataFileSuccess, LoadDataFileHdr, LoadImageHist, LoadLibrary, ClearImageDataCache, LoadImageHistSuccess, LoadDataFileHdrSuccess, RemoveDataFile, LoadDataFile } from '../data-files/data-files.actions';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
-import { SelectDataFile, SetFocusedViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlottingPanelConfig, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPanelConfig, UpdatePhotometryPanelConfig, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings, UpdateStackingPageSettings, UpdateAligningPageSettings, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView, UpdateFileInfoPanelConfig } from './workbench.actions';
+import { SelectDataFile, SetFocusedViewer, SetViewerFile, SyncFileNormalizations, SyncFileTransformations, SyncFilePlotters, SetViewerFileSuccess, SetViewerSyncEnabled, LoadCatalogs, LoadCatalogsSuccess, LoadCatalogsFail, LoadFieldCals, LoadFieldCalsSuccess, LoadFieldCalsFail, CreateFieldCal, CreateFieldCalSuccess, CreateFieldCalFail, UpdateFieldCal, UpdateFieldCalSuccess, UpdateFieldCalFail, AddFieldCalSourcesFromCatalog, CreatePixelOpsJob, CreateAdvPixelOpsJob, CreateAlignmentJob, CreateStackingJob, ImportFromSurvey, ImportFromSurveySuccess, SetViewMode, ToggleFullScreen, SetFullScreen, SetFullScreenPanel, SetSidebarView, ShowSidebar, HideSidebar, SetNormalizationSyncEnabled, SetShowConfig, ToggleShowConfig, SetActiveTool, UpdateCentroidSettings, UpdatePlottingPanelConfig, UpdatePhotometrySettings, UpdateSourceExtractionSettings, SetSelectedCatalog, SetSelectedFieldCal, CloseSidenav, OpenSidenav, UpdateCustomMarkerPanelConfig, UpdatePhotometryPanelConfig, ExtractSources, ExtractSourcesFail, PhotometerSources, SetViewerMarkers, UpdatePixelOpsPageSettings as UpdatePixelOpsPanelConfig, UpdateStackingPanelConfig, UpdateAligningPanelConfig, ClearViewerMarkers, CreateViewer, CloseViewer, KeepViewerOpen, MoveToOtherView, UpdateFileInfoPanelConfig } from './workbench.actions';
 import { ImageFile, getWidth, getHeight, hasOverlap, getCenterTime, getSourceCoordinates, DataFile } from '../data-files/models/data-file';
 import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench-file-states.state';
 import { RenormalizeImageFile, AddRegionToHistory, MoveBy, ZoomBy, RotateBy, Flip, ResetImageTransform, SetViewportTransform, SetImageTransform, UpdateNormalizer, StartLine, UpdateLine, UpdatePlotterFileState, InitializeImageFileState, AddPhotDatas } from './workbench-file-states.actions';
@@ -34,7 +34,7 @@ import { SourceExtractionRegionOption } from './models/source-extraction-setting
 import { getViewportRegion, transformToMatrix, matrixToTransform } from './models/transformation';
 import { SourceExtractionJobSettings, SourceExtractionJob, SourceExtractionJobResult } from '../jobs/models/source-extraction';
 import { JobsState } from '../jobs/jobs.state';
-import { AddSources } from './sources.actions';
+import { AddSources, RemoveSources } from './sources.actions';
 import { PhotometryJob, PhotometryJobSettings, PhotometryJobResult } from '../jobs/models/photometry';
 import { Astrometry } from '../jobs/models/astrometry';
 import { SourceId } from '../jobs/models/source-id';
@@ -107,8 +107,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     plotterSyncEnabled: false,
     plotterMode: '1D',
   },
-  photometryPageSettings: {
-    showSourceLabels: true,
+  photometryPanelConfig: {
+    showSourceLabels: false,
     centroidClicks: true,
     showSourcesFromAllFiles: true,
     selectedSourceIds: [],
@@ -120,7 +120,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     batchPhotProgress: null,
     batchPhotJobId: null
   },
-  pixelOpsPageSettings: {
+  pixelOpsPanelConfig: {
     currentPixelOpsJobId: null,
     showCurrentPixelOpsJobState: true,
     pixelOpsFormData: {
@@ -134,7 +134,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       opString: ''
     },
   },
-  aligningPageSettings: {
+  aligningPanelConfig: {
     alignFormData: {
       selectedImageFileIds: [],
       mode: 'astrometric',
@@ -142,7 +142,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     },
     currentAlignmentJobId: null,
   },
-  stackingPageSettings: {
+  stackingPanelConfig: {
     stackFormData: {
       selectedImageFileIds: [],
       mode: 'average',
@@ -285,6 +285,12 @@ export class WorkbenchState {
     return file.header;
   }
 
+  @Selector([WorkbenchState.getFocusedFileId, DataFilesState])
+  public static getFocusedImageFileId(state: WorkbenchStateModel, fileId: string, dataFilesState: DataFilesStateModel) {
+    if (!fileId || dataFilesState.entities[fileId].type != DataFileType.IMAGE) return null;
+    return fileId;
+  }
+
   @Selector([WorkbenchState.getFocusedFile])
   public static getFocusedImageFile(state: WorkbenchStateModel, file: DataFile) {
     if (!file || file.type != DataFileType.IMAGE) return null;
@@ -310,7 +316,7 @@ export class WorkbenchState {
 
   @Selector()
   public static getShowSourceLabels(state: WorkbenchStateModel) {
-    return state.photometryPageSettings.showSourceLabels;
+    return state.photometryPanelConfig.showSourceLabels;
   }
 
   @Selector()
@@ -381,27 +387,42 @@ export class WorkbenchState {
 
   @Selector()
   public static getPhotometryPanelConfig(state: WorkbenchStateModel) {
-    return state.photometryPageSettings;
+    return state.photometryPanelConfig;
+  }
+
+  @Selector()
+  public static getAligningPanelConfig(state: WorkbenchStateModel) {
+    return state.aligningPanelConfig;
+  }
+
+  @Selector()
+  public static getStackingPanelConfig(state: WorkbenchStateModel) {
+    return state.stackingPanelConfig;
+  }
+
+  @Selector()
+  public static getPixelOpsPanelConfig(state: WorkbenchStateModel) {
+    return state.pixelOpsPanelConfig;
   }
 
   @Selector()
   public static getPhotometrySelectedSourceIds(state: WorkbenchStateModel) {
-    return state.photometryPageSettings.selectedSourceIds;
+    return state.photometryPanelConfig.selectedSourceIds;
   }
 
   @Selector()
   public static getPhotometryCoordMode(state: WorkbenchStateModel) {
-    return state.photometryPageSettings.coordMode;
+    return state.photometryPanelConfig.coordMode;
   }
 
   @Selector()
   public static getPhotometryShowSourcesFromAllFiles(state: WorkbenchStateModel) {
-    return state.photometryPageSettings.showSourcesFromAllFiles;
+    return state.photometryPanelConfig.showSourcesFromAllFiles;
   }
 
   @Selector()
   public static getPhotometryShowSourceLabels(state: WorkbenchStateModel) {
-    return state.photometryPageSettings.showSourceLabels;
+    return state.photometryPanelConfig.showSourceLabels;
   }
 
   @Selector([WorkbenchFileStates, DataFilesState])
@@ -437,14 +458,14 @@ export class WorkbenchState {
     return (fileId: string) => {
       let file = dataFilesState.entities[fileId] as ImageFile;
       let sources = SourcesState.getSources(sourcesState);
-      let selectedSourceIds = state.photometryPageSettings.selectedSourceIds;
+      let selectedSourceIds = state.photometryPanelConfig.selectedSourceIds;
       let markers: Array<CircleMarker | TeardropMarker> = [];
       if (!file) return [[]];
-      let mode = state.photometryPageSettings.coordMode;
+      let mode = state.photometryPanelConfig.coordMode;
       if (!file.wcs.isValid()) mode = 'pixel';
 
       sources.forEach(source => {
-        if (source.fileId != fileId && !state.photometryPageSettings.showSourcesFromAllFiles) return;
+        if (source.fileId != fileId && !state.photometryPanelConfig.showSourcesFromAllFiles) return;
         if (source.posType != mode) return;
         let selected = selectedSourceIds.includes(source.id);
         let coord = getSourceCoordinates(file, source);
@@ -461,7 +482,7 @@ export class WorkbenchState {
             radius: 15,
             labelGap: 14,
             labelTheta: 0,
-            label: state.photometryPageSettings.showSourceLabels ? source.label : "",
+            label: state.photometryPanelConfig.showSourceLabels ? source.label : "",
             theta: coord.theta,
             selected: selected,
             data: { id: source.id }
@@ -474,7 +495,7 @@ export class WorkbenchState {
             radius: 15,
             labelGap: 14,
             labelTheta: 0,
-            label: state.photometryPageSettings.showSourceLabels ? source.label : "",
+            label: state.photometryPanelConfig.showSourceLabels ? source.label : "",
             selected: selected,
             data: { id: source.id }
           } as CircleMarker);
@@ -897,7 +918,7 @@ export class WorkbenchState {
 
   @Action(UpdateCustomMarkerPanelConfig)
   @ImmutableContext()
-  public updateCustomMarkerPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerPanelConfig) {
+  public updateCustomMarkerPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateCustomMarkerPanelConfig) {
     setState((state: WorkbenchStateModel) => {
       state.customMarkerPanelConfig = {
         ...state.customMarkerPanelConfig,
@@ -921,7 +942,7 @@ export class WorkbenchState {
 
   @Action(UpdatePlottingPanelConfig)
   @ImmutableContext()
-  public updatePlotterPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlottingPanelConfig) {
+  public updatePlottingPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePlottingPanelConfig) {
     setState((state: WorkbenchStateModel) => {
       state.plottingPanelConfig = {
         ...state.plottingPanelConfig,
@@ -933,46 +954,73 @@ export class WorkbenchState {
 
   @Action(UpdatePhotometryPanelConfig)
   @ImmutableContext()
-  public updatePhotometryPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotometryPanelConfig) {
+  public updatePhotometryPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePhotometryPanelConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.photometryPageSettings = {
-        ...state.photometryPageSettings,
+      if(changes.batchPhotFormData) {
+        changes.batchPhotFormData = {
+          ...state.photometryPanelConfig.batchPhotFormData,
+          ...changes.batchPhotFormData
+        }
+      }
+      state.photometryPanelConfig = {
+        ...state.photometryPanelConfig,
         ...changes
       }
       return state;
     });
   }
 
-  @Action(UpdatePixelOpsPageSettings)
+  @Action(UpdatePixelOpsPanelConfig)
   @ImmutableContext()
-  public updatePixelOpsPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePixelOpsPageSettings) {
+  public updatePixelOpsPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdatePixelOpsPanelConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.pixelOpsPageSettings = {
-        ...state.pixelOpsPageSettings,
+      if(changes.pixelOpsFormData) {
+        changes.pixelOpsFormData = {
+          ...state.pixelOpsPanelConfig.pixelOpsFormData,
+          ...changes.pixelOpsFormData
+        }
+      }
+      state.pixelOpsPanelConfig = {
+        ...state.pixelOpsPanelConfig,
         ...changes
       }
       return state;
     });
   }
 
-  @Action(UpdateStackingPageSettings)
+  @Action(UpdateAligningPanelConfig)
   @ImmutableContext()
-  public updateStackingPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateStackingPageSettings) {
+  public updateAligningPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateAligningPanelConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.stackingPageSettings = {
-        ...state.stackingPageSettings,
+      if(changes.alignFormData) {
+        changes.alignFormData = {
+          ...state.aligningPanelConfig.alignFormData,
+          ...changes.alignFormData
+        }
+      }
+
+      state.aligningPanelConfig = {
+        ...state.aligningPanelConfig,
         ...changes
       }
       return state;
     });
   }
 
-  @Action(UpdateAligningPageSettings)
+  @Action(UpdateStackingPanelConfig)
   @ImmutableContext()
-  public updateAligningPageSettings({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateAligningPageSettings) {
+  public updateStackingPanelConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { changes }: UpdateStackingPanelConfig) {
     setState((state: WorkbenchStateModel) => {
-      state.aligningPageSettings = {
-        ...state.aligningPageSettings,
+      
+      if(changes.stackFormData) {
+        changes.stackFormData = {
+          ...state.stackingPanelConfig.stackFormData,
+          ...changes.stackFormData
+        }
+      }
+
+      state.stackingPanelConfig = {
+        ...state.stackingPanelConfig,
         ...changes
       }
       return state;
@@ -1078,10 +1126,10 @@ export class WorkbenchState {
   @ImmutableContext()
   public removeDataFileSuccess({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fileId }: RemoveDataFileSuccess) {
     setState((state: WorkbenchStateModel) => {
-      state.aligningPageSettings.alignFormData.selectedImageFileIds = state.aligningPageSettings.alignFormData.selectedImageFileIds.filter(fileId => fileId != fileId);
-      state.pixelOpsPageSettings.pixelOpsFormData.imageFileIds = state.pixelOpsPageSettings.pixelOpsFormData.imageFileIds.filter(fileId => fileId != fileId);
-      state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileIds = state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != fileId);
-      state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId = state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId == fileId ? null : state.pixelOpsPageSettings.pixelOpsFormData.auxImageFileId;
+      state.aligningPanelConfig.alignFormData.selectedImageFileIds = state.aligningPanelConfig.alignFormData.selectedImageFileIds.filter(fileId => fileId != fileId);
+      state.pixelOpsPanelConfig.pixelOpsFormData.imageFileIds = state.pixelOpsPanelConfig.pixelOpsFormData.imageFileIds.filter(fileId => fileId != fileId);
+      state.pixelOpsPanelConfig.pixelOpsFormData.auxImageFileIds = state.pixelOpsPanelConfig.pixelOpsFormData.auxImageFileIds.filter(fileId => fileId != fileId);
+      state.pixelOpsPanelConfig.pixelOpsFormData.auxImageFileId = state.pixelOpsPanelConfig.pixelOpsFormData.auxImageFileId == fileId ? null : state.pixelOpsPanelConfig.pixelOpsFormData.auxImageFileId;
       return state;
     });
   }
@@ -1432,7 +1480,7 @@ export class WorkbenchState {
   public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreatePixelOpsJob) {
     let state = getState();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
-    let data = state.pixelOpsPageSettings.pixelOpsFormData;
+    let data = state.pixelOpsPanelConfig.pixelOpsFormData;
     let imageFiles = data.imageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let auxFileIds: number[] = [];
     let op;
@@ -1495,7 +1543,7 @@ export class WorkbenchState {
       tap(a => {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPageSettings.currentPixelOpsJobId = jobEntity.job.id;
+          state.pixelOpsPanelConfig.currentPixelOpsJobId = jobEntity.job.id;
           return state;
         });
       })
@@ -1511,7 +1559,7 @@ export class WorkbenchState {
     let state = getState();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
 
-    let data = state.pixelOpsPageSettings.pixelOpsFormData;
+    let data = state.pixelOpsPanelConfig.pixelOpsFormData;
     let imageFiles = data.imageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let auxImageFiles = data.auxImageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let job: PixelOpsJob = {
@@ -1566,7 +1614,7 @@ export class WorkbenchState {
       tap(a => {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPageSettings.currentPixelOpsJobId = jobEntity.job.id;
+          state.pixelOpsPanelConfig.currentPixelOpsJobId = jobEntity.job.id;
           return state;
         });
       })
@@ -1580,7 +1628,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAlignmentJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreateAlignmentJob) {
     let state = getState();
-    let data = state.aligningPageSettings.alignFormData;
+    let data = state.aligningPanelConfig.alignFormData;
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
     let imageFiles = data.selectedImageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
 
@@ -1651,7 +1699,7 @@ export class WorkbenchState {
       tap(a => {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.aligningPageSettings.currentAlignmentJobId = jobEntity.job.id;
+          state.aligningPanelConfig.currentAlignmentJobId = jobEntity.job.id;
           return state;
         });
       })
@@ -1666,7 +1714,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createStackingJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreateStackingJob) {
     let state = getState();
-    let data = state.stackingPageSettings.stackFormData;
+    let data = state.stackingPanelConfig.stackFormData;
     let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
     let imageFiles = data.selectedImageFileIds.map(id => dataFiles.find(f => f.id == id)).filter(f => f != null);
     let job: StackingJob = {
@@ -1726,7 +1774,7 @@ export class WorkbenchState {
       tap(a => {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.stackingPageSettings.currentStackingJobId = jobEntity.job.id;
+          state.stackingPanelConfig.currentStackingJobId = jobEntity.job.id;
           return state;
         });
       })
@@ -1907,10 +1955,20 @@ export class WorkbenchState {
     )
   }
 
+  @Action(RemoveSources)
+  @ImmutableContext()
+  public removeSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { sourceIds }: RemoveSources) {
+    let state = getState();
+    
+    setState((state: WorkbenchStateModel) => {
+      state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.filter(id => !sourceIds.includes(id))
+      return state;
+    });
+  }
 
   @Action(PhotometerSources)
   @ImmutableContext()
-  public photometerSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { sourceIds, fileIds, settings,isBatch }: PhotometerSources) {
+  public photometerSources({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { sourceIds, fileIds, settings, isBatch }: PhotometerSources) {
     let state = getState();
     let sourcesState = this.store.selectSnapshot(SourcesState.getState);
 
@@ -1991,7 +2049,7 @@ export class WorkbenchState {
     dispatch(new CreateJob(job, 1000, correlationId));
 
     setState((state: WorkbenchStateModel) => {
-      if(isBatch) state.photometryPageSettings.batchPhotProgress = 0;
+      if(isBatch) state.photometryPanelConfig.batchPhotProgress = 0;
       return state;
     });
 
@@ -2026,33 +2084,47 @@ export class WorkbenchState {
         }
 
         setState((state: WorkbenchStateModel) => {
-          if(isBatch) state.photometryPageSettings.batchPhotProgress = null;
+          if(isBatch) state.photometryPanelConfig.batchPhotProgress = null;
           return state;
         });
 
-        dispatch(new AddPhotDatas(result.data.map(d => {
-          let time = null;
-          if (d.time && Date.parse(d.time + ' GMT')) {
-            time = new Date(Date.parse(d.time + ' GMT'));
-          }
-          return {
-            id: null,
-            sourceId: d.id,
-            fileId: d.file_id.toString(),
-            time: time,
-            filter: d.filter,
-            telescope: d.telescope,
-            expLength: d.exp_length,
-            raHours: d.ra_hours,
-            decDegs: d.dec_degs,
-            x: d.x,
-            y: d.y,
-            mag: d.mag,
-            magError: d.mag_error,
-            flux: d.flux,
-            fluxError: d.flux_error
-          } as PhotData;
-        })))
+        let photDatas = []
+        fileIds.forEach(fileId => {
+          sourceIds.forEach(sourceId => {
+            let d = result.data.find(d => (d.id == sourceId && d.file_id.toString() == fileId))
+            if(!d) {
+              photDatas.push({
+                id: null,
+                sourceId: sourceId,
+                fileId: fileId
+              } as PhotData);
+            }
+            else {
+              let time = null;
+              if (d.time && Date.parse(d.time + ' GMT')) {
+                time = new Date(Date.parse(d.time + ' GMT'));
+              }
+              photDatas.push( {
+                id: null,
+                sourceId: d.id,
+                fileId: d.file_id.toString(),
+                time: time,
+                filter: d.filter,
+                telescope: d.telescope,
+                expLength: d.exp_length,
+                raHours: d.ra_hours,
+                decDegs: d.dec_degs,
+                x: d.x,
+                y: d.y,
+                mag: d.mag,
+                magError: d.mag_error,
+                flux: d.flux,
+                fluxError: d.flux_error
+              } as PhotData)
+            }
+          })
+        })
+        dispatch(new AddPhotDatas(photDatas));
       })
     )
 
@@ -2065,8 +2137,8 @@ export class WorkbenchState {
 
         setState((state: WorkbenchStateModel) => {
           if(isBatch) {
-            state.photometryPageSettings.batchPhotJobId = a.job.id;
-            state.photometryPageSettings.batchPhotProgress = jobEntity.job.state.progress;
+            state.photometryPanelConfig.batchPhotJobId = a.job.id;
+            state.photometryPanelConfig.batchPhotProgress = jobEntity.job.state.progress;
           }
           return state;
         });

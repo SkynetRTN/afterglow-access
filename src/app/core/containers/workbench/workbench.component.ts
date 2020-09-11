@@ -93,6 +93,9 @@ import {
   WorkbenchTool,
   PlottingPanelConfig,
   PhotometryPanelConfig,
+  PixelOpsPanelConfig,
+  AligningPanelConfig,
+  StackingPanelConfig,
 } from "../../models/workbench-state";
 import { WorkbenchFileStates } from "../../workbench-file-states.state";
 import { CustomMarkerPanelConfig } from "../../models/workbench-state";
@@ -175,6 +178,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   showConfig$: Observable<boolean>;
 
   focusedImageFile$: Observable<ImageFile>;
+  focusedImageFileId$: Observable<string>;
   focusedImageFileState$: Observable<WorkbenchFileState>;
   focusedImageFileTransformation$: Observable<Transformation>;
   focusedImageFileNormalization$: Observable<Normalization>;
@@ -191,6 +195,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   photometryPanelSources$: Observable<Source[]>;
   photometryPanelMarkers$: Observable<Array<Marker[]>>;
   photometryPanelConfig$: Observable<PhotometryPanelConfig>;
+  pixelOpsPanelConfig$: Observable<PixelOpsPanelConfig>;
+  aligningPanelConfig$: Observable<AligningPanelConfig>;
+  stackingPanelConfig$: Observable<StackingPanelConfig>;
   photometrySettings$: Observable<PhotometrySettings>;
   centroidSettings$: Observable<CentroidSettings>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
@@ -249,30 +256,32 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       )
     );
 
-    this.focusedFile$ = this.store.select(WorkbenchState.getFocusedFile).pipe(
+    this.focusedFile$ = this.store.select(WorkbenchState.getFocusedFile).pipe();
+    this.focusedImageFileId$ = store.select(
+      WorkbenchState.getFocusedImageFileId
     );
     this.focusedImageFile$ = store.select(WorkbenchState.getFocusedImageFile);
-    this.focusedImageFileState$ = this.focusedImageFile$.pipe(
-      switchMap((file) => {
+    this.focusedImageFileState$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
         return store
           .select(WorkbenchFileStates.getWorkbenchFileStateByFileId)
-          .pipe(map((fn) => fn(file.id)));
+          .pipe(map((fn) => fn(fileId)));
       })
     );
-    this.focusedImageFileTransformation$ = this.focusedImageFile$.pipe(
-      switchMap((file) => {
-        if (!file) return of(null);
+    this.focusedImageFileTransformation$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return store
           .select(WorkbenchFileStates.getTransformation)
-          .pipe(map((fn) => fn(file.id)));
+          .pipe(map((fn) => fn(fileId)));
       })
     );
-    this.focusedImageFileNormalization$ = this.focusedImageFile$.pipe(
-      switchMap((file) => {
-        if (!file) return of(null);
+    this.focusedImageFileNormalization$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return store
           .select(WorkbenchFileStates.getNormalization)
-          .pipe(map((fn) => fn(file.id)));
+          .pipe(map((fn) => fn(fileId)));
       })
     );
 
@@ -344,12 +353,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     /* CUSTOM MARKER PANEL */
-    this.customMarkerPanelState$ = this.focusedImageFile$.pipe(
-      switchMap((file) => {
-        if (!file) return of(null);
+    this.customMarkerPanelState$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return store
           .select(WorkbenchFileStates.getCustomMarkerPanelState)
-          .pipe(map((fn) => fn(file.id)));
+          .pipe(map((fn) => fn(fileId)));
       })
     );
 
@@ -383,12 +392,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     /* PLOTTING PANEL */
-    this.plottingPanelState$ = this.focusedImageFile$.pipe(
-      switchMap((activeImageFile) => {
-        if (!activeImageFile) return of(null);
+    this.plottingPanelState$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return this.store
           .select(WorkbenchFileStates.getPlottingPanelState)
-          .pipe(map((fn) => fn(activeImageFile.id)));
+          .pipe(map((fn) => fn(fileId)));
       })
     );
 
@@ -407,7 +416,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             let header$ = this.store.select(DataFilesState.getHeader).pipe(
               map((fn) => fn(fileId)),
               distinctUntilChanged()
-            )
+            );
 
             let plottingState$ = this.store
               .select(WorkbenchFileStates.getPlottingPanelState)
@@ -424,7 +433,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               this.store.select(WorkbenchState.getPlottingPanelConfig)
             ).pipe(
               map(([header, plottingState, config]) => {
-                let file = this.store.selectSnapshot(DataFilesState.getEntities)[fileId];
+                let file = this.store.selectSnapshot(
+                  DataFilesState.getEntities
+                )[fileId];
                 if (!file || !header) {
                   return [];
                 }
@@ -504,12 +515,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     /* SONIFICATION PANEL */
-    this.sonificationPanelState$ = this.focusedImageFile$.pipe(
-      switchMap((activeImageFile) => {
-        if (!activeImageFile) return of(null);
+    this.sonificationPanelState$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return this.store
           .select(WorkbenchFileStates.getSonificationPanelState)
-          .pipe(map((fn) => fn(activeImageFile.id)));
+          .pipe(map((fn) => fn(fileId)));
       })
     );
 
@@ -558,29 +569,44 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     /* PHOTOMETRY PANEL */
 
-    this.photometryPanelState$ = this.focusedImageFile$.pipe(
-      switchMap((activeImageFile) => {
-        if (!activeImageFile) return of(null);
+    this.photometryPanelState$ = this.focusedImageFileId$.pipe(
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return this.store
           .select(WorkbenchFileStates.getPhotometryPanelState)
           .pipe(
-            map((fn) => fn(activeImageFile.id)),
+            map((fn) => fn(fileId)),
             distinctUntilChanged()
           );
       })
     );
 
-    this.photometryPanelSources$ = this.focusedImageFile$.pipe(
-      switchMap((file) => {
-        if (!file || !file.header) return of(null);
+    this.photometryPanelSources$ = this.focusedImageFileId$.pipe(
+      tap(() => console.log("FOCUSED IMAGE FILE CHANGED")),
+      switchMap((fileId) => {
+        if (!fileId) return of(null);
         return combineLatest(
           store.select(SourcesState.getSources),
-          store.select(WorkbenchState.getPhotometryPanelConfig)
+          store.select(WorkbenchState.getPhotometryPanelConfig).pipe(
+            map((config) => config.coordMode),
+            distinctUntilChanged()
+          ),
+          store.select(WorkbenchState.getPhotometryPanelConfig).pipe(
+            map((config) => config.showSourcesFromAllFiles),
+            distinctUntilChanged()
+          ),
+          this.store.select(DataFilesState.getHeader).pipe(
+            map((fn) => fn(fileId)),
+            distinctUntilChanged()
+          )
         ).pipe(
-          map(([sources, photometryPanelConfig]) => {
-            let coordMode = photometryPanelConfig.coordMode;
-            let showSourcesFromAllFiles =
-              photometryPanelConfig.showSourcesFromAllFiles;
+          filter( ([sources, coordMode, showSourcesFromAllFiles, header]) => header != null),
+          map(([sources, coordMode, showSourcesFromAllFiles, header]) => {
+            let file = this.store.selectSnapshot(DataFilesState.getEntities)[
+              fileId
+            ];
+            console.log("NEW SOURCES!!!!!!!!!!!");
+            if (!file || !header) return [];
             if (!file.wcs || !file.wcs.isValid()) coordMode = "pixel";
             return sources.filter((source) => {
               if (coordMode != source.posType) return false;
@@ -682,6 +708,22 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       })
     );
 
+    /* PIXEL OPS PANEL */
+    this.pixelOpsPanelConfig$ = this.store.select(
+      WorkbenchState.getPixelOpsPanelConfig
+    );
+
+    /* ALIGNING PANEL */
+    this.aligningPanelConfig$ = this.store.select(
+      WorkbenchState.getAligningPanelConfig
+    );
+
+    /* STACKING PANEL */
+    this.stackingPanelConfig$ = this.store.select(
+      WorkbenchState.getStackingPanelConfig
+    );
+
+
     this.markerOverlaySub = combineLatest(
       this.customMarkerPanelMarkers$,
       this.plottingPanelMarkers$,
@@ -707,9 +749,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         ]) => {
           [selectedPrimaryViewer, selectedSecondaryViewer].forEach(
             (viewer, index) => {
-              if(!viewer) return;
-              
-              console.log("Updating markers for viewer: ", viewer, index, imageFileCustomMarkers[index], plottingToolsetMarkers[index], sonificationToolsetMarkers[index], photometryPanelMarkers[index]);
+              if (!viewer) return;
+
               this.store.dispatch(
                 new SetViewerMarkers(viewer.viewerId, [
                   ...imageFileCustomMarkers[index],

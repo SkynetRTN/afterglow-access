@@ -41,36 +41,36 @@ import {
   ImageFile,
   getCenterTime,
   getSourceCoordinates,
-} from "../../../../data-files/models/data-file";
-import { DmsPipe } from "../../../../pipes/dms.pipe";
-import { PhotometryPanelState } from "../../../models/photometry-file-state";
-import { PhotSettingsDialogComponent } from "../../../components/phot-settings-dialog/phot-settings-dialog.component";
-import { SourceExtractionDialogComponent } from "../../../components/source-extraction-dialog/source-extraction-dialog.component";
-import { Source, PosType } from "../../../models/source";
-import { WorkbenchFileState } from "../../../models/workbench-file-state";
+} from "../../../data-files/models/data-file";
+import { DmsPipe } from "../../../pipes/dms.pipe";
+import { PhotometryPanelState } from "../../models/photometry-file-state";
+import { PhotSettingsDialogComponent } from "../phot-settings-dialog/phot-settings-dialog.component";
+import { SourceExtractionDialogComponent } from "../source-extraction-dialog/source-extraction-dialog.component";
+import { Source, PosType } from "../../models/source";
+import { WorkbenchFileState } from "../../models/workbench-file-state";
 import {
   ViewerGridCanvasMouseEvent,
   ViewerGridMarkerMouseEvent,
-} from "../workbench-viewer-grid/workbench-viewer-grid.component";
+} from "../../containers/workbench/workbench-viewer-grid/workbench-viewer-grid.component";
 import {
   WorkbenchTool,
   WorkbenchStateModel,
   PhotometryPanelConfig,
   BatchPhotometryFormData,
-} from "../../../models/workbench-state";
+} from "../../models/workbench-state";
 import { DataSource } from "@angular/cdk/table";
 import { CollectionViewer, SelectionModel } from "@angular/cdk/collections";
-import { centroidPsf } from "../../../models/centroider";
-import { CentroidSettings } from "../../../models/centroid-settings";
+import { centroidPsf } from "../../models/centroider";
+import { CentroidSettings } from "../../models/centroid-settings";
 import {
   PhotometryJob,
   PhotometryJobResult,
   PhotometryJobSettings,
-} from "../../../../jobs/models/photometry";
+} from "../../../jobs/models/photometry";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material";
-import { SourcesState } from "../../../sources.state";
-import { WorkbenchState } from "../../../workbench.state";
+import { SourcesState } from "../../sources.state";
+import { WorkbenchState } from "../../workbench.state";
 import {
   SetActiveTool,
   UpdateSourceExtractionSettings,
@@ -81,37 +81,39 @@ import {
   SetViewerFile,
   SetViewerMarkers,
   ClearViewerMarkers,
-} from "../../../workbench.actions";
+} from "../../workbench.actions";
 import {
   AddSources,
   RemoveSources,
   UpdateSource,
-} from "../../../sources.actions";
-import { DataFilesState } from "../../../../data-files/data-files.state";
-import { PhotDataState } from "../../../phot-data.state.";
-import { PhotData } from "../../../models/source-phot-data";
-import { PhotometrySettings } from "../../../models/photometry-settings";
+} from "../../sources.actions";
+import { DataFilesState } from "../../../data-files/data-files.state";
+import { PhotDataState } from "../../phot-data.state.";
+import { PhotData } from "../../models/source-phot-data";
+import { PhotometrySettings } from "../../models/photometry-settings";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { Papa } from "ngx-papaparse";
-import { WorkbenchPageBaseComponent } from "../workbench-page-base/workbench-page-base.component";
-import { Viewer } from "../../../models/viewer";
+import { Viewer } from "../../models/viewer";
 import {
   Marker,
   CircleMarker,
   TeardropMarker,
   MarkerType,
-} from "../../../models/marker";
-import { LoadDataFileHdr } from "../../../../data-files/data-files.actions";
-import { JobEntity, JobsState } from "../../../../jobs/jobs.state";
-import { datetimeToJd, jdToMjd } from "../../../../../app/utils/skynet-astro";
+} from "../../models/marker";
+import { LoadDataFileHdr } from "../../../data-files/data-files.actions";
+import { JobEntity, JobsState } from "../../../jobs/jobs.state";
+import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
 import { DatePipe } from "@angular/common";
-import { SourceExtractionSettings } from "../../../models/source-extraction-settings";
-import { RemovePhotDatas, RemoveAllPhotDatas } from '../../../workbench-file-states.actions';
+import { SourceExtractionSettings } from "../../models/source-extraction-settings";
+import {
+  RemovePhotDatas,
+  RemoveAllPhotDatas,
+} from "../../workbench-file-states.actions";
 
 @Component({
-  selector: "app-photometry-page",
-  templateUrl: "./photometry-page.component.html",
-  styleUrls: ["./photometry-page.component.css"],
+  selector: "app-photometry-panel",
+  templateUrl: "./photometry-panel.component.html",
+  styleUrls: ["./photometry-panel.component.css"],
 })
 export class PhotometryPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
@@ -206,15 +208,21 @@ export class PhotometryPageComponent
     private store: Store,
     private router: Router
   ) {
-    this.tableData$ = combineLatest(this.sources$, this.state$).pipe(
-      filter(([sources, state]) => sources !== null && state !== null),
-      map(([sources, state]) => {
+    this.tableData$ = combineLatest(
+      this.sources$,
+      this.state$.pipe(
+        filter((state) => state !== null),
+        map((state) => state.sourcePhotometryData)
+      )
+    ).pipe(
+      filter(([sources]) => sources !== null),
+      map(([sources, sourcePhotometryData]) => {
         return sources.map((source) => {
           return {
             source: source,
             data:
-              source.id in state.sourcePhotometryData
-                ? state.sourcePhotometryData[source.id]
+              source.id in sourcePhotometryData
+                ? sourcePhotometryData[source.id]
                 : null,
           };
         });
@@ -279,7 +287,7 @@ export class PhotometryPageComponent
         this.selectionModel.select(...selectedSourceIds);
       });
 
-    this.photometryUpdater = this.tableData$
+      this.photometryUpdater = this.tableData$
       .pipe(
         map((rows) => rows.filter((row) => row.data == null)),
         filter((rows) => rows.length != 0 && this.config.autoPhot),
@@ -295,6 +303,23 @@ export class PhotometryPageComponent
         })
       )
       .subscribe();
+      // this.photometryUpdater = this.tableData$
+      // .pipe(
+      //   filter((sources) => sources && sources.length != 0 && this.config && this.config.autoPhot),
+      //   map(sources => sources.map(s => s.id)),
+      //   distinctUntilChanged(),
+      //   switchMap((sourceIds) => {
+      //     return this.store.dispatch(
+      //       new PhotometerSources(
+      //         sourceIds,
+      //         [this.selectedFile.id],
+      //         this.photometrySettings,
+      //         false
+      //       )
+      //     );
+      //   })
+      // )
+      // .subscribe();
   }
 
   ngOnInit() {}
@@ -427,7 +452,7 @@ export class PhotometryPageComponent
   }
 
   photometerAllSources(imageFile) {
-    this.store.dispatch(new RemoveAllPhotDatas())
+    this.store.dispatch(new RemoveAllPhotDatas());
     this.store.dispatch(
       new PhotometerSources(
         this.sources.map((s) => s.id),
@@ -483,13 +508,13 @@ export class PhotometryPageComponent
     if (this.isAllSelected()) {
       this.store.dispatch(
         new UpdatePhotometryPanelConfig({
-          selectedSourceIds: []
+          selectedSourceIds: [],
         })
       );
     } else {
       this.store.dispatch(
         new UpdatePhotometryPanelConfig({
-          selectedSourceIds: this.sources.map(s => s.id)
+          selectedSourceIds: this.sources.map((s) => s.id),
         })
       );
     }
@@ -523,7 +548,14 @@ export class PhotometryPageComponent
   }
 
   batchPhotometer() {
-    this.store.dispatch(new PhotometerSources(this.sources.map(s => s.id), this.config.batchPhotFormData.selectedImageFileIds, this.photometrySettings, true));
+    this.store.dispatch(
+      new PhotometerSources(
+        this.sources.map((s) => s.id),
+        this.config.batchPhotFormData.selectedImageFileIds,
+        this.photometrySettings,
+        true
+      )
+    );
   }
 
   downloadBatchPhotData(row: JobEntity) {
