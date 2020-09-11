@@ -50,6 +50,17 @@ import { Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';
 import { WorkbenchFileStates } from '../../workbench-file-states.state';
+import { Viewer } from '../../models/viewer';
+
+export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
+  viewerId: string,
+  viewer: Viewer
+}
+
+export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
+  viewerId: string,
+  viewer: Viewer
+}
 
 @Component({
   selector: "app-workbench-viewer-panel",

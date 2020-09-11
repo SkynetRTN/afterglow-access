@@ -104,10 +104,6 @@ import {
   RectangleMarker,
   TeardropMarker,
 } from "../models/marker";
-import {
-  ViewerGridCanvasMouseEvent,
-  ViewerGridMarkerMouseEvent,
-} from "./workbench-viewer-grid/workbench-viewer-grid.component";
 import { centroidDisk, centroidPsf } from "../models/centroider";
 import { PlottingPanelState } from "../models/plotter-file-state";
 import { CustomMarker } from "../models/custom-marker";
@@ -136,6 +132,7 @@ import { CentroidSettings } from "../models/centroid-settings";
 import { SourceExtractionSettings } from "../models/source-extraction-settings";
 import { AddSources } from "../sources.actions";
 import { PhotometryPanelState } from "../models/photometry-file-state";
+import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from './workbench-view-manager/workbench-view-manager.component';
 
 @Component({
   selector: "app-workbench",

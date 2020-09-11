@@ -20,13 +20,14 @@ import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { OverlayRef, Overlay } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { MatMenuTrigger } from '@angular/material';
+import { ViewerCanvasMouseEvent, ViewerMarkerMouseEvent } from '../workbench-viewer-panel/workbench-viewer-panel.component';
 
-export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
+export interface ViewerGridCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string,
   viewer: Viewer
 }
 
-export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
+export interface ViewerGridMarkerMouseEvent extends MarkerMouseEvent {
   viewerId: string,
   viewer: Viewer
 }

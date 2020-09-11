@@ -20,7 +20,6 @@ import { FieldCal } from '../../models/field-cal';
 import { SelectionModel } from '@angular/cdk/collections';
 import { JobType } from '../../../jobs/models/job-types';
 import { DataFileType } from '../../../data-files/models/data-file-type';
-import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../../containers/workbench-viewer-grid/workbench-viewer-grid.component';
 import { CatalogQueryJob } from '../../../jobs/models/catalog-query';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
@@ -185,8 +184,8 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onMarkerClick($event: ViewerGridMarkerMouseEvent) {
-    if ($event.mouseEvent.altKey) return;
+  // onMarkerClick($event: ViewerGridMarkerMouseEvent) {
+  //   if ($event.mouseEvent.altKey) return;
 
     // let source = this.dataSource.sources.find(
     //   source => $event.marker.data && source.id == $event.marker.data["id"]
@@ -217,10 +216,10 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
     // }
     // $event.mouseEvent.stopImmediatePropagation();
     // $event.mouseEvent.preventDefault();
-  }
+  // }
 
-  onImageClick($event: ViewerGridCanvasMouseEvent) {
-    if ($event.hitImage) {
+  // onImageClick($event: ViewerGridCanvasMouseEvent) {
+  //   if ($event.hitImage) {
       // if (
       //   this.workbenchState.sourceExtractorModeOption ==
       //     SourceExtractorModeOption.MOUSE &&
@@ -269,6 +268,6 @@ export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
       //     new sourceActions.SetSourceSelection({ sources: [] })
       //   );
       // }
-    }
-  }
+    // }
+  // }
 }

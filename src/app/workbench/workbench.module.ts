@@ -27,7 +27,6 @@ import { DataProvidersModule } from '../data-providers/data-providers.module';
 import { WorkbenchViewerPanelComponent } from './containers/workbench-viewer-panel/workbench-viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { WorkbenchDataFileListComponent } from './containers/workbench-data-file-list/workbench-data-file-list.component';
-import { WorkbenchViewerGridComponent } from './containers/workbench-viewer-grid/workbench-viewer-grid.component';
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { ImageViewerTitleBarComponent } from './components/image-viewer-title-bar/image-viewer-title-bar.component';
@@ -80,7 +79,6 @@ export const COMPONENTS = [
   NavbarComponent,
   AppFooterComponent,
   WorkbenchDataFileListComponent,
-  WorkbenchViewerGridComponent,
   WorkbenchViewerPanelComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
