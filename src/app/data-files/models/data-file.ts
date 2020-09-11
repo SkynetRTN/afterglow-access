@@ -5,7 +5,7 @@ import { HeaderEntry } from './header-entry';
 import { ImageTile, getTilePixel } from './image-tile';
 import { ImageHist } from './image-hist';
 import { Wcs } from '../../image-tools/wcs';
-import { Source, PosType } from '../../core/models/source';
+import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
 
 export type Header = Array<HeaderEntry>;

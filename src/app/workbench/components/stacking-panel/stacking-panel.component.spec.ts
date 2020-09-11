@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { StackerPageComponent } from './stacker-page.component';
+import { StackerPageComponent } from './stacking-panel.component';
 
 describe('StackerPageComponent', () => {
   let component: StackerPageComponent;

@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AlignerPageComponent } from './aligner-page.component';
+import { AlignerPageComponent } from './aligning-panel.component';
 
 describe('AlignerPageComponent', () => {
   let component: AlignerPageComponent;

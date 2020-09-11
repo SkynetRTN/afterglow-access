@@ -47,60 +47,32 @@ import { PhotometryPanelState } from "../../models/photometry-file-state";
 import { PhotSettingsDialogComponent } from "../phot-settings-dialog/phot-settings-dialog.component";
 import { SourceExtractionDialogComponent } from "../source-extraction-dialog/source-extraction-dialog.component";
 import { Source, PosType } from "../../models/source";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
 import {
-  ViewerGridCanvasMouseEvent,
-  ViewerGridMarkerMouseEvent,
-} from "../../containers/workbench/workbench-viewer-grid/workbench-viewer-grid.component";
-import {
-  WorkbenchTool,
-  WorkbenchStateModel,
   PhotometryPanelConfig,
   BatchPhotometryFormData,
 } from "../../models/workbench-state";
-import { DataSource } from "@angular/cdk/table";
-import { CollectionViewer, SelectionModel } from "@angular/cdk/collections";
-import { centroidPsf } from "../../models/centroider";
+import { SelectionModel } from "@angular/cdk/collections";
 import { CentroidSettings } from "../../models/centroid-settings";
 import {
   PhotometryJob,
   PhotometryJobResult,
-  PhotometryJobSettings,
 } from "../../../jobs/models/photometry";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material";
-import { SourcesState } from "../../sources.state";
 import { WorkbenchState } from "../../workbench.state";
 import {
-  SetActiveTool,
-  UpdateSourceExtractionSettings,
-  UpdatePhotometrySettings,
   UpdatePhotometryPanelConfig,
   ExtractSources,
   PhotometerSources,
-  SetViewerFile,
-  SetViewerMarkers,
-  ClearViewerMarkers,
 } from "../../workbench.actions";
 import {
-  AddSources,
   RemoveSources,
   UpdateSource,
 } from "../../sources.actions";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { PhotDataState } from "../../phot-data.state.";
 import { PhotData } from "../../models/source-phot-data";
 import { PhotometrySettings } from "../../models/photometry-settings";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { Papa } from "ngx-papaparse";
-import { Viewer } from "../../models/viewer";
-import {
-  Marker,
-  CircleMarker,
-  TeardropMarker,
-  MarkerType,
-} from "../../models/marker";
-import { LoadDataFileHdr } from "../../../data-files/data-files.actions";
 import { JobEntity, JobsState } from "../../../jobs/jobs.state";
 import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
 import { DatePipe } from "@angular/common";

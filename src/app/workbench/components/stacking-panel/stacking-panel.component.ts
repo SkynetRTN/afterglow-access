@@ -1,34 +1,34 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 import { map, tap, takeUntil } from "rxjs/operators";
-import { ImageFile } from "../../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../../models/workbench-file-state";
-import { DataFileType } from "../../../../data-files/models/data-file-type";
+import { ImageFile } from "../../../data-files/models/data-file";
+import { WorkbenchFileState } from "../../models/workbench-file-state";
+import { DataFileType } from "../../../data-files/models/data-file-type";
 import {
   StackFormData,
   WorkbenchTool,
   StackingPanelConfig,
-} from "../../../models/workbench-state";
+} from "../../models/workbench-state";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import {
   StackingJob,
   StackingJobResult,
-} from "../../../../jobs/models/stacking";
+} from "../../../jobs/models/stacking";
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
-import { WorkbenchState } from "../../../workbench.state";
-import { DataFilesState } from "../../../../data-files/data-files.state";
-import { JobsState } from "../../../../jobs/jobs.state";
+import { WorkbenchState } from "../../workbench.state";
+import { DataFilesState } from "../../../data-files/data-files.state";
+import { JobsState } from "../../../jobs/jobs.state";
 import {
   SetActiveTool,
   CreateStackingJob,
   UpdateStackingPanelConfig,
-} from "../../../workbench.actions";
+} from "../../workbench.actions";
 
 @Component({
-  selector: "app-stacker-page",
-  templateUrl: "./stacker-page.component.html",
-  styleUrls: ["./stacker-page.component.css"],
+  selector: "app-stacking-panel",
+  templateUrl: "./stacking-panel.component.html",
+  styleUrls: ["./stacking-panel.component.css"],
 })
 export class StackerPageComponent implements OnInit {
   @Input("selectedFile")

@@ -11,22 +11,21 @@ import {
   map
 } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { ImageFile } from '../../../../data-files/models/data-file';
-import { WorkbenchFileState } from '../../../models/workbench-file-state';
-import { WorkbenchTool } from "../../../models/workbench-state";
-import { Catalog } from "../../../models/catalog";
+import { ImageFile } from '../../../data-files/models/data-file';
+import { WorkbenchFileState } from '../../models/workbench-file-state';
+import { Catalog } from "../../models/catalog";
 import { MatDialog } from "@angular/material/dialog";
-import { CreateFieldCalDialogComponent } from "../../../components/create-field-cal-dialog/create-field-cal-dialog.component";
-import { FieldCal } from '../../../models/field-cal';
+import { CreateFieldCalDialogComponent } from "../../components/create-field-cal-dialog/create-field-cal-dialog.component";
+import { FieldCal } from '../../models/field-cal';
 import { SelectionModel } from '@angular/cdk/collections';
-import { JobType } from '../../../../jobs/models/job-types';
-import { DataFileType } from '../../../../data-files/models/data-file-type';
-import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../workbench-viewer-grid/workbench-viewer-grid.component';
-import { CatalogQueryJob } from '../../../../jobs/models/catalog-query';
+import { JobType } from '../../../jobs/models/job-types';
+import { DataFileType } from '../../../data-files/models/data-file-type';
+import { ViewerGridCanvasMouseEvent, ViewerGridMarkerMouseEvent } from '../../containers/workbench-viewer-grid/workbench-viewer-grid.component';
+import { CatalogQueryJob } from '../../../jobs/models/catalog-query';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../../workbench.state';
-import { SetActiveTool, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../../workbench.actions';
+import { WorkbenchState } from '../../workbench.state';
+import { SetActiveTool, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSourcesFromCatalog, CreateFieldCal } from '../../workbench.actions';
 
 // import { DataFile, ImageFile } from '../../../models'
 // import { DataFileLibraryStore } from '../../../stores/data-file-library.store'

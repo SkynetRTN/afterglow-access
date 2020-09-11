@@ -24,10 +24,10 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
-import { WorkbenchViewerPanelComponent } from './containers/workbench/workbench-viewer-panel/workbench-viewer-panel.component';
+import { WorkbenchViewerPanelComponent } from './containers/workbench-viewer-panel/workbench-viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
-import { WorkbenchDataFileListComponent } from './containers/workbench/workbench-data-file-list/workbench-data-file-list.component';
-import { WorkbenchViewerGridComponent } from './containers/workbench/workbench-viewer-grid/workbench-viewer-grid.component';
+import { WorkbenchDataFileListComponent } from './containers/workbench-data-file-list/workbench-data-file-list.component';
+import { WorkbenchViewerGridComponent } from './containers/workbench-viewer-grid/workbench-viewer-grid.component';
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { ImageViewerTitleBarComponent } from './components/image-viewer-title-bar/image-viewer-title-bar.component';
@@ -45,17 +45,16 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { DataProvidersComponent } from './containers/data-providers/data-providers.component';
 import { DataProvidersIndexPageComponent } from './containers/data-providers/data-providers-index-page/data-providers-index-page.component'
 import { DataProviderBrowsePageComponent} from './containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
-import { WorkbenchComponent } from './containers/workbench/workbench.component';
+import { WorkbenchComponent } from './containers/workbench.component';
 import { DisplayToolsetComponent } from './components/display-panel/display-panel.component';
 import { PlottingPanelComponent } from './components/plotting-panel/plotting-panel.component';
-import { FieldCalPageComponent } from './containers/workbench/field-cal-page/field-cal-page.component';
 import { CustomMarkerPanelComponent } from './components/custom-marker-panel/custom-marker-panel.component';
 import { SonificationPanelComponent } from './components/sonification-panel/sonification-panel.component';
 import { FileInfoToolsetComponent } from './components/file-info-panel/file-info-panel.component';
 import { PhotometryPageComponent } from './components/photometry-panel/photometry-panel.component';
 import { ImageCalculatorPageComponent } from './components/pixel-ops-panel/pixel-ops-panel.component';
-import { StackerPageComponent } from './containers/workbench/stacker-page/stacker-page.component';
-import { AlignerPageComponent } from './containers/workbench/aligner-page/aligner-page.component';
+import { StackerPageComponent } from './components/stacking-panel/stacking-panel.component';
+import { AlignerPageComponent } from './components/aligning-panel/aligning-panel.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
@@ -74,7 +73,7 @@ import { HelpDialogComponent } from './components/help-dialog/help-dialog.compon
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
-import { WorkbenchViewManagerComponent } from './containers/workbench/workbench-view-manager/workbench-view-manager.component';
+import { WorkbenchViewManagerComponent } from './containers/workbench-view-manager/workbench-view-manager.component';
 import { AvatarModule } from 'ngx-avatar';
 
 export const COMPONENTS = [
@@ -100,7 +99,6 @@ export const COMPONENTS = [
   DisplayToolsetComponent,
   PlottingPanelComponent,
   SonificationPanelComponent,
-  FieldCalPageComponent,
   PhotometryPageComponent,
   ImageCalculatorPageComponent,
   StackerPageComponent,
@@ -159,10 +157,10 @@ export const COMPONENTS = [
   ],
 
 })
-export class CoreModule {
+export class WorkbenchModule {
   static forRoot() {
     return {
-      ngModule: CoreModule,
+      ngModule: WorkbenchModule,
       providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
     };
   }

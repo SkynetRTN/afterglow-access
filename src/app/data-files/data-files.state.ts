@@ -29,7 +29,7 @@ import {
   LoadImageTilePixelsSuccess,
   LoadDataFile
 } from './data-files.actions';
-import { AfterglowDataFileService } from '../core/services/afterglow-data-files';
+import { AfterglowDataFileService } from '../workbench/services/afterglow-data-files';
 import { mergeDelayError } from '../utils/rxjs-extensions';
 import { DataFileType } from './models/data-file-type';
 import { ImageTile } from './models/image-tile';

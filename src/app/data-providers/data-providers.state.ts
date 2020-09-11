@@ -15,13 +15,13 @@ import {
 import { DataProvider } from './models/data-provider';
 import { DataProviderAsset } from './models/data-provider-asset';
 import { LoadDataProviders, LoadDataProvidersSuccess, LoadDataProvidersFail, LoadDataProviderAssets, LoadDataProviderAssetsSuccess, LoadDataProviderAssetsFail, SortDataProviderAssets, ImportSelectedAssets, ImportAssets, ImportAssetsCompleted, ImportAssetsCancel, ImportAssetsStatusUpdated } from './data-providers.actions';
-import { AfterglowDataProviderService } from '../core/services/afterglow-data-providers';
+import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
 import { UpdateJobSuccess, CreateJob, CreateJobSuccess, CreateJobFail, UpdateJobResultSuccess, JobCompleted, UpdateJob } from '../jobs/jobs.actions';
 import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jobs/models/batch-import';
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { Navigate } from '@ngxs/router-plugin';
-import { SetViewerFile, SelectDataFile } from '../core/workbench.actions';
+import { SetViewerFile, SelectDataFile } from '../workbench/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
 import { LoadLibrary } from '../data-files/data-files.actions';

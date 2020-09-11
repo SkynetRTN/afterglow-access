@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange } from '@angular/core';
-import { DataFile } from '../../../../data-files/models/data-file';
+import { DataFile } from '../../../data-files/models/data-file';
 import { SelectionModel} from '@angular/cdk/collections';
 import { ENTER, SPACE } from '@angular/cdk/keycodes';
 import { Subscription } from 'rxjs';

@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './auth/services/auth-guard.service'
 import { AuthorizedPageComponent as AuthorizedPageComponent } from './auth/containers/authorized-page/authorized-page.component';
-import { DataProvidersComponent } from './core/containers/data-providers/data-providers.component';
-import { DataProvidersIndexPageComponent } from './core/containers/data-providers/data-providers-index-page/data-providers-index-page.component';
-import { DataProviderBrowsePageComponent } from './core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
-import { WorkbenchComponent } from './core/containers/workbench/workbench.component';
+import { DataProvidersComponent } from './workbench/containers/data-providers/data-providers.component';
+import { DataProvidersIndexPageComponent } from './workbench/containers/data-providers/data-providers-index-page/data-providers-index-page.component';
+import { DataProviderBrowsePageComponent } from './workbench/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component';
+import { WorkbenchComponent } from './workbench/containers/workbench.component';
 import { LogoutPageComponent } from './auth/containers/logout-page/logout-page.component';
 import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
 

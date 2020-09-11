@@ -1,7 +1,6 @@
 import {
   Component,
   OnInit,
-  ChangeDetectionStrategy,
   OnDestroy,
 } from "@angular/core";
 import { Observable, combineLatest, merge, of } from "rxjs";
@@ -25,23 +24,21 @@ import {
   Header,
   getSourceCoordinates,
   getCenterTime,
-} from "../../../data-files/models/data-file";
-import { SidebarView } from "../../models/sidebar-view";
+} from "../../data-files/models/data-file";
+import { SidebarView } from "../models/sidebar-view";
 import { Router, ActivatedRoute } from "@angular/router";
-import { Subscription } from "../../../../../node_modules/rxjs";
+import { Subscription } from "../../../../node_modules/rxjs";
 import {
   HotkeysService,
   Hotkey,
-} from "../../../../../node_modules/angular2-hotkeys";
+} from "../../../../node_modules/angular2-hotkeys";
 import { MatDialog } from "@angular/material/dialog";
 import {
   Store,
   Actions,
-  ofActionCompleted,
-  ofActionSuccessful,
 } from "@ngxs/store";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { WorkbenchState } from "../../workbench.state";
+import { DataFilesState } from "../../data-files/data-files.state";
+import { WorkbenchState } from "../workbench.state";
 import {
   SetShowConfig,
   SetFullScreen,
@@ -67,28 +64,28 @@ import {
   UpdateFileInfoPanelConfig,
   UpdatePhotometrySettings,
   UpdateSourceExtractionSettings,
-} from "../../workbench.actions";
+} from "../workbench.actions";
 import {
   LoadLibrary,
   RemoveAllDataFiles,
   RemoveDataFile,
   LoadDataFile,
-} from "../../../data-files/data-files.actions";
-import { LoadDataProviders } from "../../../data-providers/data-providers.actions";
-import { ViewMode } from "../../models/view-mode";
+} from "../../data-files/data-files.actions";
+import { LoadDataProviders } from "../../data-providers/data-providers.actions";
+import { ViewMode } from "../models/view-mode";
 import {
   MatButtonToggleChange,
-  MatCheckboxChange,
   MatRadioChange,
+  MatSelectChange,
 } from "@angular/material";
-import { Viewer } from "../../models/viewer";
-import { DataProvider } from "../../../data-providers/models/data-provider";
-import { CorrelationIdGenerator } from "../../../utils/correlated-action";
-import { DataProvidersState } from "../../../data-providers/data-providers.state";
-import { ConfirmationDialogComponent } from "../../components/confirmation-dialog/confirmation-dialog.component";
+import { Viewer } from "../models/viewer";
+import { DataProvider } from "../../data-providers/models/data-provider";
+import { CorrelationIdGenerator } from "../../utils/correlated-action";
+import { DataProvidersState } from "../../data-providers/data-providers.state";
+import { ConfirmationDialogComponent } from "../components/confirmation-dialog/confirmation-dialog.component";
 import { Navigate } from "@ngxs/router-plugin";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
-import { DataFileType } from "../../../data-files/models/data-file-type";
+import { WorkbenchFileState } from "../models/workbench-file-state";
+import { DataFileType } from "../../data-files/models/data-file-type";
 import {
   WorkbenchTool,
   PlottingPanelConfig,
@@ -96,9 +93,9 @@ import {
   PixelOpsPanelConfig,
   AligningPanelConfig,
   StackingPanelConfig,
-} from "../../models/workbench-state";
-import { WorkbenchFileStates } from "../../workbench-file-states.state";
-import { CustomMarkerPanelConfig } from "../../models/workbench-state";
+} from "../models/workbench-state";
+import { WorkbenchFileStates } from "../workbench-file-states.state";
+import { CustomMarkerPanelConfig } from "../models/workbench-state";
 import {
   Marker,
   MarkerType,
@@ -106,14 +103,14 @@ import {
   LineMarker,
   RectangleMarker,
   TeardropMarker,
-} from "../../models/marker";
+} from "../models/marker";
 import {
   ViewerGridCanvasMouseEvent,
   ViewerGridMarkerMouseEvent,
 } from "./workbench-viewer-grid/workbench-viewer-grid.component";
-import { centroidDisk, centroidPsf } from "../../models/centroider";
-import { PlottingPanelState } from "../../models/plotter-file-state";
-import { CustomMarker } from "../../models/custom-marker";
+import { centroidDisk, centroidPsf } from "../models/centroider";
+import { PlottingPanelState } from "../models/plotter-file-state";
+import { CustomMarker } from "../models/custom-marker";
 import {
   SelectCustomMarkers,
   DeselectCustomMarkers,
@@ -123,24 +120,22 @@ import {
   RemoveCustomMarkers,
   UpdateLine,
   StartLine,
-} from "../../workbench-file-states.actions";
-import { CustomMarkerPanelState } from "../../models/marker-file-state";
-import { PosType, Source } from "../../models/source";
+} from "../workbench-file-states.actions";
+import { CustomMarkerPanelState } from "../models/marker-file-state";
+import { PosType, Source } from "../models/source";
 import {
   SonifierRegionMode,
   SonificationPanelState,
-} from "../../models/sonifier-file-state";
-import { Transformation } from "../../models/transformation";
-import { FileInfoPanelConfig } from "../../models/file-info-panel";
-import { Normalization } from "../../models/normalization";
-import { SourcesState } from "../../sources.state";
-import { PhotometrySettings } from "../../models/photometry-settings";
-import { CentroidSettings } from "../../models/centroid-settings";
-import { SourceExtractionSettings } from "../../models/source-extraction-settings";
-import { AddSources } from "../../sources.actions";
-import { PhotData } from "../../models/source-phot-data";
-import { PhotDataState } from "../../phot-data.state.";
-import { PhotometryPanelState } from "../../models/photometry-file-state";
+} from "../models/sonifier-file-state";
+import { Transformation } from "../models/transformation";
+import { FileInfoPanelConfig } from "../models/file-info-panel";
+import { Normalization } from "../models/normalization";
+import { SourcesState } from "../sources.state";
+import { PhotometrySettings } from "../models/photometry-settings";
+import { CentroidSettings } from "../models/centroid-settings";
+import { SourceExtractionSettings } from "../models/source-extraction-settings";
+import { AddSources } from "../sources.actions";
+import { PhotometryPanelState } from "../models/photometry-file-state";
 
 @Component({
   selector: "app-workbench",
@@ -157,6 +152,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   sidebarView$: Observable<SidebarView>;
   files$: Observable<DataFile[]>;
   loadingFiles$: Observable<boolean>;
+  focusedViewer$: Observable<Viewer>;
   focusedFile$: Observable<DataFile>;
   viewMode$: Observable<ViewMode>;
   primaryViewers$: Observable<Viewer[]>;
@@ -256,6 +252,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       )
     );
 
+    this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
     this.focusedFile$ = this.store.select(WorkbenchState.getFocusedFile).pipe();
     this.focusedImageFileId$ = store.select(
       WorkbenchState.getFocusedImageFileId
@@ -1014,6 +1011,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
+  getViewerLabel(viewer: Viewer, index: number) {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getEntities);
+    if(fileEntities[viewer.fileId] && fileEntities[viewer.fileId].name) return fileEntities[viewer.fileId].name
+    return `Viewer ${index + 1}`
+  }
+
   onFileInfoPanelConfigChange($event) {
     this.store.dispatch(new UpdateFileInfoPanelConfig($event));
   }
@@ -1414,8 +1417,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new SetViewMode($event.value));
   }
 
-  onActiveViewerIdChange(value: string) {
-    this.store.dispatch(new SetFocusedViewer(value));
+  onFocusedViewerIdChange($event: MatSelectChange) {
+    this.store.dispatch(new SetFocusedViewer($event.value));
   }
 
   onClickWorkbenchNav(isActiveUrl: boolean) {

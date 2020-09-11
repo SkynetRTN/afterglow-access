@@ -16,7 +16,7 @@ registerLocaleData(localeEs, 'es');
 import { TokenInterceptor } from './token.interceptor';
 
 import { MaterialModule } from './material';
-import { CoreModule } from './core/core.module';
+import { WorkbenchModule } from './workbench/workbench.module';
 import { AuthModule } from './auth/auth.module';
 import { HotkeyModule } from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -34,10 +34,10 @@ import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
 import { DataFilesState, DataFilesStateModel } from './data-files/data-files.state';
-import { WorkbenchFileStates, WorkbenchFileStatesModel } from './core/workbench-file-states.state';
-import { WorkbenchState } from './core/workbench.state';
-import { SourcesState } from './core/sources.state';
-import { PhotDataState } from './core/phot-data.state.';
+import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench/workbench-file-states.state';
+import { WorkbenchState } from './workbench/workbench.state';
+import { SourcesState } from './workbench/sources.state';
+import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { DataFileType } from './data-files/models/data-file-type';
 import { ImageFile } from './data-files/models/data-file';
@@ -118,7 +118,7 @@ export function imageFileStateSanitizer(v) {
     NgxPopperModule,
     AvatarModule,
     ThemePickerModule,
-    CoreModule.forRoot(),
+    WorkbenchModule.forRoot(),
     AuthModule.forRoot(),
     HotkeyModule.forRoot({
       disableCheatSheet: true

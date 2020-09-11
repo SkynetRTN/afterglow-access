@@ -24,8 +24,8 @@ import {
   getHeight,
   getDegsPerPixel,
   getCenterTime
-} from "../../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../../models/workbench-file-state";
+} from "../../../data-files/models/data-file";
+import { WorkbenchFileState } from "../../models/workbench-file-state";
 import {
   Marker,
   LineMarker,
@@ -33,29 +33,23 @@ import {
   TeardropMarker,
   CircleMarker,
   RectangleMarker
-} from "../../../models/marker";
+} from "../../models/marker";
 import { BehaviorSubject, Subject } from "rxjs";
 import {
   CanvasMouseEvent,
   PanZoomCanvasComponent
-} from "../../../components/pan-zoom-canvas/pan-zoom-canvas.component";
+} from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import {
   MarkerMouseEvent,
   ImageViewerMarkerOverlayComponent
-} from "../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
-import { WorkbenchTool } from "../../../models/workbench-state";
-import { SonifierRegionMode } from "../../../models/sonifier-file-state";
-import { Source, PosType } from "../../../models/source";
-import { PlottingPanelState } from "../../../models/plotter-file-state";
-import { min } from "../../../../../../node_modules/rxjs/operators";
-import { CustomMarker } from "../../../models/custom-marker";
-import { FieldCal } from '../../../models/field-cal';
+} from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
+import { Source, PosType } from "../../models/source";
+import { CustomMarker } from "../../models/custom-marker";
+import { FieldCal } from '../../models/field-cal';
 import { Store } from '@ngxs/store';
-import { DataFilesState } from '../../../../data-files/data-files.state';
-import { SourcesState } from '../../../sources.state';
-import { WorkbenchState } from '../../../workbench.state';
-import { WorkbenchFileStates } from '../../../workbench-file-states.state';
-import { HotkeysService, Hotkey } from 'angular2-hotkeys';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { SourcesState } from '../../sources.state';
+import { WorkbenchFileStates } from '../../workbench-file-states.state';
 
 @Component({
   selector: "app-workbench-viewer-panel",

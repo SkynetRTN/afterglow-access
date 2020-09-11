@@ -2,24 +2,24 @@ import { Component, OnInit, HostBinding, Input } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
 import { map, tap, takeUntil } from "rxjs/operators";
-import { ImageFile } from '../../../../data-files/models/data-file';
-import { WorkbenchFileState } from '../../../models/workbench-file-state';
-import { DataFileType } from '../../../../data-files/models/data-file-type';
+import { ImageFile } from '../../../data-files/models/data-file';
+import { WorkbenchFileState } from '../../models/workbench-file-state';
+import { DataFileType } from '../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { AlignFormData, WorkbenchTool, AligningPanelConfig } from '../../../models/workbench-state';
+import { AlignFormData, WorkbenchTool, AligningPanelConfig } from '../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
-import { AlignmentJob, AlignmentJobResult } from '../../../../jobs/models/alignment';
+import { AlignmentJob, AlignmentJobResult } from '../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../../workbench.state';
-import { DataFilesState } from '../../../../data-files/data-files.state';
-import { SetActiveTool, SelectDataFile, CreateAlignmentJob, UpdateAligningPanelConfig } from '../../../workbench.actions';
-import { JobsState } from '../../../../jobs/jobs.state';
+import { WorkbenchState } from '../../workbench.state';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { SetActiveTool, SelectDataFile, CreateAlignmentJob, UpdateAligningPanelConfig } from '../../workbench.actions';
+import { JobsState } from '../../../jobs/jobs.state';
 
 @Component({
-  selector: 'app-aligner-page',
-  templateUrl: './aligner-page.component.html',
-  styleUrls: ['./aligner-page.component.css']
+  selector: 'app-aligning-panel',
+  templateUrl: './aligning-panel.component.html',
+  styleUrls: ['./aligning-panel.component.css']
 })
 export class AlignerPageComponent implements OnInit {
   @Input("selectedFile")

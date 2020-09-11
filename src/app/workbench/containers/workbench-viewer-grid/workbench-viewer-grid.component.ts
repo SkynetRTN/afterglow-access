@@ -1,22 +1,19 @@
 import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Viewer } from '../../../models/viewer';
+import { Viewer } from '../../models/viewer';
 
-import { DataFile, ImageFile, getWidth, getHeight } from '../../../../data-files/models/data-file';
-import { WorkbenchFileState } from '../../../models/workbench-file-state';
-import { CanvasMouseEvent } from '../../../components/pan-zoom-canvas/pan-zoom-canvas.component';
-import { MarkerMouseEvent } from '../../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { DataFile, ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file';
+import { WorkbenchFileState } from '../../models/workbench-file-state';
+import { CanvasMouseEvent } from '../../components/pan-zoom-canvas/pan-zoom-canvas.component';
+import { MarkerMouseEvent } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Subscription } from 'rxjs';
-import { ViewMode } from '../../../models/view-mode';
+import { ViewMode } from '../../models/view-mode';
 import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../../workbench.state';
-import { DataFilesState } from '../../../../data-files/data-files.state';
-import { WorkbenchFileStates } from '../../../workbench-file-states.state';
-import { SetFocusedViewer } from '../../../workbench.actions';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { WorkbenchFileStates } from '../../workbench-file-states.state';
+import { SetFocusedViewer } from '../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
-import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../../workbench-file-states.actions';
-import { RemoveDataFile } from '../../../../data-files/data-files.actions';
+import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
 
 export interface ViewerGridCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string,
