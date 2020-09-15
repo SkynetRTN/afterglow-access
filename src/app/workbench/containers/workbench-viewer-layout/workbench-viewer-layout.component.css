@@ -1,4 +1,4 @@
-.view-manager-wrapper {
+.viewer-panel-wrapper {
   display: flex;
   flex: 1 1 0%;
   height: 100%;
@@ -8,7 +8,7 @@
   /* min-width: 0; */
 }
 
-.view-manager-panel {
+.viewer-panel {
   flex: 1 1 0%;
   position: relative;
   outline: none;

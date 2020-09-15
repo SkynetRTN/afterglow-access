@@ -1,212 +1,302 @@
 import {
   Component,
   OnInit,
-  Input,
   Output,
   EventEmitter,
-  SimpleChange,
-  OnChanges,
+  Input,
   ViewChild,
-  ElementRef,
-  OnDestroy
+  TemplateRef,
+  ViewContainerRef,
+  OnChanges,
+  SimpleChanges,
 } from "@angular/core";
+import { Observable, combineLatest, fromEvent, BehaviorSubject } from "rxjs";
+import { map, filter, take } from "rxjs/operators";
+import { Viewer } from "../../models/viewer";
 
-import {
-  DomSanitizer, SafeValue
-} from '@angular/platform-browser';
-
-import { Observable, combineLatest } from "rxjs";
-import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap } from "rxjs/operators";
 import {
   DataFile,
   ImageFile,
   getWidth,
   getHeight,
-  getDegsPerPixel,
-  getCenterTime
 } from "../../../data-files/models/data-file";
 import { WorkbenchFileState } from "../../models/workbench-file-state";
+import { CanvasMouseEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
+import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
+import { Subscription } from "rxjs";
+import { ViewMode } from "../../models/view-mode";
+import { Store } from "@ngxs/store";
+import { WorkbenchState } from "../../workbench.state";
+import { DataFilesState } from "../../../data-files/data-files.state";
+import { WorkbenchFileStates } from "../../workbench-file-states.state";
 import {
-  Marker,
-  LineMarker,
-  MarkerType,
-  TeardropMarker,
-  CircleMarker,
-  RectangleMarker
-} from "../../models/marker";
-import { BehaviorSubject, Subject } from "rxjs";
+  SetFocusedViewer,
+  CloseViewer,
+  KeepViewerOpen,
+  MoveToOtherView,
+} from "../../workbench.actions";
+import { HotkeysService, Hotkey } from "angular2-hotkeys";
 import {
-  CanvasMouseEvent,
-  PanZoomCanvasComponent
-} from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
-import {
-  MarkerMouseEvent,
-  ImageViewerMarkerOverlayComponent
-} from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
-import { Source, PosType } from "../../models/source";
-import { CustomMarker } from "../../models/custom-marker";
-import { FieldCal } from '../../models/field-cal';
-import { Store } from '@ngxs/store';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { SourcesState } from '../../sources.state';
-import { WorkbenchFileStates } from '../../workbench-file-states.state';
-import { Viewer } from '../../models/viewer';
+  ZoomTo,
+  ZoomBy,
+  CenterRegionInViewport,
+} from "../../workbench-file-states.actions";
+import { RemoveDataFile } from "../../../data-files/data-files.actions";
+import { OverlayRef, Overlay } from "@angular/cdk/overlay";
+import { TemplatePortal } from "@angular/cdk/portal";
+import { MatMenuTrigger } from "@angular/material";
+import { ViewerPanel } from '../../models/workbench-state';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
-  viewerId: string,
-  viewer: Viewer
+  viewerId: string;
+  viewer: Viewer;
 }
 
 export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
-  viewerId: string,
-  viewer: Viewer
+  viewerId: string;
+  viewer: Viewer;
 }
 
 @Component({
   selector: "app-workbench-viewer-panel",
   templateUrl: "./workbench-viewer-panel.component.html",
-  styleUrls: ["./workbench-viewer-panel.component.scss"]
+  styleUrls: ["./workbench-viewer-panel.component.css"],
 })
-export class WorkbenchViewerPanelComponent implements OnInit, OnChanges, OnDestroy {
-  @Input()
-  fileId: string;
-  private fileId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
-  @Input()
-  showInfoBar: boolean = true;
-  @Input()
-  active: boolean = true;
-  @Input()
-  markers: Marker[] = [];
+export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
+  @ViewChild(MatMenuTrigger, { static: false })
+  contextMenu: MatMenuTrigger;
+  contextMenuPosition = { x: "0px", y: "0px" };
+  mouseOverCloseViewerId: string = null;
 
-  @Output()
-  onImageClick = new EventEmitter<CanvasMouseEvent>();
-  @Output()
-  onImageMove = new EventEmitter<CanvasMouseEvent>();
-  @Output()
-  onMarkerClick = new EventEmitter<MarkerMouseEvent>();
-
-  @ViewChild(PanZoomCanvasComponent, { static: true })
-  panZoomCanvasComponent: PanZoomCanvasComponent;
-
-  @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
-  imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
-
-  // markers$: Observable<Marker[]>;
-  
-  sourceMarkersLayer$: Observable<Marker[]>;
-  sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-  files$: Observable<{[id: string]: DataFile}>;
-  sources$: Observable<Source[]>;
-  customMarkers$: Observable<CustomMarker[]>;
-  selectedCustomMarkers$: Observable<CustomMarker[]>;
-  showAllSources$: Observable<boolean>;
-  imageFileState$: Observable<WorkbenchFileState>;
-  imageMouseX: number = null;
-  imageMouseY: number = null;
-
-  fieldCals$: Observable<FieldCal[]>;
-  selectedFieldCal$: Observable<FieldCal>;
-  selectedFieldCalId$: Observable<string>;
-  fieldCalMarkers$: Observable<Marker[]>;
-
-  constructor(private store: Store, private sanitization: DomSanitizer) {
-    this.files$ = this.store.select(DataFilesState.getEntities);
-    let fileReady$ = combineLatest(this.fileId$, this.files$).pipe(
-      filter(([fileId, files]) => fileId in files && files[fileId].headerLoaded)
-    );
-
-    this.sources$ = this.store.select(SourcesState.getSources);
-    // this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
-    // this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
-    this.imageFileState$ = combineLatest(
-      this.fileId$,
-      this.store.select(WorkbenchFileStates.getEntities)
-    ).pipe(
-      map(([fileId, imageFileStates]) => imageFileStates[fileId]),
-    );
-
-    
-
-
-    
-
+  onContextMenu(event: MouseEvent, viewer: Viewer) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + "px";
+    this.contextMenuPosition.y = event.clientY + "px";
+    this.contextMenu.menuData = { viewer: viewer };
+    this.contextMenu.menu.focusFirstItem("mouse");
+    this.contextMenu.openMenu();
   }
 
-  
+  moveToOtherView(viewerId: string) {
+    this.store.dispatch(new MoveToOtherView(viewerId));
+  }
 
-  ngOnInit() { }
+  ViewMode = ViewMode;
+
+  @Input("viewers")
+  set viewers(viewers: Viewer[]) {
+    this.viewers$.next(viewers);
+  }
+  get viewers() {
+    return this.viewers$.getValue();
+  }
+  private viewers$ = new BehaviorSubject<Viewer[]>([]);
+
+  @Input() selectedViewerId: string;
+  @Input() hasFocus: boolean;
+
+  @Output() onImageClick = new EventEmitter<ViewerCanvasMouseEvent>();
+  @Output() onImageMove = new EventEmitter<ViewerCanvasMouseEvent>();
+  @Output() onMarkerClick = new EventEmitter<ViewerMarkerMouseEvent>();
+
+  selectedViewerIndex = 0;
+
+  private hotKeys: Array<Hotkey> = [];
+  // viewers$: Observable<Viewer[]>;
+  // viewMode$: Observable<ViewMode>;
+  // activeViewerIndex$: Observable<number>;
+
+  files$: Observable<{ [id: string]: DataFile }>;
+  fileStates$: Observable<{ [id: string]: WorkbenchFileState }>;
+  subs: Subscription[] = [];
+  // activeViewerIndex: number;
+  mouseDownActiveViewerId: string;
+  zoomStepFactor: number = 0.75;
+
+  // private get focusedViewer() {
+  //   let focusedViewerId = this.primaryViewerHasFocus ? this.selectedPrimaryViewerId : this.selectedSecondaryViewerId;
+  //   return this.viewers.find(v => v.viewerId == focusedViewerId);
+  // }
+
+  constructor(
+    private store: Store,
+    private _hotkeysService: HotkeysService,
+    public overlay: Overlay,
+    public viewContainerRef: ViewContainerRef
+  ) {
+    
+    this.files$ = this.store.select(DataFilesState.getEntities);
+    this.fileStates$ = this.store.select(WorkbenchFileStates.getEntities);
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "=",
+    //     (event: KeyboardEvent): boolean => {
+    //       let activeViewer = this.focusedViewer;
+    //       if(activeViewer && activeViewer.fileId != null) {
+    //         this.zoomIn(activeViewer.fileId);
+    //       }
+
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Zoom In"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "-",
+    //     (event: KeyboardEvent): boolean => {
+    //       let activeViewer = this.focusedViewer;
+    //       if(activeViewer && activeViewer.fileId != null) {
+    //         this.zoomOut(activeViewer.fileId);
+    //       }
+
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Zoom In"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "0",
+    //     (event: KeyboardEvent): boolean => {
+    //       let activeViewer = this.focusedViewer;
+    //       if(activeViewer && activeViewer.fileId != null) {
+    //         this.zoomTo(activeViewer.fileId, 1);
+    //       }
+
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Reset Zoom"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "z",
+    //     (event: KeyboardEvent): boolean => {
+    //       let activeViewer = this.focusedViewer;
+    //       if(activeViewer && activeViewer.fileId != null) {
+    //         this.zoomToFit(activeViewer.fileId);
+    //       }
+
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Zoom To Fit"
+    //   )
+    // );
+
+    // this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
+  }
+
+  public zoomIn(fileId: string, imageAnchor: { x: number; y: number } = null) {
+    this.zoomBy(fileId, 1.0 / this.zoomStepFactor, imageAnchor);
+  }
+
+  public zoomOut(fileId: string, imageAnchor: { x: number; y: number } = null) {
+    this.zoomBy(fileId, this.zoomStepFactor, imageAnchor);
+  }
+
+  public zoomBy(
+    fileId: string,
+    factor: number,
+    imageAnchor: { x: number; y: number } = null
+  ) {
+    this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
+  }
+
+  public zoomToFit(fileId: string, padding: number = 0) {
+    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+    let imageFile = dataFiles[fileId] as ImageFile;
+    if (imageFile) {
+      this.store.dispatch(
+        new CenterRegionInViewport(fileId, {
+          x: 1,
+          y: 1,
+          width: getWidth(imageFile),
+          height: getHeight(imageFile),
+        })
+      );
+    }
+  }
+
+  public zoomTo(fileId: string, value: number) {
+    this.store.dispatch(new ZoomTo(fileId, value, null));
+  }
+
+  ngOnInit() {}
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.selectedViewerId) {
+      this.selectedViewerIndex = this.viewers.map(viewer => viewer.viewerId).indexOf(this.selectedViewerId);
+    }
+  }
 
   ngOnDestroy() {
-    
+    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
   }
 
-  ngOnChanges(changes: { [key: string]: SimpleChange }) {
-    if (changes.hasOwnProperty("fileId")) {
-      this.fileId$.next(changes["fileId"].currentValue);
+  viewerTrackByFn(index, item: Viewer) {
+    return item.viewerId;
+  }
+
+  closeViewer(viewerId: string) {
+    this.store.dispatch(new CloseViewer(viewerId));
+  }
+
+  keepViewerOpen(viewerId: string) {
+    this.store.dispatch(new KeepViewerOpen(viewerId));
+  }
+
+  setFocusedViewer($event: Event, viewerId: string, viewer: Viewer) {
+    this.mouseDownActiveViewerId = this.selectedViewerId;
+    if (viewerId != this.selectedViewerId || !this.hasFocus) {
+      this.store.dispatch(new SetFocusedViewer(viewerId));
+      $event.preventDefault();
+      $event.stopImmediatePropagation();
     }
   }
 
-  handleImageMove($event: CanvasMouseEvent) {
-    if ($event.hitImage) {
-      this.imageMouseX = $event.imageX;
-      this.imageMouseY = $event.imageY;
-    } else {
-      this.imageMouseX = null;
-      this.imageMouseY = null;
-    }
-
-    this.onImageMove.emit($event);
+  handleImageMove($event: ViewerCanvasMouseEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMove.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
   }
 
-  handleImageClick($event: CanvasMouseEvent) {
-    this.onImageClick.emit($event);
+  handleImageClick($event: ViewerCanvasMouseEvent, viewerId: string, viewer: Viewer) {
+    // if (viewerId != this.mouseDownActiveViewerId) return;
+    this.onImageClick.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
   }
 
-  handleMarkerClick($event: MarkerMouseEvent) {
-    this.onMarkerClick.emit($event);
+  handleMarkerClick(
+    $event: ViewerMarkerMouseEvent,
+    viewerId: string,
+    viewer: Viewer
+  ) {
+    if (viewerId != this.mouseDownActiveViewerId) return;
+
+    this.onMarkerClick.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
   }
 
-  handleDownloadSnapshot() {
-    let imageCanvas = this.panZoomCanvasComponent.canvas;
-
-    // http://svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/
-    let markerSvg = this.imageViewerMarkerOverlayComponent.svg;
-    let svgXml = (new XMLSerializer()).serializeToString(markerSvg);
-
-    let data = "data:image/svg+xml;base64," + btoa(svgXml);
-    let image = new Image();
-    image.onload = function () {
-
-      let canvas: HTMLCanvasElement = document.createElement("canvas");
-      let context: CanvasRenderingContext2D = canvas.getContext("2d");
-      canvas.width = imageCanvas.width;
-      canvas.height = imageCanvas.height;
-
-      context.drawImage(imageCanvas, 0, 0);
-      context.drawImage(image, 0, 0);
-
-      var lnk = document.createElement('a'), e;
-
-      /// the key here is to set the download attribute of the a tag
-      lnk.download = 'afterglow_screenshot.jpg';
-
-      /// convert canvas content to data-uri for link. When download
-      /// attribute is set the content pointed to by link will be
-      /// pushed as "download" in HTML5 capable browsers
-      lnk.href = canvas.toDataURL("image/jpg;base64");
-
-      /// create a "fake" click-event to trigger the download
-      if (document.createEvent) {
-        e = document.createEvent("MouseEvents");
-        e.initMouseEvent("click", true, true, window,
-          0, 0, 0, 0, 0, false, false, false,
-          false, 0, null);
-
-        lnk.dispatchEvent(e);
-      }
-
-
-    }
-    image.src = data;
+  onSelectedViewerIndexChange(index) {
+    // console.log("SELECTED VIEWER INDEX CHANGED")
+    // this.selectedViewerIndex = index;
+    // this.store.dispatch(new SetFocusedViewer(this.viewers[index].viewerId));
   }
 }

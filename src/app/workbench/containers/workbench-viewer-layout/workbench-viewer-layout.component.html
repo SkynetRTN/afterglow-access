@@ -1,0 +1,35 @@
+<div [fxLayout]="container?.direction" style="height: 100%">
+  <ng-container *ngFor="let item of container?.items">
+    <ng-container [ngSwitch]="item.type">
+      <ng-container *ngSwitchCase="'container'">
+        <app-workbench-viewer-layout
+          style="height: 100%"
+          *ngIf="(containers$ | async)[item.id]; let container"
+          fxFlex="1 1 auto"
+          fxFill
+          [fxLayout]="container.direction"
+          [container]="container"
+        ></app-workbench-viewer-layout>
+      </ng-container>
+      <ng-container *ngSwitchCase="'panel'">
+        <app-workbench-viewer-panel
+          style="height: 100%"
+          *ngIf="(panels$ | async)[item.id]; let panel"
+          fxFlex="1 1 auto"
+          fxFill
+          [viewers]="getViewers(panel.viewerIds)"
+          [selectedViewerId]="panel.selectedViewerId"
+          [hasFocus]="panel.id == (focusedViewerPanelId$ | async)"
+          (onImageMove)="handleImageMove($event, panel.id, panel)"
+          (onImageClick)="handleImageClick($event, panel.id, panel)"
+          (onMarkerClick)="handleMarkerClick($event, panel.id, panel)"
+        >
+        </app-workbench-viewer-panel>
+      </ng-container>
+    </ng-container>
+    <div
+      *ngIf="true"
+      class="handler"
+    ></div>
+  </ng-container>
+</div>

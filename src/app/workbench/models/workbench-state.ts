@@ -93,6 +93,18 @@ export interface StackingPanelConfig {
   currentStackingJobId: string;
 }
 
+export interface ViewerPanelContainer {
+  id: string
+  direction: 'row' | 'row-reverse' | 'column' | 'column-reverse';
+  items: Array<{type: 'panel' | 'container', id: string}>;
+}
+
+export interface ViewerPanel {
+  id: string;
+  viewerIds: string[];
+  selectedViewerId: string;
+}
+
 export interface WorkbenchStateModel {
   version: number,
   showSideNav: boolean,
@@ -101,21 +113,22 @@ export interface WorkbenchStateModel {
   showSidebar: boolean;
   showConfig: boolean;
   fullScreenPanel: 'file' | 'viewer' | 'tool';
-  // selectedFileId: string;
-  
   activeTool: WorkbenchTool;
   viewMode: ViewMode;
+  rootViewerPanelContainerId: string
   nextViewerIdSeed: number;
+  nextViewerPanelIdSeed: number;
+  nextViewerPanelContainerIdSeed: number;
   viewerIds: string[];
   viewers: {[id:string]: Viewer};
-  primaryViewerHasFocus: boolean;
-  primaryViewerIds: string[];
-  selectedPrimaryViewerId: string;
-  secondaryViewerIds: string[];
-  selectedSecondaryViewerId: string;
+  viewerPanelIds: string[];
+  viewerPanels: {[id:string]: ViewerPanel};
+  viewerPanelContainerIds: string[];
+  viewerPanelContainers: {[id:string]: ViewerPanelContainer};
+  focusedViewerPanelId: string;
+  
   viewerSyncEnabled: boolean;
   normalizationSyncEnabled: boolean;
-  
   centroidSettings: CentroidSettings;
   sourceExtractionSettings: SourceExtractionSettings;
   photometrySettings: PhotometrySettings;

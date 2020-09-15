@@ -1,6 +1,6 @@
 import { DataFile, ImageFile } from '../data-files/models/data-file';
 import { ViewMode } from './models/view-mode';
-import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingPanelConfig, PhotometryPanelConfig, AligningPanelConfig as AligningPanelConfig, PixelOpsPanelConfig, StackingPanelConfig as StackingPanelConfig, CustomMarkerPanelConfig } from './models/workbench-state';
+import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingPanelConfig, PhotometryPanelConfig, AligningPanelConfig as AligningPanelConfig, PixelOpsPanelConfig, StackingPanelConfig as StackingPanelConfig, CustomMarkerPanelConfig, ViewerPanel } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
 import { PhotometryJobSettings } from '../jobs/models/photometry';
@@ -53,7 +53,13 @@ export class SetFocusedViewer {
 export class CreateViewer {
   public static readonly type = '[Workbench] Create Viewer';
 
-  constructor(public viewer: Viewer, public usePrimary = true) { }
+  constructor(public viewer: Viewer, public panelId: string) { }
+}
+
+export class CloseViewerPanel {
+  public static readonly type = '[Workbench] Close Viewer Panel';
+
+  constructor(public viewerPanelId: string) { }
 }
 
 export class CloseViewer {

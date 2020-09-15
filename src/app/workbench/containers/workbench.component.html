@@ -119,7 +119,7 @@
               mat-raised-button>Move actve viewer to split display</button>
           </div>
           <div class="mt-2" style="width: 100%;">
-            <mat-button-toggle-group name="viewMode" [value]="(viewMode$ | async)" (change)="setViewModeOption($event)" [disabled]="(secondaryViewers$ | async)?.length == 0">
+            <mat-button-toggle-group name="viewMode" [value]="(viewMode$ | async)" (change)="setViewModeOption($event)">
               <mat-button-toggle aria-label="Dual Viewer Split Horizontally" [value]="ViewMode.SPLIT_HORIZONTAL"
                 matTooltip="Split Viewer Horizontally" [matTooltipPosition]="'below'">
                 <mat-icon>view_stream</mat-icon>
@@ -186,18 +186,13 @@
   </div>
   <div fxFlex="1 1 0%" class="image-viewer-grid-panel" role="region" aria-label="image viewers"
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'">
-    <app-workbench-view-manager
-      [primaryViewers]="primaryViewers$ | async"
-      [selectedPrimaryViewerId]="selectedPrimaryViewerId$ | async"
-      [secondaryViewers]="secondaryViewers$ | async" 
-      [selectedSecondaryViewerId]="selectedSecondaryViewerId$ | async"
-      [primaryViewerHasFocus]="primaryViewerHasFocus$ | async"
-      [viewMode]="viewMode$ | async"
+    <app-workbench-viewer-layout
+      [container]="layoutContainer$ | async"
       (onImageClick)="onImageClick($event)"
       (onImageMove)="onImageMove($event)"
       (onMarkerClick)="onMarkerClick($event)"
     >
-    </app-workbench-view-manager>
+    </app-workbench-viewer-layout>
   </div>
   <div fxFlex="0 0 auto" fxLayout="row" class="workbench-outlet-panel" [hidden]="!(focusedImageFile$ | async)"
     style="overflow: hidden;">

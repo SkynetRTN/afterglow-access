@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { WorkbenchViewerPanelComponent } from './workbench-viewer-panel.component';
+import { WorkbenchViewerComponent } from './workbench-viewer.component';
 
 describe('ViewerComponent', () => {
-  let component: WorkbenchViewerPanelComponent;
-  let fixture: ComponentFixture<WorkbenchViewerPanelComponent>;
+  let component: WorkbenchViewerComponent;
+  let fixture: ComponentFixture<WorkbenchViewerComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ WorkbenchViewerPanelComponent ]
+      declarations: [ WorkbenchViewerComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(WorkbenchViewerPanelComponent);
+    fixture = TestBed.createComponent(WorkbenchViewerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

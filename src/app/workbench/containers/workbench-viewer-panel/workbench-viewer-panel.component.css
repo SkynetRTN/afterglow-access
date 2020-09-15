@@ -1,0 +1,50 @@
+.viewer-panel-wrapper {
+  display: flex;
+  flex: 1 1 0%;
+  height: 100%;
+  width: 100%;
+  outline: none;
+  /* overflow: hidden; */
+  /* min-width: 0; */
+}
+
+.viewer-panel {
+  flex: 1 1 0%;
+  position: relative;
+  outline: none;
+  min-width: 0;
+}
+
+.close-button {
+  line-height: 18px;
+  height: 18px;
+  width: 18px;
+  font-size: 18px;
+}
+
+.no-viewers-message {
+  flex: 1 1 0%;
+  position: relative;
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.handler {
+  width: 8px;
+  padding: 0;
+  /*cursor: ew-resize;*/
+  flex: 0 0 auto;
+}
+
+
+/* .handler::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 100%;
+  background: #424242;
+  margin: 0 auto;
+} */

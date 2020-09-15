@@ -4,10 +4,40 @@
     $warn: map-get($theme, warn);
     $background: map-get($theme, background);
     $foreground: map-get($theme, foreground);
-  
-    app-workbench-viewer-panel {
 
-       
-          
+    .workbench-viewer {
+      border: 1px solid rgba(0, 0, 0, 0.12);
     }
+
+    .viewer-panel .mat-tab-label  {
+      opacity: 1.0;
+      border-right: 1px solid rgba(0, 0, 0, 0.12);
+      padding: 0px !important;
+    }
+
+    .viewer-panel .mat-tab-label .mat-tab-label-content div:not(.active-viewer) .label  {
+      opacity: 0.6;
+    }
+
+    .viewer-panel:not(.focused) .mat-ink-bar  {
+      visibility: hidden !important;
+    }
+
+    .handler {
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+
+    @if map-get($theme, is-dark)  {
+     
+    }
+    @else {
+
+    }
+
+    
+
+    
+
+      
   }
