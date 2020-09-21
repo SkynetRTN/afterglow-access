@@ -4,13 +4,13 @@ import { CanvasMouseEvent } from '../../components/pan-zoom-canvas/pan-zoom-canv
 import { MarkerMouseEvent } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { ViewMode } from '../../models/view-mode';
 import { Store } from '@ngxs/store';
-import { MoveToOtherView } from '../../workbench.actions';
+import { SplitViewerPanel, SetFocusedViewer } from '../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 import { MatMenuTrigger } from '@angular/material';
-import { ViewerPanelContainer, ViewerPanel } from '../../models/workbench-state';
+import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from '../../models/workbench-state';
 import { Observable } from 'rxjs';
 import { WorkbenchState } from '../../workbench.state';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { ViewerMarkerMouseEvent, ViewerCanvasMouseEvent } from '../workbench-viewer-panel/workbench-viewer-panel.component';
 
 export interface ViewerPanelCanvasMouseEvent extends ViewerCanvasMouseEvent {
@@ -34,8 +34,9 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   contextMenuPosition = { x: '0px', y: '0px' };
   mouseOverCloseViewerId: string = null;
   focusedViewerPanelId$: Observable<string>;
-  panels$: Observable<{[id: string]: ViewerPanel}>;
+  layoutItems$: Observable<{[id: string]: ViewerLayoutItem}>;
   containers$: Observable<{[id: string]: ViewerPanelContainer}>;
+  panels$: Observable<{[id: string]: ViewerPanel}>;
 
   onContextMenu(event: MouseEvent, viewer: Viewer) {
     event.preventDefault();
@@ -47,11 +48,12 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   }
 
   moveToOtherView(viewerId: string) {
-    this.store.dispatch(new MoveToOtherView(viewerId));
+    this.store.dispatch(new SplitViewerPanel(viewerId));
   }
   
   ViewMode = ViewMode;
-  @Input() container: ViewerPanelContainer;
+  @Input() id: string;
+  @Input() itemIds: string[];
 
   @Output() onImageClick = new EventEmitter<ViewerPanelCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerPanelCanvasMouseEvent>();
@@ -61,11 +63,9 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
 
   constructor(private store: Store, private _hotkeysService: HotkeysService) {
     this.focusedViewerPanelId$ = this.store.select(WorkbenchState.getFocusedViewerPanelId);
-    this.panels$ = this.store.select(WorkbenchState.getViewerPanelEntities).pipe(
-      tap(panels => {
-        console.log("PANELS CHANGED: ", panels)
-      })
-    );
+    
+    this.layoutItems$ = this.store.select(WorkbenchState.getViewerLayoutItemEntities);
+    this.panels$ = this.store.select(WorkbenchState.getViewerPanelEntities);
     this.containers$ = this.store.select(WorkbenchState.getViewerPanelContainerEntities);
   }
 
@@ -85,9 +85,21 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   ngOnDestroy() {
   }
 
-  
+  handleViewerPanelContainerImageMove($event: ViewerPanelCanvasMouseEvent) {
+    this.onImageMove.emit($event);
+  }
 
-  handleImageMove($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
+  handleViewerPanelContainerImageClick($event: ViewerPanelCanvasMouseEvent) {
+    // if(panelId != this.mouseDownActiveViewerId) return;
+
+    this.onImageClick.emit($event);
+  }
+
+  handleViewerPanelContainerMarkerClick($event: ViewerPanelMarkerMouseEvent) {
+    this.onMarkerClick.emit($event);
+  }
+
+  handleViewerPanelImageMove($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
     this.onImageMove.emit({
       panelId: panelId,
       panel: panel,
@@ -95,7 +107,7 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
     });
   }
 
-  handleImageClick($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
+  handleViewerPanelImageClick($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
     // if(panelId != this.mouseDownActiveViewerId) return;
 
     this.onImageClick.emit({
@@ -105,12 +117,20 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
     });
   }
 
-  handleMarkerClick($event: ViewerMarkerMouseEvent, panelId: string, panel: ViewerPanel) {
+  handleViewerPanelMarkerClick($event: ViewerMarkerMouseEvent, panelId: string, panel: ViewerPanel) {
     this.onMarkerClick.emit({
       panelId: panelId,
       panel: panel,
       ...$event
     });
+  }
+
+  setFocusedPanel($event: MouseEvent, panel: ViewerPanel) {
+    console.log("EVENT!!!!!!!!!!!!!!!!!!: ", $event)
+    if(panel.id == this.store.selectSnapshot(WorkbenchState.getFocusedViewerPanelId)) return;
+    if(!panel.selectedViewerId) return;
+
+    this.store.dispatch(new SetFocusedViewer(panel.selectedViewerId))
   }
   
 }

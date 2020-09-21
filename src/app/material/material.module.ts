@@ -23,6 +23,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {  MatRadioModule } from '@angular/material';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   imports: [
@@ -49,6 +50,7 @@ import {  MatRadioModule } from '@angular/material';
     MatTabsModule,
     MatExpansionModule,
     MatRadioModule,
+    DragDropModule,
   ],
   exports: [
     MatInputModule,
@@ -73,7 +75,8 @@ import {  MatRadioModule } from '@angular/material';
     MatMenuModule,
     MatTabsModule,
     MatExpansionModule,
-    MatRadioModule
+    MatRadioModule,
+    DragDropModule,
   ],
 })
 export class MaterialModule { }

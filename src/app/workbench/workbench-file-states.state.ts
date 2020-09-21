@@ -63,49 +63,49 @@ export class WorkbenchFileStates {
   @Selector()
   public static getWorkbenchFileStateByFileId(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id];
+      return id in state.entities ? state.entities[id] : null;
     };
   }
 
   @Selector()
   public static getNormalization(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id].normalization;
+      return id in state.entities ? state.entities[id].normalization : null;
     };
   }
 
   @Selector()
   public static getTransformation(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id].transformation;
+      return id in state.entities ? state.entities[id].transformation : null;
     };
   }
 
   @Selector()
   public static getPlottingPanelState(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id].plottingPanelState;
+      return id in state.entities ? state.entities[id].plottingPanelState : null;
     };
   }
 
   @Selector()
   public static getSonificationPanelState(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id].sonificationPanelState;
+      return id in state.entities ? state.entities[id].sonificationPanelState : null;
     };
   }
 
   @Selector()
   public static getPhotometryPanelState(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id].photometryPanelState;
+      return id in state.entities ? state.entities[id].photometryPanelState : null;
     };
   }
 
   @Selector()
   public static getCustomMarkerPanelState(state: WorkbenchFileStatesModel) {
     return (id: string) => {
-      return state.entities[id].customMarkerPanelState;
+      return id in state.entities ? state.entities[id].customMarkerPanelState : null;
     };
   }
 

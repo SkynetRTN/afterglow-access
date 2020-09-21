@@ -4,22 +4,24 @@
 </div>
 
 <div *ngIf="state">
-  <p i18n>
+  <!-- <p i18n>
     Click once on the image to set the measurement's start point, move your
     mouse, then click a second time to set the end point.
-  </p>
-
-  <app-plotter
+  </p> -->
+  <div style="margin-top: -30px;">
+    <app-plotter
     #plotter
     [imageFile]="file"
     [mode]="config?.plotterMode"
     [width]="500"
-    [height]="275"
+    [height]="400"
     [lineMeasureStart]="lineStart$ | async"
     [lineMeasureEnd]="lineEnd$ | async"
     [interpolatePixels]="config?.interpolatePixels"
   >
   </app-plotter>
+  </div>
+  
   <mat-form-field appearance="outline" style="width: 300px">
     <mat-label i18n>Mode</mat-label>
     <mat-select
@@ -36,7 +38,7 @@
       <div class="form-group">
         <mat-slide-toggle
           [checked]="config?.centroidClicks"
-          [labelPosition]="before"
+          [labelPosition]="'before'"
           (change)="onCentroidClicksChange($event)"
           color="primary"
           i18n
@@ -51,7 +53,7 @@
           [checked]="config?.planetCentroiding"
           [disabled]="!config?.centroidClicks"
           color="primary"
-          [labelPosition]="before"
+          [labelPosition]="'before'"
           (change)="onPlanetCentroidingChange($event)"
           i18n
         >
@@ -65,7 +67,7 @@
       <div class="form-group">
         <mat-slide-toggle
           [checked]="config?.interpolatePixels"
-          [labelPosition]="before"
+          [labelPosition]="'before'"
           (change)="onInterpolatePixelsChange($event)"
           color="primary"
           i18n
@@ -78,7 +80,7 @@
       <div class="form-group pt-2">
         <mat-slide-toggle
           [checked]="config?.plotterSyncEnabled"
-          [labelPosition]="after"
+          [labelPosition]="'after'"
           (change)="onPlotterSyncEnabledChange($event)"
           color="primary"
           i18n

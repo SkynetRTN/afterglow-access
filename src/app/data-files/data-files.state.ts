@@ -85,14 +85,35 @@ export class DataFilesState {
   @Selector()
   public static getDataFileById(state: DataFilesStateModel) {
     return (id: string) => {
-      return state.entities[id];
+      return (id in state.entities) ? state.entities[id]: null;
     };
   }
 
   @Selector()
   public static getHeader(state: DataFilesStateModel) {
     return (id: string) => {
-      return state.entities[id].header;
+      return (id in state.entities) ? state.entities[id].header : null;
+    };
+  }
+
+  @Selector()
+  public static getHeaderLoaded(state: DataFilesStateModel) {
+    return (id: string) => {
+      return (id in state.entities) ? state.entities[id].headerLoaded : null;
+    };
+  }
+
+  @Selector()
+  public static getHistLoaded(state: DataFilesStateModel) {
+    return (id: string) => {
+      return (id in state.entities && state.entities[id].type == DataFileType.IMAGE) ? (state.entities[id] as ImageFile).histLoaded : false;
+    };
+  }
+
+  @Selector()
+  public static getHist(state: DataFilesStateModel) {
+    return (id: string) => {
+      return (id in state.entities && state.entities[id].type == DataFileType.IMAGE) ? (state.entities[id] as ImageFile).hist : null;
     };
   }
 

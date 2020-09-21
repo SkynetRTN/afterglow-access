@@ -159,10 +159,8 @@ export class AuthState {
 
       let nextUrl = localStorage.getItem("nextUrl");
       localStorage.removeItem("nextUrl");
-      //if redirecting from oauth authorize page,  remove from navigation history so back button skips page
-      ctx.dispatch(new Navigate([(nextUrl && nextUrl != "") ? nextUrl : "/"], {}, {
-        replaceUrl: true
-      }));
+
+      this.router.navigateByUrl((nextUrl && nextUrl != "") ? nextUrl : "/");
     }
     else {
       ctx.patchState({ loginPending: false, user: null, loginError: 'We encountered an unexpected error.  Please try again later.' });

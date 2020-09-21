@@ -28,6 +28,7 @@ import {
   WorkbenchStateModel,
   WorkbenchTool,
   ViewerPanel,
+  ViewerPanelContainer,
 } from "./models/workbench-state";
 import { ViewMode } from "./models/view-mode";
 import { SidebarView } from "./models/sidebar-view";
@@ -53,7 +54,7 @@ import {
 } from "../data-files/data-files.state";
 import {
   SelectDataFile,
-  CloseViewerPanel,
+  RemoveViewerLayoutItem,
   SetFocusedViewer,
   SetViewerFile,
   SyncFileNormalizations,
@@ -112,8 +113,9 @@ import {
   CreateViewer,
   CloseViewer,
   KeepViewerOpen,
-  MoveToOtherView,
+  SplitViewerPanel,
   UpdateFileInfoPanelConfig,
+  MoveViewer,
 } from "./workbench.actions";
 import {
   ImageFile,
@@ -210,15 +212,14 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   rootViewerPanelContainerId: "ROOT_CONTAINER",
   viewerIds: [],
   viewers: {},
-  viewerPanelIds: [],
-  viewerPanels: {},
-  viewerPanelContainerIds: ["ROOT_CONTAINER"],
-  viewerPanelContainers: {
+  viewerLayoutItemIds: ["ROOT_CONTAINER"],
+  viewerLayoutItems: {
     ROOT_CONTAINER: {
       id: "ROOT_CONTAINER",
+      type: "container",
       direction: "row",
-      items: [],
-    },
+      itemIds: [],
+    } as ViewerPanelContainer,
   },
   focusedViewerPanelId: null,
   viewerSyncEnabled: false,
@@ -372,38 +373,81 @@ export class WorkbenchState {
   }
 
   @Selector()
+  public static getViewerLayoutItemIds(state: WorkbenchStateModel) {
+    return state.viewerLayoutItemIds;
+  }
+
+  @Selector()
+  public static getViewerLayoutItemEntities(state: WorkbenchStateModel) {
+    return state.viewerLayoutItems;
+  }
+
+  @Selector()
+  public static getViewerLayoutItems(state: WorkbenchStateModel) {
+    return Object.values(state.viewerLayoutItems);
+  }
+
+  @Selector()
   public static getViewerPanelIds(state: WorkbenchStateModel) {
-    return state.viewerPanelIds;
+    return state.viewerLayoutItemIds.filter(
+      (id) => state.viewerLayoutItems[id].type == "panel"
+    );
   }
 
-  @Selector()
-  public static getViewerPanelEntities(state: WorkbenchStateModel) {
-    return state.viewerPanels;
+  @Selector([WorkbenchState.getViewerPanelIds])
+  public static getViewerPanelEntities(
+    state: WorkbenchStateModel,
+    viewerPanelIds: string[]
+  ) {
+    return viewerPanelIds.reduce((obj, key) => {
+      return {
+        ...obj,
+        [key]: state.viewerLayoutItems[key] as ViewerPanel,
+      };
+    }, {} as { [id: string]: ViewerPanel });
   }
 
-  @Selector()
-  public static getViewerPanels(state: WorkbenchStateModel) {
-    return Object.values(state.viewerPanels);
+  @Selector([WorkbenchState.getViewerPanelIds])
+  public static getViewerPanels(
+    state: WorkbenchStateModel,
+    viewerPanelIds: string[]
+  ) {
+    return viewerPanelIds.map((id) => state.viewerLayoutItems[id]);
   }
 
   @Selector()
   public static getViewerPanelContainerIds(state: WorkbenchStateModel) {
-    return state.viewerPanelContainerIds;
+    return state.viewerLayoutItemIds.filter(
+      (id) => state.viewerLayoutItems[id].type == "container"
+    );
   }
 
-  @Selector()
-  public static getViewerPanelContainerEntities(state: WorkbenchStateModel) {
-    return state.viewerPanelContainers;
+  @Selector([WorkbenchState.getViewerPanelContainerIds])
+  public static getViewerPanelContainerEntities(
+    state: WorkbenchStateModel,
+    viewerPanelContainerIds: string[]
+  ) {
+    return viewerPanelContainerIds.reduce((obj, key) => {
+      return {
+        ...obj,
+        [key]: state.viewerLayoutItems[key] as ViewerPanelContainer,
+      };
+    }, {} as { [id: string]: ViewerPanelContainer });
   }
 
-  @Selector()
-  public static getViewerPanelContainers(state: WorkbenchStateModel) {
-    return Object.values(state.viewerPanelContainers);
+  @Selector([WorkbenchState.getViewerPanelContainerIds])
+  public static getViewerContainerPanels(
+    state: WorkbenchStateModel,
+    viewerPanelContainerIds: string[]
+  ) {
+    return viewerPanelContainerIds.map((id) => state.viewerLayoutItems[id]);
   }
 
   @Selector()
   public static getRootViewerPanelContainer(state: WorkbenchStateModel) {
-    return state.viewerPanelContainers[state.rootViewerPanelContainerId];
+    return state.viewerLayoutItems[
+      state.rootViewerPanelContainerId
+    ] as ViewerPanelContainer;
   }
 
   @Selector()
@@ -414,7 +458,7 @@ export class WorkbenchState {
   @Selector()
   public static getViewerById(state: WorkbenchStateModel) {
     return (id: string) => {
-      return state.viewers[id];
+      return id in state.viewers ? state.viewers[id] : null;
     };
   }
 
@@ -816,12 +860,38 @@ export class WorkbenchState {
     { viewerId }: SetFocusedViewer
   ) {
     setState((state: WorkbenchStateModel) => {
-      let panel = Object.values(state.viewerPanels).find((p) => {
-        return p.viewerIds.includes(viewerId);
-      });
+      let panel = Object.values(state.viewerLayoutItems).find((p) => {
+        return (
+          p.type == "panel" && (p as ViewerPanel).viewerIds.includes(viewerId)
+        );
+      }) as ViewerPanel;
+
       if (panel) {
+
+        
+        if(state.viewerSyncEnabled || state.normalizationSyncEnabled || state.plottingPanelConfig.plotterSyncEnabled) {
+          // before changing the selected viewer,  sync the new viewer's file with the old
+          let referenceFileId = this.store.selectSnapshot(WorkbenchState.getFocusedFileId)
+          let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+          let fileId = state.viewers[viewerId].fileId;
+          if(referenceFileId && fileId) {
+            console.log(referenceFileId, fileId,dataFiles[referenceFileId], dataFiles[fileId])
+            if(state.viewerSyncEnabled) {
+              this.store.dispatch(new SyncFileTransformations(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
+            }
+            if(state.normalizationSyncEnabled) {
+              this.store.dispatch(new SyncFileNormalizations(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
+            }
+            if(state.plottingPanelConfig.plotterSyncEnabled) {
+              this.store.dispatch(new SyncFilePlotters(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
+            }
+          }
+          
+        }
+        
+
         state.focusedViewerPanelId = panel.id;
-        state.viewerPanels[panel.id].selectedViewerId = viewerId;
+        panel.selectedViewerId = viewerId;
 
         let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
         if (state.viewers[viewerId].fileId in dataFiles) {
@@ -850,29 +920,44 @@ export class WorkbenchState {
       };
       state.viewerIds.push(id);
 
-      if (panelId == null || !state.viewerPanelIds.includes(panelId)) {
-        if (state.viewerPanelIds.length == 0) {
+      if (
+        panelId == null ||
+        !state.viewerLayoutItemIds.includes(panelId) ||
+        state.viewerLayoutItems[panelId].type != "panel"
+      ) {
+        //if a valid panel ID was not provided
+        if (
+          state.viewerLayoutItemIds.filter(
+            (id) => state.viewerLayoutItems[id].type == "panel"
+          ).length == 0
+        ) {
+          //if no panels exist, create a new panel
           panelId = `PANEL_${state.nextViewerPanelIdSeed++}`;
-          state.viewerPanelIds.push(panelId);
-          state.viewerPanels[panelId] = {
+          state.viewerLayoutItemIds.push(panelId);
+          state.viewerLayoutItems[panelId] = {
             id: panelId,
+            type: "panel",
             selectedViewerId: null,
             viewerIds: [],
-          };
+          } as ViewerPanel;
 
           //add panel to layout
-          let rootContainer =
-            state.viewerPanelContainers[state.rootViewerPanelContainerId];
-          rootContainer.items.push({ type: "panel", id: panelId });
+          let rootContainer = state.viewerLayoutItems[
+            state.rootViewerPanelContainerId
+          ] as ViewerPanelContainer;
+          rootContainer.itemIds.push(panelId);
         } else {
-          panelId = state.viewerPanels[state.focusedViewerPanelId].id;
+          // use currently focused panel
+          panelId = state.viewerLayoutItems[state.focusedViewerPanelId].id;
         }
       }
 
-      if (state.viewerPanelIds.includes(panelId)) {
-        let panel = state.viewerPanels[panelId];
+      if (state.viewerLayoutItemIds.includes(panelId)) {
+        let panel = state.viewerLayoutItems[panelId] as ViewerPanel;
         panel.viewerIds.push(id);
-        panel.selectedViewerId = id;
+        // if the new viewer is selected before the viewer's file is set
+        // the SetViewerFile action will not be successful at syncing plotting, normalization, and transformations
+        // panel.selectedViewerId = id;
       }
       if (viewer.fileId) dispatch(new SetViewerFile(id, viewer.fileId));
 
@@ -880,23 +965,85 @@ export class WorkbenchState {
     });
   }
 
-  @Action(CloseViewerPanel)
+  @Action(RemoveViewerLayoutItem)
   @ImmutableContext()
-  public closeViewerPanel(
+  public removeViewerLayoutItem(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { viewerPanelId }: CloseViewerPanel
+    { viewerLayoutItemId }: RemoveViewerLayoutItem
   ) {
     setState((state: WorkbenchStateModel) => {
-      //TODO: close viewers
+      let containers = state.viewerLayoutItemIds
+        .filter((itemId) => state.viewerLayoutItems[itemId].type == "container")
+        .map(
+          (panelId) => state.viewerLayoutItems[panelId] as ViewerPanelContainer
+        );
 
-      state.viewerPanelIds = state.viewerPanelIds.filter(
-        (id) => id != viewerPanelId
-      );
-      if (viewerPanelId in state.viewerPanels) {
-        delete state.viewerPanels[viewerPanelId];
+      let panels = state.viewerLayoutItemIds
+        .filter((itemId) => state.viewerLayoutItems[itemId].type == "panel")
+        .map(
+          (panelId) => state.viewerLayoutItems[panelId] as ViewerPanelContainer
+        );
+
+      if (viewerLayoutItemId in state.viewerLayoutItems) {
+        // if valid viewer layout item id
+        if (state.viewerLayoutItems[viewerLayoutItemId].type == "container") {
+          // container
+          if (viewerLayoutItemId == state.rootViewerPanelContainerId) {
+            //can't remove root
+            return state;
+          }
+
+          // TODO: handle non-empty containers
+        } else {
+          // panel
+          //TODO: handle panels with viewers
+
+          if (state.focusedViewerPanelId == viewerLayoutItemId) {
+            let nextPanel = panels.find(
+              (panel) => panel.id != viewerLayoutItemId
+            );
+            state.focusedViewerPanelId = nextPanel ? nextPanel.id : null;
+          }
+        }
+
+        let parentContainer = containers.find((container) =>
+          container.itemIds.includes(viewerLayoutItemId)
+        );
+
+        if (parentContainer) {
+          // remove from parent container
+          parentContainer.itemIds = parentContainer.itemIds.filter(
+            (id) => id != viewerLayoutItemId
+          );
+
+          if (
+            parentContainer.id != state.rootViewerPanelContainerId &&
+            parentContainer.itemIds.length == 1
+          ) {
+            // container is no longer necessary, merge up
+            let parentParentContainer = containers.find((container) =>
+              container.itemIds.includes(parentContainer.id)
+            );
+
+            if (parentParentContainer) {
+              let index = parentParentContainer.itemIds.indexOf(
+                parentContainer.id
+              );
+              parentParentContainer.itemIds[index] = parentContainer.itemIds[0];
+
+              this.store.dispatch(
+                new RemoveViewerLayoutItem(parentContainer.id)
+              );
+            }
+          }
+        }
+
+        //remove item
+        state.viewerLayoutItemIds = state.viewerLayoutItemIds.filter(
+          (id) => id != viewerLayoutItemId
+        );
+        delete state.viewerLayoutItems[viewerLayoutItemId];
       }
-
-      //remove panel from layout
 
       return state;
     });
@@ -910,27 +1057,35 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       state.viewerIds = state.viewerIds.filter((id) => id != viewerId);
-      if (viewerId in state.viewers) delete state.viewers[viewerId];
+      if (viewerId in state.viewers) {
+        delete state.viewers[viewerId];
+      }
 
-      state.viewerPanelIds
-        .map((panelId) => state.viewerPanels[panelId])
-        .forEach((panel) => {
-          let index = panel.viewerIds.indexOf(viewerId);
-          if (index > -1) {
-            panel.viewerIds.splice(index, 1);
-            if (panel.selectedViewerId == viewerId) {
-              if (panel.viewerIds.length != 0) {
-                panel.selectedViewerId =
-                  state.viewerIds[
-                    Math.max(0, Math.min(state.viewerIds.length - 1, index))
-                  ];
-              } else {
-                panel.selectedViewerId = null;
-                this.store.dispatch(new CloseViewerPanel(panel.id));
-              }
+      let panels = state.viewerLayoutItemIds
+        .filter((itemId) => state.viewerLayoutItems[itemId].type == "panel")
+        .map((panelId) => state.viewerLayoutItems[panelId] as ViewerPanel);
+
+      let parentPanel = panels.find((panel) =>
+        panel.viewerIds.includes(viewerId)
+      );
+
+      if (parentPanel) {
+        let index = parentPanel.viewerIds.indexOf(viewerId);
+        if (index > -1) {
+          parentPanel.viewerIds.splice(index, 1);
+          if (parentPanel.selectedViewerId == viewerId) {
+            if (parentPanel.viewerIds.length != 0) {
+              parentPanel.selectedViewerId =
+                state.viewerIds[
+                  Math.max(0, Math.min(state.viewerIds.length - 1, index))
+                ];
+            } else {
+              parentPanel.selectedViewerId = null;
+              this.store.dispatch(new RemoveViewerLayoutItem(parentPanel.id));
             }
           }
-        });
+        }
+      }
 
       return state;
     });
@@ -948,130 +1103,154 @@ export class WorkbenchState {
     });
   }
 
-  @Action(MoveToOtherView)
+  @Action(SplitViewerPanel)
   @ImmutableContext()
-  public moveToOtherView(
+  public splitViewerPanel(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { viewerId }: MoveToOtherView
+    { viewerId, direction }: SplitViewerPanel
   ) {
     setState((state: WorkbenchStateModel) => {
       //find panel
-      let panels = state.viewerPanelIds.map(
-        (panelId) => state.viewerPanels[panelId]
-      );
+      let panels = state.viewerLayoutItemIds
+        .filter((itemId) => state.viewerLayoutItems[itemId].type == "panel")
+        .map((panelId) => state.viewerLayoutItems[panelId] as ViewerPanel);
+
+      let containers = state.viewerLayoutItemIds
+        .filter((itemId) => state.viewerLayoutItems[itemId].type == "container")
+        .map(
+          (panelId) => state.viewerLayoutItems[panelId] as ViewerPanelContainer
+        );
+
       let sourcePanel = panels.find((panel) =>
         panel.viewerIds.includes(viewerId)
       );
 
       if (sourcePanel) {
+        if (sourcePanel.viewerIds.length == 1) {
+          // cannot split a panel which only has one viewer
+          return state;
+        }
+
         console.log("FOUND PANEL: ", sourcePanel);
         let sourcePanelId = sourcePanel.id;
-        let containers = state.viewerPanelContainerIds.map(
-          (containerId) => state.viewerPanelContainers[containerId]
-        );
+
         let sourceContainer = containers.find((container) =>
-          container.items
-            .filter((item) => item.type == "panel")
-            .map((item) => item.id)
-            .includes(sourcePanel.id)
+          container.itemIds.includes(sourcePanelId)
         );
+
         if (sourceContainer) {
           console.log("FOUND CONTAINER: ", sourceContainer);
           let sourceContainerId = sourceContainer.id;
 
           //create new panel
           let nextPanelId = `PANEL_${state.nextViewerPanelIdSeed++}`;
-          state.viewerPanels[nextPanelId] = {
+          state.viewerLayoutItems[nextPanelId] = {
             id: nextPanelId,
+            type: "panel",
             selectedViewerId: viewerId,
             viewerIds: [viewerId],
-          };
-          state.viewerPanelIds.push(nextPanelId);
+          } as ViewerPanel;
 
-          //create new container
-          let nextContainerId = `CONTAINER_${state.nextViewerPanelContainerIdSeed++}`;
-          state.viewerPanelContainers[nextContainerId] = {
-            id: nextContainerId,
-            direction: "row",
-            items: [
-              {
-                type: "panel",
-                id: nextPanelId,
-              },
-            ],
-          };
-          state.viewerPanelContainerIds.push(nextContainerId);
+          state.viewerLayoutItemIds.push(nextPanelId);
 
-          //add container to layout
-          state.viewerPanelContainers[sourceContainer.id].items.push({
-            type: "container",
-            id: nextContainerId,
-          });
+          //remove viewer from source panel
+          sourcePanel.viewerIds = sourcePanel.viewerIds.filter(
+            (id) => id != viewerId
+          );
+          sourcePanel.selectedViewerId = sourcePanel.viewerIds[0];
+          let sourcePanelIndex = sourceContainer.itemIds.indexOf(sourcePanelId);
+
+          if (
+            (sourceContainer.direction == "column" &&
+              ["up", "down"].includes(direction)) ||
+            (sourceContainer.direction == "row" &&
+              ["left", "right"].includes(direction))
+          ) {
+            //add panel to parent container if same direction is requested
+
+            console.log(
+              "INSERTTING NEW PANEL IN CONTAINER AT INDEX : ",
+              sourcePanelIndex,
+              sourceContainer.itemIds
+            );
+
+            sourceContainer.itemIds.splice(
+              ["up", "left"].includes(direction)
+                ? sourcePanelIndex
+                : sourcePanelIndex + 1,
+              0,
+              nextPanelId
+            );
+          } else {
+            //create new container to wrap source panel and new panel
+            let nextContainerId = `CONTAINER_${state.nextViewerPanelContainerIdSeed++}`;
+            state.viewerLayoutItems[nextContainerId] = {
+              id: nextContainerId,
+              type: "container",
+              direction: ["up", "down"].includes(direction) ? "column" : "row",
+              itemIds: [sourcePanel.id],
+            } as ViewerPanelContainer;
+
+            (state.viewerLayoutItems[
+              nextContainerId
+            ] as ViewerPanelContainer).itemIds.splice(
+              ["up", "left"].includes(direction) ? 0 : 1,
+              0,
+              nextPanelId
+            );
+
+            state.viewerLayoutItemIds.push(nextContainerId);
+
+            //add wrapper container to source container
+            sourceContainer.itemIds[sourcePanelIndex] = nextContainerId;
+          }
+
           console.log("SETTING FOCUSED VIEWER PANEL ID: ", nextPanelId);
           state.focusedViewerPanelId = nextPanelId;
-
-          //remove viewer from original panel
-          let sourcePanelViewerIndex = sourcePanel.viewerIds.indexOf(viewerId);
-          sourcePanel.viewerIds.splice(sourcePanelViewerIndex, 1);
-          if (sourcePanel.viewerIds.length == 0) {
-            //no more viewers - delete panel
-            state.viewerPanelIds.splice(
-              state.viewerPanelIds.indexOf(sourcePanelId)
-            );
-            delete state.viewerPanels[sourcePanelId];
-
-            //remove panel from container
-            sourceContainer.items = sourceContainer.items.filter(
-              (item) => item.type != "panel" || item.id != sourcePanelId
-            );
-
-            if (sourceContainer.items.length == 0) {
-              //empty container - delete container
-              state.viewerPanelContainerIds.splice(
-                state.viewerPanelContainerIds.indexOf(sourceContainerId)
-              );
-              delete state.viewerPanelContainers[sourceContainerId];
-
-              //remove container from parent container
-              let parentContainer = containers.find((container) =>
-                container.items
-                  .filter((item) => item.type == "container")
-                  .map((item) => item.id)
-                  .includes(sourceContainerId)
-              );
-              if(parentContainer) {
-                parentContainer.items = parentContainer.items.filter(
-                  (item) => item.type != "container" || item.id != sourceContainerId
-                );
-              }
-            }
-          } else {
-            if (sourcePanel.selectedViewerId == viewerId) {
-              sourcePanel.selectedViewerId =
-                sourcePanel.viewerIds.length == 0
-                  ? null
-                  : sourcePanel.viewerIds[
-                      Math.min(
-                        Math.max(0, sourcePanelViewerIndex - 1),
-                        sourcePanel.viewerIds.length - 1
-                      )
-                    ];
-            }
-          }
         }
       }
-      // TODO VIEWER CHANGE
-      // if (state.primaryViewerIds.includes(viewerId)) {
-      //   state.primaryViewerIds = state.primaryViewerIds.filter(
-      //     (id) => id != viewerId
-      //   );
-      //   state.secondaryViewerIds.push(viewerId);
-      // } else if (state.secondaryViewerIds.includes(viewerId)) {
-      //   state.secondaryViewerIds = state.secondaryViewerIds.filter(
-      //     (id) => id != viewerId
-      //   );
-      //   state.primaryViewerIds.push(viewerId);
-      // }
+
+      return state;
+    });
+  }
+
+  @Action(MoveViewer)
+  @ImmutableContext()
+  public moveViewer(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { sourceViewerId, targetViewerId }: MoveViewer
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      //find panel
+      let panels = state.viewerLayoutItemIds
+        .filter((itemId) => state.viewerLayoutItems[itemId].type == "panel")
+        .map((panelId) => state.viewerLayoutItems[panelId] as ViewerPanel);
+
+      let sourcePanel = panels.find((panel) =>
+        panel.viewerIds.includes(sourceViewerId)
+      );
+
+      let targetPanel = panels.find((panel) =>
+        panel.viewerIds.includes(targetViewerId)
+      );
+
+      if(sourcePanel && targetPanel) {
+        let targetViewerIndex = targetPanel.viewerIds.indexOf(targetViewerId);
+        let sourceViewerIndex = sourcePanel.viewerIds.indexOf(sourceViewerId);
+        targetPanel.viewerIds.splice(targetViewerIndex, 0, sourceViewerId);
+        targetPanel.selectedViewerId = sourceViewerId;
+        if(sourcePanel.id == targetPanel.id) {
+          sourceViewerIndex += (targetViewerIndex > sourceViewerIndex) ? 0 : 1;
+        }
+        sourcePanel.viewerIds.splice(sourceViewerIndex, 1)
+
+        if(sourcePanel.viewerIds.length == 0) {
+          this.store.dispatch(new RemoveViewerLayoutItem(sourcePanel.id))
+        }
+        else if(sourcePanel.id != targetPanel.id) {
+          sourcePanel.selectedViewerId = sourcePanel.viewerIds[Math.max(0, Math.min(sourcePanel.viewerIds.length-1, sourceViewerIndex-1))];
+        }
+      }
       return state;
     });
   }
@@ -1100,7 +1279,9 @@ export class WorkbenchState {
     { viewerId, markers }: SetViewerMarkers
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.viewers[viewerId].markers = markers;
+      if(viewerId in state.viewers) {
+        state.viewers[viewerId].markers = markers;
+      }
       return state;
     });
   }
@@ -1132,25 +1313,34 @@ export class WorkbenchState {
     let actions = [];
     let dataFile = dataFiles[fileId] as ImageFile;
     if (dataFile && viewer) {
-      let originalFileId;
+
+      //get current focused file id
+      let referenceFileId: string = null;
+      let focusedPanel = state.viewerLayoutItems[state.focusedViewerPanelId]
+      if(focusedPanel) {
+        let selectedViewerId = (focusedPanel as ViewerPanel).selectedViewerId;
+        if(selectedViewerId && selectedViewerId in state.viewers)
+        referenceFileId = state.viewers[selectedViewerId].fileId
+      }
+
+      console.log("CURRENT FOCUSED FILE ID: ", referenceFileId);
+      console.log("SET VEIWER FILE: ", viewerId, fileId)
+      
       setState((state: WorkbenchStateModel) => {
-        originalFileId = state.viewers[viewerId].fileId;
         state.viewers[viewerId].fileId = fileId;
+        //for a more responsive feel, set the panel's selected viewer before loading
+        let panel = Object.values(state.viewerLayoutItems).find(item => item.type == "panel" && (item as ViewerPanel).viewerIds.includes(viewerId)) as ViewerPanel;
+        if(panel) {
+          state.focusedViewerPanelId = panel.id
+          panel.selectedViewerId = viewerId
+        }
         return state;
       });
 
-      if (dataFile.headerLoaded && dataFile.histLoaded) {
-        let referenceFileId = originalFileId;
-        if (referenceFileId == null) {
-          let referenceViewer = WorkbenchState.getViewers(state).find(
-            (viewer, index) =>
-              viewer.viewerId != viewerId && viewer.fileId != null
-          );
-          if (referenceViewer) referenceFileId = referenceViewer.fileId;
-        }
-
+      function onDataFileLoad(store: Store) {
+        console.log("ON DATA FILE LOAD: ", viewerId, fileId, referenceFileId);
         //normalization
-        let imageFileStates = this.store.selectSnapshot(
+        let imageFileStates = store.selectSnapshot(
           WorkbenchFileStates.getEntities
         );
         let normalization = imageFileStates[dataFile.id].normalization;
@@ -1201,7 +1391,14 @@ export class WorkbenchState {
             );
         }
 
+        actions.push(new SetFocusedViewer(viewerId));
+
         return dispatch(actions);
+      }
+
+      if (dataFile.headerLoaded && dataFile.histLoaded) {
+        return onDataFileLoad(this.store);
+        
       } else {
         actions.push(new LoadDataFile(fileId));
 
@@ -1218,7 +1415,7 @@ export class WorkbenchState {
           filter((r) => r.action.fileId == fileId),
           take(1),
           filter((r) => r.result.successful),
-          flatMap((action) => dispatch(new SetViewerFile(viewerId, fileId)))
+          flatMap((action) => onDataFileLoad(this.store))
         );
 
         return merge(dispatch(actions), next$);
@@ -1585,14 +1782,11 @@ export class WorkbenchState {
     let focusedViewer = this.store.selectSnapshot(
       WorkbenchState.getFocusedViewer
     );
+
     if (
-      !focusedViewer ||
-      !focusedViewer.fileId ||
-      (dataFiles.map((f) => f.id).indexOf(focusedViewer.fileId) == -1 &&
-        dataFiles.length != 0) ||
-      (dataFileEntities[focusedViewer.fileId] &&
-        dataFileEntities[focusedViewer.fileId].type == DataFileType.IMAGE &&
-        !imageFileStateEntities[focusedViewer.fileId].normalization.initialized)
+      !focusedViewer || //no viewers have focus
+      !focusedViewer.fileId || //focused viewer has no assigned file
+      !(focusedViewer.fileId in dataFileEntities) //focused viewer's file is no longer in the library
     ) {
       if (dataFiles[0]) {
         dispatch(new SelectDataFile(dataFiles[0].id));
@@ -1606,34 +1800,36 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { fileId }: RemoveDataFile
   ) {
-    setState((state: WorkbenchStateModel) => {
-      WorkbenchState.getViewers(state).forEach((v) => {
-        if (v.fileId == fileId) v.fileId = null;
-      });
-      return state;
-    });
-
-    let focusedFileId = this.store.selectSnapshot(
-      WorkbenchState.getFocusedFileId
-    );
-    if (focusedFileId == fileId) {
-      let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
-      let index = dataFiles.map((f) => f.id).indexOf(fileId);
-      if (index != -1 && dataFiles.length != 1) {
-        this.actions$
-          .pipe(
-            ofActionCompleted(RemoveDataFile),
-            take(1),
-            filter((a) => a.result.successful)
-          )
-          .subscribe(() => {
-            dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
-            let nextFile =
-              dataFiles[Math.max(0, Math.min(dataFiles.length - 1, index))];
-            if (nextFile) dispatch(new SelectDataFile(nextFile.id));
-          });
+    let state = getState();
+    state.viewerIds.forEach(viewerId => {
+      let viewer = state.viewers[viewerId];
+      if(viewer.fileId == fileId) {
+        this.store.dispatch(new CloseViewer(viewerId))
       }
-    }
+    })
+
+
+    // let focusedFileId = this.store.selectSnapshot(
+    //   WorkbenchState.getFocusedFileId
+    // );
+    // if (focusedFileId == fileId) {
+    //   let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
+    //   let index = dataFiles.map((f) => f.id).indexOf(fileId);
+    //   if (index != -1 && dataFiles.length != 1) {
+    //     this.actions$
+    //       .pipe(
+    //         ofActionCompleted(RemoveDataFile),
+    //         take(1),
+    //         filter((a) => a.result.successful)
+    //       )
+    //       .subscribe(() => {
+    //         dataFiles = this.store.selectSnapshot(DataFilesState.getDataFiles);
+    //         let nextFile =
+    //           dataFiles[Math.max(0, Math.min(dataFiles.length - 1, index))];
+    //         if (nextFile) dispatch(new SelectDataFile(nextFile.id));
+    //       });
+    //   }
+    // }
   }
 
   @Action(RemoveDataFileSuccess)
@@ -1686,7 +1882,6 @@ export class WorkbenchState {
       if (targetViewer) {
         //temporary viewer exists
         dispatch(new SetViewerFile(targetViewer.viewerId, dataFile.id));
-        dispatch(new SetFocusedViewer(targetViewer.viewerId));
         return;
       }
 
@@ -1892,7 +2087,7 @@ export class WorkbenchState {
 
     if (!srcFile) return;
 
-    let srcHasWcs = srcFile.wcs.isValid();
+    let srcHasWcs = srcFile.wcs && srcFile.wcs.isValid();
     let srcImageTransform =
       imageFileStates[srcFile.id].transformation.imageTransform;
     let srcViewportTransform =
@@ -1901,7 +2096,7 @@ export class WorkbenchState {
     targetFiles.forEach((targetFile) => {
       if (!targetFile || targetFile.id == srcFile.id) return;
 
-      let targetHasWcs = targetFile.wcs.isValid();
+      let targetHasWcs = targetFile.wcs && targetFile.wcs.isValid();
 
       if (srcHasWcs && targetHasWcs) {
         let srcWcs = srcFile.wcs;
@@ -2458,63 +2653,54 @@ export class WorkbenchState {
       correlationId,
     }: ImportFromSurvey
   ) {
-    // TODO VIEWER CHANGE
-    // let importFromSurveyCorrId = this.correlationIdGenerator.next();
-    // setState((state: WorkbenchStateModel) => {
-    //   state.dssImportLoading = true;
-    //   return state;
-    // });
-    // let importCompleted$ = this.actions$.pipe(
-    //   ofActionDispatched(ImportAssetsCompleted),
-    //   filter<ImportAssetsCompleted>(
-    //     (action) => action.correlationId == importFromSurveyCorrId
-    //   ),
-    //   take(1),
-    //   flatMap((action) => {
-    //     dispatch(new LoadLibrary());
-    //     dispatch(new ImportFromSurveySuccess());
-    //     let state = getState();
-    //     let viewers = WorkbenchState.getViewers(state);
-    //     let targetViewer = viewers.find(
-    //       (v) => v.viewerId != state.selectedPrimaryViewerId
-    //     );
-    //     return this.actions$.pipe(
-    //       ofActionCompleted(LoadLibrary),
-    //       take(1),
-    //       filter((loadLibraryAction) => loadLibraryAction.result.successful),
-    //       tap((loadLibraryAction) => {
-    //         setState((state: WorkbenchStateModel) => {
-    //           state.dssImportLoading = false;
-    //           return state;
-    //         });
-    //         if (targetViewer) {
-    //           // if(getState().viewMode == ViewMode.SINGLE ) {
-    //           //   dispatch(new SetViewMode(ViewMode.SPLIT_VERTICAL));
-    //           // }
-    //           dispatch(new SetFocusedViewer(targetViewer.viewerId));
-    //           dispatch(new SelectDataFile(action.fileIds[0].toString()));
-    //         }
-    //       })
-    //     );
-    //   })
-    // );
-    // dispatch(
-    //   new ImportAssets(
-    //     surveyDataProviderId,
-    //     [
-    //       {
-    //         name: "",
-    //         collection: false,
-    //         path: `DSS\\${
-    //           raHours * 15
-    //         },${decDegs}\\${widthArcmins},${heightArcmins}`,
-    //         metadata: {},
-    //       },
-    //     ],
-    //     importFromSurveyCorrId
-    //   )
-    // );
-    // return importCompleted$;
+    let importFromSurveyCorrId = this.correlationIdGenerator.next();
+    setState((state: WorkbenchStateModel) => {
+      state.dssImportLoading = true;
+      return state;
+    });
+    let importCompleted$ = this.actions$.pipe(
+      ofActionDispatched(ImportAssetsCompleted),
+      filter<ImportAssetsCompleted>(
+        (action) => action.correlationId == importFromSurveyCorrId
+      ),
+      take(1),
+      flatMap((action) => {
+        dispatch(new LoadLibrary());
+        dispatch(new ImportFromSurveySuccess());
+        let state = getState();
+        let viewers = WorkbenchState.getViewers(state);
+
+        return this.actions$.pipe(
+          ofActionCompleted(LoadLibrary),
+          take(1),
+          filter((loadLibraryAction) => loadLibraryAction.result.successful),
+          tap((loadLibraryAction) => {
+            setState((state: WorkbenchStateModel) => {
+              state.dssImportLoading = false;
+              return state;
+            });
+            dispatch(new SelectDataFile(action.fileIds[0].toString()));
+          })
+        );
+      })
+    );
+    dispatch(
+      new ImportAssets(
+        surveyDataProviderId,
+        [
+          {
+            name: "",
+            collection: false,
+            path: `DSS\\${
+              raHours * 15
+            },${decDegs}\\${widthArcmins},${heightArcmins}`,
+            metadata: {},
+          },
+        ],
+        importFromSurveyCorrId
+      )
+    );
+    return importCompleted$;
   }
 
   /* Source Extraction */

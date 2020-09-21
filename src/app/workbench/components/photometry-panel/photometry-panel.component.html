@@ -25,7 +25,7 @@
 
 
       <div class="form-row mt-3">
-        <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="before"
+        <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"
           (change)="onCentroidClicksChange($event)" i18n>
           Centroid clicks
         </mat-slide-toggle>
@@ -61,17 +61,17 @@
 
 
     <div class="form-row mb-2">
-      <mat-slide-toggle [checked]="config?.showSourcesFromAllFiles" [labelPosition]="after"
+      <mat-slide-toggle [checked]="config?.showSourcesFromAllFiles" [labelPosition]="'after'"
         (change)="onShowSourcesFromAllFilesChange($event)" i18n>
         Show Sources From All Files
       </mat-slide-toggle>
 
-      <mat-slide-toggle [checked]="config?.showSourceLabels" [labelPosition]="after"
+      <mat-slide-toggle [checked]="config?.showSourceLabels" [labelPosition]="'after'"
         (change)="onShowSourceLabelsChange($event)" i18n>
         Source Labels
       </mat-slide-toggle>
 
-      <mat-slide-toggle [checked]="config?.autoPhot" [labelPosition]="after"
+      <mat-slide-toggle [checked]="config?.autoPhot" [labelPosition]="'after'"
         (change)="onAutoPhotChange($event)" i18n>
         Auto-phot
       </mat-slide-toggle>
@@ -193,8 +193,8 @@
       {{mergeError}}
     </div>
 
-    <div *ngIf="selectedSourceActionError" class="mt-2  alert alert-danger">
-      {{ selectedSourceActionError }}
+    <div *ngIf="mergeError" class="mt-2  alert alert-danger">
+      {{ mergeError }}
     </div>
 
     <hr>
@@ -233,19 +233,19 @@
           [color]="'accent'"></mat-progress-bar>
       </div>
       <ng-template #downloadBatchResultsBlock>
-        <div class="mb-3" *ngIf="(batchPhotJobEntity$ | async); let batchPhotJobEntity;">
+        <div class="mb-3" *ngIf="(batchPhotJobResult$ | async); let batchPhotJobResult;">
           <div
-            *ngIf="batchPhotJobEntity.job.result.errors.length != 0 && batchPhotJobEntity.job.result.data.length == 0;else resultsBlock">
+            *ngIf="batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0;else resultsBlock">
             <div class="alert alert-danger">
               An unexpected error occurred during batch photometry.
 
             </div>
           </div>
           <ng-template #resultsBlock>
-            <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobEntity)">
+            <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobResult)">
               <mat-icon>save_alt</mat-icon>
-              <span i18n>Download Batch Photometry Data - {{batchPhotJobEntity.job.sources.length}} source(s) in
-                {{batchPhotJobEntity.job.file_ids.length}}
+              <span i18n>Download Batch Photometry Data - {{(batchPhotJob$ | async)?.sources.length}} source(s) in
+                {{(batchPhotJob$ | async)?.file_ids.length}}
                 file(s)</span>
             </button>
           </ng-template>

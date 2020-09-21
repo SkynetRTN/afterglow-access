@@ -17,6 +17,10 @@
           background: mat-color($background, card);
         }
 
+        .global-settings {
+          max-width: 375px;
+        }
+
         // .mat-icon {
         //   color: mat-color($foreground, icon);
         // }
@@ -72,11 +76,11 @@
         }
 
         .workbench-config-panel.aligner {
-          width: 550px;
+          width: 450px;
         }
 
         .workbench-config-panel.stacker {
-          width: 550px;
+          width: 450px;
         }
         
         .full-screen.workbench-config-panel {

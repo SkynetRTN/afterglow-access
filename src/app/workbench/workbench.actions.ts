@@ -56,10 +56,10 @@ export class CreateViewer {
   constructor(public viewer: Viewer, public panelId: string) { }
 }
 
-export class CloseViewerPanel {
-  public static readonly type = '[Workbench] Close Viewer Panel';
+export class RemoveViewerLayoutItem {
+  public static readonly type = '[Workbench] Remove Viewer Layout Item';
 
-  constructor(public viewerPanelId: string) { }
+  constructor(public viewerLayoutItemId: string) { }
 }
 
 export class CloseViewer {
@@ -74,10 +74,16 @@ export class KeepViewerOpen {
   constructor(public viewerId: string) { }
 }
 
-export class MoveToOtherView {
-  public static readonly type = '[Workbench] Move To Other View ';
+export class SplitViewerPanel {
+  public static readonly type = '[Workbench] Split Viewer Panel ';
 
-  constructor(public viewerId: string) { }
+  constructor(public viewerId: string, public direction: 'up' | 'down' | 'left' | 'right' = 'right' ) { }
+}
+
+export class MoveViewer {
+  public static readonly type = '[Workbench] Move Viewer ';
+
+  constructor(public sourceViewerId: string, public targetViewerId: string ) { }
 }
 
 export class SetViewerFile {

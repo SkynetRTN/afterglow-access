@@ -530,9 +530,8 @@ export class PhotometryPageComponent
     );
   }
 
-  downloadBatchPhotData(row: JobEntity) {
-    let result = row.result as PhotometryJobResult;
-
+  downloadBatchPhotData(result: PhotometryJobResult) {
+    console.log("HERE: ", result);
     let data = this.papa.unparse(
       result.data.map((d) => {
         let time = d.time
@@ -581,7 +580,7 @@ export class PhotometryPageComponent
       // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
     );
     var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
-    saveAs(blob, `afterglow_photometry_${row.job.id}.csv`);
+    saveAs(blob, `afterglow_photometry.csv`);
 
     // let sources = this.store.selectSnapshot(SourcesState.getEntities);
     // let data = this.store.selectSnapshot(PhotDataState.getSourcesPhotData).map(d => {

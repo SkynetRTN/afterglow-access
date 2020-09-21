@@ -357,7 +357,7 @@ export class DataProvidersState {
       }),
       filter(action => action.errors.length == 0),
       flatMap(action => {
-         dispatch(new Navigate(['/workbench']));
+         dispatch(new Navigate(['/']));
          dispatch(new LoadLibrary());
          return this.actions$.pipe(
            ofActionCompleted(LoadLibrary),

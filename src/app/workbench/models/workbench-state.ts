@@ -94,16 +94,20 @@ export interface StackingPanelConfig {
 }
 
 export interface ViewerPanelContainer {
-  id: string
+  id: string;
+  type: 'container'
   direction: 'row' | 'row-reverse' | 'column' | 'column-reverse';
-  items: Array<{type: 'panel' | 'container', id: string}>;
+  itemIds: Array<string>;
 }
 
 export interface ViewerPanel {
   id: string;
+  type: 'panel'
   viewerIds: string[];
   selectedViewerId: string;
 }
+
+export type ViewerLayoutItem = ViewerPanelContainer | ViewerPanel
 
 export interface WorkbenchStateModel {
   version: number,
@@ -121,10 +125,8 @@ export interface WorkbenchStateModel {
   nextViewerPanelContainerIdSeed: number;
   viewerIds: string[];
   viewers: {[id:string]: Viewer};
-  viewerPanelIds: string[];
-  viewerPanels: {[id:string]: ViewerPanel};
-  viewerPanelContainerIds: string[];
-  viewerPanelContainers: {[id:string]: ViewerPanelContainer};
+  viewerLayoutItems: {[id:string]: ViewerLayoutItem};
+  viewerLayoutItemIds: string[];
   focusedViewerPanelId: string;
   
   viewerSyncEnabled: boolean;
