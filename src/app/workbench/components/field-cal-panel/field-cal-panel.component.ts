@@ -32,8 +32,8 @@ import { SetActiveTool, SetSelectedFieldCal, SetSelectedCatalog, AddFieldCalSour
 
 @Component({
   selector: "app-field-cal-page",
-  templateUrl: "./field-cal-page.component.html",
-  styleUrls: ["./field-cal-page.component.scss"]
+  templateUrl: "./field-cal-panel.component.html",
+  styleUrls: ["./field-cal-panel.component.scss"]
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FieldCalPageComponent implements OnInit, AfterViewInit, OnDestroy {
