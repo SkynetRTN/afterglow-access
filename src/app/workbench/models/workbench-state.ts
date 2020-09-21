@@ -110,7 +110,7 @@ export interface ViewerPanel {
 export type ViewerLayoutItem = ViewerPanelContainer | ViewerPanel
 
 export interface WorkbenchStateModel {
-  version: number,
+  version: string,
   showSideNav: boolean,
   inFullScreenMode: boolean,
   sidebarView: SidebarView

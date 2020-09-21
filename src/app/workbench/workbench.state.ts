@@ -200,7 +200,7 @@ import { Viewer } from "./models/viewer";
 import { ResetState } from "../auth/auth.actions";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 1,
+  version: '051341ac-a968-4d48-9e01-8336ee6a978c',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
