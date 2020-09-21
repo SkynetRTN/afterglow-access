@@ -1,37 +1,4 @@
-<div
-  fxFlex="1 1 0%"
-  class="image-viewer-grid-panel"
-  role="region"
-  aria-label="image viewers"
-  [fxShow]="
-    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
-  "
->
-  <app-workbench-viewer-grid
-    (onImageClick)="onImageClick($event)"
-    (onMarkerClick)="onMarkerClick($event)"
-  ></app-workbench-viewer-grid>
-</div>
-
-<span class="resizer"></span>
-<div
-  *ngIf="showConfig$ | async"
-  fxFlex="0 0 auto"
-  class="workbench-config-panel"
-  role="region"
-  aria-labelledby="settings-header"
-  [ngClass]="{ 'full-screen': inFullScreenMode$ | async }"
-  [fxShow]="
-    !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'
-  "
->
-  <div class="card workbench-settings-card" style="height: 100%;">
-    <div id="settings-header" class="card-header">
-      <h5>Field Calibration</h5>
-    </div>
-
-    <div class="card-body" style="overflow-y: auto;">
-      <div
+<!-- <div
         *ngIf="!(activeImageFile$ | async) || !(activeImageHasWcs$ | async)"
         class="alert alert-info"
       >
@@ -258,7 +225,4 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
+      </div> -->
