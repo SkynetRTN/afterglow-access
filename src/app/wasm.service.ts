@@ -30,7 +30,6 @@ export class WasmService {
     const moduleArgs = {
       wasmBinary: binary,
       onRuntimeInitialized: () => {
-        console.log("WCS WASM LOADED....");
         this.wasmReady$.next(true);
 
         

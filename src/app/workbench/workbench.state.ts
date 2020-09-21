@@ -1131,7 +1131,6 @@ export class WorkbenchState {
           return state;
         }
 
-        console.log("FOUND PANEL: ", sourcePanel);
         let sourcePanelId = sourcePanel.id;
 
         let sourceContainer = containers.find((container) =>
@@ -1139,7 +1138,6 @@ export class WorkbenchState {
         );
 
         if (sourceContainer) {
-          console.log("FOUND CONTAINER: ", sourceContainer);
           let sourceContainerId = sourceContainer.id;
 
           //create new panel
@@ -1205,7 +1203,6 @@ export class WorkbenchState {
             sourceContainer.itemIds[sourcePanelIndex] = nextContainerId;
           }
 
-          console.log("SETTING FOCUSED VIEWER PANEL ID: ", nextPanelId);
           state.focusedViewerPanelId = nextPanelId;
         }
       }
@@ -1323,9 +1320,6 @@ export class WorkbenchState {
         referenceFileId = state.viewers[selectedViewerId].fileId
       }
 
-      console.log("CURRENT FOCUSED FILE ID: ", referenceFileId);
-      console.log("SET VEIWER FILE: ", viewerId, fileId)
-      
       setState((state: WorkbenchStateModel) => {
         state.viewers[viewerId].fileId = fileId;
         //for a more responsive feel, set the panel's selected viewer before loading
@@ -1338,7 +1332,6 @@ export class WorkbenchState {
       });
 
       function onDataFileLoad(store: Store) {
-        console.log("ON DATA FILE LOAD: ", viewerId, fileId, referenceFileId);
         //normalization
         let imageFileStates = store.selectSnapshot(
           WorkbenchFileStates.getEntities

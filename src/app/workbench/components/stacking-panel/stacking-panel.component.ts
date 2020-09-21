@@ -105,7 +105,6 @@ export class StackerPageComponent implements OnInit {
     );
 
     this.stackFormData$.subscribe((data) => {
-      // console.log("patching values: ", data.selectedImageFileIds)
       this.stackForm.patchValue(data, { emitEvent: false });
     });
 

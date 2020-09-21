@@ -372,8 +372,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 [key.viewerId]: key.markers,
               };
             }, {})
-          ),
-          tap((v) => console.log("REDUCED CUSTOM MARKERS: ", v))
+          )
         );
       })
     );
@@ -616,7 +615,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             let file = this.store.selectSnapshot(DataFilesState.getEntities)[
               fileId
             ];
-            console.log("NEW SOURCES!!!!!!!!!!!");
             if (!file || !header) return [];
             if (!file.wcs || !file.wcs.isValid()) coordMode = "pixel";
             return sources.filter((source) => {
@@ -713,8 +711,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 });
 
                 return { viewerId: viewerId, markers: markers };
-              }),
-              tap((v) => console.log("V"))
+              })
             );
           })
         ).pipe(
@@ -1635,7 +1632,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onFocusedViewerIdChange($event: MatSelectChange) {
-    console.log("FOCUSED VIEWER DROPDOWN CHANGE")
     this.store.dispatch(new SetFocusedViewer($event.value));
   }
 

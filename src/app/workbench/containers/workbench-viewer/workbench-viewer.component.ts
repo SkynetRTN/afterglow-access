@@ -114,7 +114,6 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
       this.store.select(WorkbenchFileStates.getEntities)
     ).pipe(
       map(([fileId, imageFileStates]) => imageFileStates[fileId]),
-      // tap(v => console.log("UPDATING IMAGE FILE STATE: ", v)),
     );
 
     

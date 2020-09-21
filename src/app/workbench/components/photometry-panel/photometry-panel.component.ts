@@ -220,7 +220,6 @@ export class PhotometryPageComponent
       map((config) => config.batchPhotFormData),
       distinctUntilChanged(),
       tap((data) => {
-        // console.log("patching values: ", data.selectedImageFileIds)
         this.batchPhotForm.patchValue(data, { emitEvent: false });
       })
     );
@@ -531,7 +530,6 @@ export class PhotometryPageComponent
   }
 
   downloadBatchPhotData(result: PhotometryJobResult) {
-    console.log("HERE: ", result);
     let data = this.papa.unparse(
       result.data.map((d) => {
         let time = d.time

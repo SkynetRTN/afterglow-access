@@ -163,7 +163,6 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     );
 
     this.pixelOpsFormData$.subscribe((data) => {
-      console.log("HERE!!!!!!!!!!!!!!", data);
       this.imageCalcForm.patchValue(data, { emitEvent: false });
       this.imageCalcFormAdv.patchValue(data, { emitEvent: false });
     });

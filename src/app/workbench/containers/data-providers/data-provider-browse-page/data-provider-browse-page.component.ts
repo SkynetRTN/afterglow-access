@@ -152,7 +152,6 @@ export class DataProviderBrowsePageComponent
             );
             if (dataProvider) {
               // if(!('path' in qparams) && dataProvider.id in lastPath) {
-              //   console.log("navigating!!!");
               //   this.store.dispatch(new Navigate(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}});
               // }
               // else {

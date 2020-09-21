@@ -76,7 +76,6 @@ export class PlotterComponent implements OnInit, OnChanges {
    // public customButton = {
   //   name: 'click me',
   //   click: function (gd) {
-  //     console.log("HERE!");
   //   },
   //   newplotlylogo: {
   //     name: 'newplotlylogo',

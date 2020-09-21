@@ -118,7 +118,6 @@ export class AuthState {
         else if (state.user) {
           //user no longer exists in local storage/cookie
           //login could be in-progress at the oauth authorized endpoint or the login endpoint of the app
-          console.log("LOGGIN OUT");
           ctx.dispatch(new Navigate(['/logout']));
         }
         else {

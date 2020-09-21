@@ -245,7 +245,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     if (changes.selectedViewerId  || changes.viewers) {
       let nextSelectedViewerIndex = this.viewers.map(viewer => viewer.viewerId).indexOf(this.selectedViewerId);
       if(this.selectedViewerIndex != nextSelectedViewerIndex) {
-        console.log("UPDATING SELECTED VIEWER INDEX: ", this.id, this.selectedViewerIndex, nextSelectedViewerIndex)
       this.selectedViewerIndex = nextSelectedViewerIndex;
       }
       
