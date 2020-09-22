@@ -351,12 +351,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 }),
                 distinctUntilChanged(),
                 map((markerFileState) => {
-                  console.log(
-                    "NEW CUSTOM MARKERS:",
-                    Object.values(markerFileState.entities),
-                    fileId,
-                    viewerId
-                  );
                   return {
                     viewerId: viewerId,
                     markers: Object.values(markerFileState.entities),
@@ -760,15 +754,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           selectedViewerFileIds,
         ]) => {
           selectedViewerFileIds.forEach(({ viewerId, fileId }) => {
-            console.log(
-              "UPDATING VIEWER MARKERS: ",
-              viewerId,
-              fileId,
-              customMarkerPanelMarkers,
-              plottingPanelMarkers,
-              sonificationPanelMarkers,
-              photometryPanelMarkers
-            );
             if (viewerId == null || fileId == null) return;
             let markers: Marker[] = [];
             let markerSources = [

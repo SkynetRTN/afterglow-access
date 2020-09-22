@@ -133,7 +133,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     this.fileStates$ = this.store.select(WorkbenchFileStates.getEntities);
     this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerIds).pipe(
       map(ids => ids.map(id => 'tab-' + id)),
-      tap(connections => console.log(connections))
     );
      
 

@@ -875,7 +875,6 @@ export class WorkbenchState {
           let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
           let fileId = state.viewers[viewerId].fileId;
           if(referenceFileId && fileId) {
-            console.log(referenceFileId, fileId,dataFiles[referenceFileId], dataFiles[fileId])
             if(state.viewerSyncEnabled) {
               this.store.dispatch(new SyncFileTransformations(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
             }
@@ -1165,13 +1164,6 @@ export class WorkbenchState {
               ["left", "right"].includes(direction))
           ) {
             //add panel to parent container if same direction is requested
-
-            console.log(
-              "INSERTTING NEW PANEL IN CONTAINER AT INDEX : ",
-              sourcePanelIndex,
-              sourceContainer.itemIds
-            );
-
             sourceContainer.itemIds.splice(
               ["up", "left"].includes(direction)
                 ? sourcePanelIndex

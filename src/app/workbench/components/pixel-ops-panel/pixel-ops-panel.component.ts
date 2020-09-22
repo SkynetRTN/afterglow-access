@@ -213,7 +213,6 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     ).pipe(
       filter(([data, allImageFiles]) => allImageFiles != null),
       map(([data, allImageFiles]) => {
-        console.log(data);
         return data.auxImageFileIds
           .map((id) => allImageFiles.find((f) => f.id == id))
           .filter((f) => f != null)
@@ -224,7 +223,6 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     let imageFiles$ = combineLatest(this.pixelOpsFormData$, this.files$).pipe(
       filter(([data, allImageFiles]) => allImageFiles != null),
       map(([data, allImageFiles]) => {
-        console.log(data);
         return data.imageFileIds
           .map((id) => allImageFiles.find((f) => f.id == id))
           .filter((f) => f != null)

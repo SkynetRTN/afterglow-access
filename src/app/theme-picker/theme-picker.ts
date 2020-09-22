@@ -41,7 +41,6 @@ export class ThemePicker implements OnInit, OnDestroy {
   }
 
   setColorTheme(colorThemeName: string) {
-    console.log(colorThemeName);
     this.themeStorage.storeTheme({
       ...this.currentTheme,
       colorThemeName: colorThemeName

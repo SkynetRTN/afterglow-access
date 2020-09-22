@@ -389,7 +389,6 @@ export class PhotometryPageComponent
     let data = selectedSources.map((source) => {
       let centerSecondaryCoord =
         (source.secondaryCoord + secondaryCoord0) / 2.0;
-      console.log(source.pmEpoch, new Date(source.pmEpoch));
       return [
         (new Date(source.pmEpoch).getTime() - t0) / 1000.0,
         (source.primaryCoord - primaryCoord0) *
