@@ -16,10 +16,10 @@
       </mat-slide-toggle>
     </div>
 
-    <table mat-table [dataSource]="getHeaderSummary()">
+    <table mat-table [dataSource]="headerSummary$ | async">
       <ng-container matColumnDef="key">
-        <th mat-header-cell *matHeaderCellDef i18n>Key</th>
-        <td mat-cell *matCellDef="let row">
+        <th mat-header-cell *matHeaderCellDef i18n class="key-column">Key</th>
+        <td mat-cell *matCellDef="let row" class="key-column">
           <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
         </td>
       </ng-container>

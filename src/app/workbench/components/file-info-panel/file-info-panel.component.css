@@ -52,6 +52,10 @@
   .mat-row {
     min-height: 30px;
   }
+
+  .key-column {
+    min-width: 150px;
+  }
   
   .mat-header-cell, .mat-cell {
     display: table-cell;

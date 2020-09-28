@@ -8,7 +8,9 @@
   
     app-workbench {
 
-        .file-list-toolbar-panel {
+      
+
+        .sidebar-nav {
           background: mat-color($background, background);
           color: mat-color($foreground, text);
         }
@@ -17,15 +19,19 @@
           background: mat-color($background, card);
         }
 
-        .global-settings {
-          max-width: 375px;
+        .file-list-panel {
+          width: 300px;
+        }
+
+        .global-settings-panel {
+          width: 300px;
         }
 
         // .mat-icon {
         //   color: mat-color($foreground, icon);
         // }
 
-        .toolbar-panel .mat-raised-button {
+        .sidebar-nav .mat-raised-button {
           background: mat-color($background, card);
         }
 
@@ -47,43 +53,43 @@
           transform: rotate(90deg);
         }
 
-        .workbench-config-panel.display {
+        .workbench-tool-panel.display {
           width: 550px;
         }
 
-        .workbench-config-panel.info {
+        .workbench-tool-panel.info {
           width: 550px;
         }
 
-        .workbench-config-panel.marker {
+        .workbench-tool-panel.marker {
           width: 550px;
         }
 
-        .workbench-config-panel.plotter {
+        .workbench-tool-panel.plotter {
           width: 575px;
         }
 
-        .workbench-config-panel.sonifier {
+        .workbench-tool-panel.sonifier {
           width: 500px;
         }
 
-        .workbench-config-panel.photometry {
+        .workbench-tool-panel.photometry {
           width: 650px;
         }
 
-        .workbench-config-panel.image-calculator {
+        .workbench-tool-panel.image-calculator {
           width: 375px;
         }
 
-        .workbench-config-panel.aligner {
+        .workbench-tool-panel.aligner {
           width: 450px;
         }
 
-        .workbench-config-panel.stacker {
+        .workbench-tool-panel.stacker {
           width: 450px;
         }
         
-        .full-screen.workbench-config-panel {
+        .full-screen.workbench-tool-panel {
           width: 100%;
         }
 
@@ -141,7 +147,7 @@
           }
         }
 
-        .workbench-nav-panel {
+        .workbench-tool-nav {
           background: mat-color($background, background);
         }
         
@@ -156,7 +162,7 @@
       //   background: mat-color($primary, default-contrast);
       // }
 
-      // .toolbar-panel, .workbench-nav-panel {
+      // .sidebar-nav, .workbench-tool-nav {
       //   background: mat-color($background, background);
       // }
     }

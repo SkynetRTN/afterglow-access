@@ -1,360 +1,214 @@
-<div fxLayout="row" fxFill style="overflow: hidden">
-  <div
-    fxFlex="0 0 auto"
-    class="sidebar-panel"
-    [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }"
-    [fxShow]="
-      !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'file'
-    "
-  >
-    <div
-      fxLayout="row"
-      fxFlex="1 1 0%"
-      class="sidebar-wrapper h-100"
-      role="region"
-      aria-label="File Library"
-    >
-      <div
-        fxFlex="0 0 auto"
-        class="file-list-toolbar-panel toolbar-panel h-100"
-        [class.collapsed]="!(showSidebar$ | async)"
-      >
-        <div class="vertical-icon-nav-item-group">
-          <div
-            id="tab-view-file-library"
-            class="vertical-icon-nav-item"
-            [matTooltip]="
+<div fxLayout="row" fxFill>
+  <div fxFlex="0 0 50px" class="sidebar-nav h-100" [class.collapsed]="!(showSidebar$ | async)">
+    <div class="vertical-icon-nav-item-group">
+      <div id="tab-view-file-library" class="vertical-icon-nav-item" [matTooltip]="
               ((showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.FILES
                 ? 'Hide'
                 : 'Show') + ' File Library List'
-            "
-            [matTooltipPosition]="'right'"
-            [class.active]="
+            " [matTooltipPosition]="'right'" [class.active]="
               (showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.FILES
-            "
-            attr.aria-label="{{
+            " attr.aria-label="{{
               (showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.FILES
                 ? 'Hide'
                 : 'Show'
-            }} File Library List"
-            [attr.aria-selected]="
+            }} File Library List" [attr.aria-selected]="
               (showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.FILES
-            "
-            (click)="setSidebarView(SidebarView.FILES)"
-          >
-            <button mat-icon-button>
-              <mat-icon>description</mat-icon>
-            </button>
-          </div>
-          <div
-            id="tab-view-settings"
-            class="vertical-icon-nav-item"
-            [matTooltip]="
+            " (click)="setSidebarView(SidebarView.FILES)">
+        <button mat-icon-button>
+          <mat-icon>description</mat-icon>
+        </button>
+      </div>
+      <div id="tab-view-settings" class="vertical-icon-nav-item" [matTooltip]="
               ((showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.SETTINGS
                 ? 'Hide'
                 : 'Show') + ' Workbench Settings'
-            "
-            [matTooltipPosition]="'right'"
-            [class.active]="
+            " [matTooltipPosition]="'right'" [class.active]="
               (showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.SETTINGS
-            "
-            attr.aria-label="{{
+            " attr.aria-label="{{
               (showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.SETTINGS
                 ? 'Hide'
                 : 'Show'
-            }} Workbench Settings"
-            [attr.aria-selected]="
+            }} Workbench Settings" [attr.aria-selected]="
               (showSidebar$ | async) &&
               (sidebarView$ | async) == SidebarView.SETTINGS
-            "
-            (click)="setSidebarView(SidebarView.SETTINGS)"
-          >
-            <button mat-icon-button>
-              <mat-icon>settings_applications</mat-icon>
-            </button>
-          </div>
+            " (click)="setSidebarView(SidebarView.SETTINGS)">
+        <button mat-icon-button>
+          <mat-icon>settings_applications</mat-icon>
+        </button>
+      </div>
 
-          <!-- <button id="tab-search-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH"
+      <!-- <button id="tab-search-file-library" class="vertical-icon-nav-item" [class.active]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH"
               attr.aria-label="{{(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH ? 'Hide' : 'Show' }} File Library Search"
               [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async)==SidebarView.SEARCH" (click)="setSidebarView(SidebarView.SEARCH)">
               <div class="icon-wrapper">
                 <mat-icon>search</mat-icon>
               </div>
             </button> -->
+    </div>
+  </div>
+  <div fxFlex="0 0 auto" class="sidebar-panel" [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }" [fxShow]="
+      (!(inFullScreenMode$ | async) &&  (showSidebar$ | async)) || ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'file')
+    " role="region" aria-label="File Library" [ngSwitch]="(sidebarView$ | async)">
+
+    <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100" fxLayout="column">
+      <div fxFlex="1 1 42px" class="file-list-panel-header">
+        <div class="file-list-header-view">
+          <!-- <button mat-icon-button aria-label="Open Files" (click)="showOpenFilesDialog()" matTooltip="Open Files">
+      <mat-icon>folder_open</mat-icon>
+    </button>
+    <button mat-icon-button aria-label="Upload Files" (click)="showUploadDialog()"
+      matTooltip="Upload Files">
+      <mat-icon>cloud_upload</mat-icon>
+    </button>
+    <button mat-icon-button [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
+      aria-label="Save All Files" (click)="saveAllFiles()" matTooltip="Save All Files">
+      <mat-icon>save_all</mat-icon>
+    </button>
+    <button mat-icon-button [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
+      aria-label="Close All Files" (click)="removeAllFiles()" matTooltip="Close All Files">
+      <mat-icon>remove_circle</mat-icon>
+    </button> -->
+          <button mat-icon-button [disabled]="
+        !(files$ | async) || (files$ | async)?.length == 0
+      " aria-label="Remove all files from library" (click)="removeAllFiles()"
+            matTooltip="Remove all files from library">
+            <mat-icon>delete_sweep</mat-icon>
+          </button>
+          <button mat-icon-button [disabled]="
+        !(files$ | async) || (files$ | async)?.length == 0
+      " aria-label="Refresh File List" (click)="refresh()" matTooltip="Refresh File List">
+            <mat-icon>refresh</mat-icon>
+          </button>
         </div>
       </div>
-      <div
-        fxFlex="1 1 0%"
-        *ngIf="
-          (showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES
-        "
-        class="file-list-panel h-100"
-      >
-        <ng-container>
-          <div
-            fxLayout="column"
-            fxFlex="1 1 0%"
-            class="file-list-panel-wrapper h-100"
-            aria-labeledby="tab-view-file-library"
-          >
-            <div fxFlex="0 0 auto" class="file-list-panel-header">
-              <div class="file-list-header-view">
-                <!-- <button mat-icon-button aria-label="Open Files" (click)="showOpenFilesDialog()" matTooltip="Open Files">
-                  <mat-icon>folder_open</mat-icon>
-                </button>
-                <button mat-icon-button aria-label="Upload Files" (click)="showUploadDialog()"
-                  matTooltip="Upload Files">
-                  <mat-icon>cloud_upload</mat-icon>
-                </button>
-                <button mat-icon-button [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
-                  aria-label="Save All Files" (click)="saveAllFiles()" matTooltip="Save All Files">
-                  <mat-icon>save_all</mat-icon>
-                </button>
-                <button mat-icon-button [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
-                  aria-label="Close All Files" (click)="removeAllFiles()" matTooltip="Close All Files">
-                  <mat-icon>remove_circle</mat-icon>
-                </button> -->
-                <button
-                  mat-icon-button
-                  [disabled]="
-                    !(files$ | async) || (files$ | async)?.length == 0
-                  "
-                  aria-label="Remove all files from library"
-                  (click)="removeAllFiles()"
-                  matTooltip="Remove all files from library"
-                >
-                  <mat-icon>delete_sweep</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  [disabled]="
-                    !(files$ | async) || (files$ | async)?.length == 0
-                  "
-                  aria-label="Refresh File List"
-                  (click)="refresh()"
-                  matTooltip="Refresh File List"
-                >
-                  <mat-icon>refresh</mat-icon>
-                </button>
-              </div>
-            </div>
-            <div
-              *ngIf="
-                !(files$ | async) || (files$ | async)?.length == 0;
-                else fileListPanelBlock
-              "
-              class="empty-library-info alert alert-info"
-              style="margin: 10px"
-            >
-              <ng-container i18n
-                >There are no open files associated with this session.
-              </ng-container>
-            </div>
-            <ng-template #fileListPanelBlock>
-              <div fxFlex="1 1 auto" class="file-list-panel-content">
-                <div class="file-list-content">
-                  <div style="padding: 0px 5px; min-height: 4px;">
-                    <mat-progress-bar
-                      mode="indeterminate"
-                      [hidden]="!(loadingFiles$ | async)"
-                      [color]="'accent'"
-                    ></mat-progress-bar>
-                  </div>
-                  <app-workbench-data-file-list
-                    [dataFiles]="files$ | async"
-                    [selectedFileId]="(focusedFile$ | async)?.id"
-                    (onSelectionChange)="onFileSelect($event)"
-                  >
-                  </app-workbench-data-file-list>
-                </div>
-              </div>
-            </ng-template>
-          </div>
+      <div *ngIf="
+    !(files$ | async) || (files$ | async)?.length == 0;
+    else fileListPanelBlock
+  " fxFlex="1 1 0%" class="empty-library-info alert alert-info" style="margin: 10px">
+        <ng-container i18n>There are no open files associated with this session.
         </ng-container>
       </div>
-      <div
-        fxFlex="1 1 0%"
-        *ngIf="
-          (showSidebar$ | async) &&
-          (sidebarView$ | async) == SidebarView.SETTINGS
-        "
-        class="file-list-panel global-settings h-100 p-3"
-      >
-        <h6 i18n>Global Settings</h6>
-        <hr />
-        <div class="pt-2">
-          <mat-form-field style="width: 100%">
-            <mat-select
-              placeholder="Focused Viewer"
-              [value]="(focusedViewer$ | async)?.viewerId"
-              (selectionChange)="onFocusedViewerIdChange($event)"
-              style="width: 200px"
-            >
-              <mat-option
-                *ngFor="let viewer of viewers$ | async; index as viewerIndex"
-                [value]="viewer.viewerId"
-              >
-                {{ getViewerLabel(viewer, viewerIndex) }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <div class="form-group">
-          <div *ngIf="focusedViewer$ | async; let focusedViewer">
-            <button
-              [disabled]="!focusedViewer"
-              (click)="splitViewerPanel(focusedViewer, 'right')"
-              class="mt-2"
-              mat-raised-button
-            >
-              Split Viewer Right
-            </button>
-            <button
-              [disabled]="!focusedViewer"
-              (click)="splitViewerPanel(focusedViewer, 'left')"
-              class="mt-2"
-              mat-raised-button
-            >
-              Split Viewer Left
-            </button>
-            <button
-              [disabled]="!focusedViewer"
-              (click)="splitViewerPanel(focusedViewer, 'down')"
-              class="mt-2"
-              mat-raised-button
-            >
-              Split Viewer Down
-            </button>
-            <button
-              [disabled]="!focusedViewer"
-              (click)="splitViewerPanel(focusedViewer, 'up')"
-              class="mt-2"
-              mat-raised-button
-            >
-              Split Viewer Up
-            </button>
+      <ng-template #fileListPanelBlock>
+        <div fxFlex="1 1 auto" class="file-list-panel-content">
+          <div class="file-list-content">
+            <div style="padding: 0px 5px; min-height: 4px;">
+              <mat-progress-bar mode="indeterminate" [hidden]="!(loadingFiles$ | async)" [color]="'accent'">
+              </mat-progress-bar>
+            </div>
+            <app-workbench-data-file-list [dataFiles]="files$ | async" [selectedFileId]="(focusedFile$ | async)?.id"
+              (onSelectionChange)="onFileSelect($event)">
+            </app-workbench-data-file-list>
           </div>
         </div>
-
-        <div class="form-group pt-2">
-          <mat-slide-toggle
-            [checked]="viewerSyncEnabled$ | async"
-            labelPosition="after"
-            (change)="onViewerSyncEnabledChange($event)"
-            color="primary"
-          >
-            <ng-container i18n>Sync orientations</ng-container>
-          </mat-slide-toggle>
+      </ng-template>
+    </div>
+    <div *ngSwitchCase="SidebarView.SETTINGS" class="global-settings-panel h-100 p-3">
+      <h6 i18n>Global Settings</h6>
+      <hr />
+      <div class="pt-2">
+        <mat-form-field style="width: 100%">
+          <mat-select placeholder="Focused Viewer" [value]="(focusedViewer$ | async)?.viewerId"
+            (selectionChange)="onFocusedViewerIdChange($event)" style="width: 200px">
+            <mat-option *ngFor="let viewer of viewers$ | async; index as viewerIndex" [value]="viewer.viewerId">
+              {{ getViewerLabel(viewer, viewerIndex) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <div *ngIf="focusedViewer$ | async; let focusedViewer">
+          <button [disabled]="!focusedViewer" (click)="splitViewerPanel(focusedViewer, 'right')" class="mt-2"
+            mat-raised-button>
+            Split Viewer Right
+          </button>
+          <button [disabled]="!focusedViewer" (click)="splitViewerPanel(focusedViewer, 'left')" class="mt-2"
+            mat-raised-button>
+            Split Viewer Left
+          </button>
+          <button [disabled]="!focusedViewer" (click)="splitViewerPanel(focusedViewer, 'down')" class="mt-2"
+            mat-raised-button>
+            Split Viewer Down
+          </button>
+          <button [disabled]="!focusedViewer" (click)="splitViewerPanel(focusedViewer, 'up')" class="mt-2"
+            mat-raised-button>
+            Split Viewer Up
+          </button>
         </div>
+      </div>
 
-        <div class="form-group pt-2">
-          <mat-slide-toggle
-            [checked]="normalizationSyncEnabled$ | async"
-            labelPosition="after"
-            (change)="onNormalizationSyncEnabledChange($event)"
-            color="primary"
-          >
-            <ng-container>Sync display settings</ng-container>
-          </mat-slide-toggle>
-        </div>
+      <div class="form-group pt-2">
+        <mat-slide-toggle [checked]="viewerSyncEnabled$ | async" labelPosition="after"
+          (change)="onViewerSyncEnabledChange($event)" color="primary">
+          <ng-container i18n>Sync orientations</ng-container>
+        </mat-slide-toggle>
+      </div>
 
-        <hr />
+      <div class="form-group pt-2">
+        <mat-slide-toggle [checked]="normalizationSyncEnabled$ | async" labelPosition="after"
+          (change)="onNormalizationSyncEnabledChange($event)" color="primary">
+          <ng-container>Sync display settings</ng-container>
+        </mat-slide-toggle>
+      </div>
 
-        <div
-          *ngIf="surveyDataProvider$ | async; let surveyDataProvider"
-          class="pt-4"
-        >
-          <div *ngIf="focusedImageFile$ | async; let imageFile">
-            <h6 i18n>DSS Catalog Import</h6>
-            <div class="pb-3">
-              <mat-radio-group
-                aria-label="DSS Import Image Center"
-                [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()"
-                [value]="
-                  useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()
-                    ? 'wcs'
-                    : 'header'
-                "
-                (change)="onUseWcsCenterChange($event)"
-              >
-                <mat-radio-button value="header" i18n
-                  >Use intended pointing for image center</mat-radio-button
-                >
-                <mat-radio-button value="wcs" i18n
-                  >Use WCS for image center</mat-radio-button
-                >
-              </mat-radio-group>
+      <hr />
 
-              <!-- <mat-slide-toggle [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [checked]="useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()"
-                [labelPosition]="after" (change)="onUseWcsCenterChange($event)">
-                Use WCS for image center
-              </mat-slide-toggle> -->
-            </div>
-            <div>
-              <button
-                mat-raised-button
-                class="mb-2"
-                [disabled]="(surveyImportCorrId$ | async) !== null"
-                (click)="importFromSurvey(surveyDataProvider, imageFile)"
-                i18n
-              >
-                Import DSS
-              </button>
-            </div>
+      <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
+        <div *ngIf="focusedImageFile$ | async; let imageFile">
+          <h6 i18n>DSS Catalog Import</h6>
+          <div class="pb-3">
+            <mat-radio-group aria-label="DSS Import Image Center"
+              [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [value]="
+            useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()
+              ? 'wcs'
+              : 'header'
+          " (change)="onUseWcsCenterChange($event)">
+              <mat-radio-button value="header" i18n>Use intended pointing for image center</mat-radio-button>
+              <mat-radio-button value="wcs" i18n>Use WCS for image center</mat-radio-button>
+            </mat-radio-group>
 
-            <div *ngIf="dssImportLoading$ | async">
-              <mat-progress-bar
-                mode="indeterminate"
-                [color]="'accent'"
-              ></mat-progress-bar>
-            </div>
+            <!-- <mat-slide-toggle [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [checked]="useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()"
+          [labelPosition]="after" (change)="onUseWcsCenterChange($event)">
+          Use WCS for image center
+        </mat-slide-toggle> -->
+          </div>
+          <div>
+            <button mat-raised-button class="mb-2" [disabled]="(surveyImportCorrId$ | async) !== null"
+              (click)="importFromSurvey(surveyDataProvider, imageFile)" i18n>
+              Import DSS
+            </button>
+          </div>
+
+          <div *ngIf="dssImportLoading$ | async">
+            <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
           </div>
         </div>
       </div>
     </div>
+
   </div>
-  <div
-    fxFlex="1 1 0%"
-    class="image-viewer-grid-panel"
-    role="region"
-    aria-label="image viewers"
-    [fxShow]="
+  <div fxFlex="1 1 auto" class="image-viewer-grid-panel" role="region" aria-label="image viewers" [fxShow]="
       !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'
-    "
-  >
-    <app-workbench-viewer-layout
-      [fxLayout]="(layoutContainer$ | async)?.direction"
-      style="height: 100%"
-      [id]="(layoutContainer$ | async)?.id"
-      [itemIds]="(layoutContainer$ | async)?.itemIds"
-      (onImageClick)="onImageClick($event)"
-      (onImageMove)="onImageMove($event)"
-      (onMarkerClick)="onMarkerClick($event)"
-    >
+    " style="overflow: auto;">
+    <app-workbench-viewer-layout [fxLayout]="(layoutContainer$ | async)?.direction" style="height: 100%"
+      [id]="(layoutContainer$ | async)?.id" [itemIds]="(layoutContainer$ | async)?.itemIds"
+      (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)" (onMarkerClick)="onMarkerClick($event)">
     </app-workbench-viewer-layout>
   </div>
-  <div
-    fxFlex="0 0 auto"
-    class="workbench-config-panel"
-    *ngIf="activeTool$ | async; let activeTool"
-    [class]="activeTool$ | async"
-    role="region"
-    aria-labelledby="settings-header"
-    [ngClass]="{ 'full-screen': inFullScreenMode$ | async }"
-    [fxShow]="
+  <div fxFlex="0 0 auto" class="workbench-tool-panel" *ngIf="activeTool$ | async; let activeTool"
+    [class]="activeTool$ | async" role="region" aria-labelledby="settings-header"
+    [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') ||
       (!(inFullScreenMode$ | async) &&
         (showConfig$ | async) &&
         (focusedImageFile$ | async))
-    "
-  >
+    ">
     <div class="card workbench-settings-card" style="height: 100%">
       <div id="settings-header" class="card-header" [ngSwitch]="activeTool">
         <h5 *ngSwitchCase="WorkbenchTool.VIEWER" i18n>Display Settings</h5>
@@ -369,328 +223,200 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-        <app-display-panel
-          *ngSwitchCase="WorkbenchTool.VIEWER"
-          [file]="focusedImageFile$ | async"
-          [normalization]="focusedImageFileNormalization$ | async"
-        >
+        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [file]="focusedImageFile$ | async"
+          [normalization]="focusedImageFileNormalization$ | async">
         </app-display-panel>
 
-        <app-file-info-panel
-          *ngSwitchCase="WorkbenchTool.INFO"
-          [file]="focusedImageFile$ | async"
-          [config]="fileInfoPanelConfig$ | async"
-          (configChange)="onFileInfoPanelConfigChange($event)"
-        >
+        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [file]="focusedImageFile$ | async"
+          [config]="fileInfoPanelConfig$ | async" (configChange)="onFileInfoPanelConfigChange($event)">
         </app-file-info-panel>
 
-        <app-custom-marker-panel
-          *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER"
-          [file]="focusedImageFile$ | async"
-          [state]="customMarkerPanelState$ | async"
-          [config]="customMarkerPanelConfig$ | async"
-          (configChange)="onCustomMarkerPanelConfigChange($event)"
-          (markerChange)="onCustomMarkerChange($event)"
-          (markerDelete)="onCustomMarkerDelete($event)"
-        >
+        <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [file]="focusedImageFile$ | async"
+          [state]="customMarkerPanelState$ | async" [config]="customMarkerPanelConfig$ | async"
+          (configChange)="onCustomMarkerPanelConfigChange($event)" (markerChange)="onCustomMarkerChange($event)"
+          (markerDelete)="onCustomMarkerDelete($event)">
         </app-custom-marker-panel>
 
-        <app-plotting-panel
-          *ngSwitchCase="WorkbenchTool.PLOTTER"
-          [file]="focusedImageFile$ | async"
-          [state]="plottingPanelState$ | async"
-          [config]="plottingPanelConfig$ | async"
-          (configChange)="onPlottingPanelConfigChange($event)"
-        >
+        <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [file]="focusedImageFile$ | async"
+          [state]="plottingPanelState$ | async" [config]="plottingPanelConfig$ | async"
+          (configChange)="onPlottingPanelConfigChange($event)">
         </app-plotting-panel>
 
-        <app-sonification-panel
-          *ngSwitchCase="WorkbenchTool.SONIFIER"
-          [file]="focusedImageFile$ | async"
-          [transformation]="focusedImageFileTransformation$ | async"
-          [state]="sonificationPanelState$ | async"
-        >
+        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [file]="focusedImageFile$ | async"
+          [transformation]="focusedImageFileTransformation$ | async" [state]="sonificationPanelState$ | async">
         </app-sonification-panel>
 
-        <app-photometry-panel
-          *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
-          [selectedFile]="focusedImageFile$ | async"
-          [state]="photometryPanelState$ | async"
-          [sources]="photometryPanelSources$ | async"
-          [files]="files$ | async"
-          [config]="photometryPanelConfig$ | async"
-          [centroidSettings]="centroidSettings$ | async"
+        <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [selectedFile]="focusedImageFile$ | async"
+          [state]="photometryPanelState$ | async" [sources]="photometryPanelSources$ | async" [files]="files$ | async"
+          [config]="photometryPanelConfig$ | async" [centroidSettings]="centroidSettings$ | async"
           [photometrySettings]="photometrySettings$ | async"
           [sourceExtractionSettings]="sourceExtractionSettings$ | async"
           (configChange)="onPhotometryPanelConfigChange($event)"
-          (photometrySettingsChange)="onPhotometrySettingsChange($event)"
-          (sourceExtractionSettingsChange)="
+          (photometrySettingsChange)="onPhotometrySettingsChange($event)" (sourceExtractionSettingsChange)="
             onSourceExtractionSettingsChange($event)
-          "
-        >
+          ">
         </app-photometry-panel>
 
-        <app-pixel-ops-panel
-          *ngSwitchCase="WorkbenchTool.IMAGE_CALC"
-          [selectedFile]="focusedImageFile$ | async"
-          [files]="files$ | async"
-          [config]="pixelOpsPanelConfig$ | async"
-        >
+        <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [selectedFile]="focusedImageFile$ | async"
+          [files]="files$ | async" [config]="pixelOpsPanelConfig$ | async">
         </app-pixel-ops-panel>
 
-        <app-aligning-panel
-          *ngSwitchCase="WorkbenchTool.ALIGNER"
-          [selectedFile]="focusedImageFile$ | async"
-          [files]="files$ | async"
-          [config]="aligningPanelConfig$ | async"
-        ></app-aligning-panel>
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [selectedFile]="focusedImageFile$ | async"
+          [files]="files$ | async" [config]="aligningPanelConfig$ | async"></app-aligning-panel>
 
-        <app-stacking-panel
-          *ngSwitchCase="WorkbenchTool.STACKER"
-          [selectedFile]="focusedImageFile$ | async"
-          [files]="files$ | async"
-          [config]="stackingPanelConfig$ | async"
-        >
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [selectedFile]="focusedImageFile$ | async"
+          [files]="files$ | async" [config]="stackingPanelConfig$ | async">
         </app-stacking-panel>
       </div>
     </div>
   </div>
-  <div
-    fxFlex="0 0 auto"
-    [fxShow]="
+  <div fxFlex="0 0 50px" class="workbench-tool-nav" [fxShow]="
       !(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'
-    "
-    class="workbench-nav-panel"
-    [class.collapsed]="!(showConfig$ | async)"
-    *ngIf="(files$ | async)?.length != 0"
-    style="width: 42px"
-  >
-    <nav
-      role="navigation"
-      aria-label="workbench"
-      *ngIf="activeTool$ | async; let activeTool"
-    >
+    " [class.collapsed]="!(showConfig$ | async)" *ngIf="(files$ | async)?.length != 0">
+    <nav role="navigation" aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
       <div class="vertical-icon-nav-item-group">
         <div class="workbench-settings-card">
           <div class="card-header spacer"></div>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.VIEWER
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.VIEWER
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
           <button mat-icon-button>
             <mat-icon>remove_red_eye</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.INFO
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.INFO
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.INFO)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.INFO)">
           <button mat-icon-button>
             <mat-icon>info</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.CUSTOM_MARKER,
               'Custom Markers'
             )
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.CUSTOM_MARKER,
               'Custom Markers'
             )
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.CUSTOM_MARKER)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.CUSTOM_MARKER)">
           <button mat-icon-button>
             <mat-icon>place</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)">
           <button mat-icon-button>
-            <mat-icon>insert_chart_outlined</mat-icon>
+            <mat-icon>show_chart</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.SONIFIER,
               'Sonification'
             )
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.SONIFIER,
               'Sonification'
             )
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SONIFIER)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SONIFIER)">
           <button mat-icon-button>
             <mat-icon>audiotrack</mat-icon>
           </button>
         </div>
 
-        <!-- <button class="vertical-icon-nav-item" [matTooltip]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')" [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)"
-        [attr.aria-label]="getToolbarTooltip(FIELD_CAL_ROUTE, 'Field Calibration')"
-        [attr.aria-selected]="(showConfig$ | async) && router.isActive(FIELD_CAL_ROUTE)" (click)="onWorkbenchNavClick(FIELD_CAL_ROUTE)">
-        <div class="icon-wrapper">
-          <mat-icon>flare</mat-icon>
-        </div>
-      </button> -->
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.PHOTOMETRY,
               'Photometry'
             )
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.PHOTOMETRY,
               'Photometry'
             )
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
           <button mat-icon-button>
             <mat-icon>star_border</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.IMAGE_CALC,
               'Image Calculator'
             )
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.IMAGE_CALC
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(
               activeTool == WorkbenchTool.IMAGE_CALC,
               'Image Calculator'
             )
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.IMAGE_CALC
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.IMAGE_CALC)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.IMAGE_CALC)">
           <button mat-icon-button>
             <mat-icon>add_to_photos</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)">
           <button mat-icon-button>
             <mat-icon>photo_size_select_large</mat-icon>
           </button>
         </div>
-        <div
-          class="vertical-icon-nav-item"
-          [matTooltip]="
+        <div class="vertical-icon-nav-item" [matTooltip]="
             getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')
-          "
-          [matTooltipPosition]="'left'"
-          [class.active]="
+          " [matTooltipPosition]="'left'" [class.active]="
             (showConfig$ | async) && activeTool == WorkbenchTool.STACKER
-          "
-          [attr.aria-label]="
+          " [attr.aria-label]="
             getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')
-          "
-          [attr.aria-selected]="
+          " [attr.aria-selected]="
             (showConfig$ | async) && activeTool == WorkbenchTool.STACKER
-          "
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)"
-        >
+          " (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)">
           <button mat-icon-button>
             <mat-icon>photo_library</mat-icon>
           </button>

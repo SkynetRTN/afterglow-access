@@ -3,24 +3,21 @@
   <ng-container [ngSwitch]="(layoutItems$ | async)[itemId]?.type">
     <ng-container *ngSwitchCase="'container'">
       <app-workbench-viewer-layout
-        style="height: 100%"
         *ngIf="(containers$ | async)[itemId]; let childContainer"
-        fxFlex="1 1 auto"
-        fxFill
+        fxFlex="1 1 100%"
         [fxLayout]="childContainer.direction"
         [id]="childContainer.id"
         [itemIds]="childContainer.itemIds"
         (onImageClick)="handleViewerPanelContainerImageClick($event)"
         (onImageMove)="handleViewerPanelContainerImageMove($event)"
         (onMarkerClick)="handleViewerPanelContainerMarkerClick($event)"
+        style="overflow: hidden;"
       ></app-workbench-viewer-layout>
     </ng-container>
     <ng-container *ngSwitchCase="'panel'">
       <app-workbench-viewer-panel
-        style="height: 100%"
         *ngIf="(panels$ | async)[itemId]; let panel"
-        fxFlex="1 1 auto"
-        fxFill
+        fxFlex="1 1 100%"
         [id]="panel.id"
         [viewers]="getViewers(panel.viewerIds)"
         [selectedViewerId]="panel.selectedViewerId"
@@ -31,6 +28,7 @@
         (click)="setFocusedPanel($event, panel)"
         (mousedown)="setFocusedPanel($event, panel)"
         (mousewheel)="setFocusedPanel($event, panel)"
+        style="overflow: hidden;"
       >
       </app-workbench-viewer-panel>
     </ng-container>
