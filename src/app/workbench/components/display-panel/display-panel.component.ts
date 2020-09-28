@@ -123,6 +123,13 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
     );
   }
 
+  // onMirrorClick() {
+  //   this.store.dispatch([
+  //     new RotateBy(this.file.id, 90),
+  //     new Flip(this.file.id)
+  //   ]);
+  // }
+
   onRotateClick() {
     this.store.dispatch(
       new RotateBy(this.file.id, 90)
