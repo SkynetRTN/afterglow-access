@@ -346,31 +346,8 @@ export class DataProvidersState {
     let importCompleted$ = this.actions$.pipe(
       ofActionDispatched(ImportAssetsCompleted),
       filter<ImportAssetsCompleted>(action => action.correlationId == importSelectedAssetsCorrId),
-      tap(action => {
-        setState((state: DataProvidersStateModel) => {
-          state.importing = false;
-          state.importProgress = 100;
-          state.importErrors = action.errors;
-
-          return state;
-        });
-      }),
-      filter(action => action.errors.length == 0),
-      flatMap(action => {
-         dispatch(new Navigate(['/']));
-         dispatch(new LoadLibrary());
-         return this.actions$.pipe(
-           ofActionCompleted(LoadLibrary),
-           take(1),
-           filter(a => a.result.successful),
-           tap(v => {
-            dispatch(new SelectDataFile(action.fileIds[0]));
-           })
-         )
-      })
+      take(1)
     )
-
-    
 
     let importProgress$ = this.actions$.pipe(
       ofActionDispatched(ImportAssetsStatusUpdated),
@@ -388,7 +365,29 @@ export class DataProvidersState {
     return merge(
       dispatch(new ImportAssets(dataProviderId, assets, importSelectedAssetsCorrId)),
       importProgress$,
-      importCompleted$
+      importCompleted$.pipe(
+        flatMap(action => {
+          setState((state: DataProvidersStateModel) => {
+            state.importing = false;
+            state.importProgress = 100;
+            state.importErrors = action.errors;
+    
+            return state;
+          });
+  
+          if(action.errors.length != 0) return of();
+          dispatch(new Navigate(['/']));
+          dispatch(new LoadLibrary());
+          return this.actions$.pipe(
+            ofActionCompleted(LoadLibrary),
+            take(1),
+            filter(a => a.result.successful),
+            tap(v => {
+             dispatch(new SelectDataFile(action.fileIds[0]));
+            })
+          )
+       })
+      ),
     );
   }
 
