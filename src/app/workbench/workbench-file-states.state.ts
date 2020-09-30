@@ -1,15 +1,15 @@
-import { State, Action, Selector, StateContext, Store, Actions} from '@ngxs/store';
+import { State, Action, Selector, StateContext, Store, Actions } from '@ngxs/store';
 import { Point, Matrix, Rectangle } from 'paper';
 import { RenormalizeImageFile, NormalizeImageTile, UpdateNormalizer, AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, CenterRegionInViewport, UpdatePhotometryFileState, ResetImageTransform, SetViewportTransform, ZoomTo, ZoomBy, UpdateCurrentViewportSize, SetImageTransform, MoveBy, InitializeImageFileState, RotateBy, Flip, StartLine, UpdateLine, UpdatePlotterFileState, UpdateSonifierFileState, ClearRegionHistory, SetProgressLine, SonificationRegionChanged, UpdateCustomMarker, AddCustomMarkers, RemoveCustomMarkers, SelectCustomMarkers, DeselectCustomMarkers, SetCustomMarkerSelection, AddPhotDatas, RemoveAllPhotDatas, RemovePhotDatas } from './workbench-file-states.actions';
-import { WorkbenchFileState } from './models/workbench-file-state';
+import { WorkbenchDataFileState, WorkbenchImageHduState, WorkbenchHduState, WorkbenchTableHduState } from './models/workbench-file-state';
 import { RemoveDataFileSuccess, InitImageTiles, LoadDataFileHdrSuccess } from '../data-files/data-files.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { DataFileType } from '../data-files/models/data-file-type';
+import { HduType } from '../data-files/models/data-file-type';
 import { grayColorMap } from './models/color-map';
 import { StretchMode } from './models/stretch-mode';
 import { SonifierRegionMode } from './models/sonifier-file-state';
 import { ImageTile } from '../data-files/models/image-tile';
-import { getYTileDim, getHeight, getXTileDim, getWidth, ImageFile } from '../data-files/models/data-file';
+import { getYTileDim, getHeight, getXTileDim, getWidth, ImageLayerMode, ImageHdu, PixelType } from '../data-files/models/data-file';
 import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
 import { normalize } from './models/pixel-normalizer';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
@@ -21,11 +21,11 @@ import { entries } from 'core-js/fn/array';
 export interface WorkbenchFileStatesModel {
   version: number;
   ids: string[];
-  entities: { [id: string]: WorkbenchFileState };
+  entities: { [id: string]: WorkbenchDataFileState };
   nextMarkerId: number;
 }
 
-const defaultWorkbenchFileStatesModel : WorkbenchFileStatesModel = {
+const defaultWorkbenchFileStatesModel: WorkbenchFileStatesModel = {
   version: 1,
   ids: [],
   entities: {},
@@ -56,56 +56,81 @@ export class WorkbenchFileStates {
   }
 
   @Selector()
-  public static getImageFileStates(state: WorkbenchFileStatesModel) {
+  public static getFileStates(state: WorkbenchFileStatesModel) {
     return Object.values(state.entities);
   }
 
   @Selector()
-  public static getWorkbenchFileStateByFileId(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id] : null;
+  public static getFileState(state: WorkbenchFileStatesModel) {
+    return (fileId: string) => {
+      return fileId in state.entities ? state.entities[fileId] : null;
+    };
+  }
+
+  @Selector()
+  public static getLayerState(state: WorkbenchFileStatesModel) {
+    return (fileId: string, hduIndex: number) => {
+      return fileId in state.entities ? state.entities[fileId].hduStates[hduIndex] : null;
     };
   }
 
   @Selector()
   public static getNormalization(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id].normalization : null;
+    return (fileId: string, hduIndex: number) => {
+      if (!(fileId in state.entities)) return null;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+
+      return layerState.normalization;
     };
   }
 
   @Selector()
   public static getTransformation(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id].transformation : null;
+    return (fileId: string, hduIndex: number) => {
+      if (!(fileId in state.entities)) return null;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+
+      return layerState.transformation;
     };
   }
 
   @Selector()
   public static getPlottingPanelState(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id].plottingPanelState : null;
+    return (fileId: string, hduIndex: number) => {
+      if (!(fileId in state.entities)) return null;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+
+      return layerState.plottingPanelState;
     };
   }
 
   @Selector()
   public static getSonificationPanelState(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id].sonificationPanelState : null;
+    return (fileId: string, hduIndex: number) => {
+      if (!(fileId in state.entities)) return null;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+
+      return layerState.sonificationPanelState;
     };
   }
 
   @Selector()
   public static getPhotometryPanelState(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id].photometryPanelState : null;
+    return (fileId: string, hduIndex: number) => {
+      if (!(fileId in state.entities)) return null;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+
+      return layerState.photometryPanelState;
     };
   }
 
   @Selector()
   public static getCustomMarkerPanelState(state: WorkbenchFileStatesModel) {
-    return (id: string) => {
-      return id in state.entities ? state.entities[id].customMarkerPanelState : null;
+    return (fileId: string, hduIndex: number) => {
+      if (!(fileId in state.entities)) return null;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+
+      return layerState.customMarkerPanelState;
     };
   }
 
@@ -125,50 +150,72 @@ export class WorkbenchFileStates {
   public initializeImageFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileIds }: InitializeImageFileState) {
     setState((state: WorkbenchFileStatesModel) => {
       fileIds.forEach(fileId => {
-        state.entities[fileId] = {
-          imageFileId: fileId,
-          normalization: {
-            normalizedTiles: null,
-            initialized: false,
-            normalizer: {
-              backgroundPercentile: 10,
-              peakPercentile: 99,
-              colorMapName: grayColorMap.name,
-              stretchMode: StretchMode.Linear,
-              inverted: false
-            }
-          },
-          transformation: {
-            imageTransform: null,
-            viewportTransform: null,
-            imageToViewportTransform: null,
-            viewportSize: null
-          },
-          plottingPanelState: {
-            measuring: false,
-            lineMeasureStart: null,
-            lineMeasureEnd: null,
-          },
-          sonificationPanelState: {
-            sonificationUri: null,
-            regionHistory: [],
-            regionHistoryIndex: null,
-            regionHistoryInitialized: false,
-            regionMode: SonifierRegionMode.VIEWPORT,
-            viewportSync: true,
-            duration: 10,
-            toneCount: 22,
-            progressLine: null,
-          },
-          photometryPanelState: {
-            sourceExtractionJobId: null,
-            sourcePhotometryData: {},
-          },
-          customMarkerPanelState: {
-            entities: {},
-            ids: [],
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+        if (!(fileId in dataFiles)) return;
+
+        let dataFile = dataFiles[fileId];
+
+        let hduStates: Array<WorkbenchHduState> = dataFile.hdus.map((hdu, index) => {
+          if (hdu.hduType == HduType.IMAGE) {
+            return {
+              hduType: HduType.IMAGE,
+              hduIndex: index,
+              normalization: {
+                tiles: null,
+                initialized: false,
+                tilesInitialized: false,
+                normalizer: {
+                  backgroundPercentile: 10,
+                  peakPercentile: 99,
+                  colorMapName: grayColorMap.name,
+                  stretchMode: StretchMode.Linear,
+                  inverted: false
+                }
+              },
+              transformation: {
+                imageTransform: null,
+                viewportTransform: null,
+                imageToViewportTransform: null,
+                viewportSize: null
+              },
+              plottingPanelState: {
+                measuring: false,
+                lineMeasureStart: null,
+                lineMeasureEnd: null,
+              },
+              sonificationPanelState: {
+                sonificationUri: null,
+                regionHistory: [],
+                regionHistoryIndex: null,
+                regionHistoryInitialized: false,
+                regionMode: SonifierRegionMode.VIEWPORT,
+                viewportSync: true,
+                duration: 10,
+                toneCount: 22,
+                progressLine: null,
+              },
+              photometryPanelState: {
+                sourceExtractionJobId: null,
+                sourcePhotometryData: {},
+              },
+              customMarkerPanelState: {
+                entities: {},
+                ids: [],
+              }
+            } as WorkbenchImageHduState
           }
-        }
+          else if (hdu.hduType == HduType.TABLE) {
+            return {
+              hduType: HduType.TABLE,
+              hduIndex: index
+            } as WorkbenchTableHduState
+          }
+        })
+        state.entities[fileId] = {
+          fileId: fileId,
+          hduStates: hduStates,
+          focusedLayerIndex: 0
+        } as WorkbenchDataFileState
 
         state.ids.push(fileId);
 
@@ -189,28 +236,30 @@ export class WorkbenchFileStates {
 
   @Action(InitImageTiles)
   @ImmutableContext()
-  public initImageTiles({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: InitImageTiles) {
+  public initImageTiles({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: InitImageTiles) {
     setState((state: WorkbenchFileStatesModel) => {
-      let normalization = state.entities[fileId].normalization;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let normalization = layerState.normalization;
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let tiles: ImageTile[] = [];
+      let imageFile = dataFiles[fileId];
+      let layer = imageFile.hdus[hduIndex] as ImageHdu;
+      let tiles: ImageTile<Uint32Array>[] = [];
 
-      for (let j = 0; j < getYTileDim(imageFile); j += 1) {
-        let tw = imageFile.tileWidth;
-        let th = imageFile.tileHeight;
+      for (let j = 0; j < getYTileDim(layer); j += 1) {
+        let tw = layer.tileWidth;
+        let th = layer.tileHeight;
 
-        if (j === getYTileDim(imageFile) - 1) {
-          th -= (j + 1) * imageFile.tileHeight - getHeight(imageFile);
+        if (j === getYTileDim(layer) - 1) {
+          th -= (j + 1) * layer.tileHeight - getHeight(layer);
         }
-        for (let i = 0; i < getXTileDim(imageFile); i += 1) {
-          if (i === getXTileDim(imageFile) - 1) {
-            tw -= (i + 1) * imageFile.tileWidth - getWidth(imageFile);
+        for (let i = 0; i < getXTileDim(layer); i += 1) {
+          if (i === getXTileDim(layer) - 1) {
+            tw -= (i + 1) * layer.tileWidth - getWidth(layer);
           }
           tiles.push({
-            index: j * getXTileDim(imageFile) + i,
-            x: i * imageFile.tileWidth,
-            y: j * imageFile.tileHeight,
+            index: j * getXTileDim(layer) + i,
+            x: i * layer.tileWidth,
+            y: j * layer.tileHeight,
             width: tw,
             height: th,
             pixelsLoaded: false,
@@ -220,16 +269,16 @@ export class WorkbenchFileStates {
           });
         }
       }
-      normalization.normalizedTiles = tiles;
+      normalization.tiles = tiles;
 
       // also initialize the transformation matrix since it requires the 
       // image height
-      let transformation = state.entities[fileId].transformation;
-      let imageMatrix = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
+      let transformation = layerState.transformation;
+      let imageMatrix = new Matrix(1, 0, 0, -1, 0, getHeight(layer));
       let viewportMatrix = new Matrix(1, 0, 0, 1, 0, 0);
       let imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
 
-      if(!transformation.imageTransform || !transformation.viewportTransform || !transformation.imageToViewportTransform) {
+      if (!transformation.imageTransform || !transformation.viewportTransform || !transformation.imageToViewportTransform) {
         transformation.imageTransform = matrixToTransform(imageMatrix);
         transformation.viewportTransform = matrixToTransform(viewportMatrix);
         transformation.imageToViewportTransform = matrixToTransform(imageToViewportMatrix);
@@ -241,10 +290,11 @@ export class WorkbenchFileStates {
 
   @Action(RenormalizeImageFile)
   @ImmutableContext()
-  public renormalizeImageFile({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: RenormalizeImageFile) {
+  public renormalizeImageFile({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: RenormalizeImageFile) {
     setState((state: WorkbenchFileStatesModel) => {
-      let normalization = state.entities[fileId].normalization;
-      normalization.normalizedTiles.forEach(tile => {
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let normalization = layerState.normalization;
+      normalization.tiles.forEach(tile => {
         tile.pixelsLoaded = false;
         tile.pixelsLoading = false;
         tile.pixels = null;
@@ -255,15 +305,16 @@ export class WorkbenchFileStates {
 
   @Action(NormalizeImageTile)
   @ImmutableContext()
-  public normalizeImageTile({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, tileIndex }: NormalizeImageTile) {
+  public normalizeImageTile({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, tileIndex }: NormalizeImageTile) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let normalization = state.entities[fileId].normalization;
-      let tile = normalization.normalizedTiles[tileIndex];
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let normalization = layerState.normalization;
+      let tile = normalization.tiles[tileIndex];
       tile.pixelsLoaded = true;
       tile.pixelsLoading = false;
-      tile.pixels = normalize(imageFile.tiles[tileIndex].pixels, imageFile.hist, normalization.normalizer);
+      tile.pixels = normalize(layer.tiles[tileIndex].pixels, layer.hist, normalization.normalizer);
 
       return state;
     });
@@ -271,70 +322,79 @@ export class WorkbenchFileStates {
 
   @Action(UpdateNormalizer)
   @ImmutableContext()
-  public updateNormalizer({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, changes }: UpdateNormalizer) {
+  public updateNormalizer({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, changes }: UpdateNormalizer) {
     setState((state: WorkbenchFileStatesModel) => {
-      let normalizer = state.entities[fileId].normalization.normalizer;
-      state.entities[fileId].normalization.normalizer = {
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let normalizer = layerState.normalization.normalizer;
+      layerState.normalization.normalizer = {
         ...normalizer,
         ...changes
       }
       return state;
     });
 
-    return dispatch(new RenormalizeImageFile(fileId))
+    return dispatch(new RenormalizeImageFile(fileId, hduIndex))
   }
 
 
   /*Sonification*/
   @Action(LoadDataFileHdrSuccess)
   @ImmutableContext()
-  public loadDataFileHdrSuccess({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, header }: LoadDataFileHdrSuccess) {
+  public loadDataFileHdrSuccess({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, header }: LoadDataFileHdrSuccess) {
     let state = getState();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
     let dataFile = dataFiles[fileId];
     let result = [];
 
-    if (dataFile.type == DataFileType.IMAGE) {
-      let sonifierState = state.entities[dataFile.id].sonificationPanelState;
-      let sourceExtractorState = state.entities[dataFile.id].photometryPanelState;
-      //add effects for image file selection
-      let imageFile = dataFile as ImageFile;
-      dispatch(new InitImageTiles(fileId));
+    dataFile.hdus.forEach(layer => {
+      if (layer.hduType == HduType.IMAGE) {
+        let imageLayer = layer as ImageHdu;
+        let layerState = state.entities[dataFile.id].hduStates[hduIndex] as WorkbenchImageHduState;
+        let sonifierState = layerState.sonificationPanelState;
+        let sourceExtractorState = layerState.photometryPanelState;
+        //add effects for image file selection
+        dispatch(new InitImageTiles(fileId, hduIndex));
 
-      if (!sonifierState.regionHistoryInitialized) {
-        dispatch(new AddRegionToHistory(
-          imageFile.id,
-          {
-            x: 0,
-            y: 0,
-            width: getWidth(imageFile),
-            height: getHeight(imageFile)
-          }
-        ))
+        if (!sonifierState.regionHistoryInitialized) {
+          dispatch(new AddRegionToHistory(
+            fileId,
+            hduIndex,
+            {
+              x: 0,
+              y: 0,
+              width: getWidth(imageLayer),
+              height: getHeight(imageLayer)
+            }
+          ))
+        }
+
       }
+    })
 
-    }
 
   }
 
 
   @Action([AddRegionToHistory, UndoRegionSelection, RedoRegionSelection])
   @ImmutableContext()
-  public regionHistoryChanged({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: AddRegionToHistory | UndoRegionSelection | RedoRegionSelection) {
+  public regionHistoryChanged({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: AddRegionToHistory | UndoRegionSelection | RedoRegionSelection) {
     let state = getState();
-    if (state.entities[fileId].sonificationPanelState.regionMode == SonifierRegionMode.CUSTOM) {
-      dispatch(new SonificationRegionChanged(fileId));
+    let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+    if (layerState.sonificationPanelState.regionMode == SonifierRegionMode.CUSTOM) {
+      dispatch(new SonificationRegionChanged(fileId, hduIndex));
     }
   }
 
   @Action(SonificationRegionChanged)
   @ImmutableContext()
-  public sonificationRegionChanged({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: SonificationRegionChanged) {
+  public sonificationRegionChanged({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: SonificationRegionChanged) {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    let sonifierState = getState().entities[fileId].sonificationPanelState;
-    let transformationState = getState().entities[fileId].transformation;
-    let sourceExtractorState = getState().entities[fileId].photometryPanelState;
+    let imageFile = dataFiles[fileId];
+    let state = getState();
+    let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+    let sonifierState = layerState.sonificationPanelState;
+    let transformationState = layerState.transformation;
+    let sourceExtractorState = layerState.photometryPanelState;
 
     if (
       sonifierState.regionMode == SonifierRegionMode.CUSTOM &&
@@ -344,6 +404,7 @@ export class WorkbenchFileStates {
       dispatch(
         new CenterRegionInViewport(
           fileId,
+          hduIndex,
           region,
           transformationState.viewportSize)
       );
@@ -353,17 +414,18 @@ export class WorkbenchFileStates {
 
   @Action(UpdateSonifierFileState)
   @ImmutableContext()
-  public updateSonifierFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, changes }: UpdateSonifierFileState) {
+  public updateSonifierFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, changes }: UpdateSonifierFileState) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonificationPanelState;
-      state.entities[fileId].sonificationPanelState = {
-        ...state.entities[fileId].sonificationPanelState,
+      let imageFile = dataFiles[fileId];
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
+      layerState.sonificationPanelState = {
+        ...layerState.sonificationPanelState,
         ...changes
       }
 
-      dispatch(new SonificationRegionChanged(fileId));
+      dispatch(new SonificationRegionChanged(fileId, hduIndex));
 
       return state;
     });
@@ -371,11 +433,12 @@ export class WorkbenchFileStates {
 
   @Action(AddRegionToHistory)
   @ImmutableContext()
-  public addRegionToHistory({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, region }: AddRegionToHistory) {
+  public addRegionToHistory({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, region }: AddRegionToHistory) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonificationPanelState;
+      let imageFile = dataFiles[fileId];
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
       if (!sonifierState.regionHistoryInitialized) {
         sonifierState.regionHistoryIndex = 0;
         sonifierState.regionHistory = [region];
@@ -392,11 +455,12 @@ export class WorkbenchFileStates {
 
   @Action(UndoRegionSelection)
   @ImmutableContext()
-  public undoRegionSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: UndoRegionSelection) {
+  public undoRegionSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: UndoRegionSelection) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonificationPanelState;
+      let imageFile = dataFiles[fileId];
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == 0) return state;
       sonifierState.regionHistoryIndex--;
       return state;
@@ -406,12 +470,13 @@ export class WorkbenchFileStates {
 
   @Action(RedoRegionSelection)
   @ImmutableContext()
-  public redoRegionSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: RedoRegionSelection) {
+  public redoRegionSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: RedoRegionSelection) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonificationPanelState;
-      if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == sonifierState.regionHistory.length-1) return state;
+      let imageFile = dataFiles[fileId];
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
+      if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == sonifierState.regionHistory.length - 1) return state;
       sonifierState.regionHistoryIndex++;
       return state;
     });
@@ -420,11 +485,12 @@ export class WorkbenchFileStates {
 
   @Action(ClearRegionHistory)
   @ImmutableContext()
-  public clearRegionHistory({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: ClearRegionHistory) {
+  public clearRegionHistory({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: ClearRegionHistory) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let sonifierState = state.entities[fileId].sonificationPanelState;
+      let imageFile = dataFiles[fileId];
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
       if (!sonifierState.regionHistoryInitialized || sonifierState.regionHistoryIndex == (sonifierState.regionHistory.length - 1)) return state;
       sonifierState.regionHistoryIndex = null
       sonifierState.regionHistory = [];
@@ -435,9 +501,10 @@ export class WorkbenchFileStates {
 
   @Action(SetProgressLine)
   @ImmutableContext()
-  public setProgressLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, line }: SetProgressLine) {
+  public setProgressLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, line }: SetProgressLine) {
     setState((state: WorkbenchFileStatesModel) => {
-      let sonifierState = state.entities[fileId].sonificationPanelState;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
       sonifierState.progressLine = line;
       return state;
     })
@@ -445,10 +512,11 @@ export class WorkbenchFileStates {
 
   @Action(UpdatePhotometryFileState)
   @ImmutableContext()
-  public updatePhotometryFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, changes }: UpdatePhotometryFileState) {
+  public updatePhotometryFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, changes }: UpdatePhotometryFileState) {
     setState((state: WorkbenchFileStatesModel) => {
-      state.entities[fileId].photometryPanelState = {
-        ...state.entities[fileId].photometryPanelState,
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      layerState.photometryPanelState = {
+        ...layerState.photometryPanelState,
         ...changes
       }
       return state;
@@ -510,11 +578,12 @@ export class WorkbenchFileStates {
   /* Transformation */
   @Action(CenterRegionInViewport)
   @ImmutableContext()
-  public centerRegionInViewport({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, region, viewportSize }: CenterRegionInViewport) {
+  public centerRegionInViewport({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, region, viewportSize }: CenterRegionInViewport) {
     let state = getState();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    let transformationState = state.entities[fileId].transformation;
+    let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+    let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+    let transformationState = layerState.transformation;
 
     if (!viewportSize)
       viewportSize = transformationState.viewportSize;
@@ -531,34 +600,37 @@ export class WorkbenchFileStates {
     let xShift = viewportAnchor.x - scale * (region.x + region.width / 2);
     let yShift =
       viewportAnchor.y -
-      scale * (getHeight(imageFile) - (region.y + region.height / 2));
+      scale * (getHeight(layer) - (region.y + region.height / 2));
     let viewportTransform = new Matrix(scale, 0, 0, scale, xShift, yShift);
 
     return dispatch([
-      new ResetImageTransform(fileId),
-      new SetViewportTransform(fileId, viewportTransform)
+      new ResetImageTransform(fileId, hduIndex),
+      new SetViewportTransform(fileId, hduIndex, viewportTransform)
     ])
   }
 
   @Action(ZoomTo)
   @ImmutableContext()
-  public zoomTo({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, scale, anchorPoint }: ZoomTo) {
+  public zoomTo({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, scale, anchorPoint }: ZoomTo) {
     let state = getState();
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let transformationState = state.entities[fileId].transformation;
+    let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+    let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+    let transformationState = layerState.transformation;
 
     let zoomByFactor = scale / getScale(transformationState);
 
-    return dispatch(new ZoomBy(fileId, zoomByFactor, anchorPoint))
+    return dispatch(new ZoomBy(fileId, hduIndex, zoomByFactor, anchorPoint))
   }
 
   @Action(ZoomBy)
   @ImmutableContext()
-  public zoomBy({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, scaleFactor, viewportAnchor }: ZoomBy) {
+  public zoomBy({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, scaleFactor, viewportAnchor }: ZoomBy) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transformation.viewportTransform);
       let imageMatrix = transformToMatrix(transformation.imageTransform);
@@ -572,7 +644,7 @@ export class WorkbenchFileStates {
       let reachedMaxZoom = d > transformation.viewportSize.width || d > transformation.viewportSize.height;
 
       // min zoom reached when image fits in viewer
-      viewportLRP = imageToViewportMatrix.transform(new Point(getWidth(imageFile) - 0.5, getHeight(imageFile) - 0.5));
+      viewportLRP = imageToViewportMatrix.transform(new Point(getWidth(layer) - 0.5, getHeight(layer) - 0.5));
       d = viewportULP.getDistance(viewportLRP);
       let reachedMinZoom = d < transformation.viewportSize.width && d < transformation.viewportSize.height;
 
@@ -605,11 +677,12 @@ export class WorkbenchFileStates {
 
   @Action(MoveBy)
   @ImmutableContext()
-  public moveBy({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, xShift, yShift }: MoveBy) {
+  public moveBy({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, xShift, yShift }: MoveBy) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transformation.viewportTransform);
       let imageMatrix = transformToMatrix(transformation.imageTransform);
@@ -618,10 +691,10 @@ export class WorkbenchFileStates {
 
       // test if image is almost entirely out of viewer
       let buffer = 50;
-      let c1 = imageToViewportMatrix.transform(new Point(getWidth(imageFile), getHeight(imageFile)));
+      let c1 = imageToViewportMatrix.transform(new Point(getWidth(layer), getHeight(layer)));
       let c2 = imageToViewportMatrix.transform(new Point(0, 0));
-      let c3 = imageToViewportMatrix.transform(new Point(0, getHeight(imageFile)));
-      let c4 = imageToViewportMatrix.transform(new Point(getWidth(imageFile), 0));
+      let c3 = imageToViewportMatrix.transform(new Point(0, getHeight(layer)));
+      let c4 = imageToViewportMatrix.transform(new Point(getWidth(layer), 0));
       let maxPoint = new Point(Math.max(c1.x, c2.x, c3.x, c4.x), Math.max(c1.y, c2.y, c3.y, c4.y));
       let minPoint = new Point(Math.min(c1.x, c2.x, c3.x, c4.x), Math.min(c1.y, c2.y, c3.y, c4.y));
       let imageRect = new Rectangle(minPoint.x + buffer + xShift,
@@ -652,11 +725,12 @@ export class WorkbenchFileStates {
 
   @Action(SetViewportTransform)
   @ImmutableContext()
-  public setViewportTransform({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, transform }: SetViewportTransform) {
+  public setViewportTransform({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, transform }: SetViewportTransform) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transform);
       let imageMatrix = transformToMatrix(transformation.imageTransform);
@@ -673,11 +747,12 @@ export class WorkbenchFileStates {
 
   @Action(SetImageTransform)
   @ImmutableContext()
-  public setImageTransform({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, transform }: SetImageTransform) {
+  public setImageTransform({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, transform }: SetImageTransform) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transformation.viewportTransform);
       let imageMatrix = transformToMatrix(transform);
@@ -694,17 +769,18 @@ export class WorkbenchFileStates {
 
   @Action(ResetImageTransform)
   @ImmutableContext()
-  public resetImageTransform({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: ResetImageTransform) {
+  public resetImageTransform({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: ResetImageTransform) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transformation.viewportTransform);
       let imageMatrix = transformToMatrix(transformation.imageTransform);
       let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
 
-      imageMatrix = new Matrix(1, 0, 0, -1, 0, getHeight(imageFile));
+      imageMatrix = new Matrix(1, 0, 0, -1, 0, getHeight(layer));
       imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
 
       transformation.imageTransform = matrixToTransform(imageMatrix);
@@ -716,11 +792,12 @@ export class WorkbenchFileStates {
 
   @Action(RotateBy)
   @ImmutableContext()
-  public rotateBy({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, rotationAngle, anchorPoint }: RotateBy) {
+  public rotateBy({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, rotationAngle, anchorPoint }: RotateBy) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transformation.viewportTransform);
       let imageMatrix = transformToMatrix(transformation.imageTransform);
@@ -745,17 +822,18 @@ export class WorkbenchFileStates {
 
   @Action(Flip)
   @ImmutableContext()
-  public flip({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId }: Flip) {
+  public flip({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex }: Flip) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       let viewportMatrix = transformToMatrix(transformation.viewportTransform);
       let imageMatrix = transformToMatrix(transformation.imageTransform);
       let imageToViewportMatrix = transformToMatrix(transformation.imageToViewportTransform);
 
-      imageMatrix.scale(-1, 1, getWidth(imageFile) / 2, getHeight(imageFile) / 2);
+      imageMatrix.scale(-1, 1, getWidth(layer) / 2, getHeight(layer) / 2);
       imageToViewportMatrix = viewportMatrix.appended(imageMatrix);
 
       transformation.imageTransform = matrixToTransform(imageMatrix);
@@ -768,12 +846,12 @@ export class WorkbenchFileStates {
 
   @Action(UpdateCurrentViewportSize)
   @ImmutableContext()
-  public updateCurrentViewportSize({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, viewportSize }: UpdateCurrentViewportSize) {
+  public updateCurrentViewportSize({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, viewportSize }: UpdateCurrentViewportSize) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      if (!imageFile || !state.entities[imageFile.id]) return state;
-      let transformation = state.entities[fileId].transformation;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let transformation = layerState.transformation;
 
       transformation.viewportSize = viewportSize;
       return state;
@@ -782,11 +860,12 @@ export class WorkbenchFileStates {
 
   @Action(StartLine)
   @ImmutableContext()
-  public startLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, point }: StartLine) {
+  public startLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, point }: StartLine) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let plotterState = state.entities[fileId].plottingPanelState;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let plotterState = layerState.plottingPanelState;
 
       if (!plotterState.measuring) {
         plotterState.lineMeasureStart = { ...point };
@@ -803,11 +882,12 @@ export class WorkbenchFileStates {
 
   @Action(UpdateLine)
   @ImmutableContext()
-  public updateLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, point }: UpdateLine) {
+  public updateLine({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, point }: UpdateLine) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      let plotterState = state.entities[fileId].plottingPanelState;
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let plotterState = layerState.plottingPanelState;
 
       if (!plotterState.measuring) return state;
 
@@ -819,12 +899,15 @@ export class WorkbenchFileStates {
 
   @Action(UpdatePlotterFileState)
   @ImmutableContext()
-  public updatePlotterFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, changes }: UpdatePlotterFileState) {
+  public updatePlotterFileState({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, changes }: UpdatePlotterFileState) {
     setState((state: WorkbenchFileStatesModel) => {
       let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-      let imageFile = dataFiles[fileId] as ImageFile;
-      state.entities[fileId].plottingPanelState = {
-        ...state.entities[fileId].plottingPanelState,
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let plotterState = layerState.plottingPanelState;
+
+      plotterState = {
+        ...plotterState,
         ...changes
       }
       return state;
@@ -835,51 +918,54 @@ export class WorkbenchFileStates {
 
 
 
-//   @Action([MoveBy, ZoomBy, UpdateCurrentViewportSize, ResetImageTransform, SetViewportTransform, SetImageTransform])
-//   @ImmutableContext()
-//   public viewportChanged({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: MoveBy | ZoomBy | UpdateCurrentViewportSize | ResetImageTransform | SetViewportTransform | SetImageTransform) {
-//     let imageFileState = getState().entities[fileId];
-//     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-//     let imageFile = dataFiles[fileId] as ImageFile;
+  //   @Action([MoveBy, ZoomBy, UpdateCurrentViewportSize, ResetImageTransform, SetViewportTransform, SetImageTransform])
+  //   @ImmutableContext()
+  //   public viewportChanged({ getState, setState, dispatch }: StateContext<ImageFilesStateModel>, { fileId }: MoveBy | ZoomBy | UpdateCurrentViewportSize | ResetImageTransform | SetViewportTransform | SetImageTransform) {
+  //     let imageFileState = getState().entities[fileId];
+  //     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+  //     let imageFile = dataFiles[fileId] as ImageFile;
 
-//     let result = [];
-//     if (
-//       imageFile.headerLoaded &&
-//       imageFileState &&
-//       imageFileState.transformation.viewportSize
-//     ) {
-//       let sonifier = imageFileState.sonifier;
-//       let sourceExtractor = imageFileState.sourceExtractor;
-//       if (sonifier.regionMode == SonifierRegionMode.VIEWPORT) {
-//         result.push(new UpdateSonifierRegion(fileId));
-//       }
-
-      
-//             // region = {
-//             //   x: imageFileGlobalState.viewport.imageX,
-//             //   y: imageFileGlobalState.viewport.imageY,
-//             //   width: imageFileGlobalState.viewport.imageWidth,
-//             //   height: imageFileGlobalState.viewport.imageHeight
-//             // }
-
-//       if (sourceExtractor.regionOption == PhotometryRegionOption.VIEWPORT) {
-//         result.push(new UpdateSourceExtractorRegion(fileId));
-//       }
-
-//     }
-//     return dispatch(result);
-//   }
+  //     let result = [];
+  //     if (
+  //       imageFile.headerLoaded &&
+  //       imageFileState &&
+  //       imageFileState.transformation.viewportSize
+  //     ) {
+  //       let sonifier = imageFileState.sonifier;
+  //       let sourceExtractor = imageFileState.sourceExtractor;
+  //       if (sonifier.regionMode == SonifierRegionMode.VIEWPORT) {
+  //         result.push(new UpdateSonifierRegion(fileId));
+  //       }
 
 
-/*  Custom Markers */
-@Action(UpdateCustomMarker)
+  //             // region = {
+  //             //   x: imageFileGlobalState.viewport.imageX,
+  //             //   y: imageFileGlobalState.viewport.imageY,
+  //             //   width: imageFileGlobalState.viewport.imageWidth,
+  //             //   height: imageFileGlobalState.viewport.imageHeight
+  //             // }
+
+  //       if (sourceExtractor.regionOption == PhotometryRegionOption.VIEWPORT) {
+  //         result.push(new UpdateSourceExtractorRegion(fileId));
+  //       }
+
+  //     }
+  //     return dispatch(result);
+  //   }
+
+
+  /*  Custom Markers */
+  @Action(UpdateCustomMarker)
   @ImmutableContext()
-  public updateCustomMarker({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markerId, changes }: UpdateCustomMarker) {
+  public updateCustomMarker({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, markerId, changes }: UpdateCustomMarker) {
     let state = getState();
-   
+
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].customMarkerPanelState
-      if(markerState.ids.includes(markerId)) {
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let markerState = layerState.customMarkerPanelState;
+      if (markerState.ids.includes(markerId)) {
         markerState.entities[markerId] = {
           ...markerState.entities[markerId],
           ...changes
@@ -891,57 +977,66 @@ export class WorkbenchFileStates {
 
   @Action(AddCustomMarkers)
   @ImmutableContext()
-  public addCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markers }: AddCustomMarkers) {
+  public addCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, markers }: AddCustomMarkers) {
     let state = getState();
-   
+
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].customMarkerPanelState
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let markerState = layerState.customMarkerPanelState;
 
       markers.forEach(marker => {
         let nextSeed = state.nextMarkerId++;
-        if(marker.label == null || marker.label == undefined) {
+        if (marker.label == null || marker.label == undefined) {
           // marker.marker.label = `M${nextSeed}`;
           marker.label = '';
         }
-        let id =  `CUSTOM_MARKER_${fileId}_${nextSeed.toString()}`;
+        let id = `CUSTOM_MARKER_${fileId}_${nextSeed.toString()}`;
         markerState.ids.push(id);
         markerState.entities[id] = {
           ...marker,
           id: id
         }
       });
-      
+
       return state;
     });
   }
 
   @Action(RemoveCustomMarkers)
   @ImmutableContext()
-  public removeCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markers }: RemoveCustomMarkers) {
+  public removeCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, markers }: RemoveCustomMarkers) {
     let state = getState();
-   
+
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].customMarkerPanelState
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let markerState = layerState.customMarkerPanelState;
 
       let idsToRemove = markers.map(m => m.id);
       markerState.ids = markerState.ids.filter(id => !idsToRemove.includes(id));
       markers.forEach(marker => {
-        if(marker.id in markerState.entities) delete markerState.entities[marker.id];
+        if (marker.id in markerState.entities) delete markerState.entities[marker.id];
       })
-      
+
       return state;
     });
   }
 
   @Action(SelectCustomMarkers)
   @ImmutableContext()
-  public selectCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markers }: SelectCustomMarkers) {
+  public selectCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, markers }: SelectCustomMarkers) {
     let state = getState();
-   
+
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].customMarkerPanelState
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let markerState = layerState.customMarkerPanelState;
       markers.forEach(marker => {
-        if(markerState.ids.includes(marker.id)) {
+        if (markerState.ids.includes(marker.id)) {
           markerState.entities[marker.id].selected = true
         }
       })
@@ -951,13 +1046,16 @@ export class WorkbenchFileStates {
 
   @Action(DeselectCustomMarkers)
   @ImmutableContext()
-  public deselectCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markers }: DeselectCustomMarkers) {
+  public deselectCustomMarkers({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, markers }: DeselectCustomMarkers) {
     let state = getState();
-   
+
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].customMarkerPanelState
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let markerState = layerState.customMarkerPanelState;
       markers.forEach(marker => {
-        if(markerState.ids.includes(marker.id)) {
+        if (markerState.ids.includes(marker.id)) {
           markerState.entities[marker.id].selected = false
         }
       })
@@ -967,9 +1065,13 @@ export class WorkbenchFileStates {
 
   @Action(SetCustomMarkerSelection)
   @ImmutableContext()
-  public setCustomMarkerSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, markers }: SetCustomMarkerSelection) {
+  public setCustomMarkerSelection({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { fileId, hduIndex, markers }: SetCustomMarkerSelection) {
     setState((state: WorkbenchFileStatesModel) => {
-      let markerState = state.entities[fileId].customMarkerPanelState
+      let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+      let layer = dataFiles[fileId].hdus[hduIndex] as ImageHdu;
+      let layerState = state.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let markerState = layerState.customMarkerPanelState;
+
       let selectedMarkerIds = markers.map(m => m.id);
       markerState.ids.forEach(markerId => {
         markerState.entities[markerId].selected = selectedMarkerIds.includes(markerId);
@@ -984,10 +1086,12 @@ export class WorkbenchFileStates {
   public addPhotDatas({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { photDatas }: AddPhotDatas) {
     setState((state: WorkbenchFileStatesModel) => {
       photDatas.forEach(d => {
-        if(!d.fileId || !(d.fileId in state.entities) || !d.sourceId) return;
-        state.entities[d.fileId].photometryPanelState.sourcePhotometryData[d.sourceId] = d;
+        if (!d.fileId || !(d.fileId in state.entities) || !d.sourceId) return;
+        let layerState = state.entities[d.fileId].hduStates[d.hduIndex] as WorkbenchImageHduState;
+        let photometryPanelState = layerState.photometryPanelState;
+        photometryPanelState.sourcePhotometryData[d.sourceId] = d;
       });
-      
+
       return state;
     });
   }
@@ -997,7 +1101,9 @@ export class WorkbenchFileStates {
   public removeAllPhotDatas({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { }: RemoveAllPhotDatas) {
     setState((state: WorkbenchFileStatesModel) => {
       state.ids.forEach(fileId => {
-        state.entities[fileId].photometryPanelState.sourcePhotometryData = {};
+        state.entities[fileId].hduStates.forEach(layerState => {
+          (layerState as WorkbenchImageHduState).photometryPanelState.sourcePhotometryData = {};
+        })
       })
       return state;
     });
@@ -1008,9 +1114,14 @@ export class WorkbenchFileStates {
   public removePhotDatas({ getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>, { sourceId }: RemovePhotDatas) {
     setState((state: WorkbenchFileStatesModel) => {
       state.ids.forEach(fileId => {
-        if(sourceId in state.entities[fileId].photometryPanelState.sourcePhotometryData) {
-          delete state.entities[fileId].photometryPanelState.sourcePhotometryData[sourceId];
-        }
+        state.entities[fileId].hduStates.forEach(layerState => {
+          let photometryPanelState = (layerState as WorkbenchImageHduState).photometryPanelState;
+          if (sourceId in photometryPanelState.sourcePhotometryData) {
+            delete photometryPanelState.sourcePhotometryData[sourceId];
+          }
+        })
+
+        
       })
       return state;
     });

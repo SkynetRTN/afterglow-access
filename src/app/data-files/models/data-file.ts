@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 
-import { DataFileType } from './data-file-type';
+import { HduType } from './data-file-type';
 import { HeaderEntry } from './header-entry';
 import { ImageTile, getTilePixel } from './image-tile';
 import { ImageHist } from './image-hist';
@@ -9,104 +9,107 @@ import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
 
 export type Header = Array<HeaderEntry>;
-export type DataFile = ImageFile | TableFile;
+export type DataLayer =  ImageHdu | TableHdu;
+export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
 
-export interface IDataFile {
-  readonly type: DataFileType;
+export enum ImageLayerPrecision {
+  uint8 = 'uint8',
+  uint16 = 'uint16',
+  uint32 = 'uint32',
+  float32 = 'float32',
+  float64 = 'float64'
+}
+
+export enum ImageLayerMode {
+  rgb = 'rgb',
+  grayscale = 'grayscale'
+}
+
+export interface DataFile {
   id: string;
   name: string;
+  dataProviderId: string;
+  assetPath: string;
+  modified: boolean;
+  hdus: IHeaderDataUnit[];
+}
+
+export interface IHeaderDataUnit {
+  readonly hduType: HduType;
   header: Header;
   wcs: Wcs;
   headerLoaded: boolean;
   headerLoading: boolean;
-  layer: string;
-  dataProviderId: string;
-  assetPath: string;
-  modified: boolean;
 }
 
-export function getEntry(dataFile: DataFile, key: string) {
-  for (let i = 0; i < dataFile.header.length; i++) {
-    if (dataFile.header[i].key == key) return dataFile.header[i];
+export function getHeaderEntry(layer: DataLayer, key: string) {
+  for (let i = 0; i < layer.header.length; i++) {
+    if (layer.header[i].key == key) return layer.header[i];
   }
   return undefined;
 }
 
-export function hasKey(dataFile: DataFile, key: string) {
-  return getEntry(dataFile, key) != undefined;
+export function hasKey(layer: DataLayer, key: string) {
+  return getHeaderEntry(layer, key) != undefined;
 }
 
-export function toKeyValueHash(dataFile: DataFile) {
+export function toKeyValueHash(layer: DataLayer) {
   let result: { [key: string]: any } = {};
-  dataFile.header.forEach(entry => {
+  layer.header.forEach(entry => {
     result[entry.key] = entry.value;
   });
   return result;
 }
 
-// interface DataFileBase {
-
-
-//   public hasKey(key: string) {
-//     return getEntry(key) != undefined;
-//   }
-
-//   public getEntry(key: string) {
-//     for(let i=0; i<header.length; i++) {
-//     if(header[i].key == key) return header[i];
-//     }
-//     return undefined;
-//   }
-
-//   public toKeyValueHash() {
-//     let result: {[key: string]: any} = {};
-//     header.forEach(entry => {
-//     result[entry.key] = entry.value;
-//     });
-//     return result;
-//   }
-//   }
-
-export interface ImageFile extends IDataFile {
-  tilesInitialized: boolean;
+export interface ITiledImageData<T> {
+  width: number;
+  height: number;
   tileWidth: number;
   tileHeight: number;
-  tiles: Array<ImageTile>;
+  tiles: Array<ImageTile<T>>;
+  tilesInitialized: boolean;
+}
 
+export interface ImageHdu extends IHeaderDataUnit, ITiledImageData<PixelType> {
+  readonly hduType: HduType.IMAGE;
+  readonly mode: ImageLayerMode;
+  readonly precision: ImageLayerPrecision;
+  
   hist: ImageHist;
   histLoaded: boolean;
   histLoading: boolean;
 }
 
-export function getWidth(file: DataFile) {
-  let naxis1 = getEntry(file, 'NAXIS1');
+
+export function getWidth(layer: ImageHdu) {
+  let naxis1 = getHeaderEntry(layer, 'NAXIS1');
   if (naxis1) {
     return naxis1.value;
   }
   return undefined;
 }
 
-export function getHeight(file: DataFile) {
-  let naxis2 = getEntry(file, 'NAXIS2');
+export function getHeight(layer: ImageHdu) {
+  let naxis2 = getHeaderEntry(layer, 'NAXIS2');
   if (naxis2) {
     return naxis2.value;
   }
   return undefined;
 }
 
-export function getPixels(imageFile: ImageFile, x: number, y: number, width: number, height: number) {
+export function getPixels<T>(imageData: ITiledImageData<T>, x: number, y: number, width: number, height: number) {
   let result: Array<Array<number>> = [];
   for(let j=0; j<height; j++) {
     let row = Array(width)
     for(let i=0; i<width; i++) {
-      row[i] = getPixel(imageFile, x+i, y+j);
+      row[i] = getPixel(imageData, x+i, y+j);
     }
     result[j] = row;
   }
   return result;
 }
 
-export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate: boolean = false) {
+export function getPixel<T>(imageData: ITiledImageData<T>, x: number, y: number, interpolate: boolean = false) {
   //let interpolateMethod = 'bilinear';
   // let interpolateMethod = 'bicubic';
 
@@ -159,7 +162,7 @@ export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate
       for (let i = 0; i < 4; i++) {
         let xi = x0 + i;
         let yj = y0 + j;
-        neighbors[i][j] = getPixel(imageFile, xi, yj, false);
+        neighbors[i][j] = getPixel(imageData, xi, yj, false);
       }
     }
     //console.log(x, y, 0.5-(Math.round(x) - x), 0.5-(Math.round(y) - y), neighbors);
@@ -171,11 +174,11 @@ export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate
   }
 
 
-  let i = Math.floor((x - 0.5) / imageFile.tileWidth);
-  let j = Math.floor((y - 0.5) / imageFile.tileHeight);
-  let tile = getTile(imageFile, i, j);
+  let i = Math.floor((x - 0.5) / imageData.tileWidth);
+  let j = Math.floor((y - 0.5) / imageData.tileHeight);
+  let tile = getTile(imageData, i, j);
   if (!tile) return NaN;
-  return getTilePixel(tile, Math.floor((x - 0.5) % imageFile.tileWidth), Math.floor((y - 0.5) % imageFile.tileWidth));
+  return getTilePixel(tile, Math.floor((x - 0.5) % imageData.tileWidth), Math.floor((y - 0.5) % imageData.tileWidth));
 
   // var BicubicInterpolation = (function(){
   //   return function(x, y, values){
@@ -212,43 +215,34 @@ export function getPixel(imageFile: ImageFile, x: number, y: number, interpolate
 
 }
 
-export function getTile(imageFile: ImageFile, i: number, j: number) {
-  return imageFile.tiles[j * getXTileDim(imageFile) + i];
+export function getTile<T>(imageData: ITiledImageData<T>, i: number, j: number) {
+  return imageData.tiles[j * getXTileDim(imageData) + i];
 }
 
-export function getXTileDim(imageFile: ImageFile) {
-  return Math.ceil(getWidth(imageFile) / imageFile.tileWidth);
+export function getXTileDim<T>(imageData: ITiledImageData<T>) {
+  return Math.ceil(imageData.width / imageData.tileWidth);
 }
 
-export function getYTileDim(imageFile: ImageFile) {
-  return Math.ceil(getHeight(imageFile) / imageFile.tileHeight);
+export function getYTileDim<T>(imageData: ITiledImageData<T>) {
+  return Math.ceil(imageData.height / imageData.tileHeight);
 }
 
-export function findTiles(imageFile: ImageFile, x: number, y: number, width: number, height: number) {
-  let result: ImageTile[] = [];
-  let jStart = Math.max(0, Math.floor(y / imageFile.tileHeight));
-  let jEnd = Math.min(getYTileDim(imageFile) - 1, Math.floor((y + height) / imageFile.tileHeight)) + 1;
-  let iStart = Math.max(0, Math.floor(x / imageFile.tileWidth));
-  let iEnd = Math.min(getXTileDim(imageFile) - 1, Math.floor((x + width) / imageFile.tileWidth)) + 1;
+export function findTiles<T>(imageData: ITiledImageData<T>, x: number, y: number, width: number, height: number) {
+  let result: ImageTile<T>[] = [];
+  let jStart = Math.max(0, Math.floor(y / imageData.tileHeight));
+  let jEnd = Math.min(getYTileDim(imageData) - 1, Math.floor((y + height) / imageData.tileHeight)) + 1;
+  let iStart = Math.max(0, Math.floor(x / imageData.tileWidth));
+  let iEnd = Math.min(getXTileDim(imageData) - 1, Math.floor((x + width) / imageData.tileWidth)) + 1;
   for (let j = jStart; j < jEnd; j++) {
     for (let i = iStart; i < iEnd; i++) {
-      result.push(imageFile.tiles[j * getXTileDim(imageFile) + i]);
+      result.push(imageData.tiles[j * getXTileDim(imageData) + i]);
     }
   }
   return result;
 }
 
-// export function getWcs(imageFile: ImageFile) {
-//   return new Wcs(toKeyValueHash(imageFile));
-// }
-
-// export function getHasWcs(imageFile: ImageFile) {
-//   let wcs = new Wcs(toKeyValueHash(imageFile));
-//   return wcs.hasWcs();
-// }
-
-export function getDegsPerPixel(imageFile: ImageFile) {
-  let secpix = getEntry(imageFile, 'SECPIX');
+export function getDegsPerPixel(layer: ImageHdu) {
+  let secpix = getHeaderEntry(layer, 'SECPIX');
   if (secpix) {
     return secpix.value / 3600.0;
   }
@@ -256,10 +250,10 @@ export function getDegsPerPixel(imageFile: ImageFile) {
   return undefined;
 }
 
-export function getStartTime(file: DataFile) {
+export function getStartTime(layer: ImageHdu) {
   let imageDateStr = '';
   let imageTimeStr = '';
-  let dateObs = getEntry(file, 'DATE-OBS');
+  let dateObs = getHeaderEntry(layer, 'DATE-OBS');
   if (dateObs) {
     imageDateStr = dateObs.value;
     if(imageDateStr.includes('T')) {
@@ -271,7 +265,7 @@ export function getStartTime(file: DataFile) {
     }
   }
 
-  let timeObs = getEntry(file, 'TIME-OBS');
+  let timeObs = getHeaderEntry(layer, 'TIME-OBS');
   if (timeObs) {
     imageTimeStr = timeObs.value;
   }
@@ -283,43 +277,43 @@ export function getStartTime(file: DataFile) {
   return undefined;
 }
 
-export function getExpLength(file: DataFile) {
-  let expLength = getEntry(file, 'EXPTIME');
+export function getExpLength(layer: ImageHdu) {
+  let expLength = getHeaderEntry(layer, 'EXPTIME');
   if (expLength) {
     return expLength.value;
   }
   return undefined;
 }
 
-export function getCenterTime(file: DataFile) {
-  let expLength = getExpLength(file);
-  let startTime = getStartTime(file);
+export function getCenterTime(layer: ImageHdu) {
+  let expLength = getExpLength(layer);
+  let startTime = getStartTime(layer);
   if (expLength !== undefined && startTime !== undefined) {
     return new Date(startTime.getTime() + expLength * 1000.0 / 2.0);
   }
   return undefined;
 }
 
-export function getTelescope(imageFile: ImageFile) {
-  let observat = getEntry(imageFile, 'OBSERVAT');
+export function getTelescope(layer: ImageHdu) {
+  let observat = getHeaderEntry(layer, 'OBSERVAT');
   if (observat) {
     return observat.value;
   }
   return undefined;
 }
 
-export function getObject(imageFile: ImageFile) {
-  let obj = getEntry(imageFile, 'OBJECT');
+export function getObject(layer: ImageHdu) {
+  let obj = getHeaderEntry(layer, 'OBJECT');
   if (obj) {
     return obj.value;
   }
   return undefined;
 }
 
-export function getRaHours(imageFile: ImageFile) {
-  let raEntry = getEntry(imageFile, 'RA');
+export function getRaHours(layer: ImageHdu) {
+  let raEntry = getHeaderEntry(layer, 'RA');
   if (!raEntry) {
-    raEntry = getEntry(imageFile, 'RAOBJ');
+    raEntry = getHeaderEntry(layer, 'RAOBJ');
     if(!raEntry) return undefined;
   }
   let ra;
@@ -335,10 +329,10 @@ export function getRaHours(imageFile: ImageFile) {
   return ra;
 }
 
-export function getDecDegs(imageFile: ImageFile) {
-  let decEntry = getEntry(imageFile, 'DEC');
+export function getDecDegs(layer: ImageHdu) {
+  let decEntry = getHeaderEntry(layer, 'DEC');
   if (!decEntry) {
-    decEntry = getEntry(imageFile, 'DECOBJ');
+    decEntry = getHeaderEntry(layer, 'DECOBJ');
     if(!decEntry) return undefined;
   }
 
@@ -355,23 +349,23 @@ export function getDecDegs(imageFile: ImageFile) {
   return dec;
 }
 
-export function getExpNum(imageFile: ImageFile) {
-  let expNum = getEntry(imageFile, 'EXPNUM');
+export function getExpNum(layer: ImageHdu) {
+  let expNum = getHeaderEntry(layer, 'EXPNUM');
   if (expNum) {
     return expNum.value;
   }
   return undefined;
 }
 
-export function getFilter(imageFile: ImageFile) {
-  let filter = getEntry(imageFile, 'FILTER');
+export function getFilter(layer: ImageHdu) {
+  let filter = getHeaderEntry(layer, 'FILTER');
   if (filter) {
     return filter.value;
   }
   return undefined;
 }
 
-export function getSourceCoordinates(file: DataFile, source: Source) {
+export function getSourceCoordinates(layer: ImageHdu, source: Source) {
   let primaryCoord = source.primaryCoord;
   let secondaryCoord = source.secondaryCoord;
   let pm = source.pm;
@@ -380,8 +374,8 @@ export function getSourceCoordinates(file: DataFile, source: Source) {
   
 
   if (pm) {
-    if (!file.headerLoaded) return null;
-    let fileEpoch = getCenterTime(file);
+    if (!layer.headerLoaded) return null;
+    let fileEpoch = getCenterTime(layer);
     if (!fileEpoch) return null;
 
     let deltaT = (fileEpoch.getTime() - (new Date(epoch)).getTime()) / 1000.0;
@@ -402,8 +396,8 @@ export function getSourceCoordinates(file: DataFile, source: Source) {
   let theta = posAngle;
 
   if (source.posType == PosType.SKY) {
-    if (!file.headerLoaded || !file.wcs.isValid()) return null;
-    let wcs = file.wcs;
+    if (!layer.headerLoaded || !layer.wcs.isValid()) return null;
+    let wcs = layer.wcs;
     let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
     x = xy[0];
     y = xy[1];
@@ -417,9 +411,9 @@ export function getSourceCoordinates(file: DataFile, source: Source) {
 
   if (
     x < 0.5 ||
-    x >= getWidth(file) + 0.5 ||
+    x >= getWidth(layer) + 0.5 ||
     y < 0.5 ||
-    y >= getHeight(file) + 0.5
+    y >= getHeight(layer) + 0.5
   ) {
     return null;
   }
@@ -436,24 +430,25 @@ export function getSourceCoordinates(file: DataFile, source: Source) {
   
 }
 
-export function hasOverlap(imageFileA: ImageFile, imageFileB: ImageFile) {
+export function hasOverlap(layerA: ImageHdu, layerB: ImageHdu) {
   // if(!imageFile1.headerLoaded || !imageFile2.headerLoaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
-  if(!imageFileA.headerLoaded || !imageFileB.headerLoaded || !imageFileA.wcs || !imageFileB.wcs) return false;
+  if(!layerA.headerLoaded || !layerB.headerLoaded || !layerA.wcs || !layerB.wcs) return false;
 
-  let wcsA = imageFileA.wcs;
+  let wcsA = layerA.wcs;
   let worldLowerLeft = wcsA.pixToWorld([0, 0]);
-  let worldUpperRight = wcsA.pixToWorld([getWidth(imageFileA), getHeight(imageFileA)]);
-  let wcsB = imageFileB.wcs;
+  let worldUpperRight = wcsA.pixToWorld([getWidth(layerA), getHeight(layerA)]);
+  let wcsB = layerB.wcs;
   let pixelLowerLeft = wcsB.worldToPix(worldLowerLeft);
   let pixelUpperRight = wcsB.worldToPix(worldUpperRight);
   let regionA = { x1: Math.min(pixelLowerLeft[0], pixelUpperRight[0]), y1: Math.max(pixelLowerLeft[1], pixelUpperRight[1]), x2: Math.max(pixelLowerLeft[0], pixelUpperRight[0]), y2: Math.min(pixelLowerLeft[1], pixelUpperRight[1]) };
-  let regionB = { x1: 0, y1: getHeight(imageFileB), x2: getWidth(imageFileB), y2: 0 };
+  let regionB = { x1: 0, y1: getHeight(layerB), x2: getWidth(layerB), y2: 0 };
   let overlap = (regionA.x1 < regionB.x2 && regionA.x2 > regionB.x1 && regionA.y1 > regionB.y2 && regionA.y2 < regionB.y1);
   return overlap;
 }
 
 
 
-export interface TableFile extends IDataFile {
+export interface TableHdu extends IHeaderDataUnit {
+  readonly hduType: HduType.TABLE;
   rows: Array<any>;
 }

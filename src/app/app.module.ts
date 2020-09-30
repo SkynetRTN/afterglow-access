@@ -39,9 +39,10 @@ import { WorkbenchState } from './workbench/workbench.state';
 import { SourcesState } from './workbench/sources.state';
 import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
-import { DataFileType } from './data-files/models/data-file-type';
-import { ImageFile } from './data-files/models/data-file';
 import { WasmService } from './wasm.service';
+import { HduType } from './data-files/models/data-file-type';
+import { ImageHdu } from './data-files/models/data-file';
+import { WorkbenchHduState, WorkbenchImageHduState } from './workbench/models/workbench-file-state';
 
 export function dataFileSanitizer(v) {
   let state = {
@@ -57,20 +58,28 @@ export function dataFileSanitizer(v) {
       ...state.entities[key]
     };
 
-    dataFile.header = null;
-    dataFile.headerLoaded = false;
-    dataFile.headerLoading = false;
-    dataFile.wcs = null;
-    
+    dataFile.hdus = dataFile.hdus.map((layer, index) => {
+      let newLayer = {
+        ...layer,
+        header: null,
+        headerLoaded: false,
+        headerLoading: false,
+        wcs: null
+      }
 
-    if(dataFile.type == DataFileType.IMAGE) {
-      let imageFile = dataFile as ImageFile;
-      imageFile.hist = null;
-      imageFile.histLoaded = false;
-      imageFile.histLoading = false;
-      imageFile.tilesInitialized = false;
-      imageFile.tiles = [];
-    }
+      if(newLayer.hduType == HduType.IMAGE) {
+        let newImageLayer = newLayer as ImageHdu;
+        newImageLayer.hist = null;
+        newImageLayer.histLoaded = false;
+        newImageLayer.histLoading = false;
+        newImageLayer.tilesInitialized = false;
+        newImageLayer.tiles = [];
+      }
+
+      return newLayer;
+    })
+
+    
     state.entities[key] = dataFile;
 
   })
@@ -87,17 +96,23 @@ export function imageFileStateSanitizer(v) {
   }
 
   Object.keys(state.entities).forEach(key => {
-    let imageFileState = {
+    let workbenchFileState = {
       ...state.entities[key]
     };
 
-    imageFileState.normalization = {
-      ...imageFileState.normalization,
-      initialized: false,
-      normalizedTiles: []
-    }
+    workbenchFileState.hduStates = workbenchFileState.hduStates.map((hduState, index) => {
+      if(hduState.hduType != HduType.IMAGE) return {...hduState};
 
-    state.entities[key] = imageFileState;
+      let imageHduState = hduState as WorkbenchImageHduState;
+      return {
+        ...imageHduState,
+        normalization: {
+          ...imageHduState.normalization,
+          tiles: []
+        }
+      }
+    })
+    state.entities[key] = workbenchFileState;
 
   })
   return state;

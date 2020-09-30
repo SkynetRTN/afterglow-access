@@ -1,11 +1,11 @@
 import { Component, OnInit, Input, ViewChild, ElementRef, OnChanges, Output, EventEmitter, ChangeDetectionStrategy, AfterViewInit, ChangeDetectorRef, SimpleChange, SimpleChanges } from '@angular/core';
 import { Point, Matrix, Rectangle } from "paper"
-import { ImageFile } from '../../../data-files/models/data-file';
 import { Marker, MarkerType, CircleMarker, TeardropMarker } from '../../models/marker';
 import { Transform, transformToMatrix } from '../../models/transformation';
+import { DataFile } from '../../../data-files/models/data-file';
 
 export type MarkerMouseEvent = {
-  targetFile: ImageFile;
+  targetFile: DataFile;
   marker: Marker;
   mouseEvent: MouseEvent;
 }
@@ -19,7 +19,7 @@ export type MarkerMouseEvent = {
 export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, AfterViewInit {
   MarkerType = MarkerType;
 
-  @Input() imageFile: ImageFile;
+  @Input() imageFile: DataFile;
   @Input() transform: Transform;
   @Input() markers: Marker[];
   @Input() svgWidth: number;

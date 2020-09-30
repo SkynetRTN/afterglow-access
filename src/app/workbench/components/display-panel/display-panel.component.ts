@@ -11,10 +11,6 @@ import { auditTime } from "rxjs/operators";
 
 declare let d3: any;
 
-import {
-  ImageFile,
-} from "../../../data-files/models/data-file";
-
 import { Normalization } from "../../models/normalization";
 import { StretchMode } from "../../models/stretch-mode";
 import { appConfig } from "../../../../environments/environment.prod";
@@ -22,6 +18,7 @@ import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
 import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../workbench-file-states.actions';
+import { DataFile } from '../../../data-files/models/data-file';
 
 @Component({
   selector: "app-display-panel",
@@ -30,7 +27,7 @@ import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../wor
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() file: ImageFile;
+  @Input() file: DataFile;
   @Input() normalization: Normalization;
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
@@ -46,13 +43,13 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router) {
     this.levels$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.file.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
+        new UpdateNormalizer(this.file.id, 0, { backgroundPercentile: value.background, peakPercentile: value.peak })
       );
     });
 
     this.backgroundPercentile$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.file.id, { backgroundPercentile: value })
+        new UpdateNormalizer(this.file.id, 0, { backgroundPercentile: value })
       );
     });
 
@@ -61,7 +58,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
       .subscribe(value => {
         this.store.dispatch(
-          new UpdateNormalizer(this.file.id, { peakPercentile: value })
+          new UpdateNormalizer(this.file.id, 0, { peakPercentile: value })
         );
       });
 
@@ -79,25 +76,25 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onColorMapChange(value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.file.id, { colorMapName: value })
+      new UpdateNormalizer(this.file.id, 0, { colorMapName: value })
     );
   }
 
   onStretchModeChange(value: StretchMode) {
     this.store.dispatch(
-      new UpdateNormalizer(this.file.id, { stretchMode: value })
+      new UpdateNormalizer(this.file.id, 0, { stretchMode: value })
     );
   }
 
   onInvertedChange(value: boolean) {
     this.store.dispatch(
-      new UpdateNormalizer(this.file.id, { inverted: value })
+      new UpdateNormalizer(this.file.id, 0, { inverted: value })
     );
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {
     this.store.dispatch(
-      new UpdateNormalizer(this.file.id,
+      new UpdateNormalizer(this.file.id, 0,
         {
           backgroundPercentile: lowerPercentile,
           peakPercentile: upperPercentile
@@ -108,7 +105,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onInvertClick() {
     this.store.dispatch(
-      new UpdateNormalizer(this.file.id,
+      new UpdateNormalizer(this.file.id, 0,
         {
           backgroundPercentile: this.normalization.normalizer.peakPercentile,
           peakPercentile: this.normalization.normalizer.backgroundPercentile
@@ -119,7 +116,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onFlipClick() {
     this.store.dispatch(
-      new Flip(this.file.id)
+      new Flip(this.file.id, 0)
     );
   }
 
@@ -132,13 +129,13 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onRotateClick() {
     this.store.dispatch(
-      new RotateBy(this.file.id, 90)
+      new RotateBy(this.file.id, 0, 90)
     );
   }
 
   onResetOrientationClick() {
     this.store.dispatch(
-      new ResetImageTransform(this.file.id)
+      new ResetImageTransform(this.file.id, 0)
     );
   }
 

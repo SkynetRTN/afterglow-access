@@ -37,6 +37,10 @@
   <mat-row *matRowDef="let row; columns: allowMultiSelection ? ['select', 'name'] : ['name'];"></mat-row>
 </mat-table> -->
 
+<tree-root [nodes]="nodes" [options]="options"></tree-root>
+
+
+
 <mat-table
   app-cell-focuser
   #cellFocuser="cellFocuser"
@@ -72,14 +76,15 @@
       (mouseleave)="mouseOverFileId = null"
     >
       <div
+        *ngFor="let hdu of row.hdus;"
         fxLayout="row"
         fxLayoutAlign="start center"
         fxFlexFill
         class="item-row data-file-list-item"
-        [class.selected]="selectedFileId == row.id"
+        [class.selected]="selectedFileId == row.id && selectedHduIndex == hdu.hduIndex"
       >
         <div fxFlex="1 1 auto">
-          <span class="filename" style="user-select: none">{{ row.name }}</span>
+          <span class="filename" style="user-select: none">{{ row.name }} <ng-container *ngIf="row.hdus.length > 1"> - {{ hdu.hduIndex }}</ng-container></span>
         </div>
         <div fxFlex="0 0 60px" style="text-align: right;">
           <!-- <button

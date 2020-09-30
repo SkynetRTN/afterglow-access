@@ -19,10 +19,12 @@ import * as SVG from "svgjs";
 import * as normalizeWheel from "normalize-wheel";
 
 import {
-  ImageFile,
   getWidth,
   getHeight,
   findTiles,
+  DataFile,
+  ImageHdu,
+  ITiledImageData,
 } from "../../../data-files/models/data-file";
 import { Normalization } from "../../models/normalization";
 import {
@@ -40,6 +42,7 @@ import {
   NormalizeImageTile,
 } from "../../workbench-file-states.actions";
 import { LoadImageTilePixels } from "../../../data-files/data-files.actions";
+import { BlendMode } from '../../models/blend-mode';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -56,13 +59,18 @@ export type ViewportSizeChangeEvent = {
 };
 
 export type CanvasMouseEvent = {
-  targetFile: ImageFile;
+  targetFile: DataFile;
   imageX: number;
   imageY: number;
   hitImage: boolean;
   source: Source;
   mouseEvent: MouseEvent;
 };
+
+export interface PanZoomCanvasLayer extends ITiledImageData<Uint32Array> {
+  blendMode: BlendMode;
+  alpha: number;
+}
 
 @Directive({
   selector: "[app-pan-zoom-canvas]",
@@ -78,8 +86,7 @@ export type CanvasMouseEvent = {
 })
 export class PanZoomCanvasComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @Input() imageFile: ImageFile;
-  @Input() normalization: Normalization;
+  @Input() layers: Array<PanZoomCanvasLayer>;
   @Input() transformation: Transformation;
 
   @Output() onViewportChange = new EventEmitter<ViewportChangeEvent>();
@@ -87,7 +94,7 @@ export class PanZoomCanvasComponent
   @Output() onImageClick = new EventEmitter<CanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<CanvasMouseEvent>();
 
-  private lastImageFile: ImageFile = null;
+  private lastImageFile: DataFile = null;
   private viewInitialized: boolean = false;
   private placeholder: HTMLDivElement;
   private targetCanvas: HTMLCanvasElement;
@@ -108,7 +115,7 @@ export class PanZoomCanvasComponent
   private mouseOverImage: boolean = false;
   // minimum number of pixels mouse must move after click to not be considered
   private maxDeltaBeforeMove: number = 5;
-  private bufferedTiles: { [key: number]: ImageTile } = {};
+  private bufferedTiles: { [key: number]: ImageTile<Uint32Array> } = {};
 
   // a move and not a click
 
@@ -311,13 +318,14 @@ export class PanZoomCanvasComponent
   }
 
   public moveBy(xShift: number, yShift: number) {
-    this.store.dispatch(new MoveBy(this.imageFile.id, xShift, yShift));
+    // this.store.dispatch(new MoveBy(this.imageFile.id, 0, xShift, yShift));
   }
 
   public moveToCenter() {
+    
     this.moveTo({
-      x: getWidth(this.imageFile) / 2,
-      y: getHeight(this.imageFile) / 2,
+      x: this.layers[0].width / 2,
+      y: this.layers[0].height / 2,
     });
   }
 
@@ -336,7 +344,7 @@ export class PanZoomCanvasComponent
   }
 
   public zoomBy(factor: number, imageAnchor: { x: number; y: number } = null) {
-    this.store.dispatch(new ZoomBy(this.imageFile.id, factor, imageAnchor));
+    // this.store.dispatch(new ZoomBy(this.imageFile.id, 0, factor, imageAnchor));
   }
 
   public get viewportToImageTransform() {
@@ -365,9 +373,9 @@ export class PanZoomCanvasComponent
     );
     let mouseOffImage: boolean =
       imagePoint.x < 0.5 ||
-      imagePoint.x >= getWidth(this.imageFile) + 0.5 ||
+      imagePoint.x >= this.layers[0].width + 0.5 ||
       imagePoint.y < 0.5 ||
-      imagePoint.y >= getHeight(this.imageFile) + 0.5;
+      imagePoint.y >= this.layers[0].height + 0.5;
     //console.log(viewportCoord.x, viewportCoord.y, imagePoint.x, imagePoint.y, !mouseOffImage);
     return !mouseOffImage;
   }
@@ -378,14 +386,13 @@ export class PanZoomCanvasComponent
       height: this.placeholder.clientHeight,
     };
     if (
-      this.imageFile &&
-      this.imageFile.headerLoaded &&
       this.transformation &&
       this.transformation.viewportSize
     ) {
       let viewportRegion = getViewportRegion(
         this.transformation,
-        this.imageFile
+        this.layers[0].width,
+        this.layers[0].height
       );
 
       let $event: ViewportChangeEvent = {
@@ -411,21 +418,23 @@ export class PanZoomCanvasComponent
         width: viewportSize.width,
         height: viewportSize.height,
       });
-      if (this.imageFile) {
-        //changes to the viewport size may occur during Angular view lifecycle
-        //ensure that side effects related to updating the viewport size does
-        //not cause view changes after angular check the value
-        setTimeout(() => {
-          this.store.dispatch(
-            new UpdateCurrentViewportSize(this.imageFile.id, {
-              width: viewportSize.width,
-              height: viewportSize.height,
-            })
-          );
-        });
+
+      //TODO: LAYER
+      // if (this.imageFile) {
+      //   //changes to the viewport size may occur during Angular view lifecycle
+      //   //ensure that side effects related to updating the viewport size does
+      //   //not cause view changes after angular check the value
+      //   setTimeout(() => {
+      //     this.store.dispatch(
+      //       new UpdateCurrentViewportSize(this.imageFile.id, 0, {
+      //         width: viewportSize.width,
+      //         height: viewportSize.height,
+      //       })
+      //     );
+      //   });
 
         
-      }
+      // }
       this.lastViewportSize = viewportSize;
     }
   }
@@ -555,14 +564,16 @@ export class PanZoomCanvasComponent
       let viewportCoord = this.viewportCoordFromEvent($event);
       let onImage = this.mouseOnImage(viewportCoord);
       let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-      this.onImageMove.emit({
-        targetFile: this.imageFile,
-        hitImage: onImage,
-        imageX: mouseImage.x,
-        imageY: mouseImage.y,
-        mouseEvent: $event,
-        source: null,
-      });
+
+      //TODO: LAYER
+      // this.onImageMove.emit({
+      //   targetFile: this.imageFile,
+      //   hitImage: onImage,
+      //   imageX: mouseImage.x,
+      //   imageY: mouseImage.y,
+      //   mouseEvent: $event,
+      //   source: null,
+      // });
     }
   }
 
@@ -571,27 +582,32 @@ export class PanZoomCanvasComponent
       let viewportCoord = this.viewportCoordFromEvent($event);
       let onImage = this.mouseOnImage(viewportCoord);
       let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-      this.onImageClick.emit({
-        targetFile: this.imageFile,
-        hitImage: onImage,
-        imageX: mouseImage.x,
-        imageY: mouseImage.y,
-        mouseEvent: $event,
-        source: null,
-      });
+      //TODO: LAYER
+      // this.onImageClick.emit({
+      //   targetFile: this.imageFile,
+      //   hitImage: onImage,
+      //   imageX: mouseImage.x,
+      //   imageY: mouseImage.y,
+      //   mouseEvent: $event,
+      //   source: null,
+      // });
     }
   }
 
   ngAfterViewChecked() {}
 
-  getViewportTiles() {
-    if (
-      getWidth(this.imageFile) != this.imageCanvas.width ||
-      getHeight(this.imageFile) != this.imageCanvas.height
-    ) {
-      this.imageCanvas.width = getWidth(this.imageFile);
-      this.imageCanvas.height = getHeight(this.imageFile);
-    }
+  getViewportTiles(layer: PanZoomCanvasLayer) {
+
+    //TODO: LAYER
+    // update canvase size
+    // let imageLayer = this.imageFile.layers[0] as ImageLayer;
+    // if (
+    //   getWidth(imageLayer) != this.imageCanvas.width ||
+    //   getHeight(imageLayer) != this.imageCanvas.height
+    // ) {
+    //   this.imageCanvas.width = getWidth(imageLayer);
+    //   this.imageCanvas.height = getHeight(imageLayer);
+    // }
 
     let c1 = this.viewportCoordToImageCoord(
       new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight)
@@ -613,7 +629,7 @@ export class PanZoomCanvasComponent
     );
 
     return findTiles(
-      this.imageFile,
+      layer,
       minPoint.x,
       minPoint.y,
       maxPoint.x - minPoint.x,
@@ -627,26 +643,27 @@ export class PanZoomCanvasComponent
   }
 
   checkForNewImage() {
-    if (this.lastImageFile && this.imageFile.id == this.lastImageFile.id)
-      return;
-    //new image detected
-    this.lastViewportChangeEvent = null;
-    this.lastViewportSize = { width: null, height: null };
-    this.lastImageFile = this.imageFile;
-    this.bufferedTiles = {};
+    // TODO: LAYER
+    // if (this.lastImageFile && this.imageFile.id == this.lastImageFile.id)
+    //   return;
+    // //new image detected
+    // this.lastViewportChangeEvent = null;
+    // this.lastViewportSize = { width: null, height: null };
+    // this.lastImageFile = this.imageFile;
+    // this.bufferedTiles = {};
 
-    let viewportSize = {
-      width: this.placeholder.clientWidth,
-      height: this.placeholder.clientHeight,
-    };
-    setTimeout(() => {
-      this.store.dispatch(
-        new UpdateCurrentViewportSize(this.imageFile.id, {
-          width: viewportSize.width,
-          height: viewportSize.height,
-        })
-      );
-    });
+    // let viewportSize = {
+    //   width: this.placeholder.clientWidth,
+    //   height: this.placeholder.clientHeight,
+    // };
+    // setTimeout(() => {
+    //   this.store.dispatch(
+    //     new UpdateCurrentViewportSize(this.imageFile.id, 0, {
+    //       width: viewportSize.width,
+    //       height: viewportSize.height,
+    //     })
+    //   );
+    // });
   }
 
   checkForResize() {
@@ -684,9 +701,6 @@ export class PanZoomCanvasComponent
   private get initialized() {
     return (
       this.viewInitialized &&
-      this.imageFile &&
-      this.normalization &&
-      this.imageFile.headerLoaded &&
       this.transformation &&
       this.transformation.imageToViewportTransform
     );
@@ -694,28 +708,26 @@ export class PanZoomCanvasComponent
 
   public lazyLoadPixels() {
     if (!this.initialized) return;
-    let tiles = this.getViewportTiles();
-    tiles.forEach((tile) => {
-      let normTile = this.normalization.normalizedTiles[tile.index];
-      if (
-        !tile.pixelsLoaded &&
-        !tile.pixelsLoading &&
-        !tile.pixelLoadingFailed
-      ) {
-        this.store.dispatch(
-          new LoadImageTilePixels(this.imageFile.id, tile.index)
-        );
-      } else if (
-        tile.pixelsLoaded &&
-        !normTile.pixelsLoaded &&
-        !normTile.pixelsLoading &&
-        !normTile.pixelLoadingFailed
-      ) {
-        this.store.dispatch(
-          new NormalizeImageTile(this.imageFile.id, tile.index)
-        );
-      }
-    });
+    this.layers.forEach(layer => {
+      let tiles = this.getViewportTiles(layer);
+      tiles.forEach((tile) => {
+        if (
+          !tile.pixelsLoaded &&
+          !tile.pixelsLoading &&
+          !tile.pixelLoadingFailed
+        ) {
+
+          console.log("DISPATCH LOAD TILE EVENT")
+          // this.store.dispatch(
+          //   new NormalizeImageTile(this.imageFile.id, 0, tile.index)
+          // );
+        }
+        
+
+
+      });
+    })
+    
   }
 
   public draw() {
@@ -742,29 +754,32 @@ export class PanZoomCanvasComponent
     );
 
     if (this.initialized) {
-      let tiles = this.getViewportTiles();
+
+      //TODO: LAYER
+      //For now,  only draw first layer
+      let layer = this.layers[0];
+      let tiles = this.getViewportTiles(layer);
 
       tiles.forEach((tile) => {
-        let normTile = this.normalization.normalizedTiles[tile.index];
         if (!tile.pixelsLoaded) {
           // fill in tile with solid background when image file pixels have not been loaded
           this.imageCtx.fillStyle = "rgb(100, 100, 100)";
           this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
-        } else if (normTile.pixelsLoaded) {
-          if (this.bufferedTiles[normTile.index] === normTile) {
+        } else {
+          if (this.bufferedTiles[tile.index] === tile) {
             //this tile has not changed and is already in the buffered canvas
             return;
           }
           let imageData = this.imageCtx.createImageData(
-            normTile.width,
-            normTile.height
+            tile.width,
+            tile.height
           );
           let blendedImageDataUint8Clamped = new Uint8ClampedArray(
-            normTile.pixels.buffer
+            tile.pixels.buffer
           );
           imageData.data.set(blendedImageDataUint8Clamped);
-          this.imageCtx.putImageData(imageData, normTile.x, normTile.y);
-          this.bufferedTiles[normTile.index] = normTile;
+          this.imageCtx.putImageData(imageData, tile.x, tile.y);
+          this.bufferedTiles[tile.index] = tile;
         }
       });
       transformToMatrix(

@@ -38,9 +38,9 @@ import * as jStat from "jstat";
 import { saveAs } from "file-saver/dist/FileSaver";
 
 import {
-  ImageFile,
   getCenterTime,
   getSourceCoordinates,
+  DataFile,
 } from "../../../data-files/models/data-file";
 import { DmsPipe } from "../../../pipes/dms.pipe";
 import { PhotometryPanelState } from "../../models/photometry-file-state";
@@ -90,13 +90,13 @@ import {
 export class PhotometryPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @Input("selectedFile")
-  set selectedFile(selectedFile: ImageFile) {
+  set selectedFile(selectedFile: DataFile) {
     this.selectedFile$.next(selectedFile);
   }
   get selectedFile() {
     return this.selectedFile$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+  private selectedFile$ = new BehaviorSubject<DataFile>(null);
 
   @Input("state")
   set state(state: PhotometryPanelState) {
@@ -117,13 +117,13 @@ export class PhotometryPageComponent
   private sources$ = new BehaviorSubject<Source[]>(null);
 
   @Input("files")
-  set files(files: ImageFile[]) {
+  set files(files: DataFile[]) {
     this.files$.next(files);
   }
   get files() {
     return this.files$.getValue();
   }
-  private files$ = new BehaviorSubject<ImageFile[]>(null);
+  private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Input("config")
   set config(config: PhotometryPanelConfig) {
@@ -169,7 +169,7 @@ export class PhotometryPageComponent
     selectedImageFileIds: new FormControl([], Validators.required),
   });
   batchPhotFormData$: Observable<BatchPhotometryFormData>;
-  selectedImageFiles$: Observable<ImageFile[]>;
+  selectedDataFiles$: Observable<DataFile[]>;
 
   constructor(
     private dialog: MatDialog,
@@ -235,7 +235,7 @@ export class PhotometryPageComponent
       // }
     });
 
-    this.selectedImageFiles$ = combineLatest(
+    this.selectedDataFiles$ = combineLatest(
       this.files$,
       this.batchPhotFormData$
     ).pipe(
@@ -506,7 +506,7 @@ export class PhotometryPageComponent
     this.store.dispatch(new RemoveAllPhotDatas());
   }
 
-  selectImageFiles(imageFiles: ImageFile[]) {
+  selectDataFiles(imageFiles: DataFile[]) {
     this.store.dispatch(
       new UpdatePhotometryPanelConfig({
         batchPhotFormData: {
@@ -599,7 +599,7 @@ export class PhotometryPageComponent
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.selectedFile.id, result)]);
+        this.store.dispatch([new ExtractSources(this.selectedFile.id, 0, result)]);
       }
     });
   }

@@ -5,9 +5,9 @@ import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
 import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
 import { CustomMarkerPanelConfig } from '../../models/workbench-state';
-import { ImageFile } from '../../../data-files/models/data-file';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { DataFile } from '../../../data-files/models/data-file';
 
 @Component({
   selector: "app-custom-marker-panel",
@@ -15,7 +15,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
   styleUrls: ["./custom-marker-panel.component.css"]
 })
 export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
-  @Input() file: ImageFile;
+  @Input() file: DataFile;
   @Input() state: CustomMarkerPanelState;
   @Input() config: CustomMarkerPanelConfig;
   

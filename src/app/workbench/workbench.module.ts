@@ -19,6 +19,8 @@ import { VgBufferingModule } from 'videogular2/buffering';
 // import 'd3';
 // import 'nvd3';
 
+import { TreeModule,  } from '@circlon/angular-tree-component';
+
 import { UtilsModule }  from '../utils/utils.module';
 import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
@@ -75,7 +77,6 @@ import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.com
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 import { AvatarModule } from 'ngx-avatar';
 import { WorkbenchViewerLayoutComponent } from './containers/workbench-viewer-layout/workbench-viewer-layout.component';
-import { FieldCalPageComponent } from './components/field-cal-panel/field-cal-panel.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -116,13 +117,13 @@ export const COMPONENTS = [
   ThemeDialogComponent,
   ConfirmationDialogComponent,
   WorkbenchViewerPanelComponent,
-  WorkbenchViewerLayoutComponent,
-  FieldCalPageComponent
+  WorkbenchViewerLayoutComponent
 ];
 
 
 @NgModule({
   imports: [
+    TreeModule,
     RouterModule,
     CommonModule,
     FormsModule,
@@ -143,7 +144,7 @@ export const COMPONENTS = [
     FlexLayoutModule,
     ThemePickerModule,
     AfterglowPlotlyModule,
-    AvatarModule
+    AvatarModule,
   ],
 
   declarations: COMPONENTS,

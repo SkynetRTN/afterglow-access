@@ -1,9 +1,7 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 import { map, tap, takeUntil } from "rxjs/operators";
-import { ImageFile } from "../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
-import { DataFileType } from "../../../data-files/models/data-file-type";
+import { WorkbenchDataFileState } from "../../models/workbench-file-state";
 import {
   StackFormData,
   WorkbenchTool,
@@ -24,6 +22,7 @@ import {
   CreateStackingJob,
   UpdateStackingPanelConfig,
 } from "../../workbench.actions";
+import { DataFile } from '../../../data-files/models/data-file';
 
 @Component({
   selector: "app-stacking-panel",
@@ -32,22 +31,22 @@ import {
 })
 export class StackerPageComponent implements OnInit {
   @Input("selectedFile")
-  set selectedFile(selectedFile: ImageFile) {
+  set selectedFile(selectedFile: DataFile) {
     this.selectedFile$.next(selectedFile);
   }
   get selectedFile() {
     return this.selectedFile$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+  private selectedFile$ = new BehaviorSubject<DataFile>(null);
 
   @Input("files")
-  set files(files: ImageFile[]) {
+  set files(files: DataFile[]) {
     this.files$.next(files);
   }
   get files() {
     return this.files$.getValue();
   }
-  private files$ = new BehaviorSubject<ImageFile[]>(null);
+  private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Input("config")
   set config(config: StackingPanelConfig) {
@@ -60,7 +59,7 @@ export class StackerPageComponent implements OnInit {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  selectedImageFiles$: Observable<Array<ImageFile>>;
+  selectedImageFiles$: Observable<Array<DataFile>>;
   stackFormData$: Observable<StackFormData>;
   stackJobRow$: Observable<{ job: StackingJob; result: StackingJobResult }>;
 
@@ -145,7 +144,7 @@ export class StackerPageComponent implements OnInit {
     });
   }
 
-  selectImageFiles(imageFiles: ImageFile[]) {
+  selectImageFiles(imageFiles: DataFile[]) {
     this.store.dispatch(
       new UpdateStackingPanelConfig({
         stackFormData: {

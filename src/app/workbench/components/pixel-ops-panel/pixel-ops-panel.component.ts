@@ -13,10 +13,7 @@ import {
   Subject,
 } from "rxjs";
 import { map, tap, filter, flatMap, takeUntil } from "rxjs/operators";
-import { ImageFile } from "../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
-
-import { DataFileType } from "../../../data-files/models/data-file-type";
+import { WorkbenchDataFileState } from "../../models/workbench-file-state";
 import {
   FormGroup,
   FormControl,
@@ -50,6 +47,7 @@ import {
   UpdatePixelOpsPageSettings,
 } from "../../workbench.actions";
 import { JobsState } from "../../../jobs/jobs.state";
+import { DataFile } from '../../../data-files/models/data-file';
 
 interface PixelOpVariable {
   name: string;
@@ -63,22 +61,22 @@ interface PixelOpVariable {
 })
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   @Input("selectedFile")
-  set selectedFile(selectedFile: ImageFile) {
+  set selectedFile(selectedFile: DataFile) {
     this.selectedFile$.next(selectedFile);
   }
   get selectedFile() {
     return this.selectedFile$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+  private selectedFile$ = new BehaviorSubject<DataFile>(null);
 
   @Input("files")
-  set files(files: ImageFile[]) {
+  set files(files: DataFile[]) {
     this.files$.next(files);
   }
   get files() {
     return this.files$.getValue();
   }
-  private files$ = new BehaviorSubject<ImageFile[]>(null);
+  private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Input("config")
   set config(config: PixelOpsPanelConfig) {

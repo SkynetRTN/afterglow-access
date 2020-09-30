@@ -12,9 +12,10 @@ import { Subject } from "rxjs";
 import { debounceTime, throttleTime } from "rxjs/operators";
 
 import {
-  ImageFile,
   getPixel,
-  getPixels
+  getPixels,
+  DataFile,
+  ImageHdu
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
 import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
@@ -27,7 +28,7 @@ import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
-  imageFile: ImageFile;
+  imageFile: DataFile;
   @Input()
   mode: '1D' | '2D' | '3D';
   @Input()
@@ -218,6 +219,8 @@ export class PlotterComponent implements OnInit, OnChanges {
       return;
     }
 
+    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
+
     let start = this.lineMeasureStart;
     let end = this.lineMeasureEnd;
     
@@ -248,7 +251,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         xs[i] = x;
         ys[i] = y;
         ts[i] = t;
-        vs[i] = getPixel(this.imageFile, x, y, this.interpolatePixels)
+        vs[i] = getPixel(imageLayer, x, y, this.interpolatePixels)
   
         // result[i] = {
         //   x: x,
@@ -279,7 +282,7 @@ export class PlotterComponent implements OnInit, OnChanges {
       if(width != 0 && height != 0) {
         this.data = [
           {
-            z: getPixels(this.imageFile, x, y, width, height),
+            z: getPixels(imageLayer, x, y, width, height),
             type: this.mode == '3D' ? 'surface' : 'heatmap'
           }
         ];
@@ -304,7 +307,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   private updateLineView() {
     if (
       !this.imageFile ||
-      !this.imageFile.headerLoaded ||
+      !this.imageFile.hdus[0].headerLoaded ||
       !this.lineMeasureStart ||
       !this.lineMeasureEnd
     ) {
@@ -318,8 +321,9 @@ export class PlotterComponent implements OnInit, OnChanges {
         Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
     );
 
-    if (this.imageFile.wcs.isValid()) {
-      let wcs = this.imageFile.wcs;
+    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
+    if (imageLayer.wcs.isValid()) {
+      let wcs = imageLayer.wcs;
       let raDec1 = wcs.pixToWorld([
         this.lineMeasureStart.x,
         this.lineMeasureStart.y

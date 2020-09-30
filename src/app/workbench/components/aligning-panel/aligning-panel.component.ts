@@ -2,9 +2,6 @@ import { Component, OnInit, HostBinding, Input } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
 import { map, tap, takeUntil } from "rxjs/operators";
-import { ImageFile } from '../../../data-files/models/data-file';
-import { WorkbenchFileState } from '../../models/workbench-file-state';
-import { DataFileType } from '../../../data-files/models/data-file-type';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { AlignFormData, WorkbenchTool, AligningPanelConfig } from '../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
@@ -15,6 +12,7 @@ import { WorkbenchState } from '../../workbench.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { SetActiveTool, SelectDataFile, CreateAlignmentJob, UpdateAligningPanelConfig } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
+import { DataFile } from '../../../data-files/models/data-file';
 
 @Component({
   selector: 'app-aligning-panel',
@@ -23,22 +21,22 @@ import { JobsState } from '../../../jobs/jobs.state';
 })
 export class AlignerPageComponent implements OnInit {
   @Input("selectedFile")
-  set selectedFile(selectedFile: ImageFile) {
+  set selectedFile(selectedFile: DataFile) {
     this.selectedFile$.next(selectedFile);
   }
   get selectedFile() {
     return this.selectedFile$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+  private selectedFile$ = new BehaviorSubject<DataFile>(null);
 
   @Input("files")
-  set files(files: ImageFile[]) {
+  set files(files: DataFile[]) {
     this.files$.next(files);
   }
   get files() {
     return this.files$.getValue();
   }
-  private files$ = new BehaviorSubject<ImageFile[]>(null);
+  private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Input("config")
   set config(config: AligningPanelConfig) {
@@ -52,7 +50,7 @@ export class AlignerPageComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
 
   
-  selectedImageFiles$: Observable<Array<ImageFile>>;
+  selectedImageFiles$: Observable<Array<DataFile>>;
   alignFormData$: Observable<AlignFormData>;
   activeImageIsSelected$: Observable<boolean>;
   activeImageHasWcs$: Observable<boolean>;
@@ -90,8 +88,9 @@ export class AlignerPageComponent implements OnInit {
       })
     )
 
+    // TODO: LAYER
     this.activeImageHasWcs$ = this.selectedFile$.pipe(
-      map(imageFile => imageFile != null && imageFile.headerLoaded && imageFile.wcs.isValid())
+      map(imageFile => imageFile != null && imageFile.hdus[0].headerLoaded && imageFile.hdus[0].wcs.isValid())
     )
 
     this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
@@ -117,7 +116,7 @@ export class AlignerPageComponent implements OnInit {
     this.store.dispatch(new SelectDataFile($event.value));
   }
 
-  selectImageFiles(imageFiles: ImageFile[]) {
+  selectImageFiles(imageFiles: DataFile[]) {
     this.store.dispatch(new UpdateAligningPanelConfig(
       {
         alignFormData: {

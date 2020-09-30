@@ -1,6 +1,7 @@
 import { StretchMode } from './stretch-mode'
 import { ColorMap, COLOR_MAPS } from './color-map'
 import { ImageHist, calcLevels } from '../../data-files/models/image-hist';
+import { PixelType } from '../../data-files/models/data-file';
 
 export interface PixelNormalizer {
   backgroundPercentile: number,
@@ -17,7 +18,7 @@ export interface PixelNormalizer {
 // }
 
 
-export function normalize(pixels: Float32Array | Uint32Array, hist: ImageHist, normalizer: PixelNormalizer) {
+export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer) {
   let stretchMode = normalizer.stretchMode;
   let colorMapLookup = COLOR_MAPS[normalizer.colorMapName].lookup;
   let normalizedPixels = new Uint32Array(pixels.length);

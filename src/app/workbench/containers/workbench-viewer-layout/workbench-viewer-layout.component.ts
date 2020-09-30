@@ -128,7 +128,6 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   setFocusedPanel($event: MouseEvent, panel: ViewerPanel) {
     if(panel.id == this.store.selectSnapshot(WorkbenchState.getFocusedViewerPanelId)) return;
     if(!panel.selectedViewerId) return;
-
     this.store.dispatch(new SetFocusedViewer(panel.selectedViewerId))
   }
   

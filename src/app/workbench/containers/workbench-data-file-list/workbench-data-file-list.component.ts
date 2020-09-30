@@ -1,57 +1,78 @@
 import { Component, OnInit, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange } from '@angular/core';
-import { DataFile } from '../../../data-files/models/data-file';
+import { DataFile, IHeaderDataUnit } from '../../../data-files/models/data-file';
 import { SelectionModel} from '@angular/cdk/collections';
 import { ENTER, SPACE } from '@angular/cdk/keycodes';
-import { Subscription } from 'rxjs';
+import { Subscription, BehaviorSubject, Observable } from 'rxjs';
 import { Store } from '@ngxs/store';
+import { map } from 'rxjs/operators';
+import { FileInfoToolsetComponent } from '../../components/file-info-panel/file-info-panel.component';
+import { ITreeOptions, TREE_ACTIONS, KEYS } from '@circlon/angular-tree-component';
+
+interface TreeNode {
+  id: string;
+  name: string;
+  children?: TreeNode[];
+}
+
 
 @Component({
   selector: 'app-workbench-data-file-list',
   templateUrl: './workbench-data-file-list.component.html',
   styleUrls: ['./workbench-data-file-list.component.css']
 })
-export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
+export class WorkbenchDataFileListComponent {
   @Input()
   selectedFileId: string;
 
   @Input()
-  dataFiles: DataFile[];
+  selectedHduIndex: number;
+
+  @Input("files")
+  set files(files: DataFile[]) {
+    this.files$.next(files);
+  }
+  get files() {
+    return this.files$.getValue();
+  }
+  private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Output() onSelectionChange = new EventEmitter<{file: DataFile, doubleClick: boolean}>();
 
   // preventSingleClick = false;
   // timer: any;
   // delay: Number;
-  mouseOverFileId: string = null;
-
-  constructor(private store: Store) {
-  }
-
-  ngOnInit() {
-  
-  }
-
-  ngOnDestroy() {
-  }
-
-  onRowKeyup($event: KeyboardEvent, file: DataFile) {
-    switch($event.keyCode) {
-      case SPACE: {
-        this.selectedFileId = file.id;
-        this.onSelectionChange.emit({file: file, doubleClick: false});
-      }
-      case ENTER: {
-        this.selectedFileId = file.id;
-        this.onSelectionChange.emit({file: file, doubleClick: false});
-      }
+  nodes$: Observable<TreeNode[]>;
+  nodes = [
+    {
+      id: 1,
+      name: 'root1',
+      children: [
+        { id: 2, name: 'child1' },
+        { id: 3, name: 'child2' }
+      ]
+    },
+    {
+      id: 4,
+      name: 'root2',
+      children: [
+        { id: 5, name: 'child2.1' },
+        {
+          id: 6,
+          name: 'child2.2',
+          children: [
+            { id: 7, name: 'subsub' }
+          ]
+        }
+      ]
     }
-  }
+  ];
+  options = {};
   
   trackByFn(index: number, value: DataFile) {
     return value.id;
   }
 
-  onRowClick(file: DataFile) {
+  onRowClick(file: DataFile, hdu: IHeaderDataUnit) {
     if(file.id == this.selectedFileId) return;
 
     this.selectedFileId = file.id;
@@ -66,7 +87,7 @@ export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
     //   }, delay);
   }
 
-  onRowDoubleClick(file: DataFile) {
+  onRowDoubleClick(file: DataFile, hdu: IHeaderDataUnit) {
     
       // this.preventSingleClick = true;
       // clearTimeout(this.timer);

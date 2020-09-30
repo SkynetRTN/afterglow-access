@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { ImageFile, getWidth, getHeight } from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Subject, BehaviorSubject, Observable, timer, interval } from 'rxjs';
 import { filter, flatMap, takeUntil } from "rxjs/operators";
 import { Store } from '@ngxs/store';
@@ -14,7 +14,7 @@ import { MatDialog } from '@angular/material';
   styleUrls: ['./image-viewer-title-bar.component.scss']
 })
 export class ImageViewerTitleBarComponent implements OnInit {
-  @Input() imageFile: ImageFile;
+  @Input() imageFile: DataFile;
   @Output() downloadSnapshot = new EventEmitter();
 
   private zoomStepFactor: number = 0.75;
@@ -94,6 +94,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
   public zoomTo(value: number) {
     this.store.dispatch(new ZoomTo(
       this.imageFile.id,
+      0,
       value,
       null
     ));
@@ -102,15 +103,18 @@ export class ImageViewerTitleBarComponent implements OnInit {
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
     this.store.dispatch(new ZoomBy(
       this.imageFile.id,
+      0,
       factor,
       imageAnchor
     ));
   }
 
   public zoomToFit(padding: number = 0) {
+    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
     this.store.dispatch(new CenterRegionInViewport(
       this.imageFile.id,
-      { x: 1, y: 1, width: getWidth(this.imageFile), height: getHeight(this.imageFile) }
+      0,
+      { x: 1, y: 1, width: getWidth(imageLayer), height: getHeight(imageLayer) }
     ))
   }
 

@@ -1,4 +1,3 @@
-import { DataFile, ImageFile } from '../data-files/models/data-file';
 import { ViewMode } from './models/view-mode';
 import { WorkbenchTool, PixelOpsFormData, AlignFormData, StackFormData, PlottingPanelConfig, PhotometryPanelConfig, AligningPanelConfig as AligningPanelConfig, PixelOpsPanelConfig, StackingPanelConfig as StackingPanelConfig, CustomMarkerPanelConfig, ViewerPanel } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
@@ -14,6 +13,7 @@ import { Source } from './models/source';
 import { Marker } from './models/marker';
 import { Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
+import { DataFile } from '../data-files/models/data-file';
 
 /* Core */
 
@@ -131,19 +131,19 @@ export class SetNormalizationSyncEnabled {
 export class SyncFileTransformations {
   public static readonly type = '[Workbench] Sync File Transformations';
 
-  constructor(public reference: ImageFile, public files: ImageFile[]) { }
+  constructor(public reference: DataFile, public files: DataFile[]) { }
 }
 
 export class SyncFileNormalizations {
   public static readonly type = '[Workbench] Sync File Normalizations';
 
-  constructor(public reference: ImageFile, public files: ImageFile[]) { }
+  constructor(public reference: DataFile, public files: DataFile[]) { }
 }
 
 export class SyncFilePlotters {
   public static readonly type = '[Workbench] Sync File Plotters';
 
-  constructor(public reference: ImageFile, public files: ImageFile[]) { }
+  constructor(public reference: DataFile, public files: DataFile[]) { }
 }
 
 export class SetActiveTool {
@@ -345,7 +345,7 @@ export class CreateStackingJob {
 export class ExtractSources {
   public static readonly type = '[Workbench] Extract Sources'
 
-  constructor(public fileId: string, public settings: SourceExtractionSettings) { }
+  constructor(public fileId: string, public hduIndex: number, public settings: SourceExtractionSettings) { }
 }
 
 export class ExtractSourcesSuccess {

@@ -9,7 +9,6 @@ import {
 } from "@angular/core";
 
 import {
-  ImageFile,
   Header,
   getWidth,
   getHeight,
@@ -20,6 +19,8 @@ import {
   getObject,
   getTelescope,
   getFilter,
+  DataFile,
+  ImageHdu,
 } from "../../../data-files/models/data-file";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material/slide-toggle";
@@ -39,13 +40,13 @@ import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
   @Input("file")
-  set file(file: ImageFile) {
+  set file(file: DataFile) {
     this.file$.next(file);
   }
   get file() {
     return this.file$.getValue();
   }
-  private file$ = new BehaviorSubject<ImageFile>(null);
+  private file$ = new BehaviorSubject<DataFile>(null);
   
   @Input("config")
   set config(config: FileInfoPanelConfig) {
@@ -70,7 +71,7 @@ export class FileInfoToolsetComponent
 
     let header$ = this.file$.pipe(
       filter(file => file != null),
-      map(file => file.header),
+      map(file => file.hdus[0].header),
       distinctUntilChanged()
     )
 
@@ -80,17 +81,18 @@ export class FileInfoToolsetComponent
     ).pipe(
       map(([header, config]) => {
         if (!header) return [];
+        let imageLayer = this.file.hdus[0] as ImageHdu;
         let result: Header = [];
-        let width = getWidth(this.file);
-        let height = getHeight(this.file);
-        let hasWcs = this.file.wcs.isValid();
-        let degsPerPixel = getDegsPerPixel(this.file);
-        let startTime = getStartTime(this.file);
-        let expLength = getExpLength(this.file);
-        let centerTime = getCenterTime(this.file);
-        let telescope = getTelescope(this.file);
-        let object = getObject(this.file);
-        let filter = getFilter(this.file);
+        let width = getWidth(imageLayer);
+        let height = getHeight(imageLayer);
+        let hasWcs = imageLayer.wcs.isValid();
+        let degsPerPixel = getDegsPerPixel(imageLayer);
+        let startTime = getStartTime(imageLayer);
+        let expLength = getExpLength(imageLayer);
+        let centerTime = getCenterTime(imageLayer);
+        let telescope = getTelescope(imageLayer);
+        let object = getObject(imageLayer);
+        let filter = getFilter(imageLayer);
 
         let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 

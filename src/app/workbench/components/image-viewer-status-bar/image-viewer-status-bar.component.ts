@@ -1,5 +1,5 @@
 import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
-import { ImageFile, getPixel, getWidth, getHeight } from '../../../data-files/models/data-file';
+import { getPixel, getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Subject, timer } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
@@ -14,7 +14,7 @@ import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-sta
   styleUrls: ['./image-viewer-status-bar.component.css']
 })
 export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
-  @Input() imageFile: ImageFile;
+  @Input() imageFile: DataFile;
   @Input() imageMouseX: number;
   @Input() imageMouseY: number;
   @Output() downloadSnapshot = new EventEmitter();
@@ -43,11 +43,11 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
       this.decDegs = null;
       return;
     }
-  
-    if(this.imageFile.headerLoaded) {
-      this.pixelValue = getPixel(this.imageFile, this.imageMouseX, this.imageMouseY);
-      if(this.imageFile.wcs.isValid()) {
-        let wcs = this.imageFile.wcs;
+    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
+    if(imageLayer.headerLoaded) {
+      this.pixelValue = getPixel(imageLayer, this.imageMouseX, this.imageMouseY);
+      if(imageLayer.wcs.isValid()) {
+        let wcs = imageLayer.wcs;
         let raDec = wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
         this.raHours = raDec[0];
         this.decDegs = raDec[1];
@@ -124,6 +124,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   public zoomTo(value: number) {
     this.store.dispatch(new ZoomTo(
       this.imageFile.id,
+      0,
       value,
       null
     ));
@@ -132,15 +133,18 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
     this.store.dispatch(new ZoomBy(
       this.imageFile.id,
+      0,
       factor,
       imageAnchor
     ));
   }
 
   public zoomToFit(padding: number = 0) {
+    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
     this.store.dispatch(new CenterRegionInViewport(
       this.imageFile.id,
-      { x: 1, y: 1, width: getWidth(this.imageFile), height: getHeight(this.imageFile) }
+      0,
+      { x: 1, y: 1, width: getWidth(imageLayer), height: getHeight(imageLayer) }
     ))
   }
 }

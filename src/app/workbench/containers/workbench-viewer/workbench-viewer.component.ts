@@ -16,16 +16,15 @@ import {
 } from '@angular/platform-browser';
 
 import { Observable, combineLatest } from "rxjs";
-import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap } from "rxjs/operators";
+import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap, switchMap } from "rxjs/operators";
 import {
   DataFile,
-  ImageFile,
   getWidth,
   getHeight,
   getDegsPerPixel,
   getCenterTime
 } from "../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
+import { WorkbenchDataFileState } from "../../models/workbench-file-state";
 import {
   Marker,
   LineMarker,
@@ -37,7 +36,8 @@ import {
 import { BehaviorSubject, Subject } from "rxjs";
 import {
   CanvasMouseEvent,
-  PanZoomCanvasComponent
+  PanZoomCanvasComponent,
+  PanZoomCanvasLayer
 } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import {
   MarkerMouseEvent,
@@ -51,6 +51,8 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';
 import { WorkbenchFileStates } from '../../workbench-file-states.state';
 import { Viewer } from '../../models/viewer';
+import { BlendMode } from '../../models/blend-mode';
+import { Transformation } from '../../models/transformation';
 
 
 @Component({
@@ -59,9 +61,16 @@ import { Viewer } from '../../models/viewer';
   styleUrls: ["./workbench-viewer.component.scss"]
 })
 export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
-  @Input()
-  fileId: string;
-  private fileId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+  @Input("fileId")
+  set fileId(fileId: string) {
+    this.fileId$.next(fileId);
+  }
+  get fileId() {
+    return this.fileId$.getValue();
+  }
+  private fileId$ = new BehaviorSubject<string>(null);
+  
+  
   @Input()
   showInfoBar: boolean = true;
   @Input()
@@ -87,11 +96,13 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
   files$: Observable<{[id: string]: DataFile}>;
+  layers$: Observable<PanZoomCanvasLayer[]>
+  transformation$: Observable<Transformation>;
   sources$: Observable<Source[]>;
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   showAllSources$: Observable<boolean>;
-  imageFileState$: Observable<WorkbenchFileState>;
+  imageFileState$: Observable<WorkbenchDataFileState>;
   imageMouseX: number = null;
   imageMouseY: number = null;
 
@@ -102,9 +113,6 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(private store: Store, private sanitization: DomSanitizer) {
     this.files$ = this.store.select(DataFilesState.getEntities);
-    let fileReady$ = combineLatest(this.fileId$, this.files$).pipe(
-      filter(([fileId, files]) => fileId in files && files[fileId].headerLoaded)
-    );
 
     this.sources$ = this.store.select(SourcesState.getSources);
     // this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
@@ -116,11 +124,27 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
       map(([fileId, imageFileStates]) => imageFileStates[fileId]),
     );
 
-    
+    this.layers$ = this.fileId$.pipe(
+      switchMap(fileId => {
+        return this.store.select(WorkbenchFileStates.getNormalization).pipe(
+          map(fn => {
+            return [{
+              alpha: 1.0,
+              blendMode: BlendMode.Normal,
+              ...fn(fileId, 0)
+            }] 
+          })
+        )
+      })
+    )
 
-
-    
-
+    this.transformation$ = this.fileId$.pipe(
+      switchMap(fileId => {
+        return this.store.select(WorkbenchFileStates.getTransformation).pipe(
+          map(fn => fn(fileId, 0))
+        )
+      })
+    )
   }
 
   
@@ -132,9 +156,6 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: { [key: string]: SimpleChange }) {
-    if (changes.hasOwnProperty("fileId")) {
-      this.fileId$.next(changes["fileId"].currentValue);
-    }
   }
 
   handleImageMove($event: CanvasMouseEvent) {

@@ -16,11 +16,11 @@ import { Viewer } from "../../models/viewer";
 
 import {
   DataFile,
-  ImageFile,
   getWidth,
   getHeight,
+  ImageHdu,
 } from "../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
+import { WorkbenchDataFileState } from "../../models/workbench-file-state";
 import { CanvasMouseEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Subscription } from "rxjs";
@@ -110,7 +110,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   // activeViewerIndex$: Observable<number>;
 
   files$: Observable<{ [id: string]: DataFile }>;
-  fileStates$: Observable<{ [id: string]: WorkbenchFileState }>;
+  fileStates$: Observable<{ [id: string]: WorkbenchDataFileState }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
   // activeViewerIndex: number;
@@ -211,31 +211,34 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     this.zoomBy(fileId, this.zoomStepFactor, imageAnchor);
   }
 
+  // TODO: LAYER
   public zoomBy(
     fileId: string,
     factor: number,
     imageAnchor: { x: number; y: number } = null
   ) {
-    this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
+    this.store.dispatch(new ZoomBy(fileId, 0, factor, imageAnchor));
   }
 
   public zoomToFit(fileId: string, padding: number = 0) {
+    // TODO: LAYER
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    if (imageFile) {
+    let dataFile = dataFiles[fileId];
+    if (dataFile) {
       this.store.dispatch(
-        new CenterRegionInViewport(fileId, {
+        new CenterRegionInViewport(fileId, 0, {
           x: 1,
           y: 1,
-          width: getWidth(imageFile),
-          height: getHeight(imageFile),
+          width: getWidth(dataFile.hdus[0] as ImageHdu),
+          height: getHeight(dataFile.hdus[0] as ImageHdu),
         })
       );
     }
   }
 
   public zoomTo(fileId: string, value: number) {
-    this.store.dispatch(new ZoomTo(fileId, value, null));
+    // TODO: LAYER
+    this.store.dispatch(new ZoomTo(fileId, 0, value, null));
   }
 
   ngOnInit() {}

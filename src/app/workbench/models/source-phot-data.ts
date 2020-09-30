@@ -2,6 +2,7 @@ export interface PhotData {
   id: string;
   sourceId: string;
   fileId: string;
+  hduIndex: number;
   time: string;
   filter: string;
   telescope: string;

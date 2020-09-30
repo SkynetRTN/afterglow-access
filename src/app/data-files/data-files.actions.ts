@@ -1,4 +1,4 @@
-import { DataFile, Header, ImageFile } from './models/data-file';
+import { DataFile, Header, PixelType } from './models/data-file';
 import { ImageHist } from './models/image-hist';
 import { ImageTile } from './models/image-tile';
 
@@ -71,13 +71,13 @@ export class RemoveAllDataFilesFail {
 export class LoadDataFileHdr {
   public static readonly type = '[DataFile] Load Data File Hdr';
 
-  constructor(public fileId: string) { }
+  constructor(public fileId: string, public hduIndex: number) { }
 }
 
 export class LoadDataFileHdrSuccess {
   public static readonly type = '[DataFile] Load Data File Hdr Success';
 
-  constructor(public fileId: string, public header: Header) { }
+  constructor(public fileId: string, public hduIndex: number, public header: Header) { }
 }
 
 /**
@@ -87,43 +87,43 @@ export class LoadDataFileHdrSuccess {
 export class LoadImageHist {
   public static readonly type = '[Image File] Load Image Hist';
 
-  constructor(public fileId: string) { }
+  constructor(public fileId: string, public hduIndex: number) { }
 }
 
 export class LoadImageHistSuccess {
   public static readonly type = '[Image File] Load Image Hist Success';
 
-  constructor(public fileId: string, public hist: ImageHist) { }
+  constructor(public fileId: string, public hduIndex: number, public hist: ImageHist) { }
 }
 
 export class InitImageTiles {
   public static readonly type = '[Image File] Init Image Tiles';
 
-  constructor(public fileId: string) { }
+  constructor(public fileId: string, public hduIndex: number) { }
 }
 
 export class LoadImageTilePixels {
   public static readonly type = '[Image File] Load Image Tile';
 
-  constructor(public fileId: string, public tileIndex: number) { }
+  constructor(public fileId: string, public hduIndex: number, public tileIndex: number) { }
 }
 
 export class LoadImageTilePixelsSuccess {
   public static readonly type = '[Image File] Load Image Tile Success';
 
-  constructor(public fileId: string, public tileIndex: number, public pixels: Float32Array) { }
+  constructor(public fileId: string, public hduIndex: number, public tileIndex: number, public pixels: PixelType) { }
 }
 
 export class LoadImageTilePixelsFail {
   public static readonly type = '[Image File] Load Image Tile Fail';
 
-  constructor(public fileId: string, public tileIndex: number, public error: any) { }
+  constructor(public fileId: string, public hduIndex: number, public tileIndex: number, public error: any) { }
 }
 
 export class LoadImageTilePixelsCancel {
   public static readonly type = '[Image File] Load Image Tile Cancel';
 
-  constructor(public fileId: string, public tileIndex: number) { }
+  constructor(public fileId: string, public hduIndex: number, public tileIndex: number) { }
 }
 
 export class ClearImageDataCache {

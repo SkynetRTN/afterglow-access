@@ -102,7 +102,9 @@
               <mat-progress-bar mode="indeterminate" [hidden]="!(loadingFiles$ | async)" [color]="'accent'">
               </mat-progress-bar>
             </div>
-            <app-workbench-data-file-list [dataFiles]="files$ | async" [selectedFileId]="(focusedFile$ | async)?.id"
+            <app-workbench-data-file-list [files]="files$ | async"
+              [selectedFileId]="(focusedFile$ | async)?.id"
+              [selectedHduIndex]=""
               (onSelectionChange)="onFileSelect($event)">
             </app-workbench-data-file-list>
           </div>

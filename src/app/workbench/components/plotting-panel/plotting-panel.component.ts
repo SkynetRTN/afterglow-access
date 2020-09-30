@@ -20,8 +20,7 @@ import {
 } from "rxjs";
 import { map, withLatestFrom } from "rxjs/operators";
 import {
-  ImageFile,
-  getDegsPerPixel,
+  getDegsPerPixel, DataFile, ImageHdu,
 } from "../../../data-files/models/data-file";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { PlotterComponent } from "../plotter/plotter.component";
@@ -39,13 +38,13 @@ import { Store, Actions } from "@ngxs/store";
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input("file")
-  set file(file: ImageFile) {
+  set file(file: DataFile) {
     this.file$.next(file);
   }
   get file() {
     return this.file$.getValue();
   }
-  private file$ = new BehaviorSubject<ImageFile>(null);
+  private file$ = new BehaviorSubject<DataFile>(null);
 
   @Input("state")
   set state(state: PlottingPanelState) {
@@ -115,6 +114,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
           lineEnd.x !== null &&
           lineEnd.y !== null
         ) {
+          let imageLayer = this.file.hdus[0] as ImageHdu;
           let deltaX = lineEnd.x - lineStart.x;
           let deltaY = lineEnd.y - lineStart.y;
           pixelPosAngle = (Math.atan2(deltaY, -deltaX) * 180.0) / Math.PI - 90;
@@ -124,9 +124,9 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
             Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
           );
 
-          if (getDegsPerPixel(this.file) != undefined) {
+          if (getDegsPerPixel(imageLayer) != undefined) {
             skySeparation =
-              pixelSeparation * getDegsPerPixel(this.file) * 3600;
+              pixelSeparation * getDegsPerPixel(imageLayer) * 3600;
           }
         }
 
@@ -162,11 +162,11 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private normalizeLine(
-    imageFile: ImageFile,
+    imageFile: DataFile,
     line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
   ) {
-    if (!imageFile.headerLoaded) return;
-
+    if (!imageFile.hdus[0].headerLoaded) return;
+    let imageLayer = this.file.hdus[0] as ImageHdu;
     let x = null;
     let y = null;
     let raHours = null;
@@ -174,8 +174,8 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     if (line.posType == PosType.PIXEL) {
       x = line.primaryCoord;
       y = line.secondaryCoord;
-      if (imageFile.wcs.isValid()) {
-        let wcs = imageFile.wcs;
+      if (imageLayer.wcs.isValid()) {
+        let wcs = imageLayer.wcs;
         let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
         raHours = raDec[0];
         decDegs = raDec[1];
@@ -183,8 +183,8 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     } else {
       raHours = line.primaryCoord;
       decDegs = line.secondaryCoord;
-      if (imageFile.wcs.isValid()) {
-        let wcs = imageFile.wcs;
+      if (imageLayer.wcs.isValid()) {
+        let wcs = imageLayer.wcs;
         let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
         x = xy[0];
         y = xy[1];

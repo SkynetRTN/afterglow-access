@@ -118,13 +118,14 @@ import {
   MoveViewer,
 } from "./workbench.actions";
 import {
-  ImageFile,
   getWidth,
   getHeight,
   hasOverlap,
   getCenterTime,
   getSourceCoordinates,
   DataFile,
+  ImageHdu,
+  DataLayer,
 } from "../data-files/models/data-file";
 import {
   WorkbenchFileStates,
@@ -162,7 +163,6 @@ import {
   ImportAssets,
 } from "../data-providers/data-providers.actions";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { DataFileType } from "../data-files/models/data-file-type";
 import { PosType, Source } from "./models/source";
 import {
   MarkerType,
@@ -198,9 +198,10 @@ import { PhotDataStateModel, PhotDataState } from "./phot-data.state.";
 import { PhotData } from "./models/source-phot-data";
 import { Viewer } from "./models/viewer";
 import { ResetState } from "../auth/auth.actions";
+import { WorkbenchDataFileState, WorkbenchImageHduState } from './models/workbench-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '051341ac-a968-4d48-9e01-8336ee6a978c',
+  version: '051341ac-a968-4d48-9e01-8336ee6a978d',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -490,56 +491,43 @@ export class WorkbenchState {
     focusedViewer: Viewer
   ) {
     if (!focusedViewer) return null;
-    return focusedViewer.fileId;
+    return [focusedViewer.fileId, focusedViewer.hduIndex] as [string, number];
   }
 
   @Selector([WorkbenchState.getFocusedFileId, DataFilesState])
-  public static getFocusedFile(
+  public static getFocusedDataFile(
     state: WorkbenchStateModel,
-    fileId: string,
+    [fileId, hduIndex] : [string, number],
     dataFilesState: DataFilesStateModel
   ) {
     if (!fileId || !dataFilesState.ids.includes(fileId)) return null;
     return dataFilesState.entities[fileId];
   }
 
-  @Selector([WorkbenchState.getFocusedFile])
+  @Selector([WorkbenchState.getFocusedFileId, DataFilesState, WorkbenchFileStates])
   public static getFocusedFileHeader(
     state: WorkbenchStateModel,
-    file: DataFile
+    [fileId, hduIndex] : [string, number],
+    dataFilesState: DataFilesStateModel,
+    workbenchFileStates: WorkbenchFileStatesModel
   ) {
-    if (!file || !file.headerLoaded) return null;
-    return file.header;
+    if (!(fileId in workbenchFileStates)) return null;
+    let file = dataFilesState[fileId];
+    let fileState = workbenchFileStates.entities[fileId];
+    if(!file.hdus[hduIndex].headerLoaded) return null;
+    return file.hdus[hduIndex].header;
   }
 
-  @Selector([WorkbenchState.getFocusedFileId, DataFilesState])
-  public static getFocusedImageFileId(
-    state: WorkbenchStateModel,
-    fileId: string,
-    dataFilesState: DataFilesStateModel
-  ) {
-    if (!fileId || dataFilesState.entities[fileId].type != DataFileType.IMAGE)
-      return null;
-    return fileId;
-  }
 
-  @Selector([WorkbenchState.getFocusedFile])
-  public static getFocusedImageFile(
+  @Selector([WorkbenchState.getFocusedFileId, WorkbenchFileStates])
+  public static getFocusedWorkbenchLayerState(
     state: WorkbenchStateModel,
-    file: DataFile
+    [fileId, hduIndex] : [string, number],
+    workbenchFileStates: WorkbenchFileStatesModel
   ) {
-    if (!file || file.type != DataFileType.IMAGE) return null;
-    return file as ImageFile;
-  }
-
-  @Selector([WorkbenchState.getFocusedImageFile, WorkbenchFileStates])
-  public static getFocusedImageFileState(
-    state: WorkbenchStateModel,
-    imageFile: ImageFile,
-    imageFilesState: WorkbenchFileStatesModel
-  ) {
-    if (!imageFile || !imageFilesState.ids.includes(imageFile.id)) return null;
-    return imageFilesState.entities[imageFile.id];
+    if (!workbenchFileStates.ids.includes(fileId)) return null;
+    let workbenchFileState = workbenchFileStates.entities[fileId];
+    return workbenchFileState.hduStates[hduIndex];
   }
 
   // @Selector([DataFilesState])
@@ -671,22 +659,24 @@ export class WorkbenchState {
     dataFilesState: DataFilesStateModel
   ) {
     return (fileId: string) => {
-      let file = dataFilesState.entities[fileId] as ImageFile;
+      let file = dataFilesState.entities[fileId];
     };
   }
 
   @Selector([WorkbenchFileStates, DataFilesState])
   static getSonifierMarkers(
     state: WorkbenchStateModel,
-    imageFilesState: WorkbenchFileStatesModel,
+    fileStates: WorkbenchFileStatesModel,
     dataFilesState: DataFilesStateModel
   ) {
-    return (fileId: string) => {
-      let file = dataFilesState.entities[fileId] as ImageFile;
-      let sonifier = imageFilesState.entities[fileId].sonificationPanelState;
-      let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
-      let regionMode = sonifier.regionMode;
-      let progressLine = sonifier.progressLine;
+    return (fileId: string, hduIndex: number) => {
+      let file = dataFilesState.entities[fileId];
+      let layer = file.hdus[hduIndex] as ImageHdu;
+      let layerState = fileStates.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
+      let sonifierState = layerState.sonificationPanelState;
+      let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
+      let regionMode = sonifierState.regionMode;
+      let progressLine = sonifierState.progressLine;
       let result: Array<RectangleMarker | LineMarker> = [];
       if (region && regionMode == SonifierRegionMode.CUSTOM)
         result.push({
@@ -702,18 +692,20 @@ export class WorkbenchState {
   @Selector([WorkbenchFileStates, DataFilesState, SourcesState])
   static getPhotometrySourceMarkers(
     state: WorkbenchStateModel,
-    imageFilesState: WorkbenchFileStatesModel,
+    fileStates: WorkbenchFileStatesModel,
     dataFilesState: DataFilesStateModel,
     sourcesState: SourcesStateModel
   ) {
-    return (fileId: string) => {
-      let file = dataFilesState.entities[fileId] as ImageFile;
+    return (fileId: string, hduIndex: number) => {
+      let file = dataFilesState.entities[fileId];
+      let layer = file.hdus[hduIndex] as ImageHdu;
+      let layerState = fileStates.entities[fileId].hduStates[hduIndex] as WorkbenchImageHduState;
       let sources = SourcesState.getSources(sourcesState);
       let selectedSourceIds = state.photometryPanelConfig.selectedSourceIds;
       let markers: Array<CircleMarker | TeardropMarker> = [];
-      if (!file) return [[]];
+      if (!layer) return [[]];
       let mode = state.photometryPanelConfig.coordMode;
-      if (!file.wcs.isValid()) mode = "pixel";
+      if (!layer.wcs.isValid()) mode = "pixel";
 
       sources.forEach((source) => {
         if (
@@ -723,7 +715,7 @@ export class WorkbenchState {
           return;
         if (source.posType != mode) return;
         let selected = selectedSourceIds.includes(source.id);
-        let coord = getSourceCoordinates(file, source);
+        let coord = getSourceCoordinates(layer, source);
 
         if (coord == null) {
           return false;
@@ -871,18 +863,18 @@ export class WorkbenchState {
         
         if(state.viewerSyncEnabled || state.normalizationSyncEnabled || state.plottingPanelConfig.plotterSyncEnabled) {
           // before changing the selected viewer,  sync the new viewer's file with the old
-          let referenceFileId = this.store.selectSnapshot(WorkbenchState.getFocusedFileId)
+          let [referenceFileId, referenceHduIndex] = this.store.selectSnapshot(WorkbenchState.getFocusedFileId)
           let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
           let fileId = state.viewers[viewerId].fileId;
           if(referenceFileId && fileId) {
             if(state.viewerSyncEnabled) {
-              this.store.dispatch(new SyncFileTransformations(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
+              this.store.dispatch(new SyncFileTransformations(dataFiles[referenceFileId], [dataFiles[fileId]]))
             }
             if(state.normalizationSyncEnabled) {
-              this.store.dispatch(new SyncFileNormalizations(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
+              this.store.dispatch(new SyncFileNormalizations(dataFiles[referenceFileId], [dataFiles[fileId]]))
             }
             if(state.plottingPanelConfig.plotterSyncEnabled) {
-              this.store.dispatch(new SyncFilePlotters(dataFiles[referenceFileId] as ImageFile, [dataFiles[fileId] as ImageFile]))
+              this.store.dispatch(new SyncFilePlotters(dataFiles[referenceFileId], [dataFiles[fileId]]))
             }
           }
           
@@ -895,10 +887,11 @@ export class WorkbenchState {
         let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
         if (state.viewers[viewerId].fileId in dataFiles) {
           let file = dataFiles[state.viewers[viewerId].fileId];
-          if (!file.headerLoaded && !file.headerLoading) {
+          // TODO: LAYER
+          // if (!file.headerLoaded && !file.headerLoading) {
             //FORCE LOADING OF IMAGE
             dispatch(new SetViewerFile(viewerId, file.id));
-          }
+          // }
         }
       }
       return state;
@@ -1300,7 +1293,8 @@ export class WorkbenchState {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
 
     let actions = [];
-    let dataFile = dataFiles[fileId] as ImageFile;
+    let dataFile = dataFiles[fileId];
+    let dataLayer = dataFile.hdus[0] as ImageHdu;
     if (dataFile && viewer) {
 
       //get current focused file id
@@ -1325,14 +1319,17 @@ export class WorkbenchState {
 
       function onDataFileLoad(store: Store) {
         //normalization
-        let imageFileStates = store.selectSnapshot(
+        let fileStates = store.selectSnapshot(
           WorkbenchFileStates.getEntities
         );
-        let normalization = imageFileStates[dataFile.id].normalization;
+        //TODO: LAYER
+        let fileState = fileStates[dataFile.id];
+        let layerState = fileState.hduStates[0] as WorkbenchImageHduState;
+        let normalization = layerState.normalization
         if (state.normalizationSyncEnabled && referenceFileId) {
           actions.push(
             new SyncFileNormalizations(
-              dataFiles[referenceFileId] as ImageFile,
+              dataFiles[referenceFileId],
               [dataFile]
             )
           );
@@ -1344,17 +1341,17 @@ export class WorkbenchState {
           //   environment.upperPercentileDefault,
           //   true
           // );
-          actions.push(new RenormalizeImageFile(dataFile.id));
+          actions.push(new RenormalizeImageFile(dataFile.id, 0));
         }
 
-        let sonifierState = imageFileStates[dataFile.id].sonificationPanelState;
+        let sonifierState = layerState.sonificationPanelState;
         if (!sonifierState.regionHistoryInitialized) {
           actions.push(
-            new AddRegionToHistory(dataFile.id, {
+            new AddRegionToHistory(dataFile.id, 0, {
               x: 0.5,
               y: 0.5,
-              width: getWidth(dataFile),
-              height: getHeight(dataFile),
+              width: getWidth(dataLayer),
+              height: getHeight(dataLayer),
             })
           );
         }
@@ -1364,24 +1361,24 @@ export class WorkbenchState {
           if (state.viewerSyncEnabled)
             actions.push(
               new SyncFileTransformations(
-                dataFiles[referenceFileId] as ImageFile,
+                dataFiles[referenceFileId],
                 [dataFile]
               )
             );
           if (state.plottingPanelConfig.plotterSyncEnabled)
             actions.push(
-              new SyncFilePlotters(dataFiles[referenceFileId] as ImageFile, [
+              new SyncFilePlotters(dataFiles[referenceFileId], [
                 dataFile,
               ])
             );
         }
-
+        console.log("HERE!!!!@!@!!@!!!!")
         actions.push(new SetFocusedViewer(viewerId));
 
         return dispatch(actions);
       }
 
-      if (dataFile.headerLoaded && dataFile.histLoaded) {
+      if (dataLayer.headerLoaded && dataLayer.histLoaded) {
         return onDataFileLoad(this.store);
         
       } else {
@@ -1758,7 +1755,6 @@ export class WorkbenchState {
       WorkbenchFileStates.getEntities
     );
     let newIds = dataFiles
-      .filter((dataFile) => dataFile.type == DataFileType.IMAGE)
       .map((imageFile) => imageFile.id)
       .filter((id) => !existingIds.includes(id));
 
@@ -1873,6 +1869,7 @@ export class WorkbenchState {
       let viewer: Viewer = {
         viewerId: null,
         fileId: fileId,
+        hduIndex: 0,
         panEnabled: true,
         zoomEnabled: true,
         markers: [],
@@ -2006,22 +2003,23 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { reference, files }: SyncFileNormalizations
   ) {
+    // TODO: LAYER
     let state = getState();
     let imageFileStates = this.store.selectSnapshot(
       WorkbenchFileStates.getEntities
     );
 
-    let srcFile: ImageFile = reference;
+    let srcFile = reference;
     if (!srcFile) return;
 
-    let targetFiles: ImageFile[] = files;
-    let srcNormalizer = imageFileStates[srcFile.id].normalization.normalizer;
+    let targetFiles: DataFile[] = files;
+    let srcNormalizer = (imageFileStates[srcFile.id].hduStates[0] as WorkbenchImageHduState).normalization.normalizer;
 
     let actions = [];
     targetFiles.forEach((targetFile) => {
       if (!targetFile || targetFile.id == srcFile.id) return;
       actions.push(
-        new UpdateNormalizer(targetFile.id, {
+        new UpdateNormalizer(targetFile.id, 0, {
           ...srcNormalizer,
           peakPercentile: srcNormalizer.peakPercentile,
           backgroundPercentile: srcNormalizer.backgroundPercentile,
@@ -2043,14 +2041,15 @@ export class WorkbenchState {
       WorkbenchFileStates.getEntities
     );
 
-    let srcFile: ImageFile = reference;
-    let targetFiles: ImageFile[] = files;
-    let srcPlotter = imageFileStates[srcFile.id].plottingPanelState;
+    // TODO: LAYER
+    let srcFile = reference;
+    let targetFiles = files;
+    let srcPlotter = (imageFileStates[srcFile.id].hduStates[0] as WorkbenchImageHduState).plottingPanelState;
 
     targetFiles.forEach((targetFile) => {
       if (!targetFile || targetFile.id == srcFile.id) return;
       return dispatch(
-        new UpdatePlotterFileState(targetFile.id, { ...srcPlotter })
+        new UpdatePlotterFileState(targetFile.id, 0, { ...srcPlotter })
       );
     });
   }
@@ -2061,30 +2060,33 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { reference, files }: SyncFileTransformations
   ) {
+    // TODO: LAYER
     let state = getState();
     let imageFileStates = this.store.selectSnapshot(
       WorkbenchFileStates.getEntities
     );
 
     let actions = [];
-    let srcFile: ImageFile = reference;
-    let targetFiles: ImageFile[] = files;
+    let srcFile = reference;
+    let targetFiles = files;
 
     if (!srcFile) return;
-
-    let srcHasWcs = srcFile.wcs && srcFile.wcs.isValid();
+    let srcLayer = srcFile.hdus[0] as ImageHdu;
+    let srcLayerState = imageFileStates[srcFile.id].hduStates[0] as WorkbenchImageHduState;
+    let srcHasWcs = srcLayer.wcs && srcLayer.wcs.isValid();
     let srcImageTransform =
-      imageFileStates[srcFile.id].transformation.imageTransform;
+      srcLayerState.transformation.imageTransform;
     let srcViewportTransform =
-      imageFileStates[srcFile.id].transformation.viewportTransform;
+      srcLayerState.transformation.viewportTransform;
 
     targetFiles.forEach((targetFile) => {
       if (!targetFile || targetFile.id == srcFile.id) return;
-
-      let targetHasWcs = targetFile.wcs && targetFile.wcs.isValid();
+      let targetLayer = targetFile.hdus[0] as ImageHdu;
+      let targetLayerState = imageFileStates[targetFile.id].hduStates[0] as WorkbenchImageHduState;
+      let targetHasWcs = targetLayer.wcs && targetLayer.wcs.isValid();
 
       if (srcHasWcs && targetHasWcs) {
-        let srcWcs = srcFile.wcs;
+        let srcWcs = targetLayer.wcs;
         let srcWcsTransform = new Matrix(
           srcWcs.m11,
           srcWcs.m21,
@@ -2094,7 +2096,7 @@ export class WorkbenchState {
           0
         );
         let originWorld = srcWcs.pixToWorld([0, 0]);
-        let targetWcs = targetFile.wcs;
+        let targetWcs = targetLayer.wcs;
         let originPixels = targetWcs.worldToPix(originWorld);
         let targetWcsTransform = new Matrix(
           targetWcs.m11,
@@ -2106,32 +2108,34 @@ export class WorkbenchState {
         );
         let targetImageFileState = imageFileStates[targetFile.id];
 
-        if (hasOverlap(srcFile, targetFile)) {
+        if (hasOverlap(srcLayer, targetLayer)) {
           let srcToTargetTransform = srcWcsTransform
             .inverted()
             .appended(targetWcsTransform)
             .translate(-originPixels[0], -originPixels[1]);
           let targetImageMatrix = transformToMatrix(
-            imageFileStates[srcFile.id].transformation.imageTransform
+            srcLayerState.transformation.imageTransform
           ).appended(srcToTargetTransform);
           actions.push(
             new SetImageTransform(
               targetFile.id,
+              0,
               matrixToTransform(targetImageMatrix)
             )
           );
           actions.push(
             new SetViewportTransform(
               targetFile.id,
-              imageFileStates[srcFile.id].transformation.viewportTransform
+              0,
+              srcLayerState.transformation.viewportTransform
             )
           );
         }
       } else {
         let targetImageFileState = imageFileStates[targetFile.id];
-        actions.push(new SetImageTransform(targetFile.id, srcImageTransform));
+        actions.push(new SetImageTransform(targetFile.id, 0, srcImageTransform));
         actions.push(
-          new SetViewportTransform(targetFile.id, srcViewportTransform)
+          new SetViewportTransform(targetFile.id, 0, srcViewportTransform)
         );
       }
     });
@@ -2693,18 +2697,18 @@ export class WorkbenchState {
   @ImmutableContext()
   public extractSources(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { fileId, settings }: ExtractSources
+    { fileId, hduIndex, settings }: ExtractSources
   ) {
     let state = getState();
     let photometryPageSettings = this.store.selectSnapshot(
       WorkbenchState.getPhotometryPanelConfig
     );
     let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    let imageFileState = this.store.selectSnapshot(
-      WorkbenchFileStates.getEntities
-    )[imageFile.id];
-    let sonifier = imageFileState.sonificationPanelState;
+    let file = dataFiles[fileId];
+    let layer = file.hdus[hduIndex] as ImageHdu;
+    let fileState = this.store.selectSnapshot(WorkbenchFileStates.getEntities)[file.id];
+    let layerState = fileState.hduStates[hduIndex] as WorkbenchImageHduState;
+    let sonificationState = layerState.sonificationPanelState;
 
     let jobSettings: SourceExtractionJobSettings = {
       threshold: settings.threshold,
@@ -2715,30 +2719,31 @@ export class WorkbenchState {
     if (
       settings.region == SourceExtractionRegionOption.VIEWPORT ||
       (settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-        imageFileState.sonificationPanelState.regionMode ==
+        sonificationState.regionMode ==
           SonifierRegionMode.VIEWPORT)
     ) {
-      let region = getViewportRegion(imageFileState.transformation, imageFile);
+      let imageHdu = file.hdus[0] as ImageHdu;
+      let region = getViewportRegion(layerState.transformation, imageHdu.width, imageHdu.height);
 
       jobSettings = {
         ...jobSettings,
-        x: Math.min(getWidth(imageFile), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(imageFile), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(imageFile), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(imageFile), Math.max(0, region.height + 1)),
+        x: Math.min(getWidth(layer), Math.max(0, region.x + 1)),
+        y: Math.min(getHeight(layer), Math.max(0, region.y + 1)),
+        width: Math.min(getWidth(layer), Math.max(0, region.width + 1)),
+        height: Math.min(getHeight(layer), Math.max(0, region.height + 1)),
       };
     } else if (
       settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-      imageFileState.sonificationPanelState.regionMode ==
+      sonificationState.regionMode ==
         SonifierRegionMode.CUSTOM
     ) {
-      let region = sonifier.regionHistory[sonifier.regionHistoryIndex];
+      let region = sonificationState.regionHistory[sonificationState.regionHistoryIndex];
       jobSettings = {
         ...jobSettings,
-        x: Math.min(getWidth(imageFile), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(imageFile), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(imageFile), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(imageFile), Math.max(0, region.height + 1)),
+        x: Math.min(getWidth(layer), Math.max(0, region.x + 1)),
+        y: Math.min(getHeight(layer), Math.max(0, region.y + 1)),
+        width: Math.min(getWidth(layer), Math.max(0, region.width + 1)),
+        height: Math.min(getHeight(layer), Math.max(0, region.height + 1)),
       };
     }
     let job: SourceExtractionJob = {
@@ -2771,8 +2776,8 @@ export class WorkbenchState {
 
           if (
             photometryPageSettings.coordMode == "sky" &&
-            dataFiles[fileId].wcs &&
-            dataFiles[fileId].wcs.isValid() &&
+            layer.wcs &&
+            layer.wcs.isValid() &&
             "ra_hours" in d &&
             d.ra_hours !== null &&
             "dec_degs" in d &&

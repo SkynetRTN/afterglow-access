@@ -1,4 +1,6 @@
-export interface ImageTile {
+import { PixelType } from './data-file';
+
+export interface ImageTile<T> {
   index: number,
   x: number;
   y: number;
@@ -7,10 +9,11 @@ export interface ImageTile {
   pixelsLoaded: boolean;
   pixelsLoading: boolean;
   pixelLoadingFailed: boolean;
-  pixels: Float32Array | Uint32Array | null;
+  pixels: T;
 }
 
-export function getTilePixel(tile: ImageTile, x: number, y: number) {
+
+export function getTilePixel<T>(tile: ImageTile<T>, x: number, y: number) {
   let index: number = Math.floor(y) * tile.width + Math.floor(x);
   if (!tile.pixelsLoaded) return NaN;
   return tile.pixels[index];

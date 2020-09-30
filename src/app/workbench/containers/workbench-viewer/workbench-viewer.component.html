@@ -5,13 +5,12 @@
   </div> -->
   <div fxFlex="1 1 100%">
     <div class="viewer-marker-wrapper h-100">
-      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [imageFile]="(files$ | async)[fileId]"
-      [normalization]="(imageFileState$ | async)?.normalization"
-      [transformation]="(imageFileState$ | async)?.transformation" (onImageMove)="handleImageMove($event)"
+      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [layers]="(layers$ | async)"
+      [transformation]="(transformation$ | async)" (onImageMove)="handleImageMove($event)"
       (onImageClick)="handleImageClick($event)">
       <app-image-viewer-marker-overlay *ngIf="(files$ | async)[fileId]" [imageFile]="(files$ | async)[fileId]"
         [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
-        [transform]="(imageFileState$ | async)?.transformation?.imageToViewportTransform" [markers]="markers"
+        [transform]="(transformation$ | async)?.imageToViewportTransform" [markers]="markers"
         (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;" class="marker-overlay">
       </app-image-viewer-marker-overlay>
     </div>
