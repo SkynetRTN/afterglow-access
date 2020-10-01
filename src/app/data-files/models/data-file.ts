@@ -31,11 +31,12 @@ export interface DataFile {
   dataProviderId: string;
   assetPath: string;
   modified: boolean;
-  hdus: IHeaderDataUnit[];
+  hdus: IHdu[];
 }
 
-export interface IHeaderDataUnit {
+export interface IHdu {
   readonly hduType: HduType;
+  id: string;
   header: Header;
   wcs: Wcs;
   headerLoaded: boolean;
@@ -70,7 +71,7 @@ export interface ITiledImageData<T> {
   tilesInitialized: boolean;
 }
 
-export interface ImageHdu extends IHeaderDataUnit, ITiledImageData<PixelType> {
+export interface ImageHdu extends IHdu, ITiledImageData<PixelType> {
   readonly hduType: HduType.IMAGE;
   readonly mode: ImageLayerMode;
   readonly precision: ImageLayerPrecision;
@@ -448,7 +449,7 @@ export function hasOverlap(layerA: ImageHdu, layerB: ImageHdu) {
 
 
 
-export interface TableHdu extends IHeaderDataUnit {
+export interface TableHdu extends IHdu {
   readonly hduType: HduType.TABLE;
   rows: Array<any>;
 }

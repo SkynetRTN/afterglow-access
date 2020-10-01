@@ -6,7 +6,7 @@ import { Store } from '@ngxs/store';
 import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-image-viewer-title-bar',

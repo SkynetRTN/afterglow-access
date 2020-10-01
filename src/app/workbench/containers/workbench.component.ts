@@ -70,11 +70,9 @@ import {
 } from "../../data-files/data-files.actions";
 import { LoadDataProviders } from "../../data-providers/data-providers.actions";
 import { ViewMode } from "../models/view-mode";
-import {
-  MatButtonToggleChange,
-  MatRadioChange,
-  MatSelectChange,
-} from "@angular/material";
+import { MatButtonToggleChange } from "@angular/material/button-toggle";
+import { MatRadioChange } from "@angular/material/radio";
+import { MatSelectChange } from "@angular/material/select"
 import { Viewer } from "../models/viewer";
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { CorrelationIdGenerator } from "../../utils/correlated-action";

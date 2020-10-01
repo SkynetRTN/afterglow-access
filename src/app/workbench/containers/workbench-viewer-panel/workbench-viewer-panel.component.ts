@@ -42,11 +42,7 @@ import {
   ZoomBy,
   CenterRegionInViewport,
 } from "../../workbench-file-states.actions";
-import { RemoveDataFile } from "../../../data-files/data-files.actions";
-import { OverlayRef, Overlay } from "@angular/cdk/overlay";
-import { TemplatePortal } from "@angular/cdk/portal";
-import { MatMenuTrigger } from "@angular/material";
-import { ViewerPanel } from '../../models/workbench-state';
+import { MatMenuTrigger } from "@angular/material/menu";
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
@@ -125,7 +121,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   constructor(
     private store: Store,
     private _hotkeysService: HotkeysService,
-    public overlay: Overlay,
     public viewContainerRef: ViewContainerRef
   ) {
     

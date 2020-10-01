@@ -6,7 +6,7 @@ import { ViewMode } from '../../models/view-mode';
 import { Store } from '@ngxs/store';
 import { SplitViewerPanel, SetFocusedViewer } from '../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
-import { MatMenuTrigger } from '@angular/material';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from '../../models/workbench-state';
 import { Observable } from 'rxjs';
 import { WorkbenchState } from '../../workbench.state';

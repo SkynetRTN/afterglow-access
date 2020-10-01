@@ -58,7 +58,7 @@ import {
   PhotometryJobResult,
 } from "../../../jobs/models/photometry";
 import { Router } from "@angular/router";
-import { MatButtonToggleChange } from "@angular/material";
+import { MatButtonToggleChange } from "@angular/material/button-toggle";
 import { WorkbenchState } from "../../workbench.state";
 import {
   UpdatePhotometryPanelConfig,

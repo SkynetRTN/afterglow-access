@@ -6,7 +6,6 @@ import {
   heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap
 } from '../../models/color-map';
 import { StretchMode } from '../../models/stretch-mode';
-import { MatSelectChange } from '@angular/material';
 
 @Component({
   selector: 'app-normalizer-form',

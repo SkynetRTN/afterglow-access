@@ -43,7 +43,7 @@ import {
 } from "angular2-hotkeys";
 import { ChangeDetectorRef } from "@angular/core";
 import { Router } from "@angular/router";
-import { MatButtonToggleChange } from "@angular/material";
+import { MatButtonToggleChange } from "@angular/material/button-toggle";
 import { Store, Actions } from "@ngxs/store";
 import {
   AddRegionToHistory,

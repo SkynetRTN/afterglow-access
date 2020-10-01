@@ -1,7 +1,7 @@
 import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
 import { getPixel, getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Subject, timer } from 'rxjs';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { takeUntil } from 'rxjs/operators';

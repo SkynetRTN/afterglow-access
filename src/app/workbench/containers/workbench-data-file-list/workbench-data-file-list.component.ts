@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange } from '@angular/core';
-import { DataFile, IHeaderDataUnit } from '../../../data-files/models/data-file';
+import { DataFile, IHdu } from '../../../data-files/models/data-file';
 import { SelectionModel} from '@angular/cdk/collections';
 import { ENTER, SPACE } from '@angular/cdk/keycodes';
 import { Subscription, BehaviorSubject, Observable } from 'rxjs';
@@ -71,7 +71,7 @@ export class WorkbenchDataFileListComponent {
     return value.id;
   }
 
-  onRowClick(file: DataFile, hdu: IHeaderDataUnit) {
+  onRowClick(file: DataFile, hdu: IHdu) {
     if(file.id == this.selectedFileId) return;
 
     this.selectedFileId = file.id;
@@ -86,7 +86,7 @@ export class WorkbenchDataFileListComponent {
     //   }, delay);
   }
 
-  onRowDoubleClick(file: DataFile, hdu: IHeaderDataUnit) {
+  onRowDoubleClick(file: DataFile, hdu: IHdu) {
     
       // this.preventSingleClick = true;
       // clearTimeout(this.timer);

@@ -16,7 +16,7 @@ import { ImageHist, getBinCenter, calcLevels } from "../../models/image-hist";
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
 import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
-import { MatCheckboxChange } from '@angular/material';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
   selector: "app-image-hist-chart",

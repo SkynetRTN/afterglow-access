@@ -22,7 +22,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import {  MatRadioModule } from '@angular/material';
+import {  MatRadioModule } from '@angular/material/radio';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
