@@ -28,7 +28,6 @@ import { AvatarModule } from 'ngx-avatar';
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
 import { appConfig } from '../environments/environment';
-import { NgxPopperModule } from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
@@ -130,7 +129,6 @@ export function imageFileStateSanitizer(v) {
     ReactiveFormsModule,
     FlexLayoutModule,
     CookieModule.forRoot(),
-    NgxPopperModule,
     AvatarModule,
     ThemePickerModule,
     WorkbenchModule.forRoot(),

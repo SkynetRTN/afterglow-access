@@ -6,7 +6,6 @@ import { Subscription, BehaviorSubject, Observable } from 'rxjs';
 import { Store } from '@ngxs/store';
 import { map } from 'rxjs/operators';
 import { FileInfoToolsetComponent } from '../../components/file-info-panel/file-info-panel.component';
-import { ITreeOptions, TREE_ACTIONS, KEYS } from '@circlon/angular-tree-component';
 
 interface TreeNode {
   id: string;

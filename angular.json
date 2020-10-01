@@ -11,6 +11,9 @@
         "build": {
           "builder": "@angular-builders/custom-webpack:browser",
           "options": {
+            "customWebpackConfig": {
+              "path": "./custom-webpack.config.js"
+            },
             "outputPath": "dist",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -42,12 +45,10 @@
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": false,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.dev.ts"
-                }
-              ]
+              "fileReplacements": [{
+                "replace": "src/environments/environment.ts",
+                "with": "src/environments/environment.dev.ts"
+              }]
             },
             "web": {
               "optimization": false,
@@ -59,12 +60,10 @@
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": false,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.web.ts"
-                }
-              ]
+              "fileReplacements": [{
+                "replace": "src/environments/environment.ts",
+                "with": "src/environments/environment.web.ts"
+              }]
             },
             "production": {
               "optimization": true,
@@ -76,12 +75,10 @@
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
-                }
-              ],
+              "fileReplacements": [{
+                "replace": "src/environments/environment.ts",
+                "with": "src/environments/environment.prod.ts"
+              }],
               "outputPath": "dist/afterglow-access",
               "baseHref": "/"
             },
@@ -95,12 +92,10 @@
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
-                }
-              ],
+              "fileReplacements": [{
+                "replace": "src/environments/environment.ts",
+                "with": "src/environments/environment.prod.ts"
+              }],
               "outputPath": "dist/afterglow-access-es/",
               "baseHref": "/es/",
               "i18nFile": "src/locale/messages.es.xlf",
@@ -125,7 +120,7 @@
             "es": {
               "browserTarget": "afterglow-access:build:es"
             }
-            
+
           }
         },
         "extract-i18n": {
@@ -144,8 +139,7 @@
             "scripts": [
               "node_modules/downloadjs/download.js",
               "node_modules/d3/d3.min.js",
-              "node_modules/nvd3/build/nv.d3.min.js",
-              "node_modules/popper.js/dist/popper.js"
+              "node_modules/nvd3/build/nv.d3.min.js"
             ],
             "styles": [
               "node_modules/bootstrap-css-only/css/bootstrap.min.css",
