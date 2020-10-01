@@ -62,7 +62,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   PosType = PosType;
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-  @ViewChild("plotter", { static: false }) plotter: PlotterComponent;
+  @ViewChild("plotter") plotter: PlotterComponent;
 
   lineStart$: Observable<{
     x: number;

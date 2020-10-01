@@ -65,7 +65,7 @@ export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
   styleUrls: ["./workbench-viewer-panel.component.css"],
 })
 export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
-  @ViewChild(MatMenuTrigger, { static: false })
+  @ViewChild(MatMenuTrigger)
   contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: "0px", y: "0px" };
   mouseOverCloseViewerId: string = null;

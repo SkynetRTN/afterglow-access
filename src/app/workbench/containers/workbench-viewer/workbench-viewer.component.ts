@@ -88,7 +88,7 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild(PanZoomCanvasComponent, { static: true })
   panZoomCanvasComponent: PanZoomCanvasComponent;
 
-  @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
+  @ViewChild(ImageViewerMarkerOverlayComponent)
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
   // markers$: Observable<Marker[]>;

@@ -28,7 +28,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   @Output() onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
   @ViewChild('svgGroup', { static: true }) svgGroup: ElementRef;
-  @ViewChild('svgTextGroup', { static: false }) svgTextGroup: ElementRef;
+  @ViewChild('svgTextGroup') svgTextGroup: ElementRef;
   @ViewChild('svgElementRef', { static: true }) svgElementRef: ElementRef;
 
   private lastTransform: Transform;

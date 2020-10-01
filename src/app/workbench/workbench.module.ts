@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -159,10 +159,10 @@ export const COMPONENTS = [
 
 })
 export class WorkbenchModule {
-  static forRoot() {
+  static forRoot(): ModuleWithProviders<WorkbenchModule> {
     return {
-      ngModule: WorkbenchModule,
-      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
+        ngModule: WorkbenchModule,
+        providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
     };
-  }
+}
 }
