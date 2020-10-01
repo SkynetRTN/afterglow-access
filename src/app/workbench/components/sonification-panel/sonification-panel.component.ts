@@ -9,7 +9,7 @@ import {
   Input,
 } from "@angular/core";
 
-import { VgAPI } from "videogular2/core";
+import { VgAPI } from "videogular2/compiled/core";
 import {
   Observable,
   Subscription,

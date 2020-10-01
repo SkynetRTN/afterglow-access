@@ -16,10 +16,10 @@ var material_1 = require("../material");
 //Covalent
 // import { CovalentDataTableModule } from '@covalent/core';
 // Videogular2
-var core_2 = require("videogular2/core");
-var controls_1 = require("videogular2/controls");
-var overlay_play_1 = require("videogular2/overlay-play");
-var buffering_1 = require("videogular2/buffering");
+var core_2 = require("videogular2/compiled/core");
+var controls_1 = require("videogular2/compiled/controls");
+var overlay_play_1 = require("videogular2/compiled/overlay-play");
+var buffering_1 = require("videogular2/compiled/buffering");
 // import { NvD3Module } from 'ng2-nvd3';
 // import 'd3';
 // import 'nvd3';
