@@ -11,6 +11,17 @@ import { Source, PosType } from "../models/source";
 import { getCoreApiUrl } from '../../../environments/app-config';
 import { HduType } from '../../data-files/models/data-file-type';
 
+export interface CoreDataFile {
+  id: number;
+  type: HduType;
+  name: string;
+  data_provider: string;
+  asset_path: string;
+  group_id: string;
+  order: number;
+  modified: boolean;
+}
+
 function createImageHist(
   data: Uint32Array,
   minBin: number,
@@ -26,29 +37,29 @@ function createImageHist(
   };
 }
 
-function createDataFile(id: string, name: string, dataProviderId: string, assetPath: string): DataFile {
-  return {
-    id: id,
-    name: name,
-    dataProviderId: dataProviderId,
-    assetPath: assetPath,
-    modified: false,
-    hdus: [{
-      hduType: HduType.IMAGE,
-      header: null,
-      wcs: null,
-      headerLoaded: false,
-      headerLoading: false,
-      tilesInitialized: false,
-      tiles: null,
-      hist: null,
-      histLoaded: false,
-      histLoading: false,
-      tileWidth: appConfig.tileSize,
-      tileHeight: appConfig.tileSize,
-    } as ImageHdu]
-  };
-}
+// function createDataFile(id: string, name: string, dataProviderId: string, assetPath: string): DataFile {
+//   return {
+//     id: id,
+//     name: name,
+//     dataProviderId: dataProviderId,
+//     assetPath: assetPath,
+//     modified: false,
+//     hdus: [{
+//       hduType: HduType.IMAGE,
+//       header: null,
+//       wcs: null,
+//       headerLoaded: false,
+//       headerLoading: false,
+//       tilesInitialized: false,
+//       tiles: null,
+//       hist: null,
+//       histLoaded: false,
+//       histLoading: false,
+//       tileWidth: appConfig.tileSize,
+//       tileHeight: appConfig.tileSize,
+//     } as ImageHdu]
+//   };
+// }
 
 @Injectable()
 export class AfterglowDataFileService {
@@ -64,33 +75,8 @@ export class AfterglowDataFileService {
       )
   }
 
-  getFiles(): Observable<DataFile[]> {
-    return this.http
-      .get<any>(
-        `${getCoreApiUrl(appConfig)}/data-files`
-      )
-      .pipe(
-        map(res =>
-          res
-            .map(r => {
-              switch (r.type) {
-                case "image": {
-                  let file: DataFile = createDataFile(
-                    r.id.toString(),
-                    r.name,
-                    r.data_provider,
-                    r.asset_path,
-                  );
-                  return file;
-                }
-                default: {
-                  return null;
-                }
-              }
-            })
-            .filter(file => file)
-        )
-      );
+  getFiles(): Observable<CoreDataFile[]> {
+    return this.http.get<CoreDataFile[]>(`${getCoreApiUrl(appConfig)}/data-files`)
   }
 
   createFromDataProviderAsset(
@@ -105,7 +91,7 @@ export class AfterglowDataFileService {
     );
   }
 
-  getHeader(fileId: string, hduIndex: number): Observable<Header> {
+  getHeader(fileId: string): Observable<Header> {
     return this.http.get<Header>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
   }
 
@@ -119,7 +105,7 @@ export class AfterglowDataFileService {
       );
   }
 
-  getPixels(fileId: string, hduIndex: number, precision: ImageLayerPrecision, region: Region = null): Observable<PixelType> {
+  getPixels(hduId: string, precision: ImageLayerPrecision, region: Region = null): Observable<PixelType> {
     let params: HttpParams = new HttpParams();
     if (region) {
       params = params
@@ -131,7 +117,7 @@ export class AfterglowDataFileService {
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
-      .get(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/pixels`,
+      .get(`${getCoreApiUrl(appConfig)}/data-files/${hduId}/pixels`,
         { headers: headers, responseType: "arraybuffer", params: params }
       )
       .pipe(
@@ -185,7 +171,7 @@ export class AfterglowDataFileService {
     }
     let source: Source = {
       id: sourceId.toString(),
-      fileId: null,
+      hduId: null,
       label: sourceId.toString(),
       objectId: null,
       pmEpoch: null,

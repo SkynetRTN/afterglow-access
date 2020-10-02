@@ -5,10 +5,10 @@
   </div> -->
   <div fxFlex="1 1 100%">
     <div class="viewer-marker-wrapper h-100">
-      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [layers]="(layers$ | async)"
+      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [layers]="[]"
       [transformation]="(transformation$ | async)" (onImageMove)="handleImageMove($event)"
       (onImageClick)="handleImageClick($event)">
-      <app-image-viewer-marker-overlay *ngIf="(files$ | async)[fileId]" [imageFile]="(files$ | async)[fileId]"
+      <app-image-viewer-marker-overlay *ngIf="(hdus$ | async)[hduId]" [hdu]="(hdus$ | async)[hduId]"
         [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
         [transform]="(transformation$ | async)?.imageToViewportTransform" [markers]="markers"
         (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;" class="marker-overlay">
@@ -19,7 +19,7 @@
     </div>
   </div>
   <div fxFlex="0 0 auto">
-    <app-image-viewer-status-bar [class.active]="active" [imageFile]="(files$ | async)[fileId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
+    <app-image-viewer-status-bar [class.active]="active" [hdu]="(hdus$ | async)[hduId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
   </div>
 </div>
 

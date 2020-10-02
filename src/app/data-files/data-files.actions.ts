@@ -1,59 +1,60 @@
-import { DataFile, Header, PixelType } from './models/data-file';
+import { DataFile, Header, PixelType, IHdu } from './models/data-file';
 import { ImageHist } from './models/image-hist';
 import { ImageTile } from './models/image-tile';
 
 /**
- * Load Library Actions
+ * CRUD
  */
-export class LoadLibrary {
-  public static readonly type = '[DataFile] Load Library';
 
-  constructor(public correlationId?: string) { }
+export class CreateDataFile {
+  public static readonly type = '[DataFile] Create Data File';
+
+  constructor(public dataFile: DataFile) { }
 }
 
-export class LoadLibrarySuccess {
-  public static readonly type = '[DataFile] Load Library Success';
+export class UpdateDataFile {
+  public static readonly type = '[DataFile] Update Data File';
 
-  constructor(public dataFiles: DataFile[], public correlationId?: string) { }
+  constructor(public fileId: string, public changes: Partial<DataFile>) { }
 }
 
-export class LoadLibraryFail {
-  public static readonly type = '[DataFile] Load Library Fail';
+export class DeleteDataFile {
+  public static readonly type = '[DataFile] Delete Data File';
 
-  constructor(public error: any, public correlationId?: string) { }
+  constructor(public fileId: string) { }
 }
 
 /**
- * Remove Data File Actions
+ * Close Data File Actions
  */
-export class RemoveDataFile {
-  public static readonly type = '[DataFile] Remove Data File';
+export class CloseDataFile {
+  public static readonly type = '[DataFile] Close Data File';
 
   constructor(public fileId: string) { }
 }
 
-export class RemoveDataFileSuccess {
-  public static readonly type = '[DataFile] Remove Data File Success';
+export class CloseDataFileSuccess {
+  public static readonly type = '[DataFile] Close Data File Success';
 
   constructor(public fileId: string) { }
 }
 
-export class RemoveDataFileFail {
-  public static readonly type = '[DataFile] Remove Data File Fail';
+export class CloseDataFileFail {
+  public static readonly type = '[DataFile] Close Data File Fail';
 
   constructor(public fileId: string, public error: any) { }
 }
 
-export class RemoveAllDataFiles {
-  public static readonly type = '[DataFile] Remove All Data Files';
+export class CloseAllDataFiles {
+  public static readonly type = '[DataFile] Close All Data Files';
 }
 
-export class RemoveAllDataFilesSuccess {
-  public static readonly type = '[DataFile] Remove All Data Files Success';
+export class CloseAllDataFilesSuccess {
+  public static readonly type = '[DataFile] Close All Data Files Success';
 }
 
-export class RemoveAllDataFilesFail {
-  public static readonly type = '[DataFile] Remove All Data Files Fail';
+export class CloseAllDataFilesFail {
+  public static readonly type = '[DataFile] Close All Data Files Fail';
 
   constructor(public errors: any) { }
 }
@@ -67,67 +68,3 @@ export class RemoveAllDataFilesFail {
 
   constructor(public fileId: string) { }
  }
-
-export class LoadDataFileHdr {
-  public static readonly type = '[DataFile] Load Data File Hdr';
-
-  constructor(public fileId: string, public hduIndex: number) { }
-}
-
-export class LoadDataFileHdrSuccess {
-  public static readonly type = '[DataFile] Load Data File Hdr Success';
-
-  constructor(public fileId: string, public hduIndex: number, public header: Header) { }
-}
-
-/**
- * Image File Actions
- */
-
-export class LoadImageHist {
-  public static readonly type = '[Image File] Load Image Hist';
-
-  constructor(public fileId: string, public hduIndex: number) { }
-}
-
-export class LoadImageHistSuccess {
-  public static readonly type = '[Image File] Load Image Hist Success';
-
-  constructor(public fileId: string, public hduIndex: number, public hist: ImageHist) { }
-}
-
-export class InitImageTiles {
-  public static readonly type = '[Image File] Init Image Tiles';
-
-  constructor(public fileId: string, public hduIndex: number) { }
-}
-
-export class LoadImageTilePixels {
-  public static readonly type = '[Image File] Load Image Tile';
-
-  constructor(public fileId: string, public hduIndex: number, public tileIndex: number) { }
-}
-
-export class LoadImageTilePixelsSuccess {
-  public static readonly type = '[Image File] Load Image Tile Success';
-
-  constructor(public fileId: string, public hduIndex: number, public tileIndex: number, public pixels: PixelType) { }
-}
-
-export class LoadImageTilePixelsFail {
-  public static readonly type = '[Image File] Load Image Tile Fail';
-
-  constructor(public fileId: string, public hduIndex: number, public tileIndex: number, public error: any) { }
-}
-
-export class LoadImageTilePixelsCancel {
-  public static readonly type = '[Image File] Load Image Tile Cancel';
-
-  constructor(public fileId: string, public hduIndex: number, public tileIndex: number) { }
-}
-
-export class ClearImageDataCache {
-  public static readonly type = '[Image File] Clear Image Data';
-
-  constructor(public fileIds: string[]) { }
-}

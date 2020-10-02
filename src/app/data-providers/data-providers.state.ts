@@ -21,10 +21,10 @@ import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jo
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { Navigate } from '@ngxs/router-plugin';
-import { SetViewerFile, SelectDataFile } from '../workbench/workbench.actions';
+import { SetViewerFile, SelectHdu } from '../workbench/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
-import { LoadLibrary } from '../data-files/data-files.actions';
+import { LoadLibrary } from '../data-files/hdus.actions';
 import { ResetState } from '../auth/auth.actions';
 
 export interface DataProvidersStateModel {
@@ -383,7 +383,7 @@ export class DataProvidersState {
             take(1),
             filter(a => a.result.successful),
             tap(v => {
-             dispatch(new SelectDataFile(action.fileIds[0]));
+             dispatch(new SelectHdu(action.fileIds[0]));
             })
           )
        })

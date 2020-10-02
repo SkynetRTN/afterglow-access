@@ -37,14 +37,14 @@ import { Store, Actions } from "@ngxs/store";
   styleUrls: ["./plotting-panel.component.css"],
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input("file")
-  set file(file: DataFile) {
-    this.file$.next(file);
+  @Input("hdu")
+  set hdu(hdu: ImageHdu) {
+    this.hdu$.next(hdu);
   }
-  get file() {
-    return this.file$.getValue();
+  get hdu() {
+    return this.hdu$.getValue();
   }
-  private file$ = new BehaviorSubject<DataFile>(null);
+  private hdu$ = new BehaviorSubject<ImageHdu>(null);
 
   @Input("state")
   set state(state: PlottingPanelState) {
@@ -84,18 +84,18 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
-    this.lineStart$ = combineLatest(this.file$, this.state$).pipe(
-      map(([file, state]) => {
-        if (!state || !state.lineMeasureStart || !file) return null;
-        return this.normalizeLine(file, state.lineMeasureStart);
+    this.lineStart$ = combineLatest(this.hdu$, this.state$).pipe(
+      map(([hdu, state]) => {
+        if (!state || !state.lineMeasureStart || !hdu) return null;
+        return this.normalizeLine(hdu, state.lineMeasureStart);
       })
     );
 
-    this.lineEnd$ = combineLatest(this.file$, this.state$).pipe(
-      map(([file, state]) => {
-        if (!state || !state.lineMeasureEnd || !file) return null;
+    this.lineEnd$ = combineLatest(this.hdu$, this.state$).pipe(
+      map(([hdu, state]) => {
+        if (!state || !state.lineMeasureEnd || !hdu) return null;
 
-        return this.normalizeLine(file, state.lineMeasureEnd);
+        return this.normalizeLine(hdu, state.lineMeasureEnd);
       })
     );
 
@@ -114,7 +114,6 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
           lineEnd.x !== null &&
           lineEnd.y !== null
         ) {
-          let imageLayer = this.file.hdus[0] as ImageHdu;
           let deltaX = lineEnd.x - lineStart.x;
           let deltaY = lineEnd.y - lineStart.y;
           pixelPosAngle = (Math.atan2(deltaY, -deltaX) * 180.0) / Math.PI - 90;
@@ -124,9 +123,9 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
             Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
           );
 
-          if (getDegsPerPixel(imageLayer) != undefined) {
+          if (getDegsPerPixel(this.hdu) != undefined) {
             skySeparation =
-              pixelSeparation * getDegsPerPixel(imageLayer) * 3600;
+              pixelSeparation * getDegsPerPixel(this.hdu) * 3600;
           }
         }
 
@@ -162,11 +161,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private normalizeLine(
-    imageFile: DataFile,
+    hdu: ImageHdu,
     line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
   ) {
-    if (!imageFile.hdus[0].headerLoaded) return;
-    let imageLayer = this.file.hdus[0] as ImageHdu;
+    if (!hdu.headerLoaded) return;
     let x = null;
     let y = null;
     let raHours = null;
@@ -174,8 +172,8 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     if (line.posType == PosType.PIXEL) {
       x = line.primaryCoord;
       y = line.secondaryCoord;
-      if (imageLayer.wcs.isValid()) {
-        let wcs = imageLayer.wcs;
+      if (hdu.wcs.isValid()) {
+        let wcs = hdu.wcs;
         let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
         raHours = raDec[0];
         decDegs = raDec[1];
@@ -183,8 +181,8 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     } else {
       raHours = line.primaryCoord;
       decDegs = line.secondaryCoord;
-      if (imageLayer.wcs.isValid()) {
-        let wcs = imageLayer.wcs;
+      if (hdu.wcs.isValid()) {
+        let wcs = hdu.wcs;
         let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
         x = xy[0];
         y = xy[1];

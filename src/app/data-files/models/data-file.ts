@@ -30,13 +30,14 @@ export interface DataFile {
   name: string;
   dataProviderId: string;
   assetPath: string;
-  modified: boolean;
-  hdus: IHdu[];
 }
 
 export interface IHdu {
   readonly hduType: HduType;
   id: string;
+  fileId: string;
+  order: number;
+  modified: boolean;
   header: Header;
   wcs: Wcs;
   headerLoaded: boolean;

@@ -7,7 +7,7 @@ import { Store, Actions } from '@ngxs/store';
 import { CustomMarkerPanelConfig } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { DataFile } from '../../../data-files/models/data-file';
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 
 @Component({
   selector: "app-custom-marker-panel",
@@ -15,7 +15,7 @@ import { DataFile } from '../../../data-files/models/data-file';
   styleUrls: ["./custom-marker-panel.component.css"]
 })
 export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
-  @Input() file: DataFile;
+  @Input() hdu: ImageHdu;
   @Input() state: CustomMarkerPanelState;
   @Input() config: CustomMarkerPanelConfig;
   

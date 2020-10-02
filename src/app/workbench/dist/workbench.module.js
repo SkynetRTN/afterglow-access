@@ -64,6 +64,7 @@ var afterglow_data_providers_1 = require("./services/afterglow-data-providers");
 var jobs_module_1 = require("../jobs/jobs.module");
 var svg_text_marker_component_1 = require("./components/svg-text-marker/svg-text-marker.component");
 var forms_2 = require("@angular/forms");
+var angular_tree_component_1 = require("@circlon/angular-tree-component");
 var afterglow_catalogs_1 = require("./services/afterglow-catalogs");
 var create_field_cal_dialog_component_1 = require("./components/create-field-cal-dialog/create-field-cal-dialog.component");
 var flex_layout_1 = require("@angular/flex-layout");
@@ -153,6 +154,7 @@ var WorkbenchModule = /** @class */ (function () {
                 theme_picker_1.ThemePickerModule,
                 afterglow_plotly_module_1.AfterglowPlotlyModule,
                 ngx_avatar_1.AvatarModule,
+                angular_tree_component_1.TreeModule,
             ],
             declarations: exports.COMPONENTS,
             exports: exports.COMPONENTS,

@@ -22,9 +22,9 @@ import {
   getWidth,
   getHeight,
   getDegsPerPixel,
-  getCenterTime
+  getCenterTime,
+  IHdu
 } from "../../../data-files/models/data-file";
-import { WorkbenchDataFileState } from "../../models/workbench-file-state";
 import {
   Marker,
   LineMarker,
@@ -47,12 +47,13 @@ import { Source, PosType } from "../../models/source";
 import { CustomMarker } from "../../models/custom-marker";
 import { FieldCal } from '../../models/field-cal';
 import { Store } from '@ngxs/store';
-import { DataFilesState } from '../../../data-files/data-files.state';
+import { HdusState } from '../../../data-files/hdus.state';
 import { SourcesState } from '../../sources.state';
-import { WorkbenchFileStates } from '../../workbench-file-states.state';
+import { WorkbenchHduStates } from '../../workbench-file-states.state';
 import { Viewer } from '../../models/viewer';
 import { BlendMode } from '../../models/blend-mode';
 import { Transformation } from '../../models/transformation';
+import { IWorkbenchHduState } from '../../models/workbench-file-state';
 
 
 @Component({
@@ -61,14 +62,14 @@ import { Transformation } from '../../models/transformation';
   styleUrls: ["./workbench-viewer.component.scss"]
 })
 export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
-  @Input("fileId")
-  set fileId(fileId: string) {
-    this.fileId$.next(fileId);
+  @Input("hduId")
+  set hduId(hduId: string) {
+    this.hduId$.next(hduId);
   }
-  get fileId() {
-    return this.fileId$.getValue();
+  get hduId() {
+    return this.hduId$.getValue();
   }
-  private fileId$ = new BehaviorSubject<string>(null);
+  private hduId$ = new BehaviorSubject<string>(null);
   
   
   @Input()
@@ -95,14 +96,13 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-  files$: Observable<{[id: string]: DataFile}>;
-  layers$: Observable<PanZoomCanvasLayer[]>
+  hdus$: Observable<{[id: string]: IHdu}>;
   transformation$: Observable<Transformation>;
   sources$: Observable<Source[]>;
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   showAllSources$: Observable<boolean>;
-  imageFileState$: Observable<WorkbenchDataFileState>;
+  hduState$: Observable<IWorkbenchHduState>;
   imageMouseX: number = null;
   imageMouseY: number = null;
 
@@ -112,36 +112,22 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   fieldCalMarkers$: Observable<Marker[]>;
 
   constructor(private store: Store, private sanitization: DomSanitizer) {
-    this.files$ = this.store.select(DataFilesState.getEntities);
+    this.hdus$ = this.store.select(HdusState.getEntities);
 
     this.sources$ = this.store.select(SourcesState.getSources);
     // this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
     // this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
-    this.imageFileState$ = combineLatest(
-      this.fileId$,
-      this.store.select(WorkbenchFileStates.getEntities)
+    this.hduState$ = combineLatest(
+      this.hduId$,
+      this.store.select(WorkbenchHduStates.getEntities)
     ).pipe(
       map(([fileId, imageFileStates]) => imageFileStates[fileId]),
     );
 
-    this.layers$ = this.fileId$.pipe(
+    this.transformation$ = this.hduId$.pipe(
       switchMap(fileId => {
-        return this.store.select(WorkbenchFileStates.getNormalization).pipe(
-          map(fn => {
-            return [{
-              alpha: 1.0,
-              blendMode: BlendMode.Normal,
-              ...fn(fileId, 0)
-            }] 
-          })
-        )
-      })
-    )
-
-    this.transformation$ = this.fileId$.pipe(
-      switchMap(fileId => {
-        return this.store.select(WorkbenchFileStates.getTransformation).pipe(
-          map(fn => fn(fileId, 0))
+        return this.store.select(WorkbenchHduStates.getTransformation).pipe(
+          map(fn => fn(fileId))
         )
       })
     )
@@ -211,8 +197,8 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
       if (document.createEvent) {
         e = document.createEvent("MouseEvents");
         e.initMouseEvent("click", true, true, window,
-          0, 0, 0, 0, 0, false, false, false,
-          false, 0, null);
+          0, false, false, false,
+          false, null);
 
         lnk.dispatchEvent(e);
       }

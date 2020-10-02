@@ -1,18 +1,17 @@
 import { Component, OnInit, HostBinding, Input } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
-import { map, tap, takeUntil } from "rxjs/operators";
+import { map, takeUntil } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { AlignFormData, WorkbenchTool, AligningPanelConfig } from '../../models/workbench-state';
+import { AlignFormData, AligningPanelConfig } from '../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
 import { AlignmentJob, AlignmentJobResult } from '../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { SetActiveTool, SelectDataFile, CreateAlignmentJob, UpdateAligningPanelConfig } from '../../workbench.actions';
+import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectHdu } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
-import { DataFile } from '../../../data-files/models/data-file';
+import { ImageHdu } from '../../../data-files/models/data-file';
 
 @Component({
   selector: 'app-aligning-panel',
@@ -20,23 +19,23 @@ import { DataFile } from '../../../data-files/models/data-file';
   styleUrls: ['./aligning-panel.component.css']
 })
 export class AlignerPageComponent implements OnInit {
-  @Input("selectedFile")
-  set selectedFile(selectedFile: DataFile) {
-    this.selectedFile$.next(selectedFile);
+  @Input("primaryHdu")
+  set primaryHdu(primaryHdu: ImageHdu) {
+    this.primaryHdu$.next(primaryHdu);
   }
-  get selectedFile() {
-    return this.selectedFile$.getValue();
+  get primaryHdu() {
+    return this.primaryHdu$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<DataFile>(null);
+  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
 
-  @Input("files")
-  set files(files: DataFile[]) {
-    this.files$.next(files);
+  @Input("hdus")
+  set hdus(hdus: ImageHdu[]) {
+    this.hdus$.next(hdus);
   }
-  get files() {
-    return this.files$.getValue();
+  get hdus() {
+    return this.hdus$.getValue();
   }
-  private files$ = new BehaviorSubject<DataFile[]>(null);
+  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
 
   @Input("config")
   set config(config: AligningPanelConfig) {
@@ -50,10 +49,10 @@ export class AlignerPageComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
 
   
-  selectedImageFiles$: Observable<Array<DataFile>>;
+  selectedHdus$: Observable<Array<ImageHdu>>;
   alignFormData$: Observable<AlignFormData>;
-  activeImageIsSelected$: Observable<boolean>;
-  activeImageHasWcs$: Observable<boolean>;
+  primaryHduIsSelected$: Observable<boolean>;
+  primaryHduHasWcs$: Observable<boolean>;
   alignmentJobRow$: Observable<{ job: AlignmentJob, result: AlignmentJobResult }>;
 
   alignForm = new FormGroup({
@@ -72,8 +71,8 @@ export class AlignerPageComponent implements OnInit {
       this.alignForm.patchValue(data, { emitEvent: false });
     });
 
-    this.selectedImageFiles$ = combineLatest(this.files$, this.alignFormData$).pipe(
-      map(([allImageFiles, alignFormData]) => alignFormData.selectedImageFileIds.map(id => allImageFiles.find(f => f.id == id)))
+    this.selectedHdus$ = combineLatest(this.hdus$, this.alignFormData$).pipe(
+      map(([allImageFiles, alignFormData]) => alignFormData.selectedHduIds.map(id => allImageFiles.find(f => f.id == id)))
     )
 
     this.alignForm.valueChanges.subscribe(value => {
@@ -82,15 +81,15 @@ export class AlignerPageComponent implements OnInit {
       // }
     })
 
-    this.activeImageIsSelected$ = combineLatest(this.selectedFile$, this.selectedImageFiles$).pipe(
-      map(([activeImageFile, selectedImageFiles]) => {
-        return selectedImageFiles.find(f => activeImageFile && f.id == activeImageFile.id) != undefined;
+    this.primaryHduIsSelected$ = combineLatest(this.primaryHdu$, this.selectedHdus$).pipe(
+      map(([primaryHdu, selectedHdus]) => {
+        return selectedHdus.find(f => primaryHdu && f.id == primaryHdu.id) != undefined;
       })
     )
 
     // TODO: LAYER
-    this.activeImageHasWcs$ = this.selectedFile$.pipe(
-      map(imageFile => imageFile != null && imageFile.hdus[0].headerLoaded && imageFile.hdus[0].wcs.isValid())
+    this.primaryHduHasWcs$ = this.primaryHdu$.pipe(
+      map(hdu => hdu != null && hdu.headerLoaded && hdu.wcs.isValid())
     )
 
     this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
@@ -112,16 +111,17 @@ export class AlignerPageComponent implements OnInit {
     this.destroy$.unsubscribe();
   }
 
-  onActiveImageChange($event: MatSelectChange) {
-    this.store.dispatch(new SelectDataFile($event.value));
+  onPrimaryHduChange($event: MatSelectChange) {
+    this.store.dispatch(new SelectHdu($event.value));
   }
 
-  selectImageFiles(imageFiles: DataFile[]) {
+
+  selectHdus(hdus: ImageHdu[]) {
     this.store.dispatch(new UpdateAligningPanelConfig(
       {
         alignFormData: {
           ...this.alignForm.value,
-          selectedImageFileIds: imageFiles.map(f => f.id)
+          selectedHduIds: hdus.map(f => f.id)
         }
       }));
   }

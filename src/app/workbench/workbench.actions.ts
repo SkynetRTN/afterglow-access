@@ -13,7 +13,7 @@ import { Source } from './models/source';
 import { Marker } from './models/marker';
 import { Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
-import { DataFile } from '../data-files/models/data-file';
+import { DataFile, ImageHdu } from '../data-files/models/data-file';
 
 /* Core */
 
@@ -38,10 +38,10 @@ export class SetFullScreenPanel {
   constructor(public panel: 'file' | 'viewer' | 'tool') { }
 }
 
-export class SelectDataFile {
-  public static readonly type = '[Workbench] Select Data File';
+export class SelectHdu {
+  public static readonly type = '[Workbench] Select HDU';
 
-  constructor(public fileId: string) { }
+  constructor(public hduId: string) { }
 }
 
 export class SetFocusedViewer {
@@ -89,7 +89,7 @@ export class MoveViewer {
 export class SetViewerFile {
   public static readonly type = '[Workbench] Set Viewer File';
 
-  constructor(public viewerId: string, public fileId: string) { }
+  constructor(public viewerId: string, public hduId: string) { }
 }
 
 export class SetViewerMarkers {
@@ -131,19 +131,19 @@ export class SetNormalizationSyncEnabled {
 export class SyncFileTransformations {
   public static readonly type = '[Workbench] Sync File Transformations';
 
-  constructor(public reference: DataFile, public files: DataFile[]) { }
+  constructor(public reference: ImageHdu, public hdus: ImageHdu[]) { }
 }
 
 export class SyncFileNormalizations {
   public static readonly type = '[Workbench] Sync File Normalizations';
 
-  constructor(public reference: DataFile, public files: DataFile[]) { }
+  constructor(public reference: ImageHdu, public hdus: ImageHdu[]) { }
 }
 
 export class SyncFilePlotters {
   public static readonly type = '[Workbench] Sync File Plotters';
 
-  constructor(public reference: DataFile, public files: DataFile[]) { }
+  constructor(public reference: ImageHdu, public hdus: ImageHdu[]) { }
 }
 
 export class SetActiveTool {
@@ -345,13 +345,13 @@ export class CreateStackingJob {
 export class ExtractSources {
   public static readonly type = '[Workbench] Extract Sources'
 
-  constructor(public fileId: string, public hduIndex: number, public settings: SourceExtractionSettings) { }
+  constructor(public hduId: string, public settings: SourceExtractionSettings) { }
 }
 
 export class ExtractSourcesSuccess {
   public static readonly type = '[Workbench] Extract Sources Success'
 
-  constructor(public fileId: string, public sources: Source[]) { }
+  constructor(public hduId: string, public sources: Source[]) { }
 }
 
 export class ExtractSourcesFail {

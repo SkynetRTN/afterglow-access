@@ -2,10 +2,10 @@ import { Component, OnInit, Input, ViewChild, ElementRef, OnChanges, Output, Eve
 import { Point, Matrix, Rectangle } from "paper"
 import { Marker, MarkerType, CircleMarker, TeardropMarker } from '../../models/marker';
 import { Transform, transformToMatrix } from '../../models/transformation';
-import { DataFile } from '../../../data-files/models/data-file';
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 
 export type MarkerMouseEvent = {
-  targetFile: DataFile;
+  targetHdu: ImageHdu;
   marker: Marker;
   mouseEvent: MouseEvent;
 }
@@ -19,7 +19,7 @@ export type MarkerMouseEvent = {
 export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, AfterViewInit {
   MarkerType = MarkerType;
 
-  @Input() imageFile: DataFile;
+  @Input() hdu: ImageHdu;
   @Input() transform: Transform;
   @Input() markers: Marker[];
   @Input() svgWidth: number;
@@ -73,7 +73,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   handleMarkerClick($event: MouseEvent, marker: Marker) {
     this.onMarkerClick.emit({
-      targetFile: this.imageFile,
+      targetHdu: this.hdu,
       marker: marker,
       mouseEvent: $event
     })

@@ -3,10 +3,10 @@ import { getPixel, getWidth, getHeight, DataFile, ImageHdu } from '../../../data
 import { Subject, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
-import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
+import { CloseHdu } from '../../../data-files/hdus.actions';
 
 @Component({
   selector: 'app-image-viewer-status-bar',
@@ -14,7 +14,7 @@ import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-sta
   styleUrls: ['./image-viewer-status-bar.component.css']
 })
 export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
-  @Input() imageFile: DataFile;
+  @Input() hdu: ImageHdu;
   @Input() imageMouseX: number;
   @Input() imageMouseY: number;
   @Output() downloadSnapshot = new EventEmitter();
@@ -37,17 +37,16 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    if(this.imageMouseX == null || this.imageMouseY == null || !this.imageFile) {
+    if(this.imageMouseX == null || this.imageMouseY == null || !this.hdu) {
       this.pixelValue = null;
       this.raHours = null;
       this.decDegs = null;
       return;
     }
-    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
-    if(imageLayer.headerLoaded) {
-      this.pixelValue = getPixel(imageLayer, this.imageMouseX, this.imageMouseY);
-      if(imageLayer.wcs.isValid()) {
-        let wcs = imageLayer.wcs;
+    if(this.hdu.headerLoaded) {
+      this.pixelValue = getPixel(this.hdu, this.imageMouseX, this.imageMouseY);
+      if(this.hdu.wcs.isValid()) {
+        let wcs = this.hdu.wcs;
         let raDec = wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
         this.raHours = raDec[0];
         this.decDegs = raDec[1];
@@ -65,8 +64,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   removeFromLibrary() {
-    if(!this.imageFile) return;
-    let imageFileId = this.imageFile.id;
+    if(!this.hdu) return;
+    let hduId = this.hdu.id;
 
     let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: "300px",
@@ -81,7 +80,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.store.dispatch(new RemoveDataFile(imageFileId));
+        this.store.dispatch(new CloseHdu(hduId));
       }
     });
 
@@ -123,8 +122,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
 
   public zoomTo(value: number) {
     this.store.dispatch(new ZoomTo(
-      this.imageFile.id,
-      0,
+      this.hdu.id,
       value,
       null
     ));
@@ -132,19 +130,16 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
 
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
     this.store.dispatch(new ZoomBy(
-      this.imageFile.id,
-      0,
+      this.hdu.id,
       factor,
       imageAnchor
     ));
   }
 
   public zoomToFit(padding: number = 0) {
-    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
     this.store.dispatch(new CenterRegionInViewport(
-      this.imageFile.id,
-      0,
-      { x: 1, y: 1, width: getWidth(imageLayer), height: getHeight(imageLayer) }
+      this.hdu.id,
+      { x: 1, y: 1, width: getWidth(this.hdu), height: getHeight(this.hdu) }
     ))
   }
 }

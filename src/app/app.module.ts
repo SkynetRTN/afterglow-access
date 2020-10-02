@@ -32,86 +32,79 @@ import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
+import { HdusState, HdusStateModel } from './data-files/hdus.state';
 import { DataFilesState, DataFilesStateModel } from './data-files/data-files.state';
-import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench/workbench-file-states.state';
+import { WorkbenchHduStates, WorkbenchHduStatesModel } from './workbench/workbench-file-states.state';
 import { WorkbenchState } from './workbench/workbench.state';
 import { SourcesState } from './workbench/sources.state';
 import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { WasmService } from './wasm.service';
 import { HduType } from './data-files/models/data-file-type';
-import { ImageHdu } from './data-files/models/data-file';
-import { WorkbenchHduState, WorkbenchImageHduState } from './workbench/models/workbench-file-state';
+import { ImageHdu, IHdu } from './data-files/models/data-file';
+import { WorkbenchImageHduState } from './workbench/models/workbench-file-state';
 
-export function dataFileSanitizer(v) {
+export function hduSanitizer(v) {
   let state = {
     ...v
-   } as DataFilesStateModel;
+   } as HdusStateModel;
 
   state.entities = {
     ...state.entities
   }
 
   Object.keys(state.entities).forEach(key => {
-    let dataFile = {
-      ...state.entities[key]
+    let hdu : IHdu = {
+      ...state.entities[key],
+      header: null,
+      headerLoaded: false,
+      headerLoading: false,
+      wcs: null
     };
 
-    dataFile.hdus = dataFile.hdus.map((layer, index) => {
-      let newLayer = {
-        ...layer,
-        header: null,
-        headerLoaded: false,
-        headerLoading: false,
-        wcs: null
-      }
+    if(hdu.hduType == HduType.IMAGE) {
+      hdu = {
+        ...hdu,
+        hist: null,
+        histLoaded: false,
+        histLoading: false,
+        tilesInitialized: false,
+        tiles: []
+      } as ImageHdu
+    }
 
-      if(newLayer.hduType == HduType.IMAGE) {
-        let newImageLayer = newLayer as ImageHdu;
-        newImageLayer.hist = null;
-        newImageLayer.histLoaded = false;
-        newImageLayer.histLoading = false;
-        newImageLayer.tilesInitialized = false;
-        newImageLayer.tiles = [];
-      }
-
-      return newLayer;
-    })
-
-    
-    state.entities[key] = dataFile;
+    state.entities[key] = hdu;
 
   })
   return state;
 }
 
-export function imageFileStateSanitizer(v) {
+export function workbenchHduStateSanitizer(v) {
   let state = {
     ...v
-   } as WorkbenchFileStatesModel;
+   } as WorkbenchHduStatesModel;
 
   state.entities = {
     ...state.entities
   }
 
   Object.keys(state.entities).forEach(key => {
-    let workbenchFileState = {
+    let hduState = {
       ...state.entities[key]
     };
 
-    workbenchFileState.hduStates = workbenchFileState.hduStates.map((hduState, index) => {
-      if(hduState.hduType != HduType.IMAGE) return {...hduState};
-
+    if(hduState.hduType == HduType.IMAGE) {
       let imageHduState = hduState as WorkbenchImageHduState;
-      return {
-        ...imageHduState,
+      hduState = {
+        ...hduState,
         normalization: {
           ...imageHduState.normalization,
           tiles: []
         }
-      }
-    })
-    state.entities[key] = workbenchFileState;
+      } as WorkbenchImageHduState
+    }
+
+    state.entities[key] = hduState;
 
   })
   return state;
@@ -137,7 +130,7 @@ export function imageFileStateSanitizer(v) {
       disableCheatSheet: true
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchFileStates, WorkbenchState, SourcesState, PhotDataState],
+      [AuthState, JobsState, DataProvidersState, HdusState, DataFilesState, WorkbenchHduStates, WorkbenchState, SourcesState, PhotDataState],
       { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -145,20 +138,21 @@ export function imageFileStateSanitizer(v) {
         AuthState,
         JobsState,
         DataProvidersState,
+        HdusState,
         DataFilesState,
-        WorkbenchFileStates,
+        WorkbenchHduStates,
         WorkbenchState,
         SourcesState,
         PhotDataState
       ],
       sanitizations: [
         {
-          key: DataFilesState,
-          sanitize: dataFileSanitizer
+          key: HdusState,
+          sanitize: hduSanitizer
         },
         {
-          key: WorkbenchFileStates,
-          sanitize: imageFileStateSanitizer,
+          key: WorkbenchHduStates,
+          sanitize: workbenchHduStateSanitizer,
         }
       ],
       storage: StorageOption.SessionStorage

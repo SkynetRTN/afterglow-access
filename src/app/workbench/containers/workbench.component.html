@@ -102,9 +102,8 @@
               <mat-progress-bar mode="indeterminate" [hidden]="!(loadingFiles$ | async)" [color]="'accent'">
               </mat-progress-bar>
             </div>
-            <app-workbench-data-file-list [files]="files$ | async"
-              [selectedFileId]="(focusedFile$ | async)?.id"
-              [selectedHduIndex]=""
+            <app-workbench-data-file-list
+              [selectedItem]="(focusedHdu$ | async)?.id"
               (onSelectionChange)="onFileSelect($event)">
             </app-workbench-data-file-list>
           </div>
@@ -162,12 +161,12 @@
       <hr />
 
       <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
-        <div *ngIf="focusedImageFile$ | async; let imageFile">
+        <div *ngIf="focusedHdu$ | async; let imageHdu">
           <h6 i18n>DSS Catalog Import</h6>
           <div class="pb-3">
             <mat-radio-group aria-label="DSS Import Image Center"
-              [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [value]="
-            useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()
+              [disabled]="!imageHdu?.wcs || !imageHdu?.wcs?.isValid()" [value]="
+            useWcsCenter && imageHdu?.wcs && imageHdu?.wcs?.isValid()
               ? 'wcs'
               : 'header'
           " (change)="onUseWcsCenterChange($event)">
@@ -175,14 +174,14 @@
               <mat-radio-button value="wcs" i18n>Use WCS for image center</mat-radio-button>
             </mat-radio-group>
 
-            <!-- <mat-slide-toggle [disabled]="!imageFile?.wcs || !imageFile?.wcs?.isValid()" [checked]="useWcsCenter && imageFile?.wcs && imageFile?.wcs?.isValid()"
+            <!-- <mat-slide-toggle [disabled]="!imageHdu?.wcs || !imageHdu?.wcs?.isValid()" [checked]="useWcsCenter && imageHdu?.wcs && imageHdu?.wcs?.isValid()"
           [labelPosition]="after" (change)="onUseWcsCenterChange($event)">
           Use WCS for image center
         </mat-slide-toggle> -->
           </div>
           <div>
             <button mat-raised-button class="mb-2" [disabled]="(surveyImportCorrId$ | async) !== null"
-              (click)="importFromSurvey(surveyDataProvider, imageFile)" i18n>
+              (click)="importFromSurvey(surveyDataProvider, imageHdu)" i18n>
               Import DSS
             </button>
           </div>
@@ -209,7 +208,7 @@
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') ||
       (!(inFullScreenMode$ | async) &&
         (showConfig$ | async) &&
-        (focusedImageFile$ | async))
+        (focusedHdu$ | async))
     ">
     <div class="card workbench-settings-card" style="height: 100%">
       <div id="settings-header" class="card-header" [ngSwitch]="activeTool">
@@ -225,30 +224,30 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [file]="focusedImageFile$ | async"
-          [normalization]="focusedImageFileNormalization$ | async">
+        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="focusedHdu$ | async"
+          [normalization]="focusedHduNormalization$ | async">
         </app-display-panel>
 
-        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [file]="focusedImageFile$ | async"
+        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="focusedHdu$ | async"
           [config]="fileInfoPanelConfig$ | async" (configChange)="onFileInfoPanelConfigChange($event)">
         </app-file-info-panel>
 
-        <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [file]="focusedImageFile$ | async"
+        <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [hdu]="focusedHdu$ | async"
           [state]="customMarkerPanelState$ | async" [config]="customMarkerPanelConfig$ | async"
           (configChange)="onCustomMarkerPanelConfigChange($event)" (markerChange)="onCustomMarkerChange($event)"
           (markerDelete)="onCustomMarkerDelete($event)">
         </app-custom-marker-panel>
 
-        <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [file]="focusedImageFile$ | async"
+        <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [hdu]="focusedHdu$ | async"
           [state]="plottingPanelState$ | async" [config]="plottingPanelConfig$ | async"
           (configChange)="onPlottingPanelConfigChange($event)">
         </app-plotting-panel>
 
-        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [file]="focusedImageFile$ | async"
-          [transformation]="focusedImageFileTransformation$ | async" [state]="sonificationPanelState$ | async">
+        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [hdu]="focusedHdu$ | async"
+          [transformation]="focusedHduTransformation$ | async" [state]="sonificationPanelState$ | async">
         </app-sonification-panel>
 
-        <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [selectedFile]="focusedImageFile$ | async"
+        <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [primaryHdu]="focusedHdu$ | async"
           [state]="photometryPanelState$ | async" [sources]="photometryPanelSources$ | async" [files]="files$ | async"
           [config]="photometryPanelConfig$ | async" [centroidSettings]="centroidSettings$ | async"
           [photometrySettings]="photometrySettings$ | async"
@@ -259,15 +258,15 @@
           ">
         </app-photometry-panel>
 
-        <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [selectedFile]="focusedImageFile$ | async"
-          [files]="files$ | async" [config]="pixelOpsPanelConfig$ | async">
+        <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [primaryHdu]="focusedHdu$ | async"
+          [hdus]="hdus$ | async" [config]="pixelOpsPanelConfig$ | async">
         </app-pixel-ops-panel>
 
-        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [selectedFile]="focusedImageFile$ | async"
-          [files]="files$ | async" [config]="aligningPanelConfig$ | async"></app-aligning-panel>
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [primaryHdu]="focusedHdu$ | async"
+          [hdus]="hdus$ | async" [config]="aligningPanelConfig$ | async"></app-aligning-panel>
 
-        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [selectedFile]="focusedImageFile$ | async"
-          [files]="files$ | async" [config]="stackingPanelConfig$ | async">
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [primaryHdu]="focusedHdu$ | async"
+          [hdus]="hdus$ | async" [config]="stackingPanelConfig$ | async">
         </app-stacking-panel>
       </div>
     </div>

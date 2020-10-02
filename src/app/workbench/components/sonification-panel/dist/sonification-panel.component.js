@@ -25,7 +25,7 @@ var SonificationPanelComponent = /** @class */ (function () {
         this.actions$ = actions$;
         this.store = store;
         this.router = router;
-        this.file$ = new rxjs_1.BehaviorSubject(null);
+        this.hdu$ = new rxjs_1.BehaviorSubject(null);
         this.transformation$ = new rxjs_1.BehaviorSubject(null);
         this.state$ = new rxjs_1.BehaviorSubject(null);
         this.SonifierRegionMode = sonifier_file_state_1.SonifierRegionMode;
@@ -36,28 +36,27 @@ var SonificationPanelComponent = /** @class */ (function () {
         this.viewportSize = null;
         this.hotKeys = [];
         this.subs = [];
-        this.region$ = rxjs_1.combineLatest(this.file$, this.transformation$, this.state$).pipe(operators_1.filter(function (_a) {
-            var file = _a[0], transformation = _a[1], state = _a[2];
-            return state !== null && file !== null;
+        this.region$ = rxjs_1.combineLatest(this.hdu$, this.transformation$, this.state$).pipe(operators_1.filter(function (_a) {
+            var hdu = _a[0], transformation = _a[1], state = _a[2];
+            return state !== null && hdu !== null;
         }), operators_1.map(function (_a) {
-            var file = _a[0], transformation = _a[1], state = _a[2];
+            var hdu = _a[0], transformation = _a[1], state = _a[2];
             if (state.regionMode == sonifier_file_state_1.SonifierRegionMode.CUSTOM) {
                 return state.regionHistory[state.regionHistoryIndex];
             }
-            if (!file ||
-                !file.hdus[0].headerLoaded ||
+            if (!hdu ||
+                !hdu.headerLoaded ||
                 !transformation ||
                 !transformation.viewportSize ||
                 !transformation.imageToViewportTransform) {
                 return null;
             }
-            var layer = file.hdus[0];
-            return transformation_1.getViewportRegion(transformation, layer.width, layer.height);
+            return transformation_1.getViewportRegion(transformation, hdu.width, hdu.height);
         }));
         this.sonificationUri$ = this.region$.pipe(operators_1.map(function (region) {
             if (!region)
                 return null;
-            _this.sonificationUri = _this.afterglowDataFileService.getSonificationUri(_this.file.id, region, _this.state.duration, _this.state.toneCount);
+            _this.sonificationUri = _this.afterglowDataFileService.getSonificationUri(_this.hdu.id, region, _this.state.duration, _this.state.toneCount);
             return _this.sonificationUri;
         }), operators_1.distinctUntilChanged());
         this.clearProgressLine$ = this.sonificationUri$.pipe(operators_1.filter(function (uri) {
@@ -125,12 +124,12 @@ var SonificationPanelComponent = /** @class */ (function () {
         }, undefined, "Redo Sonification Region"));
         this.hotKeys.forEach(function (hotKey) { return _this._hotkeysService.add(hotKey); });
     }
-    Object.defineProperty(SonificationPanelComponent.prototype, "file", {
+    Object.defineProperty(SonificationPanelComponent.prototype, "hdu", {
         get: function () {
-            return this.file$.getValue();
+            return this.hdu$.getValue();
         },
-        set: function (file) {
-            this.file$.next(file);
+        set: function (hdu) {
+            this.hdu$.next(hdu);
         },
         enumerable: false,
         configurable: true
@@ -164,7 +163,7 @@ var SonificationPanelComponent = /** @class */ (function () {
     SonificationPanelComponent.prototype.ngOnChanges = function () { };
     SonificationPanelComponent.prototype.selectSubregionByFrequency = function (subregion) {
         var region = this.state.regionHistory[this.state.regionHistoryIndex];
-        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.file.id, 0, {
+        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.hdu.id, {
             x: region.x + subregion * (region.width / 4),
             y: region.y,
             width: region.width / 2,
@@ -173,7 +172,7 @@ var SonificationPanelComponent = /** @class */ (function () {
     };
     SonificationPanelComponent.prototype.selectSubregionByTime = function (subregion) {
         var region = this.state.regionHistory[this.state.regionHistoryIndex];
-        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.file.id, 0, {
+        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.hdu.id, {
             x: region.x,
             y: region.y + subregion * (region.height / 4),
             width: region.width,
@@ -183,33 +182,32 @@ var SonificationPanelComponent = /** @class */ (function () {
     SonificationPanelComponent.prototype.resetRegionSelection = function () {
         // let region = this.lastSonifierStateConfig.region;
         // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
-        var imageLayer = this.file.hdus[0];
-        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.file.id, 0, {
+        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.hdu.id, {
             x: 0.5,
             y: 0.5,
-            width: data_file_1.getWidth(imageLayer),
-            height: data_file_1.getHeight(imageLayer)
+            width: data_file_1.getWidth(this.hdu),
+            height: data_file_1.getHeight(this.hdu)
         }));
     };
     SonificationPanelComponent.prototype.undoRegionSelection = function () {
-        this.store.dispatch(new workbench_file_states_actions_1.UndoRegionSelection(this.file.id, 0));
+        this.store.dispatch(new workbench_file_states_actions_1.UndoRegionSelection(this.hdu.id));
     };
     SonificationPanelComponent.prototype.redoRegionSelection = function () {
-        this.store.dispatch(new workbench_file_states_actions_1.RedoRegionSelection(this.file.id, 0));
+        this.store.dispatch(new workbench_file_states_actions_1.RedoRegionSelection(this.hdu.id));
     };
     SonificationPanelComponent.prototype.setRegionMode = function ($event) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.file.id, 0, {
+        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, {
             regionMode: $event.value
         }));
     };
     SonificationPanelComponent.prototype.setDuration = function (value) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.file.id, 0, { duration: value }));
+        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, { duration: value }));
     };
     SonificationPanelComponent.prototype.setToneCount = function (value) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.file.id, 0, { toneCount: value }));
+        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, { toneCount: value }));
     };
     SonificationPanelComponent.prototype.setViewportSync = function (value) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.file.id, 0, {
+        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, {
             viewportSync: value.checked
         }));
     };
@@ -255,12 +253,12 @@ var SonificationPanelComponent = /** @class */ (function () {
             return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
         })), stop$.pipe(operators_1.map(function () { return null; })), this.clearProgressLine$.pipe(operators_1.map(function () { return null; })));
         this.subs.push(this.progressLine$.pipe(operators_1.distinctUntilChanged()).subscribe(function (line) {
-            _this.store.dispatch(new workbench_file_states_actions_1.SetProgressLine(_this.file.id, 0, line));
+            _this.store.dispatch(new workbench_file_states_actions_1.SetProgressLine(_this.hdu.id, line));
         }));
     };
     __decorate([
-        core_1.Input("file")
-    ], SonificationPanelComponent.prototype, "file");
+        core_1.Input("hdu")
+    ], SonificationPanelComponent.prototype, "hdu");
     __decorate([
         core_1.Input("transformation")
     ], SonificationPanelComponent.prototype, "transformation");

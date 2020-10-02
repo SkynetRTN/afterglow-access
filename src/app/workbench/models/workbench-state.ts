@@ -24,26 +24,26 @@ export enum WorkbenchTool {
 export interface PixelOpsFormData {
   operand: '+' | '-' | '/' | '*',
   mode: 'scalar' | 'image',
-  imageFileIds: string[],
-  auxImageFileId: string,
-  auxImageFileIds: string[],
+  hduIds: string[],
+  auxHduId: string,
+  auxHduIds: string[],
   scalarValue: number,
   inPlace: boolean
   opString: string
 }
 
 export interface AlignFormData {
-  selectedImageFileIds: string[],
+  selectedHduIds: string[],
   mode: 'astrometric' | 'manual_source',
   inPlace: boolean
 }
 
 export interface BatchPhotometryFormData {
-  selectedImageFileIds: string[];
+  selectedHduIds: string[];
 }
 
 export interface StackFormData {
-  selectedImageFileIds: string[];
+  selectedHduIds: string[];
   mode: 'average' | 'percentile' | 'mode' | 'sum';
   scaling: 'none' | 'average' | 'median' | 'mode';
   rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';

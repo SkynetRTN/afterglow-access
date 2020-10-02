@@ -30,17 +30,17 @@
           [cdkDragData]="viewer"
           (contextmenu)="onContextMenu($event, viewer)"
         >
-          <div fxLayout="row" fxFlexFill>
+          <div fxLayout="row" fxFlexFill *ngIf="(hdus$ | async)[viewer.hduId]; let hdu;">
             <div
               fxFlex="1 1 auto"
               class="label"
               [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'"
               matTooltipClass="file-path-tooltip"
-              [matTooltip]="(files$ | async)[viewer.fileId]?.assetPath"
+              [matTooltip]="(files$ | async)[hdu.fileId]?.assetPath"
               matTooltipShowDelay="500"
             >
               <span class="ml-4">
-                {{ (files$ | async)[viewer.fileId]?.name }}</span
+                {{ (files$ | async)[hdu.fileId]?.name }}</span
               >
             </div>
             <div
@@ -68,7 +68,7 @@
       </ng-template>
       <app-workbench-viewer
         (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)"
-        [fileId]="viewer.fileId"
+        [hduId]="viewer.hduId"
         [active]="selectedViewerId == viewer.viewerId && hasFocus"
         [markers]="viewer.markers"
         (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"

@@ -1,7 +1,6 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 import { map, tap, takeUntil } from "rxjs/operators";
-import { WorkbenchDataFileState } from "../../models/workbench-file-state";
 import {
   StackFormData,
   WorkbenchTool,
@@ -15,14 +14,14 @@ import {
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
-import { DataFilesState } from "../../../data-files/data-files.state";
+import { HdusState } from "../../../data-files/hdus.state";
 import { JobsState } from "../../../jobs/jobs.state";
 import {
   SetActiveTool,
   CreateStackingJob,
   UpdateStackingPanelConfig,
 } from "../../workbench.actions";
-import { DataFile } from '../../../data-files/models/data-file';
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 
 @Component({
   selector: "app-stacking-panel",
@@ -30,23 +29,23 @@ import { DataFile } from '../../../data-files/models/data-file';
   styleUrls: ["./stacking-panel.component.css"],
 })
 export class StackerPageComponent implements OnInit {
-  @Input("selectedFile")
-  set selectedFile(selectedFile: DataFile) {
-    this.selectedFile$.next(selectedFile);
+  @Input("primaryHdu")
+  set primaryHdu(primaryHdu: ImageHdu) {
+    this.primaryHdu$.next(primaryHdu);
   }
-  get selectedFile() {
-    return this.selectedFile$.getValue();
+  get primaryHdu() {
+    return this.primaryHdu$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<DataFile>(null);
+  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
 
-  @Input("files")
-  set files(files: DataFile[]) {
-    this.files$.next(files);
+  @Input("hdus")
+  set hdus(hdus: ImageHdu[]) {
+    this.hdus$.next(hdus);
   }
-  get files() {
-    return this.files$.getValue();
+  get hdus() {
+    return this.hdus$.getValue();
   }
-  private files$ = new BehaviorSubject<DataFile[]>(null);
+  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
 
   @Input("config")
   set config(config: StackingPanelConfig) {
@@ -59,7 +58,7 @@ export class StackerPageComponent implements OnInit {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  selectedImageFiles$: Observable<Array<DataFile>>;
+  selectedHdus$: Observable<Array<ImageHdu>>;
   stackFormData$: Observable<StackFormData>;
   stackJobRow$: Observable<{ job: StackingJob; result: StackingJobResult }>;
 
@@ -107,13 +106,13 @@ export class StackerPageComponent implements OnInit {
       this.stackForm.patchValue(data, { emitEvent: false });
     });
 
-    this.selectedImageFiles$ = combineLatest(
-      this.files$,
+    this.selectedHdus$ = combineLatest(
+      this.hdus$,
       this.stackFormData$
     ).pipe(
-      map(([allImageFiles, data]) =>
-        data.selectedImageFileIds.map((id) =>
-          allImageFiles.find((f) => f.id == id)
+      map(([hdus, data]) =>
+        data.selectedHduIds.map((id) =>
+          hdus.find((f) => f.id == id)
         )
       )
     );
@@ -149,7 +148,7 @@ export class StackerPageComponent implements OnInit {
       new UpdateStackingPanelConfig({
         stackFormData: {
           ...this.stackForm.value,
-          selectedImageFileIds: imageFiles.map((f) => f.id),
+          selectedHduIds: imageFiles.map((f) => f.id),
         },
       })
     );

@@ -41,6 +41,7 @@ import {
   getCenterTime,
   getSourceCoordinates,
   DataFile,
+  ImageHdu,
 } from "../../../data-files/models/data-file";
 import { DmsPipe } from "../../../pipes/dms.pipe";
 import { PhotometryPanelState } from "../../models/photometry-file-state";
@@ -89,14 +90,14 @@ import {
 })
 export class PhotometryPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  @Input("selectedFile")
-  set selectedFile(selectedFile: DataFile) {
-    this.selectedFile$.next(selectedFile);
+  @Input("primaryHdu")
+  set primaryHdu(primaryHdu: ImageHdu) {
+    this.primaryHdu$.next(primaryHdu);
   }
-  get selectedFile() {
-    return this.selectedFile$.getValue();
+  get primaryHdu() {
+    return this.primaryHdu$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<DataFile>(null);
+  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
 
   @Input("state")
   set state(state: PhotometryPanelState) {
@@ -240,7 +241,7 @@ export class PhotometryPageComponent
       this.batchPhotFormData$
     ).pipe(
       map(([files, data]) =>
-        data.selectedImageFileIds.map((id) => files.find((f) => f.id == id))
+        data.selectedHduIds.map((id) => files.find((f) => f.id == id))
       )
     );
 
@@ -266,7 +267,7 @@ export class PhotometryPageComponent
           return this.store.dispatch(
             new PhotometerSources(
               rows.map((row) => row.source.id),
-              [this.selectedFile.id],
+              [this.primaryHdu.id],
               this.photometrySettings,
               false
             )
@@ -511,7 +512,7 @@ export class PhotometryPageComponent
       new UpdatePhotometryPanelConfig({
         batchPhotFormData: {
           ...this.batchPhotForm.value,
-          selectedImageFileIds: imageFiles.map((f) => f.id),
+          selectedHduIds: imageFiles.map((f) => f.id),
         },
       })
     );
@@ -521,7 +522,7 @@ export class PhotometryPageComponent
     this.store.dispatch(
       new PhotometerSources(
         this.sources.map((s) => s.id),
-        this.config.batchPhotFormData.selectedImageFileIds,
+        this.config.batchPhotFormData.selectedHduIds,
         this.photometrySettings,
         true
       )
@@ -599,7 +600,7 @@ export class PhotometryPageComponent
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.selectedFile.id, 0, result)]);
+        this.store.dispatch([new ExtractSources(this.primaryHdu.id, result)]);
       }
     });
   }

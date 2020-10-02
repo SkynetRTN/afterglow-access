@@ -1,44 +1,25 @@
-import { State, Action, Selector, StateContext, Actions, ofActionDispatched, ofActionSuccessful, ofActionCompleted } from '@ngxs/store';
-import { DataFile, getYTileDim, getXTileDim, getWidth, getHeight, ImageHdu, PixelType } from './models/data-file';
-import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { of, merge, interval, Observable, combineLatest } from "rxjs";
+import { State, Action, Selector, StateContext, Actions, Store } from '@ngxs/store';
+import { DataFile, ImageHdu } from './models/data-file';
+import { ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { merge} from "rxjs";
+import { catchError } from "rxjs/operators";
 import {
-  tap,
-  skip,
-  takeUntil,
-  flatMap,
-  map,
-  filter,
-  catchError,
-  take
-} from "rxjs/operators";
-
-import {
-  LoadLibrary, LoadLibrarySuccess,
-  LoadLibraryFail,
-  RemoveAllDataFiles,
-  RemoveDataFile,
-  RemoveAllDataFilesFail,
-  RemoveDataFileFail,
-  RemoveDataFileSuccess,
-  LoadDataFileHdr,
-  LoadDataFileHdrSuccess,
-  LoadImageHist,
-  LoadImageHistSuccess,
-  LoadImageTilePixels,
-  LoadImageTilePixelsSuccess,
-  LoadDataFile
-} from './data-files.actions';
+  LoadLibrarySuccess,
+  LoadHduHeader,
+  LoadImageHduHistogram,
+  CloseHdu,
+  LoadHdu,
+} from './hdus.actions';
 import { AfterglowDataFileService } from '../workbench/services/afterglow-data-files';
 import { mergeDelayError } from '../utils/rxjs-extensions';
-import { ImageTile } from './models/image-tile';
-import { Wcs } from '../image-tools/wcs';
 import { ResetState } from '../auth/auth.actions';
 import { WasmService } from '../wasm.service';
+import { CloseAllDataFiles, CloseAllDataFilesFail, CloseDataFile, LoadDataFile, CreateDataFile, UpdateDataFile, DeleteDataFile } from './data-files.actions';
+import { HdusState } from './hdus.state';
 import { HduType } from './models/data-file-type';
 
 export interface DataFilesStateModel {
-  version: number;
+  version: string;
   ids: string[];
   entities: { [id: string]: DataFile };
   loading: boolean,
@@ -46,7 +27,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: 1,
+  version: '678725c2-f213-4ed3-9daa-ab0426742488',
   ids: [],
   entities: {},
   loading: false,
@@ -59,7 +40,7 @@ const dataFilesDefaultState: DataFilesStateModel = {
 })
 export class DataFilesState {
 
-  constructor(private dataFileService: AfterglowDataFileService, private actions$: Actions, private wasmService: WasmService) {
+  constructor(private dataFileService: AfterglowDataFileService, private actions$: Actions, private wasmService: WasmService, private store: Store) {
   }
 
   @Selector()
@@ -79,48 +60,10 @@ export class DataFilesState {
 
   @Selector()
   public static getDataFileById(state: DataFilesStateModel) {
-    return (fileId: string, hduIndex: number) => {
-      return (fileId in state.entities) ? state.entities[fileId].hdus[hduIndex] : null;
+    return (id: string) => {
+      return (id in state.entities) ? state.entities[id] : null;
     };
   }
-
-  @Selector()
-  public static getHeader(state: DataFilesStateModel) {
-    return (fileId: string, hduIndex: number) => {
-      return (fileId in state.entities) ? state.entities[fileId].hdus[hduIndex].header : null;
-    };
-  }
-
-  @Selector()
-  public static getHeaderLoaded(state: DataFilesStateModel) {
-    return (fileId: string, hduIndex: number) => {
-      return (fileId in state.entities) ? state.entities[fileId].hdus[hduIndex].headerLoaded : null;
-    };
-  }
-
-  @Selector()
-  public static getHistLoaded(state: DataFilesStateModel) {
-    return (fileId: string, hduIndex: number) => {
-      if (!(fileId in state.entities)) return false;
-      let layer = state.entities[fileId].hdus[hduIndex];
-      return (layer.hduType == HduType.IMAGE) ? (layer as ImageHdu).histLoaded : false;
-    };
-  }
-
-  @Selector()
-  public static getHist(state: DataFilesStateModel) {
-    return (fileId: string, hduIndex: number) => {
-      if (!(fileId in state.entities)) return null;
-      let layer = state.entities[fileId].hdus[hduIndex];
-      return (layer.hduType == HduType.IMAGE) ? (layer as ImageHdu).hist : null;
-    };
-  }
-
-  @Selector()
-  static getLoading(state: DataFilesStateModel) {
-    return state.loading;
-  }
-
 
   @Action(ResetState)
   @ImmutableContext()
@@ -130,59 +73,51 @@ export class DataFilesState {
     });
   }
 
-  @Action(LoadLibrary)
+  @Action(CreateDataFile)
   @ImmutableContext()
-  public loadLibrary({ setState, dispatch }: StateContext<DataFilesStateModel>, { correlationId }: LoadLibrary) {
+  public createDataFile({ setState, dispatch }: StateContext<DataFilesStateModel>, { dataFile }: CreateDataFile) {
     setState((state: DataFilesStateModel) => {
-      state.loading = true
+      state.entities[dataFile.id] = dataFile;
+      if(!state.ids.includes(dataFile.id)) state.ids.push(dataFile.id)
       return state;
     });
-
-    return this.dataFileService.getFiles().pipe(
-      tap(files => {
-        setState((state: DataFilesStateModel) => {
-          let fileIds = files.map(file => file.id);
-
-          let deletedFileIds = state.ids.filter(id => !fileIds.includes(id));
-
-          state.ids = state.ids.filter(id => !deletedFileIds.includes(id));
-          deletedFileIds.forEach(id => delete state.entities[id]);
-
-
-          files.forEach(file => {
-            if (file.id in state.entities) {
-              //TODO: update the data file
-            }
-            else {
-              state.ids.push(file.id);
-              state.entities[file.id] = file;
-            }
-          })
-
-          state.loading = false;
-          return state;
-        });
-
-        dispatch(new LoadLibrarySuccess(files, correlationId));
-
-
-      }),
-      catchError(err => {
-        return dispatch(new LoadLibraryFail(err, correlationId));
-      })
-    );
   }
 
-  @Action(RemoveAllDataFiles)
+  @Action(UpdateDataFile)
   @ImmutableContext()
-  public removeAllDataFiles({ setState, getState, dispatch }: StateContext<DataFilesStateModel>) {
+  public updateDataFile({ setState, dispatch }: StateContext<DataFilesStateModel>, { fileId, changes }: UpdateDataFile) {
+    setState((state: DataFilesStateModel) => {
+      if(!state.ids.includes(fileId)) return;
+      state.entities[fileId] = {
+        ...state.entities[fileId],
+        ...changes
+      }
+      return state;
+    });
+  }
+
+  @Action(DeleteDataFile)
+  @ImmutableContext()
+  public deleteDataFile({ setState, dispatch }: StateContext<DataFilesStateModel>, { fileId }: DeleteDataFile) {
+    setState((state: DataFilesStateModel) => {
+      if(!state.ids.includes(fileId)) return;
+      state.ids = state.ids.filter(id => id != fileId);
+      delete state.entities[fileId];
+      return state;
+    });
+  }
+
+  @Action(CloseAllDataFiles)
+  @ImmutableContext()
+  public closeAllDataFiles({ setState, getState, dispatch }: StateContext<DataFilesStateModel>) {
     setState((state: DataFilesStateModel) => {
       state.removingAll = true;
       return state;
     });
 
     return mergeDelayError(...getState().ids.map(id => {
-      return dispatch(new RemoveDataFile(id));
+      let hdus = this.store.selectSnapshot(HdusState.getHdusByFileId)(id);
+      return merge(...hdus.map(hdu => dispatch(new CloseHdu(hdu.id))));
     })).pipe(
       catchError(errors => {
         setState((state: DataFilesStateModel) => {
@@ -190,35 +125,16 @@ export class DataFilesState {
           return state;
         });
 
-        return dispatch(new RemoveAllDataFilesFail(errors))
+        return dispatch(new CloseAllDataFilesFail(errors))
       })
     )
   }
 
-  @Action(RemoveDataFile)
+  @Action(CloseDataFile)
   @ImmutableContext()
-  public removeDataFile({ setState, dispatch }: StateContext<DataFilesStateModel>, { fileId }: RemoveDataFile) {
-    return this.dataFileService
-      .removeFile(fileId)
-      .pipe(
-        tap(result => {
-          setState((state: DataFilesStateModel) => {
-            if (state.ids.includes(fileId)) {
-              state.ids = state.ids.filter(id => id != fileId);
-              delete state.entities[fileId];
-            }
-            if (state.removingAll && state.ids.length == 0) state.removingAll = false;
-            return state;
-          });
-        }),
-        flatMap(result => {
-          return merge(
-            dispatch(new RemoveDataFileSuccess(fileId)),
-            dispatch(new LoadLibrary())
-          );
-        }),
-        catchError(err => dispatch(new RemoveDataFileFail(fileId, err)))
-      );
+  public closeDataFile({ setState, dispatch }: StateContext<DataFilesStateModel>, { fileId }: CloseDataFile) {
+    let hdus = this.store.selectSnapshot(HdusState.getHdusByFileId)(fileId);
+    return dispatch(hdus.map(hdu => new CloseHdu(hdu.id)));
   }
 
   @Action(LoadDataFile)
@@ -226,247 +142,22 @@ export class DataFilesState {
   public loadDataFile({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { fileId }: LoadDataFile) {
     let state = getState();
     let dataFile = state.entities[fileId] as DataFile;
-
-    // let hdrNext$ = this.actions$.pipe(
-    //   ofActionCompleted(LoadDataFileHdr),
-    //   filter(r => r.action.fileId == fileId),
-    //   take(1),
-    //   filter(r => r.result.successful)
-    // )
-
-    // let histNext$ = this.actions$.pipe(
-    //   ofActionCompleted(LoadImageHist),
-    //   filter(r => r.action.fileId == fileId),
-    //   take(1),
-    //   filter(r => r.result.successful)
-    // )
     let actions = [];
-    dataFile.hdus.forEach((layer, index) => {
-      if (!layer.headerLoaded && !layer.headerLoading) {
+
+    let hdus = this.store.selectSnapshot(HdusState.getHdusByFileId)(fileId);
+    hdus.forEach(hdu => {
+      if ( (!hdu.headerLoaded && !hdu.headerLoading) || (hdu.hduType == HduType.IMAGE && (!(hdu as ImageHdu).histLoaded && !(hdu as ImageHdu).histLoading))) {
         actions.push(
-          new LoadDataFileHdr(dataFile.id, index)
+          new LoadHdu(hdu.id)
         );
-      }
-      if (layer.hduType == HduType.IMAGE) {
-        let imageLayer = layer as ImageHdu;
-        if (!imageLayer.histLoaded && !imageLayer.histLoading) {
-          actions.push(
-            new LoadImageHist(dataFile.id, index)
-          );
-        }
       }
 
     })
-
-    return merge(
-      dispatch(actions),
-    )
-
+    return dispatch(actions)
   }
 
 
-  @Action(LoadDataFileHdr)
-  @ImmutableContext()
-  public loadDataFileHdr({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { fileId, hduIndex }: LoadDataFileHdr) {
-    const cancel$ = merge(
-      this.actions$.pipe(
-        ofActionSuccessful(RemoveDataFile),
-        filter<RemoveDataFile>(
-          cancelAction =>
-            cancelAction.fileId == fileId
-        )
-      ),
-      // this.actions$.pipe(
-      //   ofActionDispatched(LoadDataFileHdr),
-      //   filter<LoadDataFileHdr>(
-      //     cancelAction =>
-      //       cancelAction.fileId != fileId
-      //   )
-      // )
-    );
-
-    setState((state: DataFilesStateModel) => {
-      let dataFile = state.entities[fileId];
-      dataFile.hdus[hduIndex].headerLoading = true;
-      dataFile.hdus[hduIndex].headerLoaded = false;
-      return state;
-    });
-
-    return this.dataFileService.getHeader(fileId, hduIndex).pipe(
-      takeUntil(cancel$),
-      tap(header => {
-        setState((state: DataFilesStateModel) => {
-          let dataFile = state.entities[fileId];
-          let hdu = dataFile.hdus[hduIndex];
-          hdu.header = header;
-          hdu.headerLoading = false;
-          hdu.headerLoaded = true;
-
-          let wcsHeader: { [key: string]: any } = {};
-          header.forEach(entry => {
-            wcsHeader[entry.key] = entry.value;
-          });
-          hdu.wcs = new Wcs(wcsHeader);
-
-          /* Initialize Image Tiles*/
-          if (hdu.hduType == HduType.IMAGE) {
-            let imageHdu = hdu as ImageHdu;
-            let tiles: ImageTile<PixelType>[] = [];
-
-            for (let j = 0; j < getYTileDim(imageHdu); j += 1) {
-              let tw = imageHdu.tileWidth;
-              let th = imageHdu.tileHeight;
-
-              if (j === getYTileDim(imageHdu) - 1) {
-                th -= (j + 1) * imageHdu.tileHeight - getHeight(imageHdu);
-              }
-              for (let i = 0; i < getXTileDim(imageHdu); i += 1) {
-                if (i === getXTileDim(imageHdu) - 1) {
-                  tw -= (i + 1) * imageHdu.tileWidth - getWidth(imageHdu);
-                }
-                let index = j * getXTileDim(imageHdu) + i;
-                let x = i * imageHdu.tileWidth;
-                let y = j * imageHdu.tileHeight;
-                tiles.push({
-                  index: index,
-                  x: x,
-                  y: y,
-                  width: tw,
-                  height: th,
-                  pixelsLoaded: false,
-                  pixelsLoading: false,
-                  pixelLoadingFailed: false,
-                  pixels: null,
-                });
-              }
-            }
-
-            imageHdu.tiles = tiles;
-            imageHdu.tilesInitialized = true;
-          }
-
-          return state;
-        });
-        dispatch(new LoadDataFileHdrSuccess(fileId, hduIndex, header));
-
-      })
-    );
-  }
-
-
-  @Action(LoadImageHist)
-  @ImmutableContext()
-  public loadImageHist({ setState, dispatch }: StateContext<DataFilesStateModel>, { fileId, hduIndex }: LoadImageHist) {
-    const cancel$ = merge(
-      this.actions$.pipe(
-        ofActionSuccessful(RemoveDataFile),
-        filter<RemoveDataFile>(
-          cancelAction =>
-            cancelAction.fileId == fileId
-        )
-      ),
-      // this.actions$.pipe(
-      //   ofActionDispatched(LoadImageHist),
-      //   filter<LoadImageHist>(
-      //     cancelAction =>
-      //       cancelAction.fileId != fileId
-      //   )
-      // )
-    );
-
-    setState((state: DataFilesStateModel) => {
-      let dataFile = state.entities[fileId];
-      let layer = dataFile.hdus[hduIndex] as ImageHdu;
-      layer.histLoading = true;
-      layer.histLoaded = false;
-      return state;
-    });
-
-    return this.dataFileService.getHist(fileId).pipe(
-      takeUntil(cancel$),
-      tap(hist => {
-        setState((state: DataFilesStateModel) => {
-          let dataFile = state.entities[fileId];
-          let layer = dataFile.hdus[hduIndex] as ImageHdu;
-          layer.hist = hist;
-          layer.histLoading = false;
-          layer.histLoaded = true;
-          return state;
-        });
-      }),
-      flatMap(hist => {
-        return dispatch(new LoadImageHistSuccess(fileId, hduIndex, hist));
-      }),
-      catchError(err => {
-        setState((state: DataFilesStateModel) => {
-          let dataFile = state.entities[fileId];
-          let layer = dataFile.hdus[hduIndex] as ImageHdu;
-          layer.histLoading = false;
-          return state;
-        });
-        throw err;
-      })
-    );
-  }
-
-  @Action(LoadImageTilePixels)
-  @ImmutableContext()
-  public loadImageTilePixels({ setState, dispatch, getState }: StateContext<DataFilesStateModel>, { fileId, hduIndex, tileIndex }: LoadImageTilePixels) {
-    const cancel$ = merge(
-      this.actions$.pipe(
-        ofActionSuccessful(RemoveDataFile),
-        filter<RemoveDataFile>(
-          cancelAction =>
-            cancelAction.fileId == fileId
-        )
-      )
-    );
-
-    setState((state: DataFilesStateModel) => {
-      let dataFile = state.entities[fileId];
-      let layer = dataFile.hdus[hduIndex] as ImageHdu;
-      let tile = layer.tiles[tileIndex];
-
-      tile.pixelsLoading = true;
-      tile.pixelsLoaded = false;
-      return state;
-    });
-
-    let state = getState();
-    let dataFile = state.entities[fileId];
-    let layer = dataFile.hdus[hduIndex] as ImageHdu;
-    let tile = layer.tiles[tileIndex];
-    
-    return this.dataFileService.getPixels(fileId, hduIndex, layer.precision, tile).pipe(
-      takeUntil(cancel$),
-      tap(pixels => {
-        setState((state: DataFilesStateModel) => {
-          let dataFile = state.entities[fileId];
-          let layer = dataFile.hdus[hduIndex] as ImageHdu;
-          let tile = layer.tiles[tileIndex];
-
-          tile.pixelsLoading = false;
-          tile.pixelsLoaded = true;
-          tile.pixels = pixels;
-          return state;
-        });
-      }),
-      flatMap(pixels => {
-        return dispatch(new LoadImageTilePixelsSuccess(fileId, hduIndex, tileIndex, pixels));
-      }),
-      catchError(err => {
-        setState((state: DataFilesStateModel) => {
-          let dataFile = state.entities[fileId];
-          let layer = dataFile.hdus[hduIndex] as ImageHdu;
-          let tile = layer.tiles[tileIndex];
-          tile.pixelsLoading = false;
-          tile.pixelLoadingFailed = true;
-          return state;
-        });
-        throw err;
-      })
-    );
-  }
+  
 
 }
 

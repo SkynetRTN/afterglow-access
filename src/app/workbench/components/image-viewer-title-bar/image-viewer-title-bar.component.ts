@@ -3,10 +3,10 @@ import { getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/mod
 import { Subject, BehaviorSubject, Observable, timer, interval } from 'rxjs';
 import { filter, flatMap, takeUntil } from "rxjs/operators";
 import { Store } from '@ngxs/store';
-import { RemoveDataFile } from '../../../data-files/data-files.actions';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { CloseHdu } from '../../../data-files/hdus.actions';
 
 @Component({
   selector: 'app-image-viewer-title-bar',
@@ -14,7 +14,7 @@ import { MatDialog } from '@angular/material/dialog';
   styleUrls: ['./image-viewer-title-bar.component.scss']
 })
 export class ImageViewerTitleBarComponent implements OnInit {
-  @Input() imageFile: DataFile;
+  @Input() hdu: ImageHdu;
   @Output() downloadSnapshot = new EventEmitter();
 
   private zoomStepFactor: number = 0.75;
@@ -35,8 +35,8 @@ export class ImageViewerTitleBarComponent implements OnInit {
   }
 
   removeFromLibrary() {
-    if(!this.imageFile) return;
-    let imageFileId = this.imageFile.id;
+    if(!this.hdu) return;
+    let imageFileId = this.hdu.id;
 
     let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: "300px",
@@ -51,7 +51,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.store.dispatch(new RemoveDataFile(imageFileId));
+        this.store.dispatch(new CloseHdu(imageFileId));
       }
     });
 
@@ -93,8 +93,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
 
   public zoomTo(value: number) {
     this.store.dispatch(new ZoomTo(
-      this.imageFile.id,
-      0,
+      this.hdu.id,
       value,
       null
     ));
@@ -102,19 +101,16 @@ export class ImageViewerTitleBarComponent implements OnInit {
 
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
     this.store.dispatch(new ZoomBy(
-      this.imageFile.id,
-      0,
+      this.hdu.id,
       factor,
       imageAnchor
     ));
   }
 
   public zoomToFit(padding: number = 0) {
-    let imageLayer = this.imageFile.hdus[0] as ImageHdu;
     this.store.dispatch(new CenterRegionInViewport(
-      this.imageFile.id,
-      0,
-      { x: 1, y: 1, width: getWidth(imageLayer), height: getHeight(imageLayer) }
+      this.hdu.id,
+      { x: 1, y: 1, width: getWidth(this.hdu), height: getHeight(this.hdu) }
     ))
   }
 

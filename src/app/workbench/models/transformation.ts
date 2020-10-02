@@ -20,11 +20,11 @@ export interface Transformation {
 }
 
 
-export function transformToMatrix(t: Transform): Matrix {
+export function transformToMatrix(t: Transform): any {
   return new Matrix(t.a, t.b, t.c, t.d, t.tx, t.ty);
 }
 
-export function matrixToTransform(m: Matrix) {
+export function matrixToTransform(m: any) {
   return {
     a: m.a,
     b: m.b,

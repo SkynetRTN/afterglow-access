@@ -17,7 +17,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 exports.__esModule = true;
-exports.AppModule = exports.imageFileStateSanitizer = exports.dataFileSanitizer = void 0;
+exports.AppModule = exports.workbenchHduStateSanitizer = exports.hduSanitizer = void 0;
 var core_1 = require("@angular/core");
 var store_1 = require("@ngxs/store");
 var router_plugin_1 = require("@ngxs/router-plugin");
@@ -46,6 +46,7 @@ var theme_picker_1 = require("./theme-picker");
 var auth_state_1 = require("./auth/auth.state");
 var jobs_state_1 = require("./jobs/jobs.state");
 var data_providers_state_1 = require("./data-providers/data-providers.state");
+var hdus_state_1 = require("./data-files/hdus.state");
 var data_files_state_1 = require("./data-files/data-files.state");
 var workbench_file_states_state_1 = require("./workbench/workbench-file-states.state");
 var workbench_state_1 = require("./workbench/workbench.state");
@@ -54,44 +55,33 @@ var phot_data_state_1 = require("./workbench/phot-data.state.");
 var public_api_1 = require("./storage-plugin/public_api");
 var wasm_service_1 = require("./wasm.service");
 var data_file_type_1 = require("./data-files/models/data-file-type");
-function dataFileSanitizer(v) {
+function hduSanitizer(v) {
     var state = __assign({}, v);
     state.entities = __assign({}, state.entities);
     Object.keys(state.entities).forEach(function (key) {
-        var dataFile = __assign({}, state.entities[key]);
-        dataFile.hdus = dataFile.hdus.map(function (layer, index) {
-            var newLayer = __assign(__assign({}, layer), { header: null, headerLoaded: false, headerLoading: false, wcs: null });
-            if (newLayer.hduType == data_file_type_1.HduType.IMAGE) {
-                var newImageLayer = newLayer;
-                newImageLayer.hist = null;
-                newImageLayer.histLoaded = false;
-                newImageLayer.histLoading = false;
-                newImageLayer.tilesInitialized = false;
-                newImageLayer.tiles = [];
-            }
-            return newLayer;
-        });
-        state.entities[key] = dataFile;
+        var hdu = __assign(__assign({}, state.entities[key]), { header: null, headerLoaded: false, headerLoading: false, wcs: null });
+        if (hdu.hduType == data_file_type_1.HduType.IMAGE) {
+            hdu = __assign(__assign({}, hdu), { hist: null, histLoaded: false, histLoading: false, tilesInitialized: false, tiles: [] });
+        }
+        state.entities[key] = hdu;
     });
     return state;
 }
-exports.dataFileSanitizer = dataFileSanitizer;
-function imageFileStateSanitizer(v) {
+exports.hduSanitizer = hduSanitizer;
+function workbenchHduStateSanitizer(v) {
     var state = __assign({}, v);
     state.entities = __assign({}, state.entities);
     Object.keys(state.entities).forEach(function (key) {
-        var workbenchFileState = __assign({}, state.entities[key]);
-        workbenchFileState.hduStates = workbenchFileState.hduStates.map(function (hduState, index) {
-            if (hduState.hduType != data_file_type_1.HduType.IMAGE)
-                return __assign({}, hduState);
+        var hduState = __assign({}, state.entities[key]);
+        if (hduState.hduType == data_file_type_1.HduType.IMAGE) {
             var imageHduState = hduState;
-            return __assign(__assign({}, imageHduState), { normalization: __assign(__assign({}, imageHduState.normalization), { tiles: [] }) });
-        });
-        state.entities[key] = workbenchFileState;
+            hduState = __assign(__assign({}, hduState), { normalization: __assign(__assign({}, imageHduState.normalization), { tiles: [] }) });
+        }
+        state.entities[key] = hduState;
     });
     return state;
 }
-exports.imageFileStateSanitizer = imageFileStateSanitizer;
+exports.workbenchHduStateSanitizer = workbenchHduStateSanitizer;
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
@@ -114,26 +104,27 @@ var AppModule = /** @class */ (function () {
                 angular2_hotkeys_1.HotkeyModule.forRoot({
                     disableCheatSheet: true
                 }),
-                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchFileStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
+                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, hdus_state_1.HdusState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchHduStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
                 public_api_1.AfterglowStoragePluginModule.forRoot({
                     key: [
                         auth_state_1.AuthState,
                         jobs_state_1.JobsState,
                         data_providers_state_1.DataProvidersState,
+                        hdus_state_1.HdusState,
                         data_files_state_1.DataFilesState,
-                        workbench_file_states_state_1.WorkbenchFileStates,
+                        workbench_file_states_state_1.WorkbenchHduStates,
                         workbench_state_1.WorkbenchState,
                         sources_state_1.SourcesState,
                         phot_data_state_1.PhotDataState
                     ],
                     sanitizations: [
                         {
-                            key: data_files_state_1.DataFilesState,
-                            sanitize: dataFileSanitizer
+                            key: hdus_state_1.HdusState,
+                            sanitize: hduSanitizer
                         },
                         {
-                            key: workbench_file_states_state_1.WorkbenchFileStates,
-                            sanitize: imageFileStateSanitizer
+                            key: workbench_file_states_state_1.WorkbenchHduStates,
+                            sanitize: workbenchHduStateSanitizer
                         }
                     ],
                     storage: 1 /* SessionStorage */

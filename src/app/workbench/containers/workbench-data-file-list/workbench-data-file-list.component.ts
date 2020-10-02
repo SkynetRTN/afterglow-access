@@ -1,11 +1,13 @@
 import { Component, OnInit, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange } from '@angular/core';
 import { DataFile, IHdu } from '../../../data-files/models/data-file';
-import { SelectionModel} from '@angular/cdk/collections';
+import { SelectionModel } from '@angular/cdk/collections';
 import { ENTER, SPACE } from '@angular/cdk/keycodes';
-import { Subscription, BehaviorSubject, Observable } from 'rxjs';
+import { Subscription, BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { Store } from '@ngxs/store';
 import { map } from 'rxjs/operators';
 import { FileInfoToolsetComponent } from '../../components/file-info-panel/file-info-panel.component';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { HdusState } from '../../../data-files/hdus.state';
 
 interface TreeNode {
   id: string;
@@ -21,76 +23,65 @@ interface TreeNode {
 })
 export class WorkbenchDataFileListComponent {
   @Input()
-  selectedFileId: string;
+  selectedItem: DataFile | IHdu;
 
-  @Input()
-  selectedHduIndex: number;
-
-  @Input("files")
-  set files(files: DataFile[]) {
-    this.files$.next(files);
-  }
-  get files() {
-    return this.files$.getValue();
-  }
-  private files$ = new BehaviorSubject<DataFile[]>(null);
-
-  @Output() onSelectionChange = new EventEmitter<{file: DataFile, doubleClick: boolean}>();
+  @Output() onSelectionChange = new EventEmitter<{ file: DataFile, doubleClick: boolean }>();
 
   // preventSingleClick = false;
   // timer: any;
   // delay: Number;
   nodes$: Observable<TreeNode[]>;
-  nodes = [
-    {
-      id: 1,
-      name: 'root1',
-      children: [
-        { id: 2, name: 'child1' },
-        { id: 3, name: 'child2' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'root2',
-      children: [
-        { id: 5, name: 'child2.1' },
-        {
-          id: 6,
-          name: 'child2.2',
-          children: [
-            { id: 7, name: 'subsub' }
-          ]
-        }
-      ]
-    }
-  ];
   options = {};
-  
+
+  constructor(private store: Store) {
+    this.nodes$ = combineLatest(
+      this.store.select(DataFilesState.getEntities),
+      this.store.select(HdusState.getEntities)
+    ).pipe(
+      map(([fileEntities, hduEntities]) => {
+        return Object.values(fileEntities)
+        .sort((a, b) => (a.name > b.name) ? 1 : -1)
+        .map(file => {
+          let hdus = Object.values(hduEntities).filter(hdu => hdu.fileId == file.id)
+          if(hdus.length > 1) {
+            return {
+              id: file.id,
+              name: file.name,
+              children: hdus.map((hdu, index) => {
+                return {
+                  id: hdu.id,
+                  name: `Channel ${index}`
+                }
+              })
+            } as TreeNode;
+          }
+          else {
+            let hdu = hdus[0];
+            return {
+              id: hdu.id,
+              name: file.name,
+            } as TreeNode;
+          }
+          
+        })
+      })
+    )
+  }
+
   trackByFn(index: number, value: DataFile) {
     return value.id;
   }
 
   onRowClick(file: DataFile, hdu: IHdu) {
-    if(file.id == this.selectedFileId) return;
+    // if (file.id == this.selectedFileId) return;
 
-    this.selectedFileId = file.id;
-    this.onSelectionChange.emit({file: file, doubleClick: false});
-    // this.preventSingleClick = false;
-    //  const delay = 200;
-    //   this.timer = setTimeout(() => {
-    //     if (!this.preventSingleClick) {
-    //       this.selectedFileId = file.id;
-    //       this.onSelectionChange.emit({file: file, doubleClick: false});
-    //     }
-    //   }, delay);
+    // this.selectedFileId = file.id;
+    // this.onSelectionChange.emit({ file: file, doubleClick: false });
+    
   }
 
   onRowDoubleClick(file: DataFile, hdu: IHdu) {
-    
-      // this.preventSingleClick = true;
-      // clearTimeout(this.timer);
-      this.selectedFileId = file.id;
-      this.onSelectionChange.emit({file: file, doubleClick: true});
-    }
+    // this.selectedFileId = file.id;
+    // this.onSelectionChange.emit({ file: file, doubleClick: true });
+  }
 }

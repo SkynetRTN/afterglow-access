@@ -39,14 +39,14 @@ import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-  @Input("file")
-  set file(file: DataFile) {
-    this.file$.next(file);
+  @Input("hdu")
+  set hdu(hdu: ImageHdu) {
+    this.hdu$.next(hdu);
   }
-  get file() {
-    return this.file$.getValue();
+  get hdu() {
+    return this.hdu$.getValue();
   }
-  private file$ = new BehaviorSubject<DataFile>(null);
+  private hdu$ = new BehaviorSubject<ImageHdu>(null);
   
   @Input("config")
   set config(config: FileInfoPanelConfig) {
@@ -69,9 +69,9 @@ export class FileInfoToolsetComponent
     router: Router
   ) {
 
-    let header$ = this.file$.pipe(
-      filter(file => file != null),
-      map(file => file.hdus[0].header),
+    let header$ = this.hdu$.pipe(
+      filter(hdu => hdu != null),
+      map(hdu => hdu.header),
       distinctUntilChanged()
     )
 
@@ -81,7 +81,7 @@ export class FileInfoToolsetComponent
     ).pipe(
       map(([header, config]) => {
         if (!header) return [];
-        let imageLayer = this.file.hdus[0] as ImageHdu;
+        let imageLayer = this.hdu as ImageHdu;
         let result: Header = [];
         let width = getWidth(imageLayer);
         let height = getHeight(imageLayer);
@@ -98,7 +98,7 @@ export class FileInfoToolsetComponent
 
         result.push({
           key: "ID",
-          value: `${this.file.id}`,
+          value: `${this.hdu.id}`,
           comment: "",
         });
 

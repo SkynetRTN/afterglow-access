@@ -25,6 +25,7 @@ import {
   DataFile,
   ImageHdu,
   ITiledImageData,
+  IHdu,
 } from "../../../data-files/models/data-file";
 import { Normalization } from "../../models/normalization";
 import {
@@ -41,7 +42,7 @@ import {
   UpdateCurrentViewportSize,
   NormalizeImageTile,
 } from "../../workbench-file-states.actions";
-import { LoadImageTilePixels } from "../../../data-files/data-files.actions";
+import { LoadImageTilePixels } from "../../../data-files/hdus.actions";
 import { BlendMode } from '../../models/blend-mode';
 
 export type ViewportChangeEvent = {
@@ -59,18 +60,13 @@ export type ViewportSizeChangeEvent = {
 };
 
 export type CanvasMouseEvent = {
-  targetFile: DataFile;
+  targetHdu: IHdu;
   imageX: number;
   imageY: number;
   hitImage: boolean;
   source: Source;
   mouseEvent: MouseEvent;
 };
-
-export interface PanZoomCanvasLayer extends ITiledImageData<Uint32Array> {
-  blendMode: BlendMode;
-  alpha: number;
-}
 
 @Directive({
   selector: "[app-pan-zoom-canvas]",
@@ -121,7 +117,7 @@ export class PanZoomCanvasComponent
 
   private sumPixelsMoved: number = 0;
   private zoomStepFactor: number = 0.92;
-  private mouseDragVector: Rectangle = new Rectangle(0, 0, 0, 0);
+  private mouseDragVector = new Rectangle(0, 0, 0, 0);
 
   private handleWindowResizeBound: EventListener;
   private handleImageMouseDownBound: EventListener;
@@ -365,7 +361,7 @@ export class PanZoomCanvasComponent
     return { x: result.x, y: result.y };
   }
 
-  public mouseOnImage(viewportCoord: Point) {
+  public mouseOnImage(viewportCoord: {x: number, y: number}) {
     // console.log('mouse on image');
 
     let imagePoint = this.viewportCoordToImageCoord(
