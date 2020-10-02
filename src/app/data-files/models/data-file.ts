@@ -30,6 +30,7 @@ export interface DataFile {
   name: string;
   dataProviderId: string;
   assetPath: string;
+  hduIds: string[];
 }
 
 export interface IHdu {

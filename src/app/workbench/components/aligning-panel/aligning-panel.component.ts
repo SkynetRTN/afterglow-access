@@ -9,7 +9,7 @@ import { AlignmentJob, AlignmentJobResult } from '../../../jobs/models/alignment
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
-import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectHdu } from '../../workbench.actions';
+import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectDataFileListItem } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
 import { ImageHdu } from '../../../data-files/models/data-file';
 
@@ -112,7 +112,7 @@ export class AlignerPageComponent implements OnInit {
   }
 
   onPrimaryHduChange($event: MatSelectChange) {
-    this.store.dispatch(new SelectHdu($event.value));
+    this.store.dispatch(new SelectDataFileListItem($event.value));
   }
 
 

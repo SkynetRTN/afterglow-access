@@ -14,7 +14,7 @@ import { Source } from '../../models/source';
 import { ImageTile } from '../../../data-files/models/image-tile';
 import { Store } from '@ngxs/store';
 import { MoveBy, ZoomBy, UpdateCurrentViewportSize, NormalizeImageTile } from '../../workbench-file-states.actions';
-import { LoadImageTilePixels } from '../../../data-files/hdus.actions';
+import { LoadImageTilePixels } from '../../../data-files/data-files.actions';
 
 export type ViewportChangeEvent = {
   imageX: number;

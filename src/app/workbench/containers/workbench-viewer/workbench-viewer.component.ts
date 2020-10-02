@@ -46,7 +46,7 @@ import { Source, PosType } from "../../models/source";
 import { CustomMarker } from "../../models/custom-marker";
 import { FieldCal } from '../../models/field-cal';
 import { Store } from '@ngxs/store';
-import { HdusState } from '../../../data-files/hdus.state';
+import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';
 import { WorkbenchHduStates } from '../../workbench-file-states.state';
 import { Viewer } from '../../models/viewer';
@@ -61,14 +61,14 @@ import { IWorkbenchHduState } from '../../models/workbench-file-state';
   styleUrls: ["./workbench-viewer.component.scss"]
 })
 export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
-  @Input("hduId")
-  set hduId(hduId: string) {
-    this.hduId$.next(hduId);
+  @Input("hduIds")
+  set hduIds(hduIds: string[]) {
+    this.hduIds$.next(hduIds);
   }
-  get hduId() {
-    return this.hduId$.getValue();
+  get hduIds() {
+    return this.hduIds$.getValue();
   }
-  private hduId$ = new BehaviorSubject<string>(null);
+  private hduIds$ = new BehaviorSubject<string[]>(null);
   
   
   @Input()
@@ -91,11 +91,13 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild(ImageViewerMarkerOverlayComponent)
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
-  // markers$: Observable<Marker[]>;
   
+
+  // markers$: Observable<Marker[]>;
+  hdus$: Observable<{[id: string]: IHdu}>;
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-  hdus$: Observable<{[id: string]: IHdu}>;
+  
   transformation$: Observable<Transformation>;
   sources$: Observable<Source[]>;
   customMarkers$: Observable<CustomMarker[]>;
@@ -111,19 +113,19 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   fieldCalMarkers$: Observable<Marker[]>;
 
   constructor(private store: Store, private sanitization: DomSanitizer) {
-    this.hdus$ = this.store.select(HdusState.getEntities);
+    this.hdus$ = this.store.select(DataFilesState.getHduEntities);
 
     this.sources$ = this.store.select(SourcesState.getSources);
     // this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
     // this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
     this.hduState$ = combineLatest(
-      this.hduId$,
+      this.hduIds$,
       this.store.select(WorkbenchHduStates.getEntities)
     ).pipe(
       map(([fileId, imageFileStates]) => imageFileStates[fileId]),
     );
 
-    this.transformation$ = this.hduId$.pipe(
+    this.transformation$ = this.hduIds$.pipe(
       switchMap(fileId => {
         return this.store.select(WorkbenchHduStates.getTransformation).pipe(
           map(fn => fn(fileId))

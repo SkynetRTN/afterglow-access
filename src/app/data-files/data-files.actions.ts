@@ -3,25 +3,117 @@ import { ImageHist } from './models/image-hist';
 import { ImageTile } from './models/image-tile';
 
 /**
- * CRUD
+ * Load Library Actions
+ */
+export class LoadLibrary {
+  public static readonly type = '[Data File] Load Library';
+
+  constructor(public correlationId?: string) { }
+}
+
+export class LoadLibrarySuccess {
+  public static readonly type = '[Data File] Load Library Success';
+
+  constructor(public hdus: IHdu[], public correlationId?: string) { }
+}
+
+export class LoadLibraryFail {
+  public static readonly type = '[Data File] Load Library Fail';
+
+  constructor(public error: any, public correlationId?: string) { }
+}
+
+/**
+ * Close HDU Events
  */
 
-export class CreateDataFile {
-  public static readonly type = '[DataFile] Create Data File';
+export class CloseHduSuccess {
+  public static readonly type = '[Data File] Close HDU Success';
 
-  constructor(public dataFile: DataFile) { }
+  constructor(public hduId: string) { }
 }
 
-export class UpdateDataFile {
-  public static readonly type = '[DataFile] Update Data File';
+export class CloseHduFail {
+  public static readonly type = '[Data File] Close HDU Fail';
 
-  constructor(public fileId: string, public changes: Partial<DataFile>) { }
+  constructor(public hduId: string, public error: any) { }
 }
 
-export class DeleteDataFile {
-  public static readonly type = '[DataFile] Delete Data File';
+/**
+ * Load File Actions
+ */
 
-  constructor(public fileId: string) { }
+export class LoadHdu {
+  public static readonly type = '[Data File] Load HDU';
+
+  constructor(public hduId: string) { 
+  }
+}
+
+
+
+export class LoadHduHeader {
+  public static readonly type = '[Data File] Load HDU Header';
+
+  constructor(public hduId: string) { }
+}
+
+export class LoadHduHeaderSuccess {
+  public static readonly type = '[Data File] Load HDU Header Success';
+
+  constructor(public hduId: string, public header: Header) { }
+}
+
+/**
+ * Image File Actions
+ */
+
+export class LoadImageHduHistogram {
+  public static readonly type = '[Data File] Load Image HDU Histogram';
+
+  constructor(public hduId: string) { }
+}
+
+export class LoadImageHduHistogramSuccess {
+  public static readonly type = '[Data File] Load Image HDU Histogram Success';
+
+  constructor(public hduId: string, public hist: ImageHist) { }
+}
+
+export class InitializeImageTiles {
+  public static readonly type = '[Data File] Initialize Image Tiles';
+
+  constructor(public hduId: string) { }
+}
+
+export class LoadImageTilePixels {
+  public static readonly type = '[Data File] Load Image Tile Pixels';
+
+  constructor(public hduId: string, public tileIndex: number) { }
+}
+
+export class LoadImageTilePixelsSuccess {
+  public static readonly type = '[Data File] Load Image Tile Pixels Success';
+
+  constructor(public hduId: string, public tileIndex: number, public pixels: PixelType) { }
+}
+
+export class LoadImageTilePixelsFail {
+  public static readonly type = '[Data File] Load Image Tile Pixels Fail';
+
+  constructor(public hduId: string, public tileIndex: number, public error: any) { }
+}
+
+export class LoadImageTilePixelsCancel {
+  public static readonly type = '[Data File] Load Image Tile Pixels Cancel';
+
+  constructor(public hduId: string, public tileIndex: number) { }
+}
+
+export class ClearImageDataCache {
+  public static readonly type = '[Data File] Clear Image Data';
+
+  constructor(public hduIds: string[]) { }
 }
 
 /**

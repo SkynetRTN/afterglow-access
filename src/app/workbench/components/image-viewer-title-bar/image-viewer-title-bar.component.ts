@@ -6,7 +6,7 @@ import { Store } from '@ngxs/store';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { CloseHdu } from '../../../data-files/hdus.actions';
+import { CloseDataFile } from '../../../data-files/data-files.actions';
 
 @Component({
   selector: 'app-image-viewer-title-bar',
@@ -36,7 +36,6 @@ export class ImageViewerTitleBarComponent implements OnInit {
 
   removeFromLibrary() {
     if(!this.hdu) return;
-    let imageFileId = this.hdu.id;
 
     let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: "300px",
@@ -51,7 +50,7 @@ export class ImageViewerTitleBarComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.store.dispatch(new CloseHdu(imageFileId));
+        this.store.dispatch(new CloseDataFile(this.hdu.fileId));
       }
     });
 

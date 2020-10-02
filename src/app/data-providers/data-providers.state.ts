@@ -21,10 +21,10 @@ import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jo
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { Navigate } from '@ngxs/router-plugin';
-import { SetViewerFile, SelectHdu } from '../workbench/workbench.actions';
+import { SetViewerFile, SelectDataFileListItem } from '../workbench/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
-import { LoadLibrary } from '../data-files/hdus.actions';
+import { LoadLibrary } from '../data-files/data-files.actions';
 import { ResetState } from '../auth/auth.actions';
 
 export interface DataProvidersStateModel {
@@ -383,7 +383,7 @@ export class DataProvidersState {
             take(1),
             filter(a => a.result.successful),
             tap(v => {
-             dispatch(new SelectHdu(action.fileIds[0]));
+             dispatch(new SelectDataFileListItem({type: 'hdu', id: action.fileIds[0]}));
             })
           )
        })
@@ -438,10 +438,10 @@ export class DataProvidersState {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
         let result = jobEntity.result as BatchImportJobResult;
         if (result.errors.length != 0) {
-          console.error("Errors encountered during stacking: ", result.errors);
+          console.error("Errors encountered during import: ", result.errors);
         }
         if (result.warnings.length != 0) {
-          console.error("Warnings encountered during stacking: ", result.warnings);
+          console.error("Warnings encountered during import: ", result.warnings);
         }
         return dispatch(new ImportAssetsCompleted(assets, result.file_ids.map(id => id.toString()), result.errors, correlationId));
 

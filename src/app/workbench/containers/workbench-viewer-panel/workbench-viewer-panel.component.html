@@ -30,7 +30,7 @@
           [cdkDragData]="viewer"
           (contextmenu)="onContextMenu($event, viewer)"
         >
-          <div fxLayout="row" fxFlexFill *ngIf="(hdus$ | async)[viewer.hduId]; let hdu;">
+          <div fxLayout="row" fxFlexFill *ngIf="(hdus$ | async)[viewer.hduIds[0]]; let hdu;">
             <div
               fxFlex="1 1 auto"
               class="label"
@@ -68,7 +68,7 @@
       </ng-template>
       <app-workbench-viewer
         (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)"
-        [hduId]="viewer.hduId"
+        [hduId]="viewer.hduIds[0]"
         [active]="selectedViewerId == viewer.viewerId && hasFocus"
         [markers]="viewer.markers"
         (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"

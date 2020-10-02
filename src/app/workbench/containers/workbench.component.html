@@ -103,7 +103,7 @@
               </mat-progress-bar>
             </div>
             <app-workbench-data-file-list
-              [selectedItem]="(focusedHdu$ | async)?.id"
+              [selectedItem]="(selectedItem$ | async)"
               (onSelectionChange)="onFileSelect($event)">
             </app-workbench-data-file-list>
           </div>

@@ -6,7 +6,7 @@ import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
-import { CloseHdu } from '../../../data-files/hdus.actions';
+import { CloseDataFile } from '../../../data-files/data-files.actions';
 
 @Component({
   selector: 'app-image-viewer-status-bar',
@@ -80,7 +80,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.store.dispatch(new CloseHdu(hduId));
+        this.store.dispatch(new CloseDataFile(this.hdu.fileId));
       }
     });
 

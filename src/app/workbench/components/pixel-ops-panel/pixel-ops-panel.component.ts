@@ -37,7 +37,6 @@ import { PixelOpsJobsDialogComponent } from "../pixel-ops-jobs-dialog/pixel-ops-
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
-import { HdusState } from "../../../data-files/hdus.state";
 import {
   HideCurrentPixelOpsJobState,
   SetActiveTool,
@@ -211,7 +210,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     ).pipe(
       filter(([data, hdus]) => hdus != null),
       map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
         return data.auxHduIds
           .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
@@ -222,7 +221,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     let imageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
       filter(([data, hdus]) => hdus != null),
       map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
         return data.hduIds
           .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
@@ -232,7 +231,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
     this.pixelOpVariables$ = combineLatest(imageHdus$, auxImageHdus$).pipe(
       map(([imageFiles, auxImageHdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
         return [
           {
             name: "aux_img",

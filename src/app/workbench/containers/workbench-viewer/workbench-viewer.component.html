@@ -8,11 +8,11 @@
       <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [hdus]="[(hdus$ | async)[hduId]]"
       [transformation]="(transformation$ | async)" (onImageMove)="handleImageMove($event)"
       (onImageClick)="handleImageClick($event)">
-      <app-image-viewer-marker-overlay *ngIf="(hdus$ | async)[hduId]" [hdu]="(hdus$ | async)[hduId]"
+      <!-- <app-image-viewer-marker-overlay *ngIf="(hdus$ | async)[hduId]" [hdu]="(hdus$ | async)[hduId]"
         [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
         [transform]="(transformation$ | async)?.imageToViewportTransform" [markers]="markers"
         (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;" class="marker-overlay">
-      </app-image-viewer-marker-overlay>
+      </app-image-viewer-marker-overlay> -->
     </div>
     
 

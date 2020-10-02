@@ -37,8 +37,85 @@
   <mat-row *matRowDef="let row; columns: allowMultiSelection ? ['select', 'name'] : ['name'];"></mat-row>
 </mat-table> -->
 
-<tree-root [nodes]="nodes$ | async" [options]="options"></tree-root>
+<!-- <tree-root [nodes]="nodes$ | async" [options]="options"></tree-root> -->
 
+<mat-table
+  app-cell-focuser
+  #cellFocuser="cellFocuser"
+  #table
+  [dataSource]="(rows$ | async)"
+  [trackBy]="trackByFn"
+  class="data-file-list"
+>
+  <!-- Name Column -->
+  <ng-container matColumnDef="name">
+    <mat-header-cell
+      *matHeaderCellDef
+      class="select-header-cell"
+      app-focusable-cell
+      [rowIndex]="0"
+      [columnIndex]="0"
+      [cellInTabOrder]="true"
+    >
+      Name
+    </mat-header-cell>
+    <mat-cell
+      *matCellDef="let row; let rowIndex = index"
+      app-focusable-cell
+      #cell="cell"
+      [rowIndex]="rowIndex"
+      [columnIndex]="0"
+      [cellInTabOrder]="true"
+      (click)="onRowClick(row)"
+      (dblclick)="onRowDoubleClick(row)"
+      (keydown.space)="$event.preventDefault()"
+      (mouseenter)="mouseOverFileId = row.id"
+      (mouseleave)="mouseOverFileId = null"
+    >
+      <div
+        fxLayout="row"
+        fxLayoutAlign="start center"
+        fxFlexFill
+        class="item-row data-file-list-item"
+        [class.selected]="selectedItem?.type == row.type && selectedItem?.id == row.id"
+        [ngClass]="{'hdu' : row.type == 'hdu'}"
+      >
+        <div fxFlex="1 1 auto">
+          <span class="filename" style="user-select: none">{{ row.name }}</span>
+        </div>
+        <div fxFlex="0 0 60px" style="text-align: right;" *ngIf="row.type == 'file'">
+          <!-- <button
+            [hidden]="mouseOverFileId != row.id || !row.modified"
+            mat-icon-button
+            class="small mr-2"
+            aria-label="Save File"
+            (click)="saveFile(row.id)"
+            matTooltip="Save File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>save</mat-icon>
+          </button>
+          <button
+            [hidden]="mouseOverFileId != row.id && !row.modified"
+            mat-icon-button
+            class="small"
+            aria-label="Close File"
+            (click)="closeFile(row.id)"
+            matTooltip="Close File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>{{
+              mouseOverFileId === row.id || !row.modified
+                ? "clear"
+                : "fiber_manual_record"
+            }}</mat-icon>
+          </button> -->
+        </div>
+      </div>
+    </mat-cell>
+  </ng-container>
 
+  <mat-row *matRowDef="let row; columns: ['name']"></mat-row>
+</mat-table>
 
 

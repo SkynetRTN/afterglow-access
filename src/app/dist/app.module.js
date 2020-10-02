@@ -17,7 +17,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 exports.__esModule = true;
-exports.AppModule = exports.workbenchHduStateSanitizer = exports.hduSanitizer = void 0;
+exports.AppModule = exports.workbenchHduStateSanitizer = exports.dataFileSanitizer = void 0;
 var core_1 = require("@angular/core");
 var store_1 = require("@ngxs/store");
 var router_plugin_1 = require("@ngxs/router-plugin");
@@ -46,8 +46,6 @@ var theme_picker_1 = require("./theme-picker");
 var auth_state_1 = require("./auth/auth.state");
 var jobs_state_1 = require("./jobs/jobs.state");
 var data_providers_state_1 = require("./data-providers/data-providers.state");
-var hdus_state_1 = require("./data-files/hdus.state");
-var data_files_state_1 = require("./data-files/data-files.state");
 var workbench_file_states_state_1 = require("./workbench/workbench-file-states.state");
 var workbench_state_1 = require("./workbench/workbench.state");
 var sources_state_1 = require("./workbench/sources.state");
@@ -55,19 +53,20 @@ var phot_data_state_1 = require("./workbench/phot-data.state.");
 var public_api_1 = require("./storage-plugin/public_api");
 var wasm_service_1 = require("./wasm.service");
 var data_file_type_1 = require("./data-files/models/data-file-type");
-function hduSanitizer(v) {
+var data_files_state_1 = require("./data-files/data-files.state");
+function dataFileSanitizer(v) {
     var state = __assign({}, v);
-    state.entities = __assign({}, state.entities);
-    Object.keys(state.entities).forEach(function (key) {
-        var hdu = __assign(__assign({}, state.entities[key]), { header: null, headerLoaded: false, headerLoading: false, wcs: null });
+    state.hduEntities = __assign({}, state.hduEntities);
+    Object.keys(state.hduEntities).forEach(function (key) {
+        var hdu = __assign(__assign({}, state.hduEntities[key]), { header: null, headerLoaded: false, headerLoading: false, wcs: null });
         if (hdu.hduType == data_file_type_1.HduType.IMAGE) {
             hdu = __assign(__assign({}, hdu), { hist: null, histLoaded: false, histLoading: false, tilesInitialized: false, tiles: [] });
         }
-        state.entities[key] = hdu;
+        state.hduEntities[key] = hdu;
     });
     return state;
 }
-exports.hduSanitizer = hduSanitizer;
+exports.dataFileSanitizer = dataFileSanitizer;
 function workbenchHduStateSanitizer(v) {
     var state = __assign({}, v);
     state.entities = __assign({}, state.entities);
@@ -104,13 +103,13 @@ var AppModule = /** @class */ (function () {
                 angular2_hotkeys_1.HotkeyModule.forRoot({
                     disableCheatSheet: true
                 }),
-                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, hdus_state_1.HdusState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchHduStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
+                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchHduStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
                 public_api_1.AfterglowStoragePluginModule.forRoot({
                     key: [
                         auth_state_1.AuthState,
                         jobs_state_1.JobsState,
                         data_providers_state_1.DataProvidersState,
-                        hdus_state_1.HdusState,
+                        data_files_state_1.DataFilesState,
                         data_files_state_1.DataFilesState,
                         workbench_file_states_state_1.WorkbenchHduStates,
                         workbench_state_1.WorkbenchState,
@@ -119,8 +118,8 @@ var AppModule = /** @class */ (function () {
                     ],
                     sanitizations: [
                         {
-                            key: hdus_state_1.HdusState,
-                            sanitize: hduSanitizer
+                            key: data_files_state_1.DataFilesState,
+                            sanitize: dataFileSanitizer
                         },
                         {
                             key: workbench_file_states_state_1.WorkbenchHduStates,

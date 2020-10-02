@@ -11,13 +11,40 @@ var core_1 = require("@angular/core");
 var rxjs_1 = require("rxjs");
 var operators_1 = require("rxjs/operators");
 var data_files_state_1 = require("../../../data-files/data-files.state");
-var hdus_state_1 = require("../../../data-files/hdus.state");
 var WorkbenchDataFileListComponent = /** @class */ (function () {
     function WorkbenchDataFileListComponent(store) {
+        var _this = this;
         this.store = store;
         this.onSelectionChange = new core_1.EventEmitter();
         this.options = {};
-        this.nodes$ = rxjs_1.combineLatest(this.store.select(data_files_state_1.DataFilesState.getEntities), this.store.select(hdus_state_1.HdusState.getEntities)).pipe(operators_1.map(function (_a) {
+        this.dataFiles$ = this.store.select(data_files_state_1.DataFilesState.getDataFiles);
+        this.dataFileEntities$ = this.store.select(data_files_state_1.DataFilesState.getDataFileEntities);
+        this.hduEntities$ = this.store.select(data_files_state_1.DataFilesState.getHduEntities);
+        this.rows$ = this.dataFiles$.pipe(operators_1.map(function (dataFiles) {
+            var result = [];
+            dataFiles.forEach(function (file) {
+                result.push({
+                    id: file.id,
+                    type: 'file',
+                    name: file.name,
+                    data: file
+                });
+                if (file.hduIds.length > 1) {
+                    var hduEntities_1 = _this.store.selectSnapshot(data_files_state_1.DataFilesState.getHduEntities);
+                    file.hduIds.map(function (hduId) { return hduEntities_1[hduId]; })
+                        .sort(function (a, b) { return (a.order > b.order) ? 1 : -1; }).forEach(function (hdu, index) {
+                        result.push({
+                            id: hdu.id,
+                            type: 'hdu',
+                            name: "Channel " + index,
+                            data: hdu
+                        });
+                    });
+                }
+            });
+            return result;
+        }));
+        this.nodes$ = rxjs_1.combineLatest(this.store.select(data_files_state_1.DataFilesState.getDataFileEntities), this.store.select(data_files_state_1.DataFilesState.getHduEntities)).pipe(operators_1.map(function (_a) {
             var fileEntities = _a[0], hduEntities = _a[1];
             return Object.values(fileEntities)
                 .sort(function (a, b) { return (a.name > b.name) ? 1 : -1; })
@@ -48,14 +75,17 @@ var WorkbenchDataFileListComponent = /** @class */ (function () {
     WorkbenchDataFileListComponent.prototype.trackByFn = function (index, value) {
         return value.id;
     };
-    WorkbenchDataFileListComponent.prototype.onRowClick = function (file, hdu) {
-        // if (file.id == this.selectedFileId) return;
-        // this.selectedFileId = file.id;
-        // this.onSelectionChange.emit({ file: file, doubleClick: false });
+    WorkbenchDataFileListComponent.prototype.onRowClick = function (item) {
+        if (this.selectedItem.type == item.type && this.selectedItem.id == item.id)
+            return;
+        this.selectedItem = item;
+        this.onSelectionChange.emit({ item: item, doubleClick: false });
     };
-    WorkbenchDataFileListComponent.prototype.onRowDoubleClick = function (file, hdu) {
-        // this.selectedFileId = file.id;
-        // this.onSelectionChange.emit({ file: file, doubleClick: true });
+    WorkbenchDataFileListComponent.prototype.onRowDoubleClick = function (item) {
+        if (this.selectedItem.type == item.type && this.selectedItem.id == item.id)
+            return;
+        this.selectedItem = item;
+        this.onSelectionChange.emit({ item: item, doubleClick: true });
     };
     __decorate([
         core_1.Input()

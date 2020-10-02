@@ -3,7 +3,7 @@ import { BlendMode } from './blend-mode';
 
 export interface Viewer {
   viewerId: string;
-  hduId: string;
+  hduIds: string[];
   panEnabled: boolean;
   zoomEnabled: boolean;
   markers: Marker[];

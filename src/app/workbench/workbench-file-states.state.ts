@@ -2,7 +2,7 @@ import { State, Action, Selector, StateContext, Store, Actions } from '@ngxs/sto
 import { Point, Matrix, Rectangle } from 'paper';
 import { RenormalizeImageHdu, NormalizeImageTile, UpdateNormalizer, AddRegionToHistory, UndoRegionSelection, RedoRegionSelection, CenterRegionInViewport, UpdatePhotometryFileState, ResetImageTransform, SetViewportTransform, ZoomTo, ZoomBy, UpdateCurrentViewportSize, SetImageTransform, MoveBy, InitializeWorkbenchHduState, RotateBy, Flip, StartLine, UpdateLine, UpdatePlotterFileState, UpdateSonifierFileState, ClearRegionHistory, SetProgressLine, SonificationRegionChanged, UpdateCustomMarker, AddCustomMarkers, RemoveCustomMarkers, SelectCustomMarkers, DeselectCustomMarkers, SetCustomMarkerSelection, AddPhotDatas, RemoveAllPhotDatas, RemovePhotDatas } from './workbench-file-states.actions';
 import { WorkbenchImageHduState, WorkbenchTableHduState, IWorkbenchHduState } from './models/workbench-file-state';
-import { InitializeImageTiles, LoadHduHeaderSuccess, CloseHduSuccess } from '../data-files/hdus.actions';
+import { InitializeImageTiles, LoadHduHeaderSuccess, CloseHduSuccess } from '../data-files/data-files.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { HduType } from '../data-files/models/data-file-type';
 import { grayColorMap } from './models/color-map';
@@ -10,7 +10,7 @@ import { StretchMode } from './models/stretch-mode';
 import { SonifierRegionMode } from './models/sonifier-file-state';
 import { ImageTile } from '../data-files/models/image-tile';
 import { getYTileDim, getHeight, getXTileDim, getWidth, ImageLayerMode, ImageHdu, PixelType } from '../data-files/models/data-file';
-import { HdusState, HdusStateModel } from '../data-files/hdus.state';
+import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
 import { normalize } from './models/pixel-normalizer';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
@@ -130,7 +130,7 @@ export class WorkbenchHduStates {
   public initializeImageFileState({ getState, setState, dispatch }: StateContext<WorkbenchHduStatesModel>, { hduIds }: InitializeWorkbenchHduState) {
     setState((state: WorkbenchHduStatesModel) => {
       hduIds.forEach(hduId => {
-        let hdus = this.store.selectSnapshot(HdusState.getEntities);
+        let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
         if (!(hduId in hdus)) return;
         let hdu = hdus[hduId];
 
@@ -218,7 +218,7 @@ export class WorkbenchHduStates {
     setState((state: WorkbenchHduStatesModel) => {
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let normalization = hduState.normalization;
-      let hdus = this.store.selectSnapshot(HdusState.getEntities);
+      let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
       let imageHdu = hdus[hduId] as ImageHdu;
       let tiles: ImageTile<Uint32Array>[] = [];
 
@@ -290,7 +290,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
     
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let normalization = hduState.normalization;
       let tile = normalization.tiles[tileIndex];
@@ -309,7 +309,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let normalizer = hduState.normalization.normalizer;
       hduState.normalization.normalizer = {
@@ -330,7 +330,7 @@ export class WorkbenchHduStates {
     let state = getState();
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
-    let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
     let hduState = state.entities[hduId] as WorkbenchImageHduState;
     let sonifierState = hduState.sonificationPanelState;
     //add effects for image file selection
@@ -358,7 +358,7 @@ export class WorkbenchHduStates {
     let state = getState();
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
-    let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
     let hduState = state.entities[hduId] as WorkbenchImageHduState;
     if (hduState.sonificationPanelState.regionMode == SonifierRegionMode.CUSTOM) {
       dispatch(new SonificationRegionChanged(hduId));
@@ -370,7 +370,7 @@ export class WorkbenchHduStates {
   public sonificationRegionChanged({ getState, setState, dispatch }: StateContext<WorkbenchHduStatesModel>, { hduId }: SonificationRegionChanged) {
     let state = getState();
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
-    let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
     let hduState = state.entities[hduId] as WorkbenchImageHduState;
     let sonifierState = hduState.sonificationPanelState;
     let transformationState = hduState.transformation;
@@ -519,7 +519,7 @@ export class WorkbenchHduStates {
   public centerRegionInViewport({ getState, setState, dispatch }: StateContext<WorkbenchHduStatesModel>, { hduId, region, viewportSize }: CenterRegionInViewport) {
     let state = getState();
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
-    let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
     let hduState = state.entities[hduId] as WorkbenchImageHduState;
     let transformationState = hduState.transformation;
 
@@ -552,7 +552,7 @@ export class WorkbenchHduStates {
   public zoomTo({ getState, setState, dispatch }: StateContext<WorkbenchHduStatesModel>, { hduId, scale, anchorPoint }: ZoomTo) {
     let state = getState();
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
-    let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
     let hduState = state.entities[hduId] as WorkbenchImageHduState;
     let transformationState = hduState.transformation;
 
@@ -568,7 +568,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -623,7 +623,7 @@ export class WorkbenchHduStates {
 
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -673,7 +673,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -697,7 +697,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -721,7 +721,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -746,7 +746,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -778,7 +778,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -804,7 +804,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let transformation = hduState.transformation;
 
@@ -820,7 +820,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let plotterState = hduState.plottingPanelState;
 
@@ -844,7 +844,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let plotterState = hduState.plottingPanelState;
 
@@ -863,7 +863,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let plotterState = hduState.plottingPanelState;
 
@@ -883,7 +883,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let markerState = hduState.customMarkerPanelState;
       if (markerState.ids.includes(markerId)) {
@@ -903,7 +903,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let markerState = hduState.customMarkerPanelState;
 
@@ -932,7 +932,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let markerState = hduState.customMarkerPanelState;
 
@@ -953,7 +953,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let markerState = hduState.customMarkerPanelState;
       markers.forEach(marker => {
@@ -972,7 +972,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let markerState = hduState.customMarkerPanelState;
       markers.forEach(marker => {
@@ -991,7 +991,7 @@ export class WorkbenchHduStates {
     if(!(hduId in state.entities) || state.entities[hduId].hduType != HduType.IMAGE) return;
 
     setState((state: WorkbenchHduStatesModel) => {
-      let hdu = this.store.selectSnapshot(HdusState.getEntities)[hduId] as ImageHdu;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
       let hduState = state.entities[hduId] as WorkbenchImageHduState;
       let markerState = hduState.customMarkerPanelState;
 
@@ -1010,7 +1010,7 @@ export class WorkbenchHduStates {
     setState((state: WorkbenchHduStatesModel) => {
       photDatas.forEach(d => {
         if (!d.hduId || !(d.hduId in state.entities) || (state.entities[d.hduId].hduType != HduType.IMAGE) || !d.sourceId) return;
-        let hdu = this.store.selectSnapshot(HdusState.getEntities)[d.hduId] as ImageHdu;
+        let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[d.hduId] as ImageHdu;
         let hduState = state.entities[d.hduId] as WorkbenchImageHduState;
         let photometryPanelState = hduState.photometryPanelState;
         photometryPanelState.sourcePhotometryData[d.sourceId] = d;

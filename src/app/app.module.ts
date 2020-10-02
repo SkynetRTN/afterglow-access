@@ -32,8 +32,6 @@ import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
-import { HdusState, HdusStateModel } from './data-files/hdus.state';
-import { DataFilesState, DataFilesStateModel } from './data-files/data-files.state';
 import { WorkbenchHduStates, WorkbenchHduStatesModel } from './workbench/workbench-file-states.state';
 import { WorkbenchState } from './workbench/workbench.state';
 import { SourcesState } from './workbench/sources.state';
@@ -43,19 +41,20 @@ import { WasmService } from './wasm.service';
 import { HduType } from './data-files/models/data-file-type';
 import { ImageHdu, IHdu } from './data-files/models/data-file';
 import { WorkbenchImageHduState } from './workbench/models/workbench-file-state';
+import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
 
-export function hduSanitizer(v) {
+export function dataFileSanitizer(v) {
   let state = {
     ...v
-   } as HdusStateModel;
+   } as DataFilesStateModel;
 
-  state.entities = {
-    ...state.entities
+  state.hduEntities = {
+    ...state.hduEntities
   }
 
-  Object.keys(state.entities).forEach(key => {
+  Object.keys(state.hduEntities).forEach(key => {
     let hdu : IHdu = {
-      ...state.entities[key],
+      ...state.hduEntities[key],
       header: null,
       headerLoaded: false,
       headerLoading: false,
@@ -73,7 +72,7 @@ export function hduSanitizer(v) {
       } as ImageHdu
     }
 
-    state.entities[key] = hdu;
+    state.hduEntities[key] = hdu;
 
   })
   return state;
@@ -130,7 +129,7 @@ export function workbenchHduStateSanitizer(v) {
       disableCheatSheet: true
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, HdusState, DataFilesState, WorkbenchHduStates, WorkbenchState, SourcesState, PhotDataState],
+      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchHduStates, WorkbenchState, SourcesState, PhotDataState],
       { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -138,7 +137,7 @@ export function workbenchHduStateSanitizer(v) {
         AuthState,
         JobsState,
         DataProvidersState,
-        HdusState,
+        DataFilesState,
         DataFilesState,
         WorkbenchHduStates,
         WorkbenchState,
@@ -147,8 +146,8 @@ export function workbenchHduStateSanitizer(v) {
       ],
       sanitizations: [
         {
-          key: HdusState,
-          sanitize: hduSanitizer
+          key: DataFilesState,
+          sanitize: dataFileSanitizer
         },
         {
           key: WorkbenchHduStates,

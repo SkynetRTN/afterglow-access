@@ -27,7 +27,7 @@ import { Subscription } from "rxjs";
 import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
-import { HdusState } from "../../../data-files/hdus.state";
+import { DataFilesState } from "../../../data-files/data-files.state";
 import { WorkbenchHduStates } from "../../workbench-file-states.state";
 import {
   SetFocusedViewer,
@@ -45,7 +45,6 @@ import {
 import { MatMenuTrigger } from "@angular/material/menu";
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { IWorkbenchHduState } from '../../models/workbench-file-state';
-import { DataFilesState } from '../../../data-files/data-files.state';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -127,8 +126,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     public viewContainerRef: ViewContainerRef
   ) {
     
-    this.hdus$ = this.store.select(HdusState.getEntities);
-    this.files$ = this.store.select(DataFilesState.getEntities);
+    this.hdus$ = this.store.select(DataFilesState.getHduEntities);
+    this.files$ = this.store.select(DataFilesState.getDataFileEntities);
     this.hduStates$ = this.store.select(WorkbenchHduStates.getEntities);
     this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerIds).pipe(
       map(ids => ids.map(id => 'tab-' + id)),
@@ -221,7 +220,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
   public zoomToFit(hduId: string, padding: number = 0) {
     // TODO: LAYER
-    let hdus = this.store.selectSnapshot(HdusState.getEntities);
+    let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let hdu = hdus[hduId] as ImageHdu;
     if (hdu) {
       this.store.dispatch(

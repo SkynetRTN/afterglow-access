@@ -3,7 +3,6 @@ import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PhotData } from './models/source-phot-data';
 import { UpdatePhotData } from './phot-data.actions';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { HdusStateModel, HdusState } from '../data-files/hdus.state';
 import { ResetState } from '../auth/auth.actions';
 
 export interface PhotDataStateModel {
