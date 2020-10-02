@@ -5,7 +5,7 @@
   </div> -->
   <div fxFlex="1 1 100%">
     <div class="viewer-marker-wrapper h-100">
-      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [layers]="[]"
+      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [hdus]="[(hdus$ | async)[hduId]]"
       [transformation]="(transformation$ | async)" (onImageMove)="handleImageMove($event)"
       (onImageClick)="handleImageClick($event)">
       <app-image-viewer-marker-overlay *ngIf="(hdus$ | async)[hduId]" [hdu]="(hdus$ | async)[hduId]"

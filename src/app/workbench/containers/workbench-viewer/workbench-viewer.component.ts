@@ -37,7 +37,6 @@ import { BehaviorSubject, Subject } from "rxjs";
 import {
   CanvasMouseEvent,
   PanZoomCanvasComponent,
-  PanZoomCanvasLayer
 } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import {
   MarkerMouseEvent,
