@@ -18,7 +18,6 @@ import {
   ImageHdu
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
-import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({
@@ -51,8 +50,8 @@ export class PlotterComponent implements OnInit, OnChanges {
   private crosshairX: number = null;
   private crosshairY: number = null;
   
-  public data : Array<Plotly.Data> = [];
-  public layout: Partial<Plotly.Layout> = {
+  public data : Array<any> = [];
+  public layout: Partial<any> = {
     width: null,
     height: null,
     xaxis: {
@@ -88,7 +87,7 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   
 
-  public config: Partial<Plotly.Config> = {
+  public config: Partial<any> = {
     scrollZoom: true,
     displaylogo: false,
     modeBarButtons: [

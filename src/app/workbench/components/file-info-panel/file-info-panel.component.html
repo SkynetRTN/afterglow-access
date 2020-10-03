@@ -1,8 +1,8 @@
-<div *ngIf="!file?.header" class="alert alert-info" i18n>
+<div *ngIf="!hdu?.header" class="alert alert-info" i18n>
   Select a data file to see file info.
 </div>
 
-<div *ngIf="file?.header">
+<div *ngIf="hdu?.header">
   <div class="p-2">
     <mat-slide-toggle [color]="'primary'" [checked]="config?.showRawHeader" (change)="onShowRawHeaderChange($event)" i18n>
       Show Raw Header Data
@@ -39,7 +39,7 @@
   </div>
 
   <div *ngIf="config?.showRawHeader">
-    <table mat-table [dataSource]="file?.header">
+    <table mat-table [dataSource]="hdu?.header">
       <ng-container matColumnDef="key">
         <th mat-header-cell *matHeaderCellDef i18n>Key</th>
         <td mat-cell *matCellDef="let row">

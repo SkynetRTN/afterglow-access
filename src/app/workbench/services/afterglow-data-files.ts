@@ -4,7 +4,7 @@ import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
 import { appConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { DataFile, Header, ImageLayerPrecision, PixelType, ImageHdu } from "../../data-files/models/data-file";
+import { DataFile, Header, PixelPrecision, PixelType, ImageHdu } from "../../data-files/models/data-file";
 import { ImageHist } from "../../data-files/models/image-hist";
 import { Region } from "../models/region";
 import { Source, PosType } from "../models/source";
@@ -105,7 +105,7 @@ export class AfterglowDataFileService {
       );
   }
 
-  getPixels(hduId: string, precision: ImageLayerPrecision, region: Region = null): Observable<PixelType> {
+  getPixels(hduId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
     let params: HttpParams = new HttpParams();
     if (region) {
       params = params
@@ -123,19 +123,19 @@ export class AfterglowDataFileService {
       .pipe(
         map(resp => {
           switch(precision) {
-            case(ImageLayerPrecision.uint8): {
+            case(PixelPrecision.uint8): {
               return new Uint8Array(resp)
             }
-            case(ImageLayerPrecision.uint16): {
+            case(PixelPrecision.uint16): {
               return new Uint16Array(resp);
             }
-            case(ImageLayerPrecision.uint32): {
+            case(PixelPrecision.uint32): {
               return new Uint32Array(resp);
             }
-            case(ImageLayerPrecision.float32): {
+            case(PixelPrecision.float32): {
               return new Float32Array(resp);
             }
-            case(ImageLayerPrecision.float64): {
+            case(PixelPrecision.float64): {
               return new Float64Array(resp);
             }
 

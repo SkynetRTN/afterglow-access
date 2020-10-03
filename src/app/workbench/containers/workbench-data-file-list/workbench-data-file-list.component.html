@@ -43,7 +43,7 @@
   app-cell-focuser
   #cellFocuser="cellFocuser"
   #table
-  [dataSource]="(rows$ | async)"
+  [dataSource]="items"
   [trackBy]="trackByFn"
   class="data-file-list"
 >
@@ -81,7 +81,10 @@
         [ngClass]="{'hdu' : row.type == 'hdu'}"
       >
         <div fxFlex="1 1 auto">
-          <span class="filename" style="user-select: none">{{ row.name }}</span>
+          <span class="filename" style="user-select: none">
+            <ng-container *ngIf="row.type == 'file'">{{row.name}}</ng-container>
+            <ng-container *ngIf="row.type == 'hdu'">{{getHduName(row)}}</ng-container>
+          </span>
         </div>
         <div fxFlex="0 0 60px" style="text-align: right;" *ngIf="row.type == 'file'">
           <!-- <button

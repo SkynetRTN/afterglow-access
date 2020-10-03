@@ -15,6 +15,7 @@ import { CloseDataFile } from '../../../data-files/data-files.actions';
 })
 export class ImageViewerTitleBarComponent implements OnInit {
   @Input() hdu: ImageHdu;
+  @Input() file: DataFile;
   @Output() downloadSnapshot = new EventEmitter();
 
   private zoomStepFactor: number = 0.75;

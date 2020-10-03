@@ -1,22 +1,22 @@
-<div *ngIf="files">
+<div *ngIf="hdus">
   <form [formGroup]="alignForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Select Image(s) to Align</mat-label>
         <mat-select multiple formControlName="selectedImageFileIds">
           <mat-option
-            *ngFor="let imageFile of files"
-            [value]="imageFile.id"
-            >{{ imageFile.name }}</mat-option
+            *ngFor="let hdu of hdus"
+            [value]="hdu.id"
+            >{{ fileEntities[hdu.fileId].name }}</mat-option
           >
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectImageFiles(files)" i18n-aria-label aria-label="Select All Files">
+      <button mat-icon-button (click)="selectHdus(hdus)" i18n-aria-label aria-label="Select All Files">
         <mat-icon>select_all</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="selectImageFiles([])" i18n-aria-label aria-label="Clear Selection">
+      <button mat-icon-button (click)="selectHdus([])" i18n-aria-label aria-label="Clear Selection">
         <mat-icon>clear</mat-icon>
       </button>
     </div>
@@ -25,13 +25,13 @@
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Active Image File</mat-label>
         <mat-select
-          [value]="selectedFile?.id"
-          (selectionChange)="onActiveImageChange($event)"
+          [value]="primaryHdu?.id"
+          (selectionChange)="onPrimaryHduChange($event)"
         >
           <mat-option
-            *ngFor="let imageFile of selectedImageFiles$ | async"
-            [value]="imageFile.id"
-            >{{ imageFile.name }}</mat-option
+            *ngFor="let hdu of hdus"
+            [value]="hdu.id"
+            >{{ fileEntities[hdu.fileId].name }}</mat-option
           >
         </mat-select>
       </mat-form-field>
@@ -51,9 +51,9 @@
       </div>
     </div>
 
-    <div *ngIf="activeImageIsSelected$ | async">
+    <div *ngIf="primaryHduIsSelected$ | async">
       <div *ngIf="(alignFormData$ | async)?.mode == 'astrometric'">
-        <div *ngIf="!(activeImageHasWcs$ | async); else hasWcs">
+        <div *ngIf="!(primaryHduHasWcs$ | async); else hasWcs">
           <div class="alert alert-warning" style="margin-top: 10px;" i18n>
             This image does not have astrometric data in its header and
             cannot be aligned using the selected mode.

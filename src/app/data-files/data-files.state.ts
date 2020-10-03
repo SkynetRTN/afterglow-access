@@ -1,5 +1,5 @@
 import { State, Action, Selector, StateContext, Actions, Store, ofActionSuccessful } from '@ngxs/store';
-import { DataFile, ImageHdu, IHdu, PixelType, getYTileDim, getXTileDim, getWidth, getHeight } from './models/data-file';
+import { DataFile, ImageHdu, IHdu, PixelType, getYTileDim, getXTileDim, getWidth, getHeight, PixelPrecision } from './models/data-file';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { merge, combineLatest } from "rxjs";
 import { catchError, tap, flatMap, filter, takeUntil } from "rxjs/operators";
@@ -225,6 +225,7 @@ export class DataFilesState {
         //TODO: use server values for fileID and order
         coreFiles.forEach(coreFile => {
           let hdu: IHdu = {
+            type: 'hdu',
             id: coreFile.id.toString(),
             //fileId: coreFile.group_id,
             fileId: `FILE_${coreFile.id.toString()}`,
@@ -255,6 +256,7 @@ export class DataFilesState {
           let dataFile = dataFiles.find(dataFile => dataFile.id == hdu.fileId);
           if (!dataFile) {
             dataFile = {
+              type: 'file',
               id: hdu.fileId,
               assetPath: coreFile.asset_path,
               dataProviderId: coreFile.data_provider,
@@ -395,13 +397,21 @@ export class DataFilesState {
           hdu.wcs = new Wcs(wcsHeader);
 
           if (hdu.hduType == HduType.IMAGE) {
-            /* Initialize Image Tiles*/
             let imageHdu = hdu as ImageHdu;
+
+            //extract width and height from the header using FITS standards
+            imageHdu.width = getWidth(imageHdu);
+            imageHdu.height = getHeight(imageHdu);
+            imageHdu.precision = PixelPrecision.float32;
+
+            /* Initialize Image Tiles*/
+            
             let tiles: ImageTile<PixelType>[] = [];
 
             for (let j = 0; j < getYTileDim(imageHdu); j += 1) {
               let tw = imageHdu.tileWidth;
               let th = imageHdu.tileHeight;
+              
 
               if (j === getYTileDim(imageHdu) - 1) {
                 th -= (j + 1) * imageHdu.tileHeight - getHeight(imageHdu);
@@ -426,6 +436,7 @@ export class DataFilesState {
                 });
               }
             }
+            
 
             imageHdu.tiles = tiles;
             imageHdu.tilesInitialized = true;

@@ -1,25 +1,22 @@
 <div id="image-viewer-wrapper" fxLayout="column" class="h-100">
-  <!-- <div fxFlex="0 0 auto">
-    <app-image-viewer-title-bar [imageFile]="(files$ | async)[fileId]" (downloadSnapshot)="handleDownloadSnapshot()"
-      [class.active]="active"></app-image-viewer-title-bar>
-  </div> -->
   <div fxFlex="1 1 100%">
     <div class="viewer-marker-wrapper h-100">
-      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [hdus]="[(hdus$ | async)[hduId]]"
+      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [layers]="layers$ | async"
       [transformation]="(transformation$ | async)" (onImageMove)="handleImageMove($event)"
-      (onImageClick)="handleImageClick($event)">
-      <!-- <app-image-viewer-marker-overlay *ngIf="(hdus$ | async)[hduId]" [hdu]="(hdus$ | async)[hduId]"
+      (onImageClick)="handleImageClick($event)" (onMoveBy)="handleMoveBy($event)" (onZoomBy)="handleZoomBy($event)" (onLoadTile)="handleLoadTile($event)"
+      (onViewportSizeChange)="handleViewportSizeChange($event)">
+      <app-image-viewer-marker-overlay
         [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
         [transform]="(transformation$ | async)?.imageToViewportTransform" [markers]="markers"
         (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;" class="marker-overlay">
-      </app-image-viewer-marker-overlay> -->
+      </app-image-viewer-marker-overlay>
     </div>
     
 
     </div>
   </div>
   <div fxFlex="0 0 auto">
-    <app-image-viewer-status-bar [class.active]="active" [hdu]="(hdus$ | async)[hduId]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
+    <app-image-viewer-status-bar *ngIf="data.type == 'hdu'" [class.active]="active" [hdu]="(hdus$ | async)[data.id]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
   </div>
 </div>
 

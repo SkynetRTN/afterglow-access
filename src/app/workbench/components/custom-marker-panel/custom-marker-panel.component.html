@@ -8,7 +8,7 @@
         <div class="form-group">
           <mat-slide-toggle
             [checked]="config?.centroidClicks"
-            [labelPosition]="before"
+            [labelPosition]="'before'"
             (change)="onCentroidClicksChange($event)"
             color="primary"
             i18n
@@ -23,7 +23,7 @@
             [checked]="config?.usePlanetCentroiding"
             [disabled]="!config?.centroidClicks"
             color="primary"
-            [labelPosition]="before"
+            [labelPosition]="'before'"
             (change)="onPlanetCentroidingChange($event)"
             i18n
           >

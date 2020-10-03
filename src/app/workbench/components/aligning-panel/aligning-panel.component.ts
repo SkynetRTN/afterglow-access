@@ -11,7 +11,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
 import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectDataFileListItem } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
-import { ImageHdu } from '../../../data-files/models/data-file';
+import { ImageHdu, DataFile } from '../../../data-files/models/data-file';
 
 @Component({
   selector: 'app-aligning-panel',
@@ -36,6 +36,15 @@ export class AlignerPageComponent implements OnInit {
     return this.hdus$.getValue();
   }
   private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
+
+  @Input("fileEntities")
+  set fileEntities(fileEntities: {[id: string]: DataFile}) {
+    this.fileEntities$.next(fileEntities);
+  }
+  get fileEntities() {
+    return this.fileEntities$.getValue();
+  }
+  private fileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
 
   @Input("config")
   set config(config: AligningPanelConfig) {

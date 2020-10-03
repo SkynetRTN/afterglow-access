@@ -1,12 +1,12 @@
-<div *ngIf="!selectedFile?.headerLoaded" class="alert alert-info" i18n>
+<div *ngIf="!primaryHdu?.headerLoaded" class="alert alert-info" i18n>
   Select a data file to see options.
 </div>
-<div *ngIf="selectedFile; let activeImageFile">
-  <div *ngIf="selectedFile?.headerLoaded">
+<div *ngIf="primaryHdu; let activeImageFile">
+  <div *ngIf="primaryHdu?.headerLoaded">
     <div class="mb-3">
       <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
-        [value]="selectedFile?.wcs?.isValid() ? config?.coordMode : 'pixel'"
-        [disabled]="!selectedFile?.wcs?.isValid()" (change)="onCoordModeChange($event)">
+        [value]="primaryHdu?.wcs?.isValid() ? config?.coordMode : 'pixel'"
+        [disabled]="!primaryHdu?.wcs?.isValid()" (change)="onCoordModeChange($event)">
         <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
         <mat-button-toggle value="sky">Sky Coordinate Mode</mat-button-toggle>
       </mat-button-toggle-group>
@@ -199,28 +199,28 @@
 
     <hr>
     <div>
-      <p i18n>Use batch photometry to photometer all of your sources in multiple files.</p>
+      <p i18n>Use batch photometry to photometer all of your sources in multiple hdus.</p>
 
 
-      <div *ngIf="files">
+      <div *ngIf="hdus">
         <form [formGroup]="batchPhotForm">
           <div>
             <mat-form-field appearance="outline" style="width: 300px;">
               <mat-label i18n>Select Image(s) to Photometer</mat-label>
               <mat-select multiple formControlName="selectedImageFileIds">
-                <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}
+                <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">{{ dataFileEntities[hdu.fileId].name }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="selectImageFiles(files)">
+            <button mat-icon-button (click)="selectHdus(hdus)">
               <mat-icon>select_all</mat-icon>
             </button>
 
-            <button mat-icon-button (click)="selectImageFiles([])">
+            <button mat-icon-button (click)="selectHdus([])">
               <mat-icon>clear</mat-icon>
             </button>
-            <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()" [disabled]="config?.batchPhotFormData?.selectedImageFileIds?.length == 0 || sources?.length == 0">
+            <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()" [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0">
               <mat-icon>wb_incandescent</mat-icon>
             </button>
           </div>

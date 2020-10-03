@@ -12,7 +12,7 @@ export type Header = Array<HeaderEntry>;
 export type DataLayer =  ImageHdu | TableHdu;
 export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
 
-export enum ImageLayerPrecision {
+export enum PixelPrecision {
   uint8 = 'uint8',
   uint16 = 'uint16',
   uint32 = 'uint32',
@@ -26,6 +26,7 @@ export enum ImageLayerMode {
 }
 
 export interface DataFile {
+  readonly type: 'file';
   id: string;
   name: string;
   dataProviderId: string;
@@ -34,6 +35,7 @@ export interface DataFile {
 }
 
 export interface IHdu {
+  readonly type: 'hdu';
   readonly hduType: HduType;
   id: string;
   fileId: string;
@@ -76,8 +78,7 @@ export interface ITiledImageData<T> {
 export interface ImageHdu extends IHdu, ITiledImageData<PixelType> {
   readonly hduType: HduType.IMAGE;
   readonly mode: ImageLayerMode;
-  readonly precision: ImageLayerPrecision;
-  
+  precision: PixelPrecision;
   hist: ImageHist;
   histLoaded: boolean;
   histLoading: boolean;

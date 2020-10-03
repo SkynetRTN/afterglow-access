@@ -13,8 +13,7 @@ import { Source } from './models/source';
 import { Marker } from './models/marker';
 import { Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
-import { DataFile, ImageHdu } from '../data-files/models/data-file';
-import { IDataFileListItem } from './models/data-file-list-item';
+import { DataFile, ImageHdu, IHdu } from '../data-files/models/data-file';
 
 /* Core */
 
@@ -42,7 +41,7 @@ export class SetFullScreenPanel {
 export class SelectDataFileListItem {
   public static readonly type = '[Workbench] Select Data File List Item';
 
-  constructor(public item: IDataFileListItem) { }
+  constructor(public item: DataFile | IHdu) { }
 }
 
 export class SetFocusedViewer {
@@ -87,10 +86,10 @@ export class MoveViewer {
   constructor(public sourceViewerId: string, public targetViewerId: string ) { }
 }
 
-export class SetViewerFile {
+export class SetViewerData {
   public static readonly type = '[Workbench] Set Viewer File';
 
-  constructor(public viewerId: string, public hduId: string) { }
+  constructor(public viewerId: string, public data: {id: string, type: 'file' | 'hdu'}) { }
 }
 
 export class SetViewerMarkers {

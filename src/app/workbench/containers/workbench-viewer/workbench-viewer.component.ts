@@ -23,7 +23,8 @@ import {
   getHeight,
   getDegsPerPixel,
   getCenterTime,
-  IHdu
+  IHdu,
+  ImageHdu
 } from "../../../data-files/models/data-file";
 import {
   Marker,
@@ -37,6 +38,11 @@ import { BehaviorSubject, Subject } from "rxjs";
 import {
   CanvasMouseEvent,
   PanZoomCanvasComponent,
+  MoveByEvent,
+  ZoomByEvent,
+  ViewportSizeChangeEvent,
+  LoadTileEvent,
+  PanZoomCanvasLayer,
 } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import {
   MarkerMouseEvent,
@@ -48,11 +54,15 @@ import { FieldCal } from '../../models/field-cal';
 import { Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';
-import { WorkbenchHduStates } from '../../workbench-file-states.state';
+import { WorkbenchFileStates } from '../../workbench-file-states.state';
 import { Viewer } from '../../models/viewer';
 import { BlendMode } from '../../models/blend-mode';
 import { Transformation } from '../../models/transformation';
-import { IWorkbenchHduState } from '../../models/workbench-file-state';
+import { IWorkbenchHduState, WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { MoveBy, ZoomBy, UpdateCurrentViewportSize, NormalizeImageTile } from '../../workbench-file-states.actions';
+import { LoadImageTilePixels } from '../../../data-files/data-files.actions';
+import { HduType } from '../../../data-files/models/data-file-type';
+import { of } from 'core-js/fn/array';
 
 
 @Component({
@@ -61,14 +71,14 @@ import { IWorkbenchHduState } from '../../models/workbench-file-state';
   styleUrls: ["./workbench-viewer.component.scss"]
 })
 export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
-  @Input("hduIds")
-  set hduIds(hduIds: string[]) {
-    this.hduIds$.next(hduIds);
+  @Input("data")
+  set data(data: DataFile | IHdu) {
+    this.data$.next(data);
   }
-  get hduIds() {
-    return this.hduIds$.getValue();
+  get data() {
+    return this.data$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<string[]>(null);
+  private data$ = new BehaviorSubject< DataFile | IHdu>(null);
   
   
   @Input()
@@ -95,6 +105,8 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
 
   // markers$: Observable<Marker[]>;
   hdus$: Observable<{[id: string]: IHdu}>;
+  imageHdus$: Observable<ImageHdu[]>;
+  layers$: Observable<PanZoomCanvasLayer[]>;
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
   
@@ -103,7 +115,6 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   showAllSources$: Observable<boolean>;
-  hduState$: Observable<IWorkbenchHduState>;
   imageMouseX: number = null;
   imageMouseY: number = null;
 
@@ -114,27 +125,53 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(private store: Store, private sanitization: DomSanitizer) {
     this.hdus$ = this.store.select(DataFilesState.getHduEntities);
+    this.imageHdus$ = this.data$.pipe(
+      distinctUntilChanged((a,b) => a.type == b.type && a.id == b.id),
+      map(item => {
+        let dataFileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let hdus = (item.type == 'hdu') ? [hduEntities[item.id]] : dataFileEntities[item.id].hduIds.map(id => hduEntities[id]);
+        return hdus.filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[];
+      })
+    )
+
+
+    this.layers$ = this.imageHdus$.pipe(
+      switchMap(imageHdus => {
+        return combineLatest(
+          ...imageHdus.map(hdu => {
+             return this.store.select(WorkbenchFileStates.getNormalization).pipe(
+               map(fn => fn(hdu.id)),
+               distinctUntilChanged(),
+               map(normalization => {
+                 return {  
+                  id: hdu.id,
+                  alpha: 1.0,
+                  blendMode: BlendMode.Normal,
+                  data: normalization
+                } as PanZoomCanvasLayer
+               })
+             )
+          })
+        )
+      })
+    )
 
     this.sources$ = this.store.select(SourcesState.getSources);
-    // this.customMarkers$ = this.store.select(CustomMarkersState.getCustomMarkers);
-    // this.selectedCustomMarkers$ = this.store.select(CustomMarkersState.getSelectedCustomMarkers);
-    this.hduState$ = combineLatest(
-      this.hduIds$,
-      this.store.select(WorkbenchHduStates.getEntities)
-    ).pipe(
-      map(([fileId, imageFileStates]) => imageFileStates[fileId]),
-    );
 
-    this.transformation$ = this.hduIds$.pipe(
-      switchMap(fileId => {
-        return this.store.select(WorkbenchHduStates.getTransformation).pipe(
-          map(fn => fn(fileId))
+    
+    this.transformation$ = this.data$.pipe(
+      switchMap(data => {
+        let hduId = data.id;
+        if(data.type == 'file') {
+          hduId = (data as DataFile).hduIds[0];
+        }
+        return this.store.select(WorkbenchFileStates.getTransformation).pipe(
+          map(fn => fn(hduId))
         )
       })
     )
   }
-
-  
 
   ngOnInit() { }
 
@@ -163,6 +200,70 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
 
   handleMarkerClick($event: MarkerMouseEvent) {
     this.onMarkerClick.emit($event);
+  }
+
+  handleMoveBy($event: MoveByEvent) {
+    let hduId = this.data.id;
+    if(this.data.type == 'file') {
+      hduId = (this.data as DataFile).hduIds[0];
+    }
+    
+    this.store.dispatch(new MoveBy(
+      hduId,
+      $event.xShift,
+      $event.yShift
+    ));
+  }
+
+  handleZoomBy($event: ZoomByEvent) {
+    let hduId = this.data.id;
+    if(this.data.type == 'file') {
+      hduId = (this.data as DataFile).hduIds[0];
+    }
+
+    this.store.dispatch(new ZoomBy(
+      hduId,
+      $event.factor,
+      $event.anchor
+    ));
+  }
+
+  handleViewportSizeChange($event: ViewportSizeChangeEvent) {
+    let hduIds = [this.data.id];
+    if(this.data.type == 'file') {
+      hduIds = (this.data as DataFile).hduIds;
+    }
+
+    hduIds.forEach(hduId => {
+      this.store.dispatch(new UpdateCurrentViewportSize(
+        hduId,
+        $event
+      )); 
+    })
+  }
+
+  handleLoadTile($event: LoadTileEvent) {
+    let hduId = $event.layer.id;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
+    if(!hdu.tilesInitialized) return;
+    let rawTile = hdu.tiles[$event.tileIndex]
+    if (!rawTile.pixelsLoaded && !rawTile.pixelsLoading && !rawTile.pixelLoadingFailed) {
+      this.store.dispatch(new LoadImageTilePixels(
+        hduId,
+        rawTile.index
+      ));
+    }
+    else if(rawTile.pixelsLoaded) {
+      let normalization = (this.store.selectSnapshot(WorkbenchFileStates.getHduStateEntities)[hduId] as WorkbenchImageHduState).normalization;
+      if(!normalization.initialized || !normalization.tilesInitialized) return;
+      let normalizedTile = normalization.tiles[rawTile.index];
+      if (normalizedTile && !normalizedTile.pixelsLoaded && !normalizedTile.pixelsLoading && !normalizedTile.pixelLoadingFailed) {
+      this.store.dispatch(new NormalizeImageTile(
+        hduId,
+        normalizedTile.index
+      ));
+      }
+    }
   }
 
   handleDownloadSnapshot() {

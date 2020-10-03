@@ -7,6 +7,11 @@ import { Marker } from "./marker";
 import { CustomMarkerPanelState } from './marker-file-state';
 import { HduType } from '../../data-files/models/data-file-type';
 
+export interface WorkbenchFileState {
+  id: string;
+  transformation: Transformation;
+}
+
 
 export interface IWorkbenchHduState {
   id: string;

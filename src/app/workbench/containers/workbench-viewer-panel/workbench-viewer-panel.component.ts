@@ -28,7 +28,7 @@ import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
-import { WorkbenchHduStates } from "../../workbench-file-states.state";
+import { WorkbenchFileStates } from "../../workbench-file-states.state";
 import {
   SetFocusedViewer,
   CloseViewer,
@@ -128,7 +128,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     
     this.hdus$ = this.store.select(DataFilesState.getHduEntities);
     this.files$ = this.store.select(DataFilesState.getDataFileEntities);
-    this.hduStates$ = this.store.select(WorkbenchHduStates.getEntities);
+    this.hduStates$ = this.store.select(WorkbenchFileStates.getHduStateEntities);
     this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerIds).pipe(
       map(ids => ids.map(id => 'tab-' + id)),
     );
@@ -199,6 +199,30 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // );
 
     // this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
+  }
+
+  public getTabLabel(data: DataFile | IHdu) {
+    let file = this.getFileFromData(data);
+    if(!file) return ''
+
+    let filename = file.name;
+    if(data.type == 'hdu') {
+      let hdu = data as IHdu;
+      if(file.hduIds.length > 1) {
+        filename += ` [Channel ${file.hduIds.indexOf(hdu.id)}]`
+      }
+    }
+    else if(file.hduIds.length > 1) {
+      filename += ` [Composite]`
+    }
+    return filename;
+  }
+
+  public getFileFromData(data: {id: string, type: 'hdu' | 'file'}) {
+    let fileEntities =  this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let hduEntities =  this.store.selectSnapshot(DataFilesState.getHduEntities);
+    if(data.type == 'file') return fileEntities[data.id];
+    return fileEntities[hduEntities[data.id].fileId];
   }
 
   public zoomIn(hduId: string, imageAnchor: { x: number; y: number } = null) {

@@ -46,6 +46,15 @@ export class StackerPageComponent implements OnInit {
   }
   private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
 
+  @Input("dataFileEntities")
+  set dataFileEntities(dataFileEntities: {[id: string]: DataFile}) {
+    this.dataFileEntities$.next(dataFileEntities);
+  }
+  get dataFileEntities() {
+    return this.dataFileEntities$.getValue();
+  }
+  private dataFileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
+
   @Input("config")
   set config(config: StackingPanelConfig) {
     this.config$.next(config);

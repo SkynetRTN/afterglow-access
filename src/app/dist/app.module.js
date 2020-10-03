@@ -69,14 +69,14 @@ function dataFileSanitizer(v) {
 exports.dataFileSanitizer = dataFileSanitizer;
 function workbenchHduStateSanitizer(v) {
     var state = __assign({}, v);
-    state.entities = __assign({}, state.entities);
-    Object.keys(state.entities).forEach(function (key) {
-        var hduState = __assign({}, state.entities[key]);
+    state.hduStateEntities = __assign({}, state.hduStateEntities);
+    Object.keys(state.hduStateEntities).forEach(function (key) {
+        var hduState = __assign({}, state.hduStateEntities[key]);
         if (hduState.hduType == data_file_type_1.HduType.IMAGE) {
             var imageHduState = hduState;
-            hduState = __assign(__assign({}, hduState), { normalization: __assign(__assign({}, imageHduState.normalization), { tiles: [] }) });
+            hduState = __assign(__assign({}, hduState), { normalization: __assign(__assign({}, imageHduState.normalization), { tiles: [], tilesInitialized: false, initialized: false }) });
         }
-        state.entities[key] = hduState;
+        state.hduStateEntities[key] = hduState;
     });
     return state;
 }
@@ -103,7 +103,7 @@ var AppModule = /** @class */ (function () {
                 angular2_hotkeys_1.HotkeyModule.forRoot({
                     disableCheatSheet: true
                 }),
-                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchHduStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
+                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchFileStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
                 public_api_1.AfterglowStoragePluginModule.forRoot({
                     key: [
                         auth_state_1.AuthState,
@@ -111,7 +111,7 @@ var AppModule = /** @class */ (function () {
                         data_providers_state_1.DataProvidersState,
                         data_files_state_1.DataFilesState,
                         data_files_state_1.DataFilesState,
-                        workbench_file_states_state_1.WorkbenchHduStates,
+                        workbench_file_states_state_1.WorkbenchFileStates,
                         workbench_state_1.WorkbenchState,
                         sources_state_1.SourcesState,
                         phot_data_state_1.PhotDataState
@@ -122,7 +122,7 @@ var AppModule = /** @class */ (function () {
                             sanitize: dataFileSanitizer
                         },
                         {
-                            key: workbench_file_states_state_1.WorkbenchHduStates,
+                            key: workbench_file_states_state_1.WorkbenchFileStates,
                             sanitize: workbenchHduStateSanitizer
                         }
                     ],

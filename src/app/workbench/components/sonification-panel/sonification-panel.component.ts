@@ -310,7 +310,7 @@ export class SonificationPanelComponent
 
   ngOnChanges() { }
 
-  private selectSubregionByFrequency(subregion: number) {
+  selectSubregionByFrequency(subregion: number) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
     this.store.dispatch(
       new AddRegionToHistory(this.hdu.id, {
@@ -322,7 +322,7 @@ export class SonificationPanelComponent
     );
   }
 
-  private selectSubregionByTime(subregion: number) {
+  selectSubregionByTime(subregion: number) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
     this.store.dispatch(
       new AddRegionToHistory(this.hdu.id, {
@@ -334,7 +334,7 @@ export class SonificationPanelComponent
     );
   }
 
-  private resetRegionSelection() {
+  resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
     this.store.dispatch(
@@ -347,15 +347,15 @@ export class SonificationPanelComponent
     );
   }
 
-  private undoRegionSelection() {
+  undoRegionSelection() {
     this.store.dispatch(new UndoRegionSelection(this.hdu.id));
   }
 
-  private redoRegionSelection() {
+  redoRegionSelection() {
     this.store.dispatch(new RedoRegionSelection(this.hdu.id));
   }
 
-  private setRegionMode($event: MatButtonToggleChange) {
+  setRegionMode($event: MatButtonToggleChange) {
     this.store.dispatch(
       new UpdateSonifierFileState(this.hdu.id, {
         regionMode: $event.value,
@@ -363,19 +363,19 @@ export class SonificationPanelComponent
     );
   }
 
-  private setDuration(value) {
+  setDuration(value) {
     this.store.dispatch(
       new UpdateSonifierFileState(this.hdu.id, { duration: value })
     );
   }
 
-  private setToneCount(value) {
+  setToneCount(value) {
     this.store.dispatch(
       new UpdateSonifierFileState(this.hdu.id, { toneCount: value })
     );
   }
 
-  private setViewportSync(value) {
+  setViewportSync(value) {
     this.store.dispatch(
       new UpdateSonifierFileState(this.hdu.id, {
         viewportSync: value.checked,
@@ -383,7 +383,7 @@ export class SonificationPanelComponent
     );
   }
 
-  private sonify() {
+  sonify() {
     if (!this.sonificationUri) return;
     if (
       this.sonificationSrcUri == this.sonificationUri &&

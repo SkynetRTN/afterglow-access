@@ -5,7 +5,6 @@ import { Transform, transformToMatrix } from '../../models/transformation';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 
 export type MarkerMouseEvent = {
-  targetHdu: ImageHdu;
   marker: Marker;
   mouseEvent: MouseEvent;
 }
@@ -19,7 +18,6 @@ export type MarkerMouseEvent = {
 export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, AfterViewInit {
   MarkerType = MarkerType;
 
-  @Input() hdu: ImageHdu;
   @Input() transform: Transform;
   @Input() markers: Marker[];
   @Input() svgWidth: number;
@@ -73,7 +71,6 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   handleMarkerClick($event: MouseEvent, marker: Marker) {
     this.onMarkerClick.emit({
-      targetHdu: this.hdu,
       marker: marker,
       mouseEvent: $event
     })

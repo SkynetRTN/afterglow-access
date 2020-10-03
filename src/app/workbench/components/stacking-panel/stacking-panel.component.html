@@ -1,14 +1,14 @@
-<div *ngIf="files">
+<div *ngIf="hdus">
   <form [formGroup]="stackForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Select Image(s) to Stack</mat-label>
         <mat-select multiple formControlName="selectedImageFileIds">
-          <mat-option *ngFor="let imageFile of files" [value]="imageFile.id">{{ imageFile.name }}</mat-option>
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">{{ dataFileEntities[hdu.fileId].name }}</mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectImageFiles(files)">
+      <button mat-icon-button (click)="selectImageFiles(hdus)">
         <mat-icon>select_all</mat-icon>
       </button>
 

@@ -1,8 +1,8 @@
-<div *ngIf="!file || !normalization" class="alert alert-info">
+<div *ngIf="!hdu || !normalization" class="alert alert-info">
   <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 
-<div *ngIf="file && normalization">
+<div *ngIf="hdu && normalization">
   <div>
     <h6 i18n>Brightness and Contrast Presets</h6>
     <div class="pb-1">
@@ -23,7 +23,7 @@
 
 
   <div class="pr-3 pl-3 pb-0">
-    <app-image-hist-chart [width]="440" [height]="250" [hist]="file?.hist" [backgroundPercentile]="
+    <app-image-hist-chart [width]="440" [height]="250" [hist]="hdu?.hist" [backgroundPercentile]="
                 normalization?.normalizer?.backgroundPercentile
               " [peakPercentile]="normalization?.normalizer?.peakPercentile">
     </app-image-hist-chart>

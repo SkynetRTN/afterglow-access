@@ -117,14 +117,23 @@ export class PhotometryPageComponent
   }
   private sources$ = new BehaviorSubject<Source[]>(null);
 
-  @Input("files")
-  set files(files: DataFile[]) {
-    this.files$.next(files);
+  @Input("hdus")
+  set hdus(hdus: ImageHdu[]) {
+    this.hdus$.next(hdus);
   }
-  get files() {
-    return this.files$.getValue();
+  get hdus() {
+    return this.hdus$.getValue();
   }
-  private files$ = new BehaviorSubject<DataFile[]>(null);
+  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
+
+  @Input("dataFileEntities")
+  set dataFileEntities(dataFileEntities: {[id: string]: DataFile}) {
+    this.dataFileEntities$.next(dataFileEntities);
+  }
+  get dataFileEntities() {
+    return this.dataFileEntities$.getValue();
+  }
+  private dataFileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
 
   @Input("config")
   set config(config: PhotometryPanelConfig) {
@@ -170,7 +179,7 @@ export class PhotometryPageComponent
     selectedImageFileIds: new FormControl([], Validators.required),
   });
   batchPhotFormData$: Observable<BatchPhotometryFormData>;
-  selectedDataFiles$: Observable<DataFile[]>;
+  selectedImageHdus$: Observable<ImageHdu[]>;
 
   constructor(
     private dialog: MatDialog,
@@ -236,12 +245,12 @@ export class PhotometryPageComponent
       // }
     });
 
-    this.selectedDataFiles$ = combineLatest(
-      this.files$,
+    this.selectedImageHdus$ = combineLatest(
+      this.hdus$,
       this.batchPhotFormData$
     ).pipe(
-      map(([files, data]) =>
-        data.selectedHduIds.map((id) => files.find((f) => f.id == id))
+      map(([hdus, data]) =>
+        data.selectedHduIds.map((id) => hdus.find((f) => f.id == id))
       )
     );
 
@@ -507,12 +516,12 @@ export class PhotometryPageComponent
     this.store.dispatch(new RemoveAllPhotDatas());
   }
 
-  selectDataFiles(imageFiles: DataFile[]) {
+  selectHdus(hdus: ImageHdu[]) {
     this.store.dispatch(
       new UpdatePhotometryPanelConfig({
         batchPhotFormData: {
           ...this.batchPhotForm.value,
-          selectedHduIds: imageFiles.map((f) => f.id),
+          selectedHduIds: hdus.map((f) => f.id),
         },
       })
     );

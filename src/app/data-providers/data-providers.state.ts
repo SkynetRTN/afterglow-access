@@ -21,11 +21,12 @@ import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jo
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { Navigate } from '@ngxs/router-plugin';
-import { SetViewerFile, SelectDataFileListItem } from '../workbench/workbench.actions';
+import { SetViewerData, SelectDataFileListItem } from '../workbench/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
 import { LoadLibrary } from '../data-files/data-files.actions';
 import { ResetState } from '../auth/auth.actions';
+import { DataFilesState } from '../data-files/data-files.state';
 
 export interface DataProvidersStateModel {
   version: number;
@@ -383,7 +384,11 @@ export class DataProvidersState {
             take(1),
             filter(a => a.result.successful),
             tap(v => {
-             dispatch(new SelectDataFileListItem({type: 'hdu', id: action.fileIds[0]}));
+              let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+              if(action.fileIds[0] in hduEntities) {
+                dispatch(new SelectDataFileListItem(hduEntities[action.fileIds[0]]));
+              }
+             
             })
           )
        })
