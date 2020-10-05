@@ -322,7 +322,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   private handleViewportChange() {
     let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
-    if (this.layers[0] && this.layers[0].data && this.transformation && this.transformation.viewportSize) {
+    if (this.layers && this.layers[0] && this.layers[0].data && this.transformation && this.transformation.viewportSize) {
 
       let viewportRegion = getViewportRegion(this.transformation, this.layers[0].data.width, this.layers[0].data.height);
 
@@ -550,7 +550,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private get initialized() {
-    return this.viewInitialized && this.layers[0] && this.layers[0].data && this.layers[0].data.tilesInitialized && this.transformation && this.transformation.imageToViewportTransform;
+    return this.viewInitialized && this.layers && this.layers[0] && this.layers[0].data && this.layers[0].data.tilesInitialized && this.transformation && this.transformation.imageToViewportTransform;
   }
 
   public lazyLoadPixels() {

@@ -148,7 +148,7 @@ export class DataFilesState {
     });
 
     return mergeDelayError(
-      ...getState().dataFileIds.map(id => dispatch(new CloseDataFileSuccess(id)))
+      ...getState().dataFileIds.map(id => dispatch(new CloseDataFile(id)))
     ).pipe(
       catchError(errors => {
         setState((state: DataFilesStateModel) => {

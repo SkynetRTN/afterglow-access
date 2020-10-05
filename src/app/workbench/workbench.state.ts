@@ -1733,7 +1733,10 @@ export class WorkbenchState {
       .map((imageFile) => imageFile.id)
       .filter((id) => !existingIds.includes(id));
 
-    dispatch(new InitializeWorkbenchHduState(newIds));
+    if(newIds.length != 0) {
+      dispatch(new InitializeWorkbenchHduState(newIds));
+    }
+    
 
     let focusedViewer = this.store.selectSnapshot(
       WorkbenchState.getFocusedViewer

@@ -255,7 +255,10 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
     }
     else if(rawTile.pixelsLoaded) {
       let normalization = (this.store.selectSnapshot(WorkbenchFileStates.getHduStateEntities)[hduId] as WorkbenchImageHduState).normalization;
-      if(!normalization.initialized || !normalization.tilesInitialized) return;
+      if(!normalization.initialized || !normalization.tilesInitialized) {
+        
+        return;
+      }
       let normalizedTile = normalization.tiles[rawTile.index];
       if (normalizedTile && !normalizedTile.pixelsLoaded && !normalizedTile.pixelsLoading && !normalizedTile.pixelLoadingFailed) {
       this.store.dispatch(new NormalizeImageTile(

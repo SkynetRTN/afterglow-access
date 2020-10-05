@@ -223,7 +223,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.viewers$ = this.store.select(WorkbenchState.getViewers);
 
-    let visibleFileHdus$: Observable<{ viewerId: string, hduId: string }[]> = this.store.select(WorkbenchState.getViewerPanelEntities).pipe(
+    let visibleFileHdus$: Observable<{ viewerId: string, hduIds: string[] }[]> = this.store.select(WorkbenchState.getViewerPanelEntities).pipe(
       map((panelEntities) =>
         Object.values(panelEntities)
           .map((panel) => panel.selectedViewerId)
@@ -237,9 +237,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         return combineLatest(
           ...viewerIds.map((viewerId) => {
             return this.store.select(WorkbenchState.getViewerById).pipe(
-              map((fn) => fn(viewerId).data),
-              distinctUntilChanged(),
-              map(hduId => ({ viewerId: viewerId, hduId: hduId }))
+              map((fn) => {
+                let viewerData = fn(viewerId).data;
+                return viewerData.type == 'file' ? (viewerData as DataFile).hduIds : [viewerData.id]
+              }),
+              distinctUntilChanged(
+                (x, y) =>
+                  x.length == y.length && x.every((value, index) => value === y[index])
+              ),
+              map(hduIds => ({ viewerId: viewerId, hduIds: hduIds }))
             )
           })
         );
@@ -368,7 +374,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     ).pipe(
       switchMap(([activeTool, selectedViewerFileIds]) => {
         return combineLatest(
-          ...selectedViewerFileIds.map(({ viewerId, hduId }) => {
+          ...selectedViewerFileIds.map(({ viewerId, hduIds }) => {
+            let hduId = hduIds[0];
             if (activeTool != WorkbenchTool.CUSTOM_MARKER || !hduId) {
               return of({
                 viewerId: viewerId,
@@ -424,7 +431,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     ).pipe(
       switchMap(([activeTool, selectedViewerFileIds]) => {
         return combineLatest(
-          ...selectedViewerFileIds.map(({ viewerId, hduId }) => {
+          ...selectedViewerFileIds.map(({ viewerId, hduIds }) => {
+            let hduId = hduIds[0];
             if (activeTool != WorkbenchTool.PLOTTER || !hduId) {
               return of({ viewerId: viewerId, markers: [] });
             }
@@ -555,7 +563,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     ).pipe(
       switchMap(([activeTool, selectedViewerFileIds]) => {
         return combineLatest(
-          ...selectedViewerFileIds.map(({ viewerId, hduId }) => {
+          ...selectedViewerFileIds.map(({ viewerId, hduIds }) => {
+            let hduId = hduIds[0];
             if (activeTool != WorkbenchTool.SONIFIER || !hduId) {
               return of({ viewerId: viewerId, markers: [] });
             }
@@ -669,7 +678,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     ).pipe(
       switchMap(([activeTool, selectedViewerFileIds]) => {
         return combineLatest(
-          ...selectedViewerFileIds.map(({ viewerId, hduId }) => {
+          ...selectedViewerFileIds.map(({ viewerId, hduIds }) => {
+            let hduId = hduIds[0];
             if (activeTool != WorkbenchTool.PHOTOMETRY || !hduId) {
               return of({ viewerId: viewerId, markers: [] });
             }
@@ -791,7 +801,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           ],
           selectedViewerFileIds,
         ]) => {
-          selectedViewerFileIds.forEach(({ viewerId, hduId }) => {
+          selectedViewerFileIds.forEach(({ viewerId, hduIds }) => {
+            let hduId = hduIds[0];
             if (viewerId == null || hduId == null) return;
             let markers: Marker[] = [];
             let markerSources = [
@@ -811,21 +822,24 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       );
 
     this.fileLoaderSub = visibleFileHdus$.subscribe((viewerHdus) => {
-      let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-      let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
+      let dataFileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
 
-      viewerHdus.forEach(({ viewerId, hduId }) => {
-        if (!(hduId in hdus)) return;
-        let hdu = hdus[hduId];
-        let load = !hdu.headerLoaded && !hdu.headerLoading;
-        if (!load && hdu.hduType == HduType.IMAGE) {
-          let imageHdu = hdu as ImageHdu;
-          load = !imageHdu.histLoaded && !imageHdu.histLoading
-        }
-
-        if (load) {
-          this.store.dispatch(new LoadHdu(hduId));
-        }
+      viewerHdus.forEach(({ viewerId, hduIds }) => {
+        hduIds.forEach(hduId => {
+          if (!(hduId in hduEntities)) return;
+          let hdu = hduEntities[hduId];
+          let load = !hdu.headerLoaded && !hdu.headerLoading;
+          if (!load && hdu.hduType == HduType.IMAGE) {
+            let imageHdu = hdu as ImageHdu;
+            load = !imageHdu.histLoaded && !imageHdu.histLoading
+          }
+  
+          if (load) {
+            this.store.dispatch(new LoadHdu(hduId));
+          }
+        })
+        
       })
     });
 
@@ -864,7 +878,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let header$ = merge(
             ...selectedViewerFileIds.map(v => {
               return this.store.select(DataFilesState.getHeader).pipe(
-                map((fn) => fn(v.hduId)),
+                map((fn) => fn(v.hduIds[0])),
                 distinctUntilChanged()
               )
             })
@@ -885,7 +899,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               return {
                 srcHduId: hduId,
                 targetHduIds: selectedViewerFileIds
-                  .map((v) => v.hduId)
+                  .map((v) => v.hduIds[0])
                   .filter((v) => v != hduId),
               };
             })
@@ -924,7 +938,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             ...selectedViewerFileIds.map(v => {
               return this.store.select(DataFilesState.getHeader).pipe(
                 // TODO: LAYER
-                map((fn) => fn(v.hduId)),
+                map((fn) => fn(v.hduIds[0])),
                 distinctUntilChanged()
               )
             })
@@ -934,7 +948,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             ...selectedViewerFileIds.map(v => {
               return this.store.select(DataFilesState.getHist).pipe(
                 // TODO: LAYER
-                map((fn) => fn(v.hduId)),
+                map((fn) => fn(v.hduIds[0])),
                 distinctUntilChanged()
               )
             })
@@ -956,7 +970,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               return {
                 srcHduId: hduId,
                 targetHduIds: selectedViewerFileIds
-                  .map((v) => v.hduId)
+                  .map((v) => v.hduIds[0])
                   .filter((v) => v != hduId),
               };
             })
@@ -997,7 +1011,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let header$ = merge(
             ...selectedViewerFileIds.map(v => {
               return this.store.select(DataFilesState.getHeader).pipe(
-                map((fn) => fn(v.hduId)),
+                map((fn) => fn(v.hduIds[0])),
                 distinctUntilChanged()
               )
             })
@@ -1019,7 +1033,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               return {
                 srcHduId: hduId,
                 targetHduIds: selectedViewerFileIds
-                  .map((v) => v.hduId)
+                  .map((v) => v.hduIds[0])
                   .filter((v) => v != hduId),
               };
             })
