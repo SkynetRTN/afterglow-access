@@ -112,6 +112,7 @@ import {
   SplitViewerPanel,
   UpdateFileInfoPanelConfig,
   MoveViewer,
+  Initialize,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -720,6 +721,50 @@ export class WorkbenchState {
     };
   }
 
+  @Action(Initialize)
+  @ImmutableContext()
+  public initialize({getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: Initialize) {
+    let state = getState();
+    let dataFileEntities = this.store.selectSnapshot(
+      DataFilesState.getDataFileEntities
+    );
+    let hduEntities = this.store.selectSnapshot(
+      DataFilesState.getHduEntities
+    );
+
+
+    //load visible HDUs which were pulled from local storage
+    let viewerEntities = state.viewers;
+    let viewerIds = Object.values(this.store.selectSnapshot(WorkbenchState.getViewerPanelEntities)).map(panel => panel.selectedViewerId).filter(viewerId => viewerId in viewerEntities);
+    let viewerHdus: IHdu[] = [];
+    viewerIds.forEach(viewerId => {
+      let viewerData = viewerEntities[viewerId].data;
+      if(!viewerData) return;
+      if(viewerData.type == 'hdu') {
+        viewerHdus.push(hduEntities[viewerData.id])
+      }
+      else {
+        let file = dataFileEntities[viewerData.id];
+        viewerHdus.push(...file.hduIds.map(id => hduEntities[id]))
+      }
+
+      viewerHdus.forEach(hdu => {
+        let load = !hdu.headerLoaded && !hdu.headerLoading;
+        if (!load && hdu.hduType == HduType.IMAGE) {
+          let imageHdu = hdu as ImageHdu;
+          load = !imageHdu.histLoaded && !imageHdu.histLoading;
+        }
+
+        if (load) {
+          this.store.dispatch(new LoadHdu(hdu.id));
+        }
+      });
+    })
+
+    
+  }
+
+
   @Action(ResetState)
   @ImmutableContext()
   public resetState(
@@ -825,36 +870,40 @@ export class WorkbenchState {
         let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
         let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
         let viewerData = state.viewers[viewerId].data;
-        let hduId = viewerData.type == 'file' ? (viewerData as DataFile).hduIds[0] : (viewerData as IHdu).id;
-        let hdu = hduEntities[hduId];
+        
         if (state.viewerSyncEnabled || state.normalizationSyncEnabled || state.plottingPanelConfig.plotterSyncEnabled) {
           // before changing the selected viewer,  sync the new viewer's file with the old
 
           let referenceViewerData = this.store.selectSnapshot(WorkbenchState.getFocusedViewerData)
-          let referenceHduId = referenceViewerData.type == 'file' ? (referenceViewerData as DataFile).hduIds[0] : (referenceViewerData as IHdu).id;
-          let referenceHdu = hduEntities[referenceHduId];
+          let referenceHduIds = referenceViewerData.type == 'file' ? fileEntities[referenceViewerData.id].hduIds : [referenceViewerData.id];
+          let referenceHdus = referenceHduIds.map(id => hduEntities[id]);
+          let referenceHdu = referenceHdus.find(referenceHdu => referenceHdu.hduType == HduType.IMAGE);
 
-          if (referenceHduId && hduId && hduEntities[referenceHduId].hduType == HduType.IMAGE && hduEntities[hduId].hduType == HduType.IMAGE) {
-            if (state.viewerSyncEnabled) {
-              this.store.dispatch(new SyncFileTransformations(hduEntities[referenceHduId] as ImageHdu, [hduEntities[hduId] as ImageHdu]))
-            }
-            if (state.normalizationSyncEnabled) {
-              this.store.dispatch(new SyncFileNormalizations(hduEntities[referenceHduId] as ImageHdu, [hduEntities[hduId] as ImageHdu]))
-            }
-            if (state.plottingPanelConfig.plotterSyncEnabled) {
-              this.store.dispatch(new SyncFilePlotters(hduEntities[referenceHduId] as ImageHdu, [hduEntities[hduId] as ImageHdu]))
-            }
-          }
+          let hduIds = viewerData.type == 'file' ? fileEntities[viewerData.id].hduIds : [viewerData.id];
+          let hdus = hduIds.map(id => hduEntities[id]);
 
+          hdus.forEach(hdu => {
+            if (referenceHdu && hdu && hdu.hduType == HduType.IMAGE) {
+              if (state.viewerSyncEnabled) {
+                this.store.dispatch(new SyncFileTransformations(hduEntities[referenceHdu.id] as ImageHdu, [hduEntities[hdu.id] as ImageHdu]))
+              }
+              if (state.normalizationSyncEnabled) {
+                this.store.dispatch(new SyncFileNormalizations(hduEntities[referenceHdu.id] as ImageHdu, [hduEntities[hdu.id] as ImageHdu]))
+              }
+              if (state.plottingPanelConfig.plotterSyncEnabled) {
+                this.store.dispatch(new SyncFilePlotters(hduEntities[referenceHdu.id] as ImageHdu, [hduEntities[hdu.id] as ImageHdu]))
+              }
+            }
+          })
         }
 
 
         state.focusedViewerPanelId = panel.id;
         panel.selectedViewerId = viewerId;
 
-        if (hdu && !hdu.headerLoaded && !hdu.headerLoading) {
-          dispatch(new SetViewerData(viewerId, {id: hdu.id, type: 'hdu'}));
-        }
+        // if (hdu && !hdu.headerLoaded && !hdu.headerLoading) {
+        //   dispatch(new SetViewerData(viewerId, {id: hdu.id, type: 'hdu'}));
+        // }
       }
       return state;
     });
@@ -1284,7 +1333,7 @@ export class WorkbenchState {
         return state;
       });
 
-      function onDataFileLoad(store: Store) {
+      function onLoadComplete(store: Store) {
         //normalization
         let actions = [];
         let hduStateEntities = store.selectSnapshot(
@@ -1294,53 +1343,53 @@ export class WorkbenchState {
         // TODO: Determine how syncing should occur now that viewer's original data and new data may contain multiple HDUs
         if (imageHduIds.length != 0 && refHduIds.length != 0) {
           // for now, take the first HDU from the viewer's original data and apply it to all image HDUs in the new viewer data
-          let hdus = hduIds.map(id => hduEntities[imageHduIds[0]] as ImageHdu);
+          let hdus = hduIds.map(id => hduEntities[id] as ImageHdu);
           let refHdu = hdus[refHduIds[0]] as ImageHdu;
 
-          if (state.normalizationSyncEnabled) {
-            actions.push(
-              new SyncFileNormalizations(
-                refHdu,
-                hdus
-              )
-            );
-          }
-          else {
-            hdus.forEach(hdu => {
-              let normalization = (hduStateEntities[hdu.id] as WorkbenchImageHduState).normalization;
-              if (normalization.initialized) {
-                actions.push(new RenormalizeImageHdu(hdu.id));
-              }
-            })
-          }
+          // if (state.normalizationSyncEnabled) {
+          //   actions.push(
+          //     new SyncFileNormalizations(
+          //       refHdu,
+          //       hdus
+          //     )
+          //   );
+          // }
+          // else {
+          //   hdus.forEach(hdu => {
+          //     let normalization = (hduStateEntities[hdu.id] as WorkbenchImageHduState).normalization;
+          //     if (normalization.initialized) {
+          //       actions.push(new RenormalizeImageHdu(hdu.id));
+          //     }
+          //   })
+          // }
 
-          if (state.viewerSyncEnabled) {
-            actions.push(
-              new SyncFileTransformations(
-                refHdu,
-                hdus
-              )
-            );
-          }
-          if (state.plottingPanelConfig.plotterSyncEnabled) {
-            actions.push(
-              new SyncFilePlotters(refHdu, hdus)
-            );
-          }
+          // if (state.viewerSyncEnabled) {
+          //   actions.push(
+          //     new SyncFileTransformations(
+          //       refHdu,
+          //       hdus
+          //     )
+          //   );
+          // }
+          // if (state.plottingPanelConfig.plotterSyncEnabled) {
+          //   actions.push(
+          //     new SyncFilePlotters(refHdu, hdus)
+          //   );
+          // }
 
-          hdus.forEach(hdu => {
-            let sonifierState = (hduStateEntities[hdu.id] as WorkbenchImageHduState).sonificationPanelState;
-            if (!sonifierState.regionHistoryInitialized) {
-              actions.push(
-                new AddRegionToHistory(hdu.id, {
-                  x: 0.5,
-                  y: 0.5,
-                  width: getWidth(hdu),
-                  height: getHeight(hdu),
-                })
-              );
-            }
-          })
+          // hdus.forEach(hdu => {
+          //   let sonifierState = (hduStateEntities[hdu.id] as WorkbenchImageHduState).sonificationPanelState;
+          //   if (!sonifierState.regionHistoryInitialized) {
+          //     actions.push(
+          //       new AddRegionToHistory(hdu.id, {
+          //         x: 0.5,
+          //         y: 0.5,
+          //         width: getWidth(hdu),
+          //         height: getHeight(hdu),
+          //       })
+          //     );
+          //   }
+          // })
         }
 
         actions.push(new SetFocusedViewer(viewerId));
@@ -1348,34 +1397,25 @@ export class WorkbenchState {
         return dispatch(actions);
       }
 
-      let actions = [];
-      hduIds.forEach(id => {
-        let hdu = hduEntities[id];
-        if (hdu.headerLoaded && (hdu.hduType != HduType.IMAGE || (hdu as ImageHdu).histLoaded)) {
-          return onDataFileLoad(this.store);
-  
-        } else {
-          actions.push(new LoadHdu(hdu.id));
-  
-          let cancel$ = this.actions$.pipe(
-            ofActionDispatched(SetViewerData),
-            filter<SetViewerData>(
-              (action) => action.viewerId == viewerId && action.data != data
-            )
-          );
-  
-          let next$ = this.actions$.pipe(
-            ofActionCompleted(LoadHdu),
-            takeUntil(cancel$),
-            filter((r) => r.action.hduId == id),
-            take(1),
-            filter((r) => r.result.successful),
-            flatMap((action) => onDataFileLoad(this.store))
-          );
-  
-          return merge(dispatch(actions), next$);
-        }
-      })
+      let actions = hduIds.map(id => hduEntities[id]).filter(hdu => !hdu.headerLoaded || (hdu.hduType == HduType.IMAGE && !(hdu as ImageHdu).histLoaded)).map(hdu => new LoadHdu(hdu.id));
+      if(actions.length == 0) {
+        onLoadComplete(this.store);
+        return;
+      }
+
+      let cancel$ = this.actions$.pipe(
+        ofActionDispatched(SetViewerData),
+        filter<SetViewerData>(
+          (action) => action.viewerId == viewerId && (action.data.type != data.type || action.data.id != data.id)
+        )
+      );
+
+      return dispatch(actions).pipe(
+        takeUntil(cancel$),
+        take(1),
+        flatMap((action) => onLoadComplete(this.store))
+      );
+
       
     }
   }

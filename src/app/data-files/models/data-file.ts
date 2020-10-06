@@ -32,6 +32,8 @@ export interface DataFile {
   dataProviderId: string;
   assetPath: string;
   hduIds: string[];
+  tiledImageDataId: string;
+  transformationId: string;
 }
 
 export interface IHdu {

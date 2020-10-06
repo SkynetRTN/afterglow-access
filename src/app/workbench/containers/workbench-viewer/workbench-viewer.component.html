@@ -1,26 +1,55 @@
-<div id="image-viewer-wrapper" fxLayout="column" class="h-100">
-  <div fxFlex="1 1 100%">
-    <div class="viewer-marker-wrapper h-100">
-      <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" [layers]="layers$ | async"
-      [transformation]="(transformation$ | async)" (onImageMove)="handleImageMove($event)"
-      (onImageClick)="handleImageClick($event)" (onMoveBy)="handleMoveBy($event)" (onZoomBy)="handleZoomBy($event)" (onLoadTile)="handleLoadTile($event)"
-      (onViewportSizeChange)="handleViewportSizeChange($event)">
-      <app-image-viewer-marker-overlay
-        [svgWidth]="panZoomCanvas?.canvasWidth" [svgHeight]="panZoomCanvas?.canvasHeight"
-        [transform]="(transformation$ | async)?.imageToViewportTransform" [markers]="markers"
-        (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none;" class="marker-overlay">
-      </app-image-viewer-marker-overlay>
+<div
+  id="image-viewer-wrapper"
+  fxLayout="column"
+  class="h-100"
+  [ngSwitch]="displayMode$ | async"
+>
+  <ng-container *ngSwitchCase="HduType.IMAGE">
+    <div fxFlex="1 1 100%">
+      <div class="viewer-marker-wrapper h-100">
+        <div
+          app-pan-zoom-canvas
+          #panZoomCanvas="panZoomCanvas"
+          class="viewer"
+          [layers]="layers$ | async"
+          [transformation]="transformation$ | async"
+          (onImageMove)="handleImageMove($event)"
+          (onImageClick)="handleImageClick($event)"
+          (onMoveBy)="handleMoveBy($event)"
+          (onZoomBy)="handleZoomBy($event)"
+          (onLoadTile)="handleLoadTile($event)"
+          (onViewportSizeChange)="handleViewportSizeChange($event)"
+          (onCanvasSizeChange)="handleCanvasSizeChange($event)"
+        >
+          <app-image-viewer-marker-overlay
+            [svgWidth]="currentCanvasSize?.width"
+            [svgHeight]="currentCanvasSize?.height"
+            [transform]="(transformation$ | async)?.imageToViewportTransform"
+            [markers]="markers"
+            (onMarkerClick)="handleMarkerClick($event)"
+            style="pointer-events: none"
+            class="marker-overlay"
+          >
+          </app-image-viewer-marker-overlay>
+        </div>
+      </div>
     </div>
-    
+    <div fxFlex="0 0 auto">
+      <app-image-viewer-status-bar
+        *ngIf="data.type == 'hdu'"
+        [class.active]="active"
+        [hdu]="(hduEntities$ | async)[data.id]"
+        [imageMouseX]="imageMouseX"
+        [imageMouseY]="imageMouseY"
+        (downloadSnapshot)="handleDownloadSnapshot()"
+      ></app-image-viewer-status-bar>
+    </div>
+  </ng-container>
 
-    </div>
-  </div>
-  <div fxFlex="0 0 auto">
-    <app-image-viewer-status-bar *ngIf="data.type == 'hdu'" [class.active]="active" [hdu]="(hdus$ | async)[data.id]" [imageMouseX]="imageMouseX" [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()"></app-image-viewer-status-bar>
+  <div class="h-100" *ngSwitchCase="HduType.TABLE">
+    Tables are not yet supported.
   </div>
 </div>
-
-
 
 <!-- 
 <app-pan-zoom-viewer [viewerId]="viewerId" [imageFile]="(fileEntities$ | async)[fileId]" [normalization]="(activeFileState$ | async)?.normalization"

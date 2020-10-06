@@ -19,7 +19,16 @@ export class InitializeWorkbenchHduState {
   constructor(public hduIds: string[]) { }
 }
 
+/* Composite */
+
+
 /* Normalization */
+export class InitializeHduNormalizationSuccess {
+  public static readonly type = '[Workbench HDU State] Initialize HDU Normalization Success';
+
+  constructor(public hduId: string) { }
+}
+
 export class RenormalizeImageHdu {
   public static readonly type = '[Workbench HDU State] Renormalize Image Hdu';
 
@@ -108,74 +117,74 @@ export class UpdateLine {
 }
 
 /* Transformations */
+/* can apply to an individual HDU or the entire file */ 
 
 export class ZoomBy {
   public static readonly type = '[Transformation] Zoom By';
 
-  constructor(public hduId: string, public scaleFactor: number, public viewportAnchor: { x: number, y: number }) { }
+  constructor(public targetId: string, public scaleFactor: number, public viewportAnchor: { x: number, y: number }, public isFile: boolean = false) { }
 }
 
 export class ZoomTo {
   public static readonly type = '[Transformation] Zoom To';
 
-  constructor(public hduId: string, public scale: number, public anchorPoint: { x: number, y: number }) { }
+  constructor(public targetId: string, public scale: number, public anchorPoint: { x: number, y: number }, public isFile: boolean = false) { }
 }
 
 export class MoveBy {
   public static readonly type = '[Transformation] Move By';
 
-  constructor(public hduId: string, public xShift: number, public yShift: number) { }
+  constructor(public targetId: string, public xShift: number, public yShift: number, public isFile: boolean = false) { }
 }
 
 export class SetImageTransform {
   public static readonly type = '[Transformation] Set Image Transform';
 
-  constructor(public hduId: string, public transform: Transform) { }
+  constructor(public targetId: string, public transform: Transform, public isFile: boolean = false) { }
 }
 
 export class ResetImageTransform {
   public static readonly type = '[Transformation] Reset Image Transform';
 
-  constructor(public hduId: string) { }
+  constructor(public targetId: string, public isFile: boolean = false) { }
 }
 
 export class SetViewportTransform {
   public static readonly type = '[Transformation] Set Viewport Transform';
 
-  constructor(public hduId: string, public transform: Transform) { }
+  constructor(public targetId: string, public transform: Transform, public isFile: boolean = false) { }
 }
 
 export class RotateBy {
   public static readonly type = '[Transformation] Rotate By';
 
-  constructor(public hduId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }) { }
+  constructor(public targetId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }, public isFile: boolean = false) { }
 }
 
 export class RotateTo {
   public static readonly type = '[Transformation] Rotate To';
 
-  constructor(public hduId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }) { }
+  constructor(public targetId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }, public isFile: boolean = false) { }
 }
 
 export class Flip {
   public static readonly type = '[Transformation] Flip';
 
-  constructor(public hduId: string) { }
+  constructor(public targetId: string, public isFile: boolean = false) { }
 }
 
 export class CenterRegionInViewport {
   public static readonly type = '[Transformation] Center Region In Viewport';
 
-  constructor(public hduId: string, public region: Region, public viewportSize?: { width: number, height: number }) { }
+  constructor(public targetId: string, public region: Region, public viewportSize?: { width: number, height: number }, public isFile: boolean = false) { }
 }
 
 
 export class UpdateCurrentViewportSize {
   public static readonly type = '[Transformation] Update Current Viewport Size'
 
-  constructor(public hduId: string, public viewportSize: { width: number, height: number }) { }
+  constructor(public targetId: string, public viewportSize: { width: number, height: number }, public isFile: boolean = false) { }
 }
-
 
 
 /*Source Extractor*/

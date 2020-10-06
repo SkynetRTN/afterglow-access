@@ -11,12 +11,13 @@ import {
   CloseAllDataFiles, CloseAllDataFilesFail, CloseDataFile,
   LoadDataFile, LoadLibrary, LoadLibrarySuccess, LoadLibraryFail, LoadHduHeader,
   LoadHduHeaderSuccess, LoadImageHduHistogram, LoadImageHduHistogramSuccess, LoadImageTilePixels,
-  LoadImageTilePixelsSuccess, CloseHduSuccess, CloseHduFail, LoadHdu, CloseDataFileSuccess, CloseDataFileFail,
+  LoadImageTilePixelsSuccess, CloseHduSuccess, CloseHduFail, LoadHdu, CloseDataFileSuccess, CloseDataFileFail, InitializeImageTiles, InitializeImageTilesSuccess,
 } from './data-files.actions';
 import { HduType } from './models/data-file-type';
 import { appConfig } from '../../environments/environment';
 import { Wcs } from '../image-tools/wcs';
 import { ImageTile } from './models/image-tile';
+import { Initialize } from '../workbench/workbench.actions';
 
 export interface DataFilesStateModel {
   version: string;
@@ -131,6 +132,12 @@ export class DataFilesState {
     return state.loading;
   }
 
+  @Action(Initialize)
+  @ImmutableContext()
+  public initialize({getState, setState, dispatch }: StateContext<DataFilesStateModel>, {}: Initialize) {
+    
+  }
+
   @Action(ResetState)
   @ImmutableContext()
   public resetState({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { }: ResetState) {
@@ -157,7 +164,8 @@ export class DataFilesState {
         });
 
         return dispatch(new CloseAllDataFilesFail(errors))
-      })
+      }),
+      tap(v => this.store.dispatch(new LoadLibrary()))
     )
   }
 
@@ -174,6 +182,16 @@ export class DataFilesState {
             tap(result => {
               setState((state: DataFilesStateModel) => {
                 if (state.hduIds.includes(hduId)) {
+                  let hdu = state.hduEntities[hduId];
+                  let file = state.dataFileEntities[hdu.fileId];
+                  file.hduIds = file.hduIds.filter(id => id != hduId);
+
+                  if(file.hduIds.length == 0) {
+                    //delete file
+                    state.dataFileIds = state.dataFileIds.filter(id => id != file.id);
+                    delete state.dataFileEntities[file.id]
+                  }
+
                   state.hduIds = state.hduIds.filter(id => id != hduId);
                   delete state.hduEntities[hduId];
                 }
@@ -223,14 +241,16 @@ export class DataFilesState {
         let dataFiles: DataFile[] = [];
 
         //TODO: use server values for fileID and order
-        coreFiles.forEach(coreFile => {
+        coreFiles.forEach((coreFile, index) => {
           let hdu: IHdu = {
             type: 'hdu',
             id: coreFile.id.toString(),
             //fileId: coreFile.group_id,
-            fileId: `FILE_${coreFile.id.toString()}`,
+            //fileId: `FILE_${coreFile.id.toString()}`,
+            fileId: `1`,
             hduType: coreFile.type,
-            order: coreFile.order,
+            // order: coreFile.group_order,
+            order: index,
             modified: coreFile.modified,
             header: null,
             headerLoaded: false,
@@ -397,49 +417,7 @@ export class DataFilesState {
           hdu.wcs = new Wcs(wcsHeader);
 
           if (hdu.hduType == HduType.IMAGE) {
-            let imageHdu = hdu as ImageHdu;
-
-            //extract width and height from the header using FITS standards
-            imageHdu.width = getWidth(imageHdu);
-            imageHdu.height = getHeight(imageHdu);
-            imageHdu.precision = PixelPrecision.float32;
-
-            /* Initialize Image Tiles*/
-            
-            let tiles: ImageTile<PixelType>[] = [];
-
-            for (let j = 0; j < getYTileDim(imageHdu); j += 1) {
-              let tw = imageHdu.tileWidth;
-              let th = imageHdu.tileHeight;
-              
-
-              if (j === getYTileDim(imageHdu) - 1) {
-                th -= (j + 1) * imageHdu.tileHeight - getHeight(imageHdu);
-              }
-              for (let i = 0; i < getXTileDim(imageHdu); i += 1) {
-                if (i === getXTileDim(imageHdu) - 1) {
-                  tw -= (i + 1) * imageHdu.tileWidth - getWidth(imageHdu);
-                }
-                let index = j * getXTileDim(imageHdu) + i;
-                let x = i * imageHdu.tileWidth;
-                let y = j * imageHdu.tileHeight;
-                tiles.push({
-                  index: index,
-                  x: x,
-                  y: y,
-                  width: tw,
-                  height: th,
-                  pixelsLoaded: false,
-                  pixelsLoading: false,
-                  pixelLoadingFailed: false,
-                  pixels: null,
-                });
-              }
-            }
-            
-
-            imageHdu.tiles = tiles;
-            imageHdu.tilesInitialized = true;
+            dispatch(new InitializeImageTiles(hduId))
           }
 
           return state;
@@ -448,6 +426,64 @@ export class DataFilesState {
 
       })
     );
+  }
+
+  @Action(InitializeImageTiles)
+  @ImmutableContext()
+  public initializeImageTiles({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { hduId }: InitializeImageTiles) {
+    let state = getState();
+    if(!(hduId in state.hduEntities) || state.hduEntities[hduId].hduType != HduType.IMAGE) return;
+
+    setState((state: DataFilesStateModel) => {
+      let hdu = state.hduEntities[hduId] as ImageHdu;
+      let imageHdu = hdu as ImageHdu;
+
+      //extract width and height from the header using FITS standards
+      imageHdu.width = getWidth(imageHdu);
+      imageHdu.height = getHeight(imageHdu);
+      imageHdu.precision = PixelPrecision.float32;
+
+      /* Initialize Image Tiles*/
+      
+      let tiles: ImageTile<PixelType>[] = [];
+
+      for (let j = 0; j < getYTileDim(imageHdu); j += 1) {
+        let tw = imageHdu.tileWidth;
+        let th = imageHdu.tileHeight;
+        
+
+        if (j === getYTileDim(imageHdu) - 1) {
+          th -= (j + 1) * imageHdu.tileHeight - getHeight(imageHdu);
+        }
+        for (let i = 0; i < getXTileDim(imageHdu); i += 1) {
+          if (i === getXTileDim(imageHdu) - 1) {
+            tw -= (i + 1) * imageHdu.tileWidth - getWidth(imageHdu);
+          }
+          let index = j * getXTileDim(imageHdu) + i;
+          let x = i * imageHdu.tileWidth;
+          let y = j * imageHdu.tileHeight;
+          tiles.push({
+            index: index,
+            x: x,
+            y: y,
+            width: tw,
+            height: th,
+            pixelsLoaded: false,
+            pixelsLoading: false,
+            pixelLoadingFailed: false,
+            pixels: null,
+          });
+        }
+      }
+      
+
+      imageHdu.tiles = tiles;
+      imageHdu.tilesInitialized = true;
+
+      return state;
+    });
+
+    dispatch(new InitializeImageTilesSuccess(hduId));
   }
 
 

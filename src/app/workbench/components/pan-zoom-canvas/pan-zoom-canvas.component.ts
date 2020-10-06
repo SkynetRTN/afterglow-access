@@ -32,6 +32,11 @@ export type ViewportSizeChangeEvent = {
   height: number;
 }
 
+export type CanvasSizeChangeEvent = {
+  width: number;
+  height: number;
+}
+
 export type CanvasMouseEvent = {
   imageX: number;
   imageY: number;
@@ -79,6 +84,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   @Input() transformation: Transformation;
 
   @Output() onViewportChange = new EventEmitter<ViewportChangeEvent>();
+  @Output() onCanvasSizeChange = new EventEmitter<CanvasSizeChangeEvent>();
   @Output() onViewportSizeChange = new EventEmitter<ViewportSizeChangeEvent>();
   @Output() onImageClick = new EventEmitter<CanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<CanvasMouseEvent>();
@@ -321,6 +327,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private handleViewportChange() {
+    if(!this.transformation || !this.transformation.imageToViewportTransform) return;
     let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
     if (this.layers && this.layers[0] && this.layers[0].data && this.transformation && this.transformation.viewportSize) {
 
@@ -524,6 +531,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       this.targetCanvas.width = this.placeholder.clientWidth;
       this.targetCanvas.height = this.placeholder.clientHeight;
       this.setSmoothing(this.targetCtx, false);
+      this.onCanvasSizeChange.emit({width: this.targetCanvas.width, height: this.targetCanvas.height});
       return true;
     }
     return false;
@@ -549,8 +557,15 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     //draw immediately for optimal performance once tiles have loaded
   }
 
-  private get initialized() {
-    return this.viewInitialized && this.layers && this.layers[0] && this.layers[0].data && this.layers[0].data.tilesInitialized && this.transformation && this.transformation.imageToViewportTransform;
+  private get initialized(): boolean  {
+    if(!this.viewInitialized || !this.layers || !this.transformation || !this.transformation.imageToViewportTransform) return false;
+  
+    for(let i=0; i<this.layers.length; i++) {
+      let layer = this.layers[i];
+      if(!layer || !layer.data || !layer.data.tilesInitialized) return false;
+    }
+
+    return true;
   }
 
   public lazyLoadPixels() {

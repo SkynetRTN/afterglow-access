@@ -80,8 +80,20 @@ export class LoadImageHduHistogramSuccess {
   constructor(public hduId: string, public hist: ImageHist) { }
 }
 
+export class InitializeFileTiles {
+  public static readonly type = '[Data File] Initialize File Tiles';
+
+  constructor(public fileId: string) { }
+}
+
 export class InitializeImageTiles {
   public static readonly type = '[Data File] Initialize Image Tiles';
+
+  constructor(public hduId: string) { }
+}
+
+export class InitializeImageTilesSuccess {
+  public static readonly type = '[Data File] Initialize Image Tiles Success';
 
   constructor(public hduId: string) { }
 }

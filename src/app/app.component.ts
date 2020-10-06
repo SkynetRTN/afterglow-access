@@ -308,7 +308,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           DataProvidersState.getDataProviders
         );
         this.store.dispatch(new InitAuth());
-        // this.store.dispatch(new Initialize());
+        this.store.dispatch(new Initialize());
       });
   }
 

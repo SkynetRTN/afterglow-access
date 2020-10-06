@@ -26,19 +26,18 @@ export class WorkbenchDataFileListComponent {
   }
 
   trackByFn(index: number, value: DataFile | IHdu) {
-    return value.id && value.type;
+    if(!value) return null;
+    return `${value.type}-${value.id}`
   }
 
   onRowClick(item: DataFile | IHdu) {
-    if (this.selectedItem.type == item.type && this.selectedItem.id == item.id) return;
+    if (this.selectedItem && this.selectedItem.type == item.type && this.selectedItem.id == item.id) return;
 
     this.selectedItem = item;
     this.onSelectionChange.emit({ item: item, doubleClick: false });
   }
 
   onRowDoubleClick(item: DataFile | IHdu) {
-    if (this.selectedItem.type == item.type && this.selectedItem.id == item.id) return;
-
     this.selectedItem = item;
     this.onSelectionChange.emit({ item: item, doubleClick: true });
   }
