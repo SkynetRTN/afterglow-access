@@ -1,11 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnChanges } from '@angular/core';
-
-import { PixelNormalizer, normalize } from '../../models/pixel-normalizer';
-import {
-  ColorMap, grayColorMap, rainbowColorMap, coolColorMap,
-  heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap
-} from '../../models/color-map';
-import { StretchMode } from '../../models/stretch-mode';
+import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
+import { StretchMode } from '../../../data-files/models/stretch-mode';
+import { grayColorMap, rainbowColorMap, coolColorMap, heatColorMap, redColorMap, greenColorMap, blueColorMap, aColorMap } from '../../../data-files/models/color-map';
 
 @Component({
   selector: 'app-normalizer-form',

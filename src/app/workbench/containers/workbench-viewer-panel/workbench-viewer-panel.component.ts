@@ -37,14 +37,10 @@ import {
   MoveViewer,
 } from "../../workbench.actions";
 import { HotkeysService, Hotkey } from "angular2-hotkeys";
-import {
-  ZoomTo,
-  ZoomBy,
-  CenterRegionInViewport,
-} from "../../workbench-file-states.actions";
 import { MatMenuTrigger } from "@angular/material/menu";
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { IWorkbenchHduState } from '../../models/workbench-file-state';
+import { CenterRegionInViewport, ZoomBy } from '../../../data-files/data-files.actions';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -225,43 +221,44 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     return fileEntities[hduEntities[data.id].fileId];
   }
 
-  public zoomIn(hduId: string, imageAnchor: { x: number; y: number } = null) {
-    this.zoomBy(hduId, 1.0 / this.zoomStepFactor, imageAnchor);
-  }
+  // public zoomIn(hduId: string, imageAnchor: { x: number; y: number } = null) {
+  //   this.zoomBy(hduId, 1.0 / this.zoomStepFactor, imageAnchor);
+  // }
 
-  public zoomOut(hduId: string, imageAnchor: { x: number; y: number } = null) {
-    this.zoomBy(hduId, this.zoomStepFactor, imageAnchor);
-  }
+  // public zoomOut(hduId: string, imageAnchor: { x: number; y: number } = null) {
+  //   this.zoomBy(hduId, this.zoomStepFactor, imageAnchor);
+  // }
 
   // TODO: LAYER
-  public zoomBy(
-    fileId: string,
-    factor: number,
-    imageAnchor: { x: number; y: number } = null
-  ) {
-    this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
-  }
+  // public zoomBy(
+  //   fileId: string,
+  //   factor: number,
+  //   imageAnchor: { x: number; y: number } = null
+  // ) {
+  //   this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
+  // }
 
-  public zoomToFit(hduId: string, padding: number = 0) {
-    // TODO: LAYER
-    let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let hdu = hdus[hduId] as ImageHdu;
-    if (hdu) {
-      this.store.dispatch(
-        new CenterRegionInViewport(hduId, {
-          x: 1,
-          y: 1,
-          width: getWidth(hdu),
-          height: getHeight(hdu),
-        })
-      );
-    }
-  }
+  // public zoomToFit(hduId: string, padding: number = 0) {
+  //   // TODO: LAYER
+  //   let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
+  //   let hdu = hdus[hduId] as ImageHdu;
+  //   let imageData = 
+  //   if (hdu) {
+  //     this.store.dispatch(
+  //       new CenterRegionInViewport(hduId, {
+  //         x: 1,
+  //         y: 1,
+  //         width: getWidth(hdu),
+  //         height: getHeight(hdu),
+  //       })
+  //     );
+  //   }
+  // }
 
-  public zoomTo(hduId: string, value: number) {
-    // TODO: LAYER
-    this.store.dispatch(new ZoomTo(hduId, value, null));
-  }
+  // public zoomTo(hduId: string, value: number) {
+  //   // TODO: LAYER
+  //   this.store.dispatch(new ZoomTo(hduId, value, null));
+  // }
 
   ngOnInit() {}
 

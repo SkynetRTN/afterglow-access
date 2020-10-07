@@ -1,12 +1,14 @@
 import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
-import { getPixel, getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Subject, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
-import { ZoomTo, ZoomBy, CenterRegionInViewport } from '../../workbench-file-states.actions';
-import { CloseDataFile } from '../../../data-files/data-files.actions';
+import { CloseDataFile, ZoomTo } from '../../../data-files/data-files.actions';
+import { getPixel } from '../../../data-files/models/image-data';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { MoveByEvent, ZoomByEvent, LoadTileEvent, ZoomToEvent, ZoomToFitEvent } from '../pan-zoom-canvas/pan-zoom-canvas.component';
 
 @Component({
   selector: 'app-image-viewer-status-bar',
@@ -17,7 +19,13 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   @Input() hdu: ImageHdu;
   @Input() imageMouseX: number;
   @Input() imageMouseY: number;
+
   @Output() downloadSnapshot = new EventEmitter();
+  @Output() onMoveBy = new EventEmitter<MoveByEvent>();
+  @Output() onZoomBy = new EventEmitter<ZoomByEvent>();
+  @Output() onZoomTo = new EventEmitter<ZoomToEvent>();
+  @Output() onZoomToFit = new EventEmitter<ZoomToFitEvent>();
+  @Output() onLoadTile = new EventEmitter<LoadTileEvent>();
 
   raHours: number;
   decDegs: number;
@@ -44,7 +52,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
       return;
     }
     if(this.hdu.headerLoaded) {
-      this.pixelValue = getPixel(this.hdu, this.imageMouseX, this.imageMouseY);
+      let imageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[this.hdu.rawImageDataId]
+      this.pixelValue = getPixel(imageData, this.imageMouseX, this.imageMouseY);
       if(this.hdu.wcs.isValid()) {
         let wcs = this.hdu.wcs;
         let raDec = wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
@@ -113,33 +122,39 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   public zoomIn(imageAnchor: { x: number, y: number } = null) {
-    this.zoomBy(1.0 / this.zoomStepFactor, imageAnchor);
+    this.onZoomBy.emit({factor: 1.0 / this.zoomStepFactor, anchor: imageAnchor})
+    // this.zoomBy(1.0 / this.zoomStepFactor, imageAnchor);
   }
 
   public zoomOut(imageAnchor: { x: number, y: number } = null) {
-    this.zoomBy(this.zoomStepFactor, imageAnchor);
+    this.onZoomBy.emit({factor: this.zoomStepFactor, anchor: imageAnchor})
+    // this.zoomBy(this.zoomStepFactor, imageAnchor);
   }
 
   public zoomTo(value: number) {
-    this.store.dispatch(new ZoomTo(
-      this.hdu.id,
-      value,
-      null
-    ));
+    this.onZoomTo.emit({factor: value, anchor: null})
+    // this.store.dispatch(new ZoomTo(
+    //   this.hdu.transformation,
+    //   this.hdu.rawImageDataId,
+    //   value,
+    //   null
+    // ));
   }
 
   public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
-    this.store.dispatch(new ZoomBy(
-      this.hdu.id,
-      factor,
-      imageAnchor
-    ));
+    this.onZoomBy.emit({factor: factor, anchor: imageAnchor})
+    // this.store.dispatch(new ZoomBy(
+    //   this.hdu.id,
+    //   factor,
+    //   imageAnchor
+    // ));
   }
 
   public zoomToFit(padding: number = 0) {
-    this.store.dispatch(new CenterRegionInViewport(
-      this.hdu.id,
-      { x: 1, y: 1, width: getWidth(this.hdu), height: getHeight(this.hdu) }
-    ))
+    this.onZoomToFit.emit({})
+    // this.store.dispatch(new CenterRegionInViewport(
+    //   this.hdu.id,
+    //   { x: 1, y: 1, width: getWidth(this.hdu), height: getHeight(this.hdu) }
+    // ))
   }
 }

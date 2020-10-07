@@ -1,50 +1,15 @@
-import { ImageTile } from '../data-files/models/image-tile';
-import { PixelNormalizer } from './models/pixel-normalizer';
-import { Region } from './models/region';
 import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PosType, Source } from './models/source';
-import { Matrix } from 'svgjs';
 import { PhotometryPanelState } from './models/photometry-file-state';
-import { SourceExtractionJobSettings } from '../jobs/models/source-extraction';
-import { SourceExtractionSettings } from './models/source-extraction-settings';
-import { Transform } from './models/transformation';
-import { CustomMarker } from './models/custom-marker';
 import { Marker } from './models/marker';
 import { PhotData } from './models/source-phot-data';
+import { Region } from '../data-files/models/region';
 
 export class InitializeWorkbenchHduState {
   public static readonly type = '[Workbench HDU State] Initialize Workbench HDU State';
 
   constructor(public hduIds: string[]) { }
-}
-
-/* Composite */
-
-
-/* Normalization */
-export class InitializeHduNormalizationSuccess {
-  public static readonly type = '[Workbench HDU State] Initialize HDU Normalization Success';
-
-  constructor(public hduId: string) { }
-}
-
-export class RenormalizeImageHdu {
-  public static readonly type = '[Workbench HDU State] Renormalize Image Hdu';
-
-  constructor(public hduId: string) { }
-}
-
-export class NormalizeImageTile {
-  public static readonly type = '[Workbench HDU State] Normalize Image Tile';
-
-  constructor(public hduId: string, public tileIndex: number) { }
-}
-
-export class UpdateNormalizer {
-  public static readonly type = '[Workbench HDU State] Update Normalizer';
-
-  constructor(public hduId: string, public changes: Partial<PixelNormalizer>) { }
 }
 
 /* Sonification */
@@ -115,77 +80,6 @@ export class UpdateLine {
 
   constructor(public hduId: string, public point: { primaryCoord: number, secondaryCoord: number, posType: PosType }) { }
 }
-
-/* Transformations */
-/* can apply to an individual HDU or the entire file */ 
-
-export class ZoomBy {
-  public static readonly type = '[Transformation] Zoom By';
-
-  constructor(public targetId: string, public scaleFactor: number, public viewportAnchor: { x: number, y: number }, public isFile: boolean = false) { }
-}
-
-export class ZoomTo {
-  public static readonly type = '[Transformation] Zoom To';
-
-  constructor(public targetId: string, public scale: number, public anchorPoint: { x: number, y: number }, public isFile: boolean = false) { }
-}
-
-export class MoveBy {
-  public static readonly type = '[Transformation] Move By';
-
-  constructor(public targetId: string, public xShift: number, public yShift: number, public isFile: boolean = false) { }
-}
-
-export class SetImageTransform {
-  public static readonly type = '[Transformation] Set Image Transform';
-
-  constructor(public targetId: string, public transform: Transform, public isFile: boolean = false) { }
-}
-
-export class ResetImageTransform {
-  public static readonly type = '[Transformation] Reset Image Transform';
-
-  constructor(public targetId: string, public isFile: boolean = false) { }
-}
-
-export class SetViewportTransform {
-  public static readonly type = '[Transformation] Set Viewport Transform';
-
-  constructor(public targetId: string, public transform: Transform, public isFile: boolean = false) { }
-}
-
-export class RotateBy {
-  public static readonly type = '[Transformation] Rotate By';
-
-  constructor(public targetId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }, public isFile: boolean = false) { }
-}
-
-export class RotateTo {
-  public static readonly type = '[Transformation] Rotate To';
-
-  constructor(public targetId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }, public isFile: boolean = false) { }
-}
-
-export class Flip {
-  public static readonly type = '[Transformation] Flip';
-
-  constructor(public targetId: string, public isFile: boolean = false) { }
-}
-
-export class CenterRegionInViewport {
-  public static readonly type = '[Transformation] Center Region In Viewport';
-
-  constructor(public targetId: string, public region: Region, public viewportSize?: { width: number, height: number }, public isFile: boolean = false) { }
-}
-
-
-export class UpdateCurrentViewportSize {
-  public static readonly type = '[Transformation] Update Current Viewport Size'
-
-  constructor(public targetId: string, public viewportSize: { width: number, height: number }, public isFile: boolean = false) { }
-}
-
 
 /*Source Extractor*/
 export class UpdateFilteredSources {

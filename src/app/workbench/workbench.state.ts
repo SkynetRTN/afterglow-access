@@ -47,14 +47,15 @@ import {
   LoadHdu,
   CloseHduSuccess,
   CloseDataFile,
+  UpdateNormalizer,
+  SyncFileTransformations,
+  SyncFileNormalizations,
 } from "../data-files/data-files.actions";
 import {
   SelectDataFileListItem,
   RemoveViewerLayoutItem,
   SetFocusedViewer,
   SetViewerData,
-  SyncFileNormalizations,
-  SyncFileTransformations,
   SyncFilePlotters,
   SetViewerFileSuccess,
   SetViewerSyncEnabled,
@@ -113,6 +114,7 @@ import {
   UpdateFileInfoPanelConfig,
   MoveViewer,
   Initialize,
+  UpdateCurrentViewportSize,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -122,24 +124,14 @@ import {
   getSourceCoordinates,
   DataFile,
   ImageHdu,
-  DataLayer,
-  IHdu,
+  IHdu
 } from "../data-files/models/data-file";
 import {
   WorkbenchFileStates,
   WorkbenchFileStatesModel,
 } from "./workbench-file-states.state";
 import {
-  RenormalizeImageHdu,
   AddRegionToHistory,
-  MoveBy,
-  ZoomBy,
-  RotateBy,
-  Flip,
-  ResetImageTransform,
-  SetViewportTransform,
-  SetImageTransform,
-  UpdateNormalizer,
   StartLine,
   UpdateLine,
   UpdatePlotterFileState,
@@ -150,10 +142,8 @@ import { AfterglowCatalogService } from "./services/afterglow-catalogs";
 import { AfterglowFieldCalService } from "./services/afterglow-field-cals";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { CreateJob, UpdateJob } from "../jobs/jobs.actions";
-import { CatalogQueryJobResult } from "../jobs/models/catalog-query";
 import { PixelOpsJob, PixelOpsJobResult } from "../jobs/models/pixel-ops";
 import { JobType } from "../jobs/models/job-types";
-import { JobActionHandler } from "../jobs/lib/job-action-handler";
 import { AlignmentJob, AlignmentJobResult } from "../jobs/models/alignment";
 import { StackingJob } from "../jobs/models/stacking";
 import {
@@ -173,11 +163,6 @@ import {
 import { SonifierRegionMode } from "./models/sonifier-file-state";
 import { SourcesState, SourcesStateModel } from "./sources.state";
 import { SourceExtractionRegionOption } from "./models/source-extraction-settings";
-import {
-  getViewportRegion,
-  transformToMatrix,
-  matrixToTransform,
-} from "./models/transformation";
 import {
   SourceExtractionJobSettings,
   SourceExtractionJob,
@@ -201,6 +186,7 @@ import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.st
 import { HduType } from '../data-files/models/data-file-type';
 import { LoadDataFile } from '../data-files/data-files.actions';
 import { DataFileSelectionListBase } from '../data-files/components/data-file-selection-list/data-file-selection-list.component';
+import { getViewportRegion } from '../data-files/models/transformation';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: '051341ac-a968-4d48-9e01-8336ee6a978d',
@@ -496,6 +482,17 @@ export class WorkbenchState {
   ) {
     if (!focusedViewer) return null;
     return focusedViewer.data.type == 'file' ? dataFileEntities[focusedViewer.data.id] : hduEntities[focusedViewer.data.id];
+  }
+
+  @Selector([WorkbenchState.getFocusedViewer, DataFilesState.getDataFileEntities, DataFilesState.getHduEntities])
+  public static getFocusedViewerViewportSize(
+    state: WorkbenchStateModel,
+    focusedViewer: Viewer,
+    dataFileEntities: {[id: string]: DataFile},
+    hduEntities: {[id: string]: IHdu}
+  ) {
+    if (!focusedViewer) return null;
+    return focusedViewer.viewportSize;
   }
 
   @Selector()
@@ -885,10 +882,10 @@ export class WorkbenchState {
           hdus.forEach(hdu => {
             if (referenceHdu && hdu && hdu.hduType == HduType.IMAGE) {
               if (state.viewerSyncEnabled) {
-                this.store.dispatch(new SyncFileTransformations(hduEntities[referenceHdu.id] as ImageHdu, [hduEntities[hdu.id] as ImageHdu]))
+                this.store.dispatch(new SyncFileTransformations(referenceHdu.id, [hdu.id]))
               }
               if (state.normalizationSyncEnabled) {
-                this.store.dispatch(new SyncFileNormalizations(hduEntities[referenceHdu.id] as ImageHdu, [hduEntities[hdu.id] as ImageHdu]))
+                this.store.dispatch(new SyncFileNormalizations(referenceHdu.id, [hdu.id]))
               }
               if (state.plottingPanelConfig.plotterSyncEnabled) {
                 this.store.dispatch(new SyncFilePlotters(hduEntities[referenceHdu.id] as ImageHdu, [hduEntities[hdu.id] as ImageHdu]))
@@ -1244,6 +1241,25 @@ export class WorkbenchState {
           sourcePanel.selectedViewerId = sourcePanel.viewerIds[Math.max(0, Math.min(sourcePanel.viewerIds.length - 1, sourceViewerIndex - 1))];
         }
       }
+      return state;
+    });
+  }
+
+  @Action(UpdateCurrentViewportSize)
+  @ImmutableContext()
+  public updateCurrentViewportSize(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { viewerId, viewportSize }: UpdateCurrentViewportSize
+  ) {
+   
+    setState((state: WorkbenchStateModel) => {
+      let viewer = state.viewers[viewerId];
+      if(!viewer.viewportSize || viewer.viewportSize.width != viewportSize.width || viewer.viewportSize.height != viewportSize.height) {
+        state.viewers[viewerId].viewportSize = {
+          ...viewportSize
+        };
+      }
+     
       return state;
     });
   }
@@ -1904,6 +1920,7 @@ export class WorkbenchState {
         zoomEnabled: true,
         markers: [],
         keepOpen: false,
+        viewportSize: null
       };
 
       dispatch(new CreateViewer(viewer, state.focusedViewerPanelId));
@@ -1943,37 +1960,7 @@ export class WorkbenchState {
     return;
   }
 
-  @Action(SyncFileNormalizations)
-  @ImmutableContext()
-  public syncFileNormalizations(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { reference, hdus }: SyncFileNormalizations
-  ) {
-    let state = getState();
-    let hduStates = this.store.selectSnapshot(
-      WorkbenchFileStates.getHduStateEntities
-    );
-
-    let srcHdu = reference;
-    if (!srcHdu) return;
-
-    let targetHdus = hdus;
-    let srcNormalizer = (hduStates[srcHdu.id] as WorkbenchImageHduState).normalization.normalizer;
-
-    let actions = [];
-    targetHdus.forEach((targetHdu) => {
-      if (!targetHdu || targetHdu.id == srcHdu.id) return;
-      actions.push(
-        new UpdateNormalizer(targetHdu.id, {
-          ...srcNormalizer,
-          peakPercentile: srcNormalizer.peakPercentile,
-          backgroundPercentile: srcNormalizer.backgroundPercentile,
-        })
-      );
-    });
-
-    return dispatch(actions);
-  }
+  
 
   @Action(SyncFilePlotters)
   @ImmutableContext()
@@ -1999,89 +1986,7 @@ export class WorkbenchState {
     });
   }
 
-  @Action(SyncFileTransformations)
-  @ImmutableContext()
-  public syncFileTransformations(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { reference, hdus }: SyncFileTransformations
-  ) {
-    // TODO: LAYER
-    let state = getState();
-    let hduStates = this.store.selectSnapshot(
-      WorkbenchFileStates.getHduStateEntities
-    );
-
-    let actions = [];
-    let srcHdu = reference;
-    let targetHdus = hdus;
-
-    if (!srcHdu) return;
-    let srcHduState = hduStates[srcHdu.id] as WorkbenchImageHduState;
-    let srcHasWcs = srcHdu.wcs && srcHdu.wcs.isValid();
-    let srcImageTransform =
-      srcHduState.transformation.imageTransform;
-    let srcViewportTransform =
-      srcHduState.transformation.viewportTransform;
-
-    targetHdus.forEach((targetHdu) => {
-      if (!targetHdu || targetHdu.id == srcHdu.id) return;
-      let targetHasWcs = targetHdu.wcs && targetHdu.wcs.isValid();
-
-      if (srcHasWcs && targetHasWcs) {
-        let srcWcs = targetHdu.wcs;
-        let srcWcsTransform = new Matrix(
-          srcWcs.m11,
-          srcWcs.m21,
-          srcWcs.m12,
-          srcWcs.m22,
-          0,
-          0
-        );
-        let originWorld = srcWcs.pixToWorld([0, 0]);
-        let targetWcs = targetHdu.wcs;
-        let originPixels = targetWcs.worldToPix(originWorld);
-        let targetWcsTransform = new Matrix(
-          targetWcs.m11,
-          targetWcs.m21,
-          targetWcs.m12,
-          targetWcs.m22,
-          0,
-          0
-        );
-        let targetImageFileState = hduStates[targetHdu.id];
-
-        if (hasOverlap(srcHdu, targetHdu)) {
-          let srcToTargetTransform = srcWcsTransform
-            .inverted()
-            .appended(targetWcsTransform)
-            .translate(-originPixels[0], -originPixels[1]);
-          let targetImageMatrix = transformToMatrix(
-            srcHduState.transformation.imageTransform
-          ).appended(srcToTargetTransform);
-          actions.push(
-            new SetImageTransform(
-              targetHdu.id,
-              matrixToTransform(targetImageMatrix)
-            )
-          );
-          actions.push(
-            new SetViewportTransform(
-              targetHdu.id,
-              srcHduState.transformation.viewportTransform
-            )
-          );
-        }
-      } else {
-        let targetImageFileState = hduStates[targetHdu.id];
-        actions.push(new SetImageTransform(targetHdu.id, srcImageTransform));
-        actions.push(
-          new SetViewportTransform(targetHdu.id, srcViewportTransform)
-        );
-      }
-    });
-    return dispatch(actions);
-  }
-
+  
   @Action(LoadCatalogs)
   @ImmutableContext()
   public loadCatalogs(
@@ -2645,15 +2550,20 @@ export class WorkbenchState {
   @ImmutableContext()
   public extractSources(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, settings }: ExtractSources
+    { hduId, viewerId, settings }: ExtractSources
   ) {
     let state = getState();
     let photometryPageSettings = this.store.selectSnapshot(
       WorkbenchState.getPhotometryPanelConfig
     );
-    let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let hdu = hdus[hduId] as ImageHdu;
+    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
+    let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
+    let hdu = hduEntities[hduId] as ImageHdu;
+    let rawImageData = imageDataEntities[hdu.rawImageDataId];
+    let imageToViewportTransform = transformEntities[hdu.transformation.imageToViewportTransformId];
     let hduState = this.store.selectSnapshot(WorkbenchFileStates.getHduStateEntities)[hdu.id] as WorkbenchImageHduState;
+    let viewportSize = state.viewers[viewerId].viewportSize;
     let sonificationState = hduState.sonificationPanelState;
 
     let jobSettings: SourceExtractionJobSettings = {
@@ -2668,7 +2578,7 @@ export class WorkbenchState {
         sonificationState.regionMode ==
         SonifierRegionMode.VIEWPORT)
     ) {
-      let region = getViewportRegion(hduState.transformation, getWidth(hdu), getHeight(hdu));
+      let region = getViewportRegion(imageToViewportTransform, rawImageData.width, rawImageData.height, viewportSize.width, viewportSize.height);
 
       jobSettings = {
         ...jobSettings,

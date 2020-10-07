@@ -92,6 +92,12 @@ export class SetViewerData {
   constructor(public viewerId: string, public data: {id: string, type: 'file' | 'hdu'}) { }
 }
 
+export class UpdateCurrentViewportSize {
+  public static readonly type = '[Workbench] Update Current Viewport Size'
+
+  constructor(public viewerId: string, public viewportSize: { width: number, height: number }) { }
+}
+
 export class SetViewerMarkers {
   public static readonly type = '[Workbench] Set Viewer Markers'
 
@@ -128,17 +134,9 @@ export class SetNormalizationSyncEnabled {
   constructor(public value: boolean) { }
 }
 
-export class SyncFileTransformations {
-  public static readonly type = '[Workbench] Sync File Transformations';
 
-  constructor(public reference: ImageHdu, public hdus: ImageHdu[]) { }
-}
 
-export class SyncFileNormalizations {
-  public static readonly type = '[Workbench] Sync File Normalizations';
 
-  constructor(public reference: ImageHdu, public hdus: ImageHdu[]) { }
-}
 
 export class SyncFilePlotters {
   public static readonly type = '[Workbench] Sync File Plotters';
@@ -345,7 +343,7 @@ export class CreateStackingJob {
 export class ExtractSources {
   public static readonly type = '[Workbench] Extract Sources'
 
-  constructor(public hduId: string, public settings: SourceExtractionSettings) { }
+  constructor(public hduId: string, public viewerId: string, public settings: SourceExtractionSettings) { }
 }
 
 export class ExtractSourcesSuccess {

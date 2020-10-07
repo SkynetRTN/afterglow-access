@@ -6,19 +6,20 @@ import {
   Input,
   HostBinding
 } from "@angular/core";
-import { Subject } from "rxjs";
+import { Subject, BehaviorSubject } from "rxjs";
 import { auditTime } from "rxjs/operators";
 
 declare let d3: any;
 
-import { Normalization } from "../../models/normalization";
-import { StretchMode } from "../../models/stretch-mode";
 import { appConfig } from "../../../../environments/environment.prod";
 import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
-import { UpdateNormalizer, Flip, RotateBy, ResetImageTransform } from '../../workbench-file-states.actions';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
+import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip } from '../../../data-files/data-files.actions';
+import { StretchMode } from '../../../data-files/models/stretch-mode';
+import { DataFilesState } from '../../../data-files/data-files.state';
 
 @Component({
   selector: "app-display-panel",
@@ -28,7 +29,16 @@ import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 })
 export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() hdu: ImageHdu;
-  @Input() normalization: Normalization;
+  @Input() normalizer: PixelNormalizer;
+
+  @Input("viewportSize")
+  set viewportSize(viewportSize: {width: number, height: number}) {
+    this.viewportSize$.next(viewportSize);
+  }
+  get viewportSize() {
+    return this.viewportSize$.getValue();
+  }
+  private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -107,8 +117,8 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
     this.store.dispatch(
       new UpdateNormalizer(this.hdu.id,
         {
-          backgroundPercentile: this.normalization.normalizer.peakPercentile,
-          peakPercentile: this.normalization.normalizer.backgroundPercentile
+          backgroundPercentile: this.normalizer.peakPercentile,
+          peakPercentile: this.normalizer.backgroundPercentile
         }
       )
     );
@@ -116,7 +126,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onFlipClick() {
     this.store.dispatch(
-      new Flip(this.hdu.id)
+      new Flip(this.hdu.transformation, this.hdu.rawImageDataId)
     );
   }
 
@@ -129,13 +139,13 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onRotateClick() {
     this.store.dispatch(
-      new RotateBy(this.hdu.id, 90)
+      new RotateBy(this.hdu.transformation, this.hdu.rawImageDataId, this.viewportSize, 90)
     );
   }
 
   onResetOrientationClick() {
     this.store.dispatch(
-      new ResetImageTransform(this.hdu.id)
+      new ResetImageTransform(this.hdu.transformation, this.hdu.rawImageDataId)
     );
   }
 

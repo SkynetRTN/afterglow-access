@@ -39,9 +39,10 @@ import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { WasmService } from './wasm.service';
 import { HduType } from './data-files/models/data-file-type';
-import { ImageHdu, IHdu } from './data-files/models/data-file';
+import { ImageHdu, IHdu, PixelType } from './data-files/models/data-file';
 import { WorkbenchImageHduState } from './workbench/models/workbench-file-state';
 import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
+import { IImageData } from './data-files/models/image-data';
 
 export function dataFileSanitizer(v) {
   let state = {
@@ -67,13 +68,23 @@ export function dataFileSanitizer(v) {
         hist: null,
         histLoaded: false,
         histLoading: false,
-        tilesInitialized: false,
-        tiles: []
       } as ImageHdu
     }
 
     state.hduEntities[key] = hdu;
+  })
 
+  state.imageDataEntities = {
+    ...state.imageDataEntities
+  }
+  Object.keys(state.imageDataEntities).forEach(key => {
+    let imageData: IImageData<PixelType> = {
+      ...state.imageDataEntities[key],
+      tiles: [],
+      initialized: false
+    }
+
+    state.imageDataEntities[key] = imageData;
   })
   return state;
 }
@@ -87,27 +98,6 @@ export function workbenchHduStateSanitizer(v) {
     ...state.hduStateEntities
   }
 
-  Object.keys(state.hduStateEntities).forEach(key => {
-    let hduState = {
-      ...state.hduStateEntities[key]
-    };
-
-    if(hduState.hduType == HduType.IMAGE) {
-      let imageHduState = hduState as WorkbenchImageHduState;
-      hduState = {
-        ...hduState,
-        normalization: {
-          ...imageHduState.normalization,
-          tiles: [],
-          tilesInitialized: false,
-          initialized: false
-        }
-      } as WorkbenchImageHduState
-    }
-
-    state.hduStateEntities[key] = hduState;
-
-  })
   return state;
 }
 

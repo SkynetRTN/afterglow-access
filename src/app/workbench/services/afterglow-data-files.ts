@@ -6,10 +6,10 @@ import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { DataFile, Header, PixelPrecision, PixelType, ImageHdu } from "../../data-files/models/data-file";
 import { ImageHist } from "../../data-files/models/image-hist";
-import { Region } from "../models/region";
 import { Source, PosType } from "../models/source";
 import { getCoreApiUrl } from '../../../environments/app-config';
 import { HduType } from '../../data-files/models/data-file-type';
+import { Region } from '../../data-files/models/region';
 
 export interface CoreDataFile {
   id: number;

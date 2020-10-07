@@ -1,8 +1,8 @@
 import { Component, OnInit, Input, ViewChild, ElementRef, OnChanges, Output, EventEmitter, ChangeDetectionStrategy, AfterViewInit, ChangeDetectorRef, SimpleChange, SimpleChanges } from '@angular/core';
 import { Point, Matrix, Rectangle } from "paper"
 import { Marker, MarkerType, CircleMarker, TeardropMarker } from '../../models/marker';
-import { Transform, transformToMatrix } from '../../models/transformation';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { Transform, transformToMatrix } from '../../../data-files/models/transformation';
 
 export type MarkerMouseEvent = {
   marker: Marker;
@@ -26,7 +26,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   @Output() onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
   @ViewChild('svgGroup', { static: true }) svgGroup: ElementRef;
-  @ViewChild('svgTextGroup') svgTextGroup: ElementRef;
+  @ViewChild('svgTextGroup', { static: true }) svgTextGroup: ElementRef;
   @ViewChild('svgElementRef', { static: true }) svgElementRef: ElementRef;
 
   private lastTransform: Transform;

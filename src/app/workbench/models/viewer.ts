@@ -1,5 +1,4 @@
 import { Marker } from './marker';
-import { BlendMode } from './blend-mode';
 import { DataFile, IHdu } from '../../data-files/models/data-file';
 
 export interface Viewer {
@@ -9,4 +8,5 @@ export interface Viewer {
   zoomEnabled: boolean;
   markers: Marker[];
   keepOpen: boolean;
+  viewportSize: {width: number, height: number};
 }

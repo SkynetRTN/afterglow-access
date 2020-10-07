@@ -1,4 +1,4 @@
-import { Region } from './region';
+import { Region } from '../../data-files/models/region';
 
 export enum SonifierRegionMode {
   VIEWPORT,

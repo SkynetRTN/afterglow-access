@@ -224,7 +224,7 @@
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
         <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="focusedImageHdu$ | async"
-          [normalization]="focusedHduNormalization$ | async">
+          [normalizer]="focusedHduNormalizer$ | async">
         </app-display-panel>
 
         <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="focusedImageHdu$ | async"
@@ -243,7 +243,8 @@
         </app-plotting-panel>
 
         <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [hdu]="focusedImageHdu$ | async"
-          [transformation]="focusedHduTransformation$ | async" [state]="sonificationPanelState$ | async">
+          [transform]="focusedHduImageToViewportTransform$ | async" [viewportSize]="focusedViewerViewportSize$ | async"
+          [state]="sonificationPanelState$ | async">
         </app-sonification-panel>
 
         <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [primaryHdu]="focusedImageHdu$ | async"

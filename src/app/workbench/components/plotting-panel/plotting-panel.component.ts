@@ -18,9 +18,9 @@ import {
   BehaviorSubject,
   combineLatest,
 } from "rxjs";
-import { map, withLatestFrom } from "rxjs/operators";
+import { map, withLatestFrom, switchMap, distinctUntilChanged } from "rxjs/operators";
 import {
-  getDegsPerPixel, DataFile, ImageHdu,
+  getDegsPerPixel, DataFile, ImageHdu, PixelType,
 } from "../../../data-files/models/data-file";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { PlotterComponent } from "../plotter/plotter.component";
@@ -30,6 +30,8 @@ import { PosType } from "../../models/source";
 import { Router } from "@angular/router";
 import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Store, Actions } from "@ngxs/store";
+import { IImageData } from '../../../data-files/models/image-data';
+import { DataFilesState } from '../../../data-files/data-files.state';
 
 @Component({
   selector: "app-plotting-panel",
@@ -59,6 +61,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
 
   @Output() configChange: EventEmitter<Partial<PlottingPanelConfig>> = new EventEmitter();
 
+  imageData$: Observable<IImageData<PixelType>>;
   PosType = PosType;
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
@@ -84,6 +87,17 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
+    this.imageData$ = this.hdu$.pipe(
+      map(hdu => hdu.rawImageDataId),
+      distinctUntilChanged(),
+      switchMap(imageDataId => {
+        return store.select(DataFilesState.getImageDataById).pipe(
+          map(fn => fn(imageDataId))
+        )
+      })
+    )
+
+
     this.lineStart$ = combineLatest(this.hdu$, this.state$).pipe(
       map(([hdu, state]) => {
         if (!state || !state.lineMeasureStart || !hdu) return null;

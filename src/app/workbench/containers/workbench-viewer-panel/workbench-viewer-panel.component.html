@@ -36,7 +36,7 @@
           </div>
         </div>
       </ng-template>
-      <app-workbench-viewer (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)" [data]="viewer.data"
+      <app-workbench-viewer (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)" [viewerId]="viewer.viewerId" [data]="viewer.data"
         [active]="selectedViewerId == viewer.viewerId && hasFocus" [markers]="viewer.markers"
         (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"
         (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"

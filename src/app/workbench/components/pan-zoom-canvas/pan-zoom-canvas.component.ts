@@ -7,16 +7,13 @@ import { Point, Rectangle } from "paper";
 import * as SVG from 'svgjs'
 import * as normalizeWheel from 'normalize-wheel';
 
-import { getWidth, getHeight, findTiles, ImageHdu, ITiledImageData } from '../../../data-files/models/data-file';
-import { Normalization } from '../../models/normalization';
-import { Transformation, getViewportRegion, transformToMatrix } from '../../models/transformation';
 import { Source } from '../../models/source';
-import { ImageTile } from '../../../data-files/models/image-tile';
 import { Store } from '@ngxs/store';
-import { MoveBy, ZoomBy, UpdateCurrentViewportSize, NormalizeImageTile } from '../../workbench-file-states.actions';
-import { LoadImageTilePixels } from '../../../data-files/data-files.actions';
-import { BlendMode } from '../../models/blend-mode';
+import { LoadRawImageTile } from '../../../data-files/data-files.actions';
 import { animateChild } from '@angular/animations';
+import { IImageData, ImageTile, findTiles } from '../../../data-files/models/image-data';
+import { BlendMode } from '../../../data-files/models/blend-mode';
+import { Transform, invertTransform, transformPoint, getViewportRegion, transformToMatrix } from '../../../data-files/models/transformation';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -55,16 +52,17 @@ export type ZoomByEvent = {
   anchor: {x: number, y: number}
 }
 
-export type LoadTileEvent = {
-  layer: PanZoomCanvasLayer;
-  tileIndex: number;
+export type ZoomToEvent = {
+  factor: number;
+  anchor: {x: number, y: number}
 }
 
-export interface PanZoomCanvasLayer {
-  id: string,
-  data: ITiledImageData<Uint32Array>,
-  blendMode: BlendMode,
-  alpha: number
+export type ZoomToFitEvent = {
+}
+
+export type LoadTileEvent = {
+  imageDataId: string;
+  tileIndex: number;
 }
 
 @Directive({
@@ -80,8 +78,8 @@ export interface PanZoomCanvasLayer {
   exportAs: 'panZoomCanvas'
 })
 export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @Input() layers: PanZoomCanvasLayer[];
-  @Input() transformation: Transformation;
+  @Input() imageData: IImageData<Uint32Array>;
+  @Input() transform: Transform;
 
   @Output() onViewportChange = new EventEmitter<ViewportChangeEvent>();
   @Output() onCanvasSizeChange = new EventEmitter<CanvasSizeChangeEvent>();
@@ -101,7 +99,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   private imageCtx: CanvasRenderingContext2D;
   private backgroundCanvas: HTMLCanvasElement;
   private backgroundCtx: CanvasRenderingContext2D;
-  private lastLayers: PanZoomCanvasLayer[] = null;
+  private lastImageData: IImageData<Uint32Array> = null;
 
   private lastViewportChangeEvent: ViewportChangeEvent = null;
   private lastViewportSize: { width: number, height: number } = { width: null, height: null };
@@ -271,12 +269,12 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   get scale() {
     // let temp = this.normalizationConfig.imageToViewportTransform.scaling;
-    let temp = new Point(this.transformation.imageToViewportTransform.a, this.transformation.imageToViewportTransform.c);
+    let temp = new Point(this.transform.a, this.transform.c);
     return temp.getDistance(new Point(0, 0));
   }
 
   get viewportTopLeft() {
-    return new Point(-this.transformation.imageToViewportTransform.tx, -this.transformation.imageToViewportTransform.ty);
+    return new Point(-this.transform.tx, -this.transform.ty);
   }
 
   public moveBy(xShift: number, yShift: number) {
@@ -284,7 +282,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public moveToCenter() {
-    this.moveTo({ x: this.layers[0].data.width / 2, y: this.layers[0].data.height / 2 })
+    this.moveTo({ x: this.imageData.width / 2, y: this.imageData.height / 2 })
   }
 
   public moveTo(imageRef: { x: number, y: number }, canvasRef: { x: number, y: number } = null) {
@@ -301,37 +299,34 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   public get viewportToImageTransform() {
-    let matrix = transformToMatrix(this.transformation.imageToViewportTransform);
-    return matrix.inverted();
+    return invertTransform(this.transform);
   }
 
   public viewportCoordToImageCoord(p: { x: number, y: number }) {
-    let result = this.viewportToImageTransform.transform(new Point(p.x, p.y));
+    let result = transformPoint(p, this.viewportToImageTransform);
     return { x: result.x + 0.5, y: result.y + 0.5 };
   }
 
   public imageCoordToViewportCoord(p: { x: number, y: number }) {
-    let matrix = transformToMatrix(this.transformation.imageToViewportTransform);
-    let result = matrix.transform(new Point(p.x - 0.5, p.y - 0.5));
-    return { x: result.x, y: result.y };
+    return transformPoint({x: p.x - 0.5, y: p.y - 0.5}, this.transform);
   }
 
   public mouseOnImage(viewportCoord: {x: number, y: number}) {
     // console.log('mouse on image');
 
     let imagePoint = this.viewportCoordToImageCoord(new Point(viewportCoord.x, viewportCoord.y));
-    let mouseOffImage: boolean = imagePoint.x < 0.5 || imagePoint.x >= this.layers[0].data.width + 0.5 ||
-      imagePoint.y < 0.5 || imagePoint.y >= this.layers[0].data.height + 0.5;
+    let mouseOffImage: boolean = imagePoint.x < 0.5 || imagePoint.x >= this.imageData.width + 0.5 ||
+      imagePoint.y < 0.5 || imagePoint.y >= this.imageData.height + 0.5;
     //console.log(viewportCoord.x, viewportCoord.y, imagePoint.x, imagePoint.y, !mouseOffImage);
     return !mouseOffImage;
   }
 
   private handleViewportChange() {
-    if(!this.transformation || !this.transformation.imageToViewportTransform) return;
+    if(!this.transform) return;
     let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
-    if (this.layers && this.layers[0] && this.layers[0].data && this.transformation && this.transformation.viewportSize) {
+    if (this.imageData && this.transform) {
 
-      let viewportRegion = getViewportRegion(this.transformation, this.layers[0].data.width, this.layers[0].data.height);
+      let viewportRegion = getViewportRegion(this.transform, this.imageData.width, this.imageData.height, viewportSize.width, viewportSize.height);
 
       let $event: ViewportChangeEvent = {
         viewportWidth: viewportSize.width,
@@ -491,9 +486,9 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   getViewportTiles() {
-    if (this.layers[0].data.width != this.imageCanvas.width || this.layers[0].data.height != this.imageCanvas.height) {
-      this.imageCanvas.width = this.layers[0].data.width;
-      this.imageCanvas.height = this.layers[0].data.height;
+    if (this.imageData.width != this.imageCanvas.width || this.imageData.height != this.imageCanvas.height) {
+      this.imageCanvas.width = this.imageData.width;
+      this.imageCanvas.height = this.imageData.height;
     }
 
     let c1 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight));
@@ -503,7 +498,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     let maxPoint = new Point(Math.max(c1.x, c2.x, c3.x, c4.x), Math.max(c1.y, c2.y, c3.y, c4.y));
     let minPoint =  new Point(Math.min(c1.x, c2.x, c3.x, c4.x), Math.min(c1.y, c2.y, c3.y, c4.y));
 
-    return findTiles(this.layers[0].data, minPoint.x, minPoint.y, maxPoint.x-minPoint.x, maxPoint.y-minPoint.y);
+    return findTiles(this.imageData, {x: minPoint.x, y: minPoint.y, width: maxPoint.x-minPoint.x, height: maxPoint.y-minPoint.y});
 
 
 
@@ -514,11 +509,11 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   checkForNewImage() {
-    if (this.lastLayers && this.lastLayers == this.layers) return;
+    if (this.lastImageData && this.lastImageData == this.imageData) return;
     //new image detected
     this.lastViewportChangeEvent = null;
     this.lastViewportSize = { width: null, height: null };
-    this.lastLayers = this.layers;
+    this.lastImageData = this.imageData;
     this.bufferedTiles = {};
 
     let viewportSize = { width: this.placeholder.clientWidth, height: this.placeholder.clientHeight };
@@ -558,13 +553,8 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   private get initialized(): boolean  {
-    if(!this.viewInitialized || !this.layers || !this.transformation || !this.transformation.imageToViewportTransform) return false;
+    if(!this.viewInitialized || !this.imageData || !this.transform || !this.imageData.initialized) return false;
   
-    for(let i=0; i<this.layers.length; i++) {
-      let layer = this.layers[i];
-      if(!layer || !layer.data || !layer.data.tilesInitialized) return false;
-    }
-
     return true;
   }
 
@@ -573,7 +563,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     let tiles = this.getViewportTiles();
     tiles.forEach(tile => {
       if (!tile.pixelsLoaded && !tile.pixelsLoading && !tile.pixelLoadingFailed) {
-        this.onLoadTile.emit({layer: this.layers[0], tileIndex: tile.index})
+        this.onLoadTile.emit({imageDataId: this.imageData.id, tileIndex: tile.index})
       }
     })
 
@@ -592,8 +582,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
 
     if (this.initialized) {
+      
       let tiles = this.getViewportTiles();
 
+      console.log('tiles')
       tiles.forEach(tile => {
         if (!tile.pixelsLoaded) {
           // fill in tile with solid background when image file pixels have not been loaded
@@ -613,7 +605,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
         }
 
       })
-      let matrix = transformToMatrix(this.transformation.imageToViewportTransform)
+      let matrix = transformToMatrix(this.transform)
       matrix.applyToContext(this.targetCtx);
       this.targetCtx.drawImage(this.imageCanvas, 0, 0);
     }

@@ -1,4 +1,3 @@
-import { Region } from './region';
 import { Marker } from './marker';
 
 

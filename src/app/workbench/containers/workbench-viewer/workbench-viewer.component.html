@@ -11,8 +11,8 @@
           app-pan-zoom-canvas
           #panZoomCanvas="panZoomCanvas"
           class="viewer"
-          [layers]="layers$ | async"
-          [transformation]="transformation$ | async"
+          [imageData]="imageData$ | async"
+          [transform]="imageToViewportTransform$ | async"
           (onImageMove)="handleImageMove($event)"
           (onImageClick)="handleImageClick($event)"
           (onMoveBy)="handleMoveBy($event)"
@@ -24,7 +24,7 @@
           <app-image-viewer-marker-overlay
             [svgWidth]="currentCanvasSize?.width"
             [svgHeight]="currentCanvasSize?.height"
-            [transform]="(transformation$ | async)?.imageToViewportTransform"
+            [transform]="imageToViewportTransform$ | async"
             [markers]="markers"
             (onMarkerClick)="handleMarkerClick($event)"
             style="pointer-events: none"
@@ -42,6 +42,9 @@
         [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY"
         (downloadSnapshot)="handleDownloadSnapshot()"
+        (onZoomBy)="handleZoomBy($event)"
+        (onZoomTo)="handleZoomTo($event)"
+        (onZoomToFit)="handleZoomToFit($event)"
       ></app-image-viewer-status-bar>
     </div>
   </ng-container>

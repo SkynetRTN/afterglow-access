@@ -99,6 +99,15 @@ export class PhotometryPageComponent
   }
   private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
 
+  @Input("viewerId")
+  set viewerId(viewerId: string) {
+    this.viewerId$.next(viewerId);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  private viewerId$ = new BehaviorSubject<string>(null);
+
   @Input("state")
   set state(state: PhotometryPanelState) {
     this.state$.next(state);
@@ -609,7 +618,7 @@ export class PhotometryPageComponent
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.primaryHdu.id, result)]);
+        this.store.dispatch([new ExtractSources(this.primaryHdu.id, this.viewerId, result)]);
       }
     });
   }

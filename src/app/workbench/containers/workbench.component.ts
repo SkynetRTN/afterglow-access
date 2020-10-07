@@ -20,7 +20,6 @@ import {
   getSourceCoordinates,
   getCenterTime,
   ImageHdu,
-  DataLayer,
   IHdu,
 } from "../../data-files/models/data-file";
 import { SidebarView } from "../models/sidebar-view";
@@ -59,8 +58,6 @@ import {
   UpdateFileInfoPanelConfig,
   UpdatePhotometrySettings,
   UpdateSourceExtractionSettings,
-  SyncFileTransformations,
-  SyncFileNormalizations,
   SyncFilePlotters,
 } from "../workbench.actions";
 import { LoadDataProviders } from "../../data-providers/data-providers.actions";
@@ -113,9 +110,7 @@ import {
   SonifierRegionMode,
   SonificationPanelState,
 } from "../models/sonifier-file-state";
-import { Transformation } from "../models/transformation";
 import { FileInfoPanelConfig } from "../models/file-info-panel";
-import { Normalization } from "../models/normalization";
 import { SourcesState } from "../sources.state";
 import { PhotometrySettings } from "../models/photometry-settings";
 import { CentroidSettings } from "../models/centroid-settings";
@@ -132,7 +127,12 @@ import {
   LoadLibrary,
   LoadDataFile,
   LoadHdu,
+  SyncFileTransformations,
+  SyncFileNormalizations,
 } from "../../data-files/data-files.actions";
+import { Transformation, Transform } from '../../data-files/models/transformation';
+import { Normalization } from '../../data-files/models/normalization';
+import { PixelNormalizer } from '../../data-files/models/pixel-normalizer';
 
 @Component({
   selector: "app-workbench",
@@ -170,10 +170,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   dataFileListItems$: Observable<Array<DataFile | ImageHdu>>;
   focusedViewer$: Observable<Viewer>;
   focusedViewerData$: Observable<DataFile | IHdu>;
+  focusedViewerViewportSize$: Observable<{width: number, height: number}>;
   focusedImageHduId$: Observable<string>;
   focusedImageHdu$: Observable<ImageHdu>;
-  focusedHduTransformation$: Observable<Transformation>;
-  focusedHduNormalization$: Observable<Normalization>;
+  focusedHduImageToViewportTransform$: Observable<Transform>;
+  focusedHduNormalizer$: Observable<PixelNormalizer>;
 
   fileInfoPanelConfig$: Observable<FileInfoPanelConfig>;
   customMarkerPanelState$: Observable<CustomMarkerPanelState>;
@@ -282,6 +283,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       WorkbenchState.getFocusedViewerData
     );
 
+    this.focusedViewerViewportSize$ = this.store.select(
+      WorkbenchState.getFocusedViewerViewportSize
+    );
+
     this.selectedItem$ = this.focusedViewerData$;
 
     this.dataFileListItems$ = this.store
@@ -335,20 +340,21 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.focusedHduTransformation$ = this.focusedImageHduId$.pipe(
+    this.focusedHduImageToViewportTransform$ = this.focusedImageHdu$.pipe(
+      map(hdu => hdu.transformation.imageToViewportTransformId),
       distinctUntilChanged(),
-      switchMap((hduId) => {
+      switchMap((transformId) => {
         return this.store
-          .select(WorkbenchFileStates.getTransformation)
-          .pipe(map((fn) => fn(hduId)));
+          .select(DataFilesState.getTransformById)
+          .pipe(map((fn) => fn(transformId)));
       })
     );
 
-    this.focusedHduNormalization$ = this.focusedImageHduId$.pipe(
+    this.focusedHduNormalizer$ = this.focusedImageHduId$.pipe(
       distinctUntilChanged(),
       switchMap((hduId) => {
         return this.store
-          .select(WorkbenchFileStates.getNormalization)
+          .select(DataFilesState.getNormalizer)
           .pipe(map((fn) => fn(hduId)));
       })
     );
@@ -888,6 +894,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         switchMap(
           ([hduId, transformationSyncEnabled, selectedViewerFileIds]) => {
             if (!transformationSyncEnabled) return empty();
+            let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
             let header$ = merge(
               ...selectedViewerFileIds.map((v) => {
                 return this.store.select(DataFilesState.getHeader).pipe(
@@ -897,16 +904,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               })
             );
 
-            let transformation$ = this.store
-              .select(WorkbenchFileStates.getTransformation)
+            let transform$ = this.store
+              .select(DataFilesState.getTransformById)
               .pipe(
                 map((fn) => {
-                  return fn(hduId);
+                  return fn(hdu.transformation.imageToViewportTransformId);
                 }),
                 distinctUntilChanged()
               );
 
-            return combineLatest(header$, transformation$).pipe(
+            return combineLatest(header$, transform$ ).pipe(
               withLatestFrom(visibleFileHdus$),
               map(([[header, transformation], selectedViewerFileIds]) => {
                 return {
@@ -931,8 +938,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
           this.store.dispatch(
             new SyncFileTransformations(
-              hdus[v.srcHduId] as ImageHdu,
-              targetHduIds.map((id) => hdus[id] as ImageHdu)
+              v.srcHduId,
+              targetHduIds
             )
           );
         }
@@ -969,7 +976,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             );
 
             let normalization$ = this.store
-              .select(WorkbenchFileStates.getNormalization)
+              .select(DataFilesState.getNormalizer)
               .pipe(
                 map((fn) => {
                   return fn(hduId);
@@ -1004,8 +1011,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
           this.store.dispatch(
             new SyncFileNormalizations(
-              hdus[v.srcHduId] as ImageHdu,
-              targetHduIds.map((id) => hdus[id] as ImageHdu)
+              v.srcHduId,
+              targetHduIds
             )
           );
         }
@@ -1389,7 +1396,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
     let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
       targetHduId
-    ];
+    ] as ImageHdu;
+    let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[targetHdu.rawImageDataId]
     switch (activeTool) {
       case WorkbenchTool.CUSTOM_MARKER: {
         let hduStates = this.store.selectSnapshot(
@@ -1413,14 +1421,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               let result: { x: number; y: number };
               if (settings.usePlanetCentroiding) {
                 result = centroidDisk(
-                  targetHdu as ImageHdu,
+                  targetImageData,
                   x,
                   y,
                   centroidSettings.diskCentroiderSettings
                 );
               } else {
                 result = centroidPsf(
-                  targetHdu as ImageHdu,
+                  targetImageData,
                   x,
                   y,
                   centroidSettings.psfCentroiderSettings
@@ -1463,9 +1471,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           if (plotterPageSettings && plotterPageSettings.centroidClicks) {
             let result;
             if (plotterPageSettings.planetCentroiding) {
-              result = centroidDisk(hdu, x, y);
+              result = centroidDisk(targetImageData, x, y);
             } else {
-              result = centroidPsf(hdu, x, y);
+              result = centroidPsf(targetImageData, x, y);
             }
 
             x = result.x;
@@ -1525,7 +1533,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             let posType = PosType.PIXEL;
             if (centroidClicks) {
               let result = centroidPsf(
-                focusedHdu,
+                targetImageData,
                 primaryCoord,
                 secondaryCoord,
                 centroidSettings.psfCentroiderSettings

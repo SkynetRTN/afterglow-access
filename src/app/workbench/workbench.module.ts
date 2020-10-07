@@ -32,7 +32,6 @@ import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-ca
 import { WorkbenchDataFileListComponent } from './containers/workbench-data-file-list/workbench-data-file-list.component';
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
-import { ImageViewerTitleBarComponent } from './components/image-viewer-title-bar/image-viewer-title-bar.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
@@ -85,7 +84,6 @@ export const COMPONENTS = [
   WorkbenchViewerComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
-  ImageViewerTitleBarComponent,
   ImageViewerStatusBarComponent,
   NormalizerFormComponent,
   SvgRectangleMarkerComponent,

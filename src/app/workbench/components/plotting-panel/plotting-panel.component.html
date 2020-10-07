@@ -12,6 +12,7 @@
     <app-plotter
     #plotter
     [hdu]="hdu"
+    [imageData]="imageData$ | async"
     [mode]="config?.plotterMode"
     [width]="500"
     [height]="400"

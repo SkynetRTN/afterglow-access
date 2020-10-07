@@ -12,12 +12,12 @@ import { Subject } from "rxjs";
 import { debounceTime, throttleTime } from "rxjs/operators";
 
 import {
-  getPixel,
-  getPixels,
   DataFile,
-  ImageHdu
+  ImageHdu,
+  PixelType
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
+import { getPixel, getPixels, IImageData } from '../../../data-files/models/image-data';
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({
@@ -28,6 +28,8 @@ import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/t
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   hdu: ImageHdu;
+  @Input()
+  imageData: IImageData<PixelType>;
   @Input()
   mode: '1D' | '2D' | '3D';
   @Input()
@@ -213,7 +215,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   }
 
   private updateChart() {
-    if (!this.hdu || !this.lineMeasureStart || !this.lineMeasureEnd) {
+    if (!this.hdu || !this.imageData || !this.lineMeasureStart || !this.lineMeasureEnd) {
       this.data = [];
       return;
     }
@@ -248,7 +250,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         xs[i] = x;
         ys[i] = y;
         ts[i] = t;
-        vs[i] = getPixel(this.hdu, x, y, this.interpolatePixels)
+        vs[i] = getPixel(this.imageData, x, y, this.interpolatePixels)
   
         // result[i] = {
         //   x: x,
@@ -279,7 +281,7 @@ export class PlotterComponent implements OnInit, OnChanges {
       if(width != 0 && height != 0) {
         this.data = [
           {
-            z: getPixels(this.hdu, x, y, width, height),
+            z: getPixels(this.imageData, x, y, width, height),
             type: this.mode == '3D' ? 'surface' : 'heatmap'
           }
         ];

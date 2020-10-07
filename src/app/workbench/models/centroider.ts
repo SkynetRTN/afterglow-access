@@ -1,4 +1,5 @@
-import { getWidth, getHeight, getPixel, ImageHdu } from '../../data-files/models/data-file'
+import { getWidth, getHeight, ImageHdu, PixelType } from '../../data-files/models/data-file'
+import { getPixel, IImageData } from '../../data-files/models/image-data';
 
 export interface DiskCentroiderSettings {
   maxIterations: number,
@@ -22,7 +23,7 @@ function getMedian(data: Array<number>) {
 }
 
 
-export function centroidDisk(imageLayer: ImageHdu, x: number, y: number, settings: DiskCentroiderSettings = null) {
+export function centroidDisk(imageData: IImageData<PixelType>, x: number, y: number, settings: DiskCentroiderSettings = null) {
   if (settings == null) settings = createDiskCentroiderSettings();
   let subWidth = settings.diskSearchBoxWidth;
   let nIter = 0;
@@ -33,7 +34,7 @@ export function centroidDisk(imageLayer: ImageHdu, x: number, y: number, setting
     let recenterSub = false;
     let expandSub = false;
 
-    let sub = getSubframe(subWidth, imageLayer, x0, y0);
+    let sub = getSubframe(subWidth, imageData, x0, y0);
     let pixels = sub.pixels;
     let pixelsSorted = pixels.slice();
     let median = getMedian(pixelsSorted);
@@ -171,7 +172,7 @@ export function createPsfCentroiderSettings(): PsfCentroiderSettings {
 }
 
 
-export function centroidPsf(imageLayer: ImageHdu, x: number, y: number, settings: PsfCentroiderSettings = null) {
+export function centroidPsf(imageData: IImageData<PixelType>, x: number, y: number, settings: PsfCentroiderSettings = null) {
   if (settings == null) settings = createPsfCentroiderSettings();
   //let oxinit: number;            // initial output x center
   //let oyinit: number;            // initial output y center
@@ -203,7 +204,7 @@ export function centroidPsf(imageLayer: ImageHdu, x: number, y: number, settings
   let niter = 0;
   //bool low_signal_to_noise: number
   while (true) {
-    let subframeResult = getSubframe(settings.centeringBoxWidth, imageLayer, ox, oy);
+    let subframeResult = getSubframe(settings.centeringBoxWidth, imageData, ox, oy);
     cxc = subframeResult.cxc
     cyc = subframeResult.cyc
     cnx = subframeResult.cnx
@@ -282,14 +283,14 @@ export function centroidPsf(imageLayer: ImageHdu, x: number, y: number, settings
 
 }
 
-function getSubframe(size: number, imageLayer: ImageHdu, x: number, y: number) {
+function getSubframe(size: number, imageData: IImageData<PixelType>, x: number, y: number) {
   // convert to zero-based indexing
   x -= 1;
   y -= 1;
 
   let halfCenteringBoxWidth = (size-1) / 2.0;
-  let ncols = getWidth(imageLayer);
-  let nlines = getHeight(imageLayer);
+  let ncols = imageData.width;
+  let nlines = imageData.height;
 
   let xc1 = Math.floor(x - halfCenteringBoxWidth);
   let xc2 = Math.floor(x + halfCenteringBoxWidth);
@@ -317,7 +318,7 @@ function getSubframe(size: number, imageLayer: ImageHdu, x: number, y: number) {
     for (let i = c1; i <= c2; i++) {
       let index = (j - l1) * cnx + (i - c1);
       //convert to ones-based indexing
-      result[index] = getPixel(imageLayer, i+1, j+1);
+      result[index] = getPixel(imageData, i+1, j+1);
       //printf("(%d,%d): %f\n",i,j,image.pixel(i,j));
     }
   }
