@@ -168,7 +168,7 @@ export class CloseAllDataFilesFail {
   */
 
 export class ClearNormalizedImageTiles {
-  public static readonly type = '[Workbench HDU State] Clear Normalized Image Data';
+  public static readonly type = '[Workbench HDU State] Clear Normalized Image Tiles';
 
   constructor(public hduId: string) { }
 }
@@ -182,7 +182,7 @@ export class UpdateNormalizedImageTile {
 export class UpdateNormalizedImageTileSuccess {
   public static readonly type = '[Workbench HDU State] Load Normalized Image Tile Success';
 
-  constructor(public hduId: string, public tileIndex: number, pixels: PixelType) { }
+  constructor(public hduId: string, public tileIndex: number, pixels: Uint32Array) { }
 }
 
 export class UpdateNormalizer {
@@ -195,6 +195,28 @@ export class SyncFileNormalizations {
   public static readonly type = '[Workbench] Sync File Normalizations';
 
   constructor(public referenceHduId: string, public hduIds: string[]) { }
+}
+
+/**
+ * Composite Actions
+ */
+
+export class ClearCompositeImageTiles {
+  public static readonly type = '[Workbench HDU State] Clear Composite Image Tiles';
+
+  constructor(public fileId: string) { }
+}
+
+export class UpdateCompositeImageTile {
+  public static readonly type = '[Workbench HDU State] Update Composite Image Tile';
+
+  constructor(public fileId: string, public tileIndex: number) { }
+}
+
+export class UpdateCompositeImageTileSuccess {
+  public static readonly type = '[Workbench HDU State] Update Composite Image Tile Success';
+
+  constructor(public fileId: string, public tileIndex: number, pixels: Uint32Array) { }
 }
 
  /**

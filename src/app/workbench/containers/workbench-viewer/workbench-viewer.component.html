@@ -2,9 +2,8 @@
   id="image-viewer-wrapper"
   fxLayout="column"
   class="h-100"
-  [ngSwitch]="displayMode$ | async"
 >
-  <ng-container *ngSwitchCase="HduType.IMAGE">
+  <ng-container *ngIf="(imageData$ | async); else tableBlock">
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
         <div
@@ -36,9 +35,9 @@
     </div>
     <div fxFlex="0 0 auto">
       <app-image-viewer-status-bar
-        *ngIf="data.type == 'hdu'"
+        *ngIf="hduId"
         [class.active]="active"
-        [hdu]="(hduEntities$ | async)[data.id]"
+        [hdu]="(hduEntities$ | async)[hduId]"
         [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY"
         (downloadSnapshot)="handleDownloadSnapshot()"
@@ -48,10 +47,12 @@
       ></app-image-viewer-status-bar>
     </div>
   </ng-container>
-
-  <div class="h-100" *ngSwitchCase="HduType.TABLE">
-    Tables are not yet supported.
-  </div>
+  <ng-template #tableBlock>
+    <div class="h-100">
+      Tables are not yet supported.
+    </div>
+  </ng-template>
+ 
 </div>
 
 <!-- 

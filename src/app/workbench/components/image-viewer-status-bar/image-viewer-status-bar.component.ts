@@ -53,7 +53,9 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
     }
     if(this.hdu.headerLoaded) {
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[this.hdu.rawImageDataId]
-      this.pixelValue = getPixel(imageData, this.imageMouseX, this.imageMouseY);
+      if(imageData) {
+        this.pixelValue = getPixel(imageData, this.imageMouseX, this.imageMouseY);
+      }
       if(this.hdu.wcs.isValid()) {
         let wcs = this.hdu.wcs;
         let raDec = wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);

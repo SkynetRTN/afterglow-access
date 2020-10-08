@@ -13,7 +13,7 @@ import {
 
 import { DomSanitizer, SafeValue } from "@angular/platform-browser";
 
-import { Observable, combineLatest } from "rxjs";
+import { Observable, combineLatest, of } from "rxjs";
 import {
   distinctUntilChanged,
   map,
@@ -89,14 +89,25 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Input()
   viewerId: string;
 
-  @Input("data")
-  set data(data: DataFile | IHdu) {
-    this.data$.next(data);
+  @Input("fileId")
+  set fileId(fileId: string) {
+    this.fileId$.next(fileId);
   }
-  get data() {
-    return this.data$.getValue();
+  get fileId() {
+    return this.fileId$.getValue();
   }
-  private data$ = new BehaviorSubject<DataFile | IHdu>(null);
+  private fileId$ = new BehaviorSubject<string>(null);
+
+
+  @Input("hduId")
+  set hduId(hduId: string) {
+    this.hduId$.next(hduId);
+  }
+  get hduId() {
+    return this.hduId$.getValue();
+  }
+  private hduId$ = new BehaviorSubject<string>(null);
+
   HduType = HduType;
 
   @Input()
@@ -119,22 +130,20 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild(ImageViewerMarkerOverlayComponent, { static: true })
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
+  hduEntities$: Observable<{[id: string]: IHdu}>;
   viewportSize: { width: number; height: number };
   currentCanvasSize: { width: number; height: number } = null;
   // markers$: Observable<Marker[]>;
   imageDataId$: Observable<string>;
   imageData$: Observable<IImageData<Uint32Array>>;
+  imageData: IImageData<Uint32Array>;
   transformation$: Observable<Transformation>;
+  transformation: Transformation;
   imageToViewportTransformId$: Observable<string>;
   imageToViewportTransform$: Observable<Transform>;
 
-  hduEntities$: Observable<{ [id: string]: IHdu }>;
-  imageHdus$: Observable<ImageHdu[]>;
-  tableHdus$: Observable<TableHdu[]>;
-  displayMode$: Observable<HduType>;
   sourceMarkersLayer$: Observable<Marker[]>;
   sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-
   sources$: Observable<Source[]>;
   customMarkers$: Observable<CustomMarker[]>;
   selectedCustomMarkers$: Observable<CustomMarker[]>;
@@ -148,63 +157,69 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   fieldCalMarkers$: Observable<Marker[]>;
 
   constructor(private store: Store, private sanitization: DomSanitizer) {
+    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
-    let viewerFileHdu$ = this.data$.pipe(
-      distinctUntilChanged((a, b) => a.type == b.type && a.id == b.id),
-      switchMap((item) => {
-        if(item.type == 'hdu') {
-          return this.store.select(DataFilesState.getHduById).pipe(
-            map(fn => fn(item.id))
-          )
+    this.imageDataId$ = combineLatest(
+        this.fileId$,
+        this.hduId$
+      ).pipe(
+      switchMap(([fileId, hduId]) => {
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        if(hduId) {
+          if(hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
+            return this.store.select(DataFilesState.getHduById).pipe(
+              map(fn => (fn(hduId) as ImageHdu).normalizedImageDataId)
+            );
+          }
+          
         }
-        else {
+        else if(fileId && fileId in fileEntities) {
           return this.store.select(DataFilesState.getDataFileById).pipe(
-            map(fn => fn(item.id))
-          )
+            map(fn => fn(fileId).compositeImageDataId)
+          );
         }
-      })
-    )
-
-
-    this.imageDataId$ = viewerFileHdu$.pipe(
-      map((data) => {
-        if(!data) return null;
-
-        if(data.type == 'file') {
-          return (data as DataFile).compositeImageDataId;
-        }
-        else if(data.type == 'hdu' && (data as IHdu).hduType == HduType.IMAGE) {
-          return (data as ImageHdu).normalizedImageDataId;
-        }
-        return null;
+        return of(null);
       }),
       distinctUntilChanged()
     );
 
     this.imageData$ = this.imageDataId$.pipe(
       switchMap((imageDataId) => {
+        if(!imageDataId) return of(null);
         return this.store
           .select(DataFilesState.getImageDataById)
           .pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>));
-      })
-    );
-
-    
-
-    this.transformation$ = viewerFileHdu$.pipe(
-      map((data) => {
-        if(!data) return null;
-
-        if(data.type == 'file') {
-          return (data as DataFile).transformation;
-        }
-        else if(data.type == 'hdu' && (data as IHdu).hduType == HduType.IMAGE) {
-          return (data as ImageHdu).transformation;
-        }
-        return null;
       }),
-      distinctUntilChanged()
+      tap(v => this.imageData = v)
     );
+
+    this.transformation$ = combineLatest(
+      this.fileId$,
+      this.hduId$
+    ).pipe(
+    switchMap(([fileId, hduId]) => {
+      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+      let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+      if(hduId) {
+        if( hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
+          return this.store.select(DataFilesState.getHduById).pipe(
+            map(fn => (fn(hduId) as ImageHdu).transformation)
+          );
+        }
+        
+      }
+      else if(fileId && fileId in fileEntities) {
+        return this.store.select(DataFilesState.getDataFileById).pipe(
+          map(fn => fn(fileId).transformation)
+        );
+      }
+      return of(null);
+    }),
+    distinctUntilChanged(),
+    tap(v => this.transformation = v)
+  );
+
 
     this.imageToViewportTransformId$ = this.transformation$.pipe(
       map((transformation) => transformation && transformation.imageToViewportTransformId),
@@ -216,54 +231,6 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
         return this.store
           .select(DataFilesState.getTransformById)
           .pipe(map((fn) => fn(transformId)));
-      })
-    );
-
-    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
-
-    
-
-    this.imageHdus$ = this.data$.pipe(
-      distinctUntilChanged((a, b) => a.type == b.type && a.id == b.id),
-      map((item) => {
-        let dataFileEntities = this.store.selectSnapshot(
-          DataFilesState.getDataFileEntities
-        );
-        let hduEntities = this.store.selectSnapshot(
-          DataFilesState.getHduEntities
-        );
-        let hdus =
-          item.type == "hdu"
-            ? [hduEntities[item.id]]
-            : dataFileEntities[item.id].hduIds.map((id) => hduEntities[id]);
-        return hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[];
-      })
-    );
-    this.tableHdus$ = this.data$.pipe(
-      distinctUntilChanged((a, b) => a.type == b.type && a.id == b.id),
-      map((item) => {
-        let dataFileEntities = this.store.selectSnapshot(
-          DataFilesState.getDataFileEntities
-        );
-        let hduEntities = this.store.selectSnapshot(
-          DataFilesState.getHduEntities
-        );
-        let hdus =
-          item.type == "hdu"
-            ? [hduEntities[item.id]]
-            : dataFileEntities[item.id].hduIds.map((id) => hduEntities[id]);
-        return hdus.filter((hdu) => hdu.hduType == HduType.TABLE) as TableHdu[];
-      })
-    );
-
-    this.displayMode$ = combineLatest(this.imageHdus$, this.tableHdus$).pipe(
-      map(([imageHdus, tableHdus]) => {
-        if (imageHdus.length != 0) {
-          return HduType.IMAGE;
-        } else if (tableHdus.length != 0) {
-          return HduType.TABLE;
-        }
-        return null;
       })
     );
 
@@ -297,15 +264,13 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleMoveBy(
-    $event: MoveByEvent,
-    imageData: IImageData<Uint32Array>,
-    transformation: Transformation
+    $event: MoveByEvent
   ) {
-    if (!this.viewportSize) return;
+    if (!this.viewportSize || !this.imageData || !this.transformation) return;
     this.store.dispatch(
       new MoveBy(
-        transformation,
-        imageData.id,
+        this.transformation,
+        this.imageData.id,
         this.viewportSize,
         $event.xShift,
         $event.yShift
@@ -314,15 +279,13 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleZoomBy(
-    $event: ZoomByEvent,
-    imageData: IImageData<Uint32Array>,
-    transformation: Transformation
+    $event: ZoomByEvent
   ) {
-    if (!this.viewportSize) return;
+    if (!this.viewportSize || !this.imageData || !this.transformation) return;
     this.store.dispatch(
       new ZoomBy(
-        transformation,
-        imageData.id,
+        this.transformation,
+        this.imageData.id,
         this.viewportSize,
         $event.factor,
         $event.anchor
@@ -331,14 +294,13 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleZoomTo(
-    $event: ZoomByEvent,
-    imageData: IImageData<Uint32Array>,
-    transformation: Transformation
+    $event: ZoomByEvent
   ) {
+    if (!this.viewportSize || !this.imageData || !this.transformation) return;
     this.store.dispatch(
       new ZoomTo(
-        transformation,
-        imageData.id,
+        this.transformation,
+        this.imageData.id,
         this.viewportSize,
         $event.factor,
         $event.anchor
@@ -347,15 +309,14 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleZoomToFit(
-    $event: ZoomToFitEvent,
-    imageData: IImageData<Uint32Array>,
-    transformation: Transformation
+    $event: ZoomToFitEvent
   ) {
+    if (!this.viewportSize || !this.imageData || !this.transformation) return;
     this.store.dispatch(new CenterRegionInViewport(
-      transformation,
-      imageData.id,
+      this.transformation,
+      this.imageData.id,
       this.viewportSize,
-      { x: 1, y: 1, width: imageData.width, height: imageData.height }
+      { x: 1, y: 1, width: this.imageData.width, height: this.imageData.height }
     ))
   }
 
@@ -373,12 +334,15 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    
     let hdus: ImageHdu[] = [];
-    if(this.data.type == 'hdu') {
-      hdus = [hduEntities[this.data.id] as ImageHdu]
+    if(this.hduId) {
+      if(this.hduId in hduEntities && hduEntities[this.hduId].hduType == HduType.IMAGE) {
+        hdus = [hduEntities[this.hduId] as ImageHdu]
+      }
     }
-    else if(this.data.type == 'file') {
-      let file = dataFileEntities[this.data.id];
+    else if(this.fileId) {
+      let file = dataFileEntities[this.fileId];
       hdus = file.hduIds.map(hduId => hduEntities[hduId]).filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[];
     }
     
@@ -388,7 +352,7 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
       let rawImageData = this.store.selectSnapshot(
         DataFilesState.getImageDataEntities
       )[hdu.rawImageDataId];
-      if (!rawImageData.initialized) return;
+      if (!rawImageData || !rawImageData.initialized) return;
       let rawTile = rawImageData.tiles[$event.tileIndex];
       if (
         !rawTile.pixelsLoaded &&
@@ -397,23 +361,24 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
       ) {
         this.store.dispatch(new LoadRawImageTile(hdu.id, rawTile.index));
       }
-      // else if (rawTile.pixelsLoaded) {
-      //   let normalizedImageData = this.store.selectSnapshot(
-      //     DataFilesState.getImageDataEntities
-      //   )[hdu.normalizedImageDataId];
-      //   if (!normalizedImageData.initialized) return;
-      //   let normalizedTile = normalizedImageData.tiles[rawTile.index];
-      //   if (
-      //     normalizedTile &&
-      //     !normalizedTile.pixelsLoaded &&
-      //     !normalizedTile.pixelsLoading &&
-      //     !normalizedTile.pixelLoadingFailed
-      //   ) {
-      //     this.store.dispatch(
-      //       new UpdateNormalizedImageTile(hdu.id, normalizedTile.index)
-      //     );
-      //   }
-      // }
+      else if (rawTile.pixelsLoaded) {
+        // raw tiles are loaded,  check that tile doesn't need to be renormalized
+        let normalizedImageData = this.store.selectSnapshot(
+          DataFilesState.getImageDataEntities
+        )[hdu.normalizedImageDataId];
+        if (!normalizedImageData.initialized) return;
+        let normalizedTile = normalizedImageData.tiles[rawTile.index];
+        if (
+          normalizedTile &&
+          !normalizedTile.pixelsLoaded &&
+          !normalizedTile.pixelsLoading &&
+          !normalizedTile.pixelLoadingFailed
+        ) {
+          this.store.dispatch(
+            new UpdateNormalizedImageTile(hdu.id, normalizedTile.index)
+          );
+        }
+      }
     })
   }
 

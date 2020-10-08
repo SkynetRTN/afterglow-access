@@ -16,12 +16,12 @@
           cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)"
           [cdkDropListConnectedTo]="dropListConnections$ | async" cdkDrag [cdkDragData]="viewer"
           (contextmenu)="onContextMenu($event, viewer)">
-          <div fxLayout="row" fxFlexFill *ngIf="viewer.data; let viewerData;">
+          <div fxLayout="row" fxFlexFill>
 
             <div fxFlex="1 1 auto" class="label" [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'"
               matTooltipClass="file-path-tooltip" matTooltipShowDelay="500">
-              <span *ngIf="getFileFromData(viewerData); let file;" class="ml-4" [matTooltip]="file?.assetPath">
-                {{ getTabLabel(viewerData) }}
+              <span *ngIf="(fileEntities$ | async)[viewer.fileId]; let file;" class="ml-4" [matTooltip]="file?.assetPath">
+                {{ getTabLabel(viewer) }}
               </span>
             </div>
             <div fxFlex="0 0 auto" class="icon-group" (mouseenter)="mouseOverCloseViewerId = viewer.viewerId"
@@ -36,7 +36,8 @@
           </div>
         </div>
       </ng-template>
-      <app-workbench-viewer (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)" [viewerId]="viewer.viewerId" [data]="viewer.data"
+      <app-workbench-viewer (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)" [viewerId]="viewer.viewerId" [fileId]="viewer.fileId"
+      [hduId]="viewer.hduId"
         [active]="selectedViewerId == viewer.viewerId && hasFocus" [markers]="viewer.markers"
         (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"
         (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"

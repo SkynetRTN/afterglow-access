@@ -8,6 +8,7 @@ import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
 import { PixelNormalizer } from './pixel-normalizer';
 import { Transformation } from './transformation';
+import { BlendMode } from './blend-mode';
 
 export type Header = Array<HeaderEntry>;
 export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
@@ -75,6 +76,8 @@ export interface ImageHdu extends IHdu {
   transformation: Transformation;
   normalizedImageDataId: string;
   normalizer: PixelNormalizer;
+  blendMode: BlendMode;
+  alpha: number;
   
 }
 

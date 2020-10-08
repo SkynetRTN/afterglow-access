@@ -89,7 +89,7 @@ export class MoveViewer {
 export class SetViewerData {
   public static readonly type = '[Workbench] Set Viewer File';
 
-  constructor(public viewerId: string, public data: {id: string, type: 'file' | 'hdu'}) { }
+  constructor(public viewerId: string, public fileId: string, public hduId: string = null) { }
 }
 
 export class UpdateCurrentViewportSize {

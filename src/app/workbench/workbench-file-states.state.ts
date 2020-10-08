@@ -54,7 +54,6 @@ import {
 import { AfterglowDataFileService } from "./services/afterglow-data-files";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { ResetState } from "../auth/auth.actions";
-import { WorkbenchState } from './workbench.state';
 
 export interface WorkbenchFileStatesModel {
   version: number;
@@ -357,46 +356,7 @@ export class WorkbenchFileStates {
     }
   }
 
-  @Action(SonificationRegionChanged)
-  @ImmutableContext()
-  public sonificationRegionChanged(
-    { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId }: SonificationRegionChanged
-  ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-      hduId
-    ] as ImageHdu;
-    let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-    let sonifierState = hduState.sonificationPanelState;
-    let sourceExtractorState = hduState.photometryPanelState;
-
-    if (
-      sonifierState.regionMode == SonifierRegionMode.CUSTOM &&
-      sonifierState.viewportSync
-    ) {
-      //find viewer which contains file
-      let viewer = this.store.selectSnapshot(WorkbenchState.getViewers).find(viewer => viewer.data.type == 'hdu' && viewer.data.id == hduId);
-      if(viewer && viewer.viewportSize) {
-        let region =
-        sonifierState.regionHistory[sonifierState.regionHistoryIndex];
-        dispatch(
-          new CenterRegionInViewport(
-            hdu.transformation,
-            hdu.rawImageDataId,
-            viewer.viewportSize,
-            region,
-          )
-        );
-      }
-      
-    }
-  }
+  
 
   @Action(UpdateSonifierFileState)
   @ImmutableContext()

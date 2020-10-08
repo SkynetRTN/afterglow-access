@@ -585,7 +585,6 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       
       let tiles = this.getViewportTiles();
 
-      console.log('tiles')
       tiles.forEach(tile => {
         if (!tile.pixelsLoaded) {
           // fill in tile with solid background when image file pixels have not been loaded

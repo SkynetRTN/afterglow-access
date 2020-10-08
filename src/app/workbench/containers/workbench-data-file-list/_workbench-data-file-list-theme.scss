@@ -12,6 +12,14 @@
       color: mat-color($primary, default-contrast);
     }
 
+    .item-row.hdu .filename {
+      margin-left: 10px;
+    }
+
+    .item-row.hdu .filename:before {
+      content: "— ";
+    }
+
     .mat-icon-button.small {
 
       width: 18px;

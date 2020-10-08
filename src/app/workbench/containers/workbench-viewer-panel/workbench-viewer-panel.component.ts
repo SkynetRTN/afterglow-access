@@ -102,8 +102,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   // viewMode$: Observable<ViewMode>;
   // activeViewerIndex$: Observable<number>;
 
-  hdus$: Observable<{ [id: string]: IHdu }>;
-  files$: Observable<{ [id: string]: DataFile }>;
+  hduEntities$: Observable<{ [id: string]: IHdu }>;
+  fileEntities$: Observable<{ [id: string]: DataFile }>;
   hduStates$: Observable<{ [id: string]: IWorkbenchHduState }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
@@ -122,8 +122,8 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     public viewContainerRef: ViewContainerRef
   ) {
     
-    this.hdus$ = this.store.select(DataFilesState.getHduEntities);
-    this.files$ = this.store.select(DataFilesState.getDataFileEntities);
+    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
+    this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
     this.hduStates$ = this.store.select(WorkbenchFileStates.getHduStateEntities);
     this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerIds).pipe(
       map(ids => ids.map(id => 'tab-' + id)),
@@ -197,13 +197,17 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
   }
 
-  public getTabLabel(data: DataFile | IHdu) {
-    let file = this.getFileFromData(data);
-    if(!file) return ''
+  public getTabLabel(viewer: Viewer) {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let file = fileEntities[viewer.fileId]
+    if(!file) return '';
 
     let filename = file.name;
-    if(data.type == 'hdu') {
-      let hdu = data as IHdu;
+    if(viewer.hduId) {
+      let hdu = hduEntities[viewer.hduId]
+      if(!hdu) return '';
+      
       if(file.hduIds.length > 1) {
         filename += ` [Channel ${file.hduIds.indexOf(hdu.id)}]`
       }
@@ -212,13 +216,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       filename += ` [Composite]`
     }
     return filename;
-  }
-
-  public getFileFromData(data: {id: string, type: 'hdu' | 'file'}) {
-    let fileEntities =  this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-    let hduEntities =  this.store.selectSnapshot(DataFilesState.getHduEntities);
-    if(data.type == 'file') return fileEntities[data.id];
-    return fileEntities[hduEntities[data.id].fileId];
   }
 
   // public zoomIn(hduId: string, imageAnchor: { x: number; y: number } = null) {

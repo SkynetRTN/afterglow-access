@@ -3,7 +3,8 @@ import { DataFile, IHdu } from '../../data-files/models/data-file';
 
 export interface Viewer {
   viewerId: string;
-  data: {id: string, type: 'file' | 'hdu'};
+  fileId: string,
+  hduId: string,
   panEnabled: boolean;
   zoomEnabled: boolean;
   markers: Marker[];

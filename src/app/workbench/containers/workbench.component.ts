@@ -258,13 +258,20 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           ...viewerIds.map((viewerId) => {
             return this.store.select(WorkbenchState.getViewerById).pipe(
               map((fn) => {
-                let viewerData = fn(viewerId).data;
+                let viewer = fn(viewerId);
                 let fileEntities = this.store.selectSnapshot(
                   DataFilesState.getDataFileEntities
                 );
-                return viewerData.type == "file"
-                  ? fileEntities[viewerData.id].hduIds
-                  : [viewerData.id];
+                if(viewer.hduId) {
+                  return [viewer.hduId];
+                }
+                
+                if(viewer.fileId && viewer.fileId in fileEntities) {
+                  let file = fileEntities[viewer.fileId];
+                  return file.hduIds;
+                }
+
+                return [];
               }),
               distinctUntilChanged(
                 (x, y) =>
@@ -279,9 +286,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
-    this.focusedViewerData$ = this.store.select(
-      WorkbenchState.getFocusedViewerData
-    );
+    this.focusedViewerData$ = this.focusedViewer$.pipe(
+      map(viewer =>{
+        if(!viewer) return null;
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        return viewer.hduId ? hduEntities[viewer.hduId] : fileEntities[viewer.fileId];
+      })
+    )
 
     this.focusedViewerViewportSize$ = this.store.select(
       WorkbenchState.getFocusedViewerViewportSize
@@ -1305,11 +1317,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let fileEntities = this.store.selectSnapshot(
       DataFilesState.getDataFileEntities
     );
+    
+    let file = fileEntities[viewer.fileId];
 
-    let file =
-      viewer.data.type == "file"
-        ? (viewer.data as DataFile)
-        : fileEntities[(viewer.data as IHdu).fileId];
     if (file) return file.name;
     return `Viewer ${index}`;
   }
@@ -1327,15 +1337,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onCustomMarkerChange($event: { id: string; changes: Partial<Marker> }) {
-    let viewerData = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewerData
+    let viewer = this.store.selectSnapshot(
+      WorkbenchState.getFocusedViewer
     );
     let fileEntities = this.store.selectSnapshot(
       DataFilesState.getDataFileEntities
     );
-    let hduId = viewerData.id;
-    if (viewerData.type == "file") {
-      hduId = fileEntities[viewerData.id].hduIds[0];
+    let hduId = viewer.hduId;
+    if (!hduId) {
+      hduId = fileEntities[viewer.fileId].hduIds[0];
     }
     let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
     if (!hdu) return;
@@ -1345,15 +1355,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onCustomMarkerDelete($event: Marker[]) {
-    let viewerData = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewerData
+    let viewer = this.store.selectSnapshot(
+      WorkbenchState.getFocusedViewer
     );
-    let hduId = viewerData.id;
-    if (viewerData.type == "file") {
-      let fileEntities = this.store.selectSnapshot(
-        DataFilesState.getDataFileEntities
-      );
-      hduId = fileEntities[viewerData.id].hduIds[0];
+    let fileEntities = this.store.selectSnapshot(
+      DataFilesState.getDataFileEntities
+    );
+    let hduId = viewer.hduId;
+    if (!hduId) {
+      hduId = fileEntities[viewer.fileId].hduIds[0];
     }
     let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
     if (!hdu) return;
@@ -1383,17 +1393,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   /* image viewer mouse event handlers */
   onImageClick($event: ViewerPanelCanvasMouseEvent) {
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let viewerData = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewerData
+    let viewer = this.store.selectSnapshot(
+      WorkbenchState.getFocusedViewer
     );
-    let targetHduId = viewerData.id;
-    if (viewerData.type == "file") {
-      let fileEntities = this.store.selectSnapshot(
-        DataFilesState.getDataFileEntities
-      );
+    let targetHduId = viewer.hduId;
+    if (!targetHduId) return;
 
-      targetHduId = fileEntities[viewerData.id].hduIds[0];
-    }
     let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
       targetHduId
     ] as ImageHdu;
@@ -1507,20 +1512,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         );
         let selectedSourceIds = photometryPanelConfig.selectedSourceIds;
         let centroidClicks = photometryPanelConfig.centroidClicks;
-        let viewerData = this.store.selectSnapshot(
-          WorkbenchState.getFocusedViewerData
-        );
-        let focusedHduId = viewerData.id;
-        if (viewerData.type == "file") {
-          let fileEntities = this.store.selectSnapshot(
-            DataFilesState.getDataFileEntities
-          );
-
-          focusedHduId = fileEntities[viewerData.id].hduIds[0];
-        }
-        let focusedHdu = this.store.selectSnapshot(
-          DataFilesState.getHduEntities
-        )[focusedHduId] as ImageHdu;
 
         let centroidSettings = this.store.selectSnapshot(
           WorkbenchState.getCentroidSettings
@@ -1543,22 +1534,22 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             }
             if (
               photometryPanelConfig.coordMode == "sky" &&
-              focusedHdu.wcs.isValid()
+              targetHdu.wcs.isValid()
             ) {
-              let wcs = focusedHdu.wcs;
+              let wcs = targetHdu.wcs;
               let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
               primaryCoord = raDec[0];
               secondaryCoord = raDec[1];
               posType = PosType.SKY;
             }
 
-            let centerEpoch = getCenterTime(focusedHdu);
+            let centerEpoch = getCenterTime(targetHdu);
 
             let source: Source = {
               id: null,
               label: null,
               objectId: null,
-              hduId: focusedHdu.id,
+              hduId: targetHdu.id,
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -1582,22 +1573,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   onImageMove($event: ViewerPanelCanvasMouseEvent) {
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let viewerData = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewerData
+    let viewer = this.store.selectSnapshot(
+      WorkbenchState.getFocusedViewer
     );
-    let targetHduId = viewerData.id;
-    if (viewerData.type == "file") {
-      let fileEntities = this.store.selectSnapshot(
-        DataFilesState.getDataFileEntities
-      );
-
-      targetHduId = fileEntities[viewerData.id].hduIds[0];
+    let targetHduId = viewer.hduId;
+    if (!targetHduId) {
+      return;
     }
+    let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
+      targetHduId
+    ] as ImageHdu;
+
     switch (activeTool) {
       case WorkbenchTool.PLOTTER: {
-        let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-          targetHduId
-        ] as ImageHdu;
         let measuring = (this.store.selectSnapshot(
           WorkbenchFileStates.getHduStateEntities
         )[targetHduId] as WorkbenchImageHduState).plottingPanelState.measuring;
@@ -1605,8 +1593,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let primaryCoord = $event.imageX;
           let secondaryCoord = $event.imageY;
           let posType = PosType.PIXEL;
-          if (hdu.wcs.isValid()) {
-            let wcs = hdu.wcs;
+          if (targetHdu.wcs.isValid()) {
+            let wcs = targetHdu.wcs;
             let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
             primaryCoord = raDec[0];
             secondaryCoord = raDec[1];
@@ -1626,19 +1614,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onMarkerClick($event: ViewerPanelMarkerMouseEvent) {
-    let viewerData = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewerData
-    );
-    let targetHduId = viewerData.id;
-    if (viewerData.type == "file") {
-      let fileEntities = this.store.selectSnapshot(
-        DataFilesState.getDataFileEntities
-      );
-
-      targetHduId = fileEntities[viewerData.id].hduIds[0];
-    }
-
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
+    let viewer = this.store.selectSnapshot(
+      WorkbenchState.getFocusedViewer
+    );
+    let targetHduId = viewer.hduId;
+    if (!targetHduId) {
+      return;
+    }
+    let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
+      targetHduId
+    ] as ImageHdu;
     switch (activeTool) {
       case WorkbenchTool.CUSTOM_MARKER: {
         if ($event.mouseEvent.altKey) return;
