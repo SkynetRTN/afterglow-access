@@ -1,6 +1,6 @@
 import {
   Component, OnInit, Input, Output, OnChanges, OnDestroy,
-  ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Directive
+  ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Directive, SimpleChanges
 } from '@angular/core';
 
 import { Point, Rectangle } from "paper";
@@ -192,6 +192,9 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
     this.handleViewportChange();
     this.draw();
+    setTimeout(() => {
+      this.lazyLoadPixels();
+    })
   }
 
   ngOnDestroy() {
@@ -532,7 +535,8 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     return false;
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
+
     if (this.initialized) {
       //must async dispatch actions within life cycle hooks to prevent
       //ExpressionChangedAfterItHasBeenChecked Error
@@ -562,7 +566,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     if (!this.initialized) return;
     let tiles = this.getViewportTiles();
     tiles.forEach(tile => {
-      if (!tile.pixelsLoaded && !tile.pixelsLoading && !tile.pixelLoadingFailed) {
+      if ((!tile.pixelsLoading && !tile.pixelLoadingFailed) && (!tile.isValid || !tile.pixelsLoaded)) {
         this.onLoadTile.emit({imageDataId: this.imageData.id, tileIndex: tile.index})
       }
     })

@@ -198,7 +198,7 @@
     " style="overflow: auto;">
     <app-workbench-viewer-layout [fxLayout]="(layoutContainer$ | async)?.direction" style="height: 100%"
       [id]="(layoutContainer$ | async)?.id" [itemIds]="(layoutContainer$ | async)?.itemIds"
-      (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)" (onMarkerClick)="onMarkerClick($event)">
+      (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)" (onMarkerClick)="onMarkerClick($event)" cdkDropListGroup>
     </app-workbench-viewer-layout>
   </div>
   <div fxFlex="0 0 auto" class="workbench-tool-panel" *ngIf="activeTool$ | async; let activeTool"

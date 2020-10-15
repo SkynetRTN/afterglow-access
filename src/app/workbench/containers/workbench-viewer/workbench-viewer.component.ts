@@ -32,6 +32,7 @@ import {
   IHdu,
   ImageHdu,
   TableHdu,
+  PixelType,
 } from "../../../data-files/models/data-file";
 import {
   Marker,
@@ -70,7 +71,8 @@ import {
   ZoomBy,
   MoveBy,
   UpdateNormalizedImageTile,
-  CenterRegionInViewport
+  CenterRegionInViewport,
+  UpdateCompositeImageTile
 } from "../../../data-files/data-files.actions";
 import { HduType } from "../../../data-files/models/data-file-type";
 import {
@@ -79,6 +81,7 @@ import {
 } from "../../../data-files/models/transformation";
 import { IImageData } from "../../../data-files/models/image-data";
 import { UpdateCurrentViewportSize } from "../../workbench.actions";
+import { raw } from 'core-js/fn/string';
 
 @Component({
   selector: "app-workbench-viewer",
@@ -124,19 +127,22 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Output()
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
-  @ViewChild(PanZoomCanvasComponent, { static: true })
+  @ViewChild(PanZoomCanvasComponent, { static: false })
   panZoomCanvasComponent: PanZoomCanvasComponent;
 
-  @ViewChild(ImageViewerMarkerOverlayComponent, { static: true })
+  @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
-  hduEntities$: Observable<{[id: string]: IHdu}>;
+  hduEntities$: Observable<{ [id: string]: IHdu }>;
   viewportSize: { width: number; height: number };
   currentCanvasSize: { width: number; height: number } = null;
   // markers$: Observable<Marker[]>;
-  imageDataId$: Observable<string>;
-  imageData$: Observable<IImageData<Uint32Array>>;
-  imageData: IImageData<Uint32Array>;
+  tableData: any = null;
+  rawImageDataId$: Observable<string>;
+  rawImageData$: Observable<IImageData<PixelType>>;
+  normalizedImageDataId$: Observable<string>;
+  normalizedImageData$: Observable<IImageData<Uint32Array>>;
+  normalizedImageData: IImageData<Uint32Array>;
   transformation$: Observable<Transformation>;
   transformation: Transformation;
   imageToViewportTransformId$: Observable<string>;
@@ -159,22 +165,79 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   constructor(private store: Store, private sanitization: DomSanitizer) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
-    this.imageDataId$ = combineLatest(
-        this.fileId$,
-        this.hduId$
-      ).pipe(
+    let imageHdusLoaded$ = combineLatest(
+      this.fileId$,
+      this.hduId$
+    ).pipe(
       switchMap(([fileId, hduId]) => {
         let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
         let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-        if(hduId) {
-          if(hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
+        let allHduIds = hduId ? [hduId] : fileEntities[fileId].hduIds;
+        let hdus = allHduIds.map(hduId => hduEntities[hduId]).filter(hdu => {
+          if (!hdu) return false;
+          if (hdu.hduType != HduType.IMAGE) return false;
+          return true;
+        }) as ImageHdu[];
+
+        if (hdus.length == 0) return of(false);
+        return combineLatest(...hdus.map(hdu => this.store.select(DataFilesState.getHduById).pipe(
+          map(fn => fn(hdu.id).headerLoaded && (fn(hdu.id) as ImageHdu).histLoaded)
+        ))).pipe(map(hdusReady => {
+          return !hdusReady.includes(false)
+        }))
+      }),
+      distinctUntilChanged()
+    );
+
+    this.rawImageDataId$ = combineLatest(
+      imageHdusLoaded$,
+      this.fileId$,
+      this.hduId$
+    ).pipe(
+      switchMap(([loaded, fileId, hduId]) => {
+        if (!loaded || !hduId) return of(null);
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        if (hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
+          return this.store.select(DataFilesState.getHduById).pipe(
+            map(fn => (fn(hduId) as ImageHdu).rawImageDataId)
+          );
+        }
+        return of(null);
+      }),
+      distinctUntilChanged()
+    );
+
+    this.rawImageData$ = this.rawImageDataId$.pipe(
+      switchMap((imageDataId) => {
+        if (!imageDataId) return of(null);
+        return this.store
+          .select(DataFilesState.getImageDataById)
+          .pipe(
+            map((fn) => fn(imageDataId) as IImageData<PixelType>),
+          );
+      })
+    );
+
+
+    this.normalizedImageDataId$ = combineLatest(
+      imageHdusLoaded$,
+      this.fileId$,
+      this.hduId$
+    ).pipe(
+      switchMap(([loaded, fileId, hduId]) => {
+        if (!loaded) return of(null);
+
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        if (hduId) {
+          if (hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
             return this.store.select(DataFilesState.getHduById).pipe(
               map(fn => (fn(hduId) as ImageHdu).normalizedImageDataId)
             );
           }
-          
+
         }
-        else if(fileId && fileId in fileEntities) {
+        else if (fileId && fileId in fileEntities) {
           return this.store.select(DataFilesState.getDataFileById).pipe(
             map(fn => fn(fileId).compositeImageDataId)
           );
@@ -184,41 +247,45 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
       distinctUntilChanged()
     );
 
-    this.imageData$ = this.imageDataId$.pipe(
+    this.normalizedImageData$ = this.normalizedImageDataId$.pipe(
       switchMap((imageDataId) => {
-        if(!imageDataId) return of(null);
+        if (!imageDataId) return of(null);
         return this.store
           .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>));
+          .pipe(
+            map((fn) => fn(imageDataId) as IImageData<Uint32Array>),
+          );
       }),
-      tap(v => this.imageData = v)
+      tap(v => {
+        this.normalizedImageData = v
+      })
     );
 
     this.transformation$ = combineLatest(
       this.fileId$,
       this.hduId$
     ).pipe(
-    switchMap(([fileId, hduId]) => {
-      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-      let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-      if(hduId) {
-        if( hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
-          return this.store.select(DataFilesState.getHduById).pipe(
-            map(fn => (fn(hduId) as ImageHdu).transformation)
+      switchMap(([fileId, hduId]) => {
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        if (hduId) {
+          if (hduId in hduEntities && hduEntities[hduId].hduType == HduType.IMAGE) {
+            return this.store.select(DataFilesState.getHduById).pipe(
+              map(fn => (fn(hduId) as ImageHdu).transformation)
+            );
+          }
+
+        }
+        else if (fileId && fileId in fileEntities) {
+          return this.store.select(DataFilesState.getDataFileById).pipe(
+            map(fn => fn(fileId).transformation)
           );
         }
-        
-      }
-      else if(fileId && fileId in fileEntities) {
-        return this.store.select(DataFilesState.getDataFileById).pipe(
-          map(fn => fn(fileId).transformation)
-        );
-      }
-      return of(null);
-    }),
-    distinctUntilChanged(),
-    tap(v => this.transformation = v)
-  );
+        return of(null);
+      }),
+      distinctUntilChanged(),
+      tap(v => this.transformation = v)
+    );
 
 
     this.imageToViewportTransformId$ = this.transformation$.pipe(
@@ -237,11 +304,11 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
     this.sources$ = this.store.select(SourcesState.getSources);
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  ngOnDestroy() {}
+  ngOnDestroy() { }
 
-  ngOnChanges(changes: { [key: string]: SimpleChange }) {}
+  ngOnChanges(changes: { [key: string]: SimpleChange }) { }
 
   handleImageMove($event: CanvasMouseEvent) {
     if ($event.hitImage) {
@@ -266,11 +333,11 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   handleMoveBy(
     $event: MoveByEvent
   ) {
-    if (!this.viewportSize || !this.imageData || !this.transformation) return;
+    if (!this.viewportSize || !this.normalizedImageData || !this.transformation) return;
     this.store.dispatch(
       new MoveBy(
         this.transformation,
-        this.imageData.id,
+        this.normalizedImageData.id,
         this.viewportSize,
         $event.xShift,
         $event.yShift
@@ -281,11 +348,11 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   handleZoomBy(
     $event: ZoomByEvent
   ) {
-    if (!this.viewportSize || !this.imageData || !this.transformation) return;
+    if (!this.viewportSize || !this.normalizedImageData || !this.transformation) return;
     this.store.dispatch(
       new ZoomBy(
         this.transformation,
-        this.imageData.id,
+        this.normalizedImageData.id,
         this.viewportSize,
         $event.factor,
         $event.anchor
@@ -296,11 +363,11 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   handleZoomTo(
     $event: ZoomByEvent
   ) {
-    if (!this.viewportSize || !this.imageData || !this.transformation) return;
+    if (!this.viewportSize || !this.normalizedImageData || !this.transformation) return;
     this.store.dispatch(
       new ZoomTo(
         this.transformation,
-        this.imageData.id,
+        this.normalizedImageData.id,
         this.viewportSize,
         $event.factor,
         $event.anchor
@@ -311,12 +378,12 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   handleZoomToFit(
     $event: ZoomToFitEvent
   ) {
-    if (!this.viewportSize || !this.imageData || !this.transformation) return;
+    if (!this.viewportSize || !this.normalizedImageData || !this.transformation) return;
     this.store.dispatch(new CenterRegionInViewport(
       this.transformation,
-      this.imageData.id,
+      this.normalizedImageData.id,
       this.viewportSize,
-      { x: 1, y: 1, width: this.imageData.width, height: this.imageData.height }
+      { x: 1, y: 1, width: this.normalizedImageData.width, height: this.normalizedImageData.height }
     ))
   }
 
@@ -334,52 +401,31 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-    
-    let hdus: ImageHdu[] = [];
-    if(this.hduId) {
-      if(this.hduId in hduEntities && hduEntities[this.hduId].hduType == HduType.IMAGE) {
-        hdus = [hduEntities[this.hduId] as ImageHdu]
-      }
-    }
-    else if(this.fileId) {
-      let file = dataFileEntities[this.fileId];
-      hdus = file.hduIds.map(hduId => hduEntities[hduId]).filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[];
-    }
-    
-    
-    hdus.forEach(hdu => {
+    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
 
-      let rawImageData = this.store.selectSnapshot(
-        DataFilesState.getImageDataEntities
-      )[hdu.rawImageDataId];
+    if (this.hduId) {
+      let hdu = hduEntities[this.hduId];
+      if (!hdu || hdu.hduType != HduType.IMAGE) return;
+      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
+      if (!normalizedImageData || !normalizedImageData.initialized) return;
+      let rawImageData = imageDataEntities[(hdu as ImageHdu).rawImageDataId];
       if (!rawImageData || !rawImageData.initialized) return;
       let rawTile = rawImageData.tiles[$event.tileIndex];
-      if (
-        !rawTile.pixelsLoaded &&
-        !rawTile.pixelsLoading &&
-        !rawTile.pixelLoadingFailed
-      ) {
-        this.store.dispatch(new LoadRawImageTile(hdu.id, rawTile.index));
+      let tile = normalizedImageData.tiles[$event.tileIndex];
+      if ((!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed) && (!tile.isValid || !tile.pixelsLoaded)) {
+        this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index))
       }
-      else if (rawTile.pixelsLoaded) {
-        // raw tiles are loaded,  check that tile doesn't need to be renormalized
-        let normalizedImageData = this.store.selectSnapshot(
-          DataFilesState.getImageDataEntities
-        )[hdu.normalizedImageDataId];
-        if (!normalizedImageData.initialized) return;
-        let normalizedTile = normalizedImageData.tiles[rawTile.index];
-        if (
-          normalizedTile &&
-          !normalizedTile.pixelsLoaded &&
-          !normalizedTile.pixelsLoading &&
-          !normalizedTile.pixelLoadingFailed
-        ) {
-          this.store.dispatch(
-            new UpdateNormalizedImageTile(hdu.id, normalizedTile.index)
-          );
-        }
+    }
+    else if (this.fileId) {
+      let file = dataFileEntities[this.fileId];
+      if (!file) return;
+      let compositeImageData = imageDataEntities[file.compositeImageDataId];
+      if (!compositeImageData || !compositeImageData.initialized) return;
+      let tile = compositeImageData.tiles[$event.tileIndex];
+      if ((!tile.pixelsLoading && !tile.pixelLoadingFailed) && (!tile.isValid || !tile.pixelsLoaded)) {
+        this.store.dispatch(new UpdateCompositeImageTile(file.id, tile.index))
       }
-    })
+    }
   }
 
   handleDownloadSnapshot() {
@@ -388,8 +434,9 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
     // http://svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/
     let markerSvg = this.imageViewerMarkerOverlayComponent.svg;
     let svgXml = new XMLSerializer().serializeToString(markerSvg);
-
     let data = "data:image/svg+xml;base64," + btoa(svgXml);
+    
+    
     let image = new Image();
     image.onload = function () {
       let canvas: HTMLCanvasElement = document.createElement("canvas");

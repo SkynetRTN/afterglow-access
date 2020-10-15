@@ -13,6 +13,7 @@ export interface IImageData<T> {
 
 export interface ImageTile<T> {
   index: number,
+  isValid: boolean,
   x: number;
   y: number;
   width: number;
@@ -46,6 +47,7 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
       let y = j * tileHeight;
       tiles.push({
         index: index,
+        isValid: false,
         x: x,
         y: y,
         width: tw,

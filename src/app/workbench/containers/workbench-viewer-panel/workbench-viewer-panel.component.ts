@@ -125,9 +125,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
     this.hduStates$ = this.store.select(WorkbenchFileStates.getHduStateEntities);
-    this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerIds).pipe(
-      map(ids => ids.map(id => 'tab-' + id)),
-    );
+    this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerPanelIds);
      
 
     // this.hotKeys.push(
@@ -367,11 +365,12 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
 
   drop(event: CdkDragDrop<string[]>) {
-    var srcViewerId = event.previousContainer.id.replace("tab-","");
-    var targetViewerId = event.container.id.replace("tab-","");
-    if(srcViewerId == targetViewerId) return;
+    console.log("DROPPED: ", event);
+    var srcPanelId = event.previousContainer.id;
+    var targetPanelId = event.container.id;
+    var viewerId = event.item.data.viewerId;
 
-    this.store.dispatch(new MoveViewer(srcViewerId, targetViewerId))
+    this.store.dispatch(new MoveViewer(viewerId, srcPanelId, targetPanelId, event.currentIndex))
     // if(previousIndex!=NaN && currentIndex!=NaN && previousIndex!=undefined && currentIndex!=undefined && previousIndex!=currentIndex){
     //      //Do stuff
     //     .....

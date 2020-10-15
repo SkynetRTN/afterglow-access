@@ -322,7 +322,7 @@ export class WorkbenchState {
     private afterglowFieldCalService: AfterglowFieldCalService,
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions
-  ) {}
+  ) { }
 
   @Selector()
   public static getState(state: WorkbenchStateModel) {
@@ -759,7 +759,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public initialize(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: Initialize
+    { }: Initialize
   ) {
     let state = getState();
     let dataFileEntities = this.store.selectSnapshot(
@@ -777,12 +777,12 @@ export class WorkbenchState {
 
     let hdus: IHdu[] = []
     viewers.forEach(viewer => {
-      if(viewer.hduId) {
-        if(viewer.hduId in hduEntities) {
+      if (viewer.hduId) {
+        if (viewer.hduId in hduEntities) {
           hdus.push(hduEntities[viewer.hduId]);
         }
       }
-      else if(viewer.fileId && viewer.fileId in dataFileEntities) {
+      else if (viewer.fileId && viewer.fileId in dataFileEntities) {
         hdus.push(...dataFileEntities[viewer.fileId].hduIds.map(hduId => hduEntities[hduId]))
       }
 
@@ -791,9 +791,9 @@ export class WorkbenchState {
 
     let actions = [];
     hdus.forEach((hdu) => {
-        if(hdu.headerLoaded || hdu.headerLoading) return;
-        
-        actions.push(new LoadHdu(hdu.id))
+      if (hdu.headerLoaded || hdu.headerLoading) return;
+
+      actions.push(new LoadHdu(hdu.id))
     });
 
     this.store.dispatch(actions);
@@ -803,7 +803,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public resetState(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: ResetState
+    { }: ResetState
   ) {
     setState((state: WorkbenchStateModel) => {
       return workbenchStateDefaults;
@@ -814,7 +814,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public toggleFullScreen(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: ToggleFullScreen
+    { }: ToggleFullScreen
   ) {
     setState((state: WorkbenchStateModel) => {
       state.inFullScreenMode = !state.inFullScreenMode;
@@ -867,7 +867,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public showSidebar(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: ShowSidebar
+    { }: ShowSidebar
   ) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = true;
@@ -879,7 +879,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public hideSidebar(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: HideSidebar
+    { }: HideSidebar
   ) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = false;
@@ -963,9 +963,11 @@ export class WorkbenchState {
         state.focusedViewerPanelId = panel.id;
         panel.selectedViewerId = viewerId;
 
-        // if (hdu && !hdu.headerLoaded && !hdu.headerLoading) {
-        //   dispatch(new SetViewerData(viewerId, {id: hdu.id, type: 'hdu'}));
-        // }
+        // loading of files/hdus is currently triggered by the SetViewerFile action
+        // dispatch action to trigger loading if it is needed
+        dispatch(new SetViewerFile(viewerId, viewer.fileId, viewer.hduId));
+
+
       }
       return state;
     });
@@ -1145,7 +1147,7 @@ export class WorkbenchState {
             if (parentPanel.viewerIds.length != 0) {
               parentPanel.selectedViewerId =
                 state.viewerIds[
-                  Math.max(0, Math.min(state.viewerIds.length - 1, index))
+                Math.max(0, Math.min(state.viewerIds.length - 1, index))
                 ];
             } else {
               parentPanel.selectedViewerId = null;
@@ -1276,29 +1278,24 @@ export class WorkbenchState {
   @ImmutableContext()
   public moveViewer(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceViewerId, targetViewerId }: MoveViewer
+    { viewerId, sourcePanelId, targetPanelId, targetIndex }: MoveViewer
   ) {
     setState((state: WorkbenchStateModel) => {
       //find panel
-      let panels = state.viewerLayoutItemIds
-        .filter((itemId) => state.viewerLayoutItems[itemId].type == "panel")
-        .map((panelId) => state.viewerLayoutItems[panelId] as ViewerPanel);
+      let panelEntities = state.viewerLayoutItems;
+      let viewerEntities = state.viewers;
 
-      let sourcePanel = panels.find((panel) =>
-        panel.viewerIds.includes(sourceViewerId)
-      );
+      let sourcePanel = { ...panelEntities[sourcePanelId] as ViewerPanel };
+      let sourceViewerIndex = sourcePanel.viewerIds.indexOf(viewerId);
+      let targetPanel = { ...panelEntities[targetPanelId] as ViewerPanel };
+      let viewer = viewerEntities[viewerId];
 
-      let targetPanel = panels.find((panel) =>
-        panel.viewerIds.includes(targetViewerId)
-      );
+      if (targetPanel) {
+        targetPanel.viewerIds.splice(targetIndex, 0, viewerId);
+        targetPanel.selectedViewerId = viewerId;
 
-      if (sourcePanel && targetPanel) {
-        let targetViewerIndex = targetPanel.viewerIds.indexOf(targetViewerId);
-        let sourceViewerIndex = sourcePanel.viewerIds.indexOf(sourceViewerId);
-        targetPanel.viewerIds.splice(targetViewerIndex, 0, sourceViewerId);
-        targetPanel.selectedViewerId = sourceViewerId;
-        if (sourcePanel.id == targetPanel.id) {
-          sourceViewerIndex += targetViewerIndex > sourceViewerIndex ? 0 : 1;
+        if (sourcePanelId == targetPanel.id) {
+          sourceViewerIndex += targetIndex > sourceViewerIndex ? 0 : 1;
         }
         sourcePanel.viewerIds.splice(sourceViewerIndex, 1);
 
@@ -1307,14 +1304,19 @@ export class WorkbenchState {
         } else if (sourcePanel.id != targetPanel.id) {
           sourcePanel.selectedViewerId =
             sourcePanel.viewerIds[
-              Math.max(
-                0,
-                Math.min(
-                  sourcePanel.viewerIds.length - 1,
-                  sourceViewerIndex - 1
-                )
+            Math.max(
+              0,
+              Math.min(
+                sourcePanel.viewerIds.length - 1,
+                sourceViewerIndex - 1
               )
+            )
             ];
+          
+            let sourceSelectedViewer = viewerEntities[sourcePanel.selectedViewerId];
+            //force load of newly focused viewer
+            dispatch(new SetViewerFile(sourceSelectedViewer.viewerId, sourceSelectedViewer.fileId, sourceSelectedViewer.hduId))
+
         }
       }
       return state;
@@ -1378,7 +1380,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public clearViewerMarkers(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: ClearViewerMarkers
+    { }: ClearViewerMarkers
   ) {
     setState((state: WorkbenchStateModel) => {
       state.viewerIds.forEach(
@@ -1496,7 +1498,7 @@ export class WorkbenchState {
         //   })
         // }
 
-        actions.push(new SetFocusedViewer(viewerId));
+        //actions.push(new SetFocusedViewer(viewerId));
 
         return dispatch(actions);
       }
@@ -1522,7 +1524,7 @@ export class WorkbenchState {
           (action) =>
             action.viewerId == viewerId &&
             (action.fileId != fileId ||
-            action.hduId != hduId)
+              action.hduId != hduId)
         )
       );
 
@@ -1625,7 +1627,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public toggleShowConfig(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: ToggleShowConfig
+    { }: ToggleShowConfig
   ) {
     setState((state: WorkbenchStateModel) => {
       state.showConfig = !state.showConfig;
@@ -1849,7 +1851,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public closeSideNav(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CloseSidenav
+    { }: CloseSidenav
   ) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = false;
@@ -1861,7 +1863,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public openSideNav(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: OpenSidenav
+    { }: OpenSidenav
   ) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = true;
@@ -1919,7 +1921,7 @@ export class WorkbenchState {
       let state = getState();
       state.viewerIds.forEach((viewerId) => {
         let viewer = state.viewers[viewerId];
-        if(viewer.fileId == file.id || file.hduIds.includes(viewer.hduId)) {
+        if (viewer.fileId == file.id || file.hduIds.includes(viewer.hduId)) {
           this.store.dispatch(new CloseViewer(viewerId));
         }
       });
@@ -2007,7 +2009,7 @@ export class WorkbenchState {
       return;
     }
     let imageDataId = file.compositeImageDataId;
-    if(hdu && hdu.hduType == HduType.IMAGE) {
+    if (hdu && hdu.hduType == HduType.IMAGE) {
       imageDataId = (hdu as ImageHdu).normalizedImageDataId
     }
 
@@ -2110,9 +2112,9 @@ export class WorkbenchState {
     ) {
       //find viewer which contains file
       let viewer = this.store.selectSnapshot(WorkbenchState.getViewers).find(viewer => viewer.hduId == hduId);
-      if(viewer && viewer.viewportSize) {
+      if (viewer && viewer.viewportSize) {
         let region =
-        sonifierState.regionHistory[sonifierState.regionHistoryIndex];
+          sonifierState.regionHistory[sonifierState.regionHistoryIndex];
         dispatch(
           new CenterRegionInViewport(
             hdu.transformation,
@@ -2122,7 +2124,7 @@ export class WorkbenchState {
           )
         );
       }
-      
+
     }
   }
 
@@ -2130,7 +2132,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public loadCatalogs(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: LoadCatalogs
+    { }: LoadCatalogs
   ) {
     return this.afterglowCatalogService.getCatalogs().pipe(
       tap((catalogs) => {
@@ -2154,7 +2156,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public loadFieldCals(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: LoadFieldCals
+    { }: LoadFieldCals
   ) {
     return this.afterglowFieldCalService.getFieldCals().pipe(
       tap((fieldCals) => {
@@ -2210,7 +2212,7 @@ export class WorkbenchState {
     { fieldCal }: UpdateFieldCal
   ) {
     return this.afterglowFieldCalService.updateFieldCal(fieldCal).pipe(
-      tap((fieldCal) => {}),
+      tap((fieldCal) => { }),
       flatMap((fieldCal) => {
         return dispatch([
           new UpdateFieldCalSuccess(fieldCal),
@@ -2253,7 +2255,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createPixelOpsJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreatePixelOpsJob
+    { }: CreatePixelOpsJob
   ) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
@@ -2280,8 +2282,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       aux_file_ids: auxFileIds,
@@ -2355,7 +2357,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAdvPixelOpsJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreateAdvPixelOpsJob
+    { }: CreateAdvPixelOpsJob
   ) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
@@ -2377,8 +2379,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       aux_file_ids: auxImageFiles
@@ -2386,8 +2388,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       op: data.opString,
@@ -2457,7 +2459,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAlignmentJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreateAlignmentJob
+    { }: CreateAlignmentJob
   ) {
     let state = getState();
     let data = state.aligningPanelConfig.alignFormData;
@@ -2477,8 +2479,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       inplace: data.inPlace,
@@ -2562,7 +2564,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createStackingJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreateStackingJob
+    { }: CreateStackingJob
   ) {
     let state = getState();
     let data = state.stackingPanelConfig.stackFormData;
@@ -2581,8 +2583,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       stacking_settings: {
@@ -2715,7 +2717,7 @@ export class WorkbenchState {
             collection: false,
             path: `DSS\\${
               raHours * 15
-            },${decDegs}\\${widthArcmins},${heightArcmins}`,
+              },${decDegs}\\${widthArcmins},${heightArcmins}`,
             metadata: {},
           },
         ],

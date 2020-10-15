@@ -1,14 +1,15 @@
 import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
-import { getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
 import { Subject, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { CloseDataFile, ZoomTo } from '../../../data-files/data-files.actions';
-import { getPixel } from '../../../data-files/models/image-data';
+import { getPixel, IImageData } from '../../../data-files/models/image-data';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { MoveByEvent, ZoomByEvent, LoadTileEvent, ZoomToEvent, ZoomToFitEvent } from '../pan-zoom-canvas/pan-zoom-canvas.component';
+import { Wcs } from '../../../image-tools/wcs';
 
 @Component({
   selector: 'app-image-viewer-status-bar',
@@ -16,7 +17,9 @@ import { MoveByEvent, ZoomByEvent, LoadTileEvent, ZoomToEvent, ZoomToFitEvent } 
   styleUrls: ['./image-viewer-status-bar.component.css']
 })
 export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
-  @Input() hdu: ImageHdu;
+  @Input() rawImageData: IImageData<PixelType>;
+  @Input() normalizedImageData: IImageData<Uint32Array>;
+  @Input() wcs: Wcs;
   @Input() imageMouseX: number;
   @Input() imageMouseY: number;
 
@@ -30,6 +33,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   raHours: number;
   decDegs: number;
   pixelValue: number;
+  colorValue: {red: number, green: number, blue: number, alpha: number}
 
   private zoomStepFactor: number = 0.75;
   private startZoomIn$ = new Subject<boolean>();
@@ -45,27 +49,28 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    if(this.imageMouseX == null || this.imageMouseY == null || !this.hdu) {
+    if(this.imageMouseX == null || this.imageMouseY == null) {
       this.pixelValue = null;
+      this.colorValue = null;
       this.raHours = null;
       this.decDegs = null;
       return;
     }
-    if(this.hdu.headerLoaded) {
-      let imageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[this.hdu.rawImageDataId]
-      if(imageData) {
-        this.pixelValue = getPixel(imageData, this.imageMouseX, this.imageMouseY);
-      }
-      if(this.hdu.wcs.isValid()) {
-        let wcs = this.hdu.wcs;
-        let raDec = wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
-        this.raHours = raDec[0];
-        this.decDegs = raDec[1];
-      }
-      else {
-        this.raHours = null;
-        this.decDegs = null;
-      }
+    if(this.rawImageData) {
+      this.pixelValue = getPixel(this.rawImageData, this.imageMouseX, this.imageMouseY);
+    }
+    if(this.normalizedImageData) {
+      let c = getPixel(this.normalizedImageData, this.imageMouseX, this.imageMouseY);
+      this.colorValue = c ? {red: c & 0xff, green: (c >> 8) & 0xff, blue: (c >> 16) & 0xff, alpha: (c >> 24) & 0xff} : null;
+    }
+    if(this.wcs && this.wcs.isValid()) {
+      let raDec = this.wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
+      this.raHours = raDec[0];
+      this.decDegs = raDec[1];
+    }
+    else {
+      this.raHours = null;
+      this.decDegs = null;
     }
     
   }
@@ -75,25 +80,25 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   removeFromLibrary() {
-    if(!this.hdu) return;
-    let hduId = this.hdu.id;
+    // if(!this.hdu) return;
+    // let hduId = this.hdu.id;
 
-    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: "300px",
-      data: {
-        message: "Are you sure you want to delete this file from your library?",
-        confirmationBtn: {
-          color: 'warn',
-          label: 'Delete File'
-        }
-      }
-    });
+    // let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+    //   width: "300px",
+    //   data: {
+    //     message: "Are you sure you want to delete this file from your library?",
+    //     confirmationBtn: {
+    //       color: 'warn',
+    //       label: 'Delete File'
+    //     }
+    //   }
+    // });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.store.dispatch(new CloseDataFile(this.hdu.fileId));
-      }
-    });
+    // dialogRef.afterClosed().subscribe(result => {
+    //   if (result) {
+    //     this.store.dispatch(new CloseDataFile(this.hdu.fileId));
+    //   }
+    // });
 
   }
 

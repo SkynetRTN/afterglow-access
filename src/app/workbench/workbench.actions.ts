@@ -83,7 +83,7 @@ export class SplitViewerPanel {
 export class MoveViewer {
   public static readonly type = '[Workbench] Move Viewer ';
 
-  constructor(public sourceViewerId: string, public targetViewerId: string ) { }
+  constructor(public viewerId: string, public sourcePanelId: string, public targetPanelId: string, public targetIndex: number ) { }
 }
 
 export class SetViewerData {

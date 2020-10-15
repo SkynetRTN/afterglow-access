@@ -167,22 +167,34 @@ export class CloseAllDataFilesFail {
   * Normalization Actions
   */
 
-export class ClearNormalizedImageTiles {
-  public static readonly type = '[Workbench HDU State] Clear Normalized Image Tiles';
+export class InvalidateNormalizedImageTiles {
+  public static readonly type = '[Workbench HDU State] Invalidate Normalized Image Tiles';
 
   constructor(public hduId: string) { }
 }
 
+export class InvalidateNormalizedImageTile {
+  public static readonly type = '[Workbench HDU State] Invalidate Normalized Image Tile';
+
+  constructor(public hduId: string, public tileIndex: number) { }
+}
+
 export class UpdateNormalizedImageTile {
-  public static readonly type = '[Workbench HDU State] Load Normalized Image Tile';
+  public static readonly type = '[Workbench HDU State] Update Normalized Image Tile';
 
   constructor(public hduId: string, public tileIndex: number) { }
 }
 
 export class UpdateNormalizedImageTileSuccess {
-  public static readonly type = '[Workbench HDU State] Load Normalized Image Tile Success';
+  public static readonly type = '[Workbench HDU State] Update Normalized Image Tile Success';
 
   constructor(public hduId: string, public tileIndex: number, pixels: Uint32Array) { }
+}
+
+export class UpdateNormalizedImageTileFail {
+  public static readonly type = '[Workbench HDU State] Update Normalized Image Tile Fail';
+
+  constructor(public hduId: string, public tileIndex: number) { }
 }
 
 export class UpdateNormalizer {
@@ -201,10 +213,16 @@ export class SyncFileNormalizations {
  * Composite Actions
  */
 
-export class ClearCompositeImageTiles {
-  public static readonly type = '[Workbench HDU State] Clear Composite Image Tiles';
+export class InvalidateCompositeImageTiles {
+  public static readonly type = '[Workbench HDU State] Invalidate Composite Image Tiles';
 
   constructor(public fileId: string) { }
+}
+
+export class InvalidateCompositeImageTile {
+  public static readonly type = '[Workbench HDU State] Invalidate Composite Image Tile';
+
+  constructor(public fileId: string, public tileIndex: number) { }
 }
 
 export class UpdateCompositeImageTile {
@@ -217,6 +235,12 @@ export class UpdateCompositeImageTileSuccess {
   public static readonly type = '[Workbench HDU State] Update Composite Image Tile Success';
 
   constructor(public fileId: string, public tileIndex: number, pixels: Uint32Array) { }
+}
+
+export class UpdateCompositeImageTileFail {
+  public static readonly type = '[Workbench HDU State] Update Composite Image Tile Fail';
+
+  constructor(public fileId: string, public tileIndex: number) { }
 }
 
  /**
