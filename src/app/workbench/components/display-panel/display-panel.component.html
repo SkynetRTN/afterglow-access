@@ -1,4 +1,4 @@
-<div *ngIf="!hdu || !hdu?.normalizer; else loadedBlock" class="alert alert-info">
+<div *ngIf="!(hdu$ | async) || !hdu?.normalizer; else loadedBlock" class="alert alert-info">
   <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 

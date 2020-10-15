@@ -335,13 +335,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       this.focusedViewerHduId$
     ).pipe(
       switchMap(([fileId, hduId]) => {
-        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-        let hduIds = hduId ? [hduId] : fileEntities[fileId].hduIds;
-        if(hduIds.length == 0) return of(null);
-        return combineLatest(...hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
-          map(fn => fn(hduId))
-        )))
+        if(!hduId) {
+          return this.store.select(DataFilesState.getDataFileById).pipe(
+            map(fn => fn(fileId).selectedHduId)
+          )
+        }
+        return of(hduId);
       })
+    ).pipe(
+      distinctUntilChanged()
     )
 
 

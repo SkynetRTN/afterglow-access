@@ -22,7 +22,7 @@ import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
 import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import { HduType } from 'src/app/data-files/models/data-file-type';
+import { HduType } from '../../../data-files/models/data-file-type';
 
 @Component({
   selector: "app-display-panel",
@@ -80,12 +80,12 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
       this.selectedHduId$
     ).pipe(
       map(([hdus, selectedHduId]) => {
-        let hdu = hdus.find(hdu => hdu.id == selectedHduId);
-        if(!hdu || hdu.hduType != HduType.IMAGE) return null;
-        this.hdu = hdu as ImageHdu;
+        this.hdu = hdus.find(hdu => hdu.id == selectedHduId && hdu.hduType == HduType.IMAGE) as ImageHdu;
         return this.hdu;
       })
     )
+
+    
     this.levels$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
         new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
