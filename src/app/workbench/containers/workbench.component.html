@@ -223,8 +223,8 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="focusedImageHdu$ | async"
-          [normalizer]="focusedHduNormalizer$ | async">
+        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [file]="focusedViewerFile$ | async"
+        [hdu]="toolPanelHdu$ | async">
         </app-display-panel>
 
         <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="focusedImageHdu$ | async"

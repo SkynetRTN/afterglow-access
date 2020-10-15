@@ -1,8 +1,20 @@
-<div *ngIf="!hdu || !normalizer" class="alert alert-info">
+<div *ngIf="!hdu || !hdu?.normalizer; else loadedBlock" class="alert alert-info">
   <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 
-<div *ngIf="hdu && normalizer">
+<ng-template #loadedBlock>
+  <div *ngIf="hdus?.length > 1">
+    <h6 i18n>Channel Selection</h6>
+    <div class="pb-1">
+      <mat-form-field appearance="outline">
+        <mat-label>Channel</mat-label>
+        <mat-select [value]="hdu?.id" (selectionChange)="selectedHduIdChange.emit($event.value)" style="width: 100%;">
+          <mat-option *ngFor="let hdu of hdus; let index=index;" [value]="hdu.id">Channel {{ index }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
   <div>
     <h6 i18n>Brightness and Contrast Presets</h6>
     <div class="pb-1">
@@ -24,8 +36,8 @@
 
   <div class="pr-3 pl-3 pb-0">
     <app-image-hist-chart [width]="440" [height]="250" [hist]="hdu?.hist" [backgroundPercentile]="
-                normalizer?.backgroundPercentile
-              " [peakPercentile]="normalizer?.peakPercentile">
+                hdu?.normalizer?.backgroundPercentile
+              " [peakPercentile]="hdu?.normalizer?.peakPercentile">
     </app-image-hist-chart>
     <div style="clear: both;"></div>
   </div>
@@ -33,7 +45,7 @@
 
   <div class="pb-4 pt-1">
     <h6 i18n>Brightness and Contrast Settings</h6>
-    <app-normalizer-form [normalizer]="normalizer"
+    <app-normalizer-form [normalizer]="hdu?.normalizer"
       (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
       (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)"
       (stretchModeChange)="onStretchModeChange($event)" (invertedChange)="onInvertedChange($event)">
@@ -67,3 +79,6 @@
       </button>
     </div>
   </div>
+    
+</ng-template>
+

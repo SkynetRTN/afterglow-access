@@ -30,6 +30,7 @@ export interface DataFile {
   hduIds: string[];
   transformation: Transformation;
   compositeImageDataId: string;
+  selectedHduId: string;
 }
 
 export interface IHdu {

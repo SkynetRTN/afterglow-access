@@ -169,6 +169,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   selectedItem$: Observable<DataFile | IHdu>;
   dataFileListItems$: Observable<Array<DataFile | ImageHdu>>;
   focusedViewer$: Observable<Viewer>;
+  focusedViewerFileId$: Observable<string>;
+  focusedViewerHduId$: Observable<string>;
+  focusedViewerFile$: Observable<DataFile>;
+  focusedViewerHdu$: Observable<IHdu>;
+  toolPanelHdus$: Observable<IHdu[]>;
+  toolPanelSelectedHduId$: Observable<string>;
+
   focusedViewerData$: Observable<DataFile | IHdu>;
   focusedViewerViewportSize$: Observable<{width: number, height: number}>;
   focusedImageHduId$: Observable<string>;
@@ -286,6 +293,59 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
+    
+    this.focusedViewerFileId$ = this.focusedViewer$.pipe(
+      map(viewer => viewer.fileId),
+      distinctUntilChanged()
+    )
+
+    this.focusedViewerFile$ = this.focusedViewerFileId$.pipe(
+      switchMap(fileId => this.store.select(DataFilesState.getDataFileById).pipe(
+        map(fn => fn(fileId))
+      ))
+    )
+
+    this.focusedViewerHduId$ = this.focusedViewer$.pipe(
+      map(viewer => viewer.hduId),
+      distinctUntilChanged()
+    )
+
+    this.focusedViewerHdu$ = this.focusedViewerHduId$.pipe(
+      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
+        map(fn => fn(hduId))
+      ))
+    )
+
+    this.toolPanelHdus$ = combineLatest(
+      this.focusedViewerFileId$,
+      this.focusedViewerHduId$
+    ).pipe(
+      switchMap(([fileId, hduId]) => {
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let hduIds = hduId ? [hduId] : fileEntities[fileId].hduIds;
+        if(hduIds.length == 0) return of(null);
+        return combineLatest(...hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
+          map(fn => fn(hduId))
+        )))
+      })
+    )
+
+    this.toolPanelSelectedHduId$ = combineLatest(
+      this.focusedViewerFileId$,
+      this.focusedViewerHduId$
+    ).pipe(
+      switchMap(([fileId, hduId]) => {
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let hduIds = hduId ? [hduId] : fileEntities[fileId].hduIds;
+        if(hduIds.length == 0) return of(null);
+        return combineLatest(...hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
+          map(fn => fn(hduId))
+        )))
+      })
+    )
+
+
+
     this.focusedViewerData$ = this.focusedViewer$.pipe(
       map(viewer =>{
         if(!viewer) return null;

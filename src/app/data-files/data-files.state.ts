@@ -451,6 +451,7 @@ export class DataFilesState {
               dataProviderId: coreFile.data_provider,
               name: coreFile.name,
               hduIds: [hdu.id],
+              selectedHduId: hdu.id,
               transformation: {
                 viewportTransformId: null,
                 imageTransformId: null,
