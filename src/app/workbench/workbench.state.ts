@@ -701,7 +701,7 @@ export class WorkbenchState {
       let selectedSourceIds = state.photometryPanelConfig.selectedSourceIds;
       let markers: Array<CircleMarker | TeardropMarker> = [];
       let mode = state.photometryPanelConfig.coordMode;
-      if (!hdu.wcs.isValid()) mode = "pixel";
+      if (!hdu.header.wcs.isValid()) mode = "pixel";
 
       sources.forEach((source) => {
         if (
@@ -713,7 +713,7 @@ export class WorkbenchState {
 
         if (source.posType != mode) return;
         let selected = selectedSourceIds.includes(source.id);
-        let coord = getSourceCoordinates(hdu, source);
+        let coord = getSourceCoordinates(hdu.header, source);
 
         if (coord == null) {
           return;
@@ -791,7 +791,7 @@ export class WorkbenchState {
 
     let actions = [];
     hdus.forEach((hdu) => {
-      if (hdu.headerLoaded || hdu.headerLoading) return;
+      if (hdu.header.loaded || hdu.header.loading) return;
 
       actions.push(new LoadHdu(hdu.id))
     });
@@ -1511,7 +1511,7 @@ export class WorkbenchState {
         .map((id) => hduEntities[id])
         .filter(
           (hdu) =>
-            !hdu.headerLoaded ||
+            !hdu.header.loaded ||
             (hdu.hduType == HduType.IMAGE && !(hdu as ImageHdu).histLoaded)
         )
         .map((hdu) => new LoadHdu(hdu.id));
@@ -2776,10 +2776,10 @@ export class WorkbenchState {
 
       jobSettings = {
         ...jobSettings,
-        x: Math.min(getWidth(hdu), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(hdu), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(hdu), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(hdu), Math.max(0, region.height + 1)),
+        x: Math.min(getWidth(hdu.header), Math.max(0, region.x + 1)),
+        y: Math.min(getHeight(hdu.header), Math.max(0, region.y + 1)),
+        width: Math.min(getWidth(hdu.header), Math.max(0, region.width + 1)),
+        height: Math.min(getHeight(hdu.header), Math.max(0, region.height + 1)),
       };
     } else if (
       settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
@@ -2789,10 +2789,10 @@ export class WorkbenchState {
         sonificationState.regionHistory[sonificationState.regionHistoryIndex];
       jobSettings = {
         ...jobSettings,
-        x: Math.min(getWidth(hdu), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(hdu), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(hdu), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(hdu), Math.max(0, region.height + 1)),
+        x: Math.min(getWidth(hdu.header), Math.max(0, region.x + 1)),
+        y: Math.min(getHeight(hdu.header), Math.max(0, region.y + 1)),
+        width: Math.min(getWidth(hdu.header), Math.max(0, region.width + 1)),
+        height: Math.min(getHeight(hdu.header), Math.max(0, region.height + 1)),
       };
     }
     let job: SourceExtractionJob = {
@@ -2825,8 +2825,8 @@ export class WorkbenchState {
 
           if (
             photometryPageSettings.coordMode == "sky" &&
-            hdu.wcs &&
-            hdu.wcs.isValid() &&
+            hdu.header.wcs &&
+            hdu.header.wcs.isValid() &&
             "ra_hours" in d &&
             d.ra_hours !== null &&
             "dec_degs" in d &&

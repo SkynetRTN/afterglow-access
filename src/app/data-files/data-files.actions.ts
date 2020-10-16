@@ -63,7 +63,7 @@ export class LoadHduHeader {
 export class LoadHduHeaderSuccess {
   public static readonly type = '[Data File] Load HDU Header Success';
 
-  constructor(public hduId: string, public header: Header) { }
+  constructor(public hduId: string) { }
 }
 
 /**

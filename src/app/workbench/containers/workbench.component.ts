@@ -401,7 +401,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         if(!hduId) return null;
 
         return this.store.select(DataFilesState.getHduById).pipe(
-          map(fn => (fn(hduId) as ImageHdu).wcs)
+          map(fn => (fn(hduId) as ImageHdu).header.wcs)
         )
       })
     ).pipe(
@@ -698,17 +698,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 let y2 = endSecondaryCoord;
 
                 if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-                  if (!hdu.headerLoaded || !hdu.wcs.isValid()) {
+                  if (!hdu.header.loaded || !hdu.header.wcs.isValid()) {
                     return { viewerId: viewerId, markers: [] };
                   }
-                  let wcs = hdu.wcs;
+                  let wcs = hdu.header.wcs;
                   if (startPosType == PosType.SKY) {
                     let xy = wcs.worldToPix([
                       startPrimaryCoord,
                       startSecondaryCoord,
                     ]);
-                    x1 = Math.max(Math.min(xy[0], getWidth(hdu)), 0);
-                    y1 = Math.max(Math.min(xy[1], getHeight(hdu)), 0);
+                    x1 = Math.max(Math.min(xy[0], getWidth(hdu.header)), 0);
+                    y1 = Math.max(Math.min(xy[1], getHeight(hdu.header)), 0);
                   }
 
                   if (endPosType == PosType.SKY) {
@@ -716,8 +716,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                       endPrimaryCoord,
                       endSecondaryCoord,
                     ]);
-                    x2 = Math.max(Math.min(xy[0], getWidth(hdu)), 0);
-                    y2 = Math.max(Math.min(xy[1], getHeight(hdu)), 0);
+                    x2 = Math.max(Math.min(xy[0], getWidth(hdu.header)), 0);
+                    y2 = Math.max(Math.min(xy[1], getHeight(hdu.header)), 0);
                   }
                 }
 
@@ -869,12 +869,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               hduId
             ] as ImageHdu;
             if (!hdu || !header) return [];
-            if (!hdu.wcs || !hdu.wcs.isValid()) coordMode = "pixel";
+            if (!hdu.header.wcs || !hdu.header.wcs.isValid()) coordMode = "pixel";
             return sources.filter((source) => {
               if (coordMode != source.posType) return false;
               if (source.hduId == hdu.id) return true;
               if (!showSourcesFromAllFiles) return false;
-              let coord = getSourceCoordinates(hdu, source);
+              let coord = getSourceCoordinates(hdu.header, source);
               if (coord == null) return false;
               return true;
             });
@@ -923,13 +923,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 let markers: Array<CircleMarker | TeardropMarker> = [];
                 let mode = coordMode;
 
-                if (!hdu.wcs.isValid()) mode = "pixel";
+                if (!hdu.header.wcs.isValid()) mode = "pixel";
 
                 sources.forEach((source) => {
                   if (source.hduId != hduId && !showSourcesFromAllFiles) return;
                   if (source.posType != mode) return;
                   let selected = selectedSourceIds.includes(source.id);
-                  let coord = getSourceCoordinates(hdu, source);
+                  let coord = getSourceCoordinates(hdu.header, source);
 
                   if (coord == null) {
                     return false;
@@ -1103,9 +1103,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
         if (!(v.srcHduId in hdus)) return;
         let hdu = hdus[v.srcHduId] as ImageHdu;
-        if (hdu.headerLoaded && v.targetHduIds.length != 0) {
+        if (hdu.header.loaded && v.targetHduIds.length != 0) {
           let targetHduIds = v.targetHduIds.filter(
-            (fileId) => fileId in hdus && hdus[fileId].headerLoaded
+            (fileId) => fileId in hdus && hdus[fileId].header.loaded
           );
 
           this.store.dispatch(
@@ -1175,10 +1175,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
 
         let hdu = hdus[v.srcHduId] as ImageHdu;
-        if (hdu.headerLoaded && v.targetHduIds.length != 0) {
+        if (hdu.header.loaded && v.targetHduIds.length != 0) {
           let targetHduIds = v.targetHduIds.filter(
             (fileId) =>
-              fileId in hdus && (hdus[fileId] as ImageHdu).headerLoaded
+              fileId in hdus && (hdus[fileId] as ImageHdu).header.loaded
           );
 
           this.store.dispatch(
@@ -1245,9 +1245,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
         let hduStates = this.store.selectSnapshot(WorkbenchFileStates.getHduStateEntities)
         let hdu = hdus[v.srcHduId] as ImageHdu;
-        if (hdu.headerLoaded && v.targetHduIds.length != 0) {
+        if (hdu.header.loaded && v.targetHduIds.length != 0) {
           let targetHduIds = v.targetHduIds.filter(
-            (hduId) => hduId in hdus && hdus[hduId].headerLoaded
+            (hduId) => hduId in hdus && hdus[hduId].header.loaded
           );
 
           this.store.dispatch(
@@ -1671,8 +1671,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let primaryCoord = x;
           let secondaryCoord = y;
           let posType = PosType.PIXEL;
-          if (firstImageHdu && firstImageHdu.wcs && firstImageHdu.wcs.isValid()) {
-            let wcs = firstImageHdu.wcs;
+          if (firstImageHdu && firstImageHdu.header.wcs && firstImageHdu.header.wcs.isValid()) {
+            let wcs = firstImageHdu.header.wcs;
             let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
             primaryCoord = raDec[0];
             secondaryCoord = raDec[1];
@@ -1720,16 +1720,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             }
             if (
               photometryPanelConfig.coordMode == "sky" &&
-              targetHdu.wcs.isValid()
+              targetHdu.header.wcs.isValid()
             ) {
-              let wcs = targetHdu.wcs;
+              let wcs = targetHdu.header.wcs;
               let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
               primaryCoord = raDec[0];
               secondaryCoord = raDec[1];
               posType = PosType.SKY;
             }
 
-            let centerEpoch = getCenterTime(targetHdu);
+            let centerEpoch = getCenterTime(targetHdu.header);
 
             let source: Source = {
               id: null,
@@ -1794,8 +1794,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let primaryCoord = $event.imageX;
           let secondaryCoord = $event.imageY;
           let posType = PosType.PIXEL;
-          if (firstImageHdu && firstImageHdu.wcs &&firstImageHdu.wcs.isValid()) {
-            let wcs = firstImageHdu.wcs;
+          if (firstImageHdu && firstImageHdu.header.wcs &&firstImageHdu.header.wcs.isValid()) {
+            let wcs = firstImageHdu.header.wcs;
             let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
             primaryCoord = raDec[0];
             secondaryCoord = raDec[1];
@@ -2025,25 +2025,25 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     let imageHdu = hdu as ImageHdu;
 
-    if (imageHdu.wcs && imageHdu.wcs.isValid() && this.useWcsCenter) {
-      centerRaDec = imageHdu.wcs.pixToWorld([
-        getWidth(imageHdu) / 2,
-        getHeight(imageHdu) / 2,
+    if (imageHdu.header.wcs && imageHdu.header.wcs.isValid() && this.useWcsCenter) {
+      centerRaDec = imageHdu.header.wcs.pixToWorld([
+        getWidth(imageHdu.header) / 2,
+        getHeight(imageHdu.header) / 2,
       ]);
-      pixelScale = imageHdu.wcs.getPixelScale() * 60;
+      pixelScale = imageHdu.header.wcs.getPixelScale() * 60;
     } else {
-      let centerRa = getRaHours(imageHdu);
-      let centerDec = getDecDegs(imageHdu);
+      let centerRa = getRaHours(imageHdu.header);
+      let centerDec = getDecDegs(imageHdu.header);
       if (centerRa == undefined || centerDec == undefined) return;
 
       centerRaDec = [centerRa, centerDec];
-      pixelScale = getDegsPerPixel(imageHdu) * 60;
+      pixelScale = getDegsPerPixel(imageHdu.header) * 60;
 
       if (pixelScale == undefined) return;
     }
 
-    let width = pixelScale * getWidth(imageHdu);
-    let height = pixelScale * getHeight(imageHdu);
+    let width = pixelScale * getWidth(imageHdu.header);
+    let height = pixelScale * getHeight(imageHdu.header);
 
     this.store.dispatch(
       new ImportFromSurvey(

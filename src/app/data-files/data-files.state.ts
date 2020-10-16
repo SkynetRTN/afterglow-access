@@ -218,7 +218,7 @@ export class DataFilesState {
   public static getHeaderLoaded(state: DataFilesStateModel) {
     return (hduId: string) => {
       return hduId in state.hduEntities
-        ? state.hduEntities[hduId].headerLoaded
+        ? state.hduEntities[hduId].header.loaded
         : null;
     };
   }
@@ -407,7 +407,7 @@ export class DataFilesState {
     );
     hdus.forEach((hdu) => {
       if (
-        (!hdu.headerLoaded && !hdu.headerLoading) ||
+        (!hdu.header.loaded && !hdu.header.loading) ||
         (hdu.hduType == HduType.IMAGE &&
           !(hdu as ImageHdu).histLoaded &&
           !(hdu as ImageHdu).histLoading)
@@ -447,10 +447,12 @@ export class DataFilesState {
             // order: coreFile.group_order,
             order: index,
             modified: coreFile.modified,
-            header: null,
-            headerLoaded: false,
-            headerLoading: false,
-            wcs: null,
+            header: {
+              entries: [],
+              wcs: null,
+              loaded: false,
+              loading: false,
+            }
           };
 
           hdus.push(hdu);
@@ -466,6 +468,8 @@ export class DataFilesState {
               dataProviderId: coreFile.data_provider,
               name: coreFile.name,
               hduIds: [hdu.id],
+              imageHduIds: hdu.hduType == HduType.IMAGE ? [hdu.id] : [],
+              tableHduIds: hdu.hduType == HduType.TABLE ? [hdu.id] : [],
               selectedHduId: hdu.id,
               transformation: {
                 viewportTransformId: null,
@@ -477,6 +481,12 @@ export class DataFilesState {
             dataFiles.push(dataFile);
           } else {
             dataFile.hduIds.push(hdu.id);
+            if(hdu.hduType == HduType.IMAGE) {
+              dataFile.imageHduIds.push(hdu.id);
+            }
+            else if(hdu.hduType == HduType.TABLE) {
+              dataFile.tableHduIds.push(hdu.id);
+            }
           }
         });
 
@@ -558,6 +568,8 @@ export class DataFilesState {
                 dataProviderId: file.dataProviderId,
                 name: file.name,
                 hduIds: file.hduIds,
+                imageHduIds: file.imageHduIds,
+                tableHduIds: file.tableHduIds
               };
             } else {
               state.dataFileIds.push(file.id);
@@ -589,7 +601,7 @@ export class DataFilesState {
     if (!(hduId in state.hduEntities)) return;
     let hdu = state.hduEntities[hduId];
 
-    if (!hdu.headerLoaded && !hdu.headerLoading) {
+    if (!hdu.header.loaded && !hdu.header.loading) {
       actions.push(new LoadHduHeader(hdu.id));
     }
 
@@ -619,32 +631,32 @@ export class DataFilesState {
 
     setState((state: DataFilesStateModel) => {
       let hdu = state.hduEntities[hduId];
-      hdu.headerLoading = true;
-      hdu.headerLoaded = false;
+      hdu.header.loading = true;
+      hdu.header.loaded = false;
       return state;
     });
 
     return this.dataFileService.getHeader(hduId).pipe(
       takeUntil(cancel$),
-      tap((header) => {
+      tap((entries) => {
         setState((state: DataFilesStateModel) => {
           let hdu = state.hduEntities[hduId];
-          hdu.header = header;
-          hdu.headerLoading = false;
-          hdu.headerLoaded = true;
+          hdu.header.entries = entries;
+          hdu.header.loading = false;
+          hdu.header.loaded = true;
 
           let wcsHeader: { [key: string]: any } = {};
-          header.forEach((entry) => {
+          hdu.header.entries.forEach((entry) => {
             wcsHeader[entry.key] = entry.value;
           });
-          hdu.wcs = new Wcs(wcsHeader);
+          hdu.header.wcs = new Wcs(wcsHeader);
 
           if (hdu.hduType == HduType.IMAGE) {
             let imageHdu = hdu as ImageHdu;
             //extract width and height from the header using FITS standards
             // TODO:  Handle failure when getting width and height
-            let width = getWidth(imageHdu);
-            let height = getHeight(imageHdu);
+            let width = getWidth(imageHdu.header);
+            let height = getHeight(imageHdu.header);
 
             let hduImageDataBase = {
               width: width,
@@ -807,13 +819,13 @@ export class DataFilesState {
             let fileHdus = file.hduIds
               .map((id) => state.hduEntities[id])
               .filter(
-                (hdu) => hdu.hduType == HduType.IMAGE && hdu.headerLoaded
+                (hdu) => hdu.hduType == HduType.IMAGE && hdu.header.loaded
               ) as ImageHdu[];
             let compositeWidth = Math.min(
-              ...fileHdus.map((hdu) => getWidth(hdu))
+              ...fileHdus.map((hdu) => getWidth(hdu.header))
             );
             let compositeHeight = Math.min(
-              ...fileHdus.map((hdu) => getHeight(hdu))
+              ...fileHdus.map((hdu) => getHeight(hdu.header))
             );
             let compositeImageDataBase = {
               width: compositeWidth,
@@ -928,7 +940,7 @@ export class DataFilesState {
 
           return state;
         });
-        dispatch(new LoadHduHeaderSuccess(hduId, header));
+        dispatch(new LoadHduHeaderSuccess(hduId));
       })
     );
   }
@@ -1843,7 +1855,7 @@ export class DataFilesState {
       state.transformEntities[
         referenceHdu.transformation.imageToViewportTransformId
       ];
-    let referenceHduHasWcs = referenceHdu.wcs && referenceHdu.wcs.isValid();
+    let referenceHduHasWcs = referenceHdu.header.wcs && referenceHdu.header.wcs.isValid();
 
     setState((state: DataFilesStateModel) => {
       let actions = [];
@@ -1864,10 +1876,10 @@ export class DataFilesState {
         let viewportTransform = ts[viewportTransformId];
         let imageTransform = ts[imageTransformId];
         let imageToViewportTransform = ts[imageToViewportTransformId];
-        let hduHasWcs = hdu.wcs && hdu.wcs.isValid();
+        let hduHasWcs = hdu.header.wcs && hdu.header.wcs.isValid();
 
         if (referenceHduHasWcs && hduHasWcs) {
-          let referenceWcs = referenceHdu.wcs;
+          let referenceWcs = referenceHdu.header.wcs;
           let referenceWcsTransform = new Matrix(
             referenceWcs.m11,
             referenceWcs.m21,
@@ -1877,7 +1889,7 @@ export class DataFilesState {
             0
           );
           let originWorld = referenceWcs.pixToWorld([0, 0]);
-          let wcs = hdu.wcs;
+          let wcs = hdu.header.wcs;
           let originPixels = wcs.worldToPix(originWorld);
           let wcsTransform = new Matrix(
             wcs.m11,
@@ -1888,7 +1900,7 @@ export class DataFilesState {
             0
           );
 
-          if (hasOverlap(referenceHdu, hdu)) {
+          if (hasOverlap(referenceHdu.header, hdu.header)) {
             let srcToTargetTransform = referenceWcsTransform
               .inverted()
               .appended(wcsTransform)

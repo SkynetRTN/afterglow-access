@@ -129,7 +129,7 @@ export class SonificationPanelComponent
         }
         if (
           !hdu ||
-          !hdu.headerLoaded ||
+          !hdu.header.loaded ||
           !transform ||
           !viewportSize
         ) {
@@ -347,8 +347,8 @@ export class SonificationPanelComponent
       new AddRegionToHistory(this.hdu.id, {
         x: 0.5,
         y: 0.5,
-        width: getWidth(this.hdu),
-        height: getHeight(this.hdu),
+        width: getWidth(this.hdu.header),
+        height: getHeight(this.hdu.header),
       })
     );
   }

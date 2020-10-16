@@ -98,7 +98,7 @@ export class AlignerPageComponent implements OnInit {
 
     // TODO: LAYER
     this.primaryHduHasWcs$ = this.primaryHdu$.pipe(
-      map(hdu => hdu != null && hdu.headerLoaded && hdu.wcs.isValid())
+      map(hdu => hdu != null && hdu.header.loaded && hdu.header.wcs.isValid())
     )
 
     this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(

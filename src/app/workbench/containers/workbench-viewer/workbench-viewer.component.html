@@ -38,7 +38,7 @@
         [class.active]="active"
         [rawImageData]="(rawImageData$ | async)"
         [normalizedImageData]="(normalizedImageData$ | async)"
-        [wcs]="(hduEntities$ | async)[hduId]?.wcs"
+        [wcs]="(hduEntities$ | async)[hduId]?.header?.wcs"
         [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY"
         (downloadSnapshot)="handleDownloadSnapshot()"

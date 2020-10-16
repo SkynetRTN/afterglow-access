@@ -58,11 +58,21 @@ function dataFileSanitizer(v) {
     var state = __assign({}, v);
     state.hduEntities = __assign({}, state.hduEntities);
     Object.keys(state.hduEntities).forEach(function (key) {
-        var hdu = __assign(__assign({}, state.hduEntities[key]), { header: null, headerLoaded: false, headerLoading: false, wcs: null });
+        var hdu = __assign(__assign({}, state.hduEntities[key]), { header: {
+                loading: false,
+                loaded: false,
+                entries: [],
+                wcs: null
+            } });
         if (hdu.hduType == data_file_type_1.HduType.IMAGE) {
-            hdu = __assign(__assign({}, hdu), { hist: null, histLoaded: false, histLoading: false, tilesInitialized: false, tiles: [] });
+            hdu = __assign(__assign({}, hdu), { hist: null, histLoaded: false, histLoading: false });
         }
         state.hduEntities[key] = hdu;
+    });
+    state.imageDataEntities = __assign({}, state.imageDataEntities);
+    Object.keys(state.imageDataEntities).forEach(function (key) {
+        var imageData = __assign(__assign({}, state.imageDataEntities[key]), { tiles: [], initialized: false });
+        state.imageDataEntities[key] = imageData;
     });
     return state;
 }
@@ -70,14 +80,6 @@ exports.dataFileSanitizer = dataFileSanitizer;
 function workbenchHduStateSanitizer(v) {
     var state = __assign({}, v);
     state.hduStateEntities = __assign({}, state.hduStateEntities);
-    Object.keys(state.hduStateEntities).forEach(function (key) {
-        var hduState = __assign({}, state.hduStateEntities[key]);
-        if (hduState.hduType == data_file_type_1.HduType.IMAGE) {
-            var imageHduState = hduState;
-            hduState = __assign(__assign({}, hduState), { normalization: __assign(__assign({}, imageHduState.normalization), { tiles: [], tilesInitialized: false, initialized: false }) });
-        }
-        state.hduStateEntities[key] = hduState;
-    });
     return state;
 }
 exports.workbenchHduStateSanitizer = workbenchHduStateSanitizer;

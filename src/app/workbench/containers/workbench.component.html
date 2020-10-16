@@ -164,8 +164,8 @@
           <h6 i18n>DSS Catalog Import</h6>
           <div class="pb-3">
             <mat-radio-group aria-label="DSS Import Image Center"
-              [disabled]="!imageHdu?.wcs || !imageHdu?.wcs?.isValid()" [value]="
-            useWcsCenter && imageHdu?.wcs && imageHdu?.wcs?.isValid()
+              [disabled]="!imageHdu?.header.wcs || !imageHdu?.header.wcs?.isValid()" [value]="
+            useWcsCenter && imageHdu?.header.wcs && imageHdu?.header.wcs?.isValid()
               ? 'wcs'
               : 'header'
           " (change)="onUseWcsCenterChange($event)">
@@ -173,7 +173,7 @@
               <mat-radio-button value="wcs" i18n>Use WCS for image center</mat-radio-button>
             </mat-radio-group>
 
-            <!-- <mat-slide-toggle [disabled]="!imageHdu?.wcs || !imageHdu?.wcs?.isValid()" [checked]="useWcsCenter && imageHdu?.wcs && imageHdu?.wcs?.isValid()"
+            <!-- <mat-slide-toggle [disabled]="!imageHdu?.header.wcs || !imageHdu?.header.wcs?.isValid()" [checked]="useWcsCenter && imageHdu?.header.wcs && imageHdu?.header.wcs?.isValid()"
           [labelPosition]="after" (change)="onUseWcsCenterChange($event)">
           Use WCS for image center
         </mat-slide-toggle> -->

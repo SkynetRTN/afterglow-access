@@ -32,6 +32,7 @@ import { FileInfoPanelConfig } from '../../models/file-info-panel';
 import { BehaviorSubject, Subject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 import { MatSelectChange } from '@angular/material/select';
+import { HeaderEntry } from '../../../data-files/models/header-entry';
 
 @Component({
   selector: "app-file-info-panel",
@@ -72,7 +73,7 @@ export class FileInfoToolsetComponent
   @Output() selectedHduIdChange = new EventEmitter<{fileId: string, hduId: string}>();
 
   columnsDisplayed = ["key", "value", "comment"];
-  headerSummary$: Observable<Header>;
+  headerSummary$: Observable<HeaderEntry[]>;
   hdu$: Observable<IHdu>;
   hdu: IHdu;
 
@@ -106,17 +107,17 @@ export class FileInfoToolsetComponent
       map(([header, config]) => {
         if (!header) return [];
         let imageLayer = this.hdu as ImageHdu;
-        let result: Header = [];
-        let width = getWidth(imageLayer);
-        let height = getHeight(imageLayer);
-        let hasWcs = imageLayer.wcs.isValid();
-        let degsPerPixel = getDegsPerPixel(imageLayer);
-        let startTime = getStartTime(imageLayer);
-        let expLength = getExpLength(imageLayer);
-        let centerTime = getCenterTime(imageLayer);
-        let telescope = getTelescope(imageLayer);
-        let object = getObject(imageLayer);
-        let filter = getFilter(imageLayer);
+        let result: HeaderEntry[] = [];
+        let width = getWidth(header);
+        let height = getHeight(header);
+        let hasWcs = header.loaded && header.wcs.isValid();
+        let degsPerPixel = getDegsPerPixel(header);
+        let startTime = getStartTime(header);
+        let expLength = getExpLength(header);
+        let centerTime = getCenterTime(header);
+        let telescope = getTelescope(header);
+        let object = getObject(header);
+        let filter = getFilter(header);
 
         let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 

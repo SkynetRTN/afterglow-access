@@ -181,7 +181,7 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
 
         if (hdus.length == 0) return of(false);
         return combineLatest(...hdus.map(hdu => this.store.select(DataFilesState.getHduById).pipe(
-          map(fn => fn(hdu.id).headerLoaded && (fn(hdu.id) as ImageHdu).histLoaded)
+          map(fn => fn(hdu.id).header.loaded && (fn(hdu.id) as ImageHdu).histLoaded)
         ))).pipe(map(hdusReady => {
           return !hdusReady.includes(false)
         }))

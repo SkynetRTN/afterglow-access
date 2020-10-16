@@ -334,7 +334,7 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public loadDataFileHdrSuccess(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, header }: LoadHduHeaderSuccess
+    { hduId }: LoadHduHeaderSuccess
   ) {
     let state = getState();
     if (
@@ -354,8 +354,8 @@ export class WorkbenchFileStates {
         new AddRegionToHistory(hduId, {
           x: 0,
           y: 0,
-          width: getWidth(hdu),
-          height: getHeight(hdu),
+          width: getWidth(hdu.header),
+          height: getHeight(hdu.header),
         })
       );
     }

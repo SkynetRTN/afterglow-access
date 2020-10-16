@@ -56,10 +56,12 @@ export function dataFileSanitizer(v) {
   Object.keys(state.hduEntities).forEach(key => {
     let hdu : IHdu = {
       ...state.hduEntities[key],
-      header: null,
-      headerLoaded: false,
-      headerLoading: false,
-      wcs: null
+      header: {
+        loading: false,
+        loaded: false,
+        entries: [],
+        wcs: null
+      }
     };
 
     if(hdu.hduType == HduType.IMAGE) {

@@ -10,6 +10,7 @@ import { Source, PosType } from "../models/source";
 import { getCoreApiUrl } from '../../../environments/app-config';
 import { HduType } from '../../data-files/models/data-file-type';
 import { Region } from '../../data-files/models/region';
+import { HeaderEntry } from '../../data-files/models/header-entry';
 
 export interface CoreDataFile {
   id: number;
@@ -91,8 +92,8 @@ export class AfterglowDataFileService {
     );
   }
 
-  getHeader(fileId: string): Observable<Header> {
-    return this.http.get<Header>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
+  getHeader(fileId: string): Observable<HeaderEntry[]> {
+    return this.http.get<HeaderEntry[]>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
   }
 
   getHist(fileId: string): Observable<ImageHist> {
