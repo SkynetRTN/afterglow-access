@@ -63,22 +63,22 @@ export class SetProgressLine {
 
 /* Plotting */
 
-export class UpdatePlotterFileState {
-  public static readonly type = '[Plotter] Update Plotter File State'
+export class UpdatePlottingPanelState {
+  public static readonly type = '[Plotter] Update HDU Plotting Panel State'
 
-  constructor(public hduId: string, public changes: Partial<PlottingPanelState>) { }
+  constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) { }
 }
 
 export class StartLine {
   public static readonly type = '[Plotter] Start Line'
 
-  constructor(public hduId: string, public point: { primaryCoord: number, secondaryCoord: number, posType: PosType }) { }
+  constructor(public plottingPanelStateId: string, public point: { primaryCoord: number, secondaryCoord: number, posType: PosType }) { }
 }
 
 export class UpdateLine {
   public static readonly type = '[Plotter] Update Line'
 
-  constructor(public hduId: string, public point: { primaryCoord: number, secondaryCoord: number, posType: PosType }) { }
+  constructor(public plottingPanelStateId: string, public point: { primaryCoord: number, secondaryCoord: number, posType: PosType }) { }
 }
 
 /*Source Extractor*/

@@ -67,6 +67,7 @@ import {
   LoadRawImageTileFail,
   UpdateNormalizedImageTileFail,
   UpdateCompositeImageTileFail,
+  SetSelectedHduId
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -375,6 +376,20 @@ export class DataFilesState {
       flatMap((v) => dispatch(new CloseDataFileSuccess(fileId))),
       catchError((err) => dispatch(new CloseDataFileFail(fileId, err)))
     );
+  }
+
+  @Action(SetSelectedHduId)
+  @ImmutableContext()
+  public setSelectedHduId(
+    { setState, getState, dispatch }: StateContext<DataFilesStateModel>,
+    { fileId, hduId }: SetSelectedHduId
+  ) {
+    setState((state: DataFilesStateModel) => {
+      state.dataFileEntities[fileId].selectedHduId = hduId;
+      return state;
+    });
+
+   
   }
 
   @Action(LoadDataFile)

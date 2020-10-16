@@ -21,6 +21,7 @@ import {
   getFilter,
   DataFile,
   ImageHdu,
+  IHdu,
 } from "../../../data-files/models/data-file";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material/slide-toggle";
@@ -30,6 +31,7 @@ import { datetimeToJd } from "../../../utils/skynet-astro";
 import { FileInfoPanelConfig } from '../../models/file-info-panel';
 import { BehaviorSubject, Subject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged, filter } from 'rxjs/operators';
+import { MatSelectChange } from '@angular/material/select';
 
 @Component({
   selector: "app-file-info-panel",
@@ -39,14 +41,23 @@ import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-  @Input("hdu")
-  set hdu(hdu: ImageHdu) {
-    this.hdu$.next(hdu);
-  }
-  get hdu() {
-    return this.hdu$.getValue();
-  }
-  private hdu$ = new BehaviorSubject<ImageHdu>(null);
+    @Input("hdus")
+    set hdus(hdus: IHdu[]) {
+      this.hdus$.next(hdus);
+    }
+    get hdus() {
+      return this.hdus$.getValue();
+    }
+    private hdus$ = new BehaviorSubject<IHdu[]>(null);
+  
+    @Input("selectedHduId")
+    set selectedHduId(selectedHduId: string) {
+      this.selectedHduId$.next(selectedHduId);
+    }
+    get selectedHduId() {
+      return this.selectedHduId$.getValue();
+    }
+    private selectedHduId$ = new BehaviorSubject<string>(null);
   
   @Input("config")
   set config(config: FileInfoPanelConfig) {
@@ -58,9 +69,12 @@ export class FileInfoToolsetComponent
   private config$ = new BehaviorSubject<FileInfoPanelConfig>(null);
 
   @Output() configChange: EventEmitter<Partial<FileInfoPanelConfig>> = new EventEmitter();
+  @Output() selectedHduIdChange = new EventEmitter<{fileId: string, hduId: string}>();
 
   columnsDisplayed = ["key", "value", "comment"];
   headerSummary$: Observable<Header>;
+  hdu$: Observable<IHdu>;
+  hdu: IHdu;
 
   constructor(
     private decimalPipe: DecimalPipe,
@@ -68,6 +82,16 @@ export class FileInfoToolsetComponent
     store: Store,
     router: Router
   ) {
+
+    this.hdu$ = combineLatest(
+      this.hdus$,
+      this.selectedHduId$
+    ).pipe(
+      map(([hdus, selectedHduId]) => {
+        this.hdu = hdus.find(hdu => hdu.id == selectedHduId);
+        return this.hdu;
+      })
+    )
 
     let header$ = this.hdu$.pipe(
       filter(hdu => hdu != null),
@@ -202,6 +226,12 @@ export class FileInfoToolsetComponent
   ngOnDestroy() { }
 
   ngAfterViewInit() { }
+
+  
+  onSelectedHduIdChange($event: MatSelectChange) {
+    if(!this.hdu) return;
+    this.selectedHduIdChange.emit({fileId: this.hdu.fileId, hduId: $event.value})
+  }
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
     this.configChange.emit({ showRawHeader: $event.checked })

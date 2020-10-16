@@ -18,6 +18,7 @@ import {
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
 import { getPixel, getPixels, IImageData } from '../../../data-files/models/image-data';
+import { Wcs } from '../../../image-tools/wcs';
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({
@@ -27,7 +28,7 @@ import { getPixel, getPixels, IImageData } from '../../../data-files/models/imag
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
-  hdu: ImageHdu;
+  wcs: Wcs;
   @Input()
   imageData: IImageData<PixelType>;
   @Input()
@@ -215,7 +216,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   }
 
   private updateChart() {
-    if (!this.hdu || !this.imageData || !this.lineMeasureStart || !this.lineMeasureEnd) {
+    if (!this.imageData || !this.lineMeasureStart || !this.lineMeasureEnd) {
       this.data = [];
       return;
     }
@@ -305,8 +306,6 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   private updateLineView() {
     if (
-      !this.hdu ||
-      !this.hdu.headerLoaded ||
       !this.lineMeasureStart ||
       !this.lineMeasureEnd
     ) {
@@ -320,14 +319,12 @@ export class PlotterComponent implements OnInit, OnChanges {
         Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
     );
 
-    let imageLayer = this.hdu as ImageHdu;
-    if (imageLayer.wcs.isValid()) {
-      let wcs = imageLayer.wcs;
-      let raDec1 = wcs.pixToWorld([
+    if (this.wcs && this.wcs.isValid()) {
+      let raDec1 = this.wcs.pixToWorld([
         this.lineMeasureStart.x,
         this.lineMeasureStart.y
       ]);
-      let raDec2 = wcs.pixToWorld([
+      let raDec2 = this.wcs.pixToWorld([
         this.lineMeasureEnd.x,
         this.lineMeasureEnd.y
       ]);

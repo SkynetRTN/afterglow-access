@@ -1,3 +1,15 @@
+<div *ngIf="(hdu$ | async) && hdus?.length > 1">
+  <h6 i18n>Channel Selection</h6>
+  <div class="pb-1">
+    <mat-form-field appearance="outline">
+      <mat-label>Channel</mat-label>
+      <mat-select [value]="hdu?.id" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%;">
+        <mat-option *ngFor="let hdu of hdus; let index=index;" [value]="hdu.id">Channel {{ index }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>
+
 <div *ngIf="!hdu?.header" class="alert alert-info" i18n>
   Select a data file to see file info.
 </div>

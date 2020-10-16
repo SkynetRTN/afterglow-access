@@ -224,10 +224,11 @@
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
         <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdus]="toolPanelHdus$ | async"
-        [selectedHduId]="toolPanelSelectedHduId$ | async">
+        [selectedHduId]="toolPanelSelectedHduId$ | async" (selectedHduIdChange)="onSelectedHduIdChange($event)">
         </app-display-panel>
 
-        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="focusedImageHdu$ | async"
+        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdus]="toolPanelHdus$ | async"
+        [selectedHduId]="toolPanelSelectedHduId$ | async" (selectedHduIdChange)="onSelectedHduIdChange($event)"
           [config]="fileInfoPanelConfig$ | async" (configChange)="onFileInfoPanelConfigChange($event)">
         </app-file-info-panel>
 
@@ -237,8 +238,8 @@
           (markerDelete)="onCustomMarkerDelete($event)">
         </app-custom-marker-panel>
 
-        <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [hdu]="focusedImageHdu$ | async"
-          [state]="plottingPanelState$ | async" [config]="plottingPanelConfig$ | async"
+        <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [imageData]="plottingPanelImageData$ | async"
+          [wcs]="plottingPanelWcs$ | async" [state]="plottingPanelState$ | async" [config]="plottingPanelConfig$ | async"
           (configChange)="onPlottingPanelConfigChange($event)">
         </app-plotting-panel>
 

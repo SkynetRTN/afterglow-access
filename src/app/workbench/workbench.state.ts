@@ -48,7 +48,7 @@ import {
   RemoveViewerLayoutItem,
   SetFocusedViewer,
   SetViewerData as SetViewerFile,
-  SyncFilePlotters,
+  SyncPlottingPanelStates,
   SetViewerSyncEnabled,
   LoadCatalogs,
   LoadCatalogsSuccess,
@@ -123,7 +123,7 @@ import {
   AddRegionToHistory,
   StartLine,
   UpdateLine,
-  UpdatePlotterFileState,
+  UpdatePlottingPanelState,
   InitializeWorkbenchHduState,
   AddPhotDatas,
   SonificationRegionChanged,
@@ -936,8 +936,11 @@ export class WorkbenchState {
             .map((hduId) => hduEntities[hduId])
             .filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[];
 
+          let hduStateEntities = this.store.selectSnapshot(WorkbenchFileStates.getHduStateEntities)
+          let referenceHduState = hduStateEntities[referenceHdu.id]
           hdus.forEach((hdu) => {
-            if (referenceHdu && hdu && hdu.hduType == HduType.IMAGE) {
+            if (referenceHduState && referenceHdu && hdu && hdu.hduType == HduType.IMAGE) {
+              let hduState = hduStateEntities[hdu.id];
               if (state.viewerSyncEnabled) {
                 this.store.dispatch(
                   new SyncFileTransformations(referenceHdu.id, [hdu.id])
@@ -950,9 +953,9 @@ export class WorkbenchState {
               }
               if (state.plottingPanelConfig.plotterSyncEnabled) {
                 this.store.dispatch(
-                  new SyncFilePlotters(
-                    hduEntities[referenceHdu.id] as ImageHdu,
-                    [hduEntities[hdu.id] as ImageHdu]
+                  new SyncPlottingPanelStates(
+                    (referenceHduState as WorkbenchImageHduState).plottingPanelStateId,
+                    [(hduState as WorkbenchImageHduState).plottingPanelStateId]
                   )
                 );
               }
@@ -2027,11 +2030,11 @@ export class WorkbenchState {
     dispatch(new CreateViewer(viewer, state.focusedViewerPanelId));
   }
 
-  @Action([StartLine, UpdateLine, UpdatePlotterFileState])
+  @Action([StartLine, UpdateLine, UpdatePlottingPanelState])
   @ImmutableContext()
   public onPlotterChange(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId }: StartLine | UpdateLine | UpdatePlotterFileState
+    { plottingPanelStateId }: StartLine | UpdateLine | UpdatePlottingPanelState
   ) {
     let state = getState();
     let focusedViewer = this.store.selectSnapshot(
@@ -2060,27 +2063,24 @@ export class WorkbenchState {
     return;
   }
 
-  @Action(SyncFilePlotters)
+  @Action(SyncPlottingPanelStates)
   @ImmutableContext()
   public syncFilePlotters(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { reference, hdus }: SyncFilePlotters
+    { referenceId, ids }: SyncPlottingPanelStates
   ) {
     let state = getState();
     let hduStates = this.store.selectSnapshot(
       WorkbenchFileStates.getHduStateEntities
     );
 
-    // TODO: LAYER
-    let srcHdu = reference;
-    let targetHdus = hdus;
-    let srcPlotter = (hduStates[srcHdu.id] as WorkbenchImageHduState)
-      .plottingPanelState;
+    let referenceState = this.store.selectSnapshot(WorkbenchFileStates.getPlottingPanelStateEntities)[referenceId]
+    if(!referenceState) return;
 
-    targetHdus.forEach((targetHdu) => {
-      if (!targetHdu || targetHdu.id == srcHdu.id) return;
+    ids.forEach((id) => {
+      if (referenceId == id) return;
       return dispatch(
-        new UpdatePlotterFileState(targetHdu.id, { ...srcPlotter })
+        new UpdatePlottingPanelState(id, { ...referenceState })
       );
     });
   }

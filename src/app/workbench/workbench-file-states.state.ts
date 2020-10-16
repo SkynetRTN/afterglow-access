@@ -14,7 +14,7 @@ import {
   InitializeWorkbenchHduState,
   StartLine,
   UpdateLine,
-  UpdatePlotterFileState,
+  UpdatePlottingPanelState,
   UpdateSonifierFileState,
   ClearRegionHistory,
   SetProgressLine,
@@ -54,6 +54,7 @@ import {
 import { AfterglowDataFileService } from "./services/afterglow-data-files";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { ResetState } from "../auth/auth.actions";
+import { PlottingPanelState } from './models/plotter-file-state';
 
 export interface WorkbenchFileStatesModel {
   version: number;
@@ -62,6 +63,9 @@ export interface WorkbenchFileStatesModel {
   hduIds: string[];
   hduStateEntities: { [id: string]: IWorkbenchHduState };
   nextMarkerId: number;
+  nextPlottingPanelStateId: number,
+  plottingPanelStateIds: string[];
+  plottingPanelStateEntities: { [id: string]: PlottingPanelState };
 }
 
 const defaultWorkbenchHduStatesModel: WorkbenchFileStatesModel = {
@@ -70,6 +74,9 @@ const defaultWorkbenchHduStatesModel: WorkbenchFileStatesModel = {
   hduStateEntities: {},
   fileIds: [],
   fileStateEntities: {},
+  nextPlottingPanelStateId: 0,
+  plottingPanelStateEntities: {},
+  plottingPanelStateIds: [],
   nextMarkerId: 0,
 };
 
@@ -139,15 +146,24 @@ export class WorkbenchFileStates {
   }
 
   @Selector()
+  public static getPlottingPanelStateEntities(state: WorkbenchFileStatesModel) {
+    return state.plottingPanelStateEntities;
+  }
+
+  @Selector()
+  public static getPlottingPanelStateIds(state: WorkbenchFileStatesModel) {
+    return state.plottingPanelStateIds;
+  }
+
+  @Selector()
+  public static getPlottingPanelStates(state: WorkbenchFileStatesModel) {
+    return Object.values(state.plottingPanelStateEntities);
+  }
+
+  @Selector()
   public static getPlottingPanelState(state: WorkbenchFileStatesModel) {
-    return (hduId: string) => {
-      if (
-        !(hduId in state.hduStateEntities) ||
-        state.hduStateEntities[hduId].hduType != HduType.IMAGE
-      )
-        return null;
-      return (state.hduStateEntities[hduId] as WorkbenchImageHduState)
-        .plottingPanelState;
+    return (plottingPanelStateId: string) => {
+      return state.plottingPanelStateEntities[plottingPanelStateId];
     };
   }
 
@@ -222,13 +238,17 @@ export class WorkbenchFileStates {
         };
 
         if (hdu.hduType == HduType.IMAGE) {
+          let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`
+          state.plottingPanelStateEntities[plottingPanelStateId] = {
+            measuring: false,
+            lineMeasureStart: null,
+            lineMeasureEnd: null,
+          }
+          state.plottingPanelStateIds.push(plottingPanelStateId);
+
           hduState = {
             ...hduState,
-            plottingPanelState: {
-              measuring: false,
-              lineMeasureStart: null,
-              lineMeasureEnd: null,
-            },
+            plottingPanelStateId: plottingPanelStateId,
             sonificationPanelState: {
               sonificationUri: null,
               regionHistory: [],
@@ -263,8 +283,17 @@ export class WorkbenchFileStates {
 
         if (file.id in state.fileStateEntities) return;
 
+        let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`
+        state.plottingPanelStateEntities[plottingPanelStateId] = {
+          measuring: false,
+          lineMeasureStart: null,
+          lineMeasureEnd: null,
+        }
+        state.plottingPanelStateIds.push(plottingPanelStateId);
+        
         state.fileStateEntities[file.id] = {
           id: file.id,
+          plottingPanelStateId: plottingPanelStateId,
         };
         state.fileIds.push(file.id);
       });
@@ -548,29 +577,24 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public startLine(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, point }: StartLine
+    { plottingPanelStateId, point }: StartLine
   ) {
     let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
+    if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
       return;
+    }
+     
 
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let plotterState = hduState.plottingPanelState;
+      let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
 
-      if (!plotterState.measuring) {
-        plotterState.lineMeasureStart = { ...point };
-        plotterState.lineMeasureEnd = { ...point };
+      if (!plottingPanelState.measuring) {
+        plottingPanelState.lineMeasureStart = { ...point };
+        plottingPanelState.lineMeasureEnd = { ...point };
       } else {
-        plotterState.lineMeasureEnd = { ...point };
+        plottingPanelState.lineMeasureEnd = { ...point };
       }
-      plotterState.measuring = !plotterState.measuring;
+      plottingPanelState.measuring = !plottingPanelState.measuring;
 
       return state;
     });
@@ -580,52 +604,39 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public updateLine(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, point }: UpdateLine
+    { plottingPanelStateId, point }: UpdateLine
   ) {
     let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
+    if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
       return;
+    }
 
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let plotterState = hduState.plottingPanelState;
+      let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
+      if (!plottingPanelState.measuring) return state;
 
-      if (!plotterState.measuring) return state;
-
-      plotterState.lineMeasureEnd = point;
+      plottingPanelState.lineMeasureEnd = point;
 
       return state;
     });
   }
 
-  @Action(UpdatePlotterFileState)
+  @Action(UpdatePlottingPanelState)
   @ImmutableContext()
   public updatePlotterFileState(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, changes }: UpdatePlotterFileState
+    { plottingPanelStateId, changes }: UpdatePlottingPanelState
   ) {
     let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
+    if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
       return;
+    }
 
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let plotterState = hduState.plottingPanelState;
+      let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
 
-      plotterState = {
-        ...plotterState,
+      plottingPanelState = {
+        ...plottingPanelState,
         ...changes,
       };
       return state;

@@ -138,10 +138,10 @@ export class SetNormalizationSyncEnabled {
 
 
 
-export class SyncFilePlotters {
-  public static readonly type = '[Workbench] Sync File Plotters';
+export class SyncPlottingPanelStates {
+  public static readonly type = '[Workbench] Sync Plotting Panel States';
 
-  constructor(public reference: ImageHdu, public hdus: ImageHdu[]) { }
+  constructor(public referenceId: string, public ids: string[]) { }
 }
 
 export class SetActiveTool {

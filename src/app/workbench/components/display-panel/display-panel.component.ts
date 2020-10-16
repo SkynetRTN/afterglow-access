@@ -9,7 +9,7 @@ import {
   EventEmitter
 } from "@angular/core";
 import { Subject, BehaviorSubject, Observable, combineLatest } from "rxjs";
-import { auditTime, map } from "rxjs/operators";
+import { auditTime, map, tap } from "rxjs/operators";
 
 declare let d3: any;
 
@@ -23,6 +23,7 @@ import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip } from '../../../
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { HduType } from '../../../data-files/models/data-file-type';
+import { MatSelectChange } from '@angular/material/select';
 
 @Component({
   selector: "app-display-panel",
@@ -58,10 +59,12 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   }
   private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
 
-  @Output() selectedHduIdChange = new EventEmitter<string>();
+  @Output() selectedHduIdChange = new EventEmitter<{fileId: string, hduId: string}>();
 
-  hdu$: Observable<ImageHdu>;
-  hdu: ImageHdu;
+  hdu$: Observable<IHdu>;
+  hdu: IHdu;
+  imageHdu$: Observable<ImageHdu>;
+  imageHdu: ImageHdu;
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -80,21 +83,26 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
       this.selectedHduId$
     ).pipe(
       map(([hdus, selectedHduId]) => {
-        this.hdu = hdus.find(hdu => hdu.id == selectedHduId && hdu.hduType == HduType.IMAGE) as ImageHdu;
+        this.hdu = hdus.find(hdu => hdu.id == selectedHduId);
         return this.hdu;
       })
+    )
+
+    this.imageHdu$ = this.hdu$.pipe(
+      map(hdu => hdu && hdu.hduType == HduType.IMAGE ? hdu as ImageHdu : null),
+      tap(hdu => this.imageHdu = hdu)
     )
 
     
     this.levels$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
+        new UpdateNormalizer(this.imageHdu.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
       );
     });
 
     this.backgroundPercentile$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value })
+        new UpdateNormalizer(this.imageHdu.id, { backgroundPercentile: value })
       );
     });
 
@@ -103,13 +111,16 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
       .subscribe(value => {
         this.store.dispatch(
-          new UpdateNormalizer(this.hdu.id, { peakPercentile: value })
+          new UpdateNormalizer(this.imageHdu.id, { peakPercentile: value })
         );
       });
 
   }
 
-
+  onSelectedHduIdChange($event: MatSelectChange) {
+    if(!this.hdu) return;
+    this.selectedHduIdChange.emit({fileId: this.hdu.fileId, hduId: $event.value})
+  }
 
   onBackgroundPercentileChange(value: number) {
     this.backgroundPercentile$.next(value);
@@ -121,25 +132,25 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onColorMapChange(value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, { colorMapName: value })
+      new UpdateNormalizer(this.imageHdu.id, { colorMapName: value })
     );
   }
 
   onStretchModeChange(value: StretchMode) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, { stretchMode: value })
+      new UpdateNormalizer(this.imageHdu.id, { stretchMode: value })
     );
   }
 
   onInvertedChange(value: boolean) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, { inverted: value })
+      new UpdateNormalizer(this.imageHdu.id, { inverted: value })
     );
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id,
+      new UpdateNormalizer(this.imageHdu.id,
         {
           backgroundPercentile: lowerPercentile,
           peakPercentile: upperPercentile
@@ -150,10 +161,10 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onInvertClick() {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id,
+      new UpdateNormalizer(this.imageHdu.id,
         {
-          backgroundPercentile: this.hdu.normalizer.peakPercentile,
-          peakPercentile: this.hdu.normalizer.backgroundPercentile
+          backgroundPercentile: this.imageHdu.normalizer.peakPercentile,
+          peakPercentile: this.imageHdu.normalizer.backgroundPercentile
         }
       )
     );
@@ -161,26 +172,26 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onFlipClick() {
     this.store.dispatch(
-      new Flip(this.hdu.transformation, this.hdu.rawImageDataId)
+      new Flip(this.imageHdu.transformation, this.imageHdu.rawImageDataId)
     );
   }
 
   // onMirrorClick() {
   //   this.store.dispatch([
-  //     new RotateBy(this.hdu.id, 90),
-  //     new Flip(this.hdu.id)
+  //     new RotateBy(this.imageHdu.id, 90),
+  //     new Flip(this.imageHdu.id)
   //   ]);
   // }
 
   onRotateClick() {
     this.store.dispatch(
-      new RotateBy(this.hdu.transformation, this.hdu.rawImageDataId, this.viewportSize, 90)
+      new RotateBy(this.imageHdu.transformation, this.imageHdu.rawImageDataId, this.viewportSize, 90)
     );
   }
 
   onResetOrientationClick() {
     this.store.dispatch(
-      new ResetImageTransform(this.hdu.transformation, this.hdu.rawImageDataId)
+      new ResetImageTransform(this.imageHdu.transformation, this.imageHdu.rawImageDataId)
     );
   }
 
