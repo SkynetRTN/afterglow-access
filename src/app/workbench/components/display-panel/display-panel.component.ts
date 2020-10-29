@@ -32,23 +32,14 @@ import { MatSelectChange } from '@angular/material/select';
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input("hdus")
-  set hdus(hdus: IHdu[]) {
-    this.hdus$.next(hdus);
+  @Input("hdu")
+  set hdu(hdu: IHdu) {
+    this.hdu$.next(hdu);
   }
-  get hdus() {
-    return this.hdus$.getValue();
+  get hdu() {
+    return this.hdu$.getValue();
   }
-  private hdus$ = new BehaviorSubject<IHdu[]>(null);
-
-  @Input("selectedHduId")
-  set selectedHduId(selectedHduId: string) {
-    this.selectedHduId$.next(selectedHduId);
-  }
-  get selectedHduId() {
-    return this.selectedHduId$.getValue();
-  }
-  private selectedHduId$ = new BehaviorSubject<string>(null);
+  private hdu$ = new BehaviorSubject<IHdu>(null);
 
   @Input("viewportSize")
   set viewportSize(viewportSize: {width: number, height: number}) {
@@ -59,10 +50,6 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   }
   private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
 
-  @Output() selectedHduIdChange = new EventEmitter<{fileId: string, hduId: string}>();
-
-  hdu$: Observable<IHdu>;
-  hdu: IHdu;
   imageHdu$: Observable<ImageHdu>;
   imageHdu: ImageHdu;
 
@@ -78,15 +65,6 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router) {
 
-    this.hdu$ = combineLatest(
-      this.hdus$,
-      this.selectedHduId$
-    ).pipe(
-      map(([hdus, selectedHduId]) => {
-        this.hdu = hdus.find(hdu => hdu.id == selectedHduId);
-        return this.hdu;
-      })
-    )
 
     this.imageHdu$ = this.hdu$.pipe(
       map(hdu => hdu && hdu.hduType == HduType.IMAGE ? hdu as ImageHdu : null),
@@ -115,11 +93,6 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
         );
       });
 
-  }
-
-  onSelectedHduIdChange($event: MatSelectChange) {
-    if(!this.hdu) return;
-    this.selectedHduIdChange.emit({fileId: this.hdu.fileId, hduId: $event.value})
   }
 
   onBackgroundPercentileChange(value: number) {

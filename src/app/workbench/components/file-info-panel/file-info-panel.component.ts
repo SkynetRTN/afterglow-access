@@ -42,24 +42,16 @@ import { HeaderEntry } from '../../../data-files/models/header-entry';
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-    @Input("hdus")
-    set hdus(hdus: IHdu[]) {
-      this.hdus$.next(hdus);
+    @Input("hdu")
+    set hdu(hdu: IHdu) {
+      this.hdu$.next(hdu);
     }
-    get hdus() {
-      return this.hdus$.getValue();
+    get hdu() {
+      return this.hdu$.getValue();
     }
-    private hdus$ = new BehaviorSubject<IHdu[]>(null);
+    private hdu$ = new BehaviorSubject<IHdu>(null);
   
-    @Input("selectedHduId")
-    set selectedHduId(selectedHduId: string) {
-      this.selectedHduId$.next(selectedHduId);
-    }
-    get selectedHduId() {
-      return this.selectedHduId$.getValue();
-    }
-    private selectedHduId$ = new BehaviorSubject<string>(null);
-  
+   
   @Input("config")
   set config(config: FileInfoPanelConfig) {
     this.config$.next(config);
@@ -70,12 +62,9 @@ export class FileInfoToolsetComponent
   private config$ = new BehaviorSubject<FileInfoPanelConfig>(null);
 
   @Output() configChange: EventEmitter<Partial<FileInfoPanelConfig>> = new EventEmitter();
-  @Output() selectedHduIdChange = new EventEmitter<{fileId: string, hduId: string}>();
 
   columnsDisplayed = ["key", "value", "comment"];
   headerSummary$: Observable<HeaderEntry[]>;
-  hdu$: Observable<IHdu>;
-  hdu: IHdu;
 
   constructor(
     private decimalPipe: DecimalPipe,
@@ -83,16 +72,6 @@ export class FileInfoToolsetComponent
     store: Store,
     router: Router
   ) {
-
-    this.hdu$ = combineLatest(
-      this.hdus$,
-      this.selectedHduId$
-    ).pipe(
-      map(([hdus, selectedHduId]) => {
-        this.hdu = hdus.find(hdu => hdu.id == selectedHduId);
-        return this.hdu;
-      })
-    )
 
     let header$ = this.hdu$.pipe(
       filter(hdu => hdu != null),
@@ -227,12 +206,6 @@ export class FileInfoToolsetComponent
   ngOnDestroy() { }
 
   ngAfterViewInit() { }
-
-  
-  onSelectedHduIdChange($event: MatSelectChange) {
-    if(!this.hdu) return;
-    this.selectedHduIdChange.emit({fileId: this.hdu.fileId, hduId: $event.value})
-  }
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
     this.configChange.emit({ showRawHeader: $event.checked })

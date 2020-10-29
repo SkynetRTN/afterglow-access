@@ -1,13 +1,15 @@
 import { Component, OnInit, HostListener, Input, OnDestroy, Output, EventEmitter } from "@angular/core";
-import { map } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 import { MarkerType, Marker } from "../../models/marker";
 import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
 import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
 import { CustomMarkerPanelConfig } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { DataFile, ImageHdu, IHdu } from '../../../data-files/models/data-file';
+import { MatSelectChange } from '@angular/material/select';
+import { HduType } from '../../../data-files/models/data-file-type';
 
 @Component({
   selector: "app-custom-marker-panel",
@@ -15,7 +17,15 @@ import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
   styleUrls: ["./custom-marker-panel.component.css"]
 })
 export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
-  @Input() hdu: ImageHdu;
+  @Input("hdu")
+  set hdu(hdu: IHdu) {
+    this.hdu$.next(hdu);
+  }
+  get hdu() {
+    return this.hdu$.getValue();
+  }
+  private hdu$ = new BehaviorSubject<IHdu>(null);
+
   @Input() state: CustomMarkerPanelState;
   @Input() config: CustomMarkerPanelConfig;
   
@@ -24,10 +34,16 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   @Output() markerDelete: EventEmitter<Marker[]> = new EventEmitter();
 
   MarkerType = MarkerType;
+  imageHdu$: Observable<ImageHdu>;
+  imageHdu: ImageHdu;
 
   constructor(private actions$: Actions, store: Store, router: Router, ) {
-  }
-
+    
+    this.imageHdu$ = this.hdu$.pipe(
+      map(hdu => hdu && hdu.hduType == HduType.IMAGE ? hdu as ImageHdu : null),
+      tap(hdu => this.imageHdu = hdu)
+    )
+   }
   ngOnInit() { }
 
   ngOnDestroy() {

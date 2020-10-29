@@ -179,6 +179,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   focusedViewerHdu$: Observable<IHdu>;
   toolPanelHdus$: Observable<IHdu[]>;
   toolPanelSelectedHduId$: Observable<string>;
+  toolPanelSelectedHdu$: Observable<IHdu>;
   plottingPanelImageData$: Observable<IImageData<PixelType>>;
   plottingPanelWcs$: Observable<Wcs>;
   plottingPanelStateId$: Observable<string>;
@@ -351,6 +352,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       })
     ).pipe(
       distinctUntilChanged()
+    )
+
+    this.toolPanelSelectedHdu$ = this.toolPanelSelectedHduId$.pipe(
+      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
+        map(fn => fn(hduId))
+      ))
     )
 
     let plottingPanelImageDataId$ = combineLatest(
@@ -564,7 +571,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     /* CUSTOM MARKER PANEL */
-    this.customMarkerPanelState$ = this.focusedImageHduId$.pipe(
+    this.customMarkerPanelState$ = this.toolPanelSelectedHduId$.pipe(
       switchMap((hduId) => {
         if (!hduId) return of(null);
         return store
@@ -1485,8 +1492,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     return `Viewer ${index}`;
   }
 
-  onSelectedHduIdChange($event: { fileId: string, hduId: string }) {
-    this.store.dispatch(new SetSelectedHduId($event.fileId, $event.hduId));
+  onSelectedHduIdChange($event: MatSelectChange) {
+    let hduId = $event.value;
+    this.store.dispatch(new SetSelectedHduId(this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId].fileId, hduId));
   }
 
   onFileInfoPanelConfigChange($event) {
@@ -1557,6 +1565,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   /* image viewer mouse event handlers */
   onImageClick($event: ViewerPanelCanvasMouseEvent) {
+    console.log("IMAGE CLICK: ", $event);
     let viewer = this.store.selectSnapshot(
       WorkbenchState.getFocusedViewer
     );
@@ -1564,7 +1573,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
     let targetFile = fileEntities[viewer.fileId];
-    let targetHdu = hduEntities[viewer.hduId] as ImageHdu;
+    let hduId = viewer.hduId;
+    if(!hduId) {
+      hduId = targetFile.selectedHduId;
+    }
+    let targetHdu = hduEntities[hduId] as ImageHdu;
+    
     let hduStateEntities = this.store.selectSnapshot(WorkbenchFileStates.getHduStateEntities);
     let fileStateEntities = this.store.selectSnapshot(WorkbenchFileStates.getFileStateEntities);
     let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
