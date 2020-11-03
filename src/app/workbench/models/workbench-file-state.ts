@@ -7,6 +7,7 @@ import { HduType } from '../../data-files/models/data-file-type';
 export interface WorkbenchFileState {
   id: string;
   plottingPanelStateId: string;
+  customMarkerPanelStateId: string;
 }
 
 export interface IWorkbenchHduState {
@@ -17,7 +18,7 @@ export interface IWorkbenchHduState {
 export interface WorkbenchImageHduState extends IWorkbenchHduState {
   hduType: HduType.IMAGE;
   plottingPanelStateId: string;
-  customMarkerPanelState: CustomMarkerPanelState;
+  customMarkerPanelStateId: string;
   sonificationPanelState: SonificationPanelState;
   photometryPanelState: PhotometryPanelState;
 }

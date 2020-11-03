@@ -55,6 +55,7 @@ import { AfterglowDataFileService } from "./services/afterglow-data-files";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { ResetState } from "../auth/auth.actions";
 import { PlottingPanelState } from './models/plotter-file-state';
+import { CustomMarkerPanelState } from './models/marker-file-state';
 
 export interface WorkbenchFileStatesModel {
   version: number;
@@ -66,6 +67,9 @@ export interface WorkbenchFileStatesModel {
   nextPlottingPanelStateId: number,
   plottingPanelStateIds: string[];
   plottingPanelStateEntities: { [id: string]: PlottingPanelState };
+  nextCustomMarkerPanelStateId: number,
+  customMarkerPanelStateIds: string[];
+  customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState };
 }
 
 const defaultWorkbenchHduStatesModel: WorkbenchFileStatesModel = {
@@ -77,6 +81,9 @@ const defaultWorkbenchHduStatesModel: WorkbenchFileStatesModel = {
   nextPlottingPanelStateId: 0,
   plottingPanelStateEntities: {},
   plottingPanelStateIds: [],
+  nextCustomMarkerPanelStateId: 0,
+  customMarkerPanelStateIds: [],
+  customMarkerPanelStateEntities: {},
   nextMarkerId: 0,
 };
 
@@ -90,7 +97,7 @@ export class WorkbenchFileStates {
     private afterglowDataFileService: AfterglowDataFileService,
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions
-  ) {}
+  ) { }
 
   @Selector()
   public static getState(state: WorkbenchFileStatesModel) {
@@ -168,6 +175,28 @@ export class WorkbenchFileStates {
   }
 
   @Selector()
+  public static getCustomMarkerPanelStateEntities(state: WorkbenchFileStatesModel) {
+    return state.customMarkerPanelStateEntities;
+  }
+
+  @Selector()
+  public static getCustomMarkerPanelStateIds(state: WorkbenchFileStatesModel) {
+    return state.customMarkerPanelStateIds;
+  }
+
+  @Selector()
+  public static getCustomMarkerPanelStates(state: WorkbenchFileStatesModel) {
+    return Object.values(state.customMarkerPanelStateEntities);
+  }
+
+  @Selector()
+  public static getCustomMarkerPanelState(state: WorkbenchFileStatesModel) {
+    return (customMarkerPanelStateId: string) => {
+      return state.customMarkerPanelStateEntities[customMarkerPanelStateId];
+    };
+  }
+
+  @Selector()
   public static getSonificationPanelState(state: WorkbenchFileStatesModel) {
     return (hduId: string) => {
       if (
@@ -186,23 +215,12 @@ export class WorkbenchFileStates {
       if (
         !(hduId in state.hduStateEntities) ||
         state.hduStateEntities[hduId].hduType != HduType.IMAGE
-      )
+      ) {
         return null;
+      }
+
       return (state.hduStateEntities[hduId] as WorkbenchImageHduState)
         .photometryPanelState;
-    };
-  }
-
-  @Selector()
-  public static getCustomMarkerPanelState(state: WorkbenchFileStatesModel) {
-    return (hduId: string) => {
-      if (
-        !(hduId in state.hduStateEntities) ||
-        state.hduStateEntities[hduId].hduType != HduType.IMAGE
-      )
-        return null;
-      return (state.hduStateEntities[hduId] as WorkbenchImageHduState)
-        .customMarkerPanelState;
     };
   }
 
@@ -210,7 +228,7 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public resetState(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    {}: ResetState
+    { }: ResetState
   ) {
     setState((state: WorkbenchFileStatesModel) => {
       return defaultWorkbenchHduStatesModel;
@@ -240,15 +258,25 @@ export class WorkbenchFileStates {
         if (hdu.hduType == HduType.IMAGE) {
           let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`
           state.plottingPanelStateEntities[plottingPanelStateId] = {
+            id: plottingPanelStateId,
             measuring: false,
             lineMeasureStart: null,
             lineMeasureEnd: null,
           }
           state.plottingPanelStateIds.push(plottingPanelStateId);
 
+          let customMarkerPanelStateId = `CUSTOM_MARKER_PANEL_${state.nextCustomMarkerPanelStateId++}`
+          state.customMarkerPanelStateEntities[customMarkerPanelStateId] = {
+            id: customMarkerPanelStateId,
+            markerEntities: {},
+            markerIds: []
+          }
+          state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
+
           hduState = {
             ...hduState,
             plottingPanelStateId: plottingPanelStateId,
+            customMarkerPanelStateId: customMarkerPanelStateId,
             sonificationPanelState: {
               sonificationUri: null,
               regionHistory: [],
@@ -264,10 +292,7 @@ export class WorkbenchFileStates {
               sourceExtractionJobId: null,
               sourcePhotometryData: {},
             },
-            customMarkerPanelState: {
-              entities: {},
-              ids: [],
-            },
+
           } as WorkbenchImageHduState;
         } else if (hdu.hduType == HduType.TABLE) {
         }
@@ -285,15 +310,26 @@ export class WorkbenchFileStates {
 
         let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`
         state.plottingPanelStateEntities[plottingPanelStateId] = {
+          id: plottingPanelStateId,
           measuring: false,
           lineMeasureStart: null,
           lineMeasureEnd: null,
         }
         state.plottingPanelStateIds.push(plottingPanelStateId);
-        
+
+        let customMarkerPanelStateId = `CUSTOM_MARKER_PANEL_${state.nextCustomMarkerPanelStateId++}`
+        state.customMarkerPanelStateEntities[customMarkerPanelStateId] = {
+          id: customMarkerPanelStateId,
+          markerEntities: {},
+          markerIds: []
+        }
+        state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
+
         state.fileStateEntities[file.id] = {
           id: file.id,
           plottingPanelStateId: plottingPanelStateId,
+          customMarkerPanelStateId: customMarkerPanelStateId
+
         };
         state.fileIds.push(file.id);
       });
@@ -329,7 +365,7 @@ export class WorkbenchFileStates {
     });
   }
 
- 
+
   @Action(LoadHduHeaderSuccess)
   @ImmutableContext()
   public loadDataFileHdrSuccess(
@@ -348,7 +384,7 @@ export class WorkbenchFileStates {
     ] as ImageHdu;
     let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
     let sonifierState = hduState.sonificationPanelState;
-    
+
     if (!sonifierState.regionHistoryInitialized) {
       dispatch(
         new AddRegionToHistory(hduId, {
@@ -385,7 +421,7 @@ export class WorkbenchFileStates {
     }
   }
 
-  
+
 
   @Action(UpdateSonifierFileState)
   @ImmutableContext()
@@ -492,7 +528,7 @@ export class WorkbenchFileStates {
       if (
         !sonifierState.regionHistoryInitialized ||
         sonifierState.regionHistoryIndex ==
-          sonifierState.regionHistory.length - 1
+        sonifierState.regionHistory.length - 1
       )
         return state;
       sonifierState.regionHistoryIndex++;
@@ -519,7 +555,7 @@ export class WorkbenchFileStates {
       if (
         !sonifierState.regionHistoryInitialized ||
         sonifierState.regionHistoryIndex ==
-          sonifierState.regionHistory.length - 1
+        sonifierState.regionHistory.length - 1
       )
         return state;
       sonifierState.regionHistoryIndex = null;
@@ -583,7 +619,7 @@ export class WorkbenchFileStates {
     if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
       return;
     }
-     
+
 
     setState((state: WorkbenchFileStatesModel) => {
       let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
@@ -648,24 +684,13 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public updateCustomMarker(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, markerId, changes }: UpdateCustomMarker
+    { customMarkerPanelStateId, markerId, changes }: UpdateCustomMarker
   ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
-
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let markerState = hduState.customMarkerPanelState;
-      if (markerState.ids.includes(markerId)) {
-        markerState.entities[markerId] = {
-          ...markerState.entities[markerId],
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId]
+      if (markerState.markerIds.includes(markerId)) {
+        markerState.markerEntities[markerId] = {
+          ...markerState.markerEntities[markerId],
           ...changes,
         };
       }
@@ -677,21 +702,11 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public addCustomMarkers(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, markers }: AddCustomMarkers
+    { customMarkerPanelStateId, markers }: AddCustomMarkers
   ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
 
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let markerState = hduState.customMarkerPanelState;
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId]
 
       markers.forEach((marker) => {
         let nextSeed = state.nextMarkerId++;
@@ -699,9 +714,9 @@ export class WorkbenchFileStates {
           // marker.marker.label = `M${nextSeed}`;
           marker.label = "";
         }
-        let id = `CUSTOM_MARKER_${hdu.fileId}_${hduId}_${nextSeed.toString()}`;
-        markerState.ids.push(id);
-        markerState.entities[id] = {
+        let id = `CUSTOM_MARKER_${customMarkerPanelStateId}_${nextSeed.toString()}`;
+        markerState.markerIds.push(id);
+        markerState.markerEntities[id] = {
           ...marker,
           id: id,
         };
@@ -715,29 +730,20 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public removeCustomMarkers(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, markers }: RemoveCustomMarkers
+    { customMarkerPanelStateId, markers }: RemoveCustomMarkers
   ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
 
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let markerState = hduState.customMarkerPanelState;
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId]
+
 
       let idsToRemove = markers.map((m) => m.id);
-      markerState.ids = markerState.ids.filter(
+      markerState.markerIds = markerState.markerIds.filter(
         (id) => !idsToRemove.includes(id)
       );
       markers.forEach((marker) => {
-        if (marker.id in markerState.entities)
-          delete markerState.entities[marker.id];
+        if (marker.id in markerState.markerEntities)
+          delete markerState.markerEntities[marker.id];
       });
 
       return state;
@@ -748,24 +754,14 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public selectCustomMarkers(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, markers }: SelectCustomMarkers
+    { customMarkerPanelStateId, markers }: SelectCustomMarkers
   ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
-
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let markerState = hduState.customMarkerPanelState;
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId]
+
       markers.forEach((marker) => {
-        if (markerState.ids.includes(marker.id)) {
-          markerState.entities[marker.id].selected = true;
+        if (markerState.markerIds.includes(marker.id)) {
+          markerState.markerEntities[marker.id].selected = true;
         }
       });
       return state;
@@ -776,24 +772,14 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public deselectCustomMarkers(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, markers }: DeselectCustomMarkers
+    { customMarkerPanelStateId, markers }: DeselectCustomMarkers
   ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
-
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let markerState = hduState.customMarkerPanelState;
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId]
+
       markers.forEach((marker) => {
-        if (markerState.ids.includes(marker.id)) {
-          markerState.entities[marker.id].selected = false;
+        if (markerState.markerIds.includes(marker.id)) {
+          markerState.markerEntities[marker.id].selected = false;
         }
       });
       return state;
@@ -804,25 +790,16 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public setCustomMarkerSelection(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    { hduId, markers }: SetCustomMarkerSelection
+    { customMarkerPanelStateId, markers }: SetCustomMarkerSelection
   ) {
-    let state = getState();
-    if (
-      !(hduId in state.hduStateEntities) ||
-      state.hduStateEntities[hduId].hduType != HduType.IMAGE
-    )
-      return;
 
     setState((state: WorkbenchFileStatesModel) => {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-        hduId
-      ] as ImageHdu;
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let markerState = hduState.customMarkerPanelState;
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId]
+
 
       let selectedMarkerIds = markers.map((m) => m.id);
-      markerState.ids.forEach((markerId) => {
-        markerState.entities[markerId].selected = selectedMarkerIds.includes(
+      markerState.markerIds.forEach((markerId) => {
+        markerState.markerEntities[markerId].selected = selectedMarkerIds.includes(
           markerId
         );
       });
@@ -863,7 +840,7 @@ export class WorkbenchFileStates {
   @ImmutableContext()
   public removeAllPhotDatas(
     { getState, setState, dispatch }: StateContext<WorkbenchFileStatesModel>,
-    {}: RemoveAllPhotDatas
+    { }: RemoveAllPhotDatas
   ) {
     setState((state: WorkbenchFileStatesModel) => {
       state.hduIds.forEach((hduId) => {

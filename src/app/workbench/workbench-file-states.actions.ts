@@ -117,37 +117,37 @@ export class UpdateCustomMarker {
   public static readonly type = '[Markers] Update Custom Marker'
 
   /* TODO:  Figure out why error TS2322 is thrown by compiler when changes type is set to Partial<Marker> */
-  constructor(public hduId: string, public markerId: string, public changes: any) { }
+  constructor(public customMarkerPanelStateId: string, public markerId: string, public changes: any) { }
 }
 
 export class AddCustomMarkers {
   public static readonly type = '[Markers] Add Custom Marker'
 
-  constructor(public hduId: string, public markers: Marker[]) { }
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class RemoveCustomMarkers {
   public static readonly type = '[Markers] Remove Custom Marker'
 
-  constructor(public hduId: string, public markers: Marker[]) { }
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class SelectCustomMarkers {
   public static readonly type = '[Markers] Select Custom Markers'
 
-  constructor(public hduId: string, public markers: Marker[]) { }
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class DeselectCustomMarkers {
   public static readonly type = '[Markers] Deselect Custom Markers'
 
-  constructor(public hduId: string, public markers: Marker[]) { }
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class SetCustomMarkerSelection {
   public static readonly type = '[Markers] Set Custom Marker Selection'
 
-  constructor(public hduId: string, public markers: Marker[]) { }
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class AddPhotDatas {

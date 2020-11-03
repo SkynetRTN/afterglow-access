@@ -226,7 +226,7 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-        <div *ngIf="(toolPanelHdus$ | async) && (toolPanelHdus$ | async)?.length > 1">
+        <div *ngIf="[WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool) && (toolPanelHdus$ | async) && (toolPanelHdus$ | async)?.length > 1">
           <h6 i18n>Channel Selection</h6>
           <div class="pb-1">
             <mat-form-field appearance="outline">

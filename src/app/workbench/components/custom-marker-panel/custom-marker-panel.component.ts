@@ -70,7 +70,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   }
 
   getSelectedMarkers() {
-    let markers = Object.values(this.state.entities);
+    let markers = Object.values(this.state.markerEntities);
     if(!this.state || !markers) return [];
     return markers.filter(m => m.selected);
   }
