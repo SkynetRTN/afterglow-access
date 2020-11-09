@@ -71,7 +71,8 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
 
   getViewers(viewerIds: string[]) {
     let viewerEntities = this.store.selectSnapshot(WorkbenchState.getViewerEntities)
-    return viewerIds.map(id => viewerEntities[id])
+    let result = viewerIds.map(id => viewerEntities[id])
+    return result;
   }
 
 

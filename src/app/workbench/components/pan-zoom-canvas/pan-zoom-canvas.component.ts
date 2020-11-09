@@ -191,6 +191,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     this.viewInitialized = true;
 
     this.handleViewportChange();
+    this.onCanvasSizeChange.emit({ width: this.targetCanvas.width, height: this.targetCanvas.height })
     this.draw();
     setTimeout(() => {
       this.lazyLoadPixels();

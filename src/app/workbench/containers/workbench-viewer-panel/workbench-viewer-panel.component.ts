@@ -277,7 +277,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // The right panel's tab group shows the correct selected index but it does not detect that the viewer at that index
     // has changed and so it does not updatae the tab content.
     // return item.viewerId;
-    return index;
+    return `${item.viewerId}-${index}`;
   }
 
   closeViewer(viewerId: string) {

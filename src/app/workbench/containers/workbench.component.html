@@ -103,7 +103,7 @@
               </mat-progress-bar>
             </div>
             <app-workbench-data-file-list [items]="(dataFileListItems$ | async)"
-              [selectedItem]="(selectedItem$ | async)" (onSelectionChange)="onFileSelect($event)">
+              [selectedItem]="(selectedDataFileListItem$ | async)" (onSelectionChange)="onFileSelect($event)">
             </app-workbench-data-file-list>
           </div>
         </div>
@@ -226,26 +226,26 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-        <div *ngIf="[WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool) && (toolPanelHdus$ | async) && (toolPanelHdus$ | async)?.length > 1">
+        <div *ngIf="[WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool) && (focusedViewerHdus$ | async) && (focusedViewerHdus$ | async)?.length > 1">
           <h6 i18n>Channel Selection</h6>
           <div class="pb-1">
             <mat-form-field appearance="outline">
               <mat-label>Channel</mat-label>
-              <mat-select [value]="(toolPanelSelectedHduId$ | async)" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%;">
-                <mat-option *ngFor="let hdu of (toolPanelHdus$ | async); let index=index;" [value]="hdu.id">Channel {{ index }}</mat-option>
+              <mat-select [value]="(focusedViewerSelectedHduId$ | async)" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%;">
+                <mat-option *ngFor="let hdu of (focusedViewerHdus$ | async); let index=index;" [value]="hdu.id">Channel {{ index }}</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
         </div>
 
-        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="(toolPanelSelectedHdu$ | async)">
+        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="(focusedViewerSelectedHdu$ | async)">
         </app-display-panel>
 
-        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="(toolPanelSelectedHdu$ | async)"
+        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="(focusedViewerSelectedHdu$ | async)"
           [config]="fileInfoPanelConfig$ | async" (configChange)="onFileInfoPanelConfigChange($event)">
         </app-file-info-panel>
 
-        <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [hdu]="(toolPanelSelectedHdu$ | async)"
+        <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER"
           [state]="customMarkerPanelState$ | async" [config]="customMarkerPanelConfig$ | async"
           (configChange)="onCustomMarkerPanelConfigChange($event)" (markerChange)="onCustomMarkerChange($event)"
           (markerDelete)="onCustomMarkerDelete($event)">
@@ -256,7 +256,7 @@
           (configChange)="onPlottingPanelConfigChange($event)">
         </app-plotting-panel>
 
-        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [hdu]="focusedImageHdu$ | async"
+        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [hdu]="(focusedViewerSelectedHdu$ | async)"
           [transform]="focusedHduImageToViewportTransform$ | async" [viewportSize]="focusedViewerViewportSize$ | async"
           [state]="sonificationPanelState$ | async">
         </app-sonification-panel>
