@@ -9,23 +9,25 @@ exports.__esModule = true;
 exports.WorkbenchDataFileListComponent = void 0;
 var core_1 = require("@angular/core");
 var data_files_state_1 = require("../../../data-files/data-files.state");
+var data_file_type_1 = require("../../../data-files/models/data-file-type");
 var WorkbenchDataFileListComponent = /** @class */ (function () {
     function WorkbenchDataFileListComponent(store) {
         this.store = store;
         this.onSelectionChange = new core_1.EventEmitter();
+        this.HduType = data_file_type_1.HduType;
     }
     WorkbenchDataFileListComponent.prototype.trackByFn = function (index, value) {
-        return value.id && value.type;
+        if (!value)
+            return null;
+        return value.type + "-" + value.id;
     };
     WorkbenchDataFileListComponent.prototype.onRowClick = function (item) {
-        if (this.selectedItem.type == item.type && this.selectedItem.id == item.id)
+        if (this.selectedItem && this.selectedItem.type == item.type && this.selectedItem.id == item.id)
             return;
         this.selectedItem = item;
         this.onSelectionChange.emit({ item: item, doubleClick: false });
     };
     WorkbenchDataFileListComponent.prototype.onRowDoubleClick = function (item) {
-        if (this.selectedItem.type == item.type && this.selectedItem.id == item.id)
-            return;
         this.selectedItem = item;
         this.onSelectionChange.emit({ item: item, doubleClick: true });
     };

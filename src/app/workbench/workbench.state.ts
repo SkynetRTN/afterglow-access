@@ -191,7 +191,7 @@ import {
   DataFilesStateModel,
 } from "../data-files/data-files.state";
 import { HduType } from "../data-files/models/data-file-type";
-import { getViewportRegion } from "../data-files/models/transformation";
+import { getViewportRegion, Transform } from "../data-files/models/transformation";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "051341ac-a968-4d48-9e01-8336ee6a978d",
@@ -876,16 +876,47 @@ export class WorkbenchState {
     };
   }
 
-  @Selector()
-  public static getSonificationPanelStateById(state: WorkbenchStateModel) {
-    return (hduId: string) => {
-      if (
-        !(hduId in state.hduStateEntities) ||
-        state.hduStateEntities[hduId].hduType != HduType.IMAGE
-      )
+  @Selector([DataFilesState.getDataFileEntities, DataFilesState.getHduEntities])
+  public static getSonificationPanelStateFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: {[id: string]: DataFile},
+    hduEntities: {[id: string]: IHdu}) {
+    return (viewerId: string) => {
+      if(!viewerId || !(viewerId in state.viewers)) {
         return null;
-      return (state.hduStateEntities[hduId] as WorkbenchImageHduState)
-        .sonificationPanelState;
+      }
+      let viewer = state.viewers[viewerId];
+      let hduId = viewer.hduId;
+      if(!viewer.hduId) {
+        return null;
+      }
+
+      let hduState = state.hduStateEntities[hduId];
+      if(!hduState || hduState.hduType != HduType.IMAGE) return null;
+      
+      return (hduState as WorkbenchImageHduState).sonificationPanelState
+    };
+  }
+
+  @Selector([DataFilesState.getDataFileEntities, DataFilesState.getHduEntities, DataFilesState.getTransformEntities])
+  public static getSonificationTransformFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: {[id: string]: DataFile},
+    hduEntities: {[id: string]: IHdu},
+    transformEntities: {[id: string]: Transform},) {
+    return (viewerId: string) => {
+      if(!viewerId || !(viewerId in state.viewers)) {
+        return null;
+      }
+      let viewer = state.viewers[viewerId];
+      if(!viewer.hduId) {
+        return null;
+      }
+
+      let hdu = hduEntities[viewer.hduId];
+      if(!hdu || hdu.hduType != HduType.IMAGE) return null;
+      
+      return transformEntities[(hdu as ImageHdu).transformation.imageToViewportTransformId]
     };
   }
 

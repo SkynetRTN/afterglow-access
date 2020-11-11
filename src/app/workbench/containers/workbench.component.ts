@@ -175,8 +175,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   focusedViewerHdu$: Observable<IHdu>;
   focusedViewerImageHduId$: Observable<string>;
   focusedViewerImageHdu$: Observable<ImageHdu>;
-  focusedViewerImageToViewportTransform$: Observable<Transform>;
-  focusedViewerNormalizer$: Observable<PixelNormalizer>;
+  focusedViewerSelectedHduId$: Observable<string>;
+  focusedViewerSelectedHdu$: Observable<IHdu>;
+  focusedViewerSelectedImageHduId$: Observable<string>;
+  focusedViewerSelectedImageHdu$: Observable<ImageHdu>;
+  
   selectedDataFileListItem$: Observable<DataFile | IHdu>;
   dataFileListItems$: Observable<Array<DataFile | ImageHdu>>;
 
@@ -188,6 +191,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   plottingPanelWcs$: Observable<Wcs>;
   plottingPanelStateId$: Observable<string>;
   plottingPanelState$: Observable<PlottingPanelState>;
+  sonificationPanelTransform$: Observable<Transform>;
 
   fileInfoPanelConfig$: Observable<FileInfoPanelConfig>;
   customMarkerPanelMarkers$: Observable<{ [viewerId: string]: Marker[] }>;
@@ -286,23 +290,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     )
 
     this.focusedViewerImageHdus$ = this.focusedViewerHdus$.pipe(
-      map(hdus => hdus.filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[])
+      map(hdus => !hdus ? null : hdus.filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[])
     )
 
     this.focusedViewerHduId$ = this.focusedViewer$.pipe(
       distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
       switchMap(viewer => {
-        if (!viewer) {
+        if (!viewer || !viewer.hduId) {
           return of(null);
-        }
-        if (!viewer.hduId) {
-          return this.store.select(WorkbenchState.getFileStateById).pipe(
-            map(fn => {
-              let workbenchFileState = fn(viewer.fileId);
-              if (!workbenchFileState) return of(null);
-              return workbenchFileState.selectedHduId
-            })
-          )
         }
         return of(viewer.hduId);
       })
@@ -327,29 +322,45 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       ))
     );
 
-    this.focusedViewerImageToViewportTransform$ = this.focusedViewerImageHdu$.pipe(
-      map(hdu => hdu ? hdu.transformation.imageToViewportTransformId : null),
-      distinctUntilChanged(),
-      switchMap((transformId) => {
-        if (!transformId) {
-          return of(null)
+    this.focusedViewerSelectedHduId$ = this.focusedViewer$.pipe(
+      distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
+      switchMap(viewer => {
+        if (!viewer) {
+          return of(null);
         }
-        return this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(transformId)));
+        if (!viewer.hduId) {
+          return this.store.select(WorkbenchState.getFileStateById).pipe(
+            map(fn => {
+              let workbenchFileState = fn(viewer.fileId);
+              if (!workbenchFileState) return of(null);
+              return workbenchFileState.selectedHduId
+            })
+          )
+        }
+        return of(viewer.hduId);
       })
+    ).pipe(
+      distinctUntilChanged()
+    )
+
+    this.focusedViewerSelectedHdu$ = this.focusedViewerSelectedHduId$.pipe(
+      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
+        map(fn => fn(hduId))
+      ))
+    )
+
+    this.focusedViewerSelectedImageHduId$ = this.focusedViewerSelectedHdu$.pipe(
+      map(hdu => !hdu || hdu.hduType != HduType.IMAGE ? null : hdu.id),
+      distinctUntilChanged()
     );
 
-    this.focusedViewerNormalizer$ = this.focusedViewerImageHdu$.pipe(
-      switchMap((hdu) => {
-        if (!hdu) {
-          return of(null)
-        }
-        return this.store
-          .select(DataFilesState.getNormalizer)
-          .pipe(map((fn) => fn(hdu.id)));
-      })
+    this.focusedViewerSelectedImageHdu$ = this.focusedViewerSelectedImageHduId$.pipe(
+      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
+        map(fn => fn(hduId) as ImageHdu)
+      ))
     );
+
+
 
 
     this.selectedDataFileListItem$ = this.focusedViewer$.pipe(
@@ -658,69 +669,72 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
 
     /* SONIFICATION PANEL */
-    this.sonificationPanelState$ = this.focusedViewerImageHduId$.pipe(
-      switchMap((hduId) => {
-        if (!hduId) return of(null);
-        return this.store
-          .select(WorkbenchState.getSonificationPanelStateById)
-          .pipe(map((fn) => fn(hduId)));
+    this.sonificationPanelState$ = this.focusedViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getSonificationPanelStateFromViewerId).pipe(
+          map(fn => fn(viewerId))
+        )
       })
     );
 
-    // this.sonificationPanelMarkers$ = combineLatest(
-    //   this.activeTool$,
-    //   visibleViewerIds$
-    // ).pipe(
-    //   switchMap(([activeTool, viewers]) => {
-    //     return combineLatest(
-    //       ...viewers.map(viewer => {
-    //         let hduId = viewer.hduId;
-    //         if (activeTool != WorkbenchTool.SONIFIER || !hduId) {
-    //           return of({ viewerId: viewer.viewerId, markers: [] });
-    //         }
-    //         return this.store
-    //           .select(WorkbenchState.getSonificationPanelState)
-    //           .pipe(
-    //             map((fn) => {
-    //               return fn(hduId);
-    //             }),
-    //             distinctUntilChanged(),
-    //             map((sonificationState) => {
-    //               let region =
-    //                 sonificationState.regionHistory[
-    //                 sonificationState.regionHistoryIndex
-    //                 ];
-    //               let regionMode = sonificationState.regionMode;
-    //               let progressLine = sonificationState.progressLine;
-    //               let markers: Array<RectangleMarker | LineMarker> = [];
-    //               if (region && regionMode == SonifierRegionMode.CUSTOM)
-    //                 markers.push({
-    //                   id: `SONIFICATION_REGION_${hduId}`,
-    //                   type: MarkerType.RECTANGLE,
-    //                   ...region,
-    //                 } as RectangleMarker);
-    //               if (progressLine)
-    //                 markers.push({
-    //                   id: `SONIFICATION_PROGRESS_${hduId}`,
-    //                   type: MarkerType.LINE,
-    //                   ...progressLine,
-    //                 } as LineMarker);
-    //               return { viewerId: viewer.viewerId, markers: markers };
-    //             })
-    //           );
-    //       })
-    //     ).pipe(
-    //       map((v) =>
-    //         v.reduce((obj, key) => {
-    //           return {
-    //             ...obj,
-    //             [key.viewerId]: key.markers,
-    //           };
-    //         }, {})
-    //       )
-    //     );
-    //   })
-    // );
+    this.sonificationPanelTransform$ = this.focusedViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getSonificationTransformFromViewerId).pipe(
+          map(fn => fn(viewerId))
+        )
+      })
+    );
+
+    this.sonificationPanelMarkers$ = combineLatest(
+      this.activeTool$,
+      visibleViewerIds$
+    ).pipe(
+      switchMap(([activeTool, viewerIds]) => {
+        return combineLatest(
+          ...viewerIds.map(viewerId => {
+            return this.store.select(WorkbenchState.getSonificationPanelStateFromViewerId).pipe(
+              map(fn => fn(viewerId)),
+              distinctUntilChanged(),
+              map((sonificationState) => {
+                if(!sonificationState) {
+                  return { viewerId: viewerId, markers: [] };
+                }
+
+                let region =
+                  sonificationState.regionHistory[
+                  sonificationState.regionHistoryIndex
+                  ];
+                let regionMode = sonificationState.regionMode;
+                let progressLine = sonificationState.progressLine;
+                let markers: Array<RectangleMarker | LineMarker> = [];
+                if (region && regionMode == SonifierRegionMode.CUSTOM)
+                  markers.push({
+                    id: `SONIFICATION_REGION_${viewerId}`,
+                    type: MarkerType.RECTANGLE,
+                    ...region,
+                  } as RectangleMarker);
+                if (progressLine)
+                  markers.push({
+                    id: `SONIFICATION_PROGRESS_${viewerId}`,
+                    type: MarkerType.LINE,
+                    ...progressLine,
+                  } as LineMarker);
+                return { viewerId: viewerId, markers: markers };
+              })
+            )
+          })
+        ).pipe(
+          map((v) =>
+            v.reduce((obj, key) => {
+              return {
+                ...obj,
+                [key.viewerId]: key.markers,
+              };
+            }, {})
+          )
+        );
+      })
+    );
 
     /* PHOTOMETRY PANEL */
 
@@ -782,100 +796,113 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       WorkbenchState.getPhotometryPanelConfig
     );
 
-    // this.photometryPanelMarkers$ = combineLatest(
-    //   this.activeTool$,
-    //   visibleViewerIds$
-    // ).pipe(
-    //   switchMap(([activeTool, viewers]) => {
-    //     return combineLatest(
-    //       ...viewers.map(viewer => {
-    //         let hduId = viewer.hduId;
-    //         if (activeTool != WorkbenchTool.PHOTOMETRY || !hduId) {
-    //           return of({ viewerId: viewer.viewerId, markers: [] });
-    //         }
+    this.photometryPanelMarkers$ = combineLatest(
+      this.activeTool$,
+      visibleViewerIds$
+    ).pipe(
+      switchMap(([activeTool, viewerIds]) => {
+        console.log("PHOT MARKERS VIEWER IDS CHANGE")
+        return combineLatest(
+          ...viewerIds.map(viewerId => {
+            if (activeTool != WorkbenchTool.PHOTOMETRY) {
+              return of({ viewerId: viewerId, markers: [] });
+            }
 
-    //         // TODO: LAYER
-    //         return combineLatest(
-    //           this.store
-    //             .select(DataFilesState.getHeader)
-    //             .pipe(map((fn) => fn(hduId))),
-    //           this.store.select(WorkbenchState.getPhotometryPanelConfig),
-    //           this.store.select(SourcesState.getSources)
-    //         ).pipe(
-    //           map(([header, config, sources]) => {
-    //             let hdu = this.store.selectSnapshot(
-    //               DataFilesState.getHduEntities
-    //             )[hduId] as ImageHdu;
-    //             if (!hdu || !header) {
-    //               return { viewerId: viewer.viewerId, markers: [] };
-    //             }
+            let hduId$ = this.store.select(WorkbenchState.getViewerById).pipe(
+              map(fn => fn(viewerId).hduId),
+              distinctUntilChanged()
+            )
 
-    //             let selectedSourceIds = config.selectedSourceIds;
-    //             let coordMode = config.coordMode;
-    //             let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
-    //             let showSourceLabels = config.showSourceLabels;
+            let header$ = hduId$.pipe(
+              switchMap(hduId => this.store.select(DataFilesState.getHeader).pipe(
+                map(fn => fn(hduId))
+              ))
+            )
 
-    //             let markers: Array<CircleMarker | TeardropMarker> = [];
-    //             let mode = coordMode;
+            return combineLatest(
+              hduId$,
+              header$,
+              this.store.select(WorkbenchState.getPhotometryPanelConfig),
+              this.store.select(SourcesState.getSources)
+            ).pipe(
+              map(([hduId, header, config, sources]) => {
+                console.log("UPDATING PHOT MARKERS")
+                let hdu = this.store.selectSnapshot(
+                  DataFilesState.getHduEntities
+                )[hduId] as ImageHdu;
+                if (!hdu || !header) {
+                  return { viewerId: viewerId, markers: [] };
+                }
 
-    //             if (!hdu.header.wcs.isValid()) mode = "pixel";
+                let selectedSourceIds = config.selectedSourceIds;
+                let coordMode = config.coordMode;
+                let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
+                let showSourceLabels = config.showSourceLabels;
 
-    //             sources.forEach((source) => {
-    //               if (source.hduId != hduId && !showSourcesFromAllFiles) return;
-    //               if (source.posType != mode) return;
-    //               let selected = selectedSourceIds.includes(source.id);
-    //               let coord = getSourceCoordinates(hdu.header, source);
+                let markers: Array<CircleMarker | TeardropMarker> = [];
+                let mode = coordMode;
 
-    //               if (coord == null) {
-    //                 return false;
-    //               }
+                if (!hdu.header.wcs || !hdu.header.wcs.isValid()) mode = "pixel";
 
-    //               if (source.pm) {
-    //                 markers.push({
-    //                   id: `PHOTOMETRY_SOURCE_${hdu.id}_${source.id}`,
-    //                   type: MarkerType.TEARDROP,
-    //                   x: coord.x,
-    //                   y: coord.y,
-    //                   radius: 15,
-    //                   labelGap: 14,
-    //                   labelTheta: 0,
-    //                   label: showSourceLabels ? source.label : "",
-    //                   theta: coord.theta,
-    //                   selected: selected,
-    //                   data: { source: source },
-    //                 } as TeardropMarker);
-    //               } else {
-    //                 markers.push({
-    //                   id: `PHOTOMETRY_SOURCE_${hdu.id}_${source.id}`,
-    //                   type: MarkerType.CIRCLE,
-    //                   x: coord.x,
-    //                   y: coord.y,
-    //                   radius: 15,
-    //                   labelGap: 14,
-    //                   labelTheta: 0,
-    //                   label: showSourceLabels ? source.label : "",
-    //                   selected: selected,
-    //                   data: { source: source },
-    //                 } as CircleMarker);
-    //               }
-    //             });
+                sources.forEach((source) => {
+                  if (source.hduId != hduId && !showSourcesFromAllFiles) return;
+                  if (source.posType != mode) return;
+                  let selected = selectedSourceIds.includes(source.id);
+                  let coord = getSourceCoordinates(hdu.header, source);
 
-    //             return { viewerId: viewer.viewerId, markers: markers };
-    //           })
-    //         );
-    //       })
-    //     ).pipe(
-    //       map((v) =>
-    //         v.reduce((obj, key) => {
-    //           return {
-    //             ...obj,
-    //             [key.viewerId]: key.markers,
-    //           };
-    //         }, {})
-    //       )
-    //     );
-    //   })
-    // );
+                  if (coord == null) {
+                    return false;
+                  }
+
+                  if (source.pm) {
+                    markers.push({
+                      id: `PHOTOMETRY_SOURCE_${hdu.id}_${source.id}`,
+                      type: MarkerType.TEARDROP,
+                      x: coord.x,
+                      y: coord.y,
+                      radius: 15,
+                      labelGap: 14,
+                      labelTheta: 0,
+                      label: showSourceLabels ? source.label : "",
+                      theta: coord.theta,
+                      selected: selected,
+                      data: { source: source },
+                    } as TeardropMarker);
+                  } else {
+                    markers.push({
+                      id: `PHOTOMETRY_SOURCE_${hdu.id}_${source.id}`,
+                      type: MarkerType.CIRCLE,
+                      x: coord.x,
+                      y: coord.y,
+                      radius: 15,
+                      labelGap: 14,
+                      labelTheta: 0,
+                      label: showSourceLabels ? source.label : "",
+                      selected: selected,
+                      data: { source: source },
+                    } as CircleMarker);
+                  }
+                });
+
+                return { viewerId: viewerId, markers: markers };
+              })
+            );
+
+            // TODO: LAYER
+            
+          })
+        ).pipe(
+          map((v) =>
+            v.reduce((obj, key) => {
+              return {
+                ...obj,
+                [key.viewerId]: key.markers,
+              };
+            }, {})
+          )
+        );
+      })
+    );
 
     /* PIXEL OPS PANEL */
     this.pixelOpsPanelConfig$ = this.store.select(
@@ -895,8 +922,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.markerOverlaySub = combineLatest(
       this.customMarkerPanelMarkers$,
       this.plottingPanelMarkers$,
-      // this.sonificationPanelMarkers$,
-      // this.photometryPanelMarkers$
+      this.sonificationPanelMarkers$,
+      this.photometryPanelMarkers$
     )
       .pipe(withLatestFrom(visibleViewerIds$))
       .subscribe(
@@ -904,8 +931,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           [
             customMarkerPanelMarkers,
             plottingPanelMarkers,
-            // sonificationPanelMarkers,
-            // photometryPanelMarkers,
+            sonificationPanelMarkers,
+            photometryPanelMarkers,
           ],
           viewerIds,
         ]) => {
@@ -916,8 +943,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             let markerSources = [
               customMarkerPanelMarkers,
               plottingPanelMarkers,
-              // sonificationPanelMarkers,
-              // photometryPanelMarkers,
+              sonificationPanelMarkers,
+              photometryPanelMarkers,
             ];
             markerSources.forEach((markerSource) => {
               if (viewer.viewerId in markerSource)
