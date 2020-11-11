@@ -17,7 +17,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 exports.__esModule = true;
-exports.AppModule = exports.workbenchHduStateSanitizer = exports.dataFileSanitizer = void 0;
+exports.AppModule = exports.dataFileSanitizer = void 0;
 var core_1 = require("@angular/core");
 var store_1 = require("@ngxs/store");
 var router_plugin_1 = require("@ngxs/router-plugin");
@@ -46,7 +46,6 @@ var theme_picker_1 = require("./theme-picker");
 var auth_state_1 = require("./auth/auth.state");
 var jobs_state_1 = require("./jobs/jobs.state");
 var data_providers_state_1 = require("./data-providers/data-providers.state");
-var workbench_file_states_state_1 = require("./workbench/workbench-file-states.state");
 var workbench_state_1 = require("./workbench/workbench.state");
 var sources_state_1 = require("./workbench/sources.state");
 var phot_data_state_1 = require("./workbench/phot-data.state.");
@@ -77,12 +76,6 @@ function dataFileSanitizer(v) {
     return state;
 }
 exports.dataFileSanitizer = dataFileSanitizer;
-function workbenchHduStateSanitizer(v) {
-    var state = __assign({}, v);
-    state.hduStateEntities = __assign({}, state.hduStateEntities);
-    return state;
-}
-exports.workbenchHduStateSanitizer = workbenchHduStateSanitizer;
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
@@ -105,7 +98,7 @@ var AppModule = /** @class */ (function () {
                 angular2_hotkeys_1.HotkeyModule.forRoot({
                     disableCheatSheet: true
                 }),
-                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, data_files_state_1.DataFilesState, workbench_file_states_state_1.WorkbenchFileStates, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
+                store_1.NgxsModule.forRoot([auth_state_1.AuthState, jobs_state_1.JobsState, data_providers_state_1.DataProvidersState, data_files_state_1.DataFilesState, workbench_state_1.WorkbenchState, sources_state_1.SourcesState, phot_data_state_1.PhotDataState], { developmentMode: !environment_1.appConfig.production }),
                 public_api_1.AfterglowStoragePluginModule.forRoot({
                     key: [
                         auth_state_1.AuthState,
@@ -113,7 +106,6 @@ var AppModule = /** @class */ (function () {
                         data_providers_state_1.DataProvidersState,
                         data_files_state_1.DataFilesState,
                         data_files_state_1.DataFilesState,
-                        workbench_file_states_state_1.WorkbenchFileStates,
                         workbench_state_1.WorkbenchState,
                         sources_state_1.SourcesState,
                         phot_data_state_1.PhotDataState
@@ -123,10 +115,6 @@ var AppModule = /** @class */ (function () {
                             key: data_files_state_1.DataFilesState,
                             sanitize: dataFileSanitizer
                         },
-                        {
-                            key: workbench_file_states_state_1.WorkbenchFileStates,
-                            sanitize: workbenchHduStateSanitizer
-                        }
                     ],
                     storage: 1 /* SessionStorage */
                 }),

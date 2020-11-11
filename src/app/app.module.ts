@@ -32,7 +32,6 @@ import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
-import { WorkbenchFileStates, WorkbenchFileStatesModel } from './workbench/workbench-file-states.state';
 import { WorkbenchState } from './workbench/workbench.state';
 import { SourcesState } from './workbench/sources.state';
 import { PhotDataState } from './workbench/phot-data.state.';
@@ -91,19 +90,6 @@ export function dataFileSanitizer(v) {
   return state;
 }
 
-export function workbenchHduStateSanitizer(v) {
-  let state = {
-    ...v
-   } as WorkbenchFileStatesModel;
-
-  state.hduStateEntities = {
-    ...state.hduStateEntities
-  }
-
-  return state;
-}
-
-
 @NgModule({
   imports: [
     CommonModule,
@@ -123,7 +109,7 @@ export function workbenchHduStateSanitizer(v) {
       disableCheatSheet: true
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchFileStates, WorkbenchState, SourcesState, PhotDataState],
+      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
       { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -133,7 +119,6 @@ export function workbenchHduStateSanitizer(v) {
         DataProvidersState,
         DataFilesState,
         DataFilesState,
-        WorkbenchFileStates,
         WorkbenchState,
         SourcesState,
         PhotDataState
@@ -143,10 +128,6 @@ export function workbenchHduStateSanitizer(v) {
           key: DataFilesState,
           sanitize: dataFileSanitizer
         },
-        {
-          key: WorkbenchFileStates,
-          sanitize: workbenchHduStateSanitizer,
-        }
       ],
       storage: StorageOption.SessionStorage
     }),

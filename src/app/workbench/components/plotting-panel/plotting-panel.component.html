@@ -14,7 +14,8 @@
       #plotter
       [wcs]="wcs"
       [imageData]="imageData"
-      [mode]="config?.plotterMode"
+      [plotMode]="config?.plotMode"
+      [colorMode]="colorMode"
       [width]="500"
       [height]="400"
       [lineMeasureStart]="lineStart$ | async"
@@ -27,7 +28,7 @@
     <mat-form-field appearance="outline" style="width: 300px">
       <mat-label i18n>Mode</mat-label>
       <mat-select
-        [value]="config?.plotterMode"
+        [value]="config?.plotMode"
         (selectionChange)="onModeChange($event.value)"
       >
         <mat-option [value]="'1D'" i18n>1D Cross Section</mat-option>

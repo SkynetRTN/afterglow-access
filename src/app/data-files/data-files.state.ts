@@ -66,8 +66,7 @@ import {
   InvalidateCompositeImageTile,
   LoadRawImageTileFail,
   UpdateNormalizedImageTileFail,
-  UpdateCompositeImageTileFail,
-  SetSelectedHduId
+  UpdateCompositeImageTileFail
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -378,19 +377,7 @@ export class DataFilesState {
     );
   }
 
-  @Action(SetSelectedHduId)
-  @ImmutableContext()
-  public setSelectedHduId(
-    { setState, getState, dispatch }: StateContext<DataFilesStateModel>,
-    { fileId, hduId }: SetSelectedHduId
-  ) {
-    setState((state: DataFilesStateModel) => {
-      state.dataFileEntities[fileId].selectedHduId = hduId;
-      return state;
-    });
 
-   
-  }
 
   @Action(LoadDataFile)
   @ImmutableContext()
@@ -470,7 +457,6 @@ export class DataFilesState {
               hduIds: [hdu.id],
               imageHduIds: hdu.hduType == HduType.IMAGE ? [hdu.id] : [],
               tableHduIds: hdu.hduType == HduType.TABLE ? [hdu.id] : [],
-              selectedHduId: hdu.id,
               transformation: {
                 viewportTransformId: null,
                 imageTransformId: null,

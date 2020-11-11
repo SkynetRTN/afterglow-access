@@ -1,4 +1,4 @@
-<div *ngIf="!(imageHdu$ | async) || !state; else loadedBlock" class="alert alert-info">
+<div *ngIf="!state; else loadedBlock" class="alert alert-info">
   <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 

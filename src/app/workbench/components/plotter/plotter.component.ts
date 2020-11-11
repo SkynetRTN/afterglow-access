@@ -32,7 +32,9 @@ export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   imageData: IImageData<PixelType>;
   @Input()
-  mode: '1D' | '2D' | '3D';
+  plotMode: '1D' | '2D' | '3D';
+  @Input()
+  colorMode: 'grayscale' | 'rgba';
   @Input()
   width: number = 200;
   @Input()
@@ -60,7 +62,6 @@ export class PlotterComponent implements OnInit, OnChanges {
     xaxis: {
       type: 'linear',
       autorange: true,
-
     },
     yaxis: {
       type: 'linear',
@@ -72,8 +73,10 @@ export class PlotterComponent implements OnInit, OnChanges {
       b: 50,
       t: 50
     },
+    showlegend: false
     
   };
+  public baseTheme: PlotlyTheme;
   public theme: PlotlyTheme;
 
    // public customButton = {
@@ -103,45 +106,16 @@ export class PlotterComponent implements OnInit, OnChanges {
   private chartDebouncer$: Subject<null> = new Subject();
 
   constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef) {
-    this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
+    this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
+    this.updateTheme();
     themeStorage.onThemeUpdate.subscribe(theme => {
-      this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
+      this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
+      this.updateTheme();
       this.cd.detectChanges();
     })
   }
 
-  // updateChartOptions() {
-  //   this.chartOptions = {
-  //     chart: {
-  //       type: "lineChart",
-  //       focusEnable: false,
-  //       height: this.height,
-  //       width: this.width,
-  //       showLegend: false,
-  //       x: function(d) {
-  //         return d.t;
-  //       },
-  //       y: function(d) {
-  //         return d.v;
-  //       },
-  //       useInteractiveGuideline: true,
-  //       isArea: true,
-  //       yAxis: {
-  //         //tickValues: [],
-  //         showMaxMin: false
-  //       },
-  //       xAxis: {
-  //         //tickValues: [],
-  //         showMaxMin: false
-  //       },
-  //       xScale: d3.scale.linear(),
-  //       yScale: d3.scale.linear(),
-  //       focusShowAxisX: false,
-  //       noData: "Cross-section not available",
-  //       callback: this.onChartCreation.bind(this)
-  //     }
-  //   };
-  // }
+
 
   ngOnInit() {
     let self = this;
@@ -215,6 +189,13 @@ export class PlotterComponent implements OnInit, OnChanges {
     // }
   }
 
+  updateTheme() {
+    this.theme = {
+      ...this.baseTheme,
+      colorWay: this.colorMode == 'rgba' ? ['#DB4437', '#0F9D58', '#4285F4'] : this.baseTheme.colorWay,
+    }
+  }
+
   private updateChart() {
     if (!this.imageData || !this.lineMeasureStart || !this.lineMeasureEnd) {
       this.data = [];
@@ -224,7 +205,7 @@ export class PlotterComponent implements OnInit, OnChanges {
     let start = this.lineMeasureStart;
     let end = this.lineMeasureEnd;
     
-    if(this.mode == '1D') {
+    if(this.plotMode == '1D') {
       let v = { x: end.x - start.x, y: end.y - start.y };
       let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
   
@@ -263,17 +244,56 @@ export class PlotterComponent implements OnInit, OnChanges {
         // };
       }
   
-      this.data = [
-        {
-          x: ts,
-          y: vs,
-          // fill: "tozeroy",
-          type: "scatter",
-          // mode: "none"
+      if(this.colorMode == 'rgba') {
+        let ry = vs.map(v => v & 0xff);
+        let gy = vs.map(v => (v >> 8) & 0xff);
+        let by = vs.map(v => (v >> 16) & 0xff);
+        this.data = [
+          {
+            x: ts,
+            y: ry,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+            name: 'red'
+            
+          },
+          {
+            x: ts,
+            y: gy,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+            name: 'green'
+          },
+          {
+            x: ts,
+            y: by,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+            name: 'blue'
+          }
+        ];
+      }
+      else {
+        this.data = [
+          {
+            x: ts,
+            y: vs,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+          }
+        ];
+        if('colorWay' in this.layout) {
+          delete this.layout['colorWay'];
         }
-      ];
+      }
+      this.updateTheme();
+     
     }
-    else if(this.mode == '3D' || this.mode == '2D') {
+    else if(this.plotMode == '3D' || this.plotMode == '2D') {
       let x = Math.floor(Math.min(start.x, end.x));
       let y = Math.floor(Math.min(start.y, end.y));
       let width = Math.floor(Math.abs(start.x - end.x));
@@ -283,7 +303,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         this.data = [
           {
             z: getPixels(this.imageData, x, y, width, height),
-            type: this.mode == '3D' ? 'surface' : 'heatmap'
+            type: this.plotMode == '3D' ? 'surface' : 'heatmap'
           }
         ];
       }

@@ -8,6 +8,7 @@ export interface WorkbenchFileState {
   id: string;
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
+  selectedHduId: string;
 }
 
 export interface IWorkbenchHduState {

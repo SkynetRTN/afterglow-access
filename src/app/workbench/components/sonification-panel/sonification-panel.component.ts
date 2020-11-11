@@ -51,7 +51,7 @@ import {
   RedoRegionSelection,
   UpdateSonifierFileState,
   SetProgressLine,
-} from "../../workbench-file-states.actions";
+} from "../../workbench.actions";
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { Region } from '../../../data-files/models/region';
 import { getViewportRegion, Transform } from '../../../data-files/models/transformation';

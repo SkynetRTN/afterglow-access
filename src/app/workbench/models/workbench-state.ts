@@ -7,6 +7,9 @@ import { FieldCal } from './field-cal';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
 import { FileInfoPanelConfig } from './file-info-panel';
+import { WorkbenchFileState, IWorkbenchHduState } from './workbench-file-state';
+import { PlottingPanelState } from './plotter-file-state';
+import { CustomMarkerPanelState } from './marker-file-state';
 
 export enum WorkbenchTool {
   VIEWER = 'display',
@@ -62,7 +65,7 @@ export interface PlottingPanelConfig {
   centroidClicks: boolean,
   planetCentroiding: boolean,
   plotterSyncEnabled: boolean;
-  plotterMode: '1D' | '2D' | '3D';
+  plotMode: '1D' | '2D' | '3D';
 }
 
 export interface PhotometryPanelConfig {
@@ -151,4 +154,16 @@ export interface WorkbenchStateModel {
   pixelOpsPanelConfig: PixelOpsPanelConfig;
   aligningPanelConfig: AligningPanelConfig;
   stackingPanelConfig: StackingPanelConfig;
+
+  fileIds: string[];
+  fileStateEntities: { [id: string]: WorkbenchFileState };
+  hduIds: string[];
+  hduStateEntities: { [id: string]: IWorkbenchHduState };
+  nextMarkerId: number;
+  nextPlottingPanelStateId: number,
+  plottingPanelStateIds: string[];
+  plottingPanelStateEntities: { [id: string]: PlottingPanelState };
+  nextCustomMarkerPanelStateId: number,
+  customMarkerPanelStateIds: string[];
+  customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState };
 }

@@ -28,7 +28,6 @@ import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
-import { WorkbenchFileStates } from "../../workbench-file-states.state";
 import {
   SetFocusedViewer,
   CloseViewer,
@@ -124,7 +123,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
-    this.hduStates$ = this.store.select(WorkbenchFileStates.getHduStateEntities);
+    this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
     this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerPanelIds);
      
 

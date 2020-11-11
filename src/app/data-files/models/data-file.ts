@@ -31,7 +31,6 @@ export interface DataFile {
   tableHduIds: string[];
   transformation: Transformation;
   compositeImageDataId: string;
-  selectedHduId: string;
 }
 
 export interface Header {

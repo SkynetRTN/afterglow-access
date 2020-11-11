@@ -71,6 +71,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   private state$ = new BehaviorSubject<PlottingPanelState>(null);
 
   @Input() config: PlottingPanelConfig;
+  @Input() colorMode: 'grayscale' | 'rgba';
 
   @Output() configChange: EventEmitter<Partial<PlottingPanelConfig>> = new EventEmitter();
 
@@ -218,7 +219,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy() {}
 
   onModeChange($event) {
-    this.configChange.emit({ plotterMode: $event })
+    this.configChange.emit({ plotMode: $event })
   }
 
   onPlotterSyncEnabledChange($event) {

@@ -63,8 +63,6 @@ import { FieldCal } from "../../models/field-cal";
 import { Store } from "@ngxs/store";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { SourcesState } from "../../sources.state";
-import { WorkbenchFileStates } from "../../workbench-file-states.state";
-import { WorkbenchImageHduState } from "../../models/workbench-file-state";
 import {
   LoadRawImageTile,
   ZoomTo,

@@ -13,7 +13,7 @@ var operators_1 = require("rxjs/operators");
 var sonifier_file_state_1 = require("../../models/sonifier-file-state");
 var data_file_1 = require("../../../data-files/models/data-file");
 var angular2_hotkeys_1 = require("angular2-hotkeys");
-var workbench_file_states_actions_1 = require("../../workbench-file-states.actions");
+var workbench_actions_1 = require("../../workbench.actions");
 var data_files_state_1 = require("../../../data-files/data-files.state");
 var transformation_1 = require("../../../data-files/models/transformation");
 var SonificationPanelComponent = /** @class */ (function () {
@@ -174,7 +174,7 @@ var SonificationPanelComponent = /** @class */ (function () {
     SonificationPanelComponent.prototype.ngOnChanges = function () { };
     SonificationPanelComponent.prototype.selectSubregionByFrequency = function (subregion) {
         var region = this.state.regionHistory[this.state.regionHistoryIndex];
-        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.hdu.id, {
+        this.store.dispatch(new workbench_actions_1.AddRegionToHistory(this.hdu.id, {
             x: region.x + subregion * (region.width / 4),
             y: region.y,
             width: region.width / 2,
@@ -183,7 +183,7 @@ var SonificationPanelComponent = /** @class */ (function () {
     };
     SonificationPanelComponent.prototype.selectSubregionByTime = function (subregion) {
         var region = this.state.regionHistory[this.state.regionHistoryIndex];
-        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.hdu.id, {
+        this.store.dispatch(new workbench_actions_1.AddRegionToHistory(this.hdu.id, {
             x: region.x,
             y: region.y + subregion * (region.height / 4),
             width: region.width,
@@ -193,7 +193,7 @@ var SonificationPanelComponent = /** @class */ (function () {
     SonificationPanelComponent.prototype.resetRegionSelection = function () {
         // let region = this.lastSonifierStateConfig.region;
         // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
-        this.store.dispatch(new workbench_file_states_actions_1.AddRegionToHistory(this.hdu.id, {
+        this.store.dispatch(new workbench_actions_1.AddRegionToHistory(this.hdu.id, {
             x: 0.5,
             y: 0.5,
             width: data_file_1.getWidth(this.hdu.header),
@@ -201,24 +201,24 @@ var SonificationPanelComponent = /** @class */ (function () {
         }));
     };
     SonificationPanelComponent.prototype.undoRegionSelection = function () {
-        this.store.dispatch(new workbench_file_states_actions_1.UndoRegionSelection(this.hdu.id));
+        this.store.dispatch(new workbench_actions_1.UndoRegionSelection(this.hdu.id));
     };
     SonificationPanelComponent.prototype.redoRegionSelection = function () {
-        this.store.dispatch(new workbench_file_states_actions_1.RedoRegionSelection(this.hdu.id));
+        this.store.dispatch(new workbench_actions_1.RedoRegionSelection(this.hdu.id));
     };
     SonificationPanelComponent.prototype.setRegionMode = function ($event) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, {
+        this.store.dispatch(new workbench_actions_1.UpdateSonifierFileState(this.hdu.id, {
             regionMode: $event.value
         }));
     };
     SonificationPanelComponent.prototype.setDuration = function (value) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, { duration: value }));
+        this.store.dispatch(new workbench_actions_1.UpdateSonifierFileState(this.hdu.id, { duration: value }));
     };
     SonificationPanelComponent.prototype.setToneCount = function (value) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, { toneCount: value }));
+        this.store.dispatch(new workbench_actions_1.UpdateSonifierFileState(this.hdu.id, { toneCount: value }));
     };
     SonificationPanelComponent.prototype.setViewportSync = function (value) {
-        this.store.dispatch(new workbench_file_states_actions_1.UpdateSonifierFileState(this.hdu.id, {
+        this.store.dispatch(new workbench_actions_1.UpdateSonifierFileState(this.hdu.id, {
             viewportSync: value.checked
         }));
     };
@@ -264,7 +264,7 @@ var SonificationPanelComponent = /** @class */ (function () {
             return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
         })), stop$.pipe(operators_1.map(function () { return null; })), this.clearProgressLine$.pipe(operators_1.map(function () { return null; })));
         this.subs.push(this.progressLine$.pipe(operators_1.distinctUntilChanged()).subscribe(function (line) {
-            _this.store.dispatch(new workbench_file_states_actions_1.SetProgressLine(_this.hdu.id, line));
+            _this.store.dispatch(new workbench_actions_1.SetProgressLine(_this.hdu.id, line));
         }));
     };
     __decorate([

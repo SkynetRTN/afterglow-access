@@ -4,7 +4,6 @@
   class="h-100"
 >
   <ng-container *ngIf="(normalizedImageData$ | async); else tableBlock">
-    {{currentCanvasSize?.width}} {{currentCanvasSize?.height}}
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
         <div

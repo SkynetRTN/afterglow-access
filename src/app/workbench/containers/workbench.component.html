@@ -160,7 +160,7 @@
       <hr />
 
       <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
-        <div *ngIf="focusedImageHdu$ | async; let imageHdu">
+        <div *ngIf="focusedViewerImageHdu$ | async; let imageHdu">
           <h6 i18n>DSS Catalog Import</h6>
           <div class="pb-3">
             <mat-radio-group aria-label="DSS Import Image Center"
@@ -207,7 +207,7 @@
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') ||
       (!(inFullScreenMode$ | async) &&
         (showConfig$ | async) &&
-        (focusedImageHdu$ | async))
+        (focusedViewerImageHdu$ | async))
     ">
     <div class="card workbench-settings-card" style="height: 100%">
       <div id="settings-header" class="card-header">
@@ -226,22 +226,22 @@
       </div>
 
       <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-        <div *ngIf="[WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool) && (focusedViewerHdus$ | async) && (focusedViewerHdus$ | async)?.length > 1">
-          <h6 i18n>Channel Selection</h6>
+        <div *ngIf="[WorkbenchTool.VIEWER, WorkbenchTool.INFO, WorkbenchTool.SONIFIER, WorkbenchTool.PHOTOMETRY].includes(activeTool) && (focusedViewerImageHdus$ | async) && (focusedViewerImageHdus$ | async)?.length > 1">
+          <h6 i18n>Image Channel Selection</h6>
           <div class="pb-1">
             <mat-form-field appearance="outline">
               <mat-label>Channel</mat-label>
-              <mat-select [value]="(focusedViewerSelectedHduId$ | async)" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%;">
-                <mat-option *ngFor="let hdu of (focusedViewerHdus$ | async); let index=index;" [value]="hdu.id">Channel {{ index }}</mat-option>
+              <mat-select [value]="(focusedViewerHduId$ | async)" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%;">
+                <mat-option *ngFor="let hdu of (focusedViewerImageHdus$ | async); let index=index;" [value]="hdu.id">Channel {{ index }}</mat-option>
               </mat-select>
             </mat-form-field>
           </div>
         </div>
 
-        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="(focusedViewerSelectedHdu$ | async)">
+        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [hdu]="(focusedViewerHdu$ | async)">
         </app-display-panel>
 
-        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="(focusedViewerSelectedHdu$ | async)"
+        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [hdu]="(focusedViewerHdu$ | async)"
           [config]="fileInfoPanelConfig$ | async" (configChange)="onFileInfoPanelConfigChange($event)">
         </app-file-info-panel>
 
@@ -253,15 +253,15 @@
 
         <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [imageData]="plottingPanelImageData$ | async"
           [wcs]="plottingPanelWcs$ | async" [state]="plottingPanelState$ | async" [config]="plottingPanelConfig$ | async"
-          (configChange)="onPlottingPanelConfigChange($event)">
+          [colorMode]="(plottingPanelColorMode$ | async)" (configChange)="onPlottingPanelConfigChange($event)">
         </app-plotting-panel>
 
-        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [hdu]="(focusedViewerSelectedHdu$ | async)"
-          [transform]="focusedHduImageToViewportTransform$ | async" [viewportSize]="focusedViewerViewportSize$ | async"
+        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [hdu]="(focusedViewerImageHdu$ | async)"
+          [transform]="(focusedViewerImageHdu$ | async)" [viewportSize]="(focusedViewer$ | async)?.viewportSize"
           [state]="sonificationPanelState$ | async">
         </app-sonification-panel>
 
-        <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [primaryHdu]="focusedImageHdu$ | async"
+        <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [primaryHdu]="focusedViewerHdu$ | async"
           [state]="photometryPanelState$ | async" [sources]="photometryPanelSources$ | async" [hdus]="hdus$ | async"
           [dataFileEntities]="fileEntities$ | async" [config]="photometryPanelConfig$ | async"
           [centroidSettings]="centroidSettings$ | async" [photometrySettings]="photometrySettings$ | async"
@@ -272,15 +272,15 @@
           ">
         </app-photometry-panel>
 
-        <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [primaryHdu]="focusedImageHdu$ | async"
+        <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [primaryHdu]="focusedViewerImageHdu$ | async"
           [hdus]="hdus$ | async" [config]="pixelOpsPanelConfig$ | async" [dataFileEntities]="fileEntities$ | async">
         </app-pixel-ops-panel>
 
-        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [primaryHdu]="focusedImageHdu$ | async"
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [primaryHdu]="focusedViewerImageHdu$ | async"
           [hdus]="hdus$ | async" [fileEntities]="fileEntities$ | async" [config]="aligningPanelConfig$ | async">
         </app-aligning-panel>
 
-        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [primaryHdu]="focusedImageHdu$ | async"
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [primaryHdu]="focusedViewerImageHdu$ | async"
           [dataFileEntities]="fileEntities$ | async" [hdus]="hdus$ | async" [config]="stackingPanelConfig$ | async">
         </app-stacking-panel>
       </div>

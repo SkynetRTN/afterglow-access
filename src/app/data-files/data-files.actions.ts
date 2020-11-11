@@ -118,11 +118,7 @@ export class ClearImageDataCache {
   constructor(public hduIds: string[]) { }
 }
 
-export class SetSelectedHduId {
-  public static readonly type = '[Data File] Set Selected HDU id';
 
-  constructor(public fileId: string, public hduId: string) { }
-}
 
 /**
  * Close Data File Actions
