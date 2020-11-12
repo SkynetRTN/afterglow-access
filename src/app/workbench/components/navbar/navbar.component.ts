@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnChanges } from '@angular/core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
 import { DataProvider } from '../../../data-providers/models/data-provider';
 import { ThemeDialogComponent } from '../theme-dialog/theme-dialog.component';

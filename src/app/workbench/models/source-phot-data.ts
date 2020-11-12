@@ -1,7 +1,7 @@
 export interface PhotData {
   id: string;
   sourceId: string;
-  fileId: string;
+  hduId: string;
   time: string;
   filter: string;
   telescope: string;

@@ -26,7 +26,7 @@ export class AfterglowFieldCalService {
                   id: s.id,
                   label: s.id,
                   objectId: null,
-                  fileId: s.file_id,
+                  hduId: s.file_id,
                   posType: PosType.SKY,
                   primaryCoord: s.ra_hours,
                   secondaryCoord: s.dec_degs,

@@ -12,12 +12,13 @@ import { Subject } from "rxjs";
 import { debounceTime, throttleTime } from "rxjs/operators";
 
 import {
-  ImageFile,
-  getPixel,
-  getPixels
+  DataFile,
+  ImageHdu,
+  PixelType
 } from "../../../data-files/models/data-file";
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
-import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
+import { getPixel, getPixels, IImageData } from '../../../data-files/models/image-data';
+import { Wcs } from '../../../image-tools/wcs';
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({
@@ -27,9 +28,13 @@ import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
-  imageFile: ImageFile;
+  wcs: Wcs;
   @Input()
-  mode: '1D' | '2D' | '3D';
+  imageData: IImageData<PixelType>;
+  @Input()
+  plotMode: '1D' | '2D' | '3D';
+  @Input()
+  colorMode: 'grayscale' | 'rgba';
   @Input()
   width: number = 200;
   @Input()
@@ -50,14 +55,13 @@ export class PlotterComponent implements OnInit, OnChanges {
   private crosshairX: number = null;
   private crosshairY: number = null;
   
-  public data : Array<Plotly.Data> = [];
-  public layout: Partial<Plotly.Layout> = {
+  public data : Array<any> = [];
+  public layout: Partial<any> = {
     width: null,
     height: null,
     xaxis: {
       type: 'linear',
       autorange: true,
-
     },
     yaxis: {
       type: 'linear',
@@ -69,8 +73,10 @@ export class PlotterComponent implements OnInit, OnChanges {
       b: 50,
       t: 50
     },
+    showlegend: false
     
   };
+  public baseTheme: PlotlyTheme;
   public theme: PlotlyTheme;
 
    // public customButton = {
@@ -87,7 +93,7 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   
 
-  public config: Partial<Plotly.Config> = {
+  public config: Partial<any> = {
     scrollZoom: true,
     displaylogo: false,
     modeBarButtons: [
@@ -100,45 +106,16 @@ export class PlotterComponent implements OnInit, OnChanges {
   private chartDebouncer$: Subject<null> = new Subject();
 
   constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef) {
-    this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
+    this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
+    this.updateTheme();
     themeStorage.onThemeUpdate.subscribe(theme => {
-      this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
+      this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
+      this.updateTheme();
       this.cd.detectChanges();
     })
   }
 
-  // updateChartOptions() {
-  //   this.chartOptions = {
-  //     chart: {
-  //       type: "lineChart",
-  //       focusEnable: false,
-  //       height: this.height,
-  //       width: this.width,
-  //       showLegend: false,
-  //       x: function(d) {
-  //         return d.t;
-  //       },
-  //       y: function(d) {
-  //         return d.v;
-  //       },
-  //       useInteractiveGuideline: true,
-  //       isArea: true,
-  //       yAxis: {
-  //         //tickValues: [],
-  //         showMaxMin: false
-  //       },
-  //       xAxis: {
-  //         //tickValues: [],
-  //         showMaxMin: false
-  //       },
-  //       xScale: d3.scale.linear(),
-  //       yScale: d3.scale.linear(),
-  //       focusShowAxisX: false,
-  //       noData: "Cross-section not available",
-  //       callback: this.onChartCreation.bind(this)
-  //     }
-  //   };
-  // }
+
 
   ngOnInit() {
     let self = this;
@@ -212,8 +189,15 @@ export class PlotterComponent implements OnInit, OnChanges {
     // }
   }
 
+  updateTheme() {
+    this.theme = {
+      ...this.baseTheme,
+      colorWay: this.colorMode == 'rgba' ? ['#DB4437', '#0F9D58', '#4285F4'] : this.baseTheme.colorWay,
+    }
+  }
+
   private updateChart() {
-    if (!this.imageFile || !this.lineMeasureStart || !this.lineMeasureEnd) {
+    if (!this.imageData || !this.lineMeasureStart || !this.lineMeasureEnd) {
       this.data = [];
       return;
     }
@@ -221,7 +205,7 @@ export class PlotterComponent implements OnInit, OnChanges {
     let start = this.lineMeasureStart;
     let end = this.lineMeasureEnd;
     
-    if(this.mode == '1D') {
+    if(this.plotMode == '1D') {
       let v = { x: end.x - start.x, y: end.y - start.y };
       let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
   
@@ -248,7 +232,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         xs[i] = x;
         ys[i] = y;
         ts[i] = t;
-        vs[i] = getPixel(this.imageFile, x, y, this.interpolatePixels)
+        vs[i] = getPixel(this.imageData, x, y, this.interpolatePixels)
   
         // result[i] = {
         //   x: x,
@@ -260,17 +244,56 @@ export class PlotterComponent implements OnInit, OnChanges {
         // };
       }
   
-      this.data = [
-        {
-          x: ts,
-          y: vs,
-          // fill: "tozeroy",
-          type: "scatter",
-          // mode: "none"
+      if(this.colorMode == 'rgba') {
+        let ry = vs.map(v => v & 0xff);
+        let gy = vs.map(v => (v >> 8) & 0xff);
+        let by = vs.map(v => (v >> 16) & 0xff);
+        this.data = [
+          {
+            x: ts,
+            y: ry,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+            name: 'red'
+            
+          },
+          {
+            x: ts,
+            y: gy,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+            name: 'green'
+          },
+          {
+            x: ts,
+            y: by,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+            name: 'blue'
+          }
+        ];
+      }
+      else {
+        this.data = [
+          {
+            x: ts,
+            y: vs,
+            // fill: "tozeroy",
+            type: "scatter",
+            // mode: "none",
+          }
+        ];
+        if('colorWay' in this.layout) {
+          delete this.layout['colorWay'];
         }
-      ];
+      }
+      this.updateTheme();
+     
     }
-    else if(this.mode == '3D' || this.mode == '2D') {
+    else if(this.plotMode == '3D' || this.plotMode == '2D') {
       let x = Math.floor(Math.min(start.x, end.x));
       let y = Math.floor(Math.min(start.y, end.y));
       let width = Math.floor(Math.abs(start.x - end.x));
@@ -279,8 +302,8 @@ export class PlotterComponent implements OnInit, OnChanges {
       if(width != 0 && height != 0) {
         this.data = [
           {
-            z: getPixels(this.imageFile, x, y, width, height),
-            type: this.mode == '3D' ? 'surface' : 'heatmap'
+            z: getPixels(this.imageData, x, y, width, height),
+            type: this.plotMode == '3D' ? 'surface' : 'heatmap'
           }
         ];
       }
@@ -303,8 +326,6 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   private updateLineView() {
     if (
-      !this.imageFile ||
-      !this.imageFile.headerLoaded ||
       !this.lineMeasureStart ||
       !this.lineMeasureEnd
     ) {
@@ -318,13 +339,12 @@ export class PlotterComponent implements OnInit, OnChanges {
         Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
     );
 
-    if (this.imageFile.wcs.isValid()) {
-      let wcs = this.imageFile.wcs;
-      let raDec1 = wcs.pixToWorld([
+    if (this.wcs && this.wcs.isValid()) {
+      let raDec1 = this.wcs.pixToWorld([
         this.lineMeasureStart.x,
         this.lineMeasureStart.y
       ]);
-      let raDec2 = wcs.pixToWorld([
+      let raDec2 = this.wcs.pixToWorld([
         this.lineMeasureEnd.x,
         this.lineMeasureEnd.y
       ]);

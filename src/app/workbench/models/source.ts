@@ -9,7 +9,7 @@ export interface Source {
   id: string;
   label: string;
   objectId: string;
-  fileId: string;
+  hduId: string;
   posType: PosType;
   primaryCoord: number;
   secondaryCoord: number;

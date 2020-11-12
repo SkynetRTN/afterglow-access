@@ -1,6 +1,8 @@
-<div *ngIf="!state" class="alert alert-info" i18n>
-  Select a data file to see marker options.
+<div *ngIf="!state; else loadedBlock" class="alert alert-info">
+  <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
+
+<ng-template #loadedBlock>
 <div *ngIf="state">
   <div>
     <div class="row pb-1">
@@ -8,7 +10,7 @@
         <div class="form-group">
           <mat-slide-toggle
             [checked]="config?.centroidClicks"
-            [labelPosition]="before"
+            [labelPosition]="'before'"
             (change)="onCentroidClicksChange($event)"
             color="primary"
             i18n
@@ -23,7 +25,7 @@
             [checked]="config?.usePlanetCentroiding"
             [disabled]="!config?.centroidClicks"
             color="primary"
-            [labelPosition]="before"
+            [labelPosition]="'before'"
             (change)="onPlanetCentroidingChange($event)"
             i18n
           >
@@ -68,3 +70,4 @@
     </button>
   </ng-container>
 </div>
+</ng-template>

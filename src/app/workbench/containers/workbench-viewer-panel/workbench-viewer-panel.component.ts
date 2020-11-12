@@ -16,11 +16,11 @@ import { Viewer } from "../../models/viewer";
 
 import {
   DataFile,
-  ImageFile,
   getWidth,
   getHeight,
+  ImageHdu,
+  IHdu,
 } from "../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
 import { CanvasMouseEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Subscription } from "rxjs";
@@ -28,7 +28,6 @@ import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
-import { WorkbenchFileStates } from "../../workbench-file-states.state";
 import {
   SetFocusedViewer,
   CloseViewer,
@@ -37,17 +36,10 @@ import {
   MoveViewer,
 } from "../../workbench.actions";
 import { HotkeysService, Hotkey } from "angular2-hotkeys";
-import {
-  ZoomTo,
-  ZoomBy,
-  CenterRegionInViewport,
-} from "../../workbench-file-states.actions";
-import { RemoveDataFile } from "../../../data-files/data-files.actions";
-import { OverlayRef, Overlay } from "@angular/cdk/overlay";
-import { TemplatePortal } from "@angular/cdk/portal";
-import { MatMenuTrigger } from "@angular/material";
-import { ViewerPanel } from '../../models/workbench-state';
+import { MatMenuTrigger } from "@angular/material/menu";
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { IWorkbenchHduState } from '../../models/workbench-file-state';
+import { CenterRegionInViewport, ZoomBy } from '../../../data-files/data-files.actions';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -65,7 +57,7 @@ export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
   styleUrls: ["./workbench-viewer-panel.component.css"],
 })
 export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
-  @ViewChild(MatMenuTrigger, { static: false })
+  @ViewChild(MatMenuTrigger)
   contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: "0px", y: "0px" };
   mouseOverCloseViewerId: string = null;
@@ -109,8 +101,9 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   // viewMode$: Observable<ViewMode>;
   // activeViewerIndex$: Observable<number>;
 
-  files$: Observable<{ [id: string]: DataFile }>;
-  fileStates$: Observable<{ [id: string]: WorkbenchFileState }>;
+  hduEntities$: Observable<{ [id: string]: IHdu }>;
+  fileEntities$: Observable<{ [id: string]: DataFile }>;
+  hduStates$: Observable<{ [id: string]: IWorkbenchHduState }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
   // activeViewerIndex: number;
@@ -125,15 +118,13 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   constructor(
     private store: Store,
     private _hotkeysService: HotkeysService,
-    public overlay: Overlay,
     public viewContainerRef: ViewContainerRef
   ) {
     
-    this.files$ = this.store.select(DataFilesState.getEntities);
-    this.fileStates$ = this.store.select(WorkbenchFileStates.getEntities);
-    this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerIds).pipe(
-      map(ids => ids.map(id => 'tab-' + id)),
-    );
+    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
+    this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
+    this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
+    this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerPanelIds);
      
 
     // this.hotKeys.push(
@@ -203,40 +194,65 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
   }
 
-  public zoomIn(fileId: string, imageAnchor: { x: number; y: number } = null) {
-    this.zoomBy(fileId, 1.0 / this.zoomStepFactor, imageAnchor);
-  }
+  public getTabLabel(viewer: Viewer) {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let file = fileEntities[viewer.fileId]
+    if(!file) return '';
 
-  public zoomOut(fileId: string, imageAnchor: { x: number; y: number } = null) {
-    this.zoomBy(fileId, this.zoomStepFactor, imageAnchor);
-  }
-
-  public zoomBy(
-    fileId: string,
-    factor: number,
-    imageAnchor: { x: number; y: number } = null
-  ) {
-    this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
-  }
-
-  public zoomToFit(fileId: string, padding: number = 0) {
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getEntities);
-    let imageFile = dataFiles[fileId] as ImageFile;
-    if (imageFile) {
-      this.store.dispatch(
-        new CenterRegionInViewport(fileId, {
-          x: 1,
-          y: 1,
-          width: getWidth(imageFile),
-          height: getHeight(imageFile),
-        })
-      );
+    let filename = file.name;
+    if(viewer.hduId) {
+      let hdu = hduEntities[viewer.hduId]
+      if(!hdu) return '';
+      
+      if(file.hduIds.length > 1) {
+        filename += ` [Channel ${file.hduIds.indexOf(hdu.id)}]`
+      }
     }
+    else if(file.hduIds.length > 1) {
+      filename += ` [Composite]`
+    }
+    return filename;
   }
 
-  public zoomTo(fileId: string, value: number) {
-    this.store.dispatch(new ZoomTo(fileId, value, null));
-  }
+  // public zoomIn(hduId: string, imageAnchor: { x: number; y: number } = null) {
+  //   this.zoomBy(hduId, 1.0 / this.zoomStepFactor, imageAnchor);
+  // }
+
+  // public zoomOut(hduId: string, imageAnchor: { x: number; y: number } = null) {
+  //   this.zoomBy(hduId, this.zoomStepFactor, imageAnchor);
+  // }
+
+  // TODO: LAYER
+  // public zoomBy(
+  //   fileId: string,
+  //   factor: number,
+  //   imageAnchor: { x: number; y: number } = null
+  // ) {
+  //   this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
+  // }
+
+  // public zoomToFit(hduId: string, padding: number = 0) {
+  //   // TODO: LAYER
+  //   let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
+  //   let hdu = hdus[hduId] as ImageHdu;
+  //   let imageData = 
+  //   if (hdu) {
+  //     this.store.dispatch(
+  //       new CenterRegionInViewport(hduId, {
+  //         x: 1,
+  //         y: 1,
+  //         width: getWidth(hdu),
+  //         height: getHeight(hdu),
+  //       })
+  //     );
+  //   }
+  // }
+
+  // public zoomTo(hduId: string, value: number) {
+  //   // TODO: LAYER
+  //   this.store.dispatch(new ZoomTo(hduId, value, null));
+  // }
 
   ngOnInit() {}
 
@@ -260,7 +276,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // The right panel's tab group shows the correct selected index but it does not detect that the viewer at that index
     // has changed and so it does not updatae the tab content.
     // return item.viewerId;
-    return index;
+    return `${item.viewerId}-${index}`;
   }
 
   closeViewer(viewerId: string) {
@@ -348,11 +364,12 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
 
   drop(event: CdkDragDrop<string[]>) {
-    var srcViewerId = event.previousContainer.id.replace("tab-","");
-    var targetViewerId = event.container.id.replace("tab-","");
-    if(srcViewerId == targetViewerId) return;
+    console.log("DROPPED: ", event);
+    var srcPanelId = event.previousContainer.id;
+    var targetPanelId = event.container.id;
+    var viewerId = event.item.data.viewerId;
 
-    this.store.dispatch(new MoveViewer(srcViewerId, targetViewerId))
+    this.store.dispatch(new MoveViewer(viewerId, srcPanelId, targetPanelId, event.currentIndex))
     // if(previousIndex!=NaN && currentIndex!=NaN && previousIndex!=undefined && currentIndex!=undefined && previousIndex!=currentIndex){
     //      //Do stuff
     //     .....

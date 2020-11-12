@@ -82,7 +82,7 @@ export class DataProviderBrowsePageComponent
   sort: MatSort;
   sortSub: Subscription;
 
-  @ViewChild(MatSort, { static: false })
+  @ViewChild(MatSort)
   set sortSetter(sort: MatSort) {
     if (!sort) return;
     this.sort = sort;

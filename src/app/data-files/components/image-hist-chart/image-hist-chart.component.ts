@@ -15,8 +15,7 @@ import {
 import { ImageHist, getBinCenter, calcLevels } from "../../models/image-hist";
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
-import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
-import { MatCheckboxChange } from '@angular/material';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
   selector: "app-image-hist-chart",
@@ -40,8 +39,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   public logarithmicX: boolean = true;
   public logarithmicY: boolean = true;
 
-  public data: Array<Plotly.Data> = [];
-  public layout: Partial<Plotly.Layout> = {
+  public data: Array<any> = [];
+  public layout: Partial<any> = {
     width: null,
     height: null,
     xaxis: {
@@ -96,7 +95,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   // https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 
-  public config: Partial<Plotly.Config> = {
+  public config: Partial<any> = {
     scrollZoom: true,
     displaylogo: false,
     modeBarButtons: [

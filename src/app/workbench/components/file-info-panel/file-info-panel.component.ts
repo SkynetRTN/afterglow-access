@@ -9,7 +9,6 @@ import {
 } from "@angular/core";
 
 import {
-  ImageFile,
   Header,
   getWidth,
   getHeight,
@@ -20,6 +19,9 @@ import {
   getObject,
   getTelescope,
   getFilter,
+  DataFile,
+  ImageHdu,
+  IHdu,
 } from "../../../data-files/models/data-file";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material/slide-toggle";
@@ -29,6 +31,8 @@ import { datetimeToJd } from "../../../utils/skynet-astro";
 import { FileInfoPanelConfig } from '../../models/file-info-panel';
 import { BehaviorSubject, Subject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged, filter } from 'rxjs/operators';
+import { MatSelectChange } from '@angular/material/select';
+import { HeaderEntry } from '../../../data-files/models/header-entry';
 
 @Component({
   selector: "app-file-info-panel",
@@ -38,15 +42,16 @@ import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-  @Input("file")
-  set file(file: ImageFile) {
-    this.file$.next(file);
-  }
-  get file() {
-    return this.file$.getValue();
-  }
-  private file$ = new BehaviorSubject<ImageFile>(null);
+    @Input("hdu")
+    set hdu(hdu: IHdu) {
+      this.hdu$.next(hdu);
+    }
+    get hdu() {
+      return this.hdu$.getValue();
+    }
+    private hdu$ = new BehaviorSubject<IHdu>(null);
   
+   
   @Input("config")
   set config(config: FileInfoPanelConfig) {
     this.config$.next(config);
@@ -59,7 +64,7 @@ export class FileInfoToolsetComponent
   @Output() configChange: EventEmitter<Partial<FileInfoPanelConfig>> = new EventEmitter();
 
   columnsDisplayed = ["key", "value", "comment"];
-  headerSummary$: Observable<Header>;
+  headerSummary$: Observable<HeaderEntry[]>;
 
   constructor(
     private decimalPipe: DecimalPipe,
@@ -68,9 +73,9 @@ export class FileInfoToolsetComponent
     router: Router
   ) {
 
-    let header$ = this.file$.pipe(
-      filter(file => file != null),
-      map(file => file.header),
+    let header$ = this.hdu$.pipe(
+      filter(hdu => hdu != null),
+      map(hdu => hdu.header),
       distinctUntilChanged()
     )
 
@@ -80,23 +85,24 @@ export class FileInfoToolsetComponent
     ).pipe(
       map(([header, config]) => {
         if (!header) return [];
-        let result: Header = [];
-        let width = getWidth(this.file);
-        let height = getHeight(this.file);
-        let hasWcs = this.file.wcs.isValid();
-        let degsPerPixel = getDegsPerPixel(this.file);
-        let startTime = getStartTime(this.file);
-        let expLength = getExpLength(this.file);
-        let centerTime = getCenterTime(this.file);
-        let telescope = getTelescope(this.file);
-        let object = getObject(this.file);
-        let filter = getFilter(this.file);
+        let imageLayer = this.hdu as ImageHdu;
+        let result: HeaderEntry[] = [];
+        let width = getWidth(header);
+        let height = getHeight(header);
+        let hasWcs = header.loaded && header.wcs.isValid();
+        let degsPerPixel = getDegsPerPixel(header);
+        let startTime = getStartTime(header);
+        let expLength = getExpLength(header);
+        let centerTime = getCenterTime(header);
+        let telescope = getTelescope(header);
+        let object = getObject(header);
+        let filter = getFilter(header);
 
         let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 
         result.push({
           key: "ID",
-          value: `${this.file.id}`,
+          value: `${this.hdu.id}`,
           comment: "",
         });
 

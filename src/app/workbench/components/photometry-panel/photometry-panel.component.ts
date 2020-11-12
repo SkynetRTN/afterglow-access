@@ -38,9 +38,10 @@ import * as jStat from "jstat";
 import { saveAs } from "file-saver/dist/FileSaver";
 
 import {
-  ImageFile,
   getCenterTime,
   getSourceCoordinates,
+  DataFile,
+  ImageHdu,
 } from "../../../data-files/models/data-file";
 import { DmsPipe } from "../../../pipes/dms.pipe";
 import { PhotometryPanelState } from "../../models/photometry-file-state";
@@ -58,12 +59,14 @@ import {
   PhotometryJobResult,
 } from "../../../jobs/models/photometry";
 import { Router } from "@angular/router";
-import { MatButtonToggleChange } from "@angular/material";
+import { MatButtonToggleChange } from "@angular/material/button-toggle";
 import { WorkbenchState } from "../../workbench.state";
 import {
   UpdatePhotometryPanelConfig,
   ExtractSources,
   PhotometerSources,
+  RemovePhotDatas,
+  RemoveAllPhotDatas,
 } from "../../workbench.actions";
 import {
   RemoveSources,
@@ -77,10 +80,6 @@ import { JobEntity, JobsState } from "../../../jobs/jobs.state";
 import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
 import { DatePipe } from "@angular/common";
 import { SourceExtractionSettings } from "../../models/source-extraction-settings";
-import {
-  RemovePhotDatas,
-  RemoveAllPhotDatas,
-} from "../../workbench-file-states.actions";
 
 @Component({
   selector: "app-photometry-panel",
@@ -89,14 +88,23 @@ import {
 })
 export class PhotometryPageComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  @Input("selectedFile")
-  set selectedFile(selectedFile: ImageFile) {
-    this.selectedFile$.next(selectedFile);
+  @Input("primaryHdu")
+  set primaryHdu(primaryHdu: ImageHdu) {
+    this.primaryHdu$.next(primaryHdu);
   }
-  get selectedFile() {
-    return this.selectedFile$.getValue();
+  get primaryHdu() {
+    return this.primaryHdu$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
+
+  @Input("viewerId")
+  set viewerId(viewerId: string) {
+    this.viewerId$.next(viewerId);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  private viewerId$ = new BehaviorSubject<string>(null);
 
   @Input("state")
   set state(state: PhotometryPanelState) {
@@ -116,14 +124,23 @@ export class PhotometryPageComponent
   }
   private sources$ = new BehaviorSubject<Source[]>(null);
 
-  @Input("files")
-  set files(files: ImageFile[]) {
-    this.files$.next(files);
+  @Input("hdus")
+  set hdus(hdus: ImageHdu[]) {
+    this.hdus$.next(hdus);
   }
-  get files() {
-    return this.files$.getValue();
+  get hdus() {
+    return this.hdus$.getValue();
   }
-  private files$ = new BehaviorSubject<ImageFile[]>(null);
+  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
+
+  @Input("dataFileEntities")
+  set dataFileEntities(dataFileEntities: {[id: string]: DataFile}) {
+    this.dataFileEntities$.next(dataFileEntities);
+  }
+  get dataFileEntities() {
+    return this.dataFileEntities$.getValue();
+  }
+  private dataFileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
 
   @Input("config")
   set config(config: PhotometryPanelConfig) {
@@ -169,7 +186,7 @@ export class PhotometryPageComponent
     selectedImageFileIds: new FormControl([], Validators.required),
   });
   batchPhotFormData$: Observable<BatchPhotometryFormData>;
-  selectedImageFiles$: Observable<ImageFile[]>;
+  selectedImageHdus$: Observable<ImageHdu[]>;
 
   constructor(
     private dialog: MatDialog,
@@ -235,12 +252,12 @@ export class PhotometryPageComponent
       // }
     });
 
-    this.selectedImageFiles$ = combineLatest(
-      this.files$,
+    this.selectedImageHdus$ = combineLatest(
+      this.hdus$,
       this.batchPhotFormData$
     ).pipe(
-      map(([files, data]) =>
-        data.selectedImageFileIds.map((id) => files.find((f) => f.id == id))
+      map(([hdus, data]) =>
+        data.selectedHduIds.map((id) => hdus.find((f) => f.id == id))
       )
     );
 
@@ -266,7 +283,7 @@ export class PhotometryPageComponent
           return this.store.dispatch(
             new PhotometerSources(
               rows.map((row) => row.source.id),
-              [this.selectedFile.id],
+              [this.primaryHdu.id],
               this.photometrySettings,
               false
             )
@@ -506,12 +523,12 @@ export class PhotometryPageComponent
     this.store.dispatch(new RemoveAllPhotDatas());
   }
 
-  selectImageFiles(imageFiles: ImageFile[]) {
+  selectHdus(hdus: ImageHdu[]) {
     this.store.dispatch(
       new UpdatePhotometryPanelConfig({
         batchPhotFormData: {
           ...this.batchPhotForm.value,
-          selectedImageFileIds: imageFiles.map((f) => f.id),
+          selectedHduIds: hdus.map((f) => f.id),
         },
       })
     );
@@ -521,7 +538,7 @@ export class PhotometryPageComponent
     this.store.dispatch(
       new PhotometerSources(
         this.sources.map((s) => s.id),
-        this.config.batchPhotFormData.selectedImageFileIds,
+        this.config.batchPhotFormData.selectedHduIds,
         this.photometrySettings,
         true
       )
@@ -599,7 +616,7 @@ export class PhotometryPageComponent
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.selectedFile.id, result)]);
+        this.store.dispatch([new ExtractSources(this.primaryHdu.id, this.viewerId, result)]);
       }
     });
   }

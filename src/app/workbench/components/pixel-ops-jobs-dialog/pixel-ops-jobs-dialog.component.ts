@@ -5,7 +5,7 @@ import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
 import { Observable, combineLatest } from "rxjs";
 
 import { map, tap, filter, flatMap } from "rxjs/operators";
-import { ImageFile } from "../../../data-files/models/data-file";
+import { DataFile } from '../../../data-files/models/data-file';
 
 @Component({
   selector: "app-pixel-ops-jobs-dialog",
@@ -20,7 +20,7 @@ export class PixelOpsJobsDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       rows$: Observable<{ job: PixelOpsJob; result: PixelOpsJobResult }[]>;
-      allImageFiles$: Observable<ImageFile[]>;
+      allImageFiles$: Observable<DataFile[]>;
     }
   ) {
     this.filenameLookup$ = this.data.allImageFiles$.pipe(

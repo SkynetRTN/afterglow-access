@@ -4,12 +4,24 @@ import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
 import { appConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { DataFile, ImageFile, Header } from "../../data-files/models/data-file";
+import { DataFile, Header, PixelPrecision, PixelType, ImageHdu } from "../../data-files/models/data-file";
 import { ImageHist } from "../../data-files/models/image-hist";
-import { DataFileType } from "../../data-files/models/data-file-type";
-import { Region } from "../models/region";
 import { Source, PosType } from "../models/source";
 import { getCoreApiUrl } from '../../../environments/app-config';
+import { HduType } from '../../data-files/models/data-file-type';
+import { Region } from '../../data-files/models/region';
+import { HeaderEntry } from '../../data-files/models/header-entry';
+
+export interface CoreDataFile {
+  id: number;
+  type: HduType;
+  name: string;
+  data_provider: string;
+  asset_path: string;
+  group_id: string;
+  group_order: number;
+  modified: boolean;
+}
 
 function createImageHist(
   data: Uint32Array,
@@ -26,30 +38,29 @@ function createImageHist(
   };
 }
 
-function createImageFile(id: string, name: string, layer: string, dataProviderId: string, assetPath: string): ImageFile {
-  return {
-    type: DataFileType.IMAGE,
-    id: id,
-    name: name,
-    layer: layer,
-    dataProviderId: dataProviderId,
-    assetPath: assetPath,
-    modified: false,
-    header: null,
-    wcs: null,
-    headerLoaded: false,
-    headerLoading: false,
-    tilesInitialized: false,
-    tiles: null,
-    hist: null,
-    histLoaded: false,
-    histLoading: false,
-    tileWidth: appConfig.tileSize,
-    tileHeight: appConfig.tileSize
-    // markerEntities: {},
-    // markerIds: []
-  };
-}
+// function createDataFile(id: string, name: string, dataProviderId: string, assetPath: string): DataFile {
+//   return {
+//     id: id,
+//     name: name,
+//     dataProviderId: dataProviderId,
+//     assetPath: assetPath,
+//     modified: false,
+//     hdus: [{
+//       hduType: HduType.IMAGE,
+//       header: null,
+//       wcs: null,
+//       headerLoaded: false,
+//       headerLoading: false,
+//       tilesInitialized: false,
+//       tiles: null,
+//       hist: null,
+//       histLoaded: false,
+//       histLoading: false,
+//       tileWidth: appConfig.tileSize,
+//       tileHeight: appConfig.tileSize,
+//     } as ImageHdu]
+//   };
+// }
 
 @Injectable()
 export class AfterglowDataFileService {
@@ -65,34 +76,8 @@ export class AfterglowDataFileService {
       )
   }
 
-  getFiles(): Observable<DataFile[]> {
-    return this.http
-      .get<any>(
-        `${getCoreApiUrl(appConfig)}/data-files`
-      )
-      .pipe(
-        map(res =>
-          res
-            .map(r => {
-              switch (r.type) {
-                case "image": {
-                  let file: ImageFile = createImageFile(
-                    r.id.toString(),
-                    r.name,
-                    r.layer,
-                    r.data_provider,
-                    r.asset_path,
-                  );
-                  return file;
-                }
-                default: {
-                  return null;
-                }
-              }
-            })
-            .filter(file => file)
-        )
-      );
+  getFiles(): Observable<CoreDataFile[]> {
+    return this.http.get<CoreDataFile[]>(`${getCoreApiUrl(appConfig)}/data-files`)
   }
 
   createFromDataProviderAsset(
@@ -107,8 +92,8 @@ export class AfterglowDataFileService {
     );
   }
 
-  getHeader(fileId: string): Observable<Header> {
-    return this.http.get<Header>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
+  getHeader(fileId: string): Observable<HeaderEntry[]> {
+    return this.http.get<HeaderEntry[]>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
   }
 
   getHist(fileId: string): Observable<ImageHist> {
@@ -121,7 +106,7 @@ export class AfterglowDataFileService {
       );
   }
 
-  getPixels(fileId: string, region: Region = null): Observable<Float32Array> {
+  getPixels(hduId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
     let params: HttpParams = new HttpParams();
     if (region) {
       params = params
@@ -133,13 +118,29 @@ export class AfterglowDataFileService {
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
-      .get(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/pixels`,
+      .get(`${getCoreApiUrl(appConfig)}/data-files/${hduId}/pixels`,
         { headers: headers, responseType: "arraybuffer", params: params }
       )
       .pipe(
         map(resp => {
-          let result = new Float32Array(resp);
-          return result;
+          switch(precision) {
+            case(PixelPrecision.uint8): {
+              return new Uint8Array(resp)
+            }
+            case(PixelPrecision.uint16): {
+              return new Uint16Array(resp);
+            }
+            case(PixelPrecision.uint32): {
+              return new Uint32Array(resp);
+            }
+            case(PixelPrecision.float32): {
+              return new Float32Array(resp);
+            }
+            case(PixelPrecision.float64): {
+              return new Float64Array(resp);
+            }
+
+          }
         })
       );
   }
@@ -171,7 +172,7 @@ export class AfterglowDataFileService {
     }
     let source: Source = {
       id: sourceId.toString(),
-      fileId: null,
+      hduId: null,
       label: sourceId.toString(),
       objectId: null,
       pmEpoch: null,

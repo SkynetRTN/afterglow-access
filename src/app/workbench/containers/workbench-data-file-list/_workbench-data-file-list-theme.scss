@@ -12,18 +12,31 @@
       color: mat-color($primary, default-contrast);
     }
 
-    .mat-icon-button.small {
-
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
-  
-      .mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        line-height: 18px;
-      }
+    .item-row.hdu .filename {
+      margin-left: 10px;
     }
+
+    // .item-row.hdu .filename:before {
+      
+    // }
+
+    .item-row.hdu .mat-icon {
+      line-height: 21px;
+      vertical-align: middle;
+    }
+
+    // .mat-icon-button.small {
+
+    //   width: 18px;
+    //   height: 18px;
+    //   line-height: 18px;
+  
+    //   .mat-icon {
+    //     font-size: 18px;
+    //     width: 18px;
+    //     height: 18px;
+    //     line-height: 18px;
+    //   }
+    // }
   }
 }

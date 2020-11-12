@@ -6,7 +6,7 @@ import { ViewMode } from '../../models/view-mode';
 import { Store } from '@ngxs/store';
 import { SplitViewerPanel, SetFocusedViewer } from '../../workbench.actions';
 import { HotkeysService, Hotkey } from 'angular2-hotkeys';
-import { MatMenuTrigger } from '@angular/material';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from '../../models/workbench-state';
 import { Observable } from 'rxjs';
 import { WorkbenchState } from '../../workbench.state';
@@ -29,7 +29,7 @@ export interface ViewerPanelMarkerMouseEvent extends ViewerMarkerMouseEvent {
   styleUrls: ['./workbench-viewer-layout.component.css']
 })
 export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
-  @ViewChild(MatMenuTrigger, {static: false})
+  @ViewChild(MatMenuTrigger)
   contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: '0px', y: '0px' };
   mouseOverCloseViewerId: string = null;
@@ -71,7 +71,8 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
 
   getViewers(viewerIds: string[]) {
     let viewerEntities = this.store.selectSnapshot(WorkbenchState.getViewerEntities)
-    return viewerIds.map(id => viewerEntities[id])
+    let result = viewerIds.map(id => viewerEntities[id])
+    return result;
   }
 
 
@@ -128,7 +129,6 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   setFocusedPanel($event: MouseEvent, panel: ViewerPanel) {
     if(panel.id == this.store.selectSnapshot(WorkbenchState.getFocusedViewerPanelId)) return;
     if(!panel.selectedViewerId) return;
-
     this.store.dispatch(new SetFocusedViewer(panel.selectedViewerId))
   }
   

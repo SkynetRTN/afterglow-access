@@ -13,10 +13,6 @@ import {
   Subject,
 } from "rxjs";
 import { map, tap, filter, flatMap, takeUntil } from "rxjs/operators";
-import { ImageFile } from "../../../data-files/models/data-file";
-import { WorkbenchFileState } from "../../models/workbench-file-state";
-
-import { DataFileType } from "../../../data-files/models/data-file-type";
 import {
   FormGroup,
   FormControl,
@@ -41,7 +37,6 @@ import { PixelOpsJobsDialogComponent } from "../pixel-ops-jobs-dialog/pixel-ops-
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
-import { DataFilesState } from "../../../data-files/data-files.state";
 import {
   HideCurrentPixelOpsJobState,
   SetActiveTool,
@@ -50,6 +45,8 @@ import {
   UpdatePixelOpsPageSettings,
 } from "../../workbench.actions";
 import { JobsState } from "../../../jobs/jobs.state";
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFilesState } from '../../../data-files/data-files.state';
 
 interface PixelOpVariable {
   name: string;
@@ -62,23 +59,32 @@ interface PixelOpVariable {
   styleUrls: ["./pixel-ops-panel.component.css"],
 })
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
-  @Input("selectedFile")
-  set selectedFile(selectedFile: ImageFile) {
-    this.selectedFile$.next(selectedFile);
+  @Input("primaryHdu")
+  set primaryHdu(primaryHdu: ImageHdu) {
+    this.primaryHdu$.next(primaryHdu);
   }
-  get selectedFile() {
-    return this.selectedFile$.getValue();
+  get primaryHdu() {
+    return this.primaryHdu$.getValue();
   }
-  private selectedFile$ = new BehaviorSubject<ImageFile>(null);
+  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
 
-  @Input("files")
-  set files(files: ImageFile[]) {
-    this.files$.next(files);
+  @Input("hdus")
+  set hdus(hdus: ImageHdu[]) {
+    this.hdus$.next(hdus);
   }
-  get files() {
-    return this.files$.getValue();
+  get hdus() {
+    return this.hdus$.getValue();
   }
-  private files$ = new BehaviorSubject<ImageFile[]>(null);
+  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
+
+  @Input("dataFileEntities")
+  set dataFileEntities(dataFileEntities: {[id: string]: DataFile}) {
+    this.dataFileEntities$.next(dataFileEntities);
+  }
+  get dataFileEntities() {
+    return this.dataFileEntities$.getValue();
+  }
+  private dataFileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
 
   @Input("config")
   set config(config: PixelOpsPanelConfig) {
@@ -207,52 +213,55 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
         // }
       });
 
-    let auxImageFiles$ = combineLatest(
+    let auxImageHdus$ = combineLatest(
       this.pixelOpsFormData$,
-      this.files$
+      this.hdus$
     ).pipe(
-      filter(([data, allImageFiles]) => allImageFiles != null),
-      map(([data, allImageFiles]) => {
-        return data.auxImageFileIds
-          .map((id) => allImageFiles.find((f) => f.id == id))
+      filter(([data, hdus]) => hdus != null),
+      map(([data, hdus]) => {
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        return data.auxHduIds
+          .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
-          .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+          .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0));
       })
     );
 
-    let imageFiles$ = combineLatest(this.pixelOpsFormData$, this.files$).pipe(
-      filter(([data, allImageFiles]) => allImageFiles != null),
-      map(([data, allImageFiles]) => {
-        return data.imageFileIds
-          .map((id) => allImageFiles.find((f) => f.id == id))
+    let imageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
+      filter(([data, hdus]) => hdus != null),
+      map(([data, hdus]) => {
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        return data.hduIds
+          .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
-          .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+          .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0));
       })
     );
 
-    this.pixelOpVariables$ = combineLatest(imageFiles$, auxImageFiles$).pipe(
-      map(([imageFiles, auxImageFiles]) => {
+    this.pixelOpVariables$ = combineLatest(imageHdus$, auxImageHdus$).pipe(
+      map(([imageFiles, auxImageHdus]) => {
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
         return [
           {
             name: "aux_img",
-            value: auxImageFiles.length == 0 ? "N/A" : auxImageFiles[0].name,
+            value: auxImageHdus.length == 0 ? "N/A" : dataFiles[auxImageHdus[0].fileId].name,
           },
           { name: "img", value: "for each image file" },
 
           ...imageFiles
-            .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+            .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0))
             .map((f, index) => {
               return {
                 name: `imgs[${index}]`,
-                value: f.name,
+                value: dataFiles[f.fileId].name,
               };
             }),
-          ...auxImageFiles
-            .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+          ...auxImageHdus
+            .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0))
             .map((f, index) => {
               return {
                 name: `aux_imgs[${index}]`,
-                value: f.name,
+                value: dataFiles[f.fileId].name,
               };
             }),
         ];
@@ -322,7 +331,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     // );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -343,7 +352,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       width: "600px",
       data: {
         rows$: this.pixelOpsJobRows$,
-        allImageFiles$: this.files$,
+        allImageFiles$: this.hdus$,
       },
     });
 

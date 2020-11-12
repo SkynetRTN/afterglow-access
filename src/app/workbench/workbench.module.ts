@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,14 +10,16 @@ import { MaterialModule } from '../material'
 // import { CovalentDataTableModule } from '@covalent/core';
 
 // Videogular2
-import { VgCoreModule } from 'videogular2/core';
-import { VgControlsModule } from 'videogular2/controls';
-import { VgOverlayPlayModule } from 'videogular2/overlay-play';
-import { VgBufferingModule } from 'videogular2/buffering';
+import { VgCoreModule } from 'videogular2/compiled/core';
+import { VgControlsModule } from 'videogular2/compiled/controls';
+import { VgOverlayPlayModule } from 'videogular2/compiled/overlay-play';
+import { VgBufferingModule } from 'videogular2/compiled/buffering';
 
 // import { NvD3Module } from 'ng2-nvd3';
 // import 'd3';
 // import 'nvd3';
+
+// import { TreeModule,  } from '@circlon/angular-tree-component';
 
 import { UtilsModule }  from '../utils/utils.module';
 import { PipesModule } from '../pipes/pipes.module';
@@ -30,7 +32,6 @@ import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-ca
 import { WorkbenchDataFileListComponent } from './containers/workbench-data-file-list/workbench-data-file-list.component';
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
-import { ImageViewerTitleBarComponent } from './components/image-viewer-title-bar/image-viewer-title-bar.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
 import { SourceExtractionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
@@ -61,7 +62,7 @@ import { JobsModule } from '../jobs/jobs.module';
 import { SvgTextMarkerComponent } from './components/svg-text-marker/svg-text-marker.component';
 
 import { ReactiveFormsModule } from '@angular/forms';
-import {NgxPopperModule} from 'ngx-popper';
+import { TreeModule } from '@circlon/angular-tree-component';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { CreateFieldCalDialogComponent } from './components/create-field-cal-dialog/create-field-cal-dialog.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -75,7 +76,6 @@ import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.com
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 import { AvatarModule } from 'ngx-avatar';
 import { WorkbenchViewerLayoutComponent } from './containers/workbench-viewer-layout/workbench-viewer-layout.component';
-import { FieldCalPageComponent } from './components/field-cal-panel/field-cal-panel.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -84,7 +84,6 @@ export const COMPONENTS = [
   WorkbenchViewerComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
-  ImageViewerTitleBarComponent,
   ImageViewerStatusBarComponent,
   NormalizerFormComponent,
   SvgRectangleMarkerComponent,
@@ -116,13 +115,13 @@ export const COMPONENTS = [
   ThemeDialogComponent,
   ConfirmationDialogComponent,
   WorkbenchViewerPanelComponent,
-  WorkbenchViewerLayoutComponent,
-  FieldCalPageComponent
+  WorkbenchViewerLayoutComponent
 ];
 
 
 @NgModule({
   imports: [
+    // TreeModule,
     RouterModule,
     CommonModule,
     FormsModule,
@@ -139,11 +138,11 @@ export const COMPONENTS = [
     VgOverlayPlayModule,
     VgBufferingModule,
     // NvD3Module,
-    NgxPopperModule,
     FlexLayoutModule,
     ThemePickerModule,
     AfterglowPlotlyModule,
-    AvatarModule
+    AvatarModule,
+    TreeModule,
   ],
 
   declarations: COMPONENTS,
@@ -160,10 +159,10 @@ export const COMPONENTS = [
 
 })
 export class WorkbenchModule {
-  static forRoot() {
+  static forRoot(): ModuleWithProviders<WorkbenchModule> {
     return {
-      ngModule: WorkbenchModule,
-      providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
+        ngModule: WorkbenchModule,
+        providers: [AfterglowDataFileService, AfterglowDataProviderService, AfterglowCatalogService, AfterglowFieldCalService],
     };
-  }
+}
 }

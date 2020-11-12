@@ -1,4 +1,4 @@
-export enum DataFileType {
-  IMAGE,
-  TABLE
+export enum HduType {
+  IMAGE = 'image',
+  TABLE = 'table'
 }

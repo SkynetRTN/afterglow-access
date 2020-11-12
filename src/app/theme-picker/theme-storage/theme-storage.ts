@@ -52,7 +52,7 @@ export class ThemeStorage {
         modeBarBgColor: "#FFFFFF",
         modeBarColor: "#757575",
         modeBarActiveColor: "#757575",
-        legendFontColor: "#757575"
+        legendFontColor: "#757575",
       }
     },
     {
@@ -90,7 +90,7 @@ export class ThemeStorage {
         modeBarBgColor: "#424242",
         modeBarColor: "#FFEB3B",
         modeBarActiveColor: "#FFEB3B",
-        legendFontColor: "#FFEB3B"
+        legendFontColor: "#FFEB3B",
       }
     }
   ];

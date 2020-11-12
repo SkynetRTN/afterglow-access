@@ -18,10 +18,9 @@ import {
   BehaviorSubject,
   combineLatest,
 } from "rxjs";
-import { map, withLatestFrom } from "rxjs/operators";
+import { map, withLatestFrom, switchMap, distinctUntilChanged } from "rxjs/operators";
 import {
-  ImageFile,
-  getDegsPerPixel,
+  getDegsPerPixel, DataFile, ImageHdu, PixelType,
 } from "../../../data-files/models/data-file";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { PlotterComponent } from "../plotter/plotter.component";
@@ -31,6 +30,9 @@ import { PosType } from "../../models/source";
 import { Router } from "@angular/router";
 import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Store, Actions } from "@ngxs/store";
+import { IImageData } from '../../../data-files/models/image-data';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { Wcs } from '../../../image-tools/wcs';
 
 @Component({
   selector: "app-plotting-panel",
@@ -38,14 +40,26 @@ import { Store, Actions } from "@ngxs/store";
   styleUrls: ["./plotting-panel.component.css"],
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input("file")
-  set file(file: ImageFile) {
-    this.file$.next(file);
+  
+  @Input() degsPerPixel: number;
+
+  @Input("imageData")
+  set imageData(imageData: IImageData<PixelType>) {
+    this.imageData$.next(imageData);
   }
-  get file() {
-    return this.file$.getValue();
+  get imageData() {
+    return this.imageData$.getValue();
   }
-  private file$ = new BehaviorSubject<ImageFile>(null);
+  private imageData$ = new BehaviorSubject<IImageData<PixelType>>(null);
+
+  @Input("wcs")
+  set wcs(wcs: Wcs) {
+    this.wcs$.next(wcs);
+  }
+  get wcs() {
+    return this.wcs$.getValue();
+  }
+  private wcs$ = new BehaviorSubject<Wcs>(null);
 
   @Input("state")
   set state(state: PlottingPanelState) {
@@ -57,13 +71,14 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   private state$ = new BehaviorSubject<PlottingPanelState>(null);
 
   @Input() config: PlottingPanelConfig;
+  @Input() colorMode: 'grayscale' | 'rgba';
 
   @Output() configChange: EventEmitter<Partial<PlottingPanelConfig>> = new EventEmitter();
 
   PosType = PosType;
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
-  @ViewChild("plotter", { static: false }) plotter: PlotterComponent;
+  @ViewChild("plotter") plotter: PlotterComponent;
 
   lineStart$: Observable<{
     x: number;
@@ -85,18 +100,19 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
-    this.lineStart$ = combineLatest(this.file$, this.state$).pipe(
-      map(([file, state]) => {
-        if (!state || !state.lineMeasureStart || !file) return null;
-        return this.normalizeLine(file, state.lineMeasureStart);
+
+    this.lineStart$ = combineLatest(this.wcs$, this.state$).pipe(
+      map(([wcs, state]) => {
+        if (!state || !state.lineMeasureStart || !wcs) return null;
+        return this.normalizeLine(wcs, state.lineMeasureStart);
       })
     );
 
-    this.lineEnd$ = combineLatest(this.file$, this.state$).pipe(
-      map(([file, state]) => {
-        if (!state || !state.lineMeasureEnd || !file) return null;
+    this.lineEnd$ = combineLatest(this.wcs$, this.state$).pipe(
+      map(([wcs, state]) => {
+        if (!state || !state.lineMeasureEnd || !wcs) return null;
 
-        return this.normalizeLine(file, state.lineMeasureEnd);
+        return this.normalizeLine(wcs, state.lineMeasureEnd);
       })
     );
 
@@ -124,9 +140,13 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
             Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
           );
 
-          if (getDegsPerPixel(this.file) != undefined) {
+          // if (getDegsPerPixel(this.hdu) != undefined) {
+          //   skySeparation =
+          //     pixelSeparation * getDegsPerPixel(this.hdu) * 3600;
+          // }
+          if (this.degsPerPixel) {
             skySeparation =
-              pixelSeparation * getDegsPerPixel(this.file) * 3600;
+              pixelSeparation * this.degsPerPixel * 3600;
           }
         }
 
@@ -162,11 +182,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private normalizeLine(
-    imageFile: ImageFile,
+    wcs: Wcs,
     line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
   ) {
-    if (!imageFile.headerLoaded) return;
-
+    if (!wcs) return;
     let x = null;
     let y = null;
     let raHours = null;
@@ -174,8 +193,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     if (line.posType == PosType.PIXEL) {
       x = line.primaryCoord;
       y = line.secondaryCoord;
-      if (imageFile.wcs.isValid()) {
-        let wcs = imageFile.wcs;
+      if (wcs.isValid()) {
         let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
         raHours = raDec[0];
         decDegs = raDec[1];
@@ -183,8 +201,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     } else {
       raHours = line.primaryCoord;
       decDegs = line.secondaryCoord;
-      if (imageFile.wcs.isValid()) {
-        let wcs = imageFile.wcs;
+      if (wcs.isValid()) {
         let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
         x = xy[0];
         y = xy[1];
@@ -202,7 +219,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy() {}
 
   onModeChange($event) {
-    this.configChange.emit({ plotterMode: $event })
+    this.configChange.emit({ plotMode: $event })
   }
 
   onPlotterSyncEnabledChange($event) {

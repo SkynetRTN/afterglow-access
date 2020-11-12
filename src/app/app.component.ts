@@ -19,7 +19,7 @@ import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
 import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./workbench/components/help-dialog/help-dialog.component";
-import { MatDialog, MatDialogRef } from "@angular/material";
+import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { ThemeDialogComponent } from "./workbench/components/theme-dialog/theme-dialog.component";
 import { DataProvidersState } from "./data-providers/data-providers.state";
 import { SetFullScreen, Initialize } from "./workbench/workbench.actions";
@@ -308,7 +308,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           DataProvidersState.getDataProviders
         );
         this.store.dispatch(new InitAuth());
-        // this.store.dispatch(new Initialize());
+        this.store.dispatch(new Initialize());
       });
   }
 

@@ -1,8 +1,4 @@
-import {
-  Component, OnInit, AfterViewInit, Renderer, Output, EventEmitter, OnDestroy, Optional,
-  Inject, ViewChild, Directive, HostListener, ContentChildren, QueryList, ViewChildren, ElementRef,
-  Attribute, Input, AfterContentInit, forwardRef, ContentChild, OnChanges, HostBinding
-} from '@angular/core';
+import { Component, OnInit, AfterViewInit, Output, EventEmitter, OnDestroy, Optional, Inject, ViewChild, Directive, HostListener, ContentChildren, QueryList, ViewChildren, ElementRef, Attribute, Input, AfterContentInit, forwardRef, ContentChild, OnChanges, HostBinding, Renderer2 } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Location, DOCUMENT } from '@angular/common';

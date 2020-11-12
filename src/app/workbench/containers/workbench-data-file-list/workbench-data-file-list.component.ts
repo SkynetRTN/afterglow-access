@@ -1,76 +1,54 @@
 import { Component, OnInit, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange } from '@angular/core';
-import { DataFile } from '../../../data-files/models/data-file';
-import { SelectionModel} from '@angular/cdk/collections';
+import { DataFile, IHdu } from '../../../data-files/models/data-file';
+import { SelectionModel } from '@angular/cdk/collections';
 import { ENTER, SPACE } from '@angular/cdk/keycodes';
-import { Subscription } from 'rxjs';
+import { Subscription, BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { Store } from '@ngxs/store';
+import { map } from 'rxjs/operators';
+import { FileInfoToolsetComponent } from '../../components/file-info-panel/file-info-panel.component';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { HduType } from '../../../data-files/models/data-file-type';
 
 @Component({
   selector: 'app-workbench-data-file-list',
   templateUrl: './workbench-data-file-list.component.html',
   styleUrls: ['./workbench-data-file-list.component.css']
 })
-export class WorkbenchDataFileListComponent implements OnInit, OnDestroy {
+export class WorkbenchDataFileListComponent {
   @Input()
-  selectedFileId: string;
+  selectedItem: DataFile | IHdu;
 
   @Input()
-  dataFiles: DataFile[];
+  items: Array<DataFile | IHdu>;
 
-  @Output() onSelectionChange = new EventEmitter<{file: DataFile, doubleClick: boolean}>();
+  @Output() onSelectionChange = new EventEmitter<{ item: DataFile | IHdu, doubleClick: boolean }>();
 
-  // preventSingleClick = false;
-  // timer: any;
-  // delay: Number;
-  mouseOverFileId: string = null;
+  HduType = HduType;
 
   constructor(private store: Store) {
   }
 
-  ngOnInit() {
-  
+  trackByFn(index: number, value: DataFile | IHdu) {
+    if(!value) return null;
+    return `${value.type}-${value.id}`
   }
 
-  ngOnDestroy() {
+  onRowClick(item: DataFile | IHdu) {
+    if (this.selectedItem && this.selectedItem.type == item.type && this.selectedItem.id == item.id) return;
+
+    this.selectedItem = item;
+    this.onSelectionChange.emit({ item: item, doubleClick: false });
   }
 
-  onRowKeyup($event: KeyboardEvent, file: DataFile) {
-    switch($event.keyCode) {
-      case SPACE: {
-        this.selectedFileId = file.id;
-        this.onSelectionChange.emit({file: file, doubleClick: false});
-      }
-      case ENTER: {
-        this.selectedFileId = file.id;
-        this.onSelectionChange.emit({file: file, doubleClick: false});
-      }
-    }
-  }
-  
-  trackByFn(index: number, value: DataFile) {
-    return value.id;
+  onRowDoubleClick(item: DataFile | IHdu) {
+    this.selectedItem = item;
+    this.onSelectionChange.emit({ item: item, doubleClick: true });
   }
 
-  onRowClick(file: DataFile) {
-    if(file.id == this.selectedFileId) return;
-
-    this.selectedFileId = file.id;
-    this.onSelectionChange.emit({file: file, doubleClick: false});
-    // this.preventSingleClick = false;
-    //  const delay = 200;
-    //   this.timer = setTimeout(() => {
-    //     if (!this.preventSingleClick) {
-    //       this.selectedFileId = file.id;
-    //       this.onSelectionChange.emit({file: file, doubleClick: false});
-    //     }
-    //   }, delay);
+  getHduName(hdu: IHdu) {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let file = fileEntities[hdu.fileId];
+    if(!file) return '???????'
+    return file.hduIds.length > 1 ? `Channel ${file.hduIds.indexOf(hdu.id)}` : file.name;
   }
-
-  onRowDoubleClick(file: DataFile) {
-    
-      // this.preventSingleClick = true;
-      // clearTimeout(this.timer);
-      this.selectedFileId = file.id;
-      this.onSelectionChange.emit({file: file, doubleClick: true});
-    }
 }

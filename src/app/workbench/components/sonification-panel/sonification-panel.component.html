@@ -1,8 +1,8 @@
-<div *ngIf="!file" class="alert alert-info">
+<div *ngIf="!hdu" class="alert alert-info">
   <ng-container i18n>Select a data file to see sonifier options.</ng-container>
 
 </div>
-<div *ngIf="file">
+<div *ngIf="hdu">
   <table class="table header-value-table">
     <tbody>
       <tr>
@@ -102,7 +102,7 @@
       </mat-form-field>
     </div>
   </div>
-  <mat-slide-toggle [checked]="state?.viewportSync" [labelPosition]="before"
+  <mat-slide-toggle [checked]="state?.viewportSync" [labelPosition]="'before'"
     (change)="setViewportSync($event)" i18n>
     Keep selected region in viewer
   </mat-slide-toggle>
