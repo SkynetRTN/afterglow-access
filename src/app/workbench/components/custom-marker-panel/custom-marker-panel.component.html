@@ -1,6 +1,8 @@
-<div *ngIf="!state" class="alert alert-info" i18n>
-  Select a data file to see marker options.
+<div *ngIf="!state; else loadedBlock" class="alert alert-info">
+  <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
+
+<ng-template #loadedBlock>
 <div *ngIf="state">
   <div>
     <div class="row pb-1">
@@ -68,3 +70,4 @@
     </button>
   </ng-container>
 </div>
+</ng-template>

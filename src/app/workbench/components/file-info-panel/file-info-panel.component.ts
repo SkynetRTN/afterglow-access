@@ -21,6 +21,7 @@ import {
   getFilter,
   DataFile,
   ImageHdu,
+  IHdu,
 } from "../../../data-files/models/data-file";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material/slide-toggle";
@@ -30,6 +31,8 @@ import { datetimeToJd } from "../../../utils/skynet-astro";
 import { FileInfoPanelConfig } from '../../models/file-info-panel';
 import { BehaviorSubject, Subject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged, filter } from 'rxjs/operators';
+import { MatSelectChange } from '@angular/material/select';
+import { HeaderEntry } from '../../../data-files/models/header-entry';
 
 @Component({
   selector: "app-file-info-panel",
@@ -39,15 +42,16 @@ import { map, distinctUntilChanged, filter } from 'rxjs/operators';
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-  @Input("hdu")
-  set hdu(hdu: ImageHdu) {
-    this.hdu$.next(hdu);
-  }
-  get hdu() {
-    return this.hdu$.getValue();
-  }
-  private hdu$ = new BehaviorSubject<ImageHdu>(null);
+    @Input("hdu")
+    set hdu(hdu: IHdu) {
+      this.hdu$.next(hdu);
+    }
+    get hdu() {
+      return this.hdu$.getValue();
+    }
+    private hdu$ = new BehaviorSubject<IHdu>(null);
   
+   
   @Input("config")
   set config(config: FileInfoPanelConfig) {
     this.config$.next(config);
@@ -60,7 +64,7 @@ export class FileInfoToolsetComponent
   @Output() configChange: EventEmitter<Partial<FileInfoPanelConfig>> = new EventEmitter();
 
   columnsDisplayed = ["key", "value", "comment"];
-  headerSummary$: Observable<Header>;
+  headerSummary$: Observable<HeaderEntry[]>;
 
   constructor(
     private decimalPipe: DecimalPipe,
@@ -82,17 +86,17 @@ export class FileInfoToolsetComponent
       map(([header, config]) => {
         if (!header) return [];
         let imageLayer = this.hdu as ImageHdu;
-        let result: Header = [];
-        let width = getWidth(imageLayer);
-        let height = getHeight(imageLayer);
-        let hasWcs = imageLayer.wcs.isValid();
-        let degsPerPixel = getDegsPerPixel(imageLayer);
-        let startTime = getStartTime(imageLayer);
-        let expLength = getExpLength(imageLayer);
-        let centerTime = getCenterTime(imageLayer);
-        let telescope = getTelescope(imageLayer);
-        let object = getObject(imageLayer);
-        let filter = getFilter(imageLayer);
+        let result: HeaderEntry[] = [];
+        let width = getWidth(header);
+        let height = getHeight(header);
+        let hasWcs = header.loaded && header.wcs.isValid();
+        let degsPerPixel = getDegsPerPixel(header);
+        let startTime = getStartTime(header);
+        let expLength = getExpLength(header);
+        let centerTime = getCenterTime(header);
+        let telescope = getTelescope(header);
+        let object = getObject(header);
+        let filter = getFilter(header);
 
         let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 

@@ -2,6 +2,7 @@ import { Marker } from './marker';
 
 
 export interface CustomMarkerPanelState {
-  ids: string[];
-  entities: { [id: string]: Marker };
+  id: string;
+  markerIds: string[];
+  markerEntities: { [id: string]: Marker };
 }

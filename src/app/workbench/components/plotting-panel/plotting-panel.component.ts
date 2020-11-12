@@ -32,6 +32,7 @@ import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-ma
 import { Store, Actions } from "@ngxs/store";
 import { IImageData } from '../../../data-files/models/image-data';
 import { DataFilesState } from '../../../data-files/data-files.state';
+import { Wcs } from '../../../image-tools/wcs';
 
 @Component({
   selector: "app-plotting-panel",
@@ -39,14 +40,26 @@ import { DataFilesState } from '../../../data-files/data-files.state';
   styleUrls: ["./plotting-panel.component.css"],
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input("hdu")
-  set hdu(hdu: ImageHdu) {
-    this.hdu$.next(hdu);
+  
+  @Input() degsPerPixel: number;
+
+  @Input("imageData")
+  set imageData(imageData: IImageData<PixelType>) {
+    this.imageData$.next(imageData);
   }
-  get hdu() {
-    return this.hdu$.getValue();
+  get imageData() {
+    return this.imageData$.getValue();
   }
-  private hdu$ = new BehaviorSubject<ImageHdu>(null);
+  private imageData$ = new BehaviorSubject<IImageData<PixelType>>(null);
+
+  @Input("wcs")
+  set wcs(wcs: Wcs) {
+    this.wcs$.next(wcs);
+  }
+  get wcs() {
+    return this.wcs$.getValue();
+  }
+  private wcs$ = new BehaviorSubject<Wcs>(null);
 
   @Input("state")
   set state(state: PlottingPanelState) {
@@ -58,10 +71,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   private state$ = new BehaviorSubject<PlottingPanelState>(null);
 
   @Input() config: PlottingPanelConfig;
+  @Input() colorMode: 'grayscale' | 'rgba';
 
   @Output() configChange: EventEmitter<Partial<PlottingPanelConfig>> = new EventEmitter();
 
-  imageData$: Observable<IImageData<PixelType>>;
   PosType = PosType;
   @HostBinding("class") @Input("class") classList: string =
     "fx-workbench-outlet";
@@ -87,29 +100,19 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
-    this.imageData$ = this.hdu$.pipe(
-      map(hdu => hdu.rawImageDataId),
-      distinctUntilChanged(),
-      switchMap(imageDataId => {
-        return store.select(DataFilesState.getImageDataById).pipe(
-          map(fn => fn(imageDataId))
-        )
-      })
-    )
 
-
-    this.lineStart$ = combineLatest(this.hdu$, this.state$).pipe(
-      map(([hdu, state]) => {
-        if (!state || !state.lineMeasureStart || !hdu) return null;
-        return this.normalizeLine(hdu, state.lineMeasureStart);
+    this.lineStart$ = combineLatest(this.wcs$, this.state$).pipe(
+      map(([wcs, state]) => {
+        if (!state || !state.lineMeasureStart || !wcs) return null;
+        return this.normalizeLine(wcs, state.lineMeasureStart);
       })
     );
 
-    this.lineEnd$ = combineLatest(this.hdu$, this.state$).pipe(
-      map(([hdu, state]) => {
-        if (!state || !state.lineMeasureEnd || !hdu) return null;
+    this.lineEnd$ = combineLatest(this.wcs$, this.state$).pipe(
+      map(([wcs, state]) => {
+        if (!state || !state.lineMeasureEnd || !wcs) return null;
 
-        return this.normalizeLine(hdu, state.lineMeasureEnd);
+        return this.normalizeLine(wcs, state.lineMeasureEnd);
       })
     );
 
@@ -137,9 +140,13 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
             Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
           );
 
-          if (getDegsPerPixel(this.hdu) != undefined) {
+          // if (getDegsPerPixel(this.hdu) != undefined) {
+          //   skySeparation =
+          //     pixelSeparation * getDegsPerPixel(this.hdu) * 3600;
+          // }
+          if (this.degsPerPixel) {
             skySeparation =
-              pixelSeparation * getDegsPerPixel(this.hdu) * 3600;
+              pixelSeparation * this.degsPerPixel * 3600;
           }
         }
 
@@ -175,10 +182,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private normalizeLine(
-    hdu: ImageHdu,
+    wcs: Wcs,
     line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
   ) {
-    if (!hdu.headerLoaded) return;
+    if (!wcs) return;
     let x = null;
     let y = null;
     let raHours = null;
@@ -186,8 +193,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     if (line.posType == PosType.PIXEL) {
       x = line.primaryCoord;
       y = line.secondaryCoord;
-      if (hdu.wcs.isValid()) {
-        let wcs = hdu.wcs;
+      if (wcs.isValid()) {
         let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
         raHours = raDec[0];
         decDegs = raDec[1];
@@ -195,8 +201,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     } else {
       raHours = line.primaryCoord;
       decDegs = line.secondaryCoord;
-      if (hdu.wcs.isValid()) {
-        let wcs = hdu.wcs;
+      if (wcs.isValid()) {
         let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
         x = xy[0];
         y = xy[1];
@@ -214,7 +219,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy() {}
 
   onModeChange($event) {
-    this.configChange.emit({ plotterMode: $event })
+    this.configChange.emit({ plotMode: $event })
   }
 
   onPlotterSyncEnabledChange($event) {

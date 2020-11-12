@@ -1,8 +1,10 @@
-<div *ngIf="!hdu || !normalizer" class="alert alert-info">
+<div *ngIf="!(imageHdu$ | async) || !imageHdu?.normalizer; else loadedBlock" class="alert alert-info">
   <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 
-<div *ngIf="hdu && normalizer">
+<ng-template #loadedBlock>
+ 
+
   <div>
     <h6 i18n>Brightness and Contrast Presets</h6>
     <div class="pb-1">
@@ -23,9 +25,9 @@
 
 
   <div class="pr-3 pl-3 pb-0">
-    <app-image-hist-chart [width]="440" [height]="250" [hist]="hdu?.hist" [backgroundPercentile]="
-                normalizer?.backgroundPercentile
-              " [peakPercentile]="normalizer?.peakPercentile">
+    <app-image-hist-chart [width]="440" [height]="250" [hist]="imageHdu?.hist" [backgroundPercentile]="
+                imageHdu?.normalizer?.backgroundPercentile
+              " [peakPercentile]="imageHdu?.normalizer?.peakPercentile">
     </app-image-hist-chart>
     <div style="clear: both;"></div>
   </div>
@@ -33,7 +35,7 @@
 
   <div class="pb-4 pt-1">
     <h6 i18n>Brightness and Contrast Settings</h6>
-    <app-normalizer-form [normalizer]="normalizer"
+    <app-normalizer-form [normalizer]="imageHdu?.normalizer"
       (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
       (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)"
       (stretchModeChange)="onStretchModeChange($event)" (invertedChange)="onInvertedChange($event)">
@@ -67,3 +69,6 @@
       </button>
     </div>
   </div>
+    
+</ng-template>
+

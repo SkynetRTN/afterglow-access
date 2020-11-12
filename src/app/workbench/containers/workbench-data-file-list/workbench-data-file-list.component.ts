@@ -7,6 +7,7 @@ import { Store } from '@ngxs/store';
 import { map } from 'rxjs/operators';
 import { FileInfoToolsetComponent } from '../../components/file-info-panel/file-info-panel.component';
 import { DataFilesState } from '../../../data-files/data-files.state';
+import { HduType } from '../../../data-files/models/data-file-type';
 
 @Component({
   selector: 'app-workbench-data-file-list',
@@ -21,6 +22,8 @@ export class WorkbenchDataFileListComponent {
   items: Array<DataFile | IHdu>;
 
   @Output() onSelectionChange = new EventEmitter<{ item: DataFile | IHdu, doubleClick: boolean }>();
+
+  HduType = HduType;
 
   constructor(private store: Store) {
   }

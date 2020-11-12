@@ -78,12 +78,20 @@
         fxFlexFill
         class="item-row data-file-list-item"
         [class.selected]="selectedItem?.type == row.type && selectedItem?.id == row.id"
-        [ngClass]="{'hdu' : row.type == 'hdu'}"
+        [ngClass]="{
+          'hdu' : row.type == 'hdu',
+          'image-hdu': row.type == 'hdu' && row.hduType == HduType.IMAGE,
+          'table-hdu': row.type == 'hdu' && row.hduType == HduType.TABLE
+        }"
       >
         <div fxFlex="1 1 auto">
           <span class="filename" style="user-select: none">
             <ng-container *ngIf="row.type == 'file'">{{row.name}}</ng-container>
-            <ng-container *ngIf="row.type == 'hdu'">{{getHduName(row)}}</ng-container>
+            <ng-container *ngIf="row.type == 'hdu'">
+              <mat-icon *ngIf="row.hduType == HduType.IMAGE" aria-hidden="false" aria-label="image icon">insert_photo</mat-icon>
+              <mat-icon *ngIf="row.hduType == HduType.TABLE" aria-hidden="false" aria-label="table icon">toc</mat-icon>
+              {{getHduName(row)}}
+            </ng-container>
           </span>
         </div>
         <div fxFlex="0 0 60px" style="text-align: right;" *ngIf="row.type == 'file'">

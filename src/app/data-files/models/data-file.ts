@@ -10,7 +10,6 @@ import { PixelNormalizer } from './pixel-normalizer';
 import { Transformation } from './transformation';
 import { BlendMode } from './blend-mode';
 
-export type Header = Array<HeaderEntry>;
 export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
 
 export enum PixelPrecision {
@@ -28,8 +27,17 @@ export interface DataFile {
   dataProviderId: string;
   assetPath: string;
   hduIds: string[];
+  imageHduIds: string[];
+  tableHduIds: string[];
   transformation: Transformation;
   compositeImageDataId: string;
+}
+
+export interface Header {
+  entries: HeaderEntry[];
+  loaded: boolean;
+  loading: boolean;
+  wcs: Wcs;
 }
 
 export interface IHdu {
@@ -37,33 +45,10 @@ export interface IHdu {
   readonly hduType: HduType;
   id: string;
   fileId: string;
+  header: Header;
   order: number;
   modified: boolean;
-  header: Header;
-  wcs: Wcs;
-  headerLoaded: boolean;
-  headerLoading: boolean;
 }
-
-export function getHeaderEntry(layer: IHdu, key: string) {
-  for (let i = 0; i < layer.header.length; i++) {
-    if (layer.header[i].key == key) return layer.header[i];
-  }
-  return undefined;
-}
-
-export function hasKey(layer: IHdu, key: string) {
-  return getHeaderEntry(layer, key) != undefined;
-}
-
-export function toKeyValueHash(layer: IHdu) {
-  let result: { [key: string]: any } = {};
-  layer.header.forEach(entry => {
-    result[entry.key] = entry.value;
-  });
-  return result;
-}
-
 
 
 export interface ImageHdu extends IHdu {
@@ -81,17 +66,42 @@ export interface ImageHdu extends IHdu {
   
 }
 
+export interface TableHdu extends IHdu {
+  readonly hduType: HduType.TABLE;
+}
 
-export function getWidth(layer: ImageHdu) {
-  let naxis1 = getHeaderEntry(layer, 'NAXIS1');
+
+
+
+export function getHeaderEntry(header: Header, key: string) {
+  for (let i = 0; i < header.entries.length; i++) {
+    if (header.entries[i].key == key) return header.entries[i];
+  }
+  return undefined;
+}
+
+export function hasKey(header: Header, key: string) {
+  return getHeaderEntry(header, key) != undefined;
+}
+
+export function toKeyValueHash(header: Header) {
+  let result: { [key: string]: any } = {};
+  header.entries.forEach(entry => {
+    result[entry.key] = entry.value;
+  });
+  return result;
+}
+
+export function getWidth(header: Header) {
+  let naxis1 = getHeaderEntry(header, 'NAXIS1');
   if (naxis1) {
     return naxis1.value;
   }
   return undefined;
 }
 
-export function getHeight(layer: ImageHdu) {
-  let naxis2 = getHeaderEntry(layer, 'NAXIS2');
+export function getHeight(header: Header) {
+  let naxis2 = getHeaderEntry(header, 'NAXIS2');
   if (naxis2) {
     return naxis2.value;
   }
@@ -100,8 +110,8 @@ export function getHeight(layer: ImageHdu) {
 
 
 
-export function getDegsPerPixel(layer: ImageHdu) {
-  let secpix = getHeaderEntry(layer, 'SECPIX');
+export function getDegsPerPixel(header: Header) {
+  let secpix = getHeaderEntry(header, 'SECPIX');
   if (secpix) {
     return secpix.value / 3600.0;
   }
@@ -109,10 +119,10 @@ export function getDegsPerPixel(layer: ImageHdu) {
   return undefined;
 }
 
-export function getStartTime(layer: ImageHdu) {
+export function getStartTime(header: Header) {
   let imageDateStr = '';
   let imageTimeStr = '';
-  let dateObs = getHeaderEntry(layer, 'DATE-OBS');
+  let dateObs = getHeaderEntry(header, 'DATE-OBS');
   if (dateObs) {
     imageDateStr = dateObs.value;
     if(imageDateStr.includes('T')) {
@@ -124,7 +134,7 @@ export function getStartTime(layer: ImageHdu) {
     }
   }
 
-  let timeObs = getHeaderEntry(layer, 'TIME-OBS');
+  let timeObs = getHeaderEntry(header, 'TIME-OBS');
   if (timeObs) {
     imageTimeStr = timeObs.value;
   }
@@ -136,43 +146,43 @@ export function getStartTime(layer: ImageHdu) {
   return undefined;
 }
 
-export function getExpLength(layer: ImageHdu) {
-  let expLength = getHeaderEntry(layer, 'EXPTIME');
+export function getExpLength(header: Header) {
+  let expLength = getHeaderEntry(header, 'EXPTIME');
   if (expLength) {
     return expLength.value;
   }
   return undefined;
 }
 
-export function getCenterTime(layer: ImageHdu) {
-  let expLength = getExpLength(layer);
-  let startTime = getStartTime(layer);
+export function getCenterTime(header: Header) {
+  let expLength = getExpLength(header);
+  let startTime = getStartTime(header);
   if (expLength !== undefined && startTime !== undefined) {
     return new Date(startTime.getTime() + expLength * 1000.0 / 2.0);
   }
   return undefined;
 }
 
-export function getTelescope(layer: ImageHdu) {
-  let observat = getHeaderEntry(layer, 'OBSERVAT');
+export function getTelescope(header: Header) {
+  let observat = getHeaderEntry(header, 'OBSERVAT');
   if (observat) {
     return observat.value;
   }
   return undefined;
 }
 
-export function getObject(layer: ImageHdu) {
-  let obj = getHeaderEntry(layer, 'OBJECT');
+export function getObject(header: Header) {
+  let obj = getHeaderEntry(header, 'OBJECT');
   if (obj) {
     return obj.value;
   }
   return undefined;
 }
 
-export function getRaHours(layer: ImageHdu) {
-  let raEntry = getHeaderEntry(layer, 'RA');
+export function getRaHours(header: Header) {
+  let raEntry = getHeaderEntry(header, 'RA');
   if (!raEntry) {
-    raEntry = getHeaderEntry(layer, 'RAOBJ');
+    raEntry = getHeaderEntry(header, 'RAOBJ');
     if(!raEntry) return undefined;
   }
   let ra;
@@ -188,10 +198,10 @@ export function getRaHours(layer: ImageHdu) {
   return ra;
 }
 
-export function getDecDegs(layer: ImageHdu) {
-  let decEntry = getHeaderEntry(layer, 'DEC');
+export function getDecDegs(header: Header) {
+  let decEntry = getHeaderEntry(header, 'DEC');
   if (!decEntry) {
-    decEntry = getHeaderEntry(layer, 'DECOBJ');
+    decEntry = getHeaderEntry(header, 'DECOBJ');
     if(!decEntry) return undefined;
   }
 
@@ -208,23 +218,27 @@ export function getDecDegs(layer: ImageHdu) {
   return dec;
 }
 
-export function getExpNum(layer: ImageHdu) {
-  let expNum = getHeaderEntry(layer, 'EXPNUM');
+export function getExpNum(header: Header) {
+  let expNum = getHeaderEntry(header, 'EXPNUM');
   if (expNum) {
     return expNum.value;
   }
   return undefined;
 }
 
-export function getFilter(layer: ImageHdu) {
-  let filter = getHeaderEntry(layer, 'FILTER');
+export function getFilter(header: Header) {
+  let filter = getHeaderEntry(header, 'FILTER');
   if (filter) {
     return filter.value;
   }
   return undefined;
 }
 
-export function getSourceCoordinates(layer: ImageHdu, source: Source) {
+
+
+
+
+export function getSourceCoordinates(header: Header, source: Source) {
   let primaryCoord = source.primaryCoord;
   let secondaryCoord = source.secondaryCoord;
   let pm = source.pm;
@@ -233,8 +247,8 @@ export function getSourceCoordinates(layer: ImageHdu, source: Source) {
   
 
   if (pm) {
-    if (!layer.headerLoaded) return null;
-    let fileEpoch = getCenterTime(layer);
+    if (!header.loaded) return null;
+    let fileEpoch = getCenterTime(header);
     if (!fileEpoch) return null;
 
     let deltaT = (fileEpoch.getTime() - (new Date(epoch)).getTime()) / 1000.0;
@@ -255,8 +269,8 @@ export function getSourceCoordinates(layer: ImageHdu, source: Source) {
   let theta = posAngle;
 
   if (source.posType == PosType.SKY) {
-    if (!layer.headerLoaded || !layer.wcs.isValid()) return null;
-    let wcs = layer.wcs;
+    if (!header.loaded || !header.wcs.isValid()) return null;
+    let wcs = header.wcs;
     let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
     x = xy[0];
     y = xy[1];
@@ -270,9 +284,9 @@ export function getSourceCoordinates(layer: ImageHdu, source: Source) {
 
   if (
     x < 0.5 ||
-    x >= getWidth(layer) + 0.5 ||
+    x >= getWidth(header) + 0.5 ||
     y < 0.5 ||
-    y >= getHeight(layer) + 0.5
+    y >= getHeight(header) + 0.5
   ) {
     return null;
   }
@@ -289,24 +303,21 @@ export function getSourceCoordinates(layer: ImageHdu, source: Source) {
   
 }
 
-export function hasOverlap(layerA: ImageHdu, layerB: ImageHdu) {
-  // if(!imageFile1.headerLoaded || !imageFile2.headerLoaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
-  if(!layerA.headerLoaded || !layerB.headerLoaded || !layerA.wcs || !layerB.wcs) return false;
+export function hasOverlap(headerA: Header, headerB: Header) {
+  // if(!imageFile1.loaded || !imageFile2.loaded || !getHasWcs(imageFile1) || !getHasWcs(imageFile2)) return false;
+  if(!headerA.loaded || !headerB.loaded || !headerA.wcs || !headerB.wcs) return false;
 
-  let wcsA = layerA.wcs;
+  let wcsA = headerA.wcs;
   let worldLowerLeft = wcsA.pixToWorld([0, 0]);
-  let worldUpperRight = wcsA.pixToWorld([getWidth(layerA), getHeight(layerA)]);
-  let wcsB = layerB.wcs;
+  let worldUpperRight = wcsA.pixToWorld([getWidth(headerA), getHeight(headerA)]);
+  let wcsB = headerB.wcs;
   let pixelLowerLeft = wcsB.worldToPix(worldLowerLeft);
   let pixelUpperRight = wcsB.worldToPix(worldUpperRight);
   let regionA = { x1: Math.min(pixelLowerLeft[0], pixelUpperRight[0]), y1: Math.max(pixelLowerLeft[1], pixelUpperRight[1]), x2: Math.max(pixelLowerLeft[0], pixelUpperRight[0]), y2: Math.min(pixelLowerLeft[1], pixelUpperRight[1]) };
-  let regionB = { x1: 0, y1: getHeight(layerB), x2: getWidth(layerB), y2: 0 };
+  let regionB = { x1: 0, y1: getHeight(headerB), x2: getWidth(headerB), y2: 0 };
   let overlap = (regionA.x1 < regionB.x2 && regionA.x2 > regionB.x1 && regionA.y1 > regionB.y2 && regionA.y2 < regionB.y1);
   return overlap;
 }
 
 
 
-export interface TableHdu extends IHdu {
-  readonly hduType: HduType.TABLE;
-}

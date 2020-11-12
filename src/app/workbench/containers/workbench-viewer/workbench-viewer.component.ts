@@ -63,8 +63,6 @@ import { FieldCal } from "../../models/field-cal";
 import { Store } from "@ngxs/store";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { SourcesState } from "../../sources.state";
-import { WorkbenchFileStates } from "../../workbench-file-states.state";
-import { WorkbenchImageHduState } from "../../models/workbench-file-state";
 import {
   LoadRawImageTile,
   ZoomTo,
@@ -181,7 +179,7 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
 
         if (hdus.length == 0) return of(false);
         return combineLatest(...hdus.map(hdu => this.store.select(DataFilesState.getHduById).pipe(
-          map(fn => fn(hdu.id).headerLoaded && (fn(hdu.id) as ImageHdu).histLoaded)
+          map(fn => fn(hdu.id).header.loaded && (fn(hdu.id) as ImageHdu).histLoaded)
         ))).pipe(map(hdusReady => {
           return !hdusReady.includes(false)
         }))
@@ -393,6 +391,7 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleCanvasSizeChange($event: CanvasSizeChangeEvent) {
+    console.log("UPDATING CANVASE SIZE CHANGE EVENT")
     this.currentCanvasSize = { width: $event.width, height: $event.height };
   }
 

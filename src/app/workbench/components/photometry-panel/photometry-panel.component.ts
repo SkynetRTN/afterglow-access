@@ -65,6 +65,8 @@ import {
   UpdatePhotometryPanelConfig,
   ExtractSources,
   PhotometerSources,
+  RemovePhotDatas,
+  RemoveAllPhotDatas,
 } from "../../workbench.actions";
 import {
   RemoveSources,
@@ -78,10 +80,6 @@ import { JobEntity, JobsState } from "../../../jobs/jobs.state";
 import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
 import { DatePipe } from "@angular/common";
 import { SourceExtractionSettings } from "../../models/source-extraction-settings";
-import {
-  RemovePhotDatas,
-  RemoveAllPhotDatas,
-} from "../../workbench-file-states.actions";
 
 @Component({
   selector: "app-photometry-panel",
