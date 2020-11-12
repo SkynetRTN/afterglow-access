@@ -1,0 +1,30 @@
+<div id="svg-placeholder">
+  <svg [attr.width]="svgWidth" [attr.height]="svgHeight" #svgElementRef>
+    <g #svgGroup>
+      <ng-container *ngFor="let marker of markers; trackBy: trackById">
+        <ng-container [ngSwitch]="marker.type">
+          <g *ngSwitchCase="MarkerType.RECTANGLE" app-svg-rectangle-marker class="region-marker" [x]="marker.x-0.5" [y]="marker.y-0.5"
+            [width]="marker.width" [height]="marker.height" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill;">
+          </g>
+          <g *ngSwitchCase="MarkerType.CIRCLE" app-svg-circle-marker class="source-marker" [x]="marker.x-0.5" [y]="marker.y-0.5" [radius]="marker.radius"
+            [label]="marker.label" [selected]="marker.selected" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill;">
+          </g>
+          <g *ngSwitchCase="MarkerType.TEARDROP" app-svg-teardrop-marker class="source-marker" [x]="marker.x-0.5" [y]="marker.y-0.5"
+            [radius]="marker.radius" [theta]="marker.theta" [selected]="marker.selected" (click)="handleMarkerClick($event, marker)"
+            style="pointer-events: fill;">
+          </g>
+          <g *ngSwitchCase="MarkerType.LINE" app-svg-line-marker class="line-marker" [x1]="marker.x1-0.5" [y1]="marker.y1-0.5" [x2]="marker.x2-0.5"
+            [y2]="marker.y2-0.5" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill;">
+          </g>
+        </ng-container>
+      </ng-container>
+    </g>
+    <g>
+      <ng-container *ngFor="let data of markerTexts">
+        <g app-svg-text-marker [x]="data.x" [y]="data.y" [dx]="data.dx" [dy]="data.dy" [text]="data.text" [attr.transform]="data.transform"
+          [selected]="data.selected" [anchor]="data.anchor" style="pointer-events: fill;">
+        </g>
+      </ng-container>
+    </g>
+  </svg>
+</div>

@@ -17,8 +17,6 @@ import jwt_decode from 'jwt-decode';
 
 import { HttpParams } from '@angular/common/http';
 import { LocationStrategy } from '@angular/common';
-import { RedoRegionSelection } from '../core/image-files.actions';
-import { local } from 'd3-selection';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -118,7 +116,6 @@ export class AuthState {
         else if (state.user) {
           //user no longer exists in local storage/cookie
           //login could be in-progress at the oauth authorized endpoint or the login endpoint of the app
-          console.log("LOGGIN OUT");
           ctx.dispatch(new Navigate(['/logout']));
         }
         else {
@@ -159,10 +156,8 @@ export class AuthState {
 
       let nextUrl = localStorage.getItem("nextUrl");
       localStorage.removeItem("nextUrl");
-      //if redirecting from oauth authorize page,  remove from navigation history so back button skips page
-      ctx.dispatch(new Navigate([(nextUrl && nextUrl != "") ? nextUrl : "/"], {}, {
-        replaceUrl: true
-      }));
+
+      this.router.navigateByUrl((nextUrl && nextUrl != "") ? nextUrl : "/");
     }
     else {
       ctx.patchState({ loginPending: false, user: null, loginError: 'We encountered an unexpected error.  Please try again later.' });

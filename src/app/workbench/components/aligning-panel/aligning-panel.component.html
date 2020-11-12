@@ -1,0 +1,126 @@
+<div *ngIf="hdus">
+  <form [formGroup]="alignForm">
+    <div>
+      <mat-form-field appearance="outline" style="width: 300px;">
+        <mat-label i18n>Select Image(s) to Align</mat-label>
+        <mat-select multiple formControlName="selectedImageFileIds">
+          <mat-option
+            *ngFor="let hdu of hdus"
+            [value]="hdu.id"
+            >{{ fileEntities[hdu.fileId].name }}</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-icon-button (click)="selectHdus(hdus)" i18n-aria-label aria-label="Select All Files">
+        <mat-icon>select_all</mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="selectHdus([])" i18n-aria-label aria-label="Clear Selection">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+
+    <div>
+      <mat-form-field appearance="outline" style="width: 300px;">
+        <mat-label i18n>Active Image File</mat-label>
+        <mat-select
+          [value]="primaryHdu?.id"
+          (selectionChange)="onPrimaryHduChange($event)"
+        >
+          <mat-option
+            *ngFor="let hdu of hdus"
+            [value]="hdu.id"
+            >{{ fileEntities[hdu.fileId].name }}</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field appearance="outline" style="width: 300px;">
+        <mat-label i18n>Mode</mat-label>
+        <mat-select formControlName="mode">
+          <mat-option [value]="'astrometric'">astrometric</mat-option>
+          <!-- <mat-option  [value]="'manual_source'">manual</mat-option> -->
+        </mat-select>
+      </mat-form-field>
+      <div>
+        <mat-checkbox formControlName="inPlace" i18n>
+          Overwrite Files</mat-checkbox
+        >
+      </div>
+    </div>
+
+    <div *ngIf="primaryHduIsSelected$ | async">
+      <div *ngIf="(alignFormData$ | async)?.mode == 'astrometric'">
+        <div *ngIf="!(primaryHduHasWcs$ | async); else hasWcs">
+          <div class="alert alert-warning" style="margin-top: 10px;" i18n>
+            This image does not have astrometric data in its header and
+            cannot be aligned using the selected mode.
+          </div>
+        </div>
+        <ng-template #hasWcs>
+          <!-- <div
+          class="alert alert-info"
+        >
+            Astrometric data is available for this image.
+            </div> -->
+        </ng-template>
+      </div>
+    </div>
+    <div style="clear: both;"></div>
+    <button
+      mat-raised-button
+      (click)="submit(alignForm.value)"
+      [disabled]="!alignForm.valid"
+      class="float-right"
+      i18n
+    >
+      Submit
+    </button>
+    <div style="clear: both;"></div>
+  </form>
+
+  <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
+  <div
+    *ngIf="alignmentJobRow$ | async; let jobRow"
+    style="margin-top: 10px;"
+  >
+    <div
+      class="alert alert-info"
+      *ngIf="
+        !jobRow.result ||
+          ['pending', 'in_progress'].includes(jobRow.job.state.status);
+        else jobComplete
+      "
+    >
+      <span i18n>Processing job</span> {{ jobRow.job.id }} ... ({{
+        jobRow.job.state.progress | number: "1.0-0"
+      }}%)
+
+      <ng-container *ngIf="jobRow.job.state.status == 'in_progress'">
+        <div style="margin-top: 5px">
+          <mat-progress-bar
+            mode="determinate"
+            [value]="jobRow.job.state.progress"
+            [color]="'primary'"
+          ></mat-progress-bar>
+        </div>
+      </ng-container>
+    </div>
+    <ng-template #jobComplete>
+      <div
+        *ngIf="jobRow.result.errors.length != 0; else noErrors"
+        class="alert alert-danger"
+      >
+        {{ jobRow.result.errors }}
+      </div>
+      <ng-template #noErrors>
+        <div class="alert alert-success" i18n>
+          Processing is complete.
+        </div>
+      </ng-template>
+    </ng-template>
+  </div>
+  <!-- </div> -->
+</div>

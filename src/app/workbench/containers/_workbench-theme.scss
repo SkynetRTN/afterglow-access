@@ -1,0 +1,169 @@
+@mixin workbench-theme($theme) {
+    $primary: map-get($theme, primary);
+    $accent: map-get($theme, accent);
+    $warn: map-get($theme, warn);
+    $background: map-get($theme, background);
+    $foreground: map-get($theme, foreground);
+    $is-dark-theme: map-get($theme, is-dark);
+  
+    app-workbench {
+
+      
+
+        .sidebar-nav {
+          background: mat-color($background, background);
+          color: mat-color($foreground, text);
+        }
+
+        .file-list-panel {
+          background: mat-color($background, card);
+        }
+
+        .file-list-panel {
+          width: 300px;
+        }
+
+        .global-settings-panel {
+          width: 300px;
+        }
+
+        // .mat-icon {
+        //   color: mat-color($foreground, icon);
+        // }
+
+        .sidebar-nav .mat-raised-button {
+          background: mat-color($background, card);
+        }
+
+  
+
+        .file-list-header-view {
+          margin: 5px;
+          text-align: center;
+          background: mat-color($background, card);
+          border: 1px solid mat-color($foreground, divider);
+          color: mat-color($foreground, text);
+        }
+
+        .rotate-90 {
+          -webkit-transform: rotate(90deg);
+          -moz-transform: rotate(90deg);
+          -ms-transform: rotate(90deg);
+          -o-transform: rotate(90deg);
+          transform: rotate(90deg);
+        }
+
+        .workbench-tool-panel.display {
+          width: 550px;
+        }
+
+        .workbench-tool-panel.info {
+          width: 550px;
+        }
+
+        .workbench-tool-panel.marker {
+          width: 550px;
+        }
+
+        .workbench-tool-panel.plotter {
+          width: 575px;
+        }
+
+        .workbench-tool-panel.sonifier {
+          width: 500px;
+        }
+
+        .workbench-tool-panel.photometry {
+          width: 650px;
+        }
+
+        .workbench-tool-panel.image-calculator {
+          width: 375px;
+        }
+
+        .workbench-tool-panel.aligner {
+          width: 450px;
+        }
+
+        .workbench-tool-panel.stacker {
+          width: 450px;
+        }
+        
+        .full-screen.workbench-tool-panel {
+          width: 100%;
+        }
+
+
+
+        .workbench-settings-card {
+          border-radius: 0px;
+          border-right: none;
+          border-top: none;
+          background: mat-color($background, card);
+        }
+        
+        .workbench-settings-card .card-header {
+          height: 49px;
+          // border-left: 1px solid rgba(0,0,0,.125);
+          color: mat-color($foreground, text);
+          background: mat-color($background, card);
+        }
+        
+        .workbench-settings-card .card-header:first-child {
+          border-radius: 0px;
+        }
+
+        .workbench-settings-card .plotter svg {
+          width: 200px;
+        }
+
+
+        .vertical-icon-nav-item {
+          border: none;
+          opacity: 0.9;
+          padding: 5px;
+          @if($is-dark-theme) {
+            background: rgba(white, 0.2);
+            border-bottom: 2px solid rgba(white, 0.1);
+            
+          }
+          @else {
+            background: rgba(black, 0.1);
+            border-bottom: 2px solid rgba(black, 0.05);
+          }
+          
+        }
+
+        .vertical-icon-nav-item:hover {
+          opacity: 1.0;
+        }
+
+        .vertical-icon-nav-item.active {
+          background: mat-color($background, card);
+          opacity: 1.0;
+
+          .mat-icon {
+            color: mat-color($primary);
+          }
+        }
+
+        .workbench-tool-nav {
+          background: mat-color($background, background);
+        }
+        
+      // .vertical-icon-nav-item .icon-wrapper {
+      //   color: rgba(0, 0, 0, 0.54);
+      //   background: mat-color($mat-grey, 300);
+      //   border-bottom: 1px solid mat-color($foreground, divider);
+      // }
+
+      // .vertical-icon-nav-item.active .icon-wrapper {
+      //   color: mat-color($primary);
+      //   background: mat-color($primary, default-contrast);
+      // }
+
+      // .sidebar-nav, .workbench-tool-nav {
+      //   background: mat-color($background, background);
+      // }
+    }
+  }

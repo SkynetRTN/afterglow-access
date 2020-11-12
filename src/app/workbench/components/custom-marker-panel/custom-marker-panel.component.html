@@ -1,0 +1,73 @@
+<div *ngIf="!state; else loadedBlock" class="alert alert-info">
+  <ng-container i18n>Select a data file to see display options.</ng-container>
+</div>
+
+<ng-template #loadedBlock>
+<div *ngIf="state">
+  <div>
+    <div class="row pb-1">
+      <div class="col-6">
+        <div class="form-group">
+          <mat-slide-toggle
+            [checked]="config?.centroidClicks"
+            [labelPosition]="'before'"
+            (change)="onCentroidClicksChange($event)"
+            color="primary"
+            i18n
+          >
+            Centroid clicks
+          </mat-slide-toggle>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="form-group">
+          <mat-slide-toggle
+            [checked]="config?.usePlanetCentroiding"
+            [disabled]="!config?.centroidClicks"
+            color="primary"
+            [labelPosition]="'before'"
+            (change)="onPlanetCentroidingChange($event)"
+            i18n
+          >
+            Planet Centroiding
+          </mat-slide-toggle>
+        </div>
+      </div>
+    </div>
+
+    <p i18n>Add custom markers by clicking on your image.</p>
+    <p class="pb-2" i18n>
+      Tip: Hold <span class="kbd">Alt</span> to click beneath existing markers
+    </p>
+  </div>
+
+  <ng-container *ngIf="getSelectedMarkers(); let selectedCustomMarkers">
+    <ng-container *ngIf="selectedCustomMarkers.length == 1">
+      <hr />
+      <h5 i18n>Marker Customization</h5>
+      <app-circle-marker-editor
+        *ngIf="selectedCustomMarkers[0].type == MarkerType.CIRCLE"
+        [marker]="selectedCustomMarkers[0]"
+        (changed)="onMarkerChange($event, selectedCustomMarkers[0])"
+      ></app-circle-marker-editor>
+      <app-rectangle-marker-editor
+        *ngIf="selectedCustomMarkers[0].type == MarkerType.RECTANGLE"
+        [marker]="selectedCustomMarkers[0]"
+        (changed)="onMarkerChange($event, selectedCustomMarkers[0])"
+      ></app-rectangle-marker-editor>
+    </ng-container>
+    <button
+      mat-raised-button
+      i18n-aria-label
+      aria-label="Delete Selected Markers"
+      i18n-matTooltip
+      matTooltip="Delete Selected Markers"
+      color="warn"
+      (click)="deleteSelectedMarkers(selectedCustomMarkers)"
+      [disabled]="selectedCustomMarkers.length == 0"
+    >
+      <mat-icon>delete</mat-icon> <span i18n>Delete Selected Markers</span>
+    </button>
+  </ng-container>
+</div>
+</ng-template>

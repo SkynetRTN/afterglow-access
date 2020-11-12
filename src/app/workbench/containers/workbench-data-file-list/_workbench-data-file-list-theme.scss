@@ -1,0 +1,42 @@
+@mixin workbench-data-file-list-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+
+  app-workbench-data-file-list {
+
+    .item-row.selected {
+      background: mat-color($primary);
+      color: mat-color($primary, default-contrast);
+    }
+
+    .item-row.hdu .filename {
+      margin-left: 10px;
+    }
+
+    // .item-row.hdu .filename:before {
+      
+    // }
+
+    .item-row.hdu .mat-icon {
+      line-height: 21px;
+      vertical-align: middle;
+    }
+
+    // .mat-icon-button.small {
+
+    //   width: 18px;
+    //   height: 18px;
+    //   line-height: 18px;
+  
+    //   .mat-icon {
+    //     font-size: 18px;
+    //     width: 18px;
+    //     height: 18px;
+    //     line-height: 18px;
+    //   }
+    // }
+  }
+}

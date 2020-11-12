@@ -1,0 +1,66 @@
+<div
+  id="image-viewer-wrapper"
+  fxLayout="column"
+  class="h-100"
+>
+  <ng-container *ngIf="(normalizedImageData$ | async); else tableBlock">
+    <div fxFlex="1 1 100%">
+      <div class="viewer-marker-wrapper h-100">
+        <div
+          app-pan-zoom-canvas
+          #panZoomCanvas="panZoomCanvas"
+          class="viewer"
+          [imageData]="normalizedImageData$ | async"
+          [transform]="imageToViewportTransform$ | async"
+          (onImageMove)="handleImageMove($event)"
+          (onImageClick)="handleImageClick($event)"
+          (onMoveBy)="handleMoveBy($event)"
+          (onZoomBy)="handleZoomBy($event)"
+          (onLoadTile)="handleLoadTile($event)"
+          (onViewportSizeChange)="handleViewportSizeChange($event)"
+          (onCanvasSizeChange)="handleCanvasSizeChange($event)"
+        >
+          <app-image-viewer-marker-overlay
+            [svgWidth]="currentCanvasSize?.width"
+            [svgHeight]="currentCanvasSize?.height"
+            [transform]="imageToViewportTransform$ | async"
+            [markers]="markers"
+            (onMarkerClick)="handleMarkerClick($event)"
+            style="pointer-events: none"
+            class="marker-overlay"
+          >
+          </app-image-viewer-marker-overlay>
+        </div>
+      </div>
+    </div>
+    <div fxFlex="0 0 auto">
+      <app-image-viewer-status-bar
+        [class.active]="active"
+        [rawImageData]="(rawImageData$ | async)"
+        [normalizedImageData]="(normalizedImageData$ | async)"
+        [wcs]="(hduEntities$ | async)[hduId]?.header?.wcs"
+        [imageMouseX]="imageMouseX"
+        [imageMouseY]="imageMouseY"
+        (downloadSnapshot)="handleDownloadSnapshot()"
+        (onZoomBy)="handleZoomBy($event)"
+        (onZoomTo)="handleZoomTo($event)"
+        (onZoomToFit)="handleZoomToFit($event)"
+      ></app-image-viewer-status-bar>
+    </div>
+  </ng-container>
+  <ng-template #tableBlock>
+    <ng-container *ngIf="tableData">
+      <div class="h-100">
+        Tables are not yet supported.
+      </div>
+    </ng-container>
+    
+  </ng-template>
+ 
+</div>
+
+<!-- 
+<app-pan-zoom-viewer [viewerId]="viewerId" [imageFile]="(fileEntities$ | async)[fileId]" [normalization]="(activeFileState$ | async)?.normalization"
+  [transformation]="(activeFileState$ | async)?.transformation" [showInfoBar]="showInfoBar" [markers]="markers" (onImageClick)="onImageClick($event)"
+  (onImageMove)="onImageMove($event)" (mousedown)="setActiveViewer(viewer)">
+</app-pan-zoom-viewer> -->

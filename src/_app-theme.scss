@@ -1,13 +1,12 @@
 @import "~@angular/material/theming";
-@import "./app/core/components/navbar/navbar-theme";
-@import "./app/core/containers/workbench/workbench-theme";
-@import "./app/core/containers/workbench/viewer-page/viewer-theme";
-@import "./app/core/containers/workbench/workbench-viewer-panel/workbench-viewer-panel-theme";
-@import "./app/core/components/image-viewer-title-bar/image-viewer-title-bar-theme";
-@import "./app/core/components/image-viewer-status-bar/image-viewer-status-bar-theme";
-@import "./app/core/containers/workbench/workbench-view-manager/workbench-view-manager-theme";
-@import "./app/core/containers/workbench/workbench-data-file-list/workbench-data-file-list-theme";
-@import "./app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page-theme";
+@import "./app/workbench/components/navbar/navbar-theme";
+@import "./app/workbench/containers/workbench-theme";
+@import "./app/workbench/containers/workbench-viewer/workbench-viewer-theme";
+@import "./app/workbench/containers/workbench-viewer-panel/workbench-viewer-panel-theme";
+@import "./app/workbench/containers/workbench-data-file-list/workbench-data-file-list-theme";
+@import "./app/workbench/components/display-panel/display-panel-theme";
+@import "./app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme";
+@import "./app/workbench/containers/data-providers/data-provider-browse-page/data-provider-browse-page-theme";
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -36,13 +35,20 @@
 
   @include nav-bar-theme($theme);
   @include workbench-theme($theme);
-  @include viewer-theme($theme);
-  @include workbench-viewer-panel-theme($theme);
-  @include image-viewer-title-bar-theme($theme);
+  @include display-panel-theme($theme);
+  @include workbench-viewer-theme($theme);
   @include image-viewer-status-bar-theme($theme);
-  @include workbench-view-manager-theme($theme);
+  @include workbench-viewer-panel-theme($theme);
   @include workbench-data-file-list-theme($theme);
   @include data-provider-browse-page-theme($theme);
+
+  .context-menu .context-label {
+    padding-right: 30px;
+  }
+
+  .context-menu .mat-menu-item {
+    line-height: 36px;
+  }
   
 
   header {

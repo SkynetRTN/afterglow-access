@@ -16,7 +16,7 @@ registerLocaleData(localeEs, 'es');
 import { TokenInterceptor } from './token.interceptor';
 
 import { MaterialModule } from './material';
-import { CoreModule } from './core/core.module';
+import { WorkbenchModule } from './workbench/workbench.module';
 import { AuthModule } from './auth/auth.module';
 import { HotkeyModule } from 'angular2-hotkeys';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -28,82 +28,67 @@ import { AvatarModule } from 'ngx-avatar';
 import { AppComponent } from './app.component';
 import { AFTERGLOW_ROUTES } from './routes';
 import { appConfig } from '../environments/environment';
-import { NgxPopperModule } from 'ngx-popper';
 import { ThemePickerModule } from './theme-picker';
 import { AuthState } from './auth/auth.state';
 import { JobsState } from './jobs/jobs.state';
 import { DataProvidersState } from './data-providers/data-providers.state';
-import { DataFilesState, DataFilesStateModel } from './data-files/data-files.state';
-import { ImageFilesState, ImageFilesStateModel } from './core/image-files.state';
-import { WorkbenchState } from './core/workbench.state';
-import { SourcesState } from './core/sources.state';
-import { CustomMarkersState } from './core/custom-markers.state';
-import { PhotDataState } from './core/phot-data.state.';
+import { WorkbenchState } from './workbench/workbench.state';
+import { SourcesState } from './workbench/sources.state';
+import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
-import { DataFileType } from './data-files/models/data-file-type';
-import { ImageFile } from './data-files/models/data-file';
 import { WasmService } from './wasm.service';
+import { HduType } from './data-files/models/data-file-type';
+import { ImageHdu, IHdu, PixelType } from './data-files/models/data-file';
+import { WorkbenchImageHduState } from './workbench/models/workbench-file-state';
+import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
+import { IImageData } from './data-files/models/image-data';
 
 export function dataFileSanitizer(v) {
   let state = {
     ...v
    } as DataFilesStateModel;
 
-  state.entities = {
-    ...state.entities
+  state.hduEntities = {
+    ...state.hduEntities
   }
 
-  Object.keys(state.entities).forEach(key => {
-    let dataFile = {
-      ...state.entities[key]
+  Object.keys(state.hduEntities).forEach(key => {
+    let hdu : IHdu = {
+      ...state.hduEntities[key],
+      header: {
+        loading: false,
+        loaded: false,
+        entries: [],
+        wcs: null
+      }
     };
 
-    dataFile.header = null;
-    dataFile.headerLoaded = false;
-    dataFile.headerLoading = false;
-    dataFile.wcs = null;
-    
-
-    if(dataFile.type == DataFileType.IMAGE) {
-      let imageFile = dataFile as ImageFile;
-      imageFile.hist = null;
-      imageFile.histLoaded = false;
-      imageFile.histLoading = false;
-      imageFile.tilesInitialized = false;
-      imageFile.tiles = [];
+    if(hdu.hduType == HduType.IMAGE) {
+      hdu = {
+        ...hdu,
+        hist: null,
+        histLoaded: false,
+        histLoading: false,
+      } as ImageHdu
     }
-    state.entities[key] = dataFile;
 
+    state.hduEntities[key] = hdu;
+  })
+
+  state.imageDataEntities = {
+    ...state.imageDataEntities
+  }
+  Object.keys(state.imageDataEntities).forEach(key => {
+    let imageData: IImageData<PixelType> = {
+      ...state.imageDataEntities[key],
+      tiles: [],
+      initialized: false
+    }
+
+    state.imageDataEntities[key] = imageData;
   })
   return state;
 }
-
-export function imageFileStateSanitizer(v) {
-  let state = {
-    ...v
-   } as ImageFilesStateModel;
-
-  state.entities = {
-    ...state.entities
-  }
-
-  Object.keys(state.entities).forEach(key => {
-    let imageFileState = {
-      ...state.entities[key]
-    };
-
-    imageFileState.normalization = {
-      ...imageFileState.normalization,
-      initialized: false,
-      normalizedTiles: []
-    }
-
-    state.entities[key] = imageFileState;
-
-  })
-  return state;
-}
-
 
 @NgModule({
   imports: [
@@ -116,16 +101,15 @@ export function imageFileStateSanitizer(v) {
     ReactiveFormsModule,
     FlexLayoutModule,
     CookieModule.forRoot(),
-    NgxPopperModule,
     AvatarModule,
     ThemePickerModule,
-    CoreModule.forRoot(),
+    WorkbenchModule.forRoot(),
     AuthModule.forRoot(),
     HotkeyModule.forRoot({
       disableCheatSheet: true
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, DataFilesState, ImageFilesState, WorkbenchState, SourcesState, PhotDataState, CustomMarkersState],
+      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
       { developmentMode: !appConfig.production }
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -134,21 +118,16 @@ export function imageFileStateSanitizer(v) {
         JobsState,
         DataProvidersState,
         DataFilesState,
-        ImageFilesState,
+        DataFilesState,
         WorkbenchState,
         SourcesState,
-        PhotDataState,
-        CustomMarkersState
+        PhotDataState
       ],
       sanitizations: [
         {
           key: DataFilesState,
           sanitize: dataFileSanitizer
         },
-        {
-          key: ImageFilesState,
-          sanitize: imageFileStateSanitizer,
-        }
       ],
       storage: StorageOption.SessionStorage
     }),

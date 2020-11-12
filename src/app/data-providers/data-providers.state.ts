@@ -15,17 +15,18 @@ import {
 import { DataProvider } from './models/data-provider';
 import { DataProviderAsset } from './models/data-provider-asset';
 import { LoadDataProviders, LoadDataProvidersSuccess, LoadDataProvidersFail, LoadDataProviderAssets, LoadDataProviderAssetsSuccess, LoadDataProviderAssetsFail, SortDataProviderAssets, ImportSelectedAssets, ImportAssets, ImportAssetsCompleted, ImportAssetsCancel, ImportAssetsStatusUpdated } from './data-providers.actions';
-import { AfterglowDataProviderService } from '../core/services/afterglow-data-providers';
+import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
 import { UpdateJobSuccess, CreateJob, CreateJobSuccess, CreateJobFail, UpdateJobResultSuccess, JobCompleted, UpdateJob } from '../jobs/jobs.actions';
 import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jobs/models/batch-import';
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { Navigate } from '@ngxs/router-plugin';
-import { SetViewerFile, SelectDataFile } from '../core/workbench.actions';
+import { SetViewerData, SelectDataFileListItem } from '../workbench/workbench.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
 import { LoadLibrary } from '../data-files/data-files.actions';
 import { ResetState } from '../auth/auth.actions';
+import { DataFilesState } from '../data-files/data-files.state';
 
 export interface DataProvidersStateModel {
   version: number;
@@ -317,15 +318,15 @@ export class DataProvidersState {
     };
 
 
-    setState((state: DataProvidersStateModel) => {
-      state.currentAssets = currentAssets;
-      state.userSortField = userSortField;
-      state.userSortOrder = userSortOrder;
-      state.currentSortField = currentSortField;
-      state.currentSortOrder = currentSortOrder;
+    // setState((state: DataProvidersStateModel) => {
+    //   state.currentAssets = currentAssets;
+    //   state.userSortField = userSortField;
+    //   state.userSortOrder = userSortOrder;
+    //   state.currentSortField = currentSortField;
+    //   state.currentSortOrder = currentSortOrder;
 
-      return state;
-    });
+    //   return state;
+    // });
   }
 
 
@@ -346,31 +347,8 @@ export class DataProvidersState {
     let importCompleted$ = this.actions$.pipe(
       ofActionDispatched(ImportAssetsCompleted),
       filter<ImportAssetsCompleted>(action => action.correlationId == importSelectedAssetsCorrId),
-      tap(action => {
-        setState((state: DataProvidersStateModel) => {
-          state.importing = false;
-          state.importProgress = 100;
-          state.importErrors = action.errors;
-
-          return state;
-        });
-      }),
-      filter(action => action.errors.length == 0),
-      flatMap(action => {
-         dispatch(new Navigate(['/workbench']));
-         dispatch(new LoadLibrary());
-         return this.actions$.pipe(
-           ofActionCompleted(LoadLibrary),
-           take(1),
-           filter(a => a.result.successful),
-           tap(v => {
-            dispatch(new SelectDataFile(action.fileIds[0]));
-           })
-         )
-      })
+      take(1)
     )
-
-    
 
     let importProgress$ = this.actions$.pipe(
       ofActionDispatched(ImportAssetsStatusUpdated),
@@ -388,7 +366,33 @@ export class DataProvidersState {
     return merge(
       dispatch(new ImportAssets(dataProviderId, assets, importSelectedAssetsCorrId)),
       importProgress$,
-      importCompleted$
+      importCompleted$.pipe(
+        flatMap(action => {
+          setState((state: DataProvidersStateModel) => {
+            state.importing = false;
+            state.importProgress = 100;
+            state.importErrors = action.errors;
+    
+            return state;
+          });
+  
+          if(action.errors.length != 0) return of();
+          dispatch(new Navigate(['/']));
+          dispatch(new LoadLibrary());
+          return this.actions$.pipe(
+            ofActionCompleted(LoadLibrary),
+            take(1),
+            filter(a => a.result.successful),
+            tap(v => {
+              let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+              if(action.fileIds[0] in hduEntities) {
+                dispatch(new SelectDataFileListItem(hduEntities[action.fileIds[0]]));
+              }
+             
+            })
+          )
+       })
+      ),
     );
   }
 
@@ -439,10 +443,10 @@ export class DataProvidersState {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
         let result = jobEntity.result as BatchImportJobResult;
         if (result.errors.length != 0) {
-          console.error("Errors encountered during stacking: ", result.errors);
+          console.error("Errors encountered during import: ", result.errors);
         }
         if (result.warnings.length != 0) {
-          console.error("Warnings encountered during stacking: ", result.warnings);
+          console.error("Warnings encountered during import: ", result.warnings);
         }
         return dispatch(new ImportAssetsCompleted(assets, result.file_ids.map(id => id.toString()), result.errors, correlationId));
 

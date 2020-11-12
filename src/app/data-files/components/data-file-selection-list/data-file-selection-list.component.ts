@@ -251,7 +251,7 @@ export class DataFileSelectionListComponent extends _DataFileSelectionListBaseMi
 
   /** Sets the focused option of the selection-list. */
   _setFocusedOption(option: DataFileListItemComponent) {
-    this._keyManager.updateActiveItemIndex(this._getOptionIndex(option));
+    this._keyManager.updateActiveItem(option);
   }
 
   /** Removes an option from the selection list and updates the active item. */

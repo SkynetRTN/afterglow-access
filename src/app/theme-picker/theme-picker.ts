@@ -14,8 +14,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute} from '@angular/router';
-import { MatButtonToggleModule, MatButtonToggleChange, MatFormField, MatFormFieldModule, MatSelectModule } from '@angular/material';
-
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field'
 
 @Component({
   selector: 'theme-picker',
@@ -41,7 +42,6 @@ export class ThemePicker implements OnInit, OnDestroy {
   }
 
   setColorTheme(colorThemeName: string) {
-    console.log(colorThemeName);
     this.themeStorage.storeTheme({
       ...this.currentTheme,
       colorThemeName: colorThemeName
