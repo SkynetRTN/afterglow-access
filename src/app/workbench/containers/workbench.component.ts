@@ -979,41 +979,34 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     });
 
     // this.transformationSyncSub = combineLatest(
-    //   this.focusedImageHduId$,
+    //   this.focusedViewerId$,
     //   this.store.select(WorkbenchState.getViewerSyncEnabled),
     //   visibleViewerIds$
     // )
     //   .pipe(
-    //     filter(([hduId, transformationSyncEnabled]) => hduId != null),
+    //     filter(([focusedViewerId, transformationSyncEnabled]) => focusedViewerId != null),
     //     switchMap(
-    //       ([hduId, transformationSyncEnabled, viewerIds]) => {
+    //       ([focusedViewerId, transformationSyncEnabled, visibleViewerIds]) => {
     //         if (!transformationSyncEnabled) return empty();
-    //         let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId] as ImageHdu;
-    //         let header$ = merge(
-    //           ...viewerIds.map((v) => {
-    //             return this.store.select(DataFilesState.getHeader).pipe(
-    //               map((fn) => fn(v.hduId)),
-    //               distinctUntilChanged()
-    //             );
-    //           })
-    //         );
+            
+    //         let referenceTransform$ = this.store.select(WorkbenchState.getSyncTransformationFromViewerId).pipe(
+    //           map(fn => fn(focusedViewerId)),
+    //           distinctUntilChanged()
+    //         )
 
-    //         let transform$ = this.store
-    //           .select(DataFilesState.getTransformById)
-    //           .pipe(
-    //             map((fn) => {
-    //               return fn(hdu.transformation.imageToViewportTransformId);
-    //             }),
-    //             distinctUntilChanged()
-    //           );
+    //         let targetTransform$ = merge(...visibleViewerIds.map(viewerId => this.store.select(WorkbenchState.getSyncTransformationFromViewerId).pipe(
+    //           map(fn => fn(focusedViewerId)),
+    //           distinctUntilChanged()
+    //         )))
+           
 
-    //         return combineLatest(header$, transform$).pipe(
+    //         return combineLatest(targetTransform$, referenceTransform$).pipe(
     //           withLatestFrom(visibleViewerIds$),
     //           map(([[header, transformation], selectedViewerFileIds]) => {
     //             return {
     //               srcHduId: hduId,
     //               targetHduIds: selectedViewerFileIds
-    //                 .map((v) => v.hduId)
+    //                 .map((v) => hduId)
     //                 .filter((v) => v != hduId),
     //             };
     //           })

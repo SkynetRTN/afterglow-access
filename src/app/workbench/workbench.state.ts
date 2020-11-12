@@ -935,6 +935,31 @@ export class WorkbenchState {
     };
   }
 
+  
+  // @Selector([DataFilesState.getDataFileEntities, DataFilesState.getHduEntities, DataFilesState.getTransformEntities])
+  // public static getSyncTransformationFromViewerId(
+  //   state: WorkbenchStateModel,
+  //   fileEntities: {[id: string]: DataFile},
+  //   hduEntities: {[id: string]: IHdu},
+  //   transformEntities: {[id: string]: Transform},) {
+  //   return (viewerId: string) => {
+  //     if(!viewerId || !(viewerId in state.viewers)) {
+  //       return null;
+  //     }
+  //     let viewer = state.viewers[viewerId];
+  //     if(!viewer.hduId) {
+  //       let file = fileEntities[viewer.fileId];
+  //       if(!file || !file.transformation) return null;
+  //       return file.transformation;
+  //     }
+
+  //     let hdu = hduEntities[viewer.hduId];
+  //     if(!hdu || hdu.hduType != HduType.IMAGE) return null;
+      
+  //     return (hdu as ImageHdu).transformation
+  //   };
+  // }
+
   @Action(Initialize)
   @ImmutableContext()
   public initialize(
