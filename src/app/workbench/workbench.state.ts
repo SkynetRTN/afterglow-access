@@ -2102,7 +2102,7 @@ export class WorkbenchState {
       (!focusedViewer.hduId && !focusedViewer.fileId) //focused viewer has no assigned file
     ) {
       if (hdus[0]) {
-        dispatch(new SelectDataFileListItem(hdus[0]));
+        dispatch(new SelectDataFileListItem({fileId: hdus[0].fileId, hduId: hdus[0].id}));
       }
     }
   }
@@ -2186,13 +2186,13 @@ export class WorkbenchState {
       DataFilesState.getDataFileEntities
     );
 
-    let file = item.type == 'file' ? item : fileEntities[item.fileId];
-    let hdu = item.type == 'file' ? null : item;
+    let file = fileEntities[item.fileId];
+    let hdu = item.hduId ? hduEntities[item.hduId] : null;
     let viewers = Object.values(state.viewers);
 
     //check if file is already open
     let targetViewer = viewers.find(
-      (viewer) => item.type == 'file' ? viewer.fileId == item.id && viewer.hduId == null : viewer.hduId == item.id
+      (viewer) => viewer.fileId == item.fileId && viewer.hduId == item.hduId
     );
     if (targetViewer) {
       dispatch(new SetFocusedViewer(targetViewer.viewerId));
@@ -2894,8 +2894,9 @@ export class WorkbenchState {
               DataFilesState.getHduEntities
             );
             if (action.fileIds[0] in hduEntities) {
+              let hdu = hduEntities[action.fileIds[0]];
               dispatch(
-                new SelectDataFileListItem(hduEntities[action.fileIds[0]])
+                new SelectDataFileListItem({fileId: hdu.fileId, hduId: hdu.id})
               );
             }
           })

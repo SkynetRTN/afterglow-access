@@ -121,7 +121,7 @@ export const COMPONENTS = [
 
 @NgModule({
   imports: [
-    // TreeModule,
+    TreeModule,
     RouterModule,
     CommonModule,
     FormsModule,

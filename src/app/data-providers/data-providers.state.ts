@@ -386,7 +386,8 @@ export class DataProvidersState {
             tap(v => {
               let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
               if(action.fileIds[0] in hduEntities) {
-                dispatch(new SelectDataFileListItem(hduEntities[action.fileIds[0]]));
+                let hdu = hduEntities[action.fileIds[0]];
+                dispatch(new SelectDataFileListItem({fileId: hdu.fileId, hduId: hdu.id}));
               }
              
             })

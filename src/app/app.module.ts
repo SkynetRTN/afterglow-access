@@ -42,6 +42,7 @@ import { ImageHdu, IHdu, PixelType } from './data-files/models/data-file';
 import { WorkbenchImageHduState } from './workbench/models/workbench-file-state';
 import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
 import { IImageData } from './data-files/models/image-data';
+import { TreeModule } from '@circlon/angular-tree-component';
 
 export function dataFileSanitizer(v) {
   let state = {
@@ -92,6 +93,7 @@ export function dataFileSanitizer(v) {
 
 @NgModule({
   imports: [
+    TreeModule,
     CommonModule,
     BrowserModule,
     BrowserAnimationsModule,

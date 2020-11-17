@@ -364,7 +364,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
 
   drop(event: CdkDragDrop<string[]>) {
-    console.log("DROPPED: ", event);
     var srcPanelId = event.previousContainer.id;
     var targetPanelId = event.container.id;
     var viewerId = event.item.data.viewerId;

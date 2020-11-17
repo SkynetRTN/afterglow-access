@@ -300,5 +300,5 @@ export class ResetImageTransform {
 export class SyncFileTransformations {
   public static readonly type = '[Workbench] Sync File Transformations';
 
-  constructor(public referenceHduId: string, public hduIds: string[]) { }
+  constructor(public referenceFileId: string, public fileIds: string[]) { }
 }

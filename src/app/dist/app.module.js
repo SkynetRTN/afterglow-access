@@ -53,6 +53,7 @@ var public_api_1 = require("./storage-plugin/public_api");
 var wasm_service_1 = require("./wasm.service");
 var data_file_type_1 = require("./data-files/models/data-file-type");
 var data_files_state_1 = require("./data-files/data-files.state");
+var angular_tree_component_1 = require("@circlon/angular-tree-component");
 function dataFileSanitizer(v) {
     var state = __assign({}, v);
     state.hduEntities = __assign({}, state.hduEntities);
@@ -82,6 +83,7 @@ var AppModule = /** @class */ (function () {
     AppModule = __decorate([
         core_1.NgModule({
             imports: [
+                angular_tree_component_1.TreeModule,
                 common_1.CommonModule,
                 platform_browser_1.BrowserModule,
                 animations_1.BrowserAnimationsModule,

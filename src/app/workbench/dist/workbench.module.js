@@ -34,7 +34,6 @@ var pan_zoom_canvas_component_1 = require("./components/pan-zoom-canvas/pan-zoom
 var workbench_data_file_list_component_1 = require("./containers/workbench-data-file-list/workbench-data-file-list.component");
 var image_viewer_status_bar_component_1 = require("./components/image-viewer-status-bar/image-viewer-status-bar.component");
 var image_viewer_marker_overlay_component_1 = require("./components/image-viewer-marker-overlay/image-viewer-marker-overlay.component");
-var image_viewer_title_bar_component_1 = require("./components/image-viewer-title-bar/image-viewer-title-bar.component");
 var normalizer_form_component_1 = require("./components/normalizer-form/normalizer-form.component");
 var phot_settings_dialog_component_1 = require("./components/phot-settings-dialog/phot-settings-dialog.component");
 var source_extraction_dialog_component_1 = require("./components/source-extraction-dialog/source-extraction-dialog.component");
@@ -85,7 +84,6 @@ exports.COMPONENTS = [
     workbench_viewer_component_1.WorkbenchViewerComponent,
     pan_zoom_canvas_component_1.PanZoomCanvasComponent,
     image_viewer_marker_overlay_component_1.ImageViewerMarkerOverlayComponent,
-    image_viewer_title_bar_component_1.ImageViewerTitleBarComponent,
     image_viewer_status_bar_component_1.ImageViewerStatusBarComponent,
     normalizer_form_component_1.NormalizerFormComponent,
     svg_rectangle_marker_component_1.SvgRectangleMarkerComponent,
@@ -133,7 +131,7 @@ var WorkbenchModule = /** @class */ (function () {
     WorkbenchModule = WorkbenchModule_1 = __decorate([
         core_1.NgModule({
             imports: [
-                // TreeModule,
+                angular_tree_component_1.TreeModule,
                 router_1.RouterModule,
                 common_1.CommonModule,
                 forms_1.FormsModule,

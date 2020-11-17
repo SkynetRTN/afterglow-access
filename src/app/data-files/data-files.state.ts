@@ -427,9 +427,9 @@ export class DataFilesState {
           let hdu: IHdu = {
             type: "hdu",
             id: coreFile.id.toString(),
-            //fileId: coreFile.group_id,
+            fileId: coreFile.group_id,
             //fileId: `FILE_${coreFile.id.toString()}`,
-            fileId: `1`,
+            // fileId: `1`,
             hduType: coreFile.type,
             // order: coreFile.group_order,
             order: index,
@@ -1824,7 +1824,7 @@ export class DataFilesState {
   @ImmutableContext()
   public syncFileTransformations(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { referenceHduId, hduIds }: SyncFileTransformations
+    { referenceFileId: referenceHduId, fileIds: hduIds }: SyncFileTransformations
   ) {
     let state = getState();
     if (

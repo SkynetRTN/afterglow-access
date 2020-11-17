@@ -391,7 +391,6 @@ export class WorkbenchViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleCanvasSizeChange($event: CanvasSizeChangeEvent) {
-    console.log("UPDATING CANVASE SIZE CHANGE EVENT")
     this.currentCanvasSize = { width: $event.width, height: $event.height };
   }
 

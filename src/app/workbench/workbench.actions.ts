@@ -17,6 +17,7 @@ import { SonificationPanelState } from './models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
 import { PhotData } from './models/source-phot-data';
+import { ISelectedFileListItem } from './containers/workbench-data-file-list/workbench-data-file-list.component'
 
 /* Core */
 
@@ -44,7 +45,7 @@ export class SetFullScreenPanel {
 export class SelectDataFileListItem {
   public static readonly type = '[Workbench] Select Data File List Item';
 
-  constructor(public item: DataFile | IHdu) { }
+  constructor(public item: ISelectedFileListItem) { }
 }
 
 export class SetFocusedViewer {

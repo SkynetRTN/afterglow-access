@@ -17,13 +17,15 @@ import { appConfig } from "../../../../environments/environment.prod";
 import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
-import { DataFile, ImageHdu, IHdu } from '../../../data-files/models/data-file';
+import { DataFile, ImageHdu, IHdu, PixelType } from '../../../data-files/models/data-file';
 import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
 import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { MatSelectChange } from '@angular/material/select';
+import { Transformation } from '../../../data-files/models/transformation';
+import { IImageData } from '../../../data-files/models/image-data';
 
 @Component({
   selector: "app-display-panel",
@@ -33,13 +35,31 @@ import { MatSelectChange } from '@angular/material/select';
 })
 export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input("hdu")
-  set hdu(hdu: IHdu) {
+  set hdu(hdu: ImageHdu) {
     this.hdu$.next(hdu);
   }
   get hdu() {
     return this.hdu$.getValue();
   }
-  private hdu$ = new BehaviorSubject<IHdu>(null);
+  private hdu$ = new BehaviorSubject<ImageHdu>(null);
+
+  @Input("transformation")
+  set transformation(transformation: Transformation) {
+    this.transformation$.next(transformation);
+  }
+  get transformation() {
+    return this.transformation$.getValue();
+  }
+  private transformation$ = new BehaviorSubject<Transformation>(null);
+
+  @Input("imageData")
+  set imageData(imageData: IImageData<PixelType>) {
+    this.imageData$.next(imageData);
+  }
+  get imageData() {
+    return this.imageData$.getValue();
+  }
+  private imageData$ = new BehaviorSubject<IImageData<PixelType>>(null);
 
   @Input("viewportSize")
   set viewportSize(viewportSize: {width: number, height: number}) {
@@ -50,8 +70,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   }
   private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
 
-  imageHdu$: Observable<ImageHdu>;
-  imageHdu: ImageHdu;
+  HduType = HduType;
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -64,23 +83,16 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   lowerPercentileDefault = appConfig.lowerPercentileDefault;
 
   constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router) {
-
-
-    this.imageHdu$ = this.hdu$.pipe(
-      map(hdu => hdu && hdu.hduType == HduType.IMAGE ? hdu as ImageHdu : null),
-      tap(hdu => this.imageHdu = hdu)
-    )
-
     
     this.levels$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.imageHdu.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
+        new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value.background, peakPercentile: value.peak })
       );
     });
 
     this.backgroundPercentile$.pipe(auditTime(25)).subscribe(value => {
       this.store.dispatch(
-        new UpdateNormalizer(this.imageHdu.id, { backgroundPercentile: value })
+        new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value })
       );
     });
 
@@ -89,7 +101,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
       .subscribe(value => {
         this.store.dispatch(
-          new UpdateNormalizer(this.imageHdu.id, { peakPercentile: value })
+          new UpdateNormalizer(this.hdu.id, { peakPercentile: value })
         );
       });
 
@@ -105,25 +117,25 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onColorMapChange(value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageHdu.id, { colorMapName: value })
+      new UpdateNormalizer(this.hdu.id, { colorMapName: value })
     );
   }
 
   onStretchModeChange(value: StretchMode) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageHdu.id, { stretchMode: value })
+      new UpdateNormalizer(this.hdu.id, { stretchMode: value })
     );
   }
 
   onInvertedChange(value: boolean) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageHdu.id, { inverted: value })
+      new UpdateNormalizer(this.hdu.id, { inverted: value })
     );
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageHdu.id,
+      new UpdateNormalizer(this.hdu.id,
         {
           backgroundPercentile: lowerPercentile,
           peakPercentile: upperPercentile
@@ -134,10 +146,10 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onInvertClick() {
     this.store.dispatch(
-      new UpdateNormalizer(this.imageHdu.id,
+      new UpdateNormalizer(this.hdu.id,
         {
-          backgroundPercentile: this.imageHdu.normalizer.peakPercentile,
-          peakPercentile: this.imageHdu.normalizer.backgroundPercentile
+          backgroundPercentile: this.hdu.normalizer.peakPercentile,
+          peakPercentile: this.hdu.normalizer.backgroundPercentile
         }
       )
     );
@@ -145,26 +157,26 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onFlipClick() {
     this.store.dispatch(
-      new Flip(this.imageHdu.transformation, this.imageHdu.rawImageDataId)
+      new Flip(this.transformation, this.imageData.id)
     );
   }
 
   // onMirrorClick() {
   //   this.store.dispatch([
-  //     new RotateBy(this.imageHdu.id, 90),
-  //     new Flip(this.imageHdu.id)
+  //     new RotateBy(this.hdu.id, 90),
+  //     new Flip(this.hdu.id)
   //   ]);
   // }
 
   onRotateClick() {
     this.store.dispatch(
-      new RotateBy(this.imageHdu.transformation, this.imageHdu.rawImageDataId, this.viewportSize, 90)
+      new RotateBy(this.transformation, this.imageData.id, this.viewportSize, 90)
     );
   }
 
   onResetOrientationClick() {
     this.store.dispatch(
-      new ResetImageTransform(this.imageHdu.transformation, this.imageHdu.rawImageDataId)
+      new ResetImageTransform(this.transformation, this.imageData.id)
     );
   }
 
