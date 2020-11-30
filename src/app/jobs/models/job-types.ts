@@ -6,5 +6,6 @@ export enum JobType {
   CatalogQuery = 'catalog_query',
   Alignment = 'alignment',
   Stacking = 'stacking',
-  BatchImport = 'batch_import'
+  BatchImport = 'batch_import',
+  Sonification = 'sonification'
 }

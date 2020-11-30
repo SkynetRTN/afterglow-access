@@ -197,7 +197,7 @@ export class UpdateSourceExtractionSettings {
 }
 
 export class UpdateCustomMarkerPanelConfig {
-  public static readonly type = '[Workbench] Update Custom Marker Page Settings'
+  public static readonly type = '[Workbench] Update Custom Marker Panel Config'
 
   constructor(public changes: Partial<CustomMarkerPanelConfig>) { }
 }
@@ -209,31 +209,31 @@ export class UpdateFileInfoPanelConfig {
 }
 
 export class UpdatePlottingPanelConfig {
-  public static readonly type = '[Workbench] Update Plotter Page Settings'
+  public static readonly type = '[Workbench] Update Plotter Panel Config'
 
   constructor(public changes: Partial<PlottingPanelConfig>) { }
 }
 
 export class UpdatePhotometryPanelConfig {
-  public static readonly type = '[Workbench] Update Photometry Page Settings'
+  public static readonly type = '[Workbench] Update Photometry Panel Config'
 
   constructor(public changes: Partial<PhotometryPanelConfig>) { }
 }
 
 export class UpdatePixelOpsPageSettings {
-  public static readonly type = '[Workbench] Update Pixel Ops Page Settings'
+  public static readonly type = '[Workbench] Update Pixel Ops Panel Config'
 
   constructor(public changes: Partial<PixelOpsPanelConfig>) { }
 }
 
 export class UpdateAligningPanelConfig {
-  public static readonly type = '[Workbench] Update Aligning Page Settings'
+  public static readonly type = '[Workbench] Update Aligning Panel Config'
 
   constructor(public changes: Partial<AligningPanelConfig>) { }
 }
 
 export class UpdateStackingPanelConfig {
-  public static readonly type = '[Workbench] Update Stacking Page Settings'
+  public static readonly type = '[Workbench] Update Stacking Panel Config'
 
   constructor(public changes: Partial<StackingPanelConfig>) { }
 }
@@ -394,22 +394,6 @@ export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
 
-export class BatchPhotometerSources {
-  public static readonly type = '[Phot Data] Batch Photometer Sources'
-
-  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings) { }
-}
-
-export class PhotometerSources {
-  public static readonly type = '[Phot Data] Photometer Sources'
-
-  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings, public isBatch: boolean) { }
-}
-
-
-
-
-
 export class InitializeWorkbenchHduState {
   public static readonly type = '[Workbench HDU State] Initialize Workbench HDU State';
 
@@ -465,6 +449,18 @@ export class SetProgressLine {
   constructor(public hduId: string, public line: { x1: number, y1: number, x2: number, y2: number }) { }
 }
 
+export class Sonify {
+  public static readonly type = '[Sonifier] Sonify';
+
+  constructor(public hduId: string, public region: Region) { }
+}
+
+export class ClearSonification {
+  public static readonly type = '[Sonifier] Clear Sonification';
+
+  constructor(public hduId: string) { }
+}
+
 /* Plotting */
 
 export class UpdatePlottingPanelState {
@@ -485,35 +481,47 @@ export class UpdateLine {
   constructor(public plottingPanelStateId: string, public point: { primaryCoord: number, secondaryCoord: number, posType: PosType }) { }
 }
 
-/*Source Extractor*/
+/*Photometry*/
 export class UpdateFilteredSources {
-  public static readonly type = '[Source Extractor] Update Filtered Sources'
+  public static readonly type = '[Photometry] Update Filtered Sources'
 
   constructor(public hduId: string) { }
 }
 
 export class UpdatePhotometryFileState {
-  public static readonly type = '[Source Extractor] Update File State';
+  public static readonly type = '[Photometry] Update File State';
 
   constructor(public hduId: string, public changes: Partial<PhotometryPanelState>) { }
 }
 
 export class RemoveSelectedSources {
-  public static readonly type = '[Source Extractor] Remove Selected Sources'
+  public static readonly type = '[Photometry] Remove Selected Sources'
 
   constructor(public hduId: string) { }
 }
 
 export class RemoveAllSources {
-  public static readonly type = '[Source Extractor] Remove All Sources'
+  public static readonly type = '[Photometry] Remove All Sources'
 
   constructor(public hduId: string) { }
 }
 
 export class SetSourceLabel {
-  public static readonly type = '[Source Extractor] Set Source Label'
+  public static readonly type = '[Photometry] Set Source Label'
 
   constructor(public hduId: string, public source: Source, public label: string) { }
+}
+
+export class BatchPhotometerSources {
+  public static readonly type = '[Phot Data] Batch Photometer Sources'
+
+  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings) { }
+}
+
+export class PhotometerSources {
+  public static readonly type = '[Phot Data] Photometer Sources'
+
+  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings, public isBatch: boolean) { }
 }
 
 /* Markers */

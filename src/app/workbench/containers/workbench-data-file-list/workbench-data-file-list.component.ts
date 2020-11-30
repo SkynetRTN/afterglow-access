@@ -16,6 +16,7 @@ interface INode {
   fileId: string;
   hduId: string;
   icon: string;
+  tooltip: string;
 }
 
 export interface ISelectedFileListItem {
@@ -53,7 +54,7 @@ export class WorkbenchDataFileListComponent {
   }, doubleClick: boolean }>();
 
   HduType = HduType;
-
+  treeFocused = false;
 
 
   actionMapping:IActionMapping = {
@@ -90,6 +91,7 @@ export class WorkbenchDataFileListComponent {
                 result = {
                   id: file.id,
                   name: file.name,
+                  tooltip: file.name,
                   children: file.hduIds.map((hduId, index) => ({
                     id: `${file.id}-${hduId}`,
                     name: `Channel ${index}`,
@@ -98,7 +100,8 @@ export class WorkbenchDataFileListComponent {
                     isExpanded: false,
                     fileId: file.id,
                     hduId: hduId,
-                    icon: hduEntities[hduId].hduType == HduType.IMAGE ? 'insert_photo' : 'toc'
+                    icon: hduEntities[hduId].hduType == HduType.IMAGE ? 'insert_photo' : 'toc',
+                    tooltip: `${file.name} - Channel ${index}`
                   })),
                   hasChildren: true,
                   isExpanded: true,
@@ -113,6 +116,7 @@ export class WorkbenchDataFileListComponent {
                 result = {
                   id: `${file.id}-${hduId}`,
                   name: file.name,
+                  tooltip: file.name,
                   children: [],
                   hasChildren: false,
                   isExpanded: false,
@@ -162,6 +166,14 @@ export class WorkbenchDataFileListComponent {
   onItemDblClick(tree: TreeModel, node: TreeNode, $event) {
     this.onSelectionChange.emit({item: {fileId: node.data.fileId, hduId: node.data.hduId}, doubleClick: true})
     return TREE_ACTIONS.SELECT(tree, node, $event);
+  }
+
+  onFocus() {
+    this.treeFocused = true;
+  }
+
+  onBlur() {
+    this.treeFocused = false; 
   }
 
   // onRowClick(item: { fileId: string; hduId: string;}) {

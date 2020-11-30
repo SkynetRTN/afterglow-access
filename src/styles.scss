@@ -1,4 +1,5 @@
 @import '~@circlon/angular-tree-component/css/angular-tree-component.css';
+@import 'material-design-icons/iconfont/material-icons.css';
 @import '~@angular/material/theming';
 // @import '~@covalent/core/theming/all-theme';
 // @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
@@ -151,6 +152,17 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
 .action-menu {
   max-width: 450px !important;
 }
+
+// https://github.com/angular/components/issues/12171
+// don't show mat-icon until font is loaded, unless using a different font set
+// :not(.material-icons-loaded) .mat-icon:not([fontSet]) {
+//   display: none;
+// }
+
+.wf-loading body {
+  display: none;
+}
+
 
 
 $fa-font-path:"~font-awesome/fonts";
@@ -350,7 +362,9 @@ div.ui-datatable-scrollable-body {
 
 
 
-
+.mat-tooltip {
+  font-size: 16px;
+}
 
 
 

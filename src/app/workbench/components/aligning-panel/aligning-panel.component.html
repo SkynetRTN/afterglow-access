@@ -3,12 +3,11 @@
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Select Image(s) to Align</mat-label>
-        <mat-select multiple formControlName="selectedImageFileIds">
-          <mat-option
-            *ngFor="let hdu of hdus"
-            [value]="hdu.id"
-            >{{ fileEntities[hdu.fileId].name }}</mat-option
-          >
+        <mat-select multiple formControlName="selectedHduIds">
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+            {{ fileEntities[hdu.fileId].name }}
+            <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1"> - Channel {{fileEntities[hdu.fileId].hduIds.indexOf(hdu.id)}}</ng-container>
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -23,16 +22,15 @@
 
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
-        <mat-label i18n>Active Image File</mat-label>
+        <mat-label i18n>Reference Image File</mat-label>
         <mat-select
           [value]="primaryHdu?.id"
           (selectionChange)="onPrimaryHduChange($event)"
         >
-          <mat-option
-            *ngFor="let hdu of hdus"
-            [value]="hdu.id"
-            >{{ fileEntities[hdu.fileId].name }}</mat-option
-          >
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+            {{ fileEntities[hdu.fileId].name }}
+            <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1"> - Channel {{fileEntities[hdu.fileId].hduIds.indexOf(hdu.id)}}</ng-container>
+          </mat-option>
         </mat-select>
       </mat-form-field>
     </div>

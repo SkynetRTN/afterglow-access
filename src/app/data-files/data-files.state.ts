@@ -57,7 +57,7 @@ import {
   RotateBy,
   UpdateNormalizedImageTileSuccess,
   SyncFileNormalizations,
-  SyncFileTransformations,
+  SyncHduTransformations,
   ResetImageTransform,
   UpdateCompositeImageTile,
   UpdateCompositeImageTileSuccess,
@@ -1820,11 +1820,11 @@ export class DataFilesState {
     });
   }
 
-  @Action(SyncFileTransformations)
+  @Action(SyncHduTransformations)
   @ImmutableContext()
   public syncFileTransformations(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { referenceFileId: referenceHduId, fileIds: hduIds }: SyncFileTransformations
+    { referenceHduId, hduIds }: SyncHduTransformations
   ) {
     let state = getState();
     if (

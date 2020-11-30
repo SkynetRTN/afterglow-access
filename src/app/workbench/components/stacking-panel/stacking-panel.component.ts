@@ -71,7 +71,7 @@ export class StackerPageComponent implements OnInit {
   stackJobRow$: Observable<{ job: StackingJob; result: StackingJobResult }>;
 
   stackForm = new FormGroup({
-    selectedImageFileIds: new FormControl([], Validators.required),
+    selectedHduIds: new FormControl([], Validators.required),
     mode: new FormControl("average", Validators.required),
     scaling: new FormControl("none", Validators.required),
     rejection: new FormControl("none", Validators.required),

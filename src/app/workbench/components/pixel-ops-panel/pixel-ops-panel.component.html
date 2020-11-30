@@ -17,6 +17,7 @@
             <mat-label i18n>Image(s)</mat-label>
             <mat-select multiple formControlName="imageFileIds" i18n-aria-label aria-label="images">
               <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">{{ dataFileEntities[hdu.fileId].name }}
+                <ng-container *ngIf="dataFileEntities[hdu.fileId].hduIds.length > 1"> - Channel {{dataFileEntities[hdu.fileId].hduIds.indexOf(hdu.id)}}</ng-container>
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -33,7 +34,10 @@
             <mat-label i18n>Select an image</mat-label>
             <mat-select formControlName="auxImageFileId">
               <mat-option *ngFor="let hdu of hdus" [value]="hdu.id" i18n-aria-label
-                aria-label="Image">{{ dataFileEntities[hdu.fileId].name }}</mat-option>
+                aria-label="Image">
+                {{ dataFileEntities[hdu.fileId].name }} 
+                <ng-container *ngIf="dataFileEntities[hdu.fileId].hduIds.length > 1"> - Channel {{dataFileEntities[hdu.fileId].hduIds.indexOf(hdu.id)}}</ng-container>
+              </mat-option>
             </mat-select>
           </mat-form-field>
 

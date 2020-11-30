@@ -119,10 +119,10 @@
 
 
   <div>
-    <div *ngIf="sonificationSrcUri && loading" class="alert alert-warning">
-      <ng-container i18n>Loading...</ng-container>
+    <div *ngIf="(loading$ | async) || ((sonificationUri$ | async) && playerLoading);" class="alert alert-warning">
+      <ng-container i18n>loading...</ng-container>
     </div>
-    <vg-player (onPlayerReady)="onPlayerReady($event)" [hidden]="!sonificationSrcUri || loading" style="height: 50px;">
+    <vg-player (onPlayerReady)="onPlayerReady($event)" [hidden]="!(sonificationUri$ | async) || (loading$ | async) || ((sonificationUri$ | async) && playerLoading)" style="height: 50px;">
       <vg-controls>
         <vg-play-pause></vg-play-pause>
         <vg-playback-button></vg-playback-button>
@@ -138,7 +138,7 @@
 
         <vg-mute></vg-mute>
       </vg-controls>
-      <audio [vgMedia]="media" #media id="sonificationAudio" [src]="sonificationSrcUri" autoplay>
+      <audio  [vgMedia]="media" #media id="sonificationAudio" [src]="(sonificationUri$ | async)" autoplay>
       </audio>
     </vg-player>
   </div>

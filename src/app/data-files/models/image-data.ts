@@ -31,21 +31,22 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
   let yTileDim = Math.ceil(height / tileHeight);
 
   for (let j = 0; j < yTileDim; j += 1) {
-    let tw = tileWidth;
+    
     let th = tileHeight;
     
 
     if (j === yTileDim - 1) {
-      th -= (j + 1) * tileHeight - width;
+      th -= (j + 1) * tileHeight - height;
     }
     for (let i = 0; i < xTileDim; i += 1) {
+      let tw = tileWidth;
       if (i === xTileDim - 1) {
-        tw -= (i + 1) * tileWidth - height;
+        tw -= (i + 1) * tileWidth - width;
       }
       let index = j * xTileDim + i;
       let x = i * tileWidth;
       let y = j * tileHeight;
-      tiles.push({
+      let tile = {
         index: index,
         isValid: false,
         x: x,
@@ -56,7 +57,8 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
         pixelsLoading: false,
         pixelLoadingFailed: false,
         pixels: null,
-      });
+      };
+      tiles.push(tile);
     }
   }
 

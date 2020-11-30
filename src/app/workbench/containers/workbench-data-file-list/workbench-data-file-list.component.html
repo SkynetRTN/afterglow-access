@@ -39,10 +39,12 @@
 
 <!-- <tree-root [nodes]="nodes$ | async" [options]="options"></tree-root> -->
 <div class="tree" style="position: relative;">
-  <tree-root [focused]="true" [nodes]="nodes$ | async" [options]="options"  [(state)]="state">
+  <tree-root #tree [focused]="treeFocused" [nodes]="nodes$ | async" [options]="options"  [(state)]="state" tabindex="0" (focus)="onFocus()" (blur)="onBlur()">
     <ng-template #treeNodeTemplate let-node let-index="index">
-      <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon">{{node.data.icon}}</mat-icon>
-      <span>{{ node.data.name }}</span>
+      <span [matTooltip]="node.data.tooltip" [matTooltipShowDelay]="500">
+        <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon">{{node.data.icon}}</mat-icon>
+        <span>{{ node.data.name }}</span>
+      </span>
     </ng-template>
   </tree-root>
 </div>

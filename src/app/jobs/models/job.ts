@@ -6,6 +6,7 @@ import { CatalogQueryJob } from './catalog-query';
 import { AlignmentJob } from './alignment';
 import { StackingJob } from './stacking';
 import { BatchImportJob } from './batch-import';
+import { SonificationJob } from './sonification';
 
 export type Job =
 | SourceExtractionJob
@@ -15,5 +16,6 @@ export type Job =
 | CatalogQueryJob
 | AlignmentJob
 | StackingJob
-| BatchImportJob;
+| BatchImportJob
+| SonificationJob;
 

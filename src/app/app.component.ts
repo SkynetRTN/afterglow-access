@@ -26,6 +26,7 @@ import { SetFullScreen, Initialize } from "./workbench/workbench.actions";
 import { finalize, map, tap, filter, take } from "rxjs/operators";
 import { Navigate } from "@ngxs/router-plugin";
 import { WasmService } from "./wasm.service";
+// import * as FontFaceObserver from "fontfaceobserver"
 
 @Component({
   selector: "app-root",
@@ -62,6 +63,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private wasmService: WasmService
   ) {
     this.loaded$ = this.wasmService.wasmReady$;
+
+    //https://github.com/angular/components/issues/12171#issuecomment-546079738
+    // const materialIcons = new FontFaceObserver('Material Icons');
+    // materialIcons.load(null, 10000)
+    //   .then(() => this.renderer.addClass(document.body, `material-icons-loaded`))
+    //   .catch(() => this.renderer.addClass(document.body, `material-icons-error`)); // this line not necessary for simple example
 
     let theme = this.themeStorage.getCurrentTheme();
     if (!theme) {

@@ -3,8 +3,11 @@
     <div>
       <mat-form-field appearance="outline" style="width: 300px;">
         <mat-label i18n>Select Image(s) to Stack</mat-label>
-        <mat-select multiple formControlName="selectedImageFileIds">
-          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">{{ dataFileEntities[hdu.fileId].name }}</mat-option>
+        <mat-select multiple formControlName="selectedHduIds">
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">{{ dataFileEntities[hdu.fileId].name }}
+            
+            <ng-container *ngIf="dataFileEntities[hdu.fileId].hduIds.length > 1"> - Channel {{dataFileEntities[hdu.fileId].hduIds.indexOf(hdu.id)}}</ng-container>
+          </mat-option>
         </mat-select>
       </mat-form-field>
 

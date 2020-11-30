@@ -43,6 +43,12 @@ import { WorkbenchImageHduState } from './workbench/models/workbench-file-state'
 import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
 import { IImageData } from './data-files/models/image-data';
 import { TreeModule } from '@circlon/angular-tree-component';
+import * as WebFont from 'webfontloader';
+
+WebFont.load({
+  custom: { families: ['Material Icons', 'Material Icons Outline'], }
+});
+
 
 export function dataFileSanitizer(v) {
   let state = {

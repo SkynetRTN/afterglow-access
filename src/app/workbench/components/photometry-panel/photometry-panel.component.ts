@@ -183,7 +183,7 @@ export class PhotometryPageComponent
   selectionModel = new SelectionModel<string>(true, []);
 
   batchPhotForm = new FormGroup({
-    selectedImageFileIds: new FormControl([], Validators.required),
+    selectedHduIds: new FormControl([], Validators.required),
   });
   batchPhotFormData$: Observable<BatchPhotometryFormData>;
   selectedImageHdus$: Observable<ImageHdu[]>;

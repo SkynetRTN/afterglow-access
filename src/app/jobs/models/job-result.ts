@@ -6,6 +6,7 @@ import { PixelOpsJobResult } from './pixel-ops';
 import { AlignmentJobResult } from './alignment';
 import { StackingJobResult } from './stacking';
 import { BatchImportJobResult } from './batch-import';
+import { SonificationJobResult } from './sonification';
 
 export type JobResult = 
   SourceExtractionJobResult
@@ -15,4 +16,5 @@ export type JobResult =
 | PixelOpsJobResult
 | AlignmentJobResult
 | StackingJobResult
-| BatchImportJobResult;
+| BatchImportJobResult
+| SonificationJobResult;

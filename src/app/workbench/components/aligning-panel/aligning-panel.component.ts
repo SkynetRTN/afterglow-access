@@ -65,7 +65,7 @@ export class AlignerPageComponent implements OnInit {
   alignmentJobRow$: Observable<{ job: AlignmentJob, result: AlignmentJobResult }>;
 
   alignForm = new FormGroup({
-    selectedImageFileIds: new FormControl([], Validators.required),
+    selectedHduIds: new FormControl([], Validators.required),
     mode: new FormControl('', Validators.required),
     inPlace: new FormControl(false, Validators.required)
   });
@@ -121,7 +121,11 @@ export class AlignerPageComponent implements OnInit {
   }
 
   onPrimaryHduChange($event: MatSelectChange) {
-    this.store.dispatch(new SelectDataFileListItem($event.value));
+    let hduId: string = $event.value;
+    let hdu = this.hdus.find(hdu => hdu.id == hduId);
+    if(!hdu) return;
+
+    this.store.dispatch(new SelectDataFileListItem({hduId: hduId, fileId: hdu.fileId}));
   }
 
 

@@ -297,8 +297,8 @@ export class ResetImageTransform {
   constructor(public transformation: Transformation, public imageDataId: string) { }
 }
 
-export class SyncFileTransformations {
-  public static readonly type = '[Workbench] Sync File Transformations';
+export class SyncHduTransformations {
+  public static readonly type = '[Workbench] Sync Hdu Transformations';
 
-  constructor(public referenceFileId: string, public fileIds: string[]) { }
+  constructor(public referenceHduId: string, public hduIds: string[]) { }
 }
