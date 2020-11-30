@@ -57,7 +57,7 @@ import {
 } from "../../workbench.actions";
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { Region } from '../../../data-files/models/region';
-import { getViewportRegion, Transform } from '../../../data-files/models/transformation';
+import { getViewportRegion, Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
 
 @Component({
   selector: "app-sonification-panel",
@@ -75,14 +75,23 @@ export class SonificationPanelComponent
   }
   private hdu$ = new BehaviorSubject<ImageHdu>(null);
 
-  @Input("transform")
-  set transform(transform: Transform) {
-    this.transform$.next(transform);
+  @Input("imageTransform")
+  set imageTransform(imageTransform: Transform) {
+    this.imageTransform$.next(imageTransform);
   }
-  get transform() {
-    return this.transform$.getValue();
+  get imageTransform() {
+    return this.imageTransform$.getValue();
   }
-  private transform$ = new BehaviorSubject<Transform>(null);
+  private imageTransform$ = new BehaviorSubject<Transform>(null);
+
+  @Input("viewportTransform")
+  set viewportTransform(viewportTransform: Transform) {
+    this.viewportTransform$.next(viewportTransform);
+  }
+  get viewportTransform() {
+    return this.viewportTransform$.getValue();
+  }
+  private viewportTransform$ = new BehaviorSubject<Transform>(null);
 
   @Input("viewportSize")
   set viewportSize(viewportSize: {width: number, height: number}) {
@@ -125,7 +134,16 @@ export class SonificationPanelComponent
     private store: Store,
     private router: Router
   ) {
-    this.region$ = combineLatest(this.hdu$, this.transform$, this.viewportSize$, this.state$).pipe(
+
+    let imageToViewportTransform$ = combineLatest(this.viewportTransform$, this.imageTransform$).pipe(
+      map(([viewportTransform, imageTransform]) => {
+          if(!viewportTransform || !imageTransform) {
+            return null;
+          }
+          return getImageToViewportTransform(viewportTransform, imageTransform);
+      })
+    )
+    this.region$ = combineLatest(this.hdu$, imageToViewportTransform$, this.viewportSize$, this.state$).pipe(
       filter(([hdu, transform, viewportSize, state]) => state !== null && hdu !== null),
       map(([hdu, transform, viewportSize, state]) => {
         if (state.regionMode == SonifierRegionMode.CUSTOM) {
@@ -133,7 +151,6 @@ export class SonificationPanelComponent
         }
         else if (
           !hdu ||
-          !hdu.header.loaded ||
           !transform ||
           !viewportSize
         ) {
@@ -342,12 +359,13 @@ export class SonificationPanelComponent
   resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[this.hdu.headerId];
     this.store.dispatch(
       new AddRegionToHistory(this.hdu.id, {
         x: 0.5,
         y: 0.5,
-        width: getWidth(this.hdu.header),
-        height: getHeight(this.hdu.header),
+        width: getWidth(header),
+        height: getHeight(header),
       })
     );
   }

@@ -122,7 +122,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   ) {
     
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
-    this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
+    this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
     this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerPanelIds);
      
@@ -195,7 +195,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   public getTabLabel(viewer: Viewer) {
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let file = fileEntities[viewer.fileId]
     if(!file) return '';
@@ -258,7 +258,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.selectedViewerId  || changes.viewers) {
-      let nextSelectedViewerIndex = this.viewers.map(viewer => viewer.viewerId).indexOf(this.selectedViewerId);
+      let nextSelectedViewerIndex = this.viewers.map(viewer => viewer.id).indexOf(this.selectedViewerId);
       if(this.selectedViewerIndex != nextSelectedViewerIndex) {
       this.selectedViewerIndex = nextSelectedViewerIndex;
       }
@@ -276,7 +276,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // The right panel's tab group shows the correct selected index but it does not detect that the viewer at that index
     // has changed and so it does not updatae the tab content.
     // return item.viewerId;
-    return `${item.viewerId}-${index}`;
+    return `${item.id}-${index}`;
   }
 
   closeViewer(viewerId: string) {
@@ -284,11 +284,11 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   closeOtherViewers(viewerId: string) {
-    this.store.dispatch([this.viewers.filter(viewer => viewer.viewerId != viewerId).map(viewer => new CloseViewer(viewer.viewerId))]);
+    this.store.dispatch([this.viewers.filter(viewer => viewer.id != viewerId).map(viewer => new CloseViewer(viewer.id))]);
   }
 
   closeViewersToTheRight(viewerId: string) {
-    let viewerIds = this.viewers.map(viewer => viewer.viewerId)
+    let viewerIds = this.viewers.map(viewer => viewer.id)
     let index = viewerIds.indexOf(viewerId);
     if(index != -1) {
       let viewerIdsToClose = viewerIds.slice(index+1, viewerIds.length)
@@ -297,7 +297,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   closeAllViewers() {
-    let viewerIds = this.viewers.map(viewer => viewer.viewerId)
+    let viewerIds = this.viewers.map(viewer => viewer.id)
     this.store.dispatch(viewerIds.map(id => new CloseViewer(id)));
   }
 

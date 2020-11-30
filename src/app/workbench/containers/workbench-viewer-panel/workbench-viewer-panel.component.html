@@ -8,11 +8,11 @@
       ">
       <ng-template mat-tab-label>
         <div  class="viewer-tab-label"
-          [class.active-viewer]="selectedViewerId == viewer.viewerId"
-          [class.inactive-viewer]="selectedViewerId != viewer.viewerId"
-          (mouseup)="$event.which === 2 ? closeViewer(viewer.viewerId) : null"
-          (click)="setFocusedViewer($event, viewer.viewerId, viewer)"
-          (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)" cdkDropList
+          [class.active-viewer]="selectedViewerId == viewer.id"
+          [class.inactive-viewer]="selectedViewerId != viewer.id"
+          (mouseup)="$event.which === 2 ? closeViewer(viewer.id) : null"
+          (click)="setFocusedViewer($event, viewer.id, viewer)"
+          (mousedown)="setFocusedViewer($event, viewer.id, viewer)" cdkDropList
           cdkDrag [cdkDragData]="viewer"
           (contextmenu)="onContextMenu($event, viewer)">
           <div fxLayout="row" fxFlexFill>
@@ -23,10 +23,10 @@
                 {{ getTabLabel(viewer) }}
               </span>
             </div>
-            <div fxFlex="0 0 auto" class="icon-group" (mouseenter)="mouseOverCloseViewerId = viewer.viewerId"
+            <div fxFlex="0 0 auto" class="icon-group" (mouseenter)="mouseOverCloseViewerId = viewer.id"
               (mouseleave)="mouseOverCloseViewerId = null">
               <span class="mr-2 ml-2">
-                <button class="close-button" mat-icon-button aria-label="Close" (click)="closeViewer(viewer.viewerId)"
+                <button class="close-button" mat-icon-button aria-label="Close" (click)="closeViewer(viewer.id)"
                   matTooltipClass="file-path-tooltip" matTooltip="Close Viewer" matTooltipShowDelay="500">
                   <mat-icon class="close-button">close</mat-icon>
                 </button>
@@ -35,13 +35,18 @@
           </div>
         </div>
       </ng-template>
-      <app-workbench-viewer (mousedown)="setFocusedViewer($event, viewer.viewerId, viewer)" [viewerId]="viewer.viewerId" [fileId]="viewer.fileId"
-      [hduId]="viewer.hduId"
-        [active]="selectedViewerId == viewer.viewerId && hasFocus" [markers]="viewer.markers"
-        (onImageMove)="handleImageMove($event, viewer.viewerId, viewer)"
-        (onImageClick)="handleImageClick($event, viewer.viewerId, viewer)"
-        (onMarkerClick)="handleMarkerClick($event, viewer.viewerId, viewer)">
-      </app-workbench-viewer>
+      <ng-container [ngSwitch]="viewer.type">
+        <app-workbench-image-viewer *ngSwitchCase="'image'" (mousedown)="setFocusedViewer($event, viewer.id, viewer)" [viewer]="viewer"
+          [active]="selectedViewerId == viewer.id && hasFocus"
+          (onImageMove)="handleImageMove($event, viewer.id, viewer)"
+          (onImageClick)="handleImageClick($event, viewer.id, viewer)"
+          (onMarkerClick)="handleMarkerClick($event, viewer.id, viewer)">
+        </app-workbench-image-viewer>
+        <div *ngSwitchCase="'table'">
+          Tables are not yet supported.
+        </div>
+      </ng-container>
+     
     </mat-tab>
   </mat-tab-group>
 </div>
@@ -51,20 +56,20 @@
 
 <mat-menu class="context-menu" #contextMenu="matMenu">
   <ng-template matMenuContent let-viewer="viewer">
-    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewer(viewer.viewerId)">
+    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewer(viewer.id)">
       <div class="context-label" fxFlex="1 1 auto">Close</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"> Ctrl+K F4 </span>
       </div>
     </div>
-    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeOtherViewers(viewer.viewerId)"
+    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeOtherViewers(viewer.id)"
       [disabled]="viewers.length == 1">
       <div class="context-label" fxFlex="1 1 auto">Close Others</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"></span>
       </div>
     </div>
-    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewersToTheRight(viewer.viewerId)"
+    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewersToTheRight(viewer.id)"
       [disabled]="viewers.length == 1">
       <div class="context-label" fxFlex="1 1 auto">Close to the Right</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
@@ -81,7 +86,7 @@
     <mat-divider></mat-divider>
 
     <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewer.keepOpen"
-      (click)="keepViewerOpen(viewer.viewerId, 'left')">
+      (click)="keepViewerOpen(viewer.id, 'left')">
       <div class="context-label" fxFlex="1 1 auto">Keep Open</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"> Ctrl+K Enter </span>
@@ -89,28 +94,28 @@
     </div>
     <mat-divider></mat-divider>
     <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.viewerId, 'up')">
+      (click)="splitViewerPanel(viewer.id, 'up')">
       <div class="context-label" fxFlex="1 1 auto">Split Up</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"> </span>
       </div>
     </div>
     <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.viewerId, 'down')">
+      (click)="splitViewerPanel(viewer.id, 'down')">
       <div class="context-label" fxFlex="1 1 auto">Split Down</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"> </span>
       </div>
     </div>
     <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.viewerId, 'left')">
+      (click)="splitViewerPanel(viewer.id, 'left')">
       <div class="context-label" fxFlex="1 1 auto">Split Left</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"></span>
       </div>
     </div>
     <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.viewerId, 'right')">
+      (click)="splitViewerPanel(viewer.id, 'right')">
       <div class="context-label" fxFlex="1 1 auto">Split Right</div>
       <div class="context-shortcut" fxFlex="0 0 auto">
         <span class="mr-2 ml-2"></span>

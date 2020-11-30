@@ -6,6 +6,7 @@ export enum SonifierRegionMode {
 }
 
 export interface SonificationPanelState {
+  id: string,
   sonificationUri: string,
   regionHistoryInitialized: boolean;
   regionHistory: Array<Region>;

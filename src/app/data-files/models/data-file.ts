@@ -7,7 +7,6 @@ import { Wcs } from '../../image-tools/wcs';
 import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
 import { PixelNormalizer } from './pixel-normalizer';
-import { Transformation } from './transformation';
 import { BlendMode } from './blend-mode';
 
 export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
@@ -29,11 +28,13 @@ export interface DataFile {
   hduIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
-  transformation: Transformation;
+  viewportTransformId: string;
+  imageTransformId: string;
   compositeImageDataId: string;
 }
 
 export interface Header {
+  id: string;
   entries: HeaderEntry[];
   loaded: boolean;
   loading: boolean;
@@ -45,7 +46,7 @@ export interface IHdu {
   readonly hduType: HduType;
   id: string;
   fileId: string;
-  header: Header;
+  headerId: string;
   order: number;
   modified: boolean;
 }
@@ -58,7 +59,8 @@ export interface ImageHdu extends IHdu {
   histLoaded: boolean;
   histLoading: boolean;
   rawImageDataId: string;
-  transformation: Transformation;
+  viewportTransformId: string;
+  imageTransformId: string;
   normalizedImageDataId: string;
   normalizer: PixelNormalizer;
   blendMode: BlendMode;

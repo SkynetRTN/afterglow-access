@@ -219,7 +219,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     ).pipe(
       filter(([data, hdus]) => hdus != null),
       map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return data.auxHduIds
           .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
@@ -230,7 +230,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     let imageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
       filter(([data, hdus]) => hdus != null),
       map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return data.hduIds
           .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
@@ -240,7 +240,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
     this.pixelOpVariables$ = combineLatest(imageHdus$, auxImageHdus$).pipe(
       map(([imageFiles, auxImageHdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return [
           {
             name: "aux_img",

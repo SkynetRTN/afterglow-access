@@ -1,12 +1,12 @@
-<div *ngIf="!primaryHdu?.header.loaded" class="alert alert-info" i18n>
+<div *ngIf="!primaryHeader?.loaded" class="alert alert-info" i18n>
   Select a data file to see options.
 </div>
 <div *ngIf="primaryHdu; let activeImageFile">
-  <div *ngIf="primaryHdu?.header.loaded">
+  <div *ngIf="primaryHeader?.loaded">
     <div class="mb-3">
       <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
-        [value]="primaryHdu?.header?.wcs?.isValid() ? config?.coordMode : 'pixel'"
-        [disabled]="!primaryHdu?.header?.wcs?.isValid()" (change)="onCoordModeChange($event)">
+        [value]="primaryHeader?.wcs?.isValid() ? config?.coordMode : 'pixel'"
+        [disabled]="!primaryHeader?.wcs?.isValid()" (change)="onCoordModeChange($event)">
         <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
         <mat-button-toggle value="sky">Sky Coordinate Mode</mat-button-toggle>
       </mat-button-toggle-group>

@@ -82,7 +82,7 @@ export class WorkbenchDataFileListComponent {
       switchMap(files => {
         let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
         return combineLatest(...files.map(file => {
-          return this.store.select(DataFilesState.getDataFileById).pipe(
+          return this.store.select(DataFilesState.getFileById).pipe(
             map(fn => fn(file.id)),
             distinctUntilChanged((a,b) => a && b && a.name == b.name && a.hduIds == b.hduIds),
             map(file => {

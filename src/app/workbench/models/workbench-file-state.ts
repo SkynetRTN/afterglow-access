@@ -20,8 +20,8 @@ export interface WorkbenchImageHduState extends IWorkbenchHduState {
   hduType: HduType.IMAGE;
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
-  sonificationPanelState: SonificationPanelState;
-  photometryPanelState: PhotometryPanelState;
+  sonificationPanelStateId: string;
+  photometryPanelStateId: string;
 }
 
 export interface WorkbenchTableHduState extends IWorkbenchHduState {

@@ -3,6 +3,7 @@ import { Point, Matrix, Rectangle } from "paper"
 import { Region } from './region';
 
 export interface Transform {
+  id: string,
   a: number,
   b: number,
   c: number,
@@ -10,13 +11,6 @@ export interface Transform {
   tx: number,
   ty: number
 }
-
-export interface Transformation {
-  viewportTransformId: string;
-  imageTransformId: string;
-  imageToViewportTransformId: string;
-}
-
 
 export function matrixToTransform(m: any) {
   return {

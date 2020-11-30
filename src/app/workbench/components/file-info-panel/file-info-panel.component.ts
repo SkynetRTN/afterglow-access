@@ -42,14 +42,15 @@ import { HeaderEntry } from '../../../data-files/models/header-entry';
 })
 export class FileInfoToolsetComponent
   implements OnInit, AfterViewInit, OnDestroy {
-    @Input("hdu")
-    set hdu(hdu: IHdu) {
-      this.hdu$.next(hdu);
-    }
-    get hdu() {
-      return this.hdu$.getValue();
-    }
-    private hdu$ = new BehaviorSubject<IHdu>(null);
+
+  @Input("header")
+  set header(header: Header) {
+    this.header$.next(header);
+  }
+  get header() {
+    return this.header$.getValue();
+  }
+  private header$ = new BehaviorSubject<Header>(null);
   
    
   @Input("config")
@@ -73,19 +74,13 @@ export class FileInfoToolsetComponent
     router: Router
   ) {
 
-    let header$ = this.hdu$.pipe(
-      filter(hdu => hdu != null),
-      map(hdu => hdu.header),
-      distinctUntilChanged()
-    )
 
     this.headerSummary$ = combineLatest(
-      header$,
+      this.header$,
       this.config$
     ).pipe(
       map(([header, config]) => {
         if (!header) return [];
-        let imageLayer = this.hdu as ImageHdu;
         let result: HeaderEntry[] = [];
         let width = getWidth(header);
         let height = getHeight(header);
@@ -100,11 +95,11 @@ export class FileInfoToolsetComponent
 
         let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 
-        result.push({
-          key: "ID",
-          value: `${this.hdu.id}`,
-          comment: "",
-        });
+        // result.push({
+        //   key: "ID",
+        //   value: `${this.hdu.id}`,
+        //   comment: "",
+        // });
 
         if (width && height) {
           result.push({

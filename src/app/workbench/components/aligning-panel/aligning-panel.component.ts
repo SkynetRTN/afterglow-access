@@ -11,7 +11,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
 import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectDataFileListItem } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
-import { ImageHdu, DataFile } from '../../../data-files/models/data-file';
+import { ImageHdu, DataFile, Header } from '../../../data-files/models/data-file';
 
 @Component({
   selector: 'app-aligning-panel',
@@ -27,6 +27,15 @@ export class AlignerPageComponent implements OnInit {
     return this.primaryHdu$.getValue();
   }
   private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
+  
+  @Input("primaryHeader")
+  set primaryHeader(primaryHeader: Header) {
+    this.primaryHeader$.next(primaryHeader);
+  }
+  get primaryHeader() {
+    return this.primaryHeader$.getValue();
+  }
+  private primaryHeader$ = new BehaviorSubject<Header>(null);
 
   @Input("hdus")
   set hdus(hdus: ImageHdu[]) {
@@ -97,8 +106,8 @@ export class AlignerPageComponent implements OnInit {
     )
 
     // TODO: LAYER
-    this.primaryHduHasWcs$ = this.primaryHdu$.pipe(
-      map(hdu => hdu != null && hdu.header.loaded && hdu.header.wcs.isValid())
+    this.primaryHduHasWcs$ = this.primaryHeader$.pipe(
+      map(header => header != null && header.loaded && header.wcs.isValid())
     )
 
     this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(

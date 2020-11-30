@@ -26,7 +26,7 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
-import { WorkbenchViewerComponent } from './containers/workbench-viewer/workbench-viewer.component';
+import { WorkbenchImageViewerComponent } from './containers/workbench-image-viewer/workbench-image-viewer.component';
 import { WorkbenchViewerPanelComponent } from './containers/workbench-viewer-panel/workbench-viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
 import { WorkbenchDataFileListComponent } from './containers/workbench-data-file-list/workbench-data-file-list.component';
@@ -81,7 +81,7 @@ export const COMPONENTS = [
   NavbarComponent,
   AppFooterComponent,
   WorkbenchDataFileListComponent,
-  WorkbenchViewerComponent,
+  WorkbenchImageViewerComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
   ImageViewerStatusBarComponent,

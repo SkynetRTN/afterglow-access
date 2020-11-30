@@ -1,7 +1,6 @@
 import { DataFile, Header, PixelType, IHdu } from './models/data-file';
 import { ImageHist } from './models/image-hist';
 import { PixelNormalizer } from './models/pixel-normalizer';
-import { Transform, Transformation } from './models/transformation';
 import { Region } from './models/region';
 
 /**
@@ -252,31 +251,31 @@ export class UpdateCompositeImageTileFail {
  export class CenterRegionInViewport {
   public static readonly type = '[Transformation] Center Region In Viewport';
 
-  constructor(public transformation: Transformation, public imageDataId: string, public viewportSize: { width: number, height: number }, public region: Region) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string, public viewportSize: { width: number, height: number }, public region: Region) { }
 }
 
 export class ZoomBy {
   public static readonly type = '[Transformation] Zoom By';
 
-  constructor(public transformation: Transformation, public imageDataId: string, public viewportSize: {width: number, height: number}, public scaleFactor: number, public anchorPoint: { x: number, y: number }, ) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string, public viewportSize: {width: number, height: number}, public scaleFactor: number, public anchorPoint: { x: number, y: number }, ) { }
 }
 
 export class ZoomTo {
   public static readonly type = '[Transformation] Zoom To';
 
-  constructor(public transformation: Transformation, public imageDataId: string, public viewportSize: {width: number, height: number}, public scale: number, public anchorPoint: { x: number, y: number }) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string, public viewportSize: {width: number, height: number}, public scale: number, public anchorPoint: { x: number, y: number }) { }
 }
 
 export class MoveBy {
   public static readonly type = '[Transformation] Move By';
 
-  constructor(public transformation: Transformation, public imageDataId: string, public viewportSize: {width: number, height: number}, public xShift: number, public yShift: number) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string, public viewportSize: {width: number, height: number}, public xShift: number, public yShift: number) { }
 }
 
 export class RotateBy {
   public static readonly type = '[Transformation] Rotate By';
 
-  constructor(public transformation: Transformation, public imageDataId: string, public viewportSize: {width: number, height: number}, public rotationAngle: number, public anchorPoint: { x: number, y: number } = null) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string, public viewportSize: {width: number, height: number}, public rotationAngle: number, public anchorPoint: { x: number, y: number } = null) { }
 }
 
 // export class RotateTo {
@@ -288,13 +287,13 @@ export class RotateBy {
 export class Flip {
   public static readonly type = '[Transformation] Flip';
 
-  constructor(public transformation: Transformation, public imageDataId: string) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string) { }
 }
 
 export class ResetImageTransform {
   public static readonly type = '[Workbench] Reset Image Transform';
 
-  constructor(public transformation: Transformation, public imageDataId: string) { }
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string) { }
 }
 
 export class SyncHduTransformations {

@@ -10,6 +10,8 @@ import { FileInfoPanelConfig } from './file-info-panel';
 import { WorkbenchFileState, IWorkbenchHduState } from './workbench-file-state';
 import { PlottingPanelState } from './plotter-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
+import { SonificationPanelState } from './sonifier-file-state';
+import { PhotometryPanelState } from './photometry-file-state';
 
 export enum WorkbenchTool {
   VIEWER = 'display',
@@ -160,10 +162,17 @@ export interface WorkbenchStateModel {
   hduIds: string[];
   hduStateEntities: { [id: string]: IWorkbenchHduState };
   nextMarkerId: number;
-  nextPlottingPanelStateId: number,
-  plottingPanelStateIds: string[];
-  plottingPanelStateEntities: { [id: string]: PlottingPanelState };
   nextCustomMarkerPanelStateId: number,
   customMarkerPanelStateIds: string[];
   customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState };
+  nextPlottingPanelStateId: number,
+  plottingPanelStateIds: string[];
+  plottingPanelStateEntities: { [id: string]: PlottingPanelState };
+  nextSonificationPanelStateId: number,
+  sonificationPanelStateIds: string[];
+  sonificationPanelStateEntities: { [id: string]: SonificationPanelState };
+  nextPhotometryPanelStateId: number,
+  photometryPanelStateIds: string[];
+  photometryPanelStateEntities: { [id: string]: PhotometryPanelState };
+  
 }

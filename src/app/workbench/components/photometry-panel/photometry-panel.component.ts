@@ -42,6 +42,7 @@ import {
   getSourceCoordinates,
   DataFile,
   ImageHdu,
+  Header,
 } from "../../../data-files/models/data-file";
 import { DmsPipe } from "../../../pipes/dms.pipe";
 import { PhotometryPanelState } from "../../models/photometry-file-state";
@@ -96,6 +97,15 @@ export class PhotometryPageComponent
     return this.primaryHdu$.getValue();
   }
   private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
+
+  @Input("primaryHeader")
+  set primaryHeader(primaryHeader: Header) {
+    this.primaryHeader$.next(primaryHeader);
+  }
+  get primaryHeader() {
+    return this.primaryHeader$.getValue();
+  }
+  private primaryHeader$ = new BehaviorSubject<Header>(null);
 
   @Input("viewerId")
   set viewerId(viewerId: string) {

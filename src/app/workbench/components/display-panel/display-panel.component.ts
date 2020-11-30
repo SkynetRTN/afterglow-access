@@ -3,10 +3,7 @@ import {
   OnInit,
   OnDestroy,
   AfterViewInit,
-  Input,
-  HostBinding,
-  Output,
-  EventEmitter
+  Input
 } from "@angular/core";
 import { Subject, BehaviorSubject, Observable, combineLatest } from "rxjs";
 import { auditTime, map, tap } from "rxjs/operators";
@@ -18,13 +15,10 @@ import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
 import { DataFile, ImageHdu, IHdu, PixelType } from '../../../data-files/models/data-file';
-import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
 import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
-import { DataFilesState } from '../../../data-files/data-files.state';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { MatSelectChange } from '@angular/material/select';
-import { Transformation } from '../../../data-files/models/transformation';
+import { Transform } from '../../../data-files/models/transformation';
 import { IImageData } from '../../../data-files/models/image-data';
 
 @Component({
@@ -34,6 +28,15 @@ import { IImageData } from '../../../data-files/models/image-data';
   //changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input("file")
+  set file(file: DataFile) {
+    this.file$.next(file);
+  }
+  get file() {
+    return this.file$.getValue();
+  }
+  private file$ = new BehaviorSubject<DataFile>(null);
+
   @Input("hdu")
   set hdu(hdu: ImageHdu) {
     this.hdu$.next(hdu);
@@ -43,14 +46,23 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   }
   private hdu$ = new BehaviorSubject<ImageHdu>(null);
 
-  @Input("transformation")
-  set transformation(transformation: Transformation) {
-    this.transformation$.next(transformation);
+  @Input("viewportTransform")
+  set viewportTransform(viewportTransform: Transform) {
+    this.viewportTransform$.next(viewportTransform);
   }
-  get transformation() {
-    return this.transformation$.getValue();
+  get viewportTransform() {
+    return this.viewportTransform$.getValue();
   }
-  private transformation$ = new BehaviorSubject<Transformation>(null);
+  private viewportTransform$ = new BehaviorSubject<Transform>(null);
+
+  @Input("imageTransform")
+  set imageTransform(imageTransform: Transform) {
+    this.imageTransform$.next(imageTransform);
+  }
+  get imageTransform() {
+    return this.imageTransform$.getValue();
+  }
+  private imageTransform$ = new BehaviorSubject<Transform>(null);
 
   @Input("imageData")
   set imageData(imageData: IImageData<PixelType>) {
@@ -157,7 +169,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onFlipClick() {
     this.store.dispatch(
-      new Flip(this.transformation, this.imageData.id)
+      new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id)
     );
   }
 
@@ -170,13 +182,13 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onRotateClick() {
     this.store.dispatch(
-      new RotateBy(this.transformation, this.imageData.id, this.viewportSize, 90)
+      new RotateBy(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, this.viewportSize, 90)
     );
   }
 
   onResetOrientationClick() {
     this.store.dispatch(
-      new ResetImageTransform(this.transformation, this.imageData.id)
+      new ResetImageTransform(this.imageData.id, this.imageTransform.id, this.viewportTransform.id)
     );
   }
 
