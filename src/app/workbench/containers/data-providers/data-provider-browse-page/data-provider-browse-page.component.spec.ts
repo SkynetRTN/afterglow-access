@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DataProviderBrowsePageComponent } from './data-provider-browse-page.component';
+import { DataProviderBrowsePageComponent } from "./data-provider-browse-page.component";
 
-describe('DataProviderBrowsePageComponent', () => {
+describe("DataProviderBrowsePageComponent", () => {
   let component: DataProviderBrowsePageComponent;
   let fixture: ComponentFixture<DataProviderBrowsePageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DataProviderBrowsePageComponent ]
-    })
-    .compileComponents();
+      declarations: [DataProviderBrowsePageComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('DataProviderBrowsePageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

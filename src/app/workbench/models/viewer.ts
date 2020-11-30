@@ -1,7 +1,7 @@
-import { Marker } from './marker';
-import { DataFile, IHdu } from '../../data-files/models/data-file';
+import { Marker } from "./marker";
+import { DataFile, IHdu } from "../../data-files/models/data-file";
 
-export type ViewerType = 'image' | 'table';
+export type ViewerType = "image" | "table";
 
 export interface Viewer {
   id: string;
@@ -10,11 +10,11 @@ export interface Viewer {
   hduId: string;
   headerId: string;
   keepOpen: boolean;
-  viewportSize: {width: number, height: number};
+  viewportSize: { width: number; height: number };
 }
 
-export interface ImageViewer extends Viewer{
-  type: 'image';
+export interface ImageViewer extends Viewer {
+  type: "image";
   normalizedImageDataId: string;
   rawImageDataId: string;
   viewportTransformId: string;
@@ -30,5 +30,5 @@ export interface ImageViewer extends Viewer{
 }
 
 export interface TableViewer extends Viewer {
-  type: 'table';
+  type: "table";
 }

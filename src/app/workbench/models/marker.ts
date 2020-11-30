@@ -3,7 +3,7 @@ export enum MarkerType {
   RECTANGLE,
   CIRCLE,
   TEARDROP,
-  TEXT
+  TEXT,
 }
 
 interface IMarker {
@@ -12,7 +12,7 @@ interface IMarker {
   label?: string;
   class?: string;
   selected?: boolean;
-  data?: {[key: string]: any}
+  data?: { [key: string]: any };
 }
 
 export interface LineMarker extends IMarker {
@@ -47,10 +47,4 @@ export interface TextMarker extends IMarker {
   text: string;
 }
 
-export type Marker =
-    LineMarker
-  | RectangleMarker
-  | CircleMarker
-  | TeardropMarker
-  | TextMarker;
-
+export type Marker = LineMarker | RectangleMarker | CircleMarker | TeardropMarker | TextMarker;

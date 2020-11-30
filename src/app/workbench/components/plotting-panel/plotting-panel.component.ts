@@ -8,20 +8,12 @@ import {
   Input,
   SimpleChanges,
   Output,
-  EventEmitter
+  EventEmitter,
 } from "@angular/core";
 
-import {
-  Observable,
-  Subscription,
-  Subject,
-  BehaviorSubject,
-  combineLatest,
-} from "rxjs";
+import { Observable, Subscription, Subject, BehaviorSubject, combineLatest } from "rxjs";
 import { map, withLatestFrom, switchMap, distinctUntilChanged } from "rxjs/operators";
-import {
-  getDegsPerPixel, DataFile, ImageHdu, PixelType,
-} from "../../../data-files/models/data-file";
+import { getDegsPerPixel, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { PlotterComponent } from "../plotter/plotter.component";
 import { CanvasMouseEvent } from "../pan-zoom-canvas/pan-zoom-canvas.component";
@@ -30,9 +22,9 @@ import { PosType } from "../../models/source";
 import { Router } from "@angular/router";
 import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Store, Actions } from "@ngxs/store";
-import { IImageData } from '../../../data-files/models/image-data';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { Wcs } from '../../../image-tools/wcs';
+import { IImageData } from "../../../data-files/models/image-data";
+import { DataFilesState } from "../../../data-files/data-files.state";
+import { Wcs } from "../../../image-tools/wcs";
 
 @Component({
   selector: "app-plotting-panel",
@@ -40,7 +32,6 @@ import { Wcs } from '../../../image-tools/wcs';
   styleUrls: ["./plotting-panel.component.css"],
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
-  
   @Input() degsPerPixel: number;
 
   @Input("imageData")
@@ -71,13 +62,12 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   private state$ = new BehaviorSubject<PlottingPanelState>(null);
 
   @Input() config: PlottingPanelConfig;
-  @Input() colorMode: 'grayscale' | 'rgba';
+  @Input() colorMode: "grayscale" | "rgba";
 
   @Output() configChange: EventEmitter<Partial<PlottingPanelConfig>> = new EventEmitter();
 
   PosType = PosType;
-  @HostBinding("class") @Input("class") classList: string =
-    "fx-workbench-outlet";
+  @HostBinding("class") @Input("class") classList: string = "fx-workbench-outlet";
   @ViewChild("plotter") plotter: PlotterComponent;
 
   lineStart$: Observable<{
@@ -100,7 +90,6 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
-
     this.lineStart$ = combineLatest(this.wcs$, this.state$).pipe(
       map(([wcs, state]) => {
         if (!state || !state.lineMeasureStart || !wcs) return null;
@@ -125,28 +114,20 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
 
         if (!lineStart || !lineEnd) return;
 
-        if (
-          lineStart.x !== null &&
-          lineStart.y !== null &&
-          lineEnd.x !== null &&
-          lineEnd.y !== null
-        ) {
+        if (lineStart.x !== null && lineStart.y !== null && lineEnd.x !== null && lineEnd.y !== null) {
           let deltaX = lineEnd.x - lineStart.x;
           let deltaY = lineEnd.y - lineStart.y;
           pixelPosAngle = (Math.atan2(deltaY, -deltaX) * 180.0) / Math.PI - 90;
           pixelPosAngle = pixelPosAngle % 360;
           if (pixelPosAngle < 0) pixelPosAngle += 360;
-          pixelSeparation = Math.sqrt(
-            Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
-          );
+          pixelSeparation = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
 
           // if (getDegsPerPixel(this.hdu) != undefined) {
           //   skySeparation =
           //     pixelSeparation * getDegsPerPixel(this.hdu) * 3600;
           // }
           if (this.degsPerPixel) {
-            skySeparation =
-              pixelSeparation * this.degsPerPixel * 3600;
+            skySeparation = pixelSeparation * this.degsPerPixel * 3600;
           }
         }
 
@@ -157,18 +138,12 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
           lineEnd.decDegs !== null
         ) {
           let centerDec = (lineStart.decDegs + lineEnd.decDegs) / 2;
-          let deltaRa =
-            (lineEnd.raHours - lineStart.raHours) *
-            15 *
-            3600 *
-            Math.cos((centerDec * Math.PI) / 180);
+          let deltaRa = (lineEnd.raHours - lineStart.raHours) * 15 * 3600 * Math.cos((centerDec * Math.PI) / 180);
           let deltaDec = (lineEnd.decDegs - lineStart.decDegs) * 3600;
           skyPosAngle = (Math.atan2(deltaDec, -deltaRa) * 180.0) / Math.PI - 90;
           skyPosAngle = skyPosAngle % 360;
           if (skyPosAngle < 0) skyPosAngle += 360;
-          skySeparation = Math.sqrt(
-            Math.pow(deltaRa, 2) + Math.pow(deltaDec, 2)
-          );
+          skySeparation = Math.sqrt(Math.pow(deltaRa, 2) + Math.pow(deltaDec, 2));
         }
 
         return {
@@ -181,10 +156,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     );
   }
 
-  private normalizeLine(
-    wcs: Wcs,
-    line: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) {
+  private normalizeLine(wcs: Wcs, line: { primaryCoord: number; secondaryCoord: number; posType: PosType }) {
     if (!wcs) return;
     let x = null;
     let y = null;
@@ -219,22 +191,22 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy() {}
 
   onModeChange($event) {
-    this.configChange.emit({ plotMode: $event })
+    this.configChange.emit({ plotMode: $event });
   }
 
   onPlotterSyncEnabledChange($event) {
-    this.configChange.emit({ plotterSyncEnabled: $event.checked })
+    this.configChange.emit({ plotterSyncEnabled: $event.checked });
   }
 
   onCentroidClicksChange($event) {
-    this.configChange.emit({ centroidClicks: $event.checked })
+    this.configChange.emit({ centroidClicks: $event.checked });
   }
 
   onPlanetCentroidingChange($event) {
-    this.configChange.emit({ planetCentroiding: $event.checked })
+    this.configChange.emit({ planetCentroiding: $event.checked });
   }
 
   onInterpolatePixelsChange($event) {
-    this.configChange.emit({ interpolatePixels: $event.checked })
+    this.configChange.emit({ interpolatePixels: $event.checked });
   }
 }

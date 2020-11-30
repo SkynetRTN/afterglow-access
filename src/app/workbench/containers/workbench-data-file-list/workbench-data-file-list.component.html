@@ -38,17 +38,25 @@
 </mat-table> -->
 
 <!-- <tree-root [nodes]="nodes$ | async" [options]="options"></tree-root> -->
-<div class="tree" style="position: relative;">
-  <tree-root #tree [focused]="treeFocused" [nodes]="nodes$ | async" [options]="options"  [(state)]="state" tabindex="0" (focus)="onFocus()" (blur)="onBlur()">
+<div class="tree" style="position: relative">
+  <tree-root
+    #tree
+    [focused]="treeFocused"
+    [nodes]="nodes$ | async"
+    [options]="options"
+    [(state)]="state"
+    tabindex="0"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+  >
     <ng-template #treeNodeTemplate let-node let-index="index">
       <span [matTooltip]="node.data.tooltip" [matTooltipShowDelay]="500">
-        <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon">{{node.data.icon}}</mat-icon>
+        <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon">{{ node.data.icon }}</mat-icon>
         <span>{{ node.data.name }}</span>
       </span>
     </ng-template>
   </tree-root>
 </div>
-
 
 <!-- 
 <mat-table
@@ -102,7 +110,7 @@
           </span>
         </div>
         <div fxFlex="0 0 60px" style="text-align: right;" *ngIf="row.type == 'file'"> -->
-          <!-- <button
+<!-- <button
             [hidden]="mouseOverFileId != row.id || !row.modified"
             mat-icon-button
             class="small mr-2"
@@ -128,12 +136,10 @@
                 : "fiber_manual_record"
             }}</mat-icon>
           </button> -->
-        <!-- </div>
+<!-- </div>
       </div>
     </mat-cell>
   </ng-container>
 
   <mat-row *matRowDef="let row; columns: ['name']"></mat-row>
 </mat-table> -->
-
-

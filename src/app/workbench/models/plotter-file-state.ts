@@ -3,7 +3,7 @@ import { PosType } from "./source";
 
 export interface PlottingPanelState {
   id: string;
-  measuring: boolean,
-  lineMeasureStart: { primaryCoord: number, secondaryCoord: number, posType: PosType }
-  lineMeasureEnd: { primaryCoord: number, secondaryCoord: number, posType: PosType },
+  measuring: boolean;
+  lineMeasureStart: { primaryCoord: number; secondaryCoord: number; posType: PosType };
+  lineMeasureEnd: { primaryCoord: number; secondaryCoord: number; posType: PosType };
 }

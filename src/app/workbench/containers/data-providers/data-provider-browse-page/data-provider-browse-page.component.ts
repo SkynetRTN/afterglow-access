@@ -1,10 +1,4 @@
-import {
-  Component,
-  OnInit,
-  AfterViewInit,
-  OnDestroy,
-  ViewChild
-} from "@angular/core";
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild } from "@angular/core";
 import { ActivatedRoute, Params, Router } from "@angular/router";
 import { Location } from "@angular/common";
 import { MatSort } from "@angular/material/sort";
@@ -26,28 +20,32 @@ import {
   A,
   Z,
   ZERO,
-  NINE
+  NINE,
 } from "@angular/cdk/keycodes";
-import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
-import { Store } from '@ngxs/store';
-import { DataProvidersState } from '../../../../data-providers/data-providers.state';
-import { SortDataProviderAssets, LoadDataProviders, LoadDataProviderAssets, ImportSelectedAssets } from '../../../../data-providers/data-providers.actions';
-import { Navigate } from '@ngxs/router-plugin';
+import { CorrelationIdGenerator } from "../../../../utils/correlated-action";
+import { Store } from "@ngxs/store";
+import { DataProvidersState } from "../../../../data-providers/data-providers.state";
+import {
+  SortDataProviderAssets,
+  LoadDataProviders,
+  LoadDataProviderAssets,
+  ImportSelectedAssets,
+} from "../../../../data-providers/data-providers.actions";
+import { Navigate } from "@ngxs/router-plugin";
 
-export class DataProviderAssetsDataSource
-  implements DataSource<DataProviderAsset> {
+export class DataProviderAssetsDataSource implements DataSource<DataProviderAsset> {
   assets$: Observable<DataProviderAsset[]>;
   assets: DataProviderAsset[] = [];
   sub: Subscription;
 
   constructor(private store: Store) {
-    this.assets$ = this.store.select(DataProvidersState.getCurrentAssets).pipe(
-      map(assets => assets.slice(0).sort((a, b) => a.name.localeCompare(b.name)))
-    );;
+    this.assets$ = this.store
+      .select(DataProvidersState.getCurrentAssets)
+      .pipe(map((assets) => assets.slice(0).sort((a, b) => a.name.localeCompare(b.name))));
   }
 
   connect(collectionViewer: CollectionViewer): Observable<DataProviderAsset[]> {
-    this.sub = this.assets$.subscribe(assets => {
+    this.sub = this.assets$.subscribe((assets) => {
       this.assets = assets;
     });
 
@@ -62,10 +60,9 @@ export class DataProviderAssetsDataSource
 @Component({
   selector: "app-data-provider-browse-page",
   templateUrl: "./data-provider-browse-page.component.html",
-  styleUrls: ["./data-provider-browse-page.component.css"]
+  styleUrls: ["./data-provider-browse-page.component.css"],
 })
-export class DataProviderBrowsePageComponent
-  implements OnInit, AfterViewInit, OnDestroy {
+export class DataProviderBrowsePageComponent implements OnInit, AfterViewInit, OnDestroy {
   dataProvidersLoaded$: Observable<boolean>;
   dataProviders$: Observable<DataProvider[]>;
   currentProvider$: Observable<DataProvider>;
@@ -78,7 +75,7 @@ export class DataProviderBrowsePageComponent
   importProgress$: Observable<number>;
   importErrors$: Observable<any[]>;
   currentPathBreadcrumbs$: Observable<Array<{ name: string; url: string }>>;
-  lastPath$: Observable<{[id: string]: string}>
+  lastPath$: Observable<{ [id: string]: string }>;
   sort: MatSort;
   sortSub: Subscription;
 
@@ -88,12 +85,7 @@ export class DataProviderBrowsePageComponent
     this.sort = sort;
     if (this.sortSub) this.sortSub.unsubscribe();
     this.sortSub = this.sort.sortChange.subscribe(() => {
-      this.store.dispatch(
-        new SortDataProviderAssets(
-          this.sort.active,
-          this.sort.direction
-        )
-      );
+      this.store.dispatch(new SortDataProviderAssets(this.sort.active, this.sort.direction));
     });
   }
   dataSource: DataProviderAssetsDataSource;
@@ -112,12 +104,8 @@ export class DataProviderBrowsePageComponent
     this.dataProvidersLoaded$ = store.select(DataProvidersState.getDataProvidersLoaded);
     this.currentProvider$ = store.select(DataProvidersState.getCurrentProvider);
     this.currentProviderColumns$ = this.currentProvider$.pipe(
-      filter(provider => provider != null),
-      map(provider => [
-        "select",
-        "name",
-        ...provider.columns.map(col => col.fieldName)
-      ])
+      filter((provider) => provider != null),
+      map((provider) => ["select", "name", ...provider.columns.map((col) => col.fieldName)])
     );
     this.loadingAssets$ = store.select(DataProvidersState.getLoadingAssets);
     this.currentPathBreadcrumbs$ = store.select(DataProvidersState.getCurrentPathBreadcrumbs);
@@ -134,64 +122,54 @@ export class DataProviderBrowsePageComponent
 
   ngOnInit() {
     this.subs.push(
-      combineLatest(
-        this.route.params,
-        this.route.queryParams,
-        this.dataProviders$
-      )
+      combineLatest(this.route.params, this.route.queryParams, this.dataProviders$)
         .pipe(withLatestFrom(this.dataProvidersLoaded$, this.lastPath$))
-        .subscribe(
-          ([[params, qparams, dataProviders], dataProvidersLoaded, lastPath]) => {
-            if (!dataProvidersLoaded) {
-              this.store.dispatch(new LoadDataProviders());
-              return;
-            }
-            let slug: string = params["slug"];
-            let dataProvider = dataProviders.find(
-              provider => this.slufigy.transform(provider.name) == slug
-            );
-            if (dataProvider) {
-              // if(!('path' in qparams) && dataProvider.id in lastPath) {
-              //   this.store.dispatch(new Navigate(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}});
-              // }
-              // else {
-              //   let path = qparams['path'];
-              //   this.store.dispatch(
-              //     new dataProviderActions.LoadDataProviderAssets({
-              //       dataProvider: dataProvider,
-              //       path: path
-              //     })
-              //   );
-              //   this.selection.clear();
-              //   //this.activeCell = null;
-              // }
-              let path = '';
-              if('path' in qparams) {
-                path = qparams['path'];
-              }
-              else if(dataProvider.id in lastPath) {
-                path = lastPath[dataProvider.id];
-                this.location.go(this.router.createUrlTree(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}}).toString())
-              }
-              this.store.dispatch(
-                new LoadDataProviderAssets(
-                  dataProvider,
-                  path
-                )
-              );
-              this.selection.clear();
-              //this.activeCell = null;
-            }
+        .subscribe(([[params, qparams, dataProviders], dataProvidersLoaded, lastPath]) => {
+          if (!dataProvidersLoaded) {
+            this.store.dispatch(new LoadDataProviders());
+            return;
           }
-        )
+          let slug: string = params["slug"];
+          let dataProvider = dataProviders.find((provider) => this.slufigy.transform(provider.name) == slug);
+          if (dataProvider) {
+            // if(!('path' in qparams) && dataProvider.id in lastPath) {
+            //   this.store.dispatch(new Navigate(['data-providers', this.slufigy.transform(dataProvider.name), 'browse'], {queryParams: {...qparams, path: lastPath[dataProvider.id]}});
+            // }
+            // else {
+            //   let path = qparams['path'];
+            //   this.store.dispatch(
+            //     new dataProviderActions.LoadDataProviderAssets({
+            //       dataProvider: dataProvider,
+            //       path: path
+            //     })
+            //   );
+            //   this.selection.clear();
+            //   //this.activeCell = null;
+            // }
+            let path = "";
+            if ("path" in qparams) {
+              path = qparams["path"];
+            } else if (dataProvider.id in lastPath) {
+              path = lastPath[dataProvider.id];
+              this.location.go(
+                this.router
+                  .createUrlTree(["data-providers", this.slufigy.transform(dataProvider.name), "browse"], {
+                    queryParams: { ...qparams, path: lastPath[dataProvider.id] },
+                  })
+                  .toString()
+              );
+            }
+            this.store.dispatch(new LoadDataProviderAssets(dataProvider, path));
+            this.selection.clear();
+            //this.activeCell = null;
+          }
+        })
     );
 
     this.subs.push(
       combineLatest(this.importProgress$, this.importing$, this.importErrors$)
-        .pipe(
-          filter(([progress, importing, errors]) => !importing && progress == 100 && errors.length == 0)
-        )
-        .subscribe(v => {
+        .pipe(filter(([progress, importing, errors]) => !importing && progress == 100 && errors.length == 0))
+        .subscribe((v) => {
           //this.store.dispatch(new Navigate(["/workbench"]);
         })
     );
@@ -200,21 +178,18 @@ export class DataProviderBrowsePageComponent
   ngAfterViewInit() {}
 
   ngOnDestroy() {
-    this.subs.forEach(sub => sub.unsubscribe());
+    this.subs.forEach((sub) => sub.unsubscribe());
   }
 
   showSelectAll() {
     return (
-      this.dataSource &&
-      this.dataSource.assets &&
-      this.dataSource.assets.filter(asset => !asset.collection).length != 0
+      this.dataSource && this.dataSource.assets && this.dataSource.assets.filter((asset) => !asset.collection).length != 0
     );
   }
 
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.assets.filter(asset => !asset.collection)
-      .length;
+    const numRows = this.dataSource.assets.filter((asset) => !asset.collection).length;
     return numSelected === numRows;
   }
 
@@ -222,9 +197,7 @@ export class DataProviderBrowsePageComponent
   masterToggle() {
     this.isAllSelected()
       ? this.selection.clear()
-      : this.dataSource.assets
-          .filter(asset => !asset.collection)
-          .forEach(row => this.selection.select(row));
+      : this.dataSource.assets.filter((asset) => !asset.collection).forEach((row) => this.selection.select(row));
   }
 
   onRowClick(row: DataProviderAsset) {
@@ -243,9 +216,7 @@ export class DataProviderBrowsePageComponent
   }
 
   import(provider: DataProvider, assets: DataProviderAsset[]) {
-    this.store.dispatch(
-      new ImportSelectedAssets(provider.id, assets, this.corrGen.next())
-    );
+    this.store.dispatch(new ImportSelectedAssets(provider.id, assets, this.corrGen.next()));
   }
 
   navigateToCollection(path: string) {

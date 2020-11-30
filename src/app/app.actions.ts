@@ -1,4 +1,4 @@
 export class AppAction {
-  public static readonly type = '[App] Add item';
-  constructor(public payload: string) { }
+  public static readonly type = "[App] Add item";
+  constructor(public payload: string) {}
 }

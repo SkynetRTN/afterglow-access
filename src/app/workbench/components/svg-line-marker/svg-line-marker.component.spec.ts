@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { SvgLineMarkerComponent } from './svg-line-marker.component';
+import { SvgLineMarkerComponent } from "./svg-line-marker.component";
 
-describe('SvgLineMarkerComponent', () => {
+describe("SvgLineMarkerComponent", () => {
   let component: SvgLineMarkerComponent;
   let fixture: ComponentFixture<SvgLineMarkerComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SvgLineMarkerComponent ]
-    })
-    .compileComponents();
+      declarations: [SvgLineMarkerComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('SvgLineMarkerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

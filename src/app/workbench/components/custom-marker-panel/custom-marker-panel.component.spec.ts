@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { CustomMarkerPanelComponent } from './custom-marker-panel.component';
+import { CustomMarkerPanelComponent } from "./custom-marker-panel.component";
 
-describe('CustomMarkerPageComponent', () => {
+describe("CustomMarkerPageComponent", () => {
   let component: CustomMarkerPanelComponent;
   let fixture: ComponentFixture<CustomMarkerPanelComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CustomMarkerPanelComponent ]
-    })
-    .compileComponents();
+      declarations: [CustomMarkerPanelComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('CustomMarkerPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,9 +1,5 @@
-<div
-  id="image-viewer-wrapper"
-  fxLayout="column"
-  class="h-100"
->
-  <ng-container *ngIf="(normalizedImageData$ | async); else tableBlock">
+<div id="image-viewer-wrapper" fxLayout="column" class="h-100">
+  <ng-container *ngIf="normalizedImageData$ | async; else tableBlock">
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
         <div
@@ -36,8 +32,8 @@
     <div fxFlex="0 0 auto">
       <app-image-viewer-status-bar
         [class.active]="active"
-        [rawImageData]="(rawImageData$ | async)"
-        [normalizedImageData]="(normalizedImageData$ | async)"
+        [rawImageData]="rawImageData$ | async"
+        [normalizedImageData]="normalizedImageData$ | async"
         [wcs]="(header$ | async)?.wcs"
         [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY"
@@ -50,13 +46,9 @@
   </ng-container>
   <ng-template #tableBlock>
     <ng-container *ngIf="tableData">
-      <div class="h-100">
-        Tables are not yet supported.
-      </div>
+      <div class="h-100">Tables are not yet supported.</div>
     </ng-container>
-    
   </ng-template>
- 
 </div>
 
 <!-- 

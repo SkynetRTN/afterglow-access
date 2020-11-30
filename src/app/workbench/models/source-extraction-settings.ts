@@ -1,13 +1,13 @@
 export enum SourceExtractionRegionOption {
-    ENTIRE_IMAGE,
-    VIEWPORT,
-    SONIFIER_REGION,
-  }
+  ENTIRE_IMAGE,
+  VIEWPORT,
+  SONIFIER_REGION,
+}
 
-export interface SourceExtractionSettings { 
-    threshold: number;
-    fwhm: number;
-    deblend: boolean;
-    limit: number;
-    region: SourceExtractionRegionOption;
+export interface SourceExtractionSettings {
+  threshold: number;
+  fwhm: number;
+  deblend: boolean;
+  limit: number;
+  region: SourceExtractionRegionOption;
 }

@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { SourceExtractionDialogComponent } from './source-extraction-dialog.component';
+import { SourceExtractionDialogComponent } from "./source-extraction-dialog.component";
 
-describe('SourceExtractionSettingsDialogComponent', () => {
+describe("SourceExtractionSettingsDialogComponent", () => {
   let component: SourceExtractionDialogComponent;
   let fixture: ComponentFixture<SourceExtractionDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [SourceExtractionDialogComponent]
-    })
-      .compileComponents();
+      declarations: [SourceExtractionDialogComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('SourceExtractionSettingsDialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

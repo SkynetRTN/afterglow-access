@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DataProvidersIndexPageComponent } from './data-providers-index-page.component';
+import { DataProvidersIndexPageComponent } from "./data-providers-index-page.component";
 
-describe('DataProvidersIndexPageComponent', () => {
+describe("DataProvidersIndexPageComponent", () => {
   let component: DataProvidersIndexPageComponent;
   let fixture: ComponentFixture<DataProvidersIndexPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DataProvidersIndexPageComponent ]
-    })
-    .compileComponents();
+      declarations: [DataProvidersIndexPageComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('DataProvidersIndexPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

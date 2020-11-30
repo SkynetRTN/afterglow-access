@@ -6,19 +6,19 @@
   $foreground: map-get($theme, foreground);
 
   app-workbench-data-file-list {
-
     tree-root:focus {
-      outline:none;
-
+      outline: none;
     }
     .node-content-wrapper {
-      border: solid 1px mat-color($primary, 0.0);
+      border: solid 1px mat-color($primary, 0);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .node-content-wrapper-active, .node-content-wrapper.node-content-wrapper-active:hover, .node-content-wrapper-active.node-content-wrapper-focused {
+    .node-content-wrapper-active,
+    .node-content-wrapper.node-content-wrapper-active:hover,
+    .node-content-wrapper-active.node-content-wrapper-focused {
       background: mat-color($primary);
       color: mat-color($primary, default-contrast);
     }
@@ -28,7 +28,7 @@
     }
     .node-content-wrapper-focused {
       background: none;
-      border: solid 1px mat-color($primary, 1.0);
+      border: solid 1px mat-color($primary, 1);
     }
     .node-content-wrapper:hover {
       background: mat-color($primary, 0.6);
@@ -44,7 +44,7 @@
     }
 
     // .item-row.hdu .filename:before {
-      
+
     // }
 
     .node-content-wrapper .mat-icon {
@@ -57,7 +57,7 @@
     //   width: 18px;
     //   height: 18px;
     //   line-height: 18px;
-  
+
     //   .mat-icon {
     //     font-size: 18px;
     //     width: 18px;

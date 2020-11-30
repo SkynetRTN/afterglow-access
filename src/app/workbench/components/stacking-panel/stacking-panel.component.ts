@@ -1,26 +1,15 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 import { map, tap, takeUntil } from "rxjs/operators";
-import {
-  StackFormData,
-  WorkbenchTool,
-  StackingPanelConfig,
-} from "../../models/workbench-state";
+import { StackFormData, WorkbenchTool, StackingPanelConfig } from "../../models/workbench-state";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
-import {
-  StackingJob,
-  StackingJobResult,
-} from "../../../jobs/models/stacking";
+import { StackingJob, StackingJobResult } from "../../../jobs/models/stacking";
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
 import { JobsState } from "../../../jobs/jobs.state";
-import {
-  SetActiveTool,
-  CreateStackingJob,
-  UpdateStackingPanelConfig,
-} from "../../workbench.actions";
-import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from "../../workbench.actions";
+import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
 
 @Component({
   selector: "app-stacking-panel",
@@ -47,13 +36,13 @@ export class StackerPageComponent implements OnInit {
   private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
 
   @Input("dataFileEntities")
-  set dataFileEntities(dataFileEntities: {[id: string]: DataFile}) {
+  set dataFileEntities(dataFileEntities: { [id: string]: DataFile }) {
     this.dataFileEntities$.next(dataFileEntities);
   }
   get dataFileEntities() {
     return this.dataFileEntities$.getValue();
   }
-  private dataFileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
+  private dataFileEntities$ = new BehaviorSubject<{ [id: string]: DataFile }>(null);
 
   @Input("config")
   set config(config: StackingPanelConfig) {
@@ -114,26 +103,13 @@ export class StackerPageComponent implements OnInit {
       this.stackForm.patchValue(data, { emitEvent: false });
     });
 
-    this.selectedHdus$ = combineLatest(
-      this.hdus$,
-      this.stackFormData$
-    ).pipe(
-      map(([hdus, data]) =>
-        data.selectedHduIds.map((id) =>
-          hdus.find((f) => f.id == id)
-        )
-      )
+    this.selectedHdus$ = combineLatest(this.hdus$, this.stackFormData$).pipe(
+      map(([hdus, data]) => data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)))
     );
 
-    this.stackJobRow$ = combineLatest(
-      store.select(WorkbenchState.getState),
-      store.select(JobsState.getEntities)
-    ).pipe(
+    this.stackJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
       map(([state, jobRowLookup]) => {
-        if (
-          !state.stackingPanelConfig.currentStackingJobId ||
-          !jobRowLookup[state.stackingPanelConfig.currentStackingJobId]
-        )
+        if (!state.stackingPanelConfig.currentStackingJobId || !jobRowLookup[state.stackingPanelConfig.currentStackingJobId])
           return null;
         return jobRowLookup[state.stackingPanelConfig.currentStackingJobId] as {
           job: StackingJob;
@@ -144,9 +120,7 @@ export class StackerPageComponent implements OnInit {
 
     this.stackForm.valueChanges.subscribe((value) => {
       // if(this.imageCalcForm.valid) {
-      this.store.dispatch(
-        new UpdateStackingPanelConfig({ stackFormData: this.stackForm.value })
-      );
+      this.store.dispatch(new UpdateStackingPanelConfig({ stackFormData: this.stackForm.value }));
       // }
     });
   }

@@ -55,7 +55,8 @@
   cursor: pointer;
 }
 
-.mat-column-select, .cdk-column-select {
+.mat-column-select,
+.cdk-column-select {
   overflow: visible;
   width: 50px;
   padding-left: 15px;
@@ -67,8 +68,6 @@
   align-items: center;
 }
 
-
-
 /* style mat-table with auto-sizing columns instead of equal distribution of whitespace to flex items */
 
 .mat-table {
@@ -76,13 +75,15 @@
   width: 100%;
 }
 
-.mat-header-row, .mat-row {
+.mat-header-row,
+.mat-row {
   display: table-row;
   padding: 0;
   border: none;
 }
 
-.mat-header-cell, .mat-cell {
+.mat-header-cell,
+.mat-cell {
   display: table-cell;
   height: 48px;
   vertical-align: middle;

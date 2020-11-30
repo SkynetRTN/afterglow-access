@@ -1,10 +1,4 @@
-import {
-  Component,
-  OnInit,
-  AfterViewInit,
-  Renderer2,
-  OnDestroy,
-} from "@angular/core";
+import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular/core";
 import { Select, Store } from "@ngxs/store";
 import { Title } from "@angular/platform-browser";
 import { Router, NavigationEnd, ActivatedRoute } from "@angular/router";
@@ -82,28 +76,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.colorThemeName = theme.colorThemeName;
     this.renderer.addClass(document.body, this.colorThemeName);
     this.fontSize = theme.fontSize;
-    if (this.fontSize != "default")
-      this.renderer.addClass(document.body, this.fontSize);
+    if (this.fontSize != "default") this.renderer.addClass(document.body, this.fontSize);
     this.fontWeight = theme.fontWeight;
-    if (this.fontWeight != "default")
-      this.renderer.addClass(document.body, this.fontWeight);
+    if (this.fontWeight != "default") this.renderer.addClass(document.body, this.fontWeight);
 
     this.themeStorage.onThemeUpdate.subscribe((theme) => {
       this.renderer.removeClass(document.body, this.colorThemeName);
       this.colorThemeName = theme.colorThemeName;
       this.renderer.addClass(document.body, this.colorThemeName);
 
-      if (this.fontSize != "default")
-        this.renderer.removeClass(document.body, this.fontSize);
+      if (this.fontSize != "default") this.renderer.removeClass(document.body, this.fontSize);
       this.fontSize = theme.fontSize;
-      if (this.fontSize != "default")
-        this.renderer.addClass(document.body, this.fontSize);
+      if (this.fontSize != "default") this.renderer.addClass(document.body, this.fontSize);
 
-      if (this.fontWeight != "default")
-        this.renderer.removeClass(document.body, this.fontWeight);
+      if (this.fontWeight != "default") this.renderer.removeClass(document.body, this.fontWeight);
       this.fontWeight = theme.fontWeight;
-      if (this.fontWeight != "default")
-        this.renderer.addClass(document.body, this.fontWeight);
+      if (this.fontWeight != "default") this.renderer.addClass(document.body, this.fontWeight);
     });
 
     this.hotKeys.push(
@@ -295,10 +283,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         var title = [
-          ...this.getTitle(
-            this.router.routerState,
-            this.router.routerState.root
-          ).reverse(),
+          ...this.getTitle(this.router.routerState, this.router.routerState.root).reverse(),
           "Afterglow Access",
         ].join(" | ");
         this.titleService.setTitle(title);
@@ -311,9 +296,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         take(1)
       )
       .subscribe(() => {
-        this.dataProviders$ = this.store.select(
-          DataProvidersState.getDataProviders
-        );
+        this.dataProviders$ = this.store.select(DataProvidersState.getDataProviders);
         this.store.dispatch(new InitAuth());
         this.store.dispatch(new Initialize());
       });

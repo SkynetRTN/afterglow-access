@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { NormalizerFormComponent } from './normalizer-form.component';
+import { NormalizerFormComponent } from "./normalizer-form.component";
 
-describe('NormalizerFormComponent', () => {
+describe("NormalizerFormComponent", () => {
   let component: NormalizerFormComponent;
   let fixture: ComponentFixture<NormalizerFormComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NormalizerFormComponent ]
-    })
-    .compileComponents();
+      declarations: [NormalizerFormComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('NormalizerFormComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

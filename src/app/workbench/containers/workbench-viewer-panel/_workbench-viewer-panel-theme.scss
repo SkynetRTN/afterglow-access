@@ -1,67 +1,57 @@
 @mixin workbench-viewer-panel-theme($theme) {
-    $primary: map-get($theme, primary);
-    $accent: map-get($theme, accent);
-    $warn: map-get($theme, warn);
-    $background: map-get($theme, background);
-    $foreground: map-get($theme, foreground);
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
 
-    .workbench-viewer {
-      border: 1px solid rgba(0, 0, 0, 0.12);
-    }
-
-    .viewer-panel .viewer-tab-label {
-      height: 48px;
-      line-height: 48px;
-    }
-
-    .viewer-panel .mat-tab-label  {
-      opacity: 0.7;
-      border-right: 1px solid rgba(0, 0, 0, 0.12);
-      padding: 0px !important;
-    }
-
-    .viewer-panel.focused .mat-tab-label  {
-      opacity: 1.0;
-    }
-
-    .viewer-panel .viewer-tab-label  {
-      opacity: 0.6;
-    }
-    .viewer-panel .viewer-tab-label.active-viewer  {
-      opacity: 1.0;
-    }
-
-    // .viewer-panel .mat-tab-label-container {
-    //   border-bottom: 3px solid mat-color($background, card);
-    // }
-
-    // .viewer-panel.focused .mat-tab-label-container {
-    //   border-color: mat-color($primary);
-    // }
-
-    // .viewer-panel:not(.focused) .mat-ink-bar  {
-    //   visibility: hidden !important;
-    // }
-
-    .viewer-panel.focused .mat-ink-bar  {
-      height: 3px !important;
-    }
-
-    .handler {
-      background: rgba(0, 0, 0, 0.12);
-    }
-
-
-    @if map-get($theme, is-dark)  {
-     
-    }
-    @else {
-
-    }
-
-    
-
-    
-
-      
+  .workbench-viewer {
+    border: 1px solid rgba(0, 0, 0, 0.12);
   }
+
+  .viewer-panel .viewer-tab-label {
+    height: 48px;
+    line-height: 48px;
+  }
+
+  .viewer-panel .mat-tab-label {
+    opacity: 0.7;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 0px !important;
+  }
+
+  .viewer-panel.focused .mat-tab-label {
+    opacity: 1;
+  }
+
+  .viewer-panel .viewer-tab-label {
+    opacity: 0.6;
+  }
+  .viewer-panel .viewer-tab-label.active-viewer {
+    opacity: 1;
+  }
+
+  // .viewer-panel .mat-tab-label-container {
+  //   border-bottom: 3px solid mat-color($background, card);
+  // }
+
+  // .viewer-panel.focused .mat-tab-label-container {
+  //   border-color: mat-color($primary);
+  // }
+
+  // .viewer-panel:not(.focused) .mat-ink-bar  {
+  //   visibility: hidden !important;
+  // }
+
+  .viewer-panel.focused .mat-ink-bar {
+    height: 3px !important;
+  }
+
+  .handler {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  @if map-get($theme, is-dark) {
+  } @else {
+  }
+}

@@ -8,7 +8,7 @@ import {
   ViewChild,
   ElementRef,
   OnChanges,
-  AfterContentChecked
+  AfterContentChecked,
 } from "@angular/core";
 import { Point, Matrix, Rectangle } from "paper";
 
@@ -16,7 +16,7 @@ import { Point, Matrix, Rectangle } from "paper";
   selector: "[app-svg-text-marker]",
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./svg-text-marker.component.html",
-  styleUrls: ["./svg-text-marker.component.css"]
+  styleUrls: ["./svg-text-marker.component.css"],
 })
 export class SvgTextMarkerComponent implements OnInit, AfterViewInit, OnChanges, AfterContentChecked {
   @Input()
@@ -32,7 +32,7 @@ export class SvgTextMarkerComponent implements OnInit, AfterViewInit, OnChanges,
   @Input()
   selected: boolean = false;
   @Input()
-  anchor: 'start' | 'middle' | 'end' | 'inherit' = 'middle';
+  anchor: "start" | "middle" | "end" | "inherit" = "middle";
   @Input()
   showBackground: boolean = true;
 
@@ -42,14 +42,11 @@ export class SvgTextMarkerComponent implements OnInit, AfterViewInit, OnChanges,
 
   ngOnInit() {}
 
-  ngAfterViewInit() {
-  }
+  ngAfterViewInit() {}
 
   ngAfterContentChecked() {
     // console.log(this.textSvgElement, this.textSvgElement.nativeElement.getBBox(), this.textSvgElement.nativeElement.getBoundingClientRect())
   }
 
-  ngOnChanges() {
-    
-  }
+  ngOnChanges() {}
 }

@@ -1,47 +1,13 @@
-import {
-  Component,
-  AfterViewInit,
-  ViewChild,
-  OnDestroy,
-  OnChanges,
-  OnInit,
-  HostBinding,
-  Input,
-} from "@angular/core";
+import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit, HostBinding, Input } from "@angular/core";
 
 import { VgAPI } from "videogular2/compiled/core";
-import {
-  Observable,
-  Subscription,
-  from,
-  merge,
-  interval,
-  combineLatest,
-  BehaviorSubject,
-} from "rxjs";
-import {
-  filter,
-  map,
-  flatMap,
-  takeUntil,
-  distinctUntilChanged,
-  withLatestFrom,
-  tap,
-  skip,
-} from "rxjs/operators";
+import { Observable, Subscription, from, merge, interval, combineLatest, BehaviorSubject } from "rxjs";
+import { filter, map, flatMap, takeUntil, distinctUntilChanged, withLatestFrom, tap, skip } from "rxjs/operators";
 
 import { SonifierRegionMode, SonificationPanelState } from "../../models/sonifier-file-state";
 import { AfterglowDataFileService } from "../../services/afterglow-data-files";
-import {
-  getWidth,
-  getHeight,
-  DataFile,
-  ImageHdu,
-} from "../../../data-files/models/data-file";
-import {
-  Hotkey,
-  HotkeysService,
-} from "angular2-hotkeys";
+import { getWidth, getHeight, DataFile, ImageHdu } from "../../../data-files/models/data-file";
+import { Hotkey, HotkeysService } from "angular2-hotkeys";
 import { ChangeDetectorRef } from "@angular/core";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material/button-toggle";
@@ -55,17 +21,16 @@ import {
   Sonify,
   ClearSonification,
 } from "../../workbench.actions";
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { Region } from '../../../data-files/models/region';
-import { getViewportRegion, Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
+import { DataFilesState } from "../../../data-files/data-files.state";
+import { Region } from "../../../data-files/models/region";
+import { getViewportRegion, Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
 
 @Component({
   selector: "app-sonification-panel",
   templateUrl: "./sonification-panel.component.html",
   styleUrls: ["./sonification-panel.component.css"],
 })
-export class SonificationPanelComponent
-  implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @Input("hdu")
   set hdu(hdu: ImageHdu) {
     this.hdu$.next(hdu);
@@ -94,13 +59,13 @@ export class SonificationPanelComponent
   private viewportTransform$ = new BehaviorSubject<Transform>(null);
 
   @Input("viewportSize")
-  set viewportSize(viewportSize: {width: number, height: number}) {
+  set viewportSize(viewportSize: { width: number; height: number }) {
     this.viewportSize$.next(viewportSize);
   }
   get viewportSize() {
     return this.viewportSize$.getValue();
   }
-  private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
+  private viewportSize$ = new BehaviorSubject<{ width: number; height: number }>(null);
 
   @Input("state")
   set state(state: SonificationPanelState) {
@@ -134,49 +99,48 @@ export class SonificationPanelComponent
     private store: Store,
     private router: Router
   ) {
-
     let imageToViewportTransform$ = combineLatest(this.viewportTransform$, this.imageTransform$).pipe(
       map(([viewportTransform, imageTransform]) => {
-          if(!viewportTransform || !imageTransform) {
-            return null;
-          }
-          return getImageToViewportTransform(viewportTransform, imageTransform);
+        if (!viewportTransform || !imageTransform) {
+          return null;
+        }
+        return getImageToViewportTransform(viewportTransform, imageTransform);
       })
-    )
+    );
     this.region$ = combineLatest(this.hdu$, imageToViewportTransform$, this.viewportSize$, this.state$).pipe(
       filter(([hdu, transform, viewportSize, state]) => state !== null && hdu !== null),
       map(([hdu, transform, viewportSize, state]) => {
         if (state.regionMode == SonifierRegionMode.CUSTOM) {
           this.region = state.regionHistory[state.regionHistoryIndex];
-        }
-        else if (
-          !hdu ||
-          !transform ||
-          !viewportSize
-        ) {
+        } else if (!hdu || !transform || !viewportSize) {
           this.region = null;
-        }
-        else {
+        } else {
           let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[hdu.rawImageDataId];
-          this.region = getViewportRegion(transform, rawImageData.width, rawImageData.height, viewportSize.width, viewportSize.height);
+          this.region = getViewportRegion(
+            transform,
+            rawImageData.width,
+            rawImageData.height,
+            viewportSize.width,
+            viewportSize.height
+          );
         }
-        
+
         return this.region;
       }),
-      distinctUntilChanged( (a,b) => a && b && a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height),
-      tap(region => this.store.dispatch(new ClearSonification(this.hdu.id)))
+      distinctUntilChanged((a, b) => a && b && a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height),
+      tap((region) => this.store.dispatch(new ClearSonification(this.hdu.id)))
     );
 
     this.loading$ = this.state$.pipe(
-      map(state => state.sonificationJobProgress != null),
+      map((state) => state.sonificationJobProgress != null),
       distinctUntilChanged()
-    )
+    );
 
     this.sonificationUri$ = this.state$.pipe(
-      map(state => state.sonificationUri),
+      map((state) => state.sonificationUri),
       distinctUntilChanged(),
-      tap(uri => console.log("NEW SONIFICATION URI: ", uri))
-    )
+      tap((uri) => console.log("NEW SONIFICATION URI: ", uri))
+    );
 
     this.hotKeys.push(
       new Hotkey(
@@ -322,15 +286,15 @@ export class SonificationPanelComponent
     this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   ngOnDestroy() {
     this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
   }
 
-  ngOnChanges() { }
+  ngOnChanges() {}
 
   selectSubregionByFrequency(subregion: number) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
@@ -387,15 +351,11 @@ export class SonificationPanelComponent
   }
 
   setDuration(value) {
-    this.store.dispatch(
-      new UpdateSonifierFileState(this.hdu.id, { duration: value })
-    );
+    this.store.dispatch(new UpdateSonifierFileState(this.hdu.id, { duration: value }));
   }
 
   setToneCount(value) {
-    this.store.dispatch(
-      new UpdateSonifierFileState(this.hdu.id, { toneCount: value })
-    );
+    this.store.dispatch(new UpdateSonifierFileState(this.hdu.id, { toneCount: value }));
   }
 
   setViewportSync(value) {
@@ -407,8 +367,8 @@ export class SonificationPanelComponent
   }
 
   sonify() {
-    if(!this.hdu || !this.region) return;
-    this.store.dispatch(new Sonify(this.hdu.id, this.region))
+    if (!this.hdu || !this.region) return;
+    this.store.dispatch(new Sonify(this.hdu.id, this.region));
 
     // if (!this.sonificationUri) return;
     // if (
@@ -423,38 +383,32 @@ export class SonificationPanelComponent
   }
 
   onPlayerReady(api: VgAPI) {
-    console.log("ON PLAYER READY")
+    console.log("ON PLAYER READY");
     this.api = api;
 
     let stop$ = from(this.api.getDefaultMedia().subscriptions.ended);
     let start$ = from(this.api.getDefaultMedia().subscriptions.playing);
 
     this.subs.push(
-      from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe(
-        (canPlayThrough) => {
-          this.playerLoading = false;
-        }
-      )
+      from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe((canPlayThrough) => {
+        this.playerLoading = false;
+      })
     );
 
     this.subs.push(
-      from(this.api.getDefaultMedia().subscriptions.loadStart).subscribe(
-        (canPlayThrough) => {
-          this.playerLoading = true;
-        }
-      )
+      from(this.api.getDefaultMedia().subscriptions.loadStart).subscribe((canPlayThrough) => {
+        this.playerLoading = true;
+      })
     );
 
     let indexToneDuration = 0.852 / 2.0;
     this.progressLine$ = merge(
       start$.pipe(
-        tap(v => console.log("STARTED!!!!!!!!!!!!!!!!!!!!!!!!!!!")),
-        flatMap(() =>
-          interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))
-        ),
+        tap((v) => console.log("STARTED!!!!!!!!!!!!!!!!!!!!!!!!!!!")),
+        flatMap(() => interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))),
         withLatestFrom(this.region$),
         map(([v, region]) => {
-          console.log(this.api.getDefaultMedia(), region)
+          console.log(this.api.getDefaultMedia(), region);
           if (!this.api.getDefaultMedia()) return null;
           if (!this.api.getDefaultMedia().duration) return null;
           if (!region) return null;
@@ -466,16 +420,19 @@ export class SonificationPanelComponent
               Math.min(
                 1,
                 (this.api.getDefaultMedia().currentTime - indexToneDuration) /
-                (this.api.getDefaultMedia().duration - 2 * indexToneDuration)
+                  (this.api.getDefaultMedia().duration - 2 * indexToneDuration)
               )
             ) *
-            region.height;
+              region.height;
 
           return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
         })
       ),
       stop$.pipe(map(() => null)),
-      this.sonificationUri$.pipe(skip(1), map(() => null))
+      this.sonificationUri$.pipe(
+        skip(1),
+        map(() => null)
+      )
     );
 
     this.subs.push(
