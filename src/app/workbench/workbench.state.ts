@@ -118,7 +118,7 @@ import {
   Sonify,
   ClearSonification,
 } from "./workbench.actions";
-import { getWidth, getHeight, getSourceCoordinates, DataFile, ImageHdu, IHdu, Header } from "../data-files/models/data-file";
+import { getWidth, getHeight, getSourceCoordinates, DataFile, ImageHdu, IHdu, Header, PixelType } from "../data-files/models/data-file";
 
 import { AfterglowCatalogService } from "./services/afterglow-catalogs";
 import { AfterglowFieldCalService } from "./services/afterglow-field-cals";
@@ -153,6 +153,7 @@ import { DataFilesState, DataFilesStateModel } from "../data-files/data-files.st
 import { HduType } from "../data-files/models/data-file-type";
 import { getViewportRegion, Transform, getImageToViewportTransform } from "../data-files/models/transformation";
 import { SonificationJob, SonificationJobResult } from "../jobs/models/sonification";
+import { IImageData } from '../data-files/models/image-data';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "051341ac-a968-4d48-9e01-8336ee6a978d",
@@ -474,23 +475,184 @@ export class WorkbenchState {
     return focusedViewerHdu as ImageHdu;
   }
 
-  @Selector([WorkbenchState.getFocusedViewer, DataFilesState.getHeaderEntities])
-  public static getFocusedViewerHeader(
-    state: WorkbenchStateModel,
-    focusedViewer: Viewer,
-    headerEntities: { [id: string]: Header }
-  ) {
-    if (!focusedViewer || !focusedViewer.headerId || !(focusedViewer.headerId in headerEntities)) {
-      return null;
-    }
-    return headerEntities[focusedViewer.headerId];
-  }
-
   @Selector([WorkbenchState.getFocusedViewer])
   public static getFocusedViewerViewportSize(state: WorkbenchStateModel, focusedViewer: Viewer) {
     if (!focusedViewer) return null;
     return focusedViewer.viewportSize;
   }
+
+  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  public static getHeaderIdFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: { [id: string]: DataFile },
+    hduEntities: { [id: string]: IHdu }
+    ) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      let hduId = viewer.hduId;
+      if(!hduId) {
+        //use first image HDU from file
+        let file = fileEntities[viewer.fileId];
+        let hduId = file.hduIds.find(hduId => hduEntities[hduId].hduType == HduType.IMAGE);
+        if(!hduId) {
+          return null;
+        }
+      }
+      
+      return hduEntities[hduId].headerId;
+    };
+  }
+
+  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  public static getViewportTransformIdFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: { [id: string]: DataFile },
+    hduEntities: { [id: string]: IHdu }
+    ) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      let viewportTransformId = fileEntities[viewer.fileId].viewportTransformId;
+      if(viewer.hduId) {
+        viewportTransformId = (hduEntities[viewer.hduId] as ImageHdu).viewportTransformId;
+      }
+
+      if(!viewportTransformId) {
+        return null;
+      }
+
+      return viewportTransformId;
+    };
+  }
+
+  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  public static getImageTransformIdFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: { [id: string]: DataFile },
+    hduEntities: { [id: string]: IHdu }
+    ) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      let imageTransformId = fileEntities[viewer.fileId].imageTransformId;
+      if(viewer.hduId) {
+        imageTransformId = (hduEntities[viewer.hduId] as ImageHdu).imageTransformId;
+      }
+
+      if(!imageTransformId) {
+        return null;
+      }
+
+      return imageTransformId;
+    };
+  }
+
+  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  public static getNormalizedImageDataIdFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: { [id: string]: DataFile },
+    hduEntities: { [id: string]: IHdu }
+    ) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      let normalizedImageDataId = fileEntities[viewer.fileId].compositeImageDataId;
+      if(viewer.hduId) {
+        normalizedImageDataId = (hduEntities[viewer.hduId] as ImageHdu).normalizedImageDataId;
+      }
+
+      if(!normalizedImageDataId) {
+        return null;
+      }
+
+      return normalizedImageDataId;
+    };
+  }
+
+  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  public static getRawImageDataIdFromViewerId(
+    state: WorkbenchStateModel,
+    fileEntities: { [id: string]: DataFile },
+    hduEntities: { [id: string]: IHdu }
+    ) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId || !viewer.hduId) {
+        return null;
+      }
+
+      let rawImageDataId = (hduEntities[viewer.hduId] as ImageHdu).rawImageDataId;
+
+      if(!rawImageDataId) {
+        return null;
+      }
+
+      return rawImageDataId;
+    };
+  }
+
+  @Selector()
+  public static getCustomMarkerPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      return viewer.hduId ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).customMarkerPanelStateId : state.fileStateEntities[viewer.fileId].customMarkerPanelStateId;
+    };
+  }
+
+  @Selector()
+  public static getPlottingPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      return viewer.hduId ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).plottingPanelStateId : state.fileStateEntities[viewer.fileId].plottingPanelStateId;
+    };
+  }
+
+  @Selector()
+  public static getSonificationPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      return viewer.hduId ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).sonificationPanelStateId : null;
+    };
+  }
+
+  @Selector()
+  public static getPhotometryPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+    return (id: string) => {
+      let viewer = state.viewers[id];
+      if(viewer.type != 'image' || !viewer.fileId) {
+        return null;
+      }
+
+      return viewer.hduId ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).photometryPanelStateId : null;
+    };
+  }
+
+
 
   @Selector()
   public static getShowConfig(state: WorkbenchStateModel) {
@@ -1308,6 +1470,14 @@ export class WorkbenchState {
 
       function onLoadComplete(store: Store) {
         //normalization
+        setState((state: WorkbenchStateModel) => {
+          //update the viewer state ids which aren't set until after the file is loaded
+
+          
+          return state;
+        });
+
+
         let actions = [];
         let hduStateEntities = state.hduStateEntities;
         return dispatch(actions);
@@ -1818,19 +1988,6 @@ export class WorkbenchState {
       let imageViewer: ImageViewer = {
         ...viewerBase,
         type: "image",
-        headerId: headerId,
-        normalizedImageDataId: imageDataId,
-        rawImageDataId: hdu ? imageHdu.rawImageDataId : null,
-        imageTransformId: hdu ? imageHdu.imageTransformId : file.imageTransformId,
-        viewportTransformId: hdu ? imageHdu.viewportTransformId : file.viewportTransformId,
-        customMarkerPanelStateId: imageHduWorkbenchState
-          ? imageHduWorkbenchState.customMarkerPanelStateId
-          : workbenchFileState.customMarkerPanelStateId,
-        plottingPanelStateId: imageHduWorkbenchState
-          ? imageHduWorkbenchState.plottingPanelStateId
-          : workbenchFileState.plottingPanelStateId,
-        sonificationPanelStateId: imageHduWorkbenchState ? imageHduWorkbenchState.sonificationPanelStateId : null,
-        photometryPanelStateId: imageHduWorkbenchState ? imageHduWorkbenchState.photometryPanelStateId : null,
         panEnabled: true,
         zoomEnabled: true,
       };
@@ -1840,7 +1997,6 @@ export class WorkbenchState {
       let tableViewer: TableViewer = {
         ...viewerBase,
         type: "table",
-        headerId: hdu.headerId,
       };
       dispatch(new CreateViewer(tableViewer, state.focusedViewerPanelId));
       return;

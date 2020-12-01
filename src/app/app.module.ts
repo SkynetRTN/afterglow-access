@@ -53,6 +53,21 @@ export function dataFileSanitizer(v) {
     ...v,
   } as DataFilesStateModel;
 
+  state.headerEntities = {
+    ...state.headerEntities
+  }
+  Object.keys(state.headerEntities).forEach((key) => {
+    let header = {
+      ...state.headerEntities[key],
+      loading: false,
+      loaded: false,
+      entries: [],
+      wcs: null,
+    }
+
+    state.headerEntities[key] = header;
+  })
+
   state.hduEntities = {
     ...state.hduEntities,
   };
@@ -60,12 +75,6 @@ export function dataFileSanitizer(v) {
   Object.keys(state.hduEntities).forEach((key) => {
     let hdu: IHdu = {
       ...state.hduEntities[key],
-      header: {
-        loading: false,
-        loaded: false,
-        entries: [],
-        wcs: null,
-      },
     };
 
     if (hdu.hduType == HduType.IMAGE) {

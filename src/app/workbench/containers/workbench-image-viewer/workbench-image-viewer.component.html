@@ -1,5 +1,5 @@
 <div id="image-viewer-wrapper" fxLayout="column" class="h-100">
-  <ng-container *ngIf="normalizedImageData$ | async; else tableBlock">
+  <ng-container *ngIf="normalizedImageData$ | async">
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
         <div
@@ -44,11 +44,6 @@
       ></app-image-viewer-status-bar>
     </div>
   </ng-container>
-  <ng-template #tableBlock>
-    <ng-container *ngIf="tableData">
-      <div class="h-100">Tables are not yet supported.</div>
-    </ng-container>
-  </ng-template>
 </div>
 
 <!-- 
