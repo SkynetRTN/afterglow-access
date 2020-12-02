@@ -284,28 +284,17 @@
         </div>
 
         <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-          <div *ngIf="[WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool) && !(focusedViewerHdu$ | async)">
-            <h6 i18n>Channel Selection</h6>
-            <div class="pb-1">
-              <mat-form-field appearance="outline">
-                <mat-label>Channel</mat-label>
-                <mat-select
-                  [value]="focusedViewerFileSelectedWorkbenchHduId$ | async"
-                  (selectionChange)="onSelectedHduIdChange($event)"
-                  style="width: 100%"
-                >
-                  <mat-option *ngFor="let hdu of focusedViewerFileHduList$ | async; let index = index" [value]="hdu.id">
-                    Channel {{ index }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-          </div>
+          <app-hdu-selector
+            *ngIf="(focusedViewerFile$ | async) && !(focusedViewerImageHdu$ | async) && [WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool)"
+            [fileId]="(focusedViewerFile$ | async)?.id"
+            [hduType]="HduType.IMAGE"
+            [selectedHduId]="focusedViewerFileLastActiveImageHduId$ | async"
+          ></app-hdu-selector>
 
           <app-display-panel
             *ngSwitchCase="WorkbenchTool.VIEWER"
             [file]="focusedViewerFile$ | async"
-            [hdu]="focusedViewerImageHdu$ | async"
+            [hdu]="(focusedViewerImageHdu$ | async) ? (focusedViewerImageHdu$ | async) : (focusedViewerFileLastActiveImageHdu$ | async)"
             [imageTransform]="focusedViewerImageTransform$ | async"
             [viewportTransform]="focusedViewerViewportTransform$ | async"
             [imageData]="focusedViewerNormalizedImageData$ | async"
@@ -315,7 +304,7 @@
 
           <app-file-info-panel
             *ngSwitchCase="WorkbenchTool.INFO"
-            [header]="focusedViewerHeader$ | async"
+            [header]="(focusedViewerHeader$ | async) ? (focusedViewerHeader$ | async) : (focusedViewerFileLastActiveHduHeader$ | async)"
             [config]="fileInfoPanelConfig$ | async"
             (configChange)="onFileInfoPanelConfigChange($event)"
           >

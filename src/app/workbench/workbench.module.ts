@@ -76,12 +76,14 @@ import { ThemeDialogComponent } from "./components/theme-dialog/theme-dialog.com
 import { ConfirmationDialogComponent } from "./components/confirmation-dialog/confirmation-dialog.component";
 import { AvatarModule } from "ngx-avatar";
 import { WorkbenchViewerLayoutComponent } from "./containers/workbench-viewer-layout/workbench-viewer-layout.component";
+import { HduSelectorComponent } from './components/hdu-selector/hdu-selector.component';
 
 export const COMPONENTS = [
   NavbarComponent,
   AppFooterComponent,
   WorkbenchDataFileListComponent,
   WorkbenchImageViewerComponent,
+  HduSelectorComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
   ImageViewerStatusBarComponent,

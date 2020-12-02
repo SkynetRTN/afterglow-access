@@ -49,7 +49,6 @@ import {
   RotateBy,
   UpdateNormalizedImageTileSuccess,
   SyncFileNormalizations,
-  SyncHduTransformations,
   ResetImageTransform,
   UpdateCompositeImageTile,
   UpdateCompositeImageTileSuccess,
@@ -59,6 +58,7 @@ import {
   LoadRawImageTileFail,
   UpdateNormalizedImageTileFail,
   UpdateCompositeImageTileFail,
+  UpdateTransform,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -979,6 +979,11 @@ export class DataFilesState {
     if (!imageData.initialized) return;
     let rawTile = imageData.tiles[tileIndex];
 
+    // if(rawTile.pixelsLoading) {
+    //   console.log("SKIPPING UPDATE NORMALIZED TILE SINCE IT IS ALREADY LOADING.... ", hduId, tileIndex);
+    //   return;
+    // }
+
     let onRawPixelsLoaded = () => {
       setState((state: DataFilesStateModel) => {
         let hdu = state.hduEntities[hduId] as ImageHdu;
@@ -1539,115 +1544,22 @@ export class DataFilesState {
     });
   }
 
-  // @Action(SyncHduTransformations)
-  // @ImmutableContext()
-  // public syncFileTransformations(
-  //   { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-  //   { referenceHduId, hduIds }: SyncHduTransformations
-  // ) {
-  //   let state = getState();
-  //   if (
-  //     !(referenceHduId in state.hduEntities) ||
-  //     state.hduEntities[referenceHduId].hduType != HduType.IMAGE
-  //   )
-  //     return;
-  //   let referenceHdu = state.hduEntities[referenceHduId] as ImageHdu;
-  //   let referenceHeader = state.headerEntities[referenceHdu.headerId];
-  //   let referenceImageTransform =
-  //     state.transformEntities[referenceHdu.transformation.imageTransformId];
-  //   let referenceViewportTransform =
-  //     state.transformEntities[referenceHdu.transformation.viewportTransformId];
-  //   let referenceImageToViewportTransform =
-  //     state.transformEntities[
-  //       referenceHdu.transformation.imageToViewportTransformId
-  //     ];
-  //   let referenceHduHasWcs =
-  //   referenceHeader.wcs && referenceHeader.wcs.isValid();
+  @Action(UpdateTransform)
+  @ImmutableContext()
+  public updateTransform(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { transformId, changes }: UpdateTransform
+  ) {
+    let state = getState();
 
-  //   setState((state: DataFilesStateModel) => {
-  //     let actions = [];
-  //     hduIds.forEach((hduId) => {
-  //       if (
-  //         !(hduId in state.hduEntities) ||
-  //         state.hduEntities[hduId].hduType != HduType.IMAGE
-  //       ) {
-  //         return;
-  //       }
-  //       let hdu = state.hduEntities[hduId] as ImageHdu;
-  //       let header = state.headerEntities[hdu.headerId];
-  //       let transformation = hdu.transformation;
-  //       let viewportTransformId = transformation.viewportTransformId;
-  //       let imageTransformId = transformation.imageTransformId;
-  //       let imageToViewportTransformId =
-  //         transformation.imageToViewportTransformId;
-  //       let ts = state.transformEntities;
-  //       let viewportTransform = ts[viewportTransformId];
-  //       let imageTransform = ts[imageTransformId];
-  //       let imageToViewportTransform = ts[imageToViewportTransformId];
-  //       let hduHasWcs = header.wcs && header.wcs.isValid();
+    setState((state: DataFilesStateModel) => {
+      state.transformEntities[transformId] = {
+        ...state.transformEntities[transformId],
+        ...changes,
+        id: transformId,
+      }
+      return state;
+    });
+  }
 
-  //       if (referenceHduHasWcs && hduHasWcs) {
-
-  //         let referenceWcs = referenceHeader.wcs;
-  //         let referenceWcsTransform = new Matrix(
-  //           referenceWcs.m11,
-  //           referenceWcs.m21,
-  //           referenceWcs.m12,
-  //           referenceWcs.m22,
-  //           0,
-  //           0
-  //         );
-  //         let originWorld = referenceWcs.pixToWorld([0, 0]);
-  //         let wcs = header.wcs;
-  //         let originPixels = wcs.worldToPix(originWorld);
-  //         let wcsTransform = new Matrix(
-  //           wcs.m11,
-  //           wcs.m21,
-  //           wcs.m12,
-  //           wcs.m22,
-  //           0,
-  //           0
-  //         );
-
-  //         if (hasOverlap(referenceHeader, header)) {
-  //           let srcToTargetTransform = referenceWcsTransform
-  //             .inverted()
-  //             .appended(wcsTransform)
-  //             .translate(-originPixels[0], -originPixels[1]);
-
-  //           imageTransform = appendTransform(
-  //             referenceImageTransform,
-  //             srcToTargetTransform
-  //           );
-  //           viewportTransform = {
-  //             ...referenceViewportTransform,
-  //           };
-  //           imageToViewportTransform = getImageToViewportTransform(
-  //             viewportTransform,
-  //             imageTransform
-  //           );
-  //           ts[viewportTransformId] = viewportTransform;
-  //           ts[imageTransformId] = imageTransform;
-  //           ts[imageToViewportTransformId] = imageToViewportTransform;
-  //         }
-  //       } else {
-  //         viewportTransform = {
-  //           ...referenceViewportTransform,
-  //         };
-  //         imageTransform = {
-  //           ...referenceImageTransform,
-  //         };
-  //         imageToViewportTransform = getImageToViewportTransform(
-  //           viewportTransform,
-  //           imageTransform
-  //         );
-  //         ts[viewportTransformId] = viewportTransform;
-  //         ts[imageTransformId] = imageTransform;
-  //         ts[imageToViewportTransformId] = imageToViewportTransform;
-  //       }
-  //     });
-
-  //     return state;
-  //   });
-  // }
 }

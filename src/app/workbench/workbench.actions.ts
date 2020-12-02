@@ -23,7 +23,7 @@ import { Source, PosType } from "./models/source";
 import { Marker } from "./models/marker";
 import { Viewer } from "./models/viewer";
 import { FileInfoPanelConfig } from "./models/file-info-panel";
-import { DataFile, IHdu } from "../data-files/models/data-file";
+import { DataFile, IHdu, Header } from "../data-files/models/data-file";
 import { Region } from "../data-files/models/region";
 import { SonificationPanelState } from "./models/sonifier-file-state";
 import { PlottingPanelState } from "./models/plotter-file-state";
@@ -605,7 +605,15 @@ export class RemovePhotDatas {
 }
 
 export class SetSelectedHduId {
-  public static readonly type = "[Data File] Set Selected HDU id";
+  public static readonly type = "[Workbench] Set Selected HDU id";
 
   constructor(public fileId: string, public hduId: string) {}
+}
+
+
+
+export class SyncViewerTransformations {
+  public static readonly type = "[Workbench] Sync Viewer Transformations";
+
+  constructor(public refHeaderId: string, public refImageTransformId: string, public refViewportTransformId: string) {}
 }

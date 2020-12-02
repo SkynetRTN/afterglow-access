@@ -2,6 +2,7 @@ import { DataFile, Header, PixelType, IHdu } from "./models/data-file";
 import { ImageHist } from "./models/image-hist";
 import { PixelNormalizer } from "./models/pixel-normalizer";
 import { Region } from "./models/region";
+import { Transform } from './models/transformation';
 
 /**
  * Load Library Actions
@@ -325,8 +326,9 @@ export class ResetImageTransform {
   constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string) {}
 }
 
-export class SyncHduTransformations {
-  public static readonly type = "[Workbench] Sync Hdu Transformations";
 
-  constructor(public referenceHduId: string, public hduIds: string[]) {}
+export class UpdateTransform {
+  public static readonly type = "[Transformation] Update";
+
+  constructor(public transformId: string, public changes: Partial<Transform>) {}
 }

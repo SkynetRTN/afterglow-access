@@ -142,9 +142,9 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
     let viewerId$ = this.viewer$.pipe(
-      map(viewer => viewer ? viewer.id : null),
+      map((viewer) => (viewer ? viewer.id : null)),
       distinctUntilChanged()
-    )
+    );
 
     this.file$ = this.viewer$.pipe(
       switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId))))
@@ -156,97 +156,71 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     let headerId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getHeaderIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.header$ = headerId$.pipe(
-      switchMap((headerId) =>
-        this.store
-          .select(DataFilesState.getHeaderById)
-          .pipe(map((fn) => fn(headerId)))
-      )
+      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
     );
 
     let rawImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getRawImageDataIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getRawImageDataIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.rawImageData$ = rawImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store
-          .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
+        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
       )
     );
 
     let normalizedImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getNormalizedImageDataIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getNormalizedImageDataIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.normalizedImageData$ = normalizedImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store
-          .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
+        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
       )
     );
 
     let viewportTransformId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getViewportTransformIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.viewportTransform$ = viewportTransformId$.pipe(
-      switchMap((transformId) =>
-        this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(transformId)))
-      )
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId))))
     );
 
     let imageTransformId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getImageTransformIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.imageTransform$ = imageTransformId$.pipe(
-      switchMap((transformId) =>
-        this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(transformId)))
-      )
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId))))
     );
 
     this.imageToViewportTransform$ = combineLatest(this.imageTransform$, this.viewportTransform$).pipe(
@@ -260,57 +234,41 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     let customMarkerPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store
-          .select(WorkbenchState.getCustomMarkerPanelStateById)
-          .pipe(map((fn) => fn(id)))
-      )
+      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id))))
     );
 
     let plottingPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getPlottingPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.plottingPanelState$ = plottingPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id)))
-      )
+      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id))))
     );
 
     let sonificationPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getSonificationPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
-      ),
-    )
+        this.store.select(WorkbenchState.getSonificationPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      )
+    );
 
     this.sonificationPanelState$ = sonificationPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store
-          .select(WorkbenchState.getSonificationPanelStateById)
-          .pipe(map((fn) => fn(id)))
-      )
+      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id))))
     );
 
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
@@ -516,19 +474,18 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleMoveBy($event: MoveByEvent) {
-    if(!this.viewer) {
+    if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
     let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
     let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
+
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) {
       return;
+    }
     this.store.dispatch(
       new MoveBy(
         normalizedImageDataId,
@@ -542,19 +499,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleZoomBy($event: ZoomByEvent) {
-    if(!this.viewer) {
+    if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
     let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
     let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
-      return;
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
     this.store.dispatch(
       new ZoomBy(
         normalizedImageDataId,
@@ -568,20 +521,16 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleZoomTo($event: ZoomByEvent) {
-    if(!this.viewer) {
+    if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
     let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
     let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
 
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
-      return;
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
     this.store.dispatch(
       new ZoomTo(
         normalizedImageDataId,
@@ -595,33 +544,23 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleZoomToFit($event: ZoomToFitEvent) {
-    if(!this.viewer) {
+    if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
     let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
     let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
 
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
-      return;
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
     this.store.dispatch(
-      new CenterRegionInViewport(
-        normalizedImageDataId,
-        imageTransformId,
-        viewportTransformId,
-        this.viewer.viewportSize,
-        {
-          x: 1,
-          y: 1,
-          width: this.normalizedImageData.width,
-          height: this.normalizedImageData.height,
-        }
-      )
+      new CenterRegionInViewport(normalizedImageDataId, imageTransformId, viewportTransformId, this.viewer.viewportSize, {
+        x: 1,
+        y: 1,
+        width: this.normalizedImageData.width,
+        height: this.normalizedImageData.height,
+      })
     );
   }
 

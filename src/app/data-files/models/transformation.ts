@@ -12,8 +12,9 @@ export interface Transform {
   ty: number;
 }
 
-export function matrixToTransform(m: any) {
+export function matrixToTransform(id: string, m: any) {
   return {
+    id: id,
     a: m.a,
     b: m.b,
     c: m.c,
@@ -28,31 +29,31 @@ export function transformToMatrix(t: Transform): any {
 }
 
 export function getImageToViewportTransform(viewportTransform: Transform, imageTransform: Transform) {
-  return appendTransform(viewportTransform, imageTransform);
+  return appendTransform(null, viewportTransform, imageTransform);
 }
 
-export function appendTransform(a: Transform, b: Transform) {
+export function appendTransform(id: string, a: Transform, b: Transform) {
   let aMat = transformToMatrix(a);
   let bMat = transformToMatrix(b);
   let cMat = aMat.appended(bMat);
-  return matrixToTransform(cMat);
+  return matrixToTransform(id, cMat);
 }
 
 export function invertTransform(t: Transform) {
   let inverted = transformToMatrix(t).inverted();
-  return matrixToTransform(inverted);
+  return matrixToTransform(t.id, inverted);
 }
 
 export function scaleTransform(t: Transform, xFactor: number, yFactor: number, anchor: { x: number; y: number }) {
-  return matrixToTransform(transformToMatrix(t).scale(xFactor, yFactor, anchor));
+  return matrixToTransform(t.id, transformToMatrix(t).scale(xFactor, yFactor, anchor));
 }
 
 export function rotateTransform(t: Transform, angle: number, anchor: { x: number; y: number }) {
-  return matrixToTransform(transformToMatrix(t).rotate(angle, anchor));
+  return matrixToTransform(t.id, transformToMatrix(t).rotate(angle, anchor));
 }
 
 export function translateTransform(t: Transform, tx: number, ty: number) {
-  return matrixToTransform(transformToMatrix(t).translate(tx, ty));
+  return matrixToTransform(t.id, transformToMatrix(t).translate(tx, ty));
 }
 
 export function transformPoint(point: { x: number; y: number }, transform: Transform): { x: number; y: number } {
