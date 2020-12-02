@@ -576,7 +576,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               )
             ),
             distinctUntilChanged(),
-            tap(v => console.log("REF HEADER CHANGE: ", v))
+            // tap(v => console.log("REF HEADER CHANGED"))
           );
 
           let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
@@ -588,7 +588,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               )
             ),
             distinctUntilChanged(),
-            tap(v => console.log("REF IMAGE TRANSFORM CHANGE: ", v))
+            // tap(v => console.log("REF HEADER CHANGED"))
           );
 
           let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
@@ -600,22 +600,23 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               )
             ),
             distinctUntilChanged(),
-            tap(v => console.log("REF VIEWPORT TRANSFORM CHANGE: ", v))
+            // tap(v => console.log("REF HEADER CHANGED"))
           );
 
           // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
           let targetHeaders$ = combineLatest(
             targetViewerIds.map((viewerId) =>
               this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
-                distinctUntilChanged(),
                 map((fn) => fn(viewerId)),
+                distinctUntilChanged(),
+                // tap(v => console.log("TARGET HEADER ID CHANGED: ", v)),
                 switchMap((headerId) =>
                   this.store.select(DataFilesState.getHeaderById).pipe(
                     map((fn) => fn(headerId)),
                     distinctUntilChanged()
                   )
                 ),
-                tap(v => console.log("TARGET HEADER CHANGE: ", v))
+                // tap(v => console.log("TARGET HEADER CHANGED: ", v))
               )
             )
           )
@@ -628,7 +629,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         if(!refHeader || !refImageTransform || !refViewportTransform || targetHeaders.length == 0) {
           return;
         }
-        console.log("HERE!!!!!!!!!!!!!!: ", refHeader, refImageTransform, refViewportTransform, targetHeaders);
         this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
       });
 

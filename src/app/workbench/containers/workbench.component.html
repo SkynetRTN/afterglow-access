@@ -304,7 +304,7 @@
 
           <app-file-info-panel
             *ngSwitchCase="WorkbenchTool.INFO"
-            [header]="(focusedViewerHeader$ | async) ? (focusedViewerHeader$ | async) : (focusedViewerFileLastActiveHduHeader$ | async)"
+            [header]="(focusedViewerImageHdu$ | async) ? (focusedViewerHeader$ | async) : (focusedViewerFileLastActiveHduHeader$ | async)"
             [config]="fileInfoPanelConfig$ | async"
             (configChange)="onFileInfoPanelConfigChange($event)"
           >

@@ -10,7 +10,7 @@ export const appConfig: AppConfig = {
   oauth2ClientId: '',
   oauth2ClientSecret: '',
   authCookieName: null,
-  tileSize: 512,
+  tileSize: 2048,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,
   plugins: [NgxsLoggerPluginModule.forRoot()],

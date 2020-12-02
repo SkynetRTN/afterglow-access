@@ -1,4 +1,4 @@
-import { Component, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange } from "@angular/core";
+import { Component, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange, ChangeDetectionStrategy } from "@angular/core";
 import { DataFile, IHdu } from "../../../data-files/models/data-file";
 import { Store } from "@ngxs/store";
 import { HduType } from "../../../data-files/models/data-file-type";
@@ -36,6 +36,7 @@ export interface ISelectedFileListItem {
   selector: "app-workbench-data-file-list",
   templateUrl: "./workbench-data-file-list.component.html",
   styleUrls: ["./workbench-data-file-list.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkbenchDataFileListComponent {
   @Input("selectedItem")
@@ -144,6 +145,7 @@ export class WorkbenchDataFileListComponent {
     );
 
     this.selectedItem$.subscribe((selectedItem) => {
+      console.log("SELECTED ITEM CHANGED")
       let selectedNodeIds = {};
       let selectedItemId = null;
       if (selectedItem) {
@@ -160,11 +162,6 @@ export class WorkbenchDataFileListComponent {
         focusedNodeId: selectedItemId,
       };
     });
-  }
-
-  trackByFn(index: number, value: DataFile | IHdu) {
-    if (!value) return null;
-    return `${value.type}-${value.id}`;
   }
 
   onItemClick(tree: TreeModel, node: TreeNode, $event) {
