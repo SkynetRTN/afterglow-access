@@ -1468,9 +1468,7 @@ export class WorkbenchState {
       let refHeaderId = this.store.selectSnapshot(WorkbenchState.getHeaderIdFromViewerId)(viewer.id);
       
       setState((state: WorkbenchStateModel) => {
-        let viewer = state.viewers[viewerId];
-        viewer.fileId = fileId;
-        viewer.hduId = hduId;
+        
         //for a more responsive feel, set the panel's selected viewer before loading
         let panel = Object.values(state.viewerLayoutItems).find(
           (item) => item.type == "panel" && (item as ViewerPanel).viewerIds.includes(viewerId)
@@ -1501,14 +1499,15 @@ export class WorkbenchState {
           // }
         }
 
-
+        //wait to set the viewer file and hdu until after it has loaded the header/hist
         setState((state: WorkbenchStateModel) => {
-          
+          let viewer = state.viewers[viewerId];
+          viewer.fileId = fileId;
+          viewer.hduId = hduId;
           return state;
         });
 
         let actions = [];
-        let hduStateEntities = state.hduStateEntities;
         return dispatch(actions);
       }
 

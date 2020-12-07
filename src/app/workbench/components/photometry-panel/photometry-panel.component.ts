@@ -26,6 +26,8 @@ import {
   distinctUntilChanged,
   withLatestFrom,
   switchMap,
+  debounceTime,
+  auditTime,
 } from "rxjs/operators";
 
 import * as jStat from "jstat";
@@ -244,18 +246,18 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       .pipe(
         map((rows) => rows.filter((row) => row.data == null)),
         filter((rows) => rows.length != 0 && this.config.autoPhot),
-        switchMap((rows) => {
-          return this.store.dispatch(
-            new PhotometerSources(
-              rows.map((row) => row.source.id),
-              [this.primaryHdu.id],
-              this.photometrySettings,
-              false
-            )
-          );
-        })
+        auditTime(2000)
       )
-      .subscribe();
+      .subscribe(rows => {
+        this.store.dispatch(
+          new PhotometerSources(
+            rows.map((row) => row.source.id),
+            [this.primaryHdu.id],
+            this.photometrySettings,
+            false
+          )
+        );
+      });
     // this.photometryUpdater = this.tableData$
     // .pipe(
     //   filter((sources) => sources && sources.length != 0 && this.config && this.config.autoPhot),

@@ -140,6 +140,12 @@
       background: mat-color($background, background);
     }
 
+
+    // DSS catalog import radio wrapping issue
+    .mat-radio-label {
+      white-space: normal;
+    }
+
     // .vertical-icon-nav-item .icon-wrapper {
     //   color: rgba(0, 0, 0, 0.54);
     //   background: mat-color($mat-grey, 300);

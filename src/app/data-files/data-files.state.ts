@@ -979,10 +979,10 @@ export class DataFilesState {
     if (!imageData.initialized) return;
     let rawTile = imageData.tiles[tileIndex];
 
-    // if(rawTile.pixelsLoading) {
-    //   console.log("SKIPPING UPDATE NORMALIZED TILE SINCE IT IS ALREADY LOADING.... ", hduId, tileIndex);
-    //   return;
-    // }
+    if(rawTile.pixelsLoading) {
+      console.log("SKIPPING UPDATE NORMALIZED TILE SINCE IT IS ALREADY LOADING.... ", hduId, tileIndex);
+      return;
+    }
 
     let onRawPixelsLoaded = () => {
       setState((state: DataFilesStateModel) => {

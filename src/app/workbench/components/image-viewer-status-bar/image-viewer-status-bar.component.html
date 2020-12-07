@@ -1,9 +1,9 @@
-<div fxLayout="row wrap" fxLayout.sm="column" fxLayoutGap="10px" class="info-bar mono">
+<div fxLayout="row wrap" fxLayoutAlign="end" fxLayout.sm="column" fxLayoutGap="10px" class="info-bar mono">
   <div fxFlex="1 1 auto" fxFlexAlign="center">
     <div class="pr-4" style="min-width: 300px; display: inline-block">
       <ng-container *ngIf="imageMouseX != null && imageMouseY != null; else noImageCoords">
         ({{ imageMouseX | number: "1.3-3" }}, {{ imageMouseY | number: "1.3-3" }})
-        <ng-container *ngIf="pixelValue; else colorValueBlock"> : {{ pixelValue | number: "1.1-3" }}</ng-container>
+        <ng-container *ngIf="pixelValue != null; else colorValueBlock"> : {{ pixelValue | number: "1.1-3" }}</ng-container>
         <ng-template #colorValueBlock>
           <ng-container *ngIf="colorValue">
             : RGBA({{ colorValue.red }},{{ colorValue.green }},{{ colorValue.blue }},{{ colorValue.alpha }})</ng-container
@@ -20,7 +20,7 @@
       <ng-template #noSkyCoords> </ng-template>
     </div>
   </div>
-  <div fxFlex="1 1 auto" style="text-align: right">
+  <div fxFlex="0 0 auto" style="text-align: right">
     <div class="tool-bar">
       <button
         mat-icon-button

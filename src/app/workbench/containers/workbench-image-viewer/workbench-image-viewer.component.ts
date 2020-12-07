@@ -101,6 +101,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
   file$: Observable<DataFile>;
+  hduId$: Observable<string>;
   hdu$: Observable<ImageHdu>;
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
@@ -147,11 +148,18 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.file$ = this.viewer$.pipe(
-      switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId))))
+      switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId)))),
+      distinctUntilChanged()
     );
 
-    this.hdu$ = this.viewer$.pipe(
-      switchMap((viewer) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(viewer.hduId) as ImageHdu)))
+    this.hduId$ = this.viewer$.pipe(
+      map(viewer => viewer.hduId),
+      distinctUntilChanged()
+    );
+
+    this.hdu$ = this.hduId$.pipe(
+      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId) as ImageHdu))),
+      distinctUntilChanged()
     );
 
     let headerId$ = viewerId$.pipe(
@@ -164,7 +172,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.header$ = headerId$.pipe(
-      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
+      distinctUntilChanged()
     );
 
     let rawImageDataId$ = viewerId$.pipe(
@@ -179,7 +188,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.rawImageData$ = rawImageDataId$.pipe(
       switchMap((imageDataId) =>
         this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
-      )
+      ),
+      distinctUntilChanged()
     );
 
     let normalizedImageDataId$ = viewerId$.pipe(
@@ -188,13 +198,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
-      )
+      ),
+      distinctUntilChanged()
     );
 
     this.normalizedImageData$ = normalizedImageDataId$.pipe(
       switchMap((imageDataId) =>
         this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
-      )
+      ),
+      distinctUntilChanged()
     );
 
     let viewportTransformId$ = viewerId$.pipe(
@@ -203,11 +215,13 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
-      )
+      ),
+      distinctUntilChanged()
     );
 
     this.viewportTransform$ = viewportTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId))))
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
+      distinctUntilChanged()
     );
 
     let imageTransformId$ = viewerId$.pipe(
@@ -216,11 +230,13 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
-      )
+      ),
+      distinctUntilChanged()
     );
 
     this.imageTransform$ = imageTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId))))
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
+      distinctUntilChanged()
     );
 
     this.imageToViewportTransform$ = combineLatest(this.imageTransform$, this.viewportTransform$).pipe(
@@ -238,11 +254,13 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
-      )
+      ),
+      distinctUntilChanged()
     );
 
     this.customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id))))
+      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
+      distinctUntilChanged()
     );
 
     let plottingPanelStateId$ = viewerId$.pipe(
@@ -251,11 +269,13 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
-      )
+      ),
+      distinctUntilChanged()
     );
 
     this.plottingPanelState$ = plottingPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id))))
+      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id)))),
+      distinctUntilChanged()
     );
 
     let sonificationPanelStateId$ = viewerId$.pipe(
@@ -264,11 +284,13 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
-      )
+      ),
+      distinctUntilChanged()
     );
 
     this.sonificationPanelState$ = sonificationPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id))))
+      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id)))),
+      distinctUntilChanged()
     );
 
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
@@ -379,14 +401,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           );
         } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
           return combineLatest(
-            this.hdu$,
+            this.hduId$,
             this.header$,
             this.store.select(WorkbenchState.getPhotometryPanelConfig),
             this.store.select(SourcesState.getSources)
           ).pipe(
-            map(([hdu, header, config, sources]) => {
-              if (!hdu || !header) return [];
-              let hduId = hdu.id;
+            map(([hduId, header, config, sources]) => {
+              console.log("NEW PHOTOMETRY MARKERS")
+              if (!header) return [];
+              
               let selectedSourceIds = config.selectedSourceIds;
               let coordMode = config.coordMode;
               let showSourcesFromAllFiles = config.showSourcesFromAllFiles;

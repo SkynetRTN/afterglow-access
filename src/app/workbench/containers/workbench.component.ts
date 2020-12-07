@@ -1,6 +1,17 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { Observable, combineLatest, merge, of, never, empty } from "rxjs";
-import { map, tap, filter, distinctUntilChanged, switchMap, withLatestFrom, debounceTime, throttleTime, auditTime } from "rxjs/operators";
+import {
+  map,
+  tap,
+  filter,
+  distinctUntilChanged,
+  switchMap,
+  withLatestFrom,
+  debounceTime,
+  throttleTime,
+  auditTime,
+  skip,
+} from "rxjs/operators";
 
 import {
   DataFile,
@@ -558,24 +569,20 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.transformationSyncSub = combineLatest(
       this.focusedViewerId$,
       this.store.select(WorkbenchState.getViewerSyncEnabled),
-      visibleViewerIds$
+      // visibleViewerIds$
     )
       .pipe(
         filter(([focusedViewerId]) => focusedViewerId != null),
-        switchMap(([focusedViewerId, transformationSyncEnabled, visibleViewerIds]) => {
+        switchMap(([focusedViewerId, transformationSyncEnabled]) => {
           if (!transformationSyncEnabled) return empty();
 
-          let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
+          // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
 
           let refHeader$ = this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
-            switchMap((headerId) =>
-              this.store.select(DataFilesState.getHeaderById).pipe(
-                map((fn) => fn(headerId))
-              )
-            ),
-            distinctUntilChanged(),
+            switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
+            distinctUntilChanged()
             // tap(v => console.log("REF HEADER CHANGED"))
           );
 
@@ -583,11 +590,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
             switchMap((transformId) =>
-              this.store.select(DataFilesState.getTransformById).pipe(
-                map((fn) => fn(transformId))
-              )
+              this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
             ),
-            distinctUntilChanged(),
+            distinctUntilChanged()
             // tap(v => console.log("REF HEADER CHANGED"))
           );
 
@@ -595,42 +600,113 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
             switchMap((transformId) =>
-              this.store.select(DataFilesState.getTransformById).pipe(
-                map((fn) => fn(transformId))
-              )
+              this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
             ),
-            distinctUntilChanged(),
+            distinctUntilChanged()
             // tap(v => console.log("REF HEADER CHANGED"))
           );
 
           // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
-          let targetHeaders$ = combineLatest(
-            targetViewerIds.map((viewerId) =>
-              this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
-                map((fn) => fn(viewerId)),
-                distinctUntilChanged(),
-                // tap(v => console.log("TARGET HEADER ID CHANGED: ", v)),
-                switchMap((headerId) =>
-                  this.store.select(DataFilesState.getHeaderById).pipe(
-                    map((fn) => fn(headerId)),
-                    distinctUntilChanged()
-                  )
-                ),
-                // tap(v => console.log("TARGET HEADER CHANGED: ", v))
-              )
-            )
-          )
+          // let targetHeaders$ = combineLatest(
+          //   targetViewerIds.map((viewerId) =>
+          //     this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+          //       map((fn) => fn(viewerId)),
+          //       distinctUntilChanged(),
+          //       // tap(v => console.log("TARGET HEADER ID CHANGED: ", v)),
+          //       switchMap((headerId) =>
+          //         this.store.select(DataFilesState.getHeaderById).pipe(
+          //           map((fn) => fn(headerId)),
+          //           distinctUntilChanged()
+          //         )
+          //       )
+          //       // tap(v => console.log("TARGET HEADER CHANGED: ", v))
+          //     )
+          //   )
+          // );
 
-          return combineLatest(refHeader$, refImageTransform$, refViewportTransform$, targetHeaders$);
-        }),
+          return combineLatest(refHeader$, refImageTransform$, refViewportTransform$).pipe(
+            skip(1)
+          );
+        })
         // auditTime(10),
       )
-      .subscribe(([refHeader, refImageTransform, refViewportTransform, targetHeaders]) => {
-        if(!refHeader || !refImageTransform || !refViewportTransform || targetHeaders.length == 0) {
+      .subscribe(([refHeader, refImageTransform, refViewportTransform]) => {
+        if (!refHeader || !refImageTransform || !refViewportTransform) {
           return;
         }
         this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
       });
+
+    // this.normalizationSyncSub = combineLatest(
+    //   this.focusedViewerId$,
+    //   this.store.select(WorkbenchState.getNormalizationSyncEnabled),
+    //   visibleViewerIds$
+    // )
+    //   .pipe(
+    //     filter(([focusedViewerId]) => focusedViewerId != null),
+    //     switchMap(([focusedViewerId, normalizationSyncEnabled, visibleViewerIds]) => {
+    //       if (!normalizationSyncEnabled) return empty();
+
+    //       let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
+
+          
+
+    //       let refHeader$ = this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+    //         map((fn) => fn(focusedViewerId)),
+    //         distinctUntilChanged(),
+    //         switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
+    //         distinctUntilChanged()
+    //         // tap(v => console.log("REF HEADER CHANGED"))
+    //       );
+
+    //       let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
+    //         map((fn) => fn(focusedViewerId)),
+    //         distinctUntilChanged(),
+    //         switchMap((transformId) =>
+    //           this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
+    //         ),
+    //         distinctUntilChanged()
+    //         // tap(v => console.log("REF HEADER CHANGED"))
+    //       );
+
+    //       let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
+    //         map((fn) => fn(focusedViewerId)),
+    //         distinctUntilChanged(),
+    //         switchMap((transformId) =>
+    //           this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
+    //         ),
+    //         distinctUntilChanged()
+    //         // tap(v => console.log("REF HEADER CHANGED"))
+    //       );
+
+    //       // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
+    //       let targetHeaders$ = combineLatest(
+    //         targetViewerIds.map((viewerId) =>
+    //           this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+    //             map((fn) => fn(viewerId)),
+    //             distinctUntilChanged(),
+    //             // tap(v => console.log("TARGET HEADER ID CHANGED: ", v)),
+    //             switchMap((headerId) =>
+    //               this.store.select(DataFilesState.getHeaderById).pipe(
+    //                 map((fn) => fn(headerId)),
+    //                 distinctUntilChanged()
+    //               )
+    //             )
+    //             // tap(v => console.log("TARGET HEADER CHANGED: ", v))
+    //           )
+    //         )
+    //       );
+
+    //       return combineLatest(refHeader$, refImageTransform$, refViewportTransform$, targetHeaders$);
+    //     })
+    //     // auditTime(10),
+    //   )
+    //   .subscribe(([refHeader, refImageTransform, refViewportTransform, targetHeaders]) => {
+    //     if (!refHeader || !refImageTransform || !refViewportTransform || targetHeaders.length == 0) {
+    //       return;
+    //     }
+    //     this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
+    //   });
 
     // this.normalizationSyncSub = combineLatest(
     //   this.focusedImageHduId$,
