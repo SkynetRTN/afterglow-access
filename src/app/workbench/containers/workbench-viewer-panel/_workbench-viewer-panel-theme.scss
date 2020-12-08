@@ -10,9 +10,16 @@
   }
 
 
-  .viewer-panel.focused .mat-tab-label-container {
-    background: mat-color($primary);
+  @if map-get($theme, is-dark) {
+    .viewer-panel.focused .mat-tab-label-container {
+      background: mat-color($primary, darker);
+    }
+  } @else {
+    .viewer-panel.focused .mat-tab-label-container {
+      background: mat-color($primary, lighter);
+    }
   }
+  
 
   .viewer-panel .mat-tab-label {
     opacity: 0.7;
