@@ -643,7 +643,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
           let refImageHdu$ = this.store.select(WorkbenchState.getViewerById).pipe(
-            map((fn) => fn(focusedViewerId).hduId),
+            map((fn) => fn(focusedViewerId)),
+            map(viewer => viewer ? viewer.hduId : null),
             distinctUntilChanged(),
             switchMap((hduId) =>
               this.store.select(DataFilesState.getHduById).pipe(
