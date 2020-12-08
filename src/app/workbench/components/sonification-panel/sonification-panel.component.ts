@@ -405,7 +405,6 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
         flatMap(() => interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))),
         withLatestFrom(this.region$),
         map(([v, region]) => {
-          console.log(this.api.getDefaultMedia(), region);
           if (!this.api.getDefaultMedia()) return null;
           if (!this.api.getDefaultMedia().duration) return null;
           if (!region) return null;
