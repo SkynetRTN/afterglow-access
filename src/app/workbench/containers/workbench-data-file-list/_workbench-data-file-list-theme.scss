@@ -9,6 +9,12 @@
     tree-root:focus {
       outline: none;
     }
+
+    div.tree div.tree-children::before, div.tree::before,
+    div.tree tree-node > div::before {
+      border-color: mat-color($foreground, text);
+    }
+
     .node-content-wrapper {
       border: solid 1px mat-color($primary, 0);
       white-space: nowrap;
