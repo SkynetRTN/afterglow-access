@@ -71,7 +71,7 @@
   }
 
   .mat-tooltip {
-    font-size: 16px;
+    font-size: 16px !important;
     background-color: mat-color($foreground, text, 1);
     color: mat-color($background, card);
   }
