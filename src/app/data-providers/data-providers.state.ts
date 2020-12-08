@@ -266,98 +266,57 @@ export class DataProvidersState {
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
     { fieldName, order }: SortDataProviderAssets
   ) {
-    let state = getState();
-    let userSortField = state.userSortField;
-    let userSortOrder = state.userSortOrder;
-
-    let currentSortField = null;
-    let currentSortOrder: "" | "asc" | "desc" = "asc";
-
-    //if action sets the sort field, use it
-    if (fieldName) {
-      userSortField = fieldName;
-      if (order) userSortOrder = order;
-    }
-
-    if (userSortField) {
-      //verify that the user selected sort field exists
-      if (userSortField == "name") {
-        currentSortField = userSortField;
-        currentSortOrder = userSortOrder;
-      } else if (state.currentProvider) {
-        let col = state.currentProvider.columns.find((col) => col.fieldName == userSortField);
-        if (col) {
+    setState((state: DataProvidersStateModel) => {
+      let userSortField = state.userSortField;
+      let userSortOrder = state.userSortOrder;
+  
+      let currentSortField = null;
+      let currentSortOrder: "" | "asc" | "desc" = "asc";
+  
+      //if action sets the sort field, use it
+      if (fieldName) {
+        userSortField = fieldName;
+        if (order) userSortOrder = order;
+      }
+  
+      if (userSortField) {
+        //verify that the user selected sort field exists
+        if (userSortField == "name") {
           currentSortField = userSortField;
           currentSortOrder = userSortOrder;
+        } else if (state.currentProvider) {
+          let col = state.currentProvider.columns.find((col) => col.fieldName == userSortField);
+          if (col) {
+            currentSortField = userSortField;
+            currentSortOrder = userSortOrder;
+          }
         }
       }
-    }
-
-    if (!currentSortField) {
-      //get default from current provider
-      if (state.currentProvider && state.currentProvider.sortBy) {
-        let col = state.currentProvider.columns.find((col) => col.name == state.currentProvider.sortBy);
-        if (col) {
-          currentSortField = col.fieldName;
-          currentSortOrder = state.currentProvider.sortAsc ? "asc" : "desc";
+  
+      if (!currentSortField) {
+        //get default from current provider
+        if (state.currentProvider && state.currentProvider.sortBy) {
+          let col = state.currentProvider.columns.find((col) => col.name == state.currentProvider.sortBy);
+          if (col) {
+            currentSortField = col.fieldName;
+            currentSortOrder = state.currentProvider.sortAsc ? "asc" : "desc";
+          }
         }
       }
-    }
-
-    if (!currentSortField) {
-      //use defaults
-      currentSortField = "name";
-      currentSortOrder = "asc";
-    }
-
-    let currentAssets = state.currentAssets.slice().sort((a, b) => {
-      if (currentSortField != "name") {
-        if (currentSortField in a.metadata) {
-          //custom sort using metadata column
-          if (a.metadata[currentSortField] < b.metadata[currentSortField]) {
-            return currentSortOrder == "asc" ? -1 : 1;
-          }
-          if (a.metadata[currentSortField] > b.metadata[currentSortField]) {
-            return currentSortOrder == "asc" ? 1 : -1;
-          }
-          return 0;
-        }
+  
+      if (!currentSortField) {
+        //use defaults
         currentSortField = "name";
         currentSortOrder = "asc";
       }
 
-      if (a.collection != b.collection) {
-        return a.collection ? -1 : 1;
-      }
-
-      if (a.name.toUpperCase() < b.name.toUpperCase()) {
-        return currentSortOrder == "asc" ? -1 : 1;
-      }
-
-      if (a.name.toUpperCase() > b.name.toUpperCase()) {
-        return currentSortOrder == "asc" ? 1 : -1;
-      }
-      return 0;
+      state.userSortField = userSortField;
+      state.userSortOrder = userSortOrder;
+      state.currentSortField = currentSortField;
+      state.currentSortOrder = currentSortOrder;
+      return state;
     });
 
-    return {
-      ...state,
-      currentAssets: currentAssets,
-      userSortField: userSortField,
-      userSortOrder: userSortOrder,
-      currentSortField: currentSortField,
-      currentSortOrder: currentSortOrder,
-    };
-
-    // setState((state: DataProvidersStateModel) => {
-    //   state.currentAssets = currentAssets;
-    //   state.userSortField = userSortField;
-    //   state.userSortOrder = userSortOrder;
-    //   state.currentSortField = currentSortField;
-    //   state.currentSortOrder = currentSortOrder;
-
-    //   return state;
-    // });
   }
 
   @Action(ImportSelectedAssets)

@@ -10,7 +10,7 @@ import { DataProvider } from "../../../../data-providers/models/data-provider";
 import { DataProviderAsset } from "../../../../data-providers/models/data-provider-asset";
 
 import { Subscription, Observable, combineLatest } from "rxjs";
-import { filter, map, withLatestFrom, tap } from "rxjs/operators";
+import { filter, map, withLatestFrom, tap, distinctUntilChanged } from "rxjs/operators";
 import {
   // UP_ARROW,
   // DOWN_ARROW,
@@ -39,9 +39,44 @@ export class DataProviderAssetsDataSource implements DataSource<DataProviderAsse
   sub: Subscription;
 
   constructor(private store: Store) {
-    this.assets$ = this.store
-      .select(DataProvidersState.getCurrentAssets)
-      .pipe(map((assets) => assets.slice(0).sort((a, b) => a.name.localeCompare(b.name))));
+    this.assets$ = combineLatest(
+      this.store.select(DataProvidersState.getCurrentSortField).pipe(distinctUntilChanged()),
+      this.store.select(DataProvidersState.getCurrentSortOrder).pipe(distinctUntilChanged()),
+      this.store.select(DataProvidersState.getCurrentAssets)
+    ).pipe(
+        map(([currentSortField, currentSortOrder, assets]) => {
+          return assets.sort((a, b) => {
+            if (currentSortField != "name") {
+              if (currentSortField in a.metadata) {
+                //custom sort using metadata column
+                if (a.metadata[currentSortField] < b.metadata[currentSortField]) {
+                  return currentSortOrder == "asc" ? -1 : 1;
+                }
+                if (a.metadata[currentSortField] > b.metadata[currentSortField]) {
+                  return currentSortOrder == "asc" ? 1 : -1;
+                }
+                return 0;
+              }
+              currentSortField = "name";
+              currentSortOrder = "asc";
+            }
+      
+            if (a.collection != b.collection) {
+              return a.collection ? -1 : 1;
+            }
+      
+            if (a.name.toUpperCase() < b.name.toUpperCase()) {
+              return currentSortOrder == "asc" ? -1 : 1;
+            }
+      
+            if (a.name.toUpperCase() > b.name.toUpperCase()) {
+              return currentSortOrder == "asc" ? 1 : -1;
+            }
+            return 0;
+          });
+        })
+      )
+      // .pipe(map((assets) => assets.slice(0).sort((a, b) => a.name.localeCompare(b.name))));
   }
 
   connect(collectionViewer: CollectionViewer): Observable<DataProviderAsset[]> {
