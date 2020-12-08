@@ -596,7 +596,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleLoadTile($event: LoadTileEvent) {
-    console.log("LOAD TILE EVENT!!!! ", $event)
     // should only need to load the raw data
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -635,13 +634,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       }
       if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
         loadComposite = false;
-        console.log("UPDATE COMPONENT")
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
     })
 
     if(loadComposite) {
-      console.log("UPDATE COMPOSITE")
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex))
     }
 
