@@ -13,9 +13,16 @@
     .viewer-panel.focused .mat-tab-label-container {
       background: mat-color($primary, darker);
     }
+    .mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar {
+      background-color: mat-color($primary, darker);
+    }
+
   } @else {
     .viewer-panel.focused .mat-tab-label-container {
       background: mat-color($primary, lighter);
+    }
+    .mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar {
+      background-color: mat-color($primary, lighter);
     }
   }
 
