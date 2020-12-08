@@ -53,7 +53,7 @@ import { ResetState } from "../auth/auth.actions";
 import { DataFilesState } from "../data-files/data-files.state";
 
 export interface DataProvidersStateModel {
-  version: number;
+  version: string;
   dataProvidersLoaded: boolean;
   dataProviders: DataProvider[];
   loadingAssets: boolean;
@@ -73,7 +73,7 @@ export interface DataProvidersStateModel {
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: 1,
+  version: 'b191eee6-191d-4ea6-ba49-797ef3fb8e2d',
   dataProvidersLoaded: false,
   dataProviders: [],
   loadingAssets: false,

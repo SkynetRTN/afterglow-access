@@ -176,7 +176,7 @@ import { SonificationJob, SonificationJobResult } from "../jobs/models/sonificat
 import { IImageData } from "../data-files/models/image-data";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "051341ac-a968-4d48-9e01-8336ee6a978d",
+  version: "70d8b239-0d7f-41c8-996f-dccaef20e59e",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",

@@ -36,11 +36,13 @@ export interface JobEntity {
 }
 
 export interface JobsStateModel {
+  version: string;
   ids: string[];
   entities: { [id: string]: JobEntity };
 }
 
 const jobsDefaultState: JobsStateModel = {
+  version: 'bdedf577-1833-4e08-a12e-eda435c5f5aa',
   ids: [],
   entities: {},
 };

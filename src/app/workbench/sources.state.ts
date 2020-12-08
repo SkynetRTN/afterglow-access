@@ -5,14 +5,14 @@ import { Source } from "./models/source";
 import { ResetState } from "../auth/auth.actions";
 
 export interface SourcesStateModel {
-  version: number;
+  version: string;
   nextIdSeed: number;
   ids: string[];
   entities: { [id: string]: Source };
 }
 
 const sourcesDefaultState: SourcesStateModel = {
-  version: 1,
+  version: '7edaa969-843e-445a-bbaf-83bf0c5ae260',
   nextIdSeed: 0,
   ids: [],
   entities: {},

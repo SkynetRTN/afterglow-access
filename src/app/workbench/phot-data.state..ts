@@ -6,13 +6,13 @@ import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { ResetState } from "../auth/auth.actions";
 
 export interface PhotDataStateModel {
-  version: number;
+  version: string;
   ids: string[];
   entities: { [id: string]: PhotData };
 }
 
 const photDataDefaultState: PhotDataStateModel = {
-  version: 1,
+  version: '7960c17e-fca1-43ba-9559-1376f42ae8ca',
   ids: [],
   entities: {},
 };
