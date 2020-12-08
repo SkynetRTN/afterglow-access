@@ -4,7 +4,7 @@
     <mat-form-field appearance="outline">
       <mat-label>Channel</mat-label>
       <mat-select [value]="selectedHduId" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%">
-        <mat-option *ngFor="let hdu of (hdus$ | async); let index = index" [value]="hdu.id"> Channel {{ index }} </mat-option>
+        <mat-option *ngFor="let hdu of hdus$ | async; let index = index" [value]="hdu.id"> Channel {{ index }} </mat-option>
       </mat-select>
     </mat-form-field>
   </div>

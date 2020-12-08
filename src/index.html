@@ -1,28 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Afterglow Access</title>
+    <base href="/" />
 
-<head>
-  <meta charset="utf-8">
-  <title>Afterglow Access</title>
-  <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script>
+      var Module = {
+        locateFile: function (s) {
+          return "wasm/" + s;
+        },
+      };
+    </script>
+  </head>
 
-  <script>
-    var Module = {
-      locateFile: function(s) {
-        return 'wasm/' + s;
-      },
-    }
-  </script>
-
-
-</head>
-
-<body class="app-background">
-  <app-root class="app-root"></app-root>
-</body>
-
+  <body class="app-background">
+    <app-root class="app-root"></app-root>
+  </body>
 </html>

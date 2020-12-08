@@ -153,7 +153,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.hduId$ = this.viewer$.pipe(
-      map(viewer => viewer.hduId),
+      map((viewer) => viewer.hduId),
       distinctUntilChanged()
     );
 
@@ -408,7 +408,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           ).pipe(
             map(([hduId, header, config, sources]) => {
               if (!header) return [];
-              
+
               let selectedSourceIds = config.selectedSourceIds;
               let coordMode = config.coordMode;
               let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
@@ -602,18 +602,17 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-    let hduIds = [this.viewer.hduId]
+    let hduIds = [this.viewer.hduId];
     let loadComposite = false;
 
-    if(!this.viewer.hduId) {
+    if (!this.viewer.hduId) {
       let file = dataFileEntities[this.viewer.fileId];
       if (!file) return;
       hduIds = file.hduIds;
       loadComposite = true;
     }
-    
 
-    hduIds.forEach(hduId => {
+    hduIds.forEach((hduId) => {
       let hdu = hduEntities[hduId];
       if (!hdu || hdu.hduType != HduType.IMAGE) return;
 
@@ -629,19 +628,18 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       }
       let rawTile = rawImageData.tiles[$event.tileIndex];
       let tile = normalizedImageData.tiles[$event.tileIndex];
-      if(!tile.pixelsLoaded) {
+      if (!tile.pixelsLoaded) {
         loadComposite = false;
       }
       if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
         loadComposite = false;
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
-    })
+    });
 
-    if(loadComposite) {
-      this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex))
+    if (loadComposite) {
+      this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
-
   }
 
   handleDownloadSnapshot() {

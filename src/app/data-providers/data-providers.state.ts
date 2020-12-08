@@ -269,16 +269,16 @@ export class DataProvidersState {
     setState((state: DataProvidersStateModel) => {
       let userSortField = state.userSortField;
       let userSortOrder = state.userSortOrder;
-  
+
       let currentSortField = null;
       let currentSortOrder: "" | "asc" | "desc" = "asc";
-  
+
       //if action sets the sort field, use it
       if (fieldName) {
         userSortField = fieldName;
         if (order) userSortOrder = order;
       }
-  
+
       if (userSortField) {
         //verify that the user selected sort field exists
         if (userSortField == "name") {
@@ -292,7 +292,7 @@ export class DataProvidersState {
           }
         }
       }
-  
+
       if (!currentSortField) {
         //get default from current provider
         if (state.currentProvider && state.currentProvider.sortBy) {
@@ -303,7 +303,7 @@ export class DataProvidersState {
           }
         }
       }
-  
+
       if (!currentSortField) {
         //use defaults
         currentSortField = "name";
@@ -316,7 +316,6 @@ export class DataProvidersState {
       state.currentSortOrder = currentSortOrder;
       return state;
     });
-
   }
 
   @Action(ImportSelectedAssets)

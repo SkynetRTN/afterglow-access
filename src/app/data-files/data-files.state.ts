@@ -1029,8 +1029,8 @@ export class DataFilesState {
           ...normalizedImageData,
         };
 
-        actions.push(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels))
-        actions.push(new InvalidateCompositeImageTile(hdu.fileId, tileIndex))
+        actions.push(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels));
+        actions.push(new InvalidateCompositeImageTile(hdu.fileId, tileIndex));
 
         return state;
       });
@@ -1203,7 +1203,6 @@ export class DataFilesState {
             alpha: hdu.alpha,
           };
         });
-
 
         if (!tile.pixels || tile.pixels.length != tile.width * tile.height) {
           tile.pixels = new Uint32Array(tile.width * tile.height);

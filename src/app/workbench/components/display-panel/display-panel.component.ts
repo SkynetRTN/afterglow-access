@@ -14,8 +14,8 @@ import { StretchMode } from "../../../data-files/models/stretch-mode";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform } from "../../../data-files/models/transformation";
 import { IImageData } from "../../../data-files/models/image-data";
-import { WorkbenchState } from '../../workbench.state';
-import { DataFilesState } from '../../../data-files/data-files.state';
+import { WorkbenchState } from "../../workbench.state";
+import { DataFilesState } from "../../../data-files/data-files.state";
 
 @Component({
   selector: "app-display-panel",
@@ -94,24 +94,20 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router) {
     let selectedHduId$ = combineLatest(this.file$, this.hdu$).pipe(
       switchMap(([file, hdu]) => {
-        if(!file) {
+        if (!file) {
           return of(null);
         }
-        if(hdu) {
+        if (hdu) {
           return of(hdu.id);
         }
-        return this.store.select(WorkbenchState.getSelecteHduId).pipe(
-          map(fn => fn(file.id))
-        )
+        return this.store.select(WorkbenchState.getSelecteHduId).pipe(map((fn) => fn(file.id)));
       })
-    )
+    );
 
     this.selectedHdu$ = selectedHduId$.pipe(
       distinctUntilChanged(),
-      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
-        map(fn => fn(hduId) as ImageHdu)
-      ))
-    )
+      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId) as ImageHdu)))
+    );
     this.levels$.pipe(auditTime(25)).subscribe((value) => {
       this.store.dispatch(
         new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value.background, peakPercentile: value.peak })

@@ -10,7 +10,8 @@
       outline: none;
     }
 
-    div.tree div.tree-children::before, div.tree::before,
+    div.tree div.tree-children::before,
+    div.tree::before,
     div.tree tree-node > div::before {
       border-color: mat-color($foreground, text);
     }

@@ -49,7 +49,6 @@
   .context-menu .mat-menu-item {
     line-height: 36px;
   }
-  
 
   header {
     box-shadow: 0 10px 6px -6px mat-color($foreground, divider);
@@ -60,22 +59,22 @@
   }
 
   theme-picker {
-    .mat-button, .mat-icon-button {
+    .mat-button,
+    .mat-icon-button {
       color: mat-color($primary, default-contrast);
       opacity: 0.8;
     }
 
     a.active {
-      opacity: 1.0;
+      opacity: 1;
     }
   }
 
-  
-.mat-tooltip {
-  font-size: 16px;
-  background-color: mat-color($foreground, text, 1.0);
-  color: mat-color($background, card);
-}
+  .mat-tooltip {
+    font-size: 16px;
+    background-color: mat-color($foreground, text, 1);
+    color: mat-color($background, card);
+  }
 
   .mat-dialog-container {
     background: mat-color($background, card);
@@ -109,8 +108,6 @@
     padding: 5px 9px;
     font-size: 1em;
   }
-
-
 
   /* override bootstrap */
   .app-root {

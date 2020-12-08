@@ -54,8 +54,8 @@ export function dataFileSanitizer(v) {
   } as DataFilesStateModel;
 
   state.headerEntities = {
-    ...state.headerEntities
-  }
+    ...state.headerEntities,
+  };
   Object.keys(state.headerEntities).forEach((key) => {
     let header = {
       ...state.headerEntities[key],
@@ -63,10 +63,10 @@ export function dataFileSanitizer(v) {
       loaded: false,
       entries: [],
       wcs: null,
-    }
+    };
 
     state.headerEntities[key] = header;
-  })
+  });
 
   state.hduEntities = {
     ...state.hduEntities,

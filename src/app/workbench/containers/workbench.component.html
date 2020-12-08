@@ -185,15 +185,20 @@
           <ng-container i18n>Sync orientations</ng-container>
         </mat-slide-toggle>
         <div class="pt-2 pl-4">
-          <mat-button-toggle-group  [disabled]="!(viewerSyncEnabled$ | async)" [value]="viewerSyncMode$ | async" name="viewerSyncMode" aria-label="Viewer Sync Mode" (change)="onViewerSyncModeChange($event)">
+          <mat-button-toggle-group
+            [disabled]="!(viewerSyncEnabled$ | async)"
+            [value]="viewerSyncMode$ | async"
+            name="viewerSyncMode"
+            aria-label="Viewer Sync Mode"
+            (change)="onViewerSyncModeChange($event)"
+          >
             <mat-button-toggle value="sky">Sky</mat-button-toggle>
             <mat-button-toggle value="pixel">Physical</mat-button-toggle>
           </mat-button-toggle-group>
         </div>
-       
       </div>
 
-      <hr/>
+      <hr />
 
       <div class="form-group pt-2">
         <mat-slide-toggle
@@ -297,7 +302,11 @@
 
         <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
           <app-hdu-selector
-            *ngIf="(focusedViewerFile$ | async) && !(focusedViewerImageHdu$ | async) && [WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool)"
+            *ngIf="
+              (focusedViewerFile$ | async) &&
+              !(focusedViewerImageHdu$ | async) &&
+              [WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool)
+            "
             [fileId]="(focusedViewerFile$ | async)?.id"
             [hduType]="HduType.IMAGE"
             [selectedHduId]="focusedViewerFileLastActiveImageHduId$ | async"
@@ -306,7 +315,11 @@
           <app-display-panel
             *ngSwitchCase="WorkbenchTool.VIEWER"
             [file]="focusedViewerFile$ | async"
-            [hdu]="(focusedViewerImageHdu$ | async) ? (focusedViewerImageHdu$ | async) : (focusedViewerFileLastActiveImageHdu$ | async)"
+            [hdu]="
+              (focusedViewerImageHdu$ | async)
+                ? (focusedViewerImageHdu$ | async)
+                : (focusedViewerFileLastActiveImageHdu$ | async)
+            "
             [imageTransform]="focusedViewerImageTransform$ | async"
             [viewportTransform]="focusedViewerViewportTransform$ | async"
             [imageData]="focusedViewerNormalizedImageData$ | async"
@@ -316,7 +329,11 @@
 
           <app-file-info-panel
             *ngSwitchCase="WorkbenchTool.INFO"
-            [header]="(focusedViewerImageHdu$ | async) ? (focusedViewerHeader$ | async) : (focusedViewerFileLastActiveHduHeader$ | async)"
+            [header]="
+              (focusedViewerImageHdu$ | async)
+                ? (focusedViewerHeader$ | async)
+                : (focusedViewerFileLastActiveHduHeader$ | async)
+            "
             [config]="fileInfoPanelConfig$ | async"
             (configChange)="onFileInfoPanelConfigChange($event)"
           >

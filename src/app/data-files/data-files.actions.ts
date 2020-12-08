@@ -2,8 +2,8 @@ import { DataFile, Header, PixelType, IHdu } from "./models/data-file";
 import { ImageHist } from "./models/image-hist";
 import { PixelNormalizer } from "./models/pixel-normalizer";
 import { Region } from "./models/region";
-import { Transform } from './models/transformation';
-import { Normalization } from './models/normalization';
+import { Transform } from "./models/transformation";
+import { Normalization } from "./models/normalization";
 
 /**
  * Load Library Actions
@@ -320,7 +320,6 @@ export class ResetImageTransform {
 
   constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string) {}
 }
-
 
 export class UpdateTransform {
   public static readonly type = "[Transformation] Update";

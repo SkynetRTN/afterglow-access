@@ -138,7 +138,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.sonificationUri$ = this.state$.pipe(
       map((state) => state.sonificationUri),
-      distinctUntilChanged(),
+      distinctUntilChanged()
     );
 
     this.hotKeys.push(

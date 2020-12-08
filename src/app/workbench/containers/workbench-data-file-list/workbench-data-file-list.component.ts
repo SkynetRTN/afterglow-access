@@ -70,7 +70,7 @@ export class WorkbenchDataFileListComponent {
     item: {
       fileId: string;
       hduId: string;
-    }
+    };
   }>();
 
   @Output() onItemDoubleClick = new EventEmitter<{

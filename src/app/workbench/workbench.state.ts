@@ -982,7 +982,6 @@ export class WorkbenchState {
       actions.push(new LoadHdu(hdu.id));
     });
 
-
     this.store.dispatch(actions);
   }
 
@@ -1088,10 +1087,10 @@ export class WorkbenchState {
       refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(refViewer.id);
       refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(refViewer.id);
       refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(refViewer.id);
-      
-      if(refViewer.hduId) {
+
+      if (refViewer.hduId) {
         let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
-        if(refHdu.hduType == HduType.IMAGE) {
+        if (refHdu.hduType == HduType.IMAGE) {
           refNormalization = refHdu.normalizer;
         }
       }
@@ -1112,7 +1111,7 @@ export class WorkbenchState {
         }
       }
 
-      if(refNormalization && state.normalizationSyncEnabled) {
+      if (refNormalization && state.normalizationSyncEnabled) {
         store.dispatch(new SyncViewerNormalizations(refNormalization));
       }
 
@@ -1504,9 +1503,9 @@ export class WorkbenchState {
     let refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
     let refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
     let refNormalization = null;
-    if(viewer.hduId) {
+    if (viewer.hduId) {
       let refHdu = hduEntities[viewer.hduId] as ImageHdu;
-      if(refHdu.hduType == HduType.IMAGE) {
+      if (refHdu.hduType == HduType.IMAGE) {
         refNormalization = refHdu.normalizer;
       }
     }
@@ -1531,10 +1530,9 @@ export class WorkbenchState {
           store.dispatch(new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId));
         }
 
-        if(refNormalization && state.normalizationSyncEnabled) {
+        if (refNormalization && state.normalizationSyncEnabled) {
           store.dispatch(new SyncViewerNormalizations(refNormalization));
         }
-      
       }
 
       //wait to set the viewer file and hdu until after it has loaded the header/hist
@@ -2090,9 +2088,11 @@ export class WorkbenchState {
 
     ids.forEach((id) => {
       if (referenceId == id) return;
-      return dispatch(new UpdatePlottingPanelState(id, {
-        ...referenceState
-      }));
+      return dispatch(
+        new UpdatePlottingPanelState(id, {
+          ...referenceState,
+        })
+      );
     });
   }
 

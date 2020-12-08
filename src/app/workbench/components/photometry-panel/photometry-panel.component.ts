@@ -248,7 +248,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
         filter((rows) => rows.length != 0 && this.config.autoPhot),
         auditTime(2000)
       )
-      .subscribe(rows => {
+      .subscribe((rows) => {
         this.store.dispatch(
           new PhotometerSources(
             rows.map((row) => row.source.id),
