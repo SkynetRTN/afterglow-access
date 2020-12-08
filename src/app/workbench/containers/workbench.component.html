@@ -116,7 +116,8 @@
             <app-workbench-data-file-list
               [files]="files$ | async"
               [selectedItem]="selectedDataFileListItem$ | async"
-              (onSelectionChange)="onFileSelect($event)"
+              (onSelectionChange)="onItemSelect($event)"
+              (onItemDoubleClick)="onItemDoubleClick($event)"
             >
             </app-workbench-data-file-list>
           </div>
@@ -172,6 +173,8 @@
         </div>
       </div>
 
+      <hr />
+
       <div class="form-group pt-2">
         <mat-slide-toggle
           [checked]="viewerSyncEnabled$ | async"
@@ -181,7 +184,16 @@
         >
           <ng-container i18n>Sync orientations</ng-container>
         </mat-slide-toggle>
+        <div class="pt-2 pl-4">
+          <mat-button-toggle-group  [disabled]="!(viewerSyncEnabled$ | async)" [value]="viewerSyncMode$ | async" name="viewerSyncMode" aria-label="Viewer Sync Mode" (change)="onViewerSyncModeChange($event)">
+            <mat-button-toggle value="sky">Sky</mat-button-toggle>
+            <mat-button-toggle value="pixel">Physical</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+       
       </div>
+
+      <hr/>
 
       <div class="form-group pt-2">
         <mat-slide-toggle

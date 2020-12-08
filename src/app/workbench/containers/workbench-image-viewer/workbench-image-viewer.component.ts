@@ -164,7 +164,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     let headerId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+        this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
           map((fn) => fn(viewerId)),
           distinctUntilChanged()
         )
@@ -407,7 +407,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
             this.store.select(SourcesState.getSources)
           ).pipe(
             map(([hduId, header, config, sources]) => {
-              console.log("NEW PHOTOMETRY MARKERS")
               if (!header) return [];
               
               let selectedSourceIds = config.selectedSourceIds;
@@ -597,35 +596,55 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleLoadTile($event: LoadTileEvent) {
+    console.log("LOAD TILE EVENT!!!! ", $event)
     // should only need to load the raw data
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-    let hduId = this.viewer.hduId;
+    let hduIds = [this.viewer.hduId]
+    let loadComposite = false;
 
-    if (hduId) {
-      let hdu = hduEntities[hduId];
-      if (!hdu || hdu.hduType != HduType.IMAGE) return;
-      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
-      if (!normalizedImageData || !normalizedImageData.initialized) return;
-      let rawImageData = imageDataEntities[(hdu as ImageHdu).rawImageDataId];
-      if (!rawImageData || !rawImageData.initialized) return;
-      let rawTile = rawImageData.tiles[$event.tileIndex];
-      let tile = normalizedImageData.tiles[$event.tileIndex];
-      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
-        this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
-      }
-    } else if (this.viewer.fileId) {
+    if(!this.viewer.hduId) {
       let file = dataFileEntities[this.viewer.fileId];
       if (!file) return;
-      let compositeImageData = imageDataEntities[file.compositeImageDataId];
-      if (!compositeImageData || !compositeImageData.initialized) return;
-      let tile = compositeImageData.tiles[$event.tileIndex];
-      if (!tile.pixelsLoading && !tile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
-        this.store.dispatch(new UpdateCompositeImageTile(file.id, tile.index));
-      }
+      hduIds = file.hduIds;
+      loadComposite = true;
     }
+    
+
+    hduIds.forEach(hduId => {
+      let hdu = hduEntities[hduId];
+      if (!hdu || hdu.hduType != HduType.IMAGE) return;
+
+      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
+      if (!normalizedImageData || !normalizedImageData.initialized) {
+        loadComposite = false;
+        return;
+      }
+      let rawImageData = imageDataEntities[(hdu as ImageHdu).rawImageDataId];
+      if (!rawImageData || !rawImageData.initialized) {
+        loadComposite = false;
+        return;
+      }
+      let rawTile = rawImageData.tiles[$event.tileIndex];
+      let tile = normalizedImageData.tiles[$event.tileIndex];
+      if(!tile.pixelsLoaded) {
+        loadComposite = false;
+      }
+      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
+        loadComposite = false;
+        console.log("UPDATE COMPONENT")
+        this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
+      }
+    })
+
+    if(loadComposite) {
+      console.log("UPDATE COMPOSITE")
+      this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex))
+    }
+
   }
 
   handleDownloadSnapshot() {

@@ -70,6 +70,9 @@ import {
   StartLine,
   SetSelectedHduId,
   SyncViewerTransformations,
+  SetViewerSyncMode,
+  SyncViewerNormalizations,
+  SyncPlottingPanelStates,
 } from "../workbench.actions";
 import { LoadDataProviders } from "../../data-providers/data-providers.actions";
 import { ViewMode } from "../models/view-mode";
@@ -116,8 +119,7 @@ import {
   CloseAllDataFiles,
   LoadLibrary,
   LoadDataFile,
-  LoadHdu,
-  SyncFileNormalizations,
+  LoadHdu
 } from "../../data-files/data-files.actions";
 import { Transform, getImageToViewportTransform } from "../../data-files/models/transformation";
 import { Normalization } from "../../data-files/models/normalization";
@@ -153,6 +155,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   viewers$: Observable<Viewer[]>;
   viewerSyncEnabled$: Observable<boolean>;
+  viewerSyncMode$: Observable<'sky' | 'pixel'>;
   normalizationSyncEnabled$: Observable<boolean>;
   surveyDataProvider$: Observable<DataProvider>;
   surveyImportCorrId$: Observable<string>;
@@ -388,7 +391,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.focusedViewerHeader$ = this.focusedImageViewerId$.pipe(
       switchMap((viewerId) => {
-        return this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+        return this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
           map((fn) => fn(viewerId)),
           distinctUntilChanged(),
           switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
@@ -547,6 +550,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.stackingPanelConfig$ = this.store.select(WorkbenchState.getStackingPanelConfig);
 
     this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
+    this.viewerSyncMode$ = store.select(WorkbenchState.getViewerSyncMode);
     this.normalizationSyncEnabled$ = store.select(WorkbenchState.getNormalizationSyncEnabled);
 
     this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
@@ -566,23 +570,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.transformationSyncSub = combineLatest(
-      this.focusedViewerId$,
-      this.store.select(WorkbenchState.getViewerSyncEnabled),
-      // visibleViewerIds$
-    )
+    this.transformationSyncSub = this.focusedViewerId$
       .pipe(
-        filter(([focusedViewerId]) => focusedViewerId != null),
-        switchMap(([focusedViewerId, transformationSyncEnabled]) => {
-          if (!transformationSyncEnabled) return empty();
+        filter((focusedViewerId) => focusedViewerId != null),
+        switchMap((focusedViewerId) => {
 
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
 
-          let refHeader$ = this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+          let refHeader$ = this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
             switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
-            distinctUntilChanged()
+            distinctUntilChanged(),
             // tap(v => console.log("REF HEADER CHANGED"))
           );
 
@@ -592,8 +591,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             switchMap((transformId) =>
               this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
             ),
-            distinctUntilChanged()
-            // tap(v => console.log("REF HEADER CHANGED"))
+            distinctUntilChanged(),
+            // tap(v => console.log("REF IMAGE TRANSFORM CHANGED"))
           );
 
           let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
@@ -602,9 +601,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             switchMap((transformId) =>
               this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
             ),
-            distinctUntilChanged()
-            // tap(v => console.log("REF HEADER CHANGED"))
+            distinctUntilChanged(),
+            // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
           );
+
+          let ref$ = combineLatest(refImageTransform$, refViewportTransform$).pipe(
+            withLatestFrom(refHeader$),
+            skip(1)
+          )
 
           // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
           // let targetHeaders$ = combineLatest(
@@ -624,162 +628,124 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           //   )
           // );
 
-          return combineLatest(refHeader$, refImageTransform$, refViewportTransform$).pipe(
-            skip(1)
-          );
+          return combineLatest(
+            this.viewerSyncEnabled$,
+            this.viewerSyncMode$,
+            visibleViewerIds$,
+            ref$
+            ).pipe(
+              // tap(v => console.log("SYNC EVENT"))
+            );
         })
         // auditTime(10),
       )
-      .subscribe(([refHeader, refImageTransform, refViewportTransform]) => {
-        if (!refHeader || !refImageTransform || !refViewportTransform) {
+      .subscribe(([viewerSyncEnabled, viewerSyncMode, visibleViewerIds, [[refImageTransform, refViewportTransform], refHeader]]) => {
+        if (!viewerSyncEnabled || !refHeader || !refHeader.loaded || !refImageTransform || !refViewportTransform) {
           return;
         }
+
+        // console.log("HERE!!!!!!!!!: ", viewerSyncEnabled, viewerSyncMode, refHeader, refImageTransform, refViewportTransform)
         this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
       });
 
-    // this.normalizationSyncSub = combineLatest(
-    //   this.focusedViewerId$,
-    //   this.store.select(WorkbenchState.getNormalizationSyncEnabled),
-    //   visibleViewerIds$
-    // )
-    //   .pipe(
-    //     filter(([focusedViewerId]) => focusedViewerId != null),
-    //     switchMap(([focusedViewerId, normalizationSyncEnabled, visibleViewerIds]) => {
-    //       if (!normalizationSyncEnabled) return empty();
+      this.normalizationSyncSub = this.focusedViewerId$
+      .pipe(
+        filter((focusedViewerId) => focusedViewerId != null),
+        switchMap((focusedViewerId) => {
 
-    //       let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
+          // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
+          let refImageHdu$ = this.store.select(WorkbenchState.getViewerById).pipe(
+            map((fn) => fn(focusedViewerId).hduId),
+            distinctUntilChanged(),
+            switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(
+              map((fn) => fn(hduId)),
+              map(hdu => hdu && hdu.hduType != HduType.IMAGE ? null : hdu as ImageHdu)
+            )),
+            distinctUntilChanged(),
+          );
 
-          
+          let refNormalizer$ = refImageHdu$.pipe(
+            map(hdu => hdu ? hdu.normalizer : null),
+            distinctUntilChanged(),
+            skip(1),
+          );
 
-    //       let refHeader$ = this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
-    //         map((fn) => fn(focusedViewerId)),
-    //         distinctUntilChanged(),
-    //         switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
-    //         distinctUntilChanged()
-    //         // tap(v => console.log("REF HEADER CHANGED"))
-    //       );
+          return combineLatest(
+            this.normalizationSyncEnabled$,
+            visibleViewerIds$,
+            refNormalizer$
+            ).pipe(
+            );
+        })
+        // auditTime(10),
+      )
+      .subscribe(([normalizationSyncEnabled, visibleViewerIds, refNormalizer]) => {
+        if (!normalizationSyncEnabled || !refNormalizer) {
+          return;
+        }
 
-    //       let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
-    //         map((fn) => fn(focusedViewerId)),
-    //         distinctUntilChanged(),
-    //         switchMap((transformId) =>
-    //           this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
-    //         ),
-    //         distinctUntilChanged()
-    //         // tap(v => console.log("REF HEADER CHANGED"))
-    //       );
+        this.store.dispatch(new SyncViewerNormalizations(refNormalizer));
+      });
 
-    //       let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
-    //         map((fn) => fn(focusedViewerId)),
-    //         distinctUntilChanged(),
-    //         switchMap((transformId) =>
-    //           this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
-    //         ),
-    //         distinctUntilChanged()
-    //         // tap(v => console.log("REF HEADER CHANGED"))
-    //       );
+      this.plottingPanelSyncSub = this.focusedViewerId$
+      .pipe(
+        filter((focusedViewerId) => focusedViewerId != null),
+        switchMap((focusedViewerId) => {
+          let refPlottingPanelState$ = this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            distinctUntilChanged(),
+            switchMap((plottingPanelStateId) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(plottingPanelStateId)))),
+            distinctUntilChanged()
+          );
 
-    //       // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
-    //       let targetHeaders$ = combineLatest(
-    //         targetViewerIds.map((viewerId) =>
-    //           this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
-    //             map((fn) => fn(viewerId)),
-    //             distinctUntilChanged(),
-    //             // tap(v => console.log("TARGET HEADER ID CHANGED: ", v)),
-    //             switchMap((headerId) =>
-    //               this.store.select(DataFilesState.getHeaderById).pipe(
-    //                 map((fn) => fn(headerId)),
-    //                 distinctUntilChanged()
-    //               )
-    //             )
-    //             // tap(v => console.log("TARGET HEADER CHANGED: ", v))
-    //           )
-    //         )
-    //       );
+         
+          return combineLatest(
+            this.store.select(WorkbenchState.getPlottingPanelConfig).pipe(
+              map(config => config.plotterSyncEnabled),
+              distinctUntilChanged()
+              ),
+            visibleViewerIds$,
+            refPlottingPanelState$
+            ).pipe(
+            );
+        })
+        // auditTime(10),
+      )
+      .subscribe(([plottingSyncEnabled, visibleViewerIds, refPlottingPanelState]) => {
+        if (!plottingSyncEnabled || !refPlottingPanelState) {
+          return;
+        }
 
-    //       return combineLatest(refHeader$, refImageTransform$, refViewportTransform$, targetHeaders$);
-    //     })
-    //     // auditTime(10),
-    //   )
-    //   .subscribe(([refHeader, refImageTransform, refViewportTransform, targetHeaders]) => {
-    //     if (!refHeader || !refImageTransform || !refViewportTransform || targetHeaders.length == 0) {
-    //       return;
-    //     }
-    //     this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
-    //   });
+        let viewerEntities = this.store.selectSnapshot(WorkbenchState.getViewerEntities);
+        let workbenchFileStates = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
+        let workbenchHduStates = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
+        let targetPlottingPanelStateIds = [];
+        visibleViewerIds.forEach(viewerId => {
+          let viewer = viewerEntities[viewerId];
+          if(viewer.hduId) {
+            let workbenchHduState = workbenchHduStates[viewer.hduId];
+            if(workbenchHduState && workbenchHduState.hduType == HduType.IMAGE && (workbenchHduState as WorkbenchImageHduState).plottingPanelStateId) {
+              targetPlottingPanelStateIds.push((workbenchHduState as WorkbenchImageHduState).plottingPanelStateId)
+            }
+          }
+          else {
+            let workbenchFileState = workbenchFileStates[viewer.fileId];
+            if(workbenchFileState && workbenchFileState.plottingPanelStateId) {
+              targetPlottingPanelStateIds.push(workbenchFileState.plottingPanelStateId)
+            }
+          }
+        })
 
-    // this.normalizationSyncSub = combineLatest(
-    //   this.focusedImageHduId$,
-    //   this.store.select(WorkbenchState.getNormalizationSyncEnabled),
-    //   visibleViewerIds$
-    // )
-    //   .pipe(
-    //     filter(([hduId, normalizationSyncEnabled]) => hduId != null),
-    //     switchMap(
-    //       ([hduId, normalizationSyncEnabled, viewers]) => {
-    //         if (!normalizationSyncEnabled) return empty();
-    //         let header$ = merge(
-    //           ...viewers.map((v) => {
-    //             return this.store.select(DataFilesState.getHeader).pipe(
-    //               // TODO: LAYER
-    //               map((fn) => fn(v.hduId)),
-    //               distinctUntilChanged()
-    //             );
-    //           })
-    //         );
+        if(targetPlottingPanelStateIds.length == 0) {
+          return;
+        }
 
-    //         let hist$ = merge(
-    //           ...viewers.map((v) => {
-    //             return this.store.select(DataFilesState.getHist).pipe(
-    //               // TODO: LAYER
-    //               map((fn) => fn(v.hduId)),
-    //               distinctUntilChanged()
-    //             );
-    //           })
-    //         );
+        targetPlottingPanelStateIds = targetPlottingPanelStateIds.filter(id => id != refPlottingPanelState.id);
 
-    //         let normalization$ = this.store
-    //           .select(DataFilesState.getNormalizer)
-    //           .pipe(
-    //             map((fn) => {
-    //               return fn(hduId);
-    //             }),
-    //             distinctUntilChanged()
-    //           );
+        this.store.dispatch(new SyncPlottingPanelStates(refPlottingPanelState.id, targetPlottingPanelStateIds));
+      });
 
-    //         return combineLatest(header$, hist$, normalization$).pipe(
-    //           filter(([header, hist, normalization]) => normalization !== null),
-    //           withLatestFrom(visibleViewerIds$),
-    //           map(([[header, normalization], viewers]) => {
-    //             return {
-    //               srcHduId: hduId,
-    //               targetHduIds: viewers
-    //                 .map((v) => v.hduId)
-    //                 .filter((v) => v != hduId),
-    //             };
-    //           })
-    //         );
-    //       }
-    //     )
-    //   )
-    //   .subscribe((v) => {
-    //     let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
-
-    //     let hdu = hdus[v.srcHduId] as ImageHdu;
-    //     if (hdu.header.loaded && v.targetHduIds.length != 0) {
-    //       let targetHduIds = v.targetHduIds.filter(
-    //         (fileId) =>
-    //           fileId in hdus && (hdus[fileId] as ImageHdu).header.loaded
-    //       );
-
-    //       this.store.dispatch(
-    //         new SyncFileNormalizations(
-    //           v.srcHduId,
-    //           targetHduIds
-    //         )
-    //       );
-    //     }
-    //   });
+   
 
     // this.plottingPanelSyncSub = combineLatest(
     //   this.focusedImageHduId$,
@@ -864,6 +830,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     // this.fileLoaderSub.unsubscribe();
     this.queryParamSub.unsubscribe();
     this.transformationSyncSub.unsubscribe();
+    this.normalizationSyncSub.unsubscribe();
+    this.plottingPanelSyncSub.unsubscribe();
   }
 
   registerHotKeys() {
@@ -1120,7 +1088,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let targetFile = fileEntities[viewer.fileId];
-    let headerSelector = this.store.selectSnapshot(WorkbenchState.getHeaderIdFromViewerId);
+    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
     let headerId = headerSelector(viewer.id);
     let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
@@ -1297,7 +1265,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
     let targetFile = this.store.selectSnapshot(DataFilesState.getFileEntities)[viewer.fileId];
     let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[viewer.hduId] as ImageHdu;
-    let headerId = this.store.selectSnapshot(WorkbenchState.getHeaderIdFromViewerId)(viewer.id);
+    let headerId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
     let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
     let hduStateEntities = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
@@ -1344,7 +1312,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
     let targetFile = this.store.selectSnapshot(DataFilesState.getFileEntities)[viewer.fileId];
     let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[viewer.hduId] as ImageHdu;
-    let headerId = this.store.selectSnapshot(WorkbenchState.getHeaderIdFromViewerId)(viewer.id);
+    let headerId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
     let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
     switch (activeTool) {
@@ -1417,16 +1385,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFileSelect($event: { item: ISelectedFileListItem; doubleClick: boolean }) {
+  onItemSelect($event: { item: ISelectedFileListItem }) {
     if (!$event.item) return;
 
-    if (!$event.doubleClick) {
-      this.store.dispatch(new SelectDataFileListItem($event.item));
-    } else {
-      let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-      if (focusedViewer) {
-        this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
-      }
+    this.store.dispatch(new SelectDataFileListItem($event.item));
+  }
+
+  onItemDoubleClick($event: { item: ISelectedFileListItem }) {
+    if (!$event.item) return;
+
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
+    if (focusedViewer) {
+      this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
     }
   }
 
@@ -1505,6 +1475,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   onViewerSyncEnabledChange($event) {
     this.store.dispatch(new SetViewerSyncEnabled($event.checked));
+  }
+
+  onViewerSyncModeChange($event: MatButtonToggleChange) {
+    this.store.dispatch(new SetViewerSyncMode($event.value));
   }
 
   onNormalizationSyncEnabledChange($event) {

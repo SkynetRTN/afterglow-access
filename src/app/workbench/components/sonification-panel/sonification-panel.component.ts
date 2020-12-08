@@ -139,7 +139,6 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
     this.sonificationUri$ = this.state$.pipe(
       map((state) => state.sonificationUri),
       distinctUntilChanged(),
-      tap((uri) => console.log("NEW SONIFICATION URI: ", uri))
     );
 
     this.hotKeys.push(
@@ -383,7 +382,6 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
   }
 
   onPlayerReady(api: VgAPI) {
-    console.log("ON PLAYER READY");
     this.api = api;
 
     let stop$ = from(this.api.getDefaultMedia().subscriptions.ended);
@@ -404,7 +402,6 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
     let indexToneDuration = 0.852 / 2.0;
     this.progressLine$ = merge(
       start$.pipe(
-        tap((v) => console.log("STARTED!!!!!!!!!!!!!!!!!!!!!!!!!!!")),
         flatMap(() => interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))),
         withLatestFrom(this.region$),
         map(([v, region]) => {

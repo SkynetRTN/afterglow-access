@@ -48,7 +48,6 @@ import {
   Flip,
   RotateBy,
   UpdateNormalizedImageTileSuccess,
-  SyncFileNormalizations,
   ResetImageTransform,
   UpdateCompositeImageTile,
   UpdateCompositeImageTileSuccess,
@@ -560,22 +559,48 @@ export class DataFilesState {
   @ImmutableContext()
   public loadHdu({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { hduId }: LoadHdu) {
     let actions = [];
+    let pendingActions = [];
     let state = getState();
     if (!(hduId in state.hduEntities)) return;
     let hdu = state.hduEntities[hduId];
     let header = state.headerEntities[hdu.headerId];
-    if (!header || (!header.loaded && !header.loading)) {
+    if (header && header.loading) {
+      pendingActions.push(
+        this.actions$.pipe(
+          ofActionCompleted(LoadHduHeader),
+          filter((v) => {
+            let action: LoadHduHeader = v.action;
+            return action.hduId == hduId;
+          }),
+          take(1)
+        )
+      );
+    } else if (!header || !header.loaded) {
       actions.push(new LoadHduHeader(hdu.id));
     }
 
     if (hdu.hduType == HduType.IMAGE) {
       let imageHdu = hdu as ImageHdu;
-      if (!imageHdu.histLoaded && !imageHdu.histLoading) {
+      if (imageHdu.histLoading) {
+        pendingActions.push(
+          this.actions$.pipe(
+            ofActionCompleted(LoadImageHduHistogram),
+            filter((v) => {
+              let action: LoadImageHduHistogram = v.action;
+              return action.hduId == hduId;
+            }),
+            take(1)
+          )
+        );
+      } else if (!imageHdu.histLoaded) {
         actions.push(new LoadImageHduHistogram(imageHdu.id));
       }
     }
+    if (pendingActions.length == 0 && actions.length == 0) {
+      return;
+    }
 
-    return dispatch(actions);
+    return merge(...pendingActions, dispatch(actions));
   }
 
   @Action(LoadHduHeader)
@@ -600,6 +625,7 @@ export class DataFilesState {
     return this.dataFileService.getHeader(hduId).pipe(
       takeUntil(cancel$),
       tap((entries) => {
+        let actions = [];
         setState((state: DataFilesStateModel) => {
           let hdu = state.hduEntities[hduId];
           let header = state.headerEntities[hdu.headerId];
@@ -667,7 +693,7 @@ export class DataFilesState {
                   ...hduImageDataBase,
                   tiles: createTiles(width, height, appConfig.tileSize, appConfig.tileSize),
                 };
-                dispatch(new InvalidateNormalizedImageTiles(imageHdu.id));
+                actions.push(new InvalidateNormalizedImageTiles(imageHdu.id));
               }
             } else {
               let normalizedImageDataId = `NORMALIZED_IMAGE_DATA_${state.nextIdSeed++}`;
@@ -681,7 +707,7 @@ export class DataFilesState {
               state.imageDataIds.push(normalizedImageDataId);
               imageHdu.normalizedImageDataId = normalizedImageDataId;
 
-              dispatch(new InvalidateNormalizedImageTiles(imageHdu.id));
+              actions.push(new InvalidateNormalizedImageTiles(imageHdu.id));
             }
 
             //initialize transforms
@@ -792,7 +818,8 @@ export class DataFilesState {
 
           return state;
         });
-        dispatch(new LoadHduHeaderSuccess(hduId));
+        actions.push(new LoadHduHeaderSuccess(hduId));
+        dispatch(actions);
       })
     );
   }
@@ -959,7 +986,7 @@ export class DataFilesState {
     return dispatch(new InvalidateCompositeImageTile(fileId, tileIndex));
   }
 
-  @Action([UpdateNormalizedImageTile])
+  @Action(UpdateNormalizedImageTile)
   @ImmutableContext()
   public loadNormalizedImageTile(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
@@ -969,22 +996,23 @@ export class DataFilesState {
     if (
       !(hduId in state.hduEntities) ||
       state.hduEntities[hduId].hduType != HduType.IMAGE ||
-      !(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId ||
-      !(state.hduEntities[hduId] as ImageHdu).histLoaded
-    )
+      !(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId
+    ) {
       return;
+    }
 
     let hdu = state.hduEntities[hduId] as ImageHdu;
     let imageData = state.imageDataEntities[hdu.rawImageDataId];
     if (!imageData.initialized) return;
     let rawTile = imageData.tiles[tileIndex];
 
-    if(rawTile.pixelsLoading) {
+    if (rawTile.pixelsLoading) {
       console.log("SKIPPING UPDATE NORMALIZED TILE SINCE IT IS ALREADY LOADING.... ", hduId, tileIndex);
       return;
     }
 
     let onRawPixelsLoaded = () => {
+      let actions = [];
       setState((state: DataFilesStateModel) => {
         let hdu = state.hduEntities[hduId] as ImageHdu;
         let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
@@ -1002,10 +1030,13 @@ export class DataFilesState {
           ...normalizedImageData,
         };
 
-        dispatch(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels));
+        actions.push(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels))
+        actions.push(new InvalidateCompositeImageTile(hdu.fileId, tileIndex))
 
         return state;
       });
+
+      return dispatch(actions);
     };
 
     if (rawTile.pixelsLoaded) {
@@ -1025,7 +1056,7 @@ export class DataFilesState {
       let loadRawPixelsSuccess$ = this.actions$.pipe(
         ofActionCompleted(LoadRawImageTileSuccess),
         filter((v) => v.action.hduId == hduId && v.action.tileIndex == tileIndex),
-        tap((v) => onRawPixelsLoaded())
+        flatMap((v) => onRawPixelsLoaded())
       );
 
       let loadRawPixelsFail$ = this.actions$.pipe(
@@ -1073,33 +1104,6 @@ export class DataFilesState {
     });
 
     return dispatch(new InvalidateNormalizedImageTiles(hduId));
-  }
-
-  @Action(SyncFileNormalizations)
-  @ImmutableContext()
-  public syncFileNormalizations(
-    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { referenceHduId, hduIds }: SyncFileNormalizations
-  ) {
-    let state = getState();
-    if (!(referenceHduId in state.hduEntities) || state.hduEntities[referenceHduId].hduType != HduType.IMAGE) return;
-    let referenceHdu = state.hduEntities[referenceHduId] as ImageHdu;
-    let referenceNormalizer = referenceHdu.normalizer;
-
-    let actions = [];
-    hduIds.forEach((hduId) => {
-      if (!(hduId in state.hduEntities) || state.hduEntities[hduId].hduType != HduType.IMAGE) return;
-      let hdu = state.hduEntities[hduId] as ImageHdu;
-      actions.push(
-        new UpdateNormalizer(hdu.id, {
-          ...referenceNormalizer,
-          peakPercentile: referenceNormalizer.peakPercentile,
-          backgroundPercentile: referenceNormalizer.backgroundPercentile,
-        })
-      );
-    });
-
-    return dispatch(actions);
   }
 
   /**
@@ -1178,12 +1182,17 @@ export class DataFilesState {
         let hdus = file.hduIds
           .map((hduId) => state.hduEntities[hduId])
           .filter((hdu) => {
-            if (hdu.hduType != HduType.IMAGE) return false;
-            let imageHdu = hdu as ImageHdu;
-            if (!imageHdu.normalizedImageDataId || !(imageHdu.normalizedImageDataId in state.imageDataEntities))
+            if (hdu.hduType != HduType.IMAGE) {
               return false;
+            }
+            let imageHdu = hdu as ImageHdu;
+            if (!imageHdu.normalizedImageDataId || !(imageHdu.normalizedImageDataId in state.imageDataEntities)) {
+              return false;
+            }
             let normalizedImageData = state.imageDataEntities[imageHdu.normalizedImageDataId];
-            if (!normalizedImageData.initialized || !normalizedImageData.tiles[tileIndex].pixelsLoaded) return false;
+            if (!normalizedImageData.initialized || !normalizedImageData.tiles[tileIndex].pixelsLoaded) {
+              return false;
+            }
             return true;
           }) as ImageHdu[];
 
@@ -1195,6 +1204,7 @@ export class DataFilesState {
             alpha: hdu.alpha,
           };
         });
+
 
         if (!tile.pixels || tile.pixels.length != tile.width * tile.height) {
           tile.pixels = new Uint32Array(tile.width * tile.height);
@@ -1230,43 +1240,48 @@ export class DataFilesState {
         return state;
       });
 
+      return dispatch(actions).pipe(
+        take(1),
+        tap((v) => onAllTilesNormalized())
+      );
+
       //trigger update of normalized tile
-      let updateNormalizedTileSuccess$ = this.actions$.pipe(
-        ofActionCompleted(UpdateNormalizedImageTileSuccess),
-        filter((v) => actions.find((a) => a.hduId == v.action.hduId && a.tileIndex == v.action.tileIndex) != undefined)
-      );
+      // let updateNormalizedTileSuccess$ = this.actions$.pipe(
+      //   ofActionCompleted(UpdateNormalizedImageTileSuccess),
+      //   filter((v) => actions.find((a) => a.hduId == v.action.hduId && a.tileIndex == v.action.tileIndex) != undefined)
+      // );
 
-      let updateNormalizedTileFail$ = this.actions$.pipe(
-        ofActionCompleted(UpdateNormalizedImageTileFail),
-        filter((v) => actions.find((a) => a.hduId == v.action.hduId && a.tileIndex == v.action.tileIndex) != undefined)
-      );
+      // let updateNormalizedTileFail$ = this.actions$.pipe(
+      //   ofActionCompleted(UpdateNormalizedImageTileFail),
+      //   filter((v) => actions.find((a) => a.hduId == v.action.hduId && a.tileIndex == v.action.tileIndex) != undefined)
+      // );
 
-      return merge(
-        merge(updateNormalizedTileSuccess$, updateNormalizedTileFail$).pipe(
-          skip(actions.length - 1),
-          take(1),
-          tap((v) => {
-            if (getNormalizationActions().length == 0) {
-              onAllTilesNormalized();
-            } else {
-              setState((state: DataFilesStateModel) => {
-                let file = state.fileEntities[fileId];
-                let compositeImageData = state.imageDataEntities[file.compositeImageDataId];
-                let tile = compositeImageData.tiles[tileIndex];
-                tile.pixelsLoading = false;
-                tile.pixelLoadingFailed = true;
-                state.imageDataEntities[file.compositeImageDataId] = {
-                  ...compositeImageData,
-                };
-                return state;
-              });
+      // return merge(
+      //   merge(updateNormalizedTileSuccess$, updateNormalizedTileFail$).pipe(
+      //     skip(actions.length - 1),
+      //     take(1),
+      //     tap((v) => {
+      //       if (getNormalizationActions().length == 0) {
+      //         onAllTilesNormalized();
+      //       } else {
+      //         setState((state: DataFilesStateModel) => {
+      //           let file = state.fileEntities[fileId];
+      //           let compositeImageData = state.imageDataEntities[file.compositeImageDataId];
+      //           let tile = compositeImageData.tiles[tileIndex];
+      //           tile.pixelsLoading = false;
+      //           tile.pixelLoadingFailed = true;
+      //           state.imageDataEntities[file.compositeImageDataId] = {
+      //             ...compositeImageData,
+      //           };
+      //           return state;
+      //         });
 
-              dispatch(new UpdateCompositeImageTileFail(fileId, tileIndex));
-            }
-          })
-        ),
-        dispatch(actions)
-      );
+      //         dispatch(new UpdateCompositeImageTileFail(fileId, tileIndex));
+      //       }
+      //     })
+      //   ),
+      //   dispatch(actions)
+      // );
     }
   }
 
@@ -1557,9 +1572,8 @@ export class DataFilesState {
         ...state.transformEntities[transformId],
         ...changes,
         id: transformId,
-      }
+      };
       return state;
     });
   }
-
 }

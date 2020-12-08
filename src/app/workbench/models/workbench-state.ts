@@ -135,6 +135,7 @@ export interface WorkbenchStateModel {
   focusedViewerPanelId: string;
 
   viewerSyncEnabled: boolean;
+  viewerSyncMode: 'sky' | 'pixel';
   normalizationSyncEnabled: boolean;
   centroidSettings: CentroidSettings;
   sourceExtractionSettings: SourceExtractionSettings;

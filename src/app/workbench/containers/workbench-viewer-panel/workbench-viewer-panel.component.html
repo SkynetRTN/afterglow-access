@@ -60,19 +60,21 @@
           </div>
         </div>
       </ng-template>
-      <ng-container [ngSwitch]="viewer.type">
-        <app-workbench-image-viewer
-          *ngSwitchCase="'image'"
-          (mousedown)="setFocusedViewer($event, viewer.id, viewer)"
-          [viewer]="viewer"
-          [active]="selectedViewerId == viewer.id && hasFocus"
-          (onImageMove)="handleImageMove($event, viewer.id, viewer)"
-          (onImageClick)="handleImageClick($event, viewer.id, viewer)"
-          (onMarkerClick)="handleMarkerClick($event, viewer.id, viewer)"
-        >
-        </app-workbench-image-viewer>
-        <div *ngSwitchCase="'table'">Tables are not yet supported.</div>
-      </ng-container>
+      <ng-template matTabContent>
+        <ng-container [ngSwitch]="viewer.type">
+          <app-workbench-image-viewer
+            *ngSwitchCase="'image'"
+            (mousedown)="setFocusedViewer($event, viewer.id, viewer)"
+            [viewer]="viewer"
+            [active]="selectedViewerId == viewer.id && hasFocus"
+            (onImageMove)="handleImageMove($event, viewer.id, viewer)"
+            (onImageClick)="handleImageClick($event, viewer.id, viewer)"
+            (onMarkerClick)="handleMarkerClick($event, viewer.id, viewer)"
+          >
+          </app-workbench-image-viewer>
+          <div *ngSwitchCase="'table'">Tables are not yet supported.</div>
+        </ng-container>
+      </ng-template>
     </mat-tab>
   </mat-tab-group>
 </div>

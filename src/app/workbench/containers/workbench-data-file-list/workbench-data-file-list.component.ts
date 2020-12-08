@@ -1,4 +1,13 @@
-import { Component, Input, EventEmitter, Output, OnChanges, OnDestroy, SimpleChange, ChangeDetectionStrategy } from "@angular/core";
+import {
+  Component,
+  Input,
+  EventEmitter,
+  Output,
+  OnChanges,
+  OnDestroy,
+  SimpleChange,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { DataFile, IHdu } from "../../../data-files/models/data-file";
 import { Store } from "@ngxs/store";
 import { HduType } from "../../../data-files/models/data-file-type";
@@ -36,7 +45,7 @@ export interface ISelectedFileListItem {
   selector: "app-workbench-data-file-list",
   templateUrl: "./workbench-data-file-list.component.html",
   styleUrls: ["./workbench-data-file-list.component.css"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkbenchDataFileListComponent {
   @Input("selectedItem")
@@ -61,8 +70,14 @@ export class WorkbenchDataFileListComponent {
     item: {
       fileId: string;
       hduId: string;
+    }
+  }>();
+
+  @Output() onItemDoubleClick = new EventEmitter<{
+    item: {
+      fileId: string;
+      hduId: string;
     };
-    doubleClick: boolean;
   }>();
 
   HduType = HduType;
@@ -145,7 +160,6 @@ export class WorkbenchDataFileListComponent {
     );
 
     this.selectedItem$.subscribe((selectedItem) => {
-      console.log("SELECTED ITEM CHANGED")
       let selectedNodeIds = {};
       let selectedItemId = null;
       if (selectedItem) {
@@ -165,13 +179,15 @@ export class WorkbenchDataFileListComponent {
   }
 
   onItemClick(tree: TreeModel, node: TreeNode, $event) {
-    this.onSelectionChange.emit({ item: { fileId: node.data.fileId, hduId: node.data.hduId }, doubleClick: false });
-    return TREE_ACTIONS.SELECT(tree, node, $event);
+    if (!tree.focusedNode || tree.focusedNode.data.id != node.data.id) {
+      this.onSelectionChange.emit({ item: { fileId: node.data.fileId, hduId: node.data.hduId } });
+      return TREE_ACTIONS.SELECT(tree, node, $event);
+    }
   }
 
   onItemDblClick(tree: TreeModel, node: TreeNode, $event) {
-    this.onSelectionChange.emit({ item: { fileId: node.data.fileId, hduId: node.data.hduId }, doubleClick: true });
-    return TREE_ACTIONS.SELECT(tree, node, $event);
+    this.onItemDoubleClick.emit({ item: { fileId: node.data.fileId, hduId: node.data.hduId } });
+    // return TREE_ACTIONS.SELECT(tree, node, $event);
   }
 
   onFocus() {

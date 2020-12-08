@@ -30,6 +30,7 @@ import { PlottingPanelState } from "./models/plotter-file-state";
 import { PhotometryPanelState } from "./models/photometry-file-state";
 import { PhotData } from "./models/source-phot-data";
 import { ISelectedFileListItem } from "./containers/workbench-data-file-list/workbench-data-file-list.component";
+import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 
 /* Core */
 
@@ -147,6 +148,12 @@ export class SetViewerSyncEnabled {
   public static readonly type = "[Workbench] Set Viewer Sync Enabled";
 
   constructor(public value: boolean) {}
+}
+
+export class SetViewerSyncMode {
+  public static readonly type = "[Workbench] Set Viewer Sync Mode";
+
+  constructor(public value: 'sky' | 'pixel') {}
 }
 
 export class SetNormalizationSyncEnabled {
@@ -616,4 +623,10 @@ export class SyncViewerTransformations {
   public static readonly type = "[Workbench] Sync Viewer Transformations";
 
   constructor(public refHeaderId: string, public refImageTransformId: string, public refViewportTransformId: string) {}
+}
+
+export class SyncViewerNormalizations {
+  public static readonly type = "[Workbench] Sync Viewer Normalizations";
+
+  constructor(public normalization: PixelNormalizer) {}
 }

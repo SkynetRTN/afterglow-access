@@ -3,6 +3,7 @@ import { ImageHist } from "./models/image-hist";
 import { PixelNormalizer } from "./models/pixel-normalizer";
 import { Region } from "./models/region";
 import { Transform } from './models/transformation';
+import { Normalization } from './models/normalization';
 
 /**
  * Load Library Actions
@@ -198,12 +199,6 @@ export class UpdateNormalizer {
   public static readonly type = "[Workbench HDU State] Update Normalizer";
 
   constructor(public hduId: string, public changes: Partial<PixelNormalizer>) {}
-}
-
-export class SyncFileNormalizations {
-  public static readonly type = "[Workbench] Sync File Normalizations";
-
-  constructor(public referenceHduId: string, public hduIds: string[]) {}
 }
 
 /**
