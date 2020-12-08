@@ -1,30 +1,26 @@
-import { isPlatformServer } from '@angular/common';
-import { StateClass } from '@ngxs/store/internals';
-import { StateToken } from '@ngxs/store';
+import { isPlatformServer } from "@angular/common";
+import { StateClass } from "@ngxs/store/internals";
+import { StateToken } from "@ngxs/store";
 
-import { StorageOption, StorageEngine, NgxsStoragePluginOptions } from './symbols';
+import { StorageOption, StorageEngine, NgxsStoragePluginOptions } from "./symbols";
 
 /**
  * If the `key` option is not provided then the below constant
  * will be used as a default key
  */
-export const DEFAULT_STATE_KEY = '@@STATE';
+export const DEFAULT_STATE_KEY = "@@STATE";
 
 /**
  * Internal type definition for the `key` option provided
  * in the `forRoot` method when importing module
  */
-export type StorageKey =
-  | string
-  | StateClass
-  | StateToken<any>
-  | (string | StateClass | StateToken<any>)[];
+export type StorageKey = string | StateClass | StateToken<any> | (string | StateClass | StateToken<any>)[];
 
 /**
  * This key is used to retrieve static metadatas on state classes.
  * This constant is taken from the core codebase
  */
-const META_OPTIONS_KEY = 'NGXS_OPTIONS_META';
+const META_OPTIONS_KEY = "NGXS_OPTIONS_META";
 
 function transformKeyOption(key: StorageKey): string[] {
   if (!Array.isArray(key)) {
@@ -32,7 +28,7 @@ function transformKeyOption(key: StorageKey): string[] {
   }
 
   return key.map((token: string | StateClass | StateToken<any>) => {
-    if (typeof token === 'string') {
+    if (typeof token === "string") {
       return token;
     } else if (token instanceof StateToken) {
       return token.getName();
@@ -43,16 +39,14 @@ function transformKeyOption(key: StorageKey): string[] {
   });
 }
 
-export function storageOptionsFactory(
-  options: NgxsStoragePluginOptions | undefined
-): NgxsStoragePluginOptions {
+export function storageOptionsFactory(options: NgxsStoragePluginOptions | undefined): NgxsStoragePluginOptions {
   if (options !== undefined && options.key) {
     options.key = transformKeyOption(options.key);
   }
 
   if (options !== undefined && options.sanitizations) {
-    let transformedKeys = transformKeyOption(options.sanitizations.map(s => s.key));
-    options.sanitizations.forEach( (s, i) => s.key = transformedKeys[i]);
+    let transformedKeys = transformKeyOption(options.sanitizations.map((s) => s.key));
+    options.sanitizations.forEach((s, i) => (s.key = transformedKeys[i]));
   }
 
   return {
@@ -60,14 +54,11 @@ export function storageOptionsFactory(
     storage: StorageOption.LocalStorage,
     serialize: JSON.stringify,
     deserialize: JSON.parse,
-    ...options
+    ...options,
   };
 }
 
-export function engineFactory(
-  options: NgxsStoragePluginOptions,
-  platformId: string
-): StorageEngine | null {
+export function engineFactory(options: NgxsStoragePluginOptions, platformId: string): StorageEngine | null {
   if (isPlatformServer(platformId)) {
     return null;
   }

@@ -9,8 +9,6 @@ let WcsModule: any;
 
 @Injectable()
 export class WasmService {
-  
-
   wasmReady$ = new BehaviorSubject<boolean>(false);
 
   constructor() {
@@ -31,8 +29,6 @@ export class WasmService {
       wasmBinary: binary,
       onRuntimeInitialized: () => {
         this.wasmReady$.next(true);
-
-        
       },
     };
 
@@ -57,7 +53,7 @@ const wcsRegEx = [
   /CD.+/,
   /PC.+/,
   /PV.+/,
-  /CROTA\d+/
+  /CROTA\d+/,
 ];
 
 // Defines the maximum number of coordinate calculations to perform per WCSlib call. A larger number will result in a faster conversion, but will require more memory
@@ -66,8 +62,6 @@ const wcsRegEx = [
 const MAX_COORDS = 5000;
 
 export class WcsLib {
-  
-
   _getWCS: any;
   _hasCelestial: any;
   _pix2sky: any;
@@ -79,23 +73,11 @@ export class WcsLib {
   constructor(header: any) {
     this._getWCS = WcsModule.cwrap("getWcs", "number", ["String", "number"]);
 
-    this._hasCelestial = WcsModule.cwrap("hasCelestial", "number", [
-      "number"
-    ]);
+    this._hasCelestial = WcsModule.cwrap("hasCelestial", "number", ["number"]);
 
-    this._pix2sky = WcsModule.cwrap("pix2sky", "number", [
-      "number",
-      "number",
-      "number",
-      "number"
-    ]);
+    this._pix2sky = WcsModule.cwrap("pix2sky", "number", ["number", "number", "number", "number"]);
 
-    this._sky2pix = WcsModule.cwrap("sky2pix", "number", [
-      "number",
-      "number",
-      "number",
-      "number"
-    ]);
+    this._sky2pix = WcsModule.cwrap("sky2pix", "number", ["number", "number", "number", "number"]);
 
     var headerStr, nkeyrec, nHeaderBytes, headerPtr, headerHeap;
 
@@ -105,7 +87,7 @@ export class WcsLib {
 
     // Split the string into an array and filter based on the WCS regular expressions
     var headerArray = header.match(/.{1,80}/g);
-    headerArray = headerArray.filter(function(line) {
+    headerArray = headerArray.filter(function (line) {
       // Extract the keyword
       var keyword = line.slice(0, 8).trim();
 
@@ -154,8 +136,7 @@ export class WcsLib {
 
   private toHeader(wcsObj) {
     let header = [];
-    let line =
-      "                                                                                ";
+    let line = "                                                                                ";
 
     for (let card in wcsObj) {
       let value = wcsObj[card];
@@ -177,30 +158,19 @@ export class WcsLib {
     return header.join("\n");
   }
 
-  public pix2sky = function(x, y) {
+  public pix2sky = function (x, y) {
     const retVal = this._pix2sky(this.wcsPtr, x, y, this.coordinatePtr);
-    const world = new Float64Array(
-      WcsModule.HEAPF64.buffer,
-      this.coordinatePtr,
-      2
-    );
+    const world = new Float64Array(WcsModule.HEAPF64.buffer, this.coordinatePtr, 2);
     return new Float64Array(world);
   };
 
-  public hasCelestial = function() {
+  public hasCelestial = function () {
     return this._hasCelestial(this.wcsPtr);
-  }
-
-  public sky2pix = function(ra, dec) {
-    this._sky2pix(this.wcsPtr, ra, dec, this.coordinatePtr);
-    const pixcrd = new Float64Array(
-      WcsModule.HEAPU8.buffer,
-      this.coordinatePtr,
-      2
-    );
-    return pixcrd.slice(0);
   };
 
-
-  
+  public sky2pix = function (ra, dec) {
+    this._sky2pix(this.wcsPtr, ra, dec, this.coordinatePtr);
+    const pixcrd = new Float64Array(WcsModule.HEAPU8.buffer, this.coordinatePtr, 2);
+    return pixcrd.slice(0);
+  };
 }

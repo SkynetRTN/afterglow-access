@@ -1,30 +1,18 @@
-import {
-  Component,
-  OnInit,
-  OnChanges,
-  ViewChild,
-  AfterViewInit,
-  Input,
-  ChangeDetectorRef
-} from "@angular/core";
+import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDetectorRef } from "@angular/core";
 
 import { Subject } from "rxjs";
 import { debounceTime, throttleTime } from "rxjs/operators";
 
-import {
-  DataFile,
-  ImageHdu,
-  PixelType
-} from "../../../data-files/models/data-file";
-import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
-import { getPixel, getPixels, IImageData } from '../../../data-files/models/image-data';
-import { Wcs } from '../../../image-tools/wcs';
+import { DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
+import { PlotlyTheme, ThemeStorage } from "../../../theme-picker/theme-storage/theme-storage";
+import { getPixel, getPixels, IImageData } from "../../../data-files/models/image-data";
+import { Wcs } from "../../../image-tools/wcs";
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({
   selector: "app-plotter",
   templateUrl: "./plotter.component.html",
-  styleUrls: ["./plotter.component.css"]
+  styleUrls: ["./plotter.component.css"],
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
@@ -32,9 +20,9 @@ export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   imageData: IImageData<PixelType>;
   @Input()
-  plotMode: '1D' | '2D' | '3D';
+  plotMode: "1D" | "2D" | "3D";
   @Input()
-  colorMode: 'grayscale' | 'rgba';
+  colorMode: "grayscale" | "rgba";
   @Input()
   width: number = 200;
   @Input()
@@ -54,32 +42,31 @@ export class PlotterComponent implements OnInit, OnChanges {
   private currentSeparationScaledUnits = null;
   private crosshairX: number = null;
   private crosshairY: number = null;
-  
-  public data : Array<any> = [];
+
+  public data: Array<any> = [];
   public layout: Partial<any> = {
     width: null,
     height: null,
     xaxis: {
-      type: 'linear',
+      type: "linear",
       autorange: true,
     },
     yaxis: {
-      type: 'linear',
+      type: "linear",
       autorange: true,
     },
     margin: {
       l: 50,
       r: 50,
       b: 50,
-      t: 50
+      t: 50,
     },
-    showlegend: false
-    
+    showlegend: false,
   };
   public baseTheme: PlotlyTheme;
   public theme: PlotlyTheme;
 
-   // public customButton = {
+  // public customButton = {
   //   name: 'click me',
   //   click: function (gd) {
   //   },
@@ -91,36 +78,31 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   //https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 
-  
-
   public config: Partial<any> = {
     scrollZoom: true,
     displaylogo: false,
     modeBarButtons: [
       //[this.customButton],
-      ['toImage', 'zoomIn2d', 'zoomOut2d', 'autoScale2d',]
-    ]
+      ["toImage", "zoomIn2d", "zoomOut2d", "autoScale2d"],
+    ],
   };
-
 
   private chartDebouncer$: Subject<null> = new Subject();
 
   constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef) {
     this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
     this.updateTheme();
-    themeStorage.onThemeUpdate.subscribe(theme => {
+    themeStorage.onThemeUpdate.subscribe((theme) => {
       this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
       this.updateTheme();
       this.cd.detectChanges();
-    })
+    });
   }
-
-
 
   ngOnInit() {
     let self = this;
 
-    this.chartDebouncer$.pipe(throttleTime(50)).subscribe(value => {
+    this.chartDebouncer$.pipe(throttleTime(50)).subscribe((value) => {
       this.updateChart();
     });
 
@@ -132,8 +114,8 @@ export class PlotterComponent implements OnInit, OnChanges {
   ngOnChanges() {
     this.updateLineView();
     this.chartDebouncer$.next();
-    if(this.layout.width != this.width) this.layout.width = this.width;
-    if(this.layout.height != this.height) this.layout.height = this.height;
+    if (this.layout.width != this.width) this.layout.width = this.width;
+    if (this.layout.height != this.height) this.layout.height = this.height;
     // this.updateChartOptions();
   }
 
@@ -143,20 +125,17 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   private onChartCreation() {
     // let self = this;
-
     // let onChartMouseMove = xy => {
     //   if (this.lineMeasureStart && this.lineMeasureEnd) {
     //     let xScale = self.nvD3.chart.xAxis.scale();
     //     let yScale = self.nvD3.chart.yAxis.scale();
     //     let t = xScale.invert(xy[0]);
     //     //let y = yScale.invert(xy[1]);
-
     //     let start = self.lineMeasureStart;
     //     let end = self.lineMeasureEnd;
     //     let v = { x: end.x - start.x, y: end.y - start.y };
     //     let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
     //     let vUnit = { x: v.x / vLength, y: v.y / vLength };
-
     //     //console.log(vUnit.x*t + start.x, vUnit.y*t + start.y);
     //     self.crosshairX = vUnit.x * t + start.x;
     //     self.crosshairY = vUnit.y * t + start.y;
@@ -165,13 +144,11 @@ export class PlotterComponent implements OnInit, OnChanges {
     //     //console.log('mouse over', e.mouseX, self.nvD3.chart.xAxis.scale().invert(e.mouseX));
     //   }
     // };
-
     // let onChartMouseOut = () => {
     //   self.crosshairX = null;
     //   self.crosshairY = null;
     //   self.updateLineView();
     // };
-
     // if (this.nvD3.svg) {
     //   this.nvD3.svg.select(".nv-linesWrap").on("mousemove.lines", function(e) {
     //     onChartMouseMove(d3.mouse(this));
@@ -192,8 +169,8 @@ export class PlotterComponent implements OnInit, OnChanges {
   updateTheme() {
     this.theme = {
       ...this.baseTheme,
-      colorWay: this.colorMode == 'rgba' ? ['#DB4437', '#0F9D58', '#4285F4'] : this.baseTheme.colorWay,
-    }
+      colorWay: this.colorMode == "rgba" ? ["#DB4437", "#0F9D58", "#4285F4"] : this.baseTheme.colorWay,
+    };
   }
 
   private updateChart() {
@@ -204,18 +181,18 @@ export class PlotterComponent implements OnInit, OnChanges {
 
     let start = this.lineMeasureStart;
     let end = this.lineMeasureEnd;
-    
-    if(this.plotMode == '1D') {
+
+    if (this.plotMode == "1D") {
       let v = { x: end.x - start.x, y: end.y - start.y };
       let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
-  
+
       if (vLength == 0) {
         this.data = [];
         return;
       }
-  
+
       let vUnit = { x: v.x / vLength, y: v.y / vLength };
-  
+
       let numPoints = 256;
       let spacing = vLength / numPoints;
       let result = new Array(numPoints);
@@ -223,17 +200,17 @@ export class PlotterComponent implements OnInit, OnChanges {
       let ys = new Array(numPoints);
       let ts = new Array(numPoints);
       let vs = new Array(numPoints);
-  
+
       for (let i = 0; i < numPoints; i++) {
         let t = i * spacing;
         let x = start.x + vUnit.x * t;
         let y = start.y + vUnit.y * t;
-  
+
         xs[i] = x;
         ys[i] = y;
         ts[i] = t;
-        vs[i] = getPixel(this.imageData, x, y, this.interpolatePixels)
-  
+        vs[i] = getPixel(this.imageData, x, y, this.interpolatePixels);
+
         // result[i] = {
         //   x: x,
         //   y: y,
@@ -243,11 +220,11 @@ export class PlotterComponent implements OnInit, OnChanges {
         //   y0: y
         // };
       }
-  
-      if(this.colorMode == 'rgba') {
-        let ry = vs.map(v => v & 0xff);
-        let gy = vs.map(v => (v >> 8) & 0xff);
-        let by = vs.map(v => (v >> 16) & 0xff);
+
+      if (this.colorMode == "rgba") {
+        let ry = vs.map((v) => v & 0xff);
+        let gy = vs.map((v) => (v >> 8) & 0xff);
+        let by = vs.map((v) => (v >> 16) & 0xff);
         this.data = [
           {
             x: ts,
@@ -255,8 +232,7 @@ export class PlotterComponent implements OnInit, OnChanges {
             // fill: "tozeroy",
             type: "scatter",
             // mode: "none",
-            name: 'red'
-            
+            name: "red",
           },
           {
             x: ts,
@@ -264,7 +240,7 @@ export class PlotterComponent implements OnInit, OnChanges {
             // fill: "tozeroy",
             type: "scatter",
             // mode: "none",
-            name: 'green'
+            name: "green",
           },
           {
             x: ts,
@@ -272,11 +248,10 @@ export class PlotterComponent implements OnInit, OnChanges {
             // fill: "tozeroy",
             type: "scatter",
             // mode: "none",
-            name: 'blue'
-          }
+            name: "blue",
+          },
         ];
-      }
-      else {
+      } else {
         this.data = [
           {
             x: ts,
@@ -284,35 +259,28 @@ export class PlotterComponent implements OnInit, OnChanges {
             // fill: "tozeroy",
             type: "scatter",
             // mode: "none",
-          }
+          },
         ];
-        if('colorWay' in this.layout) {
-          delete this.layout['colorWay'];
+        if ("colorWay" in this.layout) {
+          delete this.layout["colorWay"];
         }
       }
       this.updateTheme();
-     
-    }
-    else if(this.plotMode == '3D' || this.plotMode == '2D') {
+    } else if (this.plotMode == "3D" || this.plotMode == "2D") {
       let x = Math.floor(Math.min(start.x, end.x));
       let y = Math.floor(Math.min(start.y, end.y));
       let width = Math.floor(Math.abs(start.x - end.x));
       let height = Math.floor(Math.abs(start.y - end.y));
 
-      if(width != 0 && height != 0) {
+      if (width != 0 && height != 0) {
         this.data = [
           {
             z: getPixels(this.imageData, x, y, width, height),
-            type: this.plotMode == '3D' ? 'surface' : 'heatmap'
-          }
+            type: this.plotMode == "3D" ? "surface" : "heatmap",
+          },
         ];
       }
-
-      
     }
-    
-    
-    
 
     // this.data = [
     //   {
@@ -325,10 +293,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   }
 
   private updateLineView() {
-    if (
-      !this.lineMeasureStart ||
-      !this.lineMeasureEnd
-    ) {
+    if (!this.lineMeasureStart || !this.lineMeasureEnd) {
       this.currentSeparation = null;
       this.currentSeparationScaled = null;
       return;
@@ -340,14 +305,8 @@ export class PlotterComponent implements OnInit, OnChanges {
     );
 
     if (this.wcs && this.wcs.isValid()) {
-      let raDec1 = this.wcs.pixToWorld([
-        this.lineMeasureStart.x,
-        this.lineMeasureStart.y
-      ]);
-      let raDec2 = this.wcs.pixToWorld([
-        this.lineMeasureEnd.x,
-        this.lineMeasureEnd.y
-      ]);
+      let raDec1 = this.wcs.pixToWorld([this.lineMeasureStart.x, this.lineMeasureStart.y]);
+      let raDec2 = this.wcs.pixToWorld([this.lineMeasureEnd.x, this.lineMeasureEnd.y]);
       let phi1 = raDec1[1] * (Math.PI / 180.0);
       let phi2 = raDec2[1] * (Math.PI / 180.0);
       let deltaLambda = (raDec1[0] - raDec2[0]) * (Math.PI / 180.0);
@@ -357,10 +316,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         2 *
         Math.asin(
           Math.sqrt(
-            Math.pow(Math.sin(deltaPhi / 2), 2) +
-              Math.cos(phi1) *
-                Math.cos(phi2) *
-                Math.pow(Math.sin(deltaLambda / 2), 2)
+            Math.pow(Math.sin(deltaPhi / 2), 2) + Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2), 2)
           )
         );
       separationScaled *= 180.0 / Math.PI;

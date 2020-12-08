@@ -1,14 +1,15 @@
 <div *ngIf="hdus">
   <form [formGroup]="alignForm">
     <div>
-      <mat-form-field appearance="outline" style="width: 300px;">
+      <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Align</mat-label>
-        <mat-select multiple formControlName="selectedImageFileIds">
-          <mat-option
-            *ngFor="let hdu of hdus"
-            [value]="hdu.id"
-            >{{ fileEntities[hdu.fileId].name }}</mat-option
-          >
+        <mat-select multiple formControlName="selectedHduIds">
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+            {{ fileEntities[hdu.fileId].name }}
+            <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
+              - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
+            >
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -22,22 +23,20 @@
     </div>
 
     <div>
-      <mat-form-field appearance="outline" style="width: 300px;">
-        <mat-label i18n>Active Image File</mat-label>
-        <mat-select
-          [value]="primaryHdu?.id"
-          (selectionChange)="onPrimaryHduChange($event)"
-        >
-          <mat-option
-            *ngFor="let hdu of hdus"
-            [value]="hdu.id"
-            >{{ fileEntities[hdu.fileId].name }}</mat-option
-          >
+      <mat-form-field appearance="outline" style="width: 300px">
+        <mat-label i18n>Reference Image File</mat-label>
+        <mat-select [value]="primaryHdu?.id" (selectionChange)="onPrimaryHduChange($event)">
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+            {{ fileEntities[hdu.fileId].name }}
+            <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
+              - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
+            >
+          </mat-option>
         </mat-select>
       </mat-form-field>
     </div>
     <div>
-      <mat-form-field appearance="outline" style="width: 300px;">
+      <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Mode</mat-label>
         <mat-select formControlName="mode">
           <mat-option [value]="'astrometric'">astrometric</mat-option>
@@ -45,18 +44,15 @@
         </mat-select>
       </mat-form-field>
       <div>
-        <mat-checkbox formControlName="inPlace" i18n>
-          Overwrite Files</mat-checkbox
-        >
+        <mat-checkbox formControlName="inPlace" i18n> Overwrite Files</mat-checkbox>
       </div>
     </div>
 
     <div *ngIf="primaryHduIsSelected$ | async">
       <div *ngIf="(alignFormData$ | async)?.mode == 'astrometric'">
         <div *ngIf="!(primaryHduHasWcs$ | async); else hasWcs">
-          <div class="alert alert-warning" style="margin-top: 10px;" i18n>
-            This image does not have astrometric data in its header and
-            cannot be aligned using the selected mode.
+          <div class="alert alert-warning" style="margin-top: 10px" i18n>
+            This image does not have astrometric data in its header and cannot be aligned using the selected mode.
           </div>
         </div>
         <ng-template #hasWcs>
@@ -68,57 +64,33 @@
         </ng-template>
       </div>
     </div>
-    <div style="clear: both;"></div>
-    <button
-      mat-raised-button
-      (click)="submit(alignForm.value)"
-      [disabled]="!alignForm.valid"
-      class="float-right"
-      i18n
-    >
+    <div style="clear: both"></div>
+    <button mat-raised-button (click)="submit(alignForm.value)" [disabled]="!alignForm.valid" class="float-right" i18n>
       Submit
     </button>
-    <div style="clear: both;"></div>
+    <div style="clear: both"></div>
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
-  <div
-    *ngIf="alignmentJobRow$ | async; let jobRow"
-    style="margin-top: 10px;"
-  >
+  <div *ngIf="alignmentJobRow$ | async; let jobRow" style="margin-top: 10px">
     <div
       class="alert alert-info"
-      *ngIf="
-        !jobRow.result ||
-          ['pending', 'in_progress'].includes(jobRow.job.state.status);
-        else jobComplete
-      "
+      *ngIf="!jobRow.result || ['pending', 'in_progress'].includes(jobRow.job.state.status); else jobComplete"
     >
-      <span i18n>Processing job</span> {{ jobRow.job.id }} ... ({{
-        jobRow.job.state.progress | number: "1.0-0"
-      }}%)
+      <span i18n>Processing job</span> {{ jobRow.job.id }} ... ({{ jobRow.job.state.progress | number: "1.0-0" }}%)
 
       <ng-container *ngIf="jobRow.job.state.status == 'in_progress'">
         <div style="margin-top: 5px">
-          <mat-progress-bar
-            mode="determinate"
-            [value]="jobRow.job.state.progress"
-            [color]="'primary'"
-          ></mat-progress-bar>
+          <mat-progress-bar mode="determinate" [value]="jobRow.job.state.progress" [color]="'primary'"></mat-progress-bar>
         </div>
       </ng-container>
     </div>
     <ng-template #jobComplete>
-      <div
-        *ngIf="jobRow.result.errors.length != 0; else noErrors"
-        class="alert alert-danger"
-      >
+      <div *ngIf="jobRow.result.errors.length != 0; else noErrors" class="alert alert-danger">
         {{ jobRow.result.errors }}
       </div>
       <ng-template #noErrors>
-        <div class="alert alert-success" i18n>
-          Processing is complete.
-        </div>
+        <div class="alert alert-success" i18n>Processing is complete.</div>
       </ng-template>
     </ng-template>
   </div>

@@ -1,9 +1,9 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input } from "@angular/core";
 
 @Component({
-  selector: '[app-svg-rectangle-marker]',
-  templateUrl: './svg-rectangle-marker.component.html',
-  styleUrls: ['./svg-rectangle-marker.component.css']
+  selector: "[app-svg-rectangle-marker]",
+  templateUrl: "./svg-rectangle-marker.component.html",
+  styleUrls: ["./svg-rectangle-marker.component.css"],
 })
 export class SvgRectangleMarkerComponent implements OnInit {
   @Input() x: number;
@@ -13,9 +13,7 @@ export class SvgRectangleMarkerComponent implements OnInit {
   @Input() showOutline: boolean = true;
   @Input() selected: boolean = false;
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 }

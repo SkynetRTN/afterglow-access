@@ -1,36 +1,10 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  HostBinding,
-  Input,
-} from "@angular/core";
-import {
-  Observable,
-  combineLatest,
-  BehaviorSubject,
-  Subscription,
-  Subject,
-} from "rxjs";
+import { Component, OnInit, OnDestroy, HostBinding, Input } from "@angular/core";
+import { Observable, combineLatest, BehaviorSubject, Subscription, Subject } from "rxjs";
 import { map, tap, filter, flatMap, takeUntil } from "rxjs/operators";
-import {
-  FormGroup,
-  FormControl,
-  Validators,
-  ValidatorFn,
-  ValidationErrors,
-} from "@angular/forms";
+import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from "@angular/forms";
 import { JobType } from "../../../jobs/models/job-types";
-import {
-  PixelOpsJob,
-  PixelOpsJobResult,
-} from "../../../jobs/models/pixel-ops";
-import {
-  PixelOpsFormData,
-  WorkbenchStateModel,
-  WorkbenchTool,
-  PixelOpsPanelConfig,
-} from "../../models/workbench-state";
+import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
+import { PixelOpsFormData, WorkbenchStateModel, WorkbenchTool, PixelOpsPanelConfig } from "../../models/workbench-state";
 import { MatDialog } from "@angular/material/dialog";
 import { MatTabChangeEvent } from "@angular/material/tabs";
 import { PixelOpsJobsDialogComponent } from "../pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component";
@@ -45,8 +19,8 @@ import {
   UpdatePixelOpsPageSettings,
 } from "../../workbench.actions";
 import { JobsState } from "../../../jobs/jobs.state";
-import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
-import { DataFilesState } from '../../../data-files/data-files.state';
+import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
+import { DataFilesState } from "../../../data-files/data-files.state";
 
 interface PixelOpVariable {
   name: string;
@@ -78,13 +52,13 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
 
   @Input("dataFileEntities")
-  set dataFileEntities(dataFileEntities: {[id: string]: DataFile}) {
+  set dataFileEntities(dataFileEntities: { [id: string]: DataFile }) {
     this.dataFileEntities$.next(dataFileEntities);
   }
   get dataFileEntities() {
     return this.dataFileEntities$.getValue();
   }
-  private dataFileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
+  private dataFileEntities$ = new BehaviorSubject<{ [id: string]: DataFile }>(null);
 
   @Input("config")
   set config(config: PixelOpsPanelConfig) {
@@ -95,9 +69,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
   private config$ = new BehaviorSubject<PixelOpsPanelConfig>(null);
 
-  pixelOpsJobRows$: Observable<
-    { job: PixelOpsJob; result: PixelOpsJobResult }[]
-  >;
+  pixelOpsJobRows$: Observable<{ job: PixelOpsJob; result: PixelOpsJobResult }[]>;
   currentPixelOpsJobRow$: Observable<{
     job: PixelOpsJob;
     result: PixelOpsJobResult;
@@ -125,12 +97,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     const mode = control.get("mode");
     const scalarValue = control.get("scalarValue");
     const operand = control.get("operand");
-    return mode &&
-      scalarValue &&
-      operand &&
-      mode.value == "scalar" &&
-      operand.value == "/" &&
-      scalarValue.value == 0
+    return mode && scalarValue && operand && mode.value == "scalar" && operand.value == "/" && scalarValue.value == 0
       ? { divideByZero: true }
       : null;
   };
@@ -141,10 +108,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       mode: new FormControl("image", Validators.required),
       imageFileIds: new FormControl([], Validators.required),
       auxImageFileId: new FormControl("", Validators.required),
-      scalarValue: new FormControl(
-        { disabled: true, value: 0 },
-        Validators.required
-      ),
+      scalarValue: new FormControl({ disabled: true, value: 0 }, Validators.required),
       inPlace: new FormControl(false, Validators.required),
     },
     { validators: this.divideByZero }
@@ -157,11 +121,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     inPlace: new FormControl(false, Validators.required),
   });
 
-  constructor(
-    public dialog: MatDialog,
-    private store: Store,
-    private router: Router
-  ) {
+  constructor(public dialog: MatDialog, private store: Store, private router: Router) {
     this.pixelOpsFormData$ = this.config$.pipe(
       filter((config) => config !== null),
       map((config) => config.pixelOpsFormData),
@@ -175,8 +135,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
     this.imageCalcForm
       .get("mode")
-      .valueChanges.pipe(
-        takeUntil(this.destroy$))
+      .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
         if (value == "scalar") {
           this.imageCalcForm.get("scalarValue").enable();
@@ -187,60 +146,65 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
         }
       });
 
-    this.imageCalcForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        // if(this.imageCalcForm.valid) {
-        this.store.dispatch(
-          new UpdatePixelOpsPageSettings({
-            pixelOpsFormData: this.imageCalcForm.value,
-          })
-        );
-        this.store.dispatch(new HideCurrentPixelOpsJobState());
-        // }
-      });
+    this.imageCalcForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+      // if(this.imageCalcForm.valid) {
+      this.store.dispatch(
+        new UpdatePixelOpsPageSettings({
+          pixelOpsFormData: this.imageCalcForm.value,
+        })
+      );
+      this.store.dispatch(new HideCurrentPixelOpsJobState());
+      // }
+    });
 
-    this.imageCalcFormAdv.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        // if(this.imageCalcFormAdv.valid) {
-        this.store.dispatch(
-          new UpdatePixelOpsPageSettings({
-            pixelOpsFormData: this.imageCalcFormAdv.value,
-          })
-        );
-        this.store.dispatch(new HideCurrentPixelOpsJobState());
-        // }
-      });
+    this.imageCalcFormAdv.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+      // if(this.imageCalcFormAdv.valid) {
+      this.store.dispatch(
+        new UpdatePixelOpsPageSettings({
+          pixelOpsFormData: this.imageCalcFormAdv.value,
+        })
+      );
+      this.store.dispatch(new HideCurrentPixelOpsJobState());
+      // }
+    });
 
-    let auxImageHdus$ = combineLatest(
-      this.pixelOpsFormData$,
-      this.hdus$
-    ).pipe(
+    let auxImageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
       filter(([data, hdus]) => hdus != null),
       map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return data.auxHduIds
           .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
-          .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0));
+          .sort((a, b) =>
+            dataFiles[a.fileId].name < dataFiles[b.fileId].name
+              ? -1
+              : dataFiles[a.fileId].name > dataFiles[b.fileId].name
+              ? 1
+              : 0
+          );
       })
     );
 
     let imageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
       filter(([data, hdus]) => hdus != null),
       map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return data.hduIds
           .map((id) => hdus.find((f) => f.id == id))
           .filter((f) => f != null)
-          .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0));
+          .sort((a, b) =>
+            dataFiles[a.fileId].name < dataFiles[b.fileId].name
+              ? -1
+              : dataFiles[a.fileId].name > dataFiles[b.fileId].name
+              ? 1
+              : 0
+          );
       })
     );
 
     this.pixelOpVariables$ = combineLatest(imageHdus$, auxImageHdus$).pipe(
       map(([imageFiles, auxImageHdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return [
           {
             name: "aux_img",
@@ -249,7 +213,13 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
           { name: "img", value: "for each image file" },
 
           ...imageFiles
-            .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0))
+            .sort((a, b) =>
+              dataFiles[a.fileId].name < dataFiles[b.fileId].name
+                ? -1
+                : dataFiles[a.fileId].name > dataFiles[b.fileId].name
+                ? 1
+                : 0
+            )
             .map((f, index) => {
               return {
                 name: `imgs[${index}]`,
@@ -257,7 +227,13 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
               };
             }),
           ...auxImageHdus
-            .sort((a, b) => (dataFiles[a.fileId].name < dataFiles[b.fileId].name ? -1 : dataFiles[a.fileId].name > dataFiles[b.fileId].name ? 1 : 0))
+            .sort((a, b) =>
+              dataFiles[a.fileId].name < dataFiles[b.fileId].name
+                ? -1
+                : dataFiles[a.fileId].name > dataFiles[b.fileId].name
+                ? 1
+                : 0
+            )
             .map((f, index) => {
               return {
                 name: `aux_imgs[${index}]`,
@@ -277,32 +253,18 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       )
     );
 
-    this.currentPixelOpsJobRow$ = combineLatest(
-      store.select(WorkbenchState.getState),
-      this.pixelOpsJobRows$
-    ).pipe(
+    this.currentPixelOpsJobRow$ = combineLatest(store.select(WorkbenchState.getState), this.pixelOpsJobRows$).pipe(
       filter(
-        ([state, rows]: [
-          WorkbenchStateModel,
-          { job: PixelOpsJob; result: PixelOpsJobResult }[]
-        ]) =>
+        ([state, rows]: [WorkbenchStateModel, { job: PixelOpsJob; result: PixelOpsJobResult }[]]) =>
           state.pixelOpsPanelConfig.currentPixelOpsJobId != null &&
-          rows.find(
-            (r) => r.job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId
-          ) != undefined
+          rows.find((r) => r.job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId) != undefined
       ),
-      map(([state, rows]) =>
-        rows.find(
-          (r) => r.job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId
-        )
-      )
+      map(([state, rows]) => rows.find((r) => r.job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId))
     );
 
     this.showCurrentPixelOpsJobState$ = store
       .select(WorkbenchState.getState)
-      .pipe(
-        map((state) => state.pixelOpsPanelConfig.showCurrentPixelOpsJobState)
-      );
+      .pipe(map((state) => state.pixelOpsPanelConfig.showCurrentPixelOpsJobState));
 
     // this.extractionJobRows$ = combineLatest(
     //   store.select(JobsState.getAllJobs).pipe(
@@ -331,7 +293,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     // );
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);

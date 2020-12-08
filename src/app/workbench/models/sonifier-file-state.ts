@@ -1,12 +1,13 @@
-import { Region } from '../../data-files/models/region';
+import { Region } from "../../data-files/models/region";
 
 export enum SonifierRegionMode {
   VIEWPORT,
-  CUSTOM
+  CUSTOM,
 }
 
 export interface SonificationPanelState {
-  sonificationUri: string,
+  id: string;
+  sonificationUri: string;
   regionHistoryInitialized: boolean;
   regionHistory: Array<Region>;
   regionHistoryIndex: number | null;
@@ -14,5 +15,6 @@ export interface SonificationPanelState {
   viewportSync: boolean;
   duration: number;
   toneCount: number;
-  progressLine: { x1: number, y1: number, x2: number, y2: number };
+  progressLine: { x1: number; y1: number; x2: number; y2: number };
+  sonificationJobProgress: number;
 }

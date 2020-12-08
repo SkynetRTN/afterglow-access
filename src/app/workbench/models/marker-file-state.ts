@@ -1,5 +1,4 @@
-import { Marker } from './marker';
-
+import { Marker } from "./marker";
 
 export interface CustomMarkerPanelState {
   id: string;

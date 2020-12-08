@@ -1,9 +1,5 @@
-<div
-  id="image-viewer-wrapper"
-  fxLayout="column"
-  class="h-100"
->
-  <ng-container *ngIf="(normalizedImageData$ | async); else tableBlock">
+<div id="image-viewer-wrapper" fxLayout="column" class="h-100">
+  <ng-container *ngIf="normalizedImageData$ | async">
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
         <div
@@ -24,7 +20,7 @@
             [svgWidth]="currentCanvasSize?.width"
             [svgHeight]="currentCanvasSize?.height"
             [transform]="imageToViewportTransform$ | async"
-            [markers]="markers"
+            [markers]="markers$ | async"
             (onMarkerClick)="handleMarkerClick($event)"
             style="pointer-events: none"
             class="marker-overlay"
@@ -36,9 +32,9 @@
     <div fxFlex="0 0 auto">
       <app-image-viewer-status-bar
         [class.active]="active"
-        [rawImageData]="(rawImageData$ | async)"
-        [normalizedImageData]="(normalizedImageData$ | async)"
-        [wcs]="(hduEntities$ | async)[hduId]?.header?.wcs"
+        [rawImageData]="rawImageData$ | async"
+        [normalizedImageData]="normalizedImageData$ | async"
+        [wcs]="(header$ | async)?.wcs"
         [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY"
         (downloadSnapshot)="handleDownloadSnapshot()"
@@ -48,15 +44,6 @@
       ></app-image-viewer-status-bar>
     </div>
   </ng-container>
-  <ng-template #tableBlock>
-    <ng-container *ngIf="tableData">
-      <div class="h-100">
-        Tables are not yet supported.
-      </div>
-    </ng-container>
-    
-  </ng-template>
- 
 </div>
 
 <!-- 

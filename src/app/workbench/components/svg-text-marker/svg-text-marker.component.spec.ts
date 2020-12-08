@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { SvgTextMarkerComponent } from './svg-text-marker.component';
+import { SvgTextMarkerComponent } from "./svg-text-marker.component";
 
-describe('SvgTextMarkerComponent', () => {
+describe("SvgTextMarkerComponent", () => {
   let component: SvgTextMarkerComponent;
   let fixture: ComponentFixture<SvgTextMarkerComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SvgTextMarkerComponent ]
-    })
-    .compileComponents();
+      declarations: [SvgTextMarkerComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('SvgTextMarkerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

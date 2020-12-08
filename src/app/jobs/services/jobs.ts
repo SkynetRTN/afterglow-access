@@ -7,7 +7,7 @@ import { map } from "rxjs/operators";
 import { Job } from "../models/job";
 import { JobStateBase } from "../models/job-base";
 import { JobResult } from "../models/job-result";
-import { getCoreApiUrl } from '../../../environments/app-config';
+import { getCoreApiUrl } from "../../../environments/app-config";
 
 @Injectable()
 export class JobService {
@@ -16,33 +16,22 @@ export class JobService {
   constructor(private http: HttpClient, private location: Location) {}
 
   createJob(job: Job) {
-    return this.http.post<Job>(
-      `${getCoreApiUrl(appConfig)}/jobs`,
-      job
-    );
+    return this.http.post<Job>(`${getCoreApiUrl(appConfig)}/jobs`, job);
   }
 
   getJob(jobId: string) {
-    return this.http.get<Job>(
-      `${getCoreApiUrl(appConfig)}/jobs/${jobId}`
-    );
+    return this.http.get<Job>(`${getCoreApiUrl(appConfig)}/jobs/${jobId}`);
   }
 
   getJobState(jobId: string) {
-    return this.http.get<JobStateBase>(
-      `${getCoreApiUrl(appConfig)}/jobs/${jobId}/state`
-    );
+    return this.http.get<JobStateBase>(`${getCoreApiUrl(appConfig)}/jobs/${jobId}/state`);
   }
 
   getJobResult(job: Job): Observable<JobResult> {
-    return this.http
-      .get<any>(
-        `${getCoreApiUrl(appConfig)}/jobs/${job.id}/result`
-      )
-      .pipe(
-        map(resp => {
-          return { ...resp, type: job.type };
-        })
-      );
+    return this.http.get<any>(`${getCoreApiUrl(appConfig)}/jobs/${job.id}/result`).pipe(
+      map((resp) => {
+        return { ...resp, type: job.type };
+      })
+    );
   }
 }

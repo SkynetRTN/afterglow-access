@@ -1,9 +1,5 @@
 import { Component, OnInit, Inject } from "@angular/core";
-import {
-  MatDialog,
-  MatDialogRef,
-  MAT_DIALOG_DATA
-} from "@angular/material/dialog";
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
 export interface KeyboardShortcutGroup {
   name: string;
@@ -18,7 +14,7 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: "D", description: "Data Provider Page" },
       { key: "T", description: "Open Theme Settings" },
       { key: "?", description: "Open Quick Start Guide" },
-    ]
+    ],
   },
   {
     name: "Workbench Shortcuts",
@@ -36,8 +32,8 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: "esc", description: "Reset Workbench View" },
       { key: "1", description: "Show Only Workbench File Panel" },
       { key: "2", description: "Only Workbench Image Panel" },
-      { key: "3", description: "Only Workbench Tool Panel" }
-    ]
+      { key: "3", description: "Only Workbench Tool Panel" },
+    ],
   },
   {
     name: "Sonification Shortcuts",
@@ -52,7 +48,7 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: "f,2", description: "Frequency Navigation: Mid" },
       { key: "f,3", description: "Frequency Navigation: High" },
       { key: "esc", description: "Reset Sonification Region" },
-    ]
+    ],
   },
   {
     name: "Image Viewer Shortcuts",
@@ -61,14 +57,14 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: "-", description: "Zoom out" },
       { key: "0", description: "Reset zoom" },
       { key: "z", description: "Zoom to fit" },
-    ]
-  }
+    ],
+  },
 ];
 
 @Component({
   selector: "app-help-dialog",
   templateUrl: "./help-dialog.component.html",
-  styleUrls: ["./help-dialog.component.scss"]
+  styleUrls: ["./help-dialog.component.scss"],
 })
 export class HelpDialogComponent implements OnInit {
   displayedColumns: string[] = ["key", "description"];
@@ -78,10 +74,7 @@ export class HelpDialogComponent implements OnInit {
     return v == v.toUpperCase() && v != v.toLowerCase();
   }
 
-  constructor(
-    public dialogRef: MatDialogRef<HelpDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
-  ) {}
+  constructor(public dialogRef: MatDialogRef<HelpDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {}
 
   ngOnInit() {}
 }

@@ -1,6 +1,6 @@
 <div *ngIf="!state; else loadedBlock">
-  <div class="alert alert-info"><ng-container i18n>Select a data file to see plotting options.</ng-container> </div>
-  {{state}}
+  <div class="alert alert-info"><ng-container i18n>Select a data file to see plotting options.</ng-container></div>
+  {{ state }}
 </div>
 
 <ng-template #loadedBlock>
@@ -9,28 +9,25 @@
       Click once on the image to set the measurement's start point, move your
       mouse, then click a second time to set the end point.
     </p> -->
-    <div style="margin-top: -30px;">
+    <div style="margin-top: -30px">
       <app-plotter
-      #plotter
-      [wcs]="wcs"
-      [imageData]="imageData"
-      [plotMode]="config?.plotMode"
-      [colorMode]="colorMode"
-      [width]="500"
-      [height]="400"
-      [lineMeasureStart]="lineStart$ | async"
-      [lineMeasureEnd]="lineEnd$ | async"
-      [interpolatePixels]="config?.interpolatePixels"
-    >
-    </app-plotter>
+        #plotter
+        [wcs]="wcs"
+        [imageData]="imageData"
+        [plotMode]="config?.plotMode"
+        [colorMode]="colorMode"
+        [width]="500"
+        [height]="400"
+        [lineMeasureStart]="lineStart$ | async"
+        [lineMeasureEnd]="lineEnd$ | async"
+        [interpolatePixels]="config?.interpolatePixels"
+      >
+      </app-plotter>
     </div>
-    
+
     <mat-form-field appearance="outline" style="width: 300px">
       <mat-label i18n>Mode</mat-label>
-      <mat-select
-        [value]="config?.plotMode"
-        (selectionChange)="onModeChange($event.value)"
-      >
+      <mat-select [value]="config?.plotMode" (selectionChange)="onModeChange($event.value)">
         <mat-option [value]="'1D'" i18n>1D Cross Section</mat-option>
         <mat-option [value]="'2D'" i18n>2D Heat Map</mat-option>
         <!-- <mat-option [value]="'3D'">3D Surface</mat-option> -->
@@ -93,7 +90,7 @@
         </div>
       </div>
     </div>
-  
+
     <div class="row">
       <div class="col-12">
         <table class="table">
@@ -107,21 +104,11 @@
             <tr *ngIf="lineStart$ | async">
               <th scope="row" i18n>Start</th>
               <td>
-                <div
-                  *ngIf="
-                    (lineStart$ | async)?.x !== null &&
-                    (lineStart$ | async)?.y !== null
-                  "
-                >
+                <div *ngIf="(lineStart$ | async)?.x !== null && (lineStart$ | async)?.y !== null">
                   {{ (lineStart$ | async)?.x | number: "1.0-3" }},
                   {{ (lineStart$ | async)?.y | number: "1.0-3" }}
                 </div>
-                <div
-                  *ngIf="
-                    (lineStart$ | async)?.raHours !== null &&
-                    (lineStart$ | async)?.decDegs !== null
-                  "
-                >
+                <div *ngIf="(lineStart$ | async)?.raHours !== null && (lineStart$ | async)?.decDegs !== null">
                   {{ (lineStart$ | async)?.raHours | dms: "1.0-3" }},
                   {{ (lineStart$ | async)?.decDegs | dms: "1.0-3" }}
                 </div>
@@ -130,21 +117,11 @@
             <tr *ngIf="lineEnd$ | async">
               <th scope="row" i18n>End</th>
               <td>
-                <div
-                  *ngIf="
-                    (lineEnd$ | async)?.x !== null &&
-                    (lineEnd$ | async)?.y !== null
-                  "
-                >
+                <div *ngIf="(lineEnd$ | async)?.x !== null && (lineEnd$ | async)?.y !== null">
                   {{ (lineEnd$ | async)?.x | number: "1.0-3" }},
                   {{ (lineEnd$ | async)?.y | number: "1.0-3" }}
                 </div>
-                <div
-                  *ngIf="
-                    (lineEnd$ | async)?.raHours !== null &&
-                    (lineEnd$ | async)?.decDegs !== null
-                  "
-                >
+                <div *ngIf="(lineEnd$ | async)?.raHours !== null && (lineEnd$ | async)?.decDegs !== null">
                   {{ (lineEnd$ | async)?.raHours | dms: "1.0-3" }},
                   {{ (lineEnd$ | async)?.decDegs | dms: "1.0-3" }}
                 </div>
@@ -157,9 +134,7 @@
                   {{ (vectorInfo$ | async)?.pixelSeparation | number: "1.0-3" }}
                   pixels
                 </div>
-                <div
-                  *ngIf="(vectorInfo$ | async)?.skySeparation; let skySeparation"
-                >
+                <div *ngIf="(vectorInfo$ | async)?.skySeparation; let skySeparation">
                   <div>
                     {{ skySeparation | number: "1.0-3" }}
                     arcsecs
@@ -190,4 +165,3 @@
     </div>
   </div>
 </ng-template>
-

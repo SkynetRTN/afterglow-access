@@ -5,7 +5,7 @@
 }
 
 .data-file-list-item.even .item-row {
-  background: rgba(0, 0, 0, .03);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .data-file-list-item.selected .item-row {
@@ -22,7 +22,7 @@
 /* WebKit gets its native focus styles.
  */
 
-@media (-webkit-min-device-pixel-ratio:0) {
+@media (-webkit-min-device-pixel-ratio: 0) {
   .data-file-list-item-focused .item-row {
     outline-color: -webkit-focus-ring-color;
     outline-style: auto;

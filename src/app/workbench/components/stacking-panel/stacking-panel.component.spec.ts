@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { StackerPageComponent } from './stacking-panel.component';
+import { StackerPageComponent } from "./stacking-panel.component";
 
-describe('StackerPageComponent', () => {
+describe("StackerPageComponent", () => {
   let component: StackerPageComponent;
   let fixture: ComponentFixture<StackerPageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ StackerPageComponent ]
-    })
-    .compileComponents();
+      declarations: [StackerPageComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('StackerPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

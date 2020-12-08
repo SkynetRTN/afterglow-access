@@ -1,8 +1,7 @@
-import { WcsLib } from '../wasm.service';
+import { WcsLib } from "../wasm.service";
 
 declare var WCS: any;
 // import "!!file-loader?name=wcslib.wasm!../../../wasm/wcsjs/wcslib.wasm"
-
 
 // declare let wcs: any;
 
@@ -12,12 +11,11 @@ class WcsTrig {
   private static WCSTRIG_TOL = 1e-10;
 
   public static fmod(numerator, denominator) {
-    return numerator - (Math.floor(numerator / denominator) * denominator);
+    return numerator - Math.floor(numerator / denominator) * denominator;
   }
 
   public static cosdeg(angle) {
     let resid;
-
 
     resid = Math.abs(WcsTrig.fmod(angle, 360.0));
     if (resid == 0.0) {
@@ -133,7 +131,7 @@ class WcsTrig {
 }
 
 function splice(str1, index, remove, str2) {
-  return (str1.slice(0, index) + str2 + str1.slice(index + Math.abs(remove)));
+  return str1.slice(0, index) + str2 + str1.slice(index + Math.abs(remove));
 }
 
 function toHeader(wcsObj) {
@@ -141,26 +139,24 @@ function toHeader(wcsObj) {
   let line = "                                                                                ";
 
   for (let card in wcsObj) {
-      let value = wcsObj[card];
-      if (value === undefined || value === null) {
-          continue;
-      }
+    let value = wcsObj[card];
+    if (value === undefined || value === null) {
+      continue;
+    }
 
-      if (typeof value === "string" && value !== 'T' && value !== 'F') {
-          value = "'" + value + "'";
-      }
+    if (typeof value === "string" && value !== "T" && value !== "F") {
+      value = "'" + value + "'";
+    }
 
-      let entry = splice(line, 0, card.length, card);
-      entry = splice(entry, 8, 1, "=");
-      entry = splice(entry, 10, value.toString().length, value);
+    let entry = splice(line, 0, card.length, card);
+    entry = splice(entry, 8, 1, "=");
+    entry = splice(entry, 10, value.toString().length, value);
 
-      header.push(entry);
+    header.push(entry);
   }
 
-  return header.join('\n');
+  return header.join("\n");
 }
-
-
 
 export class Wcs {
   private params: { [key: string]: any } = {};
@@ -172,60 +168,63 @@ export class Wcs {
   }
 
   public isValid() {
-    return this.wcs && this.wcs.isValid && ['CTYPE1', 'CTYPE2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2'].every(key => key in this.params) && (
-      ['CD1_1', 'CD1_2', 'CD2_1', 'CD2_2'].every(key => key in this.params) || ['CDELT1', 'CDELT2'].every(key => key in this.params) || ['PC1_1', 'PC1_2', 'PC2_1', 'PC2_2'].every(key => key in this.params)
-    )
+    return (
+      this.wcs &&
+      this.wcs.isValid &&
+      ["CTYPE1", "CTYPE2", "CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2"].every((key) => key in this.params) &&
+      (["CD1_1", "CD1_2", "CD2_1", "CD2_2"].every((key) => key in this.params) ||
+        ["CDELT1", "CDELT2"].every((key) => key in this.params) ||
+        ["PC1_1", "PC1_2", "PC2_1", "PC2_2"].every((key) => key in this.params))
+    );
   }
 
   public get crpix1() {
-    return this.params['CRPIX1'];
+    return this.params["CRPIX1"];
   }
 
   public get crpix2() {
-    return this.params['CRPIX2'];
+    return this.params["CRPIX2"];
   }
 
   public get crval1() {
-    return this.params['CRVAL1'];
+    return this.params["CRVAL1"];
   }
 
   public get crval2() {
-    return this.params['CRVAL2'];
+    return this.params["CRVAL2"];
   }
 
   public get m11() {
-   if('CD1_1' in this.params) return this.params['CD1_1'];
-   if('PC1_1' in this.params) return  this.params['PC1_1'];
-   if('CDELT1' in this.params) return this.params['CDELT1'];
-   return null;
+    if ("CD1_1" in this.params) return this.params["CD1_1"];
+    if ("PC1_1" in this.params) return this.params["PC1_1"];
+    if ("CDELT1" in this.params) return this.params["CDELT1"];
+    return null;
   }
 
   public get m12() {
-    if('CD1_2' in this.params) return this.params['CD1_2'];
-    if('PC1_2' in this.params) return  this.params['PC1_2'];
-    if('CDELT1' in this.params) return 0;
+    if ("CD1_2" in this.params) return this.params["CD1_2"];
+    if ("PC1_2" in this.params) return this.params["PC1_2"];
+    if ("CDELT1" in this.params) return 0;
     return null;
   }
 
   public get m21() {
-    if('CD2_1' in this.params) return this.params['CD2_1'];
-    if('PC2_1' in this.params) return  this.params['PC2_1'];
-    if('CDELT1' in this.params) return 0;
+    if ("CD2_1" in this.params) return this.params["CD2_1"];
+    if ("PC2_1" in this.params) return this.params["PC2_1"];
+    if ("CDELT1" in this.params) return 0;
     return null;
   }
 
   public get m22() {
-    if('CD2_2' in this.params) return this.params['CD2_2'];
-   if('PC2_2' in this.params) return  this.params['PC2_2'];
-   if('CDELT2' in this.params) return this.params['CDELT2'];
-   return null;
+    if ("CD2_2" in this.params) return this.params["CD2_2"];
+    if ("PC2_2" in this.params) return this.params["PC2_2"];
+    if ("CDELT2" in this.params) return this.params["CDELT2"];
+    return null;
   }
 
   public worldToPix(raDec: Array<number>) {
     if (!this.isValid()) return [null, null];
     return this.wcs.sky2pix(raDec[0] * 15.0, raDec[1]);
-
-
 
     // // let lng = raDec[0]*15;
     // // let lat = raDec[1];
@@ -279,7 +278,6 @@ export class Wcs {
     // let euler2 = phip;
     // let euler3 = WcsTrig.cosdeg(euler1);
     // let euler4 = WcsTrig.sindeg(euler1);
-
 
     // //sphfwd
     // let coslat = WcsTrig.cosdeg(lat);
@@ -353,7 +351,7 @@ export class Wcs {
   public pixToWorld(xy: Array<number>) {
     if (!this.isValid()) return [null, null];
     let result = this.wcs.pix2sky(xy[0], xy[1]);
-    return [result[0]/15.0, result[1]];
+    return [result[0] / 15.0, result[1]];
 
     // // let xpix = xy[0];
     // // let ypix = xy[1];
@@ -365,7 +363,6 @@ export class Wcs {
 
     // let xpix = xy[0];
     // let ypix = xy[1];
-
 
     // let h = this.params['NAXIS2'];
     // let crpix1 = this.params['CRPIX1'];
@@ -382,7 +379,6 @@ export class Wcs {
     // //proj.c tanset(prj)
     // let phi0 = 0.0;
     // let theta0 = 90.0;
-
 
     // //cel.c -> celset(pcode,cel,prg)
     // let alpha0 = crval1; // is ref[0]
@@ -404,7 +400,6 @@ export class Wcs {
     // let euler2 = phip;
     // let euler3 = WcsTrig.cosdeg(euler1);
     // let euler4 = WcsTrig.sindeg(euler1);
-
 
     // //proj.c tanrev()
     // let r = Math.sqrt(x * x + y * y);
@@ -480,34 +475,33 @@ export class Wcs {
     //   }
     // }
     // return [alpha / 15.0, del];
-
   }
 
   public getPixelScale() {
     if (!this.isValid()) return null;
 
     let cd1_1 = this.m11;
-    let cd1_2 = this.m12
+    let cd1_2 = this.m12;
     let cd2_1 = this.m21;
-    let cd2_2  =this.m22;
+    let cd2_2 = this.m22;
 
     return (Math.abs(cd1_1) + Math.abs(cd2_2)) / 2.0;
   }
 
   public isFlipped() {
     let cd1_1 = this.m11;
-    let cd1_2 = this.m12
+    let cd1_2 = this.m12;
     let cd2_1 = this.m21;
-    let cd2_2  =this.m22;
+    let cd2_2 = this.m22;
 
-    return (cd1_1 * cd2_2 - cd1_2 * cd2_1) < 0
+    return cd1_1 * cd2_2 - cd1_2 * cd2_1 < 0;
   }
 
   public positionAngle() {
     let cd1_1 = this.m11;
-    let cd1_2 = this.m12
+    let cd1_2 = this.m12;
     let cd2_1 = this.m21;
-    let cd2_2  =this.m22;
+    let cd2_2 = this.m22;
 
     let result = Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
     result = result % 360;
@@ -521,5 +515,4 @@ export class Wcs {
     //   return 180 - Math.atan2(cd1_2, cd2_2) * WcsTrig.R2D;
     // }
   }
-
 }

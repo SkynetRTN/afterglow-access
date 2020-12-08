@@ -3,40 +3,77 @@
   <div class="row mb-3">
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput i18n-placeholder placeholder="Centroiding Radius" [(ngModel)]="settings && settings.centroidRadius" type="number" step="1"
-          min="1" max="25">
+        <input
+          matInput
+          i18n-placeholder
+          placeholder="Centroiding Radius"
+          [(ngModel)]="settings && settings.centroidRadius"
+          type="number"
+          step="1"
+          min="1"
+          max="25"
+        />
       </mat-form-field>
     </div>
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput i18n-placeholder placeholder="Aperture" [(ngModel)]="settings && settings.a" type="number" step="1" min="1" max="25">
+        <input
+          matInput
+          i18n-placeholder
+          placeholder="Aperture"
+          [(ngModel)]="settings && settings.a"
+          type="number"
+          step="1"
+          min="1"
+          max="25"
+        />
       </mat-form-field>
     </div>
   </div>
   <div class="row mb-3">
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput i18n-placeholder placeholder="Annulus Inner" [(ngModel)]="settings && settings.aIn" type="number" step="1" min="1" max="25">
+        <input
+          matInput
+          i18n-placeholder
+          placeholder="Annulus Inner"
+          [(ngModel)]="settings && settings.aIn"
+          type="number"
+          step="1"
+          min="1"
+          max="25"
+        />
       </mat-form-field>
     </div>
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput i18n-placeholder placeholder="Annulus Outer" [(ngModel)]="settings && settings.aOut" type="number" step="1" min="1" max="25">
+        <input
+          matInput
+          i18n-placeholder
+          placeholder="Annulus Outer"
+          [(ngModel)]="settings && settings.aOut"
+          type="number"
+          step="1"
+          min="1"
+          max="25"
+        />
       </mat-form-field>
     </div>
   </div>
   <div class="row mb-3">
     <div class="col-6">
       <mat-form-field class="">
-        <input matInput i18n-placeholder placeholder="Zero Point" [(ngModel)]="settings && settings.zeroPoint" type="number">
+        <input
+          matInput
+          i18n-placeholder
+          placeholder="Zero Point"
+          [(ngModel)]="settings && settings.zeroPoint"
+          type="number"
+        />
       </mat-form-field>
     </div>
-    <div class="col-6">
-      
-    </div>
+    <div class="col-6"></div>
   </div>
-
-
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close i18n>Cancel</button>

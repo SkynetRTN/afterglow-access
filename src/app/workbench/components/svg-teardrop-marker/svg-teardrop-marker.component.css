@@ -1,5 +1,5 @@
 path {
-  fill-opacity: 0.0;
+  fill-opacity: 0;
 }
 
 path.stroke {
@@ -8,12 +8,12 @@ path.stroke {
 }
 
 path.outline {
-  stroke: #FFFFFF;
+  stroke: #ffffff;
   stroke-width: 7;
 }
 
 path.shadow {
-  stroke: #5A5A5A;
+  stroke: #5a5a5a;
   stroke-width: 9;
 }
 

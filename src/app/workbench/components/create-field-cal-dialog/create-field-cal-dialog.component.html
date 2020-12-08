@@ -2,11 +2,7 @@
 
 <mat-dialog-content>
   <form [formGroup]="createForm">
-    <mat-form-field
-      class=""
-      appearance="outline"
-      style="width: 100%;"
-    >
+    <mat-form-field class="" appearance="outline" style="width: 100%">
       <mat-label i18n>Name</mat-label>
       <input matInput formControlName="name" />
     </mat-form-field>
@@ -14,13 +10,7 @@
 </mat-dialog-content>
 <mat-dialog-actions>
   <div style="width: 100%">
-    
-    <button
-      mat-button
-      [mat-dialog-close]="createForm.value"
-      [disabled]="!createForm.valid"
-      class="float-right"
-      i18n>
+    <button mat-button [mat-dialog-close]="createForm.value" [disabled]="!createForm.valid" class="float-right" i18n>
       Create
     </button>
     <button mat-button mat-dialog-close class="float-right" i18n>Cancel</button>

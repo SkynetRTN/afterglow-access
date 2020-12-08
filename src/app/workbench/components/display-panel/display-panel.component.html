@@ -1,54 +1,66 @@
-<div *ngIf="!(imageHdu$ | async) || !imageHdu?.normalizer; else loadedBlock" class="alert alert-info">
+<div
+  *ngIf="(!hdu || !hdu?.normalizer) && (!imageData || !viewportTransform || !imageTransform); else loadedBlock"
+  class="alert alert-info"
+>
   <ng-container i18n>Select a data file to see display options.</ng-container>
 </div>
 
 <ng-template #loadedBlock>
- 
+  <div *ngIf="hdu">
+    <div>
+      <h6 i18n>Brightness and Contrast Presets</h6>
+      <div class="pb-1">
+        <button
+          mat-raised-button
+          class="m-1"
+          (click)="onPresetClick(10, 95)"
+          i18n-aria-label
+          aria-label="Faint Target Preset"
+        >
+          <mat-icon>brightness_3</mat-icon>Faint Target
+        </button>
+        <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label aria-label="Default Preset">
+          <mat-icon>brightness_2</mat-icon>Default
+        </button>
+        <button
+          mat-raised-button
+          class="m-1"
+          (click)="onPresetClick(10, 99.999)"
+          i18n-aria-label
+          aria-label="Bright Target Preset"
+        >
+          <mat-icon>brightness_5</mat-icon>Bright Target
+        </button>
+      </div>
+    </div>
 
-  <div>
-    <h6 i18n>Brightness and Contrast Presets</h6>
-    <div class="pb-1">
-      <button mat-raised-button class="m-1" (click)="onPresetClick(10, 95)" i18n-aria-label
-        aria-label="Faint Target Preset">
-        <mat-icon>brightness_3</mat-icon>Faint Target
-      </button>
-      <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label aria-label="Default Preset">
-        <mat-icon>brightness_2</mat-icon>Default
-      </button>
-      <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
-        aria-label="Bright Target Preset">
-        <mat-icon>brightness_5</mat-icon>Bright Target
-      </button>
+    <div class="pr-3 pl-3 pb-0">
+      <app-image-hist-chart
+        [width]="440"
+        [height]="250"
+        [hist]="hdu?.hist"
+        [backgroundPercentile]="hdu?.normalizer?.backgroundPercentile"
+        [peakPercentile]="hdu?.normalizer?.peakPercentile"
+      >
+      </app-image-hist-chart>
+      <div style="clear: both"></div>
+    </div>
+
+    <div class="pb-4 pt-1">
+      <h6 i18n>Brightness and Contrast Settings</h6>
+      <app-normalizer-form
+        [normalizer]="hdu?.normalizer"
+        (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+        (peakPercentileChange)="onPeakPercentileChange($event)"
+        (colorMapChange)="onColorMapChange($event)"
+        (stretchModeChange)="onStretchModeChange($event)"
+        (invertedChange)="onInvertedChange($event)"
+      >
+      </app-normalizer-form>
     </div>
   </div>
 
-
-
-  <div class="pr-3 pl-3 pb-0">
-    <app-image-hist-chart [width]="440" [height]="250" [hist]="imageHdu?.hist" [backgroundPercentile]="
-                imageHdu?.normalizer?.backgroundPercentile
-              " [peakPercentile]="imageHdu?.normalizer?.peakPercentile">
-    </app-image-hist-chart>
-    <div style="clear: both;"></div>
-  </div>
-
-
-  <div class="pb-4 pt-1">
-    <h6 i18n>Brightness and Contrast Settings</h6>
-    <app-normalizer-form [normalizer]="imageHdu?.normalizer"
-      (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-      (peakPercentileChange)="onPeakPercentileChange($event)" (colorMapChange)="onColorMapChange($event)"
-      (stretchModeChange)="onStretchModeChange($event)" (invertedChange)="onInvertedChange($event)">
-    </app-normalizer-form>
-  </div>
-
-  <!-- <app-normalizer
-                  [normalizer]="file?.normalizer"
-                  [hist]="file?.hist">
-                </app-normalizer> -->
-
-
-  <div>
+  <div *ngIf="viewportTransform && imageTransform && imageData">
     <h6 i18n>Image Orientation Options</h6>
     <div class="pb-4">
       <!-- <button mat-raised-button class="m-1" (click)="onMirrorClick()">
@@ -69,6 +81,4 @@
       </button>
     </div>
   </div>
-    
 </ng-template>
-

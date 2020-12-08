@@ -1,12 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  AfterViewInit,
-  Input,
-  Output,
-  EventEmitter,
-} from "@angular/core";
+import { Component, OnInit, OnDestroy, AfterViewInit, Input, Output, EventEmitter } from "@angular/core";
 
 import {
   Header,
@@ -28,11 +20,11 @@ import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { datetimeToJd } from "../../../utils/skynet-astro";
-import { FileInfoPanelConfig } from '../../models/file-info-panel';
-import { BehaviorSubject, Subject, Observable, combineLatest } from 'rxjs';
-import { map, distinctUntilChanged, filter } from 'rxjs/operators';
-import { MatSelectChange } from '@angular/material/select';
-import { HeaderEntry } from '../../../data-files/models/header-entry';
+import { FileInfoPanelConfig } from "../../models/file-info-panel";
+import { BehaviorSubject, Subject, Observable, combineLatest } from "rxjs";
+import { map, distinctUntilChanged, filter } from "rxjs/operators";
+import { MatSelectChange } from "@angular/material/select";
+import { HeaderEntry } from "../../../data-files/models/header-entry";
 
 @Component({
   selector: "app-file-info-panel",
@@ -40,18 +32,16 @@ import { HeaderEntry } from '../../../data-files/models/header-entry';
   styleUrls: ["./file-info-panel.component.css"],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FileInfoToolsetComponent
-  implements OnInit, AfterViewInit, OnDestroy {
-    @Input("hdu")
-    set hdu(hdu: IHdu) {
-      this.hdu$.next(hdu);
-    }
-    get hdu() {
-      return this.hdu$.getValue();
-    }
-    private hdu$ = new BehaviorSubject<IHdu>(null);
-  
-   
+export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input("header")
+  set header(header: Header) {
+    this.header$.next(header);
+  }
+  get header() {
+    return this.header$.getValue();
+  }
+  private header$ = new BehaviorSubject<Header>(null);
+
   @Input("config")
   set config(config: FileInfoPanelConfig) {
     this.config$.next(config);
@@ -66,26 +56,10 @@ export class FileInfoToolsetComponent
   columnsDisplayed = ["key", "value", "comment"];
   headerSummary$: Observable<HeaderEntry[]>;
 
-  constructor(
-    private decimalPipe: DecimalPipe,
-    private datePipe: DatePipe,
-    store: Store,
-    router: Router
-  ) {
-
-    let header$ = this.hdu$.pipe(
-      filter(hdu => hdu != null),
-      map(hdu => hdu.header),
-      distinctUntilChanged()
-    )
-
-    this.headerSummary$ = combineLatest(
-      header$,
-      this.config$
-    ).pipe(
+  constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, store: Store, router: Router) {
+    this.headerSummary$ = combineLatest(this.header$, this.config$).pipe(
       map(([header, config]) => {
         if (!header) return [];
-        let imageLayer = this.hdu as ImageHdu;
         let result: HeaderEntry[] = [];
         let width = getWidth(header);
         let height = getHeight(header);
@@ -100,11 +74,11 @@ export class FileInfoToolsetComponent
 
         let systemTimeZone: string = new Date().getTimezoneOffset().toString();
 
-        result.push({
-          key: "ID",
-          value: `${this.hdu.id}`,
-          comment: "",
-        });
+        // result.push({
+        //   key: "ID",
+        //   value: `${this.hdu.id}`,
+        //   comment: "",
+        // });
 
         if (width && height) {
           result.push({
@@ -124,10 +98,7 @@ export class FileInfoToolsetComponent
             }
             result.push({
               key: "FOV",
-              value: `${this.decimalPipe.transform(
-                fovX,
-                "1.0-1"
-              )} x ${this.decimalPipe.transform(fovY, "1.0-1")} ${units}`,
+              value: `${this.decimalPipe.transform(fovX, "1.0-1")} x ${this.decimalPipe.transform(fovY, "1.0-1")} ${units}`,
               comment: "",
             });
 
@@ -199,19 +170,19 @@ export class FileInfoToolsetComponent
 
         return result;
       })
-    )
+    );
   }
-  ngOnInit() { }
+  ngOnInit() {}
 
-  ngOnDestroy() { }
+  ngOnDestroy() {}
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
-    this.configChange.emit({ showRawHeader: $event.checked })
+    this.configChange.emit({ showRawHeader: $event.checked });
   }
 
   onUseSystemTimeChange($event: MatSlideToggleChange) {
-    this.configChange.emit({ useSystemTime: $event.checked })
+    this.configChange.emit({ useSystemTime: $event.checked });
   }
 }

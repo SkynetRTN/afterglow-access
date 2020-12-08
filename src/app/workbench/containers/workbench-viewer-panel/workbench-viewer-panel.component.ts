@@ -14,13 +14,7 @@ import { Observable, combineLatest, fromEvent, BehaviorSubject } from "rxjs";
 import { map, filter, take, tap } from "rxjs/operators";
 import { Viewer } from "../../models/viewer";
 
-import {
-  DataFile,
-  getWidth,
-  getHeight,
-  ImageHdu,
-  IHdu,
-} from "../../../data-files/models/data-file";
+import { DataFile, getWidth, getHeight, ImageHdu, IHdu } from "../../../data-files/models/data-file";
 import { CanvasMouseEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Subscription } from "rxjs";
@@ -28,18 +22,12 @@ import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
-import {
-  SetFocusedViewer,
-  CloseViewer,
-  KeepViewerOpen,
-  SplitViewerPanel,
-  MoveViewer,
-} from "../../workbench.actions";
+import { SetFocusedViewer, CloseViewer, KeepViewerOpen, SplitViewerPanel, MoveViewer } from "../../workbench.actions";
 import { HotkeysService, Hotkey } from "angular2-hotkeys";
 import { MatMenuTrigger } from "@angular/material/menu";
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { IWorkbenchHduState } from '../../models/workbench-file-state';
-import { CenterRegionInViewport, ZoomBy } from '../../../data-files/data-files.actions';
+import { CdkDragDrop } from "@angular/cdk/drag-drop";
+import { IWorkbenchHduState } from "../../models/workbench-file-state";
+import { CenterRegionInViewport, ZoomBy } from "../../../data-files/data-files.actions";
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -115,17 +103,11 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   //   return this.viewers.find(v => v.viewerId == focusedViewerId);
   // }
 
-  constructor(
-    private store: Store,
-    private _hotkeysService: HotkeysService,
-    public viewContainerRef: ViewContainerRef
-  ) {
-    
+  constructor(private store: Store, private _hotkeysService: HotkeysService, public viewContainerRef: ViewContainerRef) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
-    this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
+    this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
-    this.dropListConnections$ =   this.store.select(WorkbenchState.getViewerPanelIds);
-     
+    this.dropListConnections$ = this.store.select(WorkbenchState.getViewerPanelIds);
 
     // this.hotKeys.push(
     //   new Hotkey(
@@ -195,22 +177,21 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   public getTabLabel(viewer: Viewer) {
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let file = fileEntities[viewer.fileId]
-    if(!file) return '';
+    let file = fileEntities[viewer.fileId];
+    if (!file) return "";
 
     let filename = file.name;
-    if(viewer.hduId) {
-      let hdu = hduEntities[viewer.hduId]
-      if(!hdu) return '';
-      
-      if(file.hduIds.length > 1) {
-        filename += ` [Channel ${file.hduIds.indexOf(hdu.id)}]`
+    if (viewer.hduId) {
+      let hdu = hduEntities[viewer.hduId];
+      if (!hdu) return "";
+
+      if (file.hduIds.length > 1) {
+        filename += ` [Channel ${file.hduIds.indexOf(hdu.id)}]`;
       }
-    }
-    else if(file.hduIds.length > 1) {
-      filename += ` [Composite]`
+    } else if (file.hduIds.length > 1) {
+      filename += ` [Composite]`;
     }
     return filename;
   }
@@ -236,7 +217,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   //   // TODO: LAYER
   //   let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
   //   let hdu = hdus[hduId] as ImageHdu;
-  //   let imageData = 
+  //   let imageData =
   //   if (hdu) {
   //     this.store.dispatch(
   //       new CenterRegionInViewport(hduId, {
@@ -257,12 +238,11 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   ngOnInit() {}
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.selectedViewerId  || changes.viewers) {
-      let nextSelectedViewerIndex = this.viewers.map(viewer => viewer.viewerId).indexOf(this.selectedViewerId);
-      if(this.selectedViewerIndex != nextSelectedViewerIndex) {
-      this.selectedViewerIndex = nextSelectedViewerIndex;
+    if (changes.selectedViewerId || changes.viewers) {
+      let nextSelectedViewerIndex = this.viewers.map((viewer) => viewer.id).indexOf(this.selectedViewerId);
+      if (this.selectedViewerIndex != nextSelectedViewerIndex) {
+        this.selectedViewerIndex = nextSelectedViewerIndex;
       }
-      
     }
   }
 
@@ -276,7 +256,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // The right panel's tab group shows the correct selected index but it does not detect that the viewer at that index
     // has changed and so it does not updatae the tab content.
     // return item.viewerId;
-    return `${item.viewerId}-${index}`;
+    return `${item.id}-${index}`;
   }
 
   closeViewer(viewerId: string) {
@@ -284,21 +264,23 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   closeOtherViewers(viewerId: string) {
-    this.store.dispatch([this.viewers.filter(viewer => viewer.viewerId != viewerId).map(viewer => new CloseViewer(viewer.viewerId))]);
+    this.store.dispatch([
+      this.viewers.filter((viewer) => viewer.id != viewerId).map((viewer) => new CloseViewer(viewer.id)),
+    ]);
   }
 
   closeViewersToTheRight(viewerId: string) {
-    let viewerIds = this.viewers.map(viewer => viewer.viewerId)
+    let viewerIds = this.viewers.map((viewer) => viewer.id);
     let index = viewerIds.indexOf(viewerId);
-    if(index != -1) {
-      let viewerIdsToClose = viewerIds.slice(index+1, viewerIds.length)
-      this.store.dispatch(viewerIdsToClose.map(id => new CloseViewer(id)));
+    if (index != -1) {
+      let viewerIdsToClose = viewerIds.slice(index + 1, viewerIds.length);
+      this.store.dispatch(viewerIdsToClose.map((id) => new CloseViewer(id)));
     }
   }
 
   closeAllViewers() {
-    let viewerIds = this.viewers.map(viewer => viewer.viewerId)
-    this.store.dispatch(viewerIds.map(id => new CloseViewer(id)));
+    let viewerIds = this.viewers.map((viewer) => viewer.id);
+    this.store.dispatch(viewerIds.map((id) => new CloseViewer(id)));
   }
 
   keepViewerOpen(viewerId: string) {
@@ -331,11 +313,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     });
   }
 
-  handleMarkerClick(
-    $event: ViewerMarkerMouseEvent,
-    viewerId: string,
-    viewer: Viewer
-  ) {
+  handleMarkerClick($event: ViewerMarkerMouseEvent, viewerId: string, viewer: Viewer) {
     // if (viewerId != this.mouseDownActiveViewerId) return;
 
     this.onMarkerClick.emit({
@@ -351,25 +329,19 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // example: if the user drags the currently focused tab to a different panel,  the state action handler
     // will set focus to the tab in the new panel.  However,  the tab group in the source panel will detect
     // the change in selected index and fire this event which changes focus back to this panel.
-    
     // if(index < 0 || index >= this.viewers.length) return;
-
     // let viewerId = this.viewers[index].viewerId;
     // if (viewerId != this.selectedViewerId || !this.hasFocus) {
     //   this.store.dispatch(new SetFocusedViewer(viewerId));
     // }
-
   }
 
-
-
   drop(event: CdkDragDrop<string[]>) {
-    console.log("DROPPED: ", event);
     var srcPanelId = event.previousContainer.id;
     var targetPanelId = event.container.id;
     var viewerId = event.item.data.viewerId;
 
-    this.store.dispatch(new MoveViewer(viewerId, srcPanelId, targetPanelId, event.currentIndex))
+    this.store.dispatch(new MoveViewer(viewerId, srcPanelId, targetPanelId, event.currentIndex));
     // if(previousIndex!=NaN && currentIndex!=NaN && previousIndex!=undefined && currentIndex!=undefined && previousIndex!=currentIndex){
     //      //Do stuff
     //     .....
@@ -378,7 +350,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     // }
   }
 
-  splitViewerPanel(viewerId: string, direction: 'up' | 'down' | 'left' | 'right') {
+  splitViewerPanel(viewerId: string, direction: "up" | "down" | "left" | "right") {
     this.store.dispatch(new SplitViewerPanel(viewerId, direction));
   }
 }

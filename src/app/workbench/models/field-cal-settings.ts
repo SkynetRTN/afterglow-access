@@ -1,3 +1,3 @@
 export interface FieldCalSettings {
-    catalog: string,
-  }
+  catalog: string;
+}

@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { ThemeDialogComponent } from './theme-dialog.component';
+import { ThemeDialogComponent } from "./theme-dialog.component";
 
-describe('ThemeDialogComponent', () => {
+describe("ThemeDialogComponent", () => {
   let component: ThemeDialogComponent;
   let fixture: ComponentFixture<ThemeDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ThemeDialogComponent ]
-    })
-    .compileComponents();
+      declarations: [ThemeDialogComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('ThemeDialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

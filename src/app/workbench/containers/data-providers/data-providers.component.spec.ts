@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DataProvidersComponent } from './data-providers.component';
+import { DataProvidersComponent } from "./data-providers.component";
 
-describe('DataProvidersComponent', () => {
+describe("DataProvidersComponent", () => {
   let component: DataProvidersComponent;
   let fixture: ComponentFixture<DataProvidersComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DataProvidersComponent ]
-    })
-    .compileComponents();
+      declarations: [DataProvidersComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('DataProvidersComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,14 +1,14 @@
-import { StretchMode } from './stretch-mode'
-import { ColorMap, COLOR_MAPS } from './color-map'
-import { ImageHist, calcLevels } from '../../data-files/models/image-hist';
-import { PixelType } from '../../data-files/models/data-file';
+import { StretchMode } from "./stretch-mode";
+import { ColorMap, COLOR_MAPS } from "./color-map";
+import { ImageHist, calcLevels } from "../../data-files/models/image-hist";
+import { PixelType } from "../../data-files/models/data-file";
 
 export interface PixelNormalizer {
-  backgroundPercentile: number,
-  peakPercentile: number,
-  colorMapName: string,
-  stretchMode: StretchMode,
-  inverted: boolean
+  backgroundPercentile: number;
+  peakPercentile: number;
+  colorMapName: string;
+  stretchMode: StretchMode;
+  inverted: boolean;
 }
 
 // export function createPixelNormalizer(backgroundLevel: number, peakLevel: number, colorMap: ColorMap, stretchMode: StretchMode) : PixelNormalizer {
@@ -16,7 +16,6 @@ export interface PixelNormalizer {
 
 //   }
 // }
-
 
 export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer) {
   let stretchMode = normalizer.stretchMode;
@@ -27,7 +26,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   let backgroundLevel = levels.backgroundLevel;
   let peakLevel = levels.peakLevel;
 
-  if(normalizer.inverted) {
+  if (normalizer.inverted) {
     backgroundLevel = levels.peakLevel;
     peakLevel = levels.backgroundLevel;
   }
@@ -36,7 +35,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   switch (+stretchMode) {
     case StretchMode.ArcSinh: {
       stretchFn = function (x: number) {
-        return Math.asinh(10.0 * x) / 3.0
+        return Math.asinh(10.0 * x) / 3.0;
       };
       // console.log('ArcSinh');
       break;
@@ -52,31 +51,28 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
 
     case StretchMode.SquareRoot: {
       stretchFn = function (x: number) {
-        return Math.sqrt(x)
+        return Math.sqrt(x);
       };
       // console.log('SquareRoot');
       break;
     }
 
-
     default: {
       stretchFn = function (x: number) {
-        return x
+        return x;
       }; //linear
       // console.log('Linear');
       break;
     }
-
   }
 
   // console.log(stretchFn);
 
-
   let normalizationScaler = 65535.0 / (peakLevel - backgroundLevel);
   let invert;
-  if (invert = backgroundLevel > peakLevel) {
+  if ((invert = backgroundLevel > peakLevel)) {
     //swap values
-    peakLevel = [backgroundLevel, backgroundLevel = peakLevel][0];
+    peakLevel = [backgroundLevel, (backgroundLevel = peakLevel)][0];
   }
   let normalizationRange = peakLevel - backgroundLevel;
   let maxColorIndex = colorMapLookup.length - 1;
@@ -86,8 +82,8 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   //while(i--) {
   for (let i = 0; i < dataLength; i++) {
     let norm = stretchFn(Math.min(1.0, Math.max(0.0, (pixels[i] - backgroundLevel) / normalizationRange))) * 65535.0;
-    norm = (norm > 65535.0) ? 65535.0 : norm;
-    norm = (norm < 0) ? 0 : norm;
+    norm = norm > 65535.0 ? 65535.0 : norm;
+    norm = norm < 0 ? 0 : norm;
     let colorIndex = norm * colorIndexScaler;
     if (invert) colorIndex = colorMapLookup.length - 1 - colorIndex;
     normalizedPixels[i] = colorMapLookup[Math.floor(colorIndex)];
@@ -98,5 +94,4 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   }
 
   return normalizedPixels;
-
 }
