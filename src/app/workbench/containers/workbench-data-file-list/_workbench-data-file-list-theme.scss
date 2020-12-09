@@ -6,8 +6,48 @@
   $foreground: map-get($theme, foreground);
 
   app-workbench-data-file-list {
+    
+    .node-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mat-icon-button.small {
+
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+  
+      .mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        vertical-align: middle;
+      }
+    }
+
+    .mat-icon.small {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      vertical-align: middle;
+    }
+
+    .node-text .mat-icon {
+      margin-right: 5px;
+    }
+
+
+
     tree-root:focus {
       outline: none;
+    }
+
+    .node-content {
+      padding: 4px 5px;
     }
 
     div.tree div.tree-children::before,
@@ -17,11 +57,30 @@
     }
 
     .node-content-wrapper {
-      border: solid 1px mat-color($primary, 0);
-      white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
+      // border: solid 1px mat-color($primary, 0);
+      width: 100%;
+      padding: 0px; //eliminate gap between node-content-wrapper and node content template to improve mouse hover behavior
     }
+
+    div.tree tree-node > div .toggle-children-wrapper {
+      margin-top: 11px;  //shift toggle down to accomodate node-content padding
+    }
+
+    div.tree tree-node > div::before {
+      margin-top: 19px; //shift horizontal hash down to accomodate node-content padding
+    }
+    
+    div.tree tree-node > div .toggle-children-wrapper::before {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      border-top: 1px solid #23527c;
+      position: absolute;
+      top: 5px;
+      left: 2px;
+    }
+
 
     .node-content-wrapper-active,
     .node-content-wrapper.node-content-wrapper-active:hover,
@@ -54,10 +113,6 @@
 
     // }
 
-    .node-content-wrapper .mat-icon {
-      line-height: 24px;
-      vertical-align: middle;
-    }
 
     // .mat-icon-button.small {
 

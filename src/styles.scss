@@ -453,15 +453,14 @@ div.tree div.tree-children::before,
 div.tree::before {
   content: "";
   position: absolute;
-  border-left: 1px dotted #23527c;
+  border-left: 1px solid #23527c;
   height: 100%;
-  top: -14px;
+  top: 0px;
   left: 12px;
 }
 
 div.tree {
   padding-left: 0;
-  margin-left: -5px;
 }
 
 div.tree div.tree-children {
@@ -489,7 +488,7 @@ div.tree tree-node > div.tree-node-leaf > .node-wrapper {
 div.tree tree-node > div::before {
   content: "";
   position: absolute;
-  border-bottom: 1px dotted #23527c;
+  border-bottom: 1px solid #23527c;
   width: 7px;
   margin-top: 12px;
   left: 7px;

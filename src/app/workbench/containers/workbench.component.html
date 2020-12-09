@@ -81,11 +81,11 @@
           <button
             mat-icon-button
             [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
-            aria-label="Remove all files from library"
-            (click)="removeAllFiles()"
-            matTooltip="Remove all files from library"
+            aria-label="Close all files"
+            (click)="closeAllFiles()"
+            matTooltip="Remove all files"
           >
-            <mat-icon>delete_sweep</mat-icon>
+            <mat-icon>highlight_off</mat-icon>
           </button>
           <button
             mat-icon-button
@@ -118,6 +118,8 @@
               [selectedItem]="selectedDataFileListItem$ | async"
               (onSelectionChange)="onItemSelect($event)"
               (onItemDoubleClick)="onItemDoubleClick($event)"
+              (onSaveFile)="onSaveFile($event)"
+              (onCloseFile)="onCloseFile($event)"
             >
             </app-workbench-data-file-list>
           </div>

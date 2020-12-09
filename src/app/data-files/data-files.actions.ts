@@ -9,19 +9,19 @@ import { Normalization } from "./models/normalization";
  * Load Library Actions
  */
 export class LoadLibrary {
-  public static readonly type = "[Data File] Load Library";
+  public static readonly type = "[File] Load Library";
 
   constructor(public correlationId?: string) {}
 }
 
 export class LoadLibrarySuccess {
-  public static readonly type = "[Data File] Load Library Success";
+  public static readonly type = "[File] Load Library Success";
 
   constructor(public hdus: IHdu[], public correlationId?: string) {}
 }
 
 export class LoadLibraryFail {
-  public static readonly type = "[Data File] Load Library Fail";
+  public static readonly type = "[File] Load Library Fail";
 
   constructor(public error: any, public correlationId?: string) {}
 }
@@ -31,13 +31,13 @@ export class LoadLibraryFail {
  */
 
 export class CloseHduSuccess {
-  public static readonly type = "[Data File] Close HDU Success";
+  public static readonly type = "[File] Close HDU Success";
 
   constructor(public hduId: string) {}
 }
 
 export class CloseHduFail {
-  public static readonly type = "[Data File] Close HDU Fail";
+  public static readonly type = "[File] Close HDU Fail";
 
   constructor(public hduId: string, public error: any) {}
 }
@@ -47,19 +47,19 @@ export class CloseHduFail {
  */
 
 export class LoadHdu {
-  public static readonly type = "[Data File] Load HDU";
+  public static readonly type = "[File] Load HDU";
 
   constructor(public hduId: string) {}
 }
 
 export class LoadHduHeader {
-  public static readonly type = "[Data File] Load HDU Header";
+  public static readonly type = "[File] Load HDU Header";
 
   constructor(public hduId: string) {}
 }
 
 export class LoadHduHeaderSuccess {
-  public static readonly type = "[Data File] Load HDU Header Success";
+  public static readonly type = "[File] Load HDU Header Success";
 
   constructor(public hduId: string) {}
 }
@@ -69,84 +69,84 @@ export class LoadHduHeaderSuccess {
  */
 
 export class LoadImageHduHistogram {
-  public static readonly type = "[Data File] Load Image HDU Histogram";
+  public static readonly type = "[File] Load Image HDU Histogram";
 
   constructor(public hduId: string) {}
 }
 
 export class LoadImageHduHistogramSuccess {
-  public static readonly type = "[Data File] Load Image HDU Histogram Success";
+  public static readonly type = "[File] Load Image HDU Histogram Success";
 
   constructor(public hduId: string, public hist: ImageHist) {}
 }
 
 export class InitializeFileTiles {
-  public static readonly type = "[Data File] Initialize File Tiles";
+  public static readonly type = "[File] Initialize File Tiles";
 
   constructor(public fileId: string) {}
 }
 
 export class LoadRawImageTile {
-  public static readonly type = "[Data File] Load Raw Image Tile";
+  public static readonly type = "[File] Load Raw Image Tile";
 
   constructor(public hduId: string, public tileIndex: number) {}
 }
 
 export class LoadRawImageTileSuccess {
-  public static readonly type = "[Data File] Load Raw Image Tile Success";
+  public static readonly type = "[File] Load Raw Image Tile Success";
 
   constructor(public hduId: string, public tileIndex: number, public pixels: PixelType) {}
 }
 
 export class LoadRawImageTileFail {
-  public static readonly type = "[Data File] Load Raw Image Tile Fail";
+  public static readonly type = "[File] Load Raw Image Tile Fail";
 
   constructor(public hduId: string, public tileIndex: number, public error: any) {}
 }
 
 export class LoadRawImageTileCancel {
-  public static readonly type = "[Data File] Load Raw Image Tile Cancel";
+  public static readonly type = "[File] Load Raw Image Tile Cancel";
 
   constructor(public hduId: string, public tileIndex: number) {}
 }
 
 export class ClearImageDataCache {
-  public static readonly type = "[Data File] Clear Image Data";
+  public static readonly type = "[File] Clear Image Data";
 
   constructor(public hduIds: string[]) {}
 }
 
 /**
- * Close Data File Actions
+ * Close File Actions
  */
 export class CloseDataFile {
-  public static readonly type = "[DataFile] Close Data File";
+  public static readonly type = "[DataFile] Close File";
 
   constructor(public fileId: string) {}
 }
 
 export class CloseDataFileSuccess {
-  public static readonly type = "[DataFile] Close Data File Success";
+  public static readonly type = "[DataFile] Close File Success";
 
   constructor(public fileId: string) {}
 }
 
 export class CloseDataFileFail {
-  public static readonly type = "[DataFile] Close Data File Fail";
+  public static readonly type = "[DataFile] Close File Fail";
 
   constructor(public fileId: string, public error: any) {}
 }
 
 export class CloseAllDataFiles {
-  public static readonly type = "[DataFile] Close All Data Files";
+  public static readonly type = "[DataFile] Close All Files";
 }
 
 export class CloseAllDataFilesSuccess {
-  public static readonly type = "[DataFile] Close All Data Files Success";
+  public static readonly type = "[DataFile] Close All Files Success";
 }
 
 export class CloseAllDataFilesFail {
-  public static readonly type = "[DataFile] Close All Data Files Fail";
+  public static readonly type = "[DataFile] Close All Files Fail";
 
   constructor(public errors: any) {}
 }
@@ -156,9 +156,45 @@ export class CloseAllDataFilesFail {
  */
 
 export class LoadDataFile {
-  public static readonly type = "[DataFile] Load Data File";
+  public static readonly type = "[DataFile] Load File";
 
   constructor(public fileId: string) {}
+}
+
+/**
+ * Save File Actions
+ */
+
+export class SaveDataFile {
+  public static readonly type = "[DataFile] Save File";
+
+  constructor(public fileId: string) {}
+}
+
+export class SaveDataFileSuccess {
+  public static readonly type = "[DataFile] Save File Success";
+
+  constructor(public fileId: string) {}
+}
+
+export class SaveDataFileFail {
+  public static readonly type = "[DataFile] Save File Fail";
+
+  constructor(public fileId: string, public error: any) {}
+}
+
+export class SaveAllDataFiles {
+  public static readonly type = "[DataFile] Save All Files";
+}
+
+export class SaveAllDataFilesSuccess {
+  public static readonly type = "[DataFile] Save All Files Success";
+}
+
+export class SaveAllDataFilesFail {
+  public static readonly type = "[DataFile] Save All Files Fail";
+
+  constructor(public errors: any) {}
 }
 
 /**

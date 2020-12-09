@@ -50,10 +50,45 @@
     (blur)="onBlur()"
   >
     <ng-template #treeNodeTemplate let-node let-index="index">
-      <span [matTooltip]="node.data.tooltip" [matTooltipShowDelay]="500">
-        <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon">{{ node.data.icon }}</mat-icon>
-        <span>{{ node.data.name }}</span>
-      </span>
+      <div
+        class="node-content"
+        fxLayout="row"
+        fxLayoutAlign="start center"
+        fxFlexFill
+        (mouseenter)="onMouseEnterNode(node.data)"
+        (mouseleave)="onMouseLeaveNode(node.data)"
+      >
+        <div fxFlex="1 1 auto" class="node-text">
+          <span [matTooltip]="node.data.tooltip" [matTooltipShowDelay]="500">
+            <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon" class="small">{{ node.data.icon }}</mat-icon>
+            <span>{{ node.data.name }}</span>
+          </span>
+        </div>
+        <div *ngIf="node.data.showButtonBar" fxFlex="0 0 80px" class="node-buttons" style="text-align: right">
+          <button
+            [hidden]="hoverNodeId != node.data.id || !node.data.modified"
+            mat-icon-button
+            class="small mr-2"
+            aria-label="Save File"
+            (click)="saveFile($event, node.data)"
+            matTooltip="Save File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>save</mat-icon>
+          </button>
+          <button
+            [hidden]="hoverNodeId != node.data.id && !node.data.modified"
+            mat-icon-button
+            class="small"
+            aria-label="Close File"
+            (click)="closeFile($event, node.data)"
+            matTooltip="Close File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>{{ hoverNodeId === node.data.id || !node.data.modified ? "clear" : "fiber_manual_record" }}</mat-icon>
+          </button>
+        </div>
+      </div>
     </ng-template>
   </tree-root>
 </div>

@@ -548,7 +548,7 @@ export class WorkbenchState {
   ) {
     return (id: string) => {
       let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId) {
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
         return null;
       }
 
@@ -573,7 +573,7 @@ export class WorkbenchState {
   ) {
     return (id: string) => {
       let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId) {
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
         return null;
       }
 
@@ -598,7 +598,7 @@ export class WorkbenchState {
   ) {
     return (id: string) => {
       let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId) {
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
         return null;
       }
 
@@ -623,7 +623,7 @@ export class WorkbenchState {
   ) {
     return (id: string) => {
       let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId || !viewer.hduId) {
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !viewer.hduId || !fileEntities[viewer.fileId]) {
         return null;
       }
 

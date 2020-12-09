@@ -32,8 +32,10 @@ interface INode {
   isExpanded: boolean;
   fileId: string;
   hduId: string;
+  showButtonBar: boolean;
   icon: string;
   tooltip: string;
+  modified: boolean;
 }
 
 export interface ISelectedFileListItem {
@@ -67,21 +69,20 @@ export class WorkbenchDataFileListComponent {
   private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Output() onSelectionChange = new EventEmitter<{
-    item: {
-      fileId: string;
-      hduId: string;
-    };
+    item: ISelectedFileListItem;
   }>();
 
   @Output() onItemDoubleClick = new EventEmitter<{
-    item: {
-      fileId: string;
-      hduId: string;
-    };
+    item: ISelectedFileListItem;
   }>();
+
+  @Output() onCloseFile = new EventEmitter<string>();
+
+  @Output() onSaveFile = new EventEmitter<string>();
 
   HduType = HduType;
   treeFocused = false;
+  hoverNodeId: string = null;
 
   actionMapping: IActionMapping = {
     mouse: {
@@ -127,15 +128,18 @@ export class WorkbenchDataFileListComponent {
                       isExpanded: false,
                       fileId: file.id,
                       hduId: hduId,
+                      showButtonBar: false,
                       icon: hduEntities[hduId].hduType == HduType.IMAGE ? "insert_photo" : "toc",
                       tooltip: `${file.name} - Channel ${index}`,
+                      modified: null,
                     })),
                     hasChildren: true,
                     isExpanded: true,
                     fileId: file.id,
                     hduId: null,
-                    // icon: 'insert_drive_file'
+                    showButtonBar: true,
                     icon: null,
+                    modified: file.hduIds.map(hduId => hduEntities[hduId].modified).some(v => v),
                   };
                 } else {
                   let hduId = file.hduIds[0];
@@ -148,7 +152,9 @@ export class WorkbenchDataFileListComponent {
                     isExpanded: false,
                     fileId: file.id,
                     hduId: hduId,
+                    showButtonBar: true,
                     icon: hduEntities[hduId].hduType == HduType.IMAGE ? "insert_photo" : "toc",
+                    modified: hduEntities[hduId].modified,
                   };
                 }
                 return result;
@@ -169,6 +175,8 @@ export class WorkbenchDataFileListComponent {
         }
         selectedNodeIds[selectedItemId] = true;
       }
+
+      console.log("NEW SELECTION: ", selectedNodeIds, selectedItemId)
 
       this.state = {
         ...this.state,
@@ -196,6 +204,26 @@ export class WorkbenchDataFileListComponent {
 
   onBlur() {
     this.treeFocused = false;
+  }
+
+  saveFile($event: MouseEvent, data: INode) {
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    this.onSaveFile.emit(data.fileId)
+  }
+
+  closeFile($event: MouseEvent, data: INode) {
+    $event.preventDefault();
+    $event.stopImmediatePropagation();
+    this.onCloseFile.emit(data.fileId);
+  }
+
+  onMouseEnterNode(node: INode) {
+    this.hoverNodeId = node.id;
+  }
+
+  onMouseLeaveNode(node: INode) {
+    this.hoverNodeId = null;
   }
 
   // onRowClick(item: { fileId: string; hduId: string;}) {

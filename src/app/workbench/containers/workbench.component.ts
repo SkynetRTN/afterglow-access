@@ -115,7 +115,7 @@ import {
   ViewerPanelMarkerMouseEvent,
 } from "./workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduType } from "../../data-files/models/data-file-type";
-import { CloseAllDataFiles, LoadLibrary, LoadDataFile, LoadHdu } from "../../data-files/data-files.actions";
+import { CloseAllDataFiles, LoadLibrary, LoadDataFile, LoadHdu, CloseDataFile, SaveDataFile } from "../../data-files/data-files.actions";
 import { Transform, getImageToViewportTransform } from "../../data-files/models/transformation";
 import { Normalization } from "../../data-files/models/normalization";
 import { PixelNormalizer } from "../../data-files/models/pixel-normalizer";
@@ -402,8 +402,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.selectedDataFileListItem$ = this.focusedViewer$.pipe(
       distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
       map((viewer) => {
+        console.log("SELECTED DATA FILE LIST ITEM OBSERVABLE CHANGE: ", viewer)
         if (!viewer) {
-          return { fileId: null, hduId: null };
+          return null;
         }
         return { fileId: viewer.fileId, hduId: viewer.hduId };
       })
@@ -1375,6 +1376,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   onItemSelect($event: { item: ISelectedFileListItem }) {
     if (!$event.item) return;
 
+    console.log("ITEM SELECTED: ", $event.item);
     this.store.dispatch(new SelectDataFileListItem($event.item));
   }
 
@@ -1387,19 +1389,46 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
+  onSaveFile(fileId: string) {
+    this.store.dispatch(new SaveDataFile(fileId))
+  }
+
+  onCloseFile(fileId: string) {
+    let file = this.store.selectSnapshot(DataFilesState.getFileEntities)[fileId];
+    if(!file) return;
+    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: "300px",
+      data: {
+        message: `Are you sure you want to close '${file.name}'?`,
+        confirmationBtn: {
+          color: "warn",
+          label: "Close File",
+        },
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.store.dispatch(new CloseDataFile(fileId))
+      }
+    });
+
+    
+  }
+
   // onMultiFileSelect(files: Array<DataFile>) {
   //   if(!files) return;
   //   this.store.dispatch(new SetMultiFileSelection(files.map(f => f.id)));
   // }
 
-  removeAllFiles() {
+  closeAllFiles() {
     let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: "300px",
       data: {
-        message: "Are you sure you want to delete all files from your library?",
+        message: "Are you sure you want to close all files?",
         confirmationBtn: {
           color: "warn",
-          label: "Delete All Files",
+          label: "Close All Files",
         },
       },
     });
