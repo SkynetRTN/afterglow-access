@@ -401,8 +401,6 @@
 
           <app-aligning-panel
             *ngSwitchCase="WorkbenchTool.ALIGNER"
-            [primaryHdu]="focusedViewerImageHdu$ | async"
-            [primaryHeader]="focusedViewerHeader$ | async"
             [hdus]="hdus$ | async"
             [fileEntities]="fileEntities$ | async"
             [config]="aligningPanelConfig$ | async"

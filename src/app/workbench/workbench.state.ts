@@ -21,7 +21,6 @@ import { createPsfCentroiderSettings, createDiskCentroiderSettings } from "./mod
 import {
   LoadLibrarySuccess,
   LoadLibrary,
-  ClearImageDataCache,
   LoadHdu,
   CloseHduSuccess,
   CloseDataFile,
@@ -30,6 +29,9 @@ import {
   CloseDataFileSuccess,
   UpdateTransform,
   UpdateNormalizer,
+  InvalidateRawImageTiles,
+  LoadHduHeader,
+  InvalidateHeader,
 } from "../data-files/data-files.actions";
 import {
   SelectDataFileListItem,
@@ -277,8 +279,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   aligningPanelConfig: {
     alignFormData: {
       selectedHduIds: [],
+      refHduId: null,
       mode: "astrometric",
-      inPlace: true,
     },
     currentAlignmentJobId: null,
   },
@@ -1887,21 +1889,21 @@ export class WorkbenchState {
       dispatch(new InitializeWorkbenchHduState(newIds));
     }
 
-    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
+    // let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
 
-    if (
-      !focusedViewer || //no viewers have focus
-      (!focusedViewer.hduId && !focusedViewer.fileId) //focused viewer has no assigned file
-    ) {
-      if (hdus[0]) {
-        dispatch(
-          new SelectDataFileListItem({
-            fileId: hdus[0].fileId,
-            hduId: hdus[0].id,
-          })
-        );
-      }
-    }
+    // if (
+    //   !focusedViewer || //no viewers have focus
+    //   (!focusedViewer.hduId && !focusedViewer.fileId) //focused viewer has no assigned file
+    // ) {
+    //   if (hdus[0]) {
+    //     dispatch(
+    //       new SelectDataFileListItem({
+    //         fileId: hdus[0].fileId,
+    //         hduId: hdus[0].id,
+    //       })
+    //     );
+    //   }
+    // }
   }
 
   @Action(CloseDataFile)
@@ -2409,7 +2411,6 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let imageHdus = data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
-
     let job: AlignmentJob = {
       type: JobType.Alignment,
       id: null,
@@ -2422,7 +2423,12 @@ export class WorkbenchState {
             : 0
         )
         .map((f) => parseInt(f.id)),
-      inplace: data.inPlace,
+      inplace: true,
+      crop: false,
+      settings: {
+        ref_image: parseInt(data.refHduId),
+        wcs_grid_points: 0
+      }
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2458,19 +2464,14 @@ export class WorkbenchState {
           console.error("Warnings encountered during aligning: ", result.warnings);
         }
 
-        let fileIds = result.file_ids.map((id) => id.toString());
+        let hduIds = result.file_ids.map((id) => id.toString());
         let actions = [];
         if ((jobEntity.job as AlignmentJob).inplace) {
-          actions.push(new ClearImageDataCache(fileIds));
-        } else {
-          actions.push(new LoadLibrary());
-        }
-        // TODO: determine if this is necessary
-        // WorkbenchState.getViewers(getState()).forEach((viewer, index) => {
-        //   if (viewer.data.type == 'hdu' && fileIds.includes(viewer.data.id)) {
-        //     actions.push(new SetViewerData(viewer.viewerId, viewer.data));
-        //   }
-        // });
+          hduIds.forEach(hduId => actions.push(new InvalidateRawImageTiles(hduId)));
+          hduIds.forEach(hduId => actions.push(new InvalidateHeader(hduId)));
+        } 
+
+        actions.push(new LoadLibrary());
 
         return dispatch(actions);
       })
@@ -3672,8 +3673,6 @@ export class WorkbenchState {
     let refHduHasWcs = refHeader.wcs && refHeader.wcs.isValid();
 
     let visibleViewers = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds).map((id) => state.viewers[id]);
-
-    console.log();
 
     let actions = [];
     visibleViewers.forEach((viewer) => {

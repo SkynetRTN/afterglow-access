@@ -12,7 +12,7 @@ import { DataFile, IHdu } from "../../../data-files/models/data-file";
 import { Store } from "@ngxs/store";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { BehaviorSubject, Observable, combineLatest } from "rxjs";
-import { distinctUntilChanged, map, switchMap, tap } from "rxjs/operators";
+import { distinctUntilChanged, map, switchMap, tap, distinctUntilKeyChanged } from "rxjs/operators";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import {
   TREE_ACTIONS,
@@ -104,32 +104,47 @@ export class WorkbenchDataFileListComponent {
   nodes$: Observable<INode[]>;
 
   constructor(private store: Store) {
-    this.nodes$ = this.files$.pipe(
-      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index].id == value.id)),
-      switchMap((files) => {
-        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    this.nodes$ = this.store.select(DataFilesState.getFileIds).pipe(
+      switchMap((fileIds) => {
         return combineLatest(
-          ...files.map((file) => {
-            return this.store.select(DataFilesState.getFileById).pipe(
-              map((fn) => fn(file.id)),
-              distinctUntilChanged((a, b) => a && b && a.name == b.name && a.hduIds == b.hduIds),
-              map((file) => {
-                let result: INode;
-                if (file.hduIds.length > 1) {
+          ...fileIds.map((fileId) => {
+            let file$ = this.store.select(DataFilesState.getFileById).pipe(
+              map((fn) => fn(fileId)),
+              distinctUntilKeyChanged('id'),
+              distinctUntilKeyChanged('name'),
+              distinctUntilKeyChanged('hduIds'),
+              distinctUntilKeyChanged('name'),
+            );
+            let hdus$ = file$.pipe(
+              switchMap((file) =>
+                combineLatest(
+                  file.hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(
+                    map((fn) => fn(hduId)),
+                    distinctUntilKeyChanged('id'),
+                    distinctUntilKeyChanged('modified'),
+                    distinctUntilKeyChanged('hduType'),
+                  ))
+                )
+              )
+            );
+            return combineLatest(file$, hdus$).pipe(
+              map(([file, hdus]) => {
+                let result: INode = null;
+                if (hdus.length > 1) {
                   result = {
                     id: file.id,
                     name: file.name,
                     tooltip: file.name,
-                    children: file.hduIds.map((hduId, index) => ({
-                      id: `${file.id}-${hduId}`,
+                    children: hdus.map((hdu, index) => ({
+                      id: `${file.id}-${hdu.id}`,
                       name: `Channel ${index}`,
                       children: [],
                       hasChildren: false,
                       isExpanded: false,
                       fileId: file.id,
-                      hduId: hduId,
+                      hduId: hdu.id,
                       showButtonBar: false,
-                      icon: hduEntities[hduId].hduType == HduType.IMAGE ? "insert_photo" : "toc",
+                      icon: hdu.hduType == HduType.IMAGE ? "insert_photo" : "toc",
                       tooltip: `${file.name} - Channel ${index}`,
                       modified: null,
                     })),
@@ -139,31 +154,33 @@ export class WorkbenchDataFileListComponent {
                     hduId: null,
                     showButtonBar: true,
                     icon: null,
-                    modified: file.hduIds.map(hduId => hduEntities[hduId].modified).some(v => v),
+                    modified: hdus.map((hdu) => hdu.modified).some((v) => v),
                   };
-                } else {
-                  let hduId = file.hduIds[0];
+                } else if(hdus.length == 1) {
+                  let hdu = hdus[0];
                   result = {
-                    id: `${file.id}-${hduId}`,
+                    id: `${file.id}-${hdu.id}`,
                     name: file.name,
                     tooltip: file.name,
                     children: [],
                     hasChildren: false,
                     isExpanded: false,
                     fileId: file.id,
-                    hduId: hduId,
+                    hduId: hdu.id,
                     showButtonBar: true,
-                    icon: hduEntities[hduId].hduType == HduType.IMAGE ? "insert_photo" : "toc",
-                    modified: hduEntities[hduId].modified,
+                    icon:hdu.hduType == HduType.IMAGE ? "insert_photo" : "toc",
+                    modified: hdu.modified,
                   };
                 }
                 return result;
               })
-            );
+            )
           })
         );
       })
     );
+
+   
 
     this.selectedItem$.subscribe((selectedItem) => {
       let selectedNodeIds = {};
@@ -175,8 +192,6 @@ export class WorkbenchDataFileListComponent {
         }
         selectedNodeIds[selectedItemId] = true;
       }
-
-      console.log("NEW SELECTION: ", selectedNodeIds, selectedItemId)
 
       this.state = {
         ...this.state,
@@ -209,7 +224,7 @@ export class WorkbenchDataFileListComponent {
   saveFile($event: MouseEvent, data: INode) {
     $event.preventDefault();
     $event.stopImmediatePropagation();
-    this.onSaveFile.emit(data.fileId)
+    this.onSaveFile.emit(data.fileId);
   }
 
   closeFile($event: MouseEvent, data: INode) {

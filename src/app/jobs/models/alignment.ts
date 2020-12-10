@@ -13,6 +13,7 @@ export interface AlignmentJob extends JobBase {
   settings?: AlignmentSettings;
   sources?: SourceExtractionData[];
   inplace: boolean;
+  crop: boolean;
 }
 
 export interface AlignmentJobResult extends JobResultBase {

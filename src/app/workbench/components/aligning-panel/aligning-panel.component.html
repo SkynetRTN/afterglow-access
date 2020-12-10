@@ -25,8 +25,8 @@
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Reference Image File</mat-label>
-        <mat-select [value]="primaryHdu?.id" (selectionChange)="onPrimaryHduChange($event)">
-          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+        <mat-select formControlName="refHduId" [value]="(refHdu$ | async)?.id">
+          <mat-option *ngFor="let hdu of (selectedHdus$ | async)" [value]="hdu.id">
             {{ fileEntities[hdu.fileId].name }}
             <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
               - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
@@ -43,25 +43,14 @@
           <!-- <mat-option  [value]="'manual_source'">manual</mat-option> -->
         </mat-select>
       </mat-form-field>
-      <div>
-        <mat-checkbox formControlName="inPlace" i18n> Overwrite Files</mat-checkbox>
-      </div>
     </div>
 
-    <div *ngIf="primaryHduIsSelected$ | async">
-      <div *ngIf="(alignFormData$ | async)?.mode == 'astrometric'">
-        <div *ngIf="!(primaryHduHasWcs$ | async); else hasWcs">
-          <div class="alert alert-warning" style="margin-top: 10px" i18n>
-            This image does not have astrometric data in its header and cannot be aligned using the selected mode.
-          </div>
-        </div>
-        <ng-template #hasWcs>
-          <!-- <div
-          class="alert alert-info"
-        >
-            Astrometric data is available for this image.
-            </div> -->
-        </ng-template>
+    <div *ngIf="(refHeader$ | async)">
+      <div *ngIf="(refHeader$ | async).loading; else hasWcsBlock" class="alert alert-info" style="margin-top: 10px" i18n>
+        Reference header loading...
+      </div>
+      <div #hasWcsBlock *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)" class="alert alert-warning" style="margin-top: 10px" i18n>
+        This image does not have astrometric data in its header and cannot be aligned using the selected mode.
       </div>
     </div>
     <div style="clear: both"></div>

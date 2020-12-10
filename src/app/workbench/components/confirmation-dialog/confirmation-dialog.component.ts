@@ -1,22 +1,26 @@
 import { Component, OnInit, Inject } from "@angular/core";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
+export interface ConfirmationDialogConfig {
+  message: string;
+  description: string;
+  buttons: Array<{
+    label: string;
+    value: any;
+    color: string;
+  }>;
+}
+
 @Component({
   selector: "app-confirmation-dialog",
   templateUrl: "./confirmation-dialog.component.html",
   styleUrls: ["./confirmation-dialog.component.scss"],
 })
 export class ConfirmationDialogComponent implements OnInit {
-  message: string;
-  color: string = "primary";
-  btnLabel: string = "Confirm";
+  config: ConfirmationDialogConfig;
 
-  constructor(public dialogRef: MatDialogRef<ConfirmationDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {
-    this.message = data.message;
-    if (data.confirmationBtn) {
-      if (data.confirmationBtn.color) this.color = data.confirmationBtn.color;
-      if (data.confirmationBtn.label) this.btnLabel = data.confirmationBtn.label;
-    }
+  constructor(public dialogRef: MatDialogRef<ConfirmationDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: ConfirmationDialogConfig) {
+    this.config = data;
   }
 
   ngOnInit() {}

@@ -14,7 +14,7 @@ import {
 import { DomSanitizer, SafeValue } from "@angular/platform-browser";
 
 import { Observable, combineLatest, of } from "rxjs";
-import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap, switchMap } from "rxjs/operators";
+import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap, switchMap, takeUntil } from "rxjs/operators";
 import {
   DataFile,
   getWidth,
@@ -58,6 +58,7 @@ import {
   UpdateNormalizedImageTile,
   CenterRegionInViewport,
   UpdateCompositeImageTile,
+  LoadHduHeader,
 } from "../../../data-files/data-files.actions";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
@@ -100,6 +101,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   @Output()
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
+  destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
   hduId$: Observable<string>;
   hdu$: Observable<ImageHdu>;
@@ -153,7 +155,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.hduId$ = this.viewer$.pipe(
-      map((viewer) => viewer.hduId),
+      map((viewer) => viewer && viewer.hduId),
       distinctUntilChanged()
     );
 
@@ -173,8 +175,17 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.header$ = headerId$.pipe(
       switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
-      distinctUntilChanged()
+      distinctUntilChanged(),
     );
+
+    // watch for changes to header and reload when necessary
+    combineLatest(this.hduId$, this.header$).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(([hduId, header]) => {
+      if(hduId && header && !header.loaded && !header.loading) {
+        this.store.dispatch(new LoadHduHeader(hduId))
+      }
+    })
 
     let rawImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
@@ -471,7 +482,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
   ngOnInit() {}
 
-  ngOnDestroy() {}
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    // Now let's also unsubscribe from the subject itself:
+    this.destroy$.unsubscribe();
+  }
 
   ngOnChanges(changes: { [key: string]: SimpleChange }) {}
 

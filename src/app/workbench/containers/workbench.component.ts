@@ -11,6 +11,8 @@ import {
   throttleTime,
   auditTime,
   skip,
+  takeUntil,
+  take,
 } from "rxjs/operators";
 
 import {
@@ -32,7 +34,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "../../../../node_modules/rxjs";
 import { HotkeysService, Hotkey } from "../../../../node_modules/angular2-hotkeys";
 import { MatDialog } from "@angular/material/dialog";
-import { Store, Actions } from "@ngxs/store";
+import { Store, Actions, ofActionCompleted } from "@ngxs/store";
 import { DataFilesState } from "../../data-files/data-files.state";
 import { WorkbenchState } from "../workbench.state";
 import {
@@ -74,7 +76,11 @@ import {
   SyncViewerNormalizations,
   SyncPlottingPanelStates,
 } from "../workbench.actions";
-import { LoadDataProviders } from "../../data-providers/data-providers.actions";
+import {
+  LoadDataProviders,
+  LoadDataProvidersSuccess,
+  LoadDataProvidersFail,
+} from "../../data-providers/data-providers.actions";
 import { ViewMode } from "../models/view-mode";
 import { MatButtonToggleChange } from "@angular/material/button-toggle";
 import { MatRadioChange } from "@angular/material/radio";
@@ -115,7 +121,18 @@ import {
   ViewerPanelMarkerMouseEvent,
 } from "./workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduType } from "../../data-files/models/data-file-type";
-import { CloseAllDataFiles, LoadLibrary, LoadDataFile, LoadHdu, CloseDataFile, SaveDataFile } from "../../data-files/data-files.actions";
+import {
+  CloseAllDataFiles,
+  LoadLibrary,
+  LoadDataFile,
+  LoadHdu,
+  CloseDataFile,
+  SaveDataFile,
+  LoadLibrarySuccess,
+  LoadLibraryFail,
+  SaveDataFileSuccess,
+  SaveDataFileFail,
+} from "../../data-files/data-files.actions";
 import { Transform, getImageToViewportTransform } from "../../data-files/models/transformation";
 import { Normalization } from "../../data-files/models/normalization";
 import { PixelNormalizer } from "../../data-files/models/pixel-normalizer";
@@ -402,7 +419,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.selectedDataFileListItem$ = this.focusedViewer$.pipe(
       distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
       map((viewer) => {
-        console.log("SELECTED DATA FILE LIST ITEM OBSERVABLE CHANGE: ", viewer)
         if (!viewer) {
           return null;
         }
@@ -645,7 +661,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
           let refImageHdu$ = this.store.select(WorkbenchState.getViewerById).pipe(
             map((fn) => fn(focusedViewerId)),
-            map(viewer => viewer ? viewer.hduId : null),
+            map((viewer) => (viewer ? viewer.hduId : null)),
             distinctUntilChanged(),
             switchMap((hduId) =>
               this.store.select(DataFilesState.getHduById).pipe(
@@ -1376,7 +1392,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   onItemSelect($event: { item: ISelectedFileListItem }) {
     if (!$event.item) return;
 
-    console.log("ITEM SELECTED: ", $event.item);
     this.store.dispatch(new SelectDataFileListItem($event.item));
   }
 
@@ -1389,31 +1404,108 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
+  getFileSync$() {
+    this.store.dispatch(new LoadLibrary());
+    this.store.dispatch(new LoadDataProviders());
+
+    let loadLibrarySuccess$ = this.actions$.pipe(ofActionCompleted(LoadLibrarySuccess));
+    let loadLibraryFail$ = this.actions$.pipe(ofActionCompleted(LoadLibraryFail));
+
+    let loadDataProvidersSuccess$ = this.actions$.pipe(ofActionCompleted(LoadDataProvidersSuccess));
+    let loadDataProvidersFail$ = this.actions$.pipe(ofActionCompleted(LoadDataProvidersFail));
+
+    return combineLatest(loadLibrarySuccess$, loadDataProvidersSuccess$).pipe(
+      takeUntil(merge(loadLibraryFail$, loadDataProvidersFail$).pipe()),
+      take(1)
+    );
+  }
+
   onSaveFile(fileId: string) {
-    this.store.dispatch(new SaveDataFile(fileId))
+    this.store.dispatch(new SaveDataFile(fileId));
   }
 
   onCloseFile(fileId: string) {
-    let file = this.store.selectSnapshot(DataFilesState.getFileEntities)[fileId];
-    if(!file) return;
-    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: "300px",
-      data: {
-        message: `Are you sure you want to close '${file.name}'?`,
-        confirmationBtn: {
-          color: "warn",
-          label: "Close File",
-        },
-      },
-    });
+    this.getFileSync$().subscribe((v) => {
+      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+      let dataProviders = this.store.selectSnapshot(DataProvidersState.getDataProviders)
+      let file = this.store.selectSnapshot(DataFilesState.getFileEntities)[fileId];
+      if (!file) return;
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.store.dispatch(new CloseDataFile(fileId))
+      let modified = file.hduIds.map((hduId) => hduEntities[hduId].modified).some((v) => v);
+      let dataProvider = dataProviders.find(dp => dp.id == file.dataProviderId)
+      let readOnly = !dataProvider || dataProvider.readonly
+
+      if (modified) {
+        let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+          width: "400px",
+          data: {
+            message: `Do you want to save the changes you made to '${file.name}'?`,
+            description: "Your changes will be lost if you do not save them.",
+            buttons: [
+              {
+                color: null,
+                value: "save",
+                label: readOnly ? "Save As..." : "Save",
+              },
+              {
+                color: null,
+                value: "close",
+                label: "Don't Save",
+              },
+              {
+                color: null,
+                value: "cancel",
+                label: "Cancel",
+              },
+            ],
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if(result == 'close') {
+            this.store.dispatch(new CloseDataFile(fileId));
+          }
+          else if(result == 'save') {
+            this.store.dispatch(new SaveDataFile(fileId));
+            this.actions$.pipe(
+              ofActionCompleted(SaveDataFileSuccess),
+              takeUntil(this.actions$.pipe(
+                ofActionCompleted(SaveDataFileFail),
+                tap(v => console.error('UNABLE TO SAVE FILE.  SKIPPING CLOSE'))
+              )),
+              take(1),
+            ).subscribe(v => {
+              this.store.dispatch(new CloseDataFile(fileId));
+            })
+          }
+        });
+      } else {
+        let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+          width: "400px",
+          data: {
+            message: `Are you sure you want to close '${file.name}'?`,
+            buttons: [
+              {
+                color: "warn",
+                value: true,
+                label: "Close File",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result) {
+            this.store.dispatch(new CloseDataFile(fileId));
+          }
+        });
       }
     });
-
-    
   }
 
   // onMultiFileSelect(files: Array<DataFile>) {

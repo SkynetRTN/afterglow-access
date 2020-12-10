@@ -110,11 +110,7 @@ export class LoadRawImageTileCancel {
   constructor(public hduId: string, public tileIndex: number) {}
 }
 
-export class ClearImageDataCache {
-  public static readonly type = "[File] Clear Image Data";
 
-  constructor(public hduIds: string[]) {}
-}
 
 /**
  * Close File Actions
@@ -195,6 +191,24 @@ export class SaveAllDataFilesFail {
   public static readonly type = "[DataFile] Save All Files Fail";
 
   constructor(public errors: any) {}
+}
+
+export class InvalidateHeader {
+  public static readonly type = "[Workbench HDU State] Invalidate Header";
+
+  constructor(public hduId: string) {}
+}
+
+export class InvalidateRawImageTiles {
+  public static readonly type = "[Workbench HDU State] Invalidate Raw Image Tiles";
+
+  constructor(public hduId: string) {}
+}
+
+export class InvalidateRawImageTile {
+  public static readonly type = "[Workbench HDU State] Invalidate Raw Image Tile";
+
+  constructor(public hduId: string, public tileIndex: number) {}
 }
 
 /**

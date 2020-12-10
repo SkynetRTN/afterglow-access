@@ -39,8 +39,8 @@ export interface PixelOpsFormData {
 
 export interface AlignFormData {
   selectedHduIds: string[];
+  refHduId: string;
   mode: "astrometric" | "manual_source";
-  inPlace: boolean;
 }
 
 export interface BatchPhotometryFormData {

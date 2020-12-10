@@ -38,6 +38,8 @@ import {
   LoadHdu,
   CloseDataFileSuccess,
   CloseDataFileFail,
+  InvalidateRawImageTiles,
+  InvalidateRawImageTile,
   InvalidateNormalizedImageTiles,
   UpdateNormalizedImageTile,
   UpdateNormalizer,
@@ -58,6 +60,9 @@ import {
   UpdateNormalizedImageTileFail,
   UpdateCompositeImageTileFail,
   UpdateTransform,
+  SaveDataFile,
+  SaveDataFileFail,
+  InvalidateHeader,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -144,6 +149,11 @@ export class DataFilesState {
   @Selector()
   static getFiles(state: DataFilesStateModel) {
     return Object.values(state.fileEntities);
+  }
+
+  @Selector()
+  static getFileIds(state: DataFilesStateModel) {
+    return state.fileIds;
   }
 
   @Selector()
@@ -375,6 +385,13 @@ export class DataFilesState {
       flatMap((v) => dispatch(new CloseDataFileSuccess(fileId))),
       catchError((err) => dispatch(new CloseDataFileFail(fileId, err)))
     );
+  }
+
+  @Action(SaveDataFile)
+  @ImmutableContext()
+  public saveDataFile({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { fileId }: SaveDataFile) {
+    let file = getState().fileEntities[fileId];
+    dispatch(new SaveDataFileFail(fileId, ""));
   }
 
   @Action(LoadDataFile)
@@ -939,6 +956,77 @@ export class DataFilesState {
     );
   }
 
+  @Action(InvalidateHeader)
+  @ImmutableContext()
+  public invalidateHeader(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId }: InvalidateRawImageTiles
+  ) {
+    let state = getState();
+    if (
+      !state.hduEntities[hduId] ||
+      !state.hduEntities[hduId].headerId ||
+      !state.headerEntities[state.hduEntities[hduId].headerId]
+    ) {
+      return;
+    }
+
+    setState((state: DataFilesStateModel) => {
+      let header = state.headerEntities[state.hduEntities[hduId].headerId];
+      header.loaded = false;
+
+      state.headerEntities[header.id] = { ...header };
+
+      return state;
+    });
+  }
+
+  @Action(InvalidateRawImageTiles)
+  @ImmutableContext()
+  public invalidateRawImageTiles(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId }: InvalidateRawImageTiles
+  ) {
+    let state = getState();
+    if (
+      !(hduId in state.hduEntities) ||
+      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      !(state.hduEntities[hduId] as ImageHdu).rawImageDataId
+    )
+      return;
+
+    let rawImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).rawImageDataId];
+
+    return dispatch(rawImageData.tiles.map((tile) => new InvalidateRawImageTile(hduId, tile.index)));
+  }
+
+  @Action(InvalidateRawImageTile)
+  @ImmutableContext()
+  public invalidateRawImageTile(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId, tileIndex }: InvalidateRawImageTile
+  ) {
+    let state = getState();
+    if (
+      !(hduId in state.hduEntities) ||
+      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      !(state.hduEntities[hduId] as ImageHdu).rawImageDataId
+    )
+      return;
+
+    setState((state: DataFilesStateModel) => {
+      let rawImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).rawImageDataId];
+      let tile = rawImageData.tiles[tileIndex];
+      tile.isValid = false;
+
+      state.imageDataEntities[rawImageData.id] = { ...rawImageData };
+
+      return state;
+    });
+
+    return dispatch(new InvalidateNormalizedImageTile(hduId, tileIndex));
+  }
+
   @Action(InvalidateNormalizedImageTiles)
   @ImmutableContext()
   public invalidateNormalizedImageTiles(
@@ -1038,7 +1126,7 @@ export class DataFilesState {
       return dispatch(actions);
     };
 
-    if (rawTile.pixelsLoaded) {
+    if (rawTile.pixelsLoaded && rawTile.isValid) {
       return onRawPixelsLoaded();
     } else if (!rawTile.pixelsLoading) {
       setState((state: DataFilesStateModel) => {
