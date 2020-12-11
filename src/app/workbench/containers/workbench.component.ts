@@ -140,6 +140,7 @@ import { IImageData } from "../../data-files/models/image-data";
 import { Wcs } from "../../image-tools/wcs";
 import { ISelectedFileListItem } from "./workbench-data-file-list/workbench-data-file-list.component";
 import { view } from "paper";
+import { OpenFileDialogComponent } from '../../data-providers/components/open-file-dialog/open-file-dialog.component';
 
 @Component({
   selector: "app-workbench",
@@ -1512,6 +1513,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   //   if(!files) return;
   //   this.store.dispatch(new SetMultiFileSelection(files.map(f => f.id)));
   // }
+
+  openFiles() {
+    let dialogRef = this.dialog.open(OpenFileDialogComponent, {
+      width: "80vw",
+      maxWidth: "1200px"
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        
+      }
+    });
+  }
 
   closeAllFiles() {
     let dialogRef = this.dialog.open(ConfirmationDialogComponent, {

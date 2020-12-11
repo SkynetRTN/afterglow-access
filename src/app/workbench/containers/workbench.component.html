@@ -80,6 +80,15 @@
     </button> -->
           <button
             mat-icon-button
+            aria-label="Open files"
+            (click)="openFiles()"
+            matTooltip="Open files"
+          >
+            <mat-icon>folder_open</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
             [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
             aria-label="Close all files"
             (click)="closeAllFiles()"

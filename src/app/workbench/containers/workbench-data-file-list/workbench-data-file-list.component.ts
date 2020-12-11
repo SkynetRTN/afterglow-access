@@ -12,7 +12,7 @@ import { DataFile, IHdu } from "../../../data-files/models/data-file";
 import { Store } from "@ngxs/store";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { BehaviorSubject, Observable, combineLatest } from "rxjs";
-import { distinctUntilChanged, map, switchMap, tap, distinctUntilKeyChanged } from "rxjs/operators";
+import { distinctUntilChanged, map, switchMap, tap, distinctUntilKeyChanged, filter } from "rxjs/operators";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import {
   TREE_ACTIONS,
@@ -110,6 +110,7 @@ export class WorkbenchDataFileListComponent {
           ...fileIds.map((fileId) => {
             let file$ = this.store.select(DataFilesState.getFileById).pipe(
               map((fn) => fn(fileId)),
+              filter(f => f != null),
               distinctUntilKeyChanged('id'),
               distinctUntilKeyChanged('name'),
               distinctUntilKeyChanged('hduIds'),
@@ -120,6 +121,7 @@ export class WorkbenchDataFileListComponent {
                 combineLatest(
                   file.hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(
                     map((fn) => fn(hduId)),
+                    filter(f => f != null),
                     distinctUntilKeyChanged('id'),
                     distinctUntilKeyChanged('modified'),
                     distinctUntilKeyChanged('hduType'),

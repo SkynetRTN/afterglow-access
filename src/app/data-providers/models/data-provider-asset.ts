@@ -1,6 +1,8 @@
-export interface DataProviderAsset {
+export interface FileSystemItem {
+  assetPath: string;
+  dataProviderId: string;
   name: string;
-  collection: boolean;
-  path: string;
-  metadata: { [key: string]: any };
+  isDirectory: boolean;
+  items: FileSystemItem[];
+  metadata: {[key: string]: any}
 }

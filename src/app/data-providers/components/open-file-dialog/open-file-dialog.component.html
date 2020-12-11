@@ -1,0 +1,38 @@
+<div mat-dialog-title class="dialog-title">
+  <h4 i18n>Open File</h4>
+</div>
+
+<!-- See https://js.devexpress.com/Demos/WidgetsGallery/Demo/FileManager/UICustomization/Angular/Light/ for customization -->
+<mat-dialog-content>
+  <dx-file-manager
+    id="fileManager"
+    [fileSystemProvider]="fileSystem$ | async"
+    [currentPath]="currentFileSystemPath$ | async"
+    height="60vh"
+    (onCurrentDirectoryChanged)="onCurrentDirectoryChanged($event)"
+    (onSelectionChanged)="onSelectionChange($event)"
+  >
+    <dxo-item-view [showParentFolder]="false" [showParentFolder]="true">
+      <dxo-details>
+        <dxi-column dataField="thumbnail"></dxi-column>
+        <dxi-column dataField="name"></dxi-column>
+        <dxi-column *ngFor="let column of (fileManagerDetailsColumns$ | async)" [dataField]="column.dataField" [caption]="column.caption"></dxi-column>
+      </dxo-details>
+    </dxo-item-view>
+    <dxo-toolbar>
+      <!-- <dxi-item name="showNavPane" visible="true"></dxi-item>
+    <dxi-item name="separator"></dxi-item> -->
+      <dxi-item name="upload"></dxi-item>
+      <dxi-item name="download"></dxi-item>
+      <dxi-item name="separator" location="after"></dxi-item>
+      <dxi-item name="refresh"></dxi-item>
+      <dxi-file-selection-item name="clearSelection"></dxi-file-selection-item>
+    </dxo-toolbar>
+    <dxo-permissions create="false" copy="false" move="false" delete="false" rename="false" upload="true" download="true">
+    </dxo-permissions>
+  </dx-file-manager>
+</mat-dialog-content>
+<mat-dialog-actions style="justify-content: flex-end;" class="pb-4">
+  <button mat-raised-button (click)="openFiles()" [disabled]="!(openBtnEnabled$ | async)">Open</button>
+  <button mat-raised-button [mat-dialog-close]="false">Cancel</button>
+</mat-dialog-actions>

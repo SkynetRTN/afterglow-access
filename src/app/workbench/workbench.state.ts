@@ -2575,66 +2575,66 @@ export class WorkbenchState {
     return merge(jobSuccessful$, jobUpdated$);
   }
 
-  @Action(ImportFromSurvey)
-  @ImmutableContext()
-  public importFromSurvey(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { surveyDataProviderId, raHours, decDegs, widthArcmins, heightArcmins, imageFileId, correlationId }: ImportFromSurvey
-  ) {
-    let importFromSurveyCorrId = this.correlationIdGenerator.next();
-    setState((state: WorkbenchStateModel) => {
-      state.dssImportLoading = true;
-      return state;
-    });
-    let importCompleted$ = this.actions$.pipe(
-      ofActionDispatched(ImportAssetsCompleted),
-      filter<ImportAssetsCompleted>((action) => action.correlationId == importFromSurveyCorrId),
-      take(1),
-      flatMap((action) => {
-        dispatch(new LoadLibrary());
-        dispatch(new ImportFromSurveySuccess());
-        let state = getState();
-        let viewers = WorkbenchState.getViewers(state);
+  // @Action(ImportFromSurvey)
+  // @ImmutableContext()
+  // public importFromSurvey(
+  //   { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+  //   { surveyDataProviderId, raHours, decDegs, widthArcmins, heightArcmins, imageFileId, correlationId }: ImportFromSurvey
+  // ) {
+  //   let importFromSurveyCorrId = this.correlationIdGenerator.next();
+  //   setState((state: WorkbenchStateModel) => {
+  //     state.dssImportLoading = true;
+  //     return state;
+  //   });
+  //   let importCompleted$ = this.actions$.pipe(
+  //     ofActionDispatched(ImportAssetsCompleted),
+  //     filter<ImportAssetsCompleted>((action) => action.correlationId == importFromSurveyCorrId),
+  //     take(1),
+  //     flatMap((action) => {
+  //       dispatch(new LoadLibrary());
+  //       dispatch(new ImportFromSurveySuccess());
+  //       let state = getState();
+  //       let viewers = WorkbenchState.getViewers(state);
 
-        return this.actions$.pipe(
-          ofActionCompleted(LoadLibrary),
-          take(1),
-          filter((loadLibraryAction) => loadLibraryAction.result.successful),
-          tap((loadLibraryAction) => {
-            setState((state: WorkbenchStateModel) => {
-              state.dssImportLoading = false;
-              return state;
-            });
-            let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-            if (action.fileIds[0] in hduEntities) {
-              let hdu = hduEntities[action.fileIds[0]];
-              dispatch(
-                new SelectDataFileListItem({
-                  fileId: hdu.fileId,
-                  hduId: hdu.id,
-                })
-              );
-            }
-          })
-        );
-      })
-    );
-    dispatch(
-      new ImportAssets(
-        surveyDataProviderId,
-        [
-          {
-            name: "",
-            collection: false,
-            path: `DSS\\${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
-            metadata: {},
-          },
-        ],
-        importFromSurveyCorrId
-      )
-    );
-    return importCompleted$;
-  }
+  //       return this.actions$.pipe(
+  //         ofActionCompleted(LoadLibrary),
+  //         take(1),
+  //         filter((loadLibraryAction) => loadLibraryAction.result.successful),
+  //         tap((loadLibraryAction) => {
+  //           setState((state: WorkbenchStateModel) => {
+  //             state.dssImportLoading = false;
+  //             return state;
+  //           });
+  //           let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+  //           if (action.fileIds[0] in hduEntities) {
+  //             let hdu = hduEntities[action.fileIds[0]];
+  //             dispatch(
+  //               new SelectDataFileListItem({
+  //                 fileId: hdu.fileId,
+  //                 hduId: hdu.id,
+  //               })
+  //             );
+  //           }
+  //         })
+  //       );
+  //     })
+  //   );
+  //   dispatch(
+  //     new ImportAssets(
+  //       surveyDataProviderId,
+  //       [
+  //         {
+  //           name: "",
+  //           collection: false,
+  //           path: `DSS\\${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
+  //           metadata: {},
+  //         },
+  //       ],
+  //       importFromSurveyCorrId
+  //     )
+  //   );
+  //   return importCompleted$;
+  // }
 
   /* Source Extraction */
   @Action(ExtractSources)

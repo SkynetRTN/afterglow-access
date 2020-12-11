@@ -447,7 +447,14 @@ div.ui-datatable-scrollable-body {
   min-width: 250px;
 }
 
+/* Data Provider File Manager */
+.dx-drawer-panel-content.dx-drawer-panel-content-initial {
+  display: none !important;
+}
+
 /** Data File List Tree */
+
+
 
 div.tree div.tree-children::before,
 div.tree::before {

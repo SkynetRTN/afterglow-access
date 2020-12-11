@@ -16,7 +16,7 @@ import { of, merge, interval, Observable } from "rxjs";
 import { tap, skip, takeUntil, flatMap, map, takeWhile, filter, catchError, take } from "rxjs/operators";
 
 import { DataProvider } from "./models/data-provider";
-import { DataProviderAsset } from "./models/data-provider-asset";
+import { FileSystemItem } from "./models/data-provider-asset";
 import {
   LoadDataProviders,
   LoadDataProvidersSuccess,
@@ -24,72 +24,49 @@ import {
   LoadDataProviderAssets,
   LoadDataProviderAssetsSuccess,
   LoadDataProviderAssetsFail,
-  SortDataProviderAssets,
-  ImportSelectedAssets,
   ImportAssets,
   ImportAssetsCompleted,
-  ImportAssetsCancel,
   ImportAssetsStatusUpdated,
+  SetCurrentFileSystemItem,
 } from "./data-providers.actions";
 import { AfterglowDataProviderService } from "../workbench/services/afterglow-data-providers";
 import {
-  UpdateJobSuccess,
   CreateJob,
-  CreateJobSuccess,
-  CreateJobFail,
-  UpdateJobResultSuccess,
-  JobCompleted,
   UpdateJob,
 } from "../jobs/jobs.actions";
 import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from "../jobs/models/batch-import";
 import { JobType } from "../jobs/models/job-types";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
-import { Navigate } from "@ngxs/router-plugin";
-import { SetViewerData, SelectDataFileListItem } from "../workbench/workbench.actions";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
 import { JobsState } from "../jobs/jobs.state";
-import { LoadLibrary } from "../data-files/data-files.actions";
 import { ResetState } from "../auth/auth.actions";
-import { DataFilesState } from "../data-files/data-files.state";
 
 export interface DataProvidersStateModel {
   version: string;
   dataProvidersLoaded: boolean;
-  dataProviders: DataProvider[];
-  loadingAssets: boolean;
-  currentProvider: DataProvider;
-  currentPath: string;
-  currentPathBreadcrumbs: Array<{ name: string; url: string }>;
-  currentAssets: DataProviderAsset[];
-  userSortField: string;
-  userSortOrder: "" | "asc" | "desc";
-  currentSortField: string;
-  currentSortOrder: "" | "asc" | "desc";
+  dataProviderIds: string[];
+  dataProviderEntities: {[id: string]: DataProvider}
   importing: boolean;
+  selectedAssetImportCorrId: string;
   importErrors: Array<string>;
   importProgress: number;
-  lastPath: { [id: string]: string };
-  selectedAssetImportCorrId: string;
+  loadingAssets: boolean;
+  fileSystem: FileSystemItem[];
+  currentFileSystemPath: string;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: 'b191eee6-191d-4ea6-ba49-797ef3fb8e2d',
+  version: '91d88797-7f4e-4672-ab05-0a68ba7ae4a0',
   dataProvidersLoaded: false,
-  dataProviders: [],
-  loadingAssets: false,
-  currentProvider: null,
-  currentPath: "",
-  currentPathBreadcrumbs: [],
-  currentAssets: [],
-  userSortField: null,
-  userSortOrder: "asc",
-  currentSortField: null,
-  currentSortOrder: "asc",
+  dataProviderIds: [],
+  dataProviderEntities: {},
+  selectedAssetImportCorrId: null,
   importing: false,
   importErrors: [],
   importProgress: 0,
-  lastPath: {},
-  selectedAssetImportCorrId: null,
+  loadingAssets: false,
+  currentFileSystemPath: '/',
+  fileSystem: [],
 };
 
 @State<DataProvidersStateModel>({
@@ -115,38 +92,13 @@ export class DataProvidersState {
   }
 
   @Selector()
+  public static getDataProviderIds(state: DataProvidersStateModel) {
+    return Object.values(state.dataProviderEntities);
+  }
+
+  @Selector()
   public static getDataProviders(state: DataProvidersStateModel) {
-    return state.dataProviders;
-  }
-
-  @Selector()
-  public static getCurrentProvider(state: DataProvidersStateModel) {
-    return state.currentProvider;
-  }
-
-  @Selector()
-  public static getCurrentAssets(state: DataProvidersStateModel) {
-    return state.currentAssets;
-  }
-
-  @Selector()
-  public static getLoadingAssets(state: DataProvidersStateModel) {
-    return state.loadingAssets;
-  }
-
-  @Selector()
-  public static getCurrentPathBreadcrumbs(state: DataProvidersStateModel) {
-    return state.currentPathBreadcrumbs;
-  }
-
-  @Selector()
-  public static getCurrentSortField(state: DataProvidersStateModel) {
-    return state.currentSortField;
-  }
-
-  @Selector()
-  public static getCurrentSortOrder(state: DataProvidersStateModel) {
-    return state.currentSortOrder;
+    return Object.values(state.dataProviderEntities);
   }
 
   @Selector()
@@ -160,13 +112,18 @@ export class DataProvidersState {
   }
 
   @Selector()
-  public static getLastPath(state: DataProvidersStateModel) {
-    return state.lastPath;
+  public static getImportErrors(state: DataProvidersStateModel) {
+    return state.importErrors;
   }
 
   @Selector()
-  public static getImportErrors(state: DataProvidersStateModel) {
-    return state.importErrors;
+  public static getFileSystem(state: DataProvidersStateModel) {
+    return state.fileSystem;
+  }
+
+  @Selector()
+  public static getCurrentFileSystemPath(state: DataProvidersStateModel) {
+    return state.currentFileSystemPath;
   }
 
   @Action(ResetState)
@@ -183,8 +140,40 @@ export class DataProvidersState {
     return this.dataProviderService.getDataProviders().pipe(
       tap((dataProviders) => {
         setState((state: DataProvidersStateModel) => {
-          state.dataProviders = dataProviders;
           state.dataProvidersLoaded = true;
+          state.dataProviderIds = dataProviders.map(dp => dp.id);
+          dataProviders.forEach(dp => state.dataProviderEntities[dp.id]=dp)
+          
+          //remove data providers from file system root which are no longer present
+          state.fileSystem = state.fileSystem.filter(fsObject => state.dataProviderIds.includes(fsObject.assetPath))
+
+          dataProviders.forEach((dataProvider) => {
+            let dataProviderFileSystemObject = state.fileSystem.find(fsObj => fsObj.assetPath == dataProvider.id)
+            if(dataProviderFileSystemObject) {
+              let index = state.fileSystem.indexOf(dataProviderFileSystemObject)
+              //file system already exists.  update if necessary
+              state.fileSystem[index] = {
+                ...state.fileSystem[index],
+                metadata: {
+                  description: dataProvider.description
+                }
+              }
+            }
+            else {
+              //new file system
+              state.fileSystem.push({
+                dataProviderId: dataProvider.id,
+                assetPath: '',
+                isDirectory: true,
+                items: [],
+                name: dataProvider.name,
+                metadata: {
+                  description: dataProvider.description
+                }
+              })
+            }
+
+          })
           return state;
         });
       }),
@@ -201,7 +190,7 @@ export class DataProvidersState {
   @ImmutableContext()
   public loadDataProviderAssets(
     { setState, dispatch }: StateContext<DataProvidersStateModel>,
-    { dataProvider, path }: LoadDataProviderAssets
+    { dataProviderId, path }: LoadDataProviderAssets
   ) {
     setState((state: DataProvidersStateModel) => {
       if (state.importProgress == 100) {
@@ -214,40 +203,41 @@ export class DataProvidersState {
       return state;
     });
 
-    return this.dataProviderService.getAssets(dataProvider.id, path).pipe(
+    return this.dataProviderService.getAssets(dataProviderId, path).pipe(
       tap((assets) => {
         setState((state: DataProvidersStateModel) => {
           //split path into breadcrumb URIs
           state.loadingAssets = false;
-          state.currentProvider = dataProvider;
-          state.currentPath = path;
-
-          let breadcrumbs: Array<{ name: string; url: string }> = [];
-          if (dataProvider.browseable) {
-            breadcrumbs.push({ name: dataProvider.name, url: path ? "" : null });
-            if (path) {
-              let paths = path.split("/");
-              for (let i = 0; i < paths.length; i++) {
-                if (paths[i] == "") continue;
-                breadcrumbs.push({
-                  name: paths[i],
-                  url:
-                    i == paths.length - 1
-                      ? null
-                      : breadcrumbs[breadcrumbs.length - 1]["url"].concat(i == 0 ? "" : "/", paths[i]),
-                });
+          
+          //update filesystem
+          let target = state.fileSystem.find(fsObj => fsObj.assetPath == dataProviderId);
+          let currentPath = '';
+          if(path != '') {
+            path.split('/').forEach(name => {
+              currentPath += name;
+              target = target.items.find(fsObj => fsObj.assetPath == currentPath);
+              if(!target) {
+                target = {
+                  assetPath: currentPath,
+                  dataProviderId: dataProviderId,
+                  isDirectory: true,
+                  items: [],
+                  name: name,
+                  metadata: {}
+                };
+                target.items.push(target)
               }
-            }
+              currentPath += '/'
+            })
           }
-          state.currentPathBreadcrumbs = breadcrumbs;
-          state.currentAssets = assets;
-          state.lastPath[dataProvider.id] = path;
+          
+          target.items = assets;
 
           return state;
         });
       }),
       flatMap((assets) => {
-        return dispatch(new LoadDataProviderAssetsSuccess(dataProvider, path, assets));
+        return dispatch(new LoadDataProviderAssetsSuccess(dataProviderId, path, assets));
       }),
       catchError((err) => {
         setState((state: DataProvidersStateModel) => {
@@ -260,144 +250,192 @@ export class DataProvidersState {
     );
   }
 
-  @Action(SortDataProviderAssets)
+  @Action(SetCurrentFileSystemItem)
   @ImmutableContext()
-  public sortDataProviderAssets(
+  public setCurrentFileSystemPath(
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { fieldName, order }: SortDataProviderAssets
+    { targetItem }: SetCurrentFileSystemItem
   ) {
+
+
+    let actions = [];
     setState((state: DataProvidersStateModel) => {
-      let userSortField = state.userSortField;
-      let userSortOrder = state.userSortOrder;
-
-      let currentSortField = null;
-      let currentSortOrder: "" | "asc" | "desc" = "asc";
-
-      //if action sets the sort field, use it
-      if (fieldName) {
-        userSortField = fieldName;
-        if (order) userSortOrder = order;
+      if(!targetItem) {
+        //set path to root
+        state.currentFileSystemPath = '';
+        actions.push(new LoadDataProviders());
+        return state;
       }
 
-      if (userSortField) {
-        //verify that the user selected sort field exists
-        if (userSortField == "name") {
-          currentSortField = userSortField;
-          currentSortOrder = userSortOrder;
-        } else if (state.currentProvider) {
-          let col = state.currentProvider.columns.find((col) => col.fieldName == userSortField);
-          if (col) {
-            currentSortField = userSortField;
-            currentSortOrder = userSortOrder;
-          }
-        }
+      let dataProvider = state.dataProviderEntities[targetItem.dataProviderId];
+      if(!dataProvider) {
+        return state;
       }
+      state.currentFileSystemPath = `${dataProvider.name}/${targetItem.assetPath}`
+      actions.push(new LoadDataProviderAssets(dataProvider.id, targetItem.assetPath))
 
-      if (!currentSortField) {
-        //get default from current provider
-        if (state.currentProvider && state.currentProvider.sortBy) {
-          let col = state.currentProvider.columns.find((col) => col.name == state.currentProvider.sortBy);
-          if (col) {
-            currentSortField = col.fieldName;
-            currentSortOrder = state.currentProvider.sortAsc ? "asc" : "desc";
-          }
-        }
-      }
-
-      if (!currentSortField) {
-        //use defaults
-        currentSortField = "name";
-        currentSortOrder = "asc";
-      }
-
-      state.userSortField = userSortField;
-      state.userSortOrder = userSortOrder;
-      state.currentSortField = currentSortField;
-      state.currentSortOrder = currentSortOrder;
-      return state;
-    });
-  }
-
-  @Action(ImportSelectedAssets)
-  @ImmutableContext()
-  public importSelectedAssets(
-    { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { dataProviderId, assets }: ImportSelectedAssets
-  ) {
-    let importSelectedAssetsCorrId = this.correlationIdGenerator.next();
-    setState((state: DataProvidersStateModel) => {
-      state.importing = true;
-      state.importProgress = 0;
-      state.selectedAssetImportCorrId = importSelectedAssetsCorrId;
-      state.importErrors = [];
-
-      return state;
-    });
-
-    let importCompleted$ = this.actions$.pipe(
-      ofActionDispatched(ImportAssetsCompleted),
-      filter<ImportAssetsCompleted>((action) => action.correlationId == importSelectedAssetsCorrId),
-      take(1)
-    );
-
-    let importProgress$ = this.actions$.pipe(
-      ofActionDispatched(ImportAssetsStatusUpdated),
-      filter<ImportAssetsStatusUpdated>((action) => action.correlationId == importSelectedAssetsCorrId),
-      takeUntil(importCompleted$),
-      tap((action) => {
-        setState((state: DataProvidersStateModel) => {
-          state.importProgress = action.job.state.progress;
-          return state;
-        });
-      })
-    );
-
-    return merge(
-      dispatch(new ImportAssets(dataProviderId, assets, importSelectedAssetsCorrId)),
-      importProgress$,
-      importCompleted$.pipe(
-        flatMap((action) => {
-          setState((state: DataProvidersStateModel) => {
-            state.importing = false;
-            state.importProgress = 100;
-            state.importErrors = action.errors;
-
-            return state;
-          });
-
-          if (action.errors.length != 0) return of();
-          dispatch(new Navigate(["/"]));
-          dispatch(new LoadLibrary());
-          return this.actions$.pipe(
-            ofActionCompleted(LoadLibrary),
-            take(1),
-            filter((a) => a.result.successful),
-            tap((v) => {
-              let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-              if (action.fileIds[0] in hduEntities) {
-                let hdu = hduEntities[action.fileIds[0]];
-                dispatch(new SelectDataFileListItem({ fileId: hdu.fileId, hduId: hdu.id }));
-              }
-            })
-          );
+      //find item and clear child items to prevent flickered double loading within file manager
+      let target = state.fileSystem.find(item => item.dataProviderId == dataProvider.id)
+      let pathKeys = targetItem.assetPath.split('/')
+      if(pathKeys.length > 1 || pathKeys[0] != '') {
+        pathKeys.forEach(pathKey => {
+          if(!target) return;
+          target = target.items.find(item => item.name == pathKey)
         })
-      )
-    );
+      }
+      
+      if(target) {
+        target.items = [];
+      }
+      
+
+      
+      
+      return state;
+    })
+
+    return dispatch(actions);
+    
   }
+
+  // @Action(SortDataProviderAssets)
+  // @ImmutableContext()
+  // public sortDataProviderAssets(
+  //   { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
+  //   { fieldName, order }: SortDataProviderAssets
+  // ) {
+  //   setState((state: DataProvidersStateModel) => {
+  //     let userSortField = state.userSortField;
+  //     let userSortOrder = state.userSortOrder;
+
+  //     let currentSortField = null;
+  //     let currentSortOrder: "" | "asc" | "desc" = "asc";
+
+  //     //if action sets the sort field, use it
+  //     if (fieldName) {
+  //       userSortField = fieldName;
+  //       if (order) userSortOrder = order;
+  //     }
+
+  //     if (userSortField) {
+  //       //verify that the user selected sort field exists
+  //       if (userSortField == "name") {
+  //         currentSortField = userSortField;
+  //         currentSortOrder = userSortOrder;
+  //       } else if (state.currentProvider) {
+  //         let col = state.currentProvider.columns.find((col) => col.fieldName == userSortField);
+  //         if (col) {
+  //           currentSortField = userSortField;
+  //           currentSortOrder = userSortOrder;
+  //         }
+  //       }
+  //     }
+
+  //     if (!currentSortField) {
+  //       //get default from current provider
+  //       if (state.currentProvider && state.currentProvider.sortBy) {
+  //         let col = state.currentProvider.columns.find((col) => col.name == state.currentProvider.sortBy);
+  //         if (col) {
+  //           currentSortField = col.fieldName;
+  //           currentSortOrder = state.currentProvider.sortAsc ? "asc" : "desc";
+  //         }
+  //       }
+  //     }
+
+  //     if (!currentSortField) {
+  //       //use defaults
+  //       currentSortField = "name";
+  //       currentSortOrder = "asc";
+  //     }
+
+  //     state.userSortField = userSortField;
+  //     state.userSortOrder = userSortOrder;
+  //     state.currentSortField = currentSortField;
+  //     state.currentSortOrder = currentSortOrder;
+  //     return state;
+  //   });
+  // }
+
+  // @Action(ImportSelectedAssets)
+  // @ImmutableContext()
+  // public importSelectedAssets(
+  //   { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
+  //   { dataProviderId, assets }: ImportSelectedAssets
+  // ) {
+  //   let importSelectedAssetsCorrId = this.correlationIdGenerator.next();
+  //   setState((state: DataProvidersStateModel) => {
+  //     state.importing = true;
+  //     state.importProgress = 0;
+  //     state.selectedAssetImportCorrId = importSelectedAssetsCorrId;
+  //     state.importErrors = [];
+
+  //     return state;
+  //   });
+
+  //   let importCompleted$ = this.actions$.pipe(
+  //     ofActionDispatched(ImportAssetsCompleted),
+  //     filter<ImportAssetsCompleted>((action) => action.correlationId == importSelectedAssetsCorrId),
+  //     take(1)
+  //   );
+
+  //   let importProgress$ = this.actions$.pipe(
+  //     ofActionDispatched(ImportAssetsStatusUpdated),
+  //     filter<ImportAssetsStatusUpdated>((action) => action.correlationId == importSelectedAssetsCorrId),
+  //     takeUntil(importCompleted$),
+  //     tap((action) => {
+  //       setState((state: DataProvidersStateModel) => {
+  //         state.importProgress = action.job.state.progress;
+  //         return state;
+  //       });
+  //     })
+  //   );
+
+  //   return merge(
+  //     dispatch(new ImportAssets(dataProviderId, assets, importSelectedAssetsCorrId)),
+  //     importProgress$,
+  //     importCompleted$.pipe(
+  //       flatMap((action) => {
+  //         setState((state: DataProvidersStateModel) => {
+  //           state.importing = false;
+  //           state.importProgress = 100;
+  //           state.importErrors = action.errors;
+
+  //           return state;
+  //         });
+
+  //         if (action.errors.length != 0) return of();
+  //         dispatch(new Navigate(["/"]));
+  //         dispatch(new LoadLibrary());
+  //         return this.actions$.pipe(
+  //           ofActionCompleted(LoadLibrary),
+  //           take(1),
+  //           filter((a) => a.result.successful),
+  //           tap((v) => {
+  //             let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+  //             if (action.fileIds[0] in hduEntities) {
+  //               let hdu = hduEntities[action.fileIds[0]];
+  //               dispatch(new SelectDataFileListItem({ fileId: hdu.fileId, hduId: hdu.id }));
+  //             }
+  //           })
+  //         );
+  //       })
+  //     )
+  //   );
+  // }
 
   @Action(ImportAssets)
   @ImmutableContext()
   public importAssets(
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { dataProviderId, assets, correlationId }: ImportAssets
+    { assets }: ImportAssets
   ) {
     let job: BatchImportJob = {
       id: null,
       type: JobType.BatchImport,
       settings: assets.map((asset) => {
         return {
-          provider_id: parseInt(dataProviderId),
-          path: asset.path,
+          provider_id: parseInt(asset.dataProviderId),
+          path: asset.assetPath,
           recurse: false,
         } as BatchImportSettings;
       }),
@@ -408,51 +446,45 @@ export class DataProvidersState {
 
     let jobCompleted$ = this.actions$.pipe(
       ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == jobCorrelationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == jobCorrelationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
       filter((a) => a.action.correlationId == jobCorrelationId),
-      tap((action) => {
-        return dispatch(
-          new ImportAssetsCompleted(
-            assets,
-            [],
-            [`Unable to create the batch import job.  Please try again later: Error: ${action.error}`],
-            correlationId
-          )
-        );
-      })
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == jobCorrelationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
-        let result = jobEntity.result as BatchImportJobResult;
-        if (result.errors.length != 0) {
-          console.error("Errors encountered during import: ", result.errors);
+        if(a.result.successful) {
+          let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.action.job.id];
+          let result = jobEntity.result as BatchImportJobResult;
+          if (result.errors.length != 0) {
+            console.error("Errors encountered during import: ", result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error("Warnings encountered during import: ", result.warnings);
+          }
+          return dispatch(
+            new ImportAssetsCompleted(
+              assets,
+              result.file_ids.map((id) => id.toString()),
+              result.errors
+            )
+          );
         }
-        if (result.warnings.length != 0) {
-          console.error("Warnings encountered during import: ", result.warnings);
+        else if(a.result.canceled) {
+          return dispatch(
+            new ImportAssetsCompleted(
+              assets,
+              [],
+              [`Unable to import assets.  Operation was canceled`],
+            )
+          );
         }
-        return dispatch(
-          new ImportAssetsCompleted(
-            assets,
-            result.file_ids.map((id) => id.toString()),
-            result.errors,
-            correlationId
-          )
-        );
+        else if(a.result.error) {
+          return dispatch(
+            new ImportAssetsCompleted(
+              assets,
+              [],
+              [`Unable to import assets.  Please try again later: Error: ${a.result.error}`],
+            )
+          );
+        }
+       
       })
     );
 
@@ -462,10 +494,10 @@ export class DataProvidersState {
       takeUntil(jobCompleted$),
       tap((a) => {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
-        return dispatch(new ImportAssetsStatusUpdated(jobEntity.job as BatchImportJob, correlationId));
+        return dispatch(new ImportAssetsStatusUpdated(jobEntity.job as BatchImportJob));
       })
     );
 
-    return merge(jobSuccessful$, jobUpdated$);
+    return merge(jobCompleted$, jobUpdated$);
   }
 }

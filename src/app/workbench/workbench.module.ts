@@ -43,9 +43,6 @@ import { SvgTeardropMarkerComponent } from "./components/svg-teardrop-marker/svg
 import { PlotterComponent } from "./components/plotter/plotter.component";
 import { AppFooterComponent } from "./components/app-footer/app-footer.component";
 import { NavbarComponent } from "./components/navbar/navbar.component";
-import { DataProvidersComponent } from "./containers/data-providers/data-providers.component";
-import { DataProvidersIndexPageComponent } from "./containers/data-providers/data-providers-index-page/data-providers-index-page.component";
-import { DataProviderBrowsePageComponent } from "./containers/data-providers/data-provider-browse-page/data-provider-browse-page.component";
 import { WorkbenchComponent } from "./containers/workbench.component";
 import { DisplayToolsetComponent } from "./components/display-panel/display-panel.component";
 import { PlottingPanelComponent } from "./components/plotting-panel/plotting-panel.component";
@@ -77,6 +74,8 @@ import { ConfirmationDialogComponent } from "./components/confirmation-dialog/co
 import { AvatarModule } from "ngx-avatar";
 import { WorkbenchViewerLayoutComponent } from "./containers/workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.component";
+import { DxFileManagerModule } from 'devextreme-angular';
+import { FileBrowserComponent } from './components/file-browser/file-browser.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -93,9 +92,6 @@ export const COMPONENTS = [
   SvgTextMarkerComponent,
   SvgTeardropMarkerComponent,
   SvgLineMarkerComponent,
-  DataProvidersComponent,
-  DataProvidersIndexPageComponent,
-  DataProviderBrowsePageComponent,
   WorkbenchComponent,
   DisplayToolsetComponent,
   PlottingPanelComponent,
@@ -118,6 +114,7 @@ export const COMPONENTS = [
   ConfirmationDialogComponent,
   WorkbenchViewerPanelComponent,
   WorkbenchViewerLayoutComponent,
+  FileBrowserComponent,
 ];
 
 @NgModule({
@@ -143,7 +140,7 @@ export const COMPONENTS = [
     ThemePickerModule,
     AfterglowPlotlyModule,
     AvatarModule,
-    TreeModule,
+    DxFileManagerModule,
   ],
 
   declarations: COMPONENTS,
