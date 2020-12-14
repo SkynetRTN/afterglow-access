@@ -16,7 +16,7 @@ import { of, merge, interval, Observable } from "rxjs";
 import { tap, skip, takeUntil, flatMap, map, takeWhile, filter, catchError, take } from "rxjs/operators";
 
 import { DataProvider } from "./models/data-provider";
-import { FileSystemItem } from "./models/data-provider-asset";
+import { FileSystemItemData } from "./models/data-provider-asset";
 import {
   LoadDataProviders,
   LoadDataProvidersSuccess,
@@ -51,7 +51,7 @@ export interface DataProvidersStateModel {
   importErrors: Array<string>;
   importProgress: number;
   loadingAssets: boolean;
-  fileSystem: FileSystemItem[];
+  fileSystem: FileSystemItemData[];
   currentFileSystemPath: string;
 }
 

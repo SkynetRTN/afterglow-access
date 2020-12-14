@@ -6,7 +6,7 @@ import { map } from "rxjs/operators";
 import { appConfig } from "../../../environments/environment";
 
 import { DataProvider } from "../../data-providers/models/data-provider";
-import { FileSystemItem } from "../../data-providers/models/data-provider-asset";
+import { FileSystemItemData } from "../../data-providers/models/data-provider-asset";
 import { getCoreApiUrl } from "../../../environments/app-config";
 
 @Injectable()
@@ -51,7 +51,7 @@ export class AfterglowDataProviderService {
       .pipe(
         map((resp) =>
           resp.map((r) => {
-            let asset: FileSystemItem = {
+            let asset: FileSystemItemData = {
               name: r.name,
               isDirectory: r.collection,
               assetPath: r.path,

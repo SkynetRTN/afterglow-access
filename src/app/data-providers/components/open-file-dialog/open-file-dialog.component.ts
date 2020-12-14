@@ -5,11 +5,13 @@ import { Store, Actions, ofActionCompleted } from '@ngxs/store';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { dxFileManagerDetailsColumn } from 'devextreme/ui/file_manager';
+import CustomFileSystemProvider from 'devextreme/file_management/custom_provider';
 import { map, distinctUntilChanged, tap, take } from 'rxjs/operators';
-import { FileSystemItem } from '../../models/data-provider-asset';
 import { LoadLibrary } from '../../../data-files/data-files.actions';
 import { SelectDataFileListItem } from '../../../workbench/workbench.actions';
 import { DataFilesState } from "../../../data-files/data-files.state";
+import { FileSystemItemData } from '../../models/data-provider-asset';
+import FileSystemItem from 'devextreme/file_management/file_system_item';
 
 @Component({
   selector: 'app-open-file-dialog',
@@ -17,14 +19,19 @@ import { DataFilesState } from "../../../data-files/data-files.state";
   styleUrls: ['./open-file-dialog.component.scss']
 })
 export class OpenFileDialogComponent implements OnInit {
-  fileSystem$: Observable<FileSystemItem[]>;
+  fileSystemProvider: CustomFileSystemProvider;
+  fileSystem$: Observable<FileSystemItemData[]>;
   currentFileSystemPath$: Observable<string>;
   fileManagerDetailsColumns$: Observable<dxFileManagerDetailsColumn[]>;
-  selectedFileSystemItems$ = new BehaviorSubject<FileSystemItem[]>([]);
+  selectedFileSystemItems$ = new BehaviorSubject<FileSystemItemData[]>([]);
 
   openBtnEnabled$: Observable<boolean>;
 
   constructor(private store: Store, private actions$: Actions, private dialogRef: MatDialogRef<OpenFileDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: any) {
+    this.fileSystemProvider = new CustomFileSystemProvider({
+      getItems: this.getItems
+    });
+
     this.fileSystem$ = store.select(DataProvidersState.getFileSystem);
     this.currentFileSystemPath$ = store.select(DataProvidersState.getCurrentFileSystemPath);
     
@@ -60,6 +67,11 @@ export class OpenFileDialogComponent implements OnInit {
     this.openBtnEnabled$ = this.selectedFileSystemItems$.pipe(
       map(items => items.every(item => !item.isDirectory) && items.length != 0)
     )
+  }
+
+  getItems(parentDirectory: FileSystemItem) {
+    console.log(parentDirectory);
+    return [];
   }
 
   ngOnInit(): void {

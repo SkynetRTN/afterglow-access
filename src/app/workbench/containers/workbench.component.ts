@@ -1531,11 +1531,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: "300px",
       data: {
-        message: "Are you sure you want to close all files?",
-        confirmationBtn: {
-          color: "warn",
-          label: "Close All Files",
-        },
+        message: `Are you sure you want to close all files?`,
+        buttons: [
+          {
+            color: "warn",
+            value: true,
+            label: "Close File",
+          },
+          {
+            color: null,
+            value: false,
+            label: "Cancel",
+          },
+        ],
       },
     });
 

@@ -1,5 +1,5 @@
 import { DataProvider } from "./models/data-provider";
-import { FileSystemItem } from "./models/data-provider-asset";
+import { FileSystemItemData } from "./models/data-provider-asset";
 import { BatchImportJob } from "../jobs/models/batch-import";
 
 /**
@@ -30,13 +30,13 @@ export class LoadDataProviderAssets {
 export class SetCurrentFileSystemItem {
   public static readonly type = "[DataProvider] Set Current File System Item";
 
-  constructor(public targetItem: FileSystemItem) {}
+  constructor(public targetItem: FileSystemItemData) {}
 }
 
 export class LoadDataProviderAssetsSuccess {
   public static readonly type = "[DataProvider] Load Data Provider Assets Success";
 
-  constructor(public dataProviderId: string, public path: string, public assets: FileSystemItem[]) {}
+  constructor(public dataProviderId: string, public path: string, public assets: FileSystemItemData[]) {}
 }
 
 export class LoadDataProviderAssetsFail {
@@ -54,7 +54,7 @@ export class SortDataProviderAssets {
 export class ToggleDataProviderAssetSelect {
   public static readonly type = "[DataProvider] Toggle Data Provider Asset Select";
 
-  constructor(public asset: FileSystemItem) {}
+  constructor(public asset: FileSystemItemData) {}
 }
 
 export class SelectAllDataProviderAssets {
@@ -68,14 +68,14 @@ export class DeselectAllDataProviderAssets {
 export class ImportAssets {
   public static readonly type = "[DataProvider] Import Assets";
 
-  constructor(public assets: FileSystemItem[]) {}
+  constructor(public assets: FileSystemItemData[]) {}
 }
 
 export class ImportAssetsCompleted {
   public static readonly type = "[DataProvider] Import Assets Completed";
 
   constructor(
-    public assets: FileSystemItem[],
+    public assets: FileSystemItemData[],
     public fileIds: string[],
     public errors: string[],
     public correlationId?: string
