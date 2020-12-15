@@ -6,8 +6,9 @@ import { map } from "rxjs/operators";
 import { appConfig } from "../../../environments/environment";
 
 import { DataProvider } from "../../data-providers/models/data-provider";
-import { FileSystemItemData } from "../../data-providers/models/data-provider-asset";
+import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
 import { getCoreApiUrl } from "../../../environments/app-config";
+import UploadInfo from 'devextreme/file_management/upload_info';
 
 @Injectable()
 export class AfterglowDataProviderService {
@@ -42,7 +43,7 @@ export class AfterglowDataProviderService {
     );
   }
 
-  getAssets(dataProviderId: string, path: string) {
+  getAssets(dataProviderId: string, path: string) : Observable<DataProviderAsset[]> {
     let params: HttpParams = new HttpParams();
     if (path) params = params.set("path", path);
 
@@ -51,17 +52,65 @@ export class AfterglowDataProviderService {
       .pipe(
         map((resp) =>
           resp.map((r) => {
-            let asset: FileSystemItemData = {
+            let asset: DataProviderAsset = {
               name: r.name,
               isDirectory: r.collection,
               assetPath: r.path,
               metadata: r.metadata,
-              dataProviderId: dataProviderId,
-              items: []
+              dataProviderId: dataProviderId
             };
             return asset;
           })
         )
       );
+  }
+
+  downloadAsset(dataProviderId: string, path: string) : Observable<any> {
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", path);
+
+    return this.http
+    .get(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),{
+      responseType: 'blob'
+    })
+  }
+
+  deleteAsset(dataProviderId: string, path: string, recursive: boolean=false) : Observable<any> {
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", path);
+    if(recursive) {
+      params = params.set('force', 'true');
+    }
+    
+
+    return this.http
+    .delete(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString())
+  }
+
+  updateAssetName(dataProviderId: string, path: string, name: string) : Observable<any> {
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", path);
+
+    return this.http
+    .put(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString(), {name: name})
+  }
+
+  createCollectionAsset(dataProviderId: string, path: string) : Observable<any> {
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", path);
+
+    return this.http
+    .post(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString(), null)
+  }
+
+  createAsset(dataProviderId: string, path: string, file: File, uploadInfo: UploadInfo) : Observable<any> {
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", path);
+
+    let formData = new FormData();
+    formData.append('file', uploadInfo.chunkBlob)
+
+    return this.http
+    .post(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(), formData)
   }
 }

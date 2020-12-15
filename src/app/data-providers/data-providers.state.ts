@@ -16,18 +16,18 @@ import { of, merge, interval, Observable } from "rxjs";
 import { tap, skip, takeUntil, flatMap, map, takeWhile, filter, catchError, take } from "rxjs/operators";
 
 import { DataProvider } from "./models/data-provider";
-import { FileSystemItemData } from "./models/data-provider-asset";
+import { DataProviderAsset } from "./models/data-provider-asset";
 import {
   LoadDataProviders,
   LoadDataProvidersSuccess,
   LoadDataProvidersFail,
-  LoadDataProviderAssets,
+  LoadAssets,
   LoadDataProviderAssetsSuccess,
   LoadDataProviderAssetsFail,
   ImportAssets,
   ImportAssetsCompleted,
   ImportAssetsStatusUpdated,
-  SetCurrentFileSystemItem,
+  SetCurrentPath,
 } from "./data-providers.actions";
 import { AfterglowDataProviderService } from "../workbench/services/afterglow-data-providers";
 import {
@@ -45,14 +45,12 @@ export interface DataProvidersStateModel {
   version: string;
   dataProvidersLoaded: boolean;
   dataProviderIds: string[];
-  dataProviderEntities: {[id: string]: DataProvider}
+  dataProviderEntities: { [id: string]: DataProvider }
   importing: boolean;
   selectedAssetImportCorrId: string;
   importErrors: Array<string>;
   importProgress: number;
-  loadingAssets: boolean;
-  fileSystem: FileSystemItemData[];
-  currentFileSystemPath: string;
+  currentPath: string;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
@@ -64,9 +62,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importing: false,
   importErrors: [],
   importProgress: 0,
-  loadingAssets: false,
-  currentFileSystemPath: '/',
-  fileSystem: [],
+  currentPath: '/',
 };
 
 @State<DataProvidersStateModel>({
@@ -79,7 +75,7 @@ export class DataProvidersState {
     private actions$: Actions,
     private store: Store,
     private correlationIdGenerator: CorrelationIdGenerator
-  ) {}
+  ) { }
 
   @Selector()
   public static getState(state: DataProvidersStateModel) {
@@ -93,7 +89,7 @@ export class DataProvidersState {
 
   @Selector()
   public static getDataProviderIds(state: DataProvidersStateModel) {
-    return Object.values(state.dataProviderEntities);
+    return state.dataProviderIds;
   }
 
   @Selector()
@@ -117,18 +113,24 @@ export class DataProvidersState {
   }
 
   @Selector()
-  public static getFileSystem(state: DataProvidersStateModel) {
-    return state.fileSystem;
+  public static getCurrentPath(state: DataProvidersStateModel) {
+    return state.currentPath;
   }
 
   @Selector()
-  public static getCurrentFileSystemPath(state: DataProvidersStateModel) {
-    return state.currentFileSystemPath;
+  public static getCurrentDataProvider(state: DataProvidersStateModel) {
+    let dpName = state.currentPath.split('/')[0];
+    if (!dpName) {
+      return null;
+    }
+    return Object.values(state.dataProviderEntities).find(dp => dp.name == dpName)
   }
+
+
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, { }: ResetState) {
     setState((state: DataProvidersStateModel) => {
       return dataProvidersDefaultState;
     });
@@ -142,38 +144,38 @@ export class DataProvidersState {
         setState((state: DataProvidersStateModel) => {
           state.dataProvidersLoaded = true;
           state.dataProviderIds = dataProviders.map(dp => dp.id);
-          dataProviders.forEach(dp => state.dataProviderEntities[dp.id]=dp)
-          
-          //remove data providers from file system root which are no longer present
-          state.fileSystem = state.fileSystem.filter(fsObject => state.dataProviderIds.includes(fsObject.assetPath))
+          dataProviders.forEach(dp => state.dataProviderEntities[dp.id] = dp)
 
-          dataProviders.forEach((dataProvider) => {
-            let dataProviderFileSystemObject = state.fileSystem.find(fsObj => fsObj.assetPath == dataProvider.id)
-            if(dataProviderFileSystemObject) {
-              let index = state.fileSystem.indexOf(dataProviderFileSystemObject)
-              //file system already exists.  update if necessary
-              state.fileSystem[index] = {
-                ...state.fileSystem[index],
-                metadata: {
-                  description: dataProvider.description
-                }
-              }
-            }
-            else {
-              //new file system
-              state.fileSystem.push({
-                dataProviderId: dataProvider.id,
-                assetPath: '',
-                isDirectory: true,
-                items: [],
-                name: dataProvider.name,
-                metadata: {
-                  description: dataProvider.description
-                }
-              })
-            }
+          // //remove data providers from file system root which are no longer present
+          // state.fileSystem = state.fileSystem.filter(fsObject => state.dataProviderIds.includes(fsObject.assetPath))
 
-          })
+          // dataProviders.forEach((dataProvider) => {
+          //   let dataProviderFileSystemObject = state.fileSystem.find(fsObj => fsObj.assetPath == dataProvider.id)
+          //   if (dataProviderFileSystemObject) {
+          //     let index = state.fileSystem.indexOf(dataProviderFileSystemObject)
+          //     //file system already exists.  update if necessary
+          //     state.fileSystem[index] = {
+          //       ...state.fileSystem[index],
+          //       metadata: {
+          //         description: dataProvider.description
+          //       }
+          //     }
+          //   }
+          //   else {
+          //     //new file system
+          //     state.fileSystem.push({
+          //       dataProviderId: dataProvider.id,
+          //       assetPath: '',
+          //       isDirectory: true,
+          //       items: [],
+          //       name: dataProvider.name,
+          //       metadata: {
+          //         description: dataProvider.description
+          //       }
+          //     })
+          //   }
+
+          // })
           return state;
         });
       }),
@@ -186,116 +188,88 @@ export class DataProvidersState {
     );
   }
 
-  @Action(LoadDataProviderAssets)
-  @ImmutableContext()
-  public loadDataProviderAssets(
-    { setState, dispatch }: StateContext<DataProvidersStateModel>,
-    { dataProviderId, path }: LoadDataProviderAssets
-  ) {
-    setState((state: DataProvidersStateModel) => {
-      if (state.importProgress == 100) {
-        state.importProgress = 0;
-        state.importErrors = [];
-        state.importing = false;
-      }
-      state.loadingAssets = true;
+  // @Action(LoadAssets)
+  // @ImmutableContext()
+  // public loadDataProviderAssets(
+  //   { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
+  //   { }: LoadAssets
+  // ) {
 
-      return state;
-    });
+  //   setState((state: DataProvidersStateModel) => {
+  //     state.loadingAssets = true;
+  //     return state;
+  //   });
 
-    return this.dataProviderService.getAssets(dataProviderId, path).pipe(
-      tap((assets) => {
-        setState((state: DataProvidersStateModel) => {
-          //split path into breadcrumb URIs
-          state.loadingAssets = false;
-          
-          //update filesystem
-          let target = state.fileSystem.find(fsObj => fsObj.assetPath == dataProviderId);
-          let currentPath = '';
-          if(path != '') {
-            path.split('/').forEach(name => {
-              currentPath += name;
-              target = target.items.find(fsObj => fsObj.assetPath == currentPath);
-              if(!target) {
-                target = {
-                  assetPath: currentPath,
-                  dataProviderId: dataProviderId,
-                  isDirectory: true,
-                  items: [],
-                  name: name,
-                  metadata: {}
-                };
-                target.items.push(target)
-              }
-              currentPath += '/'
-            })
-          }
-          
-          target.items = assets;
+  //   let state = getState();
+  //   if(state.currentPath == '/' || state.currentPath == '') {
+  //     // root - return data providers
+  //     return state.
+  //   }
 
-          return state;
-        });
-      }),
-      flatMap((assets) => {
-        return dispatch(new LoadDataProviderAssetsSuccess(dataProviderId, path, assets));
-      }),
-      catchError((err) => {
-        setState((state: DataProvidersStateModel) => {
-          //split path into breadcrumb URIs
-          state.loadingAssets = false;
-          return state;
-        });
-        return dispatch(new LoadDataProviderAssetsFail(err));
-      })
-    );
-  }
+  //   return this.dataProviderService.getAssets(dataProviderId, path).pipe(
+  //     tap((assets) => {
+  //       setState((state: DataProvidersStateModel) => {
+  //         //split path into breadcrumb URIs
+  //         state.loadingAssets = false;
 
-  @Action(SetCurrentFileSystemItem)
+  //         //update filesystem
+  //         let target = state.fileSystem.find(fsObj => fsObj.assetPath == dataProviderId);
+  //         let currentPath = '';
+  //         if (path != '') {
+  //           path.split('/').forEach(name => {
+  //             currentPath += name;
+  //             target = target.items.find(fsObj => fsObj.assetPath == currentPath);
+  //             if (!target) {
+  //               target = {
+  //                 assetPath: currentPath,
+  //                 dataProviderId: dataProviderId,
+  //                 isDirectory: true,
+  //                 items: [],
+  //                 name: name,
+  //                 metadata: {}
+  //               };
+  //               target.items.push(target)
+  //             }
+  //             currentPath += '/'
+  //           })
+  //         }
+
+  //         target.items = assets;
+
+  //         return state;
+  //       });
+  //     }),
+  //     flatMap((assets) => {
+  //       return dispatch(new LoadDataProviderAssetsSuccess(dataProviderId, path, assets));
+  //     }),
+  //     catchError((err) => {
+  //       setState((state: DataProvidersStateModel) => {
+  //         //split path into breadcrumb URIs
+  //         state.loadingAssets = false;
+  //         return state;
+  //       });
+  //       return dispatch(new LoadDataProviderAssetsFail(err));
+  //     })
+  //   );
+  // }
+
+  @Action(SetCurrentPath)
   @ImmutableContext()
   public setCurrentFileSystemPath(
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { targetItem }: SetCurrentFileSystemItem
+    { path }: SetCurrentPath
   ) {
-
 
     let actions = [];
     setState((state: DataProvidersStateModel) => {
-      if(!targetItem) {
-        //set path to root
-        state.currentFileSystemPath = '';
-        actions.push(new LoadDataProviders());
-        return state;
+      if(path != state.currentPath) {
+        state.currentPath = path;
       }
-
-      let dataProvider = state.dataProviderEntities[targetItem.dataProviderId];
-      if(!dataProvider) {
-        return state;
-      }
-      state.currentFileSystemPath = `${dataProvider.name}/${targetItem.assetPath}`
-      actions.push(new LoadDataProviderAssets(dataProvider.id, targetItem.assetPath))
-
-      //find item and clear child items to prevent flickered double loading within file manager
-      let target = state.fileSystem.find(item => item.dataProviderId == dataProvider.id)
-      let pathKeys = targetItem.assetPath.split('/')
-      if(pathKeys.length > 1 || pathKeys[0] != '') {
-        pathKeys.forEach(pathKey => {
-          if(!target) return;
-          target = target.items.find(item => item.name == pathKey)
-        })
-      }
-      
-      if(target) {
-        target.items = [];
-      }
-      
-
-      
       
       return state;
     })
-
     return dispatch(actions);
-    
+
   }
 
   // @Action(SortDataProviderAssets)
@@ -449,7 +423,7 @@ export class DataProvidersState {
       filter((a) => a.action.correlationId == jobCorrelationId),
       take(1),
       tap((a) => {
-        if(a.result.successful) {
+        if (a.result.successful) {
           let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.action.job.id];
           let result = jobEntity.result as BatchImportJobResult;
           if (result.errors.length != 0) {
@@ -466,7 +440,7 @@ export class DataProvidersState {
             )
           );
         }
-        else if(a.result.canceled) {
+        else if (a.result.canceled) {
           return dispatch(
             new ImportAssetsCompleted(
               assets,
@@ -475,7 +449,7 @@ export class DataProvidersState {
             )
           );
         }
-        else if(a.result.error) {
+        else if (a.result.error) {
           return dispatch(
             new ImportAssetsCompleted(
               assets,
@@ -484,7 +458,7 @@ export class DataProvidersState {
             )
           );
         }
-       
+
       })
     );
 

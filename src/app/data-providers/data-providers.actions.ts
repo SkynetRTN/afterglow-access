@@ -1,42 +1,42 @@
 import { DataProvider } from "./models/data-provider";
-import { FileSystemItemData } from "./models/data-provider-asset";
+import { DataProviderAsset } from "./models/data-provider-asset";
 import { BatchImportJob } from "../jobs/models/batch-import";
 
 /**
  * Load Library Actions
  */
 export class LoadDataProviders {
-  public static readonly type = "[DataProvider] Load Data Provider";
+  public static readonly type = "[DataProvider] Load Data Providers";
 }
 
 export class LoadDataProvidersSuccess {
-  public static readonly type = "[DataProvider] Load Data Provider Success";
+  public static readonly type = "[DataProvider] Load Data Providers Success";
 
   constructor(public dataProviders: DataProvider[]) {}
 }
 
 export class LoadDataProvidersFail {
-  public static readonly type = "[DataProvider] Load Data Provider Fail";
+  public static readonly type = "[DataProvider] Load Data Providers Fail";
 
   constructor(public error: any) {}
 }
 
-export class LoadDataProviderAssets {
-  public static readonly type = "[DataProvider] Load Data Provider Assets";
+export class LoadAssets {
+  public static readonly type = "[DataProvider] Load Assets";
 
-  constructor(public dataProviderId: string, public path: string) {}
+  constructor() {}
 }
 
-export class SetCurrentFileSystemItem {
-  public static readonly type = "[DataProvider] Set Current File System Item";
+export class SetCurrentPath {
+  public static readonly type = "[DataProvider] Set Current Path";
 
-  constructor(public targetItem: FileSystemItemData) {}
+  constructor(public path: string) {}
 }
 
 export class LoadDataProviderAssetsSuccess {
   public static readonly type = "[DataProvider] Load Data Provider Assets Success";
 
-  constructor(public dataProviderId: string, public path: string, public assets: FileSystemItemData[]) {}
+  constructor(public dataProviderId: string, public path: string, public assets: DataProviderAsset[]) {}
 }
 
 export class LoadDataProviderAssetsFail {
@@ -54,7 +54,7 @@ export class SortDataProviderAssets {
 export class ToggleDataProviderAssetSelect {
   public static readonly type = "[DataProvider] Toggle Data Provider Asset Select";
 
-  constructor(public asset: FileSystemItemData) {}
+  constructor(public asset: DataProviderAsset) {}
 }
 
 export class SelectAllDataProviderAssets {
@@ -68,14 +68,14 @@ export class DeselectAllDataProviderAssets {
 export class ImportAssets {
   public static readonly type = "[DataProvider] Import Assets";
 
-  constructor(public assets: FileSystemItemData[]) {}
+  constructor(public assets: DataProviderAsset[]) {}
 }
 
 export class ImportAssetsCompleted {
   public static readonly type = "[DataProvider] Import Assets Completed";
 
   constructor(
-    public assets: FileSystemItemData[],
+    public assets: DataProviderAsset[],
     public fileIds: string[],
     public errors: string[],
     public correlationId?: string
