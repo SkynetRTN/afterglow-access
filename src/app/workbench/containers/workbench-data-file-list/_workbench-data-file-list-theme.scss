@@ -47,7 +47,7 @@
     }
 
     .node-content {
-      padding: 4px 5px;
+      padding: 3px 5px;
     }
 
     div.tree div.tree-children::before,
@@ -64,11 +64,11 @@
     }
 
     div.tree tree-node > div .toggle-children-wrapper {
-      margin-top: 11px;  //shift toggle down to accomodate node-content padding
+      margin-top: 9px;  //shift toggle down to accomodate node-content padding
     }
 
     div.tree tree-node > div::before {
-      margin-top: 19px; //shift horizontal hash down to accomodate node-content padding
+      margin-top: 17px; //shift horizontal hash down to accomodate node-content padding
     }
     
     div.tree tree-node > div .toggle-children-wrapper::before {
@@ -81,6 +81,9 @@
       left: 2px;
     }
 
+    .node-content-wrapper {
+      border: solid 1px mat-color($primary, 0);
+    }
 
     .node-content-wrapper-active,
     .node-content-wrapper.node-content-wrapper-active:hover,

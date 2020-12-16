@@ -163,7 +163,48 @@ export class FileManagerComponent implements OnInit {
   /**
    * A function that copies files or folders.
    */
-  copyItem(item: FileSystemItem, destinationDirectory: FileSystemItem) {
+  copyItem(item: FileSystemItem, destinationDirectory: FileSystemItem, keepOriginal=true) {
+    let destinationAsset: DataProviderAsset = destinationDirectory.dataItem;
+    if(!destinationAsset) {
+      return Promise.reject({ errorCode: 32767, errorText: 'Invalid destination' })
+    }
+
+    let asset: DataProviderAsset = item.dataItem;
+    if(!asset) {
+      return Promise.reject({ errorCode: 32767, errorText: 'Invalid file' })
+    }
+
+    let newAssetPath = `${destinationAsset.assetPath}/${asset.name}`;
+    if (!destinationAsset.assetPath) {
+      newAssetPath = asset.name;
+    }
+
+    let destinationProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[destinationAsset.dataProviderId];
+    if(!destinationProvider) {
+      return Promise.reject({ errorCode: 32767, errorText: 'Invalid destination' })
+    }
+
+    if(destinationProvider.readonly) {
+      return Promise.reject({ errorCode: 32767, errorText: 'Destination is readonly' })
+    }
+    let newDataProviderId = destinationProvider.id;
+
+    
+
+    let provider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[asset.dataProviderId];
+    if(!provider) {
+      return Promise.reject({ errorCode: 32767, errorText: 'Invalid file' })
+    }
+
+    if(!keepOriginal && provider.readonly) {
+      return Promise.reject({ errorCode: 32767, errorText: 'Source is readonly' })
+    }
+
+    return this.dataProviderService.copyAsset(asset.dataProviderId, asset.assetPath, newDataProviderId, newAssetPath, keepOriginal).pipe(
+      take(1)
+    ).toPromise().catch(
+      (resp) => this.handleErrorResponse(resp)
+    );
 
   }
 
@@ -249,7 +290,7 @@ export class FileManagerComponent implements OnInit {
    * A function that moves files and folders.
    */
   moveItem(item: FileSystemItem, destinationDirectory: FileSystemItem) {
-
+    return this.copyItem(item, destinationDirectory, false);
   }
 
   /**
@@ -257,7 +298,7 @@ export class FileManagerComponent implements OnInit {
    */
   renameItem(item: FileSystemItem, newName: string) {
     let asset: DataProviderAsset = item.dataItem;
-    return this.dataProviderService.updateAssetName(asset.dataProviderId, asset.assetPath, newName).pipe(
+    return this.dataProviderService.renameAsset(asset.dataProviderId, asset.assetPath, newName).pipe(
       take(1)
     ).toPromise();
   }
@@ -267,9 +308,9 @@ export class FileManagerComponent implements OnInit {
    */
   uploadFileChunk(file: File, uploadInfo: UploadInfo, destinationDirectory: FileSystemItem) {
     let destinationAsset: DataProviderAsset = destinationDirectory.dataItem;
-    let path = `${destinationAsset.assetPath}/${name}`;
+    let path = `${destinationAsset.assetPath}/${file.name}`;
     if (!destinationAsset.assetPath) {
-      path = name;
+      path = file.name;
     }
     return this.dataProviderService.createAsset(destinationAsset.dataProviderId, path, file, uploadInfo).pipe(
       take(1)

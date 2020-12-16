@@ -87,7 +87,25 @@ export class AfterglowDataProviderService {
     .delete(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString())
   }
 
-  updateAssetName(dataProviderId: string, path: string, name: string) : Observable<any> {
+  moveAsset(dataProviderId: string, path: string, newDataProviderId: string, newPath: string) : Observable<any> {
+    return this.copyAsset(dataProviderId, path, newDataProviderId, newPath, false);
+  }
+
+  copyAsset(dataProviderId: string, path: string, newDataProviderId: string, newPath: string, keepOriginal: boolean = true) : Observable<any> {
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", newPath);
+    if(!keepOriginal) {
+      params = params.set("move", '1');
+    }
+
+    return this.http
+    .post(`${getCoreApiUrl(appConfig)}/data-providers/${newDataProviderId}/assets/data?` + params.toString(), {
+      src_provider_id: dataProviderId,
+      src_path: path
+    })
+  }
+
+  renameAsset(dataProviderId: string, path: string, name: string) : Observable<any> {
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
@@ -100,7 +118,7 @@ export class AfterglowDataProviderService {
     params = params.set("path", path);
 
     return this.http
-    .post(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString(), null)
+    .post(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(), null)
   }
 
   createAsset(dataProviderId: string, path: string, file: File, uploadInfo: UploadInfo) : Observable<any> {

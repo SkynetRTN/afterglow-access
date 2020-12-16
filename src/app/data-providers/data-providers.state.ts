@@ -98,6 +98,11 @@ export class DataProvidersState {
   }
 
   @Selector()
+  public static getDataProviderEntities(state: DataProvidersStateModel) {
+    return state.dataProviderEntities;
+  }
+
+  @Selector()
   public static getImporting(state: DataProvidersStateModel) {
     return state.importing;
   }
