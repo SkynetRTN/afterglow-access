@@ -1,0 +1,14 @@
+@mixin file-manager-theme($theme) {
+    $primary: map-get($theme, primary);
+    $accent: map-get($theme, accent);
+    $warn: map-get($theme, warn);
+    $background: map-get($theme, background);
+    $foreground: map-get($theme, foreground);
+  
+    app-file-manager {
+      .dx-menu-item, .dx-button-mode-text .dx-icon, .dx-button-mode-text {
+        color: mat-color($foreground, text);
+      }
+    }
+  }
+  

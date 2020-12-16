@@ -20,6 +20,7 @@ import { SetFullScreen, Initialize } from "./workbench/workbench.actions";
 import { finalize, map, tap, filter, take } from "rxjs/operators";
 import { Navigate } from "@ngxs/router-plugin";
 import { WasmService } from "./wasm.service";
+import themes from "devextreme/ui/themes";
 // import * as FontFaceObserver from "fontfaceobserver"
 
 @Component({
@@ -80,19 +81,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fontWeight = theme.fontWeight;
     if (this.fontWeight != "default") this.renderer.addClass(document.body, this.fontWeight);
 
-    this.themeStorage.onThemeUpdate.subscribe((theme) => {
-      this.renderer.removeClass(document.body, this.colorThemeName);
-      this.colorThemeName = theme.colorThemeName;
-      this.renderer.addClass(document.body, this.colorThemeName);
-
-      if (this.fontSize != "default") this.renderer.removeClass(document.body, this.fontSize);
-      this.fontSize = theme.fontSize;
-      if (this.fontSize != "default") this.renderer.addClass(document.body, this.fontSize);
-
-      if (this.fontWeight != "default") this.renderer.removeClass(document.body, this.fontWeight);
-      this.fontWeight = theme.fontWeight;
-      if (this.fontWeight != "default") this.renderer.addClass(document.body, this.fontWeight);
-    });
+    this.themeStorage.onThemeUpdate.subscribe(this.onThemeUpdate.bind(this));
+    //initialize theme
+    this.onThemeUpdate(this.themeStorage.getCurrentTheme());
 
     this.hotKeys.push(
       new Hotkey(
@@ -267,6 +258,24 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     // })
   }
 
+  onThemeUpdate(theme) {
+    this.renderer.removeClass(document.body, this.colorThemeName);
+    this.colorThemeName = theme.colorThemeName;
+    this.renderer.addClass(document.body, this.colorThemeName);
+
+    if (this.fontSize != "default") this.renderer.removeClass(document.body, this.fontSize);
+    this.fontSize = theme.fontSize;
+    if (this.fontSize != "default") this.renderer.addClass(document.body, this.fontSize);
+
+    if (this.fontWeight != "default") this.renderer.removeClass(document.body, this.fontWeight);
+    this.fontWeight = theme.fontWeight;
+    if (this.fontWeight != "default") this.renderer.addClass(document.body, this.fontWeight);
+
+    let colorTheme = this.themeStorage.getCurrentColorTheme();
+
+    console.log("SETTING DEV EX THEME TO: ", colorTheme.devExTheme.name);
+    themes.current(colorTheme.devExTheme.name);
+  }
   getTitle(state, parent) {
     var data = [];
     if (parent && parent.snapshot.data && parent.snapshot.data.title) {

@@ -6,6 +6,9 @@
 @import "./app/workbench/containers/workbench-data-file-list/workbench-data-file-list-theme";
 @import "./app/workbench/components/display-panel/display-panel-theme";
 @import "./app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme";
+@import "./app/data-providers/components/file-manager/file-manager-theme";
+
+
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -39,6 +42,7 @@
   @include image-viewer-status-bar-theme($theme);
   @include workbench-viewer-panel-theme($theme);
   @include workbench-data-file-list-theme($theme);
+  @include file-manager-theme($theme);
 
   .context-menu .context-label {
     padding-right: 30px;

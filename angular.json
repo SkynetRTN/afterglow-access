@@ -21,13 +21,17 @@
             "polyfills": "src/polyfills.ts",
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              {
+                "glob": "**/*",
+                "input": "./node_modules/devextreme/dist/css/",
+                "output": "./devex/"
+              },
             ],
             "styles": [
               "node_modules/bootstrap-css-only/css/bootstrap.min.css",
               "node_modules/videogular2/fonts/videogular.css",
               "node_modules/devextreme/dist/css/dx.common.css",
-              "node_modules/devextreme/dist/css/dx.light.css",
               "src/styles.scss"
             ],
             "scripts": [

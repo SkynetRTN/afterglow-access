@@ -13,6 +13,10 @@ export interface PlotlyTheme {
   legendFontColor: string;
 }
 
+export interface DevExTheme {
+  name: string
+}
+
 export interface AfterglowTheme {
   colorThemeName: string;
   fontSize: "default" | "large" | "largest";
@@ -25,6 +29,7 @@ export interface AfterglowColorTheme {
   primaryIconColor: string;
   secondaryIconColor: string;
   plotlyTheme: PlotlyTheme;
+  devExTheme: DevExTheme;
 }
 
 @Injectable()
@@ -62,6 +67,9 @@ export class ThemeStorage {
         modeBarActiveColor: "#757575",
         legendFontColor: "#757575",
       },
+      devExTheme: {
+        name: 'dx.light'
+      }
     },
     {
       name: "cyan-dark-theme",
@@ -91,6 +99,9 @@ export class ThemeStorage {
         modeBarActiveColor: "#FFFFFF",
         legendFontColor: "#FFFFFF",
       },
+      devExTheme: {
+        name: 'dx.dark'
+      }
     },
     {
       name: "high-contrast-theme",
@@ -120,6 +131,9 @@ export class ThemeStorage {
         modeBarActiveColor: "#FFEB3B",
         legendFontColor: "#FFEB3B",
       },
+      devExTheme: {
+        name: 'dx.dark'
+      }
     },
   ];
 
