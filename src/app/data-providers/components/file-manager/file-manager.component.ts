@@ -95,6 +95,10 @@ export class FileManagerComponent implements OnInit {
           return [{
             dataField: 'metadata.description',
             caption: 'description',
+          },
+          {
+            dataField: 'metadata.permissions',
+            caption: 'permissions',
           }];
         }
         return dataProvider.columns.map(column => {
@@ -263,7 +267,7 @@ export class FileManagerComponent implements OnInit {
           assetPath: '',
           dataProviderId: dataProvider.id,
           isDirectory: true,
-          metadata: {},
+          metadata: {description: dataProvider.description, permissions: dataProvider.readonly ? 'readonly' : ''},
           name: dataProvider.name
         }
       }))
