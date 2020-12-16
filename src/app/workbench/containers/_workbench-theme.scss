@@ -15,6 +15,10 @@
           color: mat-color($foreground, text);
         }
 
+        .sidebar-panel {
+          background: mat-color($background, card);
+        }
+
         .file-list-panel {
           background: mat-color($background, card);
         }
