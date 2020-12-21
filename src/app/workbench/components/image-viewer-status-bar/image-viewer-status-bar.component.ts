@@ -2,7 +2,6 @@ import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from "@angu
 import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
 import { Subject, timer } from "rxjs";
 import { MatDialog } from "@angular/material/dialog";
-import { ConfirmationDialogComponent } from "../confirmation-dialog/confirmation-dialog.component";
 import { takeUntil } from "rxjs/operators";
 import { Store } from "@ngxs/store";
 import { CloseDataFile, ZoomTo } from "../../../data-files/data-files.actions";

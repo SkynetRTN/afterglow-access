@@ -50,7 +50,7 @@ export interface DataProvidersStateModel {
   selectedAssetImportCorrId: string;
   importErrors: Array<string>;
   importProgress: number;
-  currentPath: string;
+  currentFileSystemPath: string;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
@@ -62,7 +62,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importing: false,
   importErrors: [],
   importProgress: 0,
-  currentPath: '/',
+  currentFileSystemPath: '/',
 };
 
 @State<DataProvidersStateModel>({
@@ -118,13 +118,24 @@ export class DataProvidersState {
   }
 
   @Selector()
-  public static getCurrentPath(state: DataProvidersStateModel) {
-    return state.currentPath;
+  public static getCurrentFileSystemPath(state: DataProvidersStateModel) {
+    return state.currentFileSystemPath;
+  }
+
+  @Selector()
+  public static getCurrentAssetPath(state: DataProvidersStateModel) {
+    if(state.currentFileSystemPath == '') return null;
+
+    let pathKeys = state.currentFileSystemPath.split('/');
+    if(pathKeys.length == 1) return '';
+
+    let result = pathKeys.slice(1).join('/');
+    return result;
   }
 
   @Selector()
   public static getCurrentDataProvider(state: DataProvidersStateModel) {
-    let dpName = state.currentPath.split('/')[0];
+    let dpName = state.currentFileSystemPath.split('/')[0];
     if (!dpName) {
       return null;
     }
@@ -267,8 +278,8 @@ export class DataProvidersState {
 
     let actions = [];
     setState((state: DataProvidersStateModel) => {
-      if(path != state.currentPath) {
-        state.currentPath = path;
+      if(path != state.currentFileSystemPath) {
+        state.currentFileSystemPath = path;
       }
       
       return state;
@@ -412,9 +423,13 @@ export class DataProvidersState {
       id: null,
       type: JobType.BatchImport,
       settings: assets.map((asset) => {
+        let assetPath = asset.assetPath;
+        if(assetPath && assetPath[0] == '/') {
+          assetPath = assetPath.slice(1);
+        }
         return {
           provider_id: parseInt(asset.dataProviderId),
-          path: asset.assetPath,
+          path: assetPath,
           recurse: false,
         } as BatchImportSettings;
       }),

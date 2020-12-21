@@ -71,7 +71,7 @@ var afterglow_plotly_module_1 = require("../afterglow-plotly/afterglow-plotly.mo
 var help_dialog_component_1 = require("./components/help-dialog/help-dialog.component");
 var rectangle_marker_editor_component_1 = require("./components/rectangle-marker-editor/rectangle-marker-editor.component");
 var theme_dialog_component_1 = require("./components/theme-dialog/theme-dialog.component");
-var confirmation_dialog_component_1 = require("./components/confirmation-dialog/confirmation-dialog.component");
+var alert_dialog_component_1 = require("./components/alert-dialog/alert-dialog.component");
 var ngx_avatar_1 = require("ngx-avatar");
 var workbench_viewer_layout_component_1 = require("./containers/workbench-viewer-layout/workbench-viewer-layout.component");
 var hdu_selector_component_1 = require("./components/hdu-selector/hdu-selector.component");
@@ -111,7 +111,7 @@ exports.COMPONENTS = [
     pixel_ops_jobs_dialog_component_1.PixelOpsJobsDialogComponent,
     help_dialog_component_1.HelpDialogComponent,
     theme_dialog_component_1.ThemeDialogComponent,
-    confirmation_dialog_component_1.ConfirmationDialogComponent,
+    alert_dialog_component_1.AlertDialogComponent,
     workbench_viewer_panel_component_1.WorkbenchViewerPanelComponent,
     workbench_viewer_layout_component_1.WorkbenchViewerLayoutComponent,
     file_browser_component_1.FileBrowserComponent,
@@ -162,7 +162,7 @@ var WorkbenchModule = /** @class */ (function () {
                 pixel_ops_jobs_dialog_component_1.PixelOpsJobsDialogComponent,
                 help_dialog_component_1.HelpDialogComponent,
                 theme_dialog_component_1.ThemeDialogComponent,
-                confirmation_dialog_component_1.ConfirmationDialogComponent,
+                alert_dialog_component_1.AlertDialogComponent,
             ]
         })
     ], WorkbenchModule);

@@ -23,6 +23,7 @@ import {
   ITreeOptions,
   ITreeState,
 } from "@circlon/angular-tree-component";
+import { DataProvidersState } from '../../../data-providers/data-providers.state';
 
 interface INode {
   id: string;
@@ -131,12 +132,17 @@ export class WorkbenchDataFileListComponent {
             );
             return combineLatest(file$, hdus$).pipe(
               map(([file, hdus]) => {
+                let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[file.dataProviderId];
                 let result: INode = null;
+                let tooltip = file.name;
+                if(dataProvider && file.assetPath != null) {
+                  tooltip = `${dataProvider.name}${file.assetPath}`
+                }
                 if (hdus.length > 1) {
                   result = {
                     id: file.id,
                     name: file.name,
-                    tooltip: file.name,
+                    tooltip: tooltip,
                     children: hdus.map((hdu, index) => ({
                       id: `${file.id}-${hdu.id}`,
                       name: `Channel ${index}`,
@@ -147,7 +153,7 @@ export class WorkbenchDataFileListComponent {
                       hduId: hdu.id,
                       showButtonBar: false,
                       icon: hdu.hduType == HduType.IMAGE ? "insert_photo" : "toc",
-                      tooltip: `${file.name} - Channel ${index}`,
+                      tooltip: `${tooltip} - Channel ${index}`,
                       modified: null,
                     })),
                     hasChildren: true,
@@ -163,7 +169,7 @@ export class WorkbenchDataFileListComponent {
                   result = {
                     id: `${file.id}-${hdu.id}`,
                     name: file.name,
-                    tooltip: file.name,
+                    tooltip: tooltip,
                     children: [],
                     hasChildren: false,
                     isExpanded: false,

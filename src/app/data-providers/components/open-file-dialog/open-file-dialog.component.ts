@@ -43,8 +43,8 @@ export class OpenFileDialogComponent implements OnInit {
 
     let asset: DataProviderAsset = fileSystemItem.dataItem;
     if (!asset || asset.isDirectory) return;
-
-    return this.openAssets([asset]);
+    
+    this.dialogRef.close([asset])
   }
 
   onErrorOccurred($event) {
@@ -57,25 +57,7 @@ export class OpenFileDialogComponent implements OnInit {
     selectedAssets = selectedAssets.filter(asset => !asset.isDirectory);
     if (selectedAssets.length == 0) return;
 
-    return this.openAssets(selectedAssets);
-  }
-
-  openAssets(assets: DataProviderAsset[]) {
-    this.store.dispatch(new ImportAssets(assets));
-    this.actions$.pipe(
-      ofActionCompleted(ImportAssetsCompleted),
-      take(1)
-    ).subscribe((v) => {
-      let action: ImportAssetsCompleted = v.action;
-
-      this.store.dispatch(new LoadLibrary()).subscribe(() => {
-        if (action.fileIds.length != 0) {
-          let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]]
-          this.store.dispatch(new SelectDataFileListItem({ fileId: hdu.fileId, hduId: hdu.id }))
-        }
-      });
-      this.dialogRef.close();
-    })
+    this.dialogRef.close(selectedAssets);
   }
 
 

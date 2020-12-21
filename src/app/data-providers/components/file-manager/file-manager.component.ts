@@ -22,6 +22,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class FileManagerComponent implements OnInit {
 
   @Input()
+  selectionMode: string = 'single';
+
+  @Input()
   create: boolean = false;
 
   @Input()
@@ -47,6 +50,9 @@ export class FileManagerComponent implements OnInit {
 
   @Output()
   readonly onAssetSelectionChange: EventEmitter<DataProviderAsset[]> = new EventEmitter<DataProviderAsset[]>();
+
+  @Output()
+  readonly onCurrentAssetChanged: EventEmitter<DataProviderAsset> = new EventEmitter<DataProviderAsset>();
 
   @ViewChild(DxFileManagerComponent, { static: false }) fileManager: DxFileManagerComponent
 
@@ -76,7 +82,7 @@ export class FileManagerComponent implements OnInit {
     });
 
 
-    this.currentFileSystemPath$ = store.select(DataProvidersState.getCurrentPath).pipe(
+    this.currentFileSystemPath$ = store.select(DataProvidersState.getCurrentFileSystemPath).pipe(
       distinctUntilChanged()
     );
 
@@ -119,6 +125,13 @@ export class FileManagerComponent implements OnInit {
   onCurrentDirectoryChanged($event) {
     let fileSystemItem: FileSystemItem = $event.directory;
     this.store.dispatch(new SetCurrentPath(fileSystemItem.path))
+
+    let asset: DataProviderAsset = fileSystemItem.dataItem;
+    if(!asset) {
+      asset = null;
+    }
+
+    this.onCurrentAssetChanged.emit(asset)
   }
 
   onSelectionChange($event) {
@@ -179,9 +192,6 @@ export class FileManagerComponent implements OnInit {
     }
 
     let newAssetPath = `${destinationAsset.assetPath}/${asset.name}`;
-    if (!destinationAsset.assetPath) {
-      newAssetPath = asset.name;
-    }
 
     let destinationProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[destinationAsset.dataProviderId];
     if(!destinationProvider) {
@@ -218,9 +228,6 @@ export class FileManagerComponent implements OnInit {
   createDirectory(parentDirectory: FileSystemItem, name: string) {
     let parentAsset: DataProviderAsset = parentDirectory.dataItem;
     let path = `${parentAsset.assetPath}/${name}`;
-    if (!parentAsset.assetPath) {
-      path = name;
-    }
 
     return this.dataProviderService.createCollectionAsset(parentAsset.dataProviderId, path).pipe(
       take(1)
@@ -313,9 +320,6 @@ export class FileManagerComponent implements OnInit {
   uploadFileChunk(file: File, uploadInfo: UploadInfo, destinationDirectory: FileSystemItem) {
     let destinationAsset: DataProviderAsset = destinationDirectory.dataItem;
     let path = `${destinationAsset.assetPath}/${file.name}`;
-    if (!destinationAsset.assetPath) {
-      path = file.name;
-    }
     return this.dataProviderService.createAsset(destinationAsset.dataProviderId, path, file, uploadInfo).pipe(
       take(1)
     ).toPromise();

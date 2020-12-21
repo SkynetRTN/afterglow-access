@@ -5,7 +5,7 @@
 <!-- See https://js.devexpress.com/Demos/WidgetsGallery/Demo/FileManager/UICustomization/Angular/Light/ for customization -->
 <mat-dialog-content>
   <app-file-manager [create]="true" [copy]="true" [move]="true" [delete]="true" [rename]="true" [upload]="true"
-    [download]="true" (onAssetSelectionChange)="selectedAssets$.next($event)"
+    [download]="true" [selectionMode]="'multiple'" (onAssetSelectionChange)="selectedAssets$.next($event)"
     (onSelectedAssetOpened)="openSelectedAssets()">
   </app-file-manager>
 </mat-dialog-content>

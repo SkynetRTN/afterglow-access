@@ -57,16 +57,17 @@
         fxFlexFill
         (mouseenter)="onMouseEnterNode(node.data)"
         (mouseleave)="onMouseLeaveNode(node.data)"
+        
       >
-        <div fxFlex="1 1 auto" class="node-text">
-          <span [matTooltip]="node.data.tooltip" [matTooltipShowDelay]="500">
+        <div fxFlex="1 1 auto" class="node-text" [matTooltip]="node.data.tooltip" [matTooltipShowDelay]="500">
+          <span>
             <mat-icon *ngIf="node.data.icon" aria-hidden="false" aria-label="image icon" class="small">{{ node.data.icon }}</mat-icon>
             <span>{{ node.data.name }}</span>
           </span>
         </div>
         <div *ngIf="node.data.showButtonBar" fxFlex="0 0 80px" class="node-buttons" style="text-align: right">
           <button
-            [hidden]="hoverNodeId != node.data.id || !node.data.modified"
+            [hidden]="hoverNodeId != node.data.id"
             mat-icon-button
             class="small mr-2"
             aria-label="Save File"

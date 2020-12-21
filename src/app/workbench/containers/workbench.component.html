@@ -86,19 +86,28 @@
           >
             <mat-icon>folder_open</mat-icon>
           </button>
+          <button
+          mat-icon-button
+          [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
+          aria-label="Save all files"
+          (click)="onSaveAllFilesBtnClick()"
+          matTooltip="Save all files"
+        >
+        <mat-icon>save</mat-icon>
+        </button>
+          
 
           <button
             mat-icon-button
             [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
             aria-label="Close all files"
-            (click)="closeAllFiles()"
-            matTooltip="Remove all files"
+            (click)="onCloseAllFilesBtnClick()"
+            matTooltip="Close all files"
           >
             <mat-icon>highlight_off</mat-icon>
           </button>
           <button
             mat-icon-button
-            [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
             aria-label="Refresh File List"
             (click)="refresh()"
             matTooltip="Refresh File List"
@@ -127,8 +136,8 @@
               [selectedItem]="selectedDataFileListItem$ | async"
               (onSelectionChange)="onItemSelect($event)"
               (onItemDoubleClick)="onItemDoubleClick($event)"
-              (onSaveFile)="onSaveFile($event)"
-              (onCloseFile)="onCloseFile($event)"
+              (onSaveFile)="onSaveFileBtnClick($event)"
+              (onCloseFile)="onCloseFileBtnClick($event)"
             >
             </app-workbench-data-file-list>
           </div>

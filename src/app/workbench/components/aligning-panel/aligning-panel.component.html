@@ -4,11 +4,13 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Align</mat-label>
         <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
-            {{ fileEntities[hdu.fileId].name }}
-            <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
-              - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
-            >
+          <mat-option *ngFor="let hdu of hdus" [value]="hdu?.id">
+            <ng-container *ngIf="hdu">
+              {{ fileEntities[hdu.fileId].name }}
+              <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
+                - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
+              >
+            </ng-container>
           </mat-option>
         </mat-select>
       </mat-form-field>

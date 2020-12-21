@@ -447,7 +447,7 @@ export class DataFilesState {
             dataFile = {
               type: "file",
               id: hdu.fileId,
-              assetPath: coreFile.asset_path,
+              assetPath: '/' + coreFile.asset_path,
               dataProviderId: coreFile.data_provider,
               name: coreFile.name,
               hduIds: [hdu.id],
@@ -567,6 +567,11 @@ export class DataFilesState {
         return dispatch(actions);
       }),
       catchError((err) => {
+        setState((state: DataFilesStateModel) => {
+          state.loading = false;
+          return state;
+        });
+
         return dispatch(new LoadLibraryFail(err, correlationId));
       })
     );

@@ -44,6 +44,9 @@ export class AfterglowDataProviderService {
   }
 
   getAssets(dataProviderId: string, path: string) : Observable<DataProviderAsset[]> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     if (path) params = params.set("path", path);
 
@@ -55,7 +58,7 @@ export class AfterglowDataProviderService {
             let asset: DataProviderAsset = {
               name: r.name,
               isDirectory: r.collection,
-              assetPath: r.path,
+              assetPath: '/' + r.path,
               metadata: r.metadata,
               dataProviderId: dataProviderId
             };
@@ -66,6 +69,9 @@ export class AfterglowDataProviderService {
   }
 
   downloadAsset(dataProviderId: string, path: string) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
@@ -76,10 +82,13 @@ export class AfterglowDataProviderService {
   }
 
   deleteAsset(dataProviderId: string, path: string, recursive: boolean=false) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
     if(recursive) {
-      params = params.set('force', 'true');
+      params = params.set('force', '1');
     }
     
 
@@ -88,10 +97,22 @@ export class AfterglowDataProviderService {
   }
 
   moveAsset(dataProviderId: string, path: string, newDataProviderId: string, newPath: string) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
+    if(newPath && newPath[0] == '/') {
+      newPath = path.slice(1)
+    }
     return this.copyAsset(dataProviderId, path, newDataProviderId, newPath, false);
   }
 
   copyAsset(dataProviderId: string, path: string, newDataProviderId: string, newPath: string, keepOriginal: boolean = true) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
+    if(newPath && newPath[0] == '/') {
+      newPath = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     params = params.set("path", newPath);
     if(!keepOriginal) {
@@ -106,6 +127,9 @@ export class AfterglowDataProviderService {
   }
 
   renameAsset(dataProviderId: string, path: string, name: string) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
@@ -114,6 +138,9 @@ export class AfterglowDataProviderService {
   }
 
   createCollectionAsset(dataProviderId: string, path: string) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
@@ -122,6 +149,9 @@ export class AfterglowDataProviderService {
   }
 
   createAsset(dataProviderId: string, path: string, file: File, uploadInfo: UploadInfo) : Observable<any> {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
@@ -130,5 +160,26 @@ export class AfterglowDataProviderService {
 
     return this.http
     .post(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(), formData)
+  }
+
+  saveFile(fileId: string, dataProviderId: string, path: string, create: boolean=false) {
+    if(path && path[0] == '/') {
+      path = path.slice(1)
+    }
+    let params: HttpParams = new HttpParams();
+    params = params.set("path", path);
+    params = params.set("group_id", fileId);
+
+    let uri = `${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString();
+    if(!create) {
+      return this.http.put(uri, null)
+    }
+    else {
+      return this.http.post(uri, null)
+    }
+  }
+
+  saveFileAs(fileId: string, dataProviderId: string, path: string) {
+    return this.saveFile(fileId, dataProviderId, path, true);
   }
 }

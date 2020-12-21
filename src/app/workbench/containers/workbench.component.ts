@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Observable, combineLatest, merge, of, never, empty } from "rxjs";
+import { Observable, combineLatest, merge, of, never, empty, throwError } from "rxjs";
 import {
   map,
   tap,
@@ -13,6 +13,8 @@ import {
   skip,
   takeUntil,
   take,
+  flatMap,
+  catchError
 } from "rxjs/operators";
 
 import {
@@ -75,11 +77,14 @@ import {
   SetViewerSyncMode,
   SyncViewerNormalizations,
   SyncPlottingPanelStates,
+
 } from "../workbench.actions";
 import {
   LoadDataProviders,
   LoadDataProvidersSuccess,
   LoadDataProvidersFail,
+  ImportAssets,
+  ImportAssetsCompleted,
 } from "../../data-providers/data-providers.actions";
 import { ViewMode } from "../models/view-mode";
 import { MatButtonToggleChange } from "@angular/material/button-toggle";
@@ -89,7 +94,7 @@ import { Viewer, ImageViewer, TableViewer } from "../models/viewer";
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { CorrelationIdGenerator } from "../../utils/correlated-action";
 import { DataProvidersState } from "../../data-providers/data-providers.state";
-import { ConfirmationDialogComponent } from "../components/confirmation-dialog/confirmation-dialog.component";
+import { AlertDialogComponent } from "../components/alert-dialog/alert-dialog.component";
 import { Navigate } from "@ngxs/router-plugin";
 import { WorkbenchImageHduState } from "../models/workbench-file-state";
 import {
@@ -141,6 +146,15 @@ import { Wcs } from "../../image-tools/wcs";
 import { ISelectedFileListItem } from "./workbench-data-file-list/workbench-data-file-list.component";
 import { view } from "paper";
 import { OpenFileDialogComponent } from '../../data-providers/components/open-file-dialog/open-file-dialog.component';
+import { AfterglowDataProviderService } from '../services/afterglow-data-providers';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SaveDialogComponent } from '../../data-providers/components/save-dialog/save-dialog.component';
+
+interface SaveFileResult {
+  fileId: string,
+  dataProviderId: string,
+  assetPath: string
+}
 
 @Component({
   selector: "app-workbench",
@@ -243,7 +257,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     private _hotkeysService: HotkeysService,
     public dialog: MatDialog,
     private corrGen: CorrelationIdGenerator,
-    private activeRoute: ActivatedRoute
+    private activeRoute: ActivatedRoute,
+    private dataProviderService: AfterglowDataProviderService
   ) {
     this.files$ = this.store
       .select(DataFilesState.getFiles)
@@ -258,10 +273,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           fileEntities[a.fileId].name > fileEntities[b.fileId].name
             ? 1
             : a.fileId === b.fileId
-            ? a.order > b.order
-              ? 1
+              ? a.order > b.order
+                ? 1
+                : -1
               : -1
-            : -1
         );
       })
     );
@@ -1405,91 +1420,289 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
-  getFileSync$() {
+  afterLibrarySync() {
     this.store.dispatch(new LoadLibrary());
     this.store.dispatch(new LoadDataProviders());
 
     let loadLibrarySuccess$ = this.actions$.pipe(ofActionCompleted(LoadLibrarySuccess));
-    let loadLibraryFail$ = this.actions$.pipe(ofActionCompleted(LoadLibraryFail));
+    let loadLibraryFail$ = this.actions$.pipe(
+      ofActionCompleted(LoadLibraryFail),
+      map(v => throwError("Unable to load library"))
+    );
 
     let loadDataProvidersSuccess$ = this.actions$.pipe(ofActionCompleted(LoadDataProvidersSuccess));
-    let loadDataProvidersFail$ = this.actions$.pipe(ofActionCompleted(LoadDataProvidersFail));
+    let loadDataProvidersFail$ = this.actions$.pipe(
+      ofActionCompleted(LoadDataProvidersFail),
+      map(v => throwError("Unable to load data providers"))
+    )
 
-    return combineLatest(loadLibrarySuccess$, loadDataProvidersSuccess$).pipe(
+    return combineLatest([loadLibrarySuccess$, loadDataProvidersSuccess$]).pipe(
       takeUntil(merge(loadLibraryFail$, loadDataProvidersFail$).pipe()),
-      take(1)
+      take(1),
+      map(v => {
+        return {
+          dataProviderEntities: this.store.selectSnapshot(DataProvidersState.getDataProviderEntities),
+          fileEntities: this.store.selectSnapshot(DataFilesState.getFileEntities)
+        }
+      })
     );
   }
 
-  onSaveFile(fileId: string) {
-    this.store.dispatch(new SaveDataFile(fileId));
+  openSaveDialog(fileId: string): Observable<SaveFileResult> {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let file = fileEntities[fileId];
+
+    if (!file) {
+      return throwError("Invalid file")
+    }
+
+    let saveDialogRef = this.dialog.open(SaveDialogComponent, {
+      width: "80vw",
+      maxWidth: "1200px",
+      data: {
+        name: file.name
+      }
+    });
+
+    return saveDialogRef.afterClosed().pipe(
+      flatMap(saveDialogResult => {
+        if (saveDialogResult) {
+          let dataProviderId = saveDialogResult.dataProviderId;
+          let path = saveDialogResult.path;
+          let exists = saveDialogResult.exists;
+
+
+          return this.dataProviderService.saveFile(file.id, dataProviderId, path, !exists).pipe(
+            take(1),
+            map(v => {
+              let result: SaveFileResult = {
+                fileId: file.id,
+                assetPath: path,
+                dataProviderId: dataProviderId
+              }
+              return result;
+            }),
+            catchError((error) => {
+              let errorDialog = this.dialog.open(AlertDialogComponent, {
+                width: "400px",
+                data: {
+                  title: "Error",
+                  message: "An unexpected error was encountered when attempting to save the file.",
+                },
+              });
+              return errorDialog.afterClosed().pipe(map(v => null));
+            })
+          )
+        }
+        return of(null);
+
+      }));
   }
 
-  onCloseFile(fileId: string) {
-    this.getFileSync$().subscribe((v) => {
-      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-      let dataProviders = this.store.selectSnapshot(DataProvidersState.getDataProviders)
-      let file = this.store.selectSnapshot(DataFilesState.getFileEntities)[fileId];
-      if (!file) return;
+  saveFile(fileId: string, dataProviderId: string = null, assetPath: string = null): Observable<SaveFileResult> {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let file = fileEntities[fileId];
 
-      let modified = file.hduIds.map((hduId) => hduEntities[hduId].modified).some((v) => v);
-      let dataProvider = dataProviders.find(dp => dp.id == file.dataProviderId)
-      let readOnly = !dataProvider || dataProvider.readonly
+    if (!file) {
+      return throwError("Invalid file")
+    }
+    let dataProviderEntities = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities);
+    let dataProvider = dataProviderEntities[dataProviderId];
 
-      if (modified) {
-        let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-          width: "400px",
-          data: {
-            message: `Do you want to save the changes you made to '${file.name}'?`,
-            description: "Your changes will be lost if you do not save them.",
-            buttons: [
-              {
-                color: null,
-                value: "save",
-                label: readOnly ? "Save As..." : "Save",
-              },
-              {
-                color: null,
-                value: "close",
-                label: "Don't Save",
-              },
-              {
-                color: null,
-                value: "cancel",
-                label: "Cancel",
-              },
-            ],
-          },
-        });
-
-        dialogRef.afterClosed().subscribe((result) => {
-          if(result == 'close') {
-            this.store.dispatch(new CloseDataFile(fileId));
+    let obs: Observable<any>;
+    if (dataProvider && !dataProvider.readonly && assetPath) {
+      // save to provided path
+      return this.dataProviderService.saveFile(fileId, dataProviderId, assetPath).pipe(
+        take(1),
+        map(v => {
+          let result: SaveFileResult = {
+            fileId: fileId,
+            dataProviderId: dataProviderId,
+            assetPath: assetPath
           }
-          else if(result == 'save') {
-            this.store.dispatch(new SaveDataFile(fileId));
-            this.actions$.pipe(
-              ofActionCompleted(SaveDataFileSuccess),
-              takeUntil(this.actions$.pipe(
-                ofActionCompleted(SaveDataFileFail),
-                tap(v => console.error('UNABLE TO SAVE FILE.  SKIPPING CLOSE'))
-              )),
-              take(1),
-            ).subscribe(v => {
-              this.store.dispatch(new CloseDataFile(fileId));
+          return result;
+        }),
+        catchError(e => this.openSaveDialog(fileId))
+      )
+    }
+    return this.openSaveDialog(fileId);
+  }
+
+  onSaveFileBtnClick(fileId: string) {
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        let file = fileEntities[fileId];
+        if (!file) return;
+        return this.saveFile(fileId, file.dataProviderId, file.assetPath)
+      })
+    ).subscribe(() => { }, (err) => { }, () => this.store.dispatch(new LoadLibrary()))
+  }
+
+  onSaveAllFilesBtnClick() {
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities)
+
+        //remove files which have not been modified
+        let files = Object.values(fileEntities).filter(file => {
+          let hdus = file.hduIds.map(hduId => hduEntities[hduId])
+          let hduModified = hdus.map((hdu) => hdu && hdu.modified).some((v) => v)
+
+          let dataProvider = dataProviderEntities[file.dataProviderId];
+          return hduModified || !dataProvider || dataProvider.readonly
+
+        });
+        if (files.length == 0) {
+          return of(null);
+        }
+        console.log("SAVE ALL CALLED: ", files)
+
+        let recursiveSave = (index: number) => {
+          console.log("RECURSIVE SAVE CALLED: ", index)
+          if (index >= files.length) {
+            return of(null);
+          }
+          let file = files[index];
+          return this.saveFile(file.id, file.dataProviderId, file.assetPath).pipe(
+            flatMap(v => {
+              if (!v) {
+                //save was canceled
+                return of(null)
+              }
+
+              console.log("SAVE FILE COMPLETED: ", v)
+              return new Observable((subscriber) => {
+                setTimeout(() => {
+                  subscriber.next(index + 1);
+                  subscriber.complete();
+                }, 0);
+              }).pipe(
+                flatMap(index => {
+                  return recursiveSave(index as number);
+                })
+              );
             })
+          )
+        }
+
+        return recursiveSave(0);
+
+      })
+    ).subscribe(() => { }, (err) => { }, () => this.store.dispatch(new LoadLibrary()))
+  }
+
+  closeFile(fileId: string) {
+    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let dataProviderEntities = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let file = fileEntities[fileId];
+
+    if (!file) {
+      return throwError("Invalid file")
+    }
+
+    let dataProvider = dataProviderEntities[file.dataProviderId];
+    let modified = file.hduIds.map((hduId) => hduEntities[hduId].modified).some((v) => v);
+    let readOnly = !dataProvider || dataProvider.readonly
+
+    if (modified) {
+      let dialogRef = this.dialog.open(AlertDialogComponent, {
+        width: "400px",
+        data: {
+          title: `Save Changes?`,
+          message: `Do you want to save the changes you made to '${file.name}'?`,
+          description: "Your changes will be lost if you do not save them.",
+          buttons: [
+            {
+              color: null,
+              value: "save",
+              label: readOnly ? "Save As..." : "Save",
+            },
+            {
+              color: null,
+              value: "close",
+              label: "Don't Save",
+            },
+            {
+              color: null,
+              value: "cancel",
+              label: "Cancel",
+            },
+          ],
+        },
+      });
+
+      return dialogRef.afterClosed().pipe(
+        flatMap(result => {
+          if (result == 'close') {
+            return this.store.dispatch(new CloseDataFile(fileId));
           }
-        });
-      } else {
-        let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+          else if (result == 'save') {
+            return this.saveFile(file.id, file.dataProviderId, file.assetPath).pipe(
+              flatMap(saveFileResult => {
+                if(!saveFileResult) return of(null);
+                return this.store.dispatch(new CloseDataFile(fileId));
+              })
+            )
+          }
+        })
+      )
+
+    }
+    else {
+      return this.store.dispatch(new CloseDataFile(fileId));
+
+      // let dialogRef = this.dialog.open(AlertDialogComponent, {
+      //   width: "400px",
+      //   data: {
+      //     message: `Are you sure you want to close '${file.name}'?`,
+      //     buttons: [
+      //       {
+      //         color: null,
+      //         value: true,
+      //         label: "Close File",
+      //       },
+      //       {
+      //         color: null,
+      //         value: false,
+      //         label: "Cancel",
+      //       },
+      //     ],
+      //   },
+      // });
+
+      // return dialogRef.afterClosed().pipe(
+      //   flatMap(result => {
+      //     if (result == 'close') {
+      //       return this.store.dispatch(new CloseDataFile(fileId));
+      //     }
+      //   })
+      // )
+    }
+
+  }
+
+  onCloseFileBtnClick(fileId: string) {
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        return this.closeFile(fileId);
+      })
+    ).subscribe(() => { }, (err) => { }, () => this.store.dispatch(new LoadLibrary()))
+  }
+
+  onCloseAllFilesBtnClick() {
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        let dialogRef = this.dialog.open(AlertDialogComponent, {
           width: "400px",
           data: {
-            message: `Are you sure you want to close '${file.name}'?`,
+            title: 'Close All',
+            message: `Are you sure you want to close all files?`,
             buttons: [
               {
-                color: "warn",
+                color: null,
                 value: true,
-                label: "Close File",
+                label: "Close All Files",
               },
               {
                 color: null,
@@ -1500,13 +1713,49 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           },
         });
 
-        dialogRef.afterClosed().subscribe((result) => {
-          if (result) {
-            this.store.dispatch(new CloseDataFile(fileId));
-          }
-        });
-      }
-    });
+        return dialogRef.afterClosed().pipe(
+          flatMap(result => {
+            if(!result) return of(null);
+            //remove files which have not been modified
+            let files = Object.values(fileEntities);
+            if (files.length == 0) {
+              return of(null);
+            }
+
+            let recursiveClose = (index: number) => {
+              if (index >= files.length) {
+                return of(null);
+              }
+              let file = files[index];
+              return this.closeFile(file.id).pipe(
+                flatMap(v => {
+                  if (!v) {
+                    //close failed
+                    return of(null)
+                  }
+
+                  return new Observable((subscriber) => {
+                    setTimeout(() => {
+                      subscriber.next(index + 1);
+                      subscriber.complete();
+                    }, 0);
+                  }).pipe(
+                    flatMap(index => {
+                      return recursiveClose(index as number);
+                    })
+                  );
+                })
+              )
+            }
+
+            return recursiveClose(0);
+
+          })
+        );
+
+      })
+    ).subscribe(() => { }, (err) => { }, () => this.store.dispatch(new LoadLibrary()))
+
   }
 
   // onMultiFileSelect(files: Array<DataFile>) {
@@ -1520,39 +1769,29 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       maxWidth: "1200px"
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        
+    dialogRef.afterClosed().subscribe((assets) => {
+      if (assets && assets.length != 0) {
+        this.store.dispatch(new ImportAssets(assets));
+        this.actions$.pipe(
+          ofActionCompleted(ImportAssetsCompleted),
+          take(1)
+        ).subscribe((v) => {
+          let action: ImportAssetsCompleted = v.action;
+
+          this.store.dispatch(new LoadLibrary()).subscribe(() => {
+            if (action.fileIds.length != 0) {
+              let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]]
+              this.store.dispatch(new SelectDataFileListItem({ fileId: hdu.fileId, hduId: hdu.id }))
+            }
+          });
+        })
       }
     });
   }
 
-  closeAllFiles() {
-    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: "300px",
-      data: {
-        message: `Are you sure you want to close all files?`,
-        buttons: [
-          {
-            color: "warn",
-            value: true,
-            label: "Close File",
-          },
-          {
-            color: null,
-            value: false,
-            label: "Cancel",
-          },
-        ],
-      },
-    });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.store.dispatch(new CloseAllDataFiles());
-      }
-    });
-  }
+
+
 
   refresh() {
     this.store.dispatch(new LoadLibrary());

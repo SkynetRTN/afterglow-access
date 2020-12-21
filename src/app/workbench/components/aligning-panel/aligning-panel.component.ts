@@ -97,10 +97,21 @@ export class AlignerPageComponent implements OnInit {
       })
     );
 
-    combineLatest(this.refHduId$, this.refHeader$)
+    let refHeaderLoaded$ = this.refHeader$.pipe(
+      map(header => header && header.loaded),
+      distinctUntilChanged()
+    )
+
+    let refHeaderLoading$ = this.refHeader$.pipe(
+      map(header => header && header.loading),
+      distinctUntilChanged()
+    )
+
+    combineLatest(this.refHduId$, refHeaderLoaded$, refHeaderLoading$)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([refHduId, header]) => {
-        if (refHduId && header && !header.loaded && !header.loading) {
+      .subscribe(([refHduId, headerLoaded, headerLoading]) => {
+        
+        if (refHduId && headerLoaded != null && !headerLoaded && headerLoading != null && !headerLoading) {
           setTimeout(() => {
             this.store.dispatch(new LoadHduHeader(refHduId));
           });

@@ -7,6 +7,7 @@
 @import "./app/workbench/components/display-panel/display-panel-theme";
 @import "./app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme";
 @import "./app/data-providers/components/file-manager/file-manager-theme";
+@import "./app/workbench/components/alert-dialog/alert-dialog-theme";
 
 
 
@@ -43,6 +44,7 @@
   @include workbench-viewer-panel-theme($theme);
   @include workbench-data-file-list-theme($theme);
   @include file-manager-theme($theme);
+  @include alert-dialog-theme($theme);
 
   .context-menu .context-label {
     padding-right: 30px;
