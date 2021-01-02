@@ -28,9 +28,9 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Reference Image File</mat-label>
         <mat-select formControlName="refHduId" [value]="(refHdu$ | async)?.id">
-          <mat-option *ngFor="let hdu of (selectedHdus$ | async)" [value]="hdu.id">
+          <mat-option *ngFor="let hdu of (selectedHdus$ | async)" [value]="hdu?.id">
             {{ fileEntities[hdu.fileId].name }}
-            <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
+            <ng-container *ngIf="fileEntities[hdu.fileId]?.hduIds?.length > 1">
               - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
             >
           </mat-option>

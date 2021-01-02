@@ -3088,6 +3088,10 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       state.hduIds = state.hduIds.filter((id) => id != hduId);
       if (hduId in state.hduStateEntities) delete state.hduStateEntities[hduId];
+
+      state.aligningPanelConfig.alignFormData.selectedHduIds = state.aligningPanelConfig.alignFormData.selectedHduIds.filter(id => id != hduId);
+      state.stackingPanelConfig.stackFormData.selectedHduIds = state.stackingPanelConfig.stackFormData.selectedHduIds.filter(id => id != hduId);
+
       return state;
     });
   }

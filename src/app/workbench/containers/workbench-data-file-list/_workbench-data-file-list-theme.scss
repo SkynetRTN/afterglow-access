@@ -6,11 +6,20 @@
   $foreground: map-get($theme, foreground);
 
   app-workbench-data-file-list {
-    
-    .node-text {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .mat-list-option {
+      height: 36px !important;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .mat-list-option.nested {
+      padding-left: 25px !important;
+    }
+
+    .mat-list-option.nested .mat-list-item-content {
+      border-left: 1px solid mat-color($foreground, divider);
     }
 
     .mat-icon-button.small {
@@ -42,66 +51,66 @@
 
 
 
-    tree-root:focus {
-      outline: none;
-    }
+    // tree-root:focus {
+    //   outline: none;
+    // }
 
-    .node-content {
-      padding: 3px 5px;
-    }
+    // .node-content {
+    //   padding: 3px 5px;
+    // }
 
-    div.tree div.tree-children::before,
-    div.tree::before,
-    div.tree tree-node > div::before {
-      border-color: mat-color($foreground, text);
-    }
+    // div.tree div.tree-children::before,
+    // div.tree::before,
+    // div.tree tree-node > div::before {
+    //   border-color: mat-color($foreground, text);
+    // }
 
-    .node-content-wrapper {
-      overflow: hidden;
-      // border: solid 1px mat-color($primary, 0);
-      width: 100%;
-      padding: 0px; //eliminate gap between node-content-wrapper and node content template to improve mouse hover behavior
-    }
+    // .node-content-wrapper {
+    //   overflow: hidden;
+    //   // border: solid 1px mat-color($primary, 0);
+    //   width: 100%;
+    //   padding: 0px; //eliminate gap between node-content-wrapper and node content template to improve mouse hover behavior
+    // }
 
-    div.tree tree-node > div .toggle-children-wrapper {
-      margin-top: 9px;  //shift toggle down to accomodate node-content padding
-    }
+    // div.tree tree-node > div .toggle-children-wrapper {
+    //   margin-top: 9px;  //shift toggle down to accomodate node-content padding
+    // }
 
-    div.tree tree-node > div::before {
-      margin-top: 17px; //shift horizontal hash down to accomodate node-content padding
-    }
+    // div.tree tree-node > div::before {
+    //   margin-top: 17px; //shift horizontal hash down to accomodate node-content padding
+    // }
     
-    div.tree tree-node > div .toggle-children-wrapper::before {
-      content: "";
-      display: inline-block;
-      width: 7px;
-      border-top: 1px solid #23527c;
-      position: absolute;
-      top: 5px;
-      left: 2px;
-    }
+    // div.tree tree-node > div .toggle-children-wrapper::before {
+    //   content: "";
+    //   display: inline-block;
+    //   width: 7px;
+    //   border-top: 1px solid #23527c;
+    //   position: absolute;
+    //   top: 5px;
+    //   left: 2px;
+    // }
 
-    .node-content-wrapper {
-      border: solid 1px mat-color($primary, 0);
-    }
+    // .node-content-wrapper {
+    //   border: solid 1px mat-color($primary, 0);
+    // }
 
-    .node-content-wrapper-active,
-    .node-content-wrapper.node-content-wrapper-active:hover,
-    .node-content-wrapper-active.node-content-wrapper-focused {
-      background: mat-color($primary);
-      color: mat-color($primary, default-contrast);
-    }
+    // .node-content-wrapper-active,
+    // .node-content-wrapper.node-content-wrapper-active:hover,
+    // .node-content-wrapper-active.node-content-wrapper-focused {
+    //   background: mat-color($primary);
+    //   color: mat-color($primary, default-contrast);
+    // }
 
-    .node-content-wrapper-active.node-content-wrapper-focused {
-      background: mat-color($primary);
-    }
-    .node-content-wrapper-focused {
-      background: none;
-      border: solid 1px mat-color($primary, 1);
-    }
-    .node-content-wrapper:hover {
-      background: mat-color($primary, 0.3);
-    }
+    // .node-content-wrapper-active.node-content-wrapper-focused {
+    //   background: mat-color($primary);
+    // }
+    // .node-content-wrapper-focused {
+    //   background: none;
+    //   border: solid 1px mat-color($primary, 1);
+    // }
+    // .node-content-wrapper:hover {
+    //   background: mat-color($primary, 0.3);
+    // }
 
     .item-row.selected {
       background: mat-color($primary);

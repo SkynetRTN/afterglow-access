@@ -1,3 +1,72 @@
+<mat-selection-list #dataFileList [multiple]="false" (selectionChange)="onSelectionChange.emit($event.option.value)">
+  <ng-container *ngFor="let item of items$ | async">
+    <mat-list-option
+      [value]="item"
+      [selected]="selectedItem && selectedItem.fileId == item.fileId && selectedItem.hduId == item.hduId"
+      (dblclick)="onItemDoubleClick.emit({ fileId: item.fileId, hduId: item.hduId })"
+      class="expandable"
+      (mouseenter)="onMouseEnterNode(item)"
+      (mouseleave)="onMouseLeaveNode(item)"
+    >
+      <div class="item-wrapper" fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
+        <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <button
+            *ngIf="item.children.length > 0"
+            mat-icon-button
+            [attr.aria-label]="'Toggle ' + item.name"
+            (click)="toggleFile($event, item.id)"
+            class="small toggle-button"
+          >
+            <mat-icon class="mat-icon-rtl-mirror">
+              {{ !collapsedItems[item.id] ? "expand_more" : "chevron_right" }}
+            </mat-icon>
+          </button>
+          <span [matTooltip]="item.tooltip" [matTooltipShowDelay]="750">{{ item.name }}</span>
+        </div>
+        <div fxFlex="0 0 60px" class="node-buttons" style="text-align: right" [fxShow]="hoveredItem == item || (hoveredItem == item || item.modified)">
+          <button
+            [hidden]="hoveredItem != item"
+            mat-icon-button
+            class="small mr-2"
+            aria-label="Save File"
+            (click)="saveFile($event, item.fileId)"
+            matTooltip="Save File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>save</mat-icon>
+          </button>
+          <button
+            [hidden]="hoveredItem != item && !item.modified"
+            mat-icon-button
+            class="small"
+            aria-label="Close File"
+            (click)="closeFile($event, item.fileId)"
+            matTooltip="Close File"
+            matTooltipShowDelay="500"
+          >
+            <mat-icon>{{ hoveredItem == item || !item.modified ? "clear" : "fiber_manual_record" }}</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-list-option>
+    <ng-container *ngIf="item.children.length > 0 && !collapsedItems[item.id]">
+      <mat-list-option
+        class="nested"
+        *ngFor="let item of item.children; index as i"
+        [value]="item"
+        [selected]="selectedItem && selectedItem.fileId == item.fileId && selectedItem.hduId == item.hduId"
+        (dblclick)="onItemDoubleClick.emit({ fileId: item.fileId, hduId: item.hduId })"
+        (mouseenter)="onMouseEnterNode(item)"
+        (mouseleave)="onMouseLeaveNode(item)"
+      >
+        <div class="item-wrapper" fxLayout="row" fxLayoutAlign="start center" fxFlexFill  style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <span [matTooltip]="item.tooltip" [matTooltipShowDelay]="750">{{ item.name }}</span>
+        </div>
+      </mat-list-option>
+    </ng-container>
+  </ng-container>
+</mat-selection-list>
+
 <!-- <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="dataSource" [trackBy]="trackByFn">
 
   <ng-container matColumnDef="select">
@@ -38,8 +107,29 @@
 </mat-table> -->
 
 <!-- <tree-root [nodes]="nodes$ | async" [options]="options"></tree-root> -->
-<div class="tree" style="position: relative">
-  <tree-root
+
+<!-- <div class="tree" style="position: relative">
+  <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+    <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding [class.selected]="selectedItem && selectedItem.hduId == node.item.hduId && selectedItem.fileId == node.item.fileId">
+      {{node.item.name}}
+    </mat-tree-node>
+
+    <mat-tree-node *matTreeNodeDef="let node; when: hasNoContent" matTreeNodePadding>
+      {{node.item.name}}
+    </mat-tree-node>
+
+    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding [class.selected]="selectedItem && selectedItem.hduId == node.item.hduId && selectedItem.fileId == node.item.fileId">
+      <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+        <mat-icon class="mat-icon-rtl-mirror">
+          {{ treeControl.isExpanded(node) ? "expand_more" : "chevron_right" }}
+        </mat-icon>
+        {{node.item.name}}
+      </button>
+      
+    </mat-tree-node>
+  </mat-tree> -->
+
+<!-- <tree-root
     #tree
     [focused]="treeFocused"
     [nodes]="nodes$ | async"
@@ -91,8 +181,8 @@
         </div>
       </div>
     </ng-template>
-  </tree-root>
-</div>
+  </tree-root> -->
+<!-- </div> -->
 
 <!-- 
 <mat-table

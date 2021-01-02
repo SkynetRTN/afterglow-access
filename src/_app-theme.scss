@@ -78,7 +78,8 @@
     font-size: 16px !important;
     background-color: mat-color($foreground, text, 1);
     color: mat-color($background, card);
-    max-width: 350px;
+    max-width: 600px !important;
+    white-space:nowrap;
   }
 
   .mat-dialog-container {

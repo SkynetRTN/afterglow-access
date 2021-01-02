@@ -125,7 +125,7 @@ export class AlignerPageComponent implements OnInit {
 
     this.selectedHdus$ = combineLatest(this.hdus$, this.alignFormData$).pipe(
       map(([allImageFiles, alignFormData]) =>
-        alignFormData.selectedHduIds.map((id) => allImageFiles.find((f) => f.id == id))
+        alignFormData.selectedHduIds.map((id) => allImageFiles.find((f) => f.id == id)).filter(v => v)
       )
     );
 

@@ -76,6 +76,7 @@ import { WorkbenchViewerLayoutComponent } from "./containers/workbench-viewer-la
 import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.component";
 import { DxFileManagerModule } from 'devextreme-angular';
 import { FileBrowserComponent } from './components/file-browser/file-browser.component';
+import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -115,6 +116,7 @@ export const COMPONENTS = [
   WorkbenchViewerPanelComponent,
   WorkbenchViewerLayoutComponent,
   FileBrowserComponent,
+  SaveChangesDialogComponent
 ];
 
 @NgModule({
@@ -153,6 +155,7 @@ export const COMPONENTS = [
     HelpDialogComponent,
     ThemeDialogComponent,
     AlertDialogComponent,
+    SaveChangesDialogComponent,
   ],
 })
 export class WorkbenchModule {

@@ -17,6 +17,11 @@ import { FormControl, Validators } from '@angular/forms';
 import { AlertDialogComponent } from '../../../workbench/components/alert-dialog/alert-dialog.component';
 import { HttpErrorResponse } from '@angular/common/http';
 
+export interface SaveDialogResult {
+  dataProviderId: string;
+  assetPath: string;
+}
+
 @Component({
   selector: 'app-save-dialog',
   templateUrl: './save-dialog.component.html',
@@ -88,6 +93,7 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
 
@@ -109,70 +115,13 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
     let currentDataProvider = this.store.selectSnapshot(DataProvidersState.getCurrentDataProvider)
     let currentAssetPath = this.store.selectSnapshot(DataProvidersState.getCurrentAssetPath)
 
-    let path = !currentAssetPath ? this.nameFormControl.value : `${currentAssetPath}/${this.nameFormControl.value}`;
+    let path = !currentAssetPath ? `/${this.nameFormControl.value}` : `/${currentAssetPath}/${this.nameFormControl.value}`;
     this.saveAs(currentDataProvider.id, path);
   }
 
   saveAs(dataProviderId: string, path: string) {
-    //check if exists to open confirmation
-    let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[dataProviderId]
-    this.dataProviderService.getAssets(dataProviderId, path).pipe(
-      take(1)
-    ).subscribe(
-      (resp) => {
-        //check if it is a collection
-        let respAssets = resp as DataProviderAsset[];
-        if (resp.length != 1) {
-          //is collection
-          console.log("CANNOT SAVE TO PATH, EXISTING ASSET IS A COLLECTION")
-        }
-        else {
-          //exists
-          let dialogRef = this.dialog.open(AlertDialogComponent, {
-            width: "400px",
-            data: {
-              message: `Overwrite existing file? '${dataProvider.name}/${path}'?`,
-              buttons: [
-                {
-                  color: null,
-                  value: true,
-                  label: "Overwrite",
-                },
-                {
-                  color: null,
-                  value: false,
-                  label: "Cancel",
-                },
-              ],
-            },
-          });
-
-          dialogRef.afterClosed().subscribe((result) => {
-            if (result) {
-              this.dialogRef.close({ dataProviderId: dataProviderId, path: path, exists: true });
-            }
-          });
-        }
-
-
-
-      },
-      (err) => {
-        console.log("ERROR: ", err)
-        if ((err as HttpErrorResponse).error.exception == 'AssetNotFoundError') {
-          this.dialogRef.close({ dataProviderId: dataProviderId, path: path, exists: false });
-        }
-        else {
-          // unknown error
-          console.log("UNKNOWN ERROR")
-        }
-      },
-      () => {
-
-      }
-    )
-
-
+    let result: SaveDialogResult = { dataProviderId: dataProviderId, assetPath: path };
+    this.dialogRef.close(result);
   }
 
 

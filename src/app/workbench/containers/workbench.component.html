@@ -61,7 +61,7 @@
     [ngSwitch]="sidebarView$ | async"
   >
     <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100" fxLayout="column">
-      <div fxFlex="1 1 42px" class="file-list-panel-header">
+      <div fxFlex="1 1 50px" class="file-list-panel-header">
         <div class="file-list-header-view">
           <!-- <button mat-icon-button aria-label="Open Files" (click)="showOpenFilesDialog()" matTooltip="Open Files">
       <mat-icon>folder_open</mat-icon>
@@ -127,8 +127,8 @@
       <ng-template #fileListPanelBlock>
         <div fxFlex="1 1 auto" class="file-list-panel-content">
           <div class="file-list-content">
-            <div style="padding: 0px 5px; min-height: 4px">
-              <mat-progress-bar mode="indeterminate" [hidden]="!(loadingFiles$ | async)" [color]="'accent'">
+            <div  style="padding: 0px 5px; min-height: 4px">
+              <mat-progress-bar [hidden]="!(loadingFiles$ | async)" mode="indeterminate" [color]="'accent'">
               </mat-progress-bar>
             </div>
             <app-workbench-data-file-list
