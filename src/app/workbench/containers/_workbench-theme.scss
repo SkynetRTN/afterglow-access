@@ -7,9 +7,35 @@
   $is-dark-theme: map-get($theme, is-dark);
 
   app-workbench {
+    .mat-icon-button.small {
+
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+  
+      .mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        vertical-align: middle;
+      }
+    }
+
+    .mat-icon.small {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      vertical-align: middle;
+    }
+
+
     .sidebar-nav {
       background: mat-color($background, background);
       color: mat-color($foreground, text);
+      z-index: 999;
+      box-shadow: -10px -10px 10px 10px rgb(117 117 117)
     }
 
     .sidebar-panel {
@@ -24,6 +50,22 @@
       width: 350px;
     }
 
+    .file-list-header {
+      border-bottom: 1px solid mat-color($foreground, divider);
+      padding: 0px 16px;
+      position: sticky;
+      top: 0px;
+      background: mat-color($background, card);
+      z-index: 998;
+      box-shadow: -10px -10px 20px 0px #000000
+    }
+
+    .file-list-header input {
+      background: mat-color($background, app-bar);
+      color: mat-color($foreground, text);
+      padding: 5px;
+    }
+
     .global-settings-panel {
       width: 300px;
     }
@@ -36,7 +78,7 @@
       background: mat-color($background, card);
     }
 
-    .file-list-header-view {
+    .file-list-toolbar {
       margin: 5px;
       text-align: center;
       background: mat-color($background, card);
@@ -142,6 +184,8 @@
 
     .workbench-tool-nav {
       background: mat-color($background, background);
+      box-shadow: 10px 10px 10px 10px #757575;
+      z-index: 999;
     }
 
     // DSS catalog import radio wrapping issue

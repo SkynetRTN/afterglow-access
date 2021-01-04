@@ -103,6 +103,13 @@ export class DataProvidersState {
   }
 
   @Selector()
+  public static getDataProviderById(state: DataProvidersStateModel) {
+    return (id: string) => {
+      return id in state.dataProviderEntities ? state.dataProviderEntities[id] : null;
+    };
+  }
+
+  @Selector()
   public static getImporting(state: DataProvidersStateModel) {
     return state.importing;
   }

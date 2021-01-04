@@ -14,36 +14,24 @@
       user-select: none;
     }
 
+    .mat-list-option.mat-list-single-selected-option {
+      background: mat-color($primary);
+      color: mat-color($primary, default-contrast);
+    }
+
     .mat-list-option.nested {
       padding-left: 25px !important;
+    }
+
+    .mat-list-item-content {
+      padding-right: 0px !important;
     }
 
     .mat-list-option.nested .mat-list-item-content {
       border-left: 1px solid mat-color($foreground, divider);
     }
 
-    .mat-icon-button.small {
-
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
-  
-      .mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        line-height: 18px;
-        vertical-align: middle;
-      }
-    }
-
-    .mat-icon.small {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
-      vertical-align: middle;
-    }
+    
 
     .node-text .mat-icon {
       margin-right: 5px;

@@ -29,7 +29,7 @@ import { DataProvidersModule } from "../data-providers/data-providers.module";
 import { WorkbenchImageViewerComponent } from "./containers/workbench-image-viewer/workbench-image-viewer.component";
 import { WorkbenchViewerPanelComponent } from "./containers/workbench-viewer-panel/workbench-viewer-panel.component";
 import { PanZoomCanvasComponent } from "./components/pan-zoom-canvas/pan-zoom-canvas.component";
-import { WorkbenchDataFileListComponent } from "./containers/workbench-data-file-list/workbench-data-file-list.component";
+import { WorkbenchDataFileListComponent, FileListItemComponent } from "./containers/workbench-data-file-list/workbench-data-file-list.component";
 import { ImageViewerStatusBarComponent } from "./components/image-viewer-status-bar/image-viewer-status-bar.component";
 import { ImageViewerMarkerOverlayComponent } from "./components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { NormalizerFormComponent } from "./components/normalizer-form/normalizer-form.component";
@@ -116,7 +116,8 @@ export const COMPONENTS = [
   WorkbenchViewerPanelComponent,
   WorkbenchViewerLayoutComponent,
   FileBrowserComponent,
-  SaveChangesDialogComponent
+  SaveChangesDialogComponent,
+  FileListItemComponent,
 ];
 
 @NgModule({

@@ -7,53 +7,189 @@ import {
   OnDestroy,
   SimpleChange,
   ChangeDetectionStrategy,
+  ViewChild,
+  forwardRef,
+  ContentChildren,
+  QueryList,
+  Inject,
+  ChangeDetectorRef,
+  OnInit,
+  ViewChildren,
 } from "@angular/core";
 import { DataFile, IHdu } from "../../../data-files/models/data-file";
 import { Store } from "@ngxs/store";
 import { HduType } from "../../../data-files/models/data-file-type";
-import { BehaviorSubject, Observable, combineLatest } from "rxjs";
-import { map, tap, switchMap, distinctUntilKeyChanged, filter } from "rxjs/operators";
+import { BehaviorSubject, Observable, combineLatest, Subject } from "rxjs";
+import { map, tap, switchMap, distinctUntilKeyChanged, filter, takeUntil, distinctUntilChanged } from "rxjs/operators";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { DataProvidersState } from "../../../data-providers/data-providers.state";
 import { MatTreeFlatDataSource, MatTreeFlattener } from "@angular/material/tree";
 import { SelectionModel } from "@angular/cdk/collections";
 import { FlatTreeControl } from "@angular/cdk/tree";
-import { MatSelectionListChange } from "@angular/material/list";
+import { MatSelectionListChange, MatSelectionList } from "@angular/material/list";
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { DataProvider } from '../../../data-providers/models/data-provider';
+import { MatCheckbox, MAT_CHECKBOX_DEFAULT_OPTIONS, MatCheckboxDefaultOptions } from '@angular/material/checkbox';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { ToggleFileSelection } from '../../workbench.actions';
+import { WorkbenchState } from '../../workbench.state';
 
-export interface ISelectedFileListItem {
-  fileId: string;
-  hduId: string;
+@Component({
+  selector: "app-file-list-item",
+  templateUrl: "./file-list-item.component.html",
+  host: {
+    "(focus)": "_handleFocus()",
+    "(blur)": "_handleBlur()",
+    "(mouseenter)": "_handleMouseEnter()",
+    "(mouseleave)": "_handleMouseLeave()",
+  },
+  providers: [
+    {
+      provide: MAT_CHECKBOX_DEFAULT_OPTIONS,
+      useValue: { clickAction: "noop", color: "accent" } as MatCheckboxDefaultOptions,
+    },
+  ],
+})
+export class FileListItemComponent implements OnInit {
+  @Input("fileId")
+  set fileId(fileId: string) {
+    this.fileId$.next(fileId);
+  }
+  get fileId() {
+    return this.fileId$.getValue();
+  }
+  private fileId$ = new BehaviorSubject<string>(null);
+
+  @Input() focusedItem: { fileId: string; hduId: string } = null;
+  @Input() expanded: boolean = false;
+  @Input() selected: boolean = false;
+  @Input() autoHideCheckbox: boolean = false;
+
+  @Output() onSelectionChange = new EventEmitter<boolean>();
+  @Output() onItemDoubleClick = new EventEmitter<{ fileId: string; hduId: string }>();
+  @Output() onToggleExpanded = new EventEmitter<string>();
+  @Output() onToggleSelection = new EventEmitter<{fileId: string, shiftKey: boolean, ctrlKey: boolean}>();
+  @Output() onClose = new EventEmitter<string>();
+  @Output() onSave = new EventEmitter<string>();
+
+  @ViewChild(MatCheckbox) checkbox: MatCheckbox;
+
+  HduType = HduType;
+  mouseOver: boolean = false;
+  hasFocus: boolean = false;
+  file$: Observable<DataFile>;
+  hdus$: Observable<IHdu[]>;
+  dataProvider$: Observable<DataProvider>;
+  fileTooltip$: Observable<string>;
+  modified$: Observable<boolean>;
+
+  constructor(
+    private store: Store,
+    @Inject(forwardRef(() => WorkbenchDataFileListComponent)) public fileList: WorkbenchDataFileListComponent,
+    private _changeDetector: ChangeDetectorRef
+  ) {
+    this.file$ = this.fileId$.pipe(
+      distinctUntilChanged(),
+      switchMap((fileId) => {
+        return this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId)));
+      })
+    );
+
+    this.hdus$ = this.file$.pipe(
+      map((file) => file.hduIds),
+      distinctUntilChanged(),
+      switchMap((hduIds) => {
+        return combineLatest(
+          hduIds.map((hduId) => {
+            return this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId)));
+          })
+        );
+      })
+    );
+
+    this.dataProvider$ = this.file$.pipe(
+      map((file) => file.dataProviderId),
+      distinctUntilChanged(),
+      switchMap((id) => {
+        return this.store.select(DataProvidersState.getDataProviderById).pipe(map((fn) => fn(id)));
+      })
+    );
+
+    this.fileTooltip$ = combineLatest(this.file$, this.dataProvider$).pipe(
+      map(([file, dataProvider]) => {
+        if (!dataProvider || !file.assetPath) return file.name;
+        return `${dataProvider.name}${file.assetPath}`;
+      })
+    );
+
+    this.modified$ = this.hdus$.pipe(map((hdus) => hdus.some((hdu) => hdu.modified)));
+
+  }
+
+  ngOnInit(): void {}
+
+  toggleExpanded($event: MouseEvent) {
+    $event.stopPropagation();
+    this.onToggleExpanded.emit(this.fileId);
+  }
+
+  save($event: MouseEvent) {
+    $event.stopPropagation();
+    this.onSave.emit(this.fileId);
+  }
+
+  close($event: MouseEvent) {
+    $event.stopPropagation();
+    this.onClose.emit(this.fileId);
+  }
+
+  private _handleFocus() {
+    this.hasFocus = true;
+  }
+
+  private _handleBlur() {
+    this.hasFocus = false;
+  }
+
+  private _handleMouseEnter() {
+    this._handleFocus();
+    this.mouseOver = true;
+  }
+
+  private _handleMouseLeave() {
+    this._handleBlur();
+    this.mouseOver = false;
+  }
+
+  toggleCheckbox($event: MouseEvent) {
+    $event.stopPropagation();
+    this.onToggleSelection.emit({fileId: this.fileId, shiftKey: $event.shiftKey, ctrlKey: $event.ctrlKey})
+  }
 }
 
-export class FileListItem {
-  children: FileListItem[];
-  id: string;
-  name: string;
-  fileId: string;
-  hduId: string;
-  showButtonBar: boolean;
-  icon: string;
-  tooltip: string;
-  modified: boolean;
-  file: DataFile;
-  hdu: IHdu;
-}
+
+export const WORKBENCH_FILE_LIST_VALUE_ACCESSOR: any = {
+  provide: NG_VALUE_ACCESSOR,
+  useExisting: forwardRef(() => WorkbenchDataFileListComponent),
+  multi: true
+};
 
 @Component({
   selector: "app-workbench-data-file-list",
   templateUrl: "./workbench-data-file-list.component.html",
   styleUrls: ["./workbench-data-file-list.component.css"],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [WORKBENCH_FILE_LIST_VALUE_ACCESSOR],
 })
-export class WorkbenchDataFileListComponent {
-  @Input("selectedItem")
-  set selectedItem(files: ISelectedFileListItem) {
-    this.selectedItem$.next(files);
+export class WorkbenchDataFileListComponent implements OnDestroy {
+  @Input("focusedItem")
+  set focusedItem(item: { fileId: string; hduId: string }) {
+    this.focusedItem$.next(item);
   }
-  get selectedItem() {
-    return this.selectedItem$.getValue();
+  get focusedItem() {
+    return this.focusedItem$.getValue();
   }
-  private selectedItem$ = new BehaviorSubject<ISelectedFileListItem>(null);
+  private focusedItem$ = new BehaviorSubject<{ fileId: string; hduId: string }>(null);
 
   @Input("files")
   set files(files: DataFile[]) {
@@ -64,143 +200,57 @@ export class WorkbenchDataFileListComponent {
   }
   private files$ = new BehaviorSubject<DataFile[]>(null);
 
-  @Output() onSelectionChange = new EventEmitter<{
-    item: ISelectedFileListItem;
+  @Input("selectedFileIds")
+  set selectedFileIds(selectedFileIds: string[]) {
+    this.selectedFileIds$.next(selectedFileIds);
+  }
+  get selectedFileIds() {
+    return this.selectedFileIds$.getValue();
+  }
+  private selectedFileIds$ = new BehaviorSubject<string[]>([]);
+
+  // @Output() onSelectionChange = new EventEmitter<{
+  //   item: FileListItem;
+  // }>();
+
+  @Output() onFocusedItemChange = new EventEmitter<{
+    item: { fileId: string; hduId: string };
   }>();
 
   @Output() onItemDoubleClick = new EventEmitter<{
-    item: ISelectedFileListItem;
+    item: {fileId: string, hduId: string};
   }>();
 
   @Output() onCloseFile = new EventEmitter<string>();
 
   @Output() onSaveFile = new EventEmitter<string>();
 
+  @ViewChild("selectionList", { static: true }) selectionList: MatSelectionList;
+  @ViewChildren(FileListItemComponent) _items: QueryList<FileListItemComponent>;
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
   HduType = HduType;
-  hduEntities$: Observable<{ [id: string]: IHdu }>;
-
-  collapsedItems: { [id: string]: boolean } = {};
-  hoveredItem: FileListItem;
-
-  items$: Observable<FileListItem[]>;
+  collapsedFileIds: { [id: string]: boolean } = {};
 
   constructor(private store: Store) {
-    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
-
-    this.items$ = this.store.select(DataFilesState.getFileIds).pipe(
-      switchMap((fileIds) => {
-        return combineLatest(
-          ...fileIds.map((fileId) => {
-            let file$ = this.store.select(DataFilesState.getFileById).pipe(
-              map((fn) => fn(fileId)),
-              filter((f) => f != null),
-              distinctUntilKeyChanged("id"),
-              distinctUntilKeyChanged("name"),
-              distinctUntilKeyChanged("hduIds"),
-              distinctUntilKeyChanged("name")
-            );
-            let hdus$ = file$.pipe(
-              switchMap((file) =>
-                combineLatest(
-                  file.hduIds.map((hduId) =>
-                    this.store.select(DataFilesState.getHduById).pipe(
-                      map((fn) => fn(hduId)),
-                      filter((f) => f != null),
-                      distinctUntilKeyChanged("id"),
-                      distinctUntilKeyChanged("modified"),
-                      distinctUntilKeyChanged("hduType")
-                    )
-                  )
-                )
-              )
-            );
-            return combineLatest(file$, hdus$).pipe(
-              map(([file, hdus]) => {
-                let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[
-                  file.dataProviderId
-                ];
-                let result: FileListItem = null;
-                let tooltip = file.name;
-                if (dataProvider && file.assetPath != null) {
-                  tooltip = `${dataProvider.name}${file.assetPath}`;
-                }
-                if (hdus.length > 1) {
-                  result = {
-                    id: file.id,
-                    name: file.name,
-                    tooltip: tooltip,
-                    fileId: file.id,
-                    hduId: null,
-                    showButtonBar: true,
-                    icon: null,
-                    modified: hdus.map((hdu) => hdu.modified).some((v) => v),
-                    file: file,
-                    hdu: null,
-                    children: hdus.map((hdu, index) => ({
-                      file: null,
-                      hdu: hdu,
-                      id: `${file.id}-${hdu.id}`,
-                      name: `Channel ${index}`,
-                      fileId: file.id,
-                      hduId: hdu.id,
-                      showButtonBar: false,
-                      icon: hdu.hduType == HduType.IMAGE ? "insert_photo" : "toc",
-                      tooltip: `${tooltip} - Channel ${index}`,
-                      modified: null,
-                      children: [],
-                    })),
-                  };
-                } else if (hdus.length == 1) {
-                  let hdu = hdus[0];
-                  result = {
-                    file: null,
-                    hdu: hdu,
-                    id: `${file.id}-${hdu.id}`,
-                    name: file.name,
-                    tooltip: tooltip,
-                    fileId: file.id,
-                    hduId: hdu.id,
-                    showButtonBar: true,
-                    icon: hdu.hduType == HduType.IMAGE ? "insert_photo" : "toc",
-                    modified: hdu.modified,
-                    children: [],
-                  };
-                }
-                return result;
-              })
-            );
-          })
-        );
-      })
-    );
   }
 
-  getTooltip(file: DataFile) {
-    let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[file.dataProviderId];
-    let tooltip = file.name;
-    if (dataProvider && file.assetPath != null) {
-      tooltip = `${dataProvider.name}${file.assetPath}`;
-    }
-    return tooltip;
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
-  toggleFile($event: MouseEvent, fileId: string) {
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    if (this.collapsedItems[fileId]) {
-      delete this.collapsedItems[fileId];
+  onToggleExpanded(fileId: string) {
+    if (fileId in this.collapsedFileIds) {
+      delete this.collapsedFileIds[fileId];
     } else {
-      this.collapsedItems[fileId] = true;
+      this.collapsedFileIds[fileId] = true;
     }
   }
 
-  onMouseEnterNode(item: FileListItem) {
-    this.hoveredItem = item;
-  }
-
-  onMouseLeaveNode(item: FileListItem) {
-    this.hoveredItem = null;
+  onToggleSelection($event: {fileId: string, shiftKey: boolean, ctrlKey: boolean}) {
+    //TODO handle multi selection based on modifier keys
+    this.store.dispatch(new ToggleFileSelection($event.fileId))
   }
 
   saveFile($event: MouseEvent, fileId: string) {

@@ -61,8 +61,8 @@
     [ngSwitch]="sidebarView$ | async"
   >
     <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100" fxLayout="column">
-      <div fxFlex="1 1 50px" class="file-list-panel-header">
-        <div class="file-list-header-view">
+      <div fxFlex="1 1 50px">
+        <div class="file-list-toolbar">
           <!-- <button mat-icon-button aria-label="Open Files" (click)="showOpenFilesDialog()" matTooltip="Open Files">
       <mat-icon>folder_open</mat-icon>
     </button>
@@ -78,42 +78,61 @@
       aria-label="Close All Files" (click)="removeAllFiles()" matTooltip="Close All Files">
       <mat-icon>remove_circle</mat-icon>
     </button> -->
-          <button
-            mat-icon-button
-            aria-label="Open files"
-            (click)="openFiles()"
-            matTooltip="Open files"
-          >
+          <button mat-icon-button aria-label="Open files" (click)="openFiles()" matTooltip="Open files">
             <mat-icon>folder_open</mat-icon>
           </button>
           <button
-          mat-icon-button
-          [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
-          aria-label="Save all files"
-          (click)="onSaveAllFilesBtnClick()"
-          matTooltip="Save all files"
-        >
-        <mat-icon>save</mat-icon>
-        </button>
-          
+            mat-icon-button
+            [disabled]="(filteredFiles$ | async)?.length == 0"
+            aria-label="Save all files"
+            (click)="onSaveAllFileListItemsBtnClick()"
+            matTooltip="Save all files"
+          >
+            <mat-icon>save</mat-icon>
+          </button>
 
           <button
             mat-icon-button
-            [disabled]="!(files$ | async) || (files$ | async)?.length == 0"
+            [disabled]="(filteredFiles$ | async)?.length == 0"
             aria-label="Close all files"
-            (click)="onCloseAllFilesBtnClick()"
+            (click)="onCloseAllFileListItemsBtnClick()"
             matTooltip="Close all files"
           >
             <mat-icon>highlight_off</mat-icon>
           </button>
-          <button
-            mat-icon-button
-            aria-label="Refresh File List"
-            (click)="refresh()"
-            matTooltip="Refresh File List"
-          >
+          <button mat-icon-button aria-label="Refresh File List" (click)="refresh()" matTooltip="Refresh File List">
             <mat-icon>refresh</mat-icon>
           </button>
+          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="selected file options" [disabled]="(selectedFileIds$ | async)?.length == 0">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button
+              mat-menu-item
+              [disabled]="(selectedFileIds$ | async)?.length == 0"
+              aria-label="Close selected files"
+              (click)="onCloseSelectedFileListItemsBtnClick()"
+            >
+              <mat-icon>close</mat-icon>
+              <span>Close selected files</span>
+            </button>
+            <button
+              mat-menu-item
+              [disabled]="(selectedFileIds$ | async)?.length == 0"
+              aria-label="Save selected files"
+              (click)="onSaveSelectedFileListItemsBtnClick()"
+            >
+              <mat-icon>save</mat-icon>
+              <span>Save selected files</span>
+            </button>
+            <!-- <button mat-menu-item
+              [disabled]="(selectedFileIds$ | async)?.length == 0"
+              aria-label="Group selected files"
+              (click)="onGroupSelectedFileListItemsBtnClick()">
+              <mat-icon>merge_type</mat-icon>
+              <span>Group selected files</span>
+            </button> -->
+          </mat-menu>
         </div>
       </div>
       <div
@@ -125,17 +144,55 @@
         <ng-container i18n>There are no open files associated with this session. </ng-container>
       </div>
       <ng-template #fileListPanelBlock>
-        <div fxFlex="1 1 auto" class="file-list-panel-content">
-          <div class="file-list-content">
-            <div  style="padding: 0px 5px; min-height: 4px">
-              <mat-progress-bar [hidden]="!(loadingFiles$ | async)" mode="indeterminate" [color]="'accent'">
-              </mat-progress-bar>
+        <div fxLayout="column" fxFlex="1 1 auto" class="file-list-panel-content">
+          <div fxFlex="1 1 50px" fxLayout="row-reverse" fxLayoutAlign="space-around center" class="file-list-header">
+            <div fxFlex="0 0 auto" style="margin-left: 20px">
+              <mat-checkbox
+                #selectAllFilesCheckbox
+                [checked]="fileListSelectAllChecked$ | async"
+                [indeterminate]="fileListSelectAllIndeterminate$ | async"
+                (change)="toggleFileListSelectAll($event)"
+              ></mat-checkbox>
             </div>
+            <mat-progress-bar
+              fxFlex="1 1 auto"
+              *ngIf="loadingFiles$ | async; else fileListFilterInput"
+              mode="indeterminate"
+              [color]="'accent'"
+            >
+            </mat-progress-bar>
+            <ng-template #fileListFilterInput>
+              <button
+                fxFlex="0 0 auto"
+                class="small"
+                mat-button
+                *ngIf="fileListFilter$ | async"
+                mat-icon-button
+                aria-label="Clear"
+                (click)="clearFileListFilter()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+              <input
+                autocomplete="off"
+                class="file-list-filter"
+                fxFlex="1 1 auto"
+                matInput
+                placeholder="Filter list..."
+                type="text"
+                [ngModel]="fileListFilter$ | async"
+                (input)="fileListFilterInput$.next($event.target.value)"
+              />
+            </ng-template>
+          </div>
+          <div fxFlex="1 1 auto" class="file-list-content">
             <app-workbench-data-file-list
-              [files]="files$ | async"
-              [selectedItem]="selectedDataFileListItem$ | async"
-              (onSelectionChange)="onItemSelect($event)"
-              (onItemDoubleClick)="onItemDoubleClick($event)"
+              #fileList
+              [files]="filteredFiles$ | async"
+              [selectedFileIds]="selectedFileIds$ | async"
+              [focusedItem]="focusedDataFileListItem$ | async"
+              (onFocusedItemChange)="onFileListFocusedItemChange($event)"
+              (onItemDoubleClick)="onFileListItemDoubleClick($event)"
               (onSaveFile)="onSaveFileBtnClick($event)"
               (onCloseFile)="onCloseFileBtnClick($event)"
             >

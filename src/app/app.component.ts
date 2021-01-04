@@ -273,7 +273,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let colorTheme = this.themeStorage.getCurrentColorTheme();
 
-    console.log("SETTING DEV EX THEME TO: ", colorTheme.devExTheme.name);
     themes.current(colorTheme.devExTheme.name);
   }
   getTitle(state, parent) {

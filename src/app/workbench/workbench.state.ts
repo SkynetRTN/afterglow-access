@@ -34,7 +34,7 @@ import {
   InvalidateHeader,
 } from "../data-files/data-files.actions";
 import {
-  SelectDataFileListItem,
+  FocusFileListItem,
   RemoveViewerLayoutItem,
   SetFocusedViewer,
   SetViewerData as SetViewerFile,
@@ -123,6 +123,9 @@ import {
   SyncViewerTransformations,
   SetViewerSyncMode,
   SyncViewerNormalizations,
+  ToggleFileSelection,
+  SetFileSelection,
+  SetFileListFilter,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -178,7 +181,7 @@ import { SonificationJob, SonificationJobResult } from "../jobs/models/sonificat
 import { IImageData } from "../data-files/models/image-data";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "70d8b239-0d7f-41c8-996f-dccaef20e59e",
+  version: "6525d62c-398f-47cf-a2ad-fa0cc86a744d",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -199,6 +202,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       itemIds: [],
     } as ViewerPanelContainer,
   },
+  selectedFileIds: [],
+  fileListFilter: null,
   focusedViewerPanelId: null,
   viewerSyncEnabled: false,
   viewerSyncMode: "pixel",
@@ -382,6 +387,58 @@ export class WorkbenchState {
   @Selector()
   public static getViewerLayoutItems(state: WorkbenchStateModel) {
     return Object.values(state.viewerLayoutItems);
+  }
+
+  @Selector()
+  public static getFileListFilter(state: WorkbenchStateModel) {
+    return state.fileListFilter;
+  }
+
+  @Selector([DataFilesState.getFiles, WorkbenchState.getFileListFilter])
+  public static getFilteredFiles(state: WorkbenchStateModel, files: DataFile[], fileListFilter: string) {
+    if(!files || files.length == 0) return [];
+    if(!fileListFilter) return files;
+
+    let checkName = (name, str) => {
+      var pattern = str
+        .split("")
+        .map((x) => {
+          return `(?=.*${x})`;
+        })
+        .join("");
+      var regex = new RegExp(`${pattern}`, "g");
+      return name.match(regex);
+    };
+
+    let fileListFilterSub = fileListFilter.toLowerCase().substring(0, 3)
+
+    return files
+      .filter((file) => {
+        let nameSub = file.name.substring(0, 3).toLowerCase()
+        return file.name.toLowerCase().includes(fileListFilterSub) || checkName(nameSub, fileListFilterSub)
+      })
+      .sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
+  }
+
+  @Selector([WorkbenchState.getFilteredFiles])
+  public static getSelectedFileIds(state: WorkbenchStateModel, filteredFiles: DataFile[]) {
+    let filteredFileIds = filteredFiles.map((f) => f.id);
+    return state.selectedFileIds.filter((id) => filteredFileIds.includes(id));
+  }
+
+  @Selector()
+  public static getFileSelected(state: WorkbenchStateModel) {
+    return (id: string) => {
+      return state.selectedFileIds.includes(id);
+    };
   }
 
   @Selector()
@@ -1921,6 +1978,11 @@ export class WorkbenchState {
       });
     }
 
+    setState((state: WorkbenchStateModel) => {
+      state.selectedFileIds = state.selectedFileIds.filter((id) => id != fileId);
+      return state;
+    });
+
     // let focusedFileId = this.store.selectSnapshot(
     //   WorkbenchState.getFocusedFileId
     // );
@@ -1968,11 +2030,48 @@ export class WorkbenchState {
     });
   }
 
-  @Action(SelectDataFileListItem)
+  @Action(SetFileListFilter)
   @ImmutableContext()
-  public selectDataFile(
+  public setFileListFilter(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { item }: SelectDataFileListItem
+    { value }: SetFileListFilter
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.fileListFilter = value;
+      return state;
+    });
+  }
+
+  @Action(ToggleFileSelection)
+  @ImmutableContext()
+  public toggleFileSelection(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { id }: ToggleFileSelection
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      if (state.selectedFileIds.includes(id)) {
+        state.selectedFileIds = state.selectedFileIds.filter((fileId) => id != fileId);
+      } else {
+        state.selectedFileIds.push(id);
+      }
+      return state;
+    });
+  }
+
+  @Action(SetFileSelection)
+  @ImmutableContext()
+  public setFileSelection({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { ids }: SetFileSelection) {
+    setState((state: WorkbenchStateModel) => {
+      state.selectedFileIds = ids;
+      return state;
+    });
+  }
+
+  @Action(FocusFileListItem)
+  @ImmutableContext()
+  public focusFileListItem(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { item }: FocusFileListItem
   ) {
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -2427,8 +2526,8 @@ export class WorkbenchState {
       crop: false,
       settings: {
         ref_image: parseInt(data.refHduId),
-        wcs_grid_points: 0
-      }
+        wcs_grid_points: 0,
+      },
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2467,9 +2566,9 @@ export class WorkbenchState {
         let hduIds = result.file_ids.map((id) => id.toString());
         let actions = [];
         if ((jobEntity.job as AlignmentJob).inplace) {
-          hduIds.forEach(hduId => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach(hduId => actions.push(new InvalidateHeader(hduId)));
-        } 
+          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+        }
 
         actions.push(new LoadLibrary());
 
@@ -3089,8 +3188,12 @@ export class WorkbenchState {
       state.hduIds = state.hduIds.filter((id) => id != hduId);
       if (hduId in state.hduStateEntities) delete state.hduStateEntities[hduId];
 
-      state.aligningPanelConfig.alignFormData.selectedHduIds = state.aligningPanelConfig.alignFormData.selectedHduIds.filter(id => id != hduId);
-      state.stackingPanelConfig.stackFormData.selectedHduIds = state.stackingPanelConfig.stackFormData.selectedHduIds.filter(id => id != hduId);
+      state.aligningPanelConfig.alignFormData.selectedHduIds = state.aligningPanelConfig.alignFormData.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+      state.stackingPanelConfig.stackFormData.selectedHduIds = state.stackingPanelConfig.stackFormData.selectedHduIds.filter(
+        (id) => id != hduId
+      );
 
       return state;
     });

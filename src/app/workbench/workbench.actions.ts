@@ -29,7 +29,6 @@ import { SonificationPanelState } from "./models/sonifier-file-state";
 import { PlottingPanelState } from "./models/plotter-file-state";
 import { PhotometryPanelState } from "./models/photometry-file-state";
 import { PhotData } from "./models/source-phot-data";
-import { ISelectedFileListItem } from "./containers/workbench-data-file-list/workbench-data-file-list.component";
 import { PixelNormalizer } from "../data-files/models/pixel-normalizer";
 
 /* Core */
@@ -55,10 +54,28 @@ export class SetFullScreenPanel {
   constructor(public panel: "file" | "viewer" | "tool") {}
 }
 
-export class SelectDataFileListItem {
-  public static readonly type = "[Workbench] Select Data File List Item";
+export class FocusFileListItem {
+  public static readonly type = "[Workbench] Focus File List Item";
 
-  constructor(public item: ISelectedFileListItem) {}
+  constructor(public item: {fileId: string, hduId: string}) {}
+}
+
+export class ToggleFileSelection {
+  public static readonly type = "[Workbench] Toggle File Selection";
+
+  constructor(public id: string) {}
+}
+
+export class SetFileListFilter {
+  public static readonly type = "[Workbench] Set File List Filter";
+
+  constructor(public value: string) {}
+}
+
+export class SetFileSelection {
+  public static readonly type = "[Workbench] Set File Selection";
+
+  constructor(public ids: string[]) {}
 }
 
 export class SetFocusedViewer {

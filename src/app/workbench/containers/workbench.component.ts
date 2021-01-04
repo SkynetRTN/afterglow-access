@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Observable, combineLatest, merge, of, never, empty, throwError } from "rxjs";
+import { Component, OnInit, OnDestroy, ViewChild } from "@angular/core";
+import { Observable, combineLatest, merge, of, never, empty, throwError, Subject, concat } from "rxjs";
 import {
   map,
   tap,
@@ -15,6 +15,7 @@ import {
   take,
   flatMap,
   catchError,
+  concatAll,
 } from "rxjs/operators";
 
 import {
@@ -46,7 +47,7 @@ import {
   ShowSidebar,
   LoadCatalogs,
   LoadFieldCals,
-  SelectDataFileListItem,
+  FocusFileListItem,
   SetSidebarView,
   ToggleShowConfig,
   SetViewMode,
@@ -77,6 +78,8 @@ import {
   SetViewerSyncMode,
   SyncViewerNormalizations,
   SyncPlottingPanelStates,
+  SetFileSelection,
+  SetFileListFilter,
 } from "../workbench.actions";
 import {
   LoadDataProviders,
@@ -142,15 +145,20 @@ import { Normalization } from "../../data-files/models/normalization";
 import { PixelNormalizer } from "../../data-files/models/pixel-normalizer";
 import { IImageData } from "../../data-files/models/image-data";
 import { Wcs } from "../../image-tools/wcs";
-import { ISelectedFileListItem } from "./workbench-data-file-list/workbench-data-file-list.component";
+import { WorkbenchDataFileListComponent } from "./workbench-data-file-list/workbench-data-file-list.component";
 import { view } from "paper";
 import { OpenFileDialogComponent } from "../../data-providers/components/open-file-dialog/open-file-dialog.component";
 import { AfterglowDataProviderService } from "../services/afterglow-data-providers";
 import { HttpErrorResponse } from "@angular/common/http";
 import { SaveDialogComponent } from "../../data-providers/components/save-dialog/save-dialog.component";
-import { SaveChangesDialogComponent, SaveChangesDialogResult, FileDialogConfig } from "../components/file-dialog/file-dialog.component";
-
-
+import {
+  SaveChangesDialogComponent,
+  SaveChangesDialogResult,
+  FileDialogConfig,
+} from "../components/file-dialog/file-dialog.component";
+import { MatCheckboxChange } from "@angular/material/checkbox";
+import { AfterglowDataFileService } from '../services/afterglow-data-files';
+import { UUID } from 'angular2-uuid';
 
 enum SaveFileAction {
   Save = "save",
@@ -168,6 +176,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   ViewMode = ViewMode;
   HduType = HduType;
 
+  @ViewChild(WorkbenchDataFileListComponent) fileList: WorkbenchDataFileListComponent;
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+
   layoutContainer$: Observable<ViewerPanelContainer>;
 
   inFullScreenMode$: Observable<boolean>;
@@ -175,6 +187,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   showSidebar$: Observable<boolean>;
   sidebarView$: Observable<SidebarView>;
   files$: Observable<DataFile[]>;
+  fileListFilter$: Observable<string>;
+  fileListFilterInput$ = new Subject<string>();
+  filteredFiles$: Observable<DataFile[]>;
+  selectedFileIds$: Observable<string[]>;
+  fileListSelectAllChecked$: Observable<boolean>;
+  fileListSelectAllIndeterminate$: Observable<boolean>;
+
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   hdus$: Observable<IHdu[]>;
   loadingFiles$: Observable<boolean>;
@@ -239,7 +258,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   focusedViewerFileLastActiveImageHduId$: Observable<string>;
   focusedViewerFileLastActiveImageHdu$: Observable<ImageHdu>;
 
-  selectedDataFileListItem$: Observable<ISelectedFileListItem>;
+  focusedDataFileListItem$: Observable<{ fileId: string; hduId: string }>;
 
   fileLoaderSub: Subscription;
   queryParamSub: Subscription;
@@ -260,11 +279,32 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private corrGen: CorrelationIdGenerator,
     private activeRoute: ActivatedRoute,
-    private dataProviderService: AfterglowDataProviderService
+    private dataProviderService: AfterglowDataProviderService,
+    private dataFileService: AfterglowDataFileService,
   ) {
     this.files$ = this.store
       .select(DataFilesState.getFiles)
       .pipe(map((files) => files.sort((a, b) => a.name.localeCompare(b.name))));
+
+    this.fileListFilter$ = this.store.select(WorkbenchState.getFileListFilter);
+    this.fileListFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
+      this.store.dispatch(new SetFileListFilter(value));
+    });
+
+    this.filteredFiles$ = this.store.select(WorkbenchState.getFilteredFiles);
+    this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFileIds);
+
+    this.fileListSelectAllChecked$ = combineLatest(this.filteredFiles$, this.selectedFileIds$).pipe(
+      map(([filteredFiles, selectedFileIds]) => {
+        return filteredFiles.length != 0 && selectedFileIds.length == filteredFiles.length;
+      })
+    );
+
+    this.fileListSelectAllIndeterminate$ = combineLatest(this.filteredFiles$, this.selectedFileIds$).pipe(
+      map(([filteredFiles, selectedFileIds]) => {
+        return selectedFileIds.length != 0 && selectedFileIds.length != filteredFiles.length;
+      })
+    );
 
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
 
@@ -434,13 +474,28 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       distinctUntilChanged()
     );
 
-    this.selectedDataFileListItem$ = this.focusedViewer$.pipe(
+    this.focusedDataFileListItem$ = this.focusedViewer$.pipe(
       distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
       map((viewer) => {
         if (!viewer) {
           return null;
         }
-        return { fileId: viewer.fileId, hduId: viewer.hduId };
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+
+        let fileId = viewer.fileId;
+        let hduId = viewer.hduId;
+        if (viewer.hduId) {
+          //if viewer HDU is from a single-hdu file, the hdus are hidden in the data file list.
+          //focus the file instead
+
+          let file = fileEntities[viewer.fileId];
+          if (file && file.hduIds.length == 1) {
+            hduId = null;
+          }
+        }
+
+        return { fileId: fileId, hduId: hduId };
       })
     );
 
@@ -785,6 +840,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.transformationSyncSub.unsubscribe();
     this.normalizationSyncSub.unsubscribe();
     this.plottingPanelSyncSub.unsubscribe();
+
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   registerHotKeys() {
@@ -1338,11 +1396,41 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
-  onItemSelect(item: ISelectedFileListItem) {
-    this.store.dispatch(new SelectDataFileListItem(item));
+  clearFileListFilter() {
+    this.store.dispatch(new SetFileListFilter(""));
   }
 
-  onItemDoubleClick(item: ISelectedFileListItem) {
+  toggleFileListSelectAll($event: MatCheckboxChange) {
+    if ($event.checked) {
+      // selectall
+      let filteredFiles = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
+      this.store.dispatch(new SetFileSelection(filteredFiles.map((f) => f.id)));
+    } else {
+      // deselect all
+      this.store.dispatch(new SetFileSelection([]));
+    }
+  }
+
+  onFileListFocusedItemChange(item: { fileId: string; hduId: string }) {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let fileId = item.fileId;
+    let hduId = item.hduId;
+    if (!hduId) {
+      let file = fileEntities[fileId];
+      if (file && file.hduIds.length == 1) {
+        //if a single-hdu file is selected,  automatically select the hdu
+        hduId = file.hduIds[0];
+      }
+    }
+    this.store.dispatch(new FocusFileListItem({ fileId: fileId, hduId: hduId }));
+  }
+
+  // onFileListItemClick(item: IFileListItemId) {
+  //   this.store.dispatch(new SelectDataFileListItem(item));
+  // }
+
+  onFileListItemDoubleClick(item: { fileId: string; hduId: string }) {
     let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     if (focusedViewer) {
       this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
@@ -1453,9 +1541,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   closeFiles(files: DataFile[]) {
     let config: FileDialogConfig = {
       files: files,
-      mode: 'close'
-    }
-   
+      mode: "close",
+    };
 
     let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
       width: "500px",
@@ -1479,11 +1566,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       );
   }
 
-  onCloseAllFilesBtnClick() {
+  onCloseAllFileListItemsBtnClick() {
     this.afterLibrarySync()
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
-          let files = Object.values(fileEntities);
+          // let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          // let files = selectedFileIds.map(id => fileEntities[id])
+          let files = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: "Close Files",
             message: `Are you sure you want to close all files?`,
@@ -1504,18 +1593,59 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             width: "400px",
             data: dialogConfig,
           });
-      
+
           return dialogRef.afterClosed().pipe(
             flatMap((result) => {
-              if(!result) {
+              if (!result) {
                 return of(null);
               }
               return this.closeFiles(files);
             })
           );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
 
+  onCloseSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Close Files",
+            message: `Are you sure you want to close the selected files?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Close Selected Files",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+          });
 
-          
+          return dialogRef.afterClosed().pipe(
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+              return this.closeFiles(files);
+            })
+          );
         })
       )
       .subscribe(
@@ -1528,9 +1658,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   saveFiles(files: DataFile[]) {
     let config: FileDialogConfig = {
       files: files,
-      mode: 'save'
-    }
-   
+      mode: "save",
+    };
 
     let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
       width: "500px",
@@ -1554,11 +1683,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       );
   }
 
-  onSaveAllFilesBtnClick() {
+  onSaveAllFileListItemsBtnClick() {
     this.afterLibrarySync()
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
-          let files = Object.values(fileEntities);
+          // let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          // let files = selectedFileIds.map(id => fileEntities[id])
+          let files = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: "Save Files",
             message: `Are you sure you want to save all files?`,
@@ -1579,18 +1710,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             width: "400px",
             data: dialogConfig,
           });
-      
+
           return dialogRef.afterClosed().pipe(
             flatMap((result) => {
-              if(!result) {
+              if (!result) {
                 return of(null);
               }
               return this.saveFiles(files);
             })
           );
-
-
-          
         })
       )
       .subscribe(
@@ -1600,7 +1728,118 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       );
   }
 
-  
+  onSaveSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Save Files",
+            message: `Are you sure you want to save the selected files?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Save Selected Files",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+          });
+
+          return dialogRef.afterClosed().pipe(
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+              return this.saveFiles(files);
+            })
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  getLongestCommonStartingSubstring(arr1: string[]) {
+    let arr = arr1.concat().sort(),
+      a1 = arr[0],
+      a2 = arr[arr.length - 1],
+      L = a1.length,
+      i = 0;
+    while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
+    return a1.substring(0, i);
+  }
+
+  onGroupSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Group Files",
+            message: `Are you sure you want to group the selected files into a single file with multiple channels?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Group Selected Files",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+          });
+
+          return dialogRef.afterClosed().pipe(
+            take(1),
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+
+              let newFilename = this.getLongestCommonStartingSubstring(files.map(file => file.name)).replace(/_+$/,'').trim()
+              if(newFilename.length == 0) {
+                newFilename = `${files[0].name} - group`
+              }
+              let uuid = UUID.UUID();
+              let reqs = [];
+              files.forEach(file => {
+                file.hduIds.forEach(hduId => {
+                  reqs.push(this.dataFileService.updateFile(hduId, {group_id: uuid, name: newFilename}))
+                })
+                
+              })
+
+              return concat(...reqs);
+            }),
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => { throw err},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
 
   // onMultiFileSelect(files: Array<DataFile>) {
   //   if(!files) return;
@@ -1622,7 +1861,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           this.store.dispatch(new LoadLibrary()).subscribe(() => {
             if (action.fileIds.length != 0) {
               let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]];
-              this.store.dispatch(new SelectDataFileListItem({ fileId: hdu.fileId, hduId: hdu.id }));
+              this.store.dispatch(new FocusFileListItem({ fileId: hdu.fileId, hduId: hdu.id }));
             }
           });
         });

@@ -5,7 +5,7 @@ import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { map, distinctUntilChanged, tap, take } from 'rxjs/operators';
 import { LoadLibrary } from '../../../data-files/data-files.actions';
-import { SelectDataFileListItem } from '../../../workbench/workbench.actions';
+import { FocusFileListItem } from '../../../workbench/workbench.actions';
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { DataProviderAsset } from '../../models/data-provider-asset';
 import FileSystemItem from 'devextreme/file_management/file_system_item';

@@ -25,6 +25,7 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatTreeModule } from "@angular/material/tree";
 import { DragDropModule } from "@angular/cdk/drag-drop";
+import { MatRippleModule } from '@angular/material/core';
 
 @NgModule({
   imports: [
@@ -53,6 +54,7 @@ import { DragDropModule } from "@angular/cdk/drag-drop";
     MatRadioModule,
     DragDropModule,
     MatTreeModule,
+    MatRippleModule
   ],
   exports: [
     MatInputModule,
@@ -80,6 +82,7 @@ import { DragDropModule } from "@angular/cdk/drag-drop";
     MatRadioModule,
     DragDropModule,
     MatTreeModule,
+    MatRippleModule
   ],
 })
 export class MaterialModule {}

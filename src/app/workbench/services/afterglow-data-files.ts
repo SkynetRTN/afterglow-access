@@ -72,6 +72,10 @@ export class AfterglowDataFileService {
     return this.http.delete(`${getCoreApiUrl(appConfig)}/data-files/${fileId}`).pipe(map((res) => null));
   }
 
+  updateFile(fileId: string, changes: Partial<CoreDataFile>): Observable<null> {
+    return this.http.put(`${getCoreApiUrl(appConfig)}/data-files/${fileId}`, changes).pipe(map((res) => null));
+  }
+
   getFiles(): Observable<CoreDataFile[]> {
     return this.http.get<CoreDataFile[]>(`${getCoreApiUrl(appConfig)}/data-files`);
   }
