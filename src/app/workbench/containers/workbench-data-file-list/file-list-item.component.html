@@ -8,7 +8,7 @@
   >
     <!-- {{focusedItem.fileId}} - {{focusedItem.hduId}} -->
     <div class="item-wrapper" fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
-      <div fxFlex="0 0 auto" style="padding-right: 5px;">
+      <div fxFlex="0 0 auto" style="padding-right: 5px">
         <button
           *ngIf="(hdus$ | async).length > 1; else hduTypeIcon"
           mat-icon-button
@@ -27,14 +27,15 @@
         </ng-template>
       </div>
 
-      <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+      <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 15px">
         <span [matTooltip]="fileTooltip$ | async" [matTooltipShowDelay]="750">{{ file.name }}</span>
       </div>
-      <div fxFlex="0 0 auto" class="node-buttons" style="text-align: right">
+      <div fxFlex="0 0 auto" fxAlign="row" class="node-buttons" *ngIf="hasFocus || (modified$ | async) || !autoHideCheckbox">
         <button
+          fxFlex="0 0 auto"
           *ngIf="hasFocus"
           mat-icon-button
-          class="small mr-2"
+          class="small m-1"
           aria-label="Save File"
           (click)="save($event)"
           matTooltip="Save File"
@@ -43,9 +44,10 @@
           <mat-icon>save</mat-icon>
         </button>
         <button
+          fxFlex="0 0 auto"
           *ngIf="hasFocus; else modifiedIcon"
           mat-icon-button
-          class="small"
+          class="small m-1"
           aria-label="Close File"
           (click)="close($event)"
           matTooltip="Close File"
@@ -54,14 +56,16 @@
           <mat-icon>clear</mat-icon>
         </button>
         <ng-template #modifiedIcon>
-          <mat-icon *ngIf="modified$ | async" class="small" aria-label="modified">fiber_manual_record</mat-icon>
+          <mat-icon  fxFlex="0 0 auto" *ngIf="modified$ | async" class="small m-1" aria-label="modified">fiber_manual_record</mat-icon>
         </ng-template>
-        <mat-checkbox
-          style="padding-left: 15px"
-          *ngIf="!autoHideCheckbox || hasFocus"
-          [ngModel]="selected"
-          (click)="toggleCheckbox($event)"
-        ></mat-checkbox>
+        <div fxFlex="0 0 auto">
+          <mat-checkbox
+            class="m-1"
+            *ngIf="!autoHideCheckbox || hasFocus"
+            [ngModel]="selected"
+            (click)="toggleCheckbox($event)"
+          ></mat-checkbox>
+        </div>
       </div>
     </div>
   </mat-list-option>
@@ -76,13 +80,13 @@
         (dblclick)="onItemDoubleClick.emit(option.value)"
       >
         <div class="item-wrapper" fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
-          <div fxFlex="0 0 auto" style="padding-right: 5px;">
+          <div fxFlex="0 0 auto" style="padding-right: 5px">
             <mat-icon class="mat-icon small">
               {{ hdu?.hduType == HduType.IMAGE ? "insert_photo" : "toc" }}
             </mat-icon>
           </div>
 
-          <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+          <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 15px">
             <span [matTooltip]="(fileTooltip$ | async) + ' - Channel ' + i" [matTooltipShowDelay]="750"
               >Channel {{ i }}</span
             >

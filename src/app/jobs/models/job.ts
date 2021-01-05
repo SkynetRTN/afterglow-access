@@ -7,6 +7,8 @@ import { AlignmentJob } from "./alignment";
 import { StackingJob } from "./stacking";
 import { BatchImportJob } from "./batch-import";
 import { SonificationJob } from "./sonification";
+import { BatchDownloadJob } from './batch-download';
+import { BatchAssetDownloadJob } from './batch-asset-download';
 
 export type Job =
   | SourceExtractionJob
@@ -17,4 +19,6 @@ export type Job =
   | AlignmentJob
   | StackingJob
   | BatchImportJob
-  | SonificationJob;
+  | SonificationJob
+  | BatchDownloadJob
+  | BatchAssetDownloadJob;

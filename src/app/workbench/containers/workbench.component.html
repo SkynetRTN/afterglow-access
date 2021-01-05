@@ -125,6 +125,15 @@
               <mat-icon>save</mat-icon>
               <span>Save selected files</span>
             </button>
+            <button
+              mat-menu-item
+              [disabled]="(selectedFileIds$ | async)?.length == 0"
+              aria-label="Download selected files"
+              (click)="onDownloadSelectedFileListItemsBtnClick()"
+            >
+              <mat-icon>get_app</mat-icon>
+              <span>Download selected files</span>
+            </button>
             <!-- <button mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
               aria-label="Group selected files"

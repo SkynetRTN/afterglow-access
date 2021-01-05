@@ -8,4 +8,6 @@ export enum JobType {
   Stacking = "stacking",
   BatchImport = "batch_import",
   Sonification = "sonification",
+  BatchDownload = "batch_download",
+  BatchAssetDownload = "batch_asset_download"
 }

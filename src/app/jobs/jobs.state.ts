@@ -71,6 +71,14 @@ export class JobsState {
     return Object.values(state.entities);
   }
 
+  @Selector()
+  @ImmutableSelector()
+  public static getJobById(state: JobsStateModel) {
+    return (jobId) => {
+      return jobId in state.entities ? state.entities[jobId] : null;
+    }
+  }
+
   @Action(ResetState)
   @ImmutableContext()
   public resetState({ getState, setState, dispatch }: StateContext<JobsStateModel>, {}: ResetState) {
@@ -83,7 +91,7 @@ export class JobsState {
   @ImmutableContext()
   public createJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, createJobAction: CreateJob) {
     return this.jobService.createJob(createJobAction.job).pipe(
-      tap((job) => {
+      flatMap((job) => {
         createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
           state.entities[job.id] = { job: job, result: null };
@@ -92,9 +100,8 @@ export class JobsState {
           }
           return state;
         });
-      }),
-      flatMap((job) => {
-        //dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
+
+        dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
         if (!createJobAction.autoUpdateInterval) createJobAction.autoUpdateInterval = 2500;
 
         let jobCompleted$ = this.actions$.pipe(
@@ -139,7 +146,8 @@ export class JobsState {
             );
           })
         );
-      })
+      }),
+      catchError(err => dispatch(new CreateJobFail(createJobAction.job, err, createJobAction.correlationId))),
     );
   }
 

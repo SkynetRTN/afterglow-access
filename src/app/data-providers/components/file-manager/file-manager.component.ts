@@ -1,10 +1,10 @@
 import { Component, OnInit, Inject, ViewChild, Output, EventEmitter, Input } from '@angular/core';
 import { DataProvidersState } from '../../data-providers.state';
 import { SetCurrentPath } from '../../data-providers.actions';
-import { Store, Actions } from '@ngxs/store';
-import { Observable } from 'rxjs';
+import { Store, Actions, ofActionDispatched } from '@ngxs/store';
+import { Observable, of, merge } from 'rxjs';
 import CustomFileSystemProvider from 'devextreme/file_management/custom_provider';
-import { map, distinctUntilChanged, tap, take } from 'rxjs/operators';
+import { map, distinctUntilChanged, tap, take, filter, flatMap } from 'rxjs/operators';
 import { DataProviderAsset } from '../../models/data-provider-asset';
 import FileSystemItem from 'devextreme/file_management/file_system_item';
 import { dxFileManagerDetailsColumn } from 'devextreme/ui/file_manager';
@@ -13,6 +13,14 @@ import { AfterglowDataProviderService } from '../../../workbench/services/afterg
 import { saveAs } from "file-saver/dist/FileSaver";
 import { DxFileManagerComponent } from 'devextreme-angular';
 import { HttpErrorResponse } from '@angular/common/http';
+import { BatchAssetDownloadJob } from '../../../jobs/models/batch-asset-download';
+import { JobType } from '../../../jobs/models/job-types';
+import { CorrelationIdGenerator } from '../../../utils/correlated-action';
+import { JobProgressDialogConfig, JobProgressDialogComponent } from '../../../workbench/components/job-progress-dialog/job-progress-dialog.component';
+import { JobsState } from '../../../jobs/jobs.state';
+import { MatDialog } from '@angular/material/dialog';
+import { JobService } from '../../../jobs/services/jobs';
+import { CreateJobSuccess, CreateJobFail, CreateJob } from '../../../jobs/jobs.actions';
 
 @Component({
   selector: 'app-file-manager',
@@ -45,6 +53,9 @@ export class FileManagerComponent implements OnInit {
   @Input()
   download: boolean = false;
 
+  @Input()
+  allowedFileExtensions: string[] = [];
+
   @Output()
   readonly onSelectedAssetOpened: EventEmitter<DataProviderAsset> = new EventEmitter<DataProviderAsset>();
 
@@ -65,7 +76,10 @@ export class FileManagerComponent implements OnInit {
   constructor(
     private store: Store,
     private actions$: Actions,
-    private dataProviderService: AfterglowDataProviderService
+    private dataProviderService: AfterglowDataProviderService,
+    private corrGen: CorrelationIdGenerator,
+    public dialog: MatDialog,
+    private jobService: JobService
   ) {
 
     this.customFileSystemProvider = new CustomFileSystemProvider({
@@ -251,12 +265,68 @@ export class FileManagerComponent implements OnInit {
    */
   downloadItems(items: Array<FileSystemItem>) {
     let assets = items.map(item => item.dataItem as DataProviderAsset).filter(asset => asset && asset.assetPath);
-    let asset = assets[0];
-    return this.dataProviderService.downloadAsset(asset.dataProviderId, asset.assetPath).pipe(
+    if(assets.length == 0) return;
+
+    let dataProviderId = assets[0].dataProviderId;
+    //only assets from the same data provider can be downloaded
+    assets = assets.filter(asset => asset.dataProviderId == dataProviderId)
+    
+    let job: BatchAssetDownloadJob = {
+      type: JobType.BatchAssetDownload,
+      id: null,
+      provider_id: parseInt(dataProviderId),
+      paths: assets.map(asset => asset.assetPath)
+    }
+
+    let corrId = this.corrGen.next();
+    let onCreateJobSuccess$ = this.actions$.pipe(
+      ofActionDispatched(CreateJobSuccess),
+      filter(action => (action as CreateJobSuccess).correlationId == corrId),
       take(1),
-      tap(data => {
-        saveAs(data, asset.name)
+      flatMap(action => {
+        let jobId = (action as CreateJobSuccess).job.id;
+        let dialogConfig: JobProgressDialogConfig = {
+          title: "Preparing download",
+          message: `Please wait while we prepare the files for download.`,
+          progressMode: "indeterminate",
+          job$: this.store.select(JobsState.getJobById).pipe(
+            map(fn => fn(jobId).job)
+          )
+        };
+        let dialogRef = this.dialog.open(JobProgressDialogComponent, {
+          width: "400px",
+          data: dialogConfig,
+          disableClose: true
+        });
+
+        return dialogRef.afterClosed().pipe(
+          flatMap((result) => {
+            if (!result) {
+              
+              return of(null);
+            }
+            
+            return this.jobService.getJobResultFile(jobId, 'download').pipe(
+              tap(data => {
+                saveAs(data, assets.length == 1 ? assets[0].name : 'afterglow-files.zip')
+              })
+            );
+          })
+        );
       })
+    )
+
+    let onCreateJobFail$ =  this.actions$.pipe(
+      ofActionDispatched(CreateJobFail),
+      filter(action => (action as CreateJobFail).correlationId == corrId),
+      take(1),
+    )
+
+
+    this.store.dispatch(new CreateJob(job, 1000, corrId));
+
+    return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(
+      take(1)
     ).toPromise();
   }
 

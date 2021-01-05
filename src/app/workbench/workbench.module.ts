@@ -77,6 +77,7 @@ import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.com
 import { DxFileManagerModule } from 'devextreme-angular';
 import { FileBrowserComponent } from './components/file-browser/file-browser.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
+import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -118,6 +119,7 @@ export const COMPONENTS = [
   FileBrowserComponent,
   SaveChangesDialogComponent,
   FileListItemComponent,
+  JobProgressDialogComponent
 ];
 
 @NgModule({
@@ -157,6 +159,7 @@ export const COMPONENTS = [
     ThemeDialogComponent,
     AlertDialogComponent,
     SaveChangesDialogComponent,
+    JobProgressDialogComponent
   ],
 })
 export class WorkbenchModule {

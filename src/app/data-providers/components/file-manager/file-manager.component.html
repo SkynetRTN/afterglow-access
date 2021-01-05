@@ -1,7 +1,7 @@
 <dx-file-manager id="fileManager" [fileSystemProvider]="customFileSystemProvider"
   [currentPath]="currentFileSystemPath$ | async" height="60vh"
   (onCurrentDirectoryChanged)="onCurrentDirectoryChanged($event)" (onSelectionChanged)="onSelectionChange($event)"
-  (onSelectedFileOpened)="onSelectedFileOpened($event)" (onErrorOccurred)="onErrorOccurred($event)" [allowedFileExtensions]="['.fits', '.fit', '.jpg', '.jpeg', '.png']" [selectionMode]="selectionMode">
+  (onSelectedFileOpened)="onSelectedFileOpened($event)" (onErrorOccurred)="onErrorOccurred($event)" [allowedFileExtensions]="allowedFileExtensions" [selectionMode]="selectionMode">
   <dxo-upload [chunkSize]="50000000" [maxFileSize]="50000000"></dxo-upload>
   <dxo-item-view [showParentFolder]="false" [showParentFolder]="true">
     <dxo-details>

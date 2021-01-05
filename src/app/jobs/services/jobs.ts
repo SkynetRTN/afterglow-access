@@ -34,4 +34,12 @@ export class JobService {
       })
     );
   }
+
+  getJobResultFile(jobId: string, fileId: string): Observable<any> {
+    return this.http.get(`${getCoreApiUrl(appConfig)}/jobs/${jobId}/result/files/${fileId}`, {
+      responseType: 'blob'
+    })
+  }
+
+
 }

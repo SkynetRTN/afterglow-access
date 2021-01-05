@@ -37,7 +37,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "../../../../node_modules/rxjs";
 import { HotkeysService, Hotkey } from "../../../../node_modules/angular2-hotkeys";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
-import { Store, Actions, ofActionCompleted } from "@ngxs/store";
+import { Store, Actions, ofActionCompleted, ofActionDispatched } from "@ngxs/store";
 import { DataFilesState } from "../../data-files/data-files.state";
 import { WorkbenchState } from "../workbench.state";
 import {
@@ -159,6 +159,13 @@ import {
 import { MatCheckboxChange } from "@angular/material/checkbox";
 import { AfterglowDataFileService } from '../services/afterglow-data-files';
 import { UUID } from 'angular2-uuid';
+import { BatchDownloadJob } from '../../jobs/models/batch-download';
+import { JobType } from '../../jobs/models/job-types';
+import { CreateJob, CreateJobSuccess, CreateJobFail } from '../../jobs/jobs.actions';
+import { JobProgressDialogConfig, JobProgressDialogComponent } from '../components/job-progress-dialog/job-progress-dialog.component';
+import { JobsState } from '../../jobs/jobs.state';
+import { saveAs } from "file-saver/dist/FileSaver";
+import { JobService } from '../../jobs/services/jobs';
 
 enum SaveFileAction {
   Save = "save",
@@ -281,6 +288,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     private activeRoute: ActivatedRoute,
     private dataProviderService: AfterglowDataProviderService,
     private dataFileService: AfterglowDataFileService,
+    private jobService: JobService
   ) {
     this.files$ = this.store
       .select(DataFilesState.getFiles)
@@ -1772,6 +1780,79 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       );
   }
 
+  onDownloadSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+
+          let job: BatchDownloadJob = {
+            type: JobType.BatchDownload,
+            id: null,
+            group_ids: files.map(file => file.id)
+          }
+
+          let corrId = this.corrGen.next();
+          let onCreateJobSuccess$ = this.actions$.pipe(
+            ofActionDispatched(CreateJobSuccess),
+            filter(action => (action as CreateJobSuccess).correlationId == corrId),
+            take(1),
+            flatMap(action => {
+              let jobId = (action as CreateJobSuccess).job.id;
+              let dialogConfig: JobProgressDialogConfig = {
+                title: "Preparing download",
+                message: `Please wait while we prepare the files for download.`,
+                progressMode: "indeterminate",
+                job$: this.store.select(JobsState.getJobById).pipe(
+                  map(fn => fn(jobId).job)
+                )
+              };
+              let dialogRef = this.dialog.open(JobProgressDialogComponent, {
+                width: "400px",
+                data: dialogConfig,
+                disableClose: true
+              });
+    
+              return dialogRef.afterClosed().pipe(
+                flatMap((result) => {
+                  if (!result) {
+                    
+                    return of(null);
+                  }
+                  
+                  return this.jobService.getJobResultFile(jobId, 'download').pipe(
+                    tap(data => {
+                      saveAs(data, files.length == 1 ? files[0].name : 'afterglow-files.zip')
+                    })
+                  );
+                })
+              );
+            })
+          )
+
+          let onCreateJobFail$ =  this.actions$.pipe(
+            ofActionDispatched(CreateJobFail),
+            filter(action => (action as CreateJobFail).correlationId == corrId),
+            take(1),
+          )
+
+
+          this.store.dispatch(new CreateJob(job, 1000, corrId));
+
+          return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(
+            take(1)
+          )
+
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => {}
+      );
+  }
+
   getLongestCommonStartingSubstring(arr1: string[]) {
     let arr = arr1.concat().sort(),
       a1 = arr[0],
@@ -1853,19 +1934,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((assets) => {
-      if (assets && assets.length != 0) {
-        this.store.dispatch(new ImportAssets(assets));
-        this.actions$.pipe(ofActionCompleted(ImportAssetsCompleted), take(1)).subscribe((v) => {
-          let action: ImportAssetsCompleted = v.action;
 
-          this.store.dispatch(new LoadLibrary()).subscribe(() => {
-            if (action.fileIds.length != 0) {
-              let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]];
-              this.store.dispatch(new FocusFileListItem({ fileId: hdu.fileId, hduId: hdu.id }));
-            }
-          });
-        });
-      }
     });
   }
 

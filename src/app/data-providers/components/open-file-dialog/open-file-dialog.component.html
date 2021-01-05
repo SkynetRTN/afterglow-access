@@ -4,12 +4,26 @@
 
 <!-- See https://js.devexpress.com/Demos/WidgetsGallery/Demo/FileManager/UICustomization/Angular/Light/ for customization -->
 <mat-dialog-content>
-  <app-file-manager [create]="true" [copy]="true" [move]="true" [delete]="true" [rename]="true" [upload]="true"
-    [download]="true" [selectionMode]="'multiple'" (onAssetSelectionChange)="selectedAssets$.next($event)"
-    (onSelectedAssetOpened)="openSelectedAssets()">
+  <app-file-manager
+    [create]="true"
+    [copy]="true"
+    [move]="true"
+    [delete]="true"
+    [rename]="true"
+    [upload]="true"
+    [download]="true"
+    [selectionMode]="'multiple'"
+    (onAssetSelectionChange)="selectedAssets$.next($event)"
+    (onSelectedAssetOpened)="openSelectedAssets()"
+  >
   </app-file-manager>
 </mat-dialog-content>
-<mat-dialog-actions style="justify-content: flex-end;" class="pb-4">
-  <button mat-raised-button (click)="openSelectedAssets()" [disabled]="!(openBtnEnabled$ | async)">Open</button>
-  <button mat-raised-button [mat-dialog-close]="false">Cancel</button>
+<mat-dialog-actions style="justify-content: flex-end; flex-wrap: nowrap;" class="pb-4">
+  <div fxAlign="column" fxFlex="1 1 auto" style="width: 100%" class="pr-3 pl-3">
+    <mat-progress-bar fxFlex="1 1 auto" *ngIf="loading" mode="determinate" [color]="'accent'" [value]="progress"></mat-progress-bar>
+
+  </div>
+  
+  <button fxFlex="0 0 auto" mat-raised-button (click)="openSelectedAssets()" [disabled]="!(selectionIsValid$ | async) || loading">Open</button>
+  <button fxFlex="0 0 auto" mat-raised-button (click)="cancel()">Cancel</button>
 </mat-dialog-actions>
