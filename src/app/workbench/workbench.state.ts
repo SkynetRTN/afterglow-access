@@ -2539,6 +2539,7 @@ export class WorkbenchState {
       settings: {
         ref_image: parseInt(data.refHduId),
         wcs_grid_points: 0,
+        prefilter: false
       },
     };
 

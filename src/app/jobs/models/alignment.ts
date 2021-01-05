@@ -5,6 +5,7 @@ import { SourceExtractionData } from "./source-extraction";
 export interface AlignmentSettings {
   ref_image: "first" | "central" | "last" | number;
   wcs_grid_points: number;
+  prefilter: boolean;
 }
 
 export interface AlignmentJob extends JobBase {
