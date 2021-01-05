@@ -485,17 +485,14 @@
 
           <app-aligning-panel
             *ngSwitchCase="WorkbenchTool.ALIGNER"
-            [hdus]="hdus$ | async"
-            [fileEntities]="fileEntities$ | async"
+            [hduIds]="filteredHduIds$ | async"
             [config]="aligningPanelConfig$ | async"
           >
           </app-aligning-panel>
 
           <app-stacking-panel
             *ngSwitchCase="WorkbenchTool.STACKER"
-            [primaryHdu]="focusedViewerImageHdu$ | async"
-            [dataFileEntities]="fileEntities$ | async"
-            [hdus]="hdus$ | async"
+            [hduIds]="filteredHduIds$ | async"
             [config]="stackingPanelConfig$ | async"
           >
           </app-stacking-panel>

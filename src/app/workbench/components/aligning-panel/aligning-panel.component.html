@@ -1,25 +1,20 @@
-<div *ngIf="hdus">
+<div *ngIf="hduIds">
   <form [formGroup]="alignForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Align</mat-label>
         <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hdu of hdus" [value]="hdu?.id">
-            <ng-container *ngIf="hdu">
-              {{ fileEntities[hdu.fileId].name }}
-              <ng-container *ngIf="fileEntities[hdu.fileId].hduIds.length > 1">
-                - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
-              >
-            </ng-container>
+          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+            {{ getHduOptionLabel(hduId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectHdus(hdus)" i18n-aria-label aria-label="Select All Files">
+      <button mat-icon-button (click)="onSelectAllBtnClick()">
         <mat-icon>select_all</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="selectHdus([])" i18n-aria-label aria-label="Clear Selection">
+      <button mat-icon-button (click)="onClearSelectionBtnClick()">
         <mat-icon>clear</mat-icon>
       </button>
     </div>
@@ -28,11 +23,8 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Reference Image File</mat-label>
         <mat-select formControlName="refHduId" [value]="(refHdu$ | async)?.id">
-          <mat-option *ngFor="let hdu of (selectedHdus$ | async)" [value]="hdu?.id">
-            {{ fileEntities[hdu.fileId].name }}
-            <ng-container *ngIf="fileEntities[hdu.fileId]?.hduIds?.length > 1">
-              - Channel {{ fileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
-            >
+          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+            {{ getHduOptionLabel(hduId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -47,11 +39,17 @@
       </mat-form-field>
     </div>
 
-    <div *ngIf="(refHeader$ | async)">
+    <div *ngIf="refHeader$ | async">
       <div *ngIf="(refHeader$ | async).loading; else hasWcsBlock" class="alert alert-info" style="margin-top: 10px" i18n>
         Reference header loading...
       </div>
-      <div #hasWcsBlock *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)" class="alert alert-warning" style="margin-top: 10px" i18n>
+      <div
+        #hasWcsBlock
+        *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)"
+        class="alert alert-warning"
+        style="margin-top: 10px"
+        i18n
+      >
         This image does not have astrometric data in its header and cannot be aligned using the selected mode.
       </div>
     </div>

@@ -196,7 +196,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   files$: Observable<DataFile[]>;
   fileListFilter$: Observable<string>;
   fileListFilterInput$ = new Subject<string>();
+  filteredFileIds$: Observable<string[]>;
   filteredFiles$: Observable<DataFile[]>;
+  filteredHdus$: Observable<IHdu[]>;
+  filteredHduIds$: Observable<string[]>;
   selectedFileIds$: Observable<string[]>;
   fileListSelectAllChecked$: Observable<boolean>;
   fileListSelectAllIndeterminate$: Observable<boolean>;
@@ -297,10 +300,23 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.fileListFilter$ = this.store.select(WorkbenchState.getFileListFilter);
     this.fileListFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));
+      
     });
 
     this.filteredFiles$ = this.store.select(WorkbenchState.getFilteredFiles);
+    this.filteredFileIds$ = this.store.select(WorkbenchState.getFilteredFileIds);
     this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFileIds);
+
+    this.filteredHduIds$ = this.store.select(WorkbenchState.getFilteredHduIds).pipe(
+      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every( (value, index) => b[index] == value))
+    )
+    this.filteredHdus$ = this.filteredHduIds$.pipe(
+      switchMap(hduIds => {
+        return combineLatest(hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
+          map(fn => fn(hduId))
+        )))
+      })
+    )
 
     this.fileListSelectAllChecked$ = combineLatest(this.filteredFiles$, this.selectedFileIds$).pipe(
       map(([filteredFiles, selectedFileIds]) => {

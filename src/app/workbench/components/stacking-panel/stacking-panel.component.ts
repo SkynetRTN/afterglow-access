@@ -1,6 +1,6 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
-import { map, tap, takeUntil } from "rxjs/operators";
+import { map, tap, takeUntil, distinctUntilChanged, flatMap } from "rxjs/operators";
 import { StackFormData, WorkbenchTool, StackingPanelConfig } from "../../models/workbench-state";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { StackingJob, StackingJobResult } from "../../../jobs/models/stacking";
@@ -10,39 +10,22 @@ import { WorkbenchState } from "../../workbench.state";
 import { JobsState } from "../../../jobs/jobs.state";
 import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from "../../workbench.actions";
 import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
+import { DataFilesState } from "../../../data-files/data-files.state";
 
 @Component({
   selector: "app-stacking-panel",
   templateUrl: "./stacking-panel.component.html",
   styleUrls: ["./stacking-panel.component.css"],
 })
-export class StackerPageComponent implements OnInit {
-  @Input("primaryHdu")
-  set primaryHdu(primaryHdu: ImageHdu) {
-    this.primaryHdu$.next(primaryHdu);
+export class StackerPanelComponent implements OnInit {
+  @Input("hduIds")
+  set hduIds(hduIds: string[]) {
+    this.hduIds$.next(hduIds);
   }
-  get primaryHdu() {
-    return this.primaryHdu$.getValue();
+  get hduIds() {
+    return this.hduIds$.getValue();
   }
-  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
-
-  @Input("hdus")
-  set hdus(hdus: ImageHdu[]) {
-    this.hdus$.next(hdus);
-  }
-  get hdus() {
-    return this.hdus$.getValue();
-  }
-  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
-
-  @Input("dataFileEntities")
-  set dataFileEntities(dataFileEntities: { [id: string]: DataFile }) {
-    this.dataFileEntities$.next(dataFileEntities);
-  }
-  get dataFileEntities() {
-    return this.dataFileEntities$.getValue();
-  }
-  private dataFileEntities$ = new BehaviorSubject<{ [id: string]: DataFile }>(null);
+  private hduIds$ = new BehaviorSubject<string[]>(null);
 
   @Input("config")
   set config(config: StackingPanelConfig) {
@@ -54,10 +37,10 @@ export class StackerPageComponent implements OnInit {
   private config$ = new BehaviorSubject<StackingPanelConfig>(null);
 
   destroy$: Subject<boolean> = new Subject<boolean>();
-
   selectedHdus$: Observable<Array<ImageHdu>>;
   stackFormData$: Observable<StackFormData>;
   stackJobRow$: Observable<{ job: StackingJob; result: StackingJobResult }>;
+  dataFileEntities$: Observable<{ [id: string]: DataFile }>;
 
   stackForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
@@ -70,6 +53,19 @@ export class StackerPageComponent implements OnInit {
   });
 
   constructor(private store: Store, private router: Router) {
+    this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
+
+    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
+      if(!hduIds || !this.config) return;
+      let selectedHduIds = this.config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+      if (selectedHduIds.length != this.config.stackFormData.selectedHduIds.length) {
+        setTimeout(() => {
+          this.setSelectedHduIds(selectedHduIds);
+        });
+        
+      }
+    });
+
     this.stackForm
       .get("mode")
       .valueChanges.pipe(takeUntil(this.destroy$))
@@ -95,6 +91,7 @@ export class StackerPageComponent implements OnInit {
       });
 
     this.stackFormData$ = store.select(WorkbenchState.getState).pipe(
+      takeUntil(this.destroy$),
       map((state) => state.stackingPanelConfig.stackFormData),
       takeUntil(this.destroy$)
     );
@@ -102,10 +99,6 @@ export class StackerPageComponent implements OnInit {
     this.stackFormData$.subscribe((data) => {
       this.stackForm.patchValue(data, { emitEvent: false });
     });
-
-    this.selectedHdus$ = combineLatest(this.hdus$, this.stackFormData$).pipe(
-      map(([hdus, data]) => data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)))
-    );
 
     this.stackJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
       map(([state, jobRowLookup]) => {
@@ -118,29 +111,68 @@ export class StackerPageComponent implements OnInit {
       })
     );
 
-    this.stackForm.valueChanges.subscribe((value) => {
+    this.stackForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcForm.valid) {
       this.store.dispatch(new UpdateStackingPanelConfig({ stackFormData: this.stackForm.value }));
       // }
     });
   }
 
-  selectImageFiles(imageFiles: DataFile[]) {
+  getHduOptionLabel(hduId: string) {
+    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId))
+    )
+
+    let file$ = hdu$.pipe(
+      map(hdu => hdu.fileId),
+      distinctUntilChanged(),
+      flatMap(fileId => {
+        return this.store.select(DataFilesState.getFileById).pipe(
+          map(fn => fn(fileId))
+        )
+      })
+    )
+
+    return combineLatest(hdu$, file$).pipe(
+      map(([hdu, file]) => {
+        if(!hdu || !file) return '???';
+        if(file.hduIds.length > 1) {
+          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`
+        }
+        return file.name
+      })
+    )
+
+  }
+
+  setSelectedHduIds(hduIds: string[]) {
     this.store.dispatch(
       new UpdateStackingPanelConfig({
         stackFormData: {
           ...this.stackForm.value,
-          selectedHduIds: imageFiles.map((f) => f.id),
+          selectedHduIds: hduIds,
         },
       })
     );
   }
 
+  onSelectAllBtnClick() {
+    this.setSelectedHduIds(this.hduIds);
+  }
+
+  onClearSelectionBtnClick() {
+    this.setSelectedHduIds([]);
+  }
+
   submit(data: StackFormData) {
-    this.store.dispatch(new CreateStackingJob());
+    let selectedHduIds: string[] = this.stackForm.controls.selectedHduIds.value;
+    this.store.dispatch(new CreateStackingJob(selectedHduIds));
   }
 
   ngOnInit() {}
 
-  ngOnDestroy() {}
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
 }

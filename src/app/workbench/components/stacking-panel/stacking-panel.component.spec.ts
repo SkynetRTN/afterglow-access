@@ -1,19 +1,19 @@
 import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { StackerPageComponent } from "./stacking-panel.component";
+import { StackerPanelComponent } from "./stacking-panel.component";
 
 describe("StackerPageComponent", () => {
-  let component: StackerPageComponent;
-  let fixture: ComponentFixture<StackerPageComponent>;
+  let component: StackerPanelComponent;
+  let fixture: ComponentFixture<StackerPanelComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [StackerPageComponent],
+      declarations: [StackerPanelComponent],
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(StackerPageComponent);
+    fixture = TestBed.createComponent(StackerPanelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

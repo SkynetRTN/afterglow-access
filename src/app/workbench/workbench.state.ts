@@ -429,6 +429,18 @@ export class WorkbenchState {
   }
 
   @Selector([WorkbenchState.getFilteredFiles])
+  public static getFilteredFileIds(state: WorkbenchStateModel, files: DataFile[]) {
+    return files.map(file => file.id)
+  }
+
+  @Selector([WorkbenchState.getFilteredFiles])
+  public static getFilteredHduIds(state: WorkbenchStateModel, files: DataFile[]) {
+    return files.reduce((hduIds, file, index) => hduIds.concat(file.hduIds), []);
+  }
+
+
+
+  @Selector([WorkbenchState.getFilteredFiles])
   public static getSelectedFileIds(state: WorkbenchStateModel, filteredFiles: DataFile[]) {
     let filteredFileIds = filteredFiles.map((f) => f.id);
     return state.selectedFileIds.filter((id) => filteredFileIds.includes(id));
@@ -2504,12 +2516,12 @@ export class WorkbenchState {
 
   @Action(CreateAlignmentJob)
   @ImmutableContext()
-  public createAlignmentJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CreateAlignmentJob) {
+  public createAlignmentJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {hduIds}: CreateAlignmentJob) {
     let state = getState();
     let data = state.aligningPanelConfig.alignFormData;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageHdus = data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
     let job: AlignmentJob = {
       type: JobType.Alignment,
       id: null,
@@ -2594,12 +2606,12 @@ export class WorkbenchState {
 
   @Action(CreateStackingJob)
   @ImmutableContext()
-  public createStackingJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CreateStackingJob) {
+  public createStackingJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {hduIds}: CreateStackingJob) {
     let state = getState();
     let data = state.stackingPanelConfig.stackFormData;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageHdus = data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
     let job: StackingJob = {
       type: JobType.Stacking,
       id: null,

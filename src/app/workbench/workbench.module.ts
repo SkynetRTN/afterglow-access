@@ -51,7 +51,7 @@ import { SonificationPanelComponent } from "./components/sonification-panel/soni
 import { FileInfoToolsetComponent } from "./components/file-info-panel/file-info-panel.component";
 import { PhotometryPageComponent } from "./components/photometry-panel/photometry-panel.component";
 import { ImageCalculatorPageComponent } from "./components/pixel-ops-panel/pixel-ops-panel.component";
-import { StackerPageComponent } from "./components/stacking-panel/stacking-panel.component";
+import { StackerPanelComponent } from "./components/stacking-panel/stacking-panel.component";
 import { AlignerPageComponent } from "./components/aligning-panel/aligning-panel.component";
 import { AfterglowDataFileService } from "./services/afterglow-data-files";
 import { AfterglowDataProviderService } from "./services/afterglow-data-providers";
@@ -100,7 +100,7 @@ export const COMPONENTS = [
   SonificationPanelComponent,
   PhotometryPageComponent,
   ImageCalculatorPageComponent,
-  StackerPageComponent,
+  StackerPanelComponent,
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionDialogComponent,

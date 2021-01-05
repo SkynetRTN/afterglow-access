@@ -1,24 +1,20 @@
-<div *ngIf="hdus">
+<div *ngIf="hduIds">
   <form [formGroup]="stackForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Stack</mat-label>
         <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id"
-            >{{ dataFileEntities[hdu.fileId].name }}
-
-            <ng-container *ngIf="dataFileEntities[hdu.fileId].hduIds.length > 1">
-              - Channel {{ dataFileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
-            >
+          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+            {{getHduOptionLabel(hduId) | async}}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectImageFiles(hdus)">
+      <button mat-icon-button (click)="onSelectAllBtnClick()">
         <mat-icon>select_all</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="selectImageFiles([])">
+      <button mat-icon-button (click)="onClearSelectionBtnClick()">
         <mat-icon>clear</mat-icon>
       </button>
     </div>

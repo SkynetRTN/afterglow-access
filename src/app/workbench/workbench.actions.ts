@@ -375,10 +375,12 @@ export class HideCurrentPixelOpsJobState {
 
 export class CreateAlignmentJob {
   public static readonly type = "[Workbench] Create Alignment Job";
+  constructor(public hduIds: string[]) {}
 }
 
 export class CreateStackingJob {
   public static readonly type = "[Workbench] Create Stacking Job";
+  constructor(public hduIds: string[]) {}
 }
 
 export class ExtractSources {

@@ -1,7 +1,7 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 
-import { map, takeUntil, distinctUntilChanged, switchMap, tap } from "rxjs/operators";
+import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { AlignFormData, AligningPanelConfig } from "../../models/workbench-state";
 import { MatSelectChange } from "@angular/material/select";
@@ -21,23 +21,14 @@ import { LoadHduHeader } from "../../../data-files/data-files.actions";
   styleUrls: ["./aligning-panel.component.css"],
 })
 export class AlignerPageComponent implements OnInit {
-  @Input("hdus")
-  set hdus(hdus: ImageHdu[]) {
-    this.hdus$.next(hdus);
+  @Input("hduIds")
+  set hduIds(hduIds: string[]) {
+    this.hduIds$.next(hduIds);
   }
-  get hdus() {
-    return this.hdus$.getValue();
+  get hduIds() {
+    return this.hduIds$.getValue();
   }
-  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
-
-  @Input("fileEntities")
-  set fileEntities(fileEntities: { [id: string]: DataFile }) {
-    this.fileEntities$.next(fileEntities);
-  }
-  get fileEntities() {
-    return this.fileEntities$.getValue();
-  }
-  private fileEntities$ = new BehaviorSubject<{ [id: string]: DataFile }>(null);
+  private hduIds$ = new BehaviorSubject<string[]>(null);
 
   @Input("config")
   set config(config: AligningPanelConfig) {
@@ -50,7 +41,7 @@ export class AlignerPageComponent implements OnInit {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  selectedHdus$: Observable<Array<ImageHdu>>;
+  selectedHduIds$: Observable<string[]>;
   refHduId$: Observable<string>;
   refHdu$: Observable<ImageHdu>;
   refHeader$: Observable<Header>;
@@ -65,6 +56,17 @@ export class AlignerPageComponent implements OnInit {
   });
 
   constructor(private store: Store, private router: Router) {
+    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
+      if(!hduIds || !this.config) return;
+      let selectedHduIds = this.config.alignFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+      if (selectedHduIds.length != this.config.alignFormData.selectedHduIds.length) {
+        setTimeout(() => {
+          this.setSelectedHduIds(selectedHduIds);
+        });
+        
+      }
+    });
+
     this.alignFormData$ = this.config$.pipe(
       map((config) => config && config.alignFormData),
       distinctUntilChanged()
@@ -123,12 +125,6 @@ export class AlignerPageComponent implements OnInit {
       distinctUntilChanged()
     );
 
-    this.selectedHdus$ = combineLatest(this.hdus$, this.alignFormData$).pipe(
-      map(([allImageFiles, alignFormData]) =>
-        alignFormData.selectedHduIds.map((id) => allImageFiles.find((f) => f.id == id)).filter(v => v)
-      )
-    );
-
     this.alignForm.valueChanges.subscribe((value) => {
       // if(this.imageCalcForm.valid) {
       this.store.dispatch(new UpdateAligningPanelConfig({ alignFormData: this.alignForm.value }));
@@ -154,21 +150,58 @@ export class AlignerPageComponent implements OnInit {
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    // Now let's also unsubscribe from the subject itself:
     this.destroy$.unsubscribe();
   }
-  selectHdus(hdus: ImageHdu[]) {
+
+  getHduOptionLabel(hduId: string) {
+    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId))
+    )
+
+    let file$ = hdu$.pipe(
+      map(hdu => hdu.fileId),
+      distinctUntilChanged(),
+      flatMap(fileId => {
+        return this.store.select(DataFilesState.getFileById).pipe(
+          map(fn => fn(fileId))
+        )
+      })
+    )
+
+    return combineLatest(hdu$, file$).pipe(
+      map(([hdu, file]) => {
+        if(!hdu || !file) return '???';
+        if(file.hduIds.length > 1) {
+          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`
+        }
+        return file.name
+      })
+    )
+
+  }
+
+  setSelectedHduIds(hduIds: string[]) {
     this.store.dispatch(
       new UpdateAligningPanelConfig({
         alignFormData: {
           ...this.alignForm.value,
-          selectedHduIds: hdus.map((f) => f.id),
+          selectedHduIds: hduIds,
         },
       })
     );
   }
 
-  submit(data: AlignFormData) {
-    this.store.dispatch(new CreateAlignmentJob());
+  onSelectAllBtnClick() {
+    this.setSelectedHduIds(this.hduIds);
   }
+
+  onClearSelectionBtnClick() {
+    this.setSelectedHduIds([]);
+  }
+
+  submit(data: AlignFormData) {
+    let selectedHduIds: string[] = this.alignForm.controls.selectedHduIds.value;
+    this.store.dispatch(new CreateAlignmentJob(selectedHduIds));
+  }
+
 }
