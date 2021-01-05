@@ -511,9 +511,6 @@
     >
       <nav role="navigation" aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
         <div class="vertical-icon-nav-item-group">
-          <div class="workbench-settings-card">
-            <div class="card-header spacer"></div>
-          </div>
           <div
             class="vertical-icon-nav-item"
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"

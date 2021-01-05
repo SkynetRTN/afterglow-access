@@ -160,12 +160,18 @@
       border: none;
       opacity: 0.9;
       padding: 5px;
-      @if ($is-dark-theme) {
-        background: rgba(white, 0.2);
-        border-bottom: 2px solid rgba(white, 0.1);
-      } @else {
-        background: rgba(black, 0.1);
-        border-bottom: 2px solid rgba(black, 0.05);
+      background: mat-color($background, card);
+      border-bottom: 2px solid mat-color($foreground, divider);
+      // @if ($is-dark-theme) {
+      //   background: rgba(white, 0.2);
+      //   border-bottom: 2px solid rgba(white, 0.1);
+      // } @else {
+      //   background: rgba(black, 0.1);
+      //   border-bottom: 2px solid rgba(black, 0.05);
+      // }
+
+      .mat-icon {
+        color: mat-color($foreground, hint-text);
       }
     }
 
@@ -174,8 +180,12 @@
     }
 
     .vertical-icon-nav-item.active {
-      background: mat-color($background, card);
+      // background: mat-color($background, card);
       opacity: 1;
+     
+      .mat-icon-button {
+        outline: 3px auto mat-color($primary);
+      }
 
       .mat-icon {
         color: mat-color($primary);

@@ -6,6 +6,10 @@
   $foreground: map-get($theme, foreground);
 
   app-workbench-data-file-list {
+    .mat-selection-list {
+      border-bottom: solid 2px mat-color($foreground, divider);
+    }
+
     .mat-list-option {
       height: 36px !important;
       -moz-user-select: none;
@@ -47,6 +51,10 @@
       align-items: center;
       background: mat-color($background, background);
       box-shadow: 0px 0px 5px 5px mat-color($foreground, divider);
+    }
+
+    .node-buttons .mat-icon-button {
+      color: mat-color($foreground, icon);
     }
 
     .node-buttons .mat-icon-button:hover {
