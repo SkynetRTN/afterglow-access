@@ -624,6 +624,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
             //this tile has not changed and is already in the buffered canvas
             return;
           }
+          if(tile.pixelsLoading || tile.pixels.byteLength == 0) {
+            // web worker may be processing these pixel
+            return;
+          }
           let imageData = this.imageCtx.createImageData(tile.width, tile.height);
           let blendedImageDataUint8Clamped = new Uint8ClampedArray(tile.pixels.buffer);
           imageData.data.set(blendedImageDataUint8Clamped);

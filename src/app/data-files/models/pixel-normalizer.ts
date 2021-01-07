@@ -17,10 +17,9 @@ export interface PixelNormalizer {
 //   }
 // }
 
-export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer) {
+export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer, result: Uint32Array) {
   let stretchMode = normalizer.stretchMode;
   let colorMapLookup = COLOR_MAPS[normalizer.colorMapName].lookup;
-  let normalizedPixels = new Uint32Array(pixels.length);
 
   let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
   let backgroundLevel = levels.backgroundLevel;
@@ -86,12 +85,10 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
     norm = norm < 0 ? 0 : norm;
     let colorIndex = norm * colorIndexScaler;
     if (invert) colorIndex = colorMapLookup.length - 1 - colorIndex;
-    normalizedPixels[i] = colorMapLookup[Math.floor(colorIndex)];
+    result[i] = colorMapLookup[Math.floor(colorIndex)];
     // let color = colorMapLookup[Math.floor(colorIndex)];
     // let r = (color >> 16) & 0xff;
     // let g = (color >> 8) & 0xff;
     // let b = (color >> 0) & 0xff;
   }
-
-  return normalizedPixels;
 }
