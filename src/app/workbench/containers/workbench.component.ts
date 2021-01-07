@@ -1921,7 +1921,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               let reqs = [];
               files.forEach(file => {
                 file.hduIds.forEach(hduId => {
-                  reqs.push(this.dataFileService.updateFile(hduId, {group_id: uuid, name: newFilename}))
+                  reqs.push(this.dataFileService.updateFile(hduId, {group_id: uuid, name: newFilename, data_provider: null, asset_path: null, modified: true}))
                 })
                 
               })

@@ -13,7 +13,7 @@ import {
   Header,
 } from "./models/data-file";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { merge, combineLatest } from "rxjs";
+import { merge, combineLatest, fromEvent } from "rxjs";
 import { catchError, tap, flatMap, filter, takeUntil, take, skip } from "rxjs/operators";
 import { AfterglowDataFileService } from "../workbench/services/afterglow-data-files";
 import { mergeDelayError } from "../utils/rxjs-extensions";
@@ -63,6 +63,7 @@ import {
   SaveDataFile,
   SaveDataFileFail,
   InvalidateHeader,
+  UpdateNormalizedImageTileWorkerComplete,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -1079,9 +1080,43 @@ export class DataFilesState {
     return dispatch(new InvalidateCompositeImageTile(fileId, tileIndex));
   }
 
-  @Action(UpdateNormalizedImageTile)
+  @Action(UpdateNormalizedImageTileWorkerComplete)
   @ImmutableContext()
-  public loadNormalizedImageTile(
+  public updateNormalizedImageTileWorkerComplete(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId, tileIndex, normalizedImageDataId, pixels }: UpdateNormalizedImageTileWorkerComplete
+  ) {
+    let state = getState();
+    let hdu = state.hduEntities[hduId] as ImageHdu;
+    let actions = [];
+        
+    setState((state: DataFilesStateModel) => {
+      let normalizedImageData = state.imageDataEntities[normalizedImageDataId];
+      let tile = normalizedImageData.tiles[tileIndex];
+      
+      tile.pixelsLoaded = true;
+      tile.pixelLoadingFailed = false;
+      tile.pixelsLoading = false;
+      tile.isValid = true
+      tile.pixels = pixels;
+
+      state.imageDataEntities[normalizedImageDataId] = {
+        ...normalizedImageData,
+      };
+
+      actions.push(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels));
+      actions.push(new InvalidateCompositeImageTile(hdu.fileId, tileIndex));
+
+      return state;
+    })
+    
+    return dispatch(actions);
+
+
+  }
+
+  @Action(UpdateNormalizedImageTile)
+  public updateNormalizedImageTile(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
     { hduId, tileIndex }: UpdateNormalizedImageTile
   ) {
@@ -1104,31 +1139,39 @@ export class DataFilesState {
     }
 
     let onRawPixelsLoaded = () => {
-      let actions = [];
-      setState((state: DataFilesStateModel) => {
-        let hdu = state.hduEntities[hduId] as ImageHdu;
-        let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
-        let tile = normalizedImageData.tiles[tileIndex];
-        let imageData = state.imageDataEntities[hdu.rawImageDataId];
-        let rawTile = imageData.tiles[tileIndex];
+      let state = getState();
+      let hdu = state.hduEntities[hduId] as ImageHdu;
+      let imageData = state.imageDataEntities[hdu.rawImageDataId];
+      let rawTile = imageData.tiles[tileIndex];
 
-        tile.pixelsLoaded = true;
-        tile.pixelLoadingFailed = false;
-        tile.pixelsLoading = false;
-        tile.isValid = true;
-        tile.pixels = normalize(rawTile.pixels, hdu.hist, hdu.normalizer);
+      let onNormalizationComplete = (pixels: Uint32Array) => {
+        return this.store.dispatch(new UpdateNormalizedImageTileWorkerComplete(hduId, tileIndex, hdu.normalizedImageDataId, pixels))
+      }
+        
+        if (typeof Worker !== 'undefined') {
+          console.log("NORMALIZING WITH WORKERS")
+          const worker = new Worker('./normalization.worker', { type: 'module' });
+          // return fromEvent<MessageEvent>(worker, 'message').pipe(
+          //   flatMap($event => {
+          //     return onNormalizationComplete($event.data);
+          //   })
+          // )
+          worker.onmessage = ({ data }) => {
+            onNormalizationComplete(data.pixels);
+          };
 
-        state.imageDataEntities[hdu.normalizedImageDataId] = {
-          ...normalizedImageData,
-        };
+          let data = {
+            pixels: rawTile.pixels,
+            hist: hdu.hist,
+            normalizer: hdu.normalizer
+          }
+          worker.postMessage(data, [data.pixels.buffer, data.hist.data.buffer]);
+          
+         
+        } else {
+          return onNormalizationComplete(normalize(rawTile.pixels, hdu.hist, hdu.normalizer));
+        }
 
-        actions.push(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels));
-        actions.push(new InvalidateCompositeImageTile(hdu.fileId, tileIndex));
-
-        return state;
-      });
-
-      return dispatch(actions);
     };
 
     if (rawTile.pixelsLoaded && rawTile.isValid) {

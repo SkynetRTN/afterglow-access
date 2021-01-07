@@ -233,6 +233,12 @@ export class UpdateNormalizedImageTile {
   constructor(public hduId: string, public tileIndex: number) {}
 }
 
+export class UpdateNormalizedImageTileWorkerComplete {
+  public static readonly type = "[Workbench HDU State] Update Normalized Image Tile Worker Complete";
+
+  constructor(public hduId: string, public tileIndex: number, public normalizedImageDataId: string, public pixels: Uint32Array) {}
+}
+
 export class UpdateNormalizedImageTileSuccess {
   public static readonly type = "[Workbench HDU State] Update Normalized Image Tile Success";
 
