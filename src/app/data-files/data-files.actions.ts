@@ -4,6 +4,7 @@ import { PixelNormalizer } from "./models/pixel-normalizer";
 import { Region } from "./models/region";
 import { Transform } from "./models/transformation";
 import { Normalization } from "./models/normalization";
+import { BlendMode } from './models/blend-mode';
 
 /**
  * Load Library Actions
@@ -65,7 +66,7 @@ export class LoadHduHeaderSuccess {
 }
 
 /**
- * Image File Actions
+ * HDU Actions
  */
 
 export class LoadImageHduHistogram {
@@ -108,6 +109,18 @@ export class LoadRawImageTileCancel {
   public static readonly type = "[File] Load Raw Image Tile Cancel";
 
   constructor(public hduId: string, public tileIndex: number) {}
+}
+
+export class UpdateBlendMode {
+  public static readonly type = "[File] Update Blend Mode";
+
+  constructor(public hduId: string, public blendMode: BlendMode) {}
+}
+
+export class UpdateAlpha {
+  public static readonly type = "[File] Update Alpha";
+
+  constructor(public hduId: string, public alpha: number) {}
 }
 
 

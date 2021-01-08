@@ -9,13 +9,14 @@ import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from "../../../utils/correlated-action";
 import { Store } from "@ngxs/store";
 import { DataFile, ImageHdu, IHdu, PixelType } from "../../../data-files/models/data-file";
-import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip } from "../../../data-files/data-files.actions";
+import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip, UpdateBlendMode, UpdateAlpha } from "../../../data-files/data-files.actions";
 import { StretchMode } from "../../../data-files/models/stretch-mode";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform } from "../../../data-files/models/transformation";
 import { IImageData } from "../../../data-files/models/image-data";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
+import { BlendMode } from '../../../data-files/models/blend-mode';
 
 @Component({
   selector: "app-display-panel",
@@ -79,6 +80,11 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   private viewportSize$ = new BehaviorSubject<{ width: number; height: number }>(null);
 
   HduType = HduType;
+
+  blendModeOptions = [
+    { label: "Normal", value: BlendMode.Normal },
+    { label: "Screen", value: BlendMode.Screen },
+  ];
 
   selectedHdu$: Observable<ImageHdu>;
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
@@ -183,6 +189,17 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onResetOrientationClick() {
     this.store.dispatch(new ResetImageTransform(this.imageData.id, this.imageTransform.id, this.viewportTransform.id));
+  }
+
+  onBlendModeChange(value: BlendMode) {
+    this.store.dispatch(new UpdateBlendMode(this.hdu.id, value));
+  }
+
+  onAlphaChange(value: number) {
+    if(value == null || value < 0 || value > 1) {
+      return
+    }
+    this.store.dispatch(new UpdateAlpha(this.hdu.id, value))
   }
 
   ngOnInit() {}

@@ -65,6 +65,8 @@ import {
   InvalidateHeader,
   CalculateNormalizedPixelsSuccess,
   CalculateNormalizedPixels,
+  UpdateBlendMode,
+  UpdateAlpha,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -1286,6 +1288,50 @@ export class DataFilesState {
   /**
    * Composite
    */
+
+  @Action(UpdateBlendMode)
+  @ImmutableContext()
+  public updateBlendMode(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId, blendMode }: UpdateBlendMode
+  ) {
+    let state = getState();
+    if (!(hduId in state.hduEntities)) return;
+
+    let actions = [];
+    setState((state: DataFilesStateModel) => {
+      let hdu = state.hduEntities[hduId] as ImageHdu;
+      hdu.blendMode = blendMode;
+
+      actions.push(new InvalidateCompositeImageTiles(hdu.fileId))
+      return state;
+    });
+
+    dispatch(actions);
+    
+  }
+
+  @Action(UpdateAlpha)
+  @ImmutableContext()
+  public updateAlpha(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId, alpha }: UpdateAlpha
+  ) {
+    let state = getState();
+    if (!(hduId in state.hduEntities)) return;
+
+    let actions = [];
+    setState((state: DataFilesStateModel) => {
+      let hdu = state.hduEntities[hduId] as ImageHdu;
+      hdu.alpha = alpha;
+
+      actions.push(new InvalidateCompositeImageTiles(hdu.fileId))
+      return state;
+    });
+
+    dispatch(actions);
+    
+  }
 
   @Action(InvalidateCompositeImageTiles)
   @ImmutableContext()

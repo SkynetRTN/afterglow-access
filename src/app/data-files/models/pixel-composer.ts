@@ -6,6 +6,10 @@ export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMod
   let result8 = new Uint8ClampedArray(result.buffer);
   let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.pixels.buffer));
 
+  for (let k = 1; k < layers.length; k++) {
+console.log("LAYER:  ", layers[k].alpha, layers[k].blendMode)
+  }
+
   //for each pixel in result
   for (let i = 0, j = 0, len = result.length; i != len; i++, j += 4) {
     //for each layer

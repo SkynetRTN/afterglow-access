@@ -436,7 +436,13 @@ export class CloseSidenav {
 export class InitializeWorkbenchHduState {
   public static readonly type = "[Workbench HDU State] Initialize Workbench HDU State";
 
-  constructor(public hduIds: string[]) {}
+  constructor(public hduId: string) {}
+}
+
+export class InitializeWorkbenchFileState {
+  public static readonly type = "[Workbench File State] Initialize Workbench File State";
+
+  constructor(public fileId: string) {}
 }
 
 /* Sonification */
