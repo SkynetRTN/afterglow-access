@@ -108,7 +108,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
-  normalizedImageData: IImageData<Uint32Array>;
   imageTransform$: Observable<Transform>;
   viewportTransform$: Observable<Transform>;
   imageToViewportTransform$: Observable<Transform>;
@@ -587,6 +586,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
       this.viewer.id
     );
+    let normalizedImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[normalizedImageDataId];
     let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
     let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
 
@@ -595,8 +595,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       new CenterRegionInViewport(normalizedImageDataId, imageTransformId, viewportTransformId, this.viewer.viewportSize, {
         x: 1,
         y: 1,
-        width: this.normalizedImageData.width,
-        height: this.normalizedImageData.height,
+        width: normalizedImageData.width,
+        height: normalizedImageData.height,
       })
     );
   }
