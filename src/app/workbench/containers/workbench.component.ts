@@ -1571,6 +1571,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
       width: "500px",
       data: config,
+      disableClose: true
     });
 
     return dialogRef.afterClosed();
@@ -1616,6 +1617,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
+            disableClose: true
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1660,6 +1662,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
+            disableClose: true
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1688,6 +1691,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
       width: "500px",
       data: config,
+      disableClose: true
     });
 
     return dialogRef.afterClosed();
@@ -1733,6 +1737,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
+            disableClose: true
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1777,6 +1782,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
+            disableClose: true
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1904,6 +1910,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
+            disableClose: true
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1947,6 +1954,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(OpenFileDialogComponent, {
       width: "80vw",
       maxWidth: "1200px",
+      disableClose: true
     });
 
     dialogRef.afterClosed().subscribe((assets) => {

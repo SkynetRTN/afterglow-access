@@ -166,6 +166,16 @@ export class DataFilesState {
   }
 
   @Selector()
+  public static getFileByHduId(state: DataFilesStateModel) {
+    return (hduId: string) => {
+      let hdu = state.hduEntities[hduId];
+      if(!hdu) return null;
+      
+      return hdu.fileId in state.fileEntities ? state.fileEntities[hdu.fileId] : null;
+    };
+  }
+
+  @Selector()
   public static getHduEntities(state: DataFilesStateModel) {
     return state.hduEntities;
   }
@@ -358,33 +368,52 @@ export class DataFilesState {
     let file = getState().fileEntities[fileId];
 
     return combineLatest(
-      ...file.hduIds.map((hduId) => {
+      file.hduIds.map((hduId) => {
         return this.dataFileService.removeFile(hduId).pipe(
-          tap((result) => {
-            setState((state: DataFilesStateModel) => {
-              if (state.hduIds.includes(hduId)) {
-                let hdu = state.hduEntities[hduId];
-                let file = state.fileEntities[hdu.fileId];
-                file.hduIds = file.hduIds.filter((id) => id != hduId);
+          flatMap((result) => {
+            //allow other modules to react to closing of file prior to removing it from the application state
+            return dispatch(new CloseHduSuccess(hduId)).pipe(
+              take(1),
+              tap(v => {
+                setState((state: DataFilesStateModel) => {
+                  if (state.hduIds.includes(hduId)) {
+                    let hdu = state.hduEntities[hduId];
+                    let file = state.fileEntities[hdu.fileId];
+                    file.hduIds = file.hduIds.filter((id) => id != hduId);
+                    state.hduIds = state.hduIds.filter((id) => id != hduId);
+                    delete state.hduEntities[hduId];
+                  }
+                  return state;
+                });
+              })
 
-                if (file.hduIds.length == 0) {
-                  //delete file
-                  state.fileIds = state.fileIds.filter((id) => id != file.id);
-                  delete state.fileEntities[file.id];
-                }
-
-                state.hduIds = state.hduIds.filter((id) => id != hduId);
-                delete state.hduEntities[hduId];
-              }
-              return state;
-            });
-            dispatch(new CloseHduSuccess(hduId));
+            )
           }),
           catchError((err) => dispatch(new CloseHduFail(hduId, err)))
         );
       })
     ).pipe(
-      flatMap((v) => dispatch(new CloseDataFileSuccess(fileId))),
+      flatMap((v) => {
+        return dispatch(new CloseDataFileSuccess(fileId)).pipe(
+          take(1),
+          tap(v => {
+            setState((state: DataFilesStateModel) => {
+              if (!state.fileIds.includes(fileId)) {
+                return state;
+              }
+
+              let file = state.fileEntities[fileId];
+              if (file.hduIds.length == 0) {
+                //delete file
+                state.fileIds = state.fileIds.filter((id) => id != file.id);
+                delete state.fileEntities[file.id];
+              }
+              return state;
+            });
+          })
+
+        )
+      }),
       catchError((err) => dispatch(new CloseDataFileFail(fileId, err)))
     );
   }

@@ -29,7 +29,7 @@ export enum WorkbenchTool {
 export interface PixelOpsFormData {
   operand: "+" | "-" | "/" | "*";
   mode: "scalar" | "image";
-  hduIds: string[];
+  primaryHduIds: string[];
   auxHduId: string;
   auxHduIds: string[];
   scalarValue: number;

@@ -1,137 +1,190 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 exports.__esModule = true;
-exports.WorkbenchDataFileListComponent = void 0;
+exports.WorkbenchDataFileListComponent = exports.WORKBENCH_FILE_LIST_VALUE_ACCESSOR = exports.FileListItemComponent = void 0;
 var core_1 = require("@angular/core");
 var data_file_type_1 = require("../../../data-files/models/data-file-type");
 var rxjs_1 = require("rxjs");
 var operators_1 = require("rxjs/operators");
 var data_files_state_1 = require("../../../data-files/data-files.state");
-var angular_tree_component_1 = require("@circlon/angular-tree-component");
 var data_providers_state_1 = require("../../../data-providers/data-providers.state");
-var WorkbenchDataFileListComponent = /** @class */ (function () {
-    function WorkbenchDataFileListComponent(store) {
-        var _a;
+var forms_1 = require("@angular/forms");
+var checkbox_1 = require("@angular/material/checkbox");
+var workbench_actions_1 = require("../../workbench.actions");
+var FileListItemComponent = /** @class */ (function () {
+    function FileListItemComponent(store, fileList, _changeDetector) {
         var _this = this;
         this.store = store;
-        this.selectedItem$ = new rxjs_1.BehaviorSubject(null);
-        this.files$ = new rxjs_1.BehaviorSubject(null);
+        this.fileList = fileList;
+        this._changeDetector = _changeDetector;
+        this.fileId$ = new rxjs_1.BehaviorSubject(null);
+        this.focusedItem = null;
+        this.expanded = false;
+        this.selected = false;
+        this.autoHideCheckbox = false;
         this.onSelectionChange = new core_1.EventEmitter();
+        this.onItemDoubleClick = new core_1.EventEmitter();
+        this.onToggleExpanded = new core_1.EventEmitter();
+        this.onToggleSelection = new core_1.EventEmitter();
+        this.onClose = new core_1.EventEmitter();
+        this.onSave = new core_1.EventEmitter();
+        this.HduType = data_file_type_1.HduType;
+        this.mouseOver = false;
+        this.hasFocus = false;
+        this.file$ = this.fileId$.pipe(operators_1.distinctUntilChanged(), operators_1.switchMap(function (fileId) {
+            return _this.store.select(data_files_state_1.DataFilesState.getFileById).pipe(operators_1.map(function (fn) { return fn(fileId); }), operators_1.filter(function (file) { return file != null; }));
+        }));
+        this.hdus$ = this.file$.pipe(operators_1.map(function (file) { return file.hduIds; }), operators_1.distinctUntilChanged(), operators_1.switchMap(function (hduIds) {
+            return rxjs_1.combineLatest(hduIds.map(function (hduId) {
+                return _this.store.select(data_files_state_1.DataFilesState.getHduById).pipe(operators_1.map(function (fn) { return fn(hduId); }), operators_1.filter(function (hdu) { return hdu != null; }));
+            }));
+        }));
+        this.dataProvider$ = this.file$.pipe(operators_1.map(function (file) { return file.dataProviderId; }), operators_1.distinctUntilChanged(), operators_1.switchMap(function (id) {
+            return _this.store.select(data_providers_state_1.DataProvidersState.getDataProviderById).pipe(operators_1.map(function (fn) { return fn(id); }));
+        }));
+        this.fileTooltip$ = rxjs_1.combineLatest(this.file$, this.dataProvider$).pipe(operators_1.map(function (_a) {
+            var file = _a[0], dataProvider = _a[1];
+            if (!dataProvider || !file.assetPath)
+                return file.name;
+            return "" + dataProvider.name + file.assetPath;
+        }));
+        this.modified$ = this.hdus$.pipe(operators_1.map(function (hdus) { return hdus.some(function (hdu) { return hdu.modified; }); }));
+    }
+    Object.defineProperty(FileListItemComponent.prototype, "fileId", {
+        get: function () {
+            return this.fileId$.getValue();
+        },
+        set: function (fileId) {
+            this.fileId$.next(fileId);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    FileListItemComponent.prototype.ngOnInit = function () { };
+    FileListItemComponent.prototype.toggleExpanded = function ($event) {
+        $event.stopPropagation();
+        this.onToggleExpanded.emit(this.fileId);
+    };
+    FileListItemComponent.prototype.save = function ($event) {
+        $event.stopPropagation();
+        this.onSave.emit(this.fileId);
+    };
+    FileListItemComponent.prototype.close = function ($event) {
+        $event.stopPropagation();
+        this.onClose.emit(this.fileId);
+    };
+    FileListItemComponent.prototype._handleFocus = function () {
+        this.hasFocus = true;
+    };
+    FileListItemComponent.prototype._handleBlur = function () {
+        this.hasFocus = false;
+    };
+    FileListItemComponent.prototype._handleMouseEnter = function () {
+        this._handleFocus();
+        this.mouseOver = true;
+    };
+    FileListItemComponent.prototype._handleMouseLeave = function () {
+        this._handleBlur();
+        this.mouseOver = false;
+    };
+    FileListItemComponent.prototype.toggleCheckbox = function ($event) {
+        $event.stopPropagation();
+        this.onToggleSelection.emit({ fileId: this.fileId, shiftKey: $event.shiftKey, ctrlKey: $event.ctrlKey });
+    };
+    __decorate([
+        core_1.Input("fileId")
+    ], FileListItemComponent.prototype, "fileId");
+    __decorate([
+        core_1.Input()
+    ], FileListItemComponent.prototype, "focusedItem");
+    __decorate([
+        core_1.Input()
+    ], FileListItemComponent.prototype, "expanded");
+    __decorate([
+        core_1.Input()
+    ], FileListItemComponent.prototype, "selected");
+    __decorate([
+        core_1.Input()
+    ], FileListItemComponent.prototype, "autoHideCheckbox");
+    __decorate([
+        core_1.Output()
+    ], FileListItemComponent.prototype, "onSelectionChange");
+    __decorate([
+        core_1.Output()
+    ], FileListItemComponent.prototype, "onItemDoubleClick");
+    __decorate([
+        core_1.Output()
+    ], FileListItemComponent.prototype, "onToggleExpanded");
+    __decorate([
+        core_1.Output()
+    ], FileListItemComponent.prototype, "onToggleSelection");
+    __decorate([
+        core_1.Output()
+    ], FileListItemComponent.prototype, "onClose");
+    __decorate([
+        core_1.Output()
+    ], FileListItemComponent.prototype, "onSave");
+    __decorate([
+        core_1.ViewChild(checkbox_1.MatCheckbox)
+    ], FileListItemComponent.prototype, "checkbox");
+    FileListItemComponent = __decorate([
+        core_1.Component({
+            selector: "app-file-list-item",
+            templateUrl: "./file-list-item.component.html",
+            host: {
+                "(focus)": "_handleFocus()",
+                "(blur)": "_handleBlur()",
+                "(mouseenter)": "_handleMouseEnter()",
+                "(mouseleave)": "_handleMouseLeave()"
+            },
+            providers: [
+                {
+                    provide: checkbox_1.MAT_CHECKBOX_DEFAULT_OPTIONS,
+                    useValue: { clickAction: "noop", color: "accent" }
+                },
+            ]
+        }),
+        __param(1, core_1.Inject(core_1.forwardRef(function () { return WorkbenchDataFileListComponent; })))
+    ], FileListItemComponent);
+    return FileListItemComponent;
+}());
+exports.FileListItemComponent = FileListItemComponent;
+exports.WORKBENCH_FILE_LIST_VALUE_ACCESSOR = {
+    provide: forms_1.NG_VALUE_ACCESSOR,
+    useExisting: core_1.forwardRef(function () { return WorkbenchDataFileListComponent; }),
+    multi: true
+};
+var WorkbenchDataFileListComponent = /** @class */ (function () {
+    function WorkbenchDataFileListComponent(store) {
+        this.store = store;
+        this.focusedItem$ = new rxjs_1.BehaviorSubject(null);
+        this.files$ = new rxjs_1.BehaviorSubject(null);
+        this.selectedFileIds$ = new rxjs_1.BehaviorSubject([]);
+        // @Output() onSelectionChange = new EventEmitter<{
+        //   item: FileListItem;
+        // }>();
+        this.onFocusedItemChange = new core_1.EventEmitter();
         this.onItemDoubleClick = new core_1.EventEmitter();
         this.onCloseFile = new core_1.EventEmitter();
         this.onSaveFile = new core_1.EventEmitter();
+        this.destroy$ = new rxjs_1.Subject();
         this.HduType = data_file_type_1.HduType;
-        this.treeFocused = false;
-        this.hoverNodeId = null;
-        this.actionMapping = {
-            mouse: {
-                click: function (tree, node, $event) { return _this.onItemClick(tree, node, $event); },
-                dblClick: function (tree, node, $event) { return _this.onItemDblClick(tree, node, $event); }
-            },
-            keys: (_a = {},
-                _a[angular_tree_component_1.KEYS.SPACE] = function (tree, node, $event) { return _this.onItemClick(tree, node, $event); },
-                _a[angular_tree_component_1.KEYS.ENTER] = function (tree, node, $event) { return _this.onItemClick(tree, node, $event); },
-                _a)
-        };
-        this.options = {
-            actionMapping: this.actionMapping
-        };
-        this.nodes$ = this.store.select(data_files_state_1.DataFilesState.getFileIds).pipe(operators_1.switchMap(function (fileIds) {
-            return rxjs_1.combineLatest.apply(void 0, fileIds.map(function (fileId) {
-                var file$ = _this.store.select(data_files_state_1.DataFilesState.getFileById).pipe(operators_1.map(function (fn) { return fn(fileId); }), operators_1.filter(function (f) { return f != null; }), operators_1.distinctUntilKeyChanged('id'), operators_1.distinctUntilKeyChanged('name'), operators_1.distinctUntilKeyChanged('hduIds'), operators_1.distinctUntilKeyChanged('name'));
-                var hdus$ = file$.pipe(operators_1.switchMap(function (file) {
-                    return rxjs_1.combineLatest(file.hduIds.map(function (hduId) { return _this.store.select(data_files_state_1.DataFilesState.getHduById).pipe(operators_1.map(function (fn) { return fn(hduId); }), operators_1.filter(function (f) { return f != null; }), operators_1.distinctUntilKeyChanged('id'), operators_1.distinctUntilKeyChanged('modified'), operators_1.distinctUntilKeyChanged('hduType')); }));
-                }));
-                return rxjs_1.combineLatest(file$, hdus$).pipe(operators_1.map(function (_a) {
-                    var file = _a[0], hdus = _a[1];
-                    var dataProvider = _this.store.selectSnapshot(data_providers_state_1.DataProvidersState.getDataProviderEntities)[file.dataProviderId];
-                    var result = null;
-                    var tooltip = file.name;
-                    if (dataProvider && file.assetPath != null) {
-                        tooltip = "" + dataProvider.name + file.assetPath;
-                    }
-                    if (hdus.length > 1) {
-                        result = {
-                            id: file.id,
-                            name: file.name,
-                            tooltip: tooltip,
-                            children: hdus.map(function (hdu, index) { return ({
-                                id: file.id + "-" + hdu.id,
-                                name: "Channel " + index,
-                                children: [],
-                                hasChildren: false,
-                                isExpanded: false,
-                                fileId: file.id,
-                                hduId: hdu.id,
-                                showButtonBar: false,
-                                icon: hdu.hduType == data_file_type_1.HduType.IMAGE ? "insert_photo" : "toc",
-                                tooltip: tooltip + " - Channel " + index,
-                                modified: null
-                            }); }),
-                            hasChildren: true,
-                            isExpanded: true,
-                            fileId: file.id,
-                            hduId: null,
-                            showButtonBar: true,
-                            icon: null,
-                            modified: hdus.map(function (hdu) { return hdu.modified; }).some(function (v) { return v; })
-                        };
-                    }
-                    else if (hdus.length == 1) {
-                        var hdu = hdus[0];
-                        result = {
-                            id: file.id + "-" + hdu.id,
-                            name: file.name,
-                            tooltip: tooltip,
-                            children: [],
-                            hasChildren: false,
-                            isExpanded: false,
-                            fileId: file.id,
-                            hduId: hdu.id,
-                            showButtonBar: true,
-                            icon: hdu.hduType == data_file_type_1.HduType.IMAGE ? "insert_photo" : "toc",
-                            modified: hdu.modified
-                        };
-                    }
-                    return result;
-                }));
-            }));
-        }));
-        this.selectedItem$.subscribe(function (selectedItem) {
-            var selectedNodeIds = {};
-            var selectedItemId = null;
-            if (selectedItem) {
-                selectedItemId = selectedItem.fileId;
-                if (selectedItem.hduId) {
-                    selectedItemId = selectedItemId.concat("-" + selectedItem.hduId);
-                }
-                selectedNodeIds[selectedItemId] = true;
-            }
-            _this.state = __assign(__assign({}, _this.state), { activeNodeIds: selectedNodeIds, focusedNodeId: selectedItemId });
-        });
+        this.collapsedFileIds = {};
     }
-    Object.defineProperty(WorkbenchDataFileListComponent.prototype, "selectedItem", {
+    Object.defineProperty(WorkbenchDataFileListComponent.prototype, "focusedItem", {
         get: function () {
-            return this.selectedItem$.getValue();
+            return this.focusedItem$.getValue();
         },
-        set: function (files) {
-            this.selectedItem$.next(files);
+        set: function (item) {
+            this.focusedItem$.next(item);
         },
         enumerable: false,
         configurable: true
@@ -146,47 +199,54 @@ var WorkbenchDataFileListComponent = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    WorkbenchDataFileListComponent.prototype.onItemClick = function (tree, node, $event) {
-        if (!tree.focusedNode || tree.focusedNode.data.id != node.data.id) {
-            this.onSelectionChange.emit({ item: { fileId: node.data.fileId, hduId: node.data.hduId } });
-            return angular_tree_component_1.TREE_ACTIONS.SELECT(tree, node, $event);
+    Object.defineProperty(WorkbenchDataFileListComponent.prototype, "selectedFileIds", {
+        get: function () {
+            return this.selectedFileIds$.getValue();
+        },
+        set: function (selectedFileIds) {
+            this.selectedFileIds$.next(selectedFileIds);
+        },
+        enumerable: false,
+        configurable: true
+    });
+    WorkbenchDataFileListComponent.prototype.ngOnDestroy = function () {
+        this.destroy$.next(true);
+        this.destroy$.unsubscribe();
+    };
+    WorkbenchDataFileListComponent.prototype.onToggleExpanded = function (fileId) {
+        if (fileId in this.collapsedFileIds) {
+            delete this.collapsedFileIds[fileId];
+        }
+        else {
+            this.collapsedFileIds[fileId] = true;
         }
     };
-    WorkbenchDataFileListComponent.prototype.onItemDblClick = function (tree, node, $event) {
-        this.onItemDoubleClick.emit({ item: { fileId: node.data.fileId, hduId: node.data.hduId } });
-        // return TREE_ACTIONS.SELECT(tree, node, $event);
+    WorkbenchDataFileListComponent.prototype.onToggleSelection = function ($event) {
+        //TODO handle multi selection based on modifier keys
+        this.store.dispatch(new workbench_actions_1.ToggleFileSelection($event.fileId));
     };
-    WorkbenchDataFileListComponent.prototype.onFocus = function () {
-        this.treeFocused = true;
-    };
-    WorkbenchDataFileListComponent.prototype.onBlur = function () {
-        this.treeFocused = false;
-    };
-    WorkbenchDataFileListComponent.prototype.saveFile = function ($event, data) {
+    WorkbenchDataFileListComponent.prototype.saveFile = function ($event, fileId) {
         $event.preventDefault();
         $event.stopImmediatePropagation();
-        this.onSaveFile.emit(data.fileId);
+        this.onSaveFile.emit(fileId);
     };
-    WorkbenchDataFileListComponent.prototype.closeFile = function ($event, data) {
+    WorkbenchDataFileListComponent.prototype.closeFile = function ($event, fileId) {
         $event.preventDefault();
         $event.stopImmediatePropagation();
-        this.onCloseFile.emit(data.fileId);
-    };
-    WorkbenchDataFileListComponent.prototype.onMouseEnterNode = function (node) {
-        this.hoverNodeId = node.id;
-    };
-    WorkbenchDataFileListComponent.prototype.onMouseLeaveNode = function (node) {
-        this.hoverNodeId = null;
+        this.onCloseFile.emit(fileId);
     };
     __decorate([
-        core_1.Input("selectedItem")
-    ], WorkbenchDataFileListComponent.prototype, "selectedItem");
+        core_1.Input("focusedItem")
+    ], WorkbenchDataFileListComponent.prototype, "focusedItem");
     __decorate([
         core_1.Input("files")
     ], WorkbenchDataFileListComponent.prototype, "files");
     __decorate([
+        core_1.Input("selectedFileIds")
+    ], WorkbenchDataFileListComponent.prototype, "selectedFileIds");
+    __decorate([
         core_1.Output()
-    ], WorkbenchDataFileListComponent.prototype, "onSelectionChange");
+    ], WorkbenchDataFileListComponent.prototype, "onFocusedItemChange");
     __decorate([
         core_1.Output()
     ], WorkbenchDataFileListComponent.prototype, "onItemDoubleClick");
@@ -196,12 +256,19 @@ var WorkbenchDataFileListComponent = /** @class */ (function () {
     __decorate([
         core_1.Output()
     ], WorkbenchDataFileListComponent.prototype, "onSaveFile");
+    __decorate([
+        core_1.ViewChild("selectionList", { static: true })
+    ], WorkbenchDataFileListComponent.prototype, "selectionList");
+    __decorate([
+        core_1.ViewChildren(FileListItemComponent)
+    ], WorkbenchDataFileListComponent.prototype, "_items");
     WorkbenchDataFileListComponent = __decorate([
         core_1.Component({
             selector: "app-workbench-data-file-list",
             templateUrl: "./workbench-data-file-list.component.html",
             styleUrls: ["./workbench-data-file-list.component.css"],
-            changeDetection: core_1.ChangeDetectionStrategy.OnPush
+            changeDetection: core_1.ChangeDetectionStrategy.OnPush,
+            providers: [exports.WORKBENCH_FILE_LIST_VALUE_ACCESSOR]
         })
     ], WorkbenchDataFileListComponent);
     return WorkbenchDataFileListComponent;

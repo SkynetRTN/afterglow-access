@@ -476,10 +476,8 @@
 
           <app-pixel-ops-panel
             *ngSwitchCase="WorkbenchTool.IMAGE_CALC"
-            [primaryHdu]="focusedViewerImageHdu$ | async"
-            [hdus]="hdus$ | async"
+            [hduIds]="filteredHduIds$ | async"
             [config]="pixelOpsPanelConfig$ | async"
-            [dataFileEntities]="fileEntities$ | async"
           >
           </app-pixel-ops-panel>
 

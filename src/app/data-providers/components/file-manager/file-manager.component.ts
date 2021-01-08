@@ -217,8 +217,6 @@ export class FileManagerComponent implements OnInit {
     }
     let newDataProviderId = destinationProvider.id;
 
-    
-
     let provider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[asset.dataProviderId];
     if(!provider) {
       return Promise.reject({ errorCode: 32767, errorText: 'Invalid file' })

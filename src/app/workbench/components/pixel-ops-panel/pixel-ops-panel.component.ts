@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostBinding, Input } from "@angular/core";
-import { Observable, combineLatest, BehaviorSubject, Subscription, Subject } from "rxjs";
-import { map, tap, filter, flatMap, takeUntil } from "rxjs/operators";
+import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from "rxjs";
+import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap } from "rxjs/operators";
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from "@angular/forms";
 import { JobType } from "../../../jobs/models/job-types";
 import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
@@ -33,32 +33,14 @@ interface PixelOpVariable {
   styleUrls: ["./pixel-ops-panel.component.css"],
 })
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
-  @Input("primaryHdu")
-  set primaryHdu(primaryHdu: ImageHdu) {
-    this.primaryHdu$.next(primaryHdu);
+  @Input("hduIds")
+  set hduIds(hduIds: string[]) {
+    this.hduIds$.next(hduIds);
   }
-  get primaryHdu() {
-    return this.primaryHdu$.getValue();
+  get hduIds() {
+    return this.hduIds$.getValue();
   }
-  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
-
-  @Input("hdus")
-  set hdus(hdus: ImageHdu[]) {
-    this.hdus$.next(hdus);
-  }
-  get hdus() {
-    return this.hdus$.getValue();
-  }
-  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
-
-  @Input("dataFileEntities")
-  set dataFileEntities(dataFileEntities: { [id: string]: DataFile }) {
-    this.dataFileEntities$.next(dataFileEntities);
-  }
-  get dataFileEntities() {
-    return this.dataFileEntities$.getValue();
-  }
-  private dataFileEntities$ = new BehaviorSubject<{ [id: string]: DataFile }>(null);
+  private hduIds$ = new BehaviorSubject<string[]>(null);
 
   @Input("config")
   set config(config: PixelOpsPanelConfig) {
@@ -68,6 +50,10 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     return this.config$.getValue();
   }
   private config$ = new BehaviorSubject<PixelOpsPanelConfig>(null);
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+
+  selectedHduIds$: Observable<string[]>;
 
   pixelOpsJobRows$: Observable<{ job: PixelOpsJob; result: PixelOpsJobResult }[]>;
   currentPixelOpsJobRow$: Observable<{
@@ -79,7 +65,6 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   pixelOpsFormData$: Observable<PixelOpsFormData>;
   panelOpenState: boolean;
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
 
   operands = [
     { label: "Add", symbol: "+" },
@@ -106,8 +91,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     {
       operand: new FormControl("+", Validators.required),
       mode: new FormControl("image", Validators.required),
-      imageFileIds: new FormControl([], Validators.required),
-      auxImageFileId: new FormControl("", Validators.required),
+      primaryHduIds: new FormControl([], Validators.required),
+      auxHduId: new FormControl("", Validators.required),
       scalarValue: new FormControl({ disabled: true, value: 0 }, Validators.required),
       inPlace: new FormControl(false, Validators.required),
     },
@@ -116,12 +101,38 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
   imageCalcFormAdv = new FormGroup({
     opString: new FormControl("", Validators.required),
-    imageFileIds: new FormControl([], Validators.required),
-    auxImageFileIds: new FormControl([]),
+    primaryHduIds: new FormControl([], Validators.required),
+    auxHduIds: new FormControl([]),
     inPlace: new FormControl(false, Validators.required),
   });
 
   constructor(public dialog: MatDialog, private store: Store, private router: Router) {
+    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
+      if (!hduIds || !this.config) return;
+      let formData = this.config.pixelOpsFormData
+      let primaryHduIds = formData.primaryHduIds.filter((hduId) => hduIds.includes(hduId));
+      let auxHduIds = formData.auxHduIds.filter(hduId => hduIds.includes(hduId));
+      let auxHduId = formData.auxHduId;
+      if (!hduIds.includes(auxHduId)) {
+        auxHduId = null;
+      }
+      if (primaryHduIds.length != formData.primaryHduIds.length || auxHduIds.length != formData.auxHduIds.length || auxHduId != formData.auxHduId) {
+        setTimeout(() => {
+          this.store.dispatch(
+            new UpdatePixelOpsPageSettings({
+              pixelOpsFormData: {
+                ...formData,
+                primaryHduIds: primaryHduIds,
+                auxHduIds: auxHduIds,
+                auxHduId: auxHduId
+              },
+            })
+          );
+        });
+      }
+    });
+
+
     this.pixelOpsFormData$ = this.config$.pipe(
       filter((config) => config !== null),
       map((config) => config.pixelOpsFormData),
@@ -168,81 +179,49 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       // }
     });
 
-    let auxImageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
-      filter(([data, hdus]) => hdus != null),
-      map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-        return data.auxHduIds
-          .map((id) => hdus.find((f) => f.id == id))
-          .filter((f) => f != null)
-          .sort((a, b) =>
-            dataFiles[a.fileId].name < dataFiles[b.fileId].name
-              ? -1
-              : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0
-          );
+    let auxHdusVars$ = this.pixelOpsFormData$.pipe(
+      map(formData => formData.auxHduIds),
+      switchMap(hduIds => {
+        if (hduIds.length == 0) return of([]);
+        return combineLatest(hduIds.map(hduId => this.getHduOptionLabel(hduId)))
       })
-    );
+    )
 
-    let imageHdus$ = combineLatest(this.pixelOpsFormData$, this.hdus$).pipe(
-      filter(([data, hdus]) => hdus != null),
-      map(([data, hdus]) => {
-        let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-        return data.hduIds
-          .map((id) => hdus.find((f) => f.id == id))
-          .filter((f) => f != null)
-          .sort((a, b) =>
-            dataFiles[a.fileId].name < dataFiles[b.fileId].name
-              ? -1
-              : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0
-          );
+    let primaryHdusVars$ = this.pixelOpsFormData$.pipe(
+      map(formData => formData.primaryHduIds),
+      switchMap(hduIds => {
+        if (hduIds.length == 0) return of([]);
+        return combineLatest(hduIds.map(hduId => this.getHduOptionLabel(hduId)))
       })
-    );
+    )
 
-    this.pixelOpVariables$ = combineLatest(imageHdus$, auxImageHdus$).pipe(
-      map(([imageFiles, auxImageHdus]) => {
+    this.pixelOpVariables$ = combineLatest([primaryHdusVars$, auxHdusVars$]).pipe(
+      map(([primaryHduVars, auxHduVars]) => {
         let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return [
           {
             name: "aux_img",
-            value: auxImageHdus.length == 0 ? "N/A" : dataFiles[auxImageHdus[0].fileId].name,
+            value: auxHduVars.length == 0 ? "N/A" : auxHduVars[0],
           },
           { name: "img", value: "for each image file" },
-
-          ...imageFiles
-            .sort((a, b) =>
-              dataFiles[a.fileId].name < dataFiles[b.fileId].name
-                ? -1
-                : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-                ? 1
-                : 0
-            )
-            .map((f, index) => {
+          ...primaryHduVars
+            .map((value, index) => {
               return {
                 name: `imgs[${index}]`,
-                value: dataFiles[f.fileId].name,
+                value: value,
               };
             }),
-          ...auxImageHdus
-            .sort((a, b) =>
-              dataFiles[a.fileId].name < dataFiles[b.fileId].name
-                ? -1
-                : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-                ? 1
-                : 0
-            )
-            .map((f, index) => {
+          ...auxHduVars
+            .map((value, index) => {
               return {
                 name: `aux_imgs[${index}]`,
-                value: dataFiles[f.fileId].name,
+                value: value,
               };
             }),
         ];
       })
     );
+
     this.pixelOpsJobRows$ = store.select(JobsState.getJobs).pipe(
       map(
         (allJobRows) =>
@@ -293,7 +272,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     // );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -314,7 +293,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       width: "600px",
       data: {
         rows$: this.pixelOpsJobRows$,
-        allImageFiles$: this.hdus$,
+        allImageFiles$: this.store.select(DataFilesState.getHdus),
       },
     });
 
@@ -332,4 +311,89 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   onTabChange($event: MatTabChangeEvent) {
     this.store.dispatch(new HideCurrentPixelOpsJobState());
   }
+
+
+
+  setAuxHduIds(hduIds: string[]) {
+    this.store.dispatch(
+      new UpdatePixelOpsPageSettings({
+        pixelOpsFormData: {
+          ...this.imageCalcFormAdv.value,
+          auxHduIds: hduIds,
+        },
+      })
+    );
+  }
+
+  getHduOptionLabel(hduId: string) {
+    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)),
+      filter(hdu => hdu != null),
+    )
+
+    let file$ = hdu$.pipe(
+      map(hdu => hdu.fileId),
+      distinctUntilChanged(),
+      flatMap(fileId => {
+        return this.store.select(DataFilesState.getFileById).pipe(
+          map(fn => fn(fileId)),
+          filter(file => file != null),
+        )
+      })
+    )
+
+    return combineLatest(hdu$, file$).pipe(
+      map(([hdu, file]) => {
+        if (!hdu || !file) return '???';
+        if (file.hduIds.length > 1) {
+          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`
+        }
+        return file.name
+      }),
+
+      distinctUntilChanged()
+    )
+  }
+
+  onSelectAllPrimaryHdusBtnClick() {
+    this.setSelectedPrimaryHduIds(this.hduIds);
+  }
+
+  onClearPrimaryHdusSelectionBtnClick() {
+    this.setSelectedPrimaryHduIds([]);
+  }
+
+  setSelectedPrimaryHduIds(hduIds: string[]) {
+    this.store.dispatch(
+      new UpdatePixelOpsPageSettings({
+        pixelOpsFormData: {
+          ...this.imageCalcFormAdv.value,
+          primaryHduIds: hduIds
+        },
+      })
+    );
+    this.store.dispatch(new HideCurrentPixelOpsJobState());
+  }
+
+  onSelectAllAuxHdusBtnClick() {
+    this.setSelectedAuxHduIds(this.hduIds);
+  }
+
+  onClearAuxHdusSelectionBtnClick() {
+    this.setSelectedAuxHduIds([]);
+  }
+
+  setSelectedAuxHduIds(hduIds: string[]) {
+    this.store.dispatch(
+      new UpdatePixelOpsPageSettings({
+        pixelOpsFormData: {
+          ...this.imageCalcFormAdv.value,
+          auxHduIds: hduIds
+        },
+      })
+    );
+    this.store.dispatch(new HideCurrentPixelOpsJobState());
+  }
+
+
 }

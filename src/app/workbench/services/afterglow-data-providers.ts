@@ -111,7 +111,7 @@ export class AfterglowDataProviderService {
       path = path.slice(1)
     }
     if(newPath && newPath[0] == '/') {
-      newPath = path.slice(1)
+      newPath = newPath.slice(1)
     }
     let params: HttpParams = new HttpParams();
     params = params.set("path", newPath);

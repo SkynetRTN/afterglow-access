@@ -68,7 +68,7 @@ export class FileListItemComponent implements OnInit {
   @Output() onSelectionChange = new EventEmitter<boolean>();
   @Output() onItemDoubleClick = new EventEmitter<{ fileId: string; hduId: string }>();
   @Output() onToggleExpanded = new EventEmitter<string>();
-  @Output() onToggleSelection = new EventEmitter<{fileId: string, shiftKey: boolean, ctrlKey: boolean}>();
+  @Output() onToggleSelection = new EventEmitter<{ fileId: string, shiftKey: boolean, ctrlKey: boolean }>();
   @Output() onClose = new EventEmitter<string>();
   @Output() onSave = new EventEmitter<string>();
 
@@ -91,7 +91,10 @@ export class FileListItemComponent implements OnInit {
     this.file$ = this.fileId$.pipe(
       distinctUntilChanged(),
       switchMap((fileId) => {
-        return this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId)));
+        return this.store.select(DataFilesState.getFileById).pipe(
+          map((fn) => fn(fileId)),
+          filter(file => file != null)
+        );
       })
     );
 
@@ -101,7 +104,10 @@ export class FileListItemComponent implements OnInit {
       switchMap((hduIds) => {
         return combineLatest(
           hduIds.map((hduId) => {
-            return this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId)));
+            return this.store.select(DataFilesState.getHduById).pipe(
+              map((fn) => fn(hduId)),
+              filter(hdu => hdu != null)
+            );
           })
         );
       })
@@ -126,7 +132,7 @@ export class FileListItemComponent implements OnInit {
 
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   toggleExpanded($event: MouseEvent) {
     $event.stopPropagation();
@@ -163,7 +169,7 @@ export class FileListItemComponent implements OnInit {
 
   toggleCheckbox($event: MouseEvent) {
     $event.stopPropagation();
-    this.onToggleSelection.emit({fileId: this.fileId, shiftKey: $event.shiftKey, ctrlKey: $event.ctrlKey})
+    this.onToggleSelection.emit({ fileId: this.fileId, shiftKey: $event.shiftKey, ctrlKey: $event.ctrlKey })
   }
 }
 
@@ -218,7 +224,7 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
   }>();
 
   @Output() onItemDoubleClick = new EventEmitter<{
-    item: {fileId: string, hduId: string};
+    item: { fileId: string, hduId: string };
   }>();
 
   @Output() onCloseFile = new EventEmitter<string>();
@@ -248,7 +254,7 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
     }
   }
 
-  onToggleSelection($event: {fileId: string, shiftKey: boolean, ctrlKey: boolean}) {
+  onToggleSelection($event: { fileId: string, shiftKey: boolean, ctrlKey: boolean }) {
     //TODO handle multi selection based on modifier keys
     this.store.dispatch(new ToggleFileSelection($event.fileId))
   }

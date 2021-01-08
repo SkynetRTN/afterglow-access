@@ -181,7 +181,7 @@ import { SonificationJob, SonificationJobResult } from "../jobs/models/sonificat
 import { IImageData } from "../data-files/models/image-data";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "6525d62c-398f-47cf-a2ad-fa0cc86a744d",
+  version: "a7d18bf4-d481-478e-8a8b-269452ce65ad",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -275,7 +275,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       mode: "image",
       auxHduId: null,
       auxHduIds: [],
-      hduIds: [],
+      primaryHduIds: [],
       scalarValue: 1,
       inPlace: false,
       opString: "",
@@ -2028,7 +2028,7 @@ export class WorkbenchState {
       state.aligningPanelConfig.alignFormData.selectedHduIds = state.aligningPanelConfig.alignFormData.selectedHduIds.filter(
         (id) => id != hduId
       );
-      state.pixelOpsPanelConfig.pixelOpsFormData.hduIds = state.pixelOpsPanelConfig.pixelOpsFormData.hduIds.filter(
+      state.pixelOpsPanelConfig.pixelOpsFormData.primaryHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.primaryHduIds.filter(
         (id) => id != hduId
       );
       state.pixelOpsPanelConfig.pixelOpsFormData.auxHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.auxHduIds.filter(
@@ -2347,7 +2347,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.hduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
     let auxFileIds: number[] = [];
     let op;
     if (data.mode == "scalar") {
@@ -2435,7 +2435,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.hduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
     let auxImageFiles = data.auxHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
@@ -2538,7 +2538,7 @@ export class WorkbenchState {
       crop: false,
       settings: {
         ref_image: parseInt(data.refHduId),
-        wcs_grid_points: 0,
+        wcs_grid_points: 100,
         prefilter: false
       },
     };
