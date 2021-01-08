@@ -1891,6 +1891,31 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         flatMap(({ dataProviderEntities, fileEntities }) => {
           let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
+          let hduCount = 0;
+          files.forEach(file => hduCount += file.hduIds.length);
+
+          if(hduCount > 4) {
+            let dialogConfig: Partial<AlertDialogConfig> = {
+              title: "Error",
+              message: `The number of channels within a file is currently limited to no more than four.  Please reduce he number of channels and try grouping again.`,
+              buttons: [
+                {
+                  color: null,
+                  value: false,
+                  label: "Close",
+                }
+              ],
+            };
+            let dialogRef = this.dialog.open(AlertDialogComponent, {
+              width: "400px",
+              data: dialogConfig,
+              disableClose: true
+            });
+  
+            return dialogRef.afterClosed()
+          }
+          
+
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: "Group Files",
             message: `Are you sure you want to group the selected files into a single file with multiple channels?`,

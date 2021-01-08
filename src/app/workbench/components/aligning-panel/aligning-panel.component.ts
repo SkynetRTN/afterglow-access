@@ -1,7 +1,7 @@
 import { Component, OnInit, HostBinding, Input } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 
-import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap } from "rxjs/operators";
+import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { AlignFormData, AligningPanelConfig } from "../../models/workbench-state";
 import { MatSelectChange } from "@angular/material/select";
@@ -155,7 +155,8 @@ export class AlignerPageComponent implements OnInit {
 
   getHduOptionLabel(hduId: string) {
     let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
-      map(fn => fn(hduId))
+      map(fn => fn(hduId)),
+      filter(hdu => hdu != null)
     )
 
     let file$ = hdu$.pipe(
@@ -163,7 +164,8 @@ export class AlignerPageComponent implements OnInit {
       distinctUntilChanged(),
       flatMap(fileId => {
         return this.store.select(DataFilesState.getFileById).pipe(
-          map(fn => fn(fileId))
+          map(fn => fn(fileId)),
+          filter(hdu => hdu != null)
         )
       })
     )

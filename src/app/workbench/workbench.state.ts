@@ -712,7 +712,7 @@ export class WorkbenchState {
   public static getCustomMarkerPanelStateIdFromViewerId(state: WorkbenchStateModel) {
     return (id: string) => {
       let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId) {
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !state.fileStateEntities[viewer.fileId]) {
         return null;
       }
 
@@ -726,7 +726,7 @@ export class WorkbenchState {
   public static getPlottingPanelStateIdFromViewerId(state: WorkbenchStateModel) {
     return (id: string) => {
       let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId) {
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !state.fileStateEntities[viewer.fileId]) {
         return null;
       }
 
@@ -1953,10 +1953,27 @@ export class WorkbenchState {
     let state = getState();
     let existingIds = state.hduIds;
     let newIds = hdus.map((imageFile) => imageFile.id).filter((id) => !existingIds.includes(id));
-
+  
     if (newIds.length != 0) {
       dispatch(new InitializeWorkbenchHduState(newIds));
     }
+
+    //when hdus are merged or split,  viewers may need to be updated with the new file ID
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    state.viewerIds.forEach(viewerId => {
+      let viewer = state.viewers[viewerId];
+      if(viewer.fileId && fileEntities[viewer.fileId]) {
+        return;
+      }
+      dispatch(new CloseViewer(viewerId))
+    })
+    // setState((state: WorkbenchStateModel) => {
+    //   let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities)
+    //   state.aligningPanelConfig.alignFormData.selectedHduIds = state.aligningPanelConfig.alignFormData.selectedHduIds.filter(hduId => hduId in hduEntities)
+    //   state.stackingPanelConfig.stackFormData.selectedHduIds = state.stackingPanelConfig.stackFormData.selectedHduIds.filter(hduId => hduId in hduEntities)
+    //   return state;
+    // });
+    
 
     // let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
 
