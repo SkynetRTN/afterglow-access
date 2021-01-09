@@ -123,6 +123,12 @@ export class UpdateAlpha {
   constructor(public hduId: string, public alpha: number) {}
 }
 
+export class UpdateVisibility {
+  public static readonly type = "[File] Update Visibility";
+
+  constructor(public hduId: string, public value: boolean) {}
+}
+
 
 
 /**

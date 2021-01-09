@@ -64,6 +64,7 @@ export interface ImageHdu extends IHdu {
   normalizer: PixelNormalizer;
   blendMode: BlendMode;
   alpha: number;
+  visible: boolean;
 }
 
 export interface TableHdu extends IHdu {

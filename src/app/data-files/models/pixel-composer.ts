@@ -1,13 +1,20 @@
 import { PixelType } from "./data-file";
 import { BlendMode } from "./blend-mode";
 
-export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number }>, result: Uint32Array) {
+export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number, visible: boolean }>, result: Uint32Array) {
+  layers = layers.filter(layer => layer.visible)
+  if(layers.length == 0) {
+    for(let i=0; i<result.length; i++) {
+      result[i]=0;
+    }
+    return;
+  }
+  
   result.set(layers[0].pixels);
   let result8 = new Uint8ClampedArray(result.buffer);
   let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.pixels.buffer));
 
   for (let k = 1; k < layers.length; k++) {
-console.log("LAYER:  ", layers[k].alpha, layers[k].blendMode)
   }
 
   //for each pixel in result

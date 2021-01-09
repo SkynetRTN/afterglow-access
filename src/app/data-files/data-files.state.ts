@@ -67,6 +67,7 @@ import {
   CalculateNormalizedPixels,
   UpdateBlendMode,
   UpdateAlpha,
+  UpdateVisibility,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -543,6 +544,7 @@ export class DataFilesState {
                   hduType: HduType.IMAGE,
                   precision: PixelPrecision.float32,
                   blendMode: BlendMode.Screen,
+                  visible: true,
                   alpha: 1.0,
                   hist: null,
                   histLoaded: false,
@@ -1333,6 +1335,28 @@ export class DataFilesState {
     
   }
 
+  @Action(UpdateVisibility)
+  @ImmutableContext()
+  public updateVisibility(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId, value }: UpdateVisibility
+  ) {
+    let state = getState();
+    if (!(hduId in state.hduEntities)) return;
+
+    let actions = [];
+    setState((state: DataFilesStateModel) => {
+      let hdu = state.hduEntities[hduId] as ImageHdu;
+      hdu.visible = value;
+
+      actions.push(new InvalidateCompositeImageTiles(hdu.fileId))
+      return state;
+    });
+
+    dispatch(actions);
+    
+  }
+
   @Action(InvalidateCompositeImageTiles)
   @ImmutableContext()
   public invalidateCompositeImageTiles(
@@ -1425,6 +1449,7 @@ export class DataFilesState {
             pixels: normalizedImageData.tiles[tileIndex].pixels as Uint32Array,
             blendMode: hdu.blendMode,
             alpha: hdu.alpha,
+            visible: hdu.visible
           };
         });
 

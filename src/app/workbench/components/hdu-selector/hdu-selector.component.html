@@ -1,11 +1,54 @@
-<div>
-  <h6 i18n>Channel Selection</h6>
-  <div class="pb-1">
-    <mat-form-field appearance="outline">
-      <mat-label>Channel</mat-label>
-      <mat-select [value]="selectedHduId" (selectionChange)="onSelectedHduIdChange($event)" style="width: 100%">
-        <mat-option *ngFor="let hdu of hdus$ | async; let index = index" [value]="hdu.id"> Channel {{ index }} </mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
+<div class="pb-1 list-wrapper" *ngIf="(hdus$ | async); let hdus">
+  <mat-selection-list cdkDropList [cdkDropListData]="hdus"  (cdkDropListDropped)="onChannelDrop($event)" [multiple]="false" (selectionChange)="onSelectedHduIdChange($event)">
+    <mat-list-option *ngFor="let hdu of hdus$ | async; let index = index" [value]="hdu.id" cdkDrag [cdkDragData]="hdu"
+      [selected]="hdu.id == selectedHduId">
+      <div fxLayout="row-reverse" fxLayoutAlign="center center" style="width: 100%">
+
+        <ng-container *ngIf="(imageHduEntities$ | async)[hdu.id]; let imageHdu">
+          <div fxFlex="0 0 auto">
+            <button (click)="onVisibilityBtnClick($event, hdu.id, !imageHdu.visible)" mat-icon-button
+              aria-label="Toggle channel visibility">
+              <mat-icon>{{imageHdu.visible ? 'visibility' : 'visibility_off'}}</mat-icon>
+            </button>
+          </div>
+
+          <div fxFlex="0 0 auto">
+            <button #alphaMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="menu"
+              aria-label="alpha menu" (click)="$event.stopPropagation()">
+              <mat-icon>opacity</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <div mat-menu-item>
+                <input matInput type="number" [min]="0" [max]="1" [step]="0.05" [ngModel]="imageHdu?.alpha"
+                  (ngModelChange)="onAlphaChange(imageHdu, $event)" (click)="$event.stopPropagation()">
+              </div>
+            </mat-menu>
+          </div>
+
+          <div fxFlex="0 0 auto">
+            <button #alphaMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="menu"
+              aria-label="blend mode menu" (click)="$event.stopPropagation()">
+              <mat-icon>layers</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <div mat-menu-item>
+                <mat-select [value]="imageHdu?.blendMode" (selectionChange)="onBlendModeChange(imageHdu, $event.value)">
+                  <mat-option *ngFor="let blendModeOption of blendModeOptions" [value]="blendModeOption.value">
+                    {{blendModeOption.label}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </mat-menu>
+          </div>
+
+        </ng-container>
+        <div fxFlex="1 1 auto" class="label"> Channel {{ index }} - {{hdu.order}}
+          <ng-container *ngIf="getHduFilter(hdu) | async; let hduFilter;">
+            - {{hduFilter}}
+        </ng-container>
+      </div>
+      </div>
+
+    </mat-list-option>
+  </mat-selection-list>
 </div>

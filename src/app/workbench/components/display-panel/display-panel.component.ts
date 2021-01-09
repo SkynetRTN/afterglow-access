@@ -81,11 +81,6 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   HduType = HduType;
 
-  blendModeOptions = [
-    { label: "Normal", value: BlendMode.Normal },
-    { label: "Screen", value: BlendMode.Screen },
-  ];
-
   selectedHdu$: Observable<ImageHdu>;
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -189,17 +184,6 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onResetOrientationClick() {
     this.store.dispatch(new ResetImageTransform(this.imageData.id, this.imageTransform.id, this.viewportTransform.id));
-  }
-
-  onBlendModeChange(value: BlendMode) {
-    this.store.dispatch(new UpdateBlendMode(this.hdu.id, value));
-  }
-
-  onAlphaChange(value: number) {
-    if(value == null || value < 0 || value > 1) {
-      return
-    }
-    this.store.dispatch(new UpdateAlpha(this.hdu.id, value))
   }
 
   ngOnInit() {}
