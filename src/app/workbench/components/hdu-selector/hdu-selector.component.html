@@ -13,11 +13,11 @@
           </div>
 
           <div fxFlex="0 0 auto">
-            <button #alphaMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="menu"
+            <button #alphaMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="alphaMenu"
               aria-label="alpha menu" (click)="$event.stopPropagation()">
               <mat-icon>opacity</mat-icon>
             </button>
-            <mat-menu #menu="matMenu">
+            <mat-menu #alphaMenu="matMenu">
               <div mat-menu-item>
                 <input matInput type="number" [min]="0" [max]="1" [step]="0.05" [ngModel]="imageHdu?.alpha"
                   (ngModelChange)="onAlphaChange(imageHdu, $event)" (click)="$event.stopPropagation()">
@@ -26,11 +26,11 @@
           </div>
 
           <div fxFlex="0 0 auto">
-            <button #alphaMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="menu"
+            <button #alphaMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="blendMenu"
               aria-label="blend mode menu" (click)="$event.stopPropagation()">
               <mat-icon>layers</mat-icon>
             </button>
-            <mat-menu #menu="matMenu">
+            <mat-menu #blendMenu="matMenu">
               <div mat-menu-item>
                 <mat-select [value]="imageHdu?.blendMode" (selectionChange)="onBlendModeChange(imageHdu, $event.value)">
                   <mat-option *ngFor="let blendModeOption of blendModeOptions" [value]="blendModeOption.value">

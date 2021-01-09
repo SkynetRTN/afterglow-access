@@ -41,6 +41,7 @@ export class HduSelectorComponent implements OnInit {
   blendModeOptions = [
     { label: "Normal", value: BlendMode.Normal },
     { label: "Screen", value: BlendMode.Screen },
+    { label: "Luminosity", value: BlendMode.Luminosity },
   ];
   file$: Observable<DataFile>;
   hdus$: Observable<IHdu[]>;

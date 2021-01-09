@@ -14,8 +14,9 @@ export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMod
   let result8 = new Uint8ClampedArray(result.buffer);
   let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.pixels.buffer));
 
-  for (let k = 1; k < layers.length; k++) {
-  }
+  let baseHsy: [number, number, number] = [0,0,0];
+  let blendHsy: [number, number, number] = [0,0,0];
+  let resultRgb: [number, number, number] = [0,0,0];
 
   //for each pixel in result
   for (let i = 0, j = 0, len = result.length; i != len; i++, j += 4) {
@@ -32,7 +33,17 @@ export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMod
         result8[j + 1] = (1 - (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
         result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
         result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
-      } else {
+      }
+      else if(layers[k].blendMode == BlendMode.Luminosity) {
+        rgbToHsv(tr, tg, tb, blendHsy);
+        rgbToHsv(result8[j]/255.0, result8[j+1]/255.0, result8[j+2]/255.0, baseHsy)
+        hsvToRgb(baseHsy[0], baseHsy[1], blendHsy[2], resultRgb)
+        result8[j] = resultRgb[0]*255;
+        result8[j + 1] = resultRgb[1]*255;
+        result8[j + 2] = resultRgb[2]*255;
+        result8[j + 3] = 1.0;
+      }
+      else {
         //normal blend mode
         let br = result8[j] / 255.0;
         let bg = result8[j + 1] / 255.0;
@@ -45,4 +56,266 @@ export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMod
     }
   }
   return result;
+}
+
+
+// let R=0.3, G=0.59, B=0.11;
+
+// /**
+//  * This is the formula used by Photoshop to convert a color from
+//  * RGB (Red, Green, Blue) to HSY (Hue, Saturation, Luminosity).
+//  * The hue is calculated using the exacone approximation of the saturation
+//  * cone.
+//  * @param rgb The input color RGB normalized components.
+//  * @param hsy The output color HSY normalized components.
+//  */
+// function rgbToHsy(rgb: number[] | Uint8ClampedArray, hsy: number[] | Uint8ClampedArray) {
+
+//   let r = Math.min(Math.max(rgb[0], 0), 1);
+//   let g = Math.min(Math.max(rgb[1], 0), 1);
+//   let b = Math.min(Math.max(rgb[2], 0), 1);
+
+//   let h;
+//   let s;
+//   let y;
+
+//   // For saturation equals to 0 any value of hue are valid.
+//   // In this case we choose 0 as a default value.
+
+//   if (r == g && g == b) {            // Limit case.
+//       s = 0; 
+//       h = 0; 
+//   } else if ((r >= g) && (g >= b)) { // Sector 0: 0° - 60°
+//       s = r - b;
+//       h = 60 * (g - b) / s;
+//   } else if ((g > r) && (r >= b)) {  // Sector 1: 60° - 120°
+//       s = g - b;
+//       h = 60 * (g - r) / s  + 60;
+//   } else if ((g >= b) && (b > r)) {  // Sector 2: 120° - 180°
+//       s = g - r;
+//       h = 60 * (b - r) / s + 120;
+//   } else if ((b > g) && (g > r)) {   // Sector 3: 180° - 240°
+//       s = b - r;
+//       h = 60 * (b - g) / s + 180;
+//   } else if ((b > r) && (r >= g)) {  // Sector 4: 240° - 300°
+//       s = b - g;
+//       h = 60 * (r - g) / s + 240;
+//   } else {                           // Sector 5: 300° - 360°
+//       s = r - g;
+//       h = 60 * (r - b) / s + 300;
+//   }
+
+//   y = R * r + G * g + B * b;
+
+//   // Approximations erros can cause values to exceed bounds.
+
+//   hsy[0] = h % 360;
+//   hsy[1] = Math.min(Math.max(s, 0), 1);
+//   hsy[2] = Math.min(Math.max(y, 0), 1);
+// }
+
+// /**
+// * This is the formula used by Photoshop to convert a color from
+// * HSY (Hue, Saturation, Luminosity) to RGB (Red, Green, Blue).
+// * The hue is calculated using the exacone approximation of the saturation
+// * cone.
+// * @param hsy The input color HSY normalized components.
+// * @param rgb The output color RGB normalized components.
+// */
+// function hsyToRgb(hsy: number[] | Uint8ClampedArray, rgb: number[] | Uint8ClampedArray) {
+
+//   let h = hsy[0] % 360;
+//   let s = Math.min(Math.max(hsy[1], 0), 1);
+//   let y = Math.min(Math.max(hsy[2], 0), 1);
+
+//   let r;
+//   let g;
+//   let b;
+
+//   let k; // Intermediate letiable.
+
+//   if (h >= 0 && h < 60) {           // Sector 0: 0° - 60°
+//       k = s * h / 60;
+//       b = y - R * s - G * k;
+//       r = b + s;
+//       g = b + k;
+//   } else if (h >= 60 && h < 120) {  // Sector 1: 60° - 120°
+//       k = s * (h - 60) / 60;
+//       g = y + B * s + R * k;
+//       b = g - s;
+//       r = g - k;
+//   } else if (h >= 120 && h < 180) { // Sector 2: 120° - 180°
+//       k = s * (h - 120) / 60;
+//       r = y - G * s - B * k;
+//       g = r + s;
+//       b = r + k;
+//   } else if (h >= 180 && h < 240) { // Sector 3: 180° - 240°
+//       k = s * (h - 180) / 60;
+//       b = y + R * s + G * k;
+//       r = b - s;
+//       g = b - k;
+//   } else if (h >= 240 && h < 300) { // Sector 4: 240° - 300°
+//       k = s * (h - 240) / 60;
+//       g = y - B * s - R * k;
+//       b = g + s;
+//       r = g + k;
+//   } else {                          // Sector 5: 300° - 360°
+//       k = s * (h - 300) / 60;
+//       r = y + G * s + B * k;
+//       g = r - s;
+//       b = r - k;
+//   }
+
+//   // Approximations erros can cause values to exceed bounds.
+
+//   rgb[0] = Math.min(Math.max(r, 0), 1);
+//   rgb[1] = Math.min(Math.max(g, 0), 1);
+//   rgb[2] = Math.min(Math.max(b, 0), 1);
+// }
+
+
+
+/**
+ * Converts an RGB color value to HSL. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes r, g, and b are contained in the set [0, 255] and
+ * returns h, s, and l in the set [0, 1].
+ *
+ * @param   Number  r       The red color value
+ * @param   Number  g       The green color value
+ * @param   Number  b       The blue color value
+ * @return  Array           The HSL representation
+ */
+function rgbToHsl(r: number, g: number, b: number, result: [number, number, number]) {
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h: number;
+  let s: number;
+  let l = (max + min) / 2;
+
+  if (max == min) {
+    h = s = 0; // achromatic
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+
+    h /= 6;
+  }
+
+  result[0] = h;
+  result[1] = s;
+  result[2] = l;
+}
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   Number  h       The hue
+ * @param   Number  s       The saturation
+ * @param   Number  l       The lightness
+ * @return  Array           The RGB representation
+ */
+function hslToRgb(h: number, s: number, l: number, result: [number, number, number]) {
+  let r: number, g: number, b: number;
+
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    let p = 2 * l - q;
+
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+
+  result[0] = r;
+  result[1] = g;
+  result[2] = b;
+}
+
+/**
+ * Converts an RGB color value to HSV. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+ * Assumes r, g, and b are contained in the set [0, 255] and
+ * returns h, s, and v in the set [0, 1].
+ *
+ * @param   Number  r       The red color value
+ * @param   Number  g       The green color value
+ * @param   Number  b       The blue color value
+ * @return  Array           The HSV representation
+ */
+function rgbToHsv(r: number, g: number, b: number, result: [number, number, number]) {
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, v = max;
+
+  let d = max - min;
+  s = max == 0 ? 0 : d / max;
+
+  if (max == min) {
+    h = 0; // achromatic
+  } else {
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+
+    h /= 6;
+  }
+
+  result[0] = h;
+  result[1] = s;
+  result[2] = v;
+}
+
+/**
+ * Converts an HSV color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
+ * Assumes h, s, and v are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   Number  h       The hue
+ * @param   Number  s       The saturation
+ * @param   Number  v       The value
+ * @return  Array           The RGB representation
+ */
+function hsvToRgb(h: number, s: number, v: number, result: [number, number, number]) {
+  let r: number, g: number, b: number;
+
+  let i = Math.floor(h * 6);
+  let f = h * 6 - i;
+  let p = v * (1 - s);
+  let q = v * (1 - f * s);
+  let t = v * (1 - (1 - f) * s);
+
+  switch (i % 6) {
+    case 0: r = v, g = t, b = p; break;
+    case 1: r = q, g = v, b = p; break;
+    case 2: r = p, g = v, b = t; break;
+    case 3: r = p, g = q, b = v; break;
+    case 4: r = t, g = p, b = v; break;
+    case 5: r = v, g = p, b = q; break;
+  }
+
+  result[0] = r;
+  result[1] = g;
+  result[2] = b;
 }
