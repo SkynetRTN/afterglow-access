@@ -1,50 +1,34 @@
-import { Component, OnInit, HostBinding, Input } from '@angular/core';
-import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
+import { Component, OnInit, HostBinding, Input } from "@angular/core";
+import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 
-import { map, takeUntil } from "rxjs/operators";
-import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { AlignFormData, AligningPanelConfig } from '../../models/workbench-state';
-import { MatSelectChange } from '@angular/material/select';
-import { AlignmentJob, AlignmentJobResult } from '../../../jobs/models/alignment';
-import { Router } from '@angular/router';
-import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../workbench.state';
-import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectDataFileListItem } from '../../workbench.actions';
-import { JobsState } from '../../../jobs/jobs.state';
-import { ImageHdu, DataFile } from '../../../data-files/models/data-file';
+import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter } from "rxjs/operators";
+import { FormGroup, FormControl, Validators } from "@angular/forms";
+import { AlignFormData, AligningPanelConfig } from "../../models/workbench-state";
+import { MatSelectChange } from "@angular/material/select";
+import { AlignmentJob, AlignmentJobResult } from "../../../jobs/models/alignment";
+import { Router } from "@angular/router";
+import { Store } from "@ngxs/store";
+import { WorkbenchState } from "../../workbench.state";
+import { CreateAlignmentJob, UpdateAligningPanelConfig, FocusFileListItem } from "../../workbench.actions";
+import { JobsState } from "../../../jobs/jobs.state";
+import { ImageHdu, DataFile, Header } from "../../../data-files/models/data-file";
+import { DataFilesState } from "../../../data-files/data-files.state";
+import { LoadHduHeader } from "../../../data-files/data-files.actions";
 
 @Component({
-  selector: 'app-aligning-panel',
-  templateUrl: './aligning-panel.component.html',
-  styleUrls: ['./aligning-panel.component.css']
+  selector: "app-aligning-panel",
+  templateUrl: "./aligning-panel.component.html",
+  styleUrls: ["./aligning-panel.component.css"],
 })
 export class AlignerPageComponent implements OnInit {
-  @Input("primaryHdu")
-  set primaryHdu(primaryHdu: ImageHdu) {
-    this.primaryHdu$.next(primaryHdu);
+  @Input("hduIds")
+  set hduIds(hduIds: string[]) {
+    this.hduIds$.next(hduIds);
   }
-  get primaryHdu() {
-    return this.primaryHdu$.getValue();
+  get hduIds() {
+    return this.hduIds$.getValue();
   }
-  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
-
-  @Input("hdus")
-  set hdus(hdus: ImageHdu[]) {
-    this.hdus$.next(hdus);
-  }
-  get hdus() {
-    return this.hdus$.getValue();
-  }
-  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
-
-  @Input("fileEntities")
-  set fileEntities(fileEntities: {[id: string]: DataFile}) {
-    this.fileEntities$.next(fileEntities);
-  }
-  get fileEntities() {
-    return this.fileEntities$.getValue();
-  }
-  private fileEntities$ = new BehaviorSubject<{[id: string]: DataFile}>(null);
+  private hduIds$ = new BehaviorSubject<string[]>(null);
 
   @Input("config")
   set config(config: AligningPanelConfig) {
@@ -57,85 +41,169 @@ export class AlignerPageComponent implements OnInit {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  
-  selectedHdus$: Observable<Array<ImageHdu>>;
+  selectedHduIds$: Observable<string[]>;
+  refHduId$: Observable<string>;
+  refHdu$: Observable<ImageHdu>;
+  refHeader$: Observable<Header>;
+  refHduHasWcs$: Observable<boolean>;
   alignFormData$: Observable<AlignFormData>;
-  primaryHduIsSelected$: Observable<boolean>;
-  primaryHduHasWcs$: Observable<boolean>;
-  alignmentJobRow$: Observable<{ job: AlignmentJob, result: AlignmentJobResult }>;
+  alignmentJobRow$: Observable<{ job: AlignmentJob; result: AlignmentJobResult }>;
 
   alignForm = new FormGroup({
-    selectedImageFileIds: new FormControl([], Validators.required),
-    mode: new FormControl('', Validators.required),
-    inPlace: new FormControl(false, Validators.required)
+    selectedHduIds: new FormControl([], Validators.required),
+    refHduId: new FormControl("", Validators.required),
+    mode: new FormControl("", Validators.required),
   });
 
   constructor(private store: Store, private router: Router) {
-    this.alignFormData$ = store.select(WorkbenchState.getState).pipe(
-      map(state => state.aligningPanelConfig.alignFormData),
-      takeUntil(this.destroy$)
+    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
+      if(!hduIds || !this.config) return;
+      let selectedHduIds = this.config.alignFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+      if (selectedHduIds.length != this.config.alignFormData.selectedHduIds.length) {
+        setTimeout(() => {
+          this.setSelectedHduIds(selectedHduIds);
+        });
+        
+      }
+    });
+
+    this.alignFormData$ = this.config$.pipe(
+      map((config) => config && config.alignFormData),
+      distinctUntilChanged()
     );
 
-    this.alignFormData$.subscribe(data => {
+    this.alignFormData$.subscribe((data) => {
+      if (!data) return;
       this.alignForm.patchValue(data, { emitEvent: false });
     });
 
-    this.selectedHdus$ = combineLatest(this.hdus$, this.alignFormData$).pipe(
-      map(([allImageFiles, alignFormData]) => alignFormData.selectedHduIds.map(id => allImageFiles.find(f => f.id == id)))
+    this.refHduId$ = this.alignFormData$.pipe(
+      map((data) => data && data.refHduId),
+      distinctUntilChanged()
+    );
+
+    this.refHdu$ = this.refHduId$.pipe(
+      switchMap((hduId) => {
+        return this.store.select(DataFilesState.getHduById).pipe(
+          map((fn) => fn(hduId) as ImageHdu),
+          distinctUntilChanged()
+        );
+      })
+    );
+
+    this.refHeader$ = this.refHdu$.pipe(
+      map((hdu) => hdu && hdu.headerId),
+      distinctUntilChanged(),
+      switchMap((headerId) => {
+        return this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)));
+      })
+    );
+
+    let refHeaderLoaded$ = this.refHeader$.pipe(
+      map(header => header && header.loaded),
+      distinctUntilChanged()
     )
 
-    this.alignForm.valueChanges.subscribe(value => {
+    let refHeaderLoading$ = this.refHeader$.pipe(
+      map(header => header && header.loading),
+      distinctUntilChanged()
+    )
+
+    combineLatest(this.refHduId$, refHeaderLoaded$, refHeaderLoading$)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([refHduId, headerLoaded, headerLoading]) => {
+        
+        if (refHduId && headerLoaded != null && !headerLoaded && headerLoading != null && !headerLoading) {
+          setTimeout(() => {
+            this.store.dispatch(new LoadHduHeader(refHduId));
+          });
+        }
+      });
+
+    this.refHduHasWcs$ = this.refHeader$.pipe(
+      map((header) => header && header.wcs && header.wcs.isValid()),
+      distinctUntilChanged()
+    );
+
+    this.alignForm.valueChanges.subscribe((value) => {
       // if(this.imageCalcForm.valid) {
       this.store.dispatch(new UpdateAligningPanelConfig({ alignFormData: this.alignForm.value }));
       // }
-    })
-
-    this.primaryHduIsSelected$ = combineLatest(this.primaryHdu$, this.selectedHdus$).pipe(
-      map(([primaryHdu, selectedHdus]) => {
-        return selectedHdus.find(f => primaryHdu && f.id == primaryHdu.id) != undefined;
-      })
-    )
-
-    // TODO: LAYER
-    this.primaryHduHasWcs$ = this.primaryHdu$.pipe(
-      map(hdu => hdu != null && hdu.header.loaded && hdu.header.wcs.isValid())
-    )
+    });
 
     this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
       map(([state, jobRowLookup]) => {
-        if (!state.aligningPanelConfig.currentAlignmentJobId || !jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId]) return null;
-        return jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId] as { job: AlignmentJob, result: AlignmentJobResult };
+        if (
+          !state.aligningPanelConfig.currentAlignmentJobId ||
+          !jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId]
+        )
+          return null;
+        return jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId] as {
+          job: AlignmentJob;
+          result: AlignmentJobResult;
+        };
       })
-
-    )
-    
+    );
   }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    // Now let's also unsubscribe from the subject itself:
     this.destroy$.unsubscribe();
   }
 
-  onPrimaryHduChange($event: MatSelectChange) {
-    this.store.dispatch(new SelectDataFileListItem($event.value));
+  getHduOptionLabel(hduId: string) {
+    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)),
+      filter(hdu => hdu != null)
+    )
+
+    let file$ = hdu$.pipe(
+      map(hdu => hdu.fileId),
+      distinctUntilChanged(),
+      flatMap(fileId => {
+        return this.store.select(DataFilesState.getFileById).pipe(
+          map(fn => fn(fileId)),
+          filter(hdu => hdu != null)
+        )
+      })
+    )
+
+    return combineLatest(hdu$, file$).pipe(
+      map(([hdu, file]) => {
+        if(!hdu || !file) return '???';
+        if(file.hduIds.length > 1) {
+          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`
+        }
+        return file.name
+      })
+    )
+
   }
 
-
-  selectHdus(hdus: ImageHdu[]) {
-    this.store.dispatch(new UpdateAligningPanelConfig(
-      {
+  setSelectedHduIds(hduIds: string[]) {
+    this.store.dispatch(
+      new UpdateAligningPanelConfig({
         alignFormData: {
           ...this.alignForm.value,
-          selectedHduIds: hdus.map(f => f.id)
-        }
-      }));
+          selectedHduIds: hduIds,
+        },
+      })
+    );
+  }
+
+  onSelectAllBtnClick() {
+    this.setSelectedHduIds(this.hduIds);
+  }
+
+  onClearSelectionBtnClick() {
+    this.setSelectedHduIds([]);
   }
 
   submit(data: AlignFormData) {
-    this.store.dispatch(new CreateAlignmentJob())
+    let selectedHduIds: string[] = this.alignForm.controls.selectedHduIds.value;
+    this.store.dispatch(new CreateAlignmentJob(selectedHduIds));
   }
+
 }

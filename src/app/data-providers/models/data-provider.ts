@@ -16,5 +16,5 @@ export interface DataProvider {
   searchable: boolean;
   readonly: boolean;
   quota: number;
-  usage: number
+  usage: number;
 }

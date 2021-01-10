@@ -1,4 +1,3 @@
-
 <ng-container *ngFor="let itemId of itemIds">
   <ng-container [ngSwitch]="(layoutItems$ | async)[itemId]?.type">
     <ng-container *ngSwitchCase="'container'">
@@ -11,7 +10,7 @@
         (onImageClick)="handleViewerPanelContainerImageClick($event)"
         (onImageMove)="handleViewerPanelContainerImageMove($event)"
         (onMarkerClick)="handleViewerPanelContainerMarkerClick($event)"
-        style="overflow: hidden;"
+        style="overflow: hidden"
       ></app-workbench-viewer-layout>
     </ng-container>
     <ng-container *ngSwitchCase="'panel'">
@@ -28,14 +27,10 @@
         (click)="setFocusedPanel($event, panel)"
         (mousedown)="setFocusedPanel($event, panel)"
         (mousewheel)="setFocusedPanel($event, panel)"
-        style="overflow: hidden;"
+        style="overflow: hidden"
       >
       </app-workbench-viewer-panel>
     </ng-container>
   </ng-container>
-  <div
-    *ngIf="true"
-    class="handler"
-  ></div>
+  <div *ngIf="true" class="handler"></div>
 </ng-container>
-

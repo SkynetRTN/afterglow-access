@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { PixelOpsJobsDialogComponent } from './pixel-ops-jobs-dialog.component';
+import { PixelOpsJobsDialogComponent } from "./pixel-ops-jobs-dialog.component";
 
-describe('PixelOpsJobsDialogComponent', () => {
+describe("PixelOpsJobsDialogComponent", () => {
   let component: PixelOpsJobsDialogComponent;
   let fixture: ComponentFixture<PixelOpsJobsDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PixelOpsJobsDialogComponent ]
-    })
-    .compileComponents();
+      declarations: [PixelOpsJobsDialogComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('PixelOpsJobsDialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

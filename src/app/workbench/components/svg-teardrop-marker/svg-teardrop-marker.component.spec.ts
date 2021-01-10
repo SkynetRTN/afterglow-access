@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { SvgTeardropMarkerComponent } from './svg-teardrop-marker.component';
+import { SvgTeardropMarkerComponent } from "./svg-teardrop-marker.component";
 
-describe('SvgTeardropMarkerComponent', () => {
+describe("SvgTeardropMarkerComponent", () => {
   let component: SvgTeardropMarkerComponent;
   let fixture: ComponentFixture<SvgTeardropMarkerComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SvgTeardropMarkerComponent ]
-    })
-    .compileComponents();
+      declarations: [SvgTeardropMarkerComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('SvgTeardropMarkerComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

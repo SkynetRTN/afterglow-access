@@ -7,10 +7,10 @@ import { map } from "rxjs/operators";
 import { DataFile, Header, PixelPrecision, PixelType, ImageHdu } from "../../data-files/models/data-file";
 import { ImageHist } from "../../data-files/models/image-hist";
 import { Source, PosType } from "../models/source";
-import { getCoreApiUrl } from '../../../environments/app-config';
-import { HduType } from '../../data-files/models/data-file-type';
-import { Region } from '../../data-files/models/region';
-import { HeaderEntry } from '../../data-files/models/header-entry';
+import { getCoreApiUrl } from "../../../environments/app-config";
+import { HduType } from "../../data-files/models/data-file-type";
+import { Region } from "../../data-files/models/region";
+import { HeaderEntry } from "../../data-files/models/header-entry";
 
 export interface CoreDataFile {
   id: number;
@@ -34,7 +34,7 @@ function createImageHist(
     initialized: false,
     data: data,
     minBin: minBin,
-    maxBin: maxBin
+    maxBin: maxBin,
   };
 }
 
@@ -69,27 +69,21 @@ export class AfterglowDataFileService {
   constructor(private http: HttpClient, private location: Location) {}
 
   removeFile(fileId: string): Observable<null> {
-    return this.http
-      .delete(`${getCoreApiUrl(appConfig)}/data-files/${fileId}`)
-      .pipe(
-        map(res => null)
-      )
+    return this.http.delete(`${getCoreApiUrl(appConfig)}/data-files/${fileId}`).pipe(map((res) => null));
+  }
+
+  updateFile(fileId: string, changes: Partial<CoreDataFile>): Observable<null> {
+    return this.http.put(`${getCoreApiUrl(appConfig)}/data-files/${fileId}`, changes).pipe(map((res) => null));
   }
 
   getFiles(): Observable<CoreDataFile[]> {
-    return this.http.get<CoreDataFile[]>(`${getCoreApiUrl(appConfig)}/data-files`)
+    return this.http.get<CoreDataFile[]>(`${getCoreApiUrl(appConfig)}/data-files`);
   }
 
-  createFromDataProviderAsset(
-    providerId: string,
-    assetPath: string
-  ) {
+  createFromDataProviderAsset(providerId: string, assetPath: string) {
     // assetPath = assetPath.replace("\\", "/");
     let body = { provider_id: providerId, path: assetPath };
-    return this.http.post(
-      `${getCoreApiUrl(appConfig)}/data-files`,
-      body
-    );
+    return this.http.post(`${getCoreApiUrl(appConfig)}/data-files`, body);
   }
 
   getHeader(fileId: string): Observable<HeaderEntry[]> {
@@ -97,13 +91,11 @@ export class AfterglowDataFileService {
   }
 
   getHist(fileId: string): Observable<ImageHist> {
-    return this.http
-      .get<any>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/hist`)
-      .pipe(
-        map(res => {
-          return createImageHist(res.data, res.min_bin, res.max_bin);
-        })
-      );
+    return this.http.get<any>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/hist`).pipe(
+      map((res) => {
+        return createImageHist(res.data, res.min_bin, res.max_bin);
+      })
+    );
   }
 
   getPixels(hduId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
@@ -118,44 +110,38 @@ export class AfterglowDataFileService {
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
-      .get(`${getCoreApiUrl(appConfig)}/data-files/${hduId}/pixels`,
-        { headers: headers, responseType: "arraybuffer", params: params }
-      )
+      .get(`${getCoreApiUrl(appConfig)}/data-files/${hduId}/pixels`, {
+        headers: headers,
+        responseType: "arraybuffer",
+        params: params,
+      })
       .pipe(
-        map(resp => {
-          switch(precision) {
-            case(PixelPrecision.uint8): {
-              return new Uint8Array(resp)
+        map((resp) => {
+          switch (precision) {
+            case PixelPrecision.uint8: {
+              return new Uint8Array(resp);
             }
-            case(PixelPrecision.uint16): {
+            case PixelPrecision.uint16: {
               return new Uint16Array(resp);
             }
-            case(PixelPrecision.uint32): {
+            case PixelPrecision.uint32: {
               return new Uint32Array(resp);
             }
-            case(PixelPrecision.float32): {
+            case PixelPrecision.float32: {
               return new Float32Array(resp);
             }
-            case(PixelPrecision.float64): {
+            case PixelPrecision.float64: {
               return new Float64Array(resp);
             }
-
           }
         })
       );
   }
 
-  getSonificationUri(
-    fileId: string,
-    region: Region,
-    duration: number,
-    toneCount: number
-  ) {
-    return `${getCoreApiUrl(appConfig)}/data-files/${fileId}/sonification?x=${Math.floor(
-      region.x
-    ) + 1}&y=${Math.floor(region.y) + 1}&width=${Math.floor(
-      region.width
-    )}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
+  getSonificationUri(fileId: string, region: Region, duration: number, toneCount: number) {
+    return `${getCoreApiUrl(appConfig)}/data-files/${fileId}/sonification?x=${Math.floor(region.x) + 1}&y=${
+      Math.floor(region.y) + 1
+    }&width=${Math.floor(region.width)}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
       region.height / duration
     )}&num_tones=${Math.floor(toneCount)}&index_sounds=1`;
   }
@@ -180,7 +166,7 @@ export class AfterglowDataFileService {
       primaryCoord: primaryCoord,
       secondaryCoord: secondaryCoord,
       pm: null,
-      pmPosAngle: null
+      pmPosAngle: null,
     };
     return source;
   }

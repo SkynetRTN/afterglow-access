@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { PlotterComponent } from './plotter.component';
+import { PlotterComponent } from "./plotter.component";
 
-describe('PlotterComponent', () => {
+describe("PlotterComponent", () => {
   let component: PlotterComponent;
   let fixture: ComponentFixture<PlotterComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PlotterComponent ]
-    })
-    .compileComponents();
+      declarations: [PlotterComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('PlotterComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,20 +1,25 @@
-import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
-import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
-import { Subject, timer } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
-import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
-import { takeUntil } from 'rxjs/operators';
-import { Store } from '@ngxs/store';
-import { CloseDataFile, ZoomTo } from '../../../data-files/data-files.actions';
-import { getPixel, IImageData } from '../../../data-files/models/image-data';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { MoveByEvent, ZoomByEvent, LoadTileEvent, ZoomToEvent, ZoomToFitEvent } from '../pan-zoom-canvas/pan-zoom-canvas.component';
-import { Wcs } from '../../../image-tools/wcs';
+import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from "@angular/core";
+import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
+import { Subject, timer } from "rxjs";
+import { MatDialog } from "@angular/material/dialog";
+import { takeUntil } from "rxjs/operators";
+import { Store } from "@ngxs/store";
+import { CloseDataFile, ZoomTo } from "../../../data-files/data-files.actions";
+import { getPixel, IImageData } from "../../../data-files/models/image-data";
+import { DataFilesState } from "../../../data-files/data-files.state";
+import {
+  MoveByEvent,
+  ZoomByEvent,
+  LoadTileEvent,
+  ZoomToEvent,
+  ZoomToFitEvent,
+} from "../pan-zoom-canvas/pan-zoom-canvas.component";
+import { Wcs } from "../../../image-tools/wcs";
 
 @Component({
-  selector: 'app-image-viewer-status-bar',
-  templateUrl: './image-viewer-status-bar.component.html',
-  styleUrls: ['./image-viewer-status-bar.component.css']
+  selector: "app-image-viewer-status-bar",
+  templateUrl: "./image-viewer-status-bar.component.html",
+  styleUrls: ["./image-viewer-status-bar.component.css"],
 })
 export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   @Input() rawImageData: IImageData<PixelType>;
@@ -33,46 +38,44 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   raHours: number;
   decDegs: number;
   pixelValue: number;
-  colorValue: {red: number, green: number, blue: number, alpha: number}
+  colorValue: { red: number; green: number; blue: number; alpha: number };
 
   private zoomStepFactor: number = 0.75;
   private startZoomIn$ = new Subject<boolean>();
   private stopZoomIn$ = new Subject<boolean>();
-  
+
   private startZoomOut$ = new Subject<boolean>();
   private stopZoomOut$ = new Subject<boolean>();
 
+  constructor(private store: Store, private dialog: MatDialog) {}
 
-  constructor(private store: Store, private dialog: MatDialog) { }
-
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   ngOnChanges() {
-    if(this.imageMouseX == null || this.imageMouseY == null) {
+    if (this.imageMouseX == null || this.imageMouseY == null) {
       this.pixelValue = null;
       this.colorValue = null;
       this.raHours = null;
       this.decDegs = null;
       return;
     }
-    if(this.rawImageData) {
+    if (this.rawImageData) {
       this.pixelValue = getPixel(this.rawImageData, this.imageMouseX, this.imageMouseY);
     }
-    if(this.normalizedImageData) {
+    if (this.normalizedImageData) {
       let c = getPixel(this.normalizedImageData, this.imageMouseX, this.imageMouseY);
-      this.colorValue = c ? {red: c & 0xff, green: (c >> 8) & 0xff, blue: (c >> 16) & 0xff, alpha: (c >> 24) & 0xff} : null;
+      this.colorValue = c
+        ? { red: c & 0xff, green: (c >> 8) & 0xff, blue: (c >> 16) & 0xff, alpha: (c >> 24) & 0xff }
+        : null;
     }
-    if(this.wcs && this.wcs.isValid()) {
+    if (this.wcs && this.wcs.isValid()) {
       let raDec = this.wcs.pixToWorld([this.imageMouseX, this.imageMouseY]);
       this.raHours = raDec[0];
       this.decDegs = raDec[1];
-    }
-    else {
+    } else {
       this.raHours = null;
       this.decDegs = null;
     }
-    
   }
 
   onDownloadSnapshotClick() {
@@ -82,7 +85,6 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   removeFromLibrary() {
     // if(!this.hdu) return;
     // let hduId = this.hdu.id;
-
     // let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
     //   width: "300px",
     //   data: {
@@ -93,22 +95,19 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
     //     }
     //   }
     // });
-
     // dialogRef.afterClosed().subscribe(result => {
     //   if (result) {
     //     this.store.dispatch(new CloseDataFile(this.hdu.fileId));
     //   }
     // });
-
   }
 
   public startZoomIn() {
-    timer(0, 125).pipe(
-      takeUntil(this.stopZoomIn$),
-
-    ).subscribe(t => {
-      this.zoomIn();
-    });
+    timer(0, 125)
+      .pipe(takeUntil(this.stopZoomIn$))
+      .subscribe((t) => {
+        this.zoomIn();
+      });
   }
 
   public stopZoomIn() {
@@ -116,30 +115,29 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   public startZoomOut() {
-    timer(0, 125).pipe(
-      takeUntil(this.stopZoomOut$),
-
-    ).subscribe(t => {
-      this.zoomOut();
-    });
+    timer(0, 125)
+      .pipe(takeUntil(this.stopZoomOut$))
+      .subscribe((t) => {
+        this.zoomOut();
+      });
   }
 
   public stopZoomOut() {
     this.stopZoomOut$.next(true);
   }
 
-  public zoomIn(imageAnchor: { x: number, y: number } = null) {
-    this.onZoomBy.emit({factor: 1.0 / this.zoomStepFactor, anchor: imageAnchor})
+  public zoomIn(imageAnchor: { x: number; y: number } = null) {
+    this.onZoomBy.emit({ factor: 1.0 / this.zoomStepFactor, anchor: imageAnchor });
     // this.zoomBy(1.0 / this.zoomStepFactor, imageAnchor);
   }
 
-  public zoomOut(imageAnchor: { x: number, y: number } = null) {
-    this.onZoomBy.emit({factor: this.zoomStepFactor, anchor: imageAnchor})
+  public zoomOut(imageAnchor: { x: number; y: number } = null) {
+    this.onZoomBy.emit({ factor: this.zoomStepFactor, anchor: imageAnchor });
     // this.zoomBy(this.zoomStepFactor, imageAnchor);
   }
 
   public zoomTo(value: number) {
-    this.onZoomTo.emit({factor: value, anchor: null})
+    this.onZoomTo.emit({ factor: value, anchor: null });
     // this.store.dispatch(new ZoomTo(
     //   this.hdu.transformation,
     //   this.hdu.rawImageDataId,
@@ -148,8 +146,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
     // ));
   }
 
-  public zoomBy(factor: number, imageAnchor: { x: number, y: number } = null) {
-    this.onZoomBy.emit({factor: factor, anchor: imageAnchor})
+  public zoomBy(factor: number, imageAnchor: { x: number; y: number } = null) {
+    this.onZoomBy.emit({ factor: factor, anchor: imageAnchor });
     // this.store.dispatch(new ZoomBy(
     //   this.hdu.id,
     //   factor,
@@ -158,7 +156,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   }
 
   public zoomToFit(padding: number = 0) {
-    this.onZoomToFit.emit({})
+    this.onZoomToFit.emit({});
     // this.store.dispatch(new CenterRegionInViewport(
     //   this.hdu.id,
     //   { x: 1, y: 1, width: getWidth(this.hdu), height: getHeight(this.hdu) }

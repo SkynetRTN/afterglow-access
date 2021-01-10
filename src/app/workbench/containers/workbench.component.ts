@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
-import { Observable, combineLatest, merge, of, never, empty } from "rxjs";
+import { Component, OnInit, OnDestroy, ViewChild } from "@angular/core";
+import { Observable, combineLatest, merge, of, never, empty, throwError, Subject, concat } from "rxjs";
 import {
   map,
   tap,
@@ -7,6 +7,15 @@ import {
   distinctUntilChanged,
   switchMap,
   withLatestFrom,
+  debounceTime,
+  throttleTime,
+  auditTime,
+  skip,
+  takeUntil,
+  take,
+  flatMap,
+  catchError,
+  concatAll,
 } from "rxjs/operators";
 
 import {
@@ -26,12 +35,9 @@ import {
 import { SidebarView } from "../models/sidebar-view";
 import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "../../../../node_modules/rxjs";
-import {
-  HotkeysService,
-  Hotkey,
-} from "../../../../node_modules/angular2-hotkeys";
-import { MatDialog } from "@angular/material/dialog";
-import { Store, Actions } from "@ngxs/store";
+import { HotkeysService, Hotkey } from "../../../../node_modules/angular2-hotkeys";
+import { MatDialog, MatDialogRef } from "@angular/material/dialog";
+import { Store, Actions, ofActionCompleted, ofActionDispatched } from "@ngxs/store";
 import { DataFilesState } from "../../data-files/data-files.state";
 import { WorkbenchState } from "../workbench.state";
 import {
@@ -41,7 +47,7 @@ import {
   ShowSidebar,
   LoadCatalogs,
   LoadFieldCals,
-  SelectDataFileListItem,
+  FocusFileListItem,
   SetSidebarView,
   ToggleShowConfig,
   SetViewMode,
@@ -68,17 +74,29 @@ import {
   UpdateLine,
   StartLine,
   SetSelectedHduId,
+  SyncViewerTransformations,
+  SetViewerSyncMode,
+  SyncViewerNormalizations,
+  SyncPlottingPanelStates,
+  SetFileSelection,
+  SetFileListFilter,
 } from "../workbench.actions";
-import { LoadDataProviders } from "../../data-providers/data-providers.actions";
+import {
+  LoadDataProviders,
+  LoadDataProvidersSuccess,
+  LoadDataProvidersFail,
+  ImportAssets,
+  ImportAssetsCompleted,
+} from "../../data-providers/data-providers.actions";
 import { ViewMode } from "../models/view-mode";
 import { MatButtonToggleChange } from "@angular/material/button-toggle";
 import { MatRadioChange } from "@angular/material/radio";
 import { MatSelectChange } from "@angular/material/select";
-import { Viewer } from "../models/viewer";
+import { Viewer, ImageViewer, TableViewer } from "../models/viewer";
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { CorrelationIdGenerator } from "../../utils/correlated-action";
 import { DataProvidersState } from "../../data-providers/data-providers.state";
-import { ConfirmationDialogComponent } from "../components/confirmation-dialog/confirmation-dialog.component";
+import { AlertDialogComponent, AlertDialogConfig } from "../components/alert-dialog/alert-dialog.component";
 import { Navigate } from "@ngxs/router-plugin";
 import { WorkbenchImageHduState } from "../models/workbench-file-state";
 import {
@@ -91,23 +109,13 @@ import {
   ViewerPanelContainer,
 } from "../models/workbench-state";
 import { CustomMarkerPanelConfig } from "../models/workbench-state";
-import {
-  Marker,
-  MarkerType,
-  CircleMarker,
-  LineMarker,
-  RectangleMarker,
-  TeardropMarker,
-} from "../models/marker";
+import { Marker, MarkerType, CircleMarker, LineMarker, RectangleMarker, TeardropMarker } from "../models/marker";
 import { centroidDisk, centroidPsf } from "../models/centroider";
 import { PlottingPanelState } from "../models/plotter-file-state";
 import { CustomMarker } from "../models/custom-marker";
 import { CustomMarkerPanelState } from "../models/marker-file-state";
 import { PosType, Source } from "../models/source";
-import {
-  SonifierRegionMode,
-  SonificationPanelState,
-} from "../models/sonifier-file-state";
+import { SonifierRegionMode, SonificationPanelState } from "../models/sonifier-file-state";
 import { FileInfoPanelConfig } from "../models/file-info-panel";
 import { SourcesState } from "../sources.state";
 import { PhotometrySettings } from "../models/photometry-settings";
@@ -125,14 +133,45 @@ import {
   LoadLibrary,
   LoadDataFile,
   LoadHdu,
-  SyncFileTransformations,
-  SyncFileNormalizations
+  CloseDataFile,
+  SaveDataFile,
+  LoadLibrarySuccess,
+  LoadLibraryFail,
+  SaveDataFileSuccess,
+  SaveDataFileFail,
 } from "../../data-files/data-files.actions";
-import { Transformation, Transform } from '../../data-files/models/transformation';
-import { Normalization } from '../../data-files/models/normalization';
-import { PixelNormalizer } from '../../data-files/models/pixel-normalizer';
-import { IImageData } from '../../data-files/models/image-data';
-import { Wcs } from '../../image-tools/wcs';
+import { Transform, getImageToViewportTransform } from "../../data-files/models/transformation";
+import { Normalization } from "../../data-files/models/normalization";
+import { PixelNormalizer } from "../../data-files/models/pixel-normalizer";
+import { IImageData } from "../../data-files/models/image-data";
+import { Wcs } from "../../image-tools/wcs";
+import { WorkbenchDataFileListComponent } from "./workbench-data-file-list/workbench-data-file-list.component";
+import { view } from "paper";
+import { OpenFileDialogComponent } from "../../data-providers/components/open-file-dialog/open-file-dialog.component";
+import { AfterglowDataProviderService } from "../services/afterglow-data-providers";
+import { HttpErrorResponse } from "@angular/common/http";
+import { SaveDialogComponent } from "../../data-providers/components/save-dialog/save-dialog.component";
+import {
+  SaveChangesDialogComponent,
+  SaveChangesDialogResult,
+  FileDialogConfig,
+} from "../components/file-dialog/file-dialog.component";
+import { MatCheckboxChange } from "@angular/material/checkbox";
+import { AfterglowDataFileService } from '../services/afterglow-data-files';
+import { UUID } from 'angular2-uuid';
+import { BatchDownloadJob } from '../../jobs/models/batch-download';
+import { JobType } from '../../jobs/models/job-types';
+import { CreateJob, CreateJobSuccess, CreateJobFail } from '../../jobs/jobs.actions';
+import { JobProgressDialogConfig, JobProgressDialogComponent } from '../components/job-progress-dialog/job-progress-dialog.component';
+import { JobsState } from '../../jobs/jobs.state';
+import { saveAs } from "file-saver/dist/FileSaver";
+import { JobService } from '../../jobs/services/jobs';
+
+enum SaveFileAction {
+  Save = "save",
+  Discard = "discard",
+  Cancel = "cancel",
+}
 
 @Component({
   selector: "app-workbench",
@@ -142,6 +181,11 @@ import { Wcs } from '../../image-tools/wcs';
 export class WorkbenchComponent implements OnInit, OnDestroy {
   WorkbenchTool = WorkbenchTool;
   ViewMode = ViewMode;
+  HduType = HduType;
+
+  @ViewChild(WorkbenchDataFileListComponent) fileList: WorkbenchDataFileListComponent;
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
 
   layoutContainer$: Observable<ViewerPanelContainer>;
 
@@ -150,6 +194,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   showSidebar$: Observable<boolean>;
   sidebarView$: Observable<SidebarView>;
   files$: Observable<DataFile[]>;
+  fileListFilter$: Observable<string>;
+  fileListFilterInput$ = new Subject<string>();
+  filteredFileIds$: Observable<string[]>;
+  filteredFiles$: Observable<DataFile[]>;
+  filteredHdus$: Observable<IHdu[]>;
+  filteredHduIds$: Observable<string[]>;
+  selectedFileIds$: Observable<string[]>;
+  fileListSelectAllChecked$: Observable<boolean>;
+  fileListSelectAllIndeterminate$: Observable<boolean>;
+
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   hdus$: Observable<IHdu[]>;
   loadingFiles$: Observable<boolean>;
@@ -159,6 +213,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   selectedCustomMarkers$: Observable<CustomMarker[]>;
   viewers$: Observable<Viewer[]>;
   viewerSyncEnabled$: Observable<boolean>;
+  viewerSyncMode$: Observable<"sky" | "pixel">;
   normalizationSyncEnabled$: Observable<boolean>;
   surveyDataProvider$: Observable<DataProvider>;
   surveyImportCorrId$: Observable<string>;
@@ -166,53 +221,57 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   activeTool$: Observable<WorkbenchTool>;
   showConfig$: Observable<boolean>;
 
-  
   focusedViewer$: Observable<Viewer>;
   focusedViewerId$: Observable<string>;
-  focusedViewerHdus$: Observable<IHdu[]>;
-  focusedViewerImageHdus$: Observable<ImageHdu[]>;
+  focusedImageViewer$: Observable<ImageViewer>;
+  focusedImageViewerId$: Observable<string>;
+  focusedTableViewer$: Observable<TableViewer>;
+  focusedViewerFileId$: Observable<string>;
+  focusedViewerFile$: Observable<DataFile>;
+  focusedViewerFileHduList$: Observable<IHdu[]>;
+  focusedViewerFileImageHduList$: Observable<ImageHdu[]>;
   focusedViewerHduId$: Observable<string>;
   focusedViewerHdu$: Observable<IHdu>;
-  focusedViewerImageHduId$: Observable<string>;
   focusedViewerImageHdu$: Observable<ImageHdu>;
-  focusedViewerSelectedHduId$: Observable<string>;
-  focusedViewerSelectedHdu$: Observable<IHdu>;
-  focusedViewerSelectedImageHduId$: Observable<string>;
-  focusedViewerSelectedImageHdu$: Observable<ImageHdu>;
-  
-  selectedDataFileListItem$: Observable<DataFile | IHdu>;
-  dataFileListItems$: Observable<Array<DataFile | ImageHdu>>;
+  focusedViewerHeader$: Observable<Header>;
+  focusedViewerWcs$: Observable<Wcs>;
+  focusedViewerViewportSize$: Observable<{ width: number; height: number }>;
 
-  customMarkerPanelStateId$: Observable<string>;
-  customMarkerPanelState$: Observable<CustomMarkerPanelState>;
-  customMarkerPanelConfig$: Observable<CustomMarkerPanelConfig>;
-  plottingPanelImageData$: Observable<IImageData<PixelType>>;
-  plottingPanelColorMode$: Observable<'grayscale' | 'rgba'>;
-  plottingPanelWcs$: Observable<Wcs>;
-  plottingPanelStateId$: Observable<string>;
-  plottingPanelState$: Observable<PlottingPanelState>;
-  sonificationPanelTransform$: Observable<Transform>;
-
+  /** Image Viewer */
+  focusedViewerRawImageData$: Observable<IImageData<PixelType>>;
+  focusedViewerNormalizedImageData$: Observable<IImageData<Uint32Array>>;
+  focusedViewerImageTransform$: Observable<Transform>;
+  focusedViewerViewportTransform$: Observable<Transform>;
+  focusedViewerImageToViewportTransform$: Observable<Transform>;
   fileInfoPanelConfig$: Observable<FileInfoPanelConfig>;
-  customMarkerPanelMarkers$: Observable<{ [viewerId: string]: Marker[] }>;
+  customMarkerPanelConfig$: Observable<CustomMarkerPanelConfig>;
+  customMarkerPanelState$: Observable<CustomMarkerPanelState>;
+  plottingPanelState$: Observable<PlottingPanelState>;
   plottingPanelConfig$: Observable<PlottingPanelConfig>;
-  plottingPanelMarkers$: Observable<{ [viewerId: string]: Marker[] }>;
+  plottingPanelImageData$: Observable<IImageData<PixelType>>;
+  plottingPanelColorMode$: Observable<"grayscale" | "rgba">;
   sonificationPanelState$: Observable<SonificationPanelState>;
-  sonificationPanelMarkers$: Observable<{ [viewerId: string]: Marker[] }>;
+  photometryPanelConfig$: Observable<PhotometryPanelConfig>;
   photometryPanelState$: Observable<PhotometryPanelState>;
   photometryPanelSources$: Observable<Source[]>;
-  photometryPanelMarkers$: Observable<{ [viewerId: string]: Marker[] }>;
-  photometryPanelConfig$: Observable<PhotometryPanelConfig>;
   pixelOpsPanelConfig$: Observable<PixelOpsPanelConfig>;
   aligningPanelConfig$: Observable<AligningPanelConfig>;
   stackingPanelConfig$: Observable<StackingPanelConfig>;
+
   photometrySettings$: Observable<PhotometrySettings>;
   centroidSettings$: Observable<CentroidSettings>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
+  focusedViewerFileLastActiveHduId$: Observable<string>;
+  focusedViewerFileLastActiveHdu$: Observable<IHdu>;
+  focusedViewerFileLastActiveHduHeader$: Observable<Header>;
+  focusedViewerFileLastActiveImageHduId$: Observable<string>;
+  focusedViewerFileLastActiveImageHdu$: Observable<ImageHdu>;
+
+  focusedDataFileListItem$: Observable<{ fileId: string; hduId: string }>;
+
   fileLoaderSub: Subscription;
   queryParamSub: Subscription;
-  markerOverlaySub: Subscription;
   transformationSyncSub: Subscription;
   normalizationSyncSub: Subscription;
   plottingPanelSyncSub: Subscription;
@@ -229,173 +288,240 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     private _hotkeysService: HotkeysService,
     public dialog: MatDialog,
     private corrGen: CorrelationIdGenerator,
-    private activeRoute: ActivatedRoute
+    private activeRoute: ActivatedRoute,
+    private dataProviderService: AfterglowDataProviderService,
+    private dataFileService: AfterglowDataFileService,
+    private jobService: JobService
   ) {
     this.files$ = this.store
-      .select(DataFilesState.getDataFiles)
+      .select(DataFilesState.getFiles)
       .pipe(map((files) => files.sort((a, b) => a.name.localeCompare(b.name))));
 
-    this.fileEntities$ = this.store.select(DataFilesState.getDataFileEntities);
+    this.fileListFilter$ = this.store.select(WorkbenchState.getFileListFilter);
+    this.fileListFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
+      this.store.dispatch(new SetFileListFilter(value));
+      
+    });
 
-    this.hdus$ = this.store
-      .select(DataFilesState.getHdus)
-      .pipe(
-        map((hdus) =>
-          hdus.sort((a, b) =>
-            a.fileId > b.fileId
-              ? 1
-              : a.fileId === b.fileId
-                ? a.order > b.order
-                  ? 1
-                  : -1
-                : -1
-          )
-        )
-      );
+    this.filteredFiles$ = this.store.select(WorkbenchState.getFilteredFiles);
+    this.filteredFileIds$ = this.store.select(WorkbenchState.getFilteredFileIds);
+    this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFileIds);
 
-   
-    this.viewers$ = this.store.select(WorkbenchState.getViewers);
-
-    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getViewerPanelEntities).pipe(
-      map((panelEntities) =>
-        Object.values(panelEntities)
-          .map((panel) => panel.selectedViewerId)
-          .filter((id) => id !== null)
-      ),
-      distinctUntilChanged(
-        (x, y) => {
-          return x.length == y.length && x.every((value, index) => value == y[index])
-        }
-      )
+    this.filteredHduIds$ = this.store.select(WorkbenchState.getFilteredHduIds).pipe(
+      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every( (value, index) => b[index] == value))
     )
-
-    this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
-    this.focusedViewerId$ = this.store.select(WorkbenchState.getFocusedViewerId).pipe(
-      distinctUntilChanged()
-    );
-
-    this.focusedViewerHdus$ = this.focusedViewer$.pipe(
-      distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
-      switchMap(viewer => {
-        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-        if (!viewer || !viewer.fileId || !fileEntities[viewer.fileId]) {
-          return of(null);
-        }
-        let hduIds = viewer.hduId ? [viewer.hduId] : fileEntities[viewer.fileId].hduIds;
-        if (hduIds.length == 0) return of(null);
-        return combineLatest(...hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
+    this.filteredHdus$ = this.filteredHduIds$.pipe(
+      switchMap(hduIds => {
+        return combineLatest(hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
           map(fn => fn(hduId))
         )))
       })
     )
 
-    this.focusedViewerImageHdus$ = this.focusedViewerHdus$.pipe(
-      map(hdus => !hdus ? null : hdus.filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[])
-    )
-
-    this.focusedViewerHduId$ = this.focusedViewer$.pipe(
-      distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
-      switchMap(viewer => {
-        if (!viewer || !viewer.hduId) {
-          return of(null);
-        }
-        return of(viewer.hduId);
+    this.fileListSelectAllChecked$ = combineLatest(this.filteredFiles$, this.selectedFileIds$).pipe(
+      map(([filteredFiles, selectedFileIds]) => {
+        return filteredFiles.length != 0 && selectedFileIds.length == filteredFiles.length;
       })
-    ).pipe(
-      distinctUntilChanged()
-    )
-
-    this.focusedViewerHdu$ = this.focusedViewerHduId$.pipe(
-      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
-        map(fn => fn(hduId))
-      ))
-    )
-
-    this.focusedViewerImageHduId$ = this.focusedViewerHdu$.pipe(
-      map(hdu => !hdu || hdu.hduType != HduType.IMAGE ? null : hdu.id),
-      distinctUntilChanged()
     );
 
-    this.focusedViewerImageHdu$ = this.focusedViewerImageHduId$.pipe(
-      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
-        map(fn => fn(hduId) as ImageHdu)
-      ))
+    this.fileListSelectAllIndeterminate$ = combineLatest(this.filteredFiles$, this.selectedFileIds$).pipe(
+      map(([filteredFiles, selectedFileIds]) => {
+        return selectedFileIds.length != 0 && selectedFileIds.length != filteredFiles.length;
+      })
     );
 
-    this.focusedViewerSelectedHduId$ = this.focusedViewer$.pipe(
-      distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
-      switchMap(viewer => {
-        if (!viewer) {
+    this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
+
+    this.hdus$ = this.store.select(DataFilesState.getHdus).pipe(
+      map((hdus) => {
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+        return hdus.sort((a, b) =>
+          fileEntities[a.fileId].name > fileEntities[b.fileId].name
+            ? 1
+            : a.fileId === b.fileId
+            ? a.order > b.order
+              ? 1
+              : -1
+            : -1
+        );
+      })
+    );
+
+    this.viewers$ = this.store.select(WorkbenchState.getViewers);
+
+    this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
+    this.focusedViewerId$ = this.store.select(WorkbenchState.getFocusedViewerId);
+
+    this.focusedImageViewer$ = this.store.select(WorkbenchState.getFocusedImageViewer);
+    this.focusedImageViewerId$ = this.focusedImageViewer$.pipe(
+      map((imageViewer) => (imageViewer ? imageViewer.id : null)),
+      distinctUntilChanged()
+    );
+    this.focusedTableViewer$ = this.store.select(WorkbenchState.getFocusedTableViewer);
+
+    this.focusedViewerFile$ = this.store.select(WorkbenchState.getFocusedViewerFile);
+    this.focusedViewerFileId$ = this.focusedViewerFile$.pipe(
+      map((file) => (file ? file.id : null)),
+      distinctUntilChanged()
+    );
+    this.focusedViewerHdu$ = this.store.select(WorkbenchState.getFocusedViewerHdu);
+    this.focusedViewerHduId$ = this.focusedViewerHdu$.pipe(
+      map((hdu) => (hdu ? hdu.id : null)),
+      distinctUntilChanged()
+    );
+    this.focusedViewerImageHdu$ = this.store.select(WorkbenchState.getFocusedViewerImageHdu);
+    this.focusedViewerViewportSize$ = this.store.select(WorkbenchState.getFocusedViewerViewportSize);
+
+    this.focusedViewerFileHduList$ = this.focusedViewerFile$.pipe(
+      distinctUntilChanged(
+        (a, b) => a && b && a.hduIds.length == b.hduIds.length && a.hduIds.every((value, index) => b[index] == value)
+      ),
+      switchMap((file) => {
+        if (!file) {
+          return of([]);
+        }
+        return combineLatest(
+          file.hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
+        );
+      })
+    );
+
+    this.focusedViewerFileImageHduList$ = this.focusedViewerFileHduList$.pipe(
+      map((hdus) => (!hdus ? null : (hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[])))
+    );
+
+    this.focusedViewerFileLastActiveHduId$ = combineLatest([
+      this.focusedViewerFile$,
+      this.focusedViewerHdu$,
+      this.focusedViewerFileHduList$,
+    ]).pipe(
+      switchMap(([file, hdu, allHdus]) => {
+        if (!file || !allHdus) {
           return of(null);
         }
-        if (!viewer.hduId) {
-          return this.store.select(WorkbenchState.getFileStateById).pipe(
-            map(fn => {
-              let workbenchFileState = fn(viewer.fileId);
-              if (!workbenchFileState) return of(null);
-              return workbenchFileState.selectedHduId
-            })
+        if (hdu) {
+          //use the HDU assigned to the viewer
+          return of(hdu.id);
+        }
+        if (allHdus.length == 1) {
+          //if composite file assigned to viewer only has one image hdu,  use it
+          return of(allHdus[0].id);
+        }
+        return this.store.select(WorkbenchState.getFileStateById).pipe(map((fn) => fn(file.id).selectedHduId));
+      }),
+      distinctUntilChanged()
+    );
+
+    this.focusedViewerFileLastActiveHdu$ = this.focusedViewerFileLastActiveHduId$.pipe(
+      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
+    );
+
+    this.focusedViewerFileLastActiveHduHeader$ = this.focusedViewerFileLastActiveHdu$.pipe(
+      switchMap((hdu) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(hdu.headerId))))
+    );
+
+    this.focusedViewerFileLastActiveImageHduId$ = this.focusedViewerFileLastActiveHdu$.pipe(
+      map((hdu) => (!hdu || hdu.hduType != HduType.IMAGE ? null : hdu.id)),
+      distinctUntilChanged()
+    );
+
+    this.focusedViewerFileLastActiveImageHdu$ = this.focusedViewerFileLastActiveImageHduId$.pipe(
+      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId) as ImageHdu)))
+    );
+
+    this.focusedViewerRawImageData$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getRawImageDataIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((imageDataId) => this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId))))
+        );
+      })
+    );
+
+    this.focusedViewerNormalizedImageData$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getNormalizedImageDataIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((imageDataId) =>
+            this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
           )
-        }
-        return of(viewer.hduId);
+        );
       })
+    );
+
+    this.focusedViewerImageTransform$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId))))
+        );
+      })
+    );
+
+    this.focusedViewerViewportTransform$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId))))
+        );
+      })
+    );
+
+    this.focusedViewerImageToViewportTransform$ = combineLatest(
+      this.focusedViewerImageTransform$,
+      this.focusedViewerViewportTransform$
     ).pipe(
-      distinctUntilChanged()
-    )
-
-    this.focusedViewerSelectedHdu$ = this.focusedViewerSelectedHduId$.pipe(
-      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
-        map(fn => fn(hduId))
-      ))
-    )
-
-    this.focusedViewerSelectedImageHduId$ = this.focusedViewerSelectedHdu$.pipe(
-      map(hdu => !hdu || hdu.hduType != HduType.IMAGE ? null : hdu.id),
-      distinctUntilChanged()
-    );
-
-    this.focusedViewerSelectedImageHdu$ = this.focusedViewerSelectedImageHduId$.pipe(
-      switchMap(hduId => this.store.select(DataFilesState.getHduById).pipe(
-        map(fn => fn(hduId) as ImageHdu)
-      ))
-    );
-
-
-
-
-    this.selectedDataFileListItem$ = this.focusedViewer$.pipe(
-      map(viewer => {
-        if (!viewer) return null;
-        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-        let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-        return viewer.hduId ? hduEntities[viewer.hduId] : fileEntities[viewer.fileId];
+      map(([imageTransform, viewportTransform]) => {
+        if (!imageTransform || !viewportTransform) {
+          return null;
+        }
+        return getImageToViewportTransform(viewportTransform, imageTransform);
       })
-    )
+    );
 
-    this.dataFileListItems$ = this.store
-      .select(DataFilesState.getDataFiles)
-      .pipe(
-        map((files) => files.sort((a, b) => (a.name > b.name ? 1 : -1))),
-        map((files) => {
-          let hduEntities = this.store.selectSnapshot(
-            DataFilesState.getHduEntities
-          );
-          let result = [];
-          files.forEach((file) => {
-            if (file.hduIds.length > 1) {
-              result.push(file);
-            }
-            file.hduIds.forEach((hduId) => {
-              result.push(hduEntities[hduId]);
-            });
-          });
-          return result;
-        })
-      );
+    this.focusedViewerHeader$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+        );
+      })
+    );
 
+    this.focusedViewerWcs$ = this.focusedViewerHeader$.pipe(
+      map((header) => (header ? header.wcs : null)),
+      distinctUntilChanged()
+    );
 
+    this.focusedDataFileListItem$ = this.focusedViewer$.pipe(
+      distinctUntilChanged((a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId),
+      map((viewer) => {
+        if (!viewer) {
+          return null;
+        }
+        let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
 
+        let fileId = viewer.fileId;
+        let hduId = viewer.hduId;
+        if (viewer.hduId) {
+          //if viewer HDU is from a single-hdu file, the hdus are hidden in the data file list.
+          //focus the file instead
 
+          let file = fileEntities[viewer.fileId];
+          if (file && file.hduIds.length == 1) {
+            hduId = null;
+          }
+        }
+
+        return { fileId: fileId, hduId: hduId };
+      })
+    );
 
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
     this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
@@ -406,569 +532,138 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
     this.surveyDataProvider$ = this.store
       .select(DataProvidersState.getDataProviders)
-      .pipe(
-        map((dataProviders) =>
-          dataProviders.find((dp) => dp.name == "Imaging Surveys")
-        )
-      );
+      .pipe(map((dataProviders) => dataProviders.find((dp) => dp.name == "Imaging Surveys")));
 
     /* VIEWER */
-    this.layoutContainer$ = this.store.select(
-      WorkbenchState.getRootViewerPanelContainer
-    );
+    this.layoutContainer$ = this.store.select(WorkbenchState.getRootViewerPanelContainer);
 
     /* GLOBAL SETTINGS */
-    this.centroidSettings$ = this.store.select(
-      WorkbenchState.getCentroidSettings
-    );
-    this.photometrySettings$ = this.store.select(
-      WorkbenchState.getPhotometrySettings
-    );
-    this.sourceExtractionSettings$ = this.store.select(
-      WorkbenchState.getSourceExtractionSettings
-    );
+    this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
+    this.photometrySettings$ = this.store.select(WorkbenchState.getPhotometrySettings);
+    this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
     /* DISPLAY PANEL */
 
     /* FILE INFO PANEL */
-    this.fileInfoPanelConfig$ = store.select(
-      WorkbenchState.getFileInfoPanelConfig
-    );
+    this.fileInfoPanelConfig$ = store.select(WorkbenchState.getFileInfoPanelConfig);
 
     /* CUSTOM MARKER PANEL */
-    this.customMarkerPanelState$ = this.focusedViewerId$.pipe(
-      switchMap(viewerId => {
-        return this.store.select(WorkbenchState.getCustomMarkerPanelStateFromViewerId).pipe(
+    this.customMarkerPanelState$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
           distinctUntilChanged(),
-          map(fn => fn(viewerId))
-        )
-      })
-    );
-
-    this.customMarkerPanelConfig$ = store.select(
-      WorkbenchState.getCustomMarkerPanelConfig
-    );
-
-    this.customMarkerPanelMarkers$ = combineLatest(
-      this.activeTool$,
-      visibleViewerIds$
-    ).pipe(
-      switchMap(([activeTool, visibleViewerIds]) => {
-        return combineLatest(
-          ...visibleViewerIds.map(viewerId => {
-
-            if (activeTool != WorkbenchTool.CUSTOM_MARKER) {
-              return of({
-                viewerId: viewerId,
-                markers: [],
-              });
-            }
-
-            return this.store.select(WorkbenchState.getCustomMarkerPanelStateFromViewerId).pipe(
-              map(fn => fn(viewerId)),
-              distinctUntilChanged(),
-              map((markerFileState) => {
-                if (!markerFileState) {
-                  return of({
-                    viewerId: viewerId,
-                    markers: [],
-                  });
-                }
-                console.log("HERE!!!!!!!!!!!!!!!!!!!!:", markerFileState, viewerId)
-                return {
-                  viewerId: viewerId,
-                  markers: Object.values(markerFileState.markerEntities),
-                };
-              })
-            )
-          })
-        ).pipe(
-          map((v) =>
-            v.reduce((obj, key) => {
-              return {
-                ...obj,
-                [key.viewerId]: key.markers,
-              };
-            }, {})
+          switchMap((stateId) =>
+            this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(stateId)))
           )
         );
       })
     );
 
+    this.customMarkerPanelConfig$ = store.select(WorkbenchState.getCustomMarkerPanelConfig);
 
     /* PLOTTING PANEL */
-    let plottingPanelImageDataId$ = this.focusedViewerId$.pipe(
-      switchMap(viewerId => this.store.select(WorkbenchState.getPlottingPanelImageDataIdFromViewerId).pipe(
-        map(fn => fn(viewerId)),
-        distinctUntilChanged()
-      ))
-    )
-
-    this.plottingPanelImageData$ = plottingPanelImageDataId$.pipe(
-      switchMap(imageDataId => {
-        return this.store.select(DataFilesState.getImageDataById).pipe(
-          map(fn => fn(imageDataId))
-        )
-      })
-    )
-
-    this.plottingPanelColorMode$ = this.focusedViewer$.pipe(
-      map(viewer => (!viewer.hduId ? 'rgba' : 'grayscale') as 'rgba' | 'grayscale'),
-      distinctUntilChanged()
-    )
-
-    this.plottingPanelWcs$ = this.focusedViewerId$.pipe(
-      switchMap(viewerId => this.store.select(WorkbenchState.getPlottingPanelFirstHduHeaderFromViewerId).pipe(
-        map(fn => {
-          let header = fn(viewerId);
-          if (!header) {
-            return null;
-          }
-          return header.wcs;
-        }),
-        distinctUntilChanged()
-      ))
-    )
-
-
-    this.plottingPanelState$ = this.focusedViewerId$.pipe(
-      switchMap(viewerId => {
-        return this.store.select(WorkbenchState.getPlottingPanelStateFromViewerId).pipe(
-          distinctUntilChanged(),
-          map(fn => fn(viewerId))
-        )
-      })
-    );
-
-    this.plottingPanelConfig$ = this.store.select(
-      WorkbenchState.getPlottingPanelConfig
-    );
-
-    this.plottingPanelMarkers$ = combineLatest(
-      this.activeTool$,
-      visibleViewerIds$
+    this.plottingPanelImageData$ = combineLatest(
+      this.focusedViewerNormalizedImageData$,
+      this.focusedViewerRawImageData$
     ).pipe(
-      switchMap(([activeTool, visibleViewerIds]) => {
-        return combineLatest(
-          ...visibleViewerIds.map(viewerId => {
+      map(([normalizedImageData, rawImageData]) => {
+        return rawImageData ? rawImageData : normalizedImageData;
+      })
+    );
 
-            if (activeTool != WorkbenchTool.PLOTTER) {
-              return of({
-                viewerId: viewerId,
-                markers: [],
-              });
-            }
+    this.plottingPanelColorMode$ = combineLatest(
+      this.focusedViewerNormalizedImageData$,
+      this.focusedViewerRawImageData$
+    ).pipe(
+      map(([normalizedImageData, rawImageData]) => {
+        return rawImageData ? "grayscale" : ("rgba" as "rgba" | "grayscale");
+      })
+    );
 
-            let plottingPanelState$ = this.store.select(WorkbenchState.getPlottingPanelStateFromViewerId).pipe(
-              map(fn => fn(viewerId)),
-              distinctUntilChanged()
-            )
-
-            let header$ = this.store.select(WorkbenchState.getPlottingPanelFirstHduHeaderFromViewerId).pipe(
-              map(fn => fn(viewerId)),
-              distinctUntilChanged()
-            )
-
-            return combineLatest(
-              header$,
-              plottingPanelState$,
-              this.store.select(WorkbenchState.getPlottingPanelConfig)
-            ).pipe(
-              map(([header, plottingState, config]) => {
-
-                if (!plottingState || !header) {
-                  return { viewerId: viewerId, markers: [] };
-                }
-
-                let lineMeasureStart = plottingState.lineMeasureStart;
-                let lineMeasureEnd = plottingState.lineMeasureEnd;
-                if (!lineMeasureStart || !lineMeasureEnd) {
-                  return { viewerId: viewerId, markers: [] };
-                }
-
-                let startPrimaryCoord = lineMeasureStart.primaryCoord;
-                let startSecondaryCoord = lineMeasureStart.secondaryCoord;
-                let startPosType = lineMeasureStart.posType;
-                let endPrimaryCoord = lineMeasureEnd.primaryCoord;
-                let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
-                let endPosType = lineMeasureEnd.posType;
-
-                let x1 = startPrimaryCoord;
-                let y1 = startSecondaryCoord;
-                let x2 = endPrimaryCoord;
-                let y2 = endSecondaryCoord;
-
-                if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-                  if (!header.loaded || !header.wcs.isValid()) {
-                    return { viewerId: viewerId, markers: [] };
-                  }
-                  let wcs = header.wcs;
-                  if (startPosType == PosType.SKY) {
-                    let xy = wcs.worldToPix([
-                      startPrimaryCoord,
-                      startSecondaryCoord,
-                    ]);
-                    x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
-                    y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
-                  }
-
-                  if (endPosType == PosType.SKY) {
-                    let xy = wcs.worldToPix([
-                      endPrimaryCoord,
-                      endSecondaryCoord,
-                    ]);
-                    x2 = Math.max(Math.min(xy[0], getWidth(header)), 0);
-                    y2 = Math.max(Math.min(xy[1], getHeight(header)), 0);
-                  }
-                }
-                let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[viewerId]
-                let markers: Marker[] = [];
-                if (config.plotMode == "1D") {
-                  markers = [
-                    {
-                      id: `PLOTTING_MARKER_${viewer.fileId}_${viewer.hduId}`,
-                      type: MarkerType.LINE,
-                      x1: x1,
-                      y1: y1,
-                      x2: x2,
-                      y2: y2,
-                    } as LineMarker,
-                  ];
-                } else {
-                  markers = [
-                    {
-                      id: `PLOTTING_MARKER_${viewer.fileId}_${viewer.hduId}`,
-                      type: MarkerType.RECTANGLE,
-                      x: Math.min(x1, x2),
-                      y: Math.min(y1, y2),
-                      width: Math.abs(x2 - x1),
-                      height: Math.abs(y2 - y1),
-                    } as RectangleMarker,
-                  ];
-                }
-                return { viewerId: viewerId, markers: markers };
-              })
-            );
-          })
-
-
-        ).pipe(
-          map((v) =>
-            v.reduce((obj, key) => {
-              return {
-                ...obj,
-                [key.viewerId]: key.markers,
-              };
-            }, {})
-          )
+    this.plottingPanelState$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((stateId) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(stateId))))
         );
       })
     );
 
-
-
+    this.plottingPanelConfig$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
 
     /* SONIFICATION PANEL */
-    this.sonificationPanelState$ = this.focusedViewerId$.pipe(
+    this.sonificationPanelState$ = this.focusedImageViewerId$.pipe(
       switchMap((viewerId) => {
-        return this.store.select(WorkbenchState.getSonificationPanelStateFromViewerId).pipe(
-          map(fn => fn(viewerId))
-        )
-      })
-    );
-
-    this.sonificationPanelTransform$ = this.focusedViewerId$.pipe(
-      switchMap((viewerId) => {
-        return this.store.select(WorkbenchState.getSonificationTransformFromViewerId).pipe(
-          map(fn => fn(viewerId))
-        )
-      })
-    );
-
-    this.sonificationPanelMarkers$ = combineLatest(
-      this.activeTool$,
-      visibleViewerIds$
-    ).pipe(
-      switchMap(([activeTool, viewerIds]) => {
-        return combineLatest(
-          ...viewerIds.map(viewerId => {
-            return this.store.select(WorkbenchState.getSonificationPanelStateFromViewerId).pipe(
-              map(fn => fn(viewerId)),
-              distinctUntilChanged(),
-              map((sonificationState) => {
-                if(!sonificationState) {
-                  return { viewerId: viewerId, markers: [] };
-                }
-
-                let region =
-                  sonificationState.regionHistory[
-                  sonificationState.regionHistoryIndex
-                  ];
-                let regionMode = sonificationState.regionMode;
-                let progressLine = sonificationState.progressLine;
-                let markers: Array<RectangleMarker | LineMarker> = [];
-                if (region && regionMode == SonifierRegionMode.CUSTOM)
-                  markers.push({
-                    id: `SONIFICATION_REGION_${viewerId}`,
-                    type: MarkerType.RECTANGLE,
-                    ...region,
-                  } as RectangleMarker);
-                if (progressLine)
-                  markers.push({
-                    id: `SONIFICATION_PROGRESS_${viewerId}`,
-                    type: MarkerType.LINE,
-                    ...progressLine,
-                  } as LineMarker);
-                return { viewerId: viewerId, markers: markers };
-              })
-            )
-          })
-        ).pipe(
-          map((v) =>
-            v.reduce((obj, key) => {
-              return {
-                ...obj,
-                [key.viewerId]: key.markers,
-              };
-            }, {})
+        return this.store.select(WorkbenchState.getSonificationPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((stateId) =>
+            this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(stateId)))
           )
         );
       })
     );
 
     /* PHOTOMETRY PANEL */
+    this.photometryPanelConfig$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
 
-    this.photometryPanelState$ = this.focusedViewerImageHduId$.pipe(
-      switchMap((hduId) => {
-        if (!hduId) return of(null);
-        return this.store
-          .select(WorkbenchState.getPhotometryPanelStateById)
-          .pipe(
-            map((fn) => fn(hduId)),
-            distinctUntilChanged()
-          );
-      })
-    );
-
-    this.photometryPanelSources$ = this.focusedViewerImageHduId$.pipe(
-      switchMap((hduId) => {
-        if (!hduId) return of(null);
-        return combineLatest(
-          store.select(SourcesState.getSources),
-          store.select(WorkbenchState.getPhotometryPanelConfig).pipe(
-            map((config) => config.coordMode),
-            distinctUntilChanged()
-          ),
-          store.select(WorkbenchState.getPhotometryPanelConfig).pipe(
-            map((config) => config.showSourcesFromAllFiles),
-            distinctUntilChanged()
-          ),
-          // TODO: LAYER
-          this.store.select(DataFilesState.getHeader).pipe(
-            map((fn) => fn(hduId)),
-            distinctUntilChanged()
+    this.photometryPanelState$ = this.focusedImageViewerId$.pipe(
+      switchMap((viewerId) => {
+        return this.store.select(WorkbenchState.getPhotometryPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged(),
+          switchMap((stateId) =>
+            this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(stateId)))
           )
-        ).pipe(
-          filter(
-            ([sources, coordMode, showSourcesFromAllFiles, header]) =>
-              header != null
-          ),
-          map(([sources, coordMode, showSourcesFromAllFiles, header]) => {
-            let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[
-              hduId
-            ] as ImageHdu;
-            if (!hdu || !header) return [];
-            if (!hdu.header.wcs || !hdu.header.wcs.isValid()) coordMode = "pixel";
-            return sources.filter((source) => {
-              if (coordMode != source.posType) return false;
-              if (source.hduId == hdu.id) return true;
-              if (!showSourcesFromAllFiles) return false;
-              let coord = getSourceCoordinates(hdu.header, source);
-              if (coord == null) return false;
-              return true;
-            });
-          })
         );
       })
     );
 
-    this.photometryPanelConfig$ = this.store.select(
-      WorkbenchState.getPhotometryPanelConfig
-    );
-
-    this.photometryPanelMarkers$ = combineLatest(
-      this.activeTool$,
-      visibleViewerIds$
+    this.photometryPanelSources$ = combineLatest(
+      this.store.select(SourcesState.getSources),
+      this.photometryPanelConfig$.pipe(
+        map((config) => config.coordMode),
+        distinctUntilChanged()
+      ),
+      this.photometryPanelConfig$.pipe(
+        map((config) => config.showSourcesFromAllFiles),
+        distinctUntilChanged()
+      ),
+      this.focusedViewerHduId$,
+      this.focusedViewerHeader$
     ).pipe(
-      switchMap(([activeTool, viewerIds]) => {
-        console.log("PHOT MARKERS VIEWER IDS CHANGE")
-        return combineLatest(
-          ...viewerIds.map(viewerId => {
-            if (activeTool != WorkbenchTool.PHOTOMETRY) {
-              return of({ viewerId: viewerId, markers: [] });
-            }
-
-            let hduId$ = this.store.select(WorkbenchState.getViewerById).pipe(
-              map(fn => fn(viewerId).hduId),
-              distinctUntilChanged()
-            )
-
-            let header$ = hduId$.pipe(
-              switchMap(hduId => this.store.select(DataFilesState.getHeader).pipe(
-                map(fn => fn(hduId))
-              ))
-            )
-
-            return combineLatest(
-              hduId$,
-              header$,
-              this.store.select(WorkbenchState.getPhotometryPanelConfig),
-              this.store.select(SourcesState.getSources)
-            ).pipe(
-              map(([hduId, header, config, sources]) => {
-                console.log("UPDATING PHOT MARKERS")
-                let hdu = this.store.selectSnapshot(
-                  DataFilesState.getHduEntities
-                )[hduId] as ImageHdu;
-                if (!hdu || !header) {
-                  return { viewerId: viewerId, markers: [] };
-                }
-
-                let selectedSourceIds = config.selectedSourceIds;
-                let coordMode = config.coordMode;
-                let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
-                let showSourceLabels = config.showSourceLabels;
-
-                let markers: Array<CircleMarker | TeardropMarker> = [];
-                let mode = coordMode;
-
-                if (!hdu.header.wcs || !hdu.header.wcs.isValid()) mode = "pixel";
-
-                sources.forEach((source) => {
-                  if (source.hduId != hduId && !showSourcesFromAllFiles) return;
-                  if (source.posType != mode) return;
-                  let selected = selectedSourceIds.includes(source.id);
-                  let coord = getSourceCoordinates(hdu.header, source);
-
-                  if (coord == null) {
-                    return false;
-                  }
-
-                  if (source.pm) {
-                    markers.push({
-                      id: `PHOTOMETRY_SOURCE_${hdu.id}_${source.id}`,
-                      type: MarkerType.TEARDROP,
-                      x: coord.x,
-                      y: coord.y,
-                      radius: 15,
-                      labelGap: 14,
-                      labelTheta: 0,
-                      label: showSourceLabels ? source.label : "",
-                      theta: coord.theta,
-                      selected: selected,
-                      data: { source: source },
-                    } as TeardropMarker);
-                  } else {
-                    markers.push({
-                      id: `PHOTOMETRY_SOURCE_${hdu.id}_${source.id}`,
-                      type: MarkerType.CIRCLE,
-                      x: coord.x,
-                      y: coord.y,
-                      radius: 15,
-                      labelGap: 14,
-                      labelTheta: 0,
-                      label: showSourceLabels ? source.label : "",
-                      selected: selected,
-                      data: { source: source },
-                    } as CircleMarker);
-                  }
-                });
-
-                return { viewerId: viewerId, markers: markers };
-              })
-            );
-
-            // TODO: LAYER
-            
-          })
-        ).pipe(
-          map((v) =>
-            v.reduce((obj, key) => {
-              return {
-                ...obj,
-                [key.viewerId]: key.markers,
-              };
-            }, {})
-          )
-        );
+      filter(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => header != null),
+      map(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => {
+        if (!header) return [];
+        if (!header.wcs || !header.wcs.isValid()) coordMode = "pixel";
+        return sources.filter((source) => {
+          if (coordMode != source.posType) return false;
+          if (source.hduId == hduId) return true;
+          if (!showSourcesFromAllFiles) return false;
+          let coord = getSourceCoordinates(header, source);
+          if (coord == null) return false;
+          return true;
+        });
       })
     );
 
     /* PIXEL OPS PANEL */
-    this.pixelOpsPanelConfig$ = this.store.select(
-      WorkbenchState.getPixelOpsPanelConfig
-    );
+    this.pixelOpsPanelConfig$ = this.store.select(WorkbenchState.getPixelOpsPanelConfig);
 
     /* ALIGNING PANEL */
-    this.aligningPanelConfig$ = this.store.select(
-      WorkbenchState.getAligningPanelConfig
-    );
+    this.aligningPanelConfig$ = this.store.select(WorkbenchState.getAligningPanelConfig);
 
     /* STACKING PANEL */
-    this.stackingPanelConfig$ = this.store.select(
-      WorkbenchState.getStackingPanelConfig
-    );
-
-    this.markerOverlaySub = combineLatest(
-      this.customMarkerPanelMarkers$,
-      this.plottingPanelMarkers$,
-      this.sonificationPanelMarkers$,
-      this.photometryPanelMarkers$
-    )
-      .pipe(withLatestFrom(visibleViewerIds$))
-      .subscribe(
-        ([
-          [
-            customMarkerPanelMarkers,
-            plottingPanelMarkers,
-            sonificationPanelMarkers,
-            photometryPanelMarkers,
-          ],
-          viewerIds,
-        ]) => {
-          viewerIds.forEach(viewerId => {
-            let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[viewerId];
-            if (!viewer || !viewer.viewerId) return;
-            let markers: Marker[] = [];
-            let markerSources = [
-              customMarkerPanelMarkers,
-              plottingPanelMarkers,
-              sonificationPanelMarkers,
-              photometryPanelMarkers,
-            ];
-            markerSources.forEach((markerSource) => {
-              if (viewer.viewerId in markerSource)
-                markers = markers.concat(markerSource[viewer.viewerId]);
-            });
-
-            this.store.dispatch(new SetViewerMarkers(viewer.viewerId, markers));
-          });
-        }
-      );
-
-
+    this.stackingPanelConfig$ = this.store.select(WorkbenchState.getStackingPanelConfig);
 
     this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
-    this.normalizationSyncEnabled$ = store.select(
-      WorkbenchState.getNormalizationSyncEnabled
-    );
+    this.viewerSyncMode$ = store.select(WorkbenchState.getViewerSyncMode);
+    this.normalizationSyncEnabled$ = store.select(WorkbenchState.getNormalizationSyncEnabled);
 
-    this.fullScreenPanel$ = this.store.select(
-      WorkbenchState.getFullScreenPanel
-    );
-    this.inFullScreenMode$ = this.store.select(
-      WorkbenchState.getInFullScreenMode
-    );
+    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
+    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
     this.queryParamSub = this.activeRoute.queryParams.subscribe((p) => {
       let tool = WorkbenchTool.VIEWER;
       if (p.tool && Object.values(WorkbenchTool).includes(p.tool)) {
@@ -978,213 +673,187 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       this.store.dispatch(new SetActiveTool(tool));
     });
 
-    // this.transformationSyncSub = combineLatest(
-    //   this.focusedViewerId$,
-    //   this.store.select(WorkbenchState.getViewerSyncEnabled),
-    //   visibleViewerIds$
-    // )
-    //   .pipe(
-    //     filter(([focusedViewerId, transformationSyncEnabled]) => focusedViewerId != null),
-    //     switchMap(
-    //       ([focusedViewerId, transformationSyncEnabled, visibleViewerIds]) => {
-    //         if (!transformationSyncEnabled) return empty();
-            
-    //         let referenceTransform$ = this.store.select(WorkbenchState.getSyncTransformationFromViewerId).pipe(
-    //           map(fn => fn(focusedViewerId)),
-    //           distinctUntilChanged()
-    //         )
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
 
-    //         let targetTransform$ = merge(...visibleViewerIds.map(viewerId => this.store.select(WorkbenchState.getSyncTransformationFromViewerId).pipe(
-    //           map(fn => fn(focusedViewerId)),
-    //           distinctUntilChanged()
-    //         )))
-           
+    this.transformationSyncSub = this.focusedViewerId$
+      .pipe(
+        filter((focusedViewerId) => focusedViewerId != null),
+        switchMap((focusedViewerId) => {
+          // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
 
-    //         return combineLatest(targetTransform$, referenceTransform$).pipe(
-    //           withLatestFrom(visibleViewerIds$),
-    //           map(([[header, transformation], selectedViewerFileIds]) => {
-    //             return {
-    //               srcHduId: hduId,
-    //               targetHduIds: selectedViewerFileIds
-    //                 .map((v) => hduId)
-    //                 .filter((v) => v != hduId),
-    //             };
-    //           })
-    //         );
-    //       }
-    //     )
-    //   )
-    //   .subscribe((v) => {
-    //     let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    //     if (!(v.srcHduId in hdus)) return;
-    //     let hdu = hdus[v.srcHduId] as ImageHdu;
-    //     if (hdu.header.loaded && v.targetHduIds.length != 0) {
-    //       let targetHduIds = v.targetHduIds.filter(
-    //         (fileId) => fileId in hdus && hdus[fileId].header.loaded
-    //       );
+          let refHeader$ = this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            distinctUntilChanged(),
+            switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
+            distinctUntilChanged()
+            // tap(v => console.log("REF HEADER CHANGED"))
+          );
 
-    //       this.store.dispatch(
-    //         new SyncFileTransformations(
-    //           v.srcHduId,
-    //           targetHduIds
-    //         )
-    //       );
-    //     }
-    //   });
+          let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            distinctUntilChanged(),
+            switchMap((transformId) =>
+              this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
+            ),
+            distinctUntilChanged()
+            // tap(v => console.log("REF IMAGE TRANSFORM CHANGED"))
+          );
 
-    // this.normalizationSyncSub = combineLatest(
-    //   this.focusedImageHduId$,
-    //   this.store.select(WorkbenchState.getNormalizationSyncEnabled),
-    //   visibleViewerIds$
-    // )
-    //   .pipe(
-    //     filter(([hduId, normalizationSyncEnabled]) => hduId != null),
-    //     switchMap(
-    //       ([hduId, normalizationSyncEnabled, viewers]) => {
-    //         if (!normalizationSyncEnabled) return empty();
-    //         let header$ = merge(
-    //           ...viewers.map((v) => {
-    //             return this.store.select(DataFilesState.getHeader).pipe(
-    //               // TODO: LAYER
-    //               map((fn) => fn(v.hduId)),
-    //               distinctUntilChanged()
-    //             );
-    //           })
-    //         );
+          let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            distinctUntilChanged(),
+            switchMap((transformId) =>
+              this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
+            ),
+            distinctUntilChanged()
+            // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
+          );
 
-    //         let hist$ = merge(
-    //           ...viewers.map((v) => {
-    //             return this.store.select(DataFilesState.getHist).pipe(
-    //               // TODO: LAYER
-    //               map((fn) => fn(v.hduId)),
-    //               distinctUntilChanged()
-    //             );
-    //           })
-    //         );
+          let ref$ = combineLatest(refImageTransform$, refViewportTransform$).pipe(withLatestFrom(refHeader$), skip(1));
 
-    //         let normalization$ = this.store
-    //           .select(DataFilesState.getNormalizer)
-    //           .pipe(
-    //             map((fn) => {
-    //               return fn(hduId);
-    //             }),
-    //             distinctUntilChanged()
-    //           );
+          // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
+          // let targetHeaders$ = combineLatest(
+          //   targetViewerIds.map((viewerId) =>
+          //     this.store.select(WorkbenchState.getHeaderIdFromViewerId).pipe(
+          //       map((fn) => fn(viewerId)),
+          //       distinctUntilChanged(),
+          //       // tap(v => console.log("TARGET HEADER ID CHANGED: ", v)),
+          //       switchMap((headerId) =>
+          //         this.store.select(DataFilesState.getHeaderById).pipe(
+          //           map((fn) => fn(headerId)),
+          //           distinctUntilChanged()
+          //         )
+          //       )
+          //       // tap(v => console.log("TARGET HEADER CHANGED: ", v))
+          //     )
+          //   )
+          // );
 
-    //         return combineLatest(header$, hist$, normalization$).pipe(
-    //           filter(([header, hist, normalization]) => normalization !== null),
-    //           withLatestFrom(visibleViewerIds$),
-    //           map(([[header, normalization], viewers]) => {
-    //             return {
-    //               srcHduId: hduId,
-    //               targetHduIds: viewers
-    //                 .map((v) => v.hduId)
-    //                 .filter((v) => v != hduId),
-    //             };
-    //           })
-    //         );
-    //       }
-    //     )
-    //   )
-    //   .subscribe((v) => {
-    //     let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
+          return combineLatest(this.viewerSyncEnabled$, this.viewerSyncMode$, visibleViewerIds$, ref$)
+            .pipe
+            // tap(v => console.log("SYNC EVENT"))
+            ();
+        })
+        // auditTime(10),
+      )
+      .subscribe(
+        ([viewerSyncEnabled, viewerSyncMode, visibleViewerIds, [[refImageTransform, refViewportTransform], refHeader]]) => {
+          if (!viewerSyncEnabled || !refHeader || !refHeader.loaded || !refImageTransform || !refViewportTransform) {
+            return;
+          }
 
-    //     let hdu = hdus[v.srcHduId] as ImageHdu;
-    //     if (hdu.header.loaded && v.targetHduIds.length != 0) {
-    //       let targetHduIds = v.targetHduIds.filter(
-    //         (fileId) =>
-    //           fileId in hdus && (hdus[fileId] as ImageHdu).header.loaded
-    //       );
+          // console.log("HERE!!!!!!!!!: ", viewerSyncEnabled, viewerSyncMode, refHeader, refImageTransform, refViewportTransform)
+          this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
+        }
+      );
 
-    //       this.store.dispatch(
-    //         new SyncFileNormalizations(
-    //           v.srcHduId,
-    //           targetHduIds
-    //         )
-    //       );
-    //     }
-    //   });
+    this.normalizationSyncSub = this.focusedViewerId$
+      .pipe(
+        filter((focusedViewerId) => focusedViewerId != null),
+        switchMap((focusedViewerId) => {
+          // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
+          let refImageHdu$ = this.store.select(WorkbenchState.getViewerById).pipe(
+            map((fn) => fn(focusedViewerId)),
+            map((viewer) => (viewer ? viewer.hduId : null)),
+            distinctUntilChanged(),
+            switchMap((hduId) =>
+              this.store.select(DataFilesState.getHduById).pipe(
+                map((fn) => fn(hduId)),
+                map((hdu) => (hdu && hdu.hduType != HduType.IMAGE ? null : (hdu as ImageHdu)))
+              )
+            ),
+            distinctUntilChanged()
+          );
 
-    // this.plottingPanelSyncSub = combineLatest(
-    //   this.focusedImageHduId$,
-    //   this.store.select(WorkbenchState.getPlottingPanelConfig).pipe(
-    //     map((config) => config.plotterSyncEnabled),
-    //     distinctUntilChanged()
-    //   ),
-    //   visibleViewerIds$
-    // )
-    //   .pipe(
-    //     filter(([hduId, plottingPanelSyncEnabled]) => hduId != null),
-    //     switchMap(
-    //       ([hduId, plottingPanelSyncEnabled, selectedViewerFileIds]) => {
-    //         if (!plottingPanelSyncEnabled) return empty();
-    //         let header$ = merge(
-    //           ...selectedViewerFileIds.map((v) => {
-    //             return this.store.select(DataFilesState.getHeader).pipe(
-    //               map((fn) => fn(v.hduId)),
-    //               distinctUntilChanged()
-    //             );
-    //           })
-    //         );
+          let refNormalizer$ = refImageHdu$.pipe(
+            map((hdu) => (hdu ? hdu.normalizer : null)),
+            distinctUntilChanged(),
+            skip(1)
+          );
 
-    //         let plottingPanelFileState$ = this.store
-    //           .select(WorkbenchState.getPlottingPanelState)
-    //           .pipe(
-    //             map((fn) => {
-    //               return fn(hduId);
-    //             }),
-    //             distinctUntilChanged()
-    //           );
+          return combineLatest(this.normalizationSyncEnabled$, visibleViewerIds$, refNormalizer$).pipe();
+        })
+        // auditTime(10),
+      )
+      .subscribe(([normalizationSyncEnabled, visibleViewerIds, refNormalizer]) => {
+        if (!normalizationSyncEnabled || !refNormalizer) {
+          return;
+        }
 
-    //         return combineLatest(header$, plottingPanelFileState$).pipe(
-    //           filter(
-    //             ([header, plottingPanelFileState]) =>
-    //               plottingPanelFileState !== null
-    //           ),
-    //           withLatestFrom(visibleViewerIds$),
-    //           map(
-    //             ([[header, plottingPanelFileState], viewers]) => {
-    //               return {
-    //                 srcHduId: hduId,
-    //                 targetHduIds: viewers
-    //                   .map((v) => v.hduId)
-    //                   .filter((v) => v != hduId),
-    //               };
-    //             }
-    //           )
-    //         );
-    //       }
-    //     )
-    //   )
-    //   .subscribe((v) => {
-    //     let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    //     let hduStates = this.store.selectSnapshot(WorkbenchState.getHduStateEntities)
-    //     let hdu = hdus[v.srcHduId] as ImageHdu;
-    //     if (hdu.header.loaded && v.targetHduIds.length != 0) {
-    //       let targetHduIds = v.targetHduIds.filter(
-    //         (hduId) => hduId in hdus && hdus[hduId].header.loaded
-    //       );
+        this.store.dispatch(new SyncViewerNormalizations(refNormalizer));
+      });
 
-    //       this.store.dispatch(
-    //         new SyncPlottingPanelStates(
-    //           (hduStates[v.srcHduId] as WorkbenchImageHduState).plottingPanelStateId,
-    //           targetHduIds.map((id) => (hduStates[id] as WorkbenchImageHduState).plottingPanelStateId)
-    //         )
-    //       );
-    //     }
-    //   });
+    this.plottingPanelSyncSub = this.focusedViewerId$
+      .pipe(
+        filter((focusedViewerId) => focusedViewerId != null),
+        switchMap((focusedViewerId) => {
+          let refPlottingPanelState$ = this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            distinctUntilChanged(),
+            switchMap((plottingPanelStateId) =>
+              this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(plottingPanelStateId)))
+            ),
+            distinctUntilChanged()
+          );
+
+          return combineLatest(
+            this.store.select(WorkbenchState.getPlottingPanelConfig).pipe(
+              map((config) => config.plotterSyncEnabled),
+              distinctUntilChanged()
+            ),
+            visibleViewerIds$,
+            refPlottingPanelState$
+          ).pipe();
+        })
+        // auditTime(10),
+      )
+      .subscribe(([plottingSyncEnabled, visibleViewerIds, refPlottingPanelState]) => {
+        if (!plottingSyncEnabled || !refPlottingPanelState) {
+          return;
+        }
+
+        let viewerEntities = this.store.selectSnapshot(WorkbenchState.getViewerEntities);
+        let workbenchFileStates = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
+        let workbenchHduStates = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
+        let targetPlottingPanelStateIds = [];
+        visibleViewerIds.forEach((viewerId) => {
+          let viewer = viewerEntities[viewerId];
+          if (viewer.hduId) {
+            let workbenchHduState = workbenchHduStates[viewer.hduId];
+            if (
+              workbenchHduState &&
+              workbenchHduState.hduType == HduType.IMAGE &&
+              (workbenchHduState as WorkbenchImageHduState).plottingPanelStateId
+            ) {
+              targetPlottingPanelStateIds.push((workbenchHduState as WorkbenchImageHduState).plottingPanelStateId);
+            }
+          } else {
+            let workbenchFileState = workbenchFileStates[viewer.fileId];
+            if (workbenchFileState && workbenchFileState.plottingPanelStateId) {
+              targetPlottingPanelStateIds.push(workbenchFileState.plottingPanelStateId);
+            }
+          }
+        });
+
+        if (targetPlottingPanelStateIds.length == 0) {
+          return;
+        }
+
+        targetPlottingPanelStateIds = targetPlottingPanelStateIds.filter((id) => id != refPlottingPanelState.id);
+
+        this.store.dispatch(new SyncPlottingPanelStates(refPlottingPanelState.id, targetPlottingPanelStateIds));
+      });
 
     this.registerHotKeys();
   }
 
   ngOnInit() {
     setTimeout(() => {
-      this.store.dispatch([
-        new LoadLibrary(),
-        new LoadCatalogs(),
-        new LoadFieldCals(),
-        new LoadDataProviders(),
-      ]);
+      this.store.dispatch([new LoadLibrary(), new LoadCatalogs(), new LoadFieldCals(), new LoadDataProviders()]);
     });
   }
 
@@ -1192,8 +861,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
     // this.fileLoaderSub.unsubscribe();
     this.queryParamSub.unsubscribe();
-    this.markerOverlaySub.unsubscribe();
     this.transformationSyncSub.unsubscribe();
+    this.normalizationSyncSub.unsubscribe();
+    this.plottingPanelSyncSub.unsubscribe();
+
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   registerHotKeys() {
@@ -1203,11 +876,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
           this.store.dispatch(
-            new Navigate(
-              [],
-              { tool: WorkbenchTool.VIEWER },
-              { relativeTo: this.activeRoute, queryParamsHandling: "merge" }
-            )
+            new Navigate([], { tool: WorkbenchTool.VIEWER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
           );
           return false; // Prevent bubbling
         },
@@ -1222,11 +891,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
           this.store.dispatch(
-            new Navigate(
-              [],
-              { tool: WorkbenchTool.INFO },
-              { relativeTo: this.activeRoute, queryParamsHandling: "merge" }
-            )
+            new Navigate([], { tool: WorkbenchTool.INFO }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
           );
           return false; // Prevent bubbling
         },
@@ -1390,19 +1055,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   getViewerLabel(viewer: Viewer, index: number) {
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let fileEntities = this.store.selectSnapshot(
-      DataFilesState.getDataFileEntities
-    );
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
     let file = fileEntities[viewer.fileId];
 
     if (file) return file.name;
     return `Viewer ${index}`;
-  }
-
-  onSelectedHduIdChange($event: MatSelectChange) {
-    let hduId = $event.value;
-    this.store.dispatch(new SetSelectedHduId(this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId].fileId, hduId));
   }
 
   onFileInfoPanelConfigChange($event) {
@@ -1418,37 +1076,21 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onCustomMarkerChange($event: { id: string; changes: Partial<Marker> }) {
-    let viewer = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewer
+    let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedImageViewer);
+    if (!viewer) return;
+    let customMarkerPanelStateId = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)(
+      viewer.id
     );
-    let fileEntities = this.store.selectSnapshot(
-      DataFilesState.getDataFileEntities
-    );
-    let hduId = viewer.hduId;
-    if (!hduId) {
-      hduId = fileEntities[viewer.fileId].hduIds[0];
-    }
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
-    if (!hdu) return;
-    this.store.dispatch(
-      new UpdateCustomMarker(hdu.id, $event.id, $event.changes)
-    );
+    this.store.dispatch(new UpdateCustomMarker(customMarkerPanelStateId, $event.id, $event.changes));
   }
 
   onCustomMarkerDelete($event: Marker[]) {
-    let viewer = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewer
+    let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedImageViewer);
+    if (!viewer) return;
+    let customMarkerPanelStateId = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)(
+      viewer.id
     );
-    let fileEntities = this.store.selectSnapshot(
-      DataFilesState.getDataFileEntities
-    );
-    let hduId = viewer.hduId;
-    if (!hduId) {
-      hduId = fileEntities[viewer.fileId].hduIds[0];
-    }
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
-    if (!hdu) return;
-    this.store.dispatch(new RemoveCustomMarkers(hdu.id, $event));
+    this.store.dispatch(new RemoveCustomMarkers(customMarkerPanelStateId, $event));
   }
 
   selectCustomMarkers(fileId: string, customMarkers: Marker[]) {
@@ -1473,15 +1115,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   /* image viewer mouse event handlers */
   onImageClick($event: ViewerPanelCanvasMouseEvent) {
-    let viewer = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewer
-    );
+    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
+    if (!viewer || viewer.type != "image") {
+      return;
+    }
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let targetFile = fileEntities[viewer.fileId];
-    let hduId = viewer.hduId;
-    let targetHdu = hduEntities[hduId] as ImageHdu;
+    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
+    let headerId = headerSelector(viewer.id);
+    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
     let hduStateEntities = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
     let fileStateEntities = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
@@ -1489,27 +1133,24 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     switch (activeTool) {
       case WorkbenchTool.CUSTOM_MARKER: {
-        let customMarkerPanelStateId = fileStateEntities[targetFile.id].customMarkerPanelStateId
-        let imageDataId = targetFile.compositeImageDataId;
-        if (targetHdu) {
-          if (targetHdu.hduType != HduType.IMAGE) {
-            return;
-          }
-          customMarkerPanelStateId = (hduStateEntities[targetHdu.id] as WorkbenchImageHduState).customMarkerPanelStateId;
-          imageDataId = targetHdu.rawImageDataId;
-        }
-        let targetCustomMarkerPanelState = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateEntities)[customMarkerPanelStateId];
+        let customMarkerPanelStateId = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)(
+          viewer.id
+        );
+        let rawImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
+        let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+          viewer.id
+        );
+        let imageDataId = rawImageDataId ? rawImageDataId : normalizedImageDataId;
+        let targetCustomMarkerPanelState = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateEntities)[
+          customMarkerPanelStateId
+        ];
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[imageDataId];
 
-        let settings = this.store.selectSnapshot(
-          WorkbenchState.getCustomMarkerPanelConfig
+        let settings = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelConfig);
+        let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
+        let selectedCustomMarkers = Object.values(targetCustomMarkerPanelState.markerEntities).filter(
+          (marker) => marker.selected
         );
-        let centroidSettings = this.store.selectSnapshot(
-          WorkbenchState.getCentroidSettings
-        );
-        let selectedCustomMarkers = Object.values(
-          targetCustomMarkerPanelState.markerEntities
-        ).filter((marker) => marker.selected);
         if ($event.hitImage) {
           if (selectedCustomMarkers.length == 0 || $event.mouseEvent.altKey) {
             let x = $event.imageX;
@@ -1517,19 +1158,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             if (settings.centroidClicks) {
               let result: { x: number; y: number };
               if (settings.usePlanetCentroiding) {
-                result = centroidDisk(
-                  targetImageData,
-                  x,
-                  y,
-                  centroidSettings.diskCentroiderSettings
-                );
+                result = centroidDisk(targetImageData, x, y, centroidSettings.diskCentroiderSettings);
               } else {
-                result = centroidPsf(
-                  targetImageData,
-                  x,
-                  y,
-                  centroidSettings.psfCentroiderSettings
-                );
+                result = centroidPsf(targetImageData, x, y, centroidSettings.psfCentroiderSettings);
               }
               x = result.x;
               y = result.y;
@@ -1545,9 +1176,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               labelTheta: 0,
             };
 
-            this.store.dispatch(
-              new AddCustomMarkers(customMarkerPanelStateId, [customMarker])
-            );
+            this.store.dispatch(new AddCustomMarkers(customMarkerPanelStateId, [customMarker]));
           } else {
             this.store.dispatch(new SetCustomMarkerSelection(customMarkerPanelStateId, []));
           }
@@ -1555,30 +1184,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         break;
       }
       case WorkbenchTool.PLOTTER: {
-        let targetImageDataId: string;
-        let targetPlotterStateId: string;
-        let firstImageHdu: ImageHdu;
-        if (!targetHdu) {
-          //use composite file
-          targetImageDataId = targetFile.compositeImageDataId;
-          firstImageHdu = targetFile.hduIds.map(id => hduEntities[id]).find(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu;
-          targetPlotterStateId = fileStateEntities[targetFile.id].plottingPanelStateId;
-        }
-        else {
-          targetImageDataId = targetHdu.rawImageDataId;
-          firstImageHdu = targetHdu;
-          targetPlotterStateId = (hduStateEntities[targetHdu.id] as WorkbenchImageHduState).plottingPanelStateId;
-        }
-        let targetImageData = imageDataEntities[targetImageDataId];
-
-
-        // let imageFile = this.store.selectSnapshot(
-        //   DataFilesState.getHduEntities
-        // )[targetHduId];
-        // let hdu = imageFile as ImageHdu;
-        let plotterPageSettings = this.store.selectSnapshot(
-          WorkbenchState.getPlottingPanelConfig
+        let plottingPanelStateId = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateIdFromViewerId)(viewer.id);
+        let rawImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
+        let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+          viewer.id
         );
+        let imageDataId = rawImageDataId ? rawImageDataId : normalizedImageDataId;
+        let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[imageDataId];
+        let plotterPageSettings = this.store.selectSnapshot(WorkbenchState.getPlottingPanelConfig);
         if ($event.hitImage) {
           let x = $event.imageX;
           let y = $event.imageY;
@@ -1597,8 +1210,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let primaryCoord = x;
           let secondaryCoord = y;
           let posType = PosType.PIXEL;
-          if (firstImageHdu && firstImageHdu.header.wcs && firstImageHdu.header.wcs.isValid()) {
-            let wcs = firstImageHdu.header.wcs;
+          if (targetHeader.wcs && targetHeader.wcs.isValid()) {
+            let wcs = targetHeader.wcs;
             let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
             primaryCoord = raDec[0];
             secondaryCoord = raDec[1];
@@ -1606,7 +1219,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           }
 
           this.store.dispatch(
-            new StartLine(targetPlotterStateId, {
+            new StartLine(plottingPanelStateId, {
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -1616,18 +1229,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         break;
       }
       case WorkbenchTool.PHOTOMETRY: {
-        if (!targetHdu) return;
-        let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[targetHdu.rawImageDataId]
+        let rawImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
+        if (!rawImageDataId || !viewer.hduId) return;
+        let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[rawImageDataId];
+        let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
-        let photometryPanelConfig = this.store.selectSnapshot(
-          WorkbenchState.getPhotometryPanelConfig
-        );
+        let photometryPanelConfig = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
         let selectedSourceIds = photometryPanelConfig.selectedSourceIds;
         let centroidClicks = photometryPanelConfig.centroidClicks;
 
-        let centroidSettings = this.store.selectSnapshot(
-          WorkbenchState.getCentroidSettings
-        );
+        let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
 
         if ($event.hitImage) {
           if (selectedSourceIds.length == 0 || $event.mouseEvent.altKey) {
@@ -1644,24 +1255,21 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               primaryCoord = result.x;
               secondaryCoord = result.y;
             }
-            if (
-              photometryPanelConfig.coordMode == "sky" &&
-              targetHdu.header.wcs.isValid()
-            ) {
-              let wcs = targetHdu.header.wcs;
+            if (photometryPanelConfig.coordMode == "sky" && header.wcs.isValid()) {
+              let wcs = header.wcs;
               let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
               primaryCoord = raDec[0];
               secondaryCoord = raDec[1];
               posType = PosType.SKY;
             }
 
-            let centerEpoch = getCenterTime(targetHdu.header);
+            let centerEpoch = getCenterTime(header);
 
             let source: Source = {
               id: null,
               label: null,
               objectId: null,
-              hduId: targetHdu.id,
+              hduId: viewer.hduId,
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -1684,51 +1292,41 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onImageMove($event: ViewerPanelCanvasMouseEvent) {
-    let viewer = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewer
-    );
+    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
+    if (!viewer || viewer.type != "image") {
+      return;
+    }
+
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-    let targetFile = fileEntities[viewer.fileId];
-    let targetHdu = hduEntities[viewer.hduId] as ImageHdu;
+    let targetFile = this.store.selectSnapshot(DataFilesState.getFileEntities)[viewer.fileId];
+    let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[viewer.hduId] as ImageHdu;
+    let headerId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
+    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
+
     let hduStateEntities = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
     let fileStateEntities = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
     let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
 
     switch (activeTool) {
       case WorkbenchTool.PLOTTER: {
-        let targetImageDataId: string;
-        let targetPlotterStateId: string;
-        let firstImageHdu: ImageHdu;
-        if (!targetHdu) {
-          //use composite file
-          targetImageDataId = targetFile.compositeImageDataId;
-          firstImageHdu = targetFile.hduIds.map(id => hduEntities[id]).find(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu;
-          targetPlotterStateId = fileStateEntities[targetFile.id].plottingPanelStateId;
-        }
-        else {
-          targetImageDataId = targetHdu.rawImageDataId;
-          firstImageHdu = targetHdu;
-          targetPlotterStateId = (hduStateEntities[targetHdu.id] as WorkbenchImageHduState).plottingPanelStateId;
-        }
-        let targetImageData = imageDataEntities[targetImageDataId];
-        let plottingPanelState = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateEntities)[targetPlotterStateId]
-
+        let plottingPanelStateId = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateIdFromViewerId)(viewer.id);
+        let plottingPanelState = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateEntities)[
+          plottingPanelStateId
+        ];
         let measuring = plottingPanelState.measuring;
         if (measuring) {
           let primaryCoord = $event.imageX;
           let secondaryCoord = $event.imageY;
           let posType = PosType.PIXEL;
-          if (firstImageHdu && firstImageHdu.header.wcs && firstImageHdu.header.wcs.isValid()) {
-            let wcs = firstImageHdu.header.wcs;
+          if (targetHeader && targetHeader.wcs && targetHeader.wcs.isValid()) {
+            let wcs = targetHeader.wcs;
             let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
             primaryCoord = raDec[0];
             secondaryCoord = raDec[1];
             posType = PosType.SKY;
           }
           this.store.dispatch(
-            new UpdateLine(targetPlotterStateId, {
+            new UpdateLine(plottingPanelStateId, {
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -1741,39 +1339,31 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onMarkerClick($event: ViewerPanelMarkerMouseEvent) {
-    let viewer = $event.viewer
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getDataFileEntities);
-    let targetFile = fileEntities[viewer.fileId];
-    let hduId = viewer.hduId;
-    let targetHdu = hduEntities[hduId] as ImageHdu;
+    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
+    if (!viewer || viewer.type != "image") {
+      return;
+    }
 
-    let hduStateEntities = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
-    let fileStateEntities = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
+    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
+    let targetFile = this.store.selectSnapshot(DataFilesState.getFileEntities)[viewer.fileId];
+    let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[viewer.hduId] as ImageHdu;
+    let headerId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
+    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
+
     switch (activeTool) {
       case WorkbenchTool.CUSTOM_MARKER: {
         if ($event.mouseEvent.altKey) return;
         if (typeof $event.marker.id == "undefined") return;
-
-        let customMarkerPanelStateId = fileStateEntities[targetFile.id].customMarkerPanelStateId
-        if (targetHdu) {
-          if (targetHdu.hduType != HduType.IMAGE) {
-            return;
-          }
-          customMarkerPanelStateId = (hduStateEntities[targetHdu.id] as WorkbenchImageHduState).customMarkerPanelStateId;
-        }
-        let customMarkerPanelState = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateEntities)[customMarkerPanelStateId];
-
+        let customMarkerPanelStateId = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)(
+          viewer.id
+        );
+        let customMarkerPanelState = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelStateEntities)[
+          customMarkerPanelStateId
+        ];
         if (!customMarkerPanelState.markerIds.includes($event.marker.id)) return;
-
         let customMarker = customMarkerPanelState.markerEntities[$event.marker.id];
-
         if (!customMarker) return;
-
-        let customMarkerSelected =
-          customMarkerPanelState.markerEntities[$event.marker.id].selected;
+        let customMarkerSelected = customMarkerPanelState.markerEntities[$event.marker.id].selected;
 
         if ($event.mouseEvent.ctrlKey) {
           if (!customMarkerSelected) {
@@ -1784,9 +1374,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             this.deselectCustomMarkers(customMarkerPanelStateId, [customMarker]);
           }
         } else {
-          this.store.dispatch(
-            new SetCustomMarkerSelection(customMarkerPanelStateId, [customMarker])
-          );
+          this.store.dispatch(new SetCustomMarkerSelection(customMarkerPanelStateId, [customMarker]));
         }
         $event.mouseEvent.stopImmediatePropagation();
         $event.mouseEvent.preventDefault();
@@ -1796,35 +1384,23 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         if ($event.mouseEvent.altKey) return;
         let sources = this.store.selectSnapshot(SourcesState.getSources);
         let source = sources.find(
-          (source) =>
-            $event.marker.data &&
-            $event.marker.data.source &&
-            source.id == $event.marker.data.source.id
+          (source) => $event.marker.data && $event.marker.data.source && source.id == $event.marker.data.source.id
         );
         if (!source) return;
 
-        let photometryPanelConfig = this.store.selectSnapshot(
-          WorkbenchState.getPhotometryPanelConfig
-        );
-        let sourceSelected = photometryPanelConfig.selectedSourceIds.includes(
-          source.id
-        );
+        let photometryPanelConfig = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
+        let sourceSelected = photometryPanelConfig.selectedSourceIds.includes(source.id);
         if ($event.mouseEvent.ctrlKey) {
           if (!sourceSelected) {
             // select the source
             this.store.dispatch(
               new UpdatePhotometryPanelConfig({
-                selectedSourceIds: [
-                  ...photometryPanelConfig.selectedSourceIds,
-                  source.id,
-                ],
+                selectedSourceIds: [...photometryPanelConfig.selectedSourceIds, source.id],
               })
             );
           } else {
             // deselect the source
-            let selectedSourceIds = photometryPanelConfig.selectedSourceIds.filter(
-              (id) => id != source.id
-            );
+            let selectedSourceIds = photometryPanelConfig.selectedSourceIds.filter((id) => id != source.id);
             this.store.dispatch(
               new UpdatePhotometryPanelConfig({
                 selectedSourceIds: selectedSourceIds,
@@ -1844,19 +1420,554 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFileSelect($event: { item: DataFile | IHdu; doubleClick: boolean }) {
-    if (!$event.item) return;
+  clearFileListFilter() {
+    this.store.dispatch(new SetFileListFilter(""));
+  }
 
-    if (!$event.doubleClick) {
-      this.store.dispatch(new SelectDataFileListItem($event.item));
+  toggleFileListSelectAll($event: MatCheckboxChange) {
+    if ($event.checked) {
+      // selectall
+      let filteredFiles = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
+      this.store.dispatch(new SetFileSelection(filteredFiles.map((f) => f.id)));
     } else {
-      let focusedViewer = this.store.selectSnapshot(
-        WorkbenchState.getFocusedViewer
-      );
-      if (focusedViewer) {
-        this.store.dispatch(new KeepViewerOpen(focusedViewer.viewerId));
+      // deselect all
+      this.store.dispatch(new SetFileSelection([]));
+    }
+  }
+
+  onFileListFocusedItemChange(item: { fileId: string; hduId: string }) {
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let fileId = item.fileId;
+    let hduId = item.hduId;
+    if (!hduId) {
+      let file = fileEntities[fileId];
+      if (file && file.hduIds.length == 1) {
+        //if a single-hdu file is selected,  automatically select the hdu
+        hduId = file.hduIds[0];
       }
     }
+    this.store.dispatch(new FocusFileListItem({ fileId: fileId, hduId: hduId }));
+  }
+
+  // onFileListItemClick(item: IFileListItemId) {
+  //   this.store.dispatch(new SelectDataFileListItem(item));
+  // }
+
+  onFileListItemDoubleClick(item: { fileId: string; hduId: string }) {
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
+    if (focusedViewer) {
+      this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
+    }
+  }
+
+  afterLibrarySync() {
+    this.store.dispatch(new LoadLibrary());
+    this.store.dispatch(new LoadDataProviders());
+
+    let loadLibrarySuccess$ = this.actions$.pipe(ofActionCompleted(LoadLibrarySuccess));
+    let loadLibraryFail$ = this.actions$.pipe(
+      ofActionCompleted(LoadLibraryFail),
+      map((v) => throwError("Unable to load library"))
+    );
+
+    let loadDataProvidersSuccess$ = this.actions$.pipe(ofActionCompleted(LoadDataProvidersSuccess));
+    let loadDataProvidersFail$ = this.actions$.pipe(
+      ofActionCompleted(LoadDataProvidersFail),
+      map((v) => throwError("Unable to load data providers"))
+    );
+
+    return combineLatest([loadLibrarySuccess$, loadDataProvidersSuccess$]).pipe(
+      takeUntil(merge(loadLibraryFail$, loadDataProvidersFail$).pipe()),
+      take(1),
+      map((v) => {
+        return {
+          dataProviderEntities: this.store.selectSnapshot(DataProvidersState.getDataProviderEntities),
+          fileEntities: this.store.selectSnapshot(DataFilesState.getFileEntities),
+        };
+      })
+    );
+  }
+
+  // onSaveFileBtnClick(fileId: string) {
+  //   this.afterLibrarySync()
+  //     .pipe(
+  //       flatMap(({ dataProviderEntities, fileEntities }) => {
+  //         let file = fileEntities[fileId];
+  //         if (!file) return;
+  //         return this.saveFile(fileId, file.dataProviderId, file.assetPath);
+  //       })
+  //     )
+  //     .subscribe(
+  //       () => {},
+  //       (err) => {},
+  //       () => this.store.dispatch(new LoadLibrary())
+  //     );
+  // }
+
+  // onSaveAllFilesBtnClick() {
+  //   this.afterLibrarySync()
+  //     .pipe(
+  //       flatMap(({ dataProviderEntities, fileEntities }) => {
+  //         let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+
+  //         //remove files which have not been modified
+  //         let files = Object.values(fileEntities).filter((file) => {
+  //           let hdus = file.hduIds.map((hduId) => hduEntities[hduId]);
+  //           let hduModified = hdus.map((hdu) => hdu && hdu.modified).some((v) => v);
+
+  //           let dataProvider = dataProviderEntities[file.dataProviderId];
+  //           return hduModified || !dataProvider || dataProvider.readonly;
+  //         });
+  //         if (files.length == 0) {
+  //           return of(null);
+  //         }
+  //         console.log("SAVE ALL CALLED: ", files);
+
+  //         let recursiveSave = (index: number) => {
+  //           console.log("RECURSIVE SAVE CALLED: ", index);
+  //           if (index >= files.length) {
+  //             return of(null);
+  //           }
+  //           let file = files[index];
+  //           return this.saveFile(file.id, file.dataProviderId, file.assetPath).pipe(
+  //             flatMap((v) => {
+  //               if (!v) {
+  //                 //save was canceled
+  //                 return of(null);
+  //               }
+
+  //               console.log("SAVE FILE COMPLETED: ", v);
+  //               return new Observable((subscriber) => {
+  //                 setTimeout(() => {
+  //                   subscriber.next(index + 1);
+  //                   subscriber.complete();
+  //                 }, 0);
+  //               }).pipe(
+  //                 flatMap((index) => {
+  //                   return recursiveSave(index as number);
+  //                 })
+  //               );
+  //             })
+  //           );
+  //         };
+
+  //         return recursiveSave(0);
+  //       })
+  //     )
+  //     .subscribe(
+  //       () => {},
+  //       (err) => {},
+  //       () => this.store.dispatch(new LoadLibrary())
+  //     );
+  // }
+
+  closeFiles(files: DataFile[]) {
+    let config: FileDialogConfig = {
+      files: files,
+      mode: "close",
+    };
+
+    let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
+      width: "500px",
+      data: config,
+      disableClose: true
+    });
+
+    return dialogRef.afterClosed();
+  }
+
+  onCloseFileBtnClick(fileId: string) {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          return this.closeFiles([fileEntities[fileId]]);
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  onCloseAllFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          // let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          // let files = selectedFileIds.map(id => fileEntities[id])
+          let files = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Close Files",
+            message: `Are you sure you want to close all files?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Close All",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+            disableClose: true
+          });
+
+          return dialogRef.afterClosed().pipe(
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+              return this.closeFiles(files);
+            })
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  onCloseSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Close Files",
+            message: `Are you sure you want to close the selected files?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Close Selected Files",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+            disableClose: true
+          });
+
+          return dialogRef.afterClosed().pipe(
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+              return this.closeFiles(files);
+            })
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  saveFiles(files: DataFile[]) {
+    let config: FileDialogConfig = {
+      files: files,
+      mode: "save",
+    };
+
+    let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
+      width: "500px",
+      data: config,
+      disableClose: true
+    });
+
+    return dialogRef.afterClosed();
+  }
+
+  onSaveFileBtnClick(fileId: string) {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          return this.saveFiles([fileEntities[fileId]]);
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  onSaveAllFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          // let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          // let files = selectedFileIds.map(id => fileEntities[id])
+          let files = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Save Files",
+            message: `Are you sure you want to save all files?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Save All",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+            disableClose: true
+          });
+
+          return dialogRef.afterClosed().pipe(
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+              return this.saveFiles(files);
+            })
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  onSaveSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Save Files",
+            message: `Are you sure you want to save the selected files?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Save Selected Files",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+            disableClose: true
+          });
+
+          return dialogRef.afterClosed().pipe(
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+              return this.saveFiles(files);
+            })
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => this.store.dispatch(new LoadLibrary())
+      );
+  }
+
+  onDownloadSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+
+          let job: BatchDownloadJob = {
+            type: JobType.BatchDownload,
+            id: null,
+            group_ids: files.map(file => file.id)
+          }
+
+          let corrId = this.corrGen.next();
+          let onCreateJobSuccess$ = this.actions$.pipe(
+            ofActionDispatched(CreateJobSuccess),
+            filter(action => (action as CreateJobSuccess).correlationId == corrId),
+            take(1),
+            flatMap(action => {
+              let jobId = (action as CreateJobSuccess).job.id;
+              let dialogConfig: JobProgressDialogConfig = {
+                title: "Preparing download",
+                message: `Please wait while we prepare the files for download.`,
+                progressMode: "indeterminate",
+                job$: this.store.select(JobsState.getJobById).pipe(
+                  map(fn => fn(jobId).job)
+                )
+              };
+              let dialogRef = this.dialog.open(JobProgressDialogComponent, {
+                width: "400px",
+                data: dialogConfig,
+                disableClose: true
+              });
+    
+              return dialogRef.afterClosed().pipe(
+                flatMap((result) => {
+                  if (!result) {
+                    
+                    return of(null);
+                  }
+                  
+                  return this.jobService.getJobResultFile(jobId, 'download').pipe(
+                    tap(data => {
+                      saveAs(data, files.length == 1 ? files[0].name : 'afterglow-files.zip')
+                    })
+                  );
+                })
+              );
+            })
+          )
+
+          let onCreateJobFail$ =  this.actions$.pipe(
+            ofActionDispatched(CreateJobFail),
+            filter(action => (action as CreateJobFail).correlationId == corrId),
+            take(1),
+          )
+
+
+          this.store.dispatch(new CreateJob(job, 1000, corrId));
+
+          return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(
+            take(1)
+          )
+
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => {},
+        () => {}
+      );
+  }
+
+  getLongestCommonStartingSubstring(arr1: string[]) {
+    let arr = arr1.concat().sort(),
+      a1 = arr[0],
+      a2 = arr[arr.length - 1],
+      L = a1.length,
+      i = 0;
+    while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
+    return a1.substring(0, i);
+  }
+
+  onGroupSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync()
+      .pipe(
+        flatMap(({ dataProviderEntities, fileEntities }) => {
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let files = selectedFileIds.map((id) => fileEntities[id]);
+          let hduCount = 0;
+          files.forEach(file => hduCount += file.hduIds.length);
+
+          if(hduCount > 4) {
+            let dialogConfig: Partial<AlertDialogConfig> = {
+              title: "Error",
+              message: `The number of channels within a file is currently limited to no more than four.  Please reduce he number of channels and try grouping again.`,
+              buttons: [
+                {
+                  color: null,
+                  value: false,
+                  label: "Close",
+                }
+              ],
+            };
+            let dialogRef = this.dialog.open(AlertDialogComponent, {
+              width: "400px",
+              data: dialogConfig,
+              disableClose: true
+            });
+  
+            return dialogRef.afterClosed()
+          }
+          
+
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Group Files",
+            message: `Are you sure you want to group the selected files into a single file with multiple channels?`,
+            buttons: [
+              {
+                color: null,
+                value: true,
+                label: "Group Selected Files",
+              },
+              {
+                color: null,
+                value: false,
+                label: "Cancel",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+            disableClose: true
+          });
+
+          return dialogRef.afterClosed().pipe(
+            take(1),
+            flatMap((result) => {
+              if (!result) {
+                return of(null);
+              }
+
+              let newFilename = this.getLongestCommonStartingSubstring(files.map(file => file.name)).replace(/_+$/,'').trim()
+              if(newFilename.length == 0) {
+                newFilename = `${files[0].name} - group`
+              }
+              let uuid = UUID.UUID();
+              let reqs = [];
+              files.forEach(file => {
+                file.hduIds.forEach(hduId => {
+                  reqs.push(this.dataFileService.updateFile(hduId, {group_id: uuid, name: newFilename, data_provider: null, asset_path: null, modified: true}))
+                })
+                
+              })
+
+              return concat(...reqs);
+            }),
+          );
+        })
+      )
+      .subscribe(
+        () => {},
+        (err) => { throw err},
+        () => this.store.dispatch(new LoadLibrary())
+      );
   }
 
   // onMultiFileSelect(files: Array<DataFile>) {
@@ -1864,22 +1975,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   //   this.store.dispatch(new SetMultiFileSelection(files.map(f => f.id)));
   // }
 
-  removeAllFiles() {
-    let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: "300px",
-      data: {
-        message: "Are you sure you want to delete all files from your library?",
-        confirmationBtn: {
-          color: "warn",
-          label: "Delete All Files",
-        },
-      },
+  openFiles() {
+    let dialogRef = this.dialog.open(OpenFileDialogComponent, {
+      width: "80vw",
+      maxWidth: "1200px",
+      disableClose: true
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.store.dispatch(new CloseAllDataFiles());
-      }
+    dialogRef.afterClosed().subscribe((assets) => {
+
     });
   }
 
@@ -1918,11 +2022,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       this.store.dispatch(new SetShowConfig(true));
     }
     this.store.dispatch(
-      new Navigate(
-        [],
-        { tool: targetTool },
-        { relativeTo: this.activeRoute, queryParamsHandling: "merge" }
-      )
+      new Navigate([], { tool: targetTool }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
     );
   }
 
@@ -1940,47 +2040,37 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new SetViewerSyncEnabled($event.checked));
   }
 
+  onViewerSyncModeChange($event: MatButtonToggleChange) {
+    this.store.dispatch(new SetViewerSyncMode($event.value));
+  }
+
   onNormalizationSyncEnabledChange($event) {
     this.store.dispatch(new SetNormalizationSyncEnabled($event.checked));
   }
 
-  importFromSurvey(surveyDataProvider: DataProvider, hdu: IHdu) {
-    if (hdu.hduType != HduType.IMAGE) return;
-
+  importFromSurvey(surveyDataProvider: DataProvider, header: Header) {
     let centerRaDec;
     let pixelScale;
 
-    let imageHdu = hdu as ImageHdu;
-
-    if (imageHdu.header.wcs && imageHdu.header.wcs.isValid() && this.useWcsCenter) {
-      centerRaDec = imageHdu.header.wcs.pixToWorld([
-        getWidth(imageHdu.header) / 2,
-        getHeight(imageHdu.header) / 2,
-      ]);
-      pixelScale = imageHdu.header.wcs.getPixelScale() * 60;
+    if (header.wcs && header.wcs.isValid() && this.useWcsCenter) {
+      centerRaDec = header.wcs.pixToWorld([getWidth(header) / 2, getHeight(header) / 2]);
+      pixelScale = header.wcs.getPixelScale() * 60;
     } else {
-      let centerRa = getRaHours(imageHdu.header);
-      let centerDec = getDecDegs(imageHdu.header);
+      let centerRa = getRaHours(header);
+      let centerDec = getDecDegs(header);
       if (centerRa == undefined || centerDec == undefined) return;
 
       centerRaDec = [centerRa, centerDec];
-      pixelScale = getDegsPerPixel(imageHdu.header) * 60;
+      pixelScale = getDegsPerPixel(header) * 60;
 
       if (pixelScale == undefined) return;
     }
 
-    let width = pixelScale * getWidth(imageHdu.header);
-    let height = pixelScale * getHeight(imageHdu.header);
+    let width = pixelScale * getWidth(header);
+    let height = pixelScale * getHeight(header);
 
     this.store.dispatch(
-      new ImportFromSurvey(
-        surveyDataProvider.id,
-        centerRaDec[0],
-        centerRaDec[1],
-        width,
-        height,
-        this.corrGen.next()
-      )
+      new ImportFromSurvey(surveyDataProvider.id, centerRaDec[0], centerRaDec[1], width, height, this.corrGen.next())
     );
   }
 
@@ -1992,10 +2082,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.useWcsCenter = $event.value == "wcs";
   }
 
-  splitViewerPanel(
-    viewer: Viewer,
-    direction: "up" | "down" | "left" | "right" = "right"
-  ) {
-    this.store.dispatch(new SplitViewerPanel(viewer.viewerId, direction));
+  splitViewerPanel(viewer: Viewer, direction: "up" | "down" | "left" | "right" = "right") {
+    this.store.dispatch(new SplitViewerPanel(viewer.id, direction));
   }
 }

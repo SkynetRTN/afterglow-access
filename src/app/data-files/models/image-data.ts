@@ -1,4 +1,4 @@
-import { PixelType } from './data-file';
+import { PixelType } from "./data-file";
 
 export interface IImageData<T> {
   id: string;
@@ -10,10 +10,9 @@ export interface IImageData<T> {
   initialized: boolean;
 }
 
-
 export interface ImageTile<T> {
-  index: number,
-  isValid: boolean,
+  index: number;
+  isValid: boolean;
   x: number;
   y: number;
   width: number;
@@ -31,21 +30,20 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
   let yTileDim = Math.ceil(height / tileHeight);
 
   for (let j = 0; j < yTileDim; j += 1) {
-    let tw = tileWidth;
     let th = tileHeight;
-    
 
     if (j === yTileDim - 1) {
-      th -= (j + 1) * tileHeight - width;
+      th -= (j + 1) * tileHeight - height;
     }
     for (let i = 0; i < xTileDim; i += 1) {
+      let tw = tileWidth;
       if (i === xTileDim - 1) {
-        tw -= (i + 1) * tileWidth - height;
+        tw -= (i + 1) * tileWidth - width;
       }
       let index = j * xTileDim + i;
       let x = i * tileWidth;
       let y = j * tileHeight;
-      tiles.push({
+      let tile = {
         index: index,
         isValid: false,
         x: x,
@@ -56,13 +54,13 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
         pixelsLoading: false,
         pixelLoadingFailed: false,
         pixels: null,
-      });
+      };
+      tiles.push(tile);
     }
   }
 
   return tiles;
 }
-
 
 export function getTilePixel<T>(tile: ImageTile<T>, x: number, y: number) {
   let index: number = Math.floor(y) * tile.width + Math.floor(x);
@@ -72,10 +70,10 @@ export function getTilePixel<T>(tile: ImageTile<T>, x: number, y: number) {
 
 export function getPixels<T>(imageData: IImageData<T>, x: number, y: number, width: number, height: number) {
   let result: Array<Array<number>> = [];
-  for(let j=0; j<height; j++) {
-    let row = Array(width)
-    for(let i=0; i<width; i++) {
-      row[i] = getPixel(imageData, x+i, y+j);
+  for (let j = 0; j < height; j++) {
+    let row = Array(width);
+    for (let i = 0; i < width; i++) {
+      row[i] = getPixel(imageData, x + i, y + j);
     }
     result[j] = row;
   }
@@ -139,13 +137,10 @@ export function getPixel<T>(imageData: IImageData<T>, x: number, y: number, inte
       }
     }
     //console.log(x, y, 0.5-(Math.round(x) - x), 0.5-(Math.round(y) - y), neighbors);
-    return BicubicInterpolation(0.5 - (Math.round(x) - x), 0.5 - (Math.round(y) - y), neighbors)
+    return BicubicInterpolation(0.5 - (Math.round(x) - x), 0.5 - (Math.round(y) - y), neighbors);
 
     //  }
-
-
   }
-
 
   let i = Math.floor((x - 0.5) / imageData.tileWidth);
   let j = Math.floor((y - 0.5) / imageData.tileHeight);
@@ -183,9 +178,6 @@ export function getPixel<T>(imageData: IImageData<T>, x: number, y: number, inte
   // }
   //
   // return BicubicInterpolation(x-Math.floor(x), y-Math.floor(y), pixels);
-
-
-
 }
 
 export function getTile<T>(imageData: IImageData<T>, i: number, j: number) {
@@ -193,8 +185,7 @@ export function getTile<T>(imageData: IImageData<T>, i: number, j: number) {
   return imageData.tiles[j * xTileDim + i];
 }
 
-
-export function findTiles<T>(imageData: IImageData<T>, region: {x: number, y: number, width: number, height: number}) {
+export function findTiles<T>(imageData: IImageData<T>, region: { x: number; y: number; width: number; height: number }) {
   let result: ImageTile<T>[] = [];
   let xTileDim = Math.ceil(imageData.width / imageData.tileWidth);
   let yTileDim = Math.ceil(imageData.height / imageData.tileHeight);

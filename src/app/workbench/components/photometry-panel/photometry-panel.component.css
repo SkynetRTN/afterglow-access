@@ -1,4 +1,5 @@
-.form-row button, .form-row a {
+.form-row button,
+.form-row a {
   margin-right: 8px;
 }
 
@@ -11,7 +12,8 @@ dt {
   padding-right: 5px;
 }
 
-dd, dt {
+dd,
+dt {
   padding: 10px;
   margin: 0px;
 }
@@ -32,12 +34,13 @@ dl {
 dt {
   font-weight: 700;
 }
-dd, dt {
+dd,
+dt {
   line-height: 1.42857143;
 }
 
-
-.mat-column-select, .cdk-column-select {
+.mat-column-select,
+.cdk-column-select {
   overflow: visible;
   width: 50px;
   padding-left: 15px;
@@ -51,7 +54,8 @@ dd, dt {
   padding: 5px;
 }
 
-.mat-header-row, .mat-row {
+.mat-header-row,
+.mat-row {
   display: table-row;
   padding: 0;
   border: none;
@@ -61,7 +65,8 @@ dd, dt {
   min-height: 30px;
 }
 
-.mat-header-cell, .mat-cell {
+.mat-header-cell,
+.mat-cell {
   display: table-cell;
   vertical-align: middle;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);

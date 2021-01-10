@@ -1,12 +1,16 @@
 @import "~@angular/material/theming";
 @import "./app/workbench/components/navbar/navbar-theme";
 @import "./app/workbench/containers/workbench-theme";
-@import "./app/workbench/containers/workbench-viewer/workbench-viewer-theme";
+@import "./app/workbench/containers/workbench-image-viewer/workbench-image-viewer-theme";
 @import "./app/workbench/containers/workbench-viewer-panel/workbench-viewer-panel-theme";
 @import "./app/workbench/containers/workbench-data-file-list/workbench-data-file-list-theme";
 @import "./app/workbench/components/display-panel/display-panel-theme";
 @import "./app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme";
-@import "./app/workbench/containers/data-providers/data-provider-browse-page/data-provider-browse-page-theme";
+@import "./app/data-providers/components/file-manager/file-manager-theme";
+@import "./app/workbench/components/alert-dialog/alert-dialog-theme";
+@import "./app/workbench/components/hdu-selector/hdu-selector-theme";
+
+
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -40,7 +44,9 @@
   @include image-viewer-status-bar-theme($theme);
   @include workbench-viewer-panel-theme($theme);
   @include workbench-data-file-list-theme($theme);
-  @include data-provider-browse-page-theme($theme);
+  @include file-manager-theme($theme);
+  @include alert-dialog-theme($theme);
+  @include hdu-selector-theme($theme);
 
   .context-menu .context-label {
     padding-right: 30px;
@@ -49,7 +55,6 @@
   .context-menu .mat-menu-item {
     line-height: 36px;
   }
-  
 
   header {
     box-shadow: 0 10px 6px -6px mat-color($foreground, divider);
@@ -60,14 +65,23 @@
   }
 
   theme-picker {
-    .mat-button, .mat-icon-button {
+    .mat-button,
+    .mat-icon-button {
       color: mat-color($primary, default-contrast);
       opacity: 0.8;
     }
 
     a.active {
-      opacity: 1.0;
+      opacity: 1;
     }
+  }
+
+  .mat-tooltip {
+    font-size: 16px !important;
+    background-color: mat-color($foreground, text, 1);
+    color: mat-color($background, card);
+    max-width: 600px !important;
+    white-space:nowrap;
   }
 
   .mat-dialog-container {
@@ -102,8 +116,6 @@
     padding: 5px 9px;
     font-size: 1em;
   }
-
-
 
   /* override bootstrap */
   .app-root {

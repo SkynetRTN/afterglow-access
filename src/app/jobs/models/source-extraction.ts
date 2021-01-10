@@ -1,9 +1,9 @@
-import { JobBase, JobResultBase } from './job-base';
-import { SourceMergeSettings } from './source-merge';
-import { SourceMeta } from './source-meta';
-import { Astrometry } from './astrometry';
-import { SourceId } from './source-id';
-import { JobType } from './job-types';
+import { JobBase, JobResultBase } from "./job-base";
+import { SourceMergeSettings } from "./source-merge";
+import { SourceMeta } from "./source-meta";
+import { Astrometry } from "./astrometry";
+import { SourceId } from "./source-id";
+import { JobType } from "./job-types";
 
 export interface SourceExtractionJobSettings {
   x?: number;
@@ -34,17 +34,9 @@ export interface SourceExtractionJob extends JobBase {
   source_merge_settings?: SourceMergeSettings;
 }
 
-export interface SourceExtractionData extends SourceMeta, Astrometry, SourceId {
-
-}
+export interface SourceExtractionData extends SourceMeta, Astrometry, SourceId {}
 
 export interface SourceExtractionJobResult extends JobResultBase {
   readonly type: JobType.SourceExtraction;
   data: SourceExtractionData[];
 }
-
-
-
-
-
-

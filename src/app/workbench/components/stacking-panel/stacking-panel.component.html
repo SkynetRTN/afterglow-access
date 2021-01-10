@@ -1,24 +1,26 @@
-<div *ngIf="hdus">
+<div *ngIf="hduIds">
   <form [formGroup]="stackForm">
     <div>
-      <mat-form-field appearance="outline" style="width: 300px;">
+      <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Stack</mat-label>
-        <mat-select multiple formControlName="selectedImageFileIds">
-          <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">{{ dataFileEntities[hdu.fileId].name }}</mat-option>
+        <mat-select multiple formControlName="selectedHduIds">
+          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+            {{getHduOptionLabel(hduId) | async}}
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="selectImageFiles(hdus)">
+      <button mat-icon-button (click)="onSelectAllBtnClick()">
         <mat-icon>select_all</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="selectImageFiles([])">
+      <button mat-icon-button (click)="onClearSelectionBtnClick()">
         <mat-icon>clear</mat-icon>
       </button>
     </div>
 
     <div>
-      <mat-form-field appearance="outline" style="width: 200px;">
+      <mat-form-field appearance="outline" style="width: 200px">
         <mat-label i18n>Mode</mat-label>
         <mat-select formControlName="mode">
           <mat-option value="average" i18n>average</mat-option>
@@ -27,14 +29,14 @@
           <mat-option value="sum" i18n>sum</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline" [hidden]="stackForm.value?.mode != 'percentile'" style="margin-left: 10px;">
+      <mat-form-field appearance="outline" [hidden]="stackForm.value?.mode != 'percentile'" style="margin-left: 10px">
         <mat-label i18n>Percentile</mat-label>
         <input matInput formControlName="percentile" type="number" />
       </mat-form-field>
     </div>
 
     <div>
-      <mat-form-field appearance="outline" style="width: 300px;">
+      <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Rejection</mat-label>
         <mat-select formControlName="rejection">
           <mat-option value="none" i18n>None</mat-option>
@@ -44,24 +46,25 @@
           <mat-option value="sigclip" i18n>sigclip</mat-option>
         </mat-select>
       </mat-form-field>
-
     </div>
 
     <div>
-      <mat-form-field appearance="outline"
-        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)">
+      <mat-form-field appearance="outline" [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)">
         <mat-label i18n>Low</mat-label>
         <input matInput formControlName="low" type="number" />
       </mat-form-field>
-      <mat-form-field appearance="outline"
-        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)" style="margin-left: 10px;">
+      <mat-form-field
+        appearance="outline"
+        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)"
+        style="margin-left: 10px"
+      >
         <mat-label i18n>High</mat-label>
         <input matInput formControlName="high" type="number" />
       </mat-form-field>
     </div>
 
     <div>
-      <mat-form-field appearance="outline" style="width: 300px;">
+      <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Scaling</mat-label>
         <mat-select formControlName="scaling">
           <mat-option value="none" i18n>None</mat-option>
@@ -72,29 +75,24 @@
       </mat-form-field>
     </div>
 
-
-    <div style="clear: both;"></div>
+    <div style="clear: both"></div>
     <button mat-raised-button (click)="submit(stackForm.value)" [disabled]="!stackForm.valid" class="float-right" i18n>
       Submit
     </button>
-    <div style="clear: both;"></div>
+    <div style="clear: both"></div>
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
-  <div *ngIf="stackJobRow$ | async; let jobRow" style="margin-top: 10px;">
-    <div class="alert alert-info" *ngIf="
-        !jobRow.result ||
-          ['pending', 'in_progress'].includes(jobRow.job.state.status);
-        else jobComplete
-      ">
-      Processing job {{ jobRow.job.id }} ... ({{
-        jobRow.job.state.progress | number: "1.0-0"
-      }}%)
+  <div *ngIf="stackJobRow$ | async; let jobRow" style="margin-top: 10px">
+    <div
+      class="alert alert-info"
+      *ngIf="!jobRow.result || ['pending', 'in_progress'].includes(jobRow.job.state.status); else jobComplete"
+    >
+      Processing job {{ jobRow.job.id }} ... ({{ jobRow.job.state.progress | number: "1.0-0" }}%)
 
       <ng-container *ngIf="jobRow.job.state.status == 'in_progress'">
         <div style="margin-top: 5px">
-          <mat-progress-bar mode="determinate" [value]="jobRow.job.state.progress" [color]="'primary'">
-          </mat-progress-bar>
+          <mat-progress-bar mode="determinate" [value]="jobRow.job.state.progress" [color]="'primary'"> </mat-progress-bar>
         </div>
       </ng-container>
     </div>
@@ -103,9 +101,7 @@
         {{ jobRow.result.errors }}
       </div>
       <ng-template #noErrors>
-        <div class="alert alert-success" i18n>
-          Processing is complete.
-        </div>
+        <div class="alert alert-success" i18n>Processing is complete.</div>
       </ng-template>
     </ng-template>
   </div>

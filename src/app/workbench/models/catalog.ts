@@ -3,5 +3,5 @@ export interface Catalog {
   displayName: string;
   numSources: number;
   mags: string[];
-  filterLookup: {filterName: string, expression: string};
+  filterLookup: { filterName: string; expression: string };
 }

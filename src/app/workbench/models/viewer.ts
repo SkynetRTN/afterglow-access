@@ -1,13 +1,23 @@
-import { Marker } from './marker';
-import { DataFile, IHdu } from '../../data-files/models/data-file';
+import { Marker } from "./marker";
+import { DataFile, IHdu } from "../../data-files/models/data-file";
+
+export type ViewerType = "image" | "table";
 
 export interface Viewer {
-  viewerId: string;
-  fileId: string,
-  hduId: string,
+  id: string;
+  type: ViewerType;
+  fileId: string;
+  hduId: string;
+  keepOpen: boolean;
+  viewportSize: { width: number; height: number };
+}
+
+export interface ImageViewer extends Viewer {
+  type: "image";
   panEnabled: boolean;
   zoomEnabled: boolean;
-  markers: Marker[];
-  keepOpen: boolean;
-  viewportSize: {width: number, height: number};
+}
+
+export interface TableViewer extends Viewer {
+  type: "table";
 }

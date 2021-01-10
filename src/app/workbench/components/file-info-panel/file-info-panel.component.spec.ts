@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { FileInfoToolsetComponent } from './file-info-panel.component';
+import { FileInfoToolsetComponent } from "./file-info-panel.component";
 
-describe('InfoToolComponent', () => {
+describe("InfoToolComponent", () => {
   let component: FileInfoToolsetComponent;
   let fixture: ComponentFixture<FileInfoToolsetComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ FileInfoToolsetComponent ]
-    })
-    .compileComponents();
+      declarations: [FileInfoToolsetComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('InfoToolComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

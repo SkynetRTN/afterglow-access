@@ -1,8 +1,8 @@
 import { Mag } from "./mag";
 
 export enum PosType {
-  PIXEL = 'pixel',
-  SKY = 'sky'
+  PIXEL = "pixel",
+  SKY = "sky",
 }
 
 export interface Source {
@@ -18,7 +18,6 @@ export interface Source {
   pmEpoch: string;
 }
 
-
 export interface CatalogSource extends Source {
-  mags: {[filter: string]: Mag};
+  mags: { [filter: string]: Mag };
 }

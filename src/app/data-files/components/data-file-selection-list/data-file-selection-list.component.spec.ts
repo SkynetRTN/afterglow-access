@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DataFileSelectionListComponent } from './data-file-selection-list.component';
+import { DataFileSelectionListComponent } from "./data-file-selection-list.component";
 
-describe('DataFileSelectListComponent', () => {
+describe("DataFileSelectListComponent", () => {
   let component: DataFileSelectionListComponent;
   let fixture: ComponentFixture<DataFileSelectionListComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DataFileSelectionListComponent ]
-    })
-    .compileComponents();
+      declarations: [DataFileSelectionListComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('DataFileSelectListComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

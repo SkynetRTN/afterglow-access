@@ -1,55 +1,38 @@
 @mixin image-viewer-status-bar-theme($theme) {
-    $primary: map-get($theme, primary);
-    $accent: map-get($theme, accent);
-    $warn: map-get($theme, warn);
-    $background: map-get($theme, background);
-    $foreground: map-get($theme, foreground);
-  
-    app-image-viewer-status-bar {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
 
-      .tool-bar  {
-        background-color:  mat-color($background, card);
-        color:  mat-color($foreground, text);
-      }
-
-        
-          
-        
-          
+  app-image-viewer-status-bar {
+    .tool-bar {
+      background-color: mat-color($background, card);
+      color: mat-color($foreground, text);
     }
-
-    app-image-viewer-status-bar.active {
-
-      @if map-get($theme, is-dark)  {
-        .tool-bar  {
-          background-color:  mat-color($primary, darker);
-          color:  mat-color($primary, 'darker-contrast');
-          // border: solid 2px #d7d7d7;
-        }
-  
-        .mat-icon {
-          color:  mat-color($primary, 'darker-contrast');
-        }
-      }
-      @else {
-        .tool-bar  {
-          background-color:  mat-color($primary, lighter);
-          color:  mat-color($primary, 'lighter-contrast');
-          // border: solid 2px #d7d7d7;
-        }
-  
-        .mat-icon {
-          color:  mat-color($primary, 'lighter-contrast');
-        }
-
-      }
-      
-
- 
-        
-      
-        
   }
 
+  app-image-viewer-status-bar.active {
+    @if map-get($theme, is-dark) {
+      .tool-bar {
+        background-color: mat-color($primary, darker);
+        color: mat-color($primary, "darker-contrast");
+        // border: solid 2px #d7d7d7;
+      }
 
+      .mat-icon {
+        color: mat-color($primary, "darker-contrast");
+      }
+    } @else {
+      .tool-bar {
+        background-color: mat-color($primary, lighter);
+        color: mat-color($primary, "lighter-contrast");
+        // border: solid 2px #d7d7d7;
+      }
+
+      .mat-icon {
+        color: mat-color($primary, "lighter-contrast");
+      }
+    }
   }
+}

@@ -1,0 +1,12 @@
+<div mat-dialog-title class="dialog-title" i18n>
+  {{ config.title }}
+</div>
+<mat-dialog-content>
+  <div class="pb-4">
+    <mat-progress-bar [mode]="config.progressMode" [value]="progress$ | async" [color]="'accent'"></mat-progress-bar>
+  </div>
+  <div *ngIf="config.message" class="pb-4 dialog-message">{{ config.message }}</div>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="pb-4">
+  <button mat-raised-button (click)="cancel()">Cancel</button>
+</mat-dialog-actions>

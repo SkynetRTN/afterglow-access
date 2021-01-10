@@ -1,9 +1,9 @@
-import { Component, OnInit, Input, OnChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges } from "@angular/core";
 
 @Component({
-  selector: '[app-svg-line-marker]',
-  templateUrl: './svg-line-marker.component.html',
-  styleUrls: ['./svg-line-marker.component.css']
+  selector: "[app-svg-line-marker]",
+  templateUrl: "./svg-line-marker.component.html",
+  styleUrls: ["./svg-line-marker.component.css"],
 })
 export class SvgLineMarkerComponent implements OnInit, OnChanges {
   @Input() x1: number;
@@ -14,12 +14,9 @@ export class SvgLineMarkerComponent implements OnInit, OnChanges {
   @Input() showShadow: boolean = true;
   @Input() selected: boolean = false;
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
-  ngOnChanges() {
-  }
-
+  ngOnChanges() {}
 }
