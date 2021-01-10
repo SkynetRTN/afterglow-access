@@ -109,6 +109,8 @@ export class FileListItemComponent implements OnInit {
               filter(hdu => hdu != null)
             );
           })
+        ).pipe(
+          map(hdus => hdus.sort((a, b) => (a.order > b.order) ? 1 : -1))
         );
       })
     );
