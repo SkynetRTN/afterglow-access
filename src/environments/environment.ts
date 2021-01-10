@@ -4,7 +4,7 @@ import { AppConfig } from "./app-config";
 export const appConfig: AppConfig = {
   production: false,
   environment: "LOCAL",
-  coreServerUrl: "http://127.0.0.1:4200/core",
+  coreServerUrl: "https://afterglow.skynet.unc.edu/api/v1.0",
   coreApiVersion: "v1",
   authMethod: "cookie",
   authCookieName: "afterglow_core_access_token",
