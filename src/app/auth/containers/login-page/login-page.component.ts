@@ -1,55 +1,60 @@
-import {APP_BASE_HREF} from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { Select, Store } from '@ngxs/store';
-import { Observable } from "rxjs";
-import { Router } from '@angular/router';
-import {PlatformLocation, Location } from '@angular/common';
-import { map } from 'rxjs/operators';
-import { Credentials } from '../../models/user';
-import { AuthMethod } from '../../models/auth-method';
-import { AuthState } from '../../auth.state';
-import { LoadAuthMethods, Login } from '../../auth.actions';
+import { Component, OnInit, OnDestroy, AfterViewInit } from "@angular/core";
+import { Store } from "@ngxs/store";
+import { Router } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
+
+import { AuthService } from "../../services/auth.service";
+import { appConfig } from "../../../../environments/environment";
+import { CookieService } from "ngx-cookie";
+import { LoginSuccess, CheckSession } from "../../auth.actions";
+
+import * as uuid from "uuid";
+import { HttpParams } from "@angular/common/http";
 
 @Component({
-  selector: 'app-login-page',
-  templateUrl: './login-page.component.html',
-  styleUrls: ['./login-page.component.css'],
+  selector: "app-login-page",
+  templateUrl: "./login-page.component.html",
+  styleUrls: ["./login-page.component.css"],
 })
-export class LoginPageComponent implements OnInit {
-  @Select(AuthState.loginPending)
-  pending$: Observable<boolean>
+export class LoginPageComponent implements OnInit, OnDestroy, AfterViewInit {
+  constructor(
+    private store: Store,
+    private cookieService: CookieService,
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
-  @Select(AuthState.loginError)
-  error$: Observable<string>
+  ngOnInit() {}
 
-  @Select(AuthState.authMethods)
-  authMethods$: Observable<AuthMethod[]>
+  ngOnDestroy() {}
 
-  showHttpAuth$ = this.authMethods$.pipe(map(methods => methods.findIndex(method => method.type == 'http') != -1));
-  oauthServerMethods$ = this.authMethods$.pipe(map(methods => methods.filter(method => method.type == 'oauth2server')));
+  ngAfterViewInit() {
+    let redirectUri = location.origin + "/authorized";
 
-  constructor(private store: Store, private router: Router, private location: Location) {}
+    if (appConfig.authMethod == "oauth2") {
+      let nonce = uuid.v4();
+      localStorage.setItem("aa_oauth_nonce", nonce);
 
-  ngOnInit() {
-    this.store.dispatch(new LoadAuthMethods());
-  }
+      let params: HttpParams = new HttpParams();
+      params = params.set("client_id", appConfig.oauth2ClientId);
+      params = params.set("redirect_uri", redirectUri);
+      params = params.set("response_type", "token");
+      params = params.set(
+        "state",
+        JSON.stringify({
+          nonce: nonce,
+        })
+      );
+      params = params.set("scope", "email");
 
-  onSubmit($event: Credentials) {
-    this.store.dispatch(new Login($event));
-  }
+      window.location.href = appConfig.coreServerUrl + "/oauth2/authorize?" + params.toString();
+    } else {
+      // cookie-based login
+      let params: HttpParams = new HttpParams();
+      params = params.set("next", redirectUri);
 
-  onOauthMethodClick(method: AuthMethod) {
-    let params = new URLSearchParams();
-    for(let key in method.requestTokenParams){
-        params.set(key, method.requestTokenParams[key]) 
+      window.location.href = appConfig.coreServerUrl + "/login?" + params.toString();
     }
-    
-
-    params.set('client_id', method.clientId);
-    let redirectUri = window.location.origin + '/oauth_authorized';
-    params.set('redirect_uri', redirectUri)
-    localStorage.setItem('pendingOauthMethod', JSON.stringify({id: method.id, redirectUri: redirectUri}));
-    window.location.href = method.authorizeUrl + '?' + params.toString();
-    
   }
 }

@@ -1,29 +1,19 @@
-import {
-  Component,
-  OnInit,
-  ViewChild,
-  OnChanges,
-  Input,
-  Output,
-  EventEmitter,
-  ChangeDetectorRef
-} from "@angular/core";
+import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from "@angular/core";
 
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
 
 import { ImageHist, getBinCenter, calcLevels } from "../../models/image-hist";
-import { ThemePicker } from '../../../theme-picker';
-import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
-import { Plotly } from 'angular-plotly.js/src/app/shared/plotly.interface';
-import { MatCheckboxChange } from '@angular/material';
+import { ThemePicker } from "../../../theme-picker";
+import { ThemeStorage, PlotlyTheme } from "../../../theme-picker/theme-storage/theme-storage";
+import { MatCheckboxChange } from "@angular/material/checkbox";
 
 @Component({
   selector: "app-image-hist-chart",
   // template:
   //   '<nvd3 id="hist-chart" class="" [options]="chartOptions" [data]="chartData"></nvd3>',
   templateUrl: "./image-hist-chart.html",
-  styleUrls: ["./image-hist-chart.component.scss"]
+  styleUrls: ["./image-hist-chart.component.scss"],
 })
 export class ImageHistChartComponent implements OnInit, OnChanges {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
@@ -40,13 +30,12 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   public logarithmicX: boolean = true;
   public logarithmicY: boolean = true;
 
-  public data: Array<Plotly.Data> = [];
-  public layout: Partial<Plotly.Layout> = {
+  public data: Array<any> = [];
+  public layout: Partial<any> = {
     width: null,
     height: null,
     xaxis: {
       autorange: true,
-
     },
     yaxis: {
       autorange: true,
@@ -55,17 +44,13 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       l: 50,
       r: 50,
       b: 50,
-      t: 50
+      t: 50,
     },
-
-
   };
   public theme: PlotlyTheme;
 
-  
-
   public logXButton = {
-    name: 'Toggle Log-X',
+    name: "Toggle Log-X",
     click: (gd) => {
       this.logarithmicX = !this.logarithmicX;
       this.updateChart();
@@ -74,35 +59,36 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     icon: {
       width: 24,
       height: 24,
-      path: 'M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z',
-    }
-  }
+      path:
+        "M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z",
+    },
+  };
 
   public logYButton = {
-    name: 'Toggle Log-Y',
+    name: "Toggle Log-Y",
     click: (gd) => {
       this.logarithmicY = !this.logarithmicY;
       this.updateChart();
       this._changeDetectorRef.detectChanges();
-      
     },
     icon: {
       width: 24,
       height: 24,
-      path: 'M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z',
-      transform: 'rotate(90 12 12)'
-    }
-  }
+      path:
+        "M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z",
+      transform: "rotate(90 12 12)",
+    },
+  };
 
   // https://github.com/plotly/plotly.js/blob/master/src/components/modebar/buttons.js
 
-  public config: Partial<Plotly.Config> = {
+  public config: Partial<any> = {
     scrollZoom: true,
     displaylogo: false,
     modeBarButtons: [
       [this.logXButton, this.logYButton],
-      ['toImage', 'zoomIn2d', 'zoomOut2d', 'autoScale2d',]
-    ]
+      ["toImage", "zoomIn2d", "zoomOut2d", "autoScale2d"],
+    ],
   };
 
   // private backgroundLineData = {
@@ -121,21 +107,19 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   //   y2: 0
   // };
 
-
   constructor(private themeStorage: ThemeStorage, private _changeDetectorRef: ChangeDetectorRef) {
     this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
-    themeStorage.onThemeUpdate.subscribe(theme => {
+    themeStorage.onThemeUpdate.subscribe((theme) => {
       this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
       this._changeDetectorRef.detectChanges();
-    })
+    });
   }
 
+  select($event) {}
 
-  select($event) { }
+  activate($event) {}
 
-  activate($event) { }
-
-  deactivate($event) { }
+  deactivate($event) {}
 
   // updateChartOptions() {
   //   this.chartOptions = {
@@ -206,7 +190,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   onXAxisTypeChange($event: MatCheckboxChange) {
     this.logarithmicX = $event.checked;
-    
+
     this.updateChart();
   }
 
@@ -234,7 +218,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
             // fill: "tozeroy",
             type: "scatter",
             // mode: "none"
-          }
+          },
         ];
 
         this.lastHistData = this.hist.data;
@@ -250,11 +234,11 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         ...this.layout,
         xaxis: {
           ...this.layout.xaxis,
-          type: this.logarithmicX ? 'log' : 'linear',
+          type: this.logarithmicX ? "log" : "linear",
         },
         yaxis: {
           ...this.layout.yaxis,
-          type: this.logarithmicY ? 'log' : 'linear',
+          type: this.logarithmicY ? "log" : "linear",
         },
         shapes: [
           // Line Vertical
@@ -267,8 +251,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
             line: {
               color: "red",
               width: 2,
-              dash: "dot"
-            }
+              dash: "dot",
+            },
           },
           {
             type: "line",
@@ -279,16 +263,12 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
             line: {
               color: "red",
               width: 2,
-              dash: "dot"
-            }
+              dash: "dot",
+            },
           },
-        ]
-      }
-
+        ],
+      };
     }
-
-
-
   }
 
   ngOnChanges() {

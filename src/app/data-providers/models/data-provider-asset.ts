@@ -1,6 +1,7 @@
 export interface DataProviderAsset {
-  name: string,
-  collection: boolean,
-  path: string,
-  metadata: { [key: string]: any }
+  assetPath: string;
+  dataProviderId: string;
+  name: string;
+  isDirectory: boolean;
+  metadata: {[key: string]: any}
 }

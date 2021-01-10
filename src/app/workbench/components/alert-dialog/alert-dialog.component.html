@@ -1,0 +1,10 @@
+<div mat-dialog-title class="dialog-title" i18n>
+  {{config.title}}
+</div>
+<mat-dialog-content>
+  <div *ngIf="config.message" class="pb-4 dialog-message">{{ config.message }}</div>
+  <div *ngIf="config.description" class="pb-4 dialog-description" ><p>{{ config.description }}</p></div>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="pb-4">
+  <button *ngFor="let button of config.buttons" mat-raised-button [mat-dialog-close]="button.value" [color]="button.color">{{ button.label }}</button>
+</mat-dialog-actions>

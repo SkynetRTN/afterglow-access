@@ -1,0 +1,36 @@
+<ng-container *ngFor="let itemId of itemIds">
+  <ng-container [ngSwitch]="(layoutItems$ | async)[itemId]?.type">
+    <ng-container *ngSwitchCase="'container'">
+      <app-workbench-viewer-layout
+        *ngIf="(containers$ | async)[itemId]; let childContainer"
+        fxFlex="1 1 100%"
+        [fxLayout]="childContainer.direction"
+        [id]="childContainer.id"
+        [itemIds]="childContainer.itemIds"
+        (onImageClick)="handleViewerPanelContainerImageClick($event)"
+        (onImageMove)="handleViewerPanelContainerImageMove($event)"
+        (onMarkerClick)="handleViewerPanelContainerMarkerClick($event)"
+        style="overflow: hidden"
+      ></app-workbench-viewer-layout>
+    </ng-container>
+    <ng-container *ngSwitchCase="'panel'">
+      <app-workbench-viewer-panel
+        *ngIf="(panels$ | async)[itemId]; let panel"
+        fxFlex="1 1 100%"
+        [id]="panel.id"
+        [viewers]="getViewers(panel.viewerIds)"
+        [selectedViewerId]="panel.selectedViewerId"
+        [hasFocus]="panel.id == (focusedViewerPanelId$ | async)"
+        (onImageMove)="handleViewerPanelImageMove($event, panel.id, panel)"
+        (onImageClick)="handleViewerPanelImageClick($event, panel.id, panel)"
+        (onMarkerClick)="handleViewerPanelMarkerClick($event, panel.id, panel)"
+        (click)="setFocusedPanel($event, panel)"
+        (mousedown)="setFocusedPanel($event, panel)"
+        (mousewheel)="setFocusedPanel($event, panel)"
+        style="overflow: hidden"
+      >
+      </app-workbench-viewer-panel>
+    </ng-container>
+  </ng-container>
+  <div *ngIf="true" class="handler"></div>
+</ng-container>

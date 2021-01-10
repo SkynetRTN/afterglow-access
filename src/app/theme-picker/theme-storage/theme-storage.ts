@@ -13,6 +13,10 @@ export interface PlotlyTheme {
   legendFontColor: string;
 }
 
+export interface DevExTheme {
+  name: string
+}
+
 export interface AfterglowTheme {
   colorThemeName: string;
   fontSize: "default" | "large" | "largest";
@@ -25,15 +29,14 @@ export interface AfterglowColorTheme {
   primaryIconColor: string;
   secondaryIconColor: string;
   plotlyTheme: PlotlyTheme;
+  devExTheme: DevExTheme;
 }
 
 @Injectable()
 export class ThemeStorage {
   static themeStorageKey = "afterglow-theme-storage-201907050912";
 
-  onThemeUpdate: EventEmitter<AfterglowTheme> = new EventEmitter<
-    AfterglowTheme
-  >();
+  onThemeUpdate: EventEmitter<AfterglowTheme> = new EventEmitter<AfterglowTheme>();
 
   colorThemes: AfterglowColorTheme[] = [
     {
@@ -47,12 +50,25 @@ export class ThemeStorage {
         fontColor: "#000000",
         paperBgColor: "#FFFFFF",
         plotBgColor: "#FFFFFF",
-        colorWay:
-          ["#3949AB","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"],
+        colorWay: [
+          "#3949AB",
+          "#ff7f0e",
+          "#2ca02c",
+          "#d62728",
+          "#9467bd",
+          "#8c564b",
+          "#e377c2",
+          "#7f7f7f",
+          "#bcbd22",
+          "#17becf",
+        ],
         modeBarBgColor: "#FFFFFF",
         modeBarColor: "#757575",
         modeBarActiveColor: "#757575",
-        legendFontColor: "#757575"
+        legendFontColor: "#757575",
+      },
+      devExTheme: {
+        name: 'dx.light'
       }
     },
     {
@@ -66,12 +82,25 @@ export class ThemeStorage {
         fontColor: "#FFFFFF",
         paperBgColor: "#424242",
         plotBgColor: "#424242",
-        colorWay:
-          ["#00BCD4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"],
+        colorWay: [
+          "#00BCD4",
+          "#ff7f0e",
+          "#2ca02c",
+          "#d62728",
+          "#9467bd",
+          "#8c564b",
+          "#e377c2",
+          "#7f7f7f",
+          "#bcbd22",
+          "#17becf",
+        ],
         modeBarBgColor: "#424242",
         modeBarColor: "#FFFFFF",
         modeBarActiveColor: "#FFFFFF",
-        legendFontColor: "#FFFFFF"
+        legendFontColor: "#FFFFFF",
+      },
+      devExTheme: {
+        name: 'dx.dark'
       }
     },
     {
@@ -85,14 +114,27 @@ export class ThemeStorage {
         fontColor: "#FFEB3B",
         paperBgColor: "#424242",
         plotBgColor: "#424242",
-        colorWay:
-          ["#FFEB3B","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"],
+        colorWay: [
+          "#FFEB3B",
+          "#ff7f0e",
+          "#2ca02c",
+          "#d62728",
+          "#9467bd",
+          "#8c564b",
+          "#e377c2",
+          "#7f7f7f",
+          "#bcbd22",
+          "#17becf",
+        ],
         modeBarBgColor: "#424242",
         modeBarColor: "#FFEB3B",
         modeBarActiveColor: "#FFEB3B",
-        legendFontColor: "#FFEB3B"
+        legendFontColor: "#FFEB3B",
+      },
+      devExTheme: {
+        name: 'dx.dark'
       }
-    }
+    },
   ];
 
   storeTheme(theme: AfterglowTheme) {
@@ -106,7 +148,7 @@ export class ThemeStorage {
   getCurrentTheme(): AfterglowTheme {
     try {
       let currentTheme = JSON.parse(window.localStorage[ThemeStorage.themeStorageKey]);
-      if(!currentTheme) return null;
+      if (!currentTheme) return null;
       return currentTheme;
     } catch {
       return null;
@@ -115,12 +157,12 @@ export class ThemeStorage {
 
   getCurrentColorTheme(): AfterglowColorTheme {
     let theme = this.getCurrentTheme();
-    if(!theme) return null;
-    return this.colorThemes.find(t => t.name == theme.colorThemeName) || null;
+    if (!theme) return null;
+    return this.colorThemes.find((t) => t.name == theme.colorThemeName) || null;
   }
 
   getColorThemeByName(name: string) {
-    let colorTheme = this.colorThemes.find(t => t.name == name);
+    let colorTheme = this.colorThemes.find((t) => t.name == name);
     return colorTheme ? colorTheme : null;
   }
 

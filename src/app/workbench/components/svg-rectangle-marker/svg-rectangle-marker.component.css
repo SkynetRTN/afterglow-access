@@ -1,0 +1,15 @@
+rect {
+  fill-opacity: 0;
+  stroke: #ff0000;
+  stroke-width: 2;
+}
+
+rect.inner-outline {
+  stroke: #ffffff;
+  stroke-width: 6;
+}
+
+/* rect.outer-outline {
+  stroke: #FF0000;
+  stroke-width: 10;
+} */

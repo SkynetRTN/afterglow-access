@@ -4,7 +4,7 @@ import { JobType } from "./job-types";
 import { SourceExtractionData } from "./source-extraction";
 
 export interface SourceMergeSettings {
-  pos_type: 'sky' | 'pixel' | 'auto';
+  pos_type: "sky" | "pixel" | "auto";
 }
 
 export interface SourceMergeJob extends JobBase {

@@ -1,0 +1,7 @@
+#svg-placeholder {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}

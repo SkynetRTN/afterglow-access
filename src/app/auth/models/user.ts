@@ -1,11 +1,7 @@
-export interface Credentials {
+export interface CoreUser {
   username: string;
-  password: string;
-}
-
-export interface User {
-  firstName: string;
-  lastName: string;
-  username: string;
+  first_name: string;
+  last_name: string;
+  id: string;
   email: string;
 }

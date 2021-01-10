@@ -2,6 +2,1686 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file source-language="en" datatype="plaintext" original="ng2.template">
     <body>
+      <trans-unit id="cec2f1396a9d5824bf5766fe67192590a9e05bf0" datatype="html">
+        <source>Accessibility</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="312c931920a3714b59567d7bee3d668cfa4bbd50" datatype="html">
+        <source>IDATA, a project funded by the U.S. National Science Foundation (NSF) brought together blind and visually impaired
+          (BVI) and sighted high school students and their teachers to create a version of Afterglow Access that is as accessible
+          as possible for BVI users. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b20ee1150dfbe470b2fa8729897f2fcacff3547b" datatype="html">
+        <source>Over the course of 3 years, Students and teachers collaborated with astronomy, education, research and design professionals
+          in the design and development of the software. The team utilized User-Centered Design (UCD) and an iterative method
+          for the development and testing of Afterglow Access. Teachers and students who participated in IDATA will are considered
+          co-developers in the project. Below are some highlights of their work and features that have been integrated because
+          of their invaluable contribution.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4db1001178d70f7898071bb4edf1619c0d868da5" datatype="html">
+        <source>Shortcuts &amp; Navigations</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ac0e041e8055560099be36d2290eca0f2c300304" datatype="html">
+        <source>BVI users often rely on keyboard navigation to explore the digital space. IDATA students and teachers were instrumental
+          in creating intuitive shortcuts that allow users to move through Afterglow Access easily without having to use
+          a mouse. You can find these shortcuts in the “Shortcuts” Tab above. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7e04923d43d05a52817cd0dac9c5cf568f4dcfb4" datatype="html">
+        <source>Screenreaders</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6891e4bd8535e9c51e33057906ea6c1cc9cd2dd1" datatype="html">
+        <source>Afterglow Access follows the guidelines to be as screenreader compliant. In addition, IDATA worked with BVI students
+          and BVI astronomers associated with IDATA to learn how Afterglow Access worked with their screen reader of choice.
+          We tested Afterglow Access with NVDA and Apple VoiceOver. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="60c855c323706a04ccd2ff22d634bde9b6233bbf" datatype="html">
+        <source>Themes</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cce076a574e9c54d3cbe5b6efe7fdb7f7e76489e" datatype="html">
+        <source>In UCD activities held by IDATA participants and co-designers, the team discovered that the tool could be much more
+          accessible to BVI users if Afterglow Access were customizable. One such customization that IDATA students shared
+          with us was the ability to change the look and feel of the software. Depending on their BVI condition and person
+          preferences some students preferred white on black themes and others preferred a yellow on black theme. In addition
+          to the traditional “zoom” feature, students also expressed wanting to be able to change the size and weight of
+          the font which can help heighten the contrast between text and background. This method also allows users to retain
+          the same layout which is helpful for BVI students who often “lose their place” when Zoomed in on a part of the
+          screen. Using student feedback, we developed three colored themes and offered the ability to select font weight
+          and font size. These settings can be found in the top right “hamburger menu” with the title “Theme editor.”</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="792f454aeba1eb872e29cf841079519a0911a091" datatype="html">
+        <source>Sonification tool</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="293c2eea3e45bcbe5ed6ed124a3f9801e6fc7dc0" datatype="html">
+        <source>The Sonification tool was developed as an innovative way to translate astronomical images into informative sounds
+          for BVI users. This tool can be found under “sonification” which uses a musical note as its symbol. Once you have
+          an image uploaded to your viewer. You may push the “Sonify” button to “hear” the image. The sounds start at the
+          base of the image and travel upward. The pitch determines where light representing objects such as stars, planets,
+          and asteroids exist in the image. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a6493c6ca346cd052da40423eda9c132de2b2002" datatype="html">
+        <source>Key</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">40</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="eec715de352a6b114713b30b640d319fa78207a0" datatype="html">
+        <source>Description</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">94</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="f4e529ae5ffd73001d1ff4bbdeeb0a72e342e5c8" datatype="html">
+        <source>Close</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/help-dialog/help-dialog.component.html</context>
+          <context context-type="linenumber">112</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/confirmation-dialog/confirmation-dialog.component.html</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html</context>
+          <context context-type="linenumber">137</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3472e07c2c71430fca2252e24011ba52e7425203" datatype="html">
+        <source>
+      Login
+    </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="57aacf9eadb5907c23bec1f0421855818be58206" datatype="html">
+        <source>
+        Workbench
+      </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="be839b9dc1563aec0f80f5b55c8bde1a1dd10ca1" datatype="html">
+        <source>Data Providers</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="29550433c3d86f0c6a5d5c8e27a5f653357ea46d" datatype="html">
+        <source>
+          View All
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3f2bf5ca445d2176f110be0e30f2d15ce435316d" datatype="html">
+        <source>Option Menu</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7024088c7bf3793877a331f76f6d62c133a209a4" datatype="html">
+        <source>Theme Editor...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">97</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fed71c489f8ed3793fadecf088853b0419ae7266" datatype="html">
+        <source>Open Theme Editor</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1e4242a6752605cbd579c28f45a01392dae10888" datatype="html">
+        <source>Quick Start Guide...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">105</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bb694b49d408265c91c62799c2b3a7e3151c824d" datatype="html">
+        <source>Logout</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/navbar/navbar.component.html</context>
+          <context context-type="linenumber">107</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="68e710782ccb5398b3acb8844caf0b199da2c3da" datatype="html">
+        <source>Confirm</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/confirmation-dialog/confirmation-dialog.component.html</context>
+          <context context-type="linenumber">1</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="34fb6028a6630cf3a7308084b31e86e89d057965" datatype="html">
+        <source>Zoom In</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="677ce9c57b5558cb10f0b39327d5a965bfb21dc5" datatype="html">
+        <source>Zoom Out</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="43b84f787e17594962c4e909717a50d2ff569dfb" datatype="html">
+        <source>Zoom to Fit</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c465114bb0bf867de2479baf155760d8aafd894c" datatype="html">
+        <source>Zoom To Fit</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1da0dc5449c90d930ac18d7e01f1f7e8612ab2df" datatype="html">
+        <source>Reset Zoom</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">37</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="636e877cc8e887e3a4bee572d5ae3754d0de254c" datatype="html">
+        <source>Download Viewer Snapshot</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="97053f5a22fc045853f45e5ae2e384a76d521305" datatype="html">
+        <source>Remove From Library</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="660b76c1a9a9fafc2aa72d058866ee1c1cb492a4" datatype="html">
+        <source>Remove Image From Library</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-title-bar/image-viewer-title-bar.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/image-viewer-status-bar/image-viewer-status-bar.component.html</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fbecd947adcb479ded9830711d80592e127e9723" datatype="html">
+        <source>
+          Loading assets...
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6e1746225c9a39f72936b6411657f4111cd63485" datatype="html">
+        <source>
+            Importing selected assets...
+          </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fd1a67e16779e9384c2b8937fc5ad392ff9e0037" datatype="html">
+        <source>Import completed with</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="07807dce2e0dc33743530dd6a8b0d1f24094884d" datatype="html">
+        <source>Error: </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="078da879eb9dddd82833a040e0c778279d938d79" datatype="html">
+        <source>image files selected.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">40</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a059709f71aa4c0ac219e160e78a738682ca6a36" datatype="html">
+        <source>Import</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="887e6b0b4b9580beb8fe966f3787b89c1588f633" datatype="html">
+        <source>
+                  Name
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/data-providers/data-provider-browse-page/data-provider-browse-page.component.html</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b0783af4cf47ae636784d3167ed50688a22bb38d" datatype="html">
+        <source>Your library is empty. Import files from your</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a2f7a3683f38b6c7a5311679ae94d4a264bc8747" datatype="html">
+        <source>Loading library...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c69078f897bf8e3ac886072c22ed0ea91815066f" datatype="html">
+        <source>Display Settings</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">67</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="051dc4298d95df64d005a994ffeb58f4c471b663" datatype="html">
+        <source>Sync orientations</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6ee8a6149121fdac73de32869ef1b58d04e515f2" datatype="html">
+        <source>DSS Catalog Import</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c55e99a0407541978615b2071a939a5e46c92aeb" datatype="html">
+        <source>Use intended pointing for image center</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bf7c1a8454df08de8f9f9aa93e5ccef03f24d624" datatype="html">
+        <source>Use WCS for image center</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5acfd3b8f3aab360d93dfa08848c101383dd7008" datatype="html">
+        <source>
+                Import DSS
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/workbench.component.html</context>
+          <context context-type="linenumber">127</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c8f3c7fef38df9393f4712fd70a7776c5a3dfdbc" datatype="html">
+        <source>Select a data file to see viewer options.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="499fa81ca9d314a5c5e3741d050ac0b13cae34e0" datatype="html">
+        <source>Brightness and Contrast Presets</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8b311feb21f6619ecbafb55cc2b67de294f86e7b" datatype="html">
+        <source>Faint Target Preset</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="146849fcaf84d1db01fedc6966ce0b4625a1eff0" datatype="html">
+        <source>Default Preset</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b16368734f36257315efb42d3012b2c2db1df08d" datatype="html">
+        <source>Bright Target Preset</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="42f5aa22b8f54e92ff787a4d04227d96fef1519d" datatype="html">
+        <source>Brightness and Contrast Settings</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="d918bccb3651fb4f29ab85983715f1c3dcf7eca0" datatype="html">
+        <source>Image Orientation Options</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ab7f3ff8d45b09e50935775ec97b7dcf31360814" datatype="html">
+        <source>Flip</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="20058274f3bdffd2cf7023d350d44170f6ff7a12" datatype="html">
+        <source>Rotate</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">77</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="75b43013e46c6470a6cd77b69cc57c470d8c35eb" datatype="html">
+        <source>Reset Orientation</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/viewer-page/viewer-page.component.html</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="226f623be58c947ea3129b6d02245fe7010bfdd2" datatype="html">
+        <source>Plotting</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3ee0b7dcffcb050fdfc1f79531f741d08c5be072" datatype="html">
+        <source>Select a data file to see plotter options.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="66a0c1afd1c19cb0d1868b1daea3cc4624d378b0" datatype="html">
+        <source>Click once on the image to set the measurement&apos;s start point, move your mouse, then click a second time to
+          set the end point.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="37e10df2d9c0c25ef04ac112c9c9a7723e8efae0" datatype="html">
+        <source>Mode</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2c3abc6073c12716cf84473a88ef83ae3fabe71a" datatype="html">
+        <source>1D Cross Section</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="53609b1f5bbf6cf5ae034e21e4adb479e901c4d2" datatype="html">
+        <source>2D Heat Map</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="196e0ae8d81cb4d120f33ff6f548e857ff640af6" datatype="html">
+        <source>
+                Centroid clicks
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="60db3158c28cd232a1a64388ec9b286704f99fb5" datatype="html">
+        <source>
+                Planet Centroiding
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="de7883cd4cabdce8d7e116f6e8f0015c5f55b0b6" datatype="html">
+        <source>
+                Interpolate pixels
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="266683330388b6666002130452d7df34036ff69c" datatype="html">
+        <source>
+                Sync Plot Across Files
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="f9f13346e837de0b6e821503c21effc970e7ec8b" datatype="html">
+        <source>Measurement</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5049e204c14c648691ac775a64fb504467aeb549" datatype="html">
+        <source>Value</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">85</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8434d4a28744d7df82cd39ef8da4266fcbc40064" datatype="html">
+        <source>Start</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b68ce78c3f2c548391d812c248217f8a212491e1" datatype="html">
+        <source>End</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ae30bd4cca937b999a366f0841b72b214871533d" datatype="html">
+        <source>Length</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="430e3cff1e6cf0d0c36f1b8dadf5946e89fb7804" datatype="html">
+        <source>Orientation</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">153</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6006465fd9dca8975e53d008ffdd47744d9cbb8a" datatype="html">
+        <source>degrees CW of +Y</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">159</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a5b233bde0c58976aa3c899de87215cd8fd082c7" datatype="html">
+        <source>degrees E of N</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/plotter-page/plotter-page.component.html</context>
+          <context context-type="linenumber">163</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="652d4fcea6224a91f5ab9dbbc639bdf415194640" datatype="html">
+        <source>Sonification</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bf0d7a03523b07ad7026dfa07709b910fa87d12a" datatype="html">
+        <source>Select a data file to see sonifier options.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="d7079845b90c218a622fb3c4f421fdf96cfb0ba8" datatype="html">
+        <source>Region Mode:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a5c05002b0ac2040f1aede5e727e0ffd06eda819" datatype="html">
+        <source>Custom</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="67bc87f1bca5b6335422d53161b7056fd242e532" datatype="html">
+        <source>Viewport</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="34f26f109b818eca22218307edab60451b92567d" datatype="html">
+        <source>Time Navigation:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a726e0914bf138d378cf6c107462e654232a1a7c" datatype="html">
+        <source>
+                  Early
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="126658940eda9c730f95262e3854f3d969602bd0" datatype="html">
+        <source>
+                  Mid
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="67cb5a7513ca30e6187ec066471ece529fe7477d" datatype="html">
+        <source>
+                  Late
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="068bc1b1c3b5e2bb922929d1be394566d51b1567" datatype="html">
+        <source>Tone Navigation:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">56</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="506f7c6b8e7ad1ea1379d27f439e0f82060ec735" datatype="html">
+        <source>
+                  Low
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7ecc7c6e644e6a3dab83352952fe75585f6c8af2" datatype="html">
+        <source>
+                  High
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0d8dd64138b0eabe8179e82eb0bba7e4e74645e1" datatype="html">
+        <source>Selection Options:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="42a7c40fb016d94855c3e68ed6ee50b73a4dd6e4" datatype="html">
+        <source>
+                  Undo
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5b8d047c52eb2019f53fe0310cd76cd38b818e30" datatype="html">
+        <source>
+                  Redo
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">76</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4642ea483550605c2a3e39fa7f5041cd86be1fe2" datatype="html">
+        <source>
+                  Reset
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cdb82faadc197d190795f18cdef4756de589baaf" datatype="html">
+        <source>Region Size:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">88</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="f61c83e8429d4c63df16605ef3e56b2e792d7bd8" datatype="html">
+        <source>Start Pixel:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">92</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="35e8834c686f40feab0a7247dc868e2ccab231cc" datatype="html">
+        <source>End Pixel:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">96</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a02ea1d4e7424ca989929da5e598f379940fdbf2" datatype="html">
+        <source>Duration</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">107</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="752d90e4e574eb9a0fa9c73c65cb967d03a791f1" datatype="html">
+        <source>Tones</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cadf7fe424312144b7988daa854738ad5e533396" datatype="html">
+        <source>
+          Keep selected region in viewer
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">119</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="be67555dff4c5fcecd5469c32f97d72155c0d8e5" datatype="html">
+        <source>Sonify</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">127</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="94516fa213706c67ce5a5b5765681d7fb032033a" datatype="html">
+        <source>Loading...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/sonifier-page/sonifier-page.component.html</context>
+          <context context-type="linenumber">134</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-client-consent-page/oauth-client-consent-page.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cff1428d10d59d14e45edec3c735a27b5482db59" datatype="html">
+        <source>Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/create-field-cal-dialog/create-field-cal-dialog.component.html</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="987a52157bb816592a9ed354401725eaba7ad998" datatype="html">
+        <source>
+      Create
+    </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/create-field-cal-dialog/create-field-cal-dialog.component.html</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="d7b35c384aecd25a516200d6921836374613dfe7" datatype="html">
+        <source>Cancel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/create-field-cal-dialog/create-field-cal-dialog.component.html</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/phot-settings-dialog/phot-settings-dialog.component.html</context>
+          <context context-type="linenumber">32</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/source-extraction-dialog/source-extraction-dialog.component.html</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="54492c3bfe28b7a7746e063c2ecf6f3284bcec97" datatype="html">
+        <source>Centroiding Radius</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/phot-settings-dialog/phot-settings-dialog.component.html</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a3945839ff1ac31d0faf670a01101f5a844806d4" datatype="html">
+        <source>Aperture</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/phot-settings-dialog/phot-settings-dialog.component.html</context>
+          <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bb00b47115fec299a86493cb29ff81c2cfa5ba34" datatype="html">
+        <source>Annulus Inner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/phot-settings-dialog/phot-settings-dialog.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8f83ae67c0382f57e50878f17ae0c0428f42e1f3" datatype="html">
+        <source>Annulus Outer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/phot-settings-dialog/phot-settings-dialog.component.html</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="52c9a103b812f258bcddc3d90a6e3f46871d25fe" datatype="html">
+        <source>Save</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/phot-settings-dialog/phot-settings-dialog.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2f3beddc8234b30fb26a7f63ba2f1ea74f2ed6f7" datatype="html">
+        <source>Threshold</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/source-extraction-dialog/source-extraction-dialog.component.html</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="96968f2d2fc6d49184a6bbd59459366b6ef94963" datatype="html">
+        <source>FWHM</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/source-extraction-dialog/source-extraction-dialog.component.html</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="058a59a2cee57c2aebc22ed5cf4acb51e49fdda1" datatype="html">
+        <source>
+          Deblend
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/source-extraction-dialog/source-extraction-dialog.component.html</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c3ee5f127398d74517bdfed4dd13064d03359c95" datatype="html">
+        <source>Search Region</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/source-extraction-dialog/source-extraction-dialog.component.html</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c8788e2b14fe15014a8cea9e3e2bf35d27c725be" datatype="html">
+        <source>Extract Sources</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/source-extraction-dialog/source-extraction-dialog.component.html</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a35da9eda7352875aadbeb431d43177b3cd887f5" datatype="html">
+        <source>Photometry</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="576755ab5d0161d36bea1ebb7ff53cf4ae5db4ac" datatype="html">
+        <source>
+        Select a data file to see options.
+      </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c0f5bb0c3e8360744f5ec375b777d465caed5dcf" datatype="html">
+        <source>Manually add sources by clicking on them in your image or automatically add them using the options below.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b244af75867ad8c6eb1b83b12906e6c69312f77f" datatype="html">
+        <source>
+                Photometry Settings...
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5480f78821a376749380b3c42ebbfb6ec73aa1d4" datatype="html">
+        <source>Add Sources...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="644ef5983f9361040bb1b02a207de2150ab72627" datatype="html">
+        <source>Source Extraction...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="57a627d8b67e7e6752bc08d5e62502d307dc9ea0" datatype="html">
+        <source>
+              Show Sources From All Files
+            </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c655a5564dc655b1fee0cc518fc1223ac151e234" datatype="html">
+        <source>
+              Source Labels
+            </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">83</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="878d85ec9c1a39c29c3c7008e6e4bf0f20b27b71" datatype="html">
+        <source>
+              Auto-phot
+            </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">87</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b2a34de3320c21464ae3cf2e7f447161874bf1b6" datatype="html">
+        <source>Use batch photometry to photometer your sources in multiple files.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c2844a07c41506ed37fd21c61cb97ee27e359a09" datatype="html">
+        <source>Select Image(s) to Photometer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">217</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="93f39d924a9543651df4c473281bc7394bea500a" datatype="html">
+        <source>Download Batch Photometry Data - <x id="INTERPOLATION" equiv-text="{{batchPhotJobEntity.job.sources.length}}"/> source(s) in <x id="INTERPOLATION_1" equiv-text="{{batchPhotJobEntity.job.file_ids.length}}"/> file(s)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/photometry-panel/photometry-panel.component.html</context>
+          <context context-type="linenumber">244</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ed9aa6838f4ff0591d548397fadece7b967750a4" datatype="html">
+        <source>
+          ID
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e028a1db91d572ca481c3d2e048c4b2078aa851d" datatype="html">
+        <source>
+          State
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html</context>
+          <context context-type="linenumber">43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="975e21b736048bfdfe922472d292e2295084365d" datatype="html">
+        <source>
+            Operation
+          </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5877e05bd6e685e0b62666d09a96415396716a84" datatype="html">
+        <source>
+          Result
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html</context>
+          <context context-type="linenumber">102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0cf582f05de479012cde01d984e13cb776af225e" datatype="html">
+        <source>Image Calculator</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1bcc3f609e4d0069a056b9ac26b058690c63cf6d" datatype="html">
+        <source>
+        Select a data file to see image calculator options.
+      </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7a655b80add56e49b5912e9be79ce4af757ce030" datatype="html">
+        <source>Image(s)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="804d1ef6f7bbba23f8c8594d310d5e2185d03243" datatype="html">
+        <source>images</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a34ecb324d9a38bd636e42a1cda1fc6da6d857b0" datatype="html">
+        <source>Select a operand</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">56</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4f65a0c841266aec27a2fdd8bbf515a423bbdefe" datatype="html">
+        <source>operand</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="db929f007c69ebc64e179f735ab466b8b6fd588a" datatype="html">
+        <source>Select an image</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a5f9ba9bb9faa8284bcadb1cdbc6aaf969e9c4bb" datatype="html">
+        <source>Image</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="768fb7bd717335ba784fe389648085a1cc9bd1d6" datatype="html">
+        <source>Specify a scalar value</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="13096f0d158d7e364a32d5038bb28f8500ee04fb" datatype="html">
+        <source>Overwrite Files</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">89</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="18f0e20209a22c44bfbe4e7357e03756aa72f633" datatype="html">
+        <source>
+                  Dividing by zero would result in a catastrophic server
+                  meltdown
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5790102b22a000fdea669c91850bf4bc4e70596e" datatype="html">
+        <source>
+                  Submit
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b73f7f5060fb22a1e9ec462b1bb02493fa3ab866" datatype="html">
+        <source>Images</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2ff10f69a9ebdb954f101434b43b601c9424b3f6" datatype="html">
+        <source>Auxillary image(s)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">131</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">132</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="64bd3d15b1be667c730307253f3bfe49c6b6a93b" datatype="html">
+        <source>Operation String</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">142</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">143</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3c1ddc2d2cb27f66868c8184cdc641d0c8af212f" datatype="html">
+        <source>
+                      Variable Name
+                    </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">172</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6946f1c1b8b82818e9e12de05f50123f6d7cf89d" datatype="html">
+        <source>
+                      Value
+                    </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">197</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1aed0bd72d8d176096f28c62376c9ad436b76d3b" datatype="html">
+        <source>
+                Submit
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">228</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="33127df18aa3a71356606c2bd0160fbd3087d7d7" datatype="html">
+        <source>Processing job</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">246</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="be74bb2ae8ed2e3c2fafceae6f604c0014713a9f" datatype="html">
+        <source>Processing is complete.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">257</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="d15476410a1ecb99d81f887b063eb8c487c479f3" datatype="html">
+        <source>Your operation resulted in</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">259</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0406ea39dbd352f81eed82f89df33f19f65472e7" datatype="html">
+        <source>new file(s)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">260</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e1975896ac57a64951d4649df85926851faaf25c" datatype="html">
+        <source>Your operation resulted in the following scalar values:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">263</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bb63777d6928bbe0cbf84e2295efc4ea662babdb" datatype="html">
+        <source>Show All Pixel Operation Jobs...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/pixel-ops-panel/pixel-ops-panel.component.html</context>
+          <context context-type="linenumber">274</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="78be4d1051ca374f0d2ff76c270d19ec162b004d" datatype="html">
+        <source>Stacker</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2913236eee368e3cd35643ba370fd63fda034d32" datatype="html">
+        <source>Select Image(s) to Stack</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8704afb996c7025c5668537427cfdc7dd0c40829" datatype="html">
+        <source>average</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2a1597f4feaa132881612103c282ddc9b5cbd4b3" datatype="html">
+        <source>percentile</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6e4180e1b20a56671232dc59d11b94737091bef3" datatype="html">
+        <source>mode</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">105</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="955685332a909c7464c1060db31f76c230851d49" datatype="html">
+        <source>sum</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">55</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ff0c8d548ae8131b91ead2eebf4958c718372c55" datatype="html">
+        <source>Percentile</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e2ab0776b324e5a3b0ce6057f072b0932eafdbfd" datatype="html">
+        <source>Rejection</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a2f14a73f7a6e94479f67423cc51102da8d6f524" datatype="html">
+        <source>None</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c8c8a1e5c25f290d9e7446bdd17c5c26bbbe4a6b" datatype="html">
+        <source>chauvenet</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="453f41f0b4bf08a1f36d6e389314b124c976bdc9" datatype="html">
+        <source>iraf</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8acdd6409a2e61494bc2d8e9b07d200dc6eef4b1" datatype="html">
+        <source>minmax</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">74</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8195c4e309c342d3a2456e3a32b708f43ce5a5d9" datatype="html">
+        <source>sigclip</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">75</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9556266f0a2b1762a44b686f2bb21dbfefb01c12" datatype="html">
+        <source>Low</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">86</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="72279141a67cc042d9864102b703216cc8a428a3" datatype="html">
+        <source>High</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9945ab20f9f68b421528825c59eaa11e6d2269d4" datatype="html">
+        <source>Scaling</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bf0e52f5d9bc752df13b114ee9709aabe38e26aa" datatype="html">
+        <source>median</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">104</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="425ff0c8b460391d1d47b96754e84ab6f2df54de" datatype="html">
+        <source>
+            Submit
+          </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ab4e427d91366676b99487310d1538d3c1a4bc66" datatype="html">
+        <source>
+                Processing is complete.
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/stacking-panel/stacking-panel.component.html</context>
+          <context context-type="linenumber">159</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">143</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="78015404f9fd1e39888b2418ef575b3f6da59e27" datatype="html">
+        <source>Aligner</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="afe5b8618f14e4515ed0fd133c28d37c9eaf90cf" datatype="html">
+        <source>Select Image(s) to Align</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9e54900adbb152b0cd86cdda5243f1e25bcde841" datatype="html">
+        <source>Select All Files</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6f286074c957b1f7052ba9a11341486b8e669e55" datatype="html">
+        <source>Clear Selection</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="f80914fcb039562f0259b9095a44a48e553d4173" datatype="html">
+        <source>Active Image File</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2221499a4da7109743182a95558394cd3fc61e5d" datatype="html">
+        <source>
+                Overwrite Files</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="325720e3531c52cc3bda46479fe0c0b61391f413" datatype="html">
+        <source>
+                  This image does not have astrometric data in its header and
+                  cannot be aligned using the selected mode.
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/aligning-panel/aligning-panel.component.html</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3010dd0cd044334bd2096c6ace46ab85cdd70907" datatype="html">
+        <source>Custom Markers</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7d52049409a7a2ab96d85919c1aae65f610b65c9" datatype="html">
+        <source>
+        Select a data file to see custom marker options.
+      </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0e9b48a8d159df9bad0953a1248040711ae25bf7" datatype="html">
+        <source>
+                  Centroid clicks
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="d18f07897258a11c8bcd36062df2fd1d7a4d72ed" datatype="html">
+        <source>
+                  Planet Centroiding
+                </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="bb4d0951387a7efdbfb4ba3d9717cda8f73b2739" datatype="html">
+        <source>Add custom markers by clicking on your image.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="517c53eff3674d375d2b53d1ff94041de7cc23d3" datatype="html">
+        <source>
+            Tip: Hold <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/>Alt<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/> to click beneath existing
+            markers
+          </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ddd9dea623ba47126ad8f409dc4aa6f708423b90" datatype="html">
+        <source>Marker Customization</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">77</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7228fa4f7613ddda1ead30863467cb7f2caa82ee" datatype="html">
+        <source>Delete Selected Markers</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">89</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">87</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/custom-marker-page/custom-marker-page.component.html</context>
+          <context context-type="linenumber">87</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="863226cffd5b66a6fee9810a9282a5006d6ef576" datatype="html">
+        <source>Label</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/circle-marker-editor/circle-marker-editor.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2101a316b677c9dc0271cdad10d62ffb407e4e02" datatype="html">
+        <source>Radius</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/circle-marker-editor/circle-marker-editor.component.html</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="c8578ebdbbfe750bc45370f10f6ce35a95e9063d" datatype="html">
+        <source>Label Gap</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/circle-marker-editor/circle-marker-editor.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b4295cb67f5c5726e807efdb85500f69ce120f69" datatype="html">
+        <source>Label Direction (degs)</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/circle-marker-editor/circle-marker-editor.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="eb652ec6e5b2ef867985722c158224053cca15ab" datatype="html">
+        <source>X</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/circle-marker-editor/circle-marker-editor.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5f735468df8e1a39a74409adff2c9a9a5f29ead8" datatype="html">
+        <source>Y</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/components/circle-marker-editor/circle-marker-editor.component.html</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="31c8d99f34dcb19d7fcd21626b297b2073f66265" datatype="html">
+        <source>File Info</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8127c09988c8401343d62d7eb36d5dad56a8567e" datatype="html">
+        <source>
+          Select a data file to see file info.
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="278933f4ab8964ae541edd9f749d0aa398be4ae1" datatype="html">
+        <source>
+              Show Raw Header Data
+            </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3a47464123ded67839e20f480cb3ded5381d5188" datatype="html">
+        <source>
+                Use System Time
+              </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5a5d7ee2acbfa9c91ab7f41d26bda9ff0cafe42f" datatype="html">
+        <source>Comment</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/core/containers/workbench/info-tool/info-tool.component.html</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="123caf0019c1de143218fe7813a392dcf20e2850" datatype="html">
         <source>Login Services</source>
         <context-group purpose="location">
@@ -39,6 +1719,63 @@
         <context-group purpose="location">
           <context context-type="sourcefile">app/auth/components/login-form.component.ts</context>
           <context context-type="linenumber">14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4e3e9201c443bf0ade8299f43fea24b0202f6613" datatype="html">
+        <source>You have been successfully logged out.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/logout-page/logout-page.component.html</context>
+          <context context-type="linenumber">1</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="cfb49a980699fef9a1a829d9d7fb1f0597d98e33" datatype="html">
+        <source>Logging In...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-authorized-page/oauth-authorized-page.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b080d4da93450771c52bbb72dba71df9e15eff74" datatype="html">
+        <source>Please wait while we complete the login process.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-authorized-page/oauth-authorized-page.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="435fd69e2f104401535ac9cf4c2777d1bce7402c" datatype="html">
+        <source>Please wait while we process your request.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-client-consent-page/oauth-client-consent-page.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="63d6bd7f7355b46e562a821178b2cc01990161a1" datatype="html">
+        <source>Third-Party Application Consent</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-client-consent-page/oauth-client-consent-page.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3eb8a9d88831c28aa7505c7e9532743d7d65389a" datatype="html">
+        <source> would like offline access to your Afterglow account. You must grant access to continue with the login process.
+            </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-client-consent-page/oauth-client-consent-page.component.html</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="940cbf9180d20ed162bd64fb674469fa98ed427e" datatype="html">
+        <source>Deny Offline Access</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-client-consent-page/oauth-client-consent-page.component.html</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="624e9466befc1de0784d26465e2e29e71b9dc6a8" datatype="html">
+        <source>Grant Offline Access</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">app/auth/containers/oauth-client-consent-page/oauth-client-consent-page.component.html</context>
+          <context context-type="linenumber">24</context>
         </context-group>
       </trans-unit>
     </body>

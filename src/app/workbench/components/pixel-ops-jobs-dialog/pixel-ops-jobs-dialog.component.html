@@ -1,0 +1,120 @@
+<div>
+  <h5>Pixel Operation Jobs</h5>
+  <div class="mb-3" style="max-height: 200px; overflow: auto">
+    <mat-table app-cell-focuser #cellFocuser="cellFocuser" #jobTable [dataSource]="data.rows$">
+      <ng-container matColumnDef="id">
+        <mat-header-cell
+          *matHeaderCellDef
+          class="select-header-cell"
+          app-focusable-cell
+          [rowIndex]="0"
+          [columnIndex]="0"
+          [cellInTabOrder]="true"
+          i18n
+        >
+          ID
+        </mat-header-cell>
+        <mat-cell
+          *matCellDef="let row; let rowIndex = index"
+          app-focusable-cell
+          #cell="cell"
+          [rowIndex]="rowIndex + 1"
+          [columnIndex]="0"
+          [cellInTabOrder]="true"
+        >
+          {{ row.job.id }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="state">
+        <mat-header-cell
+          *matHeaderCellDef
+          class="select-header-cell"
+          app-focusable-cell
+          [rowIndex]="0"
+          [columnIndex]="1"
+          [cellInTabOrder]="true"
+          i18n
+        >
+          State
+        </mat-header-cell>
+        <mat-cell
+          *matCellDef="let row; let rowIndex = index"
+          app-focusable-cell
+          #cell="cell"
+          [rowIndex]="rowIndex + 1"
+          [columnIndex]="1"
+          [cellInTabOrder]="true"
+        >
+          <ng-container *ngIf="row.job.state.status == 'in_progress'">
+            <div class="pl-5 pr-5">
+              <mat-progress-bar mode="determinate" [value]="row.job.state.progress" [color]="'primary'"></mat-progress-bar>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="row.job.state.status != 'in_progress'">
+            {{ row.job.state.status }}
+          </ng-container>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="op">
+        <mat-header-cell
+          *matHeaderCellDef
+          class="select-header-cell"
+          app-focusable-cell
+          [rowIndex]="0"
+          [columnIndex]="2"
+          [cellInTabOrder]="true"
+          i18n
+        >
+          Operation
+        </mat-header-cell>
+        <mat-cell
+          *matCellDef="let row; let rowIndex = index"
+          app-focusable-cell
+          #cell="cell"
+          [rowIndex]="rowIndex + 1"
+          [columnIndex]="2"
+          [cellInTabOrder]="true"
+        >
+          {{ row.job.op }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="result">
+        <mat-header-cell
+          *matHeaderCellDef
+          class="select-header-cell"
+          app-focusable-cell
+          [rowIndex]="0"
+          [columnIndex]="4"
+          [cellInTabOrder]="true"
+          i18n
+        >
+          Result
+        </mat-header-cell>
+        <mat-cell
+          *matCellDef="let row; let rowIndex = index"
+          app-focusable-cell
+          #cell="cell"
+          [rowIndex]="rowIndex + 1"
+          [columnIndex]="4"
+          [cellInTabOrder]="true"
+        >
+          <ng-container *ngIf="row.result.file_ids.length != 0">
+            <ng-container *ngIf="filenameLookup$ | async; let filenameLookup">
+              <span *ngFor="let fileId of row.result.file_ids"> {{ filenameLookup[fileId] }}, </span>
+            </ng-container>
+          </ng-container>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="['id', 'state', 'op', 'result']"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: ['id', 'state', 'op', 'result']"></mat-row>
+    </mat-table>
+  </div>
+
+  <mat-dialog-actions>
+    <button mat-raised-button mat-dialog-close i18n>Close</button>
+  </mat-dialog-actions>
+</div>

@@ -1,12 +1,13 @@
-@import '~@angular/material/theming';
+@import "~@circlon/angular-tree-component/css/angular-tree-component.css";
+@import "material-design-icons/iconfont/material-icons.css";
+@import "~@angular/material/theming";
 // @import '~@covalent/core/theming/all-theme';
 // @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 // @import url('https://fonts.googleapis.com/css?family=Anonymous+Pro|Lato|Roboto+Mono|Roboto');
-@import './app-theme';
+@import "./app-theme";
 
 // Include material core styles.
 @include mat-core();
-
 
 // @function afterglow-light-theme($primary, $accent, $warn: mat-palette($mat-red), $background-color: #fafafa, $foreground-color: #000000) {
 //   $theme:  mat-light-theme($primary, $accent, $warn);
@@ -31,31 +32,32 @@
 //   @return $theme;
 // }
 
-
 //Define a light theme.
 $light-primary: mat-palette($mat-indigo, 600, 400, 800);
-$light-accent:  mat-palette($mat-deep-orange);
-$light-warn:    mat-palette($mat-red);
-$light-theme:   mat-light-theme($light-primary, $light-accent, $light-warn);
+$light-accent: mat-palette($mat-deep-orange);
+$light-warn: mat-palette($mat-red);
+$light-theme: mat-light-theme($light-primary, $light-accent, $light-warn);
 @include angular-material-theme($light-theme);
 @include afterglow-app-theme($light-theme);
 
 // Define a dark theme.
 $dark-primary: mat-palette($mat-cyan, 500, 400, 700);
-$dark-accent:  mat-palette($mat-orange);
-$dark-warn:    mat-palette($mat-red);
-$dark-theme:   mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
+$dark-accent: mat-palette($mat-orange);
+$dark-warn: mat-palette($mat-red);
+$dark-theme: mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
 
 .cyan-dark-theme {
   @include angular-material-theme($dark-theme);
   @include afterglow-app-theme($dark-theme);
 
   app-navbar {
-    .navbar, .navbar-header {
+    .navbar,
+    .navbar-header {
       background: mat-color($mat-grey, 700);
     }
 
-    .mat-button, .mat-icon-button {
+    .mat-button,
+    .mat-icon-button {
       $foreground: map-get($dark-theme, foreground);
       color: mat-color($foreground, text);
     }
@@ -68,52 +70,85 @@ $dark-hc-text: mat-color($mat-yellow, 500);
 $dark-hc-disabled-text: mat-color($mat-yellow, 700);
 $dark-hc-icons: mat-color($mat-yellow, 400);
 $dark-hc-accent: mat-palette($mat-yellow, 600);
-$dark-hc-theme:  mat-dark-theme($dark-hc-primary, $dark-hc-accent, $dark-warn);
+$dark-hc-theme: mat-dark-theme($dark-hc-primary, $dark-hc-accent, $dark-warn);
 $foreground: map-get($dark-hc-theme, foreground);
 // @debug $foreground;
-$foreground: map_merge($foreground, (
-  text: $dark-hc-text,
-  'secondary-text': $dark-hc-text,
-  icon: $dark-hc-icons,
-));
+$foreground: map_merge(
+  $foreground,
+  (
+    text: $dark-hc-text,
+    "secondary-text": $dark-hc-text,
+    icon: $dark-hc-icons,
+  )
+);
 
 $background: map-get($dark-hc-theme, background);
 // @debug $foreground;
-$background: map_merge($background, (
-  
-));
+$background: map_merge($background, ());
 
-
-$dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: $background));
-
+$dark-hc-theme: map_merge(
+  $dark-hc-theme,
+  (
+    foreground: $foreground,
+    background: $background,
+  )
+);
 
 .high-contrast-theme {
   @include angular-material-theme($dark-hc-theme);
   @include afterglow-app-theme($dark-hc-theme);
 
-  .mat-button, .mat-icon-button {
+  .mat-button,
+  .mat-icon-button {
     color: mat-color($foreground, text);
   }
 
   app-navbar {
-    .navbar, .navbar-header {
+    .navbar,
+    .navbar-header {
       background: mat-color($background, background);
     }
 
-    a.mat-button, a.mat-icon-button, .mat-button, .mat-icon-button {
+    a.mat-button,
+    a.mat-icon-button,
+    .mat-button,
+    .mat-icon-button {
       color: mat-color($foreground, text);
     }
   }
 
   theme-picker {
-    .mat-button, .mat-icon-button {
+    .mat-button,
+    .mat-icon-button {
       color: mat-color($foreground, text);
     }
   }
 }
 
 .large {
-  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+  label,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  th,
+  td,
+  p,
+  span,
+  input,
+  button,
+  a,
+  th,
+  td,
+  .mat-cell {
     font-size: 1.25em;
   }
   .mat-slide-toggle {
@@ -122,7 +157,29 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
 }
 
 .largest {
-  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+  label,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  th,
+  td,
+  p,
+  span,
+  input,
+  button,
+  a,
+  th,
+  td,
+  .mat-cell {
     font-size: 1.5em;
   }
   .mat-slide-toggle {
@@ -130,15 +187,58 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
   }
 }
 
-
 .bold {
-  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+  label,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  th,
+  td,
+  p,
+  span,
+  input,
+  button,
+  a,
+  th,
+  td,
+  .mat-cell {
     font-weight: bold;
   }
 }
 
 .boldest {
-  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+  label,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  th,
+  td,
+  p,
+  span,
+  input,
+  button,
+  a,
+  th,
+  td,
+  .mat-cell {
     font-weight: bolder;
   }
 }
@@ -151,33 +251,42 @@ $dark-hc-theme: map_merge($dark-hc-theme, (foreground: $foreground, background: 
   max-width: 450px !important;
 }
 
+// https://github.com/angular/components/issues/12171
+// don't show mat-icon until font is loaded, unless using a different font set
+// :not(.material-icons-loaded) .mat-icon:not([fontSet]) {
+//   display: none;
+// }
 
-$fa-font-path:"~font-awesome/fonts";
+.wf-loading body {
+  display: none;
+}
+
+$fa-font-path: "~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
 .icon-user {
   @extend .fa;
   @extend .fa-user;
 }
 
-
 $custom-typography: mat-typography-config(
   $font-family: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
   $headline: mat-typography-level(32px, 48px, 700),
-  $body-1: mat-typography-level(16px, 24px, 500)
+  $body-1: mat-typography-level(16px, 24px, 500),
 );
 
 @include angular-material-typography($custom-typography);
 
 body {
-  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .mono {
   // font-family: 'Anonymous Pro', monospace;
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
 }
@@ -192,7 +301,6 @@ html, body {
   outline: none;
   flex-direction: row;
 }
-
 
 /* Videogular 2 Player */
 
@@ -220,7 +328,6 @@ vg-scrub-bar-current-time .background {
 a.mat-button {
   color: inherit;
   text-decoration: none;
-  
 }
 
 /* fix margin beneath mat-button-toggle */
@@ -233,12 +340,10 @@ label.mat-button-toggle-label {
   margin-bottom: 0px;
 }
 
-
-.no-axis-labels .tick text,  .no-axis-labels .nv-axisMaxMin text{
+.no-axis-labels .tick text,
+.no-axis-labels .nv-axisMaxMin text {
   display: none;
 }
-
-
 
 /* fix for datatables which scroll bar is hidden, column widths don't match header widths */
 div.ui-datatable-scrollable-body {
@@ -246,21 +351,30 @@ div.ui-datatable-scrollable-body {
 }
 
 /* fix for kendo ui grid selected rows with bootstrap css theme */
-.k-grid tr.k-state-selected:hover, .k-grid th.k-state-selected:hover, .k-grid td.k-state-selected:hover {
+.k-grid tr.k-state-selected:hover,
+.k-grid th.k-state-selected:hover,
+.k-grid td.k-state-selected:hover {
   background-color: rgba(0, 123, 255, 0.25);
 }
-
 
 .td-data-table-cell-content-wrapper {
   padding: 0px 5px 0px 5px !important;
 }
 
-
 .data-file-tool-tip {
-  background-color: rgba(35,35,35,255);
+  background-color: rgba(35, 35, 35, 255);
   font-size: 12px;
 }
 
+.file-path-tooltip {
+  max-width: 400px !important;
+  background: rgba(97, 97, 97, 1) !important;
+  font-size: 12px !important;
+}
+
+.viewer-panel .mat-tab-label .mat-tab-label-content {
+  width: 100%;
+}
 
 // /* Material Icon */
 // /* Rules for sizing the icon. */
@@ -285,8 +399,8 @@ div.ui-datatable-scrollable-body {
 .ngxp__container {
   background-color: #fff;
   background-clip: border-box;
-  border: 1px solid rgba(0,0,0,.125);
-  border-radius: .25rem;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.25rem;
   padding: 10px;
   text-align: center;
   z-index: 99999;
@@ -320,3 +434,117 @@ div.ui-datatable-scrollable-body {
   right: -10px !important;
   border-color: transparent transparent transparent #fc5722;
 }
+
+/* Angular Material Tabs Full Height in Workbench View Manager */
+
+.mat-tab-group.mat-tab-fill-height .mat-tab-body-wrapper {
+  flex: 1 1 100%;
+}
+
+/* Important.  Prevents central view manager from pushing tool panel to the right. */
+/* This allows the mat-tabs to overflow with scrolling */
+.workbench-outlet-panel .image-viewer-grid-panel {
+  min-width: 250px;
+}
+
+/* Data Provider File Manager */
+.dx-drawer-panel-content.dx-drawer-panel-content-initial {
+  display: none !important;
+}
+
+// /** Data File List Tree */
+
+
+
+// div.tree div.tree-children::before,
+// div.tree::before {
+//   content: "";
+//   position: absolute;
+//   border-left: 1px solid #23527c;
+//   height: 100%;
+//   top: 0px;
+//   left: 12px;
+// }
+
+// div.tree {
+//   padding-left: 0;
+// }
+
+// div.tree div.tree-children {
+//   position: relative;
+//   padding-left: 0;
+//   margin-left: 16px;
+// }
+
+// div.tree div.tree-children::before {
+//   left: 5px;
+// }
+
+// div.tree tree-node > div > .node-wrapper {
+//   margin-left: 24px;
+// }
+
+// div.tree tree-node > div > .node-wrapper > .node-content-wrapper {
+//   margin-left: 4px;
+// }
+
+// div.tree tree-node > div.tree-node-leaf > .node-wrapper {
+//   margin-left: 0;
+// }
+
+// div.tree tree-node > div::before {
+//   content: "";
+//   position: absolute;
+//   border-bottom: 1px solid #23527c;
+//   width: 7px;
+//   margin-top: 12px;
+//   left: 7px;
+// }
+
+// div.tree tree-node > div .toggle-children-wrapper {
+//   width: 13px;
+//   height: 13px;
+//   border: 1px solid #23527c;
+//   position: relative;
+//   margin-top: 5px;
+//   margin-left: 15px;
+//   display: inline-block;
+//   background-color: #fff;
+//   z-index: 1;
+// }
+
+// div.tree tree-node > div .toggle-children-wrapper::before {
+//   content: "";
+//   display: inline-block;
+//   width: 7px;
+//   border-top: 1px solid #23527c;
+//   position: absolute;
+//   top: 5px;
+//   left: 2px;
+// }
+
+// div.tree tree-node > div .toggle-children-wrapper.toggle-children-wrapper-collapsed::after {
+//   content: "";
+//   display: inline-block;
+//   height: 7px;
+//   border-left: 1px solid #23527c;
+//   position: absolute;
+//   top: 2px;
+//   left: 5px;
+// }
+
+// div.tree tree-node > div .toggle-children-wrapper .toggle-children {
+//   display: none;
+// }
+
+// div.tree tree-node > div .node-content-wrapper {
+//   margin-left: 4px;
+// }
+
+// div.tree > tree-node > div::before {
+//   left: 14px;
+// }
+
+// div.tree > tree-node > div > .node-wrapper > tree-node-expander > .toggle-children-wrapper {
+//   left: 22px;
+// }

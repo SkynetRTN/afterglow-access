@@ -1,0 +1,78 @@
+<nav class="navbar-header" role="navigation" aria-label="primary">
+  <a class="afterglow-button afterglow-logo" routerLink="/" aria-label="Home" routerLinkActive="active" mat-button>
+    <img src="assets/img/core-logo.png"><span class="pl-4" style="font-size: 1.4em;"> Afterglow Access</span>
+  </a>
+
+  <div class="flex-spacer"></div>
+  <!-- <theme-picker></theme-picker> -->
+  <!-- <button mat-icon-button class="afterglow-button" matTooltip="Select a theme!" tabindex="-1">
+    <mat-icon>format_color_fill</mat-icon>
+  </button> -->
+
+  <ng-container *ngIf="!user">
+    <a class="afterglow-button" (click)="login()" aria-label="Login" mat-button i18n> Login </a>
+  </ng-container>
+  <div>
+    <ng-container *ngIf="user">
+      <!-- <button mat-icon-button class="afterglow-button" matTooltip="View User Profile" tabindex="-1">
+              <mat-icon>account_box</mat-icon>
+            </button> -->
+
+      <!-- <a class="afterglow-button mr-2" routerLink="/" aria-label="Workbench" routerLinkActive="active" mat-button i18n>
+        Workbench
+      </a> -->
+
+      <!-- <button class="mr-2" mat-button [matMenuTriggerFor]="dataProviderMenu" aria-label="Data Provider Menu">
+        <ng-container i18n>Data Providers</ng-container>
+        <mat-icon>keyboard_arrow_down</mat-icon>
+      </button>
+      <mat-menu #dataProviderMenu="matMenu" class="data-provider-menu">
+        <a
+          class="afterglow-button"
+          routerLink="data-providers"
+          aria-label="View All"
+          routerLinkActive="active"
+          mat-menu-item
+          i18n
+        >
+          View All
+        </a>
+        <a
+          *ngFor="let dataProvider of dataProviders; let i = index"
+          class="afterglow-button"
+          [routerLink]="['data-providers', dataProvider.name | slugify, dataProvider.browseable ? 'browse' : 'search']"
+          routerLinkActive="active"
+          [attr.aria-label]="dataProvider.name"
+          mat-menu-item
+        >
+          {{ dataProvider.name }}
+        </a>
+      </mat-menu> -->
+      <button class="mr-2" mat-button [matMenuTriggerFor]="actionMenu" aria-label="Option Menu" i18n-aria-label>
+        <ngx-avatar [name]="avatarName" size="50" [round]="false"> </ngx-avatar>
+      </button>
+      <mat-menu #actionMenu="matMenu" class="action-menu">
+        <button mat-menu-item (click)="openThemeDialog()" aria-label="Open Theme Editor" i18n-aria-label>
+          <mat-icon>format_color_fill</mat-icon>
+          <span i18n>Theme Editor...</span>
+        </button>
+        <button mat-menu-item (click)="openQuickStartGuide()" aria-label="Open Quick Start Guide">
+          <mat-icon>help</mat-icon>
+          <span i18n>Quick Start Guide...</span>
+        </button>
+        <button mat-menu-item (click)="logout()" aria-label="Logout" i18n-aria-label>
+          <mat-icon>exit_to_app</mat-icon>
+          <span i18n>Logout</span>
+        </button>
+      </mat-menu>
+
+      <!-- <theme-picker></theme-picker> -->
+      <!-- <a mat-icon-button class="afterglow-button" aria-label="Theme" (click)="openThemeDialog()" (keyup.enter)="openThemeDialog()">
+          <mat-icon>format_color_fill</mat-icon>
+        </a>
+      <a mat-icon-button class="afterglow-button" aria-label="Help" (click)="openQuickStartGuide()" (keyup.enter)="openQuickStartGuide()">
+          <mat-icon>help</mat-icon>
+        </a> -->
+    </ng-container>
+  </div>
+</nav>

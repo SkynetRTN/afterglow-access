@@ -1,0 +1,14 @@
+line.stroke {
+  stroke: #002175;
+  stroke-width: 3;
+}
+
+line.outline {
+  stroke: #ffffff;
+  stroke-width: 5;
+}
+
+line.shadow {
+  stroke: #5a5a5a;
+  stroke-width: 7;
+}

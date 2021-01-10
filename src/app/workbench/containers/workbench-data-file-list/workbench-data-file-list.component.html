@@ -1,0 +1,17 @@
+<mat-selection-list #selectionList [multiple]="false" (selectionChange)="onFocusedItemChange.emit($event.option.value)">
+  <app-file-list-item
+    *ngFor="let file of files"
+    [fileId]="file.id"
+    [focusedItem]="focusedItem"
+    [expanded]="!collapsedFileIds[file.id]"
+    [selected]="selectedFileIds.includes(file.id)"
+    [autoHideCheckbox]="selectedFileIds.length == 0"
+    (onToggleExpanded)="onToggleExpanded(file.id)"
+    (onToggleSelection)="onToggleSelection($event)"
+    (onItemDoubleClick)="onItemDoubleClick.emit($event)"
+    (onClose)="onCloseFile.emit($event)"
+    (onSave)="onSaveFile.emit($event)"
+    
+  >
+  </app-file-list-item>
+</mat-selection-list>

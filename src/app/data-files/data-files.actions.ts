@@ -1,139 +1,409 @@
-import { DataFile, Header, ImageFile } from './models/data-file';
-import { ImageHist } from './models/image-hist';
-import { ImageTile } from './models/image-tile';
+import { DataFile, Header, PixelType, IHdu } from "./models/data-file";
+import { ImageHist } from "./models/image-hist";
+import { PixelNormalizer } from "./models/pixel-normalizer";
+import { Region } from "./models/region";
+import { Transform } from "./models/transformation";
+import { Normalization } from "./models/normalization";
+import { BlendMode } from './models/blend-mode';
 
 /**
  * Load Library Actions
  */
 export class LoadLibrary {
-  public static readonly type = '[DataFile] Load Library';
+  public static readonly type = "[File] Load Library";
 
-  constructor(public correlationId?: string) { }
+  constructor(public correlationId?: string) {}
 }
 
 export class LoadLibrarySuccess {
-  public static readonly type = '[DataFile] Load Library Success';
+  public static readonly type = "[File] Load Library Success";
 
-  constructor(public dataFiles: DataFile[], public correlationId?: string) { }
+  constructor(public hdus: IHdu[], public correlationId?: string) {}
 }
 
 export class LoadLibraryFail {
-  public static readonly type = '[DataFile] Load Library Fail';
+  public static readonly type = "[File] Load Library Fail";
 
-  constructor(public error: any, public correlationId?: string) { }
+  constructor(public error: any, public correlationId?: string) {}
 }
 
 /**
- * Remove Data File Actions
+ * Close HDU Events
  */
-export class RemoveDataFile {
-  public static readonly type = '[DataFile] Remove Data File';
 
-  constructor(public fileId: string) { }
+export class CloseHduSuccess {
+  public static readonly type = "[File] Close HDU Success";
+
+  constructor(public hduId: string) {}
 }
 
-export class RemoveDataFileSuccess {
-  public static readonly type = '[DataFile] Remove Data File Success';
+export class CloseHduFail {
+  public static readonly type = "[File] Close HDU Fail";
 
-  constructor(public fileId: string) { }
-}
-
-export class RemoveDataFileFail {
-  public static readonly type = '[DataFile] Remove Data File Fail';
-
-  constructor(public fileId: string, public error: any) { }
-}
-
-export class RemoveAllDataFiles {
-  public static readonly type = '[DataFile] Remove All Data Files';
-}
-
-export class RemoveAllDataFilesSuccess {
-  public static readonly type = '[DataFile] Remove All Data Files Success';
-}
-
-export class RemoveAllDataFilesFail {
-  public static readonly type = '[DataFile] Remove All Data Files Fail';
-
-  constructor(public errors: any) { }
+  constructor(public hduId: string, public error: any) {}
 }
 
 /**
  * Load File Actions
  */
 
-export class LoadDataFileHdr {
-  public static readonly type = '[DataFile] Load Data File Hdr';
+export class LoadHdu {
+  public static readonly type = "[File] Load HDU";
 
-  constructor(public fileId: string) { }
+  constructor(public hduId: string) {}
 }
 
-export class LoadDataFileHdrSuccess {
-  public static readonly type = '[DataFile] Load Data File Hdr Success';
+export class LoadHduHeader {
+  public static readonly type = "[File] Load HDU Header";
 
-  constructor(public fileId: string, public header: Header) { }
+  constructor(public hduId: string) {}
 }
 
-export class LoadDataFileHdrFail {
-  public static readonly type = '[DataFile] Load Data File Hdr Fail';
+export class LoadHduHeaderSuccess {
+  public static readonly type = "[File] Load HDU Header Success";
 
-  constructor(public fileId: string, error: any) { }
+  constructor(public hduId: string) {}
 }
 
 /**
- * Image File Actions
+ * HDU Actions
  */
 
-export class LoadImageHist {
-  public static readonly type = '[Image File] Load Image Hist';
+export class LoadImageHduHistogram {
+  public static readonly type = "[File] Load Image HDU Histogram";
 
-  constructor(public fileId: string) { }
+  constructor(public hduId: string) {}
 }
 
-export class LoadImageHistSuccess {
-  public static readonly type = '[Image File] Load Image Hist Success';
+export class LoadImageHduHistogramSuccess {
+  public static readonly type = "[File] Load Image HDU Histogram Success";
 
-  constructor(public fileId: string, public hist: ImageHist) { }
+  constructor(public hduId: string, public hist: ImageHist) {}
 }
 
-export class LoadImageHistFail {
-  public static readonly type = '[Image File] Load Image Hist Fail';
+export class InitializeFileTiles {
+  public static readonly type = "[File] Initialize File Tiles";
 
-  constructor(public fileId: string, public error: any) { }
+  constructor(public fileId: string) {}
 }
 
-export class InitImageTiles {
-  public static readonly type = '[Image File] Init Image Tiles';
+export class LoadRawImageTile {
+  public static readonly type = "[File] Load Raw Image Tile";
 
-  constructor(public fileId: string) { }
+  constructor(public hduId: string, public tileIndex: number) {}
 }
 
-export class LoadImageTilePixels {
-  public static readonly type = '[Image File] Load Image Tile';
+export class LoadRawImageTileSuccess {
+  public static readonly type = "[File] Load Raw Image Tile Success";
 
-  constructor(public fileId: string, public tileIndex: number) { }
+  constructor(public hduId: string, public tileIndex: number, public pixels: PixelType) {}
 }
 
-export class LoadImageTilePixelsSuccess {
-  public static readonly type = '[Image File] Load Image Tile Success';
+export class LoadRawImageTileFail {
+  public static readonly type = "[File] Load Raw Image Tile Fail";
 
-  constructor(public fileId: string, public tileIndex: number, public pixels: Float32Array) { }
+  constructor(public hduId: string, public tileIndex: number, public error: any) {}
 }
 
-export class LoadImageTilePixelsFail {
-  public static readonly type = '[Image File] Load Image Tile Fail';
+export class LoadRawImageTileCancel {
+  public static readonly type = "[File] Load Raw Image Tile Cancel";
 
-  constructor(public fileId: string, public tileIndex: number, public error: any) { }
+  constructor(public hduId: string, public tileIndex: number) {}
 }
 
-export class LoadImageTilePixelsCancel {
-  public static readonly type = '[Image File] Load Image Tile Cancel';
+export class UpdateBlendMode {
+  public static readonly type = "[File] Update Blend Mode";
 
-  constructor(public fileId: string, public tileIndex: number) { }
+  constructor(public hduId: string, public blendMode: BlendMode) {}
 }
 
-export class ClearImageDataCache {
-  public static readonly type = '[Image File] Clear Image Data';
+export class UpdateAlpha {
+  public static readonly type = "[File] Update Alpha";
 
-  constructor(public fileIds: string[]) { }
+  constructor(public hduId: string, public alpha: number) {}
+}
+
+export class UpdateVisibility {
+  public static readonly type = "[File] Update Visibility";
+
+  constructor(public hduId: string, public value: boolean) {}
+}
+
+
+
+/**
+ * Close File Actions
+ */
+export class CloseDataFile {
+  public static readonly type = "[DataFile] Close File";
+
+  constructor(public fileId: string) {}
+}
+
+export class CloseDataFileSuccess {
+  public static readonly type = "[DataFile] Close File Success";
+
+  constructor(public fileId: string) {}
+}
+
+export class CloseDataFileFail {
+  public static readonly type = "[DataFile] Close File Fail";
+
+  constructor(public fileId: string, public error: any) {}
+}
+
+export class CloseAllDataFiles {
+  public static readonly type = "[DataFile] Close All Files";
+}
+
+export class CloseAllDataFilesSuccess {
+  public static readonly type = "[DataFile] Close All Files Success";
+}
+
+export class CloseAllDataFilesFail {
+  public static readonly type = "[DataFile] Close All Files Fail";
+
+  constructor(public errors: any) {}
+}
+
+/**
+ * Load File Actions
+ */
+
+export class LoadDataFile {
+  public static readonly type = "[DataFile] Load File";
+
+  constructor(public fileId: string) {}
+}
+
+/**
+ * Save File Actions
+ */
+
+export class SaveDataFile {
+  public static readonly type = "[DataFile] Save File";
+
+  constructor(public fileId: string) {}
+}
+
+export class SaveDataFileSuccess {
+  public static readonly type = "[DataFile] Save File Success";
+
+  constructor(public fileId: string) {}
+}
+
+export class SaveDataFileFail {
+  public static readonly type = "[DataFile] Save File Fail";
+
+  constructor(public fileId: string, public error: any) {}
+}
+
+export class SaveAllDataFiles {
+  public static readonly type = "[DataFile] Save All Files";
+}
+
+export class SaveAllDataFilesSuccess {
+  public static readonly type = "[DataFile] Save All Files Success";
+}
+
+export class SaveAllDataFilesFail {
+  public static readonly type = "[DataFile] Save All Files Fail";
+
+  constructor(public errors: any) {}
+}
+
+export class InvalidateHeader {
+  public static readonly type = "[Workbench HDU State] Invalidate Header";
+
+  constructor(public hduId: string) {}
+}
+
+export class InvalidateRawImageTiles {
+  public static readonly type = "[Workbench HDU State] Invalidate Raw Image Tiles";
+
+  constructor(public hduId: string) {}
+}
+
+export class InvalidateRawImageTile {
+  public static readonly type = "[Workbench HDU State] Invalidate Raw Image Tile";
+
+  constructor(public hduId: string, public tileIndex: number) {}
+}
+
+/**
+ * Normalization Actions
+ */
+
+export class InvalidateNormalizedImageTiles {
+  public static readonly type = "[Workbench HDU State] Invalidate Normalized Image Tiles";
+
+  constructor(public hduId: string) {}
+}
+
+export class InvalidateNormalizedImageTile {
+  public static readonly type = "[Workbench HDU State] Invalidate Normalized Image Tile";
+
+  constructor(public hduId: string, public tileIndex: number) {}
+}
+
+export class UpdateNormalizedImageTile {
+  public static readonly type = "[Workbench HDU State] Update Normalized Image Tile";
+
+  constructor(public hduId: string, public tileIndex: number) {}
+}
+
+export class CalculateNormalizedPixels {
+  public static readonly type = "[Workbench HDU State] Calculate Normalized Pixels";
+
+  constructor(public hduId: string, public tileIndex: number) {}
+}
+
+export class CalculateNormalizedPixelsSuccess {
+  public static readonly type = "[Workbench HDU State] Calculate Normalized Pixels Success";
+
+  constructor(public hduId: string, public tileIndex: number, public normalizedPixels: Uint32Array) {}
+}
+
+export class UpdateNormalizedImageTileSuccess {
+  public static readonly type = "[Workbench HDU State] Update Normalized Image Tile Success";
+
+  constructor(public hduId: string, public tileIndex: number, pixels: Uint32Array) {}
+}
+
+export class UpdateNormalizedImageTileFail {
+  public static readonly type = "[Workbench HDU State] Update Normalized Image Tile Fail";
+
+  constructor(public hduId: string, public tileIndex: number) {}
+}
+
+export class UpdateNormalizer {
+  public static readonly type = "[Workbench HDU State] Update Normalizer";
+
+  constructor(public hduId: string, public changes: Partial<PixelNormalizer>) {}
+}
+
+/**
+ * Composite Actions
+ */
+
+export class InvalidateCompositeImageTiles {
+  public static readonly type = "[Workbench HDU State] Invalidate Composite Image Tiles";
+
+  constructor(public fileId: string) {}
+}
+
+export class InvalidateCompositeImageTile {
+  public static readonly type = "[Workbench HDU State] Invalidate Composite Image Tile";
+
+  constructor(public fileId: string, public tileIndex: number) {}
+}
+
+export class UpdateCompositeImageTile {
+  public static readonly type = "[Workbench HDU State] Update Composite Image Tile";
+
+  constructor(public fileId: string, public tileIndex: number) {}
+}
+
+export class UpdateCompositeImageTileSuccess {
+  public static readonly type = "[Workbench HDU State] Update Composite Image Tile Success";
+
+  constructor(public fileId: string, public tileIndex: number, pixels: Uint32Array) {}
+}
+
+export class UpdateCompositeImageTileFail {
+  public static readonly type = "[Workbench HDU State] Update Composite Image Tile Fail";
+
+  constructor(public fileId: string, public tileIndex: number) {}
+}
+
+/**
+ * Transformation Actions
+ */
+
+export class CenterRegionInViewport {
+  public static readonly type = "[Transformation] Center Region In Viewport";
+
+  constructor(
+    public imageDataId: string,
+    public imageTransformId: string,
+    public viewportTransformId: string,
+    public viewportSize: { width: number; height: number },
+    public region: Region
+  ) {}
+}
+
+export class ZoomBy {
+  public static readonly type = "[Transformation] Zoom By";
+
+  constructor(
+    public imageDataId: string,
+    public imageTransformId: string,
+    public viewportTransformId: string,
+    public viewportSize: { width: number; height: number },
+    public scaleFactor: number,
+    public anchorPoint: { x: number; y: number }
+  ) {}
+}
+
+export class ZoomTo {
+  public static readonly type = "[Transformation] Zoom To";
+
+  constructor(
+    public imageDataId: string,
+    public imageTransformId: string,
+    public viewportTransformId: string,
+    public viewportSize: { width: number; height: number },
+    public scale: number,
+    public anchorPoint: { x: number; y: number }
+  ) {}
+}
+
+export class MoveBy {
+  public static readonly type = "[Transformation] Move By";
+
+  constructor(
+    public imageDataId: string,
+    public imageTransformId: string,
+    public viewportTransformId: string,
+    public viewportSize: { width: number; height: number },
+    public xShift: number,
+    public yShift: number
+  ) {}
+}
+
+export class RotateBy {
+  public static readonly type = "[Transformation] Rotate By";
+
+  constructor(
+    public imageDataId: string,
+    public imageTransformId: string,
+    public viewportTransformId: string,
+    public viewportSize: { width: number; height: number },
+    public rotationAngle: number,
+    public anchorPoint: { x: number; y: number } = null
+  ) {}
+}
+
+// export class RotateTo {
+//   public static readonly type = '[Transformation] Rotate To';
+
+//   constructor(public transformation: Transformation, public imageDataId: string, public rotationAngle: number, public anchorPoint?: { x: number, y: number }) { }
+// }
+
+export class Flip {
+  public static readonly type = "[Transformation] Flip";
+
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string) {}
+}
+
+export class ResetImageTransform {
+  public static readonly type = "[Workbench] Reset Image Transform";
+
+  constructor(public imageDataId: string, public imageTransformId: string, public viewportTransformId: string) {}
+}
+
+export class UpdateTransform {
+  public static readonly type = "[Transformation] Update";
+
+  constructor(public transformId: string, public changes: Partial<Transform>) {}
 }

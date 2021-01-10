@@ -1,0 +1,22 @@
+/* circle {
+  fill-opacity: 0.0;
+}
+
+circle.stroke {
+  stroke: #002175;
+  stroke-width: 3;
+}
+
+circle.outline {
+  stroke: #FFFFFF;
+  stroke-width: 7;
+}
+
+circle.shadow {
+  stroke: #5A5A5A;
+  stroke-width: 9;
+}
+
+.selected circle.stroke {
+  stroke: #ff8b00;
+} */

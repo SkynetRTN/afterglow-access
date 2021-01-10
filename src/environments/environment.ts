@@ -1,15 +1,16 @@
-import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
+import { NgxsLoggerPluginModule } from "@ngxs/logger-plugin";
+import { AppConfig } from "./app-config";
 
-// The file contents for the current environment will overwrite these during build.
-// The build system defaults to the dev environment which uses `environment.ts`, but if you do
-// `ng build --env=prod` then `environment.prod.ts` will be used instead.
-// The list of which env maps to which file can be found in `.angular-cli.json`.
-
-export const environment = {
+export const appConfig: AppConfig = {
   production: false,
-  apiUrl: '/api/v1.0',
-  accessTokenCookieName: 'access_token',
-  tileSize: 512,
+  environment: "LOCAL",
+  coreServerUrl: "http://127.0.0.1:4200/core",
+  coreApiVersion: "v1",
+  authMethod: "cookie",
+  authCookieName: "afterglow_core_access_token",
+  oauth2ClientId: "",
+  oauth2ClientSecret: "",
+  tileSize: 2048,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,
   plugins: [NgxsLoggerPluginModule.forRoot()],

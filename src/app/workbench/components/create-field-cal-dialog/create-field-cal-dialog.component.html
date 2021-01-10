@@ -1,0 +1,18 @@
+<h2 mat-dialog-title>Create New Field Calibration</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="createForm">
+    <mat-form-field class="" appearance="outline" style="width: 100%">
+      <mat-label i18n>Name</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <div style="width: 100%">
+    <button mat-button [mat-dialog-close]="createForm.value" [disabled]="!createForm.valid" class="float-right" i18n>
+      Create
+    </button>
+    <button mat-button mat-dialog-close class="float-right" i18n>Cancel</button>
+  </div>
+</mat-dialog-actions>

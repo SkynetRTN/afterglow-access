@@ -6,6 +6,7 @@
 /dist
 /tmp
 /out-tsc
+dist
 
 # dependencies
 /node_modules
@@ -49,3 +50,4 @@ package-lock.json
 /docs/_build
 /docs/_static
 /docs/_templates
+package-lock.json

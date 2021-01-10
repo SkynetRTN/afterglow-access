@@ -12,8 +12,8 @@ export interface Photometry {
 }
 
 export interface PhotometryJobSettings {
-  mode?: 'aperture' | 'auto';
-  a?: number;  // aperture radius/semi-major axis [pixels]
+  mode?: "aperture" | "auto";
+  a?: number; // aperture radius/semi-major axis [pixels]
   b?: number; // (optional) semi-minor axis
   theta?: number; // (optional) position angle of semi-major axis
   a_in?: number; // (optional = a) inner annulus radius/semi-major axis
@@ -22,6 +22,7 @@ export interface PhotometryJobSettings {
   theta_out?: number; // (optional) annulus position angle
   gain?: number; // (optional) default gain if not present in FITS headers
   centroid_radius?: number; // 0 = disable centroiding
+  zero_point?: number;
 }
 
 export interface PhotometryJob extends JobBase {
@@ -31,9 +32,7 @@ export interface PhotometryJob extends JobBase {
   settings?: PhotometryJobSettings;
 }
 
-export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {
-  
-}
+export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {}
 
 export interface PhotometryJobResult extends JobResultBase {
   readonly type: JobType.Photometry;

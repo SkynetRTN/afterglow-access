@@ -1,17 +1,13 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { NgModule } from "@angular/core";
+import { CommonModule } from "@angular/common";
 
-import { SvgRectangleComponent } from './components/svg-rectangle/svg-rectangle.component';
+import { SvgRectangleComponent } from "./components/svg-rectangle/svg-rectangle.component";
 
-export const COMPONENTS = [
-  SvgRectangleComponent
-];
+export const COMPONENTS = [SvgRectangleComponent];
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   declarations: COMPONENTS,
   exports: COMPONENTS,
 })
-export class SvgModule { };
+export class SvgModule {}

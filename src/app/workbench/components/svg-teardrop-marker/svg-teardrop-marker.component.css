@@ -1,0 +1,22 @@
+path {
+  fill-opacity: 0;
+}
+
+path.stroke {
+  stroke: #002175;
+  stroke-width: 3;
+}
+
+path.outline {
+  stroke: #ffffff;
+  stroke-width: 7;
+}
+
+path.shadow {
+  stroke: #5a5a5a;
+  stroke-width: 9;
+}
+
+.selected path.stroke {
+  stroke: #ff8b00;
+}
