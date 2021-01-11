@@ -8,11 +8,10 @@
 
   app-workbench {
     .mat-icon-button.small {
-
       width: 18px;
       height: 18px;
       line-height: 18px;
-  
+
       .mat-icon {
         font-size: 18px;
         width: 18px;
@@ -29,7 +28,6 @@
       line-height: 18px;
       vertical-align: middle;
     }
-
 
     .sidebar-nav {
       background: mat-color($background, background);
@@ -57,7 +55,7 @@
       top: 0px;
       background: mat-color($background, card);
       z-index: 998;
-      box-shadow: -10px -10px 20px 0px #000000
+      box-shadow: -10px -10px 20px 0px #000000;
     }
 
     .file-list-header input {
@@ -182,7 +180,7 @@
     .vertical-icon-nav-item.active {
       // background: mat-color($background, card);
       opacity: 1;
-     
+
       .mat-icon-button {
         outline: 3px auto mat-color($primary);
       }

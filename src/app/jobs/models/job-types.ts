@@ -9,5 +9,5 @@ export enum JobType {
   BatchImport = "batch_import",
   Sonification = "sonification",
   BatchDownload = "batch_download",
-  BatchAssetDownload = "batch_asset_download"
+  BatchAssetDownload = "batch_asset_download",
 }

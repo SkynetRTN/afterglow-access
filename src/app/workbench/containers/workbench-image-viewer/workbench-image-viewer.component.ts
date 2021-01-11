@@ -104,7 +104,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   onFileClose = new EventEmitter<string>();
   @Output()
   onFileSave = new EventEmitter<string>();
-  
+
   destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
   hduId$: Observable<string>;
@@ -178,17 +178,17 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.header$ = headerId$.pipe(
       switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
-      distinctUntilChanged(),
+      distinctUntilChanged()
     );
 
     // watch for changes to header and reload when necessary
-    combineLatest(this.hduId$, this.header$).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(([hduId, header]) => {
-      if(hduId && header && !header.loaded && !header.loading) {
-        this.store.dispatch(new LoadHduHeader(hduId))
-      }
-    })
+    combineLatest(this.hduId$, this.header$)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([hduId, header]) => {
+        if (hduId && header && !header.loaded && !header.loading) {
+          this.store.dispatch(new LoadHduHeader(hduId));
+        }
+      });
 
     let rawImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
@@ -609,7 +609,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer || !this.viewer.fileId) {
       return;
     }
-    
+
     this.onFileClose.emit(this.viewer.fileId);
   }
 
@@ -617,7 +617,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer || !this.viewer.fileId) {
       return;
     }
-    
+
     this.onFileSave.emit(this.viewer.fileId);
   }
 

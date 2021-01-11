@@ -57,7 +57,7 @@ export class SetFullScreenPanel {
 export class FocusFileListItem {
   public static readonly type = "[Workbench] Focus File List Item";
 
-  constructor(public item: {fileId: string, hduId: string}) {}
+  constructor(public item: { fileId: string; hduId: string }) {}
 }
 
 export class ToggleFileSelection {

@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { FileBrowserComponent } from './file-browser.component';
+import { FileBrowserComponent } from "./file-browser.component";
 
-describe('FileBrowserComponent', () => {
+describe("FileBrowserComponent", () => {
   let component: FileBrowserComponent;
   let fixture: ComponentFixture<FileBrowserComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ FileBrowserComponent ]
-    })
-    .compileComponents();
+      declarations: [FileBrowserComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('FileBrowserComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { OpenFileDialogComponent } from './open-file-dialog.component';
+import { OpenFileDialogComponent } from "./open-file-dialog.component";
 
-describe('OpenFileDialogComponent', () => {
+describe("OpenFileDialogComponent", () => {
   let component: OpenFileDialogComponent;
   let fixture: ComponentFixture<OpenFileDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ OpenFileDialogComponent ]
-    })
-    .compileComponents();
+      declarations: [OpenFileDialogComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('OpenFileDialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

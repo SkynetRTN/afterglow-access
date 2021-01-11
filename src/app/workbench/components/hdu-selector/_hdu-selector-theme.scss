@@ -5,17 +5,14 @@
   $background: map-get($theme, background);
   $foreground: map-get($theme, foreground);
 
-
   app-hdu-selector {
-      .list-wrapper {
-            box-shadow: 2px 2px 2px 2px mat-color($background, background);
-      }
+    .list-wrapper {
+      box-shadow: 2px 2px 2px 2px mat-color($background, background);
+    }
 
-      .mat-selection-list {
-          max-height: 200px;
-          overflow: auto;
-      }
-     
+    .mat-selection-list {
+      max-height: 200px;
+      overflow: auto;
+    }
   }
-
 }

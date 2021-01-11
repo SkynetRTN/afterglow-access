@@ -25,8 +25,8 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatTreeModule } from "@angular/material/tree";
 import { DragDropModule } from "@angular/cdk/drag-drop";
-import { MatRippleModule } from '@angular/material/core';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatRippleModule } from "@angular/material/core";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 @NgModule({
   imports: [
@@ -56,7 +56,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     DragDropModule,
     MatTreeModule,
     MatRippleModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
   ],
   exports: [
     MatInputModule,
@@ -85,7 +85,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     DragDropModule,
     MatTreeModule,
     MatRippleModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
   ],
 })
 export class MaterialModule {}

@@ -133,8 +133,8 @@ export interface WorkbenchStateModel {
   viewerLayoutItems: { [id: string]: ViewerLayoutItem };
   viewerLayoutItemIds: string[];
   focusedViewerPanelId: string;
-  selectedFileIds: string[],
-  fileListFilter: string,
+  selectedFileIds: string[];
+  fileListFilter: string;
   viewerSyncEnabled: boolean;
   viewerSyncMode: "sky" | "pixel";
   normalizationSyncEnabled: boolean;

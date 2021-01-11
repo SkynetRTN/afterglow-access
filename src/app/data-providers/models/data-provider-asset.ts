@@ -3,5 +3,5 @@ export interface DataProviderAsset {
   dataProviderId: string;
   name: string;
   isDirectory: boolean;
-  metadata: {[key: string]: any}
+  metadata: { [key: string]: any };
 }

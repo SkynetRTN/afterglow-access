@@ -9,14 +9,21 @@ import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from "../../../utils/correlated-action";
 import { Store } from "@ngxs/store";
 import { DataFile, ImageHdu, IHdu, PixelType } from "../../../data-files/models/data-file";
-import { UpdateNormalizer, RotateBy, ResetImageTransform, Flip, UpdateBlendMode, UpdateAlpha } from "../../../data-files/data-files.actions";
+import {
+  UpdateNormalizer,
+  RotateBy,
+  ResetImageTransform,
+  Flip,
+  UpdateBlendMode,
+  UpdateAlpha,
+} from "../../../data-files/data-files.actions";
 import { StretchMode } from "../../../data-files/models/stretch-mode";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform } from "../../../data-files/models/transformation";
 import { IImageData } from "../../../data-files/models/image-data";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
-import { BlendMode } from '../../../data-files/models/blend-mode';
+import { BlendMode } from "../../../data-files/models/blend-mode";
 
 @Component({
   selector: "app-display-panel",

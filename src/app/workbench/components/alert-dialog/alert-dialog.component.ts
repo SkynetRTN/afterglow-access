@@ -20,19 +20,24 @@ export interface AlertDialogConfig {
 export class AlertDialogComponent implements OnInit {
   config: AlertDialogConfig;
 
-  constructor(public dialogRef: MatDialogRef<AlertDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: Partial<AlertDialogConfig>) {
+  constructor(
+    public dialogRef: MatDialogRef<AlertDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: Partial<AlertDialogConfig>
+  ) {
     this.config = {
-      title: 'Confirm',
-      message: '',
-      description: '',
-      buttons: [{
-        color: null,
-        value: false,
-        label: "Close",
-      },],
-      ...data
-    }
+      title: "Confirm",
+      message: "",
+      description: "",
+      buttons: [
+        {
+          color: null,
+          value: false,
+          label: "Close",
+        },
+      ],
+      ...data,
+    };
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 }

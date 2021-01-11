@@ -241,7 +241,10 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.selectedViewerId || changes.viewers) {
-      let nextSelectedViewerIndex = this.viewers.filter(viewer => viewer != null).map((viewer) => viewer.id).indexOf(this.selectedViewerId);
+      let nextSelectedViewerIndex = this.viewers
+        .filter((viewer) => viewer != null)
+        .map((viewer) => viewer.id)
+        .indexOf(this.selectedViewerId);
       if (this.selectedViewerIndex != nextSelectedViewerIndex) {
         this.selectedViewerIndex = nextSelectedViewerIndex;
       }

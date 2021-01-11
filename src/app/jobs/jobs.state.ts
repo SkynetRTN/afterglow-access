@@ -42,7 +42,7 @@ export interface JobsStateModel {
 }
 
 const jobsDefaultState: JobsStateModel = {
-  version: 'bdedf577-1833-4e08-a12e-eda435c5f5aa',
+  version: "bdedf577-1833-4e08-a12e-eda435c5f5aa",
   ids: [],
   entities: {},
 };
@@ -76,7 +76,7 @@ export class JobsState {
   public static getJobById(state: JobsStateModel) {
     return (jobId) => {
       return jobId in state.entities ? state.entities[jobId] : null;
-    }
+    };
   }
 
   @Action(ResetState)
@@ -147,7 +147,7 @@ export class JobsState {
           })
         );
       }),
-      catchError(err => dispatch(new CreateJobFail(createJobAction.job, err, createJobAction.correlationId))),
+      catchError((err) => dispatch(new CreateJobFail(createJobAction.job, err, createJobAction.correlationId)))
     );
   }
 

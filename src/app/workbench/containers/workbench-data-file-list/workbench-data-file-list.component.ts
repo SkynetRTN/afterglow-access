@@ -27,12 +27,12 @@ import { MatTreeFlatDataSource, MatTreeFlattener } from "@angular/material/tree"
 import { SelectionModel } from "@angular/cdk/collections";
 import { FlatTreeControl } from "@angular/cdk/tree";
 import { MatSelectionListChange, MatSelectionList } from "@angular/material/list";
-import { NG_VALUE_ACCESSOR } from '@angular/forms';
-import { DataProvider } from '../../../data-providers/models/data-provider';
-import { MatCheckbox, MAT_CHECKBOX_DEFAULT_OPTIONS, MatCheckboxDefaultOptions } from '@angular/material/checkbox';
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { ToggleFileSelection } from '../../workbench.actions';
-import { WorkbenchState } from '../../workbench.state';
+import { NG_VALUE_ACCESSOR } from "@angular/forms";
+import { DataProvider } from "../../../data-providers/models/data-provider";
+import { MatCheckbox, MAT_CHECKBOX_DEFAULT_OPTIONS, MatCheckboxDefaultOptions } from "@angular/material/checkbox";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { ToggleFileSelection } from "../../workbench.actions";
+import { WorkbenchState } from "../../workbench.state";
 
 @Component({
   selector: "app-file-list-item",
@@ -68,7 +68,7 @@ export class FileListItemComponent implements OnInit {
   @Output() onSelectionChange = new EventEmitter<boolean>();
   @Output() onItemDoubleClick = new EventEmitter<{ fileId: string; hduId: string }>();
   @Output() onToggleExpanded = new EventEmitter<string>();
-  @Output() onToggleSelection = new EventEmitter<{ fileId: string, shiftKey: boolean, ctrlKey: boolean }>();
+  @Output() onToggleSelection = new EventEmitter<{ fileId: string; shiftKey: boolean; ctrlKey: boolean }>();
   @Output() onClose = new EventEmitter<string>();
   @Output() onSave = new EventEmitter<string>();
 
@@ -93,7 +93,7 @@ export class FileListItemComponent implements OnInit {
       switchMap((fileId) => {
         return this.store.select(DataFilesState.getFileById).pipe(
           map((fn) => fn(fileId)),
-          filter(file => file != null)
+          filter((file) => file != null)
         );
       })
     );
@@ -106,12 +106,10 @@ export class FileListItemComponent implements OnInit {
           hduIds.map((hduId) => {
             return this.store.select(DataFilesState.getHduById).pipe(
               map((fn) => fn(hduId)),
-              filter(hdu => hdu != null)
+              filter((hdu) => hdu != null)
             );
           })
-        ).pipe(
-          map(hdus => hdus.sort((a, b) => (a.order > b.order) ? 1 : -1))
-        );
+        ).pipe(map((hdus) => hdus.sort((a, b) => (a.order > b.order ? 1 : -1))));
       })
     );
 
@@ -131,10 +129,9 @@ export class FileListItemComponent implements OnInit {
     );
 
     this.modified$ = this.hdus$.pipe(map((hdus) => hdus.some((hdu) => hdu.modified)));
-
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   toggleExpanded($event: MouseEvent) {
     $event.stopPropagation();
@@ -171,15 +168,14 @@ export class FileListItemComponent implements OnInit {
 
   toggleCheckbox($event: MouseEvent) {
     $event.stopPropagation();
-    this.onToggleSelection.emit({ fileId: this.fileId, shiftKey: $event.shiftKey, ctrlKey: $event.ctrlKey })
+    this.onToggleSelection.emit({ fileId: this.fileId, shiftKey: $event.shiftKey, ctrlKey: $event.ctrlKey });
   }
 }
-
 
 export const WORKBENCH_FILE_LIST_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
   useExisting: forwardRef(() => WorkbenchDataFileListComponent),
-  multi: true
+  multi: true,
 };
 
 @Component({
@@ -226,7 +222,7 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
   }>();
 
   @Output() onItemDoubleClick = new EventEmitter<{
-    item: { fileId: string, hduId: string };
+    item: { fileId: string; hduId: string };
   }>();
 
   @Output() onCloseFile = new EventEmitter<string>();
@@ -240,8 +236,7 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
   HduType = HduType;
   collapsedFileIds: { [id: string]: boolean } = {};
 
-  constructor(private store: Store) {
-  }
+  constructor(private store: Store) {}
 
   ngOnDestroy(): void {
     this.destroy$.next(true);
@@ -256,9 +251,9 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
     }
   }
 
-  onToggleSelection($event: { fileId: string, shiftKey: boolean, ctrlKey: boolean }) {
+  onToggleSelection($event: { fileId: string; shiftKey: boolean; ctrlKey: boolean }) {
     //TODO handle multi selection based on modifier keys
-    this.store.dispatch(new ToggleFileSelection($event.fileId))
+    this.store.dispatch(new ToggleFileSelection($event.fileId));
   }
 
   saveFile($event: MouseEvent, fileId: string) {

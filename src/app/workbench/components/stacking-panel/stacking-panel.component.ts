@@ -56,13 +56,12 @@ export class StackerPanelComponent implements OnInit {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
 
     this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
-      if(!hduIds || !this.config) return;
+      if (!hduIds || !this.config) return;
       let selectedHduIds = this.config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
       if (selectedHduIds.length != this.config.stackFormData.selectedHduIds.length) {
         setTimeout(() => {
           this.setSelectedHduIds(selectedHduIds);
         });
-        
       }
     });
 
@@ -119,30 +118,25 @@ export class StackerPanelComponent implements OnInit {
   }
 
   getHduOptionLabel(hduId: string) {
-    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
-      map(fn => fn(hduId))
-    )
+    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId)));
 
     let file$ = hdu$.pipe(
-      map(hdu => hdu.fileId),
+      map((hdu) => hdu.fileId),
       distinctUntilChanged(),
-      flatMap(fileId => {
-        return this.store.select(DataFilesState.getFileById).pipe(
-          map(fn => fn(fileId))
-        )
+      flatMap((fileId) => {
+        return this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId)));
       })
-    )
+    );
 
     return combineLatest(hdu$, file$).pipe(
       map(([hdu, file]) => {
-        if(!hdu || !file) return '???';
-        if(file.hduIds.length > 1) {
-          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`
+        if (!hdu || !file) return "???";
+        if (file.hduIds.length > 1) {
+          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`;
         }
-        return file.name
+        return file.name;
       })
-    )
-
+    );
   }
 
   setSelectedHduIds(hduIds: string[]) {

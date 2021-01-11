@@ -1,14 +1,25 @@
-<dx-file-manager id="fileManager" [fileSystemProvider]="customFileSystemProvider"
-  [currentPath]="currentFileSystemPath$ | async" height="60vh"
-  (onCurrentDirectoryChanged)="onCurrentDirectoryChanged($event)" (onSelectionChanged)="onSelectionChange($event)"
-  (onSelectedFileOpened)="onSelectedFileOpened($event)" (onErrorOccurred)="onErrorOccurred($event)" [allowedFileExtensions]="allowedFileExtensions" [selectionMode]="selectionMode">
+<dx-file-manager
+  id="fileManager"
+  [fileSystemProvider]="customFileSystemProvider"
+  [currentPath]="currentFileSystemPath$ | async"
+  height="60vh"
+  (onCurrentDirectoryChanged)="onCurrentDirectoryChanged($event)"
+  (onSelectionChanged)="onSelectionChange($event)"
+  (onSelectedFileOpened)="onSelectedFileOpened($event)"
+  (onErrorOccurred)="onErrorOccurred($event)"
+  [allowedFileExtensions]="allowedFileExtensions"
+  [selectionMode]="selectionMode"
+>
   <dxo-upload [chunkSize]="50000000" [maxFileSize]="50000000"></dxo-upload>
   <dxo-item-view [showParentFolder]="false" [showParentFolder]="true">
     <dxo-details>
       <dxi-column dataField="thumbnail"></dxi-column>
       <dxi-column dataField="name"></dxi-column>
-      <dxi-column *ngFor="let column of (fileManagerDetailsColumns$ | async)" [dataField]="column.dataField"
-        [caption]="column.caption"></dxi-column>
+      <dxi-column
+        *ngFor="let column of fileManagerDetailsColumns$ | async"
+        [dataField]="column.dataField"
+        [caption]="column.caption"
+      ></dxi-column>
     </dxo-details>
   </dxo-item-view>
   <dxo-toolbar>
@@ -37,8 +48,14 @@
     <dxi-file-selection-item name="separator"></dxi-file-selection-item>
     <dxi-file-selection-item name="refresh"></dxi-file-selection-item>
   </dxo-toolbar>
-  <dxo-permissions [create]="create && (isWriteable$ | async)" [copy]="copy"
-    [move]="move && (isWriteable$ | async)" [delete]="delete && (isWriteable$ | async)"
-    [rename]="rename && (isWriteable$ | async)" [upload]="upload && (isWriteable$ | async)" [download]="download">
+  <dxo-permissions
+    [create]="create && (isWriteable$ | async)"
+    [copy]="copy"
+    [move]="move && (isWriteable$ | async)"
+    [delete]="delete && (isWriteable$ | async)"
+    [rename]="rename && (isWriteable$ | async)"
+    [upload]="upload && (isWriteable$ | async)"
+    [download]="download"
+  >
   </dxo-permissions>
 </dx-file-manager>

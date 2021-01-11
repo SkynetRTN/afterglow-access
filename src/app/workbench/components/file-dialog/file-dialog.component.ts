@@ -87,8 +87,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
       .subscribe((success) => {
         if (success) {
           this.index$.next(this.index$.getValue() + 1);
-        }
-        else if(this.config.mode == 'save') {
+        } else if (this.config.mode == "save") {
           this.dialogRef.close();
         }
       });
@@ -107,10 +106,9 @@ export class SaveChangesDialogComponent implements OnDestroy {
           if (this.config.mode == "save") {
             if (modified || this.isReadOnly) {
               this.action$.next(FileDialogAction.save);
-            }
-            else {
+            } else {
               //skip
-              this.index$.next(this.index$.getValue() + 1)
+              this.index$.next(this.index$.getValue() + 1);
             }
           } else {
             if (modified) {
@@ -377,7 +375,6 @@ export class SaveChangesDialogComponent implements OnDestroy {
         }
 
         return of(true);
-        
       })
     );
   }

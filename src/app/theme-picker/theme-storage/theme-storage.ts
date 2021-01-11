@@ -14,7 +14,7 @@ export interface PlotlyTheme {
 }
 
 export interface DevExTheme {
-  name: string
+  name: string;
 }
 
 export interface AfterglowTheme {
@@ -68,8 +68,8 @@ export class ThemeStorage {
         legendFontColor: "#757575",
       },
       devExTheme: {
-        name: 'dx.light'
-      }
+        name: "dx.light",
+      },
     },
     {
       name: "cyan-dark-theme",
@@ -100,8 +100,8 @@ export class ThemeStorage {
         legendFontColor: "#FFFFFF",
       },
       devExTheme: {
-        name: 'dx.dark'
-      }
+        name: "dx.dark",
+      },
     },
     {
       name: "high-contrast-theme",
@@ -132,8 +132,8 @@ export class ThemeStorage {
         legendFontColor: "#FFEB3B",
       },
       devExTheme: {
-        name: 'dx.dark'
-      }
+        name: "dx.dark",
+      },
     },
   ];
 

@@ -1,21 +1,30 @@
-<div mat-dialog-title class="dialog-title" i18n>{{config.mode == 'close' ? 'Closing Files' : 'Saving Files'}} <span *ngIf="config.files && config.files.length > 1"></span></div>
+<div mat-dialog-title class="dialog-title" i18n>
+  {{ config.mode == "close" ? "Closing Files" : "Saving Files" }}
+  <span *ngIf="config.files && config.files.length > 1"></span>
+</div>
 <mat-dialog-content *ngIf="currentFile">
   <div class="status pb-3" style="text-align: center" *ngIf="config.files && config.files.length > 1">
     <mat-progress-bar mode="determinate" [value]="(index$.getValue() / config.files.length) * 100"></mat-progress-bar>
-    <div>{{config.mode == 'close' ? 'Closing' : 'Saving'}} file {{ index$.getValue() + 1 }} of {{ config.files.length }}</div>
+    <div>
+      {{ config.mode == "close" ? "Closing" : "Saving" }} file {{ index$.getValue() + 1 }} of {{ config.files.length }}
+    </div>
   </div>
 
   <!-- <div *ngIf="config.action" class="pb-4 dialog-action" ><p>{{ config.action }}</p></div> -->
-  <div *ngIf="waitingForUserInput" class="pb-2 dialog-message">Do you want to save the changes you made to {{ currentFile.name }}?</div>
+  <div *ngIf="waitingForUserInput" class="pb-2 dialog-message">
+    Do you want to save the changes you made to {{ currentFile.name }}?
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end" class="pb-4">
-    <span style="padding-right: 40px;">
-        <mat-spinner *ngIf="!waitingForUserInput" diameter="35" ></mat-spinner>
-    </span>
-  
+  <span style="padding-right: 40px">
+    <mat-spinner *ngIf="!waitingForUserInput" diameter="35"></mat-spinner>
+  </span>
+
   <button *ngIf="currentFile" mat-raised-button (click)="onSaveBtnClick()" [hidden]="!waitingForUserInput">
     {{ isReadOnly ? "Save As..." : "Save" }}
   </button>
-  <button *ngIf="currentFile" mat-raised-button (click)="onDiscardBtnClick()" [hidden]="!waitingForUserInput">Discard changes</button>
+  <button *ngIf="currentFile" mat-raised-button (click)="onDiscardBtnClick()" [hidden]="!waitingForUserInput">
+    Discard changes
+  </button>
   <button mat-raised-button (click)="onCancelBtnClick()">Cancel</button>
 </mat-dialog-actions>

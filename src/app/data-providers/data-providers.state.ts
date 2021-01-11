@@ -30,10 +30,7 @@ import {
   SetCurrentPath,
 } from "./data-providers.actions";
 import { AfterglowDataProviderService } from "../workbench/services/afterglow-data-providers";
-import {
-  CreateJob,
-  UpdateJob,
-} from "../jobs/jobs.actions";
+import { CreateJob, UpdateJob } from "../jobs/jobs.actions";
 import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from "../jobs/models/batch-import";
 import { JobType } from "../jobs/models/job-types";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
@@ -45,7 +42,7 @@ export interface DataProvidersStateModel {
   version: string;
   dataProvidersLoaded: boolean;
   dataProviderIds: string[];
-  dataProviderEntities: { [id: string]: DataProvider }
+  dataProviderEntities: { [id: string]: DataProvider };
   importing: boolean;
   selectedAssetImportCorrId: string;
   importErrors: Array<string>;
@@ -54,7 +51,7 @@ export interface DataProvidersStateModel {
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: '91d88797-7f4e-4672-ab05-0a68ba7ae4a0',
+  version: "91d88797-7f4e-4672-ab05-0a68ba7ae4a0",
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
@@ -62,7 +59,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importing: false,
   importErrors: [],
   importProgress: 0,
-  currentFileSystemPath: '/',
+  currentFileSystemPath: "/",
 };
 
 @State<DataProvidersStateModel>({
@@ -75,7 +72,7 @@ export class DataProvidersState {
     private actions$: Actions,
     private store: Store,
     private correlationIdGenerator: CorrelationIdGenerator
-  ) { }
+  ) {}
 
   @Selector()
   public static getState(state: DataProvidersStateModel) {
@@ -131,29 +128,27 @@ export class DataProvidersState {
 
   @Selector()
   public static getCurrentAssetPath(state: DataProvidersStateModel) {
-    if(state.currentFileSystemPath == '') return null;
+    if (state.currentFileSystemPath == "") return null;
 
-    let pathKeys = state.currentFileSystemPath.split('/');
-    if(pathKeys.length == 1) return '';
+    let pathKeys = state.currentFileSystemPath.split("/");
+    if (pathKeys.length == 1) return "";
 
-    let result = pathKeys.slice(1).join('/');
+    let result = pathKeys.slice(1).join("/");
     return result;
   }
 
   @Selector()
   public static getCurrentDataProvider(state: DataProvidersStateModel) {
-    let dpName = state.currentFileSystemPath.split('/')[0];
+    let dpName = state.currentFileSystemPath.split("/")[0];
     if (!dpName) {
       return null;
     }
-    return Object.values(state.dataProviderEntities).find(dp => dp.name == dpName)
+    return Object.values(state.dataProviderEntities).find((dp) => dp.name == dpName);
   }
-
-
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, { }: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, {}: ResetState) {
     setState((state: DataProvidersStateModel) => {
       return dataProvidersDefaultState;
     });
@@ -166,8 +161,8 @@ export class DataProvidersState {
       tap((dataProviders) => {
         setState((state: DataProvidersStateModel) => {
           state.dataProvidersLoaded = true;
-          state.dataProviderIds = dataProviders.map(dp => dp.id);
-          dataProviders.forEach(dp => state.dataProviderEntities[dp.id] = dp)
+          state.dataProviderIds = dataProviders.map((dp) => dp.id);
+          dataProviders.forEach((dp) => (state.dataProviderEntities[dp.id] = dp));
 
           // //remove data providers from file system root which are no longer present
           // state.fileSystem = state.fileSystem.filter(fsObject => state.dataProviderIds.includes(fsObject.assetPath))
@@ -282,17 +277,15 @@ export class DataProvidersState {
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
     { path }: SetCurrentPath
   ) {
-
     let actions = [];
     setState((state: DataProvidersStateModel) => {
-      if(path != state.currentFileSystemPath) {
+      if (path != state.currentFileSystemPath) {
         state.currentFileSystemPath = path;
       }
-      
-      return state;
-    })
-    return dispatch(actions);
 
+      return state;
+    });
+    return dispatch(actions);
   }
 
   // @Action(SortDataProviderAssets)
@@ -422,16 +415,13 @@ export class DataProvidersState {
 
   @Action(ImportAssets)
   @ImmutableContext()
-  public importAssets(
-    { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { assets }: ImportAssets
-  ) {
+  public importAssets({ setState, getState, dispatch }: StateContext<DataProvidersStateModel>, { assets }: ImportAssets) {
     let job: BatchImportJob = {
       id: null,
       type: JobType.BatchImport,
       settings: assets.map((asset) => {
         let assetPath = asset.assetPath;
-        if(assetPath && assetPath[0] == '/') {
+        if (assetPath && assetPath[0] == "/") {
           assetPath = assetPath.slice(1);
         }
         return {
@@ -466,26 +456,17 @@ export class DataProvidersState {
               result.errors
             )
           );
-        }
-        else if (a.result.canceled) {
+        } else if (a.result.canceled) {
+          return dispatch(new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`]));
+        } else if (a.result.error) {
           return dispatch(
             new ImportAssetsCompleted(
               assets,
               [],
-              [`Unable to import assets.  Operation was canceled`],
+              [`Unable to import assets.  Please try again later: Error: ${a.result.error}`]
             )
           );
         }
-        else if (a.result.error) {
-          return dispatch(
-            new ImportAssetsCompleted(
-              assets,
-              [],
-              [`Unable to import assets.  Please try again later: Error: ${a.result.error}`],
-            )
-          );
-        }
-
       })
     );
 

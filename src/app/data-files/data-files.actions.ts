@@ -4,7 +4,7 @@ import { PixelNormalizer } from "./models/pixel-normalizer";
 import { Region } from "./models/region";
 import { Transform } from "./models/transformation";
 import { Normalization } from "./models/normalization";
-import { BlendMode } from './models/blend-mode';
+import { BlendMode } from "./models/blend-mode";
 
 /**
  * Load Library Actions
@@ -128,8 +128,6 @@ export class UpdateVisibility {
 
   constructor(public hduId: string, public value: boolean) {}
 }
-
-
 
 /**
  * Close File Actions

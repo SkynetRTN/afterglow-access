@@ -157,15 +157,18 @@ import {
   FileDialogConfig,
 } from "../components/file-dialog/file-dialog.component";
 import { MatCheckboxChange } from "@angular/material/checkbox";
-import { AfterglowDataFileService } from '../services/afterglow-data-files';
-import { UUID } from 'angular2-uuid';
-import { BatchDownloadJob } from '../../jobs/models/batch-download';
-import { JobType } from '../../jobs/models/job-types';
-import { CreateJob, CreateJobSuccess, CreateJobFail } from '../../jobs/jobs.actions';
-import { JobProgressDialogConfig, JobProgressDialogComponent } from '../components/job-progress-dialog/job-progress-dialog.component';
-import { JobsState } from '../../jobs/jobs.state';
+import { AfterglowDataFileService } from "../services/afterglow-data-files";
+import { UUID } from "angular2-uuid";
+import { BatchDownloadJob } from "../../jobs/models/batch-download";
+import { JobType } from "../../jobs/models/job-types";
+import { CreateJob, CreateJobSuccess, CreateJobFail } from "../../jobs/jobs.actions";
+import {
+  JobProgressDialogConfig,
+  JobProgressDialogComponent,
+} from "../components/job-progress-dialog/job-progress-dialog.component";
+import { JobsState } from "../../jobs/jobs.state";
 import { saveAs } from "file-saver/dist/FileSaver";
-import { JobService } from '../../jobs/services/jobs';
+import { JobService } from "../../jobs/services/jobs";
 
 enum SaveFileAction {
   Save = "save",
@@ -300,23 +303,22 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.fileListFilter$ = this.store.select(WorkbenchState.getFileListFilter);
     this.fileListFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));
-      
     });
 
     this.filteredFiles$ = this.store.select(WorkbenchState.getFilteredFiles);
     this.filteredFileIds$ = this.store.select(WorkbenchState.getFilteredFileIds);
     this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFileIds);
 
-    this.filteredHduIds$ = this.store.select(WorkbenchState.getFilteredHduIds).pipe(
-      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every( (value, index) => b[index] == value))
-    )
+    this.filteredHduIds$ = this.store
+      .select(WorkbenchState.getFilteredHduIds)
+      .pipe(distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value)));
     this.filteredHdus$ = this.filteredHduIds$.pipe(
-      switchMap(hduIds => {
-        return combineLatest(hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
-          map(fn => fn(hduId))
-        )))
+      switchMap((hduIds) => {
+        return combineLatest(
+          hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
+        );
       })
-    )
+    );
 
     this.fileListSelectAllChecked$ = combineLatest(this.filteredFiles$, this.selectedFileIds$).pipe(
       map(([filteredFiles, selectedFileIds]) => {
@@ -1571,7 +1573,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
       width: "500px",
       data: config,
-      disableClose: true
+      disableClose: true,
     });
 
     return dialogRef.afterClosed();
@@ -1617,7 +1619,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
-            disableClose: true
+            disableClose: true,
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1662,7 +1664,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
-            disableClose: true
+            disableClose: true,
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1691,7 +1693,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(SaveChangesDialogComponent, {
       width: "500px",
       data: config,
-      disableClose: true
+      disableClose: true,
     });
 
     return dialogRef.afterClosed();
@@ -1737,7 +1739,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
-            disableClose: true
+            disableClose: true,
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1782,7 +1784,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
-            disableClose: true
+            disableClose: true,
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1812,60 +1814,53 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let job: BatchDownloadJob = {
             type: JobType.BatchDownload,
             id: null,
-            group_ids: files.map(file => file.id)
-          }
+            group_ids: files.map((file) => file.id),
+          };
 
           let corrId = this.corrGen.next();
           let onCreateJobSuccess$ = this.actions$.pipe(
             ofActionDispatched(CreateJobSuccess),
-            filter(action => (action as CreateJobSuccess).correlationId == corrId),
+            filter((action) => (action as CreateJobSuccess).correlationId == corrId),
             take(1),
-            flatMap(action => {
+            flatMap((action) => {
               let jobId = (action as CreateJobSuccess).job.id;
               let dialogConfig: JobProgressDialogConfig = {
                 title: "Preparing download",
                 message: `Please wait while we prepare the files for download.`,
                 progressMode: "indeterminate",
-                job$: this.store.select(JobsState.getJobById).pipe(
-                  map(fn => fn(jobId).job)
-                )
+                job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId).job)),
               };
               let dialogRef = this.dialog.open(JobProgressDialogComponent, {
                 width: "400px",
                 data: dialogConfig,
-                disableClose: true
+                disableClose: true,
               });
-    
+
               return dialogRef.afterClosed().pipe(
                 flatMap((result) => {
                   if (!result) {
-                    
                     return of(null);
                   }
-                  
-                  return this.jobService.getJobResultFile(jobId, 'download').pipe(
-                    tap(data => {
-                      saveAs(data, files.length == 1 ? files[0].name : 'afterglow-files.zip')
+
+                  return this.jobService.getJobResultFile(jobId, "download").pipe(
+                    tap((data) => {
+                      saveAs(data, files.length == 1 ? files[0].name : "afterglow-files.zip");
                     })
                   );
                 })
               );
             })
-          )
+          );
 
-          let onCreateJobFail$ =  this.actions$.pipe(
+          let onCreateJobFail$ = this.actions$.pipe(
             ofActionDispatched(CreateJobFail),
-            filter(action => (action as CreateJobFail).correlationId == corrId),
-            take(1),
-          )
-
+            filter((action) => (action as CreateJobFail).correlationId == corrId),
+            take(1)
+          );
 
           this.store.dispatch(new CreateJob(job, 1000, corrId));
 
-          return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(
-            take(1)
-          )
-
+          return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1));
         })
       )
       .subscribe(
@@ -1892,9 +1887,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
           let hduCount = 0;
-          files.forEach(file => hduCount += file.hduIds.length);
+          files.forEach((file) => (hduCount += file.hduIds.length));
 
-          if(hduCount > 4) {
+          if (hduCount > 4) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: "Error",
               message: `The number of channels within a file is currently limited to no more than four.  Please reduce he number of channels and try grouping again.`,
@@ -1903,18 +1898,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                   color: null,
                   value: false,
                   label: "Close",
-                }
+                },
               ],
             };
             let dialogRef = this.dialog.open(AlertDialogComponent, {
               width: "400px",
               data: dialogConfig,
-              disableClose: true
+              disableClose: true,
             });
-  
-            return dialogRef.afterClosed()
+
+            return dialogRef.afterClosed();
           }
-          
 
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: "Group Files",
@@ -1935,7 +1929,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let dialogRef = this.dialog.open(AlertDialogComponent, {
             width: "400px",
             data: dialogConfig,
-            disableClose: true
+            disableClose: true,
           });
 
           return dialogRef.afterClosed().pipe(
@@ -1945,27 +1939,38 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 return of(null);
               }
 
-              let newFilename = this.getLongestCommonStartingSubstring(files.map(file => file.name)).replace(/_+$/,'').trim()
-              if(newFilename.length == 0) {
-                newFilename = `${files[0].name} - group`
+              let newFilename = this.getLongestCommonStartingSubstring(files.map((file) => file.name))
+                .replace(/_+$/, "")
+                .trim();
+              if (newFilename.length == 0) {
+                newFilename = `${files[0].name} - group`;
               }
               let uuid = UUID.UUID();
               let reqs = [];
-              files.forEach(file => {
-                file.hduIds.forEach(hduId => {
-                  reqs.push(this.dataFileService.updateFile(hduId, {group_id: uuid, name: newFilename, data_provider: null, asset_path: null, modified: true}))
-                })
-                
-              })
+              files.forEach((file) => {
+                file.hduIds.forEach((hduId) => {
+                  reqs.push(
+                    this.dataFileService.updateFile(hduId, {
+                      group_id: uuid,
+                      name: newFilename,
+                      data_provider: null,
+                      asset_path: null,
+                      modified: true,
+                    })
+                  );
+                });
+              });
 
               return concat(...reqs);
-            }),
+            })
           );
         })
       )
       .subscribe(
         () => {},
-        (err) => { throw err},
+        (err) => {
+          throw err;
+        },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1979,12 +1984,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(OpenFileDialogComponent, {
       width: "80vw",
       maxWidth: "1200px",
-      disableClose: true
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((assets) => {
-
-    });
+    dialogRef.afterClosed().subscribe((assets) => {});
   }
 
   refresh() {

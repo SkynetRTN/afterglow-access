@@ -1,8 +1,11 @@
 import { PixelType } from "./data-file";
 import { BlendMode } from "./blend-mode";
 
-export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number, visible: boolean }>, result: Uint32Array) {
-  layers = layers.filter(layer => layer.visible)
+export function compose(
+  layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number; visible: boolean }>,
+  result: Uint32Array
+) {
+  layers = layers.filter((layer) => layer.visible);
   if (layers.length == 0) {
     for (let i = 0; i < result.length; i++) {
       result[i] = 0;
@@ -33,19 +36,17 @@ export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMod
         result8[j + 1] = (1 - (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
         result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
         result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
-      }
-      else if (layers[k].blendMode == BlendMode.Luminosity) {
+      } else if (layers[k].blendMode == BlendMode.Luminosity) {
         // if (tr > 0.49 && tr < 0.51) console.log(`(${tr},${tg},${tb}) - (${result8[j] / 255.0},${result8[j + 1] / 255.0},${result8[j + 2] / 255.0})`)
         let blendHsy = rgbToHsv(tr, tg, tb);
         let baseHsy = rgbToHsv(result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0);
         let resultRgb = hsvToRgb(baseHsy[0], baseHsy[1], blendHsy[2]);
-        
+
         result8[j] = resultRgb[0] * 255;
         result8[j + 1] = resultRgb[1] * 255;
         result8[j + 2] = resultRgb[2] * 255;
         result8[j + 3] = 255.0;
-      }
-      else {
+      } else {
         //normal blend mode
         let br = result8[j] / 255.0;
         let bg = result8[j + 1] / 255.0;
@@ -60,44 +61,39 @@ export function compose(layers: Array<{ pixels: Uint32Array; blendMode: BlendMod
   return result;
 }
 
-
-
 function rgbToHsv(var_R: number, var_G: number, var_B: number) {
   //R, G and B input range = 0 ÷ 1.0
   //H, S and V output range = 0 ÷ 1.0
 
-  let var_Min = Math.min(var_R, var_G, var_B)    //Min. value of RGB
-  let var_Max = Math.max(var_R, var_G, var_B)    //Max. value of RGB
-  let del_Max = var_Max - var_Min             //Delta RGB value
+  let var_Min = Math.min(var_R, var_G, var_B); //Min. value of RGB
+  let var_Max = Math.max(var_R, var_G, var_B); //Max. value of RGB
+  let del_Max = var_Max - var_Min; //Delta RGB value
 
   let V = var_Max;
   let H: number;
   let S: number;
 
-  if (del_Max == 0)                     //This is a gray, no chroma...
-  {
-    H = 0
-    S = 0
+  if (del_Max == 0) {
+    //This is a gray, no chroma...
+    H = 0;
+    S = 0;
+  } //Chromatic data...
+  else {
+    S = del_Max / var_Max;
+
+    let del_R = ((var_Max - var_R) / 6 + del_Max / 2) / del_Max;
+    let del_G = ((var_Max - var_G) / 6 + del_Max / 2) / del_Max;
+    let del_B = ((var_Max - var_B) / 6 + del_Max / 2) / del_Max;
+
+    if (var_R == var_Max) H = del_B - del_G;
+    else if (var_G == var_Max) H = 1 / 3 + del_R - del_B;
+    else if (var_B == var_Max) H = 2 / 3 + del_G - del_R;
+
+    if (H < 0) H += 1;
+    if (H > 1) H -= 1;
   }
-  else                                    //Chromatic data...
-  {
-    S = del_Max / var_Max
 
-    let del_R = (((var_Max - var_R) / 6) + (del_Max / 2)) / del_Max
-    let del_G = (((var_Max - var_G) / 6) + (del_Max / 2)) / del_Max
-    let del_B = (((var_Max - var_B) / 6) + (del_Max / 2)) / del_Max
-
-    if (var_R == var_Max) H = del_B - del_G
-    else if (var_G == var_Max) H = (1 / 3) + del_R - del_B
-    else if (var_B == var_Max) H = (2 / 3) + del_G - del_R
-
-    if (H < 0) H += 1
-    if (H > 1) H -= 1
-  }
-
-  return [H,S,V]
-
-
+  return [H, S, V];
 }
 
 function hsvToRgb(H: number, S: number, V: number) {
@@ -109,37 +105,54 @@ function hsvToRgb(H: number, S: number, V: number) {
   let B: number;
 
   if (S == 0) {
-    R = V
-    G = V
-    B = V
-  }
-  else {
-    let var_h = H * 6
-    if (var_h == 6) var_h = 0      //H must be < 1
-    let var_i = Math.floor(var_h)           //Or ... var_i = floor( var_h )
-    let var_1 = V * (1 - S)
-    let var_2 = V * (1 - S * (var_h - var_i))
-    let var_3 = V * (1 - S * (1 - (var_h - var_i)))
+    R = V;
+    G = V;
+    B = V;
+  } else {
+    let var_h = H * 6;
+    if (var_h == 6) var_h = 0; //H must be < 1
+    let var_i = Math.floor(var_h); //Or ... var_i = floor( var_h )
+    let var_1 = V * (1 - S);
+    let var_2 = V * (1 - S * (var_h - var_i));
+    let var_3 = V * (1 - S * (1 - (var_h - var_i)));
 
     let var_r: number;
     let var_g: number;
     let var_b: number;
 
-    if (var_i == 0) { var_r = V; var_g = var_3; var_b = var_1 }
-    else if (var_i == 1) { var_r = var_2; var_g = V; var_b = var_1 }
-    else if (var_i == 2) { var_r = var_1; var_g = V; var_b = var_3 }
-    else if (var_i == 3) { var_r = var_1; var_g = var_2; var_b = V }
-    else if (var_i == 4) { var_r = var_3; var_g = var_1; var_b = V }
-    else { var_r = V; var_g = var_1; var_b = var_2 }
+    if (var_i == 0) {
+      var_r = V;
+      var_g = var_3;
+      var_b = var_1;
+    } else if (var_i == 1) {
+      var_r = var_2;
+      var_g = V;
+      var_b = var_1;
+    } else if (var_i == 2) {
+      var_r = var_1;
+      var_g = V;
+      var_b = var_3;
+    } else if (var_i == 3) {
+      var_r = var_1;
+      var_g = var_2;
+      var_b = V;
+    } else if (var_i == 4) {
+      var_r = var_3;
+      var_g = var_1;
+      var_b = V;
+    } else {
+      var_r = V;
+      var_g = var_1;
+      var_b = var_2;
+    }
 
-    R = var_r
-    G = var_g
-    B = var_b
+    R = var_r;
+    G = var_g;
+    B = var_b;
   }
 
-  return [R, G, B]
+  return [R, G, B];
 }
-
 
 // let R=0.3, G=0.59, B=0.11;
 
@@ -165,8 +178,8 @@ function hsvToRgb(H: number, S: number, V: number) {
 //   // In this case we choose 0 as a default value.
 
 //   if (r == g && g == b) {            // Limit case.
-//       s = 0; 
-//       h = 0; 
+//       s = 0;
+//       h = 0;
 //   } else if ((r >= g) && (g >= b)) { // Sector 0: 0° - 60°
 //       s = r - b;
 //       h = 60 * (g - b) / s;
@@ -254,8 +267,6 @@ function hsvToRgb(H: number, S: number, V: number) {
 //   rgb[1] = Math.min(Math.max(g, 0), 1);
 //   rgb[2] = Math.min(Math.max(b, 0), 1);
 // }
-
-
 
 // /**
 //  * Converts an RGB color value to HSL. Conversion formula

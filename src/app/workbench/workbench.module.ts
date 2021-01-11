@@ -29,7 +29,10 @@ import { DataProvidersModule } from "../data-providers/data-providers.module";
 import { WorkbenchImageViewerComponent } from "./containers/workbench-image-viewer/workbench-image-viewer.component";
 import { WorkbenchViewerPanelComponent } from "./containers/workbench-viewer-panel/workbench-viewer-panel.component";
 import { PanZoomCanvasComponent } from "./components/pan-zoom-canvas/pan-zoom-canvas.component";
-import { WorkbenchDataFileListComponent, FileListItemComponent } from "./containers/workbench-data-file-list/workbench-data-file-list.component";
+import {
+  WorkbenchDataFileListComponent,
+  FileListItemComponent,
+} from "./containers/workbench-data-file-list/workbench-data-file-list.component";
 import { ImageViewerStatusBarComponent } from "./components/image-viewer-status-bar/image-viewer-status-bar.component";
 import { ImageViewerMarkerOverlayComponent } from "./components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { NormalizerFormComponent } from "./components/normalizer-form/normalizer-form.component";
@@ -74,10 +77,10 @@ import { AlertDialogComponent } from "./components/alert-dialog/alert-dialog.com
 import { AvatarModule } from "ngx-avatar";
 import { WorkbenchViewerLayoutComponent } from "./containers/workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.component";
-import { DxFileManagerModule } from 'devextreme-angular';
-import { FileBrowserComponent } from './components/file-browser/file-browser.component';
-import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
-import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
+import { DxFileManagerModule } from "devextreme-angular";
+import { FileBrowserComponent } from "./components/file-browser/file-browser.component";
+import { SaveChangesDialogComponent } from "./components/file-dialog/file-dialog.component";
+import { JobProgressDialogComponent } from "./components/job-progress-dialog/job-progress-dialog.component";
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -119,7 +122,7 @@ export const COMPONENTS = [
   FileBrowserComponent,
   SaveChangesDialogComponent,
   FileListItemComponent,
-  JobProgressDialogComponent
+  JobProgressDialogComponent,
 ];
 
 @NgModule({
@@ -159,7 +162,7 @@ export const COMPONENTS = [
     ThemeDialogComponent,
     AlertDialogComponent,
     SaveChangesDialogComponent,
-    JobProgressDialogComponent
+    JobProgressDialogComponent,
   ],
 })
 export class WorkbenchModule {

@@ -12,7 +12,7 @@ export interface SourcesStateModel {
 }
 
 const sourcesDefaultState: SourcesStateModel = {
-  version: '7edaa969-843e-445a-bbaf-83bf0c5ae260',
+  version: "7edaa969-843e-445a-bbaf-83bf0c5ae260",
   nextIdSeed: 0,
   ids: [],
   entities: {},

@@ -12,7 +12,7 @@ export interface PhotDataStateModel {
 }
 
 const photDataDefaultState: PhotDataStateModel = {
-  version: '7960c17e-fca1-43ba-9559-1376f42ae8ca',
+  version: "7960c17e-fca1-43ba-9559-1376f42ae8ca",
   ids: [],
   entities: {},
 };

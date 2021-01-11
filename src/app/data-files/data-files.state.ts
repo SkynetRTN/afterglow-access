@@ -139,7 +139,7 @@ export class DataFilesState {
     private actions$: Actions,
     private wasmService: WasmService,
     private store: Store
-  ) { }
+  ) {}
 
   @Selector()
   public static getState(state: DataFilesStateModel) {
@@ -172,8 +172,8 @@ export class DataFilesState {
   public static getFileByHduId(state: DataFilesStateModel) {
     return (hduId: string) => {
       let hdu = state.hduEntities[hduId];
-      if(!hdu) return null;
-      
+      if (!hdu) return null;
+
       return hdu.fileId in state.fileEntities ? state.fileEntities[hdu.fileId] : null;
     };
   }
@@ -334,11 +334,11 @@ export class DataFilesState {
 
   @Action(Initialize)
   @ImmutableContext()
-  public initialize({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { }: Initialize) { }
+  public initialize({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, {}: Initialize) {}
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { }: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, {}: ResetState) {
     setState((state: DataFilesStateModel) => {
       return dataFilesDefaultState;
     });
@@ -377,7 +377,7 @@ export class DataFilesState {
             //allow other modules to react to closing of file prior to removing it from the application state
             return dispatch(new CloseHduSuccess(hduId)).pipe(
               take(1),
-              tap(v => {
+              tap((v) => {
                 setState((state: DataFilesStateModel) => {
                   if (state.hduIds.includes(hduId)) {
                     let hdu = state.hduEntities[hduId];
@@ -389,8 +389,7 @@ export class DataFilesState {
                   return state;
                 });
               })
-
-            )
+            );
           }),
           catchError((err) => dispatch(new CloseHduFail(hduId, err)))
         );
@@ -399,7 +398,7 @@ export class DataFilesState {
       flatMap((v) => {
         return dispatch(new CloseDataFileSuccess(fileId)).pipe(
           take(1),
-          tap(v => {
+          tap((v) => {
             setState((state: DataFilesStateModel) => {
               if (!state.fileIds.includes(fileId)) {
                 return state;
@@ -414,8 +413,7 @@ export class DataFilesState {
               return state;
             });
           })
-
-        )
+        );
       }),
       catchError((err) => dispatch(new CloseDataFileFail(fileId, err)))
     );
@@ -481,7 +479,7 @@ export class DataFilesState {
             dataFile = {
               type: "file",
               id: hdu.fileId,
-              assetPath: '/' + coreFile.asset_path,
+              assetPath: "/" + coreFile.asset_path,
               dataProviderId: coreFile.data_provider,
               name: coreFile.name,
               hduIds: [hdu.id],
@@ -1114,8 +1112,6 @@ export class DataFilesState {
     return dispatch(new InvalidateCompositeImageTile(fileId, tileIndex));
   }
 
-
-
   @Action(UpdateNormalizedImageTile)
   @ImmutableContext()
   public updateNormalizedImageTile(
@@ -1142,7 +1138,7 @@ export class DataFilesState {
 
     let onRawPixelsLoaded = () => {
       let state = getState();
-      return this.store.dispatch(new CalculateNormalizedPixels(hduId, tileIndex))
+      return this.store.dispatch(new CalculateNormalizedPixels(hduId, tileIndex));
     };
 
     if (rawTile.pixelsLoaded && rawTile.isValid) {
@@ -1194,40 +1190,38 @@ export class DataFilesState {
   @Action(CalculateNormalizedPixels)
   public calculateNormalizedPixels(
     { getState }: StateContext<DataFilesStateModel>,
-    { hduId, tileIndex}: CalculateNormalizedPixels
+    { hduId, tileIndex }: CalculateNormalizedPixels
   ) {
-
     let state = getState();
     let hdu = state.hduEntities[hduId] as ImageHdu;
     let rawPixels = state.imageDataEntities[hdu.rawImageDataId].tiles[tileIndex].pixels;
     let hist = (state.hduEntities[hduId] as ImageHdu).hist;
     let normalizer = (state.hduEntities[hduId] as ImageHdu).normalizer;
     let normalizedPixels = state.imageDataEntities[hdu.normalizedImageDataId].tiles[tileIndex].pixels as Uint32Array;
-    if(!normalizedPixels || normalizedPixels.length != rawPixels.length) {
-      normalizedPixels = new Uint32Array(rawPixels.length)
+    if (!normalizedPixels || normalizedPixels.length != rawPixels.length) {
+      normalizedPixels = new Uint32Array(rawPixels.length);
     }
-    
-    if (false && typeof Worker !== 'undefined') {
-      const worker = new Worker('./normalization.worker', { type: 'module' });
-      let result$ = fromEvent<MessageEvent>(worker, 'message').pipe(
-        flatMap($event => {
-          return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, $event.data.result))
+
+    if (false && typeof Worker !== "undefined") {
+      const worker = new Worker("./normalization.worker", { type: "module" });
+      let result$ = fromEvent<MessageEvent>(worker, "message").pipe(
+        flatMap(($event) => {
+          return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, $event.data.result));
         })
-      )
+      );
 
       let data = {
         pixels: rawPixels,
         hist: hist,
         normalizer: normalizer,
         result: normalizedPixels,
-      }
+      };
       worker.postMessage(data, [data.result.buffer]);
 
       return result$;
-
     } else {
       normalize(rawPixels, hist, normalizer, normalizedPixels);
-      return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, normalizedPixels))
+      return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, normalizedPixels));
     }
   }
 
@@ -1248,7 +1242,7 @@ export class DataFilesState {
       tile.pixelsLoaded = true;
       tile.pixelLoadingFailed = false;
       tile.pixelsLoading = false;
-      tile.isValid = true
+      tile.isValid = true;
       tile.pixels = normalizedPixels;
 
       state.imageDataEntities[hdu.normalizedImageDataId] = {
@@ -1259,11 +1253,9 @@ export class DataFilesState {
       actions.push(new InvalidateCompositeImageTile(hdu.fileId, tileIndex));
 
       return state;
-    })
+    });
 
     return dispatch(actions);
-
-
   }
 
   @Action(UpdateNormalizer)
@@ -1305,20 +1297,16 @@ export class DataFilesState {
       let hdu = state.hduEntities[hduId] as ImageHdu;
       hdu.blendMode = blendMode;
 
-      actions.push(new InvalidateCompositeImageTiles(hdu.fileId))
+      actions.push(new InvalidateCompositeImageTiles(hdu.fileId));
       return state;
     });
 
     dispatch(actions);
-    
   }
 
   @Action(UpdateAlpha)
   @ImmutableContext()
-  public updateAlpha(
-    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { hduId, alpha }: UpdateAlpha
-  ) {
+  public updateAlpha({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { hduId, alpha }: UpdateAlpha) {
     let state = getState();
     if (!(hduId in state.hduEntities)) return;
 
@@ -1327,12 +1315,11 @@ export class DataFilesState {
       let hdu = state.hduEntities[hduId] as ImageHdu;
       hdu.alpha = alpha;
 
-      actions.push(new InvalidateCompositeImageTiles(hdu.fileId))
+      actions.push(new InvalidateCompositeImageTiles(hdu.fileId));
       return state;
     });
 
     dispatch(actions);
-    
   }
 
   @Action(UpdateVisibility)
@@ -1349,12 +1336,11 @@ export class DataFilesState {
       let hdu = state.hduEntities[hduId] as ImageHdu;
       hdu.visible = value;
 
-      actions.push(new InvalidateCompositeImageTiles(hdu.fileId))
+      actions.push(new InvalidateCompositeImageTiles(hdu.fileId));
       return state;
     });
 
     dispatch(actions);
-    
   }
 
   @Action(InvalidateCompositeImageTiles)
@@ -1449,7 +1435,7 @@ export class DataFilesState {
             pixels: normalizedImageData.tiles[tileIndex].pixels as Uint32Array,
             blendMode: hdu.blendMode,
             alpha: hdu.alpha,
-            visible: hdu.visible
+            visible: hdu.visible,
           };
         });
 

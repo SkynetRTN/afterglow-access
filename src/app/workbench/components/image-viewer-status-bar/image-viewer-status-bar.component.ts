@@ -92,7 +92,6 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
     this.onSaveFile.emit();
   }
 
-
   public startZoomIn() {
     timer(0, 125)
       .pipe(takeUntil(this.stopZoomIn$))

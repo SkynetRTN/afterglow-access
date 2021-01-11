@@ -2,25 +2,35 @@
   <h4 i18n>Save As</h4>
 </div>
 <mat-dialog-content>
-  <app-file-manager [create]="true" [copy]="false" [move]="false" [delete]="true" [rename]="true" [upload]="false"
-    [download]="false" [selectionMode]="'single'" (onAssetSelectionChange)="selectedAssets$.next($event)"
-    (onSelectedAssetOpened)="onSelectedAssetOpened($event)">
+  <app-file-manager
+    [create]="true"
+    [copy]="false"
+    [move]="false"
+    [delete]="true"
+    [rename]="true"
+    [upload]="false"
+    [download]="false"
+    [selectionMode]="'single'"
+    (onAssetSelectionChange)="selectedAssets$.next($event)"
+    (onSelectedAssetOpened)="onSelectedAssetOpened($event)"
+  >
   </app-file-manager>
 </mat-dialog-content>
-<mat-form-field class="pt-3" style="width: 100%;">
+<mat-form-field class="pt-3" style="width: 100%">
   <mat-label>File name</mat-label>
-  <input #nameInput matInput [formControl]="nameFormControl">
+  <input #nameInput matInput [formControl]="nameFormControl" />
   <mat-error *ngIf="nameFormControl.hasError('pattern') && !nameFormControl.hasError('required')">
     Please enter a valid filename
   </mat-error>
-  <mat-error *ngIf="nameFormControl.hasError('required')">
-    File name is <strong>required</strong>
-  </mat-error>
+  <mat-error *ngIf="nameFormControl.hasError('required')"> File name is <strong>required</strong> </mat-error>
 </mat-form-field>
 
-
-<mat-dialog-actions style="justify-content: flex-end;" class="pb-4">
-  <span class="alert alert-danger mr-4" *ngIf="(currentDataProvider$ | async)?.readonly">This location is read-only.  Please choose a different directory.</span>
-  <button mat-raised-button (click)="onSaveAsBtnClick()" [disabled]="!nameFormControl.valid || !(destinationValid$ | async)">Save</button>
+<mat-dialog-actions style="justify-content: flex-end" class="pb-4">
+  <span class="alert alert-danger mr-4" *ngIf="(currentDataProvider$ | async)?.readonly"
+    >This location is read-only. Please choose a different directory.</span
+  >
+  <button mat-raised-button (click)="onSaveAsBtnClick()" [disabled]="!nameFormControl.valid || !(destinationValid$ | async)">
+    Save
+  </button>
   <button mat-raised-button [mat-dialog-close]="false">Cancel</button>
 </mat-dialog-actions>
