@@ -226,6 +226,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   focusedViewer$: Observable<Viewer>;
   focusedViewerId$: Observable<string>;
+  canSplitFocusedViewer$: Observable<boolean>;
   focusedImageViewer$: Observable<ImageViewer>;
   focusedImageViewerId$: Observable<string>;
   focusedTableViewer$: Observable<TableViewer>;
@@ -353,6 +354,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
     this.focusedViewerId$ = this.store.select(WorkbenchState.getFocusedViewerId);
+
+    this.canSplitFocusedViewer$ = this.store.select(WorkbenchState.getViewers).pipe(
+      map(viewers => viewers && viewers.length > 1)
+    )
 
     this.focusedImageViewer$ = this.store.select(WorkbenchState.getFocusedImageViewer);
     this.focusedImageViewerId$ = this.focusedImageViewer$.pipe(
