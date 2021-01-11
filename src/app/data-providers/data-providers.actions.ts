@@ -68,7 +68,7 @@ export class DeselectAllDataProviderAssets {
 export class ImportAssets {
   public static readonly type = "[DataProvider] Import Assets";
 
-  constructor(public assets: DataProviderAsset[], public correlationId: string) {}
+  constructor(public assets: DataProviderAsset[], public correlationId: string=null) {}
 }
 
 export class ImportAssetsCompleted {
