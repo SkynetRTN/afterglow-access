@@ -29,6 +29,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   @Input() imageMouseY: number;
 
   @Output() downloadSnapshot = new EventEmitter();
+  @Output() onSaveFile = new EventEmitter();
   @Output() onCloseFile = new EventEmitter();
   @Output() onMoveBy = new EventEmitter<MoveByEvent>();
   @Output() onZoomBy = new EventEmitter<ZoomByEvent>();
@@ -86,6 +87,11 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   onCloseFileClick() {
     this.onCloseFile.emit();
   }
+
+  onSaveFileClick() {
+    this.onSaveFile.emit();
+  }
+
 
   public startZoomIn() {
     timer(0, 125)

@@ -232,8 +232,8 @@
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'" style="overflow: auto">
     <app-workbench-viewer-layout [fxLayout]="(layoutContainer$ | async)?.direction" style="height: 100%"
       [id]="(layoutContainer$ | async)?.id" [itemIds]="(layoutContainer$ | async)?.itemIds"
-      (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)" (onMarkerClick)="onMarkerClick($event)" (onFileClose)="onCloseFileBtnClick($event)"
-      cdkDropListGroup>
+      (onImageClick)="onImageClick($event)" (onImageMove)="onImageMove($event)" (onMarkerClick)="onMarkerClick($event)"
+      (onFileClose)="onCloseFileBtnClick($event)" (onFileSave)="onSaveFileBtnClick($event)" cdkDropListGroup>
     </app-workbench-viewer-layout>
   </div>
   <ng-container *ngIf="focusedImageViewer$ | async; let focusedImageViewer">

@@ -102,7 +102,9 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
   @Output()
   onFileClose = new EventEmitter<string>();
-
+  @Output()
+  onFileSave = new EventEmitter<string>();
+  
   destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
   hduId$: Observable<string>;
@@ -609,6 +611,14 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     }
     
     this.onFileClose.emit(this.viewer.fileId);
+  }
+
+  handleSaveFile() {
+    if (!this.viewer || !this.viewer.fileId) {
+      return;
+    }
+    
+    this.onFileSave.emit(this.viewer.fileId);
   }
 
   handleViewportSizeChange($event: ViewportSizeChangeEvent) {

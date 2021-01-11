@@ -25,6 +25,7 @@
         (onImageClick)="handleViewerPanelImageClick($event, panel.id, panel)"
         (onMarkerClick)="handleViewerPanelMarkerClick($event, panel.id, panel)"
         (onFileClose)="onFileClose.emit($event)"
+        (onFileSave)="onFileSave.emit($event)"
         (click)="setFocusedPanel($event, panel)"
         (mousedown)="setFocusedPanel($event, panel)"
         (mousewheel)="setFocusedPanel($event, panel)"

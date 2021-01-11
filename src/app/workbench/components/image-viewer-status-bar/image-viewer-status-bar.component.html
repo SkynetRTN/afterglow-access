@@ -77,6 +77,16 @@
       <button
         mat-icon-button
         i18n-aria-label
+        aria-label="Save file"
+        (click)="onSaveFileClick()"
+        i18n-matTooltip
+        matTooltip="Save file"
+      >
+        <mat-icon>save</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        i18n-aria-label
         aria-label="Close file"
         (click)="onCloseFileClick()"
         i18n-matTooltip
