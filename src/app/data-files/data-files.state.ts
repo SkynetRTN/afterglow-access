@@ -51,6 +51,7 @@ import {
   RotateBy,
   UpdateNormalizedImageTileSuccess,
   ResetImageTransform,
+  ResetViewportTransform,
   UpdateCompositeImageTile,
   UpdateCompositeImageTileSuccess,
   InvalidateNormalizedImageTile,
@@ -1683,10 +1684,16 @@ export class DataFilesState {
         return state;
       }
 
-      let xScale = Math.abs(viewportTransform.a);
-      let yScale = Math.abs(viewportTransform.d);
 
-      viewportTransform = translateTransform(viewportTransform, xShift / xScale, yShift / yScale);
+
+      let shift = transformPoint({x: xShift, y: yShift}, invertTransform({
+        ...viewportTransform,
+        tx: 0,
+        ty: 0
+      }));
+
+
+      viewportTransform = translateTransform(viewportTransform, shift.x, shift.y);
       imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 
       ts[viewportTransformId] = viewportTransform;
@@ -1718,10 +1725,9 @@ export class DataFilesState {
         };
       }
 
-      //TODO:  Verify that image to viewport transform should be used instead of viewport transform for the anchor point
-      anchorPoint = transformPoint(anchorPoint, invertTransform(imageToViewportTransform));
+      anchorPoint = transformPoint(anchorPoint, invertTransform(viewportTransform));
 
-      imageTransform = rotateTransform(imageTransform, -rotationAngle, anchorPoint);
+      viewportTransform = rotateTransform(viewportTransform, -rotationAngle, anchorPoint);
       imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 
       ts[viewportTransformId] = viewportTransform;
@@ -1735,7 +1741,7 @@ export class DataFilesState {
   @ImmutableContext()
   public flip(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { imageDataId, imageTransformId, viewportTransformId }: Flip
+    { imageDataId, imageTransformId, viewportTransformId, axis, viewportSize, anchorPoint }: Flip
   ) {
     let state = getState();
 
@@ -1746,10 +1752,16 @@ export class DataFilesState {
       let imageTransform = ts[imageTransformId];
       let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 
-      imageTransform = scaleTransform(imageTransform, -1, 1, {
-        x: imageData.width / 2,
-        y: imageData.height / 2,
-      });
+      if (anchorPoint == null) {
+        anchorPoint = {
+          x: viewportSize.width / 2.0,
+          y: viewportSize.height / 2.0,
+        };
+      }
+
+      anchorPoint = transformPoint(anchorPoint, invertTransform(viewportTransform));
+
+      viewportTransform = scaleTransform(viewportTransform, axis == 'horizontal' ? 1 : -1, axis == 'horizontal' ? -1 : 1, anchorPoint);
       imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 
       ts[viewportTransformId] = viewportTransform;
@@ -1782,6 +1794,40 @@ export class DataFilesState {
         d: -1,
         tx: 0,
         ty: imageData.height,
+      };
+      imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
+
+      ts[viewportTransformId] = viewportTransform;
+      ts[imageTransformId] = imageTransform;
+
+      return state;
+    });
+  }
+
+  
+  @Action(ResetViewportTransform)
+  @ImmutableContext()
+  public resetViewportTransform(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { imageDataId, imageTransformId, viewportTransformId }: ResetViewportTransform
+  ) {
+    let state = getState();
+
+    setState((state: DataFilesStateModel) => {
+      let imageData = state.imageDataEntities[imageDataId];
+      let ts = state.transformEntities;
+      let viewportTransform = ts[viewportTransformId];
+      let imageTransform = ts[imageTransformId];
+      let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
+
+      viewportTransform = {
+        ...viewportTransform,
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 1,
+        tx: 0,
+        ty: 0,
       };
       imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 

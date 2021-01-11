@@ -16,6 +16,7 @@ import {
   Flip,
   UpdateBlendMode,
   UpdateAlpha,
+  ResetViewportTransform,
 } from "../../../data-files/data-files.actions";
 import { StretchMode } from "../../../data-files/models/stretch-mode";
 import { HduType } from "../../../data-files/models/data-file-type";
@@ -173,15 +174,12 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   onFlipClick() {
-    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id));
+    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, 'vertical',  this.viewportSize));
   }
 
-  // onMirrorClick() {
-  //   this.store.dispatch([
-  //     new RotateBy(this.hdu.id, 90),
-  //     new Flip(this.hdu.id)
-  //   ]);
-  // }
+  onMirrorClick() {
+    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, 'horizontal',  this.viewportSize));
+  }
 
   onRotateClick() {
     this.store.dispatch(
@@ -191,6 +189,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
 
   onResetOrientationClick() {
     this.store.dispatch(new ResetImageTransform(this.imageData.id, this.imageTransform.id, this.viewportTransform.id));
+    this.store.dispatch(new ResetViewportTransform(this.imageData.id, this.imageTransform.id, this.viewportTransform.id));
   }
 
   ngOnInit() {}
