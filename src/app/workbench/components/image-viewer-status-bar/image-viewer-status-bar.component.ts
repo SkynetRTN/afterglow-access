@@ -29,6 +29,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   @Input() imageMouseY: number;
 
   @Output() downloadSnapshot = new EventEmitter();
+  @Output() onCloseFile = new EventEmitter();
   @Output() onMoveBy = new EventEmitter<MoveByEvent>();
   @Output() onZoomBy = new EventEmitter<ZoomByEvent>();
   @Output() onZoomTo = new EventEmitter<ZoomToEvent>();
@@ -82,24 +83,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
     this.downloadSnapshot.emit();
   }
 
-  removeFromLibrary() {
-    // if(!this.hdu) return;
-    // let hduId = this.hdu.id;
-    // let dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-    //   width: "300px",
-    //   data: {
-    //     message: "Are you sure you want to delete this file from your library?",
-    //     confirmationBtn: {
-    //       color: 'warn',
-    //       label: 'Delete File'
-    //     }
-    //   }
-    // });
-    // dialogRef.afterClosed().subscribe(result => {
-    //   if (result) {
-    //     this.store.dispatch(new CloseDataFile(this.hdu.fileId));
-    //   }
-    // });
+  onCloseFileClick() {
+    this.onCloseFile.emit();
   }
 
   public startZoomIn() {

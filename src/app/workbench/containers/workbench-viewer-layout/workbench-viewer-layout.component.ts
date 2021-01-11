@@ -69,7 +69,8 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   @Output() onImageClick = new EventEmitter<ViewerPanelCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerPanelCanvasMouseEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerPanelMarkerMouseEvent>();
-
+  @Output() onFileClose = new EventEmitter<string>();
+  
   private hotKeys: Array<Hotkey> = [];
 
   constructor(private store: Store, private _hotkeysService: HotkeysService) {

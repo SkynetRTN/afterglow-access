@@ -81,6 +81,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Output() onImageClick = new EventEmitter<ViewerCanvasMouseEvent>();
   @Output() onImageMove = new EventEmitter<ViewerCanvasMouseEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerMarkerMouseEvent>();
+  @Output() onFileClose = new EventEmitter<string>();
 
   selectedViewerIndex = 0;
 

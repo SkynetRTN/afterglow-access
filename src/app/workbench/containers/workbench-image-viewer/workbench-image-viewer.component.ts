@@ -100,6 +100,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   onImageMove = new EventEmitter<CanvasMouseEvent>();
   @Output()
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
+  @Output()
+  onFileClose = new EventEmitter<string>();
 
   destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
@@ -599,6 +601,14 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
         height: normalizedImageData.height,
       })
     );
+  }
+
+  handleCloseFile() {
+    if (!this.viewer || !this.viewer.fileId) {
+      return;
+    }
+    
+    this.onFileClose.emit(this.viewer.fileId);
   }
 
   handleViewportSizeChange($event: ViewportSizeChangeEvent) {

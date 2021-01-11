@@ -70,6 +70,7 @@
             (onImageMove)="handleImageMove($event, viewer.id, viewer)"
             (onImageClick)="handleImageClick($event, viewer.id, viewer)"
             (onMarkerClick)="handleMarkerClick($event, viewer.id, viewer)"
+            (onFileClose)="onFileClose.emit($event)"
           >
           </app-workbench-image-viewer>
           <div *ngSwitchCase="'table'">Tables are not yet supported.</div>
