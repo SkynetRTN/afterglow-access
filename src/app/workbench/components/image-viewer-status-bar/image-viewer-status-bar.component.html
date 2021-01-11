@@ -25,6 +25,16 @@
       <button
         mat-icon-button
         i18n-aria-label
+        aria-label="Download Viewer Snapshot"
+        (click)="onDownloadSnapshotClick()"
+        i18n-matTooltip
+        matTooltip="Download Viewer Snapshot"
+      >
+        <mat-icon>photo_camera</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        i18n-aria-label
         aria-label="Zoom In"
         (mousedown)="startZoomIn()"
         (mouseup)="stopZoomIn()"
@@ -63,16 +73,6 @@
         matTooltip="Reset Zoom"
       >
         <mat-icon>all_out</mat-icon>
-      </button>
-      <button
-        mat-icon-button
-        i18n-aria-label
-        aria-label="Download Viewer Snapshot"
-        (click)="onDownloadSnapshotClick()"
-        i18n-matTooltip
-        matTooltip="Download Viewer Snapshot"
-      >
-        <mat-icon>photo_camera</mat-icon>
       </button>
       <button
         mat-icon-button
