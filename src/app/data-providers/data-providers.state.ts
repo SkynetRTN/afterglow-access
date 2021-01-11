@@ -415,7 +415,7 @@ export class DataProvidersState {
 
   @Action(ImportAssets)
   @ImmutableContext()
-  public importAssets({ setState, getState, dispatch }: StateContext<DataProvidersStateModel>, { assets }: ImportAssets) {
+  public importAssets({ setState, getState, dispatch }: StateContext<DataProvidersStateModel>, { assets, correlationId}: ImportAssets) {
     let job: BatchImportJob = {
       id: null,
       type: JobType.BatchImport,
@@ -453,17 +453,19 @@ export class DataProvidersState {
             new ImportAssetsCompleted(
               assets,
               result.file_ids.map((id) => id.toString()),
-              result.errors
+              result.errors,
+              correlationId
             )
           );
         } else if (a.result.canceled) {
-          return dispatch(new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`]));
+          return dispatch(new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`], correlationId));
         } else if (a.result.error) {
           return dispatch(
             new ImportAssetsCompleted(
               assets,
               [],
-              [`Unable to import assets.  Please try again later: Error: ${a.result.error}`]
+              [`Unable to import assets.  Please try again later: Error: ${a.result.error}`],
+              correlationId
             )
           );
         }
@@ -476,7 +478,7 @@ export class DataProvidersState {
       takeUntil(jobCompleted$),
       tap((a) => {
         let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
-        return dispatch(new ImportAssetsStatusUpdated(jobEntity.job as BatchImportJob));
+        return dispatch(new ImportAssetsStatusUpdated(jobEntity.job as BatchImportJob, correlationId));
       })
     );
 
