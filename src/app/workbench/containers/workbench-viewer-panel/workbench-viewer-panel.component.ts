@@ -344,15 +344,9 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   drop(event: CdkDragDrop<string[]>) {
     var srcPanelId = event.previousContainer.id;
     var targetPanelId = event.container.id;
-    var viewerId = event.item.data.viewerId;
+    let viewer: Viewer = event.item.data;
 
-    this.store.dispatch(new MoveViewer(viewerId, srcPanelId, targetPanelId, event.currentIndex));
-    // if(previousIndex!=NaN && currentIndex!=NaN && previousIndex!=undefined && currentIndex!=undefined && previousIndex!=currentIndex){
-    //      //Do stuff
-    //     .....
-    //     //END Stuff
-    //     moveItemInArray(this.views, previousIndex, currentIndex);
-    // }
+    this.store.dispatch(new MoveViewer(viewer.id, srcPanelId, targetPanelId, event.currentIndex));
   }
 
   splitViewerPanel(viewerId: string, direction: "up" | "down" | "left" | "right") {
