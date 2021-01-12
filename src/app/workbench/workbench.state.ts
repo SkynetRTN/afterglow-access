@@ -302,6 +302,17 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     },
     currentStackingJobId: null,
   },
+  wcsCalibrationPanelState: {
+    selectedHduIds: []
+  },
+  wcsCalibrationSettings: {
+    ra: null,
+    dec: null,
+    minScale: 0.1,
+    maxScale: 60,
+    radius: 180,
+    maxSources: 1000,
+  },
   catalogs: [],
   selectedCatalogId: null,
   fieldCals: [],
@@ -877,6 +888,16 @@ export class WorkbenchState {
   @Selector()
   public static getPhotometryShowSourceLabels(state: WorkbenchStateModel) {
     return state.photometryPanelConfig.showSourceLabels;
+  }
+
+  @Selector()
+  public static getWcsCalibrationPanelState(state: WorkbenchStateModel) {
+    return state.wcsCalibrationPanelState;
+  }
+
+  @Selector()
+  public static getWcsCalibrationSettings(state: WorkbenchStateModel) {
+    return state.wcsCalibrationSettings;
   }
 
   @Selector()

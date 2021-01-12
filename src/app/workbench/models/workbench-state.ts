@@ -24,6 +24,7 @@ export enum WorkbenchTool {
   IMAGE_CALC = "image-calculator",
   STACKER = "stacker",
   ALIGNER = "aligner",
+  WCS_CALIBRATION = "wcs-calibration"
 }
 
 export interface PixelOpsFormData {
@@ -98,6 +99,19 @@ export interface StackingPanelConfig {
   currentStackingJobId: string;
 }
 
+export interface WcsCalibrationPanelState {
+  selectedHduIds: string[];
+}
+
+export interface WcsCalibrationSettings {
+  ra: number;
+  dec: number;
+  radius: number;
+  minScale: number;
+  maxScale: number;
+  maxSources: number;
+}
+
 export interface ViewerPanelContainer {
   id: string;
   type: "container";
@@ -158,7 +172,8 @@ export interface WorkbenchStateModel {
   pixelOpsPanelConfig: PixelOpsPanelConfig;
   aligningPanelConfig: AligningPanelConfig;
   stackingPanelConfig: StackingPanelConfig;
-
+  wcsCalibrationPanelState: WcsCalibrationPanelState;
+  wcsCalibrationSettings: WcsCalibrationSettings
   fileIds: string[];
   fileStateEntities: { [id: string]: WorkbenchFileState };
   hduIds: string[];

@@ -81,6 +81,7 @@ import { DxFileManagerModule } from "devextreme-angular";
 import { FileBrowserComponent } from "./components/file-browser/file-browser.component";
 import { SaveChangesDialogComponent } from "./components/file-dialog/file-dialog.component";
 import { JobProgressDialogComponent } from "./components/job-progress-dialog/job-progress-dialog.component";
+import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -123,6 +124,7 @@ export const COMPONENTS = [
   SaveChangesDialogComponent,
   FileListItemComponent,
   JobProgressDialogComponent,
+  WcsCalibrationPanelComponent,
 ];
 
 @NgModule({

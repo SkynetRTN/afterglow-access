@@ -11,6 +11,8 @@ import {
   StackingPanelConfig as StackingPanelConfig,
   CustomMarkerPanelConfig,
   ViewerPanel,
+  WcsCalibrationSettings,
+  WcsCalibrationPanelState,
 } from "./models/workbench-state";
 import { SidebarView } from "./models/sidebar-view";
 import { CentroidSettings } from "./models/centroid-settings";
@@ -273,6 +275,18 @@ export class UpdateStackingPanelConfig {
   public static readonly type = "[Workbench] Update Stacking Panel Config";
 
   constructor(public changes: Partial<StackingPanelConfig>) {}
+}
+
+export class UpdateWcsCalibrationPanelState {
+  public static readonly type = "[Workbench] Update Wcs Calibration Panel";
+
+  constructor(public changes: Partial<WcsCalibrationPanelState>) {}
+}
+
+export class UpdateWcsCalibrationSettings {
+  public static readonly type = "[Workbench] Update Wcs Calibration Panel";
+
+  constructor(public changes: Partial<WcsCalibrationSettings>) {}
 }
 
 export class LoadCatalogs {

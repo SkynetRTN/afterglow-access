@@ -11,6 +11,7 @@ import {
   TableHdu,
   hasOverlap,
   Header,
+  getFilter,
 } from "./models/data-file";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
 import { merge, combineLatest, fromEvent } from "rxjs";
@@ -140,7 +141,7 @@ export class DataFilesState {
     private actions$: Actions,
     private wasmService: WasmService,
     private store: Store
-  ) {}
+  ) { }
 
   @Selector()
   public static getState(state: DataFilesStateModel) {
@@ -207,6 +208,31 @@ export class DataFilesState {
   public static getHduById(state: DataFilesStateModel) {
     return (hduId: string) => {
       return hduId in state.hduEntities ? state.hduEntities[hduId] : null;
+    };
+  }
+
+  @Selector([DataFilesState.getHduEntities, DataFilesState.getFileEntities, DataFilesState.getHeaderEntities])
+  public static getHduLabel(
+    state: DataFilesStateModel,
+    hduEntities: { [id: string]: IHdu },
+    fileEntities: { [id: string]: DataFile },
+    headerEntities: { [id: string]: Header }
+  ) {
+    return (hduId: string) => {
+      let hdu = hduEntities[hduId];
+      if (!hdu) return '';
+
+      let header = headerEntities[hdu.headerId];
+      if(header) {
+        let filter = getFilter(header);
+        if(filter) return filter;
+      }
+
+      let file = fileEntities[hdu.fileId];
+      if(!file) return '';
+      let index = file.hduIds.indexOf(hdu.id);
+
+      return `Layer ${index}`
     };
   }
 
@@ -335,11 +361,11 @@ export class DataFilesState {
 
   @Action(Initialize)
   @ImmutableContext()
-  public initialize({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, {}: Initialize) {}
+  public initialize({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { }: Initialize) { }
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<DataFilesStateModel>, { }: ResetState) {
     setState((state: DataFilesStateModel) => {
       return dataFilesDefaultState;
     });
@@ -1686,7 +1712,7 @@ export class DataFilesState {
 
 
 
-      let shift = transformPoint({x: xShift, y: yShift}, invertTransform({
+      let shift = transformPoint({ x: xShift, y: yShift }, invertTransform({
         ...viewportTransform,
         tx: 0,
         ty: 0
@@ -1804,7 +1830,7 @@ export class DataFilesState {
     });
   }
 
-  
+
   @Action(ResetViewportTransform)
   @ImmutableContext()
   public resetViewportTransform(

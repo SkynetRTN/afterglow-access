@@ -1,0 +1,86 @@
+<div *ngIf="hduIds">
+  <form [formGroup]="wcsCalibrationForm">
+    <div>
+      <mat-form-field appearance="outline" style="width: 300px">
+        <mat-label i18n>Select Image(s) to Calibrate</mat-label>
+        <mat-select multiple formControlName="selectedHduIds">
+          <mat-option *ngFor="let hduId of hduIds; trackBy: trackHdu"  [value]="hduId">
+            {{ getHduOptionLabel(hduId) | async }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-icon-button (click)="onSelectAllBtnClick()">
+        <mat-icon>select_all</mat-icon>
+      </button>
+
+      <button mat-icon-button (click)="onClearSelectionBtnClick()">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+
+    <div>
+      <mat-form-field appearance="outline">
+        <mat-label>RA (hours)</mat-label>
+        <input matInput formControlName="ra"/>
+      </mat-form-field>
+      <mat-form-field class="ml-2" appearance="outline">
+        <mat-label>Dec (degs)</mat-label>
+        <input matInput formControlName="dec"/>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field appearance="outline">
+        <mat-label>Radius (arcmins)</mat-label>
+        <input matInput type="number" formControlName="radius"/>
+      </mat-form-field>
+      <mat-form-field class="ml-2" appearance="outline">
+        <mat-label>Max Sources</mat-label>
+        <input matInput type="number" formControlName="maxSources"/>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field appearance="outline">
+        <mat-label>Min Scale (arcsec/pix)</mat-label>
+        <input matInput type="number" formControlName="minScale"/>
+      </mat-form-field>
+      <mat-form-field class="ml-2" appearance="outline">
+        <mat-label>Max Scale (arcsec/pix)</mat-label>
+        <input matInput type="number" formControlName="maxScale"/>
+      </mat-form-field>
+    </div>
+
+    <div style="text-align: right; width: 100%;">
+      <button class="mr-4" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
+        Open Source Extraction Settings...
+      </button>
+      <button mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>
+        Submit
+      </button>
+    </div>
+  </form>
+
+  <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
+  <div *ngIf="wcsCalibrationJobRow$ | async; let jobRow" style="margin-top: 10px">
+    <div class="alert alert-info"
+      *ngIf="!jobRow.result || ['pending', 'in_progress'].includes(jobRow.job.state.status); else jobComplete">
+      <span i18n>Processing job</span> {{ jobRow.job.id }} ... ({{ jobRow.job.state.progress | number: "1.0-0" }}%)
+
+      <ng-container *ngIf="jobRow.job.state.status == 'in_progress'">
+        <div style="margin-top: 5px">
+          <mat-progress-bar mode="determinate" [value]="jobRow.job.state.progress" [color]="'primary'">
+          </mat-progress-bar>
+        </div>
+      </ng-container>
+    </div>
+    <ng-template #jobComplete>
+      <div *ngIf="jobRow.result.errors.length != 0; else noErrors" class="alert alert-danger">
+        {{ jobRow.result.errors }}
+      </div>
+      <ng-template #noErrors>
+        <div class="alert alert-success" i18n>Processing is complete.</div>
+      </ng-template>
+    </ng-template>
+  </div>
+  <!-- </div> -->
+</div>

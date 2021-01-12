@@ -69,15 +69,15 @@ export function parseDms(str) {
   let sign = 1;
   let result = 0;
 
-  if (parseFloat(fields[0]) < 0) {
+  if (Number(fields[0]) < 0) {
     sign = -1;
-    fields[0] = -parseFloat(fields[0]);
+    fields[0] = -Number(fields[0]);
   }
 
   let denom = 1.0;
 
   for (let i in fields) {
-    let field = parseFloat(fields[i]);
+    let field = Number(fields[i]);
     result += field / denom;
     denom *= 60;
   }

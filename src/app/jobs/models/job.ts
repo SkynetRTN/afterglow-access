@@ -9,6 +9,7 @@ import { BatchImportJob } from "./batch-import";
 import { SonificationJob } from "./sonification";
 import { BatchDownloadJob } from "./batch-download";
 import { BatchAssetDownloadJob } from "./batch-asset-download";
+import { WcsCalibrationJob } from './wcs_calibration';
 
 export type Job =
   | SourceExtractionJob
@@ -21,4 +22,5 @@ export type Job =
   | BatchImportJob
   | SonificationJob
   | BatchDownloadJob
-  | BatchAssetDownloadJob;
+  | BatchAssetDownloadJob
+  | WcsCalibrationJob;

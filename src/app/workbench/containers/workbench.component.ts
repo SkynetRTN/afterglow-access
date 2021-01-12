@@ -80,6 +80,8 @@ import {
   SyncPlottingPanelStates,
   SetFileSelection,
   SetFileListFilter,
+  UpdateWcsCalibrationPanelState,
+  UpdateWcsCalibrationSettings,
 } from "../workbench.actions";
 import {
   LoadDataProviders,
@@ -107,6 +109,8 @@ import {
   AligningPanelConfig,
   StackingPanelConfig,
   ViewerPanelContainer,
+  WcsCalibrationPanelState,
+  WcsCalibrationSettings,
 } from "../models/workbench-state";
 import { CustomMarkerPanelConfig } from "../models/workbench-state";
 import { Marker, MarkerType, CircleMarker, LineMarker, RectangleMarker, TeardropMarker } from "../models/marker";
@@ -261,6 +265,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   pixelOpsPanelConfig$: Observable<PixelOpsPanelConfig>;
   aligningPanelConfig$: Observable<AligningPanelConfig>;
   stackingPanelConfig$: Observable<StackingPanelConfig>;
+
+  wcsCalibrationPanelState$: Observable<WcsCalibrationPanelState>;
+  wcsCalibrationSettings$: Observable<WcsCalibrationSettings>;
 
   photometrySettings$: Observable<PhotometrySettings>;
   centroidSettings$: Observable<CentroidSettings>;
@@ -664,6 +671,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     /* STACKING PANEL */
     this.stackingPanelConfig$ = this.store.select(WorkbenchState.getStackingPanelConfig);
+
+    /* WCS CALIBRATION PANEL */
+    this.wcsCalibrationPanelState$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
+    this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationSettings);
 
     this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
     this.viewerSyncMode$ = store.select(WorkbenchState.getViewerSyncMode);
@@ -1119,6 +1130,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   onSourceExtractionSettingsChange($event) {
     this.store.dispatch(new UpdateSourceExtractionSettings($event));
   }
+
+  onWcsCalibrationSettingsChange($event) {
+    this.store.dispatch(new UpdateSourceExtractionSettings($event));
+  }
+
+  onWcsCalibrationSelectedHduIdsChange(selectedHduIds: string[]) {
+    this.store.dispatch(new UpdateWcsCalibrationPanelState({selectedHduIds: selectedHduIds}))
+  }
+
 
   /* image viewer mouse event handlers */
   onImageClick($event: ViewerPanelCanvasMouseEvent) {

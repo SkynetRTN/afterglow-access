@@ -253,6 +253,7 @@
             <h5 *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</h5>
             <h5 *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</h5>
             <h5 *ngSwitchCase="WorkbenchTool.IMAGE_CALC" i18n>Image Calculator</h5>
+            <h5 *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</h5>
             <h5 *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</h5>
             <h5 *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</h5>
           </ng-container>
@@ -316,6 +317,15 @@
           <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [hduIds]="filteredHduIds$ | async"
             [config]="pixelOpsPanelConfig$ | async">
           </app-pixel-ops-panel>
+
+          <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [hduIds]="filteredHduIds$ | async"
+          [selectedHduIds]="(wcsCalibrationPanelState$ | async)?.selectedHduIds"
+          [wcsCalibrationSettings]="wcsCalibrationSettings$ | async"
+          [sourceExtractionSettings]="sourceExtractionSettings$ | async"
+          (onSelectedHduIdsChange)="onWcsCalibrationSelectedHduIdsChange($event)"
+          (onWcsCalibrationSettingsChange)="onWcsCalibrationSettingsChange($event)"
+          (onSourceExtractionSettingsChange)="onSourceExtractionSettingsChange($event)">
+          </app-wcs-calibration-panel>
 
           <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [hduIds]="filteredHduIds$ | async"
             [config]="aligningPanelConfig$ | async">
@@ -404,6 +414,16 @@
             (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.IMAGE_CALC)">
             <button mat-icon-button>
               <mat-icon>add_to_photos</mat-icon>
+            </button>
+          </div>
+          <div class="vertical-icon-nav-item"
+            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
+            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
+            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
+            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.WCS_CALIBRATION)">
+            <button mat-icon-button>
+              <mat-icon>gps_fixed</mat-icon>
             </button>
           </div>
           <div class="vertical-icon-nav-item"
