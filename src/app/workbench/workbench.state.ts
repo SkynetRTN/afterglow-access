@@ -3306,7 +3306,7 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      sonificationPanelState = {
+      state.sonificationPanelStateEntities[hduState.sonificationPanelStateId] = {
         ...sonificationPanelState,
         ...changes,
       };
