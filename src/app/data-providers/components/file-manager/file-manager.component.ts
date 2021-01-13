@@ -278,7 +278,7 @@ export class FileManagerComponent implements OnInit {
           title: "Preparing download",
           message: `Please wait while we prepare the files for download.`,
           progressMode: "indeterminate",
-          job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId).job)),
+          job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
         };
         let dialogRef = this.dialog.open(JobProgressDialogComponent, {
           width: "400px",

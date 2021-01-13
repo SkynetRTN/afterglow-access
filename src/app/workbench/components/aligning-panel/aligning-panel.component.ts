@@ -47,7 +47,7 @@ export class AlignerPageComponent implements OnInit {
   refHeader$: Observable<Header>;
   refHduHasWcs$: Observable<boolean>;
   alignFormData$: Observable<AlignFormData>;
-  alignmentJobRow$: Observable<{ job: AlignmentJob; result: AlignmentJobResult }>;
+  alignmentJob$: Observable<AlignmentJob>;
 
   alignForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
@@ -129,22 +129,21 @@ export class AlignerPageComponent implements OnInit {
       // }
     });
 
-    this.alignmentJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
-      map(([state, jobRowLookup]) => {
+    this.alignmentJob$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getJobEntities)).pipe(
+      map(([state, jobEntities]) => {
         if (
           !state.aligningPanelConfig.currentAlignmentJobId ||
-          !jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId]
-        )
+          !jobEntities[state.aligningPanelConfig.currentAlignmentJobId]
+        ) {
           return null;
-        return jobRowLookup[state.aligningPanelConfig.currentAlignmentJobId] as {
-          job: AlignmentJob;
-          result: AlignmentJobResult;
-        };
+        }
+
+        return jobEntities[state.aligningPanelConfig.currentAlignmentJobId] as AlignmentJob;
       })
     );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);

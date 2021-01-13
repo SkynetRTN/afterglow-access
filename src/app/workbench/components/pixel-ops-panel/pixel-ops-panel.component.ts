@@ -55,11 +55,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
   selectedHduIds$: Observable<string[]>;
 
-  pixelOpsJobRows$: Observable<{ job: PixelOpsJob; result: PixelOpsJobResult }[]>;
-  currentPixelOpsJobRow$: Observable<{
-    job: PixelOpsJob;
-    result: PixelOpsJobResult;
-  }>;
+  pixelOpsJobs$: Observable<PixelOpsJob[]>;
+  currentPixelOpsJob$: Observable<PixelOpsJob>;
   showCurrentPixelOpsJobState$: Observable<boolean>;
   pixelOpVariables$: Observable<Array<PixelOpVariable>>;
   pixelOpsFormData$: Observable<PixelOpsFormData>;
@@ -222,23 +219,17 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.pixelOpsJobRows$ = store.select(JobsState.getJobs).pipe(
-      map(
-        (allJobRows) =>
-          allJobRows.filter((row) => row.job.type == JobType.PixelOps) as {
-            job: PixelOpsJob;
-            result: PixelOpsJobResult;
-          }[]
-      )
+    this.pixelOpsJobs$ = store.select(JobsState.getJobs).pipe(
+      map(allJobRows => allJobRows.filter((row) => row.type == JobType.PixelOps) as PixelOpsJob[])
     );
 
-    this.currentPixelOpsJobRow$ = combineLatest(store.select(WorkbenchState.getState), this.pixelOpsJobRows$).pipe(
+    this.currentPixelOpsJob$ = combineLatest([store.select(WorkbenchState.getState), this.pixelOpsJobs$]).pipe(
       filter(
-        ([state, rows]: [WorkbenchStateModel, { job: PixelOpsJob; result: PixelOpsJobResult }[]]) =>
+        ([state, jobs]: [WorkbenchStateModel, PixelOpsJob[]]) =>
           state.pixelOpsPanelConfig.currentPixelOpsJobId != null &&
-          rows.find((r) => r.job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId) != undefined
+          jobs.find((job) => job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId) != undefined
       ),
-      map(([state, rows]) => rows.find((r) => r.job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId))
+      map(([state, rows]) => rows.find((job) => job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId))
     );
 
     this.showCurrentPixelOpsJobState$ = store
@@ -272,7 +263,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     // );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -292,7 +283,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     let dialogRef = this.dialog.open(PixelOpsJobsDialogComponent, {
       width: "600px",
       data: {
-        rows$: this.pixelOpsJobRows$,
+        rows$: this.pixelOpsJobs$,
         allImageFiles$: this.store.select(DataFilesState.getHdus),
       },
     });

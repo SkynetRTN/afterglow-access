@@ -83,22 +83,22 @@
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
-  <div *ngIf="stackJobRow$ | async; let jobRow" style="margin-top: 10px">
+  <div *ngIf="stackingJob$ | async; let job" style="margin-top: 10px">
     <div
       class="alert alert-info"
-      *ngIf="!jobRow.result || ['pending', 'in_progress'].includes(jobRow.job.state.status); else jobComplete"
+      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
     >
-      Processing job {{ jobRow.job.id }} ... ({{ jobRow.job.state.progress | number: "1.0-0" }}%)
+      Processing job {{ job.id }} ... ({{ job.state.progress | number: "1.0-0" }}%)
 
-      <ng-container *ngIf="jobRow.job.state.status == 'in_progress'">
+      <ng-container *ngIf="job.state.status == 'in_progress'">
         <div style="margin-top: 5px">
-          <mat-progress-bar mode="determinate" [value]="jobRow.job.state.progress" [color]="'primary'"> </mat-progress-bar>
+          <mat-progress-bar mode="determinate" [value]="job.state.progress" [color]="'primary'"> </mat-progress-bar>
         </div>
       </ng-container>
     </div>
     <ng-template #jobComplete>
-      <div *ngIf="jobRow.result.errors.length != 0; else noErrors" class="alert alert-danger">
-        {{ jobRow.result.errors }}
+      <div *ngIf="job.result.errors.length != 0; else noErrors" class="alert alert-danger">
+        {{ job.result.errors }}
       </div>
       <ng-template #noErrors>
         <div class="alert alert-success" i18n>Processing is complete.</div>

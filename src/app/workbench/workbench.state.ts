@@ -188,7 +188,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "a7d18bf4-d481-478e-8a8b-269452ce65ad",
+  version: "dffeb0e8-88bc-4c22-b8a6-e2512afaf2da",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -2451,6 +2451,7 @@ export class WorkbenchState {
       aux_file_ids: auxFileIds,
       op: op,
       inplace: data.inPlace,
+      result: null
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2477,7 +2478,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as PixelOpsJobResult;
         if (result.errors.length != 0) {
           console.error("Errors encountered during pixel ops job: ", result.errors);
@@ -2494,9 +2495,9 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPanelConfig.currentPixelOpsJobId = jobEntity.job.id;
+          state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
           return state;
         });
       })
@@ -2540,6 +2541,7 @@ export class WorkbenchState {
         .map((f) => parseInt(f.id)),
       op: data.opString,
       inplace: data.inPlace,
+      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2566,7 +2568,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as PixelOpsJobResult;
         if (result.errors.length != 0) {
           console.error("Errors encountered during pixel ops: ", result.errors);
@@ -2583,9 +2585,9 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPanelConfig.currentPixelOpsJobId = jobEntity.job.id;
+          state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
           return state;
         });
       })
@@ -2624,6 +2626,7 @@ export class WorkbenchState {
         wcs_grid_points: 100,
         prefilter: false,
       },
+      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2650,8 +2653,8 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
-        let result = jobEntity.result as AlignmentJobResult;
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let result = job.result as AlignmentJobResult;
         if (result.errors.length != 0) {
           console.error("Errors encountered during aligning: ", result.errors);
         }
@@ -2661,7 +2664,7 @@ export class WorkbenchState {
 
         let hduIds = result.file_ids.map((id) => id.toString());
         let actions = [];
-        if ((jobEntity.job as AlignmentJob).inplace) {
+        if ((job as AlignmentJob).inplace) {
           hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
           hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
         }
@@ -2677,9 +2680,9 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.aligningPanelConfig.currentAlignmentJobId = jobEntity.job.id;
+          state.aligningPanelConfig.currentAlignmentJobId = job.id;
           return state;
         });
       })
@@ -2719,6 +2722,7 @@ export class WorkbenchState {
         lo: data.low,
         hi: data.high,
       },
+      result: null
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2745,7 +2749,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as PixelOpsJobResult;
         if (result.errors.length != 0) {
           console.error("Errors encountered during stacking: ", result.errors);
@@ -2762,9 +2766,9 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         setState((state: WorkbenchStateModel) => {
-          state.stackingPanelConfig.currentStackingJobId = jobEntity.job.id;
+          state.stackingPanelConfig.currentStackingJobId = job.id;
           return state;
         });
       })
@@ -2811,6 +2815,7 @@ export class WorkbenchState {
       inplace: true,
       settings: wcsCalibrationJobSettings,
       source_extraction_settings: sourceExtractionJobSettings,
+      result: null
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2838,10 +2843,9 @@ export class WorkbenchState {
             let actions = [];
             let state = getState();
             if(value.result.successful) {
-              let jobEntites = this.store.selectSnapshot(JobsState.getEntities);
-              let jobEntity = jobEntites[state.wcsCalibrationPanelState.activeJobId];
-              let job = jobEntity.job as WcsCalibrationJob;
-              let result = jobEntity.result as WcsCalibrationJobResult;
+              let jobEntites = this.store.selectSnapshot(JobsState.getJobEntities);
+              let job = jobEntites[state.wcsCalibrationPanelState.activeJobId] as WcsCalibrationJob;
+              let result = job.result;
               result.file_ids.forEach(hduId => {
                 actions.push(new InvalidateHeader(hduId.toString()))
               })
@@ -3008,6 +3012,7 @@ export class WorkbenchState {
       source_extraction_settings: jobSettings,
       merge_sources: false,
       source_merge_settings: null,
+      result: null
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -3016,7 +3021,7 @@ export class WorkbenchState {
       ofActionSuccessful(CreateJob),
       filter<CreateJob>((a) => a.correlationId == correlationId),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as SourceExtractionJobResult;
         if (result.errors.length != 0) {
           dispatch(new ExtractSourcesFail(result.errors.join(",")));
@@ -3155,6 +3160,7 @@ export class WorkbenchState {
           pm_pos_angle_sky: pmPosAngleSky,
         } as Astrometry & SourceId;
       }),
+      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -3186,7 +3192,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as PhotometryJobResult;
         if (result.errors.length != 0) {
           console.error("Errors encountered while photometering sources: ", result.errors);
@@ -3244,12 +3250,12 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
 
         setState((state: WorkbenchStateModel) => {
           if (isBatch) {
             state.photometryPanelConfig.batchPhotJobId = a.job.id;
-            state.photometryPanelConfig.batchPhotProgress = jobEntity.job.state.progress;
+            state.photometryPanelConfig.batchPhotProgress = job.state.progress;
           }
           return state;
         });
@@ -3617,6 +3623,7 @@ export class WorkbenchState {
         tempo: Math.ceil(region.height / sonificationPanelState.duration),
         index_sounds: true,
       },
+      result: null
     };
 
     // let correlationId = this.correlationIdGenerator.next();
@@ -3671,7 +3678,7 @@ export class WorkbenchState {
             if (a.result.successful) {
               job = (a.action as CreateJob).job as SonificationJob;
               let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-              let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[job.id];
+              let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[job.id];
               let result = jobEntity.result as SonificationJobResult;
               if (result.errors.length != 0) {
                 sonificationPanelState.sonificationJobProgress = null;

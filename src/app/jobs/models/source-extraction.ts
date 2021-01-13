@@ -26,17 +26,20 @@ export interface SourceExtractionJobSettings {
   limit?: number;
 }
 
-export interface SourceExtractionJob extends JobBase {
-  readonly type: JobType.SourceExtraction;
-  file_ids: number[];
-  source_extraction_settings?: SourceExtractionJobSettings;
-  merge_sources: boolean;
-  source_merge_settings?: SourceMergeSettings;
-}
-
 export interface SourceExtractionData extends SourceMeta, Astrometry, SourceId {}
 
 export interface SourceExtractionJobResult extends JobResultBase {
   readonly type: JobType.SourceExtraction;
   data: SourceExtractionData[];
 }
+
+export interface SourceExtractionJob extends JobBase {
+  readonly type: JobType.SourceExtraction;
+  file_ids: number[];
+  source_extraction_settings?: SourceExtractionJobSettings;
+  merge_sources: boolean;
+  source_merge_settings?: SourceMergeSettings;
+  result: SourceExtractionJobResult;
+}
+
+

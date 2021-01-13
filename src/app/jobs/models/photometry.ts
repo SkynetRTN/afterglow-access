@@ -25,16 +25,19 @@ export interface PhotometryJobSettings {
   zero_point?: number;
 }
 
-export interface PhotometryJob extends JobBase {
-  readonly type: JobType.Photometry;
-  file_ids: number[];
-  sources: Array<Astrometry & SourceId>;
-  settings?: PhotometryJobSettings;
-}
-
 export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {}
 
 export interface PhotometryJobResult extends JobResultBase {
   readonly type: JobType.Photometry;
   data: Array<PhotometryData>;
 }
+
+export interface PhotometryJob extends JobBase {
+  readonly type: JobType.Photometry;
+  file_ids: number[];
+  sources: Array<Astrometry & SourceId>;
+  settings?: PhotometryJobSettings;
+  result: PhotometryJobResult;
+}
+
+

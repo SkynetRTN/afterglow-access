@@ -7,13 +7,16 @@ export interface SourceMergeSettings {
   pos_type: "sky" | "pixel" | "auto";
 }
 
-export interface SourceMergeJob extends JobBase {
-  readonly type: JobType.SourceMerge;
-  sources: Astrometry[];
-  settings: SourceMergeSettings;
-}
-
 export interface SourceMergeJobResult extends JobResultBase {
   readonly type: JobType.SourceMerge;
   data: SourceExtractionData[];
 }
+
+export interface SourceMergeJob extends JobBase {
+  readonly type: JobType.SourceMerge;
+  sources: Astrometry[];
+  settings: SourceMergeSettings;
+  result: SourceMergeJobResult;
+}
+
+

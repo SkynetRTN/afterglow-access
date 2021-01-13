@@ -369,7 +369,7 @@
         <mat-progress-bar mode="determinate" [value]="config?.batchPhotProgress" [color]="'accent'"></mat-progress-bar>
       </div>
       <ng-template #downloadBatchResultsBlock>
-        <div class="mb-3" *ngIf="batchPhotJobResult$ | async; let batchPhotJobResult">
+        <div class="mb-3" *ngIf="(batchPhotJob$ | async)?.result; let batchPhotJobResult">
           <div *ngIf="batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0; else resultsBlock">
             <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
           </div>

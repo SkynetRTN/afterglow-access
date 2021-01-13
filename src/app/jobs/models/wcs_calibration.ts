@@ -11,15 +11,18 @@ export interface WcsCalibrationJobSettings {
   max_sources: number;
 }
 
+export interface WcsCalibrationJobResult extends JobResultBase {
+  readonly type: JobType.WcsCalibration;
+  file_ids: number[];
+}
+
 export interface WcsCalibrationJob extends JobBase {
   readonly type: JobType.WcsCalibration;
   file_ids: number[];
   settings?: WcsCalibrationJobSettings;
   source_extraction_settings: SourceExtractionJobSettings;
   inplace: boolean;
+  result: WcsCalibrationJobResult;
 }
 
-export interface WcsCalibrationJobResult extends JobResultBase {
-  readonly type: JobType.WcsCalibration;
-  file_ids: number[];
-}
+

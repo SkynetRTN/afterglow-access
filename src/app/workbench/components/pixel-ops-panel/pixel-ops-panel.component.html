@@ -204,27 +204,27 @@
   </mat-tab-group>
 
   <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px">
-    <div *ngIf="currentPixelOpsJobRow$ | async; let jobRow">
+    <div *ngIf="currentPixelOpsJob$ | async; let job">
       <div
         class="alert alert-info"
-        *ngIf="!jobRow.result || ['pending', 'in_progress'].includes(jobRow.job.state.status); else jobComplete"
+        *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
       >
-        <span i18n>Processing job</span> {{ jobRow.job.id }}
+        <span i18n>Processing job</span> {{ job.id }}
       </div>
       <ng-template #jobComplete>
-        <div *ngIf="jobRow.result.errors.length != 0; else noErrors" class="alert alert-danger">
-          {{ jobRow.result.errors }}
+        <div *ngIf="job.result.errors.length != 0; else noErrors" class="alert alert-danger">
+          {{ job.result.errors }}
         </div>
         <ng-template #noErrors>
           <div class="alert alert-success">
             <span i18n>Processing is complete.</span>
-            <div *ngIf="jobRow.result.file_ids.length != 0">
+            <div *ngIf="job.result.file_ids.length != 0">
               <span i18n>Your operation resulted in</span>
-              {{ jobRow.result.file_ids.length }} <span i18n>new file(s)</span>
+              {{ job.result.file_ids.length }} <span i18n>new file(s)</span>
             </div>
-            <div *ngIf="jobRow.result.data.length != 0">
+            <div *ngIf="job.result.data.length != 0">
               <span i18n>Your operation resulted in the following scalar values:</span>
-              {{ jobRow.result.data }}
+              {{ job.result.data }}
             </div>
           </div>
         </ng-template>

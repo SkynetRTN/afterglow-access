@@ -8,6 +8,11 @@ export interface AlignmentSettings {
   prefilter: boolean;
 }
 
+export interface AlignmentJobResult extends JobResultBase {
+  readonly type: JobType.Alignment;
+  file_ids: number[];
+}
+
 export interface AlignmentJob extends JobBase {
   readonly type: JobType.Alignment;
   file_ids: number[];
@@ -15,9 +20,7 @@ export interface AlignmentJob extends JobBase {
   sources?: SourceExtractionData[];
   inplace: boolean;
   crop: boolean;
+  result: AlignmentJobResult;
 }
 
-export interface AlignmentJobResult extends JobResultBase {
-  readonly type: JobType.Alignment;
-  file_ids: number[];
-}
+

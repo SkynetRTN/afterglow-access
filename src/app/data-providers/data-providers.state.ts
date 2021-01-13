@@ -430,6 +430,7 @@ export class DataProvidersState {
           recurse: false,
         } as BatchImportSettings;
       }),
+      result: null,
     };
 
     let jobCorrelationId = this.correlationIdGenerator.next();
@@ -441,7 +442,7 @@ export class DataProvidersState {
       take(1),
       tap((a) => {
         if (a.result.successful) {
-          let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.action.job.id];
+          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.action.job.id];
           let result = jobEntity.result as BatchImportJobResult;
           if (result.errors.length != 0) {
             console.error("Errors encountered during import: ", result.errors);
@@ -477,8 +478,8 @@ export class DataProvidersState {
       filter<CreateJob>((a) => a.correlationId == jobCorrelationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[a.job.id];
-        return dispatch(new ImportAssetsStatusUpdated(jobEntity.job as BatchImportJob, correlationId));
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        return dispatch(new ImportAssetsStatusUpdated(job as BatchImportJob, correlationId));
       })
     );
 

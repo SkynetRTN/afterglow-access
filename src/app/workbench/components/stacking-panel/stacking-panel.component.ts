@@ -39,7 +39,7 @@ export class StackerPanelComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
   selectedHdus$: Observable<Array<ImageHdu>>;
   stackFormData$: Observable<StackFormData>;
-  stackJobRow$: Observable<{ job: StackingJob; result: StackingJobResult }>;
+  stackingJob$: Observable<StackingJob>;
   dataFileEntities$: Observable<{ [id: string]: DataFile }>;
 
   stackForm = new FormGroup({
@@ -99,14 +99,15 @@ export class StackerPanelComponent implements OnInit {
       this.stackForm.patchValue(data, { emitEvent: false });
     });
 
-    this.stackJobRow$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getEntities)).pipe(
-      map(([state, jobRowLookup]) => {
-        if (!state.stackingPanelConfig.currentStackingJobId || !jobRowLookup[state.stackingPanelConfig.currentStackingJobId])
+    this.stackingJob$ = combineLatest([
+      store.select(WorkbenchState.getState),
+      store.select(JobsState.getJobEntities)
+    ]).pipe(
+      map(([state, jobEntities]) => {
+        if (!state.stackingPanelConfig.currentStackingJobId || !jobEntities[state.stackingPanelConfig.currentStackingJobId]) {
           return null;
-        return jobRowLookup[state.stackingPanelConfig.currentStackingJobId] as {
-          job: StackingJob;
-          result: StackingJobResult;
-        };
+        }
+        return jobEntities[state.stackingPanelConfig.currentStackingJobId] as StackingJob;
       })
     );
 
@@ -163,7 +164,7 @@ export class StackerPanelComponent implements OnInit {
     this.store.dispatch(new CreateStackingJob(selectedHduIds));
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

@@ -15,4 +15,5 @@ export interface JobResultBase {
 export interface JobBase {
   id: string;
   state?: JobStateBase;
+  result?: JobResultBase
 }

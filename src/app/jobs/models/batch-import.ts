@@ -8,12 +8,15 @@ export interface BatchImportSettings {
   recurse?: boolean;
 }
 
-export interface BatchImportJob extends JobBase {
-  readonly type: JobType.BatchImport;
-  settings: Array<BatchImportSettings>;
-}
-
 export interface BatchImportJobResult extends JobResultBase {
   readonly type: JobType.BatchImport;
   file_ids: number[];
 }
+
+export interface BatchImportJob extends JobBase {
+  readonly type: JobType.BatchImport;
+  settings: Array<BatchImportSettings>;
+  result: BatchImportJobResult;
+}
+
+

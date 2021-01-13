@@ -28,6 +28,7 @@ import {
   switchMap,
   debounceTime,
   auditTime,
+  distinct,
 } from "rxjs/operators";
 
 import * as jStat from "jstat";
@@ -58,10 +59,10 @@ import { PhotData } from "../../models/source-phot-data";
 import { PhotometrySettings } from "../../models/photometry-settings";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { Papa } from "ngx-papaparse";
-import { JobEntity, JobsState } from "../../../jobs/jobs.state";
 import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
 import { DatePipe } from "@angular/common";
 import { SourceExtractionSettings } from "../../models/source-extraction-settings";
+import { JobsState } from "../../../jobs/jobs.state";
 
 @Component({
   selector: "app-photometry-panel",
@@ -156,9 +157,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
 
   tableData$: Observable<{ source: Source; data: PhotData }[]>;
 
-  batchPhotJobEntity$: Observable<JobEntity>;
   batchPhotJob$: Observable<PhotometryJob>;
-  batchPhotJobResult$: Observable<PhotometryJobResult>;
   batchFormDataSub: Subscription;
   photometryUpdater: Subscription;
   mergeError: string;
@@ -197,17 +196,17 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
         });
       })
     );
-    this.batchPhotJobEntity$ = this.config$.pipe(
-      map((s) => s.batchPhotJobId),
-      withLatestFrom(this.store.select(JobsState.getEntities)),
-      map(([jobId, jobEntities]) => jobEntities[jobId]),
+    this.batchPhotJob$ = combineLatest([
+      this.store.select(JobsState.getJobs),
+      this.config$.pipe(
+        map((s) => s.batchPhotJobId),
+        distinctUntilChanged()
+      )
+      ]).pipe(
+      map(([jobEntities, jobId]) => jobEntities[jobId]),
       filter((job) => job != null && job != undefined)
     );
-
-    this.batchPhotJob$ = this.batchPhotJobEntity$.pipe(map((entity) => entity.job as PhotometryJob));
-
-    this.batchPhotJobResult$ = this.batchPhotJobEntity$.pipe(map((entity) => entity.result as PhotometryJobResult));
-
+    
     this.batchPhotFormData$ = this.config$.pipe(
       filter((config) => config !== null),
       map((config) => config.batchPhotFormData),

@@ -30,19 +30,14 @@ import {
 import { JobService } from "./services/jobs";
 import { ResetState } from "../auth/auth.actions";
 
-export interface JobEntity {
-  job: Job;
-  result: JobResult;
-}
-
 export interface JobsStateModel {
   version: string;
   ids: string[];
-  entities: { [id: string]: JobEntity };
+  entities: { [id: string]: Job };
 }
 
 const jobsDefaultState: JobsStateModel = {
-  version: "bdedf577-1833-4e08-a12e-eda435c5f5aa",
+  version: "5a36ed27-d3f5-4b33-8d19-dd815f8e5ed5",
   ids: [],
   entities: {},
 };
@@ -61,7 +56,7 @@ export class JobsState {
   }
 
   @Selector()
-  public static getEntities(state: JobsStateModel) {
+  public static getJobEntities(state: JobsStateModel) {
     return state.entities;
   }
 
@@ -94,7 +89,10 @@ export class JobsState {
       flatMap((job) => {
         createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
-          state.entities[job.id] = { job: job, result: null };
+          state.entities[job.id] = {
+            ...job,
+            result: null
+          };
           if (!state.ids.includes(job.id)) {
             state.ids.push(job.id);
           }
@@ -107,7 +105,7 @@ export class JobsState {
         let jobCompleted$ = this.actions$.pipe(
           ofActionSuccessful(UpdateJob),
           filter<UpdateJob>((a) => {
-            return a.job.id == job.id && ["canceled", "completed"].includes(getState().entities[a.job.id].job.state.status);
+            return a.job.id == job.id && ["canceled", "completed"].includes(getState().entities[a.job.id].state.status);
           })
         );
 
@@ -134,7 +132,7 @@ export class JobsState {
         return jobCompleted$.pipe(
           take(1),
           flatMap((a) => {
-            if (getState().entities[a.job.id].job.state.status != "completed") return of();
+            if (getState().entities[a.job.id].state.status != "completed") return of();
 
             return this.jobService.getJobResult(job).pipe(
               tap((value) => {
@@ -157,7 +155,7 @@ export class JobsState {
     return this.jobService.getJobState(job.id).pipe(
       tap((value) => {
         setState((state: JobsStateModel) => {
-          state.entities[job.id].job.state = value;
+          state.entities[job.id].state = value;
           return state;
         });
       })

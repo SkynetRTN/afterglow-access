@@ -23,13 +23,16 @@ export interface SonificationJobSettings {
   index_sounds?: boolean;
 }
 
-export interface SonificationJob extends JobBase {
-  readonly type: JobType.Sonification;
-  file_id: number;
-  settings?: SonificationJobSettings;
-}
-
 export interface SonificationJobResult extends JobResultBase {
   readonly type: JobType.Sonification;
   sound_file_id: number;
 }
+
+export interface SonificationJob extends JobBase {
+  readonly type: JobType.Sonification;
+  file_id: number;
+  settings?: SonificationJobSettings;
+  result: SonificationJobResult;
+}
+
+

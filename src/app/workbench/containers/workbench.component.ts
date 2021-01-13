@@ -678,8 +678,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     /* WCS CALIBRATION PANEL */
     this.wcsCalibrationPanelState$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
     this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationSettings);
-    let wcsCalibrationActiveJobRow$ = combineLatest([
-      this.store.select(JobsState.getEntities),
+    
+    this.wcsCalibrationActiveJob$ = combineLatest([
+      this.store.select(JobsState.getJobEntities),
       this.wcsCalibrationPanelState$.pipe(
         map(state => state ? state.activeJobId : null),
         distinctUntilChanged(),
@@ -687,16 +688,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     ]).pipe(
       map(([jobEntities, activeJobId]) => {
         if(!activeJobId) return null;
-        return jobEntities[activeJobId];
+        return jobEntities[activeJobId] as WcsCalibrationJob;
       })
-    )
-
-    this.wcsCalibrationActiveJob$ = wcsCalibrationActiveJobRow$.pipe(
-      map(value => value ? value.job as WcsCalibrationJob : null)
-    )
-
-    this.wcsCalibrationActiveJobResult$ = wcsCalibrationActiveJobRow$.pipe(
-      map(value => value ? value.result as WcsCalibrationJobResult : null)
     )
 
     this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
@@ -1876,7 +1869,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 title: "Preparing download",
                 message: `Please wait while we prepare the files for download.`,
                 progressMode: "indeterminate",
-                job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId).job)),
+                job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
               };
               let dialogRef = this.dialog.open(JobProgressDialogComponent, {
                 width: "400px",
