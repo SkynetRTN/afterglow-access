@@ -244,7 +244,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     this.photometryUpdater = this.tableData$
       .pipe(
         map((rows) => rows.filter((row) => row.data == null)),
-        filter((rows) => rows.length != 0 && this.config.autoPhot),
+        filter((rows) => rows.length != 0 && this.config && this.config.autoPhot),
         auditTime(2000)
       )
       .subscribe((rows) => {

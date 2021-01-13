@@ -642,19 +642,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     this.photometryPanelSources$ = combineLatest(
-      this.store.select(SourcesState.getSources).pipe(tap(v => console.log("-----GET SOURCES CHANGED"))),
+      this.store.select(SourcesState.getSources),
       this.photometryPanelConfig$.pipe(
         map((config) => config.coordMode),
-        distinctUntilChanged(),
-        tap(v => console.log("----COORD MODE CHANGED"))
+        distinctUntilChanged()
       ),
       this.photometryPanelConfig$.pipe(
         map((config) => config.showSourcesFromAllFiles),
-        distinctUntilChanged(),
-        tap(v => console.log("---- SHOW SOURCES CHANGED"))
+        distinctUntilChanged()
       ),
-      this.focusedViewerHduId$.pipe(tap(v => console.log("-----HDUID CHANGED"))),
-      this.focusedViewerHeader$.pipe(tap(v => console.log("-----HEADER CHANGED")))
+      this.focusedViewerHduId$,
+      this.focusedViewerHeader$
     ).pipe(
       filter(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => header != null),
       map(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => {

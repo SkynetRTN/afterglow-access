@@ -550,7 +550,7 @@ export class WorkbenchState {
     focusedViewerPanelId: string,
     viewerPanelEntities: { [id: string]: ViewerPanel }
   ) {
-    return viewerPanelEntities[focusedViewerPanelId].selectedViewerId;
+    return viewerPanelEntities[focusedViewerPanelId] ? viewerPanelEntities[focusedViewerPanelId].selectedViewerId : null;
   }
 
   @Selector([WorkbenchState.getFocusedViewerId, WorkbenchState.getViewerEntities])

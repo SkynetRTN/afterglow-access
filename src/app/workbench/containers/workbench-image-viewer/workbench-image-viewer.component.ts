@@ -60,6 +60,7 @@ import {
   CenterRegionInViewport,
   UpdateCompositeImageTile,
   LoadHduHeader,
+  LoadHdu,
 } from "../../../data-files/data-files.actions";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
@@ -184,11 +185,14 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     // watch for changes to header and reload when necessary
-    combineLatest(this.hduId$, this.header$)
+    combineLatest([this.hduId$, this.header$])
       .pipe(takeUntil(this.destroy$))
       .subscribe(([hduId, header]) => {
         if (hduId && header && !header.loaded && !header.loading) {
-          this.store.dispatch(new LoadHduHeader(hduId));
+          setTimeout(() => {
+            this.store.dispatch(new LoadHdu(hduId));
+          })
+          
         }
       });
 
