@@ -14,7 +14,7 @@ import {
 import { tap, catchError, filter, take, takeUntil, flatMap } from "rxjs/operators";
 import { Point, Matrix, Rectangle } from "paper";
 import { merge } from "rxjs";
-import { WorkbenchStateModel, WorkbenchTool, ViewerPanel, ViewerPanelContainer, WcsCalibrationSettings } from "./models/workbench-state";
+import { WorkbenchStateModel, WorkbenchTool, ViewerPanel, ViewerPanelContainer, WcsCalibrationSettings, ViewerLayoutItem } from "./models/workbench-state";
 import { ViewMode } from "./models/view-mode";
 import { SidebarView } from "./models/sidebar-view";
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from "./models/centroider";
@@ -172,7 +172,7 @@ import { SourceId } from "../jobs/models/source-id";
 import { PhotData } from "./models/source-phot-data";
 import { Viewer, ImageViewer, TableViewer } from "./models/viewer";
 import { ResetState } from "../auth/auth.actions";
-import { WorkbenchImageHduState, IWorkbenchHduState, WorkbenchTableHduState } from "./models/workbench-file-state";
+import { WorkbenchImageHduState, IWorkbenchHduState, WorkbenchTableHduState, WorkbenchFileState } from "./models/workbench-file-state";
 import { DataFilesState, DataFilesStateModel } from "../data-files/data-files.state";
 import { HduType } from "../data-files/models/data-file-type";
 import {
@@ -415,7 +415,7 @@ export class WorkbenchState {
   }
 
   @Selector([DataFilesState.getFiles, WorkbenchState.getFileListFilter])
-  public static getFilteredFiles(state: WorkbenchStateModel, files: DataFile[], fileListFilter: string) {
+  public static getFilteredFiles(files: DataFile[], fileListFilter: string) {
     if (!files || files.length == 0) return [];
     if (!fileListFilter) return files;
 
@@ -449,71 +449,81 @@ export class WorkbenchState {
   }
 
   @Selector([WorkbenchState.getFilteredFiles])
-  public static getFilteredFileIds(state: WorkbenchStateModel, files: DataFile[]) {
+  public static getFilteredFileIds(files: DataFile[]) {
     return files.map((file) => file.id);
   }
 
   @Selector([WorkbenchState.getFilteredFiles])
-  public static getFilteredHduIds(state: WorkbenchStateModel, files: DataFile[]) {
+  public static getFilteredHduIds(files: DataFile[]) {
     return files.reduce((hduIds, file, index) => hduIds.concat(file.hduIds), []);
   }
 
-  @Selector([WorkbenchState.getFilteredFiles])
-  public static getSelectedFileIds(state: WorkbenchStateModel, filteredFiles: DataFile[]) {
-    let filteredFileIds = filteredFiles.map((f) => f.id);
-    return state.selectedFileIds.filter((id) => filteredFileIds.includes(id));
+  @Selector()
+  public static getSelectedFileIds(state: WorkbenchStateModel) {
+    return state.selectedFileIds;
   }
 
-  @Selector()
-  public static getFileSelected(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getFilteredFiles, WorkbenchState.getSelectedFileIds])
+  public static getSelectedFilteredFileIds(filteredFiles: DataFile[], selectedFileIds: string[]) {
+    let filteredFileIds = filteredFiles.map((f) => f.id);
+    return selectedFileIds.filter((id) => filteredFileIds.includes(id));
+  }
+
+  @Selector([WorkbenchState.getSelectedFileIds])
+  public static getFileSelected(selectedFileIds: string[]) {
     return (id: string) => {
-      return state.selectedFileIds.includes(id);
+      return selectedFileIds.includes(id);
     };
   }
 
-  @Selector()
-  public static getViewerPanelIds(state: WorkbenchStateModel) {
-    return state.viewerLayoutItemIds.filter((id) => state.viewerLayoutItems[id].type == "panel");
+  @Selector([WorkbenchState.getViewerLayoutItems])
+  public static getViewerPanels(viewerLayoutItems: ViewerLayoutItem[]) {
+    return viewerLayoutItems.filter((item) => item.type == "panel") as ViewerPanel[]
   }
 
-  @Selector([WorkbenchState.getViewerPanelIds])
-  public static getViewerPanelEntities(state: WorkbenchStateModel, viewerPanelIds: string[]) {
+  @Selector([WorkbenchState.getViewerPanels])
+  public static getViewerPanelIds(viewerPanels: ViewerPanel[]) {
+    return viewerPanels.map(panel => panel.id)
+  }
+
+  @Selector([WorkbenchState.getViewerPanelIds, WorkbenchState.getViewerLayoutItemEntities])
+  public static getViewerPanelEntities(viewerPanelIds: string[], viewerLayoutItemEntities: {[id: string]: ViewerLayoutItem}) {
     return viewerPanelIds.reduce((obj, key) => {
       return {
         ...obj,
-        [key]: state.viewerLayoutItems[key] as ViewerPanel,
+        [key]: viewerLayoutItemEntities[key] as ViewerPanel,
       };
     }, {} as { [id: string]: ViewerPanel });
   }
 
-  @Selector([WorkbenchState.getViewerPanelIds])
-  public static getViewerPanels(state: WorkbenchStateModel, viewerPanelIds: string[]) {
-    return viewerPanelIds.map((id) => state.viewerLayoutItems[id]);
+  @Selector([WorkbenchState.getViewerLayoutItems])
+  public static getViewerPanelContainers(viewerLayoutItems: ViewerLayoutItem[]) {
+    return viewerLayoutItems.filter((item) => item.type == "container") as ViewerPanelContainer[]
   }
 
-  @Selector()
-  public static getViewerPanelContainerIds(state: WorkbenchStateModel) {
-    return state.viewerLayoutItemIds.filter((id) => state.viewerLayoutItems[id].type == "container");
+  @Selector([WorkbenchState.getViewerPanelContainers])
+  public static getViewerPanelContainerIds(viewerPanelContainers: ViewerPanelContainer[]) {
+    return viewerPanelContainers.map(panel => panel.id)
   }
 
-  @Selector([WorkbenchState.getViewerPanelContainerIds])
-  public static getViewerPanelContainerEntities(state: WorkbenchStateModel, viewerPanelContainerIds: string[]) {
+  @Selector([WorkbenchState.getViewerPanelContainerIds, WorkbenchState.getViewerLayoutItemEntities])
+  public static getViewerPanelContainerEntities(viewerPanelContainerIds: string[], viewerLayoutItemEntities: {[id: string]: ViewerLayoutItem}) {
     return viewerPanelContainerIds.reduce((obj, key) => {
       return {
         ...obj,
-        [key]: state.viewerLayoutItems[key] as ViewerPanelContainer,
+        [key]: viewerLayoutItemEntities[key] as ViewerPanelContainer,
       };
     }, {} as { [id: string]: ViewerPanelContainer });
   }
 
-  @Selector([WorkbenchState.getViewerPanelContainerIds])
-  public static getViewerContainerPanels(state: WorkbenchStateModel, viewerPanelContainerIds: string[]) {
-    return viewerPanelContainerIds.map((id) => state.viewerLayoutItems[id]);
+  @Selector()
+  public static getRootViewerPanelContainerId(state: WorkbenchStateModel) {
+    return state.rootViewerPanelContainerId;
   }
 
-  @Selector()
-  public static getRootViewerPanelContainer(state: WorkbenchStateModel) {
-    return state.viewerLayoutItems[state.rootViewerPanelContainerId] as ViewerPanelContainer;
+  @Selector([WorkbenchState.getRootViewerPanelContainerId, WorkbenchState.getViewerLayoutItemEntities])
+  public static getRootViewerPanelContainer(rootViewerPanelContainerId: string, viewerLayoutItemEntities: {[id: string]: ViewerLayoutItem}) {
+    return viewerLayoutItemEntities[rootViewerPanelContainerId] as ViewerPanelContainer;
   }
 
   @Selector()
@@ -521,50 +531,48 @@ export class WorkbenchState {
     return state.focusedViewerPanelId;
   }
 
-  @Selector()
-  public static getViewerById(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getViewerEntities])
+  public static getViewerById(viewerEntities: {[id: string]: Viewer}) {
     return (id: string) => {
-      return id in state.viewers ? state.viewers[id] : null;
+      return id in viewerEntities ? viewerEntities[id] : null;
     };
   }
 
-  @Selector([WorkbenchState.getViewerPanelIds])
-  public static getVisibleViewerIds(state: WorkbenchStateModel, viewerPanelIds: string[]) {
+  @Selector([WorkbenchState.getViewerPanelIds, WorkbenchState.getViewerLayoutItemEntities])
+  public static getVisibleViewerIds(viewerPanelIds: string[], viewerLayoutItemEntities: {[id: string]: ViewerLayoutItem}) {
     return viewerPanelIds
-      .map((panelId) => (state.viewerLayoutItems[panelId] as ViewerPanel).selectedViewerId)
+      .map((panelId) => (viewerLayoutItemEntities[panelId] as ViewerPanel).selectedViewerId)
       .filter((id) => id !== null);
   }
 
   @Selector([WorkbenchState.getFocusedViewerPanelId, WorkbenchState.getViewerPanelEntities])
   public static getFocusedViewerId(
-    state: WorkbenchStateModel,
     focusedViewerPanelId: string,
     viewerPanelEntities: { [id: string]: ViewerPanel }
   ) {
     return viewerPanelEntities[focusedViewerPanelId].selectedViewerId;
   }
 
-  @Selector([WorkbenchState.getFocusedViewerId])
-  public static getFocusedViewer(state: WorkbenchStateModel, focusedViewerId: string) {
-    if (!focusedViewerId || !state.viewerIds.includes(focusedViewerId)) return null;
-    return state.viewers[focusedViewerId];
+  @Selector([WorkbenchState.getFocusedViewerId, WorkbenchState.getViewerEntities])
+  public static getFocusedViewer(focusedViewerId: string, viewerEntities: {[id: string]: Viewer}) {
+    if (!focusedViewerId || !viewerEntities[focusedViewerId]) return null;
+    return viewerEntities[focusedViewerId];
   }
 
   @Selector([WorkbenchState.getFocusedViewer])
-  public static getFocusedImageViewer(state: WorkbenchStateModel, focusedViewer: Viewer) {
+  public static getFocusedImageViewer(focusedViewer: Viewer) {
     if (!focusedViewer || focusedViewer.type != "image") return null;
     return focusedViewer as ImageViewer;
   }
 
   @Selector([WorkbenchState.getFocusedViewer])
-  public static getFocusedTableViewer(state: WorkbenchStateModel, focusedViewer: Viewer) {
+  public static getFocusedTableViewer(focusedViewer: Viewer) {
     if (!focusedViewer || focusedViewer.type != "table") return null;
     return focusedViewer as TableViewer;
   }
 
   @Selector([WorkbenchState.getFocusedViewer, DataFilesState.getFileEntities])
   public static getFocusedViewerFile(
-    state: WorkbenchStateModel,
     focusedViewer: Viewer,
     dataFileEntities: { [id: string]: DataFile }
   ) {
@@ -573,7 +581,7 @@ export class WorkbenchState {
   }
 
   @Selector([WorkbenchState.getFocusedViewer, DataFilesState.getHduEntities])
-  public static getFocusedViewerHdu(state: WorkbenchStateModel, focusedViewer: Viewer, hduEntities: { [id: string]: IHdu }) {
+  public static getFocusedViewerHdu(focusedViewer: Viewer, hduEntities: { [id: string]: IHdu }) {
     if (!focusedViewer || !focusedViewer.hduId) {
       return null;
     }
@@ -585,7 +593,7 @@ export class WorkbenchState {
   }
 
   @Selector([WorkbenchState.getFocusedViewerHdu])
-  public static getFocusedViewerImageHdu(state: WorkbenchStateModel, focusedViewerHdu: IHdu) {
+  public static getFocusedViewerImageHdu(focusedViewerHdu: IHdu) {
     if (!focusedViewerHdu || focusedViewerHdu.hduType != HduType.IMAGE) {
       return null;
     }
@@ -593,19 +601,19 @@ export class WorkbenchState {
   }
 
   @Selector([WorkbenchState.getFocusedViewer])
-  public static getFocusedViewerViewportSize(state: WorkbenchStateModel, focusedViewer: Viewer) {
+  public static getFocusedViewerViewportSize(focusedViewer: Viewer) {
     if (!focusedViewer) return null;
     return focusedViewer.viewportSize;
   }
 
-  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
   public static getFirstImageHeaderIdFromViewerId(
-    state: WorkbenchStateModel,
+    viewerEntities: {[id: string]: Viewer},
     fileEntities: { [id: string]: DataFile },
     hduEntities: { [id: string]: IHdu }
   ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId) {
         return null;
       }
@@ -629,14 +637,14 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
   public static getViewportTransformIdFromViewerId(
-    state: WorkbenchStateModel,
+    viewerEntities: {[id: string]: Viewer},
     fileEntities: { [id: string]: DataFile },
     hduEntities: { [id: string]: IHdu }
   ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
         return null;
       }
@@ -654,14 +662,14 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
   public static getImageTransformIdFromViewerId(
-    state: WorkbenchStateModel,
+    viewerEntities: {[id: string]: Viewer},
     fileEntities: { [id: string]: DataFile },
     hduEntities: { [id: string]: IHdu }
   ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
         return null;
       }
@@ -679,14 +687,14 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
   public static getNormalizedImageDataIdFromViewerId(
-    state: WorkbenchStateModel,
+    viewerEntities: {[id: string]: Viewer},
     fileEntities: { [id: string]: DataFile },
     hduEntities: { [id: string]: IHdu }
   ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
         return null;
       }
@@ -704,14 +712,14 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities])
+  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
   public static getRawImageDataIdFromViewerId(
-    state: WorkbenchStateModel,
+    viewerEntities: {[id: string]: Viewer},
     fileEntities: { [id: string]: DataFile },
     hduEntities: { [id: string]: IHdu }
   ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !viewer.hduId || !fileEntities[viewer.fileId]) {
         return null;
       }
@@ -726,55 +734,71 @@ export class WorkbenchState {
     };
   }
 
-  @Selector()
-  public static getCustomMarkerPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getViewerEntities, WorkbenchState.getFileStateEntities, WorkbenchState.getHduStateEntities])
+  public static getCustomMarkerPanelStateIdFromViewerId(
+    viewerEntities: {[id: string]: Viewer},
+    fileStateEntities: { [id: string]: WorkbenchFileState },
+    hduStateEntities: { [id: string]: IWorkbenchHduState },
+  ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId || !state.fileStateEntities[viewer.fileId]) {
+      let viewer = viewerEntities[id];
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !fileStateEntities[viewer.fileId]) {
         return null;
       }
 
       return viewer.hduId
-        ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).customMarkerPanelStateId
-        : state.fileStateEntities[viewer.fileId].customMarkerPanelStateId;
+        ? (hduStateEntities[viewer.hduId] as WorkbenchImageHduState).customMarkerPanelStateId
+        : fileStateEntities[viewer.fileId].customMarkerPanelStateId;
     };
   }
 
-  @Selector()
-  public static getPlottingPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getViewerEntities, WorkbenchState.getFileStateEntities, WorkbenchState.getHduStateEntities])
+  public static getPlottingPanelStateIdFromViewerId(
+    viewerEntities: {[id: string]: Viewer},
+    fileStateEntities: { [id: string]: WorkbenchFileState },
+    hduStateEntities: { [id: string]: IWorkbenchHduState },
+  ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
-      if (!viewer || viewer.type != "image" || !viewer.fileId || !state.fileStateEntities[viewer.fileId]) {
+      let viewer = viewerEntities[id];
+      if (!viewer || viewer.type != "image" || !viewer.fileId || !fileStateEntities[viewer.fileId]) {
         return null;
       }
 
       return viewer.hduId
-        ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).plottingPanelStateId
-        : state.fileStateEntities[viewer.fileId].plottingPanelStateId;
+        ? (hduStateEntities[viewer.hduId] as WorkbenchImageHduState).plottingPanelStateId
+        : fileStateEntities[viewer.fileId].plottingPanelStateId;
     };
   }
 
-  @Selector()
-  public static getSonificationPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getViewerEntities, WorkbenchState.getFileStateEntities, WorkbenchState.getHduStateEntities])
+  public static getSonificationPanelStateIdFromViewerId(
+    viewerEntities: {[id: string]: Viewer},
+    fileStateEntities: { [id: string]: WorkbenchFileState },
+    hduStateEntities: { [id: string]: IWorkbenchHduState },
+  ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId) {
         return null;
       }
 
-      return viewer.hduId ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).sonificationPanelStateId : null;
+      return viewer.hduId ? (hduStateEntities[viewer.hduId] as WorkbenchImageHduState).sonificationPanelStateId : null;
     };
   }
 
-  @Selector()
-  public static getPhotometryPanelStateIdFromViewerId(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getViewerEntities, WorkbenchState.getFileStateEntities, WorkbenchState.getHduStateEntities])
+  public static getPhotometryPanelStateIdFromViewerId(
+    viewerEntities: {[id: string]: Viewer},
+    fileStateEntities: { [id: string]: WorkbenchFileState },
+    hduStateEntities: { [id: string]: IWorkbenchHduState },
+  ) {
     return (id: string) => {
-      let viewer = state.viewers[id];
+      let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId) {
         return null;
       }
 
-      return viewer.hduId ? (state.hduStateEntities[viewer.hduId] as WorkbenchImageHduState).photometryPanelStateId : null;
+      return viewer.hduId ? (hduStateEntities[viewer.hduId] as WorkbenchImageHduState).photometryPanelStateId : null;
     };
   }
 
@@ -945,10 +969,10 @@ export class WorkbenchState {
     return Object.values(state.hduStateEntities);
   }
 
-  @Selector()
-  public static getHduStateById(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getHduStateEntities])
+  public static getHduStateById(hduStateEntities: {[id: string]: IWorkbenchHduState}) {
     return (hduId: string) => {
-      return hduId in state.hduStateEntities ? state.hduStateEntities[hduId] : null;
+      return hduId in hduStateEntities ? hduStateEntities[hduId] : null;
     };
   }
 
@@ -1040,10 +1064,10 @@ export class WorkbenchState {
     };
   }
 
-  @Selector()
-  public static getSelecteHduId(state: WorkbenchStateModel) {
+  @Selector([WorkbenchState.getFileStateEntities])
+  public static getSelectedHduId(fileStateEntities: {[id: string]: WorkbenchFileState}) {
     return (fileId: string) => {
-      return state.fileStateEntities[fileId].selectedHduId;
+      return fileStateEntities[fileId].selectedHduId;
     };
   }
 

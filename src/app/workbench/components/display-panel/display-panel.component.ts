@@ -109,7 +109,7 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
         if (hdu) {
           return of(hdu.id);
         }
-        return this.store.select(WorkbenchState.getSelecteHduId).pipe(map((fn) => fn(file.id)));
+        return this.store.select(WorkbenchState.getSelectedHduId).pipe(map((fn) => fn(file.id)));
       })
     );
 

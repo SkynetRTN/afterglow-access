@@ -43,6 +43,7 @@ import { DataFilesStateModel, DataFilesState } from "./data-files/data-files.sta
 import { IImageData } from "./data-files/models/image-data";
 import { TreeModule } from "@circlon/angular-tree-component";
 import * as WebFont from "webfontloader";
+import { ngxsConfig } from "./ngxs.config";
 
 WebFont.load({
   custom: { families: ["Material Icons", "Material Icons Outline"] },
@@ -125,7 +126,7 @@ export function dataFileSanitizer(v) {
     }),
     NgxsModule.forRoot(
       [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
-      { developmentMode: !appConfig.production }
+      ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
       key: [

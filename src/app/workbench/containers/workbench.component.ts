@@ -318,7 +318,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.filteredFiles$ = this.store.select(WorkbenchState.getFilteredFiles);
     this.filteredFileIds$ = this.store.select(WorkbenchState.getFilteredFileIds);
-    this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFileIds);
+    this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFilteredFileIds);
 
     this.filteredHduIds$ = this.store
       .select(WorkbenchState.getFilteredHduIds)
@@ -505,7 +505,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         return this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
           map((fn) => fn(viewerId)),
           distinctUntilChanged(),
-          switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+          switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(
+            map((fn) => fn(headerId)),
+            distinctUntilChanged(),
+          ))
         );
       })
     );
@@ -639,17 +642,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
 
     this.photometryPanelSources$ = combineLatest(
-      this.store.select(SourcesState.getSources),
+      this.store.select(SourcesState.getSources).pipe(tap(v => console.log("-----GET SOURCES CHANGED"))),
       this.photometryPanelConfig$.pipe(
         map((config) => config.coordMode),
-        distinctUntilChanged()
+        distinctUntilChanged(),
+        tap(v => console.log("----COORD MODE CHANGED"))
       ),
       this.photometryPanelConfig$.pipe(
         map((config) => config.showSourcesFromAllFiles),
-        distinctUntilChanged()
+        distinctUntilChanged(),
+        tap(v => console.log("---- SHOW SOURCES CHANGED"))
       ),
-      this.focusedViewerHduId$,
-      this.focusedViewerHeader$
+      this.focusedViewerHduId$.pipe(tap(v => console.log("-----HDUID CHANGED"))),
+      this.focusedViewerHeader$.pipe(tap(v => console.log("-----HEADER CHANGED")))
     ).pipe(
       filter(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => header != null),
       map(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => {
@@ -1684,7 +1689,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.afterLibrarySync()
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
-          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: "Close Files",
@@ -1804,7 +1809,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.afterLibrarySync()
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
-          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: "Save Files",
@@ -1849,7 +1854,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.afterLibrarySync()
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
-          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
 
           let job: BatchDownloadJob = {
@@ -1925,7 +1930,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.afterLibrarySync()
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
-          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFileIds);
+          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
           let hduCount = 0;
           files.forEach((file) => (hduCount += file.hduIds.length));
