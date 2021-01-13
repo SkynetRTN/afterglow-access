@@ -5,12 +5,13 @@ import { Store } from '@ngxs/store';
 import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, map, takeUntil } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import { IHdu } from '../../../data-files/models/data-file';
+import { getDecDegs, getDegsPerPixel, getHeight, getRaHours, getWidth, Header, IHdu } from '../../../data-files/models/data-file';
 import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../jobs/models/wcs_calibration';
-import { parseDms } from '../../../utils/skynet-astro';
+import { formatDms, parseDms } from '../../../utils/skynet-astro';
 import { floatOrSexagesimalValidator } from '../../../utils/validators';
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
 import { WcsCalibrationSettings } from '../../models/workbench-state';
+import { CreateWcsCalibrationJob } from '../../workbench.actions';
 import { SourceExtractionDialogComponent } from '../source-extraction-dialog/source-extraction-dialog.component';
 
 
@@ -57,6 +58,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
   private sourceExtractionSettings$ = new BehaviorSubject<SourceExtractionSettings>(null);
 
+  @Input() autofillHeader: Header = null;
+
   @Output() onSelectedHduIdsChange = new EventEmitter<string[]>();
   @Output() onWcsCalibrationSettingsChange = new EventEmitter<WcsCalibrationSettings>();
   @Output() onSourceExtractionSettingsChange = new EventEmitter<SourceExtractionSettings>();
@@ -66,8 +69,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   wcsCalibrationJobRow$: Observable<{ job: WcsCalibrationJob; result: WcsCalibrationJobResult }>;
   wcsCalibrationForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
-    ra: new FormControl("", [Validators.required, floatOrSexagesimalValidator]),
-    dec: new FormControl("", [Validators.required, floatOrSexagesimalValidator]),
+    ra: new FormControl("",  {updateOn: 'blur', validators: [floatOrSexagesimalValidator]}),
+    dec: new FormControl("",  {updateOn: 'blur', validators: [floatOrSexagesimalValidator]}),
     radius: new FormControl("", [Validators.required, Validators.min(0)]),
     minScale: new FormControl("", [Validators.required, Validators.min(0)]),
     maxScale: new FormControl("", [Validators.required, Validators.min(0)]),
@@ -86,8 +89,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
       if(settings) {
         this.wcsCalibrationForm.patchValue({
-          ra: settings.ra,
-          dec: settings.dec,
+          ra: settings.ra || settings.ra == 0 ? formatDms(settings.ra, 3, 4, null, null, null, null) : settings.ra,
+          dec: settings.dec || settings.dec == 0 ? formatDms(settings.dec, 3, 4, null, null, null, null) : settings.dec,
           radius: settings.radius,
           minScale: settings.minScale,
           maxScale: settings.maxScale,
@@ -100,13 +103,22 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     this.wcsCalibrationForm.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(value => {
-      this.wcsCalibrationForm.updateValueAndValidity({emitEvent: false});
       if(this.wcsCalibrationForm.valid) {
         this.onSelectedHduIdsChange.emit(value.selectedHduIds);
-        let ra = Number(value.ra);
-        if(isNaN(ra)) ra = parseDms(value.ra);
-        let dec = Number(value.dec);
-        if(isNaN(ra)) ra = parseDms(value.ra);
+
+        let raString: string = value.ra;
+        let ra: number = null;
+        if(raString && raString.trim() != "") {
+          ra = Number(raString);
+          if(isNaN(ra)) ra = parseDms(raString);
+        } 
+        
+        let decString: string = value.dec;
+        let dec: number = null;
+        if(decString && decString.trim() != "") {
+          dec = Number(decString);
+          if(isNaN(dec)) dec = parseDms(decString);
+        } 
         this.onWcsCalibrationSettingsChange.emit({
           ra: ra,
           dec: dec, 
@@ -175,7 +187,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onSubmitClick() {
-
+    this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedHduIds.value));
   }
 
   onOpenSourceExtractionSettingsClick() {
@@ -189,5 +201,48 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
         this.onSourceExtractionSettingsChange.emit(result);
       }
     });
+  }
+
+  onAutofillFromFocusedViewerClick() {
+    if(!this.autofillHeader) return;
+
+    let ra = getRaHours(this.autofillHeader);
+    let dec = getDecDegs(this.autofillHeader);
+    let degsPerPixel = getDegsPerPixel(this.autofillHeader);
+    let width = getWidth(this.autofillHeader);
+    let height = getHeight(this.autofillHeader);
+
+    let changes: Partial<WcsCalibrationSettings> = {}
+
+    if(ra || ra == 0) {
+      changes = {
+        ...changes,
+        ra: ra
+      }
+    }
+    if(dec || dec == 0) {
+      changes = {
+        ...changes,
+        dec: dec
+      }
+    }
+
+    if(degsPerPixel && width && height) {
+      let size = Math.max(width, height);
+      let minScale = Math.round(size*degsPerPixel*0.9*100000)/100000;
+      let maxScale = Math.round(size*degsPerPixel*1.1*100000)/100000;
+      changes = {
+        ...changes,
+        minScale: minScale,
+        maxScale: maxScale
+      }
+    }
+
+    this.onWcsCalibrationSettingsChange.emit({
+      ...this.wcsCalibrationSettings,
+      ...changes
+    });
+
+
   }
 }

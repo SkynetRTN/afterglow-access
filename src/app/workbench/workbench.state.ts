@@ -14,7 +14,7 @@ import {
 import { tap, catchError, filter, take, takeUntil, flatMap } from "rxjs/operators";
 import { Point, Matrix, Rectangle } from "paper";
 import { merge } from "rxjs";
-import { WorkbenchStateModel, WorkbenchTool, ViewerPanel, ViewerPanelContainer } from "./models/workbench-state";
+import { WorkbenchStateModel, WorkbenchTool, ViewerPanel, ViewerPanelContainer, WcsCalibrationSettings } from "./models/workbench-state";
 import { ViewMode } from "./models/view-mode";
 import { SidebarView } from "./models/sidebar-view";
 import { createPsfCentroiderSettings, createDiskCentroiderSettings } from "./models/centroider";
@@ -127,6 +127,9 @@ import {
   SetFileSelection,
   SetFileListFilter,
   InitializeWorkbenchFileState,
+  UpdateWcsCalibrationPanelState,
+  UpdateWcsCalibrationSettings,
+  CreateWcsCalibrationJob,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -143,10 +146,11 @@ import {
 import { AfterglowCatalogService } from "./services/afterglow-catalogs";
 import { AfterglowFieldCalService } from "./services/afterglow-field-cals";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
-import { CreateJob, UpdateJob } from "../jobs/jobs.actions";
+import { CreateJob, CreateJobFail, CreateJobSuccess, UpdateJob } from "../jobs/jobs.actions";
 import { PixelOpsJob, PixelOpsJobResult } from "../jobs/models/pixel-ops";
 import { JobType } from "../jobs/models/job-types";
 import { AlignmentJob, AlignmentJobResult } from "../jobs/models/alignment";
+import { WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from "../jobs/models/wcs_calibration";
 import { StackingJob } from "../jobs/models/stacking";
 import { ImportAssetsCompleted, ImportAssets } from "../data-providers/data-providers.actions";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
@@ -303,7 +307,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     currentStackingJobId: null,
   },
   wcsCalibrationPanelState: {
-    selectedHduIds: []
+    selectedHduIds: [],
+    activeJobId: null,
   },
   wcsCalibrationSettings: {
     ra: null,
@@ -354,7 +359,7 @@ export class WorkbenchState {
     private afterglowFieldCalService: AfterglowFieldCalService,
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions
-  ) {}
+  ) { }
 
   @Selector()
   public static getState(state: WorkbenchStateModel) {
@@ -1041,7 +1046,7 @@ export class WorkbenchState {
 
   @Action(Initialize)
   @ImmutableContext()
-  public initialize({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: Initialize) {
+  public initialize({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: Initialize) {
     let state = getState();
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -1078,7 +1083,7 @@ export class WorkbenchState {
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ResetState) {
     setState((state: WorkbenchStateModel) => {
       return workbenchStateDefaults;
     });
@@ -1086,7 +1091,7 @@ export class WorkbenchState {
 
   @Action(ToggleFullScreen)
   @ImmutableContext()
-  public toggleFullScreen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ToggleFullScreen) {
+  public toggleFullScreen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ToggleFullScreen) {
     setState((state: WorkbenchStateModel) => {
       state.inFullScreenMode = !state.inFullScreenMode;
       return state;
@@ -1133,7 +1138,7 @@ export class WorkbenchState {
 
   @Action(ShowSidebar)
   @ImmutableContext()
-  public showSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ShowSidebar) {
+  public showSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ShowSidebar) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = true;
       return state;
@@ -1142,7 +1147,7 @@ export class WorkbenchState {
 
   @Action(HideSidebar)
   @ImmutableContext()
-  public hideSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: HideSidebar) {
+  public hideSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: HideSidebar) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = false;
       return state;
@@ -1724,7 +1729,7 @@ export class WorkbenchState {
 
   @Action(ToggleShowConfig)
   @ImmutableContext()
-  public toggleShowConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ToggleShowConfig) {
+  public toggleShowConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ToggleShowConfig) {
     setState((state: WorkbenchStateModel) => {
       state.showConfig = !state.showConfig;
       return state;
@@ -1922,6 +1927,40 @@ export class WorkbenchState {
     });
   }
 
+  @Action(UpdateWcsCalibrationPanelState)
+  @ImmutableContext()
+  public updateWcsCalibrationPanelState(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateWcsCalibrationPanelState
+  ) {
+    setState((state: WorkbenchStateModel) => {
+
+      state.wcsCalibrationPanelState = {
+        ...state.wcsCalibrationPanelState,
+        ...changes,
+      };
+
+      return state;
+    });
+  }
+
+  @Action(UpdateWcsCalibrationSettings)
+  @ImmutableContext()
+  public updateWcsCalibrationSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateWcsCalibrationSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+
+      state.wcsCalibrationSettings = {
+        ...state.wcsCalibrationSettings,
+        ...changes,
+      };
+
+      return state;
+    });
+  }
+
   @Action(SetSelectedCatalog)
   @ImmutableContext()
   public setSelectedCatalog(
@@ -1948,7 +1987,7 @@ export class WorkbenchState {
 
   @Action(CloseSidenav)
   @ImmutableContext()
-  public closeSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CloseSidenav) {
+  public closeSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CloseSidenav) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = false;
       return state;
@@ -1957,7 +1996,7 @@ export class WorkbenchState {
 
   @Action(OpenSidenav)
   @ImmutableContext()
-  public openSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: OpenSidenav) {
+  public openSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: OpenSidenav) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = true;
       return state;
@@ -2280,7 +2319,7 @@ export class WorkbenchState {
 
   @Action(LoadCatalogs)
   @ImmutableContext()
-  public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: LoadCatalogs) {
+  public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadCatalogs) {
     return this.afterglowCatalogService.getCatalogs().pipe(
       tap((catalogs) => {
         setState((state: WorkbenchStateModel) => {
@@ -2300,7 +2339,7 @@ export class WorkbenchState {
 
   @Action(LoadFieldCals)
   @ImmutableContext()
-  public loadFieldCals({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: LoadFieldCals) {
+  public loadFieldCals({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadFieldCals) {
     return this.afterglowFieldCalService.getFieldCals().pipe(
       tap((fieldCals) => {
         setState((state: WorkbenchStateModel) => {
@@ -2342,7 +2381,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public updateFieldCal({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { fieldCal }: UpdateFieldCal) {
     return this.afterglowFieldCalService.updateFieldCal(fieldCal).pipe(
-      tap((fieldCal) => {}),
+      tap((fieldCal) => { }),
       flatMap((fieldCal) => {
         return dispatch([new UpdateFieldCalSuccess(fieldCal), new LoadFieldCals()]);
       }),
@@ -2380,7 +2419,7 @@ export class WorkbenchState {
 
   @Action(CreatePixelOpsJob)
   @ImmutableContext()
-  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CreatePixelOpsJob) {
+  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreatePixelOpsJob) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
@@ -2402,8 +2441,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       aux_file_ids: auxFileIds,
@@ -2467,7 +2506,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAdvPixelOpsJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreateAdvPixelOpsJob
+    { }: CreateAdvPixelOpsJob
   ) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
@@ -2483,8 +2522,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       aux_file_ids: auxImageFiles
@@ -2492,8 +2531,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       op: data.opString,
@@ -2571,8 +2610,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       inplace: true,
@@ -2665,8 +2704,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => parseInt(f.id)),
       stacking_settings: {
@@ -2729,6 +2768,87 @@ export class WorkbenchState {
     );
 
     return merge(jobSuccessful$, jobUpdated$);
+  }
+
+
+  @Action(CreateWcsCalibrationJob)
+  @ImmutableContext()
+  public createWcsCalibrationJob(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduIds }: CreateWcsCalibrationJob
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.wcsCalibrationPanelState.activeJobId = null;
+      return state;
+    });
+
+    let state = getState();
+    let wcsSettings = state.wcsCalibrationSettings;
+    let wcsCalibrationJobSettings: WcsCalibrationJobSettings = {
+      ra_hours: wcsSettings.ra,
+      dec_degs: wcsSettings.dec,
+      radius: wcsSettings.radius,
+      min_scale: wcsSettings.minScale,
+      max_scale: wcsSettings.maxScale,
+      max_sources: wcsSettings.maxSources
+    };
+
+    let sourceExtractionSettings = state.sourceExtractionSettings;
+    let sourceExtractionJobSettings: SourceExtractionJobSettings = {
+      threshold: sourceExtractionSettings.threshold,
+      fwhm: sourceExtractionSettings.fwhm,
+      deblend: sourceExtractionSettings.deblend,
+      limit: sourceExtractionSettings.limit,
+    }
+
+    let job: WcsCalibrationJob = {
+      type: JobType.WcsCalibration,
+      id: null,
+      file_ids: hduIds.map((hduId) => parseInt(hduId)),
+      inplace: true,
+      settings: wcsCalibrationJobSettings,
+      source_extraction_settings: sourceExtractionJobSettings,
+    };
+
+    let correlationId = this.correlationIdGenerator.next();
+    let onCreateJobFail$ = this.actions$.pipe(
+      ofActionDispatched(CreateJobFail),
+      filter(action => (action as CreateJobFail).correlationId == correlationId)
+    )
+
+    let onCreateJobSuccess$ = this.actions$.pipe(
+      takeUntil(onCreateJobFail$),
+      ofActionDispatched(CreateJobSuccess),
+      filter(action => (action as CreateJobSuccess).correlationId == correlationId),
+      take(1),
+      flatMap((action) => {
+        setState((state: WorkbenchStateModel) => {
+          state.wcsCalibrationPanelState.activeJobId = (action as CreateJobSuccess).job.id
+          return state;
+        });
+
+        return this.actions$.pipe(
+          ofActionCompleted(CreateJob),
+          filter((value) => (value.action as CreateJob).correlationId == correlationId),
+          take(1),
+          flatMap(value => {
+            let actions = [];
+            if(value.result.successful) {
+              let jobEntites = this.store.selectSnapshot(JobsState.getEntities);
+              let jobEntity = jobEntites[state.wcsCalibrationPanelState.activeJobId];
+              let job = jobEntity.job as WcsCalibrationJob;
+              let result = jobEntity.result as WcsCalibrationJobResult;
+              result.file_ids.forEach(hduId => {
+                actions.push(new InvalidateHeader(hduId.toString()))
+              })
+            }
+
+            return dispatch(actions)
+          })
+        )
+      })
+    )
+    return merge(onCreateJobSuccess$, dispatch(new CreateJob(job, 1000, correlationId)));
   }
 
   @Action(ImportFromSurvey)
@@ -3791,7 +3911,7 @@ export class WorkbenchState {
 
   @Action(RemoveAllPhotDatas)
   @ImmutableContext()
-  public removeAllPhotDatas({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: RemoveAllPhotDatas) {
+  public removeAllPhotDatas({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: RemoveAllPhotDatas) {
     setState((state: WorkbenchStateModel) => {
       state.hduIds.forEach((hduId) => {
         if (state.hduStateEntities[hduId].hduType != HduType.IMAGE) {

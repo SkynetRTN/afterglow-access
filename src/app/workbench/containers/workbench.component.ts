@@ -1132,7 +1132,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onWcsCalibrationSettingsChange($event) {
-    this.store.dispatch(new UpdateSourceExtractionSettings($event));
+    this.store.dispatch(new UpdateWcsCalibrationSettings($event));
   }
 
   onWcsCalibrationSelectedHduIdsChange(selectedHduIds: string[]) {

@@ -1,9 +1,8 @@
-import { SourceExtractionSettings } from '../../workbench/models/source-extraction-settings';
 import { JobBase, JobResultBase } from "./job-base";
 import { JobType } from "./job-types";
-import { SourceExtractionData } from "./source-extraction";
+import { SourceExtractionJobSettings } from "./source-extraction";
 
-export interface WcsCalibrationSettings {
+export interface WcsCalibrationJobSettings {
   ra_hours: number;
   dec_degs: number;
   radius: number;
@@ -15,8 +14,8 @@ export interface WcsCalibrationSettings {
 export interface WcsCalibrationJob extends JobBase {
   readonly type: JobType.WcsCalibration;
   file_ids: number[];
-  settings?: WcsCalibrationSettings;
-  source_extraction_settings: SourceExtractionSettings;
+  settings?: WcsCalibrationJobSettings;
+  source_extraction_settings: SourceExtractionJobSettings;
   inplace: boolean;
 }
 

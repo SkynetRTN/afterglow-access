@@ -322,6 +322,7 @@
           [selectedHduIds]="(wcsCalibrationPanelState$ | async)?.selectedHduIds"
           [wcsCalibrationSettings]="wcsCalibrationSettings$ | async"
           [sourceExtractionSettings]="sourceExtractionSettings$ | async"
+          [autofillHeader]="focusedViewerHeader$ | async"
           (onSelectedHduIdsChange)="onWcsCalibrationSelectedHduIdsChange($event)"
           (onWcsCalibrationSettingsChange)="onWcsCalibrationSettingsChange($event)"
           (onSourceExtractionSettingsChange)="onSourceExtractionSettingsChange($event)">

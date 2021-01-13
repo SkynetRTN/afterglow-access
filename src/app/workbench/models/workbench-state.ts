@@ -101,6 +101,7 @@ export interface StackingPanelConfig {
 
 export interface WcsCalibrationPanelState {
   selectedHduIds: string[];
+  activeJobId: string;
 }
 
 export interface WcsCalibrationSettings {

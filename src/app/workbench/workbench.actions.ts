@@ -284,7 +284,7 @@ export class UpdateWcsCalibrationPanelState {
 }
 
 export class UpdateWcsCalibrationSettings {
-  public static readonly type = "[Workbench] Update Wcs Calibration Panel";
+  public static readonly type = "[Workbench] Update Wcs Calibration Settings";
 
   constructor(public changes: Partial<WcsCalibrationSettings>) {}
 }
@@ -394,6 +394,11 @@ export class CreateAlignmentJob {
 
 export class CreateStackingJob {
   public static readonly type = "[Workbench] Create Stacking Job";
+  constructor(public hduIds: string[]) {}
+}
+
+export class CreateWcsCalibrationJob {
+  public static readonly type = "[Workbench] Create Wcs Calibration Job";
   constructor(public hduIds: string[]) {}
 }
 
