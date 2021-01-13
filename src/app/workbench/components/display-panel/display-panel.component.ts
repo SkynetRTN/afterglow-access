@@ -174,11 +174,11 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   onFlipClick() {
-    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, 'vertical',  this.viewportSize));
+    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, 'horizontal',  this.viewportSize));
   }
 
   onMirrorClick() {
-    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, 'horizontal',  this.viewportSize));
+    this.store.dispatch(new Flip(this.imageData.id, this.imageTransform.id, this.viewportTransform.id, 'vertical',  this.viewportSize));
   }
 
   onRotateClick() {
