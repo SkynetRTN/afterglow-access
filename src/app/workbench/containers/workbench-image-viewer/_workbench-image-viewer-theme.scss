@@ -4,4 +4,12 @@
   $warn: map-get($theme, warn);
   $background: map-get($theme, background);
   $foreground: map-get($theme, foreground);
+
+  .svg-placeholder {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
 }

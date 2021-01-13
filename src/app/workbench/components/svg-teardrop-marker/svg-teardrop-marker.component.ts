@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, ViewChild, ElementRef } from "@angular/core";
+import { Component, OnInit, Input, OnChanges, ViewChild, ElementRef, ChangeDetectionStrategy } from "@angular/core";
 
 import { Matrix, Point } from "paper";
 
@@ -6,6 +6,7 @@ import { Matrix, Point } from "paper";
   selector: "[app-svg-teardrop-marker]",
   templateUrl: "./svg-teardrop-marker.component.html",
   styleUrls: ["./svg-teardrop-marker.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgTeardropMarkerComponent implements OnInit, OnChanges {
   @Input() x: number;

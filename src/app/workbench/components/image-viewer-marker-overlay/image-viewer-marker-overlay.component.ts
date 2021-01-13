@@ -14,9 +14,11 @@ import {
   SimpleChanges,
 } from "@angular/core";
 import { Point, Matrix, Rectangle } from "paper";
-import { Marker, MarkerType, CircleMarker, TeardropMarker } from "../../models/marker";
+import { Marker, MarkerType, CircleMarker, TeardropMarker, RectangleMarker, LineMarker } from "../../models/marker";
 import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
 import { Transform, transformToMatrix } from "../../../data-files/models/transformation";
+import { BehaviorSubject, combineLatest, Observable } from "rxjs";
+import { map, tap } from "rxjs/operators";
 
 export type MarkerMouseEvent = {
   marker: Marker;
@@ -32,10 +34,42 @@ export type MarkerMouseEvent = {
 export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, AfterViewInit {
   MarkerType = MarkerType;
 
-  @Input() transform: Transform;
-  @Input() markers: Marker[];
-  @Input() svgWidth: number;
-  @Input() svgHeight: number;
+  @Input("transform")
+  set transform(transform: Transform) {
+    this.transform$.next(transform);
+  }
+  get transform() {
+    return this.transform$.getValue();
+  }
+  private transform$ = new BehaviorSubject<Transform>(null);
+
+
+  @Input("markers")
+  set markers(markers: Marker[]) {
+    this.markers$.next(markers);
+  }
+  get markers() {
+    return this.markers$.getValue();
+  }
+  private markers$ = new BehaviorSubject<Marker[]>(null);
+
+  @Input("svgWidth")
+  set svgWidth(svgWidth: number) {
+    this.svgWidth$.next(svgWidth);
+  }
+  get svgWidth() {
+    return this.svgWidth$.getValue();
+  }
+  private svgWidth$ = new BehaviorSubject<number>(null);
+
+  @Input("svgHeight")
+  set svgHeight(svgHeight: number) {
+    this.svgHeight$.next(svgHeight);
+  }
+  get svgHeight() {
+    return this.svgHeight$.getValue();
+  }
+  private svgHeight$ = new BehaviorSubject<number>(null);
 
   @Output() onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
@@ -43,8 +77,13 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   @ViewChild("svgTextGroup", { static: true }) svgTextGroup: ElementRef;
   @ViewChild("svgElementRef", { static: true }) svgElementRef: ElementRef;
 
-  private lastTransform: Transform;
-  public markerTexts: Array<{
+  transformAttr$: Observable<string>;
+  circleMarkers$: Observable<CircleMarker[]>;
+  rectangleMarkers$: Observable<RectangleMarker[]>;
+  tearDropMarkers$: Observable<TeardropMarker[]>;
+  lineMarkers$: Observable<LineMarker[]>;
+
+  markerTexts$: Observable<Array<{
     x: number;
     y: number;
     dx: number;
@@ -53,32 +92,106 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
     transform: string;
     selected: boolean;
     anchor: string;
-  }> = [];
+  }>>;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef) {
+    this.transformAttr$ = this.transform$.pipe(
+      map(t => `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`)
+    )
+
+    this.circleMarkers$ = this.markers$.pipe(
+      map(markers => markers.filter(m => m.type == MarkerType.CIRCLE) as CircleMarker[])
+    )
+    this.rectangleMarkers$ = this.markers$.pipe(
+      map(markers => markers.filter(m => m.type == MarkerType.RECTANGLE) as RectangleMarker[])
+    )
+
+    this.tearDropMarkers$ = this.markers$.pipe(
+      map(markers => markers.filter(m => m.type == MarkerType.TEARDROP) as TeardropMarker[])
+    )
+
+    this.lineMarkers$ = this.markers$.pipe(
+      map(markers => markers.filter(m => m.type == MarkerType.LINE) as LineMarker[])
+    )
+
+    this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$]).pipe(
+      map(([circleMarkers, tearDropMarkers]) => {
+        if (!circleMarkers || !tearDropMarkers) return [];
+        let markers: (CircleMarker | TeardropMarker)[] = circleMarkers.concat(tearDropMarkers).filter(marker => marker.label && marker.label != '');
+        return markers.map(m => {
+          let matrix = transformToMatrix(this.transform);
+          let p = matrix.transform(new Point(m.x, m.y));
+          let mirrored = matrix.scaling.x < 0;
+          let flipped = matrix.scaling.y >= 0;
+          let rotation = Math.round((-Math.atan2(-this.transform.b, this.transform.a) * 180.0) / Math.PI);
+
+          let labelTheta = m.labelTheta;
+          // console.log(labelTheta, mirrored, flipped, rotation);
+
+          if (mirrored) {
+            flipped = !flipped;
+            labelTheta += 180;
+          }
+          while (labelTheta < 0) labelTheta += 360;
+          labelTheta = labelTheta % 360;
+          if (flipped) {
+            if (labelTheta <= 180) {
+              labelTheta = 180 - labelTheta;
+            } else {
+              labelTheta = 180 - (labelTheta - 180) + 180;
+            }
+          }
+
+          labelTheta += rotation;
+          while (labelTheta < 0) labelTheta += 360;
+          labelTheta = labelTheta % 360;
+
+          let radius = m.radius + m.labelGap;
+          if (radius < 0) {
+            radius *= -1;
+            labelTheta += 180;
+            while (labelTheta < 0) labelTheta += 360;
+            labelTheta = labelTheta % 360;
+          }
+          /*TODO: Find better way of determining line height and positioning label */
+          if (labelTheta > 90 && labelTheta < 270) {
+            radius += 10 * Math.abs(Math.cos((labelTheta * Math.PI) / 180)); // line height ?
+          }
+          let dx = radius * Math.sin((labelTheta * Math.PI) / 180);
+          let dy = -radius * Math.cos((labelTheta * Math.PI) / 180);
+          let anchor = "middle";
+          if (labelTheta > 0 && labelTheta < 180) anchor = "start";
+          if (labelTheta > 180 && labelTheta < 360) anchor = "end";
+
+          return {
+            x: p.x,
+            y: p.y,
+            dx: 0,
+            dy: 0,
+            text: m.label ? m.label : "",
+            transform: `translate(${p.x},${p.y}) scale(${Math.abs(matrix.scaling.x)}, ${Math.abs(
+              matrix.scaling.y
+            )}) translate(${-p.x},${-p.y}) translate(${dx},${dy}) `,
+            selected: m.selected,
+            anchor: anchor,
+          };
+        })
+
+      })
+
+    )
+  }
+  get svg(): SVGElement {
+    return this.svgElementRef.nativeElement;
+  }
 
   trackById(m: Marker) {
     return m.id;
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (!this.transform) return;
-    if (
-      (changes.markers && changes.markers.previousValue != changes.markers.currentValue) ||
-      (changes.transform && changes.transform.previousValue != changes.transform.currentValue)
-    ) {
-      this.updateMarkerTexts();
-    }
-
-    if (!this.svgGroup) return;
-
-    if (changes.transform && changes.transform.previousValue != changes.transform.currentValue) {
-      this.lastTransform = this.transform;
-      let t = this.lastTransform;
-      this.svgGroup.nativeElement.setAttribute("transform", `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`);
-    }
   }
 
   ngAfterViewInit() {
@@ -90,73 +203,5 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
       marker: marker,
       mouseEvent: $event,
     });
-  }
-
-  get svg(): SVGElement {
-    return this.svgElementRef.nativeElement;
-  }
-
-  updateMarkerTexts() {
-    this.markerTexts = this.markers
-      .filter((marker) => marker.type == MarkerType.CIRCLE || marker.type == MarkerType.TEARDROP)
-      .map((marker) => {
-        let m = marker as CircleMarker | TeardropMarker;
-        let matrix = transformToMatrix(this.transform);
-        let p = matrix.transform(new Point(m.x, m.y));
-        let mirrored = matrix.scaling.x < 0;
-        let flipped = matrix.scaling.y >= 0;
-        let rotation = Math.round((-Math.atan2(-this.transform.b, this.transform.a) * 180.0) / Math.PI);
-
-        let labelTheta = m.labelTheta;
-        // console.log(labelTheta, mirrored, flipped, rotation);
-
-        if (mirrored) {
-          flipped = !flipped;
-          labelTheta += 180;
-        }
-        while (labelTheta < 0) labelTheta += 360;
-        labelTheta = labelTheta % 360;
-        if (flipped) {
-          if (labelTheta <= 180) {
-            labelTheta = 180 - labelTheta;
-          } else {
-            labelTheta = 180 - (labelTheta - 180) + 180;
-          }
-        }
-
-        labelTheta += rotation;
-        while (labelTheta < 0) labelTheta += 360;
-        labelTheta = labelTheta % 360;
-
-        let radius = m.radius + m.labelGap;
-        if (radius < 0) {
-          radius *= -1;
-          labelTheta += 180;
-          while (labelTheta < 0) labelTheta += 360;
-          labelTheta = labelTheta % 360;
-        }
-        /*TODO: Find better way of determining line height and positioning label */
-        if (labelTheta > 90 && labelTheta < 270) {
-          radius += 10 * Math.abs(Math.cos((labelTheta * Math.PI) / 180)); // line height ?
-        }
-        let dx = radius * Math.sin((labelTheta * Math.PI) / 180);
-        let dy = -radius * Math.cos((labelTheta * Math.PI) / 180);
-        let anchor = "middle";
-        if (labelTheta > 0 && labelTheta < 180) anchor = "start";
-        if (labelTheta > 180 && labelTheta < 360) anchor = "end";
-
-        return {
-          x: p.x,
-          y: p.y,
-          dx: 0,
-          dy: 0,
-          text: m.label ? m.label : "",
-          transform: `translate(${p.x},${p.y}) scale(${Math.abs(matrix.scaling.x)}, ${Math.abs(
-            matrix.scaling.y
-          )}) translate(${-p.x},${-p.y}) translate(${dx},${dy}) `,
-          selected: m.selected,
-          anchor: anchor,
-        };
-      });
   }
 }

@@ -2,48 +2,29 @@
   <ng-container *ngIf="normalizedImageData$ | async">
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
-        <div
-          app-pan-zoom-canvas
-          #panZoomCanvas="panZoomCanvas"
-          class="viewer"
-          [imageData]="normalizedImageData$ | async"
-          [transform]="imageToViewportTransform$ | async"
-          (onImageMove)="handleImageMove($event)"
-          (onImageClick)="handleImageClick($event)"
-          (onMoveBy)="handleMoveBy($event)"
-          (onZoomBy)="handleZoomBy($event)"
-          (onLoadTile)="handleLoadTile($event)"
+        <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer"
+          [imageData]="normalizedImageData$ | async" [transform]="imageToViewportTransform$ | async"
+          (onImageMove)="handleImageMove($event)" (onImageClick)="handleImageClick($event)"
+          (onMoveBy)="handleMoveBy($event)" (onZoomBy)="handleZoomBy($event)" (onLoadTile)="handleLoadTile($event)"
           (onViewportSizeChange)="handleViewportSizeChange($event)"
-          (onCanvasSizeChange)="handleCanvasSizeChange($event)"
-        >
-          <app-image-viewer-marker-overlay
-            [svgWidth]="currentCanvasSize?.width"
-            [svgHeight]="currentCanvasSize?.height"
-            [transform]="imageToViewportTransform$ | async"
-            [markers]="markers$ | async"
-            (onMarkerClick)="handleMarkerClick($event)"
-            style="pointer-events: none"
-            class="marker-overlay"
-          >
-          </app-image-viewer-marker-overlay>
+          (onCanvasSizeChange)="handleCanvasSizeChange($event)">
+          <div id="svg-placeholder">
+            <app-image-viewer-marker-overlay [svgWidth]="currentCanvasSize?.width"
+              [svgHeight]="currentCanvasSize?.height" [transform]="imageToViewportTransform$ | async"
+              [markers]="markers$ | async" (onMarkerClick)="handleMarkerClick($event)" style="pointer-events: none"
+              class="marker-overlay">
+            </app-image-viewer-marker-overlay>
+          </div>
+
         </div>
       </div>
     </div>
     <div fxFlex="0 0 auto">
-      <app-image-viewer-status-bar
-        [class.active]="active"
-        [rawImageData]="rawImageData$ | async"
-        [normalizedImageData]="normalizedImageData$ | async"
-        [wcs]="(header$ | async)?.wcs"
-        [imageMouseX]="imageMouseX"
-        [imageMouseY]="imageMouseY"
-        (downloadSnapshot)="handleDownloadSnapshot()"
-        (onZoomBy)="handleZoomBy($event)"
-        (onZoomTo)="handleZoomTo($event)"
-        (onZoomToFit)="handleZoomToFit($event)"
-        (onCloseFile)="handleCloseFile($event)"
-        (onSaveFile)="handleSaveFile($event)"
-      ></app-image-viewer-status-bar>
+      <app-image-viewer-status-bar [class.active]="active" [rawImageData]="rawImageData$ | async"
+        [normalizedImageData]="normalizedImageData$ | async" [wcs]="(header$ | async)?.wcs" [imageMouseX]="imageMouseX"
+        [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()" (onZoomBy)="handleZoomBy($event)"
+        (onZoomTo)="handleZoomTo($event)" (onZoomToFit)="handleZoomToFit($event)"
+        (onCloseFile)="handleCloseFile($event)" (onSaveFile)="handleSaveFile($event)"></app-image-viewer-status-bar>
     </div>
   </ng-container>
 </div>
