@@ -87,14 +87,14 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   }
   private primaryHeader$ = new BehaviorSubject<Header>(null);
 
-  @Input("viewerId")
-  set viewerId(viewerId: string) {
-    this.viewerId$.next(viewerId);
+  @Input("viewportSize")
+  set viewportSize(viewportSize: {width: number, height: number}) {
+    this.viewportSize$.next(viewportSize);
   }
-  get viewerId() {
-    return this.viewerId$.getValue();
+  get viewportSize() {
+    return this.viewportSize$.getValue();
   }
-  private viewerId$ = new BehaviorSubject<string>(null);
+  private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
 
   @Input("state")
   set state(state: PhotometryPanelState) {
@@ -547,7 +547,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.primaryHdu.id, this.viewerId, result)]);
+        this.store.dispatch([new ExtractSources(this.primaryHdu.id, this.viewportSize, result)]);
       }
     });
   }

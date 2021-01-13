@@ -386,7 +386,7 @@ export class CreateStackingJob {
 export class ExtractSources {
   public static readonly type = "[Workbench] Extract Sources";
 
-  constructor(public hduId: string, public viewerId: string, public settings: SourceExtractionSettings) {}
+  constructor(public hduId: string, public viewportSize: {width: number, height: number}, public settings: SourceExtractionSettings) {}
 }
 
 export class ExtractSourcesSuccess {
