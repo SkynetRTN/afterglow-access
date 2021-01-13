@@ -9,6 +9,7 @@ import {
   ViewChild,
   ElementRef,
   OnDestroy,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 
 import { DomSanitizer, SafeValue } from "@angular/platform-browser";
@@ -76,6 +77,7 @@ import { SonificationPanelState, SonifierRegionMode } from "../../models/sonifie
   selector: "app-workbench-image-viewer",
   templateUrl: "./workbench-image-viewer.component.html",
   styleUrls: ["./workbench-image-viewer.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Input("viewer")
