@@ -2917,7 +2917,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public extractSources(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, viewerId, settings }: ExtractSources
+    { hduId, viewportSize, settings }: ExtractSources
   ) {
     let state = getState();
     let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
@@ -2931,7 +2931,6 @@ export class WorkbenchState {
     let imageTransform = transformEntities[hdu.imageTransformId];
     let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
     let hduState = state.hduStateEntities[hdu.id] as WorkbenchImageHduState;
-    let viewportSize = state.viewers[viewerId].viewportSize;
     let sonificationState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
 
     let jobSettings: SourceExtractionJobSettings = {
@@ -3447,7 +3446,7 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      sonificationPanelState = {
+      state.sonificationPanelStateEntities[hduState.sonificationPanelStateId] = {
         ...sonificationPanelState,
         ...changes,
       };

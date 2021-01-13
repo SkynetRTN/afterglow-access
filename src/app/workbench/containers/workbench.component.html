@@ -304,7 +304,7 @@
           </app-sonification-panel>
 
           <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [primaryHdu]="focusedViewerHdu$ | async"
-            [primaryHeader]="focusedViewerHeader$ | async" [state]="photometryPanelState$ | async"
+            [primaryHeader]="focusedViewerHeader$ | async" [viewportSize]="focusedViewerViewportSize$ | async" [state]="photometryPanelState$ | async"
             [sources]="photometryPanelSources$ | async" [hdus]="hdus$ | async"
             [dataFileEntities]="fileEntities$ | async" [config]="photometryPanelConfig$ | async"
             [centroidSettings]="centroidSettings$ | async" [photometrySettings]="photometrySettings$ | async"
