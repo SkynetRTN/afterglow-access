@@ -173,6 +173,7 @@ import {
 import { JobsState } from "../../jobs/jobs.state";
 import { saveAs } from "file-saver/dist/FileSaver";
 import { JobService } from "../../jobs/services/jobs";
+import { WcsCalibrationJob, WcsCalibrationJobResult } from "../../jobs/models/wcs_calibration";
 
 enum SaveFileAction {
   Save = "save",
@@ -268,6 +269,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
   wcsCalibrationPanelState$: Observable<WcsCalibrationPanelState>;
   wcsCalibrationSettings$: Observable<WcsCalibrationSettings>;
+  wcsCalibrationActiveJob$: Observable<WcsCalibrationJob>;
+  wcsCalibrationActiveJobResult$: Observable<WcsCalibrationJobResult>;
 
   photometrySettings$: Observable<PhotometrySettings>;
   centroidSettings$: Observable<CentroidSettings>;
@@ -675,6 +678,26 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     /* WCS CALIBRATION PANEL */
     this.wcsCalibrationPanelState$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
     this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationSettings);
+    let wcsCalibrationActiveJobRow$ = combineLatest([
+      this.store.select(JobsState.getEntities),
+      this.wcsCalibrationPanelState$.pipe(
+        map(state => state ? state.activeJobId : null),
+        distinctUntilChanged(),
+      )
+    ]).pipe(
+      map(([jobEntities, activeJobId]) => {
+        if(!activeJobId) return null;
+        return jobEntities[activeJobId];
+      })
+    )
+
+    this.wcsCalibrationActiveJob$ = wcsCalibrationActiveJobRow$.pipe(
+      map(value => value ? value.job as WcsCalibrationJob : null)
+    )
+
+    this.wcsCalibrationActiveJobResult$ = wcsCalibrationActiveJobRow$.pipe(
+      map(value => value ? value.result as WcsCalibrationJobResult : null)
+    )
 
     this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
     this.viewerSyncMode$ = store.select(WorkbenchState.getViewerSyncMode);

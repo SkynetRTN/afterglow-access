@@ -40,6 +40,24 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
   private selectedHduIds$ = new BehaviorSubject<string[]>(null);
 
+  @Input("activeJob")
+  set activeJob(activeJob: WcsCalibrationJob) {
+    this.activeJob$.next(activeJob);
+  }
+  get activeJob() {
+    return this.activeJob$.getValue();
+  }
+  private activeJob$ = new BehaviorSubject<WcsCalibrationJob>(null);
+
+  @Input("activeJobResult")
+  set activeJobResult(activeJobResult: WcsCalibrationJobResult) {
+    this.activeJobResult$.next(activeJobResult);
+  }
+  get activeJobResult() {
+    return this.activeJobResult$.getValue();
+  }
+  private activeJobResult$ = new BehaviorSubject<WcsCalibrationJobResult>(null);
+
   @Input("wcsCalibrationSettings")
   set wcsCalibrationSettings(wcsCalibrationSettings: WcsCalibrationSettings) {
     this.wcsCalibrationSettings$.next(wcsCalibrationSettings);
@@ -66,7 +84,6 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  wcsCalibrationJobRow$: Observable<{ job: WcsCalibrationJob; result: WcsCalibrationJobResult }>;
   wcsCalibrationForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
     ra: new FormControl("",  {updateOn: 'blur', validators: [floatOrSexagesimalValidator]}),

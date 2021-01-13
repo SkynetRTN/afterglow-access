@@ -184,6 +184,8 @@ import {
 } from "../data-files/models/transformation";
 import { SonificationJob, SonificationJobResult } from "../jobs/models/sonification";
 import { IImageData } from "../data-files/models/image-data";
+import { MatDialog } from "@angular/material/dialog";
+import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "a7d18bf4-d481-478e-8a8b-269452ce65ad",
@@ -314,8 +316,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     ra: null,
     dec: null,
     minScale: 0.1,
-    maxScale: 60,
-    radius: 180,
+    maxScale: 10,
+    radius: 1,
     maxSources: 1000,
   },
   catalogs: [],
@@ -358,7 +360,8 @@ export class WorkbenchState {
     private afterglowCatalogService: AfterglowCatalogService,
     private afterglowFieldCalService: AfterglowFieldCalService,
     private correlationIdGenerator: CorrelationIdGenerator,
-    private actions$: Actions
+    private actions$: Actions,
+    private dialog: MatDialog
   ) { }
 
   @Selector()
@@ -2833,6 +2836,7 @@ export class WorkbenchState {
           take(1),
           flatMap(value => {
             let actions = [];
+            let state = getState();
             if(value.result.successful) {
               let jobEntites = this.store.selectSnapshot(JobsState.getEntities);
               let jobEntity = jobEntites[state.wcsCalibrationPanelState.activeJobId];
@@ -2841,6 +2845,31 @@ export class WorkbenchState {
               result.file_ids.forEach(hduId => {
                 actions.push(new InvalidateHeader(hduId.toString()))
               })
+              let message: string;
+              let numFailed = hduIds.length-result.file_ids.length;
+              if(numFailed != 0) {
+                message = `Failed to find solution for ${numFailed} image(s).`
+              }
+              else {
+                message = `Successfully found solutions for all ${hduIds.length} files.`
+              }
+
+              let dialogConfig: Partial<AlertDialogConfig> = {
+                title: "WCS Calibration Completed",
+                message: message,
+                buttons: [
+                  {
+                    color: null,
+                    value: false,
+                    label: "Close",
+                  }
+                ],
+              };
+              let dialogRef = this.dialog.open(AlertDialogComponent, {
+                width: "600px",
+                data: dialogConfig,
+              });
+
             }
 
             return dispatch(actions)
