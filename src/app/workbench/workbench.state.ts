@@ -1207,10 +1207,13 @@ export class WorkbenchState {
     let refViewportTransformId = null;
     let refHeaderId = null;
     let refNormalization = null;
+    let refImageDataId = null;
+    
     if (refViewer) {
       refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(refViewer.id);
       refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(refViewer.id);
       refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(refViewer.id);
+      refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(refViewer.id);
 
       if (refViewer.hduId) {
         let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
@@ -1231,7 +1234,7 @@ export class WorkbenchState {
       if (refHeaderId && refImageTransformId && refViewportTransformId) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
-          store.dispatch(new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId));
+          store.dispatch(new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId));
         }
       }
 
@@ -1626,6 +1629,8 @@ export class WorkbenchState {
     let refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(viewer.id);
     let refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
     let refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
+    let refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
+
     let refNormalization = null;
     if (viewer.hduId) {
       let refHdu = hduEntities[viewer.hduId] as ImageHdu;
@@ -1651,7 +1656,7 @@ export class WorkbenchState {
       if (refHeaderId && refImageTransformId && refViewportTransformId) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
-          store.dispatch(new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId));
+          store.dispatch(new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId));
         }
 
         if (refNormalization && state.normalizationSyncEnabled) {
@@ -4009,16 +4014,18 @@ export class WorkbenchState {
   @ImmutableContext()
   public syncFileTransformations(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { refHeaderId, refImageTransformId, refViewportTransformId }: SyncViewerTransformations
+    { refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId }: SyncViewerTransformations
   ) {
     let state = getState();
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
+    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
     let refHeader = headerEntities[refHeaderId];
     let refImageTransform = transformEntities[refImageTransformId];
     let refViewportTransform = transformEntities[refViewportTransformId];
     let refImageToViewportTransform = getImageToViewportTransform(refViewportTransform, refImageTransform);
     let refHduHasWcs = refHeader.wcs && refHeader.wcs.isValid();
+    
 
     let visibleViewers = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds).map((id) => state.viewers[id]);
 
@@ -4032,6 +4039,7 @@ export class WorkbenchState {
       let targetViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
         viewer.id
       );
+     
 
       if (!targetHeader || !targetHeader.loaded || !targetImageTransformId || !targetViewportTransformId) return;
 
@@ -4060,14 +4068,21 @@ export class WorkbenchState {
           }
         }
       } else {
-        targetViewportTransform = {
-          ...refViewportTransform,
-          id: targetViewportTransformId,
-        };
-        targetImageTransform = {
-          ...refImageTransform,
-          id: targetImageTransformId,
-        };
+        let targetImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
+        let targetImageData = imageDataEntities[targetImageDataId];
+        let refImageData = imageDataEntities[refImageDataId];
+
+        if(refImageData && targetImageData && refImageData.width == targetImageData.width && refImageData.height == targetImageData.height) {
+          targetViewportTransform = {
+            ...refViewportTransform,
+            id: targetViewportTransformId,
+          };
+          targetImageTransform = {
+            ...refImageTransform,
+            id: targetImageTransformId,
+          };
+        }
+       
       }
 
       if (targetViewportTransform && targetImageTransform) {

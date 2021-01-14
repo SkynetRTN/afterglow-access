@@ -129,6 +129,7 @@ import { CentroidSettings } from "../models/centroid-settings";
 import { SourceExtractionSettings } from "../models/source-extraction-settings";
 import { AddSources } from "../sources.actions";
 import { PhotometryPanelState } from "../models/photometry-file-state";
+import { WcsCalibrationJob, WcsCalibrationJobResult } from "../../jobs/models/wcs_calibration"
 import {
   ViewerPanelCanvasMouseEvent,
   ViewerPanelMarkerMouseEvent,
@@ -175,7 +176,6 @@ import {
 import { JobsState } from "../../jobs/jobs.state";
 import { saveAs } from "file-saver/dist/FileSaver";
 import { JobService } from "../../jobs/services/jobs";
-import { WcsCalibrationJob, WcsCalibrationJobResult } from "../../jobs/models/wcs_calibration";
 
 enum SaveFileAction {
   Save = "save",
@@ -752,7 +752,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
           );
 
-          let ref$ = combineLatest(refImageTransform$, refViewportTransform$).pipe(withLatestFrom(refHeader$), skip(1));
+          let refImageData$ = this.store.select(WorkbenchState.getRawImageDataIdFromViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            distinctUntilChanged(),
+            switchMap((imageDataId) =>
+              this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId)))
+            ),
+            distinctUntilChanged()
+            // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
+          );
+
+          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$).pipe(withLatestFrom(refHeader$), skip(1));
 
           // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
           // let targetHeaders$ = combineLatest(
@@ -780,13 +790,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         // auditTime(10),
       )
       .subscribe(
-        ([viewerSyncEnabled, viewerSyncMode, visibleViewerIds, [[refImageTransform, refViewportTransform], refHeader]]) => {
-          if (!viewerSyncEnabled || !refHeader || !refHeader.loaded || !refImageTransform || !refViewportTransform) {
+        ([viewerSyncEnabled, viewerSyncMode, visibleViewerIds, [[refImageTransform, refViewportTransform, refImageData], refHeader]]) => {
+          if (!viewerSyncEnabled || !refHeader || !refHeader.loaded || !refImageTransform || !refViewportTransform || !refImageData) {
             return;
           }
-
-          // console.log("HERE!!!!!!!!!: ", viewerSyncEnabled, viewerSyncMode, refHeader, refImageTransform, refViewportTransform)
-          this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id));
+          this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id));
         }
       );
 
