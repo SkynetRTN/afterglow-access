@@ -114,16 +114,16 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
       map(markers => markers.filter(m => m.type == MarkerType.LINE) as LineMarker[])
     )
 
-    this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$]).pipe(
-      map(([circleMarkers, tearDropMarkers]) => {
+    this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$, this.transform$]).pipe(
+      map(([circleMarkers, tearDropMarkers, transform]) => {
         if (!circleMarkers || !tearDropMarkers) return [];
         let markers: (CircleMarker | TeardropMarker)[] = circleMarkers.concat(tearDropMarkers).filter(marker => marker.label && marker.label != '');
         return markers.map(m => {
-          let matrix = transformToMatrix(this.transform);
+          let matrix = transformToMatrix(transform);
           let p = matrix.transform(new Point(m.x, m.y));
           let mirrored = matrix.scaling.x < 0;
           let flipped = matrix.scaling.y >= 0;
-          let rotation = Math.round((-Math.atan2(-this.transform.b, this.transform.a) * 180.0) / Math.PI);
+          let rotation = Math.round((-Math.atan2(-transform.b, transform.a) * 180.0) / Math.PI);
 
           let labelTheta = m.labelTheta;
           // console.log(labelTheta, mirrored, flipped, rotation);
