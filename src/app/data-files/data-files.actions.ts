@@ -5,6 +5,7 @@ import { Region } from "./models/region";
 import { Transform } from "./models/transformation";
 import { Normalization } from "./models/normalization";
 import { BlendMode } from "./models/blend-mode";
+import { ColorMap } from "./models/color-map";
 
 /**
  * Load Library Actions
@@ -115,6 +116,12 @@ export class UpdateBlendMode {
   public static readonly type = "[File] Update Blend Mode";
 
   constructor(public hduId: string, public blendMode: BlendMode) { }
+}
+
+export class UpdateColorMap {
+  public static readonly type = "[File] Update Color map";
+
+  constructor(public hduId: string, public colorMap: string) { }
 }
 
 export class UpdateAlpha {

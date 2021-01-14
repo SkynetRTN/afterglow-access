@@ -8,11 +8,21 @@ import { DataFilesState } from "../../../data-files/data-files.state";
 import { switchMap, map, debounce, debounceTime, distinctUntilChanged, concatAll, tap, take } from "rxjs/operators";
 import { SetSelectedHduId } from "../../workbench.actions";
 import { MatSelectionListChange } from "@angular/material/list";
-import { LoadLibrary, UpdateAlpha, UpdateBlendMode, UpdateVisibility } from "../../../data-files/data-files.actions";
+import { LoadLibrary, UpdateAlpha, UpdateBlendMode, UpdateColorMap, UpdateNormalizer, UpdateVisibility } from "../../../data-files/data-files.actions";
 import { MatSliderChange } from "@angular/material/slider";
 import { BlendMode } from "../../../data-files/models/blend-mode";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 import { AfterglowDataFileService } from "../../services/afterglow-data-files";
+import {
+  grayColorMap,
+  rainbowColorMap,
+  coolColorMap,
+  heatColorMap,
+  redColorMap,
+  greenColorMap,
+  blueColorMap,
+  aColorMap,
+} from "../../../data-files/models/color-map";
 
 @Component({
   selector: "app-hdu-selector",
@@ -38,6 +48,17 @@ export class HduSelectorComponent implements OnInit {
   @Output() selectedHduIdChange = new EventEmitter<string>();
 
   HduType = HduType;
+  colorMaps = [
+    grayColorMap,
+    rainbowColorMap,
+    coolColorMap,
+    heatColorMap,
+    redColorMap,
+    greenColorMap,
+    blueColorMap,
+    aColorMap,
+  ];
+
   blendModeOptions = [
     { label: "Normal", value: BlendMode.Normal },
     { label: "Screen", value: BlendMode.Screen },
@@ -102,6 +123,10 @@ export class HduSelectorComponent implements OnInit {
   onVisibilityBtnClick($event: MouseEvent, hduId: string, value: boolean) {
     $event.stopPropagation();
     this.store.dispatch(new UpdateVisibility(hduId, value));
+  }
+
+  onColorMapChange(hdu: ImageHdu, colorMap: string) {
+    this.store.dispatch(new UpdateColorMap(hdu.id, colorMap));
   }
 
   onChannelDrop($event: CdkDragDrop<IHdu[]>) {

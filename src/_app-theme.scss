@@ -93,6 +93,13 @@
     color: mat-color($foreground, hint-text) !important;
   }
 
+
+  /* Layer menu for blend mode and color map */
+  .mat-menu-item.selected, .mat-menu-item:hover:not([disabled]) {
+    background: mat-color($primary);
+    color: mat-color($primary, default-contrast);
+  }
+
  
 
   theme-picker {

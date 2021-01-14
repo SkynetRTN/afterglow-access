@@ -70,6 +70,7 @@ import {
   UpdateBlendMode,
   UpdateAlpha,
   UpdateVisibility,
+  UpdateColorMap,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
 import { appConfig } from "../../environments/environment";
@@ -1363,6 +1364,30 @@ export class DataFilesState {
       hdu.visible = value;
 
       actions.push(new InvalidateCompositeImageTiles(hdu.fileId));
+      return state;
+    });
+
+    dispatch(actions);
+  }
+
+  @Action(UpdateColorMap)
+  @ImmutableContext()
+  public updateColorMap(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { hduId, colorMap }: UpdateColorMap
+  ) {
+    let state = getState();
+    if (!(hduId in state.hduEntities)) return;
+
+    let actions = [];
+    setState((state: DataFilesStateModel) => {
+      let hdu = state.hduEntities[hduId] as ImageHdu;
+      hdu.normalizer = {
+        ...hdu.normalizer,
+        colorMapName: colorMap
+      }
+
+      actions.push(new InvalidateNormalizedImageTiles(hdu.id));
       return state;
     });
 
