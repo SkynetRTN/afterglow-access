@@ -189,7 +189,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "dffeb0e8-88bc-4c22-b8a6-e2512afaf2da",
+  version: "84cbf667-137c-4374-887c-e5e54b120ac7",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -319,7 +319,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     minScale: 0.1,
     maxScale: 10,
     radius: 1,
-    maxSources: 1000,
+    maxSources: 100,
   },
   catalogs: [],
   selectedCatalogId: null,
