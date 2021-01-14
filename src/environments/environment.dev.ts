@@ -10,7 +10,7 @@ export const appConfig: AppConfig = {
   authCookieName: "afterglow_core_access_token",
   oauth2ClientId: "baz",
   oauth2ClientSecret: "qux",
-  tileSize: 2048,
+  tileSize: 1024,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,
   plugins: [NgxsLoggerPluginModule.forRoot()],
