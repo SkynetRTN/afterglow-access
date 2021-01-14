@@ -13,7 +13,7 @@ import {
 } from "@ngxs/store";
 import { tap, catchError, filter, take, takeUntil, flatMap } from "rxjs/operators";
 import { Point, Matrix, Rectangle } from "paper";
-import { merge } from "rxjs";
+import { merge, of } from "rxjs";
 import { WorkbenchStateModel, WorkbenchTool, ViewerPanel, ViewerPanelContainer, WcsCalibrationSettings, ViewerLayoutItem } from "./models/workbench-state";
 import { ViewMode } from "./models/view-mode";
 import { SidebarView } from "./models/sidebar-view";
@@ -130,6 +130,7 @@ import {
   UpdateWcsCalibrationPanelState,
   UpdateWcsCalibrationSettings,
   CreateWcsCalibrationJob,
+  ImportFromSurveyFail,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -2187,7 +2188,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public focusFileListItem(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { item }: FocusFileListItem
+    { item, keepOpen }: FocusFileListItem
   ) {
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -2204,6 +2205,9 @@ export class WorkbenchState {
     let targetViewer = viewers.find((viewer) => viewer.fileId == item.fileId && viewer.hduId == item.hduId);
     if (targetViewer) {
       dispatch(new SetFocusedViewer(targetViewer.id));
+      if(keepOpen && !targetViewer.keepOpen) {
+        dispatch(new KeepViewerOpen(targetViewer.id))
+      }
       return;
     }
 
@@ -2214,6 +2218,9 @@ export class WorkbenchState {
     if (targetViewer) {
       //temporary viewer exists
       dispatch(new SetViewerFile(targetViewer.id, file.id, hdu ? hdu.id : null));
+      if(keepOpen) {
+        dispatch(new KeepViewerOpen(targetViewer.id))
+      }
       return;
     }
 
@@ -2221,7 +2228,7 @@ export class WorkbenchState {
       id: null,
       fileId: file.id,
       hduId: hdu ? hdu.id : null,
-      keepOpen: false,
+      keepOpen: keepOpen,
       viewportSize: null,
     };
 
@@ -2912,7 +2919,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public importFromSurvey(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { surveyDataProviderId, raHours, decDegs, widthArcmins, heightArcmins, imageFileId, correlationId }: ImportFromSurvey
+    { surveyDataProviderId, raHours, decDegs, widthArcmins, heightArcmins, correlationId }: ImportFromSurvey
   ) {
     let importFromSurveyCorrId = this.correlationIdGenerator.next();
     setState((state: WorkbenchStateModel) => {
@@ -2924,32 +2931,16 @@ export class WorkbenchState {
       filter<ImportAssetsCompleted>((action) => action.correlationId == importFromSurveyCorrId),
       take(1),
       flatMap((action) => {
-        dispatch(new LoadLibrary());
-        dispatch(new ImportFromSurveySuccess());
-        let state = getState();
-        let viewers = WorkbenchState.getViewers(state);
+        setState((state: WorkbenchStateModel) => {
+          state.dssImportLoading = false;
+          return state;
+        });
 
-        return this.actions$.pipe(
-          ofActionCompleted(LoadLibrary),
-          take(1),
-          filter((loadLibraryAction) => loadLibraryAction.result.successful),
-          tap((loadLibraryAction) => {
-            setState((state: WorkbenchStateModel) => {
-              state.dssImportLoading = false;
-              return state;
-            });
-            let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-            if (action.fileIds[0] in hduEntities) {
-              let hdu = hduEntities[action.fileIds[0]];
-              dispatch(
-                new FocusFileListItem({
-                  fileId: hdu.fileId,
-                  hduId: hdu.id,
-                })
-              );
-            }
-          })
-        );
+        if(action.fileIds.length == 0) {
+          return dispatch(new ImportFromSurveyFail(correlationId));
+        }
+
+        return dispatch([new LoadLibrary(), new ImportFromSurveySuccess(action.fileIds[0], correlationId)]);
       })
     );
     dispatch(

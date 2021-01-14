@@ -59,7 +59,7 @@ export class SetFullScreenPanel {
 export class FocusFileListItem {
   public static readonly type = "[Workbench] Focus File List Item";
 
-  constructor(public item: { fileId: string; hduId: string }) {}
+  constructor(public item: { fileId: string; hduId: string }, public keepOpen: boolean = false) {}
 }
 
 export class ToggleFileSelection {
@@ -430,17 +430,20 @@ export class ImportFromSurvey {
     public decDegs: number,
     public widthArcmins: number,
     public heightArcmins: number,
-    public imageFileId?: string,
     public correlationId?: string
   ) {}
 }
 
 export class ImportFromSurveySuccess {
   public static readonly type = "[Survey] Import From Survey Success";
+
+  constructor(public fileId: string, public correlationId: string = null) {}
 }
 
 export class ImportFromSurveyFail {
   public static readonly type = "[Survey] Import From Survey Fail";
+
+  constructor(public correlationId: string = null) {}
 }
 
 /* Layout */

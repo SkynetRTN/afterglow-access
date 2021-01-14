@@ -82,6 +82,8 @@ import {
   SetFileListFilter,
   UpdateWcsCalibrationPanelState,
   UpdateWcsCalibrationSettings,
+  ImportFromSurveyFail,
+  ImportFromSurveySuccess,
 } from "../workbench.actions";
 import {
   LoadDataProviders,
@@ -352,10 +354,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           fileEntities[a.fileId].name > fileEntities[b.fileId].name
             ? 1
             : a.fileId === b.fileId
-            ? a.order > b.order
-              ? 1
+              ? a.order > b.order
+                ? 1
+                : -1
               : -1
-            : -1
         );
       })
     );
@@ -681,7 +683,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     /* WCS CALIBRATION PANEL */
     this.wcsCalibrationPanelState$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
     this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationSettings);
-    
+
     this.wcsCalibrationActiveJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
       this.wcsCalibrationPanelState$.pipe(
@@ -690,7 +692,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       )
     ]).pipe(
       map(([jobEntities, activeJobId]) => {
-        if(!activeJobId) return null;
+        if (!activeJobId) return null;
         return jobEntities[activeJobId] as WcsCalibrationJob;
       })
     )
@@ -1155,7 +1157,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onWcsCalibrationSelectedHduIdsChange(selectedHduIds: string[]) {
-    this.store.dispatch(new UpdateWcsCalibrationPanelState({selectedHduIds: selectedHduIds}))
+    this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: selectedHduIds }))
   }
 
 
@@ -1631,8 +1633,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1677,8 +1679,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1722,8 +1724,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1751,8 +1753,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1797,8 +1799,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1842,8 +1844,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1908,9 +1910,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
-        () => {}
+        () => { },
+        (err) => { },
+        () => { }
       );
   }
 
@@ -2011,7 +2013,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => {},
+        () => { },
         (err) => {
           throw err;
         },
@@ -2031,7 +2033,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((assets) => {});
+    dialogRef.afterClosed().subscribe((assets) => { });
   }
 
   refresh() {
@@ -2095,9 +2097,21 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new SetNormalizationSyncEnabled($event.checked));
   }
 
-  importFromSurvey(surveyDataProvider: DataProvider, header: Header) {
+  importFromSurvey(surveyDataProvider: DataProvider) {
     let centerRaDec;
     let pixelScale;
+
+    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
+    if (!focusedViewer) return;
+
+    let hduId = focusedViewer.hduId;
+    if (!hduId) {
+      hduId = this.store.selectSnapshot(DataFilesState.getFileEntities)[focusedViewer.fileId].hduIds[0];
+    }
+
+    if (!hduId) return;
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[hdu.headerId];
 
     if (header.wcs && header.wcs.isValid() && this.useWcsCenter) {
       centerRaDec = header.wcs.pixToWorld([getWidth(header) / 2, getHeight(header) / 2]);
@@ -2115,9 +2129,79 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     let width = pixelScale * getWidth(header);
     let height = pixelScale * getHeight(header);
+    if (!focusedViewer.keepOpen) {
+      this.store.dispatch(new KeepViewerOpen(focusedViewer.id))
+    }
+
+    let correlationId = this.corrGen.next();
+
+    let importFromSurveyFail$ = this.actions$.pipe(
+      ofActionDispatched(ImportFromSurveyFail),
+      filter<ImportFromSurveyFail>(action => action.correlationId == correlationId),
+      take(1),
+      flatMap(v => {
+        let dialogConfig: Partial<AlertDialogConfig> = {
+          title: "Error",
+          message: `An unexpected error occurred when importing the survey image.  Please try again later.`,
+          buttons: [
+            {
+              color: null,
+              value: false,
+              label: "Close",
+            },
+          ],
+        };
+        let dialogRef = this.dialog.open(AlertDialogComponent, {
+          width: "400px",
+          data: dialogConfig,
+          disableClose: true,
+        });
+
+        return dialogRef.afterClosed();
+      })
+    )
+
+    this.actions$.pipe(
+      takeUntil(importFromSurveyFail$),
+      ofActionDispatched(ImportFromSurveySuccess),
+      filter<ImportFromSurveySuccess>(action => action.correlationId == correlationId),
+      take(1),
+      flatMap((action) => {
+        let surveyFileId = action.fileId;
+        this.store.dispatch(new LoadLibrary())
+        
+        let loadLibraryFail$ = this.actions$.pipe(
+          ofActionDispatched(LoadLibraryFail),
+          take(1)
+        )
+
+        return this.actions$.pipe(
+          ofActionDispatched(LoadLibrarySuccess),
+          takeUntil(loadLibraryFail$),
+          take(1),
+          map(action => surveyFileId)
+        );
+      })
+    ).subscribe((surveyFileId) => {
+      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+      if (surveyFileId && surveyFileId in hduEntities) {
+        let hdu = hduEntities[surveyFileId];
+        this.store.dispatch(
+          new FocusFileListItem({
+            fileId: hdu.fileId,
+            hduId: hdu.id,
+          }, true)
+        );
+      }
+      
+    },
+    (err) => {},
+    () => {})
+
+
 
     this.store.dispatch(
-      new ImportFromSurvey(surveyDataProvider.id, centerRaDec[0], centerRaDec[1], width, height, this.corrGen.next())
+      new ImportFromSurvey(surveyDataProvider.id, centerRaDec[0], centerRaDec[1], width, height, correlationId)
     );
   }
 
