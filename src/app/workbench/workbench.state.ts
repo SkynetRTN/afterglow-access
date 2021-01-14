@@ -214,7 +214,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   fileListFilter: null,
   focusedViewerPanelId: null,
   viewerSyncEnabled: false,
-  viewerSyncMode: "pixel",
+  viewerSyncMode: "sky",
   normalizationSyncEnabled: false,
   sidebarView: SidebarView.FILES,
   showSidebar: true,
