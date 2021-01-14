@@ -1,18 +1,51 @@
 import { PLATFORM_ID, Inject, Injectable } from "@angular/core";
 import { isPlatformServer } from "@angular/common";
 import { NgxsPlugin, setValue, getValue, InitState, UpdateState, actionMatcher, NgxsNextPluginFn } from "@ngxs/store";
-import { tap } from "rxjs/operators";
+import { takeUntil, tap, throttleTime } from "rxjs/operators";
 
 import { StorageEngine, NgxsStoragePluginOptions, STORAGE_ENGINE, NGXS_STORAGE_PLUGIN_OPTIONS } from "./symbols";
 import { DEFAULT_STATE_KEY } from "./internals";
+import { Observable, Subject } from "rxjs";
 
 @Injectable()
 export class AfterglowStoragePlugin implements NgxsPlugin {
+  stateWriter: Subject<any> = new Subject();
+
   constructor(
     @Inject(NGXS_STORAGE_PLUGIN_OPTIONS) private _options: NgxsStoragePluginOptions,
     @Inject(STORAGE_ENGINE) private _engine: StorageEngine,
     @Inject(PLATFORM_ID) private _platformId: string
-  ) {}
+  ) {
+
+    this.stateWriter.pipe(
+      throttleTime(1000)
+    ).subscribe(nextState => {
+        const keys = this._options.key as string[];
+        for (const key of keys) {
+          let val = nextState;
+
+          if (key !== DEFAULT_STATE_KEY) {
+            val = getValue(nextState, key!);
+
+            if (this._options.sanitizations) {
+              this._options.sanitizations
+                .filter((s) => s.key === key)
+                .forEach((s) => {
+                  val = s.sanitize(val);
+                });
+            }
+          }
+
+          try {
+            this._engine.setItem(key!, this._options.serialize!(val));
+          } catch (e) {
+            console.error("Error ocurred while serializing the store value, value not updated.");
+          }
+        }
+      
+    })
+
+  }
 
   handle(state: any, event: any, next: NgxsNextPluginFn) {
     if (isPlatformServer(this._platformId) && this._engine === null) {
@@ -77,28 +110,9 @@ export class AfterglowStoragePlugin implements NgxsPlugin {
     return next(state, event).pipe(
       tap((nextState) => {
         if (!isInitAction || (isInitAction && hasMigration)) {
-          for (const key of keys) {
-            let val = nextState;
-
-            if (key !== DEFAULT_STATE_KEY) {
-              val = getValue(nextState, key!);
-
-              if (this._options.sanitizations) {
-                this._options.sanitizations
-                  .filter((s) => s.key === key)
-                  .forEach((s) => {
-                    val = s.sanitize(val);
-                  });
-              }
-            }
-
-            try {
-              this._engine.setItem(key!, this._options.serialize!(val));
-            } catch (e) {
-              console.error("Error ocurred while serializing the store value, value not updated.");
-            }
-          }
+          this.stateWriter.next(nextState);
         }
+        
       })
     );
   }
