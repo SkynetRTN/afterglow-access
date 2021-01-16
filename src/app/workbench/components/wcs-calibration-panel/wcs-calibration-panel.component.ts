@@ -8,7 +8,7 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { getDecDegs, getDegsPerPixel, getHeight, getRaHours, getWidth, Header, IHdu } from '../../../data-files/models/data-file';
 import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../jobs/models/wcs_calibration';
 import { formatDms, parseDms } from '../../../utils/skynet-astro';
-import { floatOrSexagesimalValidator } from '../../../utils/validators';
+import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../utils/validators';
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
 import { WcsCalibrationSettings } from '../../models/workbench-state';
 import { CreateWcsCalibrationJob } from '../../workbench.actions';
@@ -84,14 +84,17 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
+  isNumber = [Validators.required, isNumber]
+  greaterThanZero = [Validators.required, isNumber, greaterThan(0)]
+  minZero = [Validators.required, isNumber,  Validators.min(0)]
   wcsCalibrationForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
-    ra: new FormControl("",  {updateOn: 'blur', validators: [floatOrSexagesimalValidator]}),
-    dec: new FormControl("",  {updateOn: 'blur', validators: [floatOrSexagesimalValidator]}),
-    radius: new FormControl("", [Validators.required, Validators.min(0)]),
-    minScale: new FormControl("", [Validators.required, Validators.min(0)]),
-    maxScale: new FormControl("", [Validators.required, Validators.min(0)]),
-    maxSources: new FormControl("", [Validators.required, Validators.min(0)]),
+    ra: new FormControl("",  {updateOn: 'blur', validators: [isNumberOrSexagesimalValidator]}),
+    dec: new FormControl("",  {updateOn: 'blur', validators: [isNumberOrSexagesimalValidator]}),
+    radius: new FormControl("", this.minZero),
+    minScale: new FormControl("", this.minZero),
+    maxScale: new FormControl("", this.minZero),
+    maxSources: new FormControl("", this.minZero),
   });
 
   constructor(private store: Store, private dialog: MatDialog) {
@@ -244,10 +247,9 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       }
     }
 
-    if(degsPerPixel && width && height) {
-      let size = Math.max(width, height);
-      let minScale = Math.round(size*degsPerPixel*0.9*100000)/100000;
-      let maxScale = Math.round(size*degsPerPixel*1.1*100000)/100000;
+    if(degsPerPixel) {
+      let minScale = Math.round(degsPerPixel*0.9*3600*100000)/100000;
+      let maxScale = Math.round(degsPerPixel*1.1*3600*100000)/100000;
       changes = {
         ...changes,
         minScale: minScale,
