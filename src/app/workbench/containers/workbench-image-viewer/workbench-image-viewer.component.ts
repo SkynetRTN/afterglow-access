@@ -112,15 +112,19 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
   destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
-  hduId$: Observable<string>;
-  hdu$: Observable<ImageHdu>;
-  header$: Observable<Header>;
-  headerLoaded$: Observable<boolean>;
-  headerLoading$: Observable<boolean>;
-  hist$: Observable<ImageHist>;
-  histLoaded$: Observable<boolean>;
-  histLoading$: Observable<boolean>;
+  hduIds$: Observable<string[]>;
+  hdus$: Observable<ImageHdu[]>;
+  headerIds$: Observable<string[]>;
+  headers$: Observable<Header[]>;
+  headersLoaded$: Observable<boolean>;
+  histsLoaded$: Observable<boolean>;
   ready$: Observable<boolean>;
+
+  selectedHduId$: Observable<string>;
+  selectedHdu$: Observable<ImageHdu>;
+  selectedHduHeader$: Observable<Header>;
+  firstHeader$: Observable<Header>;
+  
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
   imageTransform$: Observable<Transform>;
@@ -162,63 +166,68 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       map((viewer) => (viewer ? viewer.id : null)),
       distinctUntilChanged()
     );
+    
+    this.selectedHduId$ = this.viewer$.pipe(
+      map((viewer) => viewer ? viewer.hduId : null),
+      distinctUntilChanged()
+    );
 
     this.file$ = this.viewer$.pipe(
       switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId)))),
       distinctUntilChanged()
     );
 
-    this.hduId$ = this.viewer$.pipe(
-      map((viewer) => viewer ? viewer.hduId : null),
-      distinctUntilChanged()
-    );
+    this.hduIds$ = this.file$.pipe(
+      map(file => file.hduIds),
+      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every((value, index) => b[index]==value))
+    )
 
-    this.hdu$ = this.hduId$.pipe(
-      switchMap((hduId) => !hduId ? of(null) : this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId) as ImageHdu))),
-      distinctUntilChanged()
-    );
-
-    let headerId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
+    this.hdus$ = this.hduIds$.pipe(
+      switchMap(hduIds => {
+        return combineLatest(hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
+          map((fn) => fn(hduId))
+        ))).pipe(
+          map(hdus => hdus.filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[])
         )
-      )
-    );
-
-    this.header$ = headerId$.pipe(
-      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
-      distinctUntilChanged()
-    );
-
-    this.headerLoaded$ = this.header$.pipe(
-      map(header => header ? header.loaded : false),
-      distinctUntilChanged()
+      })
     )
 
-    this.headerLoading$ = this.header$.pipe(
-      map(header => header ? header.loading : false),
-      distinctUntilChanged()
+    this.headerIds$ = this.hdus$.pipe(
+      map(hdus => hdus.map(hdu=>hdu.headerId)),
+      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every((value, index) => b[index]==value))
     )
 
-    this.hist$ = this.hdu$.pipe(
-      map(hdu => hdu ? hdu.hist : null),
-      distinctUntilChanged()
+    this.headers$ = this.headerIds$.pipe(
+      switchMap(headerIds => {
+        return combineLatest(headerIds.map(headerId => this.store.select(DataFilesState.getHeaderById).pipe(
+          map((fn) => fn(headerId))
+        )))
+      })
     )
 
-    this.histLoaded$ = this.hist$.pipe(
-      map(hist => hist ? hist.loaded : false),
-      distinctUntilChanged(),
+    this.selectedHdu$ = combineLatest([this.selectedHduId$, this.hdus$]).pipe(
+      map(([hduId, hdus]) => hduId ? hdus.find(hdu => hdu.id == hduId) : null)
     )
 
-    this.histLoading$ = this.hist$.pipe(
-      map(hist => hist ? hist.loading : false),
-      distinctUntilChanged()
+    this.selectedHduHeader$ = combineLatest([this.selectedHdu$, this.headers$]).pipe(
+      map(([hdu, headers]) => hdu ? headers.find(header => header.id == hdu.headerId) : null)
     )
 
-    this.ready$ = combineLatest([this.headerLoaded$, this.histLoaded$]).pipe(
+    this.headersLoaded$ = combineLatest([this.headers$, this.selectedHduHeader$]).pipe(
+      map(([headers, header]) => header ? header.loaded : headers.every(header => header.loaded))
+    ) 
+
+    this.histsLoaded$ = combineLatest([this.hdus$, this.selectedHdu$]).pipe(
+      map(([hdus, hdu]) => hdu ? hdu.hist.loaded : hdus.every(hdu => hdu.hist.loaded))
+    )
+
+    this.ready$ = combineLatest([this.headersLoaded$, this.histsLoaded$]).pipe(
       map(([headerLoaded, histLoaded]) => headerLoaded && histLoaded)
+    )
+
+
+    this.firstHeader$ = this.headers$.pipe(
+      map(headers => headers.length > 0 ? headers[0] : null)
     )
 
     // // watch for changes to header and reload when necessary
@@ -372,7 +381,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           return this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
         } else if (activeTool == WorkbenchTool.PLOTTER) {
           return combineLatest(
-            this.header$,
+            this.firstHeader$,
             this.plottingPanelState$,
             this.store.select(WorkbenchState.getPlottingPanelConfig)
           ).pipe(
@@ -471,8 +480,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           );
         } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
           return combineLatest(
-            this.hduId$,
-            this.header$,
+            this.selectedHduId$,
+            this.firstHeader$,
             this.store.select(WorkbenchState.getPhotometryPanelConfig),
             this.store.select(SourcesState.getSources)
           ).pipe(

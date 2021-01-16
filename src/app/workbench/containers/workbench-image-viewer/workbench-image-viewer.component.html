@@ -21,7 +21,7 @@
     </div>
     <div fxFlex="0 0 auto">
       <app-image-viewer-status-bar [class.active]="active" [rawImageData]="rawImageData$ | async"
-        [normalizedImageData]="normalizedImageData$ | async" [wcs]="(header$ | async)?.wcs" [imageMouseX]="imageMouseX"
+        [normalizedImageData]="normalizedImageData$ | async" [wcs]="(firstHeader$ | async)?.wcs" [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()" (onZoomBy)="handleZoomBy($event)"
         (onZoomTo)="handleZoomTo($event)" (onZoomToFit)="handleZoomToFit($event)"
         (onCloseFile)="handleCloseFile($event)" (onSaveFile)="handleSaveFile($event)"></app-image-viewer-status-bar>
