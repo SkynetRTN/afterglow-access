@@ -179,8 +179,12 @@ export function getRaHours(header: Header) {
   let raEntry = getHeaderEntry(header, "RA");
   if (!raEntry) {
     raEntry = getHeaderEntry(header, "RAOBJ");
-    if (!raEntry) return undefined;
   }
+  if (!raEntry) {
+    raEntry = getHeaderEntry(header, "OBJCTRA");
+  }
+  if (!raEntry) return undefined;
+
   let ra;
   if (typeof raEntry.value == "string" && raEntry.value.includes(":")) {
     ra = parseDms(raEntry.value);
@@ -197,8 +201,11 @@ export function getDecDegs(header: Header) {
   let decEntry = getHeaderEntry(header, "DEC");
   if (!decEntry) {
     decEntry = getHeaderEntry(header, "DECOBJ");
-    if (!decEntry) return undefined;
   }
+  if (!decEntry) {
+    decEntry = getHeaderEntry(header, "OBJCTDEC");
+  }
+  if (!decEntry) return undefined;
 
   let dec;
   if (typeof decEntry.value == "string" && decEntry.value.includes(":")) {
