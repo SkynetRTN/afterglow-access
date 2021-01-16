@@ -2,7 +2,7 @@
   <ng-container *ngIf="normalizedImageData$ | async">
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
-        <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer"
+        <div app-pan-zoom-canvas #panZoomCanvas="panZoomCanvas" class="viewer" *ngIf="ready$ | async"
           [imageData]="normalizedImageData$ | async" [transform]="imageToViewportTransform$ | async"
           (onImageMove)="handleImageMove($event)" (onImageClick)="handleImageClick($event)"
           (onMoveBy)="handleMoveBy($event)" (onZoomBy)="handleZoomBy($event)" (onLoadTile)="handleLoadTile($event)"

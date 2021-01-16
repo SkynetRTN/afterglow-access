@@ -86,11 +86,11 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
   isNumber = [Validators.required, isNumber]
   greaterThanZero = [Validators.required, isNumber, greaterThan(0)]
-  minZero = [Validators.required, isNumber,  Validators.min(0)]
+  minZero = [Validators.required, isNumber, Validators.min(0)]
   wcsCalibrationForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
-    ra: new FormControl("",  {updateOn: 'blur', validators: [isNumberOrSexagesimalValidator]}),
-    dec: new FormControl("",  {updateOn: 'blur', validators: [isNumberOrSexagesimalValidator]}),
+    ra: new FormControl("", { updateOn: 'blur', validators: [isNumberOrSexagesimalValidator] }),
+    dec: new FormControl("", { updateOn: 'blur', validators: [isNumberOrSexagesimalValidator] }),
     radius: new FormControl("", this.minZero),
     minScale: new FormControl("", this.minZero),
     maxScale: new FormControl("", this.minZero),
@@ -101,13 +101,13 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     combineLatest([this.selectedHduIds$, this.wcsCalibrationSettings$]).pipe(
       takeUntil(this.destroy$)
     ).subscribe(([selectedHduIds, settings]) => {
-      if(selectedHduIds) {
+      if (selectedHduIds) {
         this.wcsCalibrationForm.patchValue({
           selectedHduIds: selectedHduIds
         }, { emitEvent: false })
       }
 
-      if(settings) {
+      if (settings) {
         this.wcsCalibrationForm.patchValue({
           ra: settings.ra || settings.ra == 0 ? formatDms(settings.ra, 3, 4, null, null, null, null) : settings.ra,
           dec: settings.dec || settings.dec == 0 ? formatDms(settings.dec, 3, 4, null, null, null, null) : settings.dec,
@@ -117,38 +117,38 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
           maxSources: settings.maxSources
         }, { emitEvent: false })
       }
-      
+
     })
 
     this.wcsCalibrationForm.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(value => {
-      if(this.wcsCalibrationForm.valid) {
+      if (this.wcsCalibrationForm.valid) {
         this.onSelectedHduIdsChange.emit(value.selectedHduIds);
 
         let raString: string = value.ra;
         let ra: number = null;
-        if(raString && raString.trim() != "") {
+        if (raString && raString.trim() != "") {
           ra = Number(raString);
-          if(isNaN(ra)) ra = parseDms(raString);
-        } 
-        
+          if (isNaN(ra)) ra = parseDms(raString);
+        }
+
         let decString: string = value.dec;
         let dec: number = null;
-        if(decString && decString.trim() != "") {
+        if (decString && decString.trim() != "") {
           dec = Number(decString);
-          if(isNaN(dec)) dec = parseDms(decString);
-        } 
+          if (isNaN(dec)) dec = parseDms(decString);
+        }
         this.onWcsCalibrationSettingsChange.emit({
           ra: ra,
-          dec: dec, 
+          dec: dec,
           radius: value.radius,
           maxScale: value.maxScale,
           minScale: value.minScale,
           maxSources: value.maxSources
         });
       }
-      
+
     })
   }
 
@@ -183,7 +183,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
     return combineLatest([hasMultipleHdus$, filename$, hduLabel$]).pipe(
       map(([hasMultipleHdus, filename, hduLabel]) => {
-        if(!hasMultipleHdus$) return filename;
+        if (!hasMultipleHdus$) return filename;
         return `${filename} - ${hduLabel}`
       })
     )
@@ -193,7 +193,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     return element ? element.id : null
   }
 
-  
+
   setSelectedHduIds(hduIds: string[]) {
     this.wcsCalibrationForm.controls.selectedHduIds.setValue(hduIds)
   }
@@ -224,37 +224,43 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onAutofillFromFocusedViewerClick() {
-    if(!this.autofillHeader) return;
+    if (!this.autofillHeader) return;
 
-    let ra = getRaHours(this.autofillHeader);
-    let dec = getDecDegs(this.autofillHeader);
-    let degsPerPixel = getDegsPerPixel(this.autofillHeader);
+    let ra: number = null;
+    let dec: number = null;
     let width = getWidth(this.autofillHeader);
     let height = getHeight(this.autofillHeader);
-
-    let changes: Partial<WcsCalibrationSettings> = {}
-
-    if(ra || ra == 0) {
-      changes = {
-        ...changes,
-        ra: ra
-      }
+    let wcs = this.autofillHeader.wcs;
+    if (width && height && wcs && wcs.isValid) {
+      let raDec: [number, number] = wcs.pixToWorld([width / 2, height / 2]) as [number, number];
+      ra = raDec[0];
+      dec = raDec[1];
     }
-    if(dec || dec == 0) {
-      changes = {
-        ...changes,
-        dec: dec
-      }
+    else {
+      ra = getRaHours(this.autofillHeader);
+      dec = getDecDegs(this.autofillHeader);
     }
 
-    if(degsPerPixel) {
-      let minScale = Math.round(degsPerPixel*0.9*3600*100000)/100000;
-      let maxScale = Math.round(degsPerPixel*1.1*3600*100000)/100000;
-      changes = {
-        ...changes,
-        minScale: minScale,
-        maxScale: maxScale
-      }
+    let degsPerPixel = getDegsPerPixel(this.autofillHeader);
+
+
+    let changes: Partial<WcsCalibrationSettings> = {
+      ra: null,
+      dec: null,
+      minScale: null,
+      maxScale: null,
+    }
+
+    if (ra || ra == 0) {
+      changes.ra = ra;
+    }
+    if (dec || dec == 0) {
+      changes.dec = dec;
+    }
+
+    if (degsPerPixel) {
+      changes.minScale = Math.round(degsPerPixel * 0.9 * 3600 * 100000) / 100000;
+      changes.maxScale = Math.round(degsPerPixel * 1.1 * 3600 * 100000) / 100000;
     }
 
     this.onWcsCalibrationSettingsChange.emit({

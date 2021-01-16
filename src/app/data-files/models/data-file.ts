@@ -55,8 +55,6 @@ export interface ImageHdu extends IHdu {
   readonly hduType: HduType.IMAGE;
   precision: PixelPrecision;
   hist: ImageHist;
-  histLoaded: boolean;
-  histLoading: boolean;
   rawImageDataId: string;
   viewportTransformId: string;
   imageTransformId: string;

@@ -116,7 +116,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: "a17c9d3c-28ad-4fba-aa55-cae9b9d220f6",
+  version: "1989355f-d525-46b8-a1ce-3fe3ccf81f4e",
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -298,7 +298,9 @@ export class DataFilesState {
     return (hduId: string) => {
       if (!(hduId in hduEntities)) return false;
       let hdu = hduEntities[hduId];
-      return hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu).histLoaded : false;
+      if(hdu.hduType != HduType.IMAGE) return null;
+      let imageHdu = hdu as ImageHdu;
+      return imageHdu.hist && imageHdu.hist.loaded;
     };
   }
 
@@ -466,7 +468,7 @@ export class DataFilesState {
       if (
         !header ||
         (!header.loaded && !header.loading) ||
-        (hdu.hduType == HduType.IMAGE && !(hdu as ImageHdu).histLoaded && !(hdu as ImageHdu).histLoading)
+        (hdu.hduType == HduType.IMAGE && !(hdu as ImageHdu).hist.loaded && !(hdu as ImageHdu).hist.loading)
       ) {
         actions.push(new LoadHdu(hdu.id));
       }
@@ -571,9 +573,14 @@ export class DataFilesState {
                   blendMode: BlendMode.Screen,
                   visible: true,
                   alpha: 1.0,
-                  hist: null,
-                  histLoaded: false,
-                  histLoading: false,
+                  hist: {
+                    data: null,
+                    loaded: false,
+                    loading: false,
+                    initialized: false,
+                    maxBin: null,
+                    minBin: null,
+                  },
                   rawImageDataId: null,
                   viewportTransformId: null,
                   imageTransformId: null,
@@ -663,7 +670,7 @@ export class DataFilesState {
 
     if (hdu.hduType == HduType.IMAGE) {
       let imageHdu = hdu as ImageHdu;
-      if (imageHdu.histLoading) {
+      if (imageHdu.hist.loading) {
         pendingActions.push(
           this.actions$.pipe(
             ofActionCompleted(LoadImageHduHistogram),
@@ -674,7 +681,7 @@ export class DataFilesState {
             take(1)
           )
         );
-      } else if (!imageHdu.histLoaded) {
+      } else if (!imageHdu.hist.loaded) {
         actions.push(new LoadImageHduHistogram(imageHdu.id));
       }
     }
@@ -924,8 +931,11 @@ export class DataFilesState {
 
     setState((state: DataFilesStateModel) => {
       let hdu = state.hduEntities[hduId] as ImageHdu;
-      hdu.histLoading = true;
-      hdu.histLoaded = false;
+      hdu.hist = {
+        ...hdu.hist,
+        loading: true,
+        loaded: false
+      }
       return state;
     });
 
@@ -934,19 +944,27 @@ export class DataFilesState {
       tap((hist) => {
         setState((state: DataFilesStateModel) => {
           let hdu = state.hduEntities[hduId] as ImageHdu;
-          hdu.hist = hist;
-          hdu.histLoading = false;
-          hdu.histLoaded = true;
+          hdu.hist = {
+            ...hist,
+            initialized: true,
+            loading: false,
+            loaded: true
+          }
           return state;
         });
       }),
       flatMap((hist) => {
-        return dispatch(new LoadImageHduHistogramSuccess(hduId, hist));
+        let state = getState();
+        return dispatch(new LoadImageHduHistogramSuccess(hduId, (state.hduEntities[hduId] as ImageHdu).hist));
       }),
       catchError((err) => {
         setState((state: DataFilesStateModel) => {
           let hdu = state.hduEntities[hduId] as ImageHdu;
-          hdu.histLoading = false;
+          hdu.hist = {
+            ...hdu.hist,
+            loaded: false,
+            loading: false
+          }
           return state;
         });
         throw err;

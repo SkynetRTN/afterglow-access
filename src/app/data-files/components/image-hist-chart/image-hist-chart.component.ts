@@ -202,7 +202,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   updateChart() {
     let x = [];
     let y = [];
-    if (this.hist) {
+    if (this.hist.loaded) {
       if (this.hist.data != this.lastHistData) {
         for (let i = 0; i < this.hist.data.length; i++) {
           if (this.hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(this.hist, i) <= 0)) continue;

@@ -23,21 +23,6 @@ export interface CoreDataFile {
   modified: boolean;
 }
 
-function createImageHist(
-  data: Uint32Array,
-  minBin: number,
-  maxBin: number,
-  lowerPercentile = 10.0,
-  upperPercentile = 98.0
-): ImageHist {
-  return {
-    initialized: false,
-    data: data,
-    minBin: minBin,
-    maxBin: maxBin,
-  };
-}
-
 // function createDataFile(id: string, name: string, dataProviderId: string, assetPath: string): DataFile {
 //   return {
 //     id: id,
@@ -90,10 +75,14 @@ export class AfterglowDataFileService {
     return this.http.get<HeaderEntry[]>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/header`);
   }
 
-  getHist(fileId: string): Observable<ImageHist> {
+  getHist(fileId: string): Observable<{data: Uint32Array, minBin: number, maxBin: number}> {
     return this.http.get<any>(`${getCoreApiUrl(appConfig)}/data-files/${fileId}/hist`).pipe(
       map((res) => {
-        return createImageHist(res.data, res.min_bin, res.max_bin);
+        return {
+          data: res.data,
+          minBin: res.min_bin,
+          maxBin: res.max_bin
+        };
       })
     );
   }

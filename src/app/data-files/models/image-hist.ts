@@ -1,4 +1,6 @@
 export interface ImageHist {
+  loaded: boolean;
+  loading: boolean;
   initialized: boolean;
   data: Uint32Array;
   minBin: number;

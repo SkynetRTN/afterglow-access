@@ -81,9 +81,14 @@ export function dataFileSanitizer(v) {
     if (hdu.hduType == HduType.IMAGE) {
       hdu = {
         ...hdu,
-        hist: null,
-        histLoaded: false,
-        histLoading: false,
+        hist: {
+          initialized: false,
+          loaded: false,
+          loading: false,
+          data: null,
+          minBin: null, 
+          maxBin: null
+        }
       } as ImageHdu;
     }
 

@@ -61,6 +61,7 @@ import {
   UpdateCompositeImageTile,
   LoadHduHeader,
   LoadHdu,
+  LoadImageHduHistogram,
 } from "../../../data-files/data-files.actions";
 import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
@@ -73,6 +74,7 @@ import { WorkbenchTool } from "../../models/workbench-state";
 import { CustomMarkerPanelState } from "../../models/marker-file-state";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { SonificationPanelState, SonifierRegionMode } from "../../models/sonifier-file-state";
+import { ImageHist } from "../../../data-files/models/image-hist";
 
 @Component({
   selector: "app-workbench-image-viewer",
@@ -113,6 +115,12 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   hduId$: Observable<string>;
   hdu$: Observable<ImageHdu>;
   header$: Observable<Header>;
+  headerLoaded$: Observable<boolean>;
+  headerLoading$: Observable<boolean>;
+  hist$: Observable<ImageHist>;
+  histLoaded$: Observable<boolean>;
+  histLoading$: Observable<boolean>;
+  ready$: Observable<boolean>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
   imageTransform$: Observable<Transform>;
@@ -161,12 +169,12 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.hduId$ = this.viewer$.pipe(
-      map((viewer) => viewer && viewer.hduId),
+      map((viewer) => viewer ? viewer.hduId : null),
       distinctUntilChanged()
     );
 
     this.hdu$ = this.hduId$.pipe(
-      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId) as ImageHdu))),
+      switchMap((hduId) => !hduId ? of(null) : this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId) as ImageHdu))),
       distinctUntilChanged()
     );
 
@@ -184,17 +192,59 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       distinctUntilChanged()
     );
 
-    // watch for changes to header and reload when necessary
-    combineLatest([this.hduId$, this.header$])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(([hduId, header]) => {
-        if (hduId && header && !header.loaded && !header.loading) {
-          setTimeout(() => {
-            this.store.dispatch(new LoadHdu(hduId));
-          })
-          
-        }
-      });
+    this.headerLoaded$ = this.header$.pipe(
+      map(header => header ? header.loaded : false),
+      distinctUntilChanged()
+    )
+
+    this.headerLoading$ = this.header$.pipe(
+      map(header => header ? header.loading : false),
+      distinctUntilChanged()
+    )
+
+    this.hist$ = this.hdu$.pipe(
+      map(hdu => hdu ? hdu.hist : null),
+      distinctUntilChanged()
+    )
+
+    this.histLoaded$ = this.hist$.pipe(
+      map(hist => hist ? hist.loaded : false),
+      distinctUntilChanged(),
+    )
+
+    this.histLoading$ = this.hist$.pipe(
+      map(hist => hist ? hist.loading : false),
+      distinctUntilChanged()
+    )
+
+    this.ready$ = combineLatest([this.headerLoaded$, this.histLoaded$]).pipe(
+      map(([headerLoaded, histLoaded]) => headerLoaded && histLoaded)
+    )
+
+    // // watch for changes to header and reload when necessary
+    // combineLatest([this.hduId$, this.header$]).pipe(
+    //   takeUntil(this.destroy$)
+    // ).subscribe(([hduId, header]) => {
+    //   if (hduId && header && !header.loaded && !header.loading) {
+    //     setTimeout(() => {
+    //       this.store.dispatch(new LoadHduHeader(hduId));
+    //     })
+
+    //   }
+    // });
+
+    // combineLatest([this.hduId$, this.histLoaded$, this.histLoading$]).pipe(
+    //   takeUntil(this.destroy$)
+    // ).subscribe(([hduId, histLoaded, histLoading]) => {
+    //   if (hduId && !histLoaded && !histLoading ) {
+    //     setTimeout(() => {
+    //       this.store.dispatch(new LoadImageHduHistogram(hduId));
+    //     })
+
+    //   }
+    // });
+
+
 
     let rawImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
@@ -489,7 +539,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -497,7 +547,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.destroy$.unsubscribe();
   }
 
-  ngOnChanges(changes: { [key: string]: SimpleChange }) {}
+  ngOnChanges(changes: { [key: string]: SimpleChange }) { }
 
   handleImageMove($event: CanvasMouseEvent) {
     if ($event.hitImage) {
@@ -655,7 +705,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     hduIds.forEach((hduId) => {
       let hdu = hduEntities[hduId];
-      if (!hdu || hdu.hduType != HduType.IMAGE || !headerEntities[hdu.headerId] || !headerEntities[hdu.headerId].loaded || !(hdu as ImageHdu).histLoaded) return;
+      if (!hdu || hdu.hduType != HduType.IMAGE || !headerEntities[hdu.headerId] || !headerEntities[hdu.headerId].loaded || !(hdu as ImageHdu).hist || !(hdu as ImageHdu).hist.loaded) return;
 
       let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
