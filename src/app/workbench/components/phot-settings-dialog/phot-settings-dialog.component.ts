@@ -23,7 +23,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
   constantApertureForm = new FormGroup({
     gain: new FormControl("", {validators: this.greaterThanZero, updateOn: "blur"}),
     zeroPoint: new FormControl("", {validators: this.isNumber, updateOn: "blur"}),
-    centroidRadius: new FormControl("", {validators: this.greaterThanZero, updateOn: "blur"}),
+    centroidRadius: new FormControl("", {validators: this.minZero, updateOn: "blur"}),
     a: new FormControl("", {validators: this.greaterThanZero, updateOn: "blur"}),
     aIn: new FormControl("", {validators: this.greaterThanZero, updateOn: "blur"}),
     aOut: new FormControl("", {validators: this.greaterThanZero, updateOn: "blur"}),
