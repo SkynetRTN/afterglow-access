@@ -16,7 +16,6 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
   
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  numericRegex = /^[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)$/;
   isNumber = [Validators.required, isNumber]
   greaterThanZero = [Validators.required, isNumber,  greaterThan(0)]
   minZero = [Validators.required, isNumber,  Validators.min(0)]
