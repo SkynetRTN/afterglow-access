@@ -189,7 +189,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "84cbf667-137c-4374-887c-e5e54b120ac7",
+  version: "52c74ac0-e9cd-4b9e-898f-62b5bc1212c3",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -228,17 +228,18 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     gain: 1,
     zeroPoint: 20,
     centroidRadius: 5,
-    mode: "constant",
+    mode: "adaptive",
     a: 5,
-    b: 5,
-    theta: 0,
     aIn: 10,
     aOut: 15,
+    elliptical: false,
+    b: 5,
     bOut: 15,
+    theta: 0,
     thetaOut: 0,
-    aKrFactor: 1.0,
-    aInKrFactor: 1.0,
-    aOutKrFactor: 1.5,
+    aKrFactor: 2.5,
+    aInKrFactor: 1.5,
+    aOutKrFactor: 2.0,
   },
   sourceExtractionSettings: {
     threshold: 3,

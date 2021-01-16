@@ -1,81 +1,167 @@
 <h2 mat-dialog-title>Photometry Settings</h2>
 <mat-dialog-content>
-  <div class="row mb-3">
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="Centroiding Radius"
-          [(ngModel)]="settings && settings.centroidRadius"
-          type="number"
-          step="1"
-          min="1"
-          max="25"
-        />
-      </mat-form-field>
+  <mat-button-toggle-group class="mb-4" name="mode" aria-label="Photometry Mode"
+    [(ngModel)]="settings && settings.mode">
+    <mat-button-toggle value="adaptive">Adaptive Aperture</mat-button-toggle>
+    <mat-button-toggle value="constant">Constant Aperture</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <form *ngIf="settings.mode == 'adaptive'" [formGroup]="adaptiveApertureForm">
+    <div fxLayout="column" style="width: 100%;" class="form-wrapper">
+      <div fxFlex="1 1 auto" fxLayout="row">
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Zero Point" formControlName="zeroPoint" />
+            <mat-hint>offset in magnitudes</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="adaptiveApertureForm.get('zeroPoint')"></app-print-form-error>
+        </div>
+
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Centroiding Radius" formControlName="centroidRadius" />
+            <mat-hint>radius in pixels</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="adaptiveApertureForm.get('centroidRadius')"></app-print-form-error>
+        </div>
+
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Gain" formControlName="gain" />
+            <mat-hint>CCD gain in e-/ADU</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="adaptiveApertureForm.get('gain')"></app-print-form-error>
+        </div>
+
+      </div>
+
+      <div fxFlex="1 1 auto" fxLayout="row">
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Aperture" formControlName="aKrFactor" />
+            <mat-hint>Kron factor</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="adaptiveApertureForm.get('aKrFactor')"></app-print-form-error>
+        </div>
+
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Annulus Inner" formControlName="aInKrFactor" />
+            <mat-hint>scale factor in apertures</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="adaptiveApertureForm.get('aInKrFactor')"></app-print-form-error>
+        </div>
+
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Annulus Outer" formControlName="aOutKrFactor" />
+            <mat-hint>scale factor in apertures</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="adaptiveApertureForm.get('aOutKrFactor')"></app-print-form-error>
+        </div>
+
+      </div>
     </div>
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="Aperture"
-          [(ngModel)]="settings && settings.a"
-          type="number"
-          step="1"
-          min="1"
-          max="25"
-        />
-      </mat-form-field>
+  </form>
+
+  <form *ngIf="settings.mode == 'constant'" [formGroup]="constantApertureForm">
+    <div fxLayout="column" style="width: 100%;" class="form-wrapper">
+      <div fxFlex="1 1 auto" fxLayout="row">
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Zero Point" formControlName="zeroPoint" />
+            <mat-hint>offset in magnitudes</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="constantApertureForm.get('zeroPoint')"></app-print-form-error>
+        </div>
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Centroiding Radius" formControlName="centroidRadius" />
+            <mat-hint>radius in pixels</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="constantApertureForm.get('centroidRadius')"></app-print-form-error>
+        </div>
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Gain" formControlName="gain" />
+            <mat-hint>CCD gain in e-/ADU</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="constantApertureForm.get('gain')"></app-print-form-error>
+        </div>
+
+
+      </div>
+
+      <div fxFlex="1 1 auto" fxLayout="row">
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Aperture" formControlName="a" />
+            <mat-hint>radius in pixels</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="constantApertureForm.get('a')"></app-print-form-error>
+        </div>
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Annulus Inner" formControlName="aIn" />
+            <mat-hint>radius in pixels</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="constantApertureForm.get('aIn')"></app-print-form-error>
+        </div>
+        <div class="form-field-wrapper">
+          <mat-form-field>
+            <input matInput i18n-placeholder placeholder="Annulus Outer" formControlName="aOut" />
+            <mat-hint>radius in pixels</mat-hint>
+          </mat-form-field>
+          <app-print-form-error [control]="constantApertureForm.get('aOut')"></app-print-form-error>
+        </div>
+
+      </div>
+
+      <div fxFlex="1 1 auto" fxLayout="column" style="margin-top: 0px; margin-bottom: 0px;" class="form-wrapper">
+        <div fxFlex="1 1 auto" fxLayout="row" style="margin-bottom: 15px; margin-left: 20px;">
+          <mat-checkbox formControlName="elliptical">Use elliptical aperture</mat-checkbox>
+
+        </div>
+        <div fxFlex="1 1 auto" fxLayout="row">
+          <div class="form-field-wrapper">
+            <mat-form-field>
+              <input matInput i18n-placeholder placeholder="Aperture Minor Axis" formControlName="b" />
+              <mat-hint>radius in pixels</mat-hint>
+            </mat-form-field>
+            <app-print-form-error [control]="constantApertureForm.get('b')"></app-print-form-error>
+          </div>
+          <div class="form-field-wrapper">
+            <mat-form-field>
+              <input matInput i18n-placeholder placeholder="Annulus Outer Minor Axis" formControlName="bOut" />
+              <mat-hint>radius in pixels</mat-hint>
+            </mat-form-field>
+            <app-print-form-error [control]="constantApertureForm.get('bOut')"></app-print-form-error>
+          </div>
+        </div>
+        <div fxFlex="1 1 auto" fxLayout="row">
+          <div class="form-field-wrapper">
+            <mat-form-field>
+              <input matInput i18n-placeholder placeholder="Aperture Position Angle" formControlName="theta" />
+              <mat-hint>angle in degrees</mat-hint>
+            </mat-form-field>
+            <app-print-form-error [control]="constantApertureForm.get('theta')"></app-print-form-error>
+          </div>
+
+          <div class="form-field-wrapper">
+            <mat-form-field>
+              <input matInput i18n-placeholder placeholder="Annulus Position Angle" formControlName="thetaOut" />
+              <mat-hint>angle in degrees</mat-hint>
+            </mat-form-field>
+            <app-print-form-error [control]="constantApertureForm.get('thetaOut')"></app-print-form-error>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="row mb-3">
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="Annulus Inner"
-          [(ngModel)]="settings && settings.aIn"
-          type="number"
-          step="1"
-          min="1"
-          max="25"
-        />
-      </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="Annulus Outer"
-          [(ngModel)]="settings && settings.aOut"
-          type="number"
-          step="1"
-          min="1"
-          max="25"
-        />
-      </mat-form-field>
-    </div>
-  </div>
-  <div class="row mb-3">
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="Zero Point"
-          [(ngModel)]="settings && settings.zeroPoint"
-          type="number"
-        />
-      </mat-form-field>
-    </div>
-    <div class="col-6"></div>
-  </div>
+  </form>
+
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close i18n>Cancel</button>
-  <button mat-button [mat-dialog-close]="settings" i18n>Save</button>
+  <button mat-raised-button mat-dialog-close i18n>Cancel</button>
+  <button mat-raised-button [mat-dialog-close]="settings" i18n
+    [disabled]="settings.mode == 'constant' ? constantApertureForm.invalid : adaptiveApertureForm.invalid">Save</button>
 </mat-dialog-actions>

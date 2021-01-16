@@ -82,6 +82,7 @@ import { FileBrowserComponent } from "./components/file-browser/file-browser.com
 import { SaveChangesDialogComponent } from "./components/file-dialog/file-dialog.component";
 import { JobProgressDialogComponent } from "./components/job-progress-dialog/job-progress-dialog.component";
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
+import { PrintFormErrorComponent } from "./components/print-form-error/print-form-error.component";
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -125,6 +126,7 @@ export const COMPONENTS = [
   FileListItemComponent,
   JobProgressDialogComponent,
   WcsCalibrationPanelComponent,
+  PrintFormErrorComponent
 ];
 
 @NgModule({

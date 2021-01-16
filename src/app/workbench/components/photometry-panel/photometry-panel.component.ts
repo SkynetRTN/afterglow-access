@@ -553,8 +553,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
 
   openPhotometrySettingsDialog() {
     let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
-      width: "600px",
+      width: "700px",
       data: { ...this.photometrySettings },
+      disableClose: true
     });
 
     dialogRef.afterClosed().subscribe((result) => {

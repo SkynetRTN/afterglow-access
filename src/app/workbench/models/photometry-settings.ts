@@ -5,11 +5,12 @@ export interface PhotometrySettings {
   mode: "adaptive" | "constant";
   //constant
   a: number;
-  b: number;
-  theta: number;
   aIn: number;
   aOut: number;
+  elliptical: boolean;
+  b: number;
   bOut: number;
+  theta: number;
   thetaOut: number;
 
   //adaptive
