@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject, ViewChild, OnDestroy } from "@angular/core";
-import { ImportAssets, ImportAssetsCompleted, ImportAssetsStatusUpdated } from "../../data-providers.actions";
+import { ImportAssets, ImportAssetsCompleted, ImportAssetsStatusUpdated, SetCurrentPath } from "../../data-providers.actions";
 import { Store, Actions, ofActionCompleted, ofActionDispatched } from "@ngxs/store";
 import { Observable, Subject, BehaviorSubject } from "rxjs";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
@@ -11,6 +11,7 @@ import { DataProviderAsset } from "../../models/data-provider-asset";
 import FileSystemItem from "devextreme/file_management/file_system_item";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
 import { BatchImportJob } from "../../../jobs/models/batch-import";
+import { DataProvidersState } from "../../data-providers.state";
 
 @Component({
   selector: "app-open-file-dialog",
@@ -32,7 +33,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) private data: any
   ) {
     this.selectionIsValid$ = this.selectedAssets$.pipe(
-      map((items) => items && items.every((item) => !item.isDirectory) && items.length != 0),
+      map((items) => items && (items.length == 1 && items[0].isDirectory) || (items.every((item) => !item.isDirectory) && items.length != 0)),
       distinctUntilChanged()
     );
   }
@@ -61,6 +62,15 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   openSelectedAssets() {
     let selectedAssets = this.selectedAssets$.value;
     if (!selectedAssets) return;
+
+    if(selectedAssets.length == 1 && selectedAssets[0].isDirectory) {
+      let asset = selectedAssets[0];
+      let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderById)(asset.dataProviderId);
+      if(!dataProvider) return;
+      this.store.dispatch(new SetCurrentPath(`${dataProvider.name}${asset.assetPath}`));
+      return;
+    }
+
     selectedAssets = selectedAssets.filter((asset) => !asset.isDirectory);
     if (selectedAssets.length == 0) return;
 
