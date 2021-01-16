@@ -655,7 +655,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     hduIds.forEach((hduId) => {
       let hdu = hduEntities[hduId];
-      if (!hdu || hdu.hduType != HduType.IMAGE) return;
+      if (!hdu || hdu.hduType != HduType.IMAGE || !headerEntities[hdu.headerId] || !headerEntities[hdu.headerId].loaded || !(hdu as ImageHdu).histLoaded) return;
 
       let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
