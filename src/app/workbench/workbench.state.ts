@@ -2219,8 +2219,9 @@ export class WorkbenchState {
 
     //check if existing viewer is available
     // if no HDU is specified,  use an image viewer for composite image data
+    let focusedPanel : ViewerPanel = state.viewerLayoutItems[state.focusedViewerPanelId] as ViewerPanel;
     let targetViewerType = !hdu || hdu.hduType == HduType.IMAGE ? "image" : "table";
-    targetViewer = viewers.find((viewer) => !viewer.keepOpen && viewer.type == targetViewerType);
+    targetViewer = viewers.find((viewer) => (!viewer.keepOpen && viewer.type == targetViewerType) && (!focusedPanel || focusedPanel.viewerIds.includes(viewer.id)));
     if (targetViewer) {
       //temporary viewer exists
       dispatch(new SetViewerFile(targetViewer.id, file.id, hdu ? hdu.id : null));
