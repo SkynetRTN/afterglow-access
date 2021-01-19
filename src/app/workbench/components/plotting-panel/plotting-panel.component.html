@@ -12,7 +12,7 @@
     <div>
       <app-plotter
         #plotter
-        [wcs]="wcs"
+        [wcs]="header?.wcs"
         [imageData]="imageData"
         [plotMode]="config?.plotMode"
         [colorMode]="colorMode"

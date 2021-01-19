@@ -292,7 +292,7 @@
           </app-custom-marker-panel>
 
           <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [imageData]="plottingPanelImageData$ | async"
-            [wcs]="focusedViewerWcs$ | async" [state]="plottingPanelState$ | async"
+            [header]="focusedViewerHeader$ | async" [state]="plottingPanelState$ | async"
             [config]="plottingPanelConfig$ | async" [colorMode]="plottingPanelColorMode$ | async"
             (configChange)="onPlottingPanelConfigChange($event)">
           </app-plotting-panel>

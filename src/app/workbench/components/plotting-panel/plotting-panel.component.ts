@@ -13,18 +13,15 @@ import {
 
 import { Observable, Subscription, Subject, BehaviorSubject, combineLatest } from "rxjs";
 import { map, withLatestFrom, switchMap, distinctUntilChanged } from "rxjs/operators";
-import { getDegsPerPixel, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
+import { getDegsPerPixel, DataFile, ImageHdu, PixelType, Header } from "../../../data-files/models/data-file";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { PlotterComponent } from "../plotter/plotter.component";
-import { CanvasMouseEvent } from "../pan-zoom-canvas/pan-zoom-canvas.component";
 import { PlottingPanelConfig } from "../../models/workbench-state";
 import { PosType } from "../../models/source";
 import { Router } from "@angular/router";
 import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Store, Actions } from "@ngxs/store";
 import { IImageData } from "../../../data-files/models/image-data";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { Wcs } from "../../../image-tools/wcs";
 
 @Component({
   selector: "app-plotting-panel",
@@ -32,8 +29,6 @@ import { Wcs } from "../../../image-tools/wcs";
   styleUrls: ["./plotting-panel.component.css"],
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() degsPerPixel: number;
-
   @Input("imageData")
   set imageData(imageData: IImageData<PixelType>) {
     this.imageData$.next(imageData);
@@ -43,14 +38,14 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
   private imageData$ = new BehaviorSubject<IImageData<PixelType>>(null);
 
-  @Input("wcs")
-  set wcs(wcs: Wcs) {
-    this.wcs$.next(wcs);
+  @Input("header")
+  set header(header: Header) {
+    this.header$.next(header);
   }
-  get wcs() {
-    return this.wcs$.getValue();
+  get header() {
+    return this.header$.getValue();
   }
-  private wcs$ = new BehaviorSubject<Wcs>(null);
+  private header$ = new BehaviorSubject<Header>(null);
 
   @Input("state")
   set state(state: PlottingPanelState) {
@@ -90,18 +85,18 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
-    this.lineStart$ = combineLatest(this.wcs$, this.state$).pipe(
-      map(([wcs, state]) => {
-        if (!state || !state.lineMeasureStart || !wcs) return null;
-        return this.normalizeLine(wcs, state.lineMeasureStart);
+    this.lineStart$ = combineLatest(this.header$, this.state$).pipe(
+      map(([header, state]) => {
+        if (!state || !state.lineMeasureStart || !header) return null;
+        return this.normalizeLine(header, state.lineMeasureStart);
       })
     );
 
-    this.lineEnd$ = combineLatest(this.wcs$, this.state$).pipe(
-      map(([wcs, state]) => {
-        if (!state || !state.lineMeasureEnd || !wcs) return null;
+    this.lineEnd$ = combineLatest(this.header$, this.state$).pipe(
+      map(([header, state]) => {
+        if (!state || !state.lineMeasureEnd || !header) return null;
 
-        return this.normalizeLine(wcs, state.lineMeasureEnd);
+        return this.normalizeLine(header, state.lineMeasureEnd);
       })
     );
 
@@ -126,9 +121,13 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
           //   skySeparation =
           //     pixelSeparation * getDegsPerPixel(this.hdu) * 3600;
           // }
-          if (this.degsPerPixel) {
-            skySeparation = pixelSeparation * this.degsPerPixel * 3600;
+          if(this.header) {
+            let degsPerPixel = this.header.wcs && this.header.wcs.isValid() ? this.header.wcs.getPixelScale() : getDegsPerPixel(this.header);
+            if (degsPerPixel) {
+              skySeparation = pixelSeparation * degsPerPixel * 3600;
+            }
           }
+         
         }
 
         if (
@@ -156,8 +155,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     );
   }
 
-  private normalizeLine(wcs: Wcs, line: { primaryCoord: number; secondaryCoord: number; posType: PosType }) {
-    if (!wcs) return;
+  private normalizeLine(header: Header, line: { primaryCoord: number; secondaryCoord: number; posType: PosType }) {
     let x = null;
     let y = null;
     let raHours = null;
@@ -165,16 +163,16 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     if (line.posType == PosType.PIXEL) {
       x = line.primaryCoord;
       y = line.secondaryCoord;
-      if (wcs.isValid()) {
-        let raDec = wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
+      if (header.wcs && header.wcs.isValid()) {
+        let raDec = header.wcs.pixToWorld([line.primaryCoord, line.secondaryCoord]);
         raHours = raDec[0];
         decDegs = raDec[1];
       }
     } else {
       raHours = line.primaryCoord;
       decDegs = line.secondaryCoord;
-      if (wcs.isValid()) {
-        let xy = wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
+      if (header.wcs && header.wcs.isValid()) {
+        let xy = header.wcs.worldToPix([line.primaryCoord, line.secondaryCoord]);
         x = xy[0];
         y = xy[1];
       }
