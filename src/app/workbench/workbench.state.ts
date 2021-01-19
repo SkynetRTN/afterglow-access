@@ -1526,6 +1526,7 @@ export class WorkbenchState {
       let viewer = viewerEntities[viewerId];
 
       if (targetPanel) {
+        console.log("SETTINGS TARGET PANEL SELECTED VIEWER ID: ", targetPanel.id, viewerId)
         targetPanel.viewerIds.splice(targetIndex, 0, viewerId);
         targetPanel.selectedViewerId = viewerId;
 
@@ -1545,6 +1546,8 @@ export class WorkbenchState {
           dispatch(new SetViewerFile(sourceSelectedViewer.id, sourceSelectedViewer.fileId, sourceSelectedViewer.hduId));
         }
       }
+      panelEntities[targetPanelId] = targetPanel;
+      panelEntities[sourcePanelId] = sourcePanel;
       return state;
     });
   }
