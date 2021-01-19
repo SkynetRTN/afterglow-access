@@ -33,8 +33,10 @@ export function centroidDisk(
   let nIter = 0;
   let x0 = x;
   let y0 = y;
+  let failedResult = { x: x0, y: y0, xErr: null, yErr: null };
 
   while (true) {
+    if(isNaN(x0) || isNaN(y0)) return failedResult;
     let recenterSub = false;
     let expandSub = false;
 
@@ -58,6 +60,7 @@ export function centroidDisk(
     let count = 0,
       index = 0;
     while (true) {
+      if(isNaN(count)) return failedResult;
       count += diffsHist[index];
       if (count >= lowerPercentile) break;
       index += 1;
@@ -118,10 +121,13 @@ export function centroidDisk(
 
       xShift = (leftEdge + rightEdge) / 2 - cxc;
       yShift = (upperEdge + lowerEdge) / 2 - cyc;
+      if(isNaN(xShift) || isNaN(yShift)) return failedResult;
+
       cxc += xShift;
       cyc += yShift;
       nIter++;
 
+      
       if (leftEdge == 0 || rightEdge == subWidth - 1) recenterSub = true;
       if (leftEdge == 0 && rightEdge == subWidth - 1) expandSub = true;
       if (upperEdge == 0 || lowerEdge == subWidth - 1) recenterSub = true;
@@ -202,7 +208,11 @@ export function centroidPsf(imageData: IImageData<PixelType>, x: number, y: numb
 
   let niter = 0;
   //bool low_signal_to_noise: number
+
+  let failedResult = { x: x, y: y, xErr: null, yErr: null }
   while (true) {
+    if(isNaN(ox) || isNaN(oy)) return failedResult;
+
     let subframeResult = getSubframe(settings.centeringBoxWidth, imageData, ox, oy);
     cxc = subframeResult.cxc;
     cyc = subframeResult.cyc;

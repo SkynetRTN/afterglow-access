@@ -1201,7 +1201,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           customMarkerPanelStateId
         ];
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[imageDataId];
-
+        if(!targetImageData) return;
         let settings = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelConfig);
         let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
         let selectedCustomMarkers = Object.values(targetCustomMarkerPanelState.markerEntities).filter(
@@ -1247,6 +1247,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         );
         let imageDataId = rawImageDataId ? rawImageDataId : normalizedImageDataId;
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[imageDataId];
+        if(!targetImageData) return;
         let plotterPageSettings = this.store.selectSnapshot(WorkbenchState.getPlottingPanelConfig);
         if ($event.hitImage) {
           let x = $event.imageX;
@@ -1288,6 +1289,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         let rawImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
         if (!rawImageDataId || !viewer.hduId) return;
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[rawImageDataId];
+        if(!targetImageData) return;
         let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
         let photometryPanelConfig = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
