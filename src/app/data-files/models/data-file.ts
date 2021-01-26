@@ -104,6 +104,14 @@ export function getHeight(header: Header) {
   return undefined;
 }
 
+export function getObserver(header: Header) : string {
+  let observer = getHeaderEntry(header, "OBSERVER");
+  if (observer) {
+    return observer.value;
+  }
+  return undefined;
+}
+
 export function getDegsPerPixel(header: Header) {
   let secpix = getHeaderEntry(header, "SECPIX");
   if (secpix) {

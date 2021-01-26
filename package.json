@@ -60,6 +60,7 @@
     "ngx-papaparse": "^4.0.4",
     "normalize-wheel": "^1.0.1",
     "paper": "^0.12.11",
+    "piexifjs": "^1.0.6",
     "plotly.js": "^1.56.0",
     "promise-worker-transferable": "^1.0.4",
     "query-string": "^6.12.1",

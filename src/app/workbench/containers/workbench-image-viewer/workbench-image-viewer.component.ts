@@ -20,6 +20,7 @@ import {
   DataFile,
   getWidth,
   getHeight,
+  getObserver,
   getDegsPerPixel,
   getCenterTime,
   IHdu,
@@ -28,6 +29,8 @@ import {
   PixelType,
   Header,
   getSourceCoordinates,
+  getStartTime,
+  getExpLength,
 } from "../../../data-files/models/data-file";
 import { Marker, LineMarker, MarkerType, TeardropMarker, CircleMarker, RectangleMarker } from "../../models/marker";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -75,12 +78,14 @@ import { CustomMarkerPanelState } from "../../models/marker-file-state";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { SonificationPanelState, SonifierRegionMode } from "../../models/sonifier-file-state";
 import { ImageHist } from "../../../data-files/models/image-hist";
+import * as piexif from "piexifjs";
+import * as moment from "moment";
 
 @Component({
   selector: "app-workbench-image-viewer",
   templateUrl: "./workbench-image-viewer.component.html",
   styleUrls: ["./workbench-image-viewer.component.scss"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Input("viewer")
@@ -124,7 +129,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   selectedHdu$: Observable<ImageHdu>;
   selectedHduHeader$: Observable<Header>;
   firstHeader$: Observable<Header>;
-  
+
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
   imageTransform$: Observable<Transform>;
@@ -166,9 +171,9 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       map((viewer) => (viewer ? viewer.id : null)),
       distinctUntilChanged()
     );
-    
+
     this.selectedHduId$ = this.viewer$.pipe(
-      map((viewer) => viewer ? viewer.hduId : null),
+      map((viewer) => (viewer ? viewer.hduId : null)),
       distinctUntilChanged()
     );
 
@@ -178,57 +183,52 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.hduIds$ = this.file$.pipe(
-      map(file => file.hduIds),
-      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every((value, index) => b[index]==value))
-    )
+      map((file) => file.hduIds),
+      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
+    );
 
     this.hdus$ = this.hduIds$.pipe(
-      switchMap(hduIds => {
-        return combineLatest(hduIds.map(hduId => this.store.select(DataFilesState.getHduById).pipe(
-          map((fn) => fn(hduId))
-        ))).pipe(
-          map(hdus => hdus.filter(hdu => hdu.hduType == HduType.IMAGE) as ImageHdu[])
-        )
+      switchMap((hduIds) => {
+        return combineLatest(
+          hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
+        ).pipe(map((hdus) => hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[]));
       })
-    )
+    );
 
     this.headerIds$ = this.hdus$.pipe(
-      map(hdus => hdus.map(hdu=>hdu.headerId)),
-      distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every((value, index) => b[index]==value))
-    )
+      map((hdus) => hdus.map((hdu) => hdu.headerId)),
+      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
+    );
 
     this.headers$ = this.headerIds$.pipe(
-      switchMap(headerIds => {
-        return combineLatest(headerIds.map(headerId => this.store.select(DataFilesState.getHeaderById).pipe(
-          map((fn) => fn(headerId))
-        )))
+      switchMap((headerIds) => {
+        return combineLatest(
+          headerIds.map((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+        );
       })
-    )
+    );
 
     this.selectedHdu$ = combineLatest([this.selectedHduId$, this.hdus$]).pipe(
-      map(([hduId, hdus]) => hduId ? hdus.find(hdu => hdu.id == hduId) : null)
-    )
+      map(([hduId, hdus]) => (hduId ? hdus.find((hdu) => hdu.id == hduId) : null))
+    );
 
     this.selectedHduHeader$ = combineLatest([this.selectedHdu$, this.headers$]).pipe(
-      map(([hdu, headers]) => hdu ? headers.find(header => header.id == hdu.headerId) : null)
-    )
+      map(([hdu, headers]) => (hdu ? headers.find((header) => header.id == hdu.headerId) : null))
+    );
 
     this.headersLoaded$ = combineLatest([this.headers$, this.selectedHduHeader$]).pipe(
-      map(([headers, header]) => header ? header.loaded : headers.every(header => header.loaded))
-    ) 
+      map(([headers, header]) => (header ? header.loaded : headers.every((header) => header.loaded)))
+    );
 
     this.histsLoaded$ = combineLatest([this.hdus$, this.selectedHdu$]).pipe(
-      map(([hdus, hdu]) => hdu ? hdu.hist.loaded : hdus.every(hdu => hdu.hist.loaded))
-    )
+      map(([hdus, hdu]) => (hdu ? hdu.hist.loaded : hdus.every((hdu) => hdu.hist.loaded)))
+    );
 
     this.ready$ = combineLatest([this.headersLoaded$, this.histsLoaded$]).pipe(
       map(([headerLoaded, histLoaded]) => headerLoaded && histLoaded)
-    )
+    );
 
-
-    this.firstHeader$ = this.headers$.pipe(
-      map(headers => headers.length > 0 ? headers[0] : null)
-    )
+    this.firstHeader$ = this.headers$.pipe(map((headers) => (headers.length > 0 ? headers[0] : null)));
 
     // // watch for changes to header and reload when necessary
     // combineLatest([this.hduId$, this.header$]).pipe(
@@ -252,8 +252,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     //   }
     // });
-
-
 
     let rawImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
@@ -548,7 +546,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -556,7 +554,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.destroy$.unsubscribe();
   }
 
-  ngOnChanges(changes: { [key: string]: SimpleChange }) { }
+  ngOnChanges(changes: { [key: string]: SimpleChange }) {}
 
   handleImageMove($event: CanvasMouseEvent) {
     if ($event.hitImage) {
@@ -714,7 +712,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     hduIds.forEach((hduId) => {
       let hdu = hduEntities[hduId];
-      if (!hdu || hdu.hduType != HduType.IMAGE || !headerEntities[hdu.headerId] || !headerEntities[hdu.headerId].loaded || !(hdu as ImageHdu).hist || !(hdu as ImageHdu).hist.loaded) return;
+      if (
+        !hdu ||
+        hdu.hduType != HduType.IMAGE ||
+        !headerEntities[hdu.headerId] ||
+        !headerEntities[hdu.headerId].loaded ||
+        !(hdu as ImageHdu).hist ||
+        !(hdu as ImageHdu).hist.loaded
+      )
+        return;
 
       let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
@@ -751,7 +757,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     let data = "data:image/svg+xml;base64," + btoa(svgXml);
 
     let image = new Image();
-    image.onload = function () {
+    image.onload = () => {
       let canvas: HTMLCanvasElement = document.createElement("canvas");
       let context: CanvasRenderingContext2D = canvas.getContext("2d");
       canvas.width = imageCanvas.width;
@@ -760,8 +766,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       context.drawImage(imageCanvas, 0, 0);
       context.drawImage(image, 0, 0);
 
-      var lnk = document.createElement("a"),
-        e;
+      var lnk = document.createElement("a");
 
       /// the key here is to set the download attribute of the a tag
       lnk.download = "afterglow_screenshot.jpg";
@@ -769,10 +774,43 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       /// convert canvas content to data-uri for link. When download
       /// attribute is set the content pointed to by link will be
       /// pushed as "download" in HTML5 capable browsers
-      lnk.href = canvas.toDataURL("image/jpg;base64");
+      let dataUrl = canvas.toDataURL('image/jpeg');
+
+      if(this.viewer.hduId) {
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+        let header = headerEntities[hduEntities[this.viewer.hduId].headerId]
+        if(header) {
+          let zeroth = {};
+          let exif = {};
+          let gps = {};
+          zeroth[piexif.ImageIFD.Software] = "Afterglow Access";
+          let observer = getObserver(header)
+          if(observer)  {
+            zeroth[piexif.ImageIFD.Artist] = observer;
+          }
+          // let expTime = getExpLength(header);
+          // if(typeof expTime !== 'undefined') {
+          //   zeroth[piexif.ImageIFD.ExposureTime] = expTime;
+          // }
+          let startTime = getStartTime(header);
+          if(startTime) {
+            exif[piexif.ExifIFD.DateTimeOriginal] = moment(startTime).format('YYYY:MM:DD HH:mm:ss');
+          }
+          let exifObj = {"0th":zeroth, "Exif":exif, "GPS":gps};
+          let exifStr = piexif.dump(exifObj);
+          dataUrl = piexif.insert(exifStr, dataUrl)
+        }
+      }
+      
+
+
+
+      lnk.href = dataUrl;
 
       /// create a "fake" click-event to trigger the download
       if (document.createEvent) {
+        let e;
         e = document.createEvent("MouseEvents");
         e.initMouseEvent("click", true, true, window, 0, false, false, false, false, null);
 
