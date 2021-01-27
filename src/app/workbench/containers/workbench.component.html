@@ -61,13 +61,13 @@
           <button mat-icon-button aria-label="Open files" (click)="openFiles()" matTooltip="Open files">
             <mat-icon>folder_open</mat-icon>
           </button>
-          <button mat-icon-button [disabled]="(filteredFiles$ | async)?.length == 0" aria-label="Save all files"
-            (click)="onSaveAllFileListItemsBtnClick()" matTooltip="Save all files">
+          <button mat-icon-button [disabled]="(selectedFileIds$ | async)?.length == 0" aria-label="Save selected files"
+            (click)="onSaveSelectedFileListItemsBtnClick()" matTooltip="Save selected files">
             <mat-icon>save</mat-icon>
           </button>
 
-          <button mat-icon-button [disabled]="(filteredFiles$ | async)?.length == 0" aria-label="Close all files"
-            (click)="onCloseAllFileListItemsBtnClick()" matTooltip="Close all files">
+          <button mat-icon-button [disabled]="(selectedFileIds$ | async)?.length == 0" aria-label="Close selected files"
+            (click)="onCloseSelectedFileListItemsBtnClick()" matTooltip="Close selected files">
             <mat-icon>highlight_off</mat-icon>
           </button>
           <button mat-icon-button aria-label="Refresh File List" (click)="refresh()" matTooltip="Refresh File List">
@@ -78,7 +78,7 @@
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item [disabled]="(selectedFileIds$ | async)?.length == 0" aria-label="Close selected files"
+            <!-- <button mat-menu-item [disabled]="(selectedFileIds$ | async)?.length == 0" aria-label="Close selected files"
               (click)="onCloseSelectedFileListItemsBtnClick()">
               <mat-icon>close</mat-icon>
               <span>Close selected files</span>
@@ -87,7 +87,7 @@
               (click)="onSaveSelectedFileListItemsBtnClick()">
               <mat-icon>save</mat-icon>
               <span>Save selected files</span>
-            </button>
+            </button> -->
             <button mat-menu-item [disabled]="(selectedFileIds$ | async)?.length == 0"
               aria-label="Download selected files" (click)="onDownloadSelectedFileListItemsBtnClick()">
               <mat-icon>get_app</mat-icon>
