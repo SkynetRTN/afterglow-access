@@ -67,6 +67,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
       let asset = selectedAssets[0];
       let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderById)(asset.dataProviderId);
       if(!dataProvider) return;
+      console.log("Setting path: ", `${dataProvider.name}${asset.assetPath}`)
       this.store.dispatch(new SetCurrentPath(`${dataProvider.name}${asset.assetPath}`));
       return;
     }
