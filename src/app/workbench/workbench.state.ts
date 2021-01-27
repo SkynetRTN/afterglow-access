@@ -189,7 +189,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "f8964ca3-03aa-4be8-96f4-129e36fcaff1",
+  version: "275fe5e8-402f-49a2-9430-3b2e41dec19f",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -250,7 +250,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   },
   fileInfoPanelConfig: {
     showRawHeader: false,
-    useSystemTime: true,
+    useSystemTime: false,
   },
   customMarkerPanelConfig: {
     centroidClicks: false,
