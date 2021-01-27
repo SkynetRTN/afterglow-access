@@ -1,27 +1,27 @@
-<div fxLayout="row wrap" fxLayoutAlign="end" fxLayout.sm="column" fxLayoutGap="10px" class="info-bar mono">
-  <div fxFlex="1 1 auto" fxFlexAlign="center">
-    <div class="pr-4" style="min-width: 300px; display: inline-block">
-      <ng-container *ngIf="imageMouseX != null && imageMouseY != null; else noImageCoords">
-        ({{ imageMouseX | number: "1.3-3" }}, {{ imageMouseY | number: "1.3-3" }})
-        <ng-container *ngIf="pixelValue != null; else colorValueBlock"> : {{ pixelValue | number: "1.1-3" }}</ng-container>
-        <ng-template #colorValueBlock>
-          <ng-container *ngIf="colorValue">
-            : RGBA({{ colorValue.red }},{{ colorValue.green }},{{ colorValue.blue }},{{ colorValue.alpha }})</ng-container
-          >
-        </ng-template>
-      </ng-container>
-      <ng-template #noImageCoords> (-.---, -.---): -.--- </ng-template>
+<div fxLayout="row" fxLayoutAlign="end stretch" fxLayout.sm="column" fxLayoutGap="10px"  class="info-bar mono">
+  <div fxFlex="1 1 auto" fxFlexAlign="center" fxLayout="row wrap">
+    <div fxFlex="1 1 auto">
+      <div class="pr-4" style="min-width: 300px; display: inline-block">
+        <ng-container *ngIf="imageMouseX != null && imageMouseY != null; else noImageCoords">
+          ({{ imageMouseX | number: "1.3-3" }}, {{ imageMouseY | number: "1.3-3" }})
+          <ng-container *ngIf="pixelValue != null; else colorValueBlock"> : {{ pixelValue | number: "1.1-3" }}</ng-container>
+          <ng-template #colorValueBlock>
+            <ng-container *ngIf="colorValue">
+              : RGBA({{ colorValue.red }},{{ colorValue.green }},{{ colorValue.blue }},{{ colorValue.alpha }})</ng-container
+            >
+          </ng-template>
+        </ng-container>
+        <ng-template #noImageCoords> (-.---, -.---): -.--- </ng-template>
+      </div>
     </div>
-
-    <div style="display: inline-block">
-      <ng-container *ngIf="raHours != null && decDegs != null; else noSkyCoords">
-        RA: {{ raHours | dms: "2.4-4" }} DEC: {{ decDegs | dms: "2.3-3" }}
-      </ng-container>
-      <ng-template #noSkyCoords> </ng-template>
+    <div fxFlex="1 1 auto" fxFlexAlign="center" fxShow="raHours != null && decDegs != null">
+      RA: {{ raHours | dms: "2.4-4" }} DEC: {{ decDegs | dms: "2.3-3" }}
     </div>
+    
   </div>
-  <div fxFlex="0 0 auto" style="text-align: right">
-    <div class="tool-bar">
+  
+  <div fxFlex="0 0 auto" style="text-align: right;">
+    <div class="tool-bar" style="height: 100%;">
       <button
         mat-icon-button
         i18n-aria-label
@@ -74,7 +74,7 @@
       >
         <mat-icon>all_out</mat-icon>
       </button>
-      <button
+      <!-- <button
         mat-icon-button
         i18n-aria-label
         aria-label="Save file"
@@ -83,8 +83,8 @@
         matTooltip="Save file"
       >
         <mat-icon>save</mat-icon>
-      </button>
-      <button
+      </button> -->
+      <!-- <button
         mat-icon-button
         i18n-aria-label
         aria-label="Close file"
@@ -93,7 +93,7 @@
         matTooltip="Close file"
       >
         <mat-icon>close</mat-icon>
-      </button>
+      </button> -->
     </div>
   </div>
 </div>
