@@ -31,6 +31,7 @@ import {
   getSourceCoordinates,
   getStartTime,
   getExpLength,
+  toKeyValueHash,
 } from "../../../data-files/models/data-file";
 import { Marker, LineMarker, MarkerType, TeardropMarker, CircleMarker, RectangleMarker } from "../../models/marker";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -80,6 +81,8 @@ import { SonificationPanelState, SonifierRegionMode } from "../../models/sonifie
 import { ImageHist } from "../../../data-files/models/image-hist";
 import * as piexif from "piexifjs";
 import * as moment from "moment";
+import { Papa } from 'ngx-papaparse';
+import { AuthState } from '../../../auth/auth.state';
 
 @Component({
   selector: "app-workbench-image-viewer",
@@ -164,7 +167,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   selectedFieldCalId$: Observable<string>;
   fieldCalMarkers$: Observable<Marker[]>;
 
-  constructor(private store: Store, private sanitization: DomSanitizer) {
+  constructor(private store: Store, private sanitization: DomSanitizer, private papa: Papa) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
     let viewerId$ = this.viewer$.pipe(
@@ -776,19 +779,30 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       /// pushed as "download" in HTML5 capable browsers
       let dataUrl = canvas.toDataURL('image/jpeg');
 
+      
+
       if(this.viewer.hduId) {
         let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
         let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+        let user = this.store.selectSnapshot(AuthState.user);
         let header = headerEntities[hduEntities[this.viewer.hduId].headerId]
         if(header) {
           let zeroth = {};
           let exif = {};
           let gps = {};
           zeroth[piexif.ImageIFD.Software] = "Afterglow Access";
+          let artist = user ? `${user.first_name} ${user.last_name} (${user.username})` : '';
           let observer = getObserver(header)
           if(observer)  {
-            zeroth[piexif.ImageIFD.Artist] = observer;
+            artist = artist.concat(`, ${observer}`)
           }
+          zeroth[piexif.ImageIFD.Artist] = artist;
+
+          let headerStr =  header.entries.reduce((value, entry) => value.concat(`${entry.key}: ${entry.value} - ${entry.comment} | `), "")
+          // let headerStr = this.papa.unparse(header.entries, {
+          //   columns: ['key', 'value', 'comment']
+          // })
+          zeroth[piexif.ImageIFD.ImageDescription] = headerStr;
           // let expTime = getExpLength(header);
           // if(typeof expTime !== 'undefined') {
           //   zeroth[piexif.ImageIFD.ExposureTime] = expTime;
