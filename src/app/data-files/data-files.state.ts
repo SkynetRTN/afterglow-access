@@ -1826,10 +1826,14 @@ export class DataFilesState {
           y: viewportSize.height / 2.0,
         };
       }
-
+      let rotationAngle = Math.atan2(viewportTransform.c, viewportTransform.a)
       anchorPoint = transformPoint(anchorPoint, invertTransform(viewportTransform));
 
-      viewportTransform = scaleTransform(viewportTransform, axis == 'horizontal' ? 1 : -1, axis == 'horizontal' ? -1 : 1, anchorPoint);
+      let xScale = (axis == 'horizontal') ? 1 : -1
+      if(Math.abs(Math.round(rotationAngle/(Math.PI/2.0)))%2) {
+        xScale *= -1;
+      }
+      viewportTransform = scaleTransform(viewportTransform, xScale ,xScale * -1, anchorPoint);
       imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 
       ts[viewportTransformId] = viewportTransform;
