@@ -199,14 +199,14 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       })
     );
     this.batchPhotJob$ = combineLatest([
-      this.store.select(JobsState.getJobs),
+      this.store.select(JobsState.getJobEntities),
       this.config$.pipe(
         map((s) => s.batchPhotJobId),
         distinctUntilChanged()
       )
       ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId]),
-      filter((job) => job != null && job != undefined)
+      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob),
+      filter((job) => job != null && job != undefined),
     );
     
     this.batchPhotFormData$ = this.config$.pipe(
