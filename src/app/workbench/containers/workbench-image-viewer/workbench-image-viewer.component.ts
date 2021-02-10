@@ -798,11 +798,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           }
           zeroth[piexif.ImageIFD.Artist] = artist;
 
-          let headerStr =  header.entries.reduce((value, entry) => value.concat(`${entry.key}: ${entry.value} - ${entry.comment} | `), "")
-          // let headerStr = this.papa.unparse(header.entries, {
-          //   columns: ['key', 'value', 'comment']
-          // })
-          zeroth[piexif.ImageIFD.ImageDescription] = headerStr;
+          // let headerStr =  header.entries.reduce((value, entry) => value.concat(`${entry.key}: ${entry.value} - ${entry.comment} | `), "")
+          // // let headerStr = this.papa.unparse(header.entries, {
+          // //   columns: ['key', 'value', 'comment']
+          // // })
+          // zeroth[piexif.ImageIFD.ImageDescription] = headerStr;
           // let expTime = getExpLength(header);
           // if(typeof expTime !== 'undefined') {
           //   zeroth[piexif.ImageIFD.ExposureTime] = expTime;
