@@ -10,7 +10,7 @@ export const appConfig: AppConfig = {
   authCookieName: "afterglow_core_access_token",
   oauth2ClientId: "",
   oauth2ClientSecret: "",
-  tileSize: 1024,
+  tileSize: 512,
   upperPercentileDefault: 99.95,
   lowerPercentileDefault: 10,
   plugins: [],
