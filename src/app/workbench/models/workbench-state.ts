@@ -42,6 +42,7 @@ export interface AlignFormData {
   selectedHduIds: string[];
   refHduId: string;
   mode: "astrometric" | "manual_source";
+  crop: boolean;
 }
 
 export interface BatchPhotometryFormData {

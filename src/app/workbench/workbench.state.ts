@@ -201,7 +201,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: "275fe5e8-402f-49a2-9430-3b2e41dec19f",
+  version: "215396f5-1224-4e17-be97-e60f8aeb0a82",
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: "file",
@@ -307,6 +307,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       selectedHduIds: [],
       refHduId: null,
       mode: "astrometric",
+      crop: true,
     },
     currentAlignmentJobId: null,
   },
@@ -2680,7 +2681,7 @@ export class WorkbenchState {
         )
         .map((f) => parseInt(f.id)),
       inplace: true,
-      crop: false,
+      crop: data.crop,
       settings: {
         ref_image: parseInt(data.refHduId),
         wcs_grid_points: 100,

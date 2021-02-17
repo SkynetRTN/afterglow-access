@@ -53,6 +53,7 @@ export class AlignerPageComponent implements OnInit {
     selectedHduIds: new FormControl([], Validators.required),
     refHduId: new FormControl("", Validators.required),
     mode: new FormControl("", Validators.required),
+    crop: new FormControl("", Validators.required),
   });
 
   constructor(private store: Store, private router: Router) {

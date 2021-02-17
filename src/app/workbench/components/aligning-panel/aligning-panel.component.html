@@ -38,6 +38,15 @@
         </mat-select>
       </mat-form-field>
     </div>
+    <div>
+      <mat-slide-toggle
+          [labelPosition]="'after'"
+          [checked]="(alignFormData$ | async).crop"
+          color="primary"
+          formControlName="crop"
+          >Crop to largest overlapping region</mat-slide-toggle
+        >
+    </div>
 
     <div *ngIf="refHeader$ | async">
       <div *ngIf="(refHeader$ | async).loading; else hasWcsBlock" class="alert alert-info" style="margin-top: 10px" i18n>
