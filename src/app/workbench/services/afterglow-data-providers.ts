@@ -19,7 +19,7 @@ export class AfterglowDataProviderService {
       map((res) =>
         res.map((r) => {
           return {
-            id: r.id,
+            id: r.id.toString(),
             name: r.display_name,
             icon: r.icon,
             description: r.description,

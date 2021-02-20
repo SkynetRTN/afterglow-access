@@ -3,13 +3,13 @@
 </div>
 <mat-dialog-content>
   <app-file-manager
-    [create]="true"
-    [copy]="false"
-    [move]="false"
-    [delete]="true"
-    [rename]="true"
-    [upload]="false"
-    [download]="false"
+    [allowCreate]="true"
+    [allowCopy]="false"
+    [allowMove]="false"
+    [allowDelete]="true"
+    [allowRename]="true"
+    [allowUpload]="false"
+    [allowDownload]="false"
     [selectionMode]="'single'"
     (onAssetSelectionChange)="selectedAssets$.next($event)"
     (onSelectedAssetOpened)="onSelectedAssetOpened($event)"

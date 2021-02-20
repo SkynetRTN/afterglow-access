@@ -45,23 +45,23 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(MAT_DIALOG_DATA) private data: any,
     public dialog: MatDialog
   ) {
-    if (data && data.name) {
-      this.nameFormControl.setValue(data.name);
-    }
-    this.currentDataProvider$ = this.store.select(DataProvidersState.getCurrentDataProvider).pipe(distinctUntilChanged());
-    let currentAssetPath$ = this.store.select(DataProvidersState.getCurrentAssetPath).pipe(distinctUntilChanged());
+    // if (data && data.name) {
+    //   this.nameFormControl.setValue(data.name);
+    // }
+    // this.currentDataProvider$ = this.store.select(DataProvidersState.getCurrentDataProvider).pipe(distinctUntilChanged());
+    // let currentAssetPath$ = this.store.select(DataProvidersState.getCurrentAssetPath).pipe(distinctUntilChanged());
 
-    this.destinationValid$ = combineLatest([this.currentDataProvider$, currentAssetPath$]).pipe(
-      map(([destDataProvider, destAssetPath]) => {
-        return destDataProvider && !destDataProvider.readonly && destAssetPath != null;
-      }),
-      distinctUntilChanged()
-    );
+    // this.destinationValid$ = combineLatest([this.currentDataProvider$, currentAssetPath$]).pipe(
+    //   map(([destDataProvider, destAssetPath]) => {
+    //     return destDataProvider && !destDataProvider.readonly && destAssetPath != null;
+    //   }),
+    //   distinctUntilChanged()
+    // );
 
-    this.selectedAssets$.pipe(takeUntil(this.destroy$)).subscribe((selectedAssets) => {
-      if (selectedAssets.length != 1 || (selectedAssets[0] && selectedAssets[0].isDirectory)) return;
-      this.nameFormControl.setValue(selectedAssets[0].name);
-    });
+    // this.selectedAssets$.pipe(takeUntil(this.destroy$)).subscribe((selectedAssets) => {
+    //   if (selectedAssets.length != 1 || (selectedAssets[0] && selectedAssets[0].isDirectory)) return;
+    //   this.nameFormControl.setValue(selectedAssets[0].name);
+    // });
   }
 
   ngOnInit(): void {}
@@ -94,11 +94,11 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onSaveAsBtnClick() {
-    let currentDataProvider = this.store.selectSnapshot(DataProvidersState.getCurrentDataProvider);
-    let currentAssetPath = this.store.selectSnapshot(DataProvidersState.getCurrentAssetPath);
+    // let currentDataProvider = this.store.selectSnapshot(DataProvidersState.getCurrentDataProvider);
+    // let currentAssetPath = this.store.selectSnapshot(DataProvidersState.getCurrentAssetPath);
 
-    let path = !currentAssetPath ? `/${this.nameFormControl.value}` : `/${currentAssetPath}/${this.nameFormControl.value}`;
-    this.saveAs(currentDataProvider.id, path);
+    // let path = !currentAssetPath ? `/${this.nameFormControl.value}` : `/${currentAssetPath}/${this.nameFormControl.value}`;
+    // this.saveAs(currentDataProvider.id, path);
   }
 
   saveAs(dataProviderId: string, path: string) {

@@ -27,7 +27,7 @@ import {
   ImportAssets,
   ImportAssetsCompleted,
   ImportAssetsStatusUpdated,
-  SetCurrentPath,
+  SetCurrentPath
 } from "./data-providers.actions";
 import { AfterglowDataProviderService } from "../workbench/services/afterglow-data-providers";
 import { CreateJob, UpdateJob } from "../jobs/jobs.actions";
@@ -38,6 +38,11 @@ import { ImmutableContext } from "@ngxs-labs/immer-adapter";
 import { JobsState } from "../jobs/jobs.state";
 import { ResetState } from "../auth/auth.actions";
 
+export interface DataProviderPath {
+  dataProviderId: string;
+  assets: DataProviderAsset[];
+}
+
 export interface DataProvidersStateModel {
   version: string;
   dataProvidersLoaded: boolean;
@@ -47,11 +52,11 @@ export interface DataProvidersStateModel {
   selectedAssetImportCorrId: string;
   importErrors: Array<string>;
   importProgress: number;
-  currentFileSystemPath: string;
+  lastPath: DataProviderPath;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: "91d88797-7f4e-4672-ab05-0a68ba7ae4a0",
+  version: "c2cf1dcb-52a8-4579-82a4-2708fb21cc1c",
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
@@ -59,7 +64,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importing: false,
   importErrors: [],
   importProgress: 0,
-  currentFileSystemPath: "/",
+  lastPath: null
 };
 
 @State<DataProvidersStateModel>({
@@ -89,9 +94,9 @@ export class DataProvidersState {
     return state.dataProviderIds;
   }
 
-  @Selector()
-  public static getDataProviders(state: DataProvidersStateModel) {
-    return Object.values(state.dataProviderEntities);
+  @Selector([DataProvidersState.getDataProviderEntities])
+  public static getDataProviders(entities: { [id: string]: DataProvider }) {
+    return Object.values(entities);
   }
 
   @Selector()
@@ -99,10 +104,10 @@ export class DataProvidersState {
     return state.dataProviderEntities;
   }
 
-  @Selector()
-  public static getDataProviderById(state: DataProvidersStateModel) {
+  @Selector([DataProvidersState.getDataProviderEntities])
+  public static getDataProviderById(entities: { [id: string]: DataProvider }) {
     return (id: string) => {
-      return id in state.dataProviderEntities ? state.dataProviderEntities[id] : null;
+      return id in entities ? entities[id] : null;
     };
   }
 
@@ -121,30 +126,13 @@ export class DataProvidersState {
     return state.importErrors;
   }
 
-  @Selector()
-  public static getCurrentFileSystemPath(state: DataProvidersStateModel) {
-    return state.currentFileSystemPath;
-  }
 
   @Selector()
-  public static getCurrentAssetPath(state: DataProvidersStateModel) {
-    if (state.currentFileSystemPath == "") return null;
-
-    let pathKeys = state.currentFileSystemPath.split("/");
-    if (pathKeys.length == 1) return "";
-
-    let result = pathKeys.slice(1).join("/");
-    return result;
+  public static getLastPath(state: DataProvidersStateModel) {
+    return state.lastPath;
   }
 
-  @Selector()
-  public static getCurrentDataProvider(state: DataProvidersStateModel) {
-    let dpName = state.currentFileSystemPath.split("/")[0];
-    if (!dpName) {
-      return null;
-    }
-    return Object.values(state.dataProviderEntities).find((dp) => dp.name == dpName);
-  }
+
 
   @Action(ResetState)
   @ImmutableContext()
@@ -277,15 +265,11 @@ export class DataProvidersState {
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
     { path }: SetCurrentPath
   ) {
-    let actions = [];
-    setState((state: DataProvidersStateModel) => {
-      if (path != state.currentFileSystemPath) {
-        state.currentFileSystemPath = path;
-      }
 
-      return state;
-    });
-    return dispatch(actions);
+    setState((state: DataProvidersStateModel) => {
+        state.lastPath = path;
+        return state;
+    })
   }
 
   // @Action(SortDataProviderAssets)

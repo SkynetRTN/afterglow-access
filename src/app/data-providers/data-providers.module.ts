@@ -12,9 +12,10 @@ import { OpenFileDialogComponent } from "./components/open-file-dialog/open-file
 import { DxFileManagerModule } from "devextreme-angular";
 import { FileManagerComponent } from "./components/file-manager/file-manager.component";
 import { SaveDialogComponent } from "./components/save-dialog/save-dialog.component";
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, DxFileManagerModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, DxFileManagerModule, ReactiveFormsModule, FlexLayoutModule],
   declarations: [
     DataProviderDetailComponent,
     OpenFileDialogComponent,

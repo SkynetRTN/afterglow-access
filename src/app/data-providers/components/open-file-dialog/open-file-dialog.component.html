@@ -5,16 +5,18 @@
 <!-- See https://js.devexpress.com/Demos/WidgetsGallery/Demo/FileManager/UICustomization/Angular/Light/ for customization -->
 <mat-dialog-content>
   <app-file-manager
-    [create]="true"
-    [copy]="true"
-    [move]="true"
-    [delete]="true"
-    [rename]="true"
-    [upload]="true"
-    [download]="true"
+    [path]="lastPath$ | async"
+    [allowCreate]="true"
+    [allowCopy]="true"
+    [allowMove]="true"
+    [allowDelete]="true"
+    [allowRename]="true"
+    [allowUpload]="true"
+    [allowDownload]="true"
     [selectionMode]="'multiple'"
     (onAssetSelectionChange)="selectedAssets$.next($event)"
     (onSelectedAssetOpened)="openSelectedAssets()"
+    (onPathChange)="onPathChange($event)"
   >
   </app-file-manager>
 </mat-dialog-content>

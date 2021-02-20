@@ -1,61 +1,94 @@
-<dx-file-manager
-  id="fileManager"
-  [fileSystemProvider]="customFileSystemProvider"
-  [currentPath]="currentFileSystemPath$ | async"
-  height="60vh"
-  (onCurrentDirectoryChanged)="onCurrentDirectoryChanged($event)"
-  (onSelectionChanged)="onSelectionChange($event)"
-  (onSelectedFileOpened)="onSelectedFileOpened($event)"
-  (onErrorOccurred)="onErrorOccurred($event)"
-  [allowedFileExtensions]="allowedFileExtensions"
-  [selectionMode]="selectionMode"
->
-  <dxo-upload [chunkSize]="50000000" [maxFileSize]="50000000"></dxo-upload>
-  <dxo-item-view [showParentFolder]="false" [showParentFolder]="true">
-    <dxo-details>
-      <dxi-column dataField="thumbnail"></dxi-column>
-      <dxi-column dataField="name"></dxi-column>
-      <dxi-column
-        *ngFor="let column of fileManagerDetailsColumns$ | async"
-        [dataField]="column.dataField"
-        [caption]="column.caption"
-      ></dxi-column>
-    </dxo-details>
-  </dxo-item-view>
-  <dxo-toolbar>
-    <!-- <dxi-item name="showNavPane" visible="true"></dxi-item>
-    <dxi-item name="separator"></dxi-item> -->
+<div style="height: 600px" fxLayout="column" class="wrapper">
+  <div *ngIf="showToolbar" class="toolbar" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" style="width: 100%">
+    <button mat-raised-button *ngIf="showCreate$ | async" (click)="onCreateClick()"><mat-icon>create_new_folder</mat-icon> New directory</button>
+    <button mat-raised-button *ngIf="showCopy$ | async" (click)="onCopyClick()"><mat-icon>file_copy</mat-icon> Copy to</button>
+    <button mat-raised-button *ngIf="showMove$ | async" (click)="onMoveClick()"><mat-icon>drive_file_move</mat-icon> Move to</button>
+    <button mat-raised-button *ngIf="showDelete$ | async" (click)="onDeleteClick()"><mat-icon>delete</mat-icon> Delete</button>
+    <button mat-raised-button *ngIf="showRename$ | async" (click)="onRenameClick()"><mat-icon>drive_file_rename_outline</mat-icon> Rename</button>
+    <button mat-raised-button *ngIf="showUpload$ | async" (click)="onUploadClick()"><mat-icon>publish</mat-icon> Upload</button>
+    <button mat-raised-button *ngIf="showDownload$ | async" (click)="onDownloadClick()"><mat-icon>get_app</mat-icon> Download</button>
+  </div>
+  <div class="path" fxLayout="row" fxLayoutAlign="start center" style="width: 100%">
+    <span class="path-item">
+      <button mat-flat-button (click)="navigateToRoot()">Files</button>
+    </span>
+    <ng-container *ngIf="parentDataProvider$ | async; let parentDataProvider">
+      <span class="path-item">
+        <button mat-flat-button (click)="navigateTo(parentDataProvider.id, [])">{{ parentDataProvider.name }}</button>
+      </span>
+      <ng-container *ngFor="let asset of path?.assets; let i = index">
+        <span class="path-item">
+          <button mat-flat-button (click)="navigateTo(path.dataProviderId, path.assets.slice(0, i+1))">
+            {{ asset.name }}
+          </button>
+        </span>
+      </ng-container>
+    </ng-container>
+  </div>
+  <div fxFlex="1 1 auto" class="file-items-panel">
+    <div class="loading-shade" *ngIf="isLoading">
+      <mat-spinner *ngIf="isLoading"></mat-spinner>
+    </div>
+    <div class="table-wrapper" style="height: 100%;">
+      <table
+        mat-table
+        matSort
+        [class.multi-selection-mode]="selection.selected.length > 1"
+        [dataSource]="dataSource"
+        class="mat-elevation-z8"
+      >
+        <!-- Checkbox Column -->
+        <ng-container matColumnDef="select" sticky>
+          <th class="select" mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              (change)="masterToggle()"
+              [checked]="isAllSelected$ | async"
+              [indeterminate]="isIndeterminate$ | async"
+              [aria-label]="(isAllSelected$ | async) ? 'select all' : 'deselect all'"
+            >
+            </mat-checkbox>
+          </th>
+          <td class="select" mat-cell *matCellDef="let row">
+            <mat-checkbox
+              (click)="$event.stopPropagation()"
+              (change)="$event ? selection.toggle(row) : null"
+              [checked]="selection.isSelected(row)"
+              [aria-label]="checkboxLabel(row)"
+            >
+            </mat-checkbox>
+          </td>
+        </ng-container>
 
-    <dxi-item name="create"></dxi-item>
-    <dxi-item name="separator"></dxi-item>
-    <dxi-item name="upload"></dxi-item>
-    <dxi-item name="separator"></dxi-item>
-    <dxi-item name="download"></dxi-item>
-    <dxi-item name="refresh"></dxi-item>
+        <!-- Name Column -->
+        <ng-container matColumnDef="name" sticky>
+          <th class="name" mat-header-cell mat-sort-header *matHeaderCellDef>Name</th>
+          <td class="name" mat-cell *matCellDef="let item">
+            <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px">
+              <mat-icon *ngIf="item.isDirectory; else fileIcon"> folder </mat-icon>
+              <ng-template #fileIcon>
+                <mat-icon> insert_drive_file </mat-icon>
+              </ng-template>
+              <span>{{ item.name }}</span>
+            </div>
+          </td>
+        </ng-container>
 
-    <!-- <dxi-file-selection-item name="clearSelection"></dxi-file-selection-item> -->
-    <dxi-file-selection-item name="rename"></dxi-file-selection-item>
-    <dxi-file-selection-item name="separator"></dxi-file-selection-item>
-    <dxi-file-selection-item name="delete"></dxi-file-selection-item>
-    <dxi-file-selection-item name="separator"></dxi-file-selection-item>
-    <dxi-file-selection-item name="copy"></dxi-file-selection-item>
-    <dxi-file-selection-item name="separator"></dxi-file-selection-item>
-    <dxi-file-selection-item name="move"></dxi-file-selection-item>
-    <dxi-file-selection-item name="separator"></dxi-file-selection-item>
-    <dxi-file-selection-item name="upload"></dxi-file-selection-item>
-    <dxi-file-selection-item name="separator"></dxi-file-selection-item>
-    <dxi-file-selection-item name="download"></dxi-file-selection-item>
-    <dxi-file-selection-item name="separator"></dxi-file-selection-item>
-    <dxi-file-selection-item name="refresh"></dxi-file-selection-item>
-  </dxo-toolbar>
-  <dxo-permissions
-    [create]="create && (isWriteable$ | async)"
-    [copy]="copy"
-    [move]="move && (isWriteable$ | async)"
-    [delete]="delete && (isWriteable$ | async)"
-    [rename]="rename && (isWriteable$ | async)"
-    [upload]="upload && (isWriteable$ | async)"
-    [download]="download"
-  >
-  </dxo-permissions>
-</dx-file-manager>
+        <ng-container *ngFor="let column of columns$ | async" [matColumnDef]="column.caption">
+          <th mat-header-cell mat-sort-header class="meta-column" *matHeaderCellDef>{{ column.caption }}</th>
+          <td mat-cell class="meta-column" *matCellDef="let item">
+            <span class="">{{ resolvePath(item, column.dataField) }} </span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; let rowIndex = index; columns: displayedColumns$ | async"
+          [class.selected]="selection.isSelected(row)"
+          (click)="onRowClick$.next({ $event: $event, item: row })"
+          (dblclick)="onRowDblClick$.next({ $event: $event, item: row })"
+        ></tr>
+      </table>
+    </div>
+  </div>
+</div>

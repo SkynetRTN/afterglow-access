@@ -1,6 +1,7 @@
 import { DataProvider } from "./models/data-provider";
 import { DataProviderAsset } from "./models/data-provider-asset";
 import { BatchImportJob } from "../jobs/models/batch-import";
+import { DataProviderPath } from './data-providers.state';
 
 /**
  * Load Library Actions
@@ -30,8 +31,9 @@ export class LoadAssets {
 export class SetCurrentPath {
   public static readonly type = "[DataProvider] Set Current Path";
 
-  constructor(public path: string) {}
+  constructor(public path: DataProviderPath) {}
 }
+
 
 export class LoadDataProviderAssetsSuccess {
   public static readonly type = "[DataProvider] Load Data Provider Assets Success";
