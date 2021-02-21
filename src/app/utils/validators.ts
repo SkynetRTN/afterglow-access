@@ -1,4 +1,4 @@
-import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn, Validators, FormControl } from '@angular/forms';
 import { parseDms } from './skynet-astro';
 
 function isEmptyInputValue(value: any): boolean {
@@ -50,4 +50,11 @@ export function greaterThan(min: number): ValidatorFn {
     // maximum, per the HTML forms spec: https://www.w3.org/TR/html5/forms.html#attr-input-max
     return !isNaN(value) && value <= min ? { 'greaterThan': { 'min': min, 'actual': control.value } } : null;
   };
+}
+
+export function isValidFilename(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const name = control.value // give the value inside the field
+    return /^[-\w^&'@{}[\],$=!#().%+~ ]+$/g.test(name) ? null : {'isValidFilename': 'Not a valid filename'}
+  }
 }

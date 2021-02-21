@@ -8,8 +8,9 @@ import { MaterialModule } from "../material";
 
 import { FocusableCell, CellFocuser } from "./cell-focuser/cell-focuser";
 import { CorrelationIdGenerator } from "./correlated-action";
+import { PrintFormErrorComponent } from './print-form-error/print-form-error.component';
 
-export const COMPONENTS = [FocusableCell, CellFocuser];
+export const COMPONENTS = [FocusableCell, CellFocuser, PrintFormErrorComponent];
 
 @NgModule({
   imports: [RouterModule, CommonModule, FormsModule, MaterialModule],

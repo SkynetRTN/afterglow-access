@@ -39,6 +39,7 @@ import { DataProvider } from "../../models/data-provider";
 import { SelectionModel } from "@angular/cdk/collections";
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { RenameDialogComponent } from '../rename-dialog/rename-dialog.component';
 
 export interface FileSystemItem {
   id: string;
@@ -218,7 +219,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     ).pipe(
       takeUntil(this.destroy$),
       switchMap(([parent]) => {
-        this.selection.clear();
+        
         this.isLoading = true;
         if (!parent) {
           return this.dataProviderService.getDataProviders().pipe(
@@ -235,7 +236,12 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             );
         }
       })
-    ).subscribe((items) => this.items$.next(items));
+    ).subscribe((items) => {
+      let selectedIds = this.selection.selected.map(item => item.id);
+      this.selection.clear();
+      this.selection.select(...items.filter(item => selectedIds.includes(item.id)));
+      this.items$.next(items)
+    });
 
     this.parentDataProvider$ = this.parent$.pipe(
       map(parent => parent ? parent.dataProvider.id : null),
@@ -447,7 +453,30 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   }
 
   onRenameClick() {
+    let asset = this.selection.selected[0].asset
+    let dialogRef = this.dialog.open(RenameDialogComponent, {
+      width: "350px",
+      disableClose: true,
+      data: {
+        asset: asset
+      }
+    });
 
+    dialogRef.afterClosed().subscribe((result) => {
+      if(result) {
+        this.isLoading = true;
+        this.dataProviderService.renameAsset(asset.dataProviderId, asset.assetPath, result).pipe(
+          take(1)
+        ).subscribe(
+          () => {
+            this.refresh$.next(true);
+          },
+          (err)=>{},
+          ()=>{
+            this.isLoading=false
+          })
+      }
+    });
   }
 
   onUploadClick() {
