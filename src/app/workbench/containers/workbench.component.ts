@@ -100,7 +100,6 @@ import { Viewer, ImageViewer, TableViewer } from "../models/viewer";
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { CorrelationIdGenerator } from "../../utils/correlated-action";
 import { DataProvidersState } from "../../data-providers/data-providers.state";
-import { AlertDialogComponent, AlertDialogConfig } from "../components/alert-dialog/alert-dialog.component";
 import { Navigate } from "@ngxs/router-plugin";
 import { WorkbenchImageHduState } from "../models/workbench-file-state";
 import {
@@ -176,6 +175,7 @@ import {
 import { JobsState } from "../../jobs/jobs.state";
 import { saveAs } from "file-saver/dist/FileSaver";
 import { JobService } from "../../jobs/services/jobs";
+import { AlertDialogConfig, AlertDialogComponent } from '../../utils/alert-dialog/alert-dialog.component';
 
 enum SaveFileAction {
   Save = "save",

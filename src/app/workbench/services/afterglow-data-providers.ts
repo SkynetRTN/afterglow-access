@@ -80,7 +80,7 @@ export class AfterglowDataProviderService {
     });
   }
 
-  deleteAsset(dataProviderId: string, path: string, recursive: boolean = false): Observable<any> {
+  deleteAsset(dataProviderId: string, path: string, recursive: boolean = false) {
     if (path && path[0] == "/") {
       path = path.slice(1);
     }

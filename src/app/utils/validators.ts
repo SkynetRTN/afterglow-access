@@ -55,6 +55,6 @@ export function greaterThan(min: number): ValidatorFn {
 export function isValidFilename(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const name = control.value // give the value inside the field
-    return /^[-\w^&'@{}[\],$=!#().%+~ ]+$/g.test(name) ? null : {'isValidFilename': 'Not a valid filename'}
+    return /^[-\w^&'@{}[\],$=!#().%+~ ]+$/g.test(name) ? null : {'isValidFilename': 'Not a valid file/folder name'}
   }
 }

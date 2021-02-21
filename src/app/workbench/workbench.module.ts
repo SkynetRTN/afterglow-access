@@ -73,7 +73,6 @@ import { AfterglowPlotlyModule } from "../afterglow-plotly/afterglow-plotly.modu
 import { HelpDialogComponent } from "./components/help-dialog/help-dialog.component";
 import { RectangleMarkerEditorComponent } from "./components/rectangle-marker-editor/rectangle-marker-editor.component";
 import { ThemeDialogComponent } from "./components/theme-dialog/theme-dialog.component";
-import { AlertDialogComponent } from "./components/alert-dialog/alert-dialog.component";
 import { AvatarModule } from "ngx-avatar";
 import { WorkbenchViewerLayoutComponent } from "./containers/workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.component";
@@ -117,7 +116,6 @@ export const COMPONENTS = [
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
   ThemeDialogComponent,
-  AlertDialogComponent,
   WorkbenchViewerPanelComponent,
   WorkbenchViewerLayoutComponent,
   FileBrowserComponent,
@@ -162,7 +160,6 @@ export const COMPONENTS = [
     PixelOpsJobsDialogComponent,
     HelpDialogComponent,
     ThemeDialogComponent,
-    AlertDialogComponent,
     SaveChangesDialogComponent,
     JobProgressDialogComponent,
   ],

@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, ViewChild, Output, EventEmitter, Input, Afte
 import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
 import { SetCurrentPath } from "../../data-providers.actions";
 import { Store, Actions, ofActionDispatched } from "@ngxs/store";
-import { Observable, of, merge, Subject, combineLatest, BehaviorSubject, zip } from "rxjs";
+import { Observable, of, merge, Subject, combineLatest, BehaviorSubject, zip, forkJoin } from "rxjs";
 import {
   map,
   distinctUntilChanged,
@@ -19,6 +19,7 @@ import {
   debounceTime,
   delay,
   startWith,
+  catchError,
 } from "rxjs/operators";
 import { DataProviderAsset } from "../../models/data-provider-asset";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
@@ -37,25 +38,24 @@ import { JobService } from "../../../jobs/services/jobs";
 import { CreateJobSuccess, CreateJobFail, CreateJob } from "../../../jobs/jobs.actions";
 import { DataProvider } from "../../models/data-provider";
 import { SelectionModel } from "@angular/cdk/collections";
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { RenameDialogComponent } from '../rename-dialog/rename-dialog.component';
+import { MatSort } from "@angular/material/sort";
+import { MatTableDataSource } from "@angular/material/table";
+import { RenameDialogComponent } from "../name-dialog/name-dialog.component";
+import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 
 export interface FileSystemItem {
   id: string;
   name: string;
   isDirectory: boolean;
   metadata: { [key: string]: any };
-  dataProvider: DataProvider,
-  asset: DataProviderAsset,
+  dataProvider: DataProvider;
+  asset: DataProviderAsset;
 }
 
 export interface FileSystemDetailsColumn {
   dataField: string;
   caption: string;
 }
-
-
 
 @Component({
   selector: "app-file-manager",
@@ -171,10 +171,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   columns$: Observable<FileSystemDetailsColumn[]>;
   displayedColumns$: Observable<string[]>;
   isWriteable$: Observable<boolean>;
-  
+
   resolvePath = (object, path, defaultValue) => path.split(".").reduce((o, p) => (o ? o[p] : defaultValue), object);
   @ViewChild(MatSort) sort: MatSort;
-  dataSource = new MatTableDataSource<FileSystemItem>()
+  dataSource = new MatTableDataSource<FileSystemItem>();
   showCreate$: Observable<boolean>;
   showCopy$: Observable<boolean>;
   showMove$: Observable<boolean>;
@@ -191,68 +191,72 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     public dialog: MatDialog,
     private jobService: JobService
   ) {
-    let selectionChange$ = this.selection.changed.pipe(startWith(null))
+    let selectionChange$ = this.selection.changed.pipe(startWith(null));
 
     this.parent$ = this.path$.pipe(
-      map(path => {
-        if(!path) {
+      map((path) => {
+        if (!path) {
           //root file system item
           return null;
         }
 
         let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[path.dataProviderId];
-        
-        if(path.assets.length == 0) {
+
+        if (path.assets.length == 0) {
           //data provider root
           return this.providerToFileSystemItem(dataProvider);
         }
 
-        return this.assetToFileSystemItem(path.assets[path.assets.length-1])
+        return this.assetToFileSystemItem(path.assets[path.assets.length - 1]);
       })
-    )
+    );
 
-    combineLatest(
-      this.parent$.pipe(
-        distinctUntilChanged((a,b) => a && b && a.id == b.id)
-      ),
-      this.refresh$
-    ).pipe(
-      takeUntil(this.destroy$),
-      switchMap(([parent]) => {
-        
-        this.isLoading = true;
-        if (!parent) {
-          return this.dataProviderService.getDataProviders().pipe(
-            // delay(50000),
-            map(dataProviders => dataProviders.map(dataProvider => this.providerToFileSystemItem(dataProvider))),
-            tap((v) => (this.isLoading = false))
-          );
-        } else {
-          return this.dataProviderService
-            .getAssets(parent.dataProvider.id, parent.asset ? parent.asset.assetPath : '')
-            .pipe(
-              map(assets => assets.map(asset => this.assetToFileSystemItem(asset))),
+    combineLatest(this.parent$.pipe(distinctUntilChanged((a, b) => a && b && a.id == b.id)), this.refresh$)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(([parent]) => {
+          this.isLoading = true;
+          if (!parent) {
+            return this.dataProviderService.getDataProviders().pipe(
+              // delay(50000),
+              map((dataProviders) => dataProviders.map((dataProvider) => this.providerToFileSystemItem(dataProvider))),
               tap((v) => (this.isLoading = false))
             );
-        }
-      })
-    ).subscribe((items) => {
-      let selectedIds = this.selection.selected.map(item => item.id);
-      this.selection.clear();
-      this.selection.select(...items.filter(item => selectedIds.includes(item.id)));
-      this.items$.next(items)
-    });
+          } else {
+            return this.dataProviderService
+              .getAssets(parent.dataProvider.id, parent.asset ? parent.asset.assetPath : "")
+              .pipe(
+                map((assets) => assets.map((asset) => this.assetToFileSystemItem(asset))),
+                tap((v) => (this.isLoading = false))
+              );
+          }
+        })
+      )
+      .subscribe((items) => {
+        let selectedIds = this.selection.selected.map((item) => item.id);
+        this.selection.clear();
+        this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
+        items = items.sort((a,b) => {
+          if(a.isDirectory == b.isDirectory)
+          {
+              return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+          }
+          else
+          {
+              return (a.isDirectory) ? -1 : 1;
+          }
+        })
+        this.items$.next(items);
+      });
 
     this.parentDataProvider$ = this.parent$.pipe(
-      map(parent => parent ? parent.dataProvider.id : null),
+      map((parent) => (parent ? parent.dataProvider.id : null)),
       distinctUntilChanged(),
-      switchMap(id => {
-        if(!id) return of(null);
-        return this.store.select(DataProvidersState.getDataProviderById).pipe(
-          map(fn => fn(id))
-        )
+      switchMap((id) => {
+        if (!id) return of(null);
+        return this.store.select(DataProvidersState.getDataProviderById).pipe(map((fn) => fn(id)));
       })
-    )
+    );
 
     this.isWriteable$ = this.parentDataProvider$.pipe(
       map((dataProvider) => dataProvider && !dataProvider.readonly),
@@ -311,90 +315,83 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
       .subscribe(([{ $event, item }, items]) => {
         //double click
-        if(item.isDirectory) {
-          this.navigateTo(item.dataProvider.id, item.asset ? this.path.assets.concat(item.asset) : [])
-        }
-        else {
-
+        if (item.isDirectory) {
+          this.navigateTo(item.dataProvider.id, item.asset ? this.path.assets.concat(item.asset) : []);
+        } else {
         }
       });
 
-    this.onRowClick$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{ $event, item }, items]) => {
-        if (
-          !this.selection.isMultipleSelection() ||
-          (!$event.shiftKey && !$event.ctrlKey && this.selection.selected.length <= 1)
-        ) {
-          this.lastSelectedItem = item;
-          //single-selection mode
-          if (this.selection.isSelected(item)) return;
+    this.onRowClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.items$)).subscribe(([{ $event, item }, items]) => {
+      if (
+        !this.selection.isMultipleSelection() ||
+        (!$event.shiftKey && !$event.ctrlKey && this.selection.selected.length <= 1)
+      ) {
+        this.lastSelectedItem = item;
+        //single-selection mode
+        if (this.selection.isSelected(item)) return;
 
-          this.selection.clear();
-          this.selection.select(item);
-          return;
-        }
-
-        if ($event.shiftKey) {
-          if (!this.lastSelectedItem) this.lastSelectedItem = item;
-          let index1 = items.indexOf(this.lastSelectedItem);
-          let index2 = items.indexOf(item);
-          let selection = items
-            .slice(Math.min(index1, index2), Math.max(index1, index2) + 1)
-            .filter((item) => !this.selection.isSelected(item));
-          this.selection.select(...selection);
-          this.lastSelectedItem = item;
-          return;
-        }
-
-        this.selection.toggle(item);
-        this.lastSelectedItem = this.selection.isSelected(item) ? item : null;
+        this.selection.clear();
+        this.selection.select(item);
         return;
-      });
+      }
 
-      this.showCreate$ = combineLatest(this.allowCreate$, this.isWriteable$).pipe(
-        map(([allowCreate, isWriteable])=> {
-          return allowCreate && isWriteable
-        })
-      )
+      if ($event.shiftKey) {
+        if (!this.lastSelectedItem) this.lastSelectedItem = item;
+        let index1 = items.indexOf(this.lastSelectedItem);
+        let index2 = items.indexOf(item);
+        let selection = items
+          .slice(Math.min(index1, index2), Math.max(index1, index2) + 1)
+          .filter((item) => !this.selection.isSelected(item));
+        this.selection.select(...selection);
+        this.lastSelectedItem = item;
+        return;
+      }
 
-      this.showCopy$ = combineLatest(this.allowCopy$, selectionChange$).pipe(
-        map(([allowCopy])=> {
-          if(!allowCopy) return false;
-          let selected = this.selection.selected;
-          //disallow copying the entire data provider
-          if(selected.length == 0 || selected.some(v => !v.asset)) return false;
-          return true;
-        })
-      )
+      this.selection.toggle(item);
+      this.lastSelectedItem = this.selection.isSelected(item) ? item : null;
+      return;
+    });
 
-      this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
-        map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
-      )
+    this.showCreate$ = combineLatest(this.allowCreate$, this.isWriteable$).pipe(
+      map(([allowCreate, isWriteable]) => {
+        return allowCreate && isWriteable;
+      })
+    );
 
-      this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
-        map(([allowDelete, showMove]) => allowDelete && showMove)
-      )
+    this.showCopy$ = combineLatest(this.allowCopy$, selectionChange$).pipe(
+      map(([allowCopy]) => {
+        if (!allowCopy) return false;
+        let selected = this.selection.selected;
+        //disallow copying the entire data provider
+        if (selected.length == 0 || selected.some((v) => !v.asset)) return false;
+        return true;
+      })
+    );
 
-      this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
-        map(([allowRename, isWriteable]) => {
-          return allowRename && isWriteable && this.selection.selected.length == 1
-        })
-      )
+    this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
+      map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
+    );
 
-      this.showUpload$ = this.allowUpload$;
+    this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
+      map(([allowDelete, showMove]) => allowDelete && showMove)
+    );
 
-      this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
-        map(()=> {
-          if(!this.allowDownload) return false;
-          let selected = this.selection.selected;
-          if(selected.length == 0 || selected.some(v => v.isDirectory)) return false;
-          return true;
-        })
-      )
+    this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
+      map(([allowRename, isWriteable]) => {
+        return allowRename && isWriteable && this.selection.selected.length == 1;
+      })
+    );
 
+    this.showUpload$ = this.allowUpload$;
 
-
+    this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
+      map(() => {
+        if (!this.allowDownload) return false;
+        let selected = this.selection.selected;
+        if (selected.length == 0 || selected.some((v) => v.isDirectory)) return false;
+        return true;
+      })
+    );
   }
 
   providerToFileSystemItem(dataProvider: DataProvider): FileSystemItem {
@@ -407,10 +404,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       metadata: {
         description: dataProvider.description,
         permissions: dataProvider.readonly ? "readonly" : "",
-      }
-    }
+      },
+    };
   }
-  
+
   assetToFileSystemItem(asset: DataProviderAsset): FileSystemItem {
     let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[asset.dataProviderId];
     return {
@@ -419,81 +416,169 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       dataProvider: dataProvider,
       asset: asset,
       isDirectory: asset.isDirectory,
-      metadata: asset.metadata
-    }
+      metadata: asset.metadata,
+    };
   }
 
   navigateToRoot() {
-    this.path$.next(null)
+    this.path$.next(null);
     this.onPathChange.emit(null);
   }
   navigateTo(dataProviderId: string, assets: DataProviderAsset[]) {
     this.path = {
       dataProviderId: dataProviderId,
-      assets: assets
-    }
+      assets: assets,
+    };
 
-    this.onPathChange.emit(this.path)
+    this.onPathChange.emit(this.path);
   }
 
   onCreateClick() {
-
-  }
-
-  onCopyClick() {
-
-  }
-
-  onMoveClick() {
-
-  }
-
-  onDeleteClick() {
-
-  }
-
-  onRenameClick() {
-    let asset = this.selection.selected[0].asset
     let dialogRef = this.dialog.open(RenameDialogComponent, {
       width: "350px",
       disableClose: true,
       data: {
-        asset: asset
+        title: "New Directory",
+        name: "",
+      },
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(withLatestFrom(this.parent$))
+      .subscribe(([result, parent]) => {
+        if (result) {
+          this.isLoading = true;
+          this.dataProviderService
+            .createCollectionAsset(parent.dataProvider.id, `${parent.asset.assetPath}/${result}`)
+            .pipe(take(1))
+            .subscribe(
+              () => {
+                this.refresh$.next(true);
+              },
+              (err) => {},
+              () => {
+                this.isLoading = false;
+              }
+            );
+        }
+      });
+  }
+
+  onCopyClick() {}
+
+  onMoveClick() {}
+
+  onDeleteClick() {
+    let dialogConfig: Partial<AlertDialogConfig> = {
+      title: "Delete Files",
+      message: `Are you sure you want to delete the selected files?`,
+      buttons: [
+        {
+          color: null,
+          value: true,
+          label: "Delete",
+        },
+        {
+          color: null,
+          value: false,
+          label: "Cancel",
+        },
+      ],
+    };
+    let dialogRef = this.dialog.open(AlertDialogComponent, {
+      width: "400px",
+      data: dialogConfig,
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe(
+      (result) => {
+
+        if(result) {
+          let assets = this.selection.selected.map(item => item.asset).filter(asset => asset !== null);
+          let reqs = assets.map(asset => this.dataProviderService.deleteAsset(asset.dataProviderId, asset.assetPath, true).pipe(
+            take(1),
+            map(result => ({asset: asset, error: null})),
+            catchError(err => of({asset: asset, error: err as HttpErrorResponse}))
+          ));
+          forkJoin(reqs)
+          .subscribe(
+            (result) => {
+              let errors = result.filter(result => result.error);
+
+              if(errors.length != 0) {
+                let dialogConfig: Partial<AlertDialogConfig> = {
+                  title: "Error",
+                  message: `Unable to delete ${errors.length} of the selected files/folders. ${errors.map(error => error.asset.name).join(', ')}`,
+                  buttons: [
+                    {
+                      color: null,
+                      value: false,
+                      label: "Close",
+                    },
+                  ],
+                };
+                let dialogRef = this.dialog.open(AlertDialogComponent, {
+                  width: "400px",
+                  data: dialogConfig,
+                });
+              }
+              
+              
+              this.refresh$.next(true);
+            },
+            (err) => {},
+            () => {
+              this.isLoading = false;
+            }
+          );
+        }
       }
+    );
+  }
+
+  onRenameClick() {
+    let asset = this.selection.selected[0].asset;
+    let dialogRef = this.dialog.open(RenameDialogComponent, {
+      width: "350px",
+      disableClose: true,
+      data: {
+        title: "Rename File",
+        name: asset.name,
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if(result) {
+      if (result) {
         this.isLoading = true;
-        this.dataProviderService.renameAsset(asset.dataProviderId, asset.assetPath, result).pipe(
-          take(1)
-        ).subscribe(
-          () => {
-            this.refresh$.next(true);
-          },
-          (err)=>{},
-          ()=>{
-            this.isLoading=false
-          })
+        this.dataProviderService
+          .renameAsset(asset.dataProviderId, asset.assetPath, result)
+          .pipe(take(1))
+          .subscribe(
+            () => {
+              this.refresh$.next(true);
+            },
+            (err) => {},
+            () => {
+              this.isLoading = false;
+            }
+          );
       }
     });
   }
 
-  onUploadClick() {
+  onUploadClick() {}
 
-  }
-
-  onDownloadClick() {
-
-  }
+  onDownloadClick() {}
 
   ngOnInit(): void {}
 
   ngAfterViewInit() {
-    this.items$.subscribe(items => {
+    this.items$.subscribe((items) => {
       this.dataSource.data = items;
-      this.dataSource.sort = this.sort
-    })
+      this.dataSource.sort = this.sort;
+    });
   }
 
   ngOnDestroy() {

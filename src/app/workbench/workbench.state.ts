@@ -198,7 +198,7 @@ import {
 import { SonificationJob, SonificationJobResult } from "../jobs/models/sonification";
 import { IImageData } from "../data-files/models/image-data";
 import { MatDialog } from "@angular/material/dialog";
-import { AlertDialogComponent, AlertDialogConfig } from "./components/alert-dialog/alert-dialog.component";
+import { AlertDialogConfig, AlertDialogComponent } from '../utils/alert-dialog/alert-dialog.component';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "215396f5-1224-4e17-be97-e60f8aeb0a82",

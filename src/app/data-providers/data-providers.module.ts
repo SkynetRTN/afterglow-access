@@ -13,7 +13,7 @@ import { DxFileManagerModule } from "devextreme-angular";
 import { FileManagerComponent } from "./components/file-manager/file-manager.component";
 import { SaveDialogComponent } from "./components/save-dialog/save-dialog.component";
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { RenameDialogComponent } from './components/rename-dialog/rename-dialog.component';
+import { RenameDialogComponent } from './components/name-dialog/name-dialog.component';
 import { UtilsModule } from '../utils/utils.module';
 
 @NgModule({

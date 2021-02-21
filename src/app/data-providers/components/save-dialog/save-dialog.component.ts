@@ -14,7 +14,6 @@ import { DataProvidersModule } from "../../data-providers.module";
 import { DataProvidersState } from "../../data-providers.state";
 import { DataProvider } from "../../models/data-provider";
 import { FormControl, Validators } from "@angular/forms";
-import { AlertDialogComponent } from "../../../workbench/components/alert-dialog/alert-dialog.component";
 import { HttpErrorResponse } from "@angular/common/http";
 
 export interface SaveDialogResult {

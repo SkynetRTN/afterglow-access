@@ -1,7 +1,6 @@
 import { Component, OnInit, Inject, OnDestroy, AfterViewInit } from "@angular/core";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { DataFile } from "../../../data-files/models/data-file";
-import { AlertDialogConfig, AlertDialogComponent } from "../alert-dialog/alert-dialog.component";
 import { Store, Actions, ofActionDispatched } from "@ngxs/store";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { DataProvidersState } from "../../../data-providers/data-providers.state";
@@ -12,6 +11,7 @@ import { AfterglowDataProviderService } from "../../services/afterglow-data-prov
 import { SaveDialogComponent, SaveDialogResult } from "../../../data-providers/components/save-dialog/save-dialog.component";
 import { DataProviderAsset } from "../../../data-providers/models/data-provider-asset";
 import { HttpErrorResponse } from "@angular/common/http";
+import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 
 export interface FileDialogConfig {
   files: DataFile[];
