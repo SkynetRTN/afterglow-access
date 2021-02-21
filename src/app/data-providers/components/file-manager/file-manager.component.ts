@@ -40,9 +40,10 @@ import { DataProvider } from "../../models/data-provider";
 import { SelectionModel } from "@angular/cdk/collections";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
-import { RenameDialogComponent } from "../name-dialog/name-dialog.component";
+import { NameDialogComponent } from "../name-dialog/name-dialog.component";
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
+import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
 
 export interface FileSystemItem {
   id: string;
@@ -147,6 +148,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   @Input()
   allowedFileExtensions: string[] = ['image/*'];
+
+  @Input()
+  maxUploadSize: number = null;
 
   @Output()
   readonly onSelectedAssetOpened: EventEmitter<DataProviderAsset> = new EventEmitter<DataProviderAsset>();
@@ -489,7 +493,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   }
 
   onCreateClick() {
-    let dialogRef = this.dialog.open(RenameDialogComponent, {
+    let dialogRef = this.dialog.open(NameDialogComponent, {
       width: "350px",
       disableClose: true,
       data: {
@@ -671,7 +675,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   onRenameClick() {
     let asset = this.selection.selected[0].asset;
-    let dialogRef = this.dialog.open(RenameDialogComponent, {
+    let dialogRef = this.dialog.open(NameDialogComponent, {
       width: "350px",
       disableClose: true,
       data: {
@@ -704,7 +708,41 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   }
 
   onUploadChange(files: FileList) {
-    console.log(files);
+    if(files.length == 0) return;
+    let maxSize = Math.max(...Array.from(files).map(file => file.size))
+    if(this.maxUploadSize !== null && maxSize > this.maxUploadSize) {
+      let dialogConfig: Partial<AlertDialogConfig> = {
+        title: "Exceeds Maximum Allowed Size",
+        message: `The maximum allowed size for each file is ${Math.round(100*this.maxUploadSize/1000000)/100} Mb.`,
+        buttons: [
+          {
+            color: null,
+            value: false,
+            label: "Close",
+          },
+        ],
+      };
+      let dialogRef = this.dialog.open(AlertDialogComponent, {
+        width: "450px",
+        data: dialogConfig,
+      });
+      return;
+    }
+
+
+    let dialogRef = this.dialog.open(UploadDialogComponent, {
+      width: "550px",
+      disableClose: true,
+      data: {
+        files: files,
+        target: this.parent
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      this.fileUpload.nativeElement.value = "";
+      this.refresh$.next(true);
+    });
   }
 
   onDownloadClick() {}

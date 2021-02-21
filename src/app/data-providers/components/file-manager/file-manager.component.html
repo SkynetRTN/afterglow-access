@@ -7,7 +7,7 @@
       <button mat-raised-button *ngIf="showDelete$ | async" (click)="onDeleteClick()"><mat-icon>delete</mat-icon> Delete</button>
       <button mat-raised-button *ngIf="showRename$ | async" (click)="onRenameClick()"><mat-icon>drive_file_rename_outline</mat-icon> Rename</button>
       <button mat-raised-button *ngIf="showUpload$ | async" (click)="onUploadClick()"><mat-icon>publish</mat-icon> Upload</button>
-      <input [hidden]="true" type="file" [accept]="allowedFileExtensions?.join(',')" (change)="onUploadChange($event.target.files)" #fileUpload>
+      <input [hidden]="true" type="file" [accept]="allowedFileExtensions?.join(',')" (change)="onUploadChange($event.target.files)" multiple #fileUpload>
       <button mat-raised-button *ngIf="showDownload$ | async" (click)="onDownloadClick()"><mat-icon>get_app</mat-icon> Download</button>
     </div>
     <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" >

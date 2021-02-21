@@ -9,7 +9,7 @@ import { isValidFilename } from '../../../utils/validators';
   templateUrl: './name-dialog.component.html',
   styleUrls: ['./name-dialog.component.scss']
 })
-export class RenameDialogComponent implements OnInit, AfterViewInit {
+export class NameDialogComponent implements OnInit, AfterViewInit {
   @ViewChild('nameInput')
   nameInput: ElementRef;
   title = '';
@@ -19,7 +19,7 @@ export class RenameDialogComponent implements OnInit, AfterViewInit {
     }
   )
 
-  constructor(private dialogRef: MatDialogRef<RenameDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: any) {
+  constructor(private dialogRef: MatDialogRef<NameDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: any) {
     this.title = data.title;
     this.nameForm.get('name').setValue(data.name);
     this.nameForm.updateValueAndValidity();

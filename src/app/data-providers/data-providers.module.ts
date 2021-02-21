@@ -13,9 +13,10 @@ import { DxFileManagerModule } from "devextreme-angular";
 import { FileManagerComponent } from "./components/file-manager/file-manager.component";
 import { SaveDialogComponent } from "./components/save-dialog/save-dialog.component";
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { RenameDialogComponent } from './components/name-dialog/name-dialog.component';
+import { NameDialogComponent } from './components/name-dialog/name-dialog.component';
 import { UtilsModule } from '../utils/utils.module';
 import { TargetDialogComponent } from './components/target-dialog/target-dialog.component';
+import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.component';
 
 @NgModule({
   imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, DxFileManagerModule, ReactiveFormsModule, FlexLayoutModule, UtilsModule],
@@ -25,11 +26,12 @@ import { TargetDialogComponent } from './components/target-dialog/target-dialog.
     SaveDialogComponent,
     FileManagerComponent,
     SaveDialogComponent,
-    RenameDialogComponent,
-    TargetDialogComponent
+    NameDialogComponent,
+    TargetDialogComponent,
+    UploadDialogComponent
   ],
   exports: [DataProviderDetailComponent],
   providers: [],
-  entryComponents: [OpenFileDialogComponent, SaveDialogComponent, RenameDialogComponent, TargetDialogComponent],
+  entryComponents: [OpenFileDialogComponent, SaveDialogComponent, NameDialogComponent, TargetDialogComponent, UploadDialogComponent],
 })
 export class DataProvidersModule {}

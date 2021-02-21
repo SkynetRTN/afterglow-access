@@ -8,7 +8,15 @@ import { appConfig } from "../../../environments/environment";
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
 import { getCoreApiUrl } from "../../../environments/app-config";
-import UploadInfo from "devextreme/file_management/upload_info";
+
+
+export interface UploadInfo {
+  bytesUploaded: number;
+  chunkCount: number;
+  customData: any;
+  chunkBlob: Blob;
+  chunkIndex: number;
+};
 
 @Injectable()
 export class AfterglowDataProviderService {
