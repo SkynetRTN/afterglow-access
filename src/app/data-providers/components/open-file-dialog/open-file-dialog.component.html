@@ -5,6 +5,7 @@
 <!-- See https://js.devexpress.com/Demos/WidgetsGallery/Demo/FileManager/UICustomization/Angular/Light/ for customization -->
 <mat-dialog-content>
   <app-file-manager
+    #fileManager
     [path]="lastPath$ | async"
     [allowCreate]="true"
     [allowCopy]="true"
@@ -15,7 +16,7 @@
     [maxUploadSize]="50000000"
     [allowDownload]="true"
     [selectionMode]="'multiple'"
-    (onAssetSelectionChange)="selectedAssets$.next($event)"
+    (onSelectionChange)="selectedFileSystemItems$.next($event)"
     (onSelectedAssetOpened)="openSelectedAssets()"
     (onPathChange)="onPathChange($event)"
   >

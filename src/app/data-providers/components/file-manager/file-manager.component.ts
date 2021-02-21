@@ -156,7 +156,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   readonly onSelectedAssetOpened: EventEmitter<DataProviderAsset> = new EventEmitter<DataProviderAsset>();
 
   @Output()
-  readonly onAssetSelectionChange: EventEmitter<DataProviderAsset[]> = new EventEmitter<DataProviderAsset[]>();
+  readonly onSelectionChange: EventEmitter<FileSystemItem[]> = new EventEmitter<FileSystemItem[]>();
 
   @Output()
   readonly onPathChange: EventEmitter<DataProviderPath> = new EventEmitter<DataProviderPath>();
@@ -207,6 +207,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     private jobService: JobService
   ) {
     let selectionChange$ = this.selection.changed.pipe(startWith(null));
+
+    this.selection.changed.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.onSelectionChange.emit(this.selection.selected))
 
     this.error$.pipe(
       takeUntil(this.destroy$),
@@ -368,8 +372,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       .subscribe(([{ $event, item }, items]) => {
         //double click
         if (item.isDirectory) {
-          this.navigateTo(item.dataProvider.id, item.asset ? this.path.assets.concat(item.asset) : []);
+          this.navigateToChildItem(item);
         } else {
+          this.onSelectedAssetOpened.emit(item.asset)
         }
       });
 
@@ -477,12 +482,17 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     };
   }
 
-  navigateToRoot(clearError=true) {
+  public navigateToRoot(clearError=true) {
     if(clearError) this.clearError();
     this.path$.next(null);
     this.onPathChange.emit(null);
   }
-  navigateTo(dataProviderId: string, assets: DataProviderAsset[], clearError=true) {
+
+  public navigateToChildItem(item: FileSystemItem) {
+    this.navigateTo(item.dataProvider.id, item.asset ? this.path.assets.concat(item.asset) : []);
+  }
+
+  public navigateTo(dataProviderId: string, assets: DataProviderAsset[], clearError=true) {
     if(clearError) this.clearError();
     this.path = {
       dataProviderId: dataProviderId,
@@ -804,7 +814,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     this.store.dispatch(new CreateJob(job, 1000, corrId));
 
     return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1)).subscribe(() => {
-      
+
     })
   }
 
@@ -841,10 +851,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     // }
     // this.store.dispatch(new NavigateToCollectionAsset(asset))
     // this.onCurrentAssetChanged.emit(asset);
-  }
-
-  onSelectionChange($event) {
-    // this.onAssetSelectionChange.emit($event.selectedItems.map((item) => item.dataItem));
   }
 
   onSelectedFileOpened($event) {

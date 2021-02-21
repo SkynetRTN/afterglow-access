@@ -11,6 +11,7 @@ import { DataProviderAsset } from "../../models/data-provider-asset";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
 import { BatchImportJob } from "../../../jobs/models/batch-import";
 import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
+import { FileSystemItem, FileManagerComponent } from '../file-manager/file-manager.component';
 
 @Component({
   selector: "app-open-file-dialog",
@@ -18,8 +19,9 @@ import { DataProvidersState, DataProviderPath } from "../../data-providers.state
   styleUrls: ["./open-file-dialog.component.scss"],
 })
 export class OpenFileDialogComponent implements OnInit, OnDestroy {
+  @ViewChild('fileManager') fileManager: FileManagerComponent;
   lastPath$: Observable<DataProviderPath>;
-  selectedAssets$ = new BehaviorSubject<DataProviderAsset[]>([]);
+  selectedFileSystemItems$ = new BehaviorSubject<FileSystemItem[]>([]);
   selectionIsValid$: Observable<boolean>;
   destroy$: Subject<boolean> = new Subject<boolean>();
   loading: boolean = false;
@@ -32,7 +34,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     private dialogRef: MatDialogRef<OpenFileDialogComponent>,
     @Inject(MAT_DIALOG_DATA) private data: any
   ) {
-    this.selectionIsValid$ = this.selectedAssets$.pipe(
+    this.selectionIsValid$ = this.selectedFileSystemItems$.pipe(
       map((items) => items && (items.length == 1 && items[0].isDirectory) || (items.every((item) => !item.isDirectory) && items.length != 0)),
       distinctUntilChanged()
     );
@@ -47,16 +49,6 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     this.destroy$.unsubscribe();
   }
 
-  onSelectedFileOpened($event) {
-    // let fileSystemItem: FileSystemItem = $event.file;
-    // if (!fileSystemItem) return;
-
-    // let asset: DataProviderAsset = fileSystemItem.dataItem;
-    // if (!asset || asset.isDirectory) return;
-
-    // this.open([asset]);
-  }
-
   onErrorOccurred($event) {
     console.log($event);
   }
@@ -66,19 +58,15 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   }
 
   openSelectedAssets() {
-    let selectedAssets = this.selectedAssets$.value;
-    if (!selectedAssets) return;
+    let selectedItems = this.selectedFileSystemItems$.value;
+    if (!selectedItems) return;
 
-    if(selectedAssets.length == 1 && selectedAssets[0].isDirectory) {
-      let asset = selectedAssets[0];
-      let dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderById)(asset.dataProviderId);
-      if(!dataProvider) return;
-      // console.log("Setting path: ", `${dataProvider.name}${asset.assetPath}`)
-      // this.store.dispatch(new SetCurrentPath(`${dataProvider.name}${asset.assetPath}`));
+    if(selectedItems.length == 1 && selectedItems[0].isDirectory) {
+      this.fileManager.navigateToChildItem(selectedItems[0]);
       return;
     }
 
-    selectedAssets = selectedAssets.filter((asset) => !asset.isDirectory);
+    let selectedAssets = selectedItems.filter((item) => !item.isDirectory && item.asset).map(item => item.asset);
     if (selectedAssets.length == 0) return;
 
     this.open(selectedAssets);
