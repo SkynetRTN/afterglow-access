@@ -15,6 +15,7 @@ import { SaveDialogComponent } from "./components/save-dialog/save-dialog.compon
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { RenameDialogComponent } from './components/name-dialog/name-dialog.component';
 import { UtilsModule } from '../utils/utils.module';
+import { TargetDialogComponent } from './components/target-dialog/target-dialog.component';
 
 @NgModule({
   imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, DxFileManagerModule, ReactiveFormsModule, FlexLayoutModule, UtilsModule],
@@ -25,9 +26,10 @@ import { UtilsModule } from '../utils/utils.module';
     FileManagerComponent,
     SaveDialogComponent,
     RenameDialogComponent,
+    TargetDialogComponent
   ],
   exports: [DataProviderDetailComponent],
   providers: [],
-  entryComponents: [OpenFileDialogComponent, SaveDialogComponent, RenameDialogComponent],
+  entryComponents: [OpenFileDialogComponent, SaveDialogComponent, RenameDialogComponent, TargetDialogComponent],
 })
 export class DataProvidersModule {}

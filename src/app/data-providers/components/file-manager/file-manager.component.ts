@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ViewChild, Output, EventEmitter, Input, AfterViewInit } from "@angular/core";
+import { Component, OnInit, Inject, ViewChild, Output, EventEmitter, Input, AfterViewInit, ElementRef } from "@angular/core";
 import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
 import { SetCurrentPath } from "../../data-providers.actions";
 import { Store, Actions, ofActionDispatched } from "@ngxs/store";
@@ -42,6 +42,7 @@ import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { RenameDialogComponent } from "../name-dialog/name-dialog.component";
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
+import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
 
 export interface FileSystemItem {
   id: string;
@@ -73,10 +74,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   private path$ = new BehaviorSubject<DataProviderPath>(null);
 
   @Input()
-  selectionMode: "single" | "multiple" = "multiple";
+  selectionMode: "none" | "single" | "multiple" = "multiple";
 
   @Input()
   showToolbar: boolean = true;
+
+  @Input()
+  showMetadataColumns: boolean = true;
 
   @Input("allowCreate")
   set allowCreate(allow: boolean) {
@@ -142,7 +146,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   private allowDownload$ = new BehaviorSubject<boolean>(null);
 
   @Input()
-  allowedFileExtensions: string[] = [];
+  allowedFileExtensions: string[] = ['image/*'];
 
   @Output()
   readonly onSelectedAssetOpened: EventEmitter<DataProviderAsset> = new EventEmitter<DataProviderAsset>();
@@ -153,9 +157,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @Output()
   readonly onPathChange: EventEmitter<DataProviderPath> = new EventEmitter<DataProviderPath>();
 
+  @Output()
+  readonly onParentChange: EventEmitter<FileSystemItem> = new EventEmitter<FileSystemItem>();
+
   destroy$: Subject<boolean> = new Subject<boolean>();
 
   parent$: Observable<FileSystemItem>;
+  parent: FileSystemItem;
   parentDataProvider$: Observable<DataProvider>;
   refresh$ = new BehaviorSubject<boolean>(null);
   items$ = new Subject<FileSystemItem[]>();
@@ -171,6 +179,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   columns$: Observable<FileSystemDetailsColumn[]>;
   displayedColumns$: Observable<string[]>;
   isWriteable$: Observable<boolean>;
+  error$ = new BehaviorSubject<string>(null);
+  uploadFile: File = null;
+  @ViewChild('fileUpload') fileUpload: ElementRef;
 
   resolvePath = (object, path, defaultValue) => path.split(".").reduce((o, p) => (o ? o[p] : defaultValue), object);
   @ViewChild(MatSort) sort: MatSort;
@@ -193,6 +204,14 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   ) {
     let selectionChange$ = this.selection.changed.pipe(startWith(null));
 
+    this.error$.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(3000)
+    ).subscribe((e)=>{
+      if(!e) return;
+      this.error$.next(null);
+    })
+
     this.parent$ = this.path$.pipe(
       map((path) => {
         if (!path) {
@@ -211,6 +230,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
 
+    this.parent$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((parent => {
+      this.parent = parent;
+      this.onParentChange.emit(parent)
+    }))
+
     combineLatest(this.parent$.pipe(distinctUntilChanged((a, b) => a && b && a.id == b.id)), this.refresh$)
       .pipe(
         takeUntil(this.destroy$),
@@ -219,27 +245,43 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           if (!parent) {
             return this.dataProviderService.getDataProviders().pipe(
               // delay(50000),
-              map((dataProviders) => dataProviders.map((dataProvider) => this.providerToFileSystemItem(dataProvider))),
-              tap((v) => (this.isLoading = false))
+              map((dataProviders) => {
+                return {
+                  items: dataProviders.map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
+                  error: null
+                }
+              }),
+              catchError(err => of({items: [], error: err}))
             );
           } else {
             return this.dataProviderService
               .getAssets(parent.dataProvider.id, parent.asset ? parent.asset.assetPath : "")
               .pipe(
-                map((assets) => assets.map((asset) => this.assetToFileSystemItem(asset))),
-                tap((v) => (this.isLoading = false))
+                map((assets) => {
+                  return {
+                    items: assets.map((asset) => this.assetToFileSystemItem(asset)),
+                    error: null
+                  }
+                }),
+                catchError(err => of({items: [], error: err}))
               );
           }
         })
       )
-      .subscribe((items) => {
+      .subscribe(({items, error}) => {
+        this.isLoading = false;
+        if(error) {
+          this.error$.next((error as HttpErrorResponse).error.message);
+          this.navigateToRoot(false);
+          return;
+        }
         let selectedIds = this.selection.selected.map((item) => item.id);
         this.selection.clear();
         this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
         items = items.sort((a,b) => {
           if(a.isDirectory == b.isDirectory)
           {
-              return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+              return (a.name.toLowerCase() < b.name.toLowerCase()) ? -1 : (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : 0;
           }
           else
           {
@@ -288,7 +330,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     );
 
     this.displayedColumns$ = this.columns$.pipe(
-      map((columns) => ["select", "name"].concat(columns.map((column) => column.caption)))
+      map((columns) => {
+        let result = [];
+        if(this.selectionMode != 'none') result.push('select');
+        result.push('name');
+        if(this.showMetadataColumns) result = result.concat(columns.map((column) => column.caption))
+        return result;
+      })
     );
 
     this.isAllSelected$ = combineLatest(this.items$, selectionChange$).pipe(
@@ -322,6 +370,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       });
 
     this.onRowClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.items$)).subscribe(([{ $event, item }, items]) => {
+      if(this.selectionMode == 'none') return;
       if (
         !this.selection.isMultipleSelection() ||
         (!$event.shiftKey && !$event.ctrlKey && this.selection.selected.length <= 1)
@@ -394,6 +443,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     );
   }
 
+  clearError() {
+    this.error$.next(null);
+  }
+
   providerToFileSystemItem(dataProvider: DataProvider): FileSystemItem {
     return {
       id: dataProvider.id,
@@ -420,11 +473,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     };
   }
 
-  navigateToRoot() {
+  navigateToRoot(clearError=true) {
+    if(clearError) this.clearError();
     this.path$.next(null);
     this.onPathChange.emit(null);
   }
-  navigateTo(dataProviderId: string, assets: DataProviderAsset[]) {
+  navigateTo(dataProviderId: string, assets: DataProviderAsset[], clearError=true) {
+    if(clearError) this.clearError();
     this.path = {
       dataProviderId: dataProviderId,
       assets: assets,
@@ -449,8 +504,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       .subscribe(([result, parent]) => {
         if (result) {
           this.isLoading = true;
+          let parentAssetPath = parent.asset ? parent.asset.assetPath : ''
           this.dataProviderService
-            .createCollectionAsset(parent.dataProvider.id, `${parent.asset.assetPath}/${result}`)
+            .createCollectionAsset(parent.dataProvider.id, `${parentAssetPath}${result}`)
             .pipe(take(1))
             .subscribe(
               () => {
@@ -465,9 +521,83 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       });
   }
 
-  onCopyClick() {}
+  handleMove(keepOriginal: boolean=false) {
+    let actionName = keepOriginal ? 'Copy' : 'Move';
+    let selectedItems = [...this.selection.selected];
+    let dialogRef = this.dialog.open(TargetDialogComponent, {
+      width: "500px",
+      disableClose: true,
+      data: {
+        title: `${actionName} to`,
+        action: actionName,
+        path: this.path,
+        source: this.parent
+      },
+    });
 
-  onMoveClick() {}
+    dialogRef
+      .afterClosed()
+      .subscribe(result => {
+        if (result) {
+          this.isLoading = true;
+          let path = result.path as DataProviderPath;
+          let target =result.target as FileSystemItem;
+          let assets = selectedItems.map(item => item.asset).filter(asset => asset !== null);
+          let parentAssetPath = target.asset ? target.asset.assetPath : ''
+          let reqs = assets.map(asset => {
+            let newAssetPath = `${parentAssetPath}/${asset.name}`
+            return this.dataProviderService.copyAsset(asset.dataProviderId, asset.assetPath, target.dataProvider.id, newAssetPath, keepOriginal).pipe(
+              take(1),
+              map(result => ({asset: asset, error: null})),
+              catchError(err => of({asset: asset, error: err as HttpErrorResponse}))
+            )
+          })
+          forkJoin(reqs)
+          .subscribe(
+            (result) => {
+              let errors = result.filter(result => result.error);
+
+              if(errors.length != 0) {
+                let dialogConfig: Partial<AlertDialogConfig> = {
+                  title: "Error",
+                  message: `Unable to ${actionName.toLowerCase()} ${errors.length} of the selected files/folders. ${errors.map(error => error.asset.name).join(', ')}`,
+                  buttons: [
+                    {
+                      color: null,
+                      value: false,
+                      label: "Close",
+                    },
+                  ],
+                };
+                let dialogRef = this.dialog.open(AlertDialogComponent, {
+                  width: "450px",
+                  data: dialogConfig,
+                });
+              }
+              else if(errors.length != assets.length) {
+                this.navigateTo(path.dataProviderId, path.assets)
+              }
+              
+              
+              
+            },
+            (err) => {},
+            () => {
+              this.isLoading = false;
+            }
+          );
+         
+        }
+      });
+  }
+
+  onCopyClick() {
+    return this.handleMove(true)
+  }
+
+  onMoveClick() {
+    return this.handleMove()
+  }
 
   onDeleteClick() {
     let dialogConfig: Partial<AlertDialogConfig> = {
@@ -487,7 +617,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       ],
     };
     let dialogRef = this.dialog.open(AlertDialogComponent, {
-      width: "400px",
+      width: "450px",
       data: dialogConfig,
       disableClose: true,
     });
@@ -496,6 +626,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       (result) => {
 
         if(result) {
+          this.isLoading = true;
           let assets = this.selection.selected.map(item => item.asset).filter(asset => asset !== null);
           let reqs = assets.map(asset => this.dataProviderService.deleteAsset(asset.dataProviderId, asset.assetPath, true).pipe(
             take(1),
@@ -520,7 +651,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
                   ],
                 };
                 let dialogRef = this.dialog.open(AlertDialogComponent, {
-                  width: "400px",
+                  width: "450px",
                   data: dialogConfig,
                 });
               }
@@ -568,9 +699,17 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onUploadClick() {}
+  onUploadClick() {
+    this.fileUpload.nativeElement.click();
+  }
+
+  onUploadChange(files: FileList) {
+    console.log(files);
+  }
 
   onDownloadClick() {}
+
+
 
   ngOnInit(): void {}
 

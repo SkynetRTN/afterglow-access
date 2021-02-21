@@ -1,0 +1,28 @@
+<div mat-dialog-title class="dialog-title">
+  <h4 i18n>{{title}}</h4>
+</div>
+
+<mat-dialog-content>
+  <app-file-manager
+  [path]="path"
+  [allowCreate]="true"
+  [showMetadataColumns]='false'
+  [selectionMode]="'none'"
+  (onPathChange)="onPathChange($event)"
+  (onParentChange)="onParentChange($event)"
+>
+</app-file-manager>
+</mat-dialog-content>
+<div *ngIf="targetIsReadonly" class="alert alert-warning" style="margin-top: 10px;">
+  This location is read-only
+</div>
+<div *ngIf="targetIsSource" class="alert alert-warning" style="margin-top: 10px;">
+  Choose a location other than the source directory
+</div>
+
+<mat-dialog-actions style="justify-content: flex-end; flex-wrap: nowrap" class="pb-4">
+  <button fxFlex="0 0 auto" mat-raised-button (click)="submit()"  [disabled]="targetIsReadonly || targetIsSource">
+    {{action}}
+  </button>
+  <button fxFlex="0 0 auto" mat-raised-button (click)="cancel()">Cancel</button>
+</mat-dialog-actions>

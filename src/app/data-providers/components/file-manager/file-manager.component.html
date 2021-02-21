@@ -7,6 +7,7 @@
       <button mat-raised-button *ngIf="showDelete$ | async" (click)="onDeleteClick()"><mat-icon>delete</mat-icon> Delete</button>
       <button mat-raised-button *ngIf="showRename$ | async" (click)="onRenameClick()"><mat-icon>drive_file_rename_outline</mat-icon> Rename</button>
       <button mat-raised-button *ngIf="showUpload$ | async" (click)="onUploadClick()"><mat-icon>publish</mat-icon> Upload</button>
+      <input [hidden]="true" type="file" [accept]="allowedFileExtensions?.join(',')" (change)="onUploadChange($event.target.files)" #fileUpload>
       <button mat-raised-button *ngIf="showDownload$ | async" (click)="onDownloadClick()"><mat-icon>get_app</mat-icon> Download</button>
     </div>
     <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" >
@@ -14,22 +15,29 @@
     </div>
     
   </div>
-  <div class="path" fxLayout="row" fxLayoutAlign="start center" style="width: 100%">
-    <span class="path-item">
-      <button mat-flat-button (click)="navigateToRoot()">Files</button>
-    </span>
-    <ng-container *ngIf="parentDataProvider$ | async; let parentDataProvider">
-      <span class="path-item">
-        <button mat-flat-button (click)="navigateTo(parentDataProvider.id, [])">{{ parentDataProvider.name }}</button>
-      </span>
-      <ng-container *ngFor="let asset of path?.assets; let i = index">
-        <span class="path-item">
-          <button mat-flat-button (click)="navigateTo(path.dataProviderId, path.assets.slice(0, i+1))">
-            {{ asset.name }}
-          </button>
-        </span>
-      </ng-container>
+  <div class="path" fxFlex="0 0 auto" fxLayout="row wrap" fxLayoutAlign="start center" style="width: 100%">
+    <ng-container *ngIf="error$ | async; else pathBlock; let error">
+      <div (click)="clearError()" class="alert-danger" style="width: 100%; padding: 10px; vertical-align: center; text-align: center">{{error}}</div>
     </ng-container>
+    <ng-template #pathBlock>
+      <span class="path-item">
+        <button mat-flat-button (click)="navigateToRoot()">Files</button>
+      </span>
+      <ng-container *ngIf="parentDataProvider$ | async; let parentDataProvider">
+        <span class="path-item">
+          <button mat-flat-button (click)="navigateTo(parentDataProvider.id, [])">{{ parentDataProvider.name }}</button>
+        </span>
+        <ng-container *ngFor="let asset of path?.assets; let i = index">
+          <span class="path-item">
+            <button mat-flat-button (click)="navigateTo(path.dataProviderId, path.assets.slice(0, i+1))">
+              {{ asset.name }}
+            </button>
+          </span>
+        </ng-container>
+      </ng-container>
+      
+    </ng-template>
+
   </div>
   <div fxFlex="1 1 auto" class="file-items-panel">
     <div class="loading-shade" *ngIf="isLoading">
