@@ -745,7 +745,68 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onDownloadClick() {}
+  onDownloadClick() {
+    let assets = this.selection.selected.map(item => item.asset).filter(asset => asset !== null);
+    if (assets.length == 0) return;
+
+    let dataProviderId = assets[0].dataProviderId;
+    //only assets from the same data provider can be downloaded
+    assets = assets.filter((asset) => asset.dataProviderId == dataProviderId);
+
+    let job: BatchAssetDownloadJob = {
+      type: JobType.BatchAssetDownload,
+      id: null,
+      provider_id: parseInt(dataProviderId),
+      paths: assets.map((asset) => asset.assetPath),
+    };
+
+    let corrId = this.corrGen.next();
+    let onCreateJobSuccess$ = this.actions$.pipe(
+      ofActionDispatched(CreateJobSuccess),
+      filter((action) => (action as CreateJobSuccess).correlationId == corrId),
+      take(1),
+      flatMap((action) => {
+        let jobId = (action as CreateJobSuccess).job.id;
+        let dialogConfig: JobProgressDialogConfig = {
+          title: "Preparing download",
+          message: `Please wait while we prepare the files for download.`,
+          progressMode: "indeterminate",
+          job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
+        };
+        let dialogRef = this.dialog.open(JobProgressDialogComponent, {
+          width: "400px",
+          data: dialogConfig,
+          disableClose: true,
+        });
+
+        return dialogRef.afterClosed().pipe(
+          flatMap((result) => {
+            if (!result) {
+              return of(null);
+            }
+
+            return this.jobService.getJobResultFile(jobId, "download").pipe(
+              tap((data) => {
+                saveAs(data, assets.length == 1 ? assets[0].name : "afterglow-files.zip");
+              })
+            );
+          })
+        );
+      })
+    );
+
+    let onCreateJobFail$ = this.actions$.pipe(
+      ofActionDispatched(CreateJobFail),
+      filter((action) => (action as CreateJobFail).correlationId == corrId),
+      take(1)
+    );
+
+    this.store.dispatch(new CreateJob(job, 1000, corrId));
+
+    return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1)).subscribe(() => {
+      
+    })
+  }
 
 
 
