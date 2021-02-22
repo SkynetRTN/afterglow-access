@@ -83,7 +83,7 @@ export class UploadDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     forkJoin(reqs).pipe(
       takeUntil(this.destroy$),
     ).subscribe(
-      (v) => console.log("ALL UPLOADS HAVE COMPLETED: ", v),
+      (v) => {},
       (err) => {},
       () => {this.completed = true;}
     )
