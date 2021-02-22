@@ -111,6 +111,10 @@
       width: 60px;
     }
 
+    td.name {
+      white-space: nowrap;
+    }
+
     tr {
       cursor: default;
       background-color: mat-color($background, "app-bar") !important;
