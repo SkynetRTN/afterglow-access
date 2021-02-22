@@ -26,6 +26,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
   loading: boolean = false;
   progress: number = 0;
+  allowedFileExtensions = ['.fits,.fit']
 
   constructor(
     private store: Store,
