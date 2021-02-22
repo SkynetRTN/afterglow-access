@@ -255,7 +255,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
               // delay(50000),
               map((dataProviders) => {
                 return {
-                  items: dataProviders.map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
+                  items: dataProviders.filter(dataProvider => dataProvider.browseable).map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
                   error: null
                 }
               }),
