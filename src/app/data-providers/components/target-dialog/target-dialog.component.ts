@@ -37,7 +37,7 @@ export class TargetDialogComponent implements OnInit, AfterViewInit {
     this.path = path;
   }
 
-  onParentChange(parent: FileSystemItem) {
+  onCurrentDirectoryChange(parent: FileSystemItem) {
     this.target = parent;
     this.targetIsSource = this.source && this.target && this.source.id == this.target.id;
     this.targetIsReadonly = !this.target || this.target.dataProvider.readonly
