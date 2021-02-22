@@ -76,8 +76,6 @@ import { ThemeDialogComponent } from "./components/theme-dialog/theme-dialog.com
 import { AvatarModule } from "ngx-avatar";
 import { WorkbenchViewerLayoutComponent } from "./containers/workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.component";
-import { DxFileManagerModule } from "devextreme-angular";
-import { FileBrowserComponent } from "./components/file-browser/file-browser.component";
 import { SaveChangesDialogComponent } from "./components/file-dialog/file-dialog.component";
 import { JobProgressDialogComponent } from "./components/job-progress-dialog/job-progress-dialog.component";
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
@@ -118,7 +116,6 @@ export const COMPONENTS = [
   ThemeDialogComponent,
   WorkbenchViewerPanelComponent,
   WorkbenchViewerLayoutComponent,
-  FileBrowserComponent,
   SaveChangesDialogComponent,
   FileListItemComponent,
   JobProgressDialogComponent,
@@ -148,7 +145,6 @@ export const COMPONENTS = [
     ThemePickerModule,
     AfterglowPlotlyModule,
     AvatarModule,
-    DxFileManagerModule,
   ],
 
   declarations: COMPONENTS,

@@ -156,18 +156,18 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   readonly onSelectedAssetOpened: EventEmitter<DataProviderAsset> = new EventEmitter<DataProviderAsset>();
 
   @Output()
-  readonly onSelectionChange: EventEmitter<FileSystemItem[]> = new EventEmitter<FileSystemItem[]>();
-
-  @Output()
   readonly onPathChange: EventEmitter<DataProviderPath> = new EventEmitter<DataProviderPath>();
 
   @Output()
-  readonly onParentChange: EventEmitter<FileSystemItem> = new EventEmitter<FileSystemItem>();
+  readonly onSelectionChange: EventEmitter<FileSystemItem[]> = new EventEmitter<FileSystemItem[]>();
+
+  @Output()
+  readonly onCurrentDirectoryChange: EventEmitter<FileSystemItem> = new EventEmitter<FileSystemItem>();
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  parent$: Observable<FileSystemItem>;
-  parent: FileSystemItem;
+  currentDirectory$: Observable<FileSystemItem>;
+  currentDirectory: FileSystemItem;
   parentDataProvider$: Observable<DataProvider>;
   refresh$ = new BehaviorSubject<boolean>(null);
   items$ = new Subject<FileSystemItem[]>();
@@ -220,7 +220,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       this.error$.next(null);
     })
 
-    this.parent$ = this.path$.pipe(
+    this.currentDirectory$ = this.path$.pipe(
       map((path) => {
         if (!path) {
           //root file system item
@@ -238,14 +238,14 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.parent$.pipe(
+    this.currentDirectory$.pipe(
       takeUntil(this.destroy$)
     ).subscribe((parent => {
-      this.parent = parent;
-      this.onParentChange.emit(parent)
+      this.currentDirectory = parent;
+      this.onCurrentDirectoryChange.emit(parent)
     }))
 
-    combineLatest(this.parent$.pipe(distinctUntilChanged((a, b) => a && b && a.id == b.id)), this.refresh$)
+    combineLatest(this.currentDirectory$.pipe(distinctUntilChanged((a, b) => a && b && a.id == b.id)), this.refresh$)
       .pipe(
         takeUntil(this.destroy$),
         switchMap(([parent]) => {
@@ -299,7 +299,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         this.items$.next(items);
       });
 
-    this.parentDataProvider$ = this.parent$.pipe(
+    this.parentDataProvider$ = this.currentDirectory$.pipe(
       map((parent) => (parent ? parent.dataProvider.id : null)),
       distinctUntilChanged(),
       switchMap((id) => {
@@ -440,7 +440,11 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.showUpload$ = this.allowUpload$;
+    this.showUpload$ = combineLatest(this.allowUpload$, this.isWriteable$).pipe(
+      map(([allowUpload, isWriteable]) => {
+        return allowUpload && isWriteable;
+      })
+    );
 
     this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
       map(() => {
@@ -514,7 +518,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
     dialogRef
       .afterClosed()
-      .pipe(withLatestFrom(this.parent$))
+      .pipe(withLatestFrom(this.currentDirectory$))
       .subscribe(([result, parent]) => {
         if (result) {
           this.isLoading = true;
@@ -545,7 +549,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         title: `${actionName} to`,
         action: actionName,
         path: this.path,
-        source: this.parent
+        source: this.currentDirectory
       },
     });
 
@@ -745,7 +749,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       disableClose: true,
       data: {
         files: files,
-        target: this.parent
+        target: this.currentDirectory
       },
     });
 

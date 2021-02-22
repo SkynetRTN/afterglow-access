@@ -3,6 +3,8 @@
 </div>
 <mat-dialog-content>
   <app-file-manager
+    #fileManager
+    [path]="lastPath$ | async"
     [allowCreate]="true"
     [allowCopy]="false"
     [allowMove]="false"
@@ -11,8 +13,9 @@
     [allowUpload]="false"
     [allowDownload]="false"
     [selectionMode]="'single'"
-    (onAssetSelectionChange)="selectedAssets$.next($event)"
+    (onSelectionChange)="selectedAssets$.next($event)"
     (onSelectedAssetOpened)="onSelectedAssetOpened($event)"
+    (onCurrentDirectoryChange)="onCurrentDirectoryChange($event)"
   >
   </app-file-manager>
 </mat-dialog-content>
@@ -26,10 +29,10 @@
 </mat-form-field>
 
 <mat-dialog-actions style="justify-content: flex-end" class="pb-4">
-  <span class="alert alert-danger mr-4" *ngIf="(currentDataProvider$ | async)?.readonly"
+  <span class="alert alert-danger mr-4" *ngIf="(currentDirectory$ | async)?.dataProvider?.readonly"
     >This location is read-only. Please choose a different directory.</span
   >
-  <button mat-raised-button (click)="onSaveAsBtnClick()" [disabled]="!nameFormControl.valid || !(destinationValid$ | async)">
+  <button mat-raised-button (click)="onSaveClick$.next(true)" [disabled]="!nameFormControl.valid || !(destinationValid$ | async)">
     Save
   </button>
   <button mat-raised-button [mat-dialog-close]="false">Cancel</button>

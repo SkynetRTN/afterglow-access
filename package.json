@@ -40,8 +40,6 @@
     "change-case": "^3.1.0",
     "core-js": "^2.6.5",
     "deepmerge": "^3.3.0",
-    "devextreme": "20.2.4",
-    "devextreme-angular": "20.2.4",
     "downloadjs": "^1.4.7",
     "file-saver": "^2.0.2",
     "font-awesome": "^4.7.0",

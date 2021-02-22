@@ -3,18 +3,18 @@ import { ImportAssets, ImportAssetsCompleted } from "../../data-providers.action
 import { Store, Actions, ofActionCompleted } from "@ngxs/store";
 import { Observable, Subject, BehaviorSubject, combineLatest } from "rxjs";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { map, distinctUntilChanged, tap, take, takeUntil } from "rxjs/operators";
+import { map, distinctUntilChanged, tap, take, takeUntil, withLatestFrom } from "rxjs/operators";
 import { LoadLibrary } from "../../../data-files/data-files.actions";
 import { FocusFileListItem } from "../../../workbench/workbench.actions";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { DataProviderAsset } from "../../models/data-provider-asset";
-import FileSystemItem from "devextreme/file_management/file_system_item";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
 import { DataProvidersModule } from "../../data-providers.module";
-import { DataProvidersState } from "../../data-providers.state";
+import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
 import { DataProvider } from "../../models/data-provider";
 import { FormControl, Validators } from "@angular/forms";
 import { HttpErrorResponse } from "@angular/common/http";
+import { FileSystemItem, FileManagerComponent } from "../file-manager/file-manager.component";
 
 export interface SaveDialogResult {
   dataProviderId: string;
@@ -27,14 +27,16 @@ export interface SaveDialogResult {
   styleUrls: ["./save-dialog.component.scss"],
 })
 export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
-  selectedAssets$ = new BehaviorSubject<DataProviderAsset[]>([]);
+  selectedAssets$ = new Subject<FileSystemItem[]>();
+  currentDirectory$ = new BehaviorSubject<FileSystemItem>(null);
+  onSaveClick$ = new Subject<boolean>();
   destinationValid$: Observable<boolean>;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  currentDataProvider$: Observable<DataProvider>;
 
   @ViewChild("nameInput") nameInput: ElementRef;
-
+  @ViewChild("fileManager") fileManager: FileManagerComponent;
   nameFormControl = new FormControl("", [Validators.required, Validators.pattern(/^[\w\-. ]+/)]);
+  lastPath$: Observable<DataProviderPath>;
 
   constructor(
     private store: Store,
@@ -44,23 +46,34 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(MAT_DIALOG_DATA) private data: any,
     public dialog: MatDialog
   ) {
-    // if (data && data.name) {
-    //   this.nameFormControl.setValue(data.name);
-    // }
-    // this.currentDataProvider$ = this.store.select(DataProvidersState.getCurrentDataProvider).pipe(distinctUntilChanged());
-    // let currentAssetPath$ = this.store.select(DataProvidersState.getCurrentAssetPath).pipe(distinctUntilChanged());
+    this.lastPath$ = this.store.select(DataProvidersState.getLastPath);
 
-    // this.destinationValid$ = combineLatest([this.currentDataProvider$, currentAssetPath$]).pipe(
-    //   map(([destDataProvider, destAssetPath]) => {
-    //     return destDataProvider && !destDataProvider.readonly && destAssetPath != null;
-    //   }),
-    //   distinctUntilChanged()
-    // );
+    if (data && data.name) {
+      this.nameFormControl.setValue(data.name);
+    }
 
-    // this.selectedAssets$.pipe(takeUntil(this.destroy$)).subscribe((selectedAssets) => {
-    //   if (selectedAssets.length != 1 || (selectedAssets[0] && selectedAssets[0].isDirectory)) return;
-    //   this.nameFormControl.setValue(selectedAssets[0].name);
-    // });
+    this.destinationValid$ = this.currentDirectory$.pipe(
+      map((cwd) => {
+        return cwd && cwd.dataProvider && !cwd.dataProvider.readonly;
+      }),
+      distinctUntilChanged()
+    );
+
+    this.selectedAssets$.pipe(takeUntil(this.destroy$)).subscribe((selectedAssets) => {
+      if (selectedAssets.length != 1 || (selectedAssets[0] && selectedAssets[0].isDirectory)) return;
+      this.nameFormControl.setValue(selectedAssets[0].name);
+    });
+
+    this.onSaveClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.currentDirectory$)).subscribe(([v, cwd]) => {
+      let currentDataProvider = cwd.dataProvider;
+      let parentAssetPath = cwd.asset ? cwd.asset.assetPath : "";
+      this.saveAs(currentDataProvider.id, `${parentAssetPath}/${this.nameFormControl.value}`);
+    });
+  }
+
+  saveAs(dataProviderId: string, path: string) {
+    let result: SaveDialogResult = { dataProviderId: dataProviderId, assetPath: path };
+    this.dialogRef.close(result);
   }
 
   ngOnInit(): void {}
@@ -78,6 +91,10 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
     this.destroy$.unsubscribe();
   }
 
+  onCurrentDirectoryChange(item: FileSystemItem) {
+    this.currentDirectory$.next(item);
+  }
+
   onSelectedAssetOpened(asset: DataProviderAsset) {
     if (!asset || asset.isDirectory) return;
 
@@ -90,18 +107,5 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onErrorOccurred($event) {
     console.log($event);
-  }
-
-  onSaveAsBtnClick() {
-    // let currentDataProvider = this.store.selectSnapshot(DataProvidersState.getCurrentDataProvider);
-    // let currentAssetPath = this.store.selectSnapshot(DataProvidersState.getCurrentAssetPath);
-
-    // let path = !currentAssetPath ? `/${this.nameFormControl.value}` : `/${currentAssetPath}/${this.nameFormControl.value}`;
-    // this.saveAs(currentDataProvider.id, path);
-  }
-
-  saveAs(dataProviderId: string, path: string) {
-    let result: SaveDialogResult = { dataProviderId: dataProviderId, assetPath: path };
-    this.dialogRef.close(result);
   }
 }

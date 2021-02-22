@@ -9,7 +9,6 @@ import { SvgModule } from "../svg/svg.module";
 import { PipesModule } from "../pipes/pipes.module";
 import { DataProviderDetailComponent } from "./components/data-provider-detail/data-provider-detail.component";
 import { OpenFileDialogComponent } from "./components/open-file-dialog/open-file-dialog.component";
-import { DxFileManagerModule } from "devextreme-angular";
 import { FileManagerComponent } from "./components/file-manager/file-manager.component";
 import { SaveDialogComponent } from "./components/save-dialog/save-dialog.component";
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -19,7 +18,7 @@ import { TargetDialogComponent } from './components/target-dialog/target-dialog.
 import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.component';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, DxFileManagerModule, ReactiveFormsModule, FlexLayoutModule, UtilsModule],
+  imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, ReactiveFormsModule, FlexLayoutModule, UtilsModule],
   declarations: [
     DataProviderDetailComponent,
     OpenFileDialogComponent,

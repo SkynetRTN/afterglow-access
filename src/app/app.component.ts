@@ -20,7 +20,6 @@ import { SetFullScreen, Initialize } from "./workbench/workbench.actions";
 import { finalize, map, tap, filter, take } from "rxjs/operators";
 import { Navigate } from "@ngxs/router-plugin";
 import { WasmService } from "./wasm.service";
-import themes from "devextreme/ui/themes";
 // import * as FontFaceObserver from "fontfaceobserver"
 
 @Component({
@@ -272,8 +271,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.fontWeight != "default") this.renderer.addClass(document.body, this.fontWeight);
 
     let colorTheme = this.themeStorage.getCurrentColorTheme();
-
-    themes.current(colorTheme.devExTheme.name);
   }
   getTitle(state, parent) {
     var data = [];
