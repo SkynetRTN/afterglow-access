@@ -1498,7 +1498,7 @@ export class DataFilesState {
             return true;
           }) as ImageHdu[];
 
-        let layers = hdus.map((hdu) => {
+        let layers = hdus.sort((a,b)=> (a.order > b.order) ? 1 : -1).map((hdu) => {
           let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
           return {
             pixels: normalizedImageData.tiles[tileIndex].pixels as Uint32Array,
