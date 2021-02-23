@@ -189,7 +189,6 @@ export const WORKBENCH_FILE_LIST_VALUE_ACCESSOR: any = {
 export class WorkbenchDataFileListComponent implements OnDestroy {
   @Input("focusedItem")
   set focusedItem(item: { fileId: string; hduId: string }) {
-    console.log("FOCUSED ITEM CHANGED", item)
     this.focusedItem$.next(item);
   }
   get focusedItem() {
@@ -208,7 +207,6 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
 
   @Input("selectedFileIds")
   set selectedFileIds(selectedFileIds: string[]) {
-    console.log("SELECTED FILE IDS CHANGED: ", selectedFileIds)
     this.selectedFileIds$.next(selectedFileIds);
   }
   get selectedFileIds() {

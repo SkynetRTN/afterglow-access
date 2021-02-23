@@ -24,7 +24,6 @@ import { LoadHduHeader } from "../../../data-files/data-files.actions";
 export class AlignerPageComponent implements OnInit {
   @Input("hduIds")
   set hduIds(hduIds: string[]) {
-    console.log("NEW HDU IDS")
     this.hduIds$.next(hduIds);
   }
   get hduIds() {
@@ -34,7 +33,6 @@ export class AlignerPageComponent implements OnInit {
 
   @Input("config")
   set config(config: AligningPanelConfig) {
-    console.log("NEW CONFIG")
     this.config$.next(config);
   }
   get config() {

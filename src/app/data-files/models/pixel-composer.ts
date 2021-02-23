@@ -37,7 +37,6 @@ export function compose(
         result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
         result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
       } else if (layers[k].blendMode == BlendMode.Luminosity) {
-        // if (tr > 0.49 && tr < 0.51) console.log(`(${tr},${tg},${tb}) - (${result8[j] / 255.0},${result8[j + 1] / 255.0},${result8[j + 2] / 255.0})`)
         let blendHsy = rgbToHsv(tr, tg, tb);
         let baseHsy = rgbToHsv(result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0);
         let resultRgb = hsvToRgb(baseHsy[0], baseHsy[1], blendHsy[2]);
