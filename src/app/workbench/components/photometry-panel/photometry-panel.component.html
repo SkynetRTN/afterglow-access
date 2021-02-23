@@ -336,11 +336,8 @@
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Select Image(s) to Photometer</mat-label>
               <mat-select multiple formControlName="selectedHduIds">
-                <mat-option *ngFor="let hdu of hdus" [value]="hdu.id"
-                  >{{ dataFileEntities[hdu.fileId].name }}
-                  <ng-container *ngIf="dataFileEntities[hdu.fileId].hduIds.length > 1">
-                    - Channel {{ dataFileEntities[hdu.fileId].hduIds.indexOf(hdu.id) }}</ng-container
-                  >
+                <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+                  {{getHduOptionLabel(hdu.id) | async}}
                 </mat-option>
               </mat-select>
             </mat-form-field>

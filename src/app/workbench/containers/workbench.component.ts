@@ -84,6 +84,7 @@ import {
   UpdateWcsCalibrationSettings,
   ImportFromSurveyFail,
   ImportFromSurveySuccess,
+  CloseViewer,
 } from "../workbench.actions";
 import {
   LoadDataProviders,
@@ -128,7 +129,7 @@ import { CentroidSettings } from "../models/centroid-settings";
 import { SourceExtractionSettings } from "../models/source-extraction-settings";
 import { AddSources } from "../sources.actions";
 import { PhotometryPanelState } from "../models/photometry-file-state";
-import { WcsCalibrationJob, WcsCalibrationJobResult } from "../../jobs/models/wcs_calibration"
+import { WcsCalibrationJob, WcsCalibrationJobResult } from "../../jobs/models/wcs_calibration";
 import {
   ViewerPanelCanvasMouseEvent,
   ViewerPanelMarkerMouseEvent,
@@ -145,6 +146,7 @@ import {
   LoadLibraryFail,
   SaveDataFileSuccess,
   SaveDataFileFail,
+  InvalidateHeader,
 } from "../../data-files/data-files.actions";
 import { Transform, getImageToViewportTransform } from "../../data-files/models/transformation";
 import { Normalization } from "../../data-files/models/normalization";
@@ -175,7 +177,7 @@ import {
 import { JobsState } from "../../jobs/jobs.state";
 import { saveAs } from "file-saver/dist/FileSaver";
 import { JobService } from "../../jobs/services/jobs";
-import { AlertDialogConfig, AlertDialogComponent } from '../../utils/alert-dialog/alert-dialog.component';
+import { AlertDialogConfig, AlertDialogComponent } from "../../utils/alert-dialog/alert-dialog.component";
 
 enum SaveFileAction {
   Save = "save",
@@ -354,10 +356,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           fileEntities[a.fileId].name > fileEntities[b.fileId].name
             ? 1
             : a.fileId === b.fileId
-              ? a.order > b.order
-                ? 1
-                : -1
+            ? a.order > b.order
+              ? 1
               : -1
+            : -1
         );
       })
     );
@@ -367,9 +369,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
     this.focusedViewerId$ = this.store.select(WorkbenchState.getFocusedViewerId);
 
-    this.canSplitFocusedViewer$ = this.store.select(WorkbenchState.getViewers).pipe(
-      map(viewers => viewers && viewers.length > 1)
-    )
+    this.canSplitFocusedViewer$ = this.store
+      .select(WorkbenchState.getViewers)
+      .pipe(map((viewers) => viewers && viewers.length > 1));
 
     this.focusedImageViewer$ = this.store.select(WorkbenchState.getFocusedImageViewer);
     this.focusedImageViewerId$ = this.focusedImageViewer$.pipe(
@@ -507,10 +509,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         return this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
           map((fn) => fn(viewerId)),
           distinctUntilChanged(),
-          switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(
-            map((fn) => fn(headerId)),
-            distinctUntilChanged(),
-          ))
+          switchMap((headerId) =>
+            this.store.select(DataFilesState.getHeaderById).pipe(
+              map((fn) => fn(headerId)),
+              distinctUntilChanged()
+            )
+          )
         );
       })
     );
@@ -687,15 +691,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.wcsCalibrationActiveJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
       this.wcsCalibrationPanelState$.pipe(
-        map(state => state ? state.activeJobId : null),
-        distinctUntilChanged(),
-      )
+        map((state) => (state ? state.activeJobId : null)),
+        distinctUntilChanged()
+      ),
     ]).pipe(
       map(([jobEntities, activeJobId]) => {
         if (!activeJobId) return null;
         return jobEntities[activeJobId] as WcsCalibrationJob;
       })
-    )
+    );
 
     this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
     this.viewerSyncMode$ = store.select(WorkbenchState.getViewerSyncMode);
@@ -762,7 +766,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
           );
 
-          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$).pipe(withLatestFrom(refHeader$), skip(1));
+          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$).pipe(
+            withLatestFrom(refHeader$),
+            skip(1)
+          );
 
           // detect changes to target file headers so that transforms which use WCS can be resynced once the headers load
           // let targetHeaders$ = combineLatest(
@@ -790,11 +797,25 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         // auditTime(10),
       )
       .subscribe(
-        ([viewerSyncEnabled, viewerSyncMode, visibleViewerIds, [[refImageTransform, refViewportTransform, refImageData], refHeader]]) => {
-          if (!viewerSyncEnabled || !refHeader || !refHeader.loaded || !refImageTransform || !refViewportTransform || !refImageData) {
+        ([
+          viewerSyncEnabled,
+          viewerSyncMode,
+          visibleViewerIds,
+          [[refImageTransform, refViewportTransform, refImageData], refHeader],
+        ]) => {
+          if (
+            !viewerSyncEnabled ||
+            !refHeader ||
+            !refHeader.loaded ||
+            !refImageTransform ||
+            !refViewportTransform ||
+            !refImageData
+          ) {
             return;
           }
-          this.store.dispatch(new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id));
+          this.store.dispatch(
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id)
+          );
         }
       );
 
@@ -1165,9 +1186,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onWcsCalibrationSelectedHduIdsChange(selectedHduIds: string[]) {
-    this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: selectedHduIds }))
+    this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: selectedHduIds }));
   }
-
 
   /* image viewer mouse event handlers */
   onImageClick($event: ViewerPanelCanvasMouseEvent) {
@@ -1201,7 +1221,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           customMarkerPanelStateId
         ];
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[imageDataId];
-        if(!targetImageData) return;
+        if (!targetImageData) return;
         let settings = this.store.selectSnapshot(WorkbenchState.getCustomMarkerPanelConfig);
         let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
         let selectedCustomMarkers = Object.values(targetCustomMarkerPanelState.markerEntities).filter(
@@ -1247,7 +1267,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         );
         let imageDataId = rawImageDataId ? rawImageDataId : normalizedImageDataId;
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[imageDataId];
-        if(!targetImageData) return;
+        if (!targetImageData) return;
         let plotterPageSettings = this.store.selectSnapshot(WorkbenchState.getPlottingPanelConfig);
         if ($event.hitImage) {
           let x = $event.imageX;
@@ -1289,7 +1309,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         let rawImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
         if (!rawImageDataId || !viewer.hduId) return;
         let targetImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[rawImageDataId];
-        if(!targetImageData) return;
+        if (!targetImageData) return;
         let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
 
         let photometryPanelConfig = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
@@ -1643,8 +1663,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
+        () => {},
+        (err) => {},
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1689,8 +1709,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
+        () => {},
+        (err) => {},
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1734,8 +1754,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
+        () => {},
+        (err) => {},
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1763,8 +1783,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
+        () => {},
+        (err) => {},
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1809,8 +1829,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
+        () => {},
+        (err) => {},
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1854,8 +1874,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
+        () => {},
+        (err) => {},
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1920,9 +1940,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
-        (err) => { },
-        () => { }
+        () => {},
+        (err) => {},
+        () => {}
       );
   }
 
@@ -1934,6 +1954,95 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       i = 0;
     while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
     return a1.substring(0, i);
+  }
+
+  onSplitSelectedFileListItemsBtnClick() {
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
+        let files = selectedFileIds.map((id) => fileEntities[id]).filter(file => file.hduIds.length > 1);
+        if (files.length == 0) {
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: "Error",
+            message: `None of the selected files contain multiple HDUs.`,
+            buttons: [
+              {
+                color: null,
+                value: false,
+                label: "Close",
+              },
+            ],
+          };
+          let dialogRef = this.dialog.open(AlertDialogComponent, {
+            width: "400px",
+            data: dialogConfig,
+            disableClose: true,
+          });
+
+          return dialogRef.afterClosed();
+        }
+
+        let dialogConfig: Partial<AlertDialogConfig> = {
+          title: "Split Files",
+          message: `Are you sure you want to split the HDUs within each selected file into separate single-HDU files?`,
+          buttons: [
+            {
+              color: null,
+              value: true,
+              label: "Split Selected Files",
+            },
+            {
+              color: null,
+              value: false,
+              label: "Cancel",
+            },
+          ],
+        };
+        let dialogRef = this.dialog.open(AlertDialogComponent, {
+          width: "400px",
+          data: dialogConfig,
+          disableClose: true,
+        });
+
+        return dialogRef.afterClosed().pipe(
+          take(1),
+          flatMap((result) => {
+            if (!result) {
+              return of(null);
+            }
+            let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
+            let reqs = [];
+            files.forEach((file) => {
+              file.hduIds.forEach((hduId, index) => {
+                let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId]
+                let uuid = UUID.UUID();
+                let newFilename = file.name + '_' + index
+                viewers.filter(viewer => viewer.hduId == hduId || viewer.fileId == hdu.fileId).forEach(viewer => this.store.dispatch(new CloseViewer(viewer.id)))
+                this.store.dispatch(new InvalidateHeader(hduId));
+                reqs.push(
+                  this.dataFileService.updateFile(hduId, {
+                    group_id: uuid,
+                    name: hdu && hdu.name ? hdu.name : `${file.name}_${index}`,
+                    data_provider: null,
+                    asset_path: null,
+                    modified: true,
+                  })
+                );
+              });
+            });
+
+            return concat(...reqs);
+          })
+        );
+      })
+    )
+    .subscribe(
+      () => {},
+      (err) => {
+        throw err;
+      },
+      () => this.store.dispatch(new LoadLibrary())
+    );
   }
 
   onGroupSelectedFileListItemsBtnClick() {
@@ -2001,10 +2110,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               if (newFilename.length == 0) {
                 newFilename = `${files[0].name} - group`;
               }
+
+              let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
               let uuid = UUID.UUID();
               let reqs = [];
               files.forEach((file) => {
                 file.hduIds.forEach((hduId) => {
+                  let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId]
+                  viewers.filter(viewer => viewer.hduId == hduId || viewer.fileId == hdu.fileId).forEach(viewer => this.store.dispatch(new CloseViewer(viewer.id)))
+                  this.store.dispatch(new InvalidateHeader(hduId));
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
                       group_id: uuid,
@@ -2023,7 +2137,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(
-        () => { },
+        () => {},
         (err) => {
           throw err;
         },
@@ -2043,7 +2157,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((assets) => { });
+    dialogRef.afterClosed().subscribe((assets) => {});
   }
 
   refresh() {
@@ -2140,16 +2254,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     let width = pixelScale * getWidth(header);
     let height = pixelScale * getHeight(header);
     if (!focusedViewer.keepOpen) {
-      this.store.dispatch(new KeepViewerOpen(focusedViewer.id))
+      this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
     }
 
     let correlationId = this.corrGen.next();
 
     let importFromSurveyFail$ = this.actions$.pipe(
       ofActionDispatched(ImportFromSurveyFail),
-      filter<ImportFromSurveyFail>(action => action.correlationId == correlationId),
+      filter<ImportFromSurveyFail>((action) => action.correlationId == correlationId),
       take(1),
-      flatMap(v => {
+      flatMap((v) => {
         let dialogConfig: Partial<AlertDialogConfig> = {
           title: "Error",
           message: `An unexpected error occurred when importing the survey image.  Please try again later.`,
@@ -2169,46 +2283,47 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
         return dialogRef.afterClosed();
       })
-    )
+    );
 
-    this.actions$.pipe(
-      takeUntil(importFromSurveyFail$),
-      ofActionDispatched(ImportFromSurveySuccess),
-      filter<ImportFromSurveySuccess>(action => action.correlationId == correlationId),
-      take(1),
-      flatMap((action) => {
-        let surveyFileId = action.fileId;
-        this.store.dispatch(new LoadLibrary())
-        
-        let loadLibraryFail$ = this.actions$.pipe(
-          ofActionDispatched(LoadLibraryFail),
-          take(1)
-        )
+    this.actions$
+      .pipe(
+        takeUntil(importFromSurveyFail$),
+        ofActionDispatched(ImportFromSurveySuccess),
+        filter<ImportFromSurveySuccess>((action) => action.correlationId == correlationId),
+        take(1),
+        flatMap((action) => {
+          let surveyFileId = action.fileId;
+          this.store.dispatch(new LoadLibrary());
 
-        return this.actions$.pipe(
-          ofActionDispatched(LoadLibrarySuccess),
-          takeUntil(loadLibraryFail$),
-          take(1),
-          map(action => surveyFileId)
-        );
-      })
-    ).subscribe((surveyFileId) => {
-      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-      if (surveyFileId && surveyFileId in hduEntities) {
-        let hdu = hduEntities[surveyFileId];
-        this.store.dispatch(
-          new FocusFileListItem({
-            fileId: hdu.fileId,
-            hduId: hdu.id,
-          }, true)
-        );
-      }
-      
-    },
-    (err) => {},
-    () => {})
+          let loadLibraryFail$ = this.actions$.pipe(ofActionDispatched(LoadLibraryFail), take(1));
 
-
+          return this.actions$.pipe(
+            ofActionDispatched(LoadLibrarySuccess),
+            takeUntil(loadLibraryFail$),
+            take(1),
+            map((action) => surveyFileId)
+          );
+        })
+      )
+      .subscribe(
+        (surveyFileId) => {
+          let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+          if (surveyFileId && surveyFileId in hduEntities) {
+            let hdu = hduEntities[surveyFileId];
+            this.store.dispatch(
+              new FocusFileListItem(
+                {
+                  fileId: hdu.fileId,
+                  hduId: hdu.id,
+                },
+                true
+              )
+            );
+          }
+        },
+        (err) => {},
+        () => {}
+      );
 
     this.store.dispatch(
       new ImportFromSurvey(surveyDataProvider.id, centerRaDec[0], centerRaDec[1], width, height, correlationId)

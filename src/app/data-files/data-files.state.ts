@@ -499,6 +499,7 @@ export class DataFilesState {
             order: coreFile.group_order,
             modified: coreFile.modified,
             headerId: null,
+            name: coreFile.name,
           };
 
           hdus.push(hdu);

@@ -173,7 +173,7 @@ export class AlignerPageComponent implements OnInit {
       map(([hdu, file]) => {
         if (!hdu || !file) return "???";
         if (file.hduIds.length > 1) {
-          return `${file.name} - Channel ${file.hduIds.indexOf(hdu.id)}`;
+          return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
         }
         return file.name;
       })

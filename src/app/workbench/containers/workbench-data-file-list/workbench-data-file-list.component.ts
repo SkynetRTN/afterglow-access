@@ -134,6 +134,11 @@ export class FileListItemComponent implements OnInit {
 
   ngOnInit(): void {}
 
+  getHduLabel(hdu: IHdu, index: number) {
+    if(hdu.name) return hdu.name;
+    return hdu.name ? hdu.name : `Layer ${index}`
+  }
+
   toggleExpanded($event: MouseEvent) {
     $event.stopPropagation();
     this.onToggleExpanded.emit(this.fileId);

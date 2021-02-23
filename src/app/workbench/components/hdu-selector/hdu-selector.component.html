@@ -65,8 +65,7 @@
           </div>
         </ng-container>
         <div fxFlex="1 1 auto" class="label">
-          Channel {{ index }} - {{ hdu.order }}
-          <ng-container *ngIf="getHduFilter(hdu) | async; let hduFilter"> - {{ hduFilter }} </ng-container>
+          {{getHduLabel(hdu, index) | async}}
         </div>
       </div>
     </mat-list-option>

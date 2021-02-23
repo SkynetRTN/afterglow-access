@@ -1284,7 +1284,8 @@ export class WorkbenchState {
         state.viewerLayoutItems[panelId].type != "panel"
       ) {
         //if a valid panel ID was not provided
-        if (state.viewerLayoutItemIds.filter((id) => state.viewerLayoutItems[id].type == "panel").length == 0) {
+        let panelIds = state.viewerLayoutItemIds.filter((id) => state.viewerLayoutItems[id].type == "panel")
+        if (panelIds.length == 0) {
           //if no panels exist, create a new panel
           panelId = `PANEL_${state.nextViewerPanelIdSeed++}`;
           state.viewerLayoutItemIds.push(panelId);
@@ -1300,6 +1301,9 @@ export class WorkbenchState {
           rootContainer.itemIds.push(panelId);
         } else {
           // use currently focused panel
+          if(!state.focusedViewerPanelId) {
+            state.focusedViewerPanelId = panelIds[0]
+          }
           panelId = state.viewerLayoutItems[state.focusedViewerPanelId].id;
         }
       }

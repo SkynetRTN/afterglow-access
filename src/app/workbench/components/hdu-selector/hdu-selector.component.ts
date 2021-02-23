@@ -156,10 +156,21 @@ export class HduSelectorComponent implements OnInit {
     );
   }
 
-  getHduFilter(hdu: IHdu) {
-    return this.store.select(DataFilesState.getHeaderByHduId).pipe(
-      map((fn) => fn(hdu.id)),
-      map((header) => header && (getFilter(header) as string))
-    );
+  getHduLabel(hdu: IHdu, index: number) {
+    return combineLatest(
+      this.store.select(DataFilesState.getHduById).pipe(
+        map((fn) => fn(hdu.id))
+      ),
+      this.store.select(DataFilesState.getHeaderByHduId).pipe(
+        map((fn) => fn(hdu.id)),
+      )
+    ).pipe(
+      map(([hdu, header]) => {
+        let name = hdu && hdu.name ? hdu.name : `Layer ${index}`
+        let filter = header && getFilter(header) as string
+        return name;
+        // return name + (filter ? `- ${filter}` : '')
+      })
+    )
   }
 }

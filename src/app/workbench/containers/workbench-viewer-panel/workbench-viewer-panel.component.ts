@@ -190,7 +190,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       if (!hdu) return "";
 
       if (file.hduIds.length > 1) {
-        filename += ` [Channel ${file.hduIds.indexOf(hdu.id)}]`;
+        return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
       }
     } else if (file.hduIds.length > 1) {
       filename += ` [Composite]`;

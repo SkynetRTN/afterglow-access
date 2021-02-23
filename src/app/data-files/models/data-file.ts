@@ -49,6 +49,7 @@ export interface IHdu {
   headerId: string;
   order: number;
   modified: boolean;
+  name: string;
 }
 
 export interface ImageHdu extends IHdu {

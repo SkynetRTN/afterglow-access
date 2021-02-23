@@ -89,8 +89,8 @@
           </div>
 
           <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 15px">
-            <span [matTooltip]="(fileTooltip$ | async) + ' - Channel ' + i" [matTooltipShowDelay]="750"
-              >Channel {{ i }}</span
+            <span [matTooltip]="(fileTooltip$ | async) + getHduLabel(hdu, i)" [matTooltipShowDelay]="750"
+              >{{getHduLabel(hdu, i)}}</span
             >
           </div>
         </div>

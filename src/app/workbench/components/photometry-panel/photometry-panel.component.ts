@@ -64,6 +64,7 @@ import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
 import { DatePipe } from "@angular/common";
 import { SourceExtractionSettings } from "../../models/source-extraction-settings";
 import { JobsState } from "../../../jobs/jobs.state";
+import { DataFilesState } from '../../../data-files/data-files.state';
 
 @Component({
   selector: "app-photometry-panel",
@@ -291,6 +292,34 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   }
 
   ngOnChanges() {}
+
+  getHduOptionLabel(hduId: string) {
+    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
+      map((fn) => fn(hduId)),
+      filter((hdu) => hdu != null)
+    );
+
+    let file$ = hdu$.pipe(
+      map((hdu) => hdu.fileId),
+      distinctUntilChanged(),
+      flatMap((fileId) => {
+        return this.store.select(DataFilesState.getFileById).pipe(
+          map((fn) => fn(fileId)),
+          filter((hdu) => hdu != null)
+        );
+      })
+    );
+
+    return combineLatest(hdu$, file$).pipe(
+      map(([hdu, file]) => {
+        if (!hdu || !file) return "???";
+        if (file.hduIds.length > 1) {
+          return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
+        }
+        return file.name;
+      })
+    );
+  }
 
   selectSources(sources: Source[]) {
     let selectedSourceIds = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig).selectedSourceIds;

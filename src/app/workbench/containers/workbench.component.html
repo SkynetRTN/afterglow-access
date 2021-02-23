@@ -160,8 +160,17 @@
               aria-label="Group selected files"
               (click)="onGroupSelectedFileListItemsBtnClick()"
             >
-              <mat-icon>merge_type</mat-icon>
+              <mat-icon>call_merge</mat-icon>
               <span>Group selected files</span>
+            </button>
+            <button
+              mat-menu-item
+              [disabled]="(selectedFileIds$ | async)?.length == 0"
+              aria-label="Split selected files"
+              (click)="onSplitSelectedFileListItemsBtnClick()"
+            >
+              <mat-icon>call_split</mat-icon>
+              <span>Split selected files</span>
             </button>
           </mat-menu>
         </div>
@@ -426,7 +435,7 @@
               [WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool)
             "
           >
-            <h6 i18n>Channels</h6>
+            <h6 i18n>Layers</h6>
             <app-hdu-selector
               [fileId]="(focusedViewerFile$ | async)?.id"
               [hduType]="HduType.IMAGE"
