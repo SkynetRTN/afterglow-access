@@ -206,6 +206,7 @@ export class DataFileListItemComponent implements AfterContentInit, OnDestroy, O
     "[attr.aria-disabled]": "disabled.toString()",
   },
   template: "<ng-content></ng-content>",
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataFileSelectionListComponent
   extends _DataFileSelectionListBaseMixinBase
