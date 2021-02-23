@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, Input, OnDestroy, Output, EventEmitter } from "@angular/core";
+import { Component, OnInit, HostListener, Input, OnDestroy, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import { map, tap } from "rxjs/operators";
 import { MarkerType, Marker } from "../../models/marker";
 import { DELETE, ESCAPE } from "@angular/cdk/keycodes";
@@ -15,6 +15,7 @@ import { HduType } from "../../../data-files/models/data-file-type";
   selector: "app-custom-marker-panel",
   templateUrl: "./custom-marker-panel.component.html",
   styleUrls: ["./custom-marker-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   @Input() state: CustomMarkerPanelState;

@@ -8,6 +8,7 @@ import {
   Input,
   EventEmitter,
   Output,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 
 import * as moment from "moment";
@@ -68,6 +69,7 @@ import { JobsState } from "../../../jobs/jobs.state";
   selector: "app-photometry-panel",
   templateUrl: "./photometry-panel.component.html",
   styleUrls: ["./photometry-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @Input("primaryHdu")

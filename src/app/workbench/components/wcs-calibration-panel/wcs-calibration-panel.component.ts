@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
@@ -19,7 +19,8 @@ import { SourceExtractionDialogComponent } from '../source-extraction-dialog/sou
 @Component({
   selector: 'app-wcs-calibration-panel',
   templateUrl: './wcs-calibration-panel.component.html',
-  styleUrls: ['./wcs-calibration-panel.component.scss']
+  styleUrls: ['./wcs-calibration-panel.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   @Input("hduIds")

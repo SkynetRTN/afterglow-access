@@ -92,7 +92,7 @@ export type LoadTileEvent = {
     "[class.dragging]": "dragging",
     "[class.mouse-over-image]": "mouseOverImage",
   },
-  exportAs: "panZoomCanvas",
+  exportAs: "panZoomCanvas"
 })
 export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() imageData: IImageData<Uint32Array>;

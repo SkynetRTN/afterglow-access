@@ -1,4 +1,4 @@
-import { Component, OnInit, HostBinding, Input } from "@angular/core";
+import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 
 import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter } from "rxjs/operators";
@@ -19,10 +19,12 @@ import { LoadHduHeader } from "../../../data-files/data-files.actions";
   selector: "app-aligning-panel",
   templateUrl: "./aligning-panel.component.html",
   styleUrls: ["./aligning-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AlignerPageComponent implements OnInit {
   @Input("hduIds")
   set hduIds(hduIds: string[]) {
+    console.log("NEW HDU IDS")
     this.hduIds$.next(hduIds);
   }
   get hduIds() {
@@ -32,6 +34,7 @@ export class AlignerPageComponent implements OnInit {
 
   @Input("config")
   set config(config: AligningPanelConfig) {
+    console.log("NEW CONFIG")
     this.config$.next(config);
   }
   get config() {

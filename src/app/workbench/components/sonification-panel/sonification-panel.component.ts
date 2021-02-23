@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit, HostBinding, Input } from "@angular/core";
+import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 
 import { VgAPI } from "videogular2/compiled/core";
 import { Observable, Subscription, from, merge, interval, combineLatest, BehaviorSubject } from "rxjs";
@@ -29,6 +29,7 @@ import { getViewportRegion, Transform, getImageToViewportTransform } from "../..
   selector: "app-sonification-panel",
   templateUrl: "./sonification-panel.component.html",
   styleUrls: ["./sonification-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @Input("hdu")

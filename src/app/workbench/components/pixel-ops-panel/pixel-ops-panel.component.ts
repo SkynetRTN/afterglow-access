@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostBinding, Input } from "@angular/core";
+import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from "rxjs";
 import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap } from "rxjs/operators";
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from "@angular/forms";
@@ -31,6 +31,7 @@ interface PixelOpVariable {
   selector: "app-pixel-ops-panel",
   templateUrl: "./pixel-ops-panel.component.html",
   styleUrls: ["./pixel-ops-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   @Input("hduIds")

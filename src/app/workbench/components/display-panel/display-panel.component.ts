@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, Input } from "@angular/core";
+import { Component, OnInit, OnDestroy, AfterViewInit, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Subject, BehaviorSubject, Observable, combineLatest, of } from "rxjs";
 import { auditTime, map, tap, switchMap, distinct, distinctUntilChanged } from "rxjs/operators";
 
@@ -30,7 +30,7 @@ import { BlendMode } from "../../../data-files/models/blend-mode";
   selector: "app-display-panel",
   templateUrl: "./display-panel.component.html",
   styleUrls: ["./display-panel.component.scss"],
-  //changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input("file")

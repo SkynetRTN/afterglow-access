@@ -1,4 +1,4 @@
-import { Component, OnInit, HostBinding, Input } from "@angular/core";
+import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 import { map, tap, takeUntil, distinctUntilChanged, flatMap } from "rxjs/operators";
 import { StackFormData, WorkbenchTool, StackingPanelConfig } from "../../models/workbench-state";
@@ -16,6 +16,7 @@ import { DataFilesState } from "../../../data-files/data-files.state";
   selector: "app-stacking-panel",
   templateUrl: "./stacking-panel.component.html",
   styleUrls: ["./stacking-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StackerPanelComponent implements OnInit {
   @Input("hduIds")

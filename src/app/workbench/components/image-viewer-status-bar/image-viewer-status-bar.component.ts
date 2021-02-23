@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from "@angular/core";
+import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
 import { Subject, timer } from "rxjs";
 import { MatDialog } from "@angular/material/dialog";
@@ -20,6 +20,7 @@ import { Wcs } from "../../../image-tools/wcs";
   selector: "app-image-viewer-status-bar",
   templateUrl: "./image-viewer-status-bar.component.html",
   styleUrls: ["./image-viewer-status-bar.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
   @Input() rawImageData: IImageData<PixelType>;

@@ -9,6 +9,7 @@ import {
   SimpleChanges,
   Output,
   EventEmitter,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 
 import { Observable, Subscription, Subject, BehaviorSubject, combineLatest } from "rxjs";
@@ -27,6 +28,7 @@ import { IImageData } from "../../../data-files/models/image-data";
   selector: "app-plotting-panel",
   templateUrl: "./plotting-panel.component.html",
   styleUrls: ["./plotting-panel.component.css"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input("imageData")

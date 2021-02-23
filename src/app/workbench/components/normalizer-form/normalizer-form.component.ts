@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges } from "@angular/core";
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy } from "@angular/core";
 import { PixelNormalizer } from "../../../data-files/models/pixel-normalizer";
 import { StretchMode } from "../../../data-files/models/stretch-mode";
 import {
@@ -16,6 +16,7 @@ import {
   selector: "app-normalizer-form",
   templateUrl: "./normalizer-form.component.html",
   styleUrls: ["./normalizer-form.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
