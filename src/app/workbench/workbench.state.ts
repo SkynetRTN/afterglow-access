@@ -199,6 +199,7 @@ import { SonificationJob, SonificationJobResult } from "../jobs/models/sonificat
 import { IImageData } from "../data-files/models/image-data";
 import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogConfig, AlertDialogComponent } from '../utils/alert-dialog/alert-dialog.component';
+import { wildcardToRegExp } from '../utils/regex';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "215396f5-1224-4e17-be97-e60f8aeb0a82",
@@ -433,25 +434,10 @@ export class WorkbenchState {
   public static getFilteredFiles(files: DataFile[], fileListFilter: string) {
     if (!files || files.length == 0) return [];
     if (!fileListFilter) return files;
-
-    let checkName = (name, str) => {
-      var pattern = str
-        .split("")
-        .map((x) => {
-          return `(?=.*${x})`;
-        })
-        .join("");
-      var regex = new RegExp(`${pattern}`, "g");
-      return name.match(regex);
-    };
-
-    let fileListFilterSub = fileListFilter.toLowerCase().substring(0, 3);
-
+    let f = fileListFilter;
+    let regex = wildcardToRegExp('*' + fileListFilter.toLowerCase() + '*')
     return files
-      .filter((file) => {
-        let nameSub = file.name.substring(0, 3).toLowerCase();
-        return file.name.toLowerCase().includes(fileListFilterSub) || checkName(nameSub, fileListFilterSub);
-      })
+      .filter(file => file.name.toLowerCase().match(regex))
       .sort((a, b) => {
         if (a.name < b.name) {
           return -1;
