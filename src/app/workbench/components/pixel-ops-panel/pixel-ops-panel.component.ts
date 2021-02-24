@@ -21,6 +21,7 @@ import {
 import { JobsState } from "../../../jobs/jobs.state";
 import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
 import { DataFilesState } from "../../../data-files/data-files.state";
+import { isNumber } from '../../../utils/validators';
 
 interface PixelOpVariable {
   name: string;
@@ -90,7 +91,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       mode: new FormControl("image", Validators.required),
       primaryHduIds: new FormControl([], Validators.required),
       auxHduId: new FormControl("", Validators.required),
-      scalarValue: new FormControl({ disabled: true, value: 0 }, Validators.required),
+      scalarValue: new FormControl("", [Validators.required, isNumber]),
       inPlace: new FormControl(false, Validators.required),
     },
     { validators: this.divideByZero }
@@ -150,10 +151,10 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       .subscribe((value) => {
         if (value == "scalar") {
           this.imageCalcForm.get("scalarValue").enable();
-          this.imageCalcForm.get("auxImageFileId").disable();
+          this.imageCalcForm.get("auxHduId").disable();
         } else {
           this.imageCalcForm.get("scalarValue").disable();
-          this.imageCalcForm.get("auxImageFileId").enable();
+          this.imageCalcForm.get("auxHduId").enable();
         }
       });
 
