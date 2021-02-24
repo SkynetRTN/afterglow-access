@@ -1,5 +1,10 @@
 import { Component, OnInit, Inject, ViewChild, OnDestroy } from "@angular/core";
-import { ImportAssets, ImportAssetsCompleted, ImportAssetsStatusUpdated, SetCurrentPath } from "../../data-providers.actions";
+import {
+  ImportAssets,
+  ImportAssetsCompleted,
+  ImportAssetsStatusUpdated,
+  SetCurrentPath,
+} from "../../data-providers.actions";
 import { Store, Actions, ofActionCompleted, ofActionDispatched } from "@ngxs/store";
 import { Observable, Subject, BehaviorSubject } from "rxjs";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
@@ -11,7 +16,8 @@ import { DataProviderAsset } from "../../models/data-provider-asset";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
 import { BatchImportJob } from "../../../jobs/models/batch-import";
 import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
-import { FileSystemItem, FileManagerComponent } from '../file-manager/file-manager.component';
+import { FileSystemItem, FileManagerComponent } from "../file-manager/file-manager.component";
+import { Hotkey, HotkeysService } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-open-file-dialog",
@@ -19,28 +25,36 @@ import { FileSystemItem, FileManagerComponent } from '../file-manager/file-manag
   styleUrls: ["./open-file-dialog.component.scss"],
 })
 export class OpenFileDialogComponent implements OnInit, OnDestroy {
-  @ViewChild('fileManager') fileManager: FileManagerComponent;
+  @ViewChild("fileManager") fileManager: FileManagerComponent;
   lastPath$: Observable<DataProviderPath>;
   selectedFileSystemItems$ = new BehaviorSubject<FileSystemItem[]>([]);
   selectionIsValid$: Observable<boolean>;
   destroy$: Subject<boolean> = new Subject<boolean>();
   loading: boolean = false;
   progress: number = 0;
-  allowedFileExtensions = ['.fits,.fit']
+  allowedFileExtensions = [".fits,.fit"];
+  
+  hotKeys: Array<Hotkey> = [];
 
   constructor(
     private store: Store,
     private actions$: Actions,
     private dataProviderService: AfterglowDataProviderService,
     private dialogRef: MatDialogRef<OpenFileDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) private data: any
+    @Inject(MAT_DIALOG_DATA) private data: any,
+    private _hotkeysService: HotkeysService,
   ) {
     this.selectionIsValid$ = this.selectedFileSystemItems$.pipe(
-      map((items) => items && (items.length == 1 && items[0].isDirectory) || (items.every((item) => !item.isDirectory) && items.length != 0)),
+      map(
+        (items) =>
+          (items && items.length == 1 && items[0].isDirectory) ||
+          (items.every((item) => !item.isDirectory) && items.length != 0)
+      ),
       distinctUntilChanged()
     );
 
     this.lastPath$ = this.store.select(DataProvidersState.getLastPath);
+    this.registerHotKeys();
   }
 
   ngOnInit(): void {}
@@ -48,6 +62,24 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
+
+    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+  }
+
+  registerHotKeys() {
+    this.hotKeys.push(
+      new Hotkey(
+        "esc",
+        (event: KeyboardEvent): boolean => {
+          this.dialogRef.close()
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Open File Manager"
+      )
+    );
+
+    this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   onErrorOccurred($event) {
@@ -55,19 +87,19 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   }
 
   onPathChange(path: DataProviderPath) {
-    this.store.dispatch(new SetCurrentPath(path))
+    this.store.dispatch(new SetCurrentPath(path));
   }
 
   openSelectedAssets() {
     let selectedItems = this.selectedFileSystemItems$.value;
     if (!selectedItems) return;
 
-    if(selectedItems.length == 1 && selectedItems[0].isDirectory) {
+    if (selectedItems.length == 1 && selectedItems[0].isDirectory) {
       this.fileManager.navigateToChildItem(selectedItems[0]);
       return;
     }
 
-    let selectedAssets = selectedItems.filter((item) => !item.isDirectory && item.asset).map(item => item.asset);
+    let selectedAssets = selectedItems.filter((item) => !item.isDirectory && item.asset).map((item) => item.asset);
     if (selectedAssets.length == 0) return;
 
     this.open(selectedAssets);

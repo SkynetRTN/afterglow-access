@@ -97,17 +97,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       )
     );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "D",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new Navigate(["data-providers"]));
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Data Providers"
-      )
-    );
+   
 
     this.hotKeys.push(
       new Hotkey(

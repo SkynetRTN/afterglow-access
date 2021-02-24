@@ -940,6 +940,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   registerHotKeys() {
     this.hotKeys.push(
       new Hotkey(
+        "F",
+        (event: KeyboardEvent): boolean => {
+          this.openFiles();
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Open File Manager"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
         "d",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
@@ -973,7 +985,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         "m",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.CUSTOM_MARKER));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.CUSTOM_MARKER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
@@ -986,7 +1000,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         "P",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.PLOTTER));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.PLOTTER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
@@ -999,7 +1015,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         "s",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.SONIFIER));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.SONIFIER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
@@ -1018,7 +1036,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         "p",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.PHOTOMETRY));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.PHOTOMETRY }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
@@ -1028,14 +1048,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(
       new Hotkey(
-        "/",
+        "*",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.IMAGE_CALC));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.IMAGE_CALC }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
-        "Image Arithmetic"
+        "Image Calculator"
       )
     );
 
@@ -1044,7 +1066,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         "a",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.ALIGNER));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.ALIGNER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
@@ -1057,7 +1081,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         "S",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(new SetActiveTool(WorkbenchTool.STACKER));
+          this.store.dispatch(
+            new Navigate([], { tool: WorkbenchTool.STACKER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+          );
           return false; // Prevent bubbling
         },
         undefined,
@@ -1079,7 +1105,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(
       new Hotkey(
-        "1",
+        "7",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetFullScreen(true));
           this.store.dispatch(new SetFullScreenPanel("file"));
@@ -1093,20 +1119,20 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
     this.hotKeys.push(
       new Hotkey(
-        "2",
+        "8",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetFullScreen(true));
           this.store.dispatch(new SetFullScreenPanel("viewer"));
           return false; // Prevent bubbling
         },
         undefined,
-        "Show workbench file panel"
+        "Show workbench viewer"
       )
     );
 
     this.hotKeys.push(
       new Hotkey(
-        "3",
+        "9",
         (event: KeyboardEvent): boolean => {
           this.store.dispatch(new SetFullScreen(true));
           this.store.dispatch(new SetFullScreenPanel("tool"));
@@ -1114,9 +1140,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           return false; // Prevent bubbling
         },
         undefined,
-        "Show workbench file panel"
+        "Show workbench viewer"
       )
     );
+
 
     this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }

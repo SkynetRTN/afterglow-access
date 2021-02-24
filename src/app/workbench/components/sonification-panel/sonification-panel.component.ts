@@ -144,7 +144,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "t 1",
+        "1",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.selectSubregionByTime(0);
@@ -157,7 +157,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "t 2",
+        "2",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.selectSubregionByTime(1);
@@ -170,7 +170,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "t 3",
+        "3",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.selectSubregionByTime(2);
@@ -183,7 +183,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "f 1",
+        "4",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.selectSubregionByFrequency(0);
@@ -196,7 +196,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "f 2",
+        "5",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.selectSubregionByFrequency(1);
@@ -209,7 +209,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "f 3",
+        "6",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.selectSubregionByFrequency(2);
@@ -222,8 +222,100 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
+        "7",
+        (event: KeyboardEvent): boolean => {
+          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+          this.selectSubregion(0, 0);
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Time Navigation: Early, Frequency Navigation Low"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "8",
+        (event: KeyboardEvent): boolean => {
+          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+          this.selectSubregion(1, 1);
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Time Navigation: Mid, Frequency Navigation Mid"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "9",
+        (event: KeyboardEvent): boolean => {
+          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+          this.selectSubregion(2, 2);
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Time Navigation: Late, Frequency Navigation High"
+      )
+    );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "0 7",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregion(2, 0);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Time Navigation: Early, Frequency Navigation Low"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "0 8",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregion(1, 1);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Time Navigation: Mid, Frequency Navigation Mid"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "0 9",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregion(0, 2);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Time Navigation: Late, Frequency Navigation High"
+    //   )
+    // );
+
+    this.hotKeys.push(
+      new Hotkey(
+        ".",
+        (event: KeyboardEvent): boolean => {
+          this.sonify();
+          this.ref.markForCheck();
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Play Sonification"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
         "enter",
         (event: KeyboardEvent): boolean => {
+          if(document.activeElement.tagName == "BUTTON") return;
           this.sonify();
           this.ref.markForCheck();
           return false; // Prevent bubbling
@@ -237,6 +329,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
       new Hotkey(
         "space",
         (event: KeyboardEvent): boolean => {
+          if(document.activeElement.tagName == "BUTTON") return;
           this.sonify();
           this.ref.markForCheck();
           return false; // Prevent bubbling
@@ -248,7 +341,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     this.hotKeys.push(
       new Hotkey(
-        "esc",
+        "0",
         (event: KeyboardEvent): boolean => {
           if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
           this.resetRegionSelection();
@@ -297,28 +390,38 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
   ngOnChanges() {}
 
   selectSubregionByFrequency(subregion: number) {
+    this.selectSubregion(null, subregion);
+  }
+
+  selectSubregionByTime(subregion: number) {
+    this.selectSubregion(subregion, null);
+  }
+
+  selectSubregion(timeSubregion: number=null, frequencySubregion:number=null) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
+    let xShift = 0;
+    let width = region.width;
+    let yShift = 0;
+    let height = region.height;
+    if(frequencySubregion !== null) {
+      xShift = frequencySubregion * (region.width / 4);
+      width /= 2;
+    }
+    if(timeSubregion !== null) {
+      yShift = timeSubregion * (region.height / 4);
+      height /= 2;
+    }
     this.store.dispatch(
       new AddRegionToHistory(this.hdu.id, {
-        x: region.x + subregion * (region.width / 4),
-        y: region.y,
-        width: region.width / 2,
-        height: region.height,
+        x: region.x + xShift,
+        y: region.y + yShift,
+        width: width,
+        height: height,
       })
     );
   }
 
-  selectSubregionByTime(subregion: number) {
-    let region = this.state.regionHistory[this.state.regionHistoryIndex];
-    this.store.dispatch(
-      new AddRegionToHistory(this.hdu.id, {
-        x: region.x,
-        y: region.y + subregion * (region.height / 4),
-        width: region.width,
-        height: region.height / 2,
-      })
-    );
-  }
+
 
   resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;

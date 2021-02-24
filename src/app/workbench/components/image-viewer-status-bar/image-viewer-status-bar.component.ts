@@ -1,6 +1,6 @@
-import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
+import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectionStrategy, OnDestroy } from "@angular/core";
 import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
-import { Subject, timer } from "rxjs";
+import { Subject, timer, BehaviorSubject } from "rxjs";
 import { MatDialog } from "@angular/material/dialog";
 import { takeUntil } from "rxjs/operators";
 import { Store } from "@ngxs/store";
@@ -15,6 +15,7 @@ import {
   ZoomToFitEvent,
 } from "../pan-zoom-canvas/pan-zoom-canvas.component";
 import { Wcs } from "../../../image-tools/wcs";
+import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-image-viewer-status-bar",
@@ -22,12 +23,20 @@ import { Wcs } from "../../../image-tools/wcs";
   styleUrls: ["./image-viewer-status-bar.component.css"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
+export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rawImageData: IImageData<PixelType>;
   @Input() normalizedImageData: IImageData<Uint32Array>;
   @Input() wcs: Wcs;
   @Input() imageMouseX: number;
   @Input() imageMouseY: number;
+  @Input("hasFocus")
+  set hasFocus(hasFocus: boolean) {
+    this.hasFocus$.next(hasFocus);
+  }
+  get hasFocus() {
+    return this.hasFocus$.getValue();
+  }
+  private hasFocus$ = new BehaviorSubject<boolean>(null);
 
   @Output() downloadSnapshot = new EventEmitter();
   @Output() onSaveFile = new EventEmitter();
@@ -49,8 +58,78 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges {
 
   private startZoomOut$ = new Subject<boolean>();
   private stopZoomOut$ = new Subject<boolean>();
+  private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store, private dialog: MatDialog) {}
+  constructor(private store: Store, private dialog: MatDialog, private _hotkeysService: HotkeysService) {
+    
+    this.hotKeys.push(
+      new Hotkey(
+        "=",
+        (event: KeyboardEvent): boolean => {
+          this.zoomIn();
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Zoom In"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "-",
+        (event: KeyboardEvent): boolean => {
+          this.zoomOut();
+
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Zoom In"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "r",
+        (event: KeyboardEvent): boolean => {
+          this.zoomTo(1)
+
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Reset Zoom"
+      )
+    );
+
+    this.hotKeys.push(
+      new Hotkey(
+        "z",
+        (event: KeyboardEvent): boolean => {
+          this.zoomToFit();
+
+          return false; // Prevent bubbling
+        },
+        undefined,
+        "Zoom To Fit"
+      )
+    );
+
+    this.hasFocus$.subscribe(value => {
+      if(!value) {
+        // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+      }
+      else {
+        this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
+      }
+    })
+    
+    
+
+    
+  }
+
+  ngOnDestroy() {
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+  }
 
   ngOnInit() {}
 

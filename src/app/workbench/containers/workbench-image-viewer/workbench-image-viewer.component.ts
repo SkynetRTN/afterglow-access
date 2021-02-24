@@ -83,6 +83,7 @@ import * as piexif from "piexifjs";
 import * as moment from "moment";
 import { Papa } from 'ngx-papaparse';
 import { AuthState } from '../../../auth/auth.state';
+import { Hotkey, HotkeysService } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-workbench-image-viewer",
@@ -106,6 +107,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   showInfoBar: boolean = true;
   @Input()
   active: boolean = true;
+  @Input()
+  hasFocus: boolean = true;
 
   @Output()
   onImageClick = new EventEmitter<CanvasMouseEvent>();
@@ -118,6 +121,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   @Output()
   onFileSave = new EventEmitter<string>();
 
+  
   destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
   hduIds$: Observable<string[]>;
@@ -547,14 +551,17 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
         return of([]);
       })
     );
+
+
+
   }
 
   ngOnInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    // Now let's also unsubscribe from the subject itself:
     this.destroy$.unsubscribe();
+    
   }
 
   ngOnChanges(changes: { [key: string]: SimpleChange }) {}

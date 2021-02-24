@@ -20,7 +20,7 @@
       </div>
     </div>
     <div fxFlex="0 0 auto">
-      <app-image-viewer-status-bar [class.active]="active" [rawImageData]="rawImageData$ | async"
+      <app-image-viewer-status-bar [class.active]="active" [hasFocus]="active" [rawImageData]="rawImageData$ | async"
         [normalizedImageData]="normalizedImageData$ | async" [wcs]="(firstHeader$ | async)?.wcs" [imageMouseX]="imageMouseX"
         [imageMouseY]="imageMouseY" (downloadSnapshot)="handleDownloadSnapshot()" (onZoomBy)="handleZoomBy($event)"
         (onZoomTo)="handleZoomTo($event)" (onZoomToFit)="handleZoomToFit($event)"

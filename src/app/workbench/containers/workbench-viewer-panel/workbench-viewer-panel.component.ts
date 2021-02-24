@@ -86,7 +86,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
 
   selectedViewerIndex = 0;
 
-  private hotKeys: Array<Hotkey> = [];
   // viewers$: Observable<Viewer[]>;
   // viewMode$: Observable<ViewMode>;
   // activeViewerIndex$: Observable<number>;
@@ -105,77 +104,12 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   //   return this.viewers.find(v => v.viewerId == focusedViewerId);
   // }
 
-  constructor(private store: Store, private _hotkeysService: HotkeysService, public viewContainerRef: ViewContainerRef) {
+  constructor(private store: Store, public viewContainerRef: ViewContainerRef) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
     this.dropListConnections$ = this.store.select(WorkbenchState.getViewerPanelIds);
 
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "=",
-    //     (event: KeyboardEvent): boolean => {
-    //       let activeViewer = this.focusedViewer;
-    //       if(activeViewer && activeViewer.fileId != null) {
-    //         this.zoomIn(activeViewer.fileId);
-    //       }
-
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Zoom In"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "-",
-    //     (event: KeyboardEvent): boolean => {
-    //       let activeViewer = this.focusedViewer;
-    //       if(activeViewer && activeViewer.fileId != null) {
-    //         this.zoomOut(activeViewer.fileId);
-    //       }
-
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Zoom In"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "0",
-    //     (event: KeyboardEvent): boolean => {
-    //       let activeViewer = this.focusedViewer;
-    //       if(activeViewer && activeViewer.fileId != null) {
-    //         this.zoomTo(activeViewer.fileId, 1);
-    //       }
-
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Reset Zoom"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "z",
-    //     (event: KeyboardEvent): boolean => {
-    //       let activeViewer = this.focusedViewer;
-    //       if(activeViewer && activeViewer.fileId != null) {
-    //         this.zoomToFit(activeViewer.fileId);
-    //       }
-
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Zoom To Fit"
-    //   )
-    // );
-
-    // this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
   }
 
   public getTabLabel(viewer: Viewer) {
@@ -252,7 +186,7 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   ngOnDestroy() {
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+    
   }
 
   viewerTrackByFn(index, item: Viewer) {
