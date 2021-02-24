@@ -62,66 +62,62 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
 
   constructor(private store: Store, private dialog: MatDialog, private _hotkeysService: HotkeysService) {
     
-    this.hotKeys.push(
-      new Hotkey(
-        "=",
-        (event: KeyboardEvent): boolean => {
-          this.zoomIn();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Zoom In"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "=",
+    //     (event: KeyboardEvent): boolean => {
+    //       if(!this.hasFocus) return;
+    //       this.zoomIn();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Zoom In"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "-",
-        (event: KeyboardEvent): boolean => {
-          this.zoomOut();
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "-",
+    //     (event: KeyboardEvent): boolean => {
+    //       if(!this.hasFocus) return;
+    //       this.zoomOut();
 
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Zoom In"
-      )
-    );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Zoom In"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "r",
-        (event: KeyboardEvent): boolean => {
-          this.zoomTo(1)
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "r",
+    //     (event: KeyboardEvent): boolean => {
+    //       if(!this.hasFocus) return;
+    //       this.zoomTo(1)
 
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Reset Zoom"
-      )
-    );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Reset Zoom"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "z",
-        (event: KeyboardEvent): boolean => {
-          this.zoomToFit();
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "z",
+    //     (event: KeyboardEvent): boolean => {
+    //       if(!this.hasFocus) return;
+    //       this.zoomToFit();
 
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Zoom To Fit"
-      )
-    );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Zoom To Fit"
+    //   )
+    // );
 
-    this.hasFocus$.subscribe(value => {
-      if(!value) {
-        // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
-      }
-      else {
-        this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
-      }
-    })
-    
+    // this.hotKeys.forEach(hotKey => this._hotkeysService.add(hotKey));
     
 
     
