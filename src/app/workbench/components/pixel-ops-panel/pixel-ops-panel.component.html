@@ -50,7 +50,7 @@
 
           <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'scalar'">
             <mat-label i18n>Specify a scalar value</mat-label>
-            <input matInput formControlName="scalarValue" type="number" />
+            <input matInput formControlName="scalarValue" />
           </mat-form-field>
 
           <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>
