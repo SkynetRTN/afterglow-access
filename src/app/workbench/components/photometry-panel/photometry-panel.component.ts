@@ -44,7 +44,7 @@ import { Source, PosType } from "../../models/source";
 import { PhotometryPanelConfig, BatchPhotometryFormData } from "../../models/workbench-state";
 import { SelectionModel } from "@angular/cdk/collections";
 import { CentroidSettings } from "../../models/centroid-settings";
-import { PhotometryJob, PhotometryJobResult } from "../../../jobs/models/photometry";
+import { PhotometryJob, PhotometryJobResult, PhotometryData } from "../../../jobs/models/photometry";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material/button-toggle";
 import { WorkbenchState } from "../../workbench.state";
@@ -159,7 +159,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : "N/A");
   SourcePosType = PosType;
 
-  tableData$: Observable<{ source: Source; data: PhotData }[]>;
+  tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
 
   batchPhotJob$: Observable<PhotometryJob>;
   batchFormDataSub: Subscription;

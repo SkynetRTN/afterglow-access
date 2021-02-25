@@ -32,6 +32,7 @@ import { PlottingPanelState } from "./models/plotter-file-state";
 import { PhotometryPanelState } from "./models/photometry-file-state";
 import { PhotData } from "./models/source-phot-data";
 import { PixelNormalizer } from "../data-files/models/pixel-normalizer";
+import { PhotometryData } from '../jobs/models/photometry';
 
 /* Core */
 
@@ -643,7 +644,7 @@ export class SetCustomMarkerSelection {
 export class AddPhotDatas {
   public static readonly type = "[Sources Phot Data] Add Source Phot Datas";
 
-  constructor(public photDatas: PhotData[]) { }
+  constructor(public photDatas: PhotometryData[]) { }
 }
 
 export class RemoveAllPhotDatas {

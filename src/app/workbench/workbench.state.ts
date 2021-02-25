@@ -174,7 +174,7 @@ import {
 } from "../jobs/models/source-extraction";
 import { JobsState } from "../jobs/jobs.state";
 import { AddSources, RemoveSources } from "./sources.actions";
-import { PhotometryJob, PhotometryJobSettings, PhotometryJobResult } from "../jobs/models/photometry";
+import { PhotometryJob, PhotometryJobSettings, PhotometryJobResult, PhotometryData } from "../jobs/models/photometry";
 import { Astrometry } from "../jobs/models/astrometry";
 import { SourceId } from "../jobs/models/source-id";
 import { PhotData } from "./models/source-phot-data";
@@ -3219,7 +3219,6 @@ export class WorkbenchState {
           let a = v.action as CreateJob;
           let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
           let result = jobEntity.result as PhotometryJobResult;
-          console.log("HERE!!!!!!!!!!!!!!!!!!: ", sourceIds, jobEntity, result)
           if (result.errors.length != 0) {
             console.error("Errors encountered while photometering sources: ", result.errors);
           }
@@ -3232,38 +3231,51 @@ export class WorkbenchState {
             return state;
           });
 
-          let photDatas = [];
+          let photDatas: PhotometryData[] = [];
           fileIds.forEach((fileId) => {
             sourceIds.forEach((sourceId) => {
               let d = result.data.find((d) => d.id == sourceId && d.fileId == fileId);
               if (!d) {
                 photDatas.push({
-                  id: null,
-                  sourceId: sourceId,
-                  hduId: fileId,
-                } as PhotData);
+                  id: sourceId,
+                  decDegs: null,
+                  raHours: null,
+                  expLength: null,
+                  filter: null,
+                   flux: null,
+                   fluxError: null,
+                   mag: null,
+                   magError: null,
+                   telescope: null,
+                   time: null,
+                   fileId: fileId,
+                   fwhmX: null,
+                   fwhmY: null,
+                   pmEpoch: null,
+                   pmPixel: null,
+                   pmPosAnglePixel: null,
+                   pmPosAngleSky: null,
+                   pmSky: null,
+                   theta: null,
+                   x: null,
+                   y: null,
+                   annulusAIn: null,
+                   annulusAOut: null,
+                   annulusBIn: null,
+                   annulusBOut: null,
+                   aperA: null,
+                   aperB: null,
+                   aperTheta: null
+                });
               } else {
                 let time = null;
                 if (d.time && Date.parse(d.time + " GMT")) {
                   time = new Date(Date.parse(d.time + " GMT"));
                 }
                 photDatas.push({
-                  id: null,
-                  sourceId: d.id,
-                  hduId: d.fileId.toString(),
-                  time: time,
-                  filter: d.filter,
-                  telescope: d.telescope,
-                  expLength: d.expLength,
-                  raHours: d.raHours,
-                  decDegs: d.decDegs,
-                  x: d.x,
-                  y: d.y,
-                  mag: d.mag,
-                  magError: d.magError,
-                  flux: d.flux,
-                  fluxError: d.fluxError,
-                } as PhotData);
+                  ...d,
+                  time: time
+                });
               }
             });
           });
@@ -3955,18 +3967,18 @@ export class WorkbenchState {
   @ImmutableContext()
   public addPhotDatas({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { photDatas }: AddPhotDatas) {
     setState((state: WorkbenchStateModel) => {
+      //Photometry data from the Core refers to hdu ids as file ids.
       photDatas.forEach((d) => {
         if (
-          !d.hduId ||
-          !(d.hduId in state.hduStateEntities) ||
-          state.hduStateEntities[d.hduId].hduType != HduType.IMAGE ||
-          !d.sourceId
+          !d.fileId ||
+          !(d.fileId in state.hduStateEntities) ||
+          state.hduStateEntities[d.fileId].hduType != HduType.IMAGE ||
+          !d.id
         )
           return;
-        let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[d.hduId] as ImageHdu;
-        let hduState = state.hduStateEntities[d.hduId] as WorkbenchImageHduState;
+        let hduState = state.hduStateEntities[d.fileId] as WorkbenchImageHduState;
         let photometryPanelState = state.photometryPanelStateEntities[hduState.photometryPanelStateId];
-        photometryPanelState.sourcePhotometryData[d.sourceId] = d;
+        photometryPanelState.sourcePhotometryData[d.id] = d;
       });
 
       return state;

@@ -79,6 +79,7 @@ import { HduSelectorComponent } from "./components/hdu-selector/hdu-selector.com
 import { SaveChangesDialogComponent } from "./components/file-dialog/file-dialog.component";
 import { JobProgressDialogComponent } from "./components/job-progress-dialog/job-progress-dialog.component";
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
+import { SvgApertureMarkerComponent } from './components/svg-aperture-marker/svg-aperture-marker.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -95,6 +96,7 @@ export const COMPONENTS = [
   SvgTextMarkerComponent,
   SvgTeardropMarkerComponent,
   SvgLineMarkerComponent,
+  SvgApertureMarkerComponent,
   WorkbenchComponent,
   DisplayToolsetComponent,
   PlottingPanelComponent,

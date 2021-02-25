@@ -9,6 +9,13 @@ export interface Photometry {
   magError: number;
   flux: number;
   fluxError: number;
+  annulusAIn: number;
+  annulusBIn: number;
+  annulusAOut: number;
+  annulusBOut: number;
+  aperA: number;
+  aperB: number;
+  aperTheta: number;
 }
 
 export interface PhotometryJobSettings {
