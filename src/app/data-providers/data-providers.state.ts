@@ -148,6 +148,7 @@ export class DataProvidersState {
     return this.dataProviderService.getDataProviders().pipe(
       tap((dataProviders) => {
         setState((state: DataProvidersStateModel) => {
+          console.log("HERE DATA PROVIDERS: ", dataProviders)
           state.dataProvidersLoaded = true;
           state.dataProviderIds = dataProviders.map((dp) => dp.id);
           dataProviders.forEach((dp) => (state.dataProviderEntities[dp.id] = dp));
@@ -409,7 +410,7 @@ export class DataProvidersState {
           assetPath = assetPath.slice(1);
         }
         return {
-          provider_id: parseInt(asset.dataProviderId),
+          providerId: asset.dataProviderId,
           path: assetPath,
           recurse: false,
         } as BatchImportSettings;
@@ -437,7 +438,7 @@ export class DataProvidersState {
           return dispatch(
             new ImportAssetsCompleted(
               assets,
-              result.file_ids.map((id) => id.toString()),
+              result.fileIds.map((id) => id.toString()),
               result.errors,
               correlationId
             )

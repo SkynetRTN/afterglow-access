@@ -9,46 +9,20 @@ import { DataProvider } from "../../data-providers/models/data-provider";
 import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
 import { getCoreApiUrl } from "../../../environments/app-config";
 
-
 export interface UploadInfo {
   bytesUploaded: number;
   chunkCount: number;
   customData: any;
   chunkBlob: Blob;
   chunkIndex: number;
-};
+}
 
 @Injectable()
 export class AfterglowDataProviderService {
   constructor(private http: HttpClient, private location: Location) {}
 
   getDataProviders(): Observable<DataProvider[]> {
-    return this.http.get<any>(`${getCoreApiUrl(appConfig)}/data-providers`).pipe(
-      map((res) =>
-        res.map((r) => {
-          return {
-            id: r.id.toString(),
-            name: r.display_name,
-            icon: r.icon,
-            description: r.description,
-            columns: r.columns.map((rcol) => {
-              return {
-                name: rcol.name,
-                fieldName: rcol.field_name,
-                sortable: rcol.sortable,
-              };
-            }),
-            sortBy: r.sort_by,
-            sortAsc: r.sort_asc,
-            browseable: r.browseable,
-            searchable: r.searchable,
-            readonly: r.readonly,
-            quota: r.quota,
-            usage: r.usage,
-          };
-        })
-      )
-    );
+    return this.http.get<DataProvider[]>(`${getCoreApiUrl(appConfig)}/data-providers`)
   }
 
   getAssets(dataProviderId: string, path: string): Observable<DataProviderAsset[]> {

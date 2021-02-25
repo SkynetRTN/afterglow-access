@@ -3,19 +3,19 @@ import { JobType } from "./job-types";
 import { SourceExtractionData } from "./source-extraction";
 
 export interface AlignmentSettings {
-  ref_image: "first" | "central" | "last" | number;
-  wcs_grid_points: number;
+  refImage: "first" | "central" | "last" | number;
+  wcsGridPoints: number;
   prefilter: boolean;
 }
 
 export interface AlignmentJobResult extends JobResultBase {
   readonly type: JobType.Alignment;
-  file_ids: number[];
+  fileIds: string[];
 }
 
 export interface AlignmentJob extends JobBase {
   readonly type: JobType.Alignment;
-  file_ids: number[];
+  fileIds: string[];
   settings?: AlignmentSettings;
   sources?: SourceExtractionData[];
   inplace: boolean;

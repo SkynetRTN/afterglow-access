@@ -3,7 +3,7 @@ import { Location } from "@angular/common";
 import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
 import { appConfig } from "../../../environments/environment";
 import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 import { Job } from "../models/job";
 import { JobStateBase } from "../models/job-base";
 import { JobResult } from "../models/job-result";
@@ -20,7 +20,7 @@ export class JobService {
   }
 
   getJob(jobId: string) {
-    return this.http.get<Job>(`${getCoreApiUrl(appConfig)}/jobs/${jobId}`);
+    return this.http.get<Job>(`${getCoreApiUrl(appConfig)}/jobs/${jobId}`)
   }
 
   getJobState(jobId: string) {

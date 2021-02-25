@@ -65,6 +65,7 @@ import { DatePipe } from "@angular/common";
 import { SourceExtractionSettings } from "../../models/source-extraction-settings";
 import { JobsState } from "../../../jobs/jobs.state";
 import { DataFilesState } from '../../../data-files/data-files.state';
+import * as snakeCaseKeys from "snakecase-keys";
 
 @Component({
   selector: "app-photometry-panel",
@@ -518,19 +519,19 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
 
   downloadBatchPhotData(result: PhotometryJobResult) {
     let data = this.papa.unparse(
-      result.data.map((d) => {
+      snakeCaseKeys(result.data.map((d) => {
         let time = d.time ? moment.utc(d.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
-        let pmEpoch = d.pm_epoch ? moment.utc(d.pm_epoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
+        let pmEpoch = d.pmEpoch ? moment.utc(d.pmEpoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
         // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
         let jd = time ? datetimeToJd(time) : null;
         return {
           ...d,
           time: time ? this.datePipe.transform(time, "yyyy-MM-dd HH:mm:ss.SSS") : null,
-          pm_epoch: pmEpoch ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS") : null,
+          pmEpoch: pmEpoch ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS") : null,
           jd: jd,
           mjd: jd ? jdToMjd(jd) : null,
         };
-      }),
+      })),
       {
         columns: [
           "file_id",

@@ -27,8 +27,8 @@ export class NavbarComponent implements OnInit, OnChanges {
   ngOnChanges() {
     if (!this.user) {
       this.avatarName = null;
-    } else if (this.user.first_name && this.user.last_name)
-      this.avatarName = `${this.user.first_name} ${this.user.last_name}`;
+    } else if (this.user.firstName && this.user.lastName)
+      this.avatarName = `${this.user.firstName} ${this.user.lastName}`;
     else if (this.user.username) this.avatarName = this.user.username;
     else if (this.user.email) this.avatarName = this.user.email;
     else {

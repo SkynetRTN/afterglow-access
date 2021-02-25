@@ -558,7 +558,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
     this.surveyDataProvider$ = this.store
       .select(DataProvidersState.getDataProviders)
-      .pipe(map((dataProviders) => dataProviders.find((dp) => dp.name == "Imaging Surveys")));
+      .pipe(map((dataProviders) => dataProviders.find((dp) => dp.displayName == "Imaging Surveys")));
 
     /* VIEWER */
     this.layoutContainer$ = this.store.select(WorkbenchState.getRootViewerPanelContainer);
@@ -1917,7 +1917,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let job: BatchDownloadJob = {
             type: JobType.BatchDownload,
             id: null,
-            group_ids: files.map((file) => file.id),
+            groupIds: files.map((file) => file.id),
           };
 
           let corrId = this.corrGen.next();
@@ -2048,10 +2048,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 this.store.dispatch(new InvalidateHeader(hduId));
                 reqs.push(
                   this.dataFileService.updateFile(hduId, {
-                    group_id: uuid,
+                    groupId: uuid,
                     name: hdu && hdu.name ? hdu.name : `${file.name}_${index}`,
-                    data_provider: null,
-                    asset_path: null,
+                    dataProvider: null,
+                    assetPath: null,
                     modified: true,
                   })
                 );
@@ -2148,10 +2148,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                   this.store.dispatch(new InvalidateHeader(hduId));
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
-                      group_id: uuid,
+                      groupId: uuid,
                       name: newFilename,
-                      data_provider: null,
-                      asset_path: null,
+                      dataProvider: null,
+                      assetPath: null,
                       modified: true,
                     })
                   );

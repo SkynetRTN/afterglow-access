@@ -3,24 +3,24 @@ import { JobType } from "./job-types";
 import { SourceExtractionJobSettings } from "./source-extraction";
 
 export interface WcsCalibrationJobSettings {
-  ra_hours: number;
-  dec_degs: number;
+  raHours: number;
+  decDegs: number;
   radius: number;
-  min_scale: number;
-  max_scale: number;
-  max_sources: number;
+  minScale: number;
+  maxScale: number;
+  maxSources: number;
 }
 
 export interface WcsCalibrationJobResult extends JobResultBase {
   readonly type: JobType.WcsCalibration;
-  file_ids: number[];
+  fileIds: string[];
 }
 
 export interface WcsCalibrationJob extends JobBase {
   readonly type: JobType.WcsCalibration;
-  file_ids: number[];
+  fileIds: string[];
   settings?: WcsCalibrationJobSettings;
-  source_extraction_settings: SourceExtractionJobSettings;
+  sourceExtractionSettings: SourceExtractionJobSettings;
   inplace: boolean;
   result: WcsCalibrationJobResult;
 }

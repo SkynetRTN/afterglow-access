@@ -13,13 +13,13 @@ export interface StackSettings {
 
 export interface StackingJobResult extends JobResultBase {
   readonly type: JobType.Stacking;
-  file_id: number;
+  fileId: string;
 }
 
 export interface StackingJob extends JobBase {
   readonly type: JobType.Stacking;
-  file_ids: number[];
-  stacking_settings?: StackSettings;
+  fileIds: string[];
+  stackingSettings?: StackSettings;
   result: StackingJobResult;
 }
 

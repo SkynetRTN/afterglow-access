@@ -13,13 +13,13 @@ import { Region } from "../../data-files/models/region";
 import { HeaderEntry } from "../../data-files/models/header-entry";
 
 export interface CoreDataFile {
-  id: number;
+  id: string;
   type: HduType;
   name: string;
-  data_provider: string;
-  asset_path: string;
-  group_id: string;
-  group_order: number;
+  dataProvider: string;
+  assetPath: string;
+  groupId: string;
+  groupOrder: number;
   modified: boolean;
 }
 
@@ -80,8 +80,8 @@ export class AfterglowDataFileService {
       map((res) => {
         return {
           data: res.data,
-          minBin: res.min_bin,
-          maxBin: res.max_bin
+          minBin: res.minBin,
+          maxBin: res.maxBin
         };
       })
     );

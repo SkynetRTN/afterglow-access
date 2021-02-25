@@ -3,14 +3,14 @@ import { JobType } from "./job-types";
 
 export interface PixelOpsJobResult extends JobResultBase {
   readonly type: JobType.PixelOps;
-  file_ids: number[];
+  fileIds: string[];
   data: Array<number>;
 }
 
 export interface PixelOpsJob extends JobBase {
   readonly type: JobType.PixelOps;
-  file_ids: number[];
-  aux_file_ids: number[];
+  fileIds: string[];
+  auxFileIds: string[];
   op: string;
   inplace: boolean;
   result: PixelOpsJobResult;

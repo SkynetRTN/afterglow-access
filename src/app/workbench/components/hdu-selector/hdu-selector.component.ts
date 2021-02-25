@@ -142,7 +142,7 @@ export class HduSelectorComponent implements OnInit {
       .map((hdu, index) => {
         if (hdu.order == index) return null;
         return this.fileService.updateFile(hdu.id, {
-          group_order: index,
+          groupOrder: index,
         });
       })
       .filter((req) => req != null);

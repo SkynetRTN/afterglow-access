@@ -2,7 +2,7 @@ import { JobType } from "./job-types";
 import { JobBase, JobResultBase } from "./job-base";
 
 export interface BatchImportSettings {
-  provider_id?: number;
+  providerId?: string;
   path?: string;
   duplicates?: "ignore";
   recurse?: boolean;
@@ -10,7 +10,7 @@ export interface BatchImportSettings {
 
 export interface BatchImportJobResult extends JobResultBase {
   readonly type: JobType.BatchImport;
-  file_ids: number[];
+  fileIds: string[];
 }
 
 export interface BatchImportJob extends JobBase {

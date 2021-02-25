@@ -9,28 +9,28 @@ export interface SonificationJobSettings {
   coord?: "rect" | "radial" | "circ";
   barycenter?: boolean;
   tempo?: number;
-  sampling_rate?: number;
-  start_tone?: number;
-  num_tones?: number;
+  samplingRate?: number;
+  startTone?: number;
+  numTones?: number;
   volume?: number;
-  noise_volume?: number;
-  bkg_scale?: number;
+  noiseVolume?: number;
+  bkgScale?: number;
   threshold?: number;
-  min_connected?: number;
-  hi_clip?: number;
-  noise_lo?: number;
-  noise_hi?: number;
-  index_sounds?: boolean;
+  minConnected?: number;
+  hiClip?: number;
+  noiseLo?: number;
+  noiseHi?: number;
+  indexSounds?: boolean;
 }
 
 export interface SonificationJobResult extends JobResultBase {
   readonly type: JobType.Sonification;
-  sound_file_id: number;
+  soundFileId: string;
 }
 
 export interface SonificationJob extends JobBase {
   readonly type: JobType.Sonification;
-  file_id: number;
+  fileId: string;
   settings?: SonificationJobSettings;
   result: SonificationJobResult;
 }

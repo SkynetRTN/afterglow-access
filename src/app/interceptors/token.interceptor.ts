@@ -4,8 +4,8 @@ import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse
 import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 
-import { Logout } from "./auth/auth.actions";
-import { appConfig } from "../environments/environment";
+import { Logout } from "../auth/auth.actions";
+import { appConfig } from "../../environments/environment";
 import { Navigate } from "@ngxs/router-plugin";
 
 @Injectable()

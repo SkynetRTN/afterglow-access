@@ -7,7 +7,6 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MaterialModule } from "../material";
 import { SvgModule } from "../svg/svg.module";
 import { PipesModule } from "../pipes/pipes.module";
-import { DataProviderDetailComponent } from "./components/data-provider-detail/data-provider-detail.component";
 import { OpenFileDialogComponent } from "./components/open-file-dialog/open-file-dialog.component";
 import { FileManagerComponent } from "./components/file-manager/file-manager.component";
 import { SaveDialogComponent } from "./components/save-dialog/save-dialog.component";
@@ -20,7 +19,6 @@ import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.
 @NgModule({
   imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, ReactiveFormsModule, FlexLayoutModule, UtilsModule],
   declarations: [
-    DataProviderDetailComponent,
     OpenFileDialogComponent,
     SaveDialogComponent,
     FileManagerComponent,
@@ -29,7 +27,7 @@ import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.
     TargetDialogComponent,
     UploadDialogComponent
   ],
-  exports: [DataProviderDetailComponent],
+  exports: [],
   providers: [],
   entryComponents: [OpenFileDialogComponent, SaveDialogComponent, NameDialogComponent, TargetDialogComponent, UploadDialogComponent],
 })

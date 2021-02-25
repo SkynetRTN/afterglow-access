@@ -286,7 +286,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
                 let dialogRef = this.dialog.open(AlertDialogComponent, {
                   width: "400px",
                   data: {
-                    message: `Overwrite existing file? '${dataProvider.name}${assetPath}'?`,
+                    message: `Overwrite existing file? '${dataProvider.displayName}${assetPath}'?`,
                     buttons: [
                       {
                         color: null,

@@ -6,7 +6,7 @@ export interface DataProviderColumn {
 
 export interface DataProvider {
   id: string;
-  name: string;
+  displayName: string;
   icon: string;
   description: string;
   columns: Array<DataProviderColumn>;

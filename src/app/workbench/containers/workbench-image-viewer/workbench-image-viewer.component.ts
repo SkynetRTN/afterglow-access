@@ -377,6 +377,21 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       distinctUntilChanged()
     );
 
+    let photometryPanelStateId$ =  viewerId$.pipe(
+      switchMap((viewerId) =>
+        this.store.select(WorkbenchState.getPhotometryPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
+      ),
+      distinctUntilChanged()
+    );
+
+    let photometryPanelState$ = photometryPanelStateId$.pipe(
+      switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id)))),
+      distinctUntilChanged()
+    );
+
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
     this.sources$ = this.store.select(SourcesState.getSources);
 
@@ -488,9 +503,10 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
             this.selectedHduId$,
             this.firstHeader$,
             this.store.select(WorkbenchState.getPhotometryPanelConfig),
-            this.store.select(SourcesState.getSources)
+            this.store.select(SourcesState.getSources),
+            photometryPanelState$
           ).pipe(
-            map(([hduId, header, config, sources]) => {
+            map(([hduId, header, config, sources, state]) => {
               if (!header) return [];
 
               let selectedSourceIds = config.selectedSourceIds;
@@ -798,7 +814,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           let exif = {};
           let gps = {};
           zeroth[piexif.ImageIFD.Software] = "Afterglow Access";
-          let artist = user ? `${user.first_name} ${user.last_name} (${user.username})` : '';
+          let artist = user ? `${user.firstName} ${user.lastName} (${user.username})` : '';
           let observer = getObserver(header)
           if(observer)  {
             artist = artist.concat(`, ${observer}`)

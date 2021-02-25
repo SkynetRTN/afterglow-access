@@ -87,6 +87,7 @@ export class JobsState {
   public createJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, createJobAction: CreateJob) {
     return this.jobService.createJob(createJobAction.job).pipe(
       flatMap((job) => {
+        console.log("JOB CREATED: ", job)
         createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
           state.entities[job.id] = {

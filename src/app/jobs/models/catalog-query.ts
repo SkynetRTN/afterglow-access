@@ -10,14 +10,14 @@ export interface CatalogQueryJobResult extends JobResultBase {
 export interface CatalogQueryJob extends JobBase {
   readonly type: JobType.CatalogQuery;
   catalogs: Array<string>;
-  ra_hours?: number;
-  dec_degs?: number;
-  radius_arcmins?: number;
-  width_arcmins?: number;
-  height_arcmins?: number;
-  file_ids?: Array<number>;
+  raHours?: number;
+  decDegs?: number;
+  radiusArcmins?: number;
+  widthArcmins?: number;
+  heightArcmins?: number;
+  fileIds?: string[];
   constraints: { [column: string]: string };
-  source_ids?: Array<string>;
+  sourceIds?: string[];
   result: CatalogQueryJobResult;
 }
 

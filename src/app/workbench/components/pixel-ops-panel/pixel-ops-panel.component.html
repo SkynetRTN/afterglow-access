@@ -218,9 +218,9 @@
         <ng-template #noErrors>
           <div class="alert alert-success">
             <span i18n>Processing is complete.</span>
-            <div *ngIf="job.result.file_ids.length != 0">
+            <div *ngIf="job.result.fileIds.length != 0">
               <span i18n>Your operation resulted in</span>
-              {{ job.result.file_ids.length }} <span i18n>new file(s)</span>
+              {{ job.result.fileIds.length }} <span i18n>new file(s)</span>
             </div>
             <div *ngIf="job.result.data.length != 0">
               <span i18n>Your operation resulted in the following scalar values:</span>

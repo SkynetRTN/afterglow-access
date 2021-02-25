@@ -6,9 +6,9 @@ import { SourceMeta } from "./source-meta";
 
 export interface Photometry {
   mag: number;
-  mag_error: number;
+  magError: number;
   flux: number;
-  flux_error: number;
+  fluxError: number;
 }
 
 export interface PhotometryJobSettings {
@@ -16,13 +16,13 @@ export interface PhotometryJobSettings {
   a?: number; // aperture radius/semi-major axis [pixels]
   b?: number; // (optional) semi-minor axis
   theta?: number; // (optional) position angle of semi-major axis
-  a_in?: number; // (optional = a) inner annulus radius/semi-major axis
-  a_out?: number; // outer annulus radius/semi-major axis
-  b_out?: number; // (optional) outer annulus semi-minor axis
-  theta_out?: number; // (optional) annulus position angle
+  aIn?: number; // (optional = a) inner annulus radius/semi-major axis
+  aOut?: number; // outer annulus radius/semi-major axis
+  bOut?: number; // (optional) outer annulus semi-minor axis
+  thetaOut?: number; // (optional) annulus position angle
   gain?: number; // (optional) default gain if not present in FITS headers
-  centroid_radius?: number; // 0 = disable centroiding
-  zero_point?: number;
+  centroidRadius?: number; // 0 = disable centroiding
+  zeroPoint?: number;
 }
 
 export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {}
@@ -34,7 +34,7 @@ export interface PhotometryJobResult extends JobResultBase {
 
 export interface PhotometryJob extends JobBase {
   readonly type: JobType.Photometry;
-  file_ids: number[];
+  fileIds: string[];
   sources: Array<Astrometry & SourceId>;
   settings?: PhotometryJobSettings;
   result: PhotometryJobResult;

@@ -13,7 +13,8 @@ import { CookieModule } from "ngx-cookie";
 import localeEs from "@angular/common/locales/es";
 registerLocaleData(localeEs, "es");
 
-import { TokenInterceptor } from "./token.interceptor";
+import { TokenInterceptor } from "./interceptors/token.interceptor";
+import { AfterglowCoreInterceptor } from "./interceptors/afterglow-core.interceptor";
 
 import { MaterialModule } from "./material";
 import { WorkbenchModule } from "./workbench/workbench.module";
@@ -86,9 +87,9 @@ export function dataFileSanitizer(v) {
           loaded: false,
           loading: false,
           data: null,
-          minBin: null, 
-          maxBin: null
-        }
+          minBin: null,
+          maxBin: null,
+        },
       } as ImageHdu;
     }
 
@@ -159,11 +160,10 @@ export function dataFileSanitizer(v) {
   declarations: [AppComponent],
   providers: [
     WasmService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: TokenInterceptor,
-      multi: true,
-    },
+    [
+      { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
+      { provide: HTTP_INTERCEPTORS, useClass: AfterglowCoreInterceptor, multi: true },
+    ],
   ],
   bootstrap: [AppComponent],
 })

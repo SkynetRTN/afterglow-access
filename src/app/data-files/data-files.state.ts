@@ -493,10 +493,10 @@ export class DataFilesState {
         coreFiles.forEach((coreFile, index) => {
           let hdu: IHdu = {
             type: "hdu",
-            id: coreFile.id.toString(),
-            fileId: coreFile.group_id,
+            id: coreFile.id,
+            fileId: coreFile.groupId,
             hduType: coreFile.type,
-            order: coreFile.group_order,
+            order: coreFile.groupOrder,
             modified: coreFile.modified,
             headerId: null,
             name: coreFile.name,
@@ -509,8 +509,8 @@ export class DataFilesState {
             dataFile = {
               type: "file",
               id: hdu.fileId,
-              assetPath: "/" + coreFile.asset_path,
-              dataProviderId: coreFile.data_provider,
+              assetPath: "/" + coreFile.assetPath,
+              dataProviderId: coreFile.dataProvider,
               name: coreFile.name,
               hduIds: [hdu.id],
               imageHduIds: hdu.hduType == HduType.IMAGE ? [hdu.id] : [],

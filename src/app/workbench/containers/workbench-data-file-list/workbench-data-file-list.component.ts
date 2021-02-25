@@ -125,7 +125,7 @@ export class FileListItemComponent implements OnInit {
     this.fileTooltip$ = combineLatest(this.file$, this.dataProvider$).pipe(
       map(([file, dataProvider]) => {
         if (!dataProvider || !file.assetPath) return file.name;
-        return `${dataProvider.name}${file.assetPath}`;
+        return `${dataProvider.displayName}${file.assetPath}`;
       })
     );
 

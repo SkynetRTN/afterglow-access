@@ -11,15 +11,15 @@ export interface SourceExtractionJobSettings {
   width?: number;
   height?: number;
   threshold?: number;
-  bk_size?: number;
-  bk_filter_size?: number;
+  bkSize?: number;
+  bkFilterSize?: number;
   fwhm?: number;
   ratio?: number;
   theta?: number;
-  min_pixels?: number;
+  minPixels?: number;
   deblend?: boolean;
-  deblend_levels?: number;
-  deblend_contrast?: number;
+  deblendLevels?: number;
+  deblendContrast?: number;
   gain?: number;
   clean?: number;
   centroid?: boolean;
@@ -35,10 +35,10 @@ export interface SourceExtractionJobResult extends JobResultBase {
 
 export interface SourceExtractionJob extends JobBase {
   readonly type: JobType.SourceExtraction;
-  file_ids: number[];
-  source_extraction_settings?: SourceExtractionJobSettings;
-  merge_sources: boolean;
-  source_merge_settings?: SourceMergeSettings;
+  fileIds: string[];
+  sourceExtractionSettings?: SourceExtractionJobSettings;
+  mergeSources: boolean;
+  sourceMergeSettings?: SourceMergeSettings;
   result: SourceExtractionJobResult;
 }
 

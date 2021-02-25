@@ -25,7 +25,7 @@
       </span>
       <ng-container *ngIf="parentDataProvider$ | async; let parentDataProvider">
         <span class="path-item">
-          <button mat-flat-button (click)="navigateTo(parentDataProvider.id, [])">{{ parentDataProvider.name }}</button>
+          <button mat-flat-button (click)="navigateTo(parentDataProvider.id, [])">{{ parentDataProvider.displayName }}</button>
         </span>
         <ng-container *ngFor="let asset of path?.assets; let i = index">
           <span class="path-item">

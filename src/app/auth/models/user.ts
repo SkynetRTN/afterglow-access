@@ -1,7 +1,7 @@
 export interface CoreUser {
   username: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   id: string;
   email: string;
 }

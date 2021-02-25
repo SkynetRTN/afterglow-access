@@ -2479,18 +2479,18 @@ export class WorkbenchState {
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
     let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
-    let auxFileIds: number[] = [];
+    let auxFileIds: string[] = [];
     let op;
     if (data.mode == "scalar") {
       op = `img ${data.operand} ${data.scalarValue}`;
     } else {
       op = `img ${data.operand} aux_img`;
-      auxFileIds.push(parseInt(data.auxHduId));
+      auxFileIds.push(data.auxHduId);
     }
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
       id: null,
-      file_ids: imageHdus
+      fileIds: imageHdus
         .sort((a, b) =>
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
@@ -2498,8 +2498,8 @@ export class WorkbenchState {
             ? 1
             : 0
         )
-        .map((f) => parseInt(f.id)),
-      aux_file_ids: auxFileIds,
+        .map((f) => f.id),
+      auxFileIds: auxFileIds,
       op: op,
       inplace: data.inPlace,
       result: null,
@@ -2572,7 +2572,7 @@ export class WorkbenchState {
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
       id: null,
-      file_ids: imageHdus
+      fileIds: imageHdus
         .sort((a, b) =>
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
@@ -2580,8 +2580,8 @@ export class WorkbenchState {
             ? 1
             : 0
         )
-        .map((f) => parseInt(f.id)),
-      aux_file_ids: auxImageFiles
+        .map((f) => f.id),
+      auxFileIds: auxImageFiles
         .sort((a, b) =>
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
@@ -2589,7 +2589,7 @@ export class WorkbenchState {
             ? 1
             : 0
         )
-        .map((f) => parseInt(f.id)),
+        .map((f) => f.id),
       op: data.opString,
       inplace: data.inPlace,
       result: null,
@@ -2661,7 +2661,7 @@ export class WorkbenchState {
     let job: AlignmentJob = {
       type: JobType.Alignment,
       id: null,
-      file_ids: imageHdus
+      fileIds: imageHdus
         .sort((a, b) =>
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
@@ -2669,12 +2669,12 @@ export class WorkbenchState {
             ? 1
             : 0
         )
-        .map((f) => parseInt(f.id)),
+        .map((f) => f.id),
       inplace: true,
       crop: data.crop,
       settings: {
-        ref_image: parseInt(data.refHduId),
-        wcs_grid_points: 100,
+        refImage: parseInt(data.refHduId),
+        wcsGridPoints: 100,
         prefilter: false,
       },
       result: null,
@@ -2713,7 +2713,7 @@ export class WorkbenchState {
           console.error("Warnings encountered during aligning: ", result.warnings);
         }
 
-        let hduIds = result.file_ids.map((id) => id.toString());
+        let hduIds = result.fileIds.map((id) => id.toString());
         let actions = [];
         if ((job as AlignmentJob).inplace) {
           hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
@@ -2756,7 +2756,7 @@ export class WorkbenchState {
     let job: StackingJob = {
       type: JobType.Stacking,
       id: null,
-      file_ids: imageHdus
+      fileIds: imageHdus
         .sort((a, b) =>
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
@@ -2764,8 +2764,8 @@ export class WorkbenchState {
             ? 1
             : 0
         )
-        .map((f) => parseInt(f.id)),
-      stacking_settings: {
+        .map((f) => f.id),
+      stackingSettings: {
         mode: data.mode,
         scaling: data.scaling == "none" ? null : data.scaling,
         rejection: data.rejection == "none" ? null : data.rejection,
@@ -2842,12 +2842,12 @@ export class WorkbenchState {
     let state = getState();
     let wcsSettings = state.wcsCalibrationSettings;
     let wcsCalibrationJobSettings: WcsCalibrationJobSettings = {
-      ra_hours: wcsSettings.ra,
-      dec_degs: wcsSettings.dec,
+      raHours: wcsSettings.ra,
+      decDegs: wcsSettings.dec,
       radius: wcsSettings.radius,
-      min_scale: wcsSettings.minScale,
-      max_scale: wcsSettings.maxScale,
-      max_sources: wcsSettings.maxSources,
+      minScale: wcsSettings.minScale,
+      maxScale: wcsSettings.maxScale,
+      maxSources: wcsSettings.maxSources,
     };
 
     let sourceExtractionSettings = state.sourceExtractionSettings;
@@ -2861,10 +2861,10 @@ export class WorkbenchState {
     let job: WcsCalibrationJob = {
       type: JobType.WcsCalibration,
       id: null,
-      file_ids: hduIds.map((hduId) => parseInt(hduId)),
+      fileIds: hduIds,
       inplace: true,
       settings: wcsCalibrationJobSettings,
-      source_extraction_settings: sourceExtractionJobSettings,
+      sourceExtractionSettings: sourceExtractionJobSettings,
       result: null,
     };
 
@@ -2896,11 +2896,11 @@ export class WorkbenchState {
               let jobEntites = this.store.selectSnapshot(JobsState.getJobEntities);
               let job = jobEntites[state.wcsCalibrationPanelState.activeJobId] as WcsCalibrationJob;
               let result = job.result;
-              result.file_ids.forEach((hduId) => {
+              result.fileIds.forEach((hduId) => {
                 actions.push(new InvalidateHeader(hduId.toString()));
               });
               let message: string;
-              let numFailed = hduIds.length - result.file_ids.length;
+              let numFailed = hduIds.length - result.fileIds.length;
               if (numFailed != 0) {
                 message = `Failed to find solution for ${numFailed} image(s).`;
               } else {
@@ -3040,10 +3040,10 @@ export class WorkbenchState {
     let job: SourceExtractionJob = {
       id: null,
       type: JobType.SourceExtraction,
-      file_ids: [parseInt(hduId)],
-      source_extraction_settings: jobSettings,
-      merge_sources: false,
-      source_merge_settings: null,
+      fileIds: [hduId],
+      sourceExtractionSettings: jobSettings,
+      mergeSources: false,
+      sourceMergeSettings: null,
       result: null,
     };
 
@@ -3068,14 +3068,14 @@ export class WorkbenchState {
             photometryPageSettings.coordMode == "sky" &&
             header.wcs &&
             header.wcs.isValid() &&
-            "ra_hours" in d &&
-            d.ra_hours !== null &&
-            "dec_degs" in d &&
-            d.dec_degs !== null
+            "raHours" in d &&
+            d.raHours !== null &&
+            "decDegs" in d &&
+            d.decDegs !== null
           ) {
             posType = PosType.SKY;
-            primaryCoord = d.ra_hours;
-            secondaryCoord = d.dec_degs;
+            primaryCoord = d.raHours;
+            secondaryCoord = d.decDegs;
           }
 
           let pmEpoch = null;
@@ -3086,7 +3086,7 @@ export class WorkbenchState {
             id: null,
             label: null,
             objectId: null,
-            hduId: d.file_id.toString(),
+            hduId: d.fileId.toString(),
             posType: posType,
             primaryCoord: primaryCoord,
             secondaryCoord: secondaryCoord,
@@ -3131,31 +3131,31 @@ export class WorkbenchState {
       s = {
         mode: "auto",
         a: settings.aKrFactor,
-        a_in: settings.aInKrFactor,
-        a_out: settings.aOutKrFactor,
+        aIn: settings.aInKrFactor,
+        aOut: settings.aOutKrFactor,
       };
     } else {
       s = {
         mode: "aperture",
         a: settings.a,
         b: settings.b,
-        a_in: settings.aIn,
-        a_out: settings.aOut,
-        b_out: settings.bOut,
+        aIn: settings.aIn,
+        aOut: settings.aOut,
+        bOut: settings.bOut,
         theta: settings.theta,
-        theta_out: settings.thetaOut,
+        thetaOut: settings.thetaOut,
       };
     }
 
     s.gain = settings.gain;
-    s.centroid_radius = settings.centroidRadius;
-    s.zero_point = settings.zeroPoint;
+    s.centroidRadius = settings.centroidRadius;
+    s.zeroPoint = settings.zeroPoint;
 
     let job: PhotometryJob = {
       type: JobType.Photometry,
       settings: s,
       id: null,
-      file_ids: fileIds.map((id) => parseInt(id)),
+      fileIds: fileIds,
       sources: sourceIds.map((id, index) => {
         let source = sourcesState.entities[id];
         let x = null;
@@ -3179,21 +3179,28 @@ export class WorkbenchState {
           if (pmSky) pmSky /= 3600.0;
           pmPosAngleSky = source.pmPosAngle;
         }
-        return {
+
+        let s: Astrometry & SourceId = {
           id: source.id,
-          pm_epoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
+          pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
           x: x,
           y: y,
-          pm_pixel: pmPixel,
-          pm_pos_angle_pixel: pmPosAnglePixel,
-          ra_hours: raHours,
-          dec_degs: decDegs,
-          pm_sky: pmSky,
-          pm_pos_angle_sky: pmPosAngleSky,
-        } as Astrometry & SourceId;
+          pmPixel: pmPixel,
+          pmPosAnglePixel: pmPosAnglePixel,
+          raHours: raHours,
+          decDegs: decDegs,
+          pmSky: pmSky,
+          pmPosAngleSky: pmPosAngleSky,
+          fwhmX: null,
+          fwhmY: null,
+          theta: null,
+        }
+        return s;
       }),
       result: null,
     };
+
+    console.log("JOB:::: ", job, job.sources.map(s => s.id));
 
     let correlationId = this.correlationIdGenerator.next();
     dispatch(new CreateJob(job, 1000, correlationId));
@@ -3212,6 +3219,7 @@ export class WorkbenchState {
           let a = v.action as CreateJob;
           let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
           let result = jobEntity.result as PhotometryJobResult;
+          console.log("HERE!!!!!!!!!!!!!!!!!!: ", sourceIds, jobEntity, result)
           if (result.errors.length != 0) {
             console.error("Errors encountered while photometering sources: ", result.errors);
           }
@@ -3227,7 +3235,7 @@ export class WorkbenchState {
           let photDatas = [];
           fileIds.forEach((fileId) => {
             sourceIds.forEach((sourceId) => {
-              let d = result.data.find((d) => d.id == sourceId && d.file_id.toString() == fileId);
+              let d = result.data.find((d) => d.id == sourceId && d.fileId == fileId);
               if (!d) {
                 photDatas.push({
                   id: null,
@@ -3242,19 +3250,19 @@ export class WorkbenchState {
                 photDatas.push({
                   id: null,
                   sourceId: d.id,
-                  hduId: d.file_id.toString(),
+                  hduId: d.fileId.toString(),
                   time: time,
                   filter: d.filter,
                   telescope: d.telescope,
-                  expLength: d.exp_length,
-                  raHours: d.ra_hours,
-                  decDegs: d.dec_degs,
+                  expLength: d.expLength,
+                  raHours: d.raHours,
+                  decDegs: d.decDegs,
                   x: d.x,
                   y: d.y,
                   mag: d.mag,
-                  magError: d.mag_error,
+                  magError: d.magError,
                   flux: d.flux,
-                  fluxError: d.flux_error,
+                  fluxError: d.fluxError,
                 } as PhotData);
               }
             });
@@ -3633,16 +3641,16 @@ export class WorkbenchState {
 
     let job: SonificationJob = {
       id: null,
-      file_id: parseInt(hduId),
+      fileId: hduId,
       type: JobType.Sonification,
       settings: {
         x: Math.floor(region.x) + 1,
         y: Math.floor(region.y) + 1,
         width: Math.floor(region.width),
         height: Math.floor(region.height),
-        num_tones: Math.floor(sonificationPanelState.toneCount),
+        numTones: Math.floor(sonificationPanelState.toneCount),
         tempo: Math.ceil(region.height / sonificationPanelState.duration),
-        index_sounds: true,
+        indexSounds: true,
       },
       result: null,
     };
