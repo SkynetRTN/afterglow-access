@@ -148,7 +148,6 @@ export class DataProvidersState {
     return this.dataProviderService.getDataProviders().pipe(
       tap((dataProviders) => {
         setState((state: DataProvidersStateModel) => {
-          console.log("HERE DATA PROVIDERS: ", dataProviders)
           state.dataProvidersLoaded = true;
           state.dataProviderIds = dataProviders.map((dp) => dp.id);
           dataProviders.forEach((dp) => (state.dataProviderEntities[dp.id] = dp));
