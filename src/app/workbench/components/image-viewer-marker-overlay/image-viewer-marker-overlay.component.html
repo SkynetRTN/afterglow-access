@@ -1,23 +1,62 @@
 <svg [attr.width]="svgWidth" [attr.height]="svgHeight" #svgElementRef>
   <g #svgGroup [attr.transform]="transformAttr$ | async">
-    <g *ngFor="let marker of (circleMarkers$ | async); trackBy: trackById" app-svg-circle-marker class="source-marker"
-      [x]="marker.x - 0.5" [y]="marker.y - 0.5" [radius]="marker.radius" [label]="marker.label"
-      [selected]="marker.selected" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill"></g>
+    <g
+      *ngFor="let marker of circleMarkers$ | async; trackBy: trackById"
+      app-svg-circle-marker
+      class="source-marker"
+      [marker]="marker"
+      (click)="handleMarkerClick($event, marker)"
+      style="pointer-events: fill"
+    ></g>
 
-    <g *ngFor="let marker of (rectangleMarkers$ | async); trackBy: trackById" app-svg-rectangle-marker
-      class="region-marker" [x]="marker.x - 0.5" [y]="marker.y - 0.5" [width]="marker.width" [height]="marker.height"
-      (click)="handleMarkerClick($event, marker)" style="pointer-events: fill"></g>
+    <g
+      *ngFor="let marker of apertureMarkers$ | async; trackBy: trackById"
+      app-svg-aperture-marker
+      class="source-marker"
+      [marker]="marker"
+      (click)="handleMarkerClick($event, marker)"
+      style="pointer-events: fill"
+    ></g>
 
-    <g *ngFor="let marker of (tearDropMarkers$ | async); trackBy: trackById" app-svg-teardrop-marker
-      class="source-marker" [x]="marker.x - 0.5" [y]="marker.y - 0.5" [radius]="marker.radius" [theta]="marker.theta"
-      [selected]="marker.selected" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill"></g>
-    <g *ngFor="let marker of (lineMarkers$ | async); trackBy: trackById" app-svg-line-marker class="line-marker"
-      [x1]="marker.x1 - 0.5" [y1]="marker.y1 - 0.5" [x2]="marker.x2 - 0.5" [y2]="marker.y2 - 0.5"
-      (click)="handleMarkerClick($event, marker)" style="pointer-events: fill"></g>
+    <g
+      *ngFor="let marker of rectangleMarkers$ | async; trackBy: trackById"
+      app-svg-rectangle-marker
+      class="region-marker"
+      [marker]="marker"
+      (click)="handleMarkerClick($event, marker)"
+      style="pointer-events: fill"
+    ></g>
+
+    <g
+      *ngFor="let marker of tearDropMarkers$ | async; trackBy: trackById"
+      app-svg-teardrop-marker
+      class="source-marker"
+      [marker]="marker"
+      (click)="handleMarkerClick($event, marker)"
+      style="pointer-events: fill"
+    ></g>
+    <g
+      *ngFor="let marker of lineMarkers$ | async; trackBy: trackById"
+      app-svg-line-marker
+      class="line-marker"
+      [marker]="marker"
+      (click)="handleMarkerClick($event, marker)"
+      style="pointer-events: fill"
+    ></g>
   </g>
   <g>
-    <g *ngFor="let data of (markerTexts$ | async); trackBy: trackById" app-svg-text-marker [x]="data.x" [y]="data.y" [dx]="data.dx" [dy]="data.dy" [text]="data.text"
-    [attr.transform]="data.transform" [selected]="data.selected" [anchor]="data.anchor"
-    style="pointer-events: fill"></g>
+    <g
+      *ngFor="let data of markerTexts$ | async; trackBy: trackById"
+      app-svg-text-marker
+      [x]="data.x"
+      [y]="data.y"
+      [dx]="data.dx"
+      [dy]="data.dy"
+      [text]="data.text"
+      [attr.transform]="data.transform"
+      [selected]="data.selected"
+      [anchor]="data.anchor"
+      style="pointer-events: fill"
+    ></g>
   </g>
 </svg>

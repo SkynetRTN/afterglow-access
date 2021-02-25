@@ -1,0 +1,39 @@
+<svg:g class="svg-ellipse-marker" [class.selected]="marker.selected" [attr.transform]="getTransform()">
+  <svg:ellipse
+    class="stroke"
+    [attr.cx]="0"
+    [attr.cy]="0"
+    [attr.rx]="marker.apertureA"
+    [attr.ry]="marker.apertureB"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    style="fill-opacity: 0"
+    [style.stroke-width]="strokeWidth"
+    [style.stroke]="marker.selected ? selectedStroke : apertureStroke"
+  />
+  <svg:ellipse
+    class="stroke"
+    [attr.cx]="0"
+    [attr.cy]="0"
+    [attr.rx]="marker.annulusAIn"
+    [attr.ry]="marker.annulusBIn"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    style="fill-opacity: 0"
+    [style.stroke-width]="strokeWidth"
+    [style.stroke]="marker.selected ? selectedStroke : innerAnnulusStroke"
+  />
+  <svg:ellipse
+    class="stroke"
+    [attr.cx]="0"
+    [attr.cy]="0"
+    [attr.rx]="marker.annulusAOut"
+    [attr.ry]="marker.annulusBOut"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    style="fill-opacity: 0"
+    [style.stroke-width]="strokeWidth"
+    [style.stroke]="marker.selected ? selectedStroke : outerAnnulusStroke"
+  />
+
+  <!-- <svg:text *ngIf="label" class="label" [attr.x]="x" [attr.y]="y" [attr.dy]="radius*-1.2" [attr.transform]="'translate(' + x + ',' + y + ') rotate(180) scale(-1,1)' + 'translate(' + -x + ',' + -y + ')'">
+    {{label}}
+  </svg:text> -->
+</svg:g>

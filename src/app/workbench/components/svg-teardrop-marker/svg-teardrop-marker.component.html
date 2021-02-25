@@ -1,4 +1,4 @@
-<svg:g #svgGroup class="svg-teardrop-marker" [class.selected]="selected">
+<svg:g class="svg-teardrop-marker" [class.selected]="marker.selected" [attr.transform]="getTransform()">
   <path
     *ngIf="showShadow"
     class="shadow"

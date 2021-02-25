@@ -4,6 +4,7 @@ export enum MarkerType {
   CIRCLE,
   TEARDROP,
   TEXT,
+  APERTURE,
 }
 
 interface IMarker {
@@ -37,6 +38,20 @@ export interface CircleMarker extends IMarker {
   labelTheta: number;
 }
 
+export interface ApertureMarker extends IMarker {
+  x: number;
+  y: number;
+  apertureA: number;
+  apertureB: number;
+  apertureTheta: number;
+  annulusAIn: number;
+  annulusBIn: number;
+  annulusAOut: number;
+  annulusBOut: number;
+  labelGap: number;
+  labelTheta: number;
+}
+
 export interface TeardropMarker extends CircleMarker {
   theta: number;
 }
@@ -47,4 +62,4 @@ export interface TextMarker extends IMarker {
   text: string;
 }
 
-export type Marker = LineMarker | RectangleMarker | CircleMarker | TeardropMarker | TextMarker;
+export type Marker = LineMarker | RectangleMarker | CircleMarker | TeardropMarker | TextMarker | ApertureMarker;

@@ -1,4 +1,5 @@
 import { Component, OnInit, Input, OnChanges, ChangeDetectionStrategy } from "@angular/core";
+import { LineMarker } from '../../models/marker';
 
 @Component({
   selector: "[app-svg-line-marker]",
@@ -7,13 +8,9 @@ import { Component, OnInit, Input, OnChanges, ChangeDetectionStrategy } from "@a
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgLineMarkerComponent implements OnInit, OnChanges {
-  @Input() x1: number;
-  @Input() y1: number;
-  @Input() x2: number;
-  @Input() y2: number;
+  @Input() marker: LineMarker;
   @Input() showOutline: boolean = true;
   @Input() showShadow: boolean = true;
-  @Input() selected: boolean = false;
 
   constructor() {}
 

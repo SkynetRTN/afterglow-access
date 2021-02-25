@@ -14,7 +14,7 @@ import {
   SimpleChanges,
 } from "@angular/core";
 import { Point, Matrix, Rectangle } from "paper";
-import { Marker, MarkerType, CircleMarker, TeardropMarker, RectangleMarker, LineMarker } from "../../models/marker";
+import { Marker, MarkerType, CircleMarker, TeardropMarker, RectangleMarker, LineMarker, ApertureMarker } from "../../models/marker";
 import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
 import { Transform, transformToMatrix } from "../../../data-files/models/transformation";
 import { BehaviorSubject, combineLatest, Observable } from "rxjs";
@@ -82,6 +82,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   rectangleMarkers$: Observable<RectangleMarker[]>;
   tearDropMarkers$: Observable<TeardropMarker[]>;
   lineMarkers$: Observable<LineMarker[]>;
+  apertureMarkers$: Observable<ApertureMarker[]>;
 
   markerTexts$: Observable<Array<{
     x: number;
@@ -112,6 +113,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
     this.lineMarkers$ = this.markers$.pipe(
       map(markers => markers.filter(m => m.type == MarkerType.LINE) as LineMarker[])
+    )
+
+    this.apertureMarkers$ = this.markers$.pipe(
+      map(markers => markers.filter(m => m.type == MarkerType.APERTURE) as ApertureMarker[])
     )
 
     this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$, this.transform$]).pipe(

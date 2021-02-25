@@ -1,4 +1,5 @@
 import { Component, OnInit, Input, ChangeDetectionStrategy, AfterViewInit, ChangeDetectorRef } from "@angular/core";
+import { CircleMarker } from '../../models/marker';
 
 @Component({
   selector: "[app-svg-circle-marker]",
@@ -7,15 +8,11 @@ import { Component, OnInit, Input, ChangeDetectionStrategy, AfterViewInit, Chang
   styleUrls: ["./svg-circle-marker.component.css"],
 })
 export class SvgCircleMarkerComponent implements OnInit, AfterViewInit {
-  @Input() x: number;
-  @Input() y: number;
-  @Input() radius: number;
-  @Input() label: string;
+  @Input() marker: CircleMarker;
   @Input() showOutline: boolean = true;
   @Input() showShadow: boolean = true;
-  @Input() selected: boolean = false;
 
-  @Input() stroke: string = "#002175";
+  @Input() stroke: string = "rgb(0,33,117,0.9)";
   @Input() strokeWidth: number = 3;
   @Input() selectedStroke: string = "#ff8b00";
 

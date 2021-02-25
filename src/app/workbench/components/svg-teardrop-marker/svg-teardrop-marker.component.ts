@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, OnChanges, ViewChild, ElementRef, ChangeDetectionStrategy } from "@angular/core";
 
 import { Matrix, Point } from "paper";
+import { TeardropMarker } from '../../models/marker';
 
 @Component({
   selector: "[app-svg-teardrop-marker]",
@@ -9,28 +10,26 @@ import { Matrix, Point } from "paper";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgTeardropMarkerComponent implements OnInit, OnChanges {
-  @Input() x: number;
-  @Input() y: number;
-  @Input() radius: number;
-  @Input() theta: number = 0;
+  @Input() marker: TeardropMarker;
   @Input() showOutline: boolean = true;
   @Input() showShadow: boolean = true;
-  @Input() selected: boolean = false;
 
-  @ViewChild("svgGroup", { static: true }) svgGroup: ElementRef;
   lastTheta: number;
 
   constructor() {}
 
+  getTransform() {
+    let center = new Point(15, 26);
+    let t = new Matrix();
+    t.translate(this.marker.x - center.x - 0.5, this.marker.y - center.y - 0.5);
+    t.rotate(-this.marker.theta - 180, center);
+    t.scale(this.marker.radius / 12.8, center);
+    return `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`;
+  }
+
   ngOnInit() {}
 
   ngOnChanges() {
-    let center = new Point(15, 26);
-    if (!this.svgGroup) return;
-    let t = new Matrix();
-    t.translate(this.x - center.x, this.y - center.y);
-    t.rotate(-this.theta - 180, center);
-    t.scale(this.radius / 12.8, center);
-    this.svgGroup.nativeElement.setAttribute("transform", `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`);
+    
   }
 }

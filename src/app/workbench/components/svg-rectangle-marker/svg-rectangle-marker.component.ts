@@ -1,4 +1,5 @@
 import { Component, OnInit, Input, ChangeDetectionStrategy } from "@angular/core";
+import { RectangleMarker } from '../../models/marker';
 
 @Component({
   selector: "[app-svg-rectangle-marker]",
@@ -7,12 +8,8 @@ import { Component, OnInit, Input, ChangeDetectionStrategy } from "@angular/core
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgRectangleMarkerComponent implements OnInit {
-  @Input() x: number;
-  @Input() y: number;
-  @Input() width: number;
-  @Input() height: number;
+  @Input() marker: RectangleMarker;
   @Input() showOutline: boolean = true;
-  @Input() selected: boolean = false;
 
   constructor() {}
 

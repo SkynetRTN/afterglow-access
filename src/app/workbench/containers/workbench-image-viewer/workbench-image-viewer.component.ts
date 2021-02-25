@@ -33,7 +33,7 @@ import {
   getExpLength,
   toKeyValueHash,
 } from "../../../data-files/models/data-file";
-import { Marker, LineMarker, MarkerType, TeardropMarker, CircleMarker, RectangleMarker } from "../../models/marker";
+import { Marker, LineMarker, MarkerType, TeardropMarker, CircleMarker, RectangleMarker, ApertureMarker } from "../../models/marker";
 import { BehaviorSubject, Subject } from "rxjs";
 import {
   CanvasMouseEvent,
@@ -514,7 +514,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
               let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
               let showSourceLabels = config.showSourceLabels;
 
-              let markers: Array<CircleMarker | TeardropMarker> = [];
+              let markers: Array<CircleMarker | TeardropMarker | ApertureMarker> = [];
               let mode = coordMode;
 
               if (!header.wcs || !header.wcs.isValid()) mode = "pixel";
@@ -529,34 +529,61 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                   return false;
                 }
 
-                if (source.pm) {
-                  markers.push({
+                let photData = state.sourcePhotometryData[source.id];
+                if(photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
+                  let apertureMarker: ApertureMarker = {
                     id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                    type: MarkerType.TEARDROP,
-                    x: coord.x,
-                    y: coord.y,
-                    radius: 15,
-                    labelGap: 14,
+                    type: MarkerType.APERTURE,
+                    x: photData.x,
+                    y: photData.y,
+                    apertureA: photData.aperA,
+                    apertureB: photData.aperB,
+                    apertureTheta: photData.aperTheta,
+                    annulusAIn: photData.annulusAIn,
+                    annulusBIn: photData.annulusBIn,
+                    annulusAOut: photData.annulusAOut,
+                    annulusBOut: photData.annulusBOut,
                     labelTheta: 0,
-                    label: showSourceLabels ? source.label : "",
-                    theta: coord.theta,
-                    selected: selected,
-                    data: { source: source },
-                  } as TeardropMarker);
-                } else {
-                  markers.push({
-                    id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                    type: MarkerType.CIRCLE,
-                    x: coord.x,
-                    y: coord.y,
-                    radius: 15,
                     labelGap: 14,
-                    labelTheta: 0,
                     label: showSourceLabels ? source.label : "",
                     selected: selected,
                     data: { source: source },
-                  } as CircleMarker);
+                  };
+
+                  markers.push(apertureMarker);
                 }
+                else {
+                  if (source.pm) {
+                    markers.push({
+                      id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+                      type: MarkerType.TEARDROP,
+                      x: coord.x,
+                      y: coord.y,
+                      radius: 15,
+                      labelGap: 14,
+                      labelTheta: 0,
+                      label: showSourceLabels ? source.label : "",
+                      theta: coord.theta,
+                      selected: selected,
+                      data: { source: source },
+                    } as TeardropMarker);
+                  } else {
+                    markers.push({
+                      id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+                      type: MarkerType.CIRCLE,
+                      x: coord.x,
+                      y: coord.y,
+                      radius: 15,
+                      labelGap: 14,
+                      labelTheta: 0,
+                      label: showSourceLabels ? source.label : "",
+                      selected: selected,
+                      data: { source: source },
+                    } as CircleMarker);
+                  }
+                }
+
+               
               });
 
               return markers;
