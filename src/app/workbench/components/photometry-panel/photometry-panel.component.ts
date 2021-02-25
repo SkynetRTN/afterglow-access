@@ -440,7 +440,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     return numSelected === numRows;
   }
 
-  exportSourceData(rows: Array<{ source: Source; data: PhotData }>) {
+  exportSourceData(rows: Array<{ source: Source; data: PhotometryData }>) {
     let data = this.papa.unparse(
       rows.map((row) => {
         let time = row.data.time ? moment.utc(row.data.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;

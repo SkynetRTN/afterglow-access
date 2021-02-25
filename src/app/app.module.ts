@@ -45,6 +45,8 @@ import { IImageData } from "./data-files/models/image-data";
 import { TreeModule } from "@circlon/angular-tree-component";
 import * as WebFont from "webfontloader";
 import { ngxsConfig } from "./ngxs.config";
+import { WorkbenchStateModel } from './workbench/models/workbench-state';
+import { PhotometryPanelState } from './workbench/models/photometry-file-state';
 
 WebFont.load({
   custom: { families: ["Material Icons", "Material Icons Outline"] },
@@ -111,6 +113,25 @@ export function dataFileSanitizer(v) {
   return state;
 }
 
+export function workbenchSanitizer(v) {
+  let state = {
+    ...v,
+  } as WorkbenchStateModel;
+
+  state.photometryPanelStateEntities = {
+    ...state.photometryPanelStateEntities,
+  };
+  Object.keys(state.photometryPanelStateEntities).forEach((key) => {
+    let photPanelState: PhotometryPanelState = {
+      ...state.photometryPanelStateEntities[key],
+      sourcePhotometryData: {}
+    };
+
+    state.photometryPanelStateEntities[key] = photPanelState;
+  });
+  return state;
+}
+
 @NgModule({
   imports: [
     TreeModule,
@@ -149,6 +170,10 @@ export function dataFileSanitizer(v) {
         {
           key: DataFilesState,
           sanitize: dataFileSanitizer,
+        },
+        {
+          key: WorkbenchState,
+          sanitize: workbenchSanitizer,
         },
       ],
       storage: StorageOption.SessionStorage,
