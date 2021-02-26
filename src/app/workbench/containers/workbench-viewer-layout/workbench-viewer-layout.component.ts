@@ -22,9 +22,14 @@ import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from "../../model
 import { Observable } from "rxjs";
 import { WorkbenchState } from "../../workbench.state";
 import { tap, map } from "rxjs/operators";
-import { ViewerMarkerMouseEvent, ViewerCanvasMouseEvent } from "../workbench-viewer-panel/workbench-viewer-panel.component";
+import { ViewerMarkerMouseEvent, ViewerCanvasMouseEvent, ViewerCanvasMouseDragEvent } from "../workbench-viewer-panel/workbench-viewer-panel.component";
 
 export interface ViewerPanelCanvasMouseEvent extends ViewerCanvasMouseEvent {
+  panelId: string;
+  panel: ViewerPanel;
+}
+
+export interface ViewerPanelCanvasMouseDragEvent extends ViewerCanvasMouseDragEvent {
   panelId: string;
   panel: ViewerPanel;
 }
@@ -33,6 +38,8 @@ export interface ViewerPanelMarkerMouseEvent extends ViewerMarkerMouseEvent {
   panelId: string;
   panel: ViewerPanel;
 }
+
+
 
 @Component({
   selector: "app-workbench-viewer-layout",
@@ -67,7 +74,12 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   @Input() itemIds: string[];
 
   @Output() onImageClick = new EventEmitter<ViewerPanelCanvasMouseEvent>();
-  @Output() onImageMove = new EventEmitter<ViewerPanelCanvasMouseEvent>();
+  @Output() onImageMouseDown = new EventEmitter<ViewerPanelCanvasMouseEvent>();
+  @Output() onImageMouseUp = new EventEmitter<ViewerPanelCanvasMouseEvent>();
+  @Output() onImageMouseMove = new EventEmitter<ViewerPanelCanvasMouseEvent>();
+  @Output() onImageMouseDragStart = new EventEmitter<ViewerPanelCanvasMouseDragEvent>();
+  @Output() onImageMouseDrag = new EventEmitter<ViewerPanelCanvasMouseDragEvent>();
+  @Output() onImageMouseDragEnd = new EventEmitter<ViewerPanelCanvasMouseDragEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerPanelMarkerMouseEvent>();
   @Output() onFileClose = new EventEmitter<string>();
   @Output() onFileSave = new EventEmitter<string>();
@@ -94,29 +106,55 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
 
   ngOnDestroy() {}
 
-  handleViewerPanelContainerImageMove($event: ViewerPanelCanvasMouseEvent) {
-    this.onImageMove.emit($event);
-  }
-
-  handleViewerPanelContainerImageClick($event: ViewerPanelCanvasMouseEvent) {
-    // if(panelId != this.mouseDownActiveViewerId) return;
-
-    this.onImageClick.emit($event);
-  }
-
-  handleViewerPanelContainerMarkerClick($event: ViewerPanelMarkerMouseEvent) {
-    this.onMarkerClick.emit($event);
-  }
-
-  handleViewerPanelImageMove($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
-    this.onImageMove.emit({
+  onPanelImageMouseDown($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
+    this.onImageMouseDown.emit({
       panelId: panelId,
       panel: panel,
       ...$event,
     });
   }
 
-  handleViewerPanelImageClick($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
+  onPanelImageMouseUp($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
+    this.onImageMouseUp.emit({
+      panelId: panelId,
+      panel: panel,
+      ...$event,
+    });
+  }
+
+  onPanelImageMouseMove($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
+    this.onImageMouseMove.emit({
+      panelId: panelId,
+      panel: panel,
+      ...$event,
+    });
+  }
+
+  onPanelImageMouseDragStart($event: ViewerCanvasMouseDragEvent, panelId: string, panel: ViewerPanel) {
+    this.onImageMouseDragStart.emit({
+      panelId: panelId,
+      panel: panel,
+      ...$event,
+    });
+  }
+
+  onPanelImageMouseDrag($event: ViewerCanvasMouseDragEvent, panelId: string, panel: ViewerPanel) {
+    this.onImageMouseDrag.emit({
+      panelId: panelId,
+      panel: panel,
+      ...$event,
+    });
+  }
+
+  onPanelImageMouseDragEnd($event: ViewerCanvasMouseDragEvent, panelId: string, panel: ViewerPanel) {
+    this.onImageMouseDragEnd.emit({
+      panelId: panelId,
+      panel: panel,
+      ...$event,
+    });
+  }
+
+  onPanelImageClick($event: ViewerCanvasMouseEvent, panelId: string, panel: ViewerPanel) {
     // if(panelId != this.mouseDownActiveViewerId) return;
 
     this.onImageClick.emit({
@@ -126,7 +164,7 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
     });
   }
 
-  handleViewerPanelMarkerClick($event: ViewerMarkerMouseEvent, panelId: string, panel: ViewerPanel) {
+  onPanelMarkerClick($event: ViewerMarkerMouseEvent, panelId: string, panel: ViewerPanel) {
     this.onMarkerClick.emit({
       panelId: panelId,
       panel: panel,

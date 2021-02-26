@@ -60,6 +60,15 @@ export type CanvasMouseEvent = {
   mouseEvent: MouseEvent;
 };
 
+export type CanvasMouseDragEvent = {
+  $mouseDownEvent: MouseEvent;
+  $mouseMoveEvent: MouseEvent;
+  viewportStart: { x: number; y: number };
+  viewportEnd: { x: number; y: number };
+  imageStart: { x: number; y: number };
+  imageEnd: { x: number; y: number };
+};
+
 export type MoveByEvent = {
   xShift: number;
   yShift: number;
@@ -90,9 +99,10 @@ export type LoadTileEvent = {
     "(mousemove)": "onViewportMove($event)",
     // '(touchmove)': 'onViewportMove($event)',
     "[class.dragging]": "dragging",
+    "[class.panning]": "panning",
     "[class.mouse-over-image]": "mouseOverImage",
   },
-  exportAs: "panZoomCanvas"
+  exportAs: "panZoomCanvas",
 })
 export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() imageData: IImageData<Uint32Array>;
@@ -101,8 +111,13 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   @Output() onViewportChange = new EventEmitter<ViewportChangeEvent>();
   @Output() onCanvasSizeChange = new EventEmitter<CanvasSizeChangeEvent>();
   @Output() onViewportSizeChange = new EventEmitter<ViewportSizeChangeEvent>();
+  @Output() onImageMouseDown = new EventEmitter<CanvasMouseEvent>();
+  @Output() onImageMouseUp = new EventEmitter<CanvasMouseEvent>();
+  @Output() onImageMouseMove = new EventEmitter<CanvasMouseEvent>();
+  @Output() onImageMouseDragStart = new EventEmitter<CanvasMouseDragEvent>();
+  @Output() onImageMouseDragEnd = new EventEmitter<CanvasMouseDragEvent>();
+  @Output() onImageMouseDrag = new EventEmitter<CanvasMouseDragEvent>();
   @Output() onImageClick = new EventEmitter<CanvasMouseEvent>();
-  @Output() onImageMove = new EventEmitter<CanvasMouseEvent>();
 
   @Output() onMoveBy = new EventEmitter<MoveByEvent>();
   @Output() onZoomBy = new EventEmitter<ZoomByEvent>();
@@ -123,6 +138,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   private dragging: boolean = false;
   private dragged: boolean = false;
+  private panning: boolean = false;
+  private panned: boolean = false;
+  private dragStartOnImage: boolean = false;
+  private $dragStartMouseDownEvent: MouseEvent = null;
   private mouseOverImage: boolean = false;
   // minimum number of pixels mouse must move after click to not be considered
   private maxDeltaBeforeMove: number = 5;
@@ -404,15 +423,27 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     event.preventDefault();
   }
 
-  public handleImageMouseDown(event: MouseEvent) {
+  public handleImageMouseDown($event: MouseEvent) {
     if (!this.initialized) return;
 
     this.dragging = false;
     this.dragged = false;
-    let viewportCoord = this.viewportCoordFromEvent(event);
-    if (!this.mouseOnImage(viewportCoord)) {
-      return;
-    }
+    this.panning = false;
+    this.panned = false;
+
+    let viewportCoord = this.viewportCoordFromEvent($event);
+    let hitImage = this.mouseOnImage(viewportCoord);
+    let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
+    this.onImageMouseDown.emit({
+      hitImage: hitImage,
+      imageX: mouseImage.x,
+      imageY: mouseImage.y,
+      mouseEvent: $event,
+      source: null,
+    });
+
+    this.dragStartOnImage = hitImage;
+    this.$dragStartMouseDownEvent = $event;
 
     this.mouseDragVector.topLeft = new Point(viewportCoord.x, viewportCoord.y);
     this.placeholder.removeEventListener("mousedown", this.handleImageMouseDownBound);
@@ -432,54 +463,102 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
   }
 
-  public handleDocumentMouseMoveWhileDown(event: MouseEvent) {
+  public handleDocumentMouseMoveWhileDown($event: MouseEvent) {
     if (!this.initialized) return;
-    let viewportCoord = this.viewportCoordFromEvent(event);
+    let viewportCoord = this.viewportCoordFromEvent($event);
 
     this.mouseDragVector.bottomRight = new Point(viewportCoord.x, viewportCoord.y);
 
-    // // test if image is almost entirely out of viewer
-    // let buffer = 50;
-    // let c1 = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), getHeight(this.imageFile)));
-    // let c2 = this.imageCoordToViewportCoord(new Point(0, 0));
-    // let c3 = this.imageCoordToViewportCoord(new Point(0, getHeight(this.imageFile)));
-    // let c4 = this.imageCoordToViewportCoord(new Point(getWidth(this.imageFile), 0));
-    // let maxPoint = new Point(Math.max(c1.x, c2.x, c3.x, c4.x), Math.max(c1.y, c2.y, c3.y, c4.y));
-    // let minPoint =  new Point(Math.min(c1.x, c2.x, c3.x, c4.x), Math.min(c1.y, c2.y, c3.y, c4.y));
-    // let imageRect = new Rectangle(minPoint.x + buffer + this.mouseDragVector.width,
-    //   minPoint.y + buffer + this.mouseDragVector.height,
-    //   maxPoint.x - minPoint.x - (buffer * 2),
-    //   maxPoint.y - minPoint.y - (buffer * 2)
-    // );
-
-    // let viewportRect = new Rectangle(0, 0, this.targetCanvas.clientWidth, this.targetCanvas.clientHeight);
-    // if (!imageRect.intersects(viewportRect)) {
-    //   let e = event || window.event;
-    //   return;
-    // }
+    let imageDragStart = this.viewportCoordToImageCoord(this.mouseDragVector.topLeft);
 
     this.sumPixelsMoved += this.mouseDragVector.topLeft.getDistance(this.mouseDragVector.bottomRight);
-    if (this.sumPixelsMoved > this.maxDeltaBeforeMove && !this.dragging) {
-      this.dragging = true;
-      this.dragged = true;
+    let modifierPressed = ["shiftKey", "altKey", "metaKey", "ctrlKey"].some((key) => this.$dragStartMouseDownEvent[key]);
+
+    let viewportStart = {
+      x: this.mouseDragVector.topLeft.x,
+      y: this.mouseDragVector.topLeft.y,
+    };
+    let viewportEnd = {
+      x: this.mouseDragVector.bottomRight.x,
+      y: this.mouseDragVector.bottomRight.y,
+    };
+    let imageStart = this.viewportCoordToImageCoord(viewportStart);
+    let imageEnd = this.viewportCoordToImageCoord(viewportEnd);
+
+    if (!this.dragging) {
+      if (this.sumPixelsMoved > this.maxDeltaBeforeMove) {
+        this.onImageMouseDragStart.emit({
+          $mouseDownEvent: this.$dragStartMouseDownEvent,
+          $mouseMoveEvent: $event,
+          viewportStart: viewportStart,
+          viewportEnd: viewportEnd,
+          imageStart: imageStart,
+          imageEnd: imageEnd,
+        });
+        this.dragging = true;
+        this.dragged = true;
+      }
+    } else {
+      this.onImageMouseDrag.emit({
+        $mouseDownEvent: this.$dragStartMouseDownEvent,
+        $mouseMoveEvent: $event,
+        viewportStart: viewportStart,
+        viewportEnd: viewportEnd,
+        imageStart: imageStart,
+        imageEnd: imageEnd,
+      });
     }
 
-    if (this.dragging) {
-      let e = event || window.event;
+    if (this.dragging && !modifierPressed) {
+      this.panning = true;
+      this.panned = true;
+      let e = $event || window.event;
       this.moveBy(this.mouseDragVector.width, this.mouseDragVector.height);
       this.mouseDragVector.topLeft = this.mouseDragVector.bottomRight.clone();
-      event.preventDefault();
+      $event.preventDefault();
     }
   }
 
-  public handleDocumentMouseUp(event: MouseEvent) {
+  public handleDocumentMouseUp($event: MouseEvent) {
     if (!this.initialized) return;
     document.removeEventListener("mouseup", this.handleDocumentMouseUpBound);
     document.removeEventListener("mousemove", this.handleDocumentMouseMoveWhileDownBound);
     // document.removeEventListener('touchmove', this.handleDocumentMouseMoveWhileDownBound);
     this.placeholder.addEventListener("mousedown", this.handleImageMouseDownBound);
     // this.placeholder.addEventListener('touchstart', this.handleImageMouseDownBound);
+    if (this.dragging) {
+      let viewportStart = {
+        x: this.mouseDragVector.topLeft.x,
+        y: this.mouseDragVector.topLeft.y,
+      };
+      let viewportEnd = {
+        x: this.mouseDragVector.bottomRight.x,
+        y: this.mouseDragVector.bottomRight.y,
+      };
+      let imageStart = this.viewportCoordToImageCoord(viewportStart);
+      let imageEnd = this.viewportCoordToImageCoord(viewportEnd);
+
+      this.onImageMouseDragEnd.emit({
+        $mouseDownEvent: this.$dragStartMouseDownEvent,
+        $mouseMoveEvent: $event,
+        viewportStart: viewportStart,
+        viewportEnd: viewportEnd,
+        imageStart: imageStart,
+        imageEnd: imageEnd,
+      });
+    }
     this.dragging = false;
+
+    let viewportCoord = this.viewportCoordFromEvent($event);
+    let hitImage = this.mouseOnImage(viewportCoord);
+    let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
+    this.onImageMouseUp.emit({
+      hitImage: hitImage,
+      imageX: mouseImage.x,
+      imageY: mouseImage.y,
+      mouseEvent: $event,
+      source: null,
+    });
   }
 
   onViewportMove($event: MouseEvent) {
@@ -487,7 +566,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       let viewportCoord = this.viewportCoordFromEvent($event);
       let onImage = this.mouseOnImage(viewportCoord);
       let mouseImage = this.viewportCoordToImageCoord(viewportCoord);
-      this.onImageMove.emit({
+      this.onImageMouseMove.emit({
         hitImage: onImage,
         imageX: mouseImage.x,
         imageY: mouseImage.y,

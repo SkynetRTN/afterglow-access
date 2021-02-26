@@ -44,6 +44,7 @@ import {
   LoadTileEvent,
   CanvasSizeChangeEvent,
   ZoomToFitEvent,
+  CanvasMouseDragEvent,
 } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import {
   MarkerMouseEvent,
@@ -113,7 +114,17 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   @Output()
   onImageClick = new EventEmitter<CanvasMouseEvent>();
   @Output()
-  onImageMove = new EventEmitter<CanvasMouseEvent>();
+  onImageMouseMove = new EventEmitter<CanvasMouseEvent>();
+  @Output()
+  onImageMouseDown = new EventEmitter<CanvasMouseEvent>();
+  @Output()
+  onImageMouseUp = new EventEmitter<CanvasMouseEvent>();
+  @Output()
+  onImageMouseDragStart = new EventEmitter<CanvasMouseDragEvent>();
+  @Output()
+  onImageMouseDrag = new EventEmitter<CanvasMouseDragEvent>();
+  @Output()
+  onImageMouseDragEnd = new EventEmitter<CanvasMouseDragEvent>();
   @Output()
   onMarkerClick = new EventEmitter<MarkerMouseEvent>();
   @Output()
@@ -609,7 +620,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
   ngOnChanges(changes: { [key: string]: SimpleChange }) {}
 
-  handleImageMove($event: CanvasMouseEvent) {
+  handleImageMouseMove($event: CanvasMouseEvent) {
     if ($event.hitImage) {
       this.imageMouseX = $event.imageX;
       this.imageMouseY = $event.imageY;
@@ -618,7 +629,31 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.onImageMove.emit($event);
+    this.onImageMouseMove.emit($event);
+  }
+
+  handleImageMouseDown($event: CanvasMouseEvent) {
+    if ($event.hitImage) {
+      this.imageMouseX = $event.imageX;
+      this.imageMouseY = $event.imageY;
+    } else {
+      this.imageMouseX = null;
+      this.imageMouseY = null;
+    }
+
+    this.onImageMouseDown.emit($event);
+  }
+
+  handleImageMouseUp($event: CanvasMouseEvent) {
+    if ($event.hitImage) {
+      this.imageMouseX = $event.imageX;
+      this.imageMouseY = $event.imageY;
+    } else {
+      this.imageMouseX = null;
+      this.imageMouseY = null;
+    }
+
+    this.onImageMouseUp.emit($event);
   }
 
   handleImageClick($event: CanvasMouseEvent) {

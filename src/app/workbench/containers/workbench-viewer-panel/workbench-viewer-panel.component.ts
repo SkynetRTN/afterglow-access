@@ -15,7 +15,7 @@ import { map, filter, take, tap } from "rxjs/operators";
 import { Viewer } from "../../models/viewer";
 
 import { DataFile, getWidth, getHeight, ImageHdu, IHdu } from "../../../data-files/models/data-file";
-import { CanvasMouseEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
+import { CanvasMouseEvent, CanvasMouseDragEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
 import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Subscription } from "rxjs";
 import { ViewMode } from "../../models/view-mode";
@@ -30,6 +30,11 @@ import { IWorkbenchHduState } from "../../models/workbench-file-state";
 import { CenterRegionInViewport, ZoomBy } from "../../../data-files/data-files.actions";
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
+  viewerId: string;
+  viewer: Viewer;
+}
+
+export interface ViewerCanvasMouseDragEvent extends CanvasMouseDragEvent {
   viewerId: string;
   viewer: Viewer;
 }
@@ -79,7 +84,12 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Input() hasFocus: boolean;
 
   @Output() onImageClick = new EventEmitter<ViewerCanvasMouseEvent>();
-  @Output() onImageMove = new EventEmitter<ViewerCanvasMouseEvent>();
+  @Output() onImageMouseMove = new EventEmitter<ViewerCanvasMouseEvent>();
+  @Output() onImageMouseDown = new EventEmitter<ViewerCanvasMouseEvent>();
+  @Output() onImageMouseUp = new EventEmitter<ViewerCanvasMouseEvent>();
+  @Output() onImageMouseDragStart = new EventEmitter<ViewerCanvasMouseDragEvent>();
+  @Output() onImageMouseDrag = new EventEmitter<ViewerCanvasMouseDragEvent>();
+  @Output() onImageMouseDragEnd = new EventEmitter<ViewerCanvasMouseDragEvent>();
   @Output() onMarkerClick = new EventEmitter<ViewerMarkerMouseEvent>();
   @Output() onFileClose = new EventEmitter<string>();
   @Output() onFileSave = new EventEmitter<string>();
@@ -235,8 +245,48 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     }
   }
 
-  handleImageMove($event: ViewerCanvasMouseEvent, viewerId: string, viewer: Viewer) {
-    this.onImageMove.emit({
+  handleImageMouseMove($event: CanvasMouseEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMouseMove.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
+  }
+
+  handleImageMouseDown($event: CanvasMouseEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMouseDown.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
+  }
+
+  handleImageMouseUp($event: CanvasMouseEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMouseUp.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
+  }
+
+  handleImageMouseDragStart($event: CanvasMouseDragEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMouseDragStart.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
+  }
+
+  handleImageMouseDrag($event: CanvasMouseDragEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMouseDrag.emit({
+      viewerId: viewerId,
+      viewer: viewer,
+      ...$event,
+    });
+  }
+
+  handleImageMouseDragEnd($event: CanvasMouseDragEvent, viewerId: string, viewer: Viewer) {
+    this.onImageMouseDragEnd.emit({
       viewerId: viewerId,
       viewer: viewer,
       ...$event,

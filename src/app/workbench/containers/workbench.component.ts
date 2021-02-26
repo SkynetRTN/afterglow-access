@@ -133,6 +133,7 @@ import { WcsCalibrationJob, WcsCalibrationJobResult } from "../../jobs/models/wc
 import {
   ViewerPanelCanvasMouseEvent,
   ViewerPanelMarkerMouseEvent,
+  ViewerPanelCanvasMouseDragEvent,
 } from "./workbench-viewer-layout/workbench-viewer-layout.component";
 import { HduType } from "../../data-files/models/data-file-type";
 import {
@@ -1216,6 +1217,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: selectedHduIds }));
   }
 
+  onImageMouseDown($event: ViewerPanelCanvasMouseEvent) {
+    console.log("IMAGE MOUSE DOWN EVENT: ", $event)
+  }
+
+  onImageMouseUp($event: ViewerPanelCanvasMouseEvent) {
+    console.log("IMAGE MOUSE UP EVENT: ", $event)
+  }
+
   /* image viewer mouse event handlers */
   onImageClick($event: ViewerPanelCanvasMouseEvent) {
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
@@ -1396,7 +1405,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     }
   }
 
-  onImageMove($event: ViewerPanelCanvasMouseEvent) {
+  onImageMouseMove($event: ViewerPanelCanvasMouseEvent) {
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
     if (!viewer || viewer.type != "image") {
       return;
@@ -1441,6 +1450,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         break;
       }
     }
+  }
+
+  onImageMouseDragStart($event: ViewerPanelCanvasMouseDragEvent) {
+    console.log("DRAG STARTED: ", $event)
+  }
+
+  onImageMouseDrag($event: ViewerPanelCanvasMouseDragEvent) {
+    console.log("DRAGGED: ", $event)
+  }
+
+  onImageMouseDragEnd($event: ViewerPanelCanvasMouseDragEvent) {
+    console.log("DRAG ENDED: ", $event)
   }
 
   onMarkerClick($event: ViewerPanelMarkerMouseEvent) {
@@ -2046,6 +2067,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 let newFilename = file.name + '_' + index
                 viewers.filter(viewer => viewer.hduId == hduId || viewer.fileId == hdu.fileId).forEach(viewer => this.store.dispatch(new CloseViewer(viewer.id)))
                 this.store.dispatch(new InvalidateHeader(hduId));
+                console.log("HERE!!!!!!!!!: ", uuid, hdu && hdu.name ? hdu.name : `${file.name}_${index}`)
                 reqs.push(
                   this.dataFileService.updateFile(hduId, {
                     groupId: uuid,
