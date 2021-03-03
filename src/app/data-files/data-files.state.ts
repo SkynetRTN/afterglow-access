@@ -494,7 +494,7 @@ export class DataFilesState {
           let hdu: IHdu = {
             type: "hdu",
             id: coreFile.id,
-            fileId: coreFile.groupId,
+            fileId: coreFile.groupName,
             hduType: coreFile.type,
             order: coreFile.groupOrder,
             modified: coreFile.modified,
@@ -511,7 +511,7 @@ export class DataFilesState {
               id: hdu.fileId,
               assetPath: "/" + coreFile.assetPath,
               dataProviderId: coreFile.dataProvider,
-              name: coreFile.name,
+              name: coreFile.groupName,
               hduIds: [hdu.id],
               imageHduIds: hdu.hduType == HduType.IMAGE ? [hdu.id] : [],
               tableHduIds: hdu.hduType == HduType.TABLE ? [hdu.id] : [],
