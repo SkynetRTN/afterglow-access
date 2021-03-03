@@ -18,7 +18,7 @@ export interface CoreDataFile {
   name: string;
   dataProvider: string;
   assetPath: string;
-  groupId: string;
+  groupName: string;
   groupOrder: number;
   modified: boolean;
 }

@@ -160,7 +160,7 @@ export class AfterglowDataProviderService {
     }
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
-    params = params.set("group_id", fileId);
+    params = params.set("group_name", fileId);
 
     let uri = `${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString();
     if (!create) {
