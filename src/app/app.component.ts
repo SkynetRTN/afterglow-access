@@ -126,7 +126,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           if (this.helpDialog) return;
           this.helpDialog = this.dialog.open(HelpDialogComponent, {
             data: {},
-            width: "800px",
+            width: "900px",
             height: "600px",
           });
 
