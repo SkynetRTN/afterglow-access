@@ -85,7 +85,7 @@ export function parseDms(str) {
   return sign * result;
 }
 
-export function formatDms(value, digits, decimals, sep1, sep2, sep3, showplus) {
+export function formatDms(value, digits?, decimals?, sep1?, sep2?, sep3?, showplus?) {
   /*
     Format a decimal value as a sexagesimal string.
 
