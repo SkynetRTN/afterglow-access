@@ -4,5 +4,5 @@ import { JobBase, JobResultBase } from "./job-base";
 export interface BatchDownloadJob extends JobBase {
   readonly type: JobType.BatchDownload;
   fileIds?: string[];
-  groupIds?: string[];
+  groupNames?: string[];
 }
