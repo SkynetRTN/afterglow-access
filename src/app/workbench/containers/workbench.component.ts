@@ -85,6 +85,9 @@ import {
   ImportFromSurveyFail,
   ImportFromSurveySuccess,
   CloseViewer,
+  StartPhotometrySourceSelectionRegion,
+  UpdatePhotometrySourceSelectionRegion,
+  EndPhotometrySourceSelectionRegion,
 } from "../workbench.actions";
 import {
   LoadDataProviders,
@@ -1284,7 +1287,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               x: x,
               y: y,
               radius: 10,
-              labelGap: 8,
+              labelRadius: 8,
               labelTheta: 0,
             };
 
@@ -1392,7 +1395,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
             };
             this.store.dispatch(new AddSources([source]));
-          } else {
+          } else if(!$event.mouseEvent.ctrlKey) {
             this.store.dispatch(
               new UpdatePhotometryPanelConfig({
                 selectedSourceIds: [],
@@ -1453,15 +1456,66 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onImageMouseDragStart($event: ViewerPanelCanvasMouseDragEvent) {
-    console.log("DRAG STARTED: ", $event)
+    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
+    if (!viewer || viewer.type != "image") {
+      return;
+    }
+    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
+    let headerId = headerSelector(viewer.id);
+    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
+    switch (activeTool) {
+      case WorkbenchTool.PHOTOMETRY: {
+        if(!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey) return;
+        if(viewer.hduId == null) return;
+
+        this.store.dispatch(new StartPhotometrySourceSelectionRegion(viewer.hduId, $event.imageStart))
+        break;
+      }
+    }
   }
 
   onImageMouseDrag($event: ViewerPanelCanvasMouseDragEvent) {
-    console.log("DRAGGED: ", $event)
+    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
+    if (!viewer || viewer.type != "image") {
+      return;
+    }
+    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
+    let headerId = headerSelector(viewer.id);
+    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
+    switch (activeTool) {
+      case WorkbenchTool.PHOTOMETRY: {
+        if(!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey) return;
+        if(viewer.hduId == null) return;
+
+        this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(viewer.hduId, $event.imageEnd))
+        break;
+      }
+    }
   }
 
   onImageMouseDragEnd($event: ViewerPanelCanvasMouseDragEvent) {
-    console.log("DRAG ENDED: ", $event)
+    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
+    if (!viewer || viewer.type != "image") {
+      return;
+    }
+    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
+    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
+    let headerId = headerSelector(viewer.id);
+    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
+    switch (activeTool) {
+      case WorkbenchTool.PHOTOMETRY: {
+        if(!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey) return;
+        if(viewer.hduId == null) return;
+
+        this.store.dispatch(new EndPhotometrySourceSelectionRegion(viewer.hduId, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append'))
+        break;
+      }
+    }
   }
 
   onMarkerClick($event: ViewerPanelMarkerMouseEvent) {
@@ -1938,7 +1992,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
           let job: BatchDownloadJob = {
             type: JobType.BatchDownload,
             id: null,
-            groupIds: files.map((file) => file.id),
+            groupNames: files.map((file) => file.id),
           };
 
           let corrId = this.corrGen.next();
@@ -2070,7 +2124,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 console.log("HERE!!!!!!!!!: ", uuid, hdu && hdu.name ? hdu.name : `${file.name}_${index}`)
                 reqs.push(
                   this.dataFileService.updateFile(hduId, {
-                    groupId: uuid,
+                    groupName: uuid,
                     name: hdu && hdu.name ? hdu.name : `${file.name}_${index}`,
                     dataProvider: null,
                     assetPath: null,
@@ -2170,7 +2224,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                   this.store.dispatch(new InvalidateHeader(hduId));
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
-                      groupId: uuid,
+                      groupName: uuid,
                       name: newFilename,
                       dataProvider: null,
                       assetPath: null,

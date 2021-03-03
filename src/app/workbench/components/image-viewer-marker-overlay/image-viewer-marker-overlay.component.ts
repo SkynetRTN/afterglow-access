@@ -119,10 +119,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
       map(markers => markers.filter(m => m.type == MarkerType.APERTURE) as ApertureMarker[])
     )
 
-    this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$, this.transform$]).pipe(
-      map(([circleMarkers, tearDropMarkers, transform]) => {
-        if (!circleMarkers || !tearDropMarkers) return [];
-        let markers: (CircleMarker | TeardropMarker)[] = circleMarkers.concat(tearDropMarkers).filter(marker => marker.label && marker.label != '');
+    this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$, this.apertureMarkers$, this.transform$]).pipe(
+      map(([circleMarkers, tearDropMarkers, apertureMarkers, transform]) => {
+        if (!circleMarkers || !tearDropMarkers || !apertureMarkers) return [];
+        let markers: (CircleMarker | TeardropMarker | ApertureMarker)[] = [...circleMarkers, ...tearDropMarkers, ...apertureMarkers].filter(marker => marker.label && marker.label != '');
         return markers.map(m => {
           let matrix = transformToMatrix(transform);
           let p = matrix.transform(new Point(m.x, m.y));
@@ -151,7 +151,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
           while (labelTheta < 0) labelTheta += 360;
           labelTheta = labelTheta % 360;
 
-          let radius = m.radius + m.labelGap;
+          let radius = m.labelRadius;
           if (radius < 0) {
             radius *= -1;
             labelTheta += 180;

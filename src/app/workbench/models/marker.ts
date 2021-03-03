@@ -14,6 +14,12 @@ interface IMarker {
   class?: string;
   selected?: boolean;
   data?: { [key: string]: any };
+  tooltip?: {
+    hideDelay: number,
+    showDelay: number,
+    message: string,
+    class: string
+  }
 }
 
 export interface LineMarker extends IMarker {
@@ -34,7 +40,7 @@ export interface CircleMarker extends IMarker {
   x: number;
   y: number;
   radius: number;
-  labelGap: number;
+  labelRadius: number;
   labelTheta: number;
 }
 
@@ -48,7 +54,7 @@ export interface ApertureMarker extends IMarker {
   annulusBIn: number;
   annulusAOut: number;
   annulusBOut: number;
-  labelGap: number;
+  labelRadius: number;
   labelTheta: number;
 }
 

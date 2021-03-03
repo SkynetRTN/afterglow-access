@@ -7,6 +7,10 @@
       [marker]="marker"
       (click)="handleMarkerClick($event, marker)"
       style="pointer-events: fill"
+      [matTooltip]="marker.tooltip?.message"
+      [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+      [matTooltipShowDelay]="marker.tooltip?.showDelay"
+      [matTooltipClass]="marker.tooltip?.class"
     ></g>
 
     <g
@@ -16,6 +20,10 @@
       [marker]="marker"
       (click)="handleMarkerClick($event, marker)"
       style="pointer-events: fill"
+      [matTooltip]="marker.tooltip?.message"
+      [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+      [matTooltipShowDelay]="marker.tooltip?.showDelay"
+      [matTooltipClass]="marker.tooltip?.class"
     ></g>
 
     <g
@@ -25,6 +33,10 @@
       [marker]="marker"
       (click)="handleMarkerClick($event, marker)"
       style="pointer-events: fill"
+      [matTooltip]="marker.tooltip?.message"
+      [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+      [matTooltipShowDelay]="marker.tooltip?.showDelay"
+      [matTooltipClass]="marker.tooltip?.class"
     ></g>
 
     <g
@@ -34,6 +46,10 @@
       [marker]="marker"
       (click)="handleMarkerClick($event, marker)"
       style="pointer-events: fill"
+      [matTooltip]="marker.tooltip?.message"
+      [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+      [matTooltipShowDelay]="marker.tooltip?.showDelay"
+      [matTooltipClass]="marker.tooltip?.class"
     ></g>
     <g
       *ngFor="let marker of lineMarkers$ | async; trackBy: trackById"
@@ -42,6 +58,10 @@
       [marker]="marker"
       (click)="handleMarkerClick($event, marker)"
       style="pointer-events: fill"
+      [matTooltip]="marker.tooltip?.message"
+      [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+      [matTooltipShowDelay]="marker.tooltip?.showDelay"
+      [matTooltipClass]="marker.tooltip?.class"
     ></g>
   </g>
   <g>

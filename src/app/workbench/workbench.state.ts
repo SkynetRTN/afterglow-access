@@ -138,6 +138,9 @@ import {
   UpdateWcsCalibrationSettings,
   CreateWcsCalibrationJob,
   ImportFromSurveyFail,
+  StartPhotometrySourceSelectionRegion,
+  UpdatePhotometrySourceSelectionRegion,
+  EndPhotometrySourceSelectionRegion,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -198,8 +201,8 @@ import {
 import { SonificationJob, SonificationJobResult } from "../jobs/models/sonification";
 import { IImageData } from "../data-files/models/image-data";
 import { MatDialog } from "@angular/material/dialog";
-import { AlertDialogConfig, AlertDialogComponent } from '../utils/alert-dialog/alert-dialog.component';
-import { wildcardToRegExp } from '../utils/regex';
+import { AlertDialogConfig, AlertDialogComponent } from "../utils/alert-dialog/alert-dialog.component";
+import { wildcardToRegExp } from "../utils/regex";
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "215396f5-1224-4e17-be97-e60f8aeb0a82",
@@ -258,7 +261,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     threshold: 3,
     fwhm: 0,
     deblend: false,
-    limit: 200,
+    limit: null,
     region: SourceExtractionRegionOption.ENTIRE_IMAGE,
   },
   fileInfoPanelConfig: {
@@ -435,9 +438,9 @@ export class WorkbenchState {
     if (!files || files.length == 0) return [];
     if (!fileListFilter) return files;
     let f = fileListFilter;
-    let regex = wildcardToRegExp('*' + fileListFilter.toLowerCase() + '*')
+    let regex = wildcardToRegExp("*" + fileListFilter.toLowerCase() + "*");
     return files
-      .filter(file => file.name.toLowerCase().match(regex))
+      .filter((file) => file.name.toLowerCase().match(regex))
       .sort((a, b) => {
         if (a.name < b.name) {
           return -1;
@@ -1284,7 +1287,7 @@ export class WorkbenchState {
         state.viewerLayoutItems[panelId].type != "panel"
       ) {
         //if a valid panel ID was not provided
-        let panelIds = state.viewerLayoutItemIds.filter((id) => state.viewerLayoutItems[id].type == "panel")
+        let panelIds = state.viewerLayoutItemIds.filter((id) => state.viewerLayoutItems[id].type == "panel");
         if (panelIds.length == 0) {
           //if no panels exist, create a new panel
           panelId = `PANEL_${state.nextViewerPanelIdSeed++}`;
@@ -1301,8 +1304,8 @@ export class WorkbenchState {
           rootContainer.itemIds.push(panelId);
         } else {
           // use currently focused panel
-          if(!state.focusedViewerPanelId) {
-            state.focusedViewerPanelId = panelIds[0]
+          if (!state.focusedViewerPanelId) {
+            state.focusedViewerPanelId = panelIds[0];
           }
           panelId = state.viewerLayoutItems[state.focusedViewerPanelId].id;
         }
@@ -3194,13 +3197,17 @@ export class WorkbenchState {
           fwhmX: null,
           fwhmY: null,
           theta: null,
-        }
+        };
         return s;
       }),
       result: null,
     };
 
-    console.log("JOB:::: ", job, job.sources.map(s => s.id));
+    console.log(
+      "JOB:::: ",
+      job,
+      job.sources.map((s) => s.id)
+    );
 
     let correlationId = this.correlationIdGenerator.next();
     dispatch(new CreateJob(job, 1000, correlationId));
@@ -3242,30 +3249,30 @@ export class WorkbenchState {
                   raHours: null,
                   expLength: null,
                   filter: null,
-                   flux: null,
-                   fluxError: null,
-                   mag: null,
-                   magError: null,
-                   telescope: null,
-                   time: null,
-                   fileId: fileId,
-                   fwhmX: null,
-                   fwhmY: null,
-                   pmEpoch: null,
-                   pmPixel: null,
-                   pmPosAnglePixel: null,
-                   pmPosAngleSky: null,
-                   pmSky: null,
-                   theta: null,
-                   x: null,
-                   y: null,
-                   annulusAIn: null,
-                   annulusAOut: null,
-                   annulusBIn: null,
-                   annulusBOut: null,
-                   aperA: null,
-                   aperB: null,
-                   aperTheta: null
+                  flux: null,
+                  fluxError: null,
+                  mag: null,
+                  magError: null,
+                  telescope: null,
+                  time: null,
+                  fileId: fileId,
+                  fwhmX: null,
+                  fwhmY: null,
+                  pmEpoch: null,
+                  pmPixel: null,
+                  pmPosAnglePixel: null,
+                  pmPosAngleSky: null,
+                  pmSky: null,
+                  theta: null,
+                  x: null,
+                  y: null,
+                  annulusAIn: null,
+                  annulusAOut: null,
+                  annulusBIn: null,
+                  annulusBOut: null,
+                  aperA: null,
+                  aperB: null,
+                  aperTheta: null,
                 });
               } else {
                 let time = null;
@@ -3274,14 +3281,13 @@ export class WorkbenchState {
                 }
                 photDatas.push({
                   ...d,
-                  time: time
+                  time: time,
                 });
               }
             });
           });
           dispatch(new AddPhotDatas(photDatas));
-        }
-        else {
+        } else {
           console.error("Photometry job error");
         }
       })
@@ -3359,6 +3365,7 @@ export class WorkbenchState {
           id: photometryPanelStateId,
           sourceExtractionJobId: null,
           sourcePhotometryData: {},
+          markerSelectionRegion: null,
         };
         state.photometryPanelStateIds.push(photometryPanelStateId);
 
@@ -3751,6 +3758,82 @@ export class WorkbenchState {
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
       sonificationPanelState.sonificationJobProgress = null;
       sonificationPanelState.sonificationUri = null;
+      return state;
+    });
+  }
+
+  @Action(StartPhotometrySourceSelectionRegion)
+  @ImmutableContext()
+  public startPhotometryMarkerRegionSelection(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId, point }: StartPhotometrySourceSelectionRegion
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+      let photState = state.photometryPanelStateEntities[photPanelStateId];
+      photState.markerSelectionRegion = {
+        x: point.x,
+        y: point.y,
+        width: 0,
+        height: 0,
+      };
+      return state;
+    });
+  }
+
+  @Action(UpdatePhotometrySourceSelectionRegion)
+  @ImmutableContext()
+  public updatePhotometryMarkerRegionSelection(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId, point }: UpdatePhotometrySourceSelectionRegion
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+      let photState = state.photometryPanelStateEntities[photPanelStateId];
+      if (!photState.markerSelectionRegion) return state;
+      let region = photState.markerSelectionRegion;
+      photState.markerSelectionRegion = {
+        ...region,
+        width: point.x - region.x,
+        height: point.y - region.y,
+      };
+      return state;
+    });
+  }
+
+  @Action(EndPhotometrySourceSelectionRegion)
+  @ImmutableContext()
+  public endPhotometryMarkerRegionSelection(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId, mode }: EndPhotometrySourceSelectionRegion
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+      let photState = state.photometryPanelStateEntities[photPanelStateId];
+
+      let region = photState.markerSelectionRegion;
+      let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId)(hduId);
+      let sourceIds = this.store.selectSnapshot(SourcesState.getSources).filter((source) => {
+        let coord = getSourceCoordinates(header, source);
+        let x1 = Math.min(region.x, region.x + region.width);
+        let y1 = Math.min(region.y, region.y + region.height);
+        let x2 = x1 + Math.abs(region.width);
+        let y2 = y1 + Math.abs(region.height);
+
+        return coord && coord.x >= x1 && coord.x < x2 && coord.y >= y1 && coord.y < y2;
+      }).map(source => source.id);
+
+      if(mode == 'remove') {
+        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.filter(id => !sourceIds.includes(id))
+      }
+      else {
+        let filteredSourceIds = sourceIds.filter(id => !state.photometryPanelConfig.selectedSourceIds.includes(id))
+        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.concat(filteredSourceIds)
+      }
+      photState.markerSelectionRegion = null;
       return state;
     });
   }

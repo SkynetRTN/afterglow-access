@@ -556,6 +556,35 @@ export class UpdateLine {
 }
 
 /*Photometry*/
+
+export class StartPhotometrySourceSelectionRegion {
+  public static readonly type = "[Photometry] Start Photometry Source Selection Region";
+
+  constructor(
+    public hduId: string,
+    public point: { x: number; y: number; }
+  ) { }
+}
+
+export class UpdatePhotometrySourceSelectionRegion {
+  public static readonly type = "[Photometry] Update Photometry Source Selection Region";
+
+  constructor(
+    public hduId: string,
+    public point: { x: number; y: number; }
+  ) { }
+}
+
+export class EndPhotometrySourceSelectionRegion {
+  public static readonly type = "[Photometry] End Photometry Source Selection Region";
+
+  constructor(
+    public hduId: string,
+    public mode: 'append' | 'remove'
+  ) { }
+}
+
+
 export class UpdateFilteredSources {
   public static readonly type = "[Photometry] Update Filtered Sources";
 

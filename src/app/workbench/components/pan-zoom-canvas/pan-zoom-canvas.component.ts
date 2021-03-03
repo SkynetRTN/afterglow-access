@@ -63,6 +63,7 @@ export type CanvasMouseEvent = {
 export type CanvasMouseDragEvent = {
   $mouseDownEvent: MouseEvent;
   $mouseMoveEvent: MouseEvent;
+  $mouseUpEvent: MouseEvent;
   viewportStart: { x: number; y: number };
   viewportEnd: { x: number; y: number };
   imageStart: { x: number; y: number };
@@ -490,6 +491,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
         this.onImageMouseDragStart.emit({
           $mouseDownEvent: this.$dragStartMouseDownEvent,
           $mouseMoveEvent: $event,
+          $mouseUpEvent: null,
           viewportStart: viewportStart,
           viewportEnd: viewportEnd,
           imageStart: imageStart,
@@ -502,6 +504,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       this.onImageMouseDrag.emit({
         $mouseDownEvent: this.$dragStartMouseDownEvent,
         $mouseMoveEvent: $event,
+        $mouseUpEvent: null,
         viewportStart: viewportStart,
         viewportEnd: viewportEnd,
         imageStart: imageStart,
@@ -540,7 +543,8 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
       this.onImageMouseDragEnd.emit({
         $mouseDownEvent: this.$dragStartMouseDownEvent,
-        $mouseMoveEvent: $event,
+        $mouseMoveEvent: null,
+        $mouseUpEvent: $event,
         viewportStart: viewportStart,
         viewportEnd: viewportEnd,
         imageStart: imageStart,
@@ -548,6 +552,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       });
     }
     this.dragging = false;
+    this.panning = false;
 
     let viewportCoord = this.viewportCoordFromEvent($event);
     let hitImage = this.mouseOnImage(viewportCoord);

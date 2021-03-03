@@ -186,7 +186,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     this.tableData$ = combineLatest(
       this.sources$,
       this.state$.pipe(
-        map((state) => state ? state.sourcePhotometryData : null)
+        map((state) => state ? state.sourcePhotometryData : null),
+        distinctUntilChanged(),
       )
     ).pipe(
       filter(([sources, sourcePhotometryData]) => {

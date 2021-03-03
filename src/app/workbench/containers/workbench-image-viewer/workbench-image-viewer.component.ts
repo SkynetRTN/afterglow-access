@@ -85,6 +85,8 @@ import * as moment from "moment";
 import { Papa } from 'ngx-papaparse';
 import { AuthState } from '../../../auth/auth.state';
 import { Hotkey, HotkeysService } from 'angular2-hotkeys';
+import { round } from '../../../utils/math';
+import { formatDms } from '../../../utils/skynet-astro';
 
 @Component({
   selector: "app-workbench-image-viewer",
@@ -403,6 +405,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       distinctUntilChanged()
     );
 
+    let sourcePhotometryData$ = photometryPanelState$.pipe(
+      map(state => state.sourcePhotometryData),
+      distinctUntilChanged()
+    )
+
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
     this.sources$ = this.store.select(SourcesState.getSources);
 
@@ -510,14 +517,32 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
             })
           );
         } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
-          return combineLatest(
+          let sourceSelectionRegionMarkers$ = combineLatest(
+              this.selectedHduId$,
+              photometryPanelState$,
+            ).pipe(
+            map(([hduId, state]) => {
+              if(!state.markerSelectionRegion) return [];
+              let region = state.markerSelectionRegion;
+              let sourceSelectionMarker: RectangleMarker = {
+                id: `PHOTOMETRY_SOURCE_SELECTION_${hduId}`,
+                x: Math.min(region.x, region.x+region.width),
+                y: Math.min(region.y, region.y+region.height),
+                width: Math.abs(region.width),
+                height: Math.abs(region.height),
+                type: MarkerType.RECTANGLE,
+              }
+              return [sourceSelectionMarker];
+            })
+          )
+          let sourceMarkers$ = combineLatest(
             this.selectedHduId$,
             this.firstHeader$,
             this.store.select(WorkbenchState.getPhotometryPanelConfig),
             this.store.select(SourcesState.getSources),
-            photometryPanelState$
+            sourcePhotometryData$
           ).pipe(
-            map(([hduId, header, config, sources, state]) => {
+            map(([hduId, header, config, sources, sourcePhotometryData]) => {
               if (!header) return [];
 
               let selectedSourceIds = config.selectedSourceIds;
@@ -525,7 +550,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
               let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
               let showSourceLabels = config.showSourceLabels;
 
-              let markers: Array<CircleMarker | TeardropMarker | ApertureMarker> = [];
+              let markers: Array<CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker> = [];
               let mode = coordMode;
 
               if (!header.wcs || !header.wcs.isValid()) mode = "pixel";
@@ -540,8 +565,20 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                   return false;
                 }
 
-                let photData = state.sourcePhotometryData[source.id];
+                let photData = sourcePhotometryData[source.id];
                 if(photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
+                  let tooltipMessage = [];
+                  if(photData.raHours !== null && photData.decDegs !== null) {
+                    tooltipMessage.push(`RA,DEC: (${formatDms(photData.raHours, 2, 3)}, ${formatDms(photData.decDegs, 2, 3)})`)
+                  }
+                  if(photData.x !== null && photData.y !== null) {
+                    tooltipMessage.push(`X,Y: (${round(photData.x,3)}, ${round(photData.y, 3)})`)
+                  }
+
+                  if(photData.mag !== null && photData.magError !== null) {
+                    tooltipMessage.push(`${round(photData.mag, 3)} +/- ${round(photData.magError, 3)} mag`)
+                  }
+
                   let apertureMarker: ApertureMarker = {
                     id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
                     type: MarkerType.APERTURE,
@@ -555,10 +592,16 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                     annulusAOut: photData.annulusAOut,
                     annulusBOut: photData.annulusBOut,
                     labelTheta: 0,
-                    labelGap: 14,
+                    labelRadius: Math.max(photData.annulusAOut, photData.annulusBOut)+15,
                     label: showSourceLabels ? source.label : "",
                     selected: selected,
                     data: { source: source },
+                    tooltip: {
+                      class: 'photometry-data-tooltip',
+                      message: tooltipMessage.join('\n'),
+                      showDelay: 500,
+                      hideDelay: null
+                    }
                   };
 
                   markers.push(apertureMarker);
@@ -571,7 +614,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                       x: coord.x,
                       y: coord.y,
                       radius: 15,
-                      labelGap: 14,
+                      labelRadius: 30,
                       labelTheta: 0,
                       label: showSourceLabels ? source.label : "",
                       theta: coord.theta,
@@ -585,7 +628,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                       x: coord.x,
                       y: coord.y,
                       radius: 15,
-                      labelGap: 14,
+                      labelRadius: 30,
                       labelTheta: 0,
                       label: showSourceLabels ? source.label : "",
                       selected: selected,
@@ -593,13 +636,16 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                     } as CircleMarker);
                   }
                 }
-
-               
               });
-
               return markers;
             })
           );
+
+          return combineLatest(
+            sourceSelectionRegionMarkers$,
+            sourceMarkers$).pipe(
+              map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
+            )
         }
 
         return of([]);
