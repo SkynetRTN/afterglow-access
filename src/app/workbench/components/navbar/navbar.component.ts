@@ -39,7 +39,7 @@ export class NavbarComponent implements OnInit, OnChanges {
   openQuickStartGuide() {
     this.dialog.open(HelpDialogComponent, {
       data: {},
-      width: "80vw",
+      width: "900px",
       maxWidth: "600px",
     });
   }
