@@ -155,11 +155,12 @@ export class AlignerPageComponent implements OnInit {
   getHduOptionLabel(hduId: string) {
     let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
       map((fn) => fn(hduId)),
-      filter((hdu) => hdu != null)
+      filter((hdu) => hdu !== null)
     );
 
     let file$ = hdu$.pipe(
-      map((hdu) => hdu.fileId),
+      filter(hdu => hdu !== null),
+      map((hdu) => hdu?.fileId),
       distinctUntilChanged(),
       flatMap((fileId) => {
         return this.store.select(DataFilesState.getFileById).pipe(

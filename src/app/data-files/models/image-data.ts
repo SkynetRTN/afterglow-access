@@ -43,7 +43,7 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
       let index = j * xTileDim + i;
       let x = i * tileWidth;
       let y = j * tileHeight;
-      let tile = {
+      let tile: ImageTile<T> = {
         index: index,
         isValid: false,
         x: x,
@@ -113,7 +113,7 @@ export function getPixel<T>(imageData: IImageData<T>, x: number, y: number, inte
     // else {
     //Bicubic
     let BicubicInterpolation = (function () {
-      return function (x, y, values) {
+      return function (x: number, y: number, values: number[][]) {
         var i0, i1, i2, i3;
 
         i0 = TERP(x, values[0][0], values[1][0], values[2][0], values[3][0]);
@@ -122,7 +122,7 @@ export function getPixel<T>(imageData: IImageData<T>, x: number, y: number, inte
         i3 = TERP(x, values[0][3], values[1][3], values[2][3], values[3][3]);
         return TERP(y, i0, i1, i2, i3);
       };
-      function TERP(t, a, b, c, d) {
+      function TERP(t: number, a: number, b: number, c: number, d: number) {
         return 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * t) * t) * t + b;
       }
     })();

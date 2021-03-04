@@ -179,9 +179,11 @@ import {
   JobProgressDialogComponent,
 } from "../components/job-progress-dialog/job-progress-dialog.component";
 import { JobsState } from "../../jobs/jobs.state";
-import { saveAs } from "file-saver/dist/FileSaver";
 import { JobService } from "../../jobs/services/jobs";
 import { AlertDialogConfig, AlertDialogComponent } from "../../utils/alert-dialog/alert-dialog.component";
+
+// @ts-ignore
+import { saveAs } from "file-saver/dist/FileSaver";
 
 enum SaveFileAction {
   Save = "save",
@@ -891,7 +893,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
         let viewerEntities = this.store.selectSnapshot(WorkbenchState.getViewerEntities);
         let workbenchFileStates = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
         let workbenchHduStates = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
-        let targetPlottingPanelStateIds = [];
+        let targetPlottingPanelStateIds: string[] = [];
         visibleViewerIds.forEach((viewerId) => {
           let viewer = viewerEntities[viewerId];
           if (viewer.hduId) {
@@ -1162,15 +1164,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     return `Viewer ${index}`;
   }
 
-  onFileInfoPanelConfigChange($event) {
+  onFileInfoPanelConfigChange($event: Partial<FileInfoPanelConfig>) {
     this.store.dispatch(new UpdateFileInfoPanelConfig($event));
   }
 
-  onPlottingPanelConfigChange($event) {
+  onPlottingPanelConfigChange($event: Partial<PlottingPanelConfig>) {
     this.store.dispatch(new UpdatePlottingPanelConfig($event));
   }
 
-  onCustomMarkerPanelConfigChange($event) {
+  onCustomMarkerPanelConfigChange($event: Partial<CustomMarkerPanelConfig>) {
     this.store.dispatch(new UpdateCustomMarkerPanelConfig($event));
   }
 
@@ -1200,19 +1202,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new DeselectCustomMarkers(fileId, customMarkers));
   }
 
-  onPhotometryPanelConfigChange($event) {
+  onPhotometryPanelConfigChange($event: Partial<PhotometryPanelConfig>) {
     this.store.dispatch(new UpdatePhotometryPanelConfig($event));
   }
 
-  onPhotometrySettingsChange($event) {
+  onPhotometrySettingsChange($event: Partial<PhotometrySettings>) {
     this.store.dispatch(new UpdatePhotometrySettings($event));
   }
 
-  onSourceExtractionSettingsChange($event) {
+  onSourceExtractionSettingsChange($event: Partial<SourceExtractionSettings>) {
     this.store.dispatch(new UpdateSourceExtractionSettings($event));
   }
 
-  onWcsCalibrationSettingsChange($event) {
+  onWcsCalibrationSettingsChange($event: Partial<WcsCalibrationSettings>) {
     this.store.dispatch(new UpdateWcsCalibrationSettings($event));
   }
 
@@ -1221,11 +1223,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   onImageMouseDown($event: ViewerPanelCanvasMouseEvent) {
-    console.log("IMAGE MOUSE DOWN EVENT: ", $event)
   }
 
   onImageMouseUp($event: ViewerPanelCanvasMouseEvent) {
-    console.log("IMAGE MOUSE UP EVENT: ", $event)
   }
 
   /* image viewer mouse event handlers */
@@ -2115,7 +2115,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
               return of(null);
             }
             let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
-            let reqs = [];
+            let reqs: Observable<any>[] = [];
             files.forEach((file) => {
               file.hduIds.forEach((hduId, index) => {
                 let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId]
@@ -2123,7 +2123,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
                 let newFilename = file.name + '_' + index
                 viewers.filter(viewer => viewer.hduId == hduId || viewer.fileId == hdu.fileId).forEach(viewer => this.store.dispatch(new CloseViewer(viewer.id)))
                 this.store.dispatch(new InvalidateHeader(hduId));
-                console.log("HERE!!!!!!!!!: ", uuid, hdu && hdu.name ? hdu.name : `${file.name}_${index}`)
                 reqs.push(
                   this.dataFileService.updateFile(hduId, {
                     groupName: uuid,
@@ -2218,7 +2217,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
 
               let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
               let uuid = UUID.UUID();
-              let reqs = [];
+              let reqs: Observable<any>[] = [];
               files.forEach((file) => {
                 file.hduIds.forEach((hduId) => {
                   let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId]
@@ -2304,17 +2303,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     );
   }
 
-  /* for data file selection list */
-  trackByFn(index, item) {
-    return item.id; // or item.id
-  }
-
   getToolbarTooltip(isActive: boolean, base: string) {
     let showToolPanel = this.store.selectSnapshot(WorkbenchState.getShowConfig);
     return (showToolPanel && isActive ? "Hide " : "Show ") + base;
   }
 
-  onViewerSyncEnabledChange($event) {
+  onViewerSyncEnabledChange($event: MatCheckboxChange) {
     this.store.dispatch(new SetViewerSyncEnabled($event.checked));
   }
 
@@ -2322,7 +2316,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
     this.store.dispatch(new SetViewerSyncMode($event.value));
   }
 
-  onNormalizationSyncEnabledChange($event) {
+  onNormalizationSyncEnabledChange($event: MatCheckboxChange) {
     this.store.dispatch(new SetNormalizationSyncEnabled($event.checked));
   }
 

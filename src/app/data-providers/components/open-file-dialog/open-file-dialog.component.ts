@@ -82,10 +82,6 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
-  onErrorOccurred($event) {
-    console.log($event);
-  }
-
   onPathChange(path: DataProviderPath) {
     this.store.dispatch(new SetCurrentPath(path));
   }

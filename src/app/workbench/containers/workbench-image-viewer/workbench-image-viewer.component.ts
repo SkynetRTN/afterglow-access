@@ -80,13 +80,13 @@ import { CustomMarkerPanelState } from "../../models/marker-file-state";
 import { PlottingPanelState } from "../../models/plotter-file-state";
 import { SonificationPanelState, SonifierRegionMode } from "../../models/sonifier-file-state";
 import { ImageHist } from "../../../data-files/models/image-hist";
-import * as piexif from "piexifjs";
 import * as moment from "moment";
 import { Papa } from 'ngx-papaparse';
 import { AuthState } from '../../../auth/auth.state';
-import { Hotkey, HotkeysService } from 'angular2-hotkeys';
 import { round } from '../../../utils/math';
 import { formatDms } from '../../../utils/skynet-astro';
+// @ts-ignore
+import * as piexif from "piexifjs";
 
 @Component({
   selector: "app-workbench-image-viewer",
@@ -957,7 +957,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       if (document.createEvent) {
         let e;
         e = document.createEvent("MouseEvents");
-        e.initMouseEvent("click", true, true, window, 0, false, false, false, false, null);
+        e.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 
         lnk.dispatchEvent(e);
       }

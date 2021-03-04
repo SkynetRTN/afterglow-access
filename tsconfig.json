@@ -6,7 +6,7 @@
   },
   "compilerOptions": {
     "strictNullChecks": false,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
     "rootDir": ".",
     "outDir": "build",

@@ -23,7 +23,6 @@ import {
 } from "rxjs/operators";
 import { DataProviderAsset } from "../../models/data-provider-asset";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
-import { saveAs } from "file-saver/dist/FileSaver";
 import { HttpErrorResponse } from "@angular/common/http";
 import { BatchAssetDownloadJob } from "../../../jobs/models/batch-asset-download";
 import { JobType } from "../../../jobs/models/job-types";
@@ -44,6 +43,9 @@ import { NameDialogComponent } from "../name-dialog/name-dialog.component";
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
 import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
+
+// @ts-ignore
+import { saveAs } from "file-saver/dist/FileSaver";
 
 export interface FileSystemItem {
   id: string;
@@ -186,8 +188,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   error$ = new BehaviorSubject<string>(null);
   uploadFile: File = null;
   @ViewChild('fileUpload') fileUpload: ElementRef;
-
-  resolvePath = (object, path, defaultValue) => path.split(".").reduce((o, p) => (o ? o[p] : defaultValue), object);
+  
   @ViewChild(MatSort) sort: MatSort;
   dataSource = new MatTableDataSource<FileSystemItem>();
   showCreate$: Observable<boolean>;
@@ -197,6 +198,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   showRename$: Observable<boolean>;
   showUpload$: Observable<boolean>;
   showDownload$: Observable<boolean>;
+
+ 
 
   constructor(
     private store: Store,
@@ -455,6 +458,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
   }
+
+  resolvePath(object: Object, path: string, defaultValue: any) {
+    return path.split(".").reduce((o, p) => (o ? o[p] : defaultValue), object)
+  };
 
   clearError() {
     this.error$.next(null);

@@ -17,6 +17,7 @@ import {
 
 import { Point, Rectangle } from "paper";
 import * as SVG from "svgjs";
+// @ts-ignore
 import * as normalizeWheel from "normalize-wheel";
 
 import { Source } from "../../models/source";

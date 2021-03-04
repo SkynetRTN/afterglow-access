@@ -23,7 +23,7 @@ function idToString(o: Object) {
         if ((k == "id" || k.endsWith("_id")) && typeof o[k] === "number") {
           o[k] = (o[k] as number).toString();
         } else if ((k == "ids" || k.endsWith("_ids")) && Array.isArray(o[k])) {
-          o[k] = o[k].map((value) => (typeof o[k] === "number" ? (value as number).toString() : o[k]));
+          o[k] = (o[k] as Array<any>).map((value) => (typeof o[k] === "number" ? (value as number).toString() : o[k]));
         }
       }
     });
@@ -45,7 +45,7 @@ function idToNumber(o: Object) {
             o[k] = parsed;
           }
         } else if ((k == "ids" || k.endsWith("Ids")) && Array.isArray(o[k]) && isPositiveInteger(o[k])) {
-          o[k] = o[k].map((value) => (typeof o[k] === "string" && !isNaN(parseInt(value)) ? parseInt(value) : o[k]));
+          o[k] = (o[k] as Array<any>).map((value) => (typeof o[k] === "string" && !isNaN(parseInt(value)) ? parseInt(value) : o[k]));
         }
       }
     });

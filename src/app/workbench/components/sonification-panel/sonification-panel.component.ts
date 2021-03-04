@@ -24,6 +24,7 @@ import {
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { Region } from "../../../data-files/models/region";
 import { getViewportRegion, Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
   selector: "app-sonification-panel",
@@ -453,15 +454,15 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
     );
   }
 
-  setDuration(value) {
+  setDuration(value: number) {
     this.store.dispatch(new UpdateSonifierFileState(this.hdu.id, { duration: value }));
   }
 
-  setToneCount(value) {
+  setToneCount(value: number) {
     this.store.dispatch(new UpdateSonifierFileState(this.hdu.id, { toneCount: value }));
   }
 
-  setViewportSync(value) {
+  setViewportSync(value: MatCheckboxChange) {
     this.store.dispatch(
       new UpdateSonifierFileState(this.hdu.id, {
         viewportSync: value.checked,

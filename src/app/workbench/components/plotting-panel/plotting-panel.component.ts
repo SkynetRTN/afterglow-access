@@ -23,6 +23,7 @@ import { Router } from "@angular/router";
 import { MarkerMouseEvent } from "../image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { Store, Actions } from "@ngxs/store";
 import { IImageData } from "../../../data-files/models/image-data";
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
   selector: "app-plotting-panel",
@@ -83,7 +84,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     pixelSeparation: number;
     pixelPosAngle: number;
     skySeparation: number;
-    skyPosAngle;
+    skyPosAngle: number;
   }>;
 
   constructor(private actions$: Actions, store: Store, router: Router) {
@@ -190,23 +191,23 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnDestroy() {}
 
-  onModeChange($event) {
-    this.configChange.emit({ plotMode: $event });
+  onModeChange(mode: '1D' | '2D' | '3D' ) {
+    this.configChange.emit({ plotMode: mode });
   }
 
-  onPlotterSyncEnabledChange($event) {
+  onPlotterSyncEnabledChange($event: MatCheckboxChange) {
     this.configChange.emit({ plotterSyncEnabled: $event.checked });
   }
 
-  onCentroidClicksChange($event) {
+  onCentroidClicksChange($event: MatCheckboxChange) {
     this.configChange.emit({ centroidClicks: $event.checked });
   }
 
-  onPlanetCentroidingChange($event) {
+  onPlanetCentroidingChange($event: MatCheckboxChange) {
     this.configChange.emit({ planetCentroiding: $event.checked });
   }
 
-  onInterpolatePixelsChange($event) {
+  onInterpolatePixelsChange($event: MatCheckboxChange) {
     this.configChange.emit({ interpolatePixels: $event.checked });
   }
 }

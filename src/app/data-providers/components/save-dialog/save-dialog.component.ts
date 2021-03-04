@@ -104,8 +104,4 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.saveAs(asset.dataProviderId, asset.assetPath);
   }
-
-  onErrorOccurred($event) {
-    console.log($event);
-  }
 }

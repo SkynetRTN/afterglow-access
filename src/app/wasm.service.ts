@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { Observable, BehaviorSubject } from "rxjs";
 
 // set Module.locateFile in index.html
+// @ts-ignore
 import * as Module from "../wasm/wcs.js";
 import "!!file-loader?name=wasm/wcslib.wasm!../wasm/wcslib.wasm";
 
@@ -86,8 +87,8 @@ export class WcsLib {
     }
 
     // Split the string into an array and filter based on the WCS regular expressions
-    var headerArray = header.match(/.{1,80}/g);
-    headerArray = headerArray.filter(function (line) {
+    var headerArray: any[] = header.match(/.{1,80}/g);
+    headerArray = headerArray.filter(line => {
       // Extract the keyword
       var keyword = line.slice(0, 8).trim();
 
@@ -120,7 +121,7 @@ export class WcsLib {
     // console.log(this.isValid, this.wcsPtr);
   }
 
-  private string2buffer(str) {
+  private string2buffer(str: string) {
     let buffer = new ArrayBuffer(str.length);
     let view = new Uint8Array(buffer);
     for (let i = 0; i < str.length; i += 1) {
@@ -130,11 +131,11 @@ export class WcsLib {
     return buffer;
   }
 
-  private splice(str1, index, remove, str2) {
+  private splice(str1: string, index: number, remove: number, str2: string) {
     return str1.slice(0, index) + str2 + str1.slice(index + Math.abs(remove));
   }
 
-  private toHeader(wcsObj) {
+  private toHeader(wcsObj: any) {
     let header = [];
     let line = "                                                                                ";
 
@@ -158,7 +159,7 @@ export class WcsLib {
     return header.join("\n");
   }
 
-  public pix2sky(x, y) {
+  public pix2sky(x: number, y: number) {
     const retVal = this._pix2sky(this.wcsPtr, x, y, this.coordinatePtr);
     const world = new Float64Array(WcsModule.HEAPF64.buffer, this.coordinatePtr, 2);
     return new Float64Array(world);
@@ -168,7 +169,7 @@ export class WcsLib {
     return this._hasCelestial(this.wcsPtr);
   };
 
-  public sky2pix(ra, dec) {
+  public sky2pix(ra: number, dec: number) {
     this._sky2pix(this.wcsPtr, ra, dec, this.coordinatePtr);
     const pixcrd = new Float64Array(WcsModule.HEAPU8.buffer, this.coordinatePtr, 2);
     return pixcrd.slice(0);
