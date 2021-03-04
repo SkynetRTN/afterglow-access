@@ -4,8 +4,7 @@ Afterglow Access is the client-side component of the Afterglow Platform.  It was
 
 - [Afterglow Access](https://github.com/SkynetRTN/afterglow-access)
 - [Afterglow Core](https://github.com/SkynetRTN/afterglow-core)
-- [Non-Commercial Licensing](https://github.com/SkynetRTN/afterglow-core/blob/1_0/LICENSE.md)
-- [Commercial Licensing](https://github.com/SkynetRTN/afterglow-core/blob/1_0/COMMERCIAL_LICENSE.md)
+- [License](https://github.com/SkynetRTN/afterglow-core/blob/1_0/LICENSE.md)
 
 
 ## Getting Started
@@ -23,19 +22,13 @@ To get started, follow these instructions:
 1. If you haven't done it already, make a fork of this repo.
 2. Clone to your local computer or server using git.
 3. Make sure that you have installed NodeJS.
-4. Make sure that you have yarn installed.
-5. Run `yarn install`.
-6. Run `yarn build:packages`.
+4. Create a Afterglow configuration file by copying the default template `cp src/afterglow.defaults.json src/afterglow.json`
+5. Open `src/afterglow.json` and ensure all configuration settings are correct.
+6. Run `npm install`.
+7. Run `ng build --prod`.  For additional options, see [Angular CLI build documentation](https://angular.io/cli/build)
+8. Copy the `dist/afterglow-access` directory to the desired location on your server where it can be accessed by clients.
 
 ## Learn
 
-
-- [Documentation](https://js.devexpress.com/Documentation)
-- [Examples on GitHub](https://github.com/DevExpress/DevExtreme-examples)
 - [YouTube demo](https://youtu.be/Z6qi-aJ613E?t=317)
 - [YouTube videos](https://www.youtube.com/playlist?list=PLy034wwN98YKMepknVKcRPB9qpN0aHYaJ)
-
-
-## Contributing
-
-See our [Guidelines for Contributing](CONTRIBUTING.md)

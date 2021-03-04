@@ -1,6 +1,6 @@
-﻿# DevExpress Non-Commercial, Non-Competitive License
+﻿# Afterglow Access Non-Commercial, Non-Competitive License
 
-Version 1.0, April 2017
+Version 1.0, March 3 2020
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
@@ -17,7 +17,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 "Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
 "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
 
-"Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License. If you receive the Work from Developer Express, Inc., d/b/a DevExpress, the Licensor shall be Developer Express, Inc.
+"Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License. If you receive the Work from Skynet Robotic Telescope Network, the Licensor shall be Skynet Robotic Telescope Network
 
 "Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
 
