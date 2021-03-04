@@ -1993,6 +1993,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
             type: JobType.BatchDownload,
             id: null,
             groupNames: files.map((file) => file.id),
+            state: null,
+            result: null
           };
 
           let corrId = this.corrGen.next();

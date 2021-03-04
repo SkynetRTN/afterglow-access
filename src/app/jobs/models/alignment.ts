@@ -20,7 +20,7 @@ export interface AlignmentJob extends JobBase {
   sources?: SourceExtractionData[];
   inplace: boolean;
   crop: boolean;
-  result: AlignmentJobResult;
+  result: AlignmentJobResult | null;
 }
 
 

@@ -13,7 +13,7 @@ export interface PixelOpsJob extends JobBase {
   auxFileIds: string[];
   op: string;
   inplace: boolean;
-  result: PixelOpsJobResult;
+  result: PixelOpsJobResult | null;
 }
 
 

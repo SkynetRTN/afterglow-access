@@ -32,7 +32,7 @@ export interface SonificationJob extends JobBase {
   readonly type: JobType.Sonification;
   fileId: string;
   settings?: SonificationJobSettings;
-  result: SonificationJobResult;
+  result: SonificationJobResult | null;
 }
 
 

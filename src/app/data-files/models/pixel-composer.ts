@@ -10,7 +10,7 @@ export function compose(
     for (let i = 0; i < result.length; i++) {
       result[i] = 0;
     }
-    return;
+    return new Uint32Array();
   }
 
   result.set(layers[0].pixels);

@@ -20,7 +20,7 @@ export interface StackingJob extends JobBase {
   readonly type: JobType.Stacking;
   fileIds: string[];
   stackingSettings?: StackSettings;
-  result: StackingJobResult;
+  result: StackingJobResult | null;
 }
 
 

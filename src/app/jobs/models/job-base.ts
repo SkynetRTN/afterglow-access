@@ -13,7 +13,7 @@ export interface JobResultBase {
 }
 
 export interface JobBase {
-  id: string;
-  state?: JobStateBase;
-  result?: JobResultBase
+  id: string | null;
+  state: JobStateBase | null;
+  result: JobResultBase | null;
 }

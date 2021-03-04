@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from "rxjs";
 import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap } from "rxjs/operators";
-import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors } from "@angular/forms";
+import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors, AbstractControl } from "@angular/forms";
 import { JobType } from "../../../jobs/models/job-types";
 import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
 import { PixelOpsFormData, WorkbenchStateModel, WorkbenchTool, PixelOpsPanelConfig } from "../../models/workbench-state";
@@ -76,14 +76,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     { label: "Image", value: "image" },
   ];
 
-  divideByZero: ValidatorFn = (control: FormGroup): ValidationErrors | null => {
+  divideByZero(control: AbstractControl): ValidationErrors | null {
     const mode = control.get("mode");
     const scalarValue = control.get("scalarValue");
     const operand = control.get("operand");
     return mode && scalarValue && operand && mode.value == "scalar" && operand.value == "/" && scalarValue.value == 0
       ? { divideByZero: true }
       : null;
-  };
+  }
 
   imageCalcForm = new FormGroup(
     {

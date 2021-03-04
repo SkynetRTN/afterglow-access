@@ -556,13 +556,13 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
               if (!header.wcs || !header.wcs.isValid()) mode = "pixel";
 
               sources.forEach((source) => {
-                if (source.hduId != hduId && !showSourcesFromAllFiles) return;
+                if (source.hduId != hduId && !showSourcesFromAllFiles) return ;
                 if (source.posType != mode) return;
                 let selected = selectedSourceIds.includes(source.id);
                 let coord = getSourceCoordinates(header, source);
 
                 if (coord == null) {
-                  return false;
+                  return;
                 }
 
                 let photData = sourcePhotometryData[source.id];

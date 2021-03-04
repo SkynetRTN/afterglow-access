@@ -18,14 +18,14 @@ import { MatCheckboxChange } from "@angular/material/checkbox";
 export class ImageHistChartComponent implements OnInit, OnChanges {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
 
-  @Input() hist: ImageHist;
+  @Input() hist: ImageHist | null = null;
   @Input() width: number = 200;
   @Input() height: number = 200;
-  @Input() backgroundPercentile: number;
-  @Input() peakPercentile: number;
+  @Input() backgroundPercentile: number = 10.0;
+  @Input() peakPercentile: number = 99.0;
 
   math = Math;
-  private lastHistData;
+  private lastHistData: Uint32Array | null = null;
   private yMax = 0;
   public logarithmicX: boolean = true;
   public logarithmicY: boolean = true;
@@ -51,7 +51,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   public logXButton = {
     name: "Toggle Log-X",
-    click: (gd) => {
+    click: () => {
       this.logarithmicX = !this.logarithmicX;
       this.updateChart();
       this._changeDetectorRef.detectChanges();
@@ -66,7 +66,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   public logYButton = {
     name: "Toggle Log-Y",
-    click: (gd) => {
+    click: () => {
       this.logarithmicY = !this.logarithmicY;
       this.updateChart();
       this._changeDetectorRef.detectChanges();
@@ -109,17 +109,17 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
   constructor(private themeStorage: ThemeStorage, private _changeDetectorRef: ChangeDetectorRef) {
     this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
-    themeStorage.onThemeUpdate.subscribe((theme) => {
+    themeStorage.onThemeUpdate.subscribe(() => {
       this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
       this._changeDetectorRef.detectChanges();
     });
   }
 
-  select($event) {}
+  // select($event) {}
 
-  activate($event) {}
+  // activate($event) {}
 
-  deactivate($event) {}
+  // deactivate($event) {}
 
   // updateChartOptions() {
   //   this.chartOptions = {
@@ -200,75 +200,75 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   }
 
   updateChart() {
+    if(!this.hist || !this.hist.loaded || !this.hist.data) return;
+
     let x = [];
     let y = [];
-    if (this.hist.loaded) {
-      if (this.hist.data != this.lastHistData) {
-        for (let i = 0; i < this.hist.data.length; i++) {
-          if (this.hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(this.hist, i) <= 0)) continue;
-          x.push(getBinCenter(this.hist, i));
-          y.push(this.hist.data[i]);
-          if (this.yMax < this.hist.data[i]) this.yMax = this.hist.data[i];
-        }
-
-        this.data = [
-          {
-            x: x,
-            y: y,
-            // fill: "tozeroy",
-            type: "scatter",
-            // mode: "none"
-          },
-        ];
-
-        this.lastHistData = this.hist.data;
-        //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
-        //console.log(this.chartOptions);
+    if (this.hist.data != this.lastHistData) {
+      for (let i = 0; i < this.hist.data.length; i++) {
+        if (this.hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(this.hist, i) <= 0)) continue;
+        x.push(getBinCenter(this.hist, i));
+        y.push(this.hist.data[i]);
+        if (this.yMax < this.hist.data[i]) this.yMax = this.hist.data[i];
       }
 
-      if (this.layout.width != this.width) this.layout.width = this.width;
-      if (this.layout.height != this.height) this.layout.height = this.height;
+      this.data = [
+        {
+          x: x,
+          y: y,
+          // fill: "tozeroy",
+          type: "scatter",
+          // mode: "none"
+        },
+      ];
 
-      let levels = calcLevels(this.hist, this.backgroundPercentile, this.peakPercentile);
-      this.layout = {
-        ...this.layout,
-        xaxis: {
-          ...this.layout.xaxis,
-          type: this.logarithmicX ? "log" : "linear",
-        },
-        yaxis: {
-          ...this.layout.yaxis,
-          type: this.logarithmicY ? "log" : "linear",
-        },
-        shapes: [
-          // Line Vertical
-          {
-            type: "line",
-            x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
-            y0: 1,
-            x1: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
-            y1: this.yMax,
-            line: {
-              color: "red",
-              width: 2,
-              dash: "dot",
-            },
-          },
-          {
-            type: "line",
-            x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
-            y0: 1,
-            x1: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
-            y1: this.yMax,
-            line: {
-              color: "red",
-              width: 2,
-              dash: "dot",
-            },
-          },
-        ],
-      };
+      this.lastHistData = this.hist.data;
+      //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
+      //console.log(this.chartOptions);
     }
+
+    if (this.layout.width != this.width) this.layout.width = this.width;
+    if (this.layout.height != this.height) this.layout.height = this.height;
+
+    let levels = calcLevels(this.hist, this.backgroundPercentile, this.peakPercentile);
+    this.layout = {
+      ...this.layout,
+      xaxis: {
+        ...this.layout.xaxis,
+        type: this.logarithmicX ? "log" : "linear",
+      },
+      yaxis: {
+        ...this.layout.yaxis,
+        type: this.logarithmicY ? "log" : "linear",
+      },
+      shapes: [
+        // Line Vertical
+        {
+          type: "line",
+          x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
+          y0: 1,
+          x1: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
+          y1: this.yMax,
+          line: {
+            color: "red",
+            width: 2,
+            dash: "dot",
+          },
+        },
+        {
+          type: "line",
+          x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
+          y0: 1,
+          x1: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
+          y1: this.yMax,
+          line: {
+            color: "red",
+            width: 2,
+            dash: "dot",
+          },
+        },
+      ],
+    };
   }
 
   ngOnChanges() {

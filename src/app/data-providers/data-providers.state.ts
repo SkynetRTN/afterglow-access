@@ -51,8 +51,8 @@ export interface DataProvidersStateModel {
   importing: boolean;
   selectedAssetImportCorrId: string;
   importErrors: Array<string>;
-  importProgress: number;
-  lastPath: DataProviderPath;
+  importProgress: number | null;
+  lastPath: DataProviderPath | null;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
@@ -60,10 +60,10 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
-  selectedAssetImportCorrId: null,
+  selectedAssetImportCorrId: '',
   importing: false,
   importErrors: [],
-  importProgress: 0,
+  importProgress: null,
   lastPath: null
 };
 
@@ -414,6 +414,7 @@ export class DataProvidersState {
           recurse: false,
         } as BatchImportSettings;
       }),
+      state: null,
       result: null,
     };
 
@@ -434,7 +435,7 @@ export class DataProvidersState {
           if (result.warnings.length != 0) {
             console.error("Warnings encountered during import: ", result.warnings);
           }
-          return dispatch(
+          dispatch(
             new ImportAssetsCompleted(
               assets,
               result.fileIds.map((id) => id.toString()),
@@ -443,9 +444,9 @@ export class DataProvidersState {
             )
           );
         } else if (a.result.canceled) {
-          return dispatch(new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`], correlationId));
+          dispatch(new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`], correlationId));
         } else if (a.result.error) {
-          return dispatch(
+          dispatch(
             new ImportAssetsCompleted(
               assets,
               [],

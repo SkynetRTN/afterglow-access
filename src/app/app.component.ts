@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular/core";
 import { Select, Store } from "@ngxs/store";
 import { Title } from "@angular/platform-browser";
-import { Router, NavigationEnd, ActivatedRoute } from "@angular/router";
+import { Router, NavigationEnd, ActivatedRoute, RouterState } from "@angular/router";
 import { Observable, Subscription, Subscribable, combineLatest } from "rxjs";
 
 import { AuthState } from "./auth/auth.state";
@@ -10,7 +10,7 @@ import { AuthGuard } from "./auth/services/auth-guard.service";
 import { CoreUser } from "./auth/models/user";
 
 import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
-import { ThemeStorage } from "./theme-picker/theme-storage/theme-storage";
+import { ThemeStorage, AfterglowTheme } from "./theme-picker/theme-storage/theme-storage";
 import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./workbench/components/help-dialog/help-dialog.component";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
@@ -32,23 +32,19 @@ import { LoadAfterglowConfig } from './app.actions';
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   currentRoutes: any[] = [];
 
-  @Select(AuthState.user)
-  user$: Observable<CoreUser>;
-
-  loggedInSub: Subscription;
+  user$: Observable<CoreUser | null>;
   colorThemeName: string;
   fontSize: "default" | "large" | "largest";
   fontWeight: "default" | "bold" | "boldest";
   dataProviders$: Observable<Array<DataProvider>>;
 
   private hotKeys: Array<Hotkey> = [];
-  private themeDialog: MatDialogRef<ThemeDialogComponent>;
-  private helpDialog: MatDialogRef<HelpDialogComponent>;
+  private themeDialog: MatDialogRef<ThemeDialogComponent> | null = null;
+  private helpDialog: MatDialogRef<HelpDialogComponent> | null = null;
   
   wasmReady$: Observable<boolean>;
   configReady$: Observable<boolean>;
   configError$: Observable<string>;
-  authReady$: Observable<boolean>;
   ready$: Observable<boolean>;
 
   public constructor(
@@ -61,6 +57,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private _hotkeysService: HotkeysService,
     private wasmService: WasmService
   ) {
+    this.user$ = this.store.select(AuthState.user);
     this.wasmReady$ = this.wasmService.wasmReady$;
     this.configReady$ = this.store.select(AppState.getConfigLoaded);
     this.configError$ = this.store.select(AppState.getConfigError);
@@ -95,6 +92,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.themeStorage.onThemeUpdate.subscribe(this.onThemeUpdate.bind(this));
     //initialize theme
     this.onThemeUpdate(this.themeStorage.getCurrentTheme());
+    this.dataProviders$ = this.store.select(DataProvidersState.getDataProviders);
+    this.ready$
+      .pipe(
+        filter((v) => v === true),
+        take(1)
+      )
+      .subscribe(() => {
+        
+        this.store.dispatch(new InitAuth());
+        this.store.dispatch(new Initialize());
+      });
 
     this.hotKeys.push(
       new Hotkey(
@@ -115,14 +123,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "T",
         (event: KeyboardEvent): boolean => {
-          if (this.themeDialog) return;
+          if (this.themeDialog) return false;
           this.themeDialog = this.dialog.open(ThemeDialogComponent, {
             data: {},
             width: "500px",
             height: "400px",
           });
           this.themeDialog.afterClosed().subscribe((result) => {
-            this.themeDialog = undefined;
+            this.themeDialog = null;
           });
           return false; // Prevent bubbling
         },
@@ -135,7 +143,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       new Hotkey(
         "?",
         (event: KeyboardEvent): boolean => {
-          if (this.helpDialog) return;
+          if (this.helpDialog) return false;
           this.helpDialog = this.dialog.open(HelpDialogComponent, {
             data: {},
             width: "900px",
@@ -143,7 +151,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           });
 
           this.helpDialog.afterClosed().subscribe((result) => {
-            this.helpDialog = undefined;
+            this.helpDialog = null;
           });
 
           return false; // Prevent bubbling
@@ -156,7 +164,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
-  onThemeUpdate(theme) {
+  onThemeUpdate(theme: AfterglowTheme) {
     this.renderer.removeClass(document.body, this.colorThemeName);
     this.colorThemeName = theme.colorThemeName;
     this.renderer.addClass(document.body, this.colorThemeName);
@@ -171,14 +179,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let colorTheme = this.themeStorage.getCurrentColorTheme();
   }
-  getTitle(state, parent) {
-    var data = [];
+
+  getTitle(state: RouterState, parent: ActivatedRoute) {
+    var data: any[] = [];
     if (parent && parent.snapshot.data && parent.snapshot.data.title) {
       data.push(parent.snapshot.data.title);
     }
 
-    if (state && parent) {
-      data.push(...this.getTitle(state, state.firstChild(parent)));
+    if (state && parent && parent.firstChild) {
+      data.push(...this.getTitle(state, parent.firstChild));
     }
     return data;
   }
@@ -193,18 +202,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.titleService.setTitle(title);
       }
     });
-
-
-    this.ready$
-      .pipe(
-        filter((v) => v === true),
-        take(1)
-      )
-      .subscribe(() => {
-        this.dataProviders$ = this.store.select(DataProvidersState.getDataProviders);
-        this.store.dispatch(new InitAuth());
-        this.store.dispatch(new Initialize());
-      });
   }
 
   ngAfterViewInit() {}

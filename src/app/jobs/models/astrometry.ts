@@ -1,16 +1,16 @@
 export interface Astrometry {
-  raHours: number;
-  decDegs: number;
-  pmSky: number;
-  pmPosAngleSky: number;
+  raHours: number | null;
+  decDegs: number | null;
+  pmSky: number | null;
+  pmPosAngleSky: number | null;
 
-  x: number;
-  y: number;
-  pmPixel: number;
-  pmPosAnglePixel: number;
-  pmEpoch: string;
+  x: number | null;
+  y: number | null;
+  pmPixel: number | null;
+  pmPosAnglePixel: number | null;
+  pmEpoch: string | null;
 
-  fwhmX: number;
-  fwhmY: number;
-  theta: number;
+  fwhmX: number | null;
+  fwhmY: number | null;
+  theta: number | null;
 }

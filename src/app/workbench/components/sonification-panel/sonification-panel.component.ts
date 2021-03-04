@@ -315,7 +315,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
       new Hotkey(
         "enter",
         (event: KeyboardEvent): boolean => {
-          if(document.activeElement.tagName == "BUTTON") return;
+          if(document.activeElement.tagName == "BUTTON") return null;
           this.sonify();
           this.ref.markForCheck();
           return false; // Prevent bubbling
@@ -329,7 +329,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
       new Hotkey(
         "space",
         (event: KeyboardEvent): boolean => {
-          if(document.activeElement.tagName == "BUTTON") return;
+          if(document.activeElement.tagName == "BUTTON") return null;
           this.sonify();
           this.ref.markForCheck();
           return false; // Prevent bubbling

@@ -5,31 +5,31 @@ import { SourceId } from "./source-id";
 import { SourceMeta } from "./source-meta";
 
 export interface Photometry {
-  mag: number;
-  magError: number;
-  flux: number;
-  fluxError: number;
-  annulusAIn: number;
-  annulusBIn: number;
-  annulusAOut: number;
-  annulusBOut: number;
-  aperA: number;
-  aperB: number;
-  aperTheta: number;
+  mag: number | null;
+  magError: number | null;
+  flux: number | null;
+  fluxError: number | null;
+  annulusAIn: number | null;
+  annulusBIn: number | null;
+  annulusAOut: number | null;
+  annulusBOut: number | null;
+  aperA: number | null;
+  aperB: number | null;
+  aperTheta: number | null;
 }
 
 export interface PhotometryJobSettings {
-  mode?: "aperture" | "auto";
-  a?: number; // aperture radius/semi-major axis [pixels]
-  b?: number; // (optional) semi-minor axis
-  theta?: number; // (optional) position angle of semi-major axis
-  aIn?: number; // (optional = a) inner annulus radius/semi-major axis
-  aOut?: number; // outer annulus radius/semi-major axis
-  bOut?: number; // (optional) outer annulus semi-minor axis
-  thetaOut?: number; // (optional) annulus position angle
-  gain?: number; // (optional) default gain if not present in FITS headers
-  centroidRadius?: number; // 0 = disable centroiding
-  zeroPoint?: number;
+  mode: "aperture" | "auto";
+  a: number | null; // aperture radius/semi-major axis [pixels]
+  b: number | null; // (optional) semi-minor axis
+  theta: number | null; // (optional) position angle of semi-major axis
+  aIn: number | null; // (optional = a) inner annulus radius/semi-major axis
+  aOut: number | null; // outer annulus radius/semi-major axis
+  bOut: number | null; // (optional) outer annulus semi-minor axis
+  thetaOut: number | null; // (optional) annulus position angle
+  gain: number | null; // (optional) default gain if not present in FITS headers
+  centroidRadius: number | null; // 0 = disable centroiding
+  zeroPoint: number | null;
 }
 
 export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {}
@@ -44,7 +44,7 @@ export interface PhotometryJob extends JobBase {
   fileIds: string[];
   sources: Array<Astrometry & SourceId>;
   settings?: PhotometryJobSettings;
-  result: PhotometryJobResult;
+  result: PhotometryJobResult | null;
 }
 
 

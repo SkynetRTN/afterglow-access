@@ -22,11 +22,29 @@ To get started, follow these instructions:
 1. If you haven't done it already, make a fork of this repo.
 2. Clone to your local computer or server using git.
 3. Make sure that you have installed NodeJS.
-4. Create a Afterglow configuration file by copying the default template `cp src/afterglow.defaults.json src/afterglow.json`
-5. Open `src/afterglow.json` and ensure all configuration settings are correct.
+4. Create a Afterglow configuration file by copying the default template to a new file named `afterglow.json` in the `src/` directory. For example: `cp src/afterglow.defaults.json src/afterglow.json`.
+5. Open `src/afterglow.json` and ensure all configuration settings are correct.  For more information, see the [configuration section](#configuration) below.
 6. Run `npm install`.
-7. Run `ng build --prod`.  For additional options, see [Angular CLI build documentation](https://angular.io/cli/build)
-8. Copy the `dist/afterglow-access` directory to the desired location on your server where it can be accessed by clients.
+
+#### Local Development
+Afterglow access includes a built-in development server which can be used for local testing.  By default,  the server is configured to run on port 4200.  To start the development server:
+
+1. Run `npm run start`.
+2. Open a browser and navigate to [http://127.0.0.1:4200](http://127.0.0.1:4200)
+
+The `proxy.config.json` file can be configured to proxy local requests from the development server to the Core's API.  By default, the development server is configured such that all requests sent to [http://127.0.0.1:4200/core](http://127.0.0.1:4200/core) will be proxied to http://127.0.0.1:5000.  If the Afterglow Core development server is running at a different location or port you will need to modify the proxy configuration file. 
+
+#### Production
+To build the application for production:
+
+1. Run `ng build --prod`.  For additional options, see [Angular CLI build documentation](https://angular.io/cli/build)
+2. Copy the `dist/afterglow-access` directory to the desired location on your server where it can be accessed by clients.
+
+### Configuration
+
+```json
+Here goes your json object definition
+```
 
 ## Learn
 

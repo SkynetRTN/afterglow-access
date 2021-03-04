@@ -203,6 +203,9 @@ import { IImageData } from "../data-files/models/image-data";
 import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogConfig, AlertDialogComponent } from "../utils/alert-dialog/alert-dialog.component";
 import { wildcardToRegExp } from "../utils/regex";
+import { Normalization } from "../data-files/models/normalization";
+import { PixelNormalizer } from "../data-files/models/pixel-normalizer";
+import { isNotEmpty } from "../utils/utils";;
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "215396f5-1224-4e17-be97-e60f8aeb0a82",
@@ -227,8 +230,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     } as ViewerPanelContainer,
   },
   selectedFileIds: [],
-  fileListFilter: null,
-  focusedViewerPanelId: null,
+  fileListFilter: "",
+  focusedViewerPanelId: "",
   viewerSyncEnabled: false,
   viewerSyncMode: "sky",
   normalizationSyncEnabled: false,
@@ -261,7 +264,6 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     threshold: 3,
     fwhm: 0,
     deblend: false,
-    limit: null,
     region: SourceExtractionRegionOption.ENTIRE_IMAGE,
   },
   fileInfoPanelConfig: {
@@ -290,15 +292,15 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       selectedHduIds: [],
     },
     batchPhotProgress: null,
-    batchPhotJobId: null,
+    batchPhotJobId: "",
   },
   pixelOpsPanelConfig: {
-    currentPixelOpsJobId: null,
+    currentPixelOpsJobId: "",
     showCurrentPixelOpsJobState: true,
     pixelOpsFormData: {
       operand: "+",
       mode: "image",
-      auxHduId: null,
+      auxHduId: "",
       auxHduIds: [],
       primaryHduIds: [],
       scalarValue: 1,
@@ -309,11 +311,11 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   aligningPanelConfig: {
     alignFormData: {
       selectedHduIds: [],
-      refHduId: null,
+      refHduId: "",
       mode: "astrometric",
       crop: true,
     },
-    currentAlignmentJobId: null,
+    currentAlignmentJobId: "",
   },
   stackingPanelConfig: {
     stackFormData: {
@@ -325,27 +327,25 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       low: 0,
       high: 0,
     },
-    currentStackingJobId: null,
+    currentStackingJobId: "",
   },
   wcsCalibrationPanelState: {
     selectedHduIds: [],
-    activeJobId: null,
+    activeJobId: "",
   },
   wcsCalibrationSettings: {
-    ra: null,
-    dec: null,
     minScale: 0.1,
     maxScale: 10,
     radius: 1,
     maxSources: 100,
   },
   catalogs: [],
-  selectedCatalogId: null,
+  selectedCatalogId: "",
   fieldCals: [],
-  selectedFieldCalId: null,
-  addFieldCalSourcesFromCatalogJobId: null,
+  selectedFieldCalId: "",
+  addFieldCalSourcesFromCatalogJobId: "",
   creatingAddFieldCalSourcesFromCatalogJob: false,
-  addFieldCalSourcesFromCatalogFieldCalId: null,
+  addFieldCalSourcesFromCatalogFieldCalId: "",
   dssImportLoading: false,
 
   hduIds: [],
@@ -459,7 +459,8 @@ export class WorkbenchState {
 
   @Selector([WorkbenchState.getFilteredFiles])
   public static getFilteredHduIds(files: DataFile[]) {
-    return files.reduce((hduIds, file, index) => hduIds.concat(file.hduIds), []);
+    let result: string[] = [];
+    return files.reduce((hduIds, file, index) => hduIds.concat(file.hduIds), result);
   }
 
   @Selector()
@@ -622,22 +623,22 @@ export class WorkbenchState {
     return (id: string) => {
       let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId) {
-        return null;
+        return "";
       }
 
-      let hduId = viewer.hduId;
+      let hduId: string | undefined = viewer.hduId;
       if (!hduId) {
         //use first image HDU from file
         let file = fileEntities[viewer.fileId];
         hduId = file.hduIds.find((hduId) => hduEntities[hduId].hduType == HduType.IMAGE);
         if (!hduId) {
-          return null;
+          return "";
         }
       }
 
       let hdu = hduEntities[hduId];
       if (!hdu) {
-        return null;
+        return "";
       }
 
       return hdu.headerId;
@@ -653,7 +654,7 @@ export class WorkbenchState {
     return (id: string) => {
       let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
-        return null;
+        return "";
       }
 
       let viewportTransformId = fileEntities[viewer.fileId].viewportTransformId;
@@ -662,7 +663,7 @@ export class WorkbenchState {
       }
 
       if (!viewportTransformId) {
-        return null;
+        return "";
       }
 
       return viewportTransformId;
@@ -678,7 +679,7 @@ export class WorkbenchState {
     return (id: string) => {
       let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !fileEntities[viewer.fileId]) {
-        return null;
+        return "";
       }
 
       let imageTransformId = fileEntities[viewer.fileId].imageTransformId;
@@ -687,7 +688,7 @@ export class WorkbenchState {
       }
 
       if (!imageTransformId) {
-        return null;
+        return "";
       }
 
       return imageTransformId;
@@ -728,13 +729,13 @@ export class WorkbenchState {
     return (id: string) => {
       let viewer = viewerEntities[id];
       if (!viewer || viewer.type != "image" || !viewer.fileId || !viewer.hduId || !fileEntities[viewer.fileId]) {
-        return null;
+        return "";
       }
 
       let rawImageDataId = (hduEntities[viewer.hduId] as ImageHdu).rawImageDataId;
 
       if (!rawImageDataId) {
-        return null;
+        return "";
       }
 
       return rawImageDataId;
@@ -1103,7 +1104,7 @@ export class WorkbenchState {
       }
     });
 
-    let actions = [];
+    let actions: Array<LoadHdu> = [];
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     hdus.forEach((hdu) => {
       let header = headerEntities[hdu.headerId];
@@ -1201,19 +1202,19 @@ export class WorkbenchState {
       return p.type == "panel" && (p as ViewerPanel).viewerIds.includes(viewerId);
     }) as ViewerPanel;
     if (!panel) {
-      return;
+      return null;
     }
     let viewer = state.viewers[viewerId];
     if (!viewer) {
-      return;
+      return null;
     }
 
     let refViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-    let refImageTransformId = null;
-    let refViewportTransformId = null;
-    let refHeaderId = null;
-    let refNormalization = null;
-    let refImageDataId = null;
+    let refImageTransformId: string;
+    let refViewportTransformId: string;
+    let refHeaderId: string;
+    let refNormalization: PixelNormalizer;
+    let refImageDataId: string;
 
     if (refViewer) {
       refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(refViewer.id);
@@ -1249,9 +1250,7 @@ export class WorkbenchState {
       if (refNormalization && state.normalizationSyncEnabled) {
         store.dispatch(new SyncViewerNormalizations(refNormalization));
       }
-
-      let actions = [];
-      return dispatch(actions);
+      return dispatch([]);
     }
 
     let hduIds = viewer.hduId ? [viewer.hduId] : fileEntities[viewer.fileId].hduIds;
@@ -1295,7 +1294,7 @@ export class WorkbenchState {
           state.viewerLayoutItems[panelId] = {
             id: panelId,
             type: "panel",
-            selectedViewerId: null,
+            selectedViewerId: "",
             viewerIds: [],
           } as ViewerPanel;
 
@@ -1357,7 +1356,7 @@ export class WorkbenchState {
 
           if (state.focusedViewerPanelId == viewerLayoutItemId) {
             let nextPanel = panels.find((panel) => panel.id != viewerLayoutItemId);
-            state.focusedViewerPanelId = nextPanel ? nextPanel.id : null;
+            state.focusedViewerPanelId = nextPanel ? nextPanel.id : "";
           }
         }
 
@@ -1369,7 +1368,8 @@ export class WorkbenchState {
 
           if (parentContainer.id != state.rootViewerPanelContainerId && parentContainer.itemIds.length == 1) {
             // container is no longer necessary, merge up
-            let parentParentContainer = containers.find((container) => container.itemIds.includes(parentContainer.id));
+            let parentContainerId = parentContainer.id;
+            let parentParentContainer = containers.find((container) => container.itemIds.includes(parentContainerId));
 
             if (parentParentContainer) {
               let index = parentParentContainer.itemIds.indexOf(parentContainer.id);
@@ -1413,7 +1413,7 @@ export class WorkbenchState {
               parentPanel.selectedViewerId =
                 parentPanel.viewerIds[Math.max(0, Math.min(parentPanel.viewerIds.length - 1, index))];
             } else {
-              parentPanel.selectedViewerId = null;
+              parentPanel.selectedViewerId = "";
               this.store.dispatch(new RemoveViewerLayoutItem(parentPanel.id));
             }
           }
@@ -1638,14 +1638,14 @@ export class WorkbenchState {
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
-    if (!viewer) return;
+    if (!viewer) return null;
 
     let refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(viewer.id);
     let refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
     let refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
     let refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
 
-    let refNormalization = null;
+    let refNormalization: PixelNormalizer;
     if (viewer.hduId) {
       let refHdu = hduEntities[viewer.hduId] as ImageHdu;
       if (refHdu.hduType == HduType.IMAGE) {
@@ -1688,8 +1688,7 @@ export class WorkbenchState {
         return state;
       });
 
-      let actions = [];
-      return dispatch(actions);
+      return dispatch([]);
     }
 
     let hduIds = hduId ? [hduId] : fileEntities[fileId].hduIds;
@@ -1746,25 +1745,7 @@ export class WorkbenchState {
     let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getHduEntities);
 
-    let actions = [];
-    // TODO VIEWER CHANGE
-    // let referenceFile = dataFiles[
-    //   state.viewers[state.selectedPrimaryViewerId].fileId
-    // ] as ImageFile;
-    // let files = WorkbenchState.getViewers(state)
-    //   .filter(
-    //     (viewer, index) =>
-    //       viewer.viewerId != state.selectedPrimaryViewerId &&
-    //       viewer.fileId !== null
-    //   )
-    //   .map((viewer) => dataFiles[viewer.fileId] as ImageFile);
-
-    // if (referenceFile && files.length != 0) {
-    //   if (state.normalizationSyncEnabled)
-    //     actions.push(new SyncFileNormalizations(referenceFile, files));
-    // }
-
-    return dispatch(actions);
+    return dispatch([]);
   }
 
   @Action(SetShowConfig)
@@ -1945,7 +1926,7 @@ export class WorkbenchState {
         ...changes,
       };
 
-      state.aligningPanelConfig.currentAlignmentJobId = null;
+      state.aligningPanelConfig.currentAlignmentJobId = "";
 
       return state;
     });
@@ -1970,7 +1951,7 @@ export class WorkbenchState {
         ...changes,
       };
 
-      state.stackingPanelConfig.currentStackingJobId = null;
+      state.stackingPanelConfig.currentStackingJobId = "";
 
       return state;
     });
@@ -2160,7 +2141,7 @@ export class WorkbenchState {
       );
       state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId =
         state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId == hduId
-          ? null
+          ? ""
           : state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId;
       return state;
     });
@@ -2240,7 +2221,7 @@ export class WorkbenchState {
     );
     if (targetViewer) {
       //temporary viewer exists
-      dispatch(new SetViewerFile(targetViewer.id, file.id, hdu ? hdu.id : null));
+      dispatch(new SetViewerFile(targetViewer.id, file.id, hdu ? hdu.id : ""));
       if (keepOpen) {
         dispatch(new KeepViewerOpen(targetViewer.id));
       }
@@ -2248,18 +2229,19 @@ export class WorkbenchState {
     }
 
     let viewerBase = {
-      id: null,
+      id: "",
       fileId: file.id,
-      hduId: hdu ? hdu.id : null,
+      hduId: hdu ? hdu.id : "",
       keepOpen: keepOpen,
-      viewportSize: null,
+      viewportSize: {
+        width: 0,
+        height: 0,
+      },
     };
 
     if (targetViewerType == "image") {
-      let imageHdu = hdu as ImageHdu;
-      let imageHduWorkbenchState = workbenchHduState as WorkbenchImageHduState;
-      let headerId: string = null;
-      let imageDataId: string = null;
+      let headerId: string = "";
+      let imageDataId: string = "";
       if (hdu) {
         headerId = hdu.headerId;
         imageDataId = (hdu as ImageHdu).normalizedImageDataId;
@@ -2335,7 +2317,7 @@ export class WorkbenchState {
 
     ids.forEach((id) => {
       if (referenceId == id) return;
-      return dispatch(
+      dispatch(
         new UpdatePlottingPanelState(id, {
           ...referenceState,
         })
@@ -2359,7 +2341,7 @@ export class WorkbenchState {
     if (sonifierState.regionMode == SonifierRegionMode.CUSTOM && sonifierState.viewportSync) {
       //find viewer which contains file
       let viewer = this.store.selectSnapshot(WorkbenchState.getViewers).find((viewer) => viewer.hduId == hduId);
-      if (viewer && viewer.viewportSize) {
+      if (viewer && viewer.viewportSize && sonifierState.regionHistoryIndex !== null) {
         let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
         dispatch(
           new CenterRegionInViewport(
@@ -2381,7 +2363,7 @@ export class WorkbenchState {
       tap((catalogs) => {
         setState((state: WorkbenchStateModel) => {
           state.catalogs = catalogs;
-          state.selectedCatalogId = catalogs.length != 0 ? catalogs[0].name : null;
+          state.selectedCatalogId = catalogs.length != 0 ? catalogs[0].name : "";
           return state;
         });
       }),
@@ -2401,8 +2383,11 @@ export class WorkbenchState {
       tap((fieldCals) => {
         setState((state: WorkbenchStateModel) => {
           state.fieldCals = fieldCals;
-          state.selectedFieldCalId =
-            state.selectedFieldCalId == null ? (fieldCals.length == 0 ? null : fieldCals[0].id) : state.selectedFieldCalId;
+          state.selectedFieldCalId = state.selectedFieldCalId
+            ? fieldCals.length == 0
+              ? ""
+              : fieldCals[0].id
+            : state.selectedFieldCalId;
           return state;
         });
       }),
@@ -2481,7 +2466,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxFileIds: string[] = [];
     let op;
     if (data.mode == "scalar") {
@@ -2494,17 +2479,18 @@ export class WorkbenchState {
       type: JobType.PixelOps,
       id: null,
       fileIds: imageHdus
-        .sort((a, b) =>
-          dataFiles[a.fileId].name < dataFiles[b.fileId].name
+        .sort((a, b) => {
+          return dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
             ? 1
-            : 0
-        )
+            : 0;
+        })
         .map((f) => f.id),
       auxFileIds: auxFileIds,
       op: op,
       inplace: data.inPlace,
+      state: null,
       result: null,
     };
 
@@ -2570,8 +2556,8 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
-    let auxImageFiles = data.auxHduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let auxImageFiles = data.auxHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
       id: null,
@@ -2595,6 +2581,7 @@ export class WorkbenchState {
         .map((f) => f.id),
       op: data.opString,
       inplace: data.inPlace,
+      state: null,
       result: null,
     };
 
@@ -2660,7 +2647,7 @@ export class WorkbenchState {
     let data = state.aligningPanelConfig.alignFormData;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let job: AlignmentJob = {
       type: JobType.Alignment,
       id: null,
@@ -2680,6 +2667,7 @@ export class WorkbenchState {
         wcsGridPoints: 100,
         prefilter: false,
       },
+      state: null,
       result: null,
     };
 
@@ -2717,7 +2705,7 @@ export class WorkbenchState {
         }
 
         let hduIds = result.fileIds.map((id) => id.toString());
-        let actions = [];
+        let actions: any[] = [];
         if ((job as AlignmentJob).inplace) {
           hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
           hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
@@ -2755,7 +2743,7 @@ export class WorkbenchState {
     let data = state.stackingPanelConfig.stackFormData;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter((f) => f != null);
+    let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let job: StackingJob = {
       type: JobType.Stacking,
       id: null,
@@ -2776,6 +2764,7 @@ export class WorkbenchState {
         lo: data.low,
         hi: data.high,
       },
+      state: null,
       result: null,
     };
 
@@ -2838,7 +2827,7 @@ export class WorkbenchState {
     { hduIds }: CreateWcsCalibrationJob
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.wcsCalibrationPanelState.activeJobId = null;
+      state.wcsCalibrationPanelState.activeJobId = "";
       return state;
     });
 
@@ -2862,12 +2851,13 @@ export class WorkbenchState {
     };
 
     let job: WcsCalibrationJob = {
-      type: JobType.WcsCalibration,
       id: null,
+      type: JobType.WcsCalibration,
       fileIds: hduIds,
       inplace: true,
       settings: wcsCalibrationJobSettings,
       sourceExtractionSettings: sourceExtractionJobSettings,
+      state: null,
       result: null,
     };
 
@@ -2893,38 +2883,40 @@ export class WorkbenchState {
           filter((value) => (value.action as CreateJob).correlationId == correlationId),
           take(1),
           flatMap((value) => {
-            let actions = [];
+            let actions: any[] = [];
             let state = getState();
             if (value.result.successful) {
               let jobEntites = this.store.selectSnapshot(JobsState.getJobEntities);
               let job = jobEntites[state.wcsCalibrationPanelState.activeJobId] as WcsCalibrationJob;
               let result = job.result;
-              result.fileIds.forEach((hduId) => {
-                actions.push(new InvalidateHeader(hduId.toString()));
-              });
-              let message: string;
-              let numFailed = hduIds.length - result.fileIds.length;
-              if (numFailed != 0) {
-                message = `Failed to find solution for ${numFailed} image(s).`;
-              } else {
-                message = `Successfully found solutions for all ${hduIds.length} files.`;
-              }
+              if (result) {
+                result.fileIds.forEach((hduId) => {
+                  actions.push(new InvalidateHeader(hduId.toString()));
+                });
+                let message: string;
+                let numFailed = hduIds.length - result.fileIds.length;
+                if (numFailed != 0) {
+                  message = `Failed to find solution for ${numFailed} image(s).`;
+                } else {
+                  message = `Successfully found solutions for all ${hduIds.length} files.`;
+                }
 
-              let dialogConfig: Partial<AlertDialogConfig> = {
-                title: "WCS Calibration Completed",
-                message: message,
-                buttons: [
-                  {
-                    color: null,
-                    value: false,
-                    label: "Close",
-                  },
-                ],
-              };
-              let dialogRef = this.dialog.open(AlertDialogComponent, {
-                width: "600px",
-                data: dialogConfig,
-              });
+                let dialogConfig: Partial<AlertDialogConfig> = {
+                  title: "WCS Calibration Completed",
+                  message: message,
+                  buttons: [
+                    {
+                      color: "",
+                      value: false,
+                      label: "Close",
+                    },
+                  ],
+                };
+                let dialogRef = this.dialog.open(AlertDialogComponent, {
+                  width: "600px",
+                  data: dialogConfig,
+                });
+              }
             }
 
             return dispatch(actions);
@@ -3029,7 +3021,8 @@ export class WorkbenchState {
       };
     } else if (
       settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-      sonificationState.regionMode == SonifierRegionMode.CUSTOM
+      sonificationState.regionMode == SonifierRegionMode.CUSTOM &&
+      sonificationState.regionHistoryIndex !== null
     ) {
       let region = sonificationState.regionHistory[sonificationState.regionHistoryIndex];
       jobSettings = {
@@ -3046,7 +3039,7 @@ export class WorkbenchState {
       fileIds: [hduId],
       sourceExtractionSettings: jobSettings,
       mergeSources: false,
-      sourceMergeSettings: null,
+      state: null,
       result: null,
     };
 
@@ -3087,14 +3080,14 @@ export class WorkbenchState {
           }
           return {
             id: null,
-            label: null,
-            objectId: null,
+            label: "",
+            objectId: "",
             hduId: d.fileId.toString(),
             posType: posType,
             primaryCoord: primaryCoord,
             secondaryCoord: secondaryCoord,
-            pm: null,
-            pmPosAngle: null,
+            pm: 0,
+            pmPosAngle: 0,
             pmEpoch: pmEpoch,
           } as Source;
         });
@@ -3136,6 +3129,13 @@ export class WorkbenchState {
         a: settings.aKrFactor,
         aIn: settings.aInKrFactor,
         aOut: settings.aOutKrFactor,
+        b: null,
+        bOut: null,
+        centroidRadius: null,
+        gain: null,
+        theta: null,
+        thetaOut: null,
+        zeroPoint: null,
       };
     } else {
       s = {
@@ -3147,6 +3147,9 @@ export class WorkbenchState {
         bOut: settings.bOut,
         theta: settings.theta,
         thetaOut: settings.thetaOut,
+        centroidRadius: null,
+        gain: null,
+        zeroPoint: null,
       };
     }
 
@@ -3185,7 +3188,7 @@ export class WorkbenchState {
 
         let s: Astrometry & SourceId = {
           id: source.id,
-          pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
+          pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : "",
           x: x,
           y: y,
           pmPixel: pmPixel,
@@ -3200,20 +3203,15 @@ export class WorkbenchState {
         };
         return s;
       }),
+      state: null,
       result: null,
     };
-
-    console.log(
-      "JOB:::: ",
-      job,
-      job.sources.map((s) => s.id)
-    );
 
     let correlationId = this.correlationIdGenerator.next();
     dispatch(new CreateJob(job, 1000, correlationId));
 
     setState((state: WorkbenchStateModel) => {
-      if (isBatch) state.photometryPanelConfig.batchPhotProgress = 0;
+      if (isBatch) state.photometryPanelConfig.batchPhotProgress = null;
       return state;
     });
 
@@ -3245,27 +3243,7 @@ export class WorkbenchState {
               if (!d) {
                 photDatas.push({
                   id: sourceId,
-                  decDegs: null,
-                  raHours: null,
-                  expLength: null,
-                  filter: null,
-                  flux: null,
-                  fluxError: null,
-                  mag: null,
-                  magError: null,
-                  telescope: null,
-                  time: null,
                   fileId: fileId,
-                  fwhmX: null,
-                  fwhmY: null,
-                  pmEpoch: null,
-                  pmPixel: null,
-                  pmPosAnglePixel: null,
-                  pmPosAngleSky: null,
-                  pmSky: null,
-                  theta: null,
-                  x: null,
-                  y: null,
                   annulusAIn: null,
                   annulusAOut: null,
                   annulusBIn: null,
@@ -3273,6 +3251,26 @@ export class WorkbenchState {
                   aperA: null,
                   aperB: null,
                   aperTheta: null,
+                  decDegs: null,
+                  expLength: null,
+                  filter: null,
+                  flux: null,
+                  fluxError: null,
+                  fwhmX: null,
+                  fwhmY: null,
+                  mag: null,
+                  magError: null,
+                  pmPixel: null,
+                  pmPosAnglePixel: null,
+                  pmPosAngleSky: null,
+                  pmSky: null,
+                  raHours: null,
+                  telescope: null,
+                  theta: null,
+                  time: null,
+                  x: null,
+                  y: null,
+                  pmEpoch: null,
                 });
               } else {
                 let time = null;
@@ -3302,7 +3300,7 @@ export class WorkbenchState {
         setState((state: WorkbenchStateModel) => {
           if (isBatch) {
             state.photometryPanelConfig.batchPhotJobId = a.job.id;
-            state.photometryPanelConfig.batchPhotProgress = job.state.progress;
+            state.photometryPanelConfig.batchPhotProgress = job.state ? job.state.progress : null;
           }
           return state;
         });
@@ -3318,10 +3316,10 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { hduId }: InitializeWorkbenchHduState
   ) {
-    let actions = [];
+    let actions: any[] = [];
     setState((state: WorkbenchStateModel) => {
       let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-      if (!(hduId in hduEntities)) return;
+      if (!(hduId in hduEntities)) return state;
       let hdu = hduEntities[hduId];
       let hduState: IWorkbenchHduState;
 
@@ -3347,7 +3345,7 @@ export class WorkbenchState {
         let sonificationPanelStateId = `SONIFICATION_PANEL_${state.nextSonificationPanelStateId++}`;
         state.sonificationPanelStateEntities[sonificationPanelStateId] = {
           id: sonificationPanelStateId,
-          sonificationUri: null,
+          sonificationUri: "",
           regionHistory: [],
           regionHistoryIndex: null,
           regionHistoryInitialized: false,
@@ -3363,7 +3361,7 @@ export class WorkbenchState {
         let photometryPanelStateId = `PHOTOMETRY_PANEL_${state.nextPhotometryPanelStateId++}`;
         state.photometryPanelStateEntities[photometryPanelStateId] = {
           id: photometryPanelStateId,
-          sourceExtractionJobId: null,
+          sourceExtractionJobId: "",
           sourcePhotometryData: {},
           markerSelectionRegion: null,
         };
@@ -3379,6 +3377,10 @@ export class WorkbenchState {
         };
 
         hduState = imageHduState;
+        state.hduStateEntities[hduState.id] = hduState;
+        state.hduIds.push(hdu.id);
+
+        actions.push(new InitializeWorkbenchFileState(hdu.fileId));
       } else if (hdu.hduType == HduType.TABLE) {
         let tableHduState: WorkbenchTableHduState = {
           id: hdu.id,
@@ -3386,12 +3388,11 @@ export class WorkbenchState {
         };
 
         hduState = tableHduState;
+        state.hduStateEntities[hduState.id] = hduState;
+        state.hduIds.push(hdu.id);
+
+        actions.push(new InitializeWorkbenchFileState(hdu.fileId));
       }
-
-      state.hduStateEntities[hduState.id] = hduState;
-      state.hduIds.push(hdu.id);
-
-      actions.push(new InitializeWorkbenchFileState(hdu.fileId));
 
       return state;
     });
@@ -3433,7 +3434,7 @@ export class WorkbenchState {
         id: file.id,
         plottingPanelStateId: plottingPanelStateId,
         customMarkerPanelStateId: customMarkerPanelStateId,
-        selectedHduId: file.hduIds.length == 0 ? null : file.hduIds[0],
+        selectedHduId: file.hduIds.length == 0 ? "" : file.hduIds[0],
       };
       state.fileIds.push(file.id);
 
@@ -3556,7 +3557,7 @@ export class WorkbenchState {
         sonificationPanelState.regionHistoryIndex = 0;
         sonificationPanelState.regionHistory = [region];
         sonificationPanelState.regionHistoryInitialized = true;
-      } else {
+      } else if (sonificationPanelState.regionHistoryIndex != null) {
         sonificationPanelState.regionHistory = [
           ...sonificationPanelState.regionHistory.slice(0, sonificationPanelState.regionHistoryIndex + 1),
           region,
@@ -3579,7 +3580,12 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      if (!sonificationPanelState.regionHistoryInitialized || sonificationPanelState.regionHistoryIndex == 0) return state;
+      if (
+        !sonificationPanelState.regionHistoryInitialized ||
+        sonificationPanelState.regionHistoryIndex == null ||
+        sonificationPanelState.regionHistoryIndex == 0
+      )
+        return state;
       sonificationPanelState.regionHistoryIndex--;
       return state;
     });
@@ -3599,9 +3605,11 @@ export class WorkbenchState {
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
       if (
         !sonificationPanelState.regionHistoryInitialized ||
+        sonificationPanelState.regionHistoryIndex == null ||
         sonificationPanelState.regionHistoryIndex == sonificationPanelState.regionHistory.length - 1
-      )
+      ) {
         return state;
+      }
       sonificationPanelState.regionHistoryIndex++;
       return state;
     });
@@ -3654,7 +3662,7 @@ export class WorkbenchState {
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-    if (!hduState || hduState.hduType != HduType.IMAGE) return;
+    if (!hduState || hduState.hduType != HduType.IMAGE) return null;
 
     let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
 
@@ -3671,6 +3679,7 @@ export class WorkbenchState {
         tempo: Math.ceil(region.height / sonificationPanelState.duration),
         indexSounds: true,
       },
+      state: null,
       result: null,
     };
 
@@ -3694,8 +3703,8 @@ export class WorkbenchState {
 
     setState((state: WorkbenchStateModel) => {
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      sonificationPanelState.sonificationJobProgress = 0;
-      sonificationPanelState.sonificationUri = null;
+      sonificationPanelState.sonificationJobProgress = null;
+      sonificationPanelState.sonificationUri = "";
       return state;
     });
 
@@ -3712,7 +3721,9 @@ export class WorkbenchState {
       tap((a) => {
         setState((state: WorkbenchStateModel) => {
           let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-          sonificationPanelState.sonificationJobProgress = a.job.state.progress;
+          if (a.job.state) {
+            sonificationPanelState.sonificationJobProgress = a.job.state.progress;
+          }
           return state;
         });
       })
@@ -3730,8 +3741,8 @@ export class WorkbenchState {
               let result = jobEntity.result as SonificationJobResult;
               if (result.errors.length != 0) {
                 sonificationPanelState.sonificationJobProgress = null;
-                sonificationPanelState.sonificationUri = null;
-                return;
+                sonificationPanelState.sonificationUri = "";
+                return state;
               }
               sonificationPanelState.sonificationJobProgress = null;
               sonificationPanelState.sonificationUri = `core/api/v1/jobs/${job.id}/result/files/sonification`;
@@ -3757,7 +3768,7 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
       sonificationPanelState.sonificationJobProgress = null;
-      sonificationPanelState.sonificationUri = null;
+      sonificationPanelState.sonificationUri = "";
       return state;
     });
   }
@@ -3816,24 +3827,33 @@ export class WorkbenchState {
 
       let region = photState.markerSelectionRegion;
       let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId)(hduId);
-      let sourceIds = this.store.selectSnapshot(SourcesState.getSources).filter((source) => {
-        let coord = getSourceCoordinates(header, source);
-        let x1 = Math.min(region.x, region.x + region.width);
-        let y1 = Math.min(region.y, region.y + region.height);
-        let x2 = x1 + Math.abs(region.width);
-        let y2 = y1 + Math.abs(region.height);
+      if(!header || !region) return state;
 
-        return coord && coord.x >= x1 && coord.x < x2 && coord.y >= y1 && coord.y < y2;
-      }).map(source => source.id);
+      let sourceIds = this.store
+        .selectSnapshot(SourcesState.getSources)
+        .filter((source) => {
+          let coord = getSourceCoordinates(header!, source);
+          let x1 = Math.min(region!.x, region!.x + region!.width);
+          let y1 = Math.min(region!.y, region!.y + region!.height);
+          let x2 = x1 + Math.abs(region!.width);
+          let y2 = y1 + Math.abs(region!.height);
 
-      if(mode == 'remove') {
-        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.filter(id => !sourceIds.includes(id))
-      }
-      else {
-        let filteredSourceIds = sourceIds.filter(id => !state.photometryPanelConfig.selectedSourceIds.includes(id))
-        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.concat(filteredSourceIds)
+          return coord && coord.x >= x1 && coord.x < x2 && coord.y >= y1 && coord.y < y2;
+        })
+        .map((source) => source.id);
+
+      if (mode == "remove") {
+        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.filter(
+          (id) => !sourceIds.includes(id)
+        );
+      } else {
+        let filteredSourceIds = sourceIds.filter((id) => !state.photometryPanelConfig.selectedSourceIds.includes(id));
+        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.concat(
+          filteredSourceIds
+        );
       }
       photState.markerSelectionRegion = null;
+      
       return state;
     });
   }
@@ -3986,7 +4006,7 @@ export class WorkbenchState {
       let idsToRemove = markers.map((m) => m.id);
       markerState.markerIds = markerState.markerIds.filter((id) => !idsToRemove.includes(id));
       markers.forEach((marker) => {
-        if (marker.id in markerState.markerEntities) delete markerState.markerEntities[marker.id];
+        if (marker.id && marker.id in markerState.markerEntities) delete markerState.markerEntities[marker.id];
       });
 
       return state;
@@ -4003,7 +4023,7 @@ export class WorkbenchState {
       let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
 
       markers.forEach((marker) => {
-        if (markerState.markerIds.includes(marker.id)) {
+        if (marker.id && markerState.markerIds.includes(marker.id)) {
           markerState.markerEntities[marker.id].selected = true;
         }
       });
@@ -4021,7 +4041,7 @@ export class WorkbenchState {
       let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
 
       markers.forEach((marker) => {
-        if (markerState.markerIds.includes(marker.id)) {
+        if (marker.id && markerState.markerIds.includes(marker.id)) {
           markerState.markerEntities[marker.id].selected = false;
         }
       });
@@ -4132,10 +4152,10 @@ export class WorkbenchState {
 
     let visibleViewers = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds).map((id) => state.viewers[id]);
 
-    let actions = [];
+    let actions: any[] = [];
     visibleViewers.forEach((viewer) => {
-      let targetImageTransform: Transform;
-      let targetViewportTransform: Transform;
+      let targetImageTransform: Transform | null = null;
+      let targetViewportTransform: Transform | null = null;
       let targetHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
       let targetHeader = headerEntities[targetHeaderId];
       let targetImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
@@ -4213,7 +4233,7 @@ export class WorkbenchState {
     let visibleViewers = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds).map((id) => state.viewers[id]);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
 
-    let actions = [];
+    let actions: any[] = [];
     visibleViewers.forEach((viewer) => {
       let hduId = viewer.hduId;
       if (!hduId) {

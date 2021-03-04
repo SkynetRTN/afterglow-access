@@ -62,7 +62,6 @@ import { JobsModule } from "../jobs/jobs.module";
 import { SvgTextMarkerComponent } from "./components/svg-text-marker/svg-text-marker.component";
 
 import { ReactiveFormsModule } from "@angular/forms";
-import { TreeModule } from "@circlon/angular-tree-component";
 import { AfterglowCatalogService } from "./services/afterglow-catalogs";
 import { CreateFieldCalDialogComponent } from "./components/create-field-cal-dialog/create-field-cal-dialog.component";
 import { FlexLayoutModule } from "@angular/flex-layout";
@@ -126,7 +125,6 @@ export const COMPONENTS = [
 
 @NgModule({
   imports: [
-    TreeModule,
     RouterModule,
     CommonModule,
     FormsModule,

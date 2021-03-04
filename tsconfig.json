@@ -1,12 +1,17 @@
 {
+  "extends": "./node_modules/gts/tsconfig-google.json",
   "compileOnSave": false,
   "angularCompilerOptions": {
     "enableIvy": false
   },
   "compilerOptions": {
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "rootDir": ".",
+    "outDir": "build",
     "downlevelIteration": true,
     "importHelpers": true,
-    "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
@@ -28,5 +33,9 @@
     ],
     "module": "esnext",
     "baseUrl": "./"
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

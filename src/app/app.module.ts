@@ -30,7 +30,7 @@ import { AFTERGLOW_ROUTES } from "./routes";
 import { env } from "../environments/environment";
 import { ThemePickerModule } from "./theme-picker";
 import { AuthState } from "./auth/auth.state";
-import { JobsState } from "./jobs/jobs.state";
+import { JobsState, JobsStateModel } from "./jobs/jobs.state";
 import { DataProvidersState } from "./data-providers/data-providers.state";
 import { WorkbenchState } from "./workbench/workbench.state";
 import { SourcesState } from "./workbench/sources.state";
@@ -38,23 +38,22 @@ import { PhotDataState } from "./workbench/phot-data.state.";
 import { AfterglowStoragePluginModule, StorageOption } from "./storage-plugin/public_api";
 import { WasmService } from "./wasm.service";
 import { HduType } from "./data-files/models/data-file-type";
-import { ImageHdu, IHdu, PixelType } from "./data-files/models/data-file";
+import { ImageHdu, IHdu, PixelType, Header } from "./data-files/models/data-file";
 import { WorkbenchImageHduState } from "./workbench/models/workbench-file-state";
 import { DataFilesStateModel, DataFilesState } from "./data-files/data-files.state";
 import { IImageData } from "./data-files/models/image-data";
-import { TreeModule } from "@circlon/angular-tree-component";
-import * as WebFont from "webfontloader";
+// import * as WebFont from "webfontloader";
 import { ngxsConfig } from "./ngxs.config";
 import { WorkbenchStateModel } from './workbench/models/workbench-state';
 import { PhotometryPanelState } from './workbench/models/photometry-file-state';
 import { AfterglowConfigService } from './afterglow-config.service';
 import { AppState } from './app.state';
 
-WebFont.load({
-  custom: { families: ["Material Icons", "Material Icons Outline"] },
-});
+// WebFont.load({
+//   custom: { families: ["Material Icons", "Material Icons Outline"] },
+// });
 
-export function dataFileSanitizer(v) {
+export function dataFileSanitizer(v: DataFilesStateModel) {
   let state = {
     ...v,
   } as DataFilesStateModel;
@@ -63,7 +62,7 @@ export function dataFileSanitizer(v) {
     ...state.headerEntities,
   };
   Object.keys(state.headerEntities).forEach((key) => {
-    let header = {
+    let header: Header = {
       ...state.headerEntities[key],
       loading: false,
       loaded: false,
@@ -90,9 +89,9 @@ export function dataFileSanitizer(v) {
           initialized: false,
           loaded: false,
           loading: false,
-          data: null,
-          minBin: null,
-          maxBin: null,
+          data: new Uint32Array(),
+          minBin: 0,
+          maxBin: 0,
         },
       } as ImageHdu;
     }
@@ -115,7 +114,7 @@ export function dataFileSanitizer(v) {
   return state;
 }
 
-export function workbenchSanitizer(v) {
+export function workbenchSanitizer(v: WorkbenchStateModel) {
   let state = {
     ...v,
   } as WorkbenchStateModel;
@@ -134,9 +133,18 @@ export function workbenchSanitizer(v) {
   return state;
 }
 
+export function jobSanitizer(v: JobsStateModel) {
+  let state = {
+    ...v,
+  } as JobsStateModel;
+
+  state.entities = {};
+  state.ids = [];
+  return state;
+}
+
 @NgModule({
   imports: [
-    TreeModule,
     CommonModule,
     BrowserModule,
     BrowserAnimationsModule,
@@ -176,6 +184,10 @@ export function workbenchSanitizer(v) {
         {
           key: WorkbenchState,
           sanitize: workbenchSanitizer,
+        },
+        {
+          key: JobsState,
+          sanitize: jobSanitizer,
         },
       ],
       storage: StorageOption.SessionStorage,

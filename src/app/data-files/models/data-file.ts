@@ -38,7 +38,7 @@ export interface Header {
   entries: HeaderEntry[];
   loaded: boolean;
   loading: boolean;
-  wcs: Wcs;
+  wcs: Wcs | null;
 }
 
 export interface IHdu {
@@ -89,23 +89,23 @@ export function toKeyValueHash(header: Header) {
   return result;
 }
 
-export function getWidth(header: Header) {
+export function getWidth(header: Header): number {
   let naxis1 = getHeaderEntry(header, "NAXIS1");
   if (naxis1) {
     return naxis1.value;
   }
-  return undefined;
+  return 0;
 }
 
-export function getHeight(header: Header) {
+export function getHeight(header: Header): number {
   let naxis2 = getHeaderEntry(header, "NAXIS2");
   if (naxis2) {
     return naxis2.value;
   }
-  return undefined;
+  return 0;
 }
 
-export function getObserver(header: Header) : string {
+export function getObserver(header: Header) : string | undefined {
   let observer = getHeaderEntry(header, "OBSERVER");
   if (observer) {
     return observer.value;
@@ -272,7 +272,7 @@ export function getSourceCoordinates(header: Header, source: Source) {
   let theta = posAngle;
 
   if (source.posType == PosType.SKY) {
-    if (!header.loaded || !header.wcs.isValid()) return null;
+    if (!header.loaded || !header.wcs || !header.wcs.isValid()) return null;
     let wcs = header.wcs;
     let xy = wcs.worldToPix([primaryCoord, secondaryCoord]);
     x = xy[0];

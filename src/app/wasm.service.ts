@@ -158,17 +158,17 @@ export class WcsLib {
     return header.join("\n");
   }
 
-  public pix2sky = function (x, y) {
+  public pix2sky(x, y) {
     const retVal = this._pix2sky(this.wcsPtr, x, y, this.coordinatePtr);
     const world = new Float64Array(WcsModule.HEAPF64.buffer, this.coordinatePtr, 2);
     return new Float64Array(world);
   };
 
-  public hasCelestial = function () {
+  public hasCelestial() {
     return this._hasCelestial(this.wcsPtr);
   };
 
-  public sky2pix = function (ra, dec) {
+  public sky2pix(ra, dec) {
     this._sky2pix(this.wcsPtr, ra, dec, this.coordinatePtr);
     const pixcrd = new Float64Array(WcsModule.HEAPU8.buffer, this.coordinatePtr, 2);
     return pixcrd.slice(0);

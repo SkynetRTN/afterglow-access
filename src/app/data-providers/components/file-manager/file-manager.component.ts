@@ -761,7 +761,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   onDownloadClick() {
     let assets = this.selection.selected.map(item => item.asset).filter(asset => asset !== null);
-    if (assets.length == 0) return;
+    if (assets.length == 0) {
+      return;
+    }
 
     let dataProviderId = assets[0].dataProviderId;
     //only assets from the same data provider can be downloaded
@@ -772,6 +774,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       id: null,
       providerId: dataProviderId,
       paths: assets.map((asset) => asset.assetPath),
+      state: null,
+      result: null
     };
 
     let corrId = this.corrGen.next();
@@ -817,7 +821,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
     this.store.dispatch(new CreateJob(job, 1000, corrId));
 
-    return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1)).subscribe(() => {
+    merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1)).subscribe(() => {
 
     })
   }

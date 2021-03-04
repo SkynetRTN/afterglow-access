@@ -11,7 +11,7 @@ export interface ColorMap {
   red: LIColor[];
   green: LIColor[];
   blue: LIColor[];
-  lookup: Uint32Array | null;
+  lookup: Uint32Array;
 }
 
 function getColorFromChannel(i: number, count: number, cc: Array<LIColor>) {

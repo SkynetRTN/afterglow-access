@@ -20,7 +20,7 @@ export interface ImageTile<T> {
   pixelsLoaded: boolean;
   pixelsLoading: boolean;
   pixelLoadingFailed: boolean;
-  pixels: T;
+  pixels: T | null;
 }
 
 export function createTiles<T>(width: number, height: number, tileWidth: number, tileHeight: number) {
@@ -64,8 +64,9 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
 
 export function getTilePixel<T>(tile: ImageTile<T>, x: number, y: number) {
   let index: number = Math.floor(y) * tile.width + Math.floor(x);
-  if (!tile.pixelsLoaded) return NaN;
-  return tile.pixels[index];
+  if (!tile.pixelsLoaded || !tile.pixels) return NaN;
+  let result: number = tile.pixels[index]
+  return result ;
 }
 
 export function getPixels<T>(imageData: IImageData<T>, x: number, y: number, width: number, height: number) {

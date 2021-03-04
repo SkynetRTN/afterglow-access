@@ -385,7 +385,7 @@ export class RotateBy {
     public viewportTransformId: string,
     public viewportSize: { width: number; height: number },
     public rotationAngle: number,
-    public anchorPoint: { x: number; y: number } = null
+    public anchorPoint: { x: number; y: number } | null = null
   ) { }
 }
 
@@ -404,7 +404,7 @@ export class Flip {
     public viewportTransformId: string,
     public axis: 'vertical' | 'horizontal',
     public viewportSize: { width: number; height: number },
-    public anchorPoint: { x: number; y: number } = null) { }
+    public anchorPoint: { x: number; y: number } | null = null) { }
 }
 
 export class ResetImageTransform {

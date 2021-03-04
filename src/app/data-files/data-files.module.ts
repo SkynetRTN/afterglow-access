@@ -13,10 +13,6 @@ import { SvgModule } from "../svg/svg.module";
 
 import { PipesModule } from "../pipes/pipes.module";
 import { ImageHistChartComponent } from "./components/image-hist-chart/image-hist-chart.component";
-import {
-  DataFileSelectionListComponent,
-  DataFileListItemComponent,
-} from "./components/data-file-selection-list/data-file-selection-list.component";
 import { AfterglowPlotlyModule } from "../afterglow-plotly/afterglow-plotly.module";
 
 @NgModule({
@@ -29,8 +25,8 @@ import { AfterglowPlotlyModule } from "../afterglow-plotly/afterglow-plotly.modu
     SvgModule,
     AfterglowPlotlyModule,
   ],
-  declarations: [DataFileListItemComponent, ImageHistChartComponent, DataFileSelectionListComponent],
-  exports: [DataFileListItemComponent, ImageHistChartComponent, DataFileSelectionListComponent],
+  declarations: [ImageHistChartComponent],
+  exports: [ImageHistChartComponent],
   providers: [],
 })
 export class DataFilesModule {}

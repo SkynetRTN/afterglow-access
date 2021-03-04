@@ -6,5 +6,5 @@ export interface PhotometryPanelState {
   id: string;
   sourceExtractionJobId: string;
   sourcePhotometryData: { [sourceId: string]: PhotometryData };
-  markerSelectionRegion: Region;
+  markerSelectionRegion: Region | null;
 }

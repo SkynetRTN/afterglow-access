@@ -92,6 +92,8 @@ export type LoadTileEvent = {
   tileIndex: number;
 };
 
+export type BoundMouseEventListener = ($event: MouseEvent) => void;
+
 @Directive({
   selector: "[app-pan-zoom-canvas]",
   host: {
@@ -181,12 +183,12 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   }
 
   ngAfterViewInit() {
-    this.handleWindowResizeBound = this.handleWindowResize.bind(this);
-    this.handleImageMouseDownBound = this.handleImageMouseDown.bind(this);
-    this.handleImageMouseMoveBound = this.handleImageMouseMove.bind(this);
-    this.handleImageMouseWheelBound = this.handleImageMouseWheel.bind(this);
-    this.handleDocumentMouseUpBound = this.handleDocumentMouseUp.bind(this);
-    this.handleDocumentMouseMoveWhileDownBound = this.handleDocumentMouseMoveWhileDown.bind(this);
+    this.handleWindowResizeBound = this.handleWindowResize.bind(this) as EventListener;
+    this.handleImageMouseDownBound = this.handleImageMouseDown.bind(this) as EventListener;
+    this.handleImageMouseMoveBound = this.handleImageMouseMove.bind(this) as EventListener;
+    this.handleImageMouseWheelBound = this.handleImageMouseWheel.bind(this) as EventListener;
+    this.handleDocumentMouseUpBound = this.handleDocumentMouseUp.bind(this) as EventListener;
+    this.handleDocumentMouseMoveWhileDownBound = this.handleDocumentMouseMoveWhileDown.bind(this) as EventListener;
 
     this.initializeResizeMonitor();
 

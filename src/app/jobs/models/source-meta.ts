@@ -1,7 +1,7 @@
 export interface SourceMeta {
   fileId: string;
-  time: string;
-  filter: string;
-  telescope: string;
-  expLength: number;
+  time: Date | string | null;
+  filter: string | null;
+  telescope: string | null;
+  expLength: number | null;
 }

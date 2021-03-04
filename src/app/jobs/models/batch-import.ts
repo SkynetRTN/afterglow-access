@@ -16,7 +16,7 @@ export interface BatchImportJobResult extends JobResultBase {
 export interface BatchImportJob extends JobBase {
   readonly type: JobType.BatchImport;
   settings: Array<BatchImportSettings>;
-  result: BatchImportJobResult;
+  result: BatchImportJobResult | null;
 }
 
 

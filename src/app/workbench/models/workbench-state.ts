@@ -80,7 +80,7 @@ export interface PhotometryPanelConfig {
   coordMode: "pixel" | "sky";
   batchPhotFormData: BatchPhotometryFormData;
   autoPhot: boolean;
-  batchPhotProgress: number;
+  batchPhotProgress: number | null;
   batchPhotJobId: string;
 }
 
@@ -106,12 +106,12 @@ export interface WcsCalibrationPanelState {
 }
 
 export interface WcsCalibrationSettings {
-  ra: number;
-  dec: number;
-  radius: number;
-  minScale: number;
-  maxScale: number;
-  maxSources: number;
+  ra?: number;
+  dec?: number;
+  radius?: number;
+  minScale?: number;
+  maxScale?: number;
+  maxSources?: number;
 }
 
 export interface ViewerPanelContainer {

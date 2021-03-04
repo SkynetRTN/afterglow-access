@@ -39,7 +39,7 @@ export interface SourceExtractionJob extends JobBase {
   sourceExtractionSettings?: SourceExtractionJobSettings;
   mergeSources: boolean;
   sourceMergeSettings?: SourceMergeSettings;
-  result: SourceExtractionJobResult;
+  result: SourceExtractionJobResult | null;
 }
 
 

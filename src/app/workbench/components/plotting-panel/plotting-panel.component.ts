@@ -109,7 +109,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
         let pixelPosAngle = null;
         let skyPosAngle = null;
 
-        if (!lineStart || !lineEnd) return;
+        if (!lineStart || !lineEnd) return null;
 
         if (lineStart.x !== null && lineStart.y !== null && lineEnd.x !== null && lineEnd.y !== null) {
           let deltaX = lineEnd.x - lineStart.x;
