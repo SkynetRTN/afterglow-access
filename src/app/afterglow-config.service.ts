@@ -10,6 +10,7 @@ import { tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AfterglowConfigService implements AfterglowConfig {
+  usingDefaults: boolean = true;
   coreUrl: string;
   authMethod: "cookie" | "oauth2";
   authCookieName: string;

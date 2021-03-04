@@ -47,6 +47,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   
   wasmReady$: Observable<boolean>;
   configReady$: Observable<boolean>;
+  configError$: Observable<string>;
   authReady$: Observable<boolean>;
   ready$: Observable<boolean>;
 
@@ -62,6 +63,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {
     this.wasmReady$ = this.wasmService.wasmReady$;
     this.configReady$ = this.store.select(AppState.getConfigLoaded);
+    this.configError$ = this.store.select(AppState.getConfigError);
     this.ready$ = combineLatest(this.configReady$, this.wasmReady$).pipe(
       map(([wasmReady, configReady]) => wasmReady && configReady),
     );

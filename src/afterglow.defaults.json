@@ -1,0 +1,10 @@
+{
+    "coreUrl": "http://127.0.0.1:4200/core",
+    "authMethod": "cookie",
+    "authCookieName": "afterglow_core_access_token",
+    "oauth2ClientId": null,
+    "tileSize": 512,
+    "saturationDefault": 99.0,
+    "backgroundDefault": 15.0,
+    "enableDebug": true
+}
