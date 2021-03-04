@@ -4,7 +4,6 @@ import { auditTime, map, tap, switchMap, distinct, distinctUntilChanged } from "
 
 declare let d3: any;
 
-import { appConfig } from "../../../../environments/environment.prod";
 import { Router } from "@angular/router";
 import { CorrelationIdGenerator } from "../../../utils/correlated-action";
 import { Store } from "@ngxs/store";
@@ -25,6 +24,7 @@ import { IImageData } from "../../../data-files/models/image-data";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { BlendMode } from "../../../data-files/models/blend-mode";
+import { AfterglowConfigService } from '../../../afterglow-config.service';
 
 @Component({
   selector: "app-display-panel",
@@ -97,10 +97,13 @@ export class DisplayToolsetComponent implements OnInit, AfterViewInit, OnDestroy
   backgroundPercentile$: Subject<number> = new Subject<number>();
   peakPercentile$: Subject<number> = new Subject<number>();
 
-  upperPercentileDefault = appConfig.upperPercentileDefault;
-  lowerPercentileDefault = appConfig.lowerPercentileDefault;
+  upperPercentileDefault: number;
+  lowerPercentileDefault: number;
 
-  constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router) {
+  constructor(private corrGen: CorrelationIdGenerator, private store: Store, private router: Router, private afterglowConfig: AfterglowConfigService) {
+    this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
+    this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
+    
     let selectedHduId$ = combineLatest(this.file$, this.hdu$).pipe(
       switchMap(([file, hdu]) => {
         if (!file) {

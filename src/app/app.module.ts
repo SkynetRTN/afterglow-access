@@ -27,7 +27,7 @@ import { AvatarModule } from "ngx-avatar";
 
 import { AppComponent } from "./app.component";
 import { AFTERGLOW_ROUTES } from "./routes";
-import { appConfig } from "../environments/environment";
+import { env } from "../environments/environment";
 import { ThemePickerModule } from "./theme-picker";
 import { AuthState } from "./auth/auth.state";
 import { JobsState } from "./jobs/jobs.state";
@@ -47,6 +47,8 @@ import * as WebFont from "webfontloader";
 import { ngxsConfig } from "./ngxs.config";
 import { WorkbenchStateModel } from './workbench/models/workbench-state';
 import { PhotometryPanelState } from './workbench/models/photometry-file-state';
+import { AfterglowConfigService } from './afterglow-config.service';
+import { AppState } from './app.state';
 
 WebFont.load({
   custom: { families: ["Material Icons", "Material Icons Outline"] },
@@ -152,7 +154,7 @@ export function workbenchSanitizer(v) {
       disableCheatSheet: true,
     }),
     NgxsModule.forRoot(
-      [AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
+      [AppState, AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
       ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -179,12 +181,13 @@ export function workbenchSanitizer(v) {
       storage: StorageOption.SessionStorage,
     }),
     NgxsRouterPluginModule.forRoot(),
-    appConfig.plugins,
+    env.plugins,
   ],
 
   declarations: [AppComponent],
   providers: [
     WasmService,
+    AfterglowConfigService,
     [
       { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
       { provide: HTTP_INTERCEPTORS, useClass: AfterglowCoreInterceptor, multi: true },

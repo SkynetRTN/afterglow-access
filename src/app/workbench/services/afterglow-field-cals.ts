@@ -3,17 +3,17 @@ import { Location } from "@angular/common";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { appConfig } from "../../../environments/environment";
 import { FieldCal } from "../models/field-cal";
 import { PosType, CatalogSource } from "../models/source";
-import { getCoreApiUrl } from "../../../environments/app-config";
+import { getCoreApiUrl } from '../../afterglow-config';
+import { AfterglowConfigService } from '../../afterglow-config.service';
 
 @Injectable()
 export class AfterglowFieldCalService {
-  constructor(private http: HttpClient, private location: Location) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   getFieldCals(): Observable<FieldCal[]> {
-    return this.http.get<any>(`${getCoreApiUrl(appConfig)}/field-cals`).pipe(
+    return this.http.get<any>(`${getCoreApiUrl(this.config)}/field-cals`).pipe(
       map(
         (res) =>
           res.map((r) => {
@@ -48,7 +48,7 @@ export class AfterglowFieldCalService {
 
   createFieldCal(c: FieldCal): Observable<FieldCal> {
     return this.http
-      .post<any>(`${getCoreApiUrl(appConfig)}/field-cals`, {
+      .post<any>(`${getCoreApiUrl(this.config)}/field-cals`, {
         name: c.name,
         catalog_sources: JSON.stringify(c.catalogSources),
         catalogs: JSON.stringify([]),
@@ -76,7 +76,7 @@ export class AfterglowFieldCalService {
 
   updateFieldCal(c: FieldCal): Observable<FieldCal> {
     return this.http
-      .put<any>(`${getCoreApiUrl(appConfig)}/field-cals/${c.id}`, {
+      .put<any>(`${getCoreApiUrl(this.config)}/field-cals/${c.id}`, {
         id: c.id,
         name: c.name,
         catalog_sources: JSON.stringify(c.catalogSources),

@@ -9,7 +9,7 @@ import {
   UrlSerializer,
 } from "@angular/router";
 import { CookieService } from "ngx-cookie";
-import { appConfig } from "../../../environments/environment";
+import { env } from "../../../environments/environment";
 
 import * as moment from "moment";
 import * as uuid from "uuid";
@@ -18,28 +18,29 @@ import { HttpParams } from "@angular/common/http";
 import { Login, ResetState } from "../auth.actions";
 import { AuthState } from "../auth.state";
 import { Navigate } from "@ngxs/router-plugin";
+import { AppState } from '../../app.state';
+import { AfterglowConfigService } from '../../afterglow-config.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanActivateChild {
   constructor(
     private store: Store,
     private cookieService: CookieService,
-    private router: Router,
-    private location: LocationStrategy,
-    private urlSerializer: UrlSerializer
+    private config: AfterglowConfigService,
   ) {}
 
   get user() {
+
     if (!localStorage.getItem("aa_user")) return null;
-    if (appConfig.authMethod == "cookie") {
-      if (!this.cookieService.get(appConfig.authCookieName)) {
+    if (this.config.authMethod == "cookie") {
+      if (!this.cookieService.get(this.config.authCookieName)) {
         return null;
-      } else if (this.cookieService.get(appConfig.authCookieName) != localStorage.getItem("aa_access_token")) {
+      } else if (this.cookieService.get(this.config.authCookieName) != localStorage.getItem("aa_access_token")) {
         //unexpected cookie change.  //could be that a different user has logged in
         return null;
       }
     }
-    if (appConfig.authMethod == "oauth2") {
+    if (this.config.authMethod == "oauth2") {
       let expiresAt = moment(localStorage.getItem("aa_expires_at"));
       if (moment().isSameOrAfter(expiresAt)) {
         localStorage.removeItem("aa_user");

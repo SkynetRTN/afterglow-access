@@ -5,16 +5,19 @@ import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 
 import { Logout } from "../auth/auth.actions";
-import { appConfig } from "../../environments/environment";
+import { env } from "../../environments/environment";
 import { Navigate } from "@ngxs/router-plugin";
+import { AppState } from '../app.state';
+import { AfterglowConfigService } from '../afterglow-config.service';
 
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
-  constructor(private store: Store) {}
+  constructor(private store: Store, 
+    private config: AfterglowConfigService) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const idToken = localStorage.getItem("aa_access_token");
     let req = request;
-    if (appConfig.authMethod == "oauth2" && idToken) {
+    if (this.config.authMethod == "oauth2" && idToken) {
       req = request.clone({
         headers: request.headers.set("Authorization", "Bearer " + idToken),
       });

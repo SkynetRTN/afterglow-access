@@ -1,34 +1,33 @@
 import { Injectable } from "@angular/core";
-import { Location } from "@angular/common";
-import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
-import { appConfig } from "../../../environments/environment";
+import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map, tap } from "rxjs/operators";
 import { Job } from "../models/job";
 import { JobStateBase } from "../models/job-base";
 import { JobResult } from "../models/job-result";
-import { getCoreApiUrl } from "../../../environments/app-config";
+import { getCoreApiUrl } from "../../afterglow-config";
+import { AfterglowConfigService } from "../../afterglow-config.service";
 
 @Injectable()
 export class JobService {
   private SOURCE_ID = 0;
 
-  constructor(private http: HttpClient, private location: Location) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   createJob(job: Job) {
-    return this.http.post<Job>(`${getCoreApiUrl(appConfig)}/jobs`, job);
+    return this.http.post<Job>(`${getCoreApiUrl(this.config)}/jobs`, job);
   }
 
   getJob(jobId: string) {
-    return this.http.get<Job>(`${getCoreApiUrl(appConfig)}/jobs/${jobId}`)
+    return this.http.get<Job>(`${getCoreApiUrl(this.config)}/jobs/${jobId}`);
   }
 
   getJobState(jobId: string) {
-    return this.http.get<JobStateBase>(`${getCoreApiUrl(appConfig)}/jobs/${jobId}/state`);
+    return this.http.get<JobStateBase>(`${getCoreApiUrl(this.config)}/jobs/${jobId}/state`);
   }
 
   getJobResult(job: Job): Observable<JobResult> {
-    return this.http.get<any>(`${getCoreApiUrl(appConfig)}/jobs/${job.id}/result`).pipe(
+    return this.http.get<any>(`${getCoreApiUrl(this.config)}/jobs/${job.id}/result`).pipe(
       map((resp) => {
         return { ...resp, type: job.type };
       })
@@ -36,7 +35,7 @@ export class JobService {
   }
 
   getJobResultFile(jobId: string, fileId: string): Observable<any> {
-    return this.http.get(`${getCoreApiUrl(appConfig)}/jobs/${jobId}/result/files/${fileId}`, {
+    return this.http.get(`${getCoreApiUrl(this.config)}/jobs/${jobId}/result/files/${fileId}`, {
       responseType: "blob",
     });
   }

@@ -3,17 +3,20 @@ import { HttpClient } from "@angular/common/http";
 import { Location } from "@angular/common";
 import { CoreUser } from "../models/user";
 import { AuthMethod } from "../models/auth-method";
-import { appConfig } from "../../../environments/environment";
+import { env } from "../../../environments/environment";
 import { OAuthClient } from "../models/oauth-client";
 import { of, throwError } from "rxjs";
 import { map } from "rxjs/operators";
-import { getCoreApiUrl } from "../../../environments/app-config";
+import { getCoreApiUrl } from "../../afterglow-config";
+import { Store } from "@ngxs/store";
+import { AppState } from "../../app.state";
+import { AfterglowConfigService } from "../../afterglow-config.service";
 
 @Injectable()
 export class AuthService {
-  constructor(private http: HttpClient, private location: Location) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   getUser() {
-    return this.http.get<CoreUser>(`${getCoreApiUrl(appConfig)}/user`);
+    return this.http.get<CoreUser>(`${getCoreApiUrl(this.config)}/user`);
   }
 }

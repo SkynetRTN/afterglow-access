@@ -1,4 +1,4 @@
-import { State, Action, Selector, StateContext } from "@ngxs/store";
+import { State, Action, Selector, StateContext, Store } from "@ngxs/store";
 import { Router, UrlSerializer } from "@angular/router";
 import { CookieService } from "ngx-cookie";
 import { tap, catchError, finalize } from "rxjs/operators";
@@ -8,7 +8,7 @@ import { InitAuth, Login, LoginSuccess, Logout, CheckSession, ResetState } from 
 import { OAuthClient } from "./models/oauth-client";
 import { CoreUser } from "./models/user";
 import { AuthService } from "./services/auth.service";
-import { appConfig } from "../../environments/environment";
+import { env } from "../../environments/environment";
 import { AuthMethod } from "./models/auth-method";
 import { Navigate } from "@ngxs/router-plugin";
 import { AuthGuard } from "./services/auth-guard.service";
@@ -17,6 +17,8 @@ import jwt_decode from "jwt-decode";
 
 import { HttpParams } from "@angular/common/http";
 import { LocationStrategy } from "@angular/common";
+import { AppState } from "../app.state";
+import { AfterglowConfigService } from "../afterglow-config.service";
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -44,12 +46,10 @@ export interface AuthStateModel {
 })
 export class AuthState {
   constructor(
-    private authService: AuthService,
     private router: Router,
-    private location: LocationStrategy,
-    private urlSerializer: UrlSerializer,
     private cookieService: CookieService,
-    private authGuard: AuthGuard
+    private authGuard: AuthGuard,
+    private config: AfterglowConfigService
   ) {}
 
   @Selector()
@@ -124,6 +124,10 @@ export class AuthState {
         }
       }
     });
+
+    ctx.patchState({
+      user: this.authGuard.user,
+    });
   }
 
   @Action(CheckSession)
@@ -162,9 +166,9 @@ export class AuthState {
 
   @Action(Logout)
   public logout(ctx: StateContext<AuthStateModel>, {}: Logout) {
-    if (appConfig.authMethod == "cookie") {
-      this.cookieService.remove(appConfig.authCookieName);
-    } else if (appConfig.authMethod == "oauth2") {
+    if (this.config.authMethod == "cookie") {
+      this.cookieService.remove(this.config.authCookieName);
+    } else if (this.config.authMethod == "oauth2") {
     }
     localStorage.removeItem("aa_user");
     localStorage.removeItem("aa_expires_at");

@@ -10,8 +10,10 @@ import * as moment from "moment";
 import * as qs from "query-string";
 import { HttpParams } from "@angular/common/http";
 import { AuthService } from "../../services/auth.service";
-import { appConfig } from "../../../../environments/environment";
+import { env } from "../../../../environments/environment";
 import { CookieService } from "ngx-cookie";
+import { AppState } from '../../../app.state';
+import { AfterglowConfigService } from '../../../afterglow-config.service';
 
 @Component({
   selector: "app-authorized-page",
@@ -26,17 +28,18 @@ export class AuthorizedPageComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private config: AfterglowConfigService,
   ) {}
 
   ngOnInit() {
-    if (appConfig.authMethod == "cookie") {
-      if (this.cookieService.get(appConfig.authCookieName)) {
+    if (this.config.authMethod == "cookie") {
+      if (this.cookieService.get(this.config.authCookieName)) {
         //
         this.authService.getUser().subscribe(
           (user) => {
             localStorage.setItem("aa_user", JSON.stringify(user));
-            localStorage.setItem("aa_access_token", this.cookieService.get(appConfig.authCookieName));
+            localStorage.setItem("aa_access_token", this.cookieService.get(this.config.authCookieName));
             this.store.dispatch(new LoginSuccess());
           },
           (error) => {

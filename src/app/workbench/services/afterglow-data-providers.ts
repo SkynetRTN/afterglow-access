@@ -3,11 +3,11 @@ import { Location } from "@angular/common";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { appConfig } from "../../../environments/environment";
 
 import { DataProvider } from "../../data-providers/models/data-provider";
 import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
-import { getCoreApiUrl } from "../../../environments/app-config";
+import { getCoreApiUrl } from '../../afterglow-config';
+import { AfterglowConfigService } from '../../afterglow-config.service';
 
 export interface UploadInfo {
   bytesUploaded: number;
@@ -19,10 +19,10 @@ export interface UploadInfo {
 
 @Injectable()
 export class AfterglowDataProviderService {
-  constructor(private http: HttpClient, private location: Location) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   getDataProviders(): Observable<DataProvider[]> {
-    return this.http.get<DataProvider[]>(`${getCoreApiUrl(appConfig)}/data-providers`)
+    return this.http.get<DataProvider[]>(`${getCoreApiUrl(this.config)}/data-providers`)
   }
 
   getAssets(dataProviderId: string, path: string): Observable<DataProviderAsset[]> {
@@ -33,7 +33,7 @@ export class AfterglowDataProviderService {
     if (path) params = params.set("path", path);
 
     return this.http
-      .get<any>(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString())
+      .get<any>(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString())
       .pipe(
         map((resp) =>
           resp.map((r) => {
@@ -57,7 +57,7 @@ export class AfterglowDataProviderService {
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
-    return this.http.get(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(), {
+    return this.http.get(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(), {
       responseType: "blob",
     });
   }
@@ -72,7 +72,7 @@ export class AfterglowDataProviderService {
       params = params.set("force", "1");
     }
 
-    return this.http.delete(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString());
+    return this.http.delete(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString());
   }
 
   moveAsset(dataProviderId: string, path: string, newDataProviderId: string, newPath: string): Observable<any> {
@@ -105,7 +105,7 @@ export class AfterglowDataProviderService {
     }
 
     return this.http.post(
-      `${getCoreApiUrl(appConfig)}/data-providers/${newDataProviderId}/assets/data?` + params.toString(),
+      `${getCoreApiUrl(this.config)}/data-providers/${newDataProviderId}/assets/data?` + params.toString(),
       {
         src_provider_id: dataProviderId,
         src_path: path,
@@ -120,7 +120,7 @@ export class AfterglowDataProviderService {
     let params: HttpParams = new HttpParams();
     params = params.set("path", path);
 
-    return this.http.put(`${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets?` + params.toString(), {
+    return this.http.put(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString(), {
       name: name,
     });
   }
@@ -133,7 +133,7 @@ export class AfterglowDataProviderService {
     params = params.set("path", path);
 
     return this.http.post(
-      `${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
+      `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
       null
     );
   }
@@ -149,7 +149,7 @@ export class AfterglowDataProviderService {
     formData.append("file", uploadInfo.chunkBlob);
 
     return this.http.post(
-      `${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
+      `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
       formData
     );
   }
@@ -162,7 +162,7 @@ export class AfterglowDataProviderService {
     params = params.set("path", path);
     params = params.set("group_name", fileId);
 
-    let uri = `${getCoreApiUrl(appConfig)}/data-providers/${dataProviderId}/assets/data?` + params.toString();
+    let uri = `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString();
     if (!create) {
       return this.http.put(uri, null);
     } else {

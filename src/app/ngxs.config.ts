@@ -1,8 +1,8 @@
 import { NgxsModuleOptions } from "@ngxs/store";
-import { appConfig } from "../environments/environment";
+import { env } from "../environments/environment";
 
 export const ngxsConfig: NgxsModuleOptions = {
-    developmentMode: !appConfig.production,
+    developmentMode: !env.production,
     selectorOptions: {
       suppressErrors: false,
       injectContainerState: false

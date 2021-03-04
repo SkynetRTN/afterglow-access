@@ -73,7 +73,7 @@ import {
   UpdateColorMap,
 } from "./data-files.actions";
 import { HduType } from "./models/data-file-type";
-import { appConfig } from "../../environments/environment";
+import { env } from "../../environments/environment";
 import { Wcs } from "../image-tools/wcs";
 import { Initialize } from "../workbench/workbench.actions";
 import { IImageData, createTiles } from "./models/image-data";
@@ -97,6 +97,8 @@ import { StretchMode } from "./models/stretch-mode";
 import { BlendMode } from "./models/blend-mode";
 import { on } from "process";
 import { compose } from "./models/pixel-composer";
+import { AppState } from '../app.state';
+import { AfterglowConfigService } from '../afterglow-config.service';
 
 export interface DataFilesStateModel {
   version: string;
@@ -141,7 +143,8 @@ export class DataFilesState {
     private dataFileService: AfterglowDataFileService,
     private actions$: Actions,
     private wasmService: WasmService,
-    private store: Store
+    private store: Store,
+    private config: AfterglowConfigService
   ) { }
 
   @Selector()
@@ -735,12 +738,13 @@ export class DataFilesState {
             // TODO:  Handle failure when getting width and height
             let width = getWidth(header);
             let height = getHeight(header);
+            
 
             let hduImageDataBase = {
               width: width,
               height: height,
-              tileWidth: appConfig.tileSize,
-              tileHeight: appConfig.tileSize,
+              tileWidth: this.config.tileSize,
+              tileHeight: this.config.tileSize,
               initialized: true,
             };
 
@@ -756,7 +760,7 @@ export class DataFilesState {
                 state.imageDataEntities[imageHdu.rawImageDataId] = {
                   ...rawImageData,
                   ...hduImageDataBase,
-                  tiles: createTiles(width, height, appConfig.tileSize, appConfig.tileSize),
+                  tiles: createTiles(width, height, this.config.tileSize, this.config.tileSize),
                 };
               } else {
               }
@@ -765,7 +769,7 @@ export class DataFilesState {
               let rawImageData: IImageData<PixelType> = {
                 id: rawImageDataId,
                 ...hduImageDataBase,
-                tiles: createTiles<PixelType>(width, height, appConfig.tileSize, appConfig.tileSize),
+                tiles: createTiles<PixelType>(width, height, this.config.tileSize, this.config.tileSize),
               };
 
               state.imageDataEntities[rawImageDataId] = rawImageData;
@@ -781,7 +785,7 @@ export class DataFilesState {
                 state.imageDataEntities[imageHdu.normalizedImageDataId] = {
                   ...normalizedImageData,
                   ...hduImageDataBase,
-                  tiles: createTiles(width, height, appConfig.tileSize, appConfig.tileSize),
+                  tiles: createTiles(width, height, this.config.tileSize, this.config.tileSize),
                 };
                 actions.push(new InvalidateNormalizedImageTiles(imageHdu.id));
               }
@@ -790,7 +794,7 @@ export class DataFilesState {
               let normalizedImageData: IImageData<Uint32Array> = {
                 id: normalizedImageDataId,
                 ...hduImageDataBase,
-                tiles: createTiles<Uint32Array>(width, height, appConfig.tileSize, appConfig.tileSize),
+                tiles: createTiles<Uint32Array>(width, height, this.config.tileSize, this.config.tileSize),
               };
 
               state.imageDataEntities[normalizedImageDataId] = normalizedImageData;
@@ -845,8 +849,8 @@ export class DataFilesState {
             let compositeImageDataBase = {
               width: compositeWidth,
               height: compositeHeight,
-              tileWidth: appConfig.tileSize,
-              tileHeight: appConfig.tileSize,
+              tileWidth: this.config.tileSize,
+              tileHeight: this.config.tileSize,
               initialized: true,
             };
 
@@ -857,7 +861,7 @@ export class DataFilesState {
                 state.imageDataEntities[file.compositeImageDataId] = {
                   ...compositeImageData,
                   ...compositeImageDataBase,
-                  tiles: createTiles(compositeWidth, compositeHeight, appConfig.tileSize, appConfig.tileSize),
+                  tiles: createTiles(compositeWidth, compositeHeight, this.config.tileSize, this.config.tileSize),
                 };
               }
             } else {
@@ -865,7 +869,7 @@ export class DataFilesState {
               let compositeImageData: IImageData<Uint32Array> = {
                 id: compositeImageDataId,
                 ...hduImageDataBase,
-                tiles: createTiles<Uint32Array>(compositeWidth, compositeHeight, appConfig.tileSize, appConfig.tileSize),
+                tiles: createTiles<Uint32Array>(compositeWidth, compositeHeight, this.config.tileSize, this.config.tileSize),
               };
 
               state.imageDataEntities[compositeImageDataId] = compositeImageData;

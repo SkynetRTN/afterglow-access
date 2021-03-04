@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular
 import { Select, Store } from "@ngxs/store";
 import { Title } from "@angular/platform-browser";
 import { Router, NavigationEnd, ActivatedRoute } from "@angular/router";
-import { Observable, Subscription, Subscribable } from "rxjs";
+import { Observable, Subscription, Subscribable, combineLatest } from "rxjs";
 
 import { AuthState } from "./auth/auth.state";
 import { InitAuth } from "./auth/auth.actions";
@@ -20,6 +20,8 @@ import { SetFullScreen, Initialize } from "./workbench/workbench.actions";
 import { finalize, map, tap, filter, take } from "rxjs/operators";
 import { Navigate } from "@ngxs/router-plugin";
 import { WasmService } from "./wasm.service";
+import { AppState } from './app.state';
+import { LoadAfterglowConfig } from './app.actions';
 // import * as FontFaceObserver from "fontfaceobserver"
 
 @Component({
@@ -42,13 +44,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private hotKeys: Array<Hotkey> = [];
   private themeDialog: MatDialogRef<ThemeDialogComponent>;
   private helpDialog: MatDialogRef<HelpDialogComponent>;
-  loaded$: Observable<boolean>;
+  
+  wasmReady$: Observable<boolean>;
+  configReady$: Observable<boolean>;
+  authReady$: Observable<boolean>;
+  ready$: Observable<boolean>;
 
   public constructor(
     private store: Store,
-    private authGuard: AuthGuard,
     private router: Router,
-    private activatedRoute: ActivatedRoute,
     private titleService: Title,
     private renderer: Renderer2,
     private themeStorage: ThemeStorage,
@@ -56,7 +60,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private _hotkeysService: HotkeysService,
     private wasmService: WasmService
   ) {
-    this.loaded$ = this.wasmService.wasmReady$;
+    this.wasmReady$ = this.wasmService.wasmReady$;
+    this.configReady$ = this.store.select(AppState.getConfigLoaded);
+    this.ready$ = combineLatest(this.configReady$, this.wasmReady$).pipe(
+      map(([wasmReady, configReady]) => wasmReady && configReady),
+    );
+
+    this.store.dispatch(new LoadAfterglowConfig());
 
     //https://github.com/angular/components/issues/12171#issuecomment-546079738
     // const materialIcons = new FontFaceObserver('Material Icons');
@@ -142,109 +152,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
-
-    // localStorage.setItem("previouslyVisited", "false");
-    // this.tourService.events$.subscribe(x => console.log(x));
-    // this.tourService.initialize(
-    //   [
-    //     {
-    //       anchorId: "primary navigation",
-    //       content:
-    //         "This is Afterglow's main navigation menu.  You are currently viewing the Workbench.  Click the next button below or press the right arrow key on your keyboard to continue.",
-    //       title: "Navigation Menu",
-    //       route: "/workbench"
-    //     },
-    //     {
-    //       anchorId: "workbench nav link",
-    //       content:
-    //         "The workbench is where you will find tools for analyzing and manipulating your image data. You can adjust the appearance of the image, make plots, measure objects, sonify, and much more.",
-    //       title: "Workbench",
-    //       route: "/workbench"
-    //     },
-    //     {
-    //       anchorId: "data providers nav link",
-    //       content:
-    //         "Before you can use the workbench tools,  you need to import image files into your Afterglow library.  This is done on the data providers page.  For this tour,  we will automatically import an image from a data provider for you.  After the tour,  come back to this page using the main navigation menu if you want to import additional images from other data providers.",
-    //       title: "Data Providers",
-    //       route: "/data-providers"
-    //     },
-    //     {
-    //       anchorId: "tour nav link",
-    //       content:
-    //         "As a reminder, you can access this tour at any time in the future by clicking this help button.  Click next to learn more about the workbench.",
-    //       title: "Tour",
-    //       route: "/workbench"
-    //     },
-    //     {
-    //       anchorId: "file library",
-    //       content:
-    //         "The panel on the left side of the screen allows you to manage all of the files you have imported into your library.  You can select, search, and delete files from this panel.",
-    //       title: "File Library",
-    //       route: "/workbench"
-    //     },
-    //     {
-    //       anchorId: "file libary show/hide",
-    //       content:
-    //         "You can hide the file library by clicking this file icon.  Simply click the icon a second time to make it visible again.",
-    //       title: "Hide File Library",
-    //       route: "/workbench"
-    //     },
-
-    //     {
-    //       anchorId: "display settings",
-    //       content:
-    //         "The panel on the right side of the screen is where you will find all of the processing and analysis tools.  You are currently viewing the display settings.  This is where you can change how the image is displayed on the screen by adjusting the orientation, color mapping, scaling, and more.",
-    //       title: "Display Settings",
-    //       route: "/workbench/viewer"
-    //     },
-    //     {
-    //       anchorId: "marker settings",
-    //       content:
-    //         "This is where you can add custom markers to your image.  This is great for identifying known targets, making a finding chart, or for adding labels to your image.",
-    //       title: "Custom Markers",
-    //       route: "/workbench/markers"
-    //     },
-    //     {
-    //       anchorId: "plotter settings",
-    //       content:
-    //         "The plotter tool is useful for plotting the cross sections through or the separation between sources in your image.  To plot,  simply click once in your image to set the starting point and click again to set the ending point.",
-    //       title: "Plotter",
-    //       route: "/workbench/plotter"
-    //     },
-    //     {
-    //       anchorId: "sonifier settings",
-    //       content:
-    //         "The sonification tool converts the pixel data in to sound.",
-    //       title: "Sonifier",
-    //       route: "/workbench/sonifier"
-    //     },
-    //     {
-    //       anchorId: "source extraction settings",
-    //       content:
-    //         "The source extraction tool allows you to identify sources in your image files through manual clicking or through automatic extraction.  Once they've been identified,  you can photometer them in one or more of your image files and download the results.",
-    //       title: "Source Extraction",
-    //       route: "/workbench/source-extractor"
-    //     },
-    //     {
-    //       anchorId: "display settings",
-    //       content:
-    //         "Similar to the file library panel,  you can hide the workbench tools panel by clicking the icon next to the active tool.  Clicking it a second time will make it visible again.",
-    //       title: "Hide Workbench Tools",
-    //       route: "/workbench/viewer"
-    //     },
-
-    //   ],
-    //   {
-    //     popperSettings: {
-    //       closeOnClickOutside: false,
-    //       hideOnClickOutside: false
-    //     }
-    //   }
-    // );
-
-    // this.loggedInSub = this.loggedIn$.subscribe(loggedIn => {
-    //   this.currentRoutes = routes.filter(route => route.menuType == MenuType.BRAND || (('canActivate' in route) == loggedIn));
-    // })
   }
 
   onThemeUpdate(theme) {
@@ -285,7 +192,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    this.loaded$
+
+    this.ready$
       .pipe(
         filter((v) => v === true),
         take(1)

@@ -1,34 +1,75 @@
 import { State, Action, Selector, StateContext, Store } from "@ngxs/store";
-import { AppAction } from "./app.actions";
+import { LoadAfterglowConfig, LoadAfterglowConfigSuccess, LoadAfterglowConfigFail } from "./app.actions";
+import { AfterglowConfigService } from "./afterglow-config.service";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { DataFilesState } from "./data-files/data-files.state";
-import { WorkbenchState } from "./workbench/workbench.state";
-import { IHdu, ImageHdu } from "./data-files/models/data-file";
-import { HduType } from "./data-files/models/data-file-type";
-import { LoadHdu } from "./data-files/data-files.actions";
+import { tap, flatMap, catchError } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AfterglowConfig } from './afterglow-config';
 
 export interface AppStateModel {
-  items: string[];
+  configLoading: boolean;
+  configLoaded: boolean;
+  configError: string;
 }
 
 @State<AppStateModel>({
   name: "app",
   defaults: {
-    items: [],
+    configLoading: false,
+    configLoaded: false,
+    configError: null,
   },
 })
 export class AppState {
-  constructor(private store: Store) {}
+  constructor(private store: Store, private configService: AfterglowConfigService) {}
 
   @Selector()
   public static getState(state: AppStateModel) {
     return state;
   }
 
-  @Action(AppAction)
-  public add(ctx: StateContext<AppStateModel>, { payload }: AppAction) {
-    const stateModel = ctx.getState();
-    stateModel.items = [...stateModel.items, payload];
-    ctx.setState(stateModel);
+  @Selector()
+  public static getConfigLoading(state: AppStateModel) {
+    return state.configLoading;
+  }
+
+  @Selector()
+  public static getConfigLoaded(state: AppStateModel) {
+    return state.configLoaded;
+  }
+
+
+  @Selector()
+  public static getConfigError(state: AppStateModel) {
+    return state.configError;
+  }
+
+  @Action(LoadAfterglowConfig)
+  @ImmutableContext()
+  public loadAfterglowConfig({ setState, dispatch }: StateContext<AppStateModel>, {}: LoadAfterglowConfig) {
+    setState((state: AppStateModel) => {
+      state.configLoading = true;
+      return state;
+    })
+    return this.configService.loadConfig().pipe(
+      flatMap(config => {
+        setState((state: AppStateModel) => {
+          state.configLoading = false;
+          state.configLoaded = true;
+          return state;
+        })
+        return dispatch(new LoadAfterglowConfigSuccess(config))
+      }),
+      catchError((err) => {
+        setState((state: AppStateModel) => {
+          state.configLoading = false;
+          state.configLoaded = false;
+          state.configError = (err as HttpErrorResponse).error;
+          return state;
+        })
+        return dispatch(new LoadAfterglowConfigFail(err))
+      })
+    )
+    
   }
 }

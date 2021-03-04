@@ -1,4 +1,4 @@
-<div *ngIf="loaded$ | async" style="height: 100%; width: 100%">
+<div *ngIf="ready$ | async; else loadingBlock" style="height: 100%; width: 100%">
   <div fxLayout="column" fxFill>
     <header fxFlex="0 0 auto" class="main-header">
       <app-navbar [dataProviders]="dataProviders$ | async" class="mat-elevation-z6" [user]="user$ | async"></app-navbar>
@@ -11,3 +11,18 @@
     </main>
   </div>
 </div>
+<ng-template #loadingBlock>
+  <div style="height: 100%; width: 100%">
+    <main fxLayout="row" class="main-content" fxFill fxLayoutAlign="center">
+      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px" style="height: 100%; width: 400px;">
+        <div style="width: 100%; text-align: center">
+          <img style="width: 100%;" src="assets/img/access-logo-full-dark-theme.png" />
+        </div>
+        
+        <mat-progress-bar mode="indeterminate" color="accent"></mat-progress-bar>
+        <div *ngIf="!(wasmReady$ | async)" class="loading-ellipsis">loading WCSLib</div>
+        <div *ngIf="!(configReady$ | async)" class="loading-ellipsis">loading Afterglow Access configuration</div>
+      </div>
+    </main>
+  </div>
+</ng-template>
