@@ -10,10 +10,10 @@ import { MaterialModule } from "../material";
 // import { CovalentDataTableModule } from '@covalent/core';
 
 // Videogular2
-import { VgCoreModule } from "videogular2/compiled/core";
-import { VgControlsModule } from "videogular2/compiled/controls";
-import { VgOverlayPlayModule } from "videogular2/compiled/overlay-play";
-import { VgBufferingModule } from "videogular2/compiled/buffering";
+// import { VgCoreModule } from "videogular2/compiled/core";
+// import { VgControlsModule } from "videogular2/compiled/controls";
+// import { VgOverlayPlayModule } from "videogular2/compiled/overlay-play";
+// import { VgBufferingModule } from "videogular2/compiled/buffering";
 
 // import { NvD3Module } from 'ng2-nvd3';
 // import 'd3';
@@ -136,10 +136,10 @@ export const COMPONENTS = [
     JobsModule,
     MaterialModule,
     // CovalentDataTableModule,
-    VgCoreModule,
-    VgControlsModule,
-    VgOverlayPlayModule,
-    VgBufferingModule,
+    // VgCoreModule,
+    // VgControlsModule,
+    // VgOverlayPlayModule,
+    // VgBufferingModule,
     // NvD3Module,
     FlexLayoutModule,
     ThemePickerModule,

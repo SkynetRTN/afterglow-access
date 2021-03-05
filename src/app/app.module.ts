@@ -1,8 +1,6 @@
 import { NgModule } from "@angular/core";
 import { NgxsModule } from "@ngxs/store";
 import { NgxsRouterPluginModule } from "@ngxs/router-plugin";
-import { NgxsReduxDevtoolsPluginModule } from "@ngxs/devtools-plugin";
-import { NgxsLoggerPluginModule } from "@ngxs/logger-plugin";
 import { CommonModule } from "@angular/common";
 import { HttpClientModule } from "@angular/common/http";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
@@ -19,7 +17,7 @@ import { AfterglowCoreInterceptor } from "./interceptors/afterglow-core.intercep
 import { MaterialModule } from "./material";
 import { WorkbenchModule } from "./workbench/workbench.module";
 import { AuthModule } from "./auth/auth.module";
-import { HotkeyModule } from "angular2-hotkeys";
+// import { HotkeyModule } from "angular2-hotkeys";
 import { ReactiveFormsModule } from "@angular/forms";
 import { FlexLayoutModule } from "@angular/flex-layout";
 import { registerLocaleData } from "@angular/common";
@@ -158,9 +156,9 @@ export function jobSanitizer(v: JobsStateModel) {
     ThemePickerModule,
     WorkbenchModule.forRoot(),
     AuthModule.forRoot(),
-    HotkeyModule.forRoot({
-      disableCheatSheet: true,
-    }),
+    // HotkeyModule.forRoot({
+    //   disableCheatSheet: true,
+    // }),
     NgxsModule.forRoot(
       [AppState, AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
       ngxsConfig

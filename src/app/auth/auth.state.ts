@@ -19,6 +19,7 @@ import { HttpParams } from "@angular/common/http";
 import { LocationStrategy } from "@angular/common";
 import { AppState } from "../app.state";
 import { AfterglowConfigService } from "../afterglow-config.service";
+import { Injectable } from '@angular/core';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -44,6 +45,7 @@ export interface AuthStateModel {
     authMethods: [],
   },
 })
+@Injectable()
 export class AuthState {
   constructor(
     private router: Router,

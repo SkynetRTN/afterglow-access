@@ -29,6 +29,7 @@ import {
 } from "./jobs.actions";
 import { JobService } from "./services/jobs";
 import { ResetState } from "../auth/auth.actions";
+import { Injectable } from '@angular/core';
 
 export interface JobsStateModel {
   version: string;
@@ -46,6 +47,7 @@ const jobsDefaultState: JobsStateModel = {
   name: "jobs",
   defaults: jobsDefaultState,
 })
+@Injectable()
 export class JobsState {
   constructor(private jobService: JobService, private actions$: Actions) {}
 

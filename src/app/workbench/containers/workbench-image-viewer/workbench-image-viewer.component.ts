@@ -72,7 +72,6 @@ import { HduType } from "../../../data-files/models/data-file-type";
 import { Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
 import { IImageData } from "../../../data-files/models/image-data";
 import { UpdateCurrentViewportSize } from "../../workbench.actions";
-import { raw } from "core-js/fn/string";
 import { Viewer, ImageViewer } from "../../models/viewer";
 import { WorkbenchState } from "../../workbench.state";
 import { WorkbenchTool } from "../../models/workbench-state";

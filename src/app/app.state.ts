@@ -5,6 +5,7 @@ import { ImmutableContext } from "@ngxs-labs/immer-adapter";
 import { tap, flatMap, catchError } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AfterglowConfig } from './afterglow-config';
+import { Injectable } from '@angular/core';
 
 export interface AppStateModel {
   configLoading: boolean;
@@ -20,6 +21,7 @@ export interface AppStateModel {
     configError: null,
   },
 })
+@Injectable()
 export class AppState {
   constructor(private store: Store, private configService: AfterglowConfigService) {}
 

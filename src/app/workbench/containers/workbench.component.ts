@@ -35,7 +35,7 @@ import {
 import { SidebarView } from "../models/sidebar-view";
 import { Router, ActivatedRoute } from "@angular/router";
 import { Subscription } from "../../../../node_modules/rxjs";
-import { HotkeysService, Hotkey } from "../../../../node_modules/angular2-hotkeys";
+// import { HotkeysService, Hotkey } from "../../../../node_modules/angular2-hotkeys";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { Store, Actions, ofActionCompleted, ofActionDispatched } from "@ngxs/store";
 import { DataFilesState } from "../../data-files/data-files.state";
@@ -303,13 +303,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   useWcsCenter: boolean = false;
   currentSidebarView = SidebarView.FILES;
   SidebarView = SidebarView;
-  hotKeys: Array<Hotkey> = [];
+  // hotKeys: Array<Hotkey> = [];
 
   constructor(
     private actions$: Actions,
     private store: Store,
     private router: Router,
-    private _hotkeysService: HotkeysService,
+    // private _hotkeysService: HotkeysService,
     public dialog: MatDialog,
     private corrGen: CorrelationIdGenerator,
     private activeRoute: ActivatedRoute,
@@ -932,7 +932,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
     // this.fileLoaderSub.unsubscribe();
     this.queryParamSub.unsubscribe();
     this.transformationSyncSub.unsubscribe();
@@ -944,214 +944,214 @@ export class WorkbenchComponent implements OnInit, OnDestroy {
   }
 
   registerHotKeys() {
-    this.hotKeys.push(
-      new Hotkey(
-        "F",
-        (event: KeyboardEvent): boolean => {
-          this.openFiles();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Open File Manager"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "F",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.openFiles();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Open File Manager"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "d",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.VIEWER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Display Settings"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "d",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.VIEWER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Display Settings"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "i",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.INFO }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "File Info"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "i",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.INFO }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "File Info"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "m",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.CUSTOM_MARKER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Markers"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "m",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.CUSTOM_MARKER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Markers"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "P",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.PLOTTER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Plotter"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "P",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.PLOTTER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Plotter"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "s",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.SONIFIER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Sonifier"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "s",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.SONIFIER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Sonifier"
+    //   )
+    // );
 
-    // this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
-    //   this.store.dispatch(new SetShowConfig(true));
-    //   this.store.dispatch(new Navigate([this.FIELD_CAL_ROUTE]);
-    //   return false; // Prevent bubbling
-    // }, undefined, 'Field Calibration'));
+    // // this.hotKeys.push(new Hotkey('f', (event: KeyboardEvent): boolean => {
+    // //   this.store.dispatch(new SetShowConfig(true));
+    // //   this.store.dispatch(new Navigate([this.FIELD_CAL_ROUTE]);
+    // //   return false; // Prevent bubbling
+    // // }, undefined, 'Field Calibration'));
 
-    this.hotKeys.push(
-      new Hotkey(
-        "p",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.PHOTOMETRY }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Photometry"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "p",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.PHOTOMETRY }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Photometry"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "*",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.IMAGE_CALC }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Image Calculator"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "*",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.IMAGE_CALC }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Image Calculator"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "a",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.ALIGNER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Aligning"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "a",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.ALIGNER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Aligning"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "S",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetShowConfig(true));
-          this.store.dispatch(
-            new Navigate([], { tool: WorkbenchTool.STACKER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
-          );
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Stacking"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "S",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       this.store.dispatch(
+    //         new Navigate([], { tool: WorkbenchTool.STACKER }, { relativeTo: this.activeRoute, queryParamsHandling: "merge" })
+    //       );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Stacking"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "esc",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetFullScreen(false));
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Reset workbench views"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "esc",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetFullScreen(false));
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Reset workbench views"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "7",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetFullScreen(true));
-          this.store.dispatch(new SetFullScreenPanel("file"));
-          this.store.dispatch(new ShowSidebar());
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Show workbench file panel"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "7",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetFullScreen(true));
+    //       this.store.dispatch(new SetFullScreenPanel("file"));
+    //       this.store.dispatch(new ShowSidebar());
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Show workbench file panel"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "8",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetFullScreen(true));
-          this.store.dispatch(new SetFullScreenPanel("viewer"));
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Show workbench viewer"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "8",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetFullScreen(true));
+    //       this.store.dispatch(new SetFullScreenPanel("viewer"));
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Show workbench viewer"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "9",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new SetFullScreen(true));
-          this.store.dispatch(new SetFullScreenPanel("tool"));
-          this.store.dispatch(new SetShowConfig(true));
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Show workbench viewer"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "9",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new SetFullScreen(true));
+    //       this.store.dispatch(new SetFullScreenPanel("tool"));
+    //       this.store.dispatch(new SetShowConfig(true));
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Show workbench viewer"
+    //   )
+    // );
 
 
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   getViewerLabel(viewer: Viewer, index: number) {

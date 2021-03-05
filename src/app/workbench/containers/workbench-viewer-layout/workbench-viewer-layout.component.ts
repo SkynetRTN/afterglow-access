@@ -16,7 +16,7 @@ import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/i
 import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { SplitViewerPanel, SetFocusedViewer } from "../../workbench.actions";
-import { HotkeysService, Hotkey } from "angular2-hotkeys";
+// import { HotkeysService, Hotkey } from "angular2-hotkeys";
 import { MatMenuTrigger } from "@angular/material/menu";
 import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from "../../models/workbench-state";
 import { Observable } from "rxjs";
@@ -84,9 +84,9 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   @Output() onFileClose = new EventEmitter<string>();
   @Output() onFileSave = new EventEmitter<string>();
 
-  private hotKeys: Array<Hotkey> = [];
+  // private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store, private _hotkeysService: HotkeysService) {
+  constructor(private store: Store) {
     this.focusedViewerPanelId$ = this.store.select(WorkbenchState.getFocusedViewerPanelId);
 
     this.layoutItems$ = this.store.select(WorkbenchState.getViewerLayoutItemEntities);

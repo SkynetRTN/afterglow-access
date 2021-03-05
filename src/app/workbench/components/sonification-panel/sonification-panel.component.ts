@@ -1,13 +1,13 @@
 import { Component, AfterViewInit, ViewChild, OnDestroy, OnChanges, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 
-import { VgAPI } from "videogular2/compiled/core";
+// import { VgAPI } from "videogular2/compiled/core";
 import { Observable, Subscription, from, merge, interval, combineLatest, BehaviorSubject } from "rxjs";
 import { filter, map, flatMap, takeUntil, distinctUntilChanged, withLatestFrom, tap, skip } from "rxjs/operators";
 
 import { SonifierRegionMode, SonificationPanelState } from "../../models/sonifier-file-state";
 import { AfterglowDataFileService } from "../../services/afterglow-data-files";
 import { getWidth, getHeight, DataFile, ImageHdu } from "../../../data-files/models/data-file";
-import { Hotkey, HotkeysService } from "angular2-hotkeys";
+// import { Hotkey, HotkeysService } from "angular2-hotkeys";
 import { ChangeDetectorRef } from "@angular/core";
 import { Router } from "@angular/router";
 import { MatButtonToggleChange } from "@angular/material/button-toggle";
@@ -87,14 +87,14 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
   loading$: Observable<boolean>;
   playerLoading: boolean = false;
   showPlayer: boolean = false;
-  api: VgAPI;
-  hotKeys: Array<Hotkey> = [];
+  // api: VgAPI;
+  // hotKeys: Array<Hotkey> = [];
   subs: Subscription[] = [];
   progressLine$: Observable<{ x1: number; y1: number; x2: number; y2: number }>;
 
   constructor(
     private afterglowService: AfterglowDataFileService,
-    private _hotkeysService: HotkeysService,
+    // private _hotkeysService: HotkeysService,
     private ref: ChangeDetectorRef,
     private afterglowDataFileService: AfterglowDataFileService,
     private actions$: Actions,
@@ -143,129 +143,90 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
       distinctUntilChanged()
     );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "1",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregionByTime(0);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Time Navigation: Early"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "2",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregionByTime(1);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Time Navigation: Mid"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "3",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregionByTime(2);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Time Navigation: Late"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "4",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregionByFrequency(0);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Frequency Navigation: Low"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "5",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregionByFrequency(1);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Frequency Navigation: Mid"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "6",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregionByFrequency(2);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Frequency Navigation: High"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "7",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregion(0, 0);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Time Navigation: Early, Frequency Navigation Low"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "8",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregion(1, 1);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Time Navigation: Mid, Frequency Navigation Mid"
-      )
-    );
-
-    this.hotKeys.push(
-      new Hotkey(
-        "9",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.selectSubregion(2, 2);
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Time Navigation: Late, Frequency Navigation High"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "1",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregionByTime(0);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Time Navigation: Early"
+    //   )
+    // );
 
     // this.hotKeys.push(
     //   new Hotkey(
-    //     "0 7",
+    //     "2",
     //     (event: KeyboardEvent): boolean => {
     //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregion(2, 0);
+    //       this.selectSubregionByTime(1);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Time Navigation: Mid"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "3",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregionByTime(2);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Time Navigation: Late"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "4",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregionByFrequency(0);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Frequency Navigation: Low"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "5",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregionByFrequency(1);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Frequency Navigation: Mid"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "6",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregionByFrequency(2);
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Frequency Navigation: High"
+    //   )
+    // );
+
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "7",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.selectSubregion(0, 0);
     //       return false; // Prevent bubbling
     //     },
     //     undefined,
@@ -275,7 +236,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     // this.hotKeys.push(
     //   new Hotkey(
-    //     "0 8",
+    //     "8",
     //     (event: KeyboardEvent): boolean => {
     //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
     //       this.selectSubregion(1, 1);
@@ -288,10 +249,10 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
 
     // this.hotKeys.push(
     //   new Hotkey(
-    //     "0 9",
+    //     "9",
     //     (event: KeyboardEvent): boolean => {
     //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregion(0, 2);
+    //       this.selectSubregion(2, 2);
     //       return false; // Prevent bubbling
     //     },
     //     undefined,
@@ -299,85 +260,87 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
     //   )
     // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        ".",
-        (event: KeyboardEvent): boolean => {
-          this.sonify();
-          this.ref.markForCheck();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Play Sonification"
-      )
-    );
+   
 
-    this.hotKeys.push(
-      new Hotkey(
-        "enter",
-        (event: KeyboardEvent): boolean => {
-          if(document.activeElement.tagName == "BUTTON") return null;
-          this.sonify();
-          this.ref.markForCheck();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Play Sonification"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     ".",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.sonify();
+    //       this.ref.markForCheck();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Play Sonification"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "space",
-        (event: KeyboardEvent): boolean => {
-          if(document.activeElement.tagName == "BUTTON") return null;
-          this.sonify();
-          this.ref.markForCheck();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Play Sonification"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "enter",
+    //     (event: KeyboardEvent): boolean => {
+    //       if(document.activeElement.tagName == "BUTTON") return null;
+    //       this.sonify();
+    //       this.ref.markForCheck();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Play Sonification"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "0",
-        (event: KeyboardEvent): boolean => {
-          if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-          this.resetRegionSelection();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Reset Sonification Region"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "space",
+    //     (event: KeyboardEvent): boolean => {
+    //       if(document.activeElement.tagName == "BUTTON") return null;
+    //       this.sonify();
+    //       this.ref.markForCheck();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Play Sonification"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "ctrl+z",
-        (event: KeyboardEvent): boolean => {
-          this.undoRegionSelection();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Undo Sonification Region"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "0",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
+    //       this.resetRegionSelection();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Reset Sonification Region"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "ctrl+y",
-        (event: KeyboardEvent): boolean => {
-          this.redoRegionSelection();
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Redo Sonification Region"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "ctrl+z",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.undoRegionSelection();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Undo Sonification Region"
+    //   )
+    // );
 
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "ctrl+y",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.redoRegionSelection();
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Redo Sonification Region"
+    //   )
+    // );
+
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   ngOnInit() {}
@@ -385,7 +348,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
   ngAfterViewInit() {}
 
   ngOnDestroy() {
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
   }
 
   ngOnChanges() {}
@@ -486,60 +449,60 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnC
     // }
   }
 
-  onPlayerReady(api: VgAPI) {
-    this.api = api;
+  // onPlayerReady(api: VgAPI) {
+  //   this.api = api;
 
-    let stop$ = from(this.api.getDefaultMedia().subscriptions.ended);
-    let start$ = from(this.api.getDefaultMedia().subscriptions.playing);
+  //   let stop$ = from(this.api.getDefaultMedia().subscriptions.ended);
+  //   let start$ = from(this.api.getDefaultMedia().subscriptions.playing);
 
-    this.subs.push(
-      from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe((canPlayThrough) => {
-        this.playerLoading = false;
-      })
-    );
+  //   this.subs.push(
+  //     from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe((canPlayThrough) => {
+  //       this.playerLoading = false;
+  //     })
+  //   );
 
-    this.subs.push(
-      from(this.api.getDefaultMedia().subscriptions.loadStart).subscribe((canPlayThrough) => {
-        this.playerLoading = true;
-      })
-    );
+  //   this.subs.push(
+  //     from(this.api.getDefaultMedia().subscriptions.loadStart).subscribe((canPlayThrough) => {
+  //       this.playerLoading = true;
+  //     })
+  //   );
 
-    let indexToneDuration = 0.852 / 2.0;
-    this.progressLine$ = merge(
-      start$.pipe(
-        flatMap(() => interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))),
-        withLatestFrom(this.region$),
-        map(([v, region]) => {
-          if (!this.api.getDefaultMedia()) return null;
-          if (!this.api.getDefaultMedia().duration) return null;
-          if (!region) return null;
-          // console.log(region, this.api.getDefaultMedia().currentTime, indexToneDuration, this.api.getDefaultMedia().duration);
-          let y =
-            region.y +
-            Math.max(
-              0,
-              Math.min(
-                1,
-                (this.api.getDefaultMedia().currentTime - indexToneDuration) /
-                  (this.api.getDefaultMedia().duration - 2 * indexToneDuration)
-              )
-            ) *
-              region.height;
+  //   let indexToneDuration = 0.852 / 2.0;
+  //   this.progressLine$ = merge(
+  //     start$.pipe(
+  //       flatMap(() => interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))),
+  //       withLatestFrom(this.region$),
+  //       map(([v, region]) => {
+  //         if (!this.api.getDefaultMedia()) return null;
+  //         if (!this.api.getDefaultMedia().duration) return null;
+  //         if (!region) return null;
+  //         // console.log(region, this.api.getDefaultMedia().currentTime, indexToneDuration, this.api.getDefaultMedia().duration);
+  //         let y =
+  //           region.y +
+  //           Math.max(
+  //             0,
+  //             Math.min(
+  //               1,
+  //               (this.api.getDefaultMedia().currentTime - indexToneDuration) /
+  //                 (this.api.getDefaultMedia().duration - 2 * indexToneDuration)
+  //             )
+  //           ) *
+  //             region.height;
 
-          return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
-        })
-      ),
-      stop$.pipe(map(() => null)),
-      this.sonificationUri$.pipe(
-        skip(1),
-        map(() => null)
-      )
-    );
+  //         return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
+  //       })
+  //     ),
+  //     stop$.pipe(map(() => null)),
+  //     this.sonificationUri$.pipe(
+  //       skip(1),
+  //       map(() => null)
+  //     )
+  //   );
 
-    this.subs.push(
-      this.progressLine$.pipe(distinctUntilChanged()).subscribe((line) => {
-        this.store.dispatch(new SetProgressLine(this.hdu.id, line));
-      })
-    );
-  }
+  //   this.subs.push(
+  //     this.progressLine$.pipe(distinctUntilChanged()).subscribe((line) => {
+  //       this.store.dispatch(new SetProgressLine(this.hdu.id, line));
+  //     })
+  //   );
+  // }
 }

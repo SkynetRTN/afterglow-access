@@ -15,7 +15,7 @@ import {
   ZoomToFitEvent,
 } from "../pan-zoom-canvas/pan-zoom-canvas.component";
 import { Wcs } from "../../../image-tools/wcs";
-import { HotkeysService, Hotkey } from 'angular2-hotkeys';
+// import { HotkeysService, Hotkey } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-image-viewer-status-bar",
@@ -58,9 +58,9 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
 
   private startZoomOut$ = new Subject<boolean>();
   private stopZoomOut$ = new Subject<boolean>();
-  private hotKeys: Array<Hotkey> = [];
+  // private hotKeys: Array<Hotkey> = [];
 
-  constructor(private store: Store, private dialog: MatDialog, private _hotkeysService: HotkeysService) {
+  constructor(private store: Store, private dialog: MatDialog) {
     
     // this.hotKeys.push(
     //   new Hotkey(

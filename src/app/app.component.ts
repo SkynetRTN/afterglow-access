@@ -9,7 +9,7 @@ import { InitAuth } from "./auth/auth.actions";
 import { AuthGuard } from "./auth/services/auth-guard.service";
 import { CoreUser } from "./auth/models/user";
 
-import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
+// import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage, AfterglowTheme } from "./theme-picker/theme-storage/theme-storage";
 import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./workbench/components/help-dialog/help-dialog.component";
@@ -38,7 +38,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fontWeight: "default" | "bold" | "boldest";
   dataProviders$: Observable<Array<DataProvider>>;
 
-  private hotKeys: Array<Hotkey> = [];
+  // private hotKeys: Array<Hotkey> = [];
   private themeDialog: MatDialogRef<ThemeDialogComponent> | null = null;
   private helpDialog: MatDialogRef<HelpDialogComponent> | null = null;
   
@@ -54,7 +54,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private renderer: Renderer2,
     private themeStorage: ThemeStorage,
     public dialog: MatDialog,
-    private _hotkeysService: HotkeysService,
+    // private _hotkeysService: HotkeysService,
     private wasmService: WasmService
   ) {
     this.user$ = this.store.select(AuthState.user);
@@ -104,64 +104,64 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.store.dispatch(new Initialize());
       });
 
-    this.hotKeys.push(
-      new Hotkey(
-        "W",
-        (event: KeyboardEvent): boolean => {
-          this.store.dispatch(new Navigate(["workbench"]));
-          this.store.dispatch(new SetFullScreen(false));
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Workbench"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "W",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.store.dispatch(new Navigate(["workbench"]));
+    //       this.store.dispatch(new SetFullScreen(false));
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Workbench"
+    //   )
+    // );
 
    
 
-    this.hotKeys.push(
-      new Hotkey(
-        "T",
-        (event: KeyboardEvent): boolean => {
-          if (this.themeDialog) return false;
-          this.themeDialog = this.dialog.open(ThemeDialogComponent, {
-            data: {},
-            width: "500px",
-            height: "400px",
-          });
-          this.themeDialog.afterClosed().subscribe((result) => {
-            this.themeDialog = null;
-          });
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Quick Start Guide"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "T",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.themeDialog) return false;
+    //       this.themeDialog = this.dialog.open(ThemeDialogComponent, {
+    //         data: {},
+    //         width: "500px",
+    //         height: "400px",
+    //       });
+    //       this.themeDialog.afterClosed().subscribe((result) => {
+    //         this.themeDialog = null;
+    //       });
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Quick Start Guide"
+    //   )
+    // );
 
-    this.hotKeys.push(
-      new Hotkey(
-        "?",
-        (event: KeyboardEvent): boolean => {
-          if (this.helpDialog) return false;
-          this.helpDialog = this.dialog.open(HelpDialogComponent, {
-            data: {},
-            width: "900px",
-            height: "600px",
-          });
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "?",
+    //     (event: KeyboardEvent): boolean => {
+    //       if (this.helpDialog) return false;
+    //       this.helpDialog = this.dialog.open(HelpDialogComponent, {
+    //         data: {},
+    //         width: "900px",
+    //         height: "600px",
+    //       });
 
-          this.helpDialog.afterClosed().subscribe((result) => {
-            this.helpDialog = null;
-          });
+    //       this.helpDialog.afterClosed().subscribe((result) => {
+    //         this.helpDialog = null;
+    //       });
 
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Quick Start Guide"
-      )
-    );
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Quick Start Guide"
+    //   )
+    // );
 
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   onThemeUpdate(theme: AfterglowTheme) {
@@ -207,6 +207,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit() {}
 
   ngOnDestroy() {
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
   }
 }

@@ -37,6 +37,7 @@ import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
 import { JobsState } from "../jobs/jobs.state";
 import { ResetState } from "../auth/auth.actions";
+import { Injectable } from '@angular/core';
 
 export interface DataProviderPath {
   dataProviderId: string;
@@ -71,6 +72,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   name: "dataProviders",
   defaults: dataProvidersDefaultState,
 })
+@Injectable()
 export class DataProvidersState {
   constructor(
     private dataProviderService: AfterglowDataProviderService,

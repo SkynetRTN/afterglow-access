@@ -4,6 +4,7 @@ import { PhotData } from "./models/source-phot-data";
 import { UpdatePhotData } from "./phot-data.actions";
 import { CorrelationIdGenerator } from "../utils/correlated-action";
 import { ResetState } from "../auth/auth.actions";
+import { Injectable } from '@angular/core';
 
 export interface PhotDataStateModel {
   version: string;
@@ -21,6 +22,7 @@ const photDataDefaultState: PhotDataStateModel = {
   name: "sourcesPhotData",
   defaults: photDataDefaultState,
 })
+@Injectable()
 export class PhotDataState {
   constructor(private store: Store, private correlationIdGenerator: CorrelationIdGenerator, private actions$: Actions) {}
 

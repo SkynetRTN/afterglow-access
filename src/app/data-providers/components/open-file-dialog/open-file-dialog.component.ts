@@ -17,7 +17,7 @@ import { AfterglowDataProviderService } from "../../../workbench/services/afterg
 import { BatchImportJob } from "../../../jobs/models/batch-import";
 import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
 import { FileSystemItem, FileManagerComponent } from "../file-manager/file-manager.component";
-import { Hotkey, HotkeysService } from 'angular2-hotkeys';
+// import { Hotkey, HotkeysService } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-open-file-dialog",
@@ -34,7 +34,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   progress: number = 0;
   allowedFileExtensions = [".fits,.fit"];
   
-  hotKeys: Array<Hotkey> = [];
+  // hotKeys: Array<Hotkey> = [];
 
   constructor(
     private store: Store,
@@ -42,7 +42,6 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     private dataProviderService: AfterglowDataProviderService,
     private dialogRef: MatDialogRef<OpenFileDialogComponent>,
     @Inject(MAT_DIALOG_DATA) private data: any,
-    private _hotkeysService: HotkeysService,
   ) {
     this.selectionIsValid$ = this.selectedFileSystemItems$.pipe(
       map(
@@ -63,23 +62,23 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
 
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
   }
 
   registerHotKeys() {
-    this.hotKeys.push(
-      new Hotkey(
-        "esc",
-        (event: KeyboardEvent): boolean => {
-          this.dialogRef.close()
-          return false; // Prevent bubbling
-        },
-        undefined,
-        "Open File Manager"
-      )
-    );
+    // this.hotKeys.push(
+    //   new Hotkey(
+    //     "esc",
+    //     (event: KeyboardEvent): boolean => {
+    //       this.dialogRef.close()
+    //       return false; // Prevent bubbling
+    //     },
+    //     undefined,
+    //     "Open File Manager"
+    //   )
+    // );
 
-    this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
+    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   onPathChange(path: DataProviderPath) {

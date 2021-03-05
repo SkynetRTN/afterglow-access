@@ -3,6 +3,7 @@ import { UpdateSource, AddSources, RemoveSources } from "./sources.actions";
 import { ImmutableContext } from "@ngxs-labs/immer-adapter";
 import { Source } from "./models/source";
 import { ResetState } from "../auth/auth.actions";
+import { Injectable } from '@angular/core';
 
 export interface SourcesStateModel {
   version: string;
@@ -22,6 +23,7 @@ const sourcesDefaultState: SourcesStateModel = {
   name: "sources",
   defaults: sourcesDefaultState,
 })
+@Injectable()
 export class SourcesState {
   protected prefix = "SRC";
 

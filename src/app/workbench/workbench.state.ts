@@ -205,7 +205,8 @@ import { AlertDialogConfig, AlertDialogComponent } from "../utils/alert-dialog/a
 import { wildcardToRegExp } from "../utils/regex";
 import { Normalization } from "../data-files/models/normalization";
 import { PixelNormalizer } from "../data-files/models/pixel-normalizer";
-import { isNotEmpty } from "../utils/utils";;
+import { isNotEmpty } from "../utils/utils";import { Injectable } from '@angular/core';
+;
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "215396f5-1224-4e17-be97-e60f8aeb0a82",
@@ -371,6 +372,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   name: "workbench",
   defaults: workbenchStateDefaults,
 })
+@Injectable()
 export class WorkbenchState {
   protected viewerIdPrefix = "VWR";
 

@@ -99,6 +99,7 @@ import { on } from "process";
 import { compose } from "./models/pixel-composer";
 import { AppState } from "../app.state";
 import { AfterglowConfigService } from "../afterglow-config.service";
+import { Injectable } from '@angular/core';
 
 export interface DataFilesStateModel {
   version: string;
@@ -138,6 +139,7 @@ const dataFilesDefaultState: DataFilesStateModel = {
   name: "dataFiles",
   defaults: dataFilesDefaultState,
 })
+@Injectable()
 export class DataFilesState {
   constructor(
     private dataFileService: AfterglowDataFileService,
