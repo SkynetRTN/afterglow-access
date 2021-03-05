@@ -59,7 +59,7 @@ Your installation of Afterglow Access can be configured by modifying the `./src/
 | Parameter         | Type                  | Description                           |
 | ----------------- | --------------------- | ------------------------------------- |
 | coreUrl           | string                | Location of the Afterglow Core server |
-| authMethod        | 'cookie' or 'oauth2'  | When set to 'cookie', cookies will be used for authentication.  When set to 'oauth2', users will be redirected to the Core's OAuth2.0 Provider |
+| authMethod        | 'cookie' | 'oauth2'   | When set to 'cookie', cookies will be used for authentication.  When set to 'oauth2', users will be redirected to the Core's OAuth2.0 Provider |
 | tileSize          | integer               | The tile size Afterglow Access uses when it downloads pixel data |
 | saturationDefault | number                | The default percentile used when calculating saturation levels |
 | backgroundDefault | number                | The default percentile used when calculating background levels |
