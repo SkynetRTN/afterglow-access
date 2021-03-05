@@ -8,21 +8,15 @@ import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterModule } from "@angular/router";
 import { CookieModule } from "ngx-cookie";
-import localeEs from "@angular/common/locales/es";
-registerLocaleData(localeEs, "es");
-
 import { TokenInterceptor } from "./interceptors/token.interceptor";
 import { AfterglowCoreInterceptor } from "./interceptors/afterglow-core.interceptor";
-
 import { MaterialModule } from "./material";
 import { WorkbenchModule } from "./workbench/workbench.module";
 import { AuthModule } from "./auth/auth.module";
-// import { HotkeyModule } from "angular2-hotkeys";
 import { ReactiveFormsModule } from "@angular/forms";
 import { FlexLayoutModule } from "@angular/flex-layout";
 import { registerLocaleData } from "@angular/common";
 import { AvatarModule } from "ngx-avatar";
-
 import { AppComponent } from "./app.component";
 import { AFTERGLOW_ROUTES } from "./routes";
 import { env } from "../environments/environment";
@@ -37,19 +31,16 @@ import { AfterglowStoragePluginModule, StorageOption } from "./storage-plugin/pu
 import { WasmService } from "./wasm.service";
 import { HduType } from "./data-files/models/data-file-type";
 import { ImageHdu, IHdu, PixelType, Header } from "./data-files/models/data-file";
-import { WorkbenchImageHduState } from "./workbench/models/workbench-file-state";
 import { DataFilesStateModel, DataFilesState } from "./data-files/data-files.state";
 import { IImageData } from "./data-files/models/image-data";
-// import * as WebFont from "webfontloader";
 import { ngxsConfig } from "./ngxs.config";
 import { WorkbenchStateModel } from './workbench/models/workbench-state';
 import { PhotometryPanelState } from './workbench/models/photometry-file-state';
 import { AfterglowConfigService } from './afterglow-config.service';
 import { AppState } from './app.state';
-
-// WebFont.load({
-//   custom: { families: ["Material Icons", "Material Icons Outline"] },
-// });
+import { KeyboardShortcutsModule }     from 'ng-keyboard-shortcuts';  
+import localeEs from "@angular/common/locales/es";
+registerLocaleData(localeEs, "es");
 
 export function dataFileSanitizer(v: DataFilesStateModel) {
   let state = {
@@ -156,9 +147,7 @@ export function jobSanitizer(v: JobsStateModel) {
     ThemePickerModule,
     WorkbenchModule.forRoot(),
     AuthModule.forRoot(),
-    // HotkeyModule.forRoot({
-    //   disableCheatSheet: true,
-    // }),
+    KeyboardShortcutsModule.forRoot(),
     NgxsModule.forRoot(
       [AppState, AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
       ngxsConfig

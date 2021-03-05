@@ -17,7 +17,6 @@ import { AfterglowDataProviderService } from "../../../workbench/services/afterg
 import { BatchImportJob } from "../../../jobs/models/batch-import";
 import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
 import { FileSystemItem, FileManagerComponent } from "../file-manager/file-manager.component";
-// import { Hotkey, HotkeysService } from 'angular2-hotkeys';
 
 @Component({
   selector: "app-open-file-dialog",
@@ -33,8 +32,6 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   loading: boolean = false;
   progress: number = 0;
   allowedFileExtensions = [".fits,.fit"];
-  
-  // hotKeys: Array<Hotkey> = [];
 
   constructor(
     private store: Store,
@@ -53,7 +50,6 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     );
 
     this.lastPath$ = this.store.select(DataProvidersState.getLastPath);
-    this.registerHotKeys();
   }
 
   ngOnInit(): void {}
@@ -61,24 +57,6 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
-
-    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
-  }
-
-  registerHotKeys() {
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "esc",
-    //     (event: KeyboardEvent): boolean => {
-    //       this.dialogRef.close()
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Open File Manager"
-    //   )
-    // );
-
-    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   onPathChange(path: DataProviderPath) {

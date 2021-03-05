@@ -1,27 +1,25 @@
 import { Component, OnInit, AfterViewInit, Renderer2, OnDestroy } from "@angular/core";
-import { Select, Store } from "@ngxs/store";
+import { Store } from "@ngxs/store";
 import { Title } from "@angular/platform-browser";
 import { Router, NavigationEnd, ActivatedRoute, RouterState } from "@angular/router";
-import { Observable, Subscription, Subscribable, combineLatest } from "rxjs";
+import { Observable, combineLatest } from "rxjs";
 
 import { AuthState } from "./auth/auth.state";
 import { InitAuth } from "./auth/auth.actions";
-import { AuthGuard } from "./auth/services/auth-guard.service";
 import { CoreUser } from "./auth/models/user";
 
-// import { HotkeysService, Hotkey } from "../../node_modules/angular2-hotkeys";
 import { ThemeStorage, AfterglowTheme } from "./theme-picker/theme-storage/theme-storage";
 import { DataProvider } from "./data-providers/models/data-provider";
 import { HelpDialogComponent } from "./workbench/components/help-dialog/help-dialog.component";
 import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { ThemeDialogComponent } from "./workbench/components/theme-dialog/theme-dialog.component";
 import { DataProvidersState } from "./data-providers/data-providers.state";
-import { SetFullScreen, Initialize } from "./workbench/workbench.actions";
-import { finalize, map, tap, filter, take } from "rxjs/operators";
-import { Navigate } from "@ngxs/router-plugin";
+import { Initialize } from "./workbench/workbench.actions";
+import { map, filter, take } from "rxjs/operators";
 import { WasmService } from "./wasm.service";
 import { AppState } from './app.state';
 import { LoadAfterglowConfig } from './app.actions';
+import { ShortcutInput } from 'ng-keyboard-shortcuts';
 // import * as FontFaceObserver from "fontfaceobserver"
 
 @Component({
@@ -38,7 +36,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fontWeight: "default" | "bold" | "boldest";
   dataProviders$: Observable<Array<DataProvider>>;
 
-  // private hotKeys: Array<Hotkey> = [];
   private themeDialog: MatDialogRef<ThemeDialogComponent> | null = null;
   private helpDialog: MatDialogRef<HelpDialogComponent> | null = null;
   
@@ -54,7 +51,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private renderer: Renderer2,
     private themeStorage: ThemeStorage,
     public dialog: MatDialog,
-    // private _hotkeysService: HotkeysService,
     private wasmService: WasmService
   ) {
     this.user$ = this.store.select(AuthState.user);
@@ -103,65 +99,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.store.dispatch(new InitAuth());
         this.store.dispatch(new Initialize());
       });
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "W",
-    //     (event: KeyboardEvent): boolean => {
-    //       this.store.dispatch(new Navigate(["workbench"]));
-    //       this.store.dispatch(new SetFullScreen(false));
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Workbench"
-    //   )
-    // );
-
-   
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "T",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.themeDialog) return false;
-    //       this.themeDialog = this.dialog.open(ThemeDialogComponent, {
-    //         data: {},
-    //         width: "500px",
-    //         height: "400px",
-    //       });
-    //       this.themeDialog.afterClosed().subscribe((result) => {
-    //         this.themeDialog = null;
-    //       });
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Quick Start Guide"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "?",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.helpDialog) return false;
-    //       this.helpDialog = this.dialog.open(HelpDialogComponent, {
-    //         data: {},
-    //         width: "900px",
-    //         height: "600px",
-    //       });
-
-    //       this.helpDialog.afterClosed().subscribe((result) => {
-    //         this.helpDialog = null;
-    //       });
-
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Quick Start Guide"
-    //   )
-    // );
-
-    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
   }
 
   onThemeUpdate(theme: AfterglowTheme) {
@@ -204,7 +141,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() {
+   
+  }
 
   ngOnDestroy() {
     // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));

@@ -23,7 +23,6 @@ import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { SetFocusedViewer, CloseViewer, KeepViewerOpen, SplitViewerPanel, MoveViewer } from "../../workbench.actions";
-// import { HotkeysService, Hotkey } from "angular2-hotkeys";
 import { MatMenuTrigger } from "@angular/material/menu";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 import { IWorkbenchHduState } from "../../models/workbench-file-state";

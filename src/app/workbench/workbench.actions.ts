@@ -529,6 +529,12 @@ export class ClearSonification {
   constructor(public hduId: string) { }
 }
 
+export class SonificationCompleted {
+  public static readonly type = "[Sonifier] Sonification Completed";
+
+  constructor(public hduId: string, public url: string, public error: string) { }
+}
+
 /* Plotting */
 
 export class UpdatePlottingPanelState {

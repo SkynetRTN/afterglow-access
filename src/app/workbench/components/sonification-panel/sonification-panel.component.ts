@@ -46,11 +46,10 @@ import {
   DataFile,
   ImageHdu,
 } from '../../../data-files/models/data-file';
-// import { Hotkey, HotkeysService } from "angular2-hotkeys";
 import { ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
-import { Store, Actions } from '@ngxs/store';
+import { Store, Actions, ofActionDispatched } from '@ngxs/store';
 import {
   AddRegionToHistory,
   UndoRegionSelection,
@@ -59,6 +58,7 @@ import {
   SetProgressLine,
   Sonify,
   ClearSonification,
+  SonificationCompleted,
 } from '../../workbench.actions';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { Region } from '../../../data-files/models/region';
@@ -69,6 +69,7 @@ import {
 } from '../../../data-files/models/transformation';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import * as moment from 'moment';
+import { ShortcutInput } from 'ng-keyboard-shortcuts';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -130,12 +131,7 @@ export class SonificationPanelComponent
   SonifierRegionMode = SonifierRegionMode;
   region$: Observable<Region>;
   region: Region;
-  sonificationUri$: Observable<string>;
-  sonificationUri: string = null;
-  sonificationSrcUri: string = null;
-  loading$: Observable<boolean>;
-  playerLoading: boolean = false;
-  showPlayer: boolean = false;
+  shortcuts: ShortcutInput[] = [];
 
   stop$ = new Subject();
   audioObj = new Audio();
@@ -156,7 +152,6 @@ export class SonificationPanelComponent
 
   constructor(
     private afterglowService: AfterglowDataFileService,
-    // private _hotkeysService: HotkeysService,
     private ref: ChangeDetectorRef,
     private afterglowDataFileService: AfterglowDataFileService,
     private actions$: Actions,
@@ -213,234 +208,221 @@ export class SonificationPanelComponent
           a.width == b.width &&
           a.height == b.height
       ),
-      tap((region) => this.store.dispatch(new ClearSonification(this.hdu.id)))
-    );
-
-    this.loading$ = this.state$.pipe(
-      map((state) => state.sonificationJobProgress != null),
-      distinctUntilChanged()
-    );
-
-    this.sonificationUri$ = this.state$.pipe(
-      map((state) => state?.sonificationUri),
-      distinctUntilChanged()
-    );
-
-    this.sonificationUri$.pipe(takeUntil(this.destroy$)).subscribe((url) => {
-      if (url) {
-        this.store.dispatch(new SetProgressLine(this.hdu.id, null))
+      tap((region) => {
         this.stop();
-        this.playStream(url);
-      }
-    });
+        this.store.dispatch(new SetProgressLine(this.hdu.id, null))
+      })
+    );
 
-
-
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "1",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregionByTime(0);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Time Navigation: Early"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "2",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregionByTime(1);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Time Navigation: Mid"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "3",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregionByTime(2);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Time Navigation: Late"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "4",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregionByFrequency(0);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Frequency Navigation: Low"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "5",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregionByFrequency(1);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Frequency Navigation: Mid"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "6",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregionByFrequency(2);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Frequency Navigation: High"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "7",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregion(0, 0);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Time Navigation: Early, Frequency Navigation Low"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "8",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregion(1, 1);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Time Navigation: Mid, Frequency Navigation Mid"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "9",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.selectSubregion(2, 2);
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Time Navigation: Late, Frequency Navigation High"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     ".",
-    //     (event: KeyboardEvent): boolean => {
-    //       this.sonify();
-    //       this.ref.markForCheck();
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Play Sonification"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "enter",
-    //     (event: KeyboardEvent): boolean => {
-    //       if(document.activeElement.tagName == "BUTTON") return null;
-    //       this.sonify();
-    //       this.ref.markForCheck();
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Play Sonification"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "space",
-    //     (event: KeyboardEvent): boolean => {
-    //       if(document.activeElement.tagName == "BUTTON") return null;
-    //       this.sonify();
-    //       this.ref.markForCheck();
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Play Sonification"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "0",
-    //     (event: KeyboardEvent): boolean => {
-    //       if (this.state.regionMode != SonifierRegionMode.CUSTOM) return true;
-    //       this.resetRegionSelection();
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Reset Sonification Region"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "ctrl+z",
-    //     (event: KeyboardEvent): boolean => {
-    //       this.undoRegionSelection();
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Undo Sonification Region"
-    //   )
-    // );
-
-    // this.hotKeys.push(
-    //   new Hotkey(
-    //     "ctrl+y",
-    //     (event: KeyboardEvent): boolean => {
-    //       this.redoRegionSelection();
-    //       return false; // Prevent bubbling
-    //     },
-    //     undefined,
-    //     "Redo Sonification Region"
-    //   )
-    // );
-
-    // this.hotKeys.forEach((hotKey) => this._hotkeysService.add(hotKey));
+    
+    this.actions$.pipe(
+      ofActionDispatched(SonificationCompleted),
+      takeUntil(this.destroy$),
+    ).subscribe((action => {
+        let a = action as SonificationCompleted;
+        if(!a.error && a.url) {
+          this.store.dispatch(new SetProgressLine(this.hdu.id, null))
+          this.stop();
+          this.playStream(a.url);
+        }
+    }))
   }
 
   ngOnInit() {}
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() {
+    this.shortcuts.push({
+      key: '1',
+      label: 'Select low frequency region from beginning of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(0,0);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '2',
+      label: 'Select mid frequency region from beginning of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(0,1);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '3',
+      label: 'Select high frequency region from beginning of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(0,2);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '4',
+      label: 'Select low frequency region from middle of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(1, 0);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '5',
+      label: 'Select mid frequency region from middle of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(1, 1);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '6',
+      label: 'Select high frequency region from middle of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(1, 2);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '7',
+      label: 'Select low frequency region from end of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(2, 0);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '8',
+      label: 'Select mid frequency region from end of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(2, 1);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '9',
+      label: 'Select high frequency region from end of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregion(2, 2);
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'left',
+      label: 'Select low frequency region from sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregionByFrequency(0)
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'right',
+      label: 'Select high frequency region from sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregionByFrequency(2)
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: ['left right', 'right left'],
+      label: 'Select central frequency region from sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregionByFrequency(1)
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'down',
+      label: 'Select region from beginning of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregionByTime(0)
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'up',
+      label: 'Select region from end of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregionByTime(2)
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: ['up down', 'down up'],
+      label: 'Select region from middle of sonification',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.selectSubregionByTime(1)
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'ctrl + z',
+      label: 'Undo previous region selection',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.undoRegionSelection();
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'ctrl + y',
+      label: 'Redo previous region selection',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.redoRegionSelection();
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '0',
+      label: 'Reset region selection',
+      command: (e) => {
+        if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
+        this.resetRegionSelection();
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: ['space', 'enter'],
+      label: 'Sonifiy',
+      command: (e) => {
+        this.sonify();
+      },
+      preventDefault: true,
+    });
+
+  }
 
   ngOnDestroy() {
-    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
@@ -474,7 +456,7 @@ export class SonificationPanelComponent
     let indexToneDuration = 0.852 / 2.0;
     
     let events$ = this.getStream(url).pipe(
-      takeUntil(this.stop$),
+      takeUntil(merge(this.destroy$, this.stop$)),
       share()
     )
 
@@ -652,73 +634,5 @@ export class SonificationPanelComponent
   sonify() {
     if (!this.hdu || !this.region) return;
     this.store.dispatch(new Sonify(this.hdu.id, this.region));
-
-    // if (!this.sonificationUri) return;
-    // if (
-    //   this.sonificationSrcUri == this.sonificationUri &&
-    //   this.api &&
-    //   this.api.canPlay
-    // ) {
-    //   this.api.getDefaultMedia().play();
-    // } else {
-    //   this.sonificationSrcUri = this.sonificationUri;
-    // }
   }
-
-  // onPlayerReady(api: VgAPI) {
-  //   this.api = api;
-
-  //   let stop$ = from(this.api.getDefaultMedia().subscriptions.ended);
-  //   let start$ = from(this.api.getDefaultMedia().subscriptions.playing);
-
-  //   this.subs.push(
-  //     from(this.api.getDefaultMedia().subscriptions.canPlayThrough).subscribe((canPlayThrough) => {
-  //       this.playerLoading = false;
-  //     })
-  //   );
-
-  //   this.subs.push(
-  //     from(this.api.getDefaultMedia().subscriptions.loadStart).subscribe((canPlayThrough) => {
-  //       this.playerLoading = true;
-  //     })
-  //   );
-
-  //   let indexToneDuration = 0.852 / 2.0;
-  //   this.progressLine$ = merge(
-  //     start$.pipe(
-  //       flatMap(() => interval(10).pipe(takeUntil(merge(stop$, this.sonificationUri$.pipe(skip(1)))))),
-  //       withLatestFrom(this.region$),
-  //       map(([v, region]) => {
-  //         if (!this.api.getDefaultMedia()) return null;
-  //         if (!this.api.getDefaultMedia().duration) return null;
-  //         if (!region) return null;
-  //         // console.log(region, this.api.getDefaultMedia().currentTime, indexToneDuration, this.api.getDefaultMedia().duration);
-  //         let y =
-  //           region.y +
-  //           Math.max(
-  //             0,
-  //             Math.min(
-  //               1,
-  //               (this.api.getDefaultMedia().currentTime - indexToneDuration) /
-  //                 (this.api.getDefaultMedia().duration - 2 * indexToneDuration)
-  //             )
-  //           ) *
-  //             region.height;
-
-  //         return { x1: region.x, y1: y, x2: region.x + region.width, y2: y };
-  //       })
-  //     ),
-  //     stop$.pipe(map(() => null)),
-  //     this.sonificationUri$.pipe(
-  //       skip(1),
-  //       map(() => null)
-  //     )
-  //   );
-
-  //   this.subs.push(
-  //     this.progressLine$.pipe(distinctUntilChanged()).subscribe((line) => {
-  //       this.store.dispatch(new SetProgressLine(this.hdu.id, line));
-  //     })
-  //   );
-  // }
 }

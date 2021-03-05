@@ -8,6 +8,7 @@ import { CoreUser } from "../../../auth/models/user";
 import { Store } from "@ngxs/store";
 import { Logout, Login } from "../../../auth/auth.actions";
 import { Navigate } from "@ngxs/router-plugin";
+import { ShortcutInput } from 'ng-keyboard-shortcuts';
 
 @Component({
   selector: "app-navbar",
@@ -19,6 +20,8 @@ export class NavbarComponent implements OnInit, OnChanges {
 
   @Input() dataProviders: Array<DataProvider>;
   @Input("user") user: CoreUser;
+  
+  shortcuts: ShortcutInput[] = [];
 
   constructor(public dialog: MatDialog, private router: Router, private store: Store) {}
 
@@ -34,6 +37,22 @@ export class NavbarComponent implements OnInit, OnChanges {
     else {
       this.avatarName = null;
     }
+  }
+
+  ngAfterViewInit() {
+    this.shortcuts.push({
+      key: 'T',
+      label: 'Open Theme Settings',
+      command: (e) => this.openThemeDialog(),
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: '?',
+      label: 'Open Quick Start Guide',
+      command: (e) => this.openQuickStartGuide(),
+      preventDefault: true,
+    });
   }
 
   openQuickStartGuide() {

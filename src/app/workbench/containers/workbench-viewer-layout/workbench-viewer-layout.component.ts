@@ -11,17 +11,13 @@ import {
   SimpleChanges,
 } from "@angular/core";
 import { Viewer } from "../../models/viewer";
-import { CanvasMouseEvent } from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
-import { MarkerMouseEvent } from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
 import { ViewMode } from "../../models/view-mode";
 import { Store } from "@ngxs/store";
 import { SplitViewerPanel, SetFocusedViewer } from "../../workbench.actions";
-// import { HotkeysService, Hotkey } from "angular2-hotkeys";
 import { MatMenuTrigger } from "@angular/material/menu";
 import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from "../../models/workbench-state";
 import { Observable } from "rxjs";
 import { WorkbenchState } from "../../workbench.state";
-import { tap, map } from "rxjs/operators";
 import { ViewerMarkerMouseEvent, ViewerCanvasMouseEvent, ViewerCanvasMouseDragEvent } from "../workbench-viewer-panel/workbench-viewer-panel.component";
 
 export interface ViewerPanelCanvasMouseEvent extends ViewerCanvasMouseEvent {
@@ -83,8 +79,6 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   @Output() onMarkerClick = new EventEmitter<ViewerPanelMarkerMouseEvent>();
   @Output() onFileClose = new EventEmitter<string>();
   @Output() onFileSave = new EventEmitter<string>();
-
-  // private hotKeys: Array<Hotkey> = [];
 
   constructor(private store: Store) {
     this.focusedViewerPanelId$ = this.store.select(WorkbenchState.getFocusedViewerPanelId);

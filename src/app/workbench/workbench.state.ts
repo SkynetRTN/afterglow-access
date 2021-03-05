@@ -141,6 +141,7 @@ import {
   StartPhotometrySourceSelectionRegion,
   UpdatePhotometrySourceSelectionRegion,
   EndPhotometrySourceSelectionRegion,
+  SonificationCompleted,
 } from "./workbench.actions";
 import {
   getWidth,
@@ -198,15 +199,16 @@ import {
   appendTransform,
   matrixToTransform,
 } from "../data-files/models/transformation";
-import { SonificationJob, SonificationJobResult } from "../jobs/models/sonification";
+import { SonificationJob, SonificationJobResult, SonificationJobSettings } from "../jobs/models/sonification";
 import { IImageData } from "../data-files/models/image-data";
 import { MatDialog } from "@angular/material/dialog";
 import { AlertDialogConfig, AlertDialogComponent } from "../utils/alert-dialog/alert-dialog.component";
 import { wildcardToRegExp } from "../utils/regex";
 import { Normalization } from "../data-files/models/normalization";
 import { PixelNormalizer } from "../data-files/models/pixel-normalizer";
-import { isNotEmpty } from "../utils/utils";import { Injectable } from '@angular/core';
-;
+import { isNotEmpty } from "../utils/utils";
+import { Injectable } from '@angular/core';;
+import * as deepEqual from 'fast-deep-equal';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: "215396f5-1224-4e17-be97-e60f8aeb0a82",
@@ -3347,7 +3349,6 @@ export class WorkbenchState {
         let sonificationPanelStateId = `SONIFICATION_PANEL_${state.nextSonificationPanelStateId++}`;
         state.sonificationPanelStateEntities[sonificationPanelStateId] = {
           id: sonificationPanelStateId,
-          sonificationUri: "",
           regionHistory: [],
           regionHistoryIndex: null,
           regionHistoryInitialized: false,
@@ -3356,7 +3357,8 @@ export class WorkbenchState {
           duration: 10,
           toneCount: 22,
           progressLine: null,
-          sonificationJobProgress: null,
+          sonificationLoading: null,
+          sonificationJobId: '',
         };
         state.sonificationPanelStateIds.push(sonificationPanelStateId);
 
@@ -3661,52 +3663,62 @@ export class WorkbenchState {
   @Action(Sonify)
   @ImmutableContext()
   public sonify({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { hduId, region }: Sonify) {
+
+    let getSonificationUrl = (jobId) => `core/api/v1/jobs/${jobId}/result/files/sonification`;
+
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
     if (!hduState || hduState.hduType != HduType.IMAGE) return null;
+    let sonificationPanelStateId = hduState.sonificationPanelStateId
 
-    let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
+    let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
+    let settings = {
+      x: Math.floor(region.x) + 1,
+      y: Math.floor(region.y) + 1,
+      width: Math.floor(region.width),
+      height: Math.floor(region.height),
+      numTones: Math.floor(sonificationPanelState.toneCount),
+      tempo: Math.ceil(region.height / sonificationPanelState.duration),
+      indexSounds: true,
+    }
+
+    //check whether new job should be created or if previous job result can be used
+    if(sonificationPanelState.sonificationJobId) {
+      let job = this.store.selectSnapshot(JobsState.getJobEntities)[sonificationPanelState.sonificationJobId] as SonificationJob;
+      
+      if(job && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
+        let jobSettings : SonificationJobSettings = {
+          x: job.settings.x,
+          y: job.settings.y,
+          width: job.settings.width,
+          height: job.settings.height,
+          numTones: job.settings.numTones,
+          tempo: job.settings.tempo,
+          indexSounds: job.settings.indexSounds
+        }
+        if(deepEqual(jobSettings, settings)) {
+          return dispatch(new SonificationCompleted(hduId, getSonificationUrl(job.id), ''))
+        }
+       
+      }
+    }
 
     let job: SonificationJob = {
       id: null,
       fileId: hduId,
       type: JobType.Sonification,
-      settings: {
-        x: Math.floor(region.x) + 1,
-        y: Math.floor(region.y) + 1,
-        width: Math.floor(region.width),
-        height: Math.floor(region.height),
-        numTones: Math.floor(sonificationPanelState.toneCount),
-        tempo: Math.ceil(region.height / sonificationPanelState.duration),
-        indexSounds: true,
-      },
+      settings: settings,
       state: null,
       result: null,
     };
-
-    // let correlationId = this.correlationIdGenerator.next();
-    // dispatch(new CreateJob(job, 1000, correlationId));
-    // return this.actions$.pipe(
-    //   ofActionSuccessful(CreateJob),
-    //   filter<CreateJob>((a) => a.correlationId == correlationId),
-    //   tap((a) => {
-    //     let jobEntity = this.store.selectSnapshot(JobsState.getEntities)[
-    //       a.job.id
-    //     ];
-    //     let result = jobEntity.result as PhotometryJobResult;
-    //     if (result.errors.length != 0) {
-
-    //       return;
-    //     }
 
     let correlationId = this.correlationIdGenerator.next();
     dispatch(new CreateJob(job, 1000, correlationId));
 
     setState((state: WorkbenchStateModel) => {
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      sonificationPanelState.sonificationJobProgress = null;
-      sonificationPanelState.sonificationUri = "";
+      sonificationPanelState.sonificationLoading = true;
       return state;
     });
 
@@ -3721,37 +3733,46 @@ export class WorkbenchState {
       filter<UpdateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        setState((state: WorkbenchStateModel) => {
-          let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-          if (a.job.state) {
-            sonificationPanelState.sonificationJobProgress = a.job.state.progress;
-          }
-          return state;
-        });
+        // setState((state: WorkbenchStateModel) => {
+        //   let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
+        //   if (a.job.state) {
+        //     sonificationPanelState.sonificationLoading = a.job.state.progress;
+        //   }
+        //   return state;
+        // });
       })
     );
 
     return merge(
       jobStatusUpdated$,
       jobCompleted$.pipe(
-        tap((a) => {
-          setState((state: WorkbenchStateModel) => {
-            if (a.result.successful) {
-              job = (a.action as CreateJob).job as SonificationJob;
-              let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-              let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[job.id];
-              let result = jobEntity.result as SonificationJobResult;
-              if (result.errors.length != 0) {
-                sonificationPanelState.sonificationJobProgress = null;
-                sonificationPanelState.sonificationUri = "";
-                return state;
-              }
-              sonificationPanelState.sonificationJobProgress = null;
-              sonificationPanelState.sonificationUri = `core/api/v1/jobs/${job.id}/result/files/sonification`;
+        flatMap((a) => {
+          let actions: any[] = [];
+          let sonificationUrl = '';
+          let error = 'Unexpected error occurred';
+          if (a.result.successful) {
+            job = (a.action as CreateJob).job as SonificationJob;
+            let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[job.id];
+            let result = jobEntity.result as SonificationJobResult;
+            
+            if (result.errors.length == 0) {
+              sonificationUrl = getSonificationUrl(job.id);
+              error = ''
             }
+            else {
+              error = result.errors.join(', ')
+            }
+          }
 
+          setState((state: WorkbenchStateModel) => {
+            let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
+            sonificationPanelState.sonificationLoading = false;
+            sonificationPanelState.sonificationJobId = job.id;
             return state;
           });
+
+          return dispatch(new SonificationCompleted(hduId, sonificationUrl, error))
+          
         })
       )
     );
@@ -3769,8 +3790,8 @@ export class WorkbenchState {
     if (!hduState || hduState.hduType != HduType.IMAGE) return;
     setState((state: WorkbenchStateModel) => {
       let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      sonificationPanelState.sonificationJobProgress = null;
-      sonificationPanelState.sonificationUri = "";
+      sonificationPanelState.sonificationLoading = null;
+      sonificationPanelState.sonificationJobId = '';
       return state;
     });
   }

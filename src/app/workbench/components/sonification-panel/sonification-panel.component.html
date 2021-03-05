@@ -115,32 +115,10 @@
     <div style="clear: both"></div>
   </div>
 
+  <mat-progress-bar *ngIf="state?.sonificationLoading" color="accent" mode="indeterminate"></mat-progress-bar>
 
-  <!-- <div>
-    <div *ngIf="(loading$ | async) || ((sonificationUri$ | async) && playerLoading)" class="alert alert-warning">
-      <ng-container i18n>loading...</ng-container>
-    </div>
-    <vg-player
-      (onPlayerReady)="onPlayerReady($event)"
-      [hidden]="!(sonificationUri$ | async) || (loading$ | async) || ((sonificationUri$ | async) && playerLoading)"
-      style="height: 50px"
-    >
-      <vg-controls>
-        <vg-play-pause></vg-play-pause>
-        <vg-playback-button></vg-playback-button>
-        <vg-time-display vgformat="mm:ss" vgproperty="current"></vg-time-display>
 
-        <vg-scrub-bar>
-          <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
-          <vg-scrub-bar-buffering-time></vg-scrub-bar-buffering-time>
-        </vg-scrub-bar>
-
-        <vg-time-display vgformat="mm:ss" vgproperty="left"></vg-time-display>
-        <vg-time-display vgformat="mm:ss" vgproperty="total"></vg-time-display>
-
-        <vg-mute></vg-mute>
-      </vg-controls>
-      <audio [vgMedia]="media" #media id="sonificationAudio" [src]="sonificationUri$ | async" autoplay></audio>
-    </vg-player>
-  </div> -->
 </div>
+
+
+<ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>

@@ -79,6 +79,7 @@ import { SaveChangesDialogComponent } from "./components/file-dialog/file-dialog
 import { JobProgressDialogComponent } from "./components/job-progress-dialog/job-progress-dialog.component";
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
 import { SvgApertureMarkerComponent } from './components/svg-aperture-marker/svg-aperture-marker.component';
+import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -135,12 +136,7 @@ export const COMPONENTS = [
     DataFilesModule,
     JobsModule,
     MaterialModule,
-    // CovalentDataTableModule,
-    // VgCoreModule,
-    // VgControlsModule,
-    // VgOverlayPlayModule,
-    // VgBufferingModule,
-    // NvD3Module,
+    KeyboardShortcutsModule.forRoot(),
     FlexLayoutModule,
     ThemePickerModule,
     AfterglowPlotlyModule,

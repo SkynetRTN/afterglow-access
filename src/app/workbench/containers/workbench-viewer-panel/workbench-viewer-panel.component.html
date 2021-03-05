@@ -97,15 +97,9 @@
   <ng-template matMenuContent let-viewer="viewer">
     <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewer(viewer.id)">
       <div class="context-label" fxFlex="1 1 auto">Close</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"> Ctrl+K F4 </span>
-      </div>
     </div>
     <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeOtherViewers(viewer.id)" [disabled]="viewers.length == 1">
       <div class="context-label" fxFlex="1 1 auto">Close Others</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"></span>
-      </div>
     </div>
     <div
       mat-menu-item
@@ -115,24 +109,18 @@
       [disabled]="viewers.length == 1"
     >
       <div class="context-label" fxFlex="1 1 auto">Close to the Right</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"></span>
-      </div>
+
     </div>
 
     <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeAllViewers()">
       <div class="context-label" fxFlex="1 1 auto">Close All</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2">Ctrl+K W</span>
-      </div>
+
     </div>
     <mat-divider></mat-divider>
 
     <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewer.keepOpen" (click)="keepViewerOpen(viewer.id, 'left')">
       <div class="context-label" fxFlex="1 1 auto">Keep Open</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"> Ctrl+K Enter </span>
-      </div>
+
     </div>
     <mat-divider></mat-divider>
     <div
@@ -143,9 +131,7 @@
       (click)="splitViewerPanel(viewer.id, 'up')"
     >
       <div class="context-label" fxFlex="1 1 auto">Split Up</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"> </span>
-      </div>
+
     </div>
     <div
       mat-menu-item
@@ -155,9 +141,7 @@
       (click)="splitViewerPanel(viewer.id, 'down')"
     >
       <div class="context-label" fxFlex="1 1 auto">Split Down</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"> </span>
-      </div>
+
     </div>
     <div
       mat-menu-item
@@ -167,9 +151,7 @@
       (click)="splitViewerPanel(viewer.id, 'left')"
     >
       <div class="context-label" fxFlex="1 1 auto">Split Left</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"></span>
-      </div>
+
     </div>
     <div
       mat-menu-item
@@ -179,9 +161,7 @@
       (click)="splitViewerPanel(viewer.id, 'right')"
     >
       <div class="context-label" fxFlex="1 1 auto">Split Right</div>
-      <div class="context-shortcut" fxFlex="0 0 auto">
-        <span class="mr-2 ml-2"></span>
-      </div>
+
     </div>
   </ng-template>
 </mat-menu>

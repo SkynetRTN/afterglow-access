@@ -1,4 +1,5 @@
 import { Region } from "../../data-files/models/region";
+import { SonificationJob } from '../../jobs/models/sonification';
 
 export enum SonifierRegionMode {
   VIEWPORT,
@@ -7,7 +8,6 @@ export enum SonifierRegionMode {
 
 export interface SonificationPanelState {
   id: string;
-  sonificationUri: string;
   regionHistoryInitialized: boolean;
   regionHistory: Array<Region>;
   regionHistoryIndex: number | null;
@@ -16,5 +16,6 @@ export interface SonificationPanelState {
   duration: number;
   toneCount: number;
   progressLine: { x1: number; y1: number; x2: number; y2: number } | null;
-  sonificationJobProgress: number | null;
+  sonificationLoading: boolean;
+  sonificationJobId: string;
 }
