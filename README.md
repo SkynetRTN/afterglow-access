@@ -22,8 +22,8 @@ To get started, follow these instructions:
 1. If you haven't done it already, make a fork of this repo.
 2. Clone to your local computer or server using git.
 3. Make sure that you have installed NodeJS.
-4. Create a Afterglow configuration file by copying the default template to a new file named `afterglow.json` in the `src/` directory. For example: `cp src/afterglow.defaults.json src/afterglow.json`.
-5. Open `src/afterglow.json` and ensure all configuration settings are correct.  For more information, see the [configuration section](#configuration) below.
+4. Create a Afterglow configuration file by copying the default template to a new file named `afterglow.json` in the `./src/` directory. For example: `cp ./src/afterglow.defaults.json ./src/afterglow.json`.
+5. Open `./src/afterglow.json` and ensure all configuration settings are correct.  For more information, see the [configuration section](#configuration) below.
 6. Run `npm install`.
 
 #### Local Development
@@ -38,15 +38,38 @@ The `proxy.config.json` file can be configured to proxy local requests from the 
 To build the application for production:
 
 1. Run `ng build --prod`.  For additional options, see [Angular CLI build documentation](https://angular.io/cli/build)
-2. Copy the `dist/afterglow-access` directory to the desired location on your server where it can be accessed by clients.
+2. Copy the `./dist/afterglow-access` directory to the desired location on your server where it can be accessed by clients.
 
 ### Configuration
 
+Your installation of Afterglow Access can be configured by modifying the `./src/afterglow.json` file.  The file is automatically copied to the assets directory when the application is built.  The current default configuration is:
+
 ```json
-Here goes your json object definition
+{
+    "coreUrl": "http://127.0.0.1:4200/core",
+    "authMethod": "cookie",
+    "authCookieName": "afterglow_core_access_token",
+    "oauth2ClientId": null,
+    "tileSize": 1024,
+    "saturationDefault": 99.0,
+    "backgroundDefault": 15.0
+}
 ```
+
+| Parameter         | Type                  | Description                           |
+| ----------------- | --------------------- | ------------------------------------- |
+| coreUrl           | string                | Location of the Afterglow Core server |
+| authMethod        | 'cookie' or 'oauth2'  | When set to 'cookie', cookies will be used for authentication.  When set to 'oauth2', users will be redirected to the Core's OAuth2.0 Provider |
+| tileSize          | integer               | The tile size Afterglow Access uses when it downloads pixel data |
+| saturationDefault | number                | The default percentile used when calculating saturation levels |
+| backgroundDefault | number                | The default percentile used when calculating background levels |
 
 ## Learn
 
 - [YouTube demo](https://youtu.be/Z6qi-aJ613E?t=317)
 - [YouTube videos](https://www.youtube.com/playlist?list=PLy034wwN98YKMepknVKcRPB9qpN0aHYaJ)
+
+
+## License
+
+For non-commercial, non-competitive use,  see the license included with the source code.  For other use, contact the [Skynet Robotic Telescope Network](https://skynet.unc.edu).

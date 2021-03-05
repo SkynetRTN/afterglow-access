@@ -10,12 +10,21 @@ import {
   ElementRef,
   OnDestroy,
   ChangeDetectionStrategy,
-} from "@angular/core";
+} from '@angular/core';
 
-import { DomSanitizer, SafeValue } from "@angular/platform-browser";
+import { DomSanitizer, SafeValue } from '@angular/platform-browser';
 
-import { Observable, combineLatest, of } from "rxjs";
-import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap, switchMap, takeUntil } from "rxjs/operators";
+import { Observable, combineLatest, of } from 'rxjs';
+import {
+  distinctUntilChanged,
+  map,
+  flatMap,
+  filter,
+  withLatestFrom,
+  tap,
+  switchMap,
+  takeUntil,
+} from 'rxjs/operators';
 import {
   DataFile,
   getWidth,
@@ -32,9 +41,17 @@ import {
   getStartTime,
   getExpLength,
   toKeyValueHash,
-} from "../../../data-files/models/data-file";
-import { Marker, LineMarker, MarkerType, TeardropMarker, CircleMarker, RectangleMarker, ApertureMarker } from "../../models/marker";
-import { BehaviorSubject, Subject } from "rxjs";
+} from '../../../data-files/models/data-file';
+import {
+  Marker,
+  LineMarker,
+  MarkerType,
+  TeardropMarker,
+  CircleMarker,
+  RectangleMarker,
+  ApertureMarker,
+} from '../../models/marker';
+import { BehaviorSubject, Subject } from 'rxjs';
 import {
   CanvasMouseEvent,
   PanZoomCanvasComponent,
@@ -45,17 +62,17 @@ import {
   CanvasSizeChangeEvent,
   ZoomToFitEvent,
   CanvasMouseDragEvent,
-} from "../../components/pan-zoom-canvas/pan-zoom-canvas.component";
+} from '../../components/pan-zoom-canvas/pan-zoom-canvas.component';
 import {
   MarkerMouseEvent,
   ImageViewerMarkerOverlayComponent,
-} from "../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component";
-import { Source, PosType } from "../../models/source";
-import { CustomMarker } from "../../models/custom-marker";
-import { FieldCal } from "../../models/field-cal";
-import { Store } from "@ngxs/store";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { SourcesState } from "../../sources.state";
+} from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { Source, PosType } from '../../models/source';
+import { CustomMarker } from '../../models/custom-marker';
+import { FieldCal } from '../../models/field-cal';
+import { Store } from '@ngxs/store';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { SourcesState } from '../../sources.state';
 import {
   LoadRawImageTile,
   ZoomTo,
@@ -67,34 +84,41 @@ import {
   LoadHduHeader,
   LoadHdu,
   LoadImageHduHistogram,
-} from "../../../data-files/data-files.actions";
-import { HduType } from "../../../data-files/models/data-file-type";
-import { Transform, getImageToViewportTransform } from "../../../data-files/models/transformation";
-import { IImageData } from "../../../data-files/models/image-data";
-import { UpdateCurrentViewportSize } from "../../workbench.actions";
-import { Viewer, ImageViewer } from "../../models/viewer";
-import { WorkbenchState } from "../../workbench.state";
-import { WorkbenchTool } from "../../models/workbench-state";
-import { CustomMarkerPanelState } from "../../models/marker-file-state";
-import { PlottingPanelState } from "../../models/plotter-file-state";
-import { SonificationPanelState, SonifierRegionMode } from "../../models/sonifier-file-state";
-import { ImageHist } from "../../../data-files/models/image-hist";
-import * as moment from "moment";
+} from '../../../data-files/data-files.actions';
+import { HduType } from '../../../data-files/models/data-file-type';
+import {
+  Transform,
+  getImageToViewportTransform,
+} from '../../../data-files/models/transformation';
+import { IImageData } from '../../../data-files/models/image-data';
+import { UpdateCurrentViewportSize } from '../../workbench.actions';
+import { Viewer, ImageViewer } from '../../models/viewer';
+import { WorkbenchState } from '../../workbench.state';
+import { WorkbenchTool } from '../../models/workbench-state';
+import { CustomMarkerPanelState } from '../../models/marker-file-state';
+import { PlottingPanelState } from '../../models/plotter-file-state';
+import {
+  SonificationPanelState,
+  SonifierRegionMode,
+} from '../../models/sonifier-file-state';
+import { ImageHist } from '../../../data-files/models/image-hist';
+import * as moment from 'moment';
 import { Papa } from 'ngx-papaparse';
 import { AuthState } from '../../../auth/auth.state';
 import { round } from '../../../utils/math';
 import { formatDms } from '../../../utils/skynet-astro';
 // @ts-ignore
-import * as piexif from "piexifjs";
+import * as piexif from 'piexifjs';
 
 @Component({
-  selector: "app-workbench-image-viewer",
-  templateUrl: "./workbench-image-viewer.component.html",
-  styleUrls: ["./workbench-image-viewer.component.scss"],
+  selector: 'app-workbench-image-viewer',
+  templateUrl: './workbench-image-viewer.component.html',
+  styleUrls: ['./workbench-image-viewer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestroy {
-  @Input("viewer")
+export class WorkbenchImageViewerComponent
+  implements OnInit, OnChanges, OnDestroy {
+  @Input('viewer')
   set viewer(viewer: ImageViewer) {
     this.viewer$.next(viewer);
   }
@@ -133,7 +157,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   @Output()
   onFileSave = new EventEmitter<string>();
 
-  
   destroy$: Subject<boolean> = new Subject<boolean>();
   file$: Observable<DataFile>;
   hduIds$: Observable<string[]>;
@@ -183,7 +206,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   selectedFieldCalId$: Observable<string>;
   fieldCalMarkers$: Observable<Marker[]>;
 
-  constructor(private store: Store, private sanitization: DomSanitizer, private papa: Papa) {
+  constructor(
+    private store: Store,
+    private sanitization: DomSanitizer,
+    private papa: Papa
+  ) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
     let viewerId$ = this.viewer$.pipe(
@@ -197,57 +224,102 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.file$ = this.viewer$.pipe(
-      switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId)))),
+      switchMap((viewer) =>
+        this.store
+          .select(DataFilesState.getFileById)
+          .pipe(map((fn) => fn(viewer.fileId)))
+      ),
       distinctUntilChanged()
     );
 
     this.hduIds$ = this.file$.pipe(
       map((file) => file.hduIds),
-      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
+      distinctUntilChanged(
+        (a, b) =>
+          a &&
+          b &&
+          a.length == b.length &&
+          a.every((value, index) => b[index] == value)
+      )
     );
 
     this.hdus$ = this.hduIds$.pipe(
       switchMap((hduIds) => {
         return combineLatest(
-          hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
-        ).pipe(map((hdus) => hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[]));
+          hduIds.map((hduId) =>
+            this.store
+              .select(DataFilesState.getHduById)
+              .pipe(map((fn) => fn(hduId)))
+          )
+        ).pipe(
+          map(
+            (hdus) =>
+              hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[]
+          )
+        );
       })
     );
 
     this.headerIds$ = this.hdus$.pipe(
       map((hdus) => hdus.map((hdu) => hdu.headerId)),
-      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
+      distinctUntilChanged(
+        (a, b) =>
+          a &&
+          b &&
+          a.length == b.length &&
+          a.every((value, index) => b[index] == value)
+      )
     );
 
     this.headers$ = this.headerIds$.pipe(
       switchMap((headerIds) => {
         return combineLatest(
-          headerIds.map((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+          headerIds.map((headerId) =>
+            this.store
+              .select(DataFilesState.getHeaderById)
+              .pipe(map((fn) => fn(headerId)))
+          )
         );
       })
     );
 
     this.selectedHdu$ = combineLatest([this.selectedHduId$, this.hdus$]).pipe(
-      map(([hduId, hdus]) => (hduId ? hdus.find((hdu) => hdu.id == hduId) : null))
+      map(([hduId, hdus]) =>
+        hduId ? hdus.find((hdu) => hdu.id == hduId) : null
+      )
     );
 
-    this.selectedHduHeader$ = combineLatest([this.selectedHdu$, this.headers$]).pipe(
-      map(([hdu, headers]) => (hdu ? headers.find((header) => header.id == hdu.headerId) : null))
+    this.selectedHduHeader$ = combineLatest([
+      this.selectedHdu$,
+      this.headers$,
+    ]).pipe(
+      map(([hdu, headers]) =>
+        hdu ? headers.find((header) => header.id == hdu.headerId) : null
+      )
     );
 
-    this.headersLoaded$ = combineLatest([this.headers$, this.selectedHduHeader$]).pipe(
-      map(([headers, header]) => (header ? header.loaded : headers.every((header) => header.loaded)))
+    this.headersLoaded$ = combineLatest([
+      this.headers$,
+      this.selectedHduHeader$,
+    ]).pipe(
+      map(([headers, header]) =>
+        header ? header.loaded : headers.every((header) => header.loaded)
+      )
     );
 
     this.histsLoaded$ = combineLatest([this.hdus$, this.selectedHdu$]).pipe(
-      map(([hdus, hdu]) => (hdu ? hdu.hist.loaded : hdus.every((hdu) => hdu.hist.loaded)))
+      map(([hdus, hdu]) =>
+        hdu ? hdu.hist.loaded : hdus.every((hdu) => hdu.hist.loaded)
+      )
     );
 
     this.ready$ = combineLatest([this.headersLoaded$, this.histsLoaded$]).pipe(
       map(([headerLoaded, histLoaded]) => headerLoaded && histLoaded)
     );
 
-    this.firstHeader$ = this.headers$.pipe(map((headers) => (headers.length > 0 ? headers[0] : null)));
+    this.firstHeader$ = this.headers$.pipe(
+      map((headers) => (headers.length > 0 ? headers[0] : null))
+    );
 
     // // watch for changes to header and reload when necessary
     // combineLatest([this.hduId$, this.header$]).pipe(
@@ -283,40 +355,52 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.rawImageData$ = rawImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
+        this.store
+          .select(DataFilesState.getImageDataById)
+          .pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
       ),
       distinctUntilChanged()
     );
 
     let normalizedImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getNormalizedImageDataIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+        this.store
+          .select(WorkbenchState.getNormalizedImageDataIdFromViewerId)
+          .pipe(
+            map((fn) => fn(viewerId)),
+            distinctUntilChanged()
+          )
       ),
       distinctUntilChanged()
     );
 
     this.normalizedImageData$ = normalizedImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
+        this.store
+          .select(DataFilesState.getImageDataById)
+          .pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
       ),
       distinctUntilChanged()
     );
 
     let viewportTransformId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+        this.store
+          .select(WorkbenchState.getViewportTransformIdFromViewerId)
+          .pipe(
+            map((fn) => fn(viewerId)),
+            distinctUntilChanged()
+          )
       ),
       distinctUntilChanged()
     );
 
     this.viewportTransform$ = viewportTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
+      switchMap((transformId) =>
+        this.store
+          .select(DataFilesState.getTransformById)
+          .pipe(map((fn) => fn(transformId)))
+      ),
       distinctUntilChanged()
     );
 
@@ -331,11 +415,18 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.imageTransform$ = imageTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
+      switchMap((transformId) =>
+        this.store
+          .select(DataFilesState.getTransformById)
+          .pipe(map((fn) => fn(transformId)))
+      ),
       distinctUntilChanged()
     );
 
-    this.imageToViewportTransform$ = combineLatest(this.imageTransform$, this.viewportTransform$).pipe(
+    this.imageToViewportTransform$ = combineLatest(
+      this.imageTransform$,
+      this.viewportTransform$
+    ).pipe(
       map(([imageTransform, viewportTransform]) => {
         if (!imageTransform || !viewportTransform) {
           return null;
@@ -346,68 +437,92 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     let customMarkerPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+        this.store
+          .select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)
+          .pipe(
+            map((fn) => fn(viewerId)),
+            distinctUntilChanged()
+          )
       ),
       distinctUntilChanged()
     );
 
     this.customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
+      switchMap((id) =>
+        this.store
+          .select(WorkbenchState.getCustomMarkerPanelStateById)
+          .pipe(map((fn) => fn(id)))
+      ),
       distinctUntilChanged()
     );
 
     let plottingPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+        this.store
+          .select(WorkbenchState.getPlottingPanelStateIdFromViewerId)
+          .pipe(
+            map((fn) => fn(viewerId)),
+            distinctUntilChanged()
+          )
       ),
       distinctUntilChanged()
     );
 
     this.plottingPanelState$ = plottingPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id)))),
+      switchMap((id) =>
+        this.store
+          .select(WorkbenchState.getPlottingPanelStateById)
+          .pipe(map((fn) => fn(id)))
+      ),
       distinctUntilChanged()
     );
 
     let sonificationPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getSonificationPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+        this.store
+          .select(WorkbenchState.getSonificationPanelStateIdFromViewerId)
+          .pipe(
+            map((fn) => fn(viewerId)),
+            distinctUntilChanged()
+          )
       ),
       distinctUntilChanged()
     );
 
     this.sonificationPanelState$ = sonificationPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id)))),
+      switchMap((id) =>
+        this.store
+          .select(WorkbenchState.getSonificationPanelStateById)
+          .pipe(map((fn) => fn(id)))
+      ),
       distinctUntilChanged()
     );
 
-    let photometryPanelStateId$ =  viewerId$.pipe(
+    let photometryPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getPhotometryPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+        this.store
+          .select(WorkbenchState.getPhotometryPanelStateIdFromViewerId)
+          .pipe(
+            map((fn) => fn(viewerId)),
+            distinctUntilChanged()
+          )
       ),
       distinctUntilChanged()
     );
 
     let photometryPanelState$ = photometryPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id)))),
+      switchMap((id) =>
+        this.store
+          .select(WorkbenchState.getPhotometryPanelStateById)
+          .pipe(map((fn) => fn(id)))
+      ),
       distinctUntilChanged()
     );
 
     let sourcePhotometryData$ = photometryPanelState$.pipe(
-      map(state => state.sourcePhotometryData),
+      map((state) => state.sourcePhotometryData),
       distinctUntilChanged()
-    )
+    );
 
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
     this.sources$ = this.store.select(SourcesState.getSources);
@@ -415,15 +530,22 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.markers$ = this.activeTool$.pipe(
       switchMap((activeTool) => {
         if (activeTool == WorkbenchTool.CUSTOM_MARKER) {
-          return this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
+          return this.customMarkerPanelState$.pipe(
+            map((state) => Object.values(state.markerEntities))
+          );
         } else if (activeTool == WorkbenchTool.PLOTTER) {
           return combineLatest(
             this.firstHeader$,
+            this.selectedHduHeader$,
             this.plottingPanelState$,
             this.store.select(WorkbenchState.getPlottingPanelConfig)
           ).pipe(
-            map(([header, plottingState, config]) => {
-              if (!plottingState || !header) {
+            map(([firstHeader, selectedHeader, plottingState, config]) => {
+              let header = selectedHeader;
+              if(!header) {
+                header = firstHeader
+              }
+              if (!plottingState || !header ) {
                 return [];
               }
 
@@ -451,7 +573,10 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                 }
                 let wcs = header.wcs;
                 if (startPosType == PosType.SKY) {
-                  let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
+                  let xy = wcs.worldToPix([
+                    startPrimaryCoord,
+                    startSecondaryCoord,
+                  ]);
                   x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
                   y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
                 }
@@ -463,28 +588,27 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                 }
               }
               let markers: Marker[] = [];
-              if (config.plotMode == "1D") {
-                markers = [
-                  {
-                    id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
-                    type: MarkerType.LINE,
-                    x1: x1,
-                    y1: y1,
-                    x2: x2,
-                    y2: y2,
-                  } as LineMarker,
-                ];
+              if (config.plotMode == '1D') {
+                let lineMarker: LineMarker = {
+                  id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
+                  type: MarkerType.LINE,
+                  x1: x1,
+                  y1: y1,
+                  x2: x2,
+                  y2: y2,
+                }
+
+                markers = [ lineMarker];
               } else {
-                markers = [
-                  {
-                    id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
-                    type: MarkerType.RECTANGLE,
-                    x: Math.min(x1, x2),
-                    y: Math.min(y1, y2),
-                    width: Math.abs(x2 - x1),
-                    height: Math.abs(y2 - y1),
-                  } as RectangleMarker,
-                ];
+                let rectangleMarker: RectangleMarker = {
+                  id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
+                  type: MarkerType.RECTANGLE,
+                  x: Math.min(x1, x2),
+                  y: Math.min(y1, y2),
+                  width: Math.abs(x2 - x1),
+                  height: Math.abs(y2 - y1),
+                }
+                markers = [rectangleMarker];
               }
               return markers;
             })
@@ -517,23 +641,23 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           );
         } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
           let sourceSelectionRegionMarkers$ = combineLatest(
-              this.selectedHduId$,
-              photometryPanelState$,
-            ).pipe(
+            this.selectedHduId$,
+            photometryPanelState$
+          ).pipe(
             map(([hduId, state]) => {
-              if(!state.markerSelectionRegion) return [];
+              if (!state || !state.markerSelectionRegion) return [];
               let region = state.markerSelectionRegion;
               let sourceSelectionMarker: RectangleMarker = {
                 id: `PHOTOMETRY_SOURCE_SELECTION_${hduId}`,
-                x: Math.min(region.x, region.x+region.width),
-                y: Math.min(region.y, region.y+region.height),
+                x: Math.min(region.x, region.x + region.width),
+                y: Math.min(region.y, region.y + region.height),
                 width: Math.abs(region.width),
                 height: Math.abs(region.height),
                 type: MarkerType.RECTANGLE,
-              }
+              };
               return [sourceSelectionMarker];
             })
-          )
+          );
           let sourceMarkers$ = combineLatest(
             this.selectedHduId$,
             this.firstHeader$,
@@ -549,13 +673,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
               let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
               let showSourceLabels = config.showSourceLabels;
 
-              let markers: Array<CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker> = [];
+              let markers: Array<
+                CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker
+              > = [];
               let mode = coordMode;
 
-              if (!header.wcs || !header.wcs.isValid()) mode = "pixel";
+              if (!header.wcs || !header.wcs.isValid()) mode = 'pixel';
 
               sources.forEach((source) => {
-                if (source.hduId != hduId && !showSourcesFromAllFiles) return ;
+                if (source.hduId != hduId && !showSourcesFromAllFiles) return;
                 if (source.posType != mode) return;
                 let selected = selectedSourceIds.includes(source.id);
                 let coord = getSourceCoordinates(header, source);
@@ -565,17 +691,35 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                 }
 
                 let photData = sourcePhotometryData[source.id];
-                if(photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
+                if (
+                  photData &&
+                  photData.x !== null &&
+                  photData.y !== null &&
+                  photData.aperA !== null
+                ) {
                   let tooltipMessage = [];
-                  if(photData.raHours !== null && photData.decDegs !== null) {
-                    tooltipMessage.push(`RA,DEC: (${formatDms(photData.raHours, 2, 3)}, ${formatDms(photData.decDegs, 2, 3)})`)
+                  if (photData.raHours !== null && photData.decDegs !== null) {
+                    tooltipMessage.push(
+                      `RA,DEC: (${formatDms(
+                        photData.raHours,
+                        2,
+                        3
+                      )}, ${formatDms(photData.decDegs, 2, 3)})`
+                    );
                   }
-                  if(photData.x !== null && photData.y !== null) {
-                    tooltipMessage.push(`X,Y: (${round(photData.x,3)}, ${round(photData.y, 3)})`)
+                  if (photData.x !== null && photData.y !== null) {
+                    tooltipMessage.push(
+                      `X,Y: (${round(photData.x, 3)}, ${round(photData.y, 3)})`
+                    );
                   }
 
-                  if(photData.mag !== null && photData.magError !== null) {
-                    tooltipMessage.push(`${round(photData.mag, 3)} +/- ${round(photData.magError, 3)} mag`)
+                  if (photData.mag !== null && photData.magError !== null) {
+                    tooltipMessage.push(
+                      `${round(photData.mag, 3)} +/- ${round(
+                        photData.magError,
+                        3
+                      )} mag`
+                    );
                   }
 
                   let apertureMarker: ApertureMarker = {
@@ -591,21 +735,21 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                     annulusAOut: photData.annulusAOut,
                     annulusBOut: photData.annulusBOut,
                     labelTheta: 0,
-                    labelRadius: Math.max(photData.annulusAOut, photData.annulusBOut)+15,
-                    label: showSourceLabels ? source.label : "",
+                    labelRadius:
+                      Math.max(photData.annulusAOut, photData.annulusBOut) + 15,
+                    label: showSourceLabels ? source.label : '',
                     selected: selected,
                     data: { source: source },
                     tooltip: {
                       class: 'photometry-data-tooltip',
                       message: tooltipMessage.join('\n'),
                       showDelay: 500,
-                      hideDelay: null
-                    }
+                      hideDelay: null,
+                    },
                   };
 
                   markers.push(apertureMarker);
-                }
-                else {
+                } else {
                   if (source.pm) {
                     markers.push({
                       id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
@@ -615,7 +759,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                       radius: 15,
                       labelRadius: 30,
                       labelTheta: 0,
-                      label: showSourceLabels ? source.label : "",
+                      label: showSourceLabels ? source.label : '',
                       theta: coord.theta,
                       selected: selected,
                       data: { source: source },
@@ -629,7 +773,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                       radius: 15,
                       labelRadius: 30,
                       labelTheta: 0,
-                      label: showSourceLabels ? source.label : "",
+                      label: showSourceLabels ? source.label : '',
                       selected: selected,
                       data: { source: source },
                     } as CircleMarker);
@@ -642,17 +786,17 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
           return combineLatest(
             sourceSelectionRegionMarkers$,
-            sourceMarkers$).pipe(
-              map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
+            sourceMarkers$
+          ).pipe(
+            map(([sourceSelectionRegionMarkers, sourceMarkers]) =>
+              sourceMarkers.concat(sourceSelectionRegionMarkers)
             )
+          );
         }
 
         return of([]);
       })
     );
-
-
-
   }
 
   ngOnInit() {}
@@ -660,7 +804,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
-    
   }
 
   ngOnChanges(changes: { [key: string]: SimpleChange }) {}
@@ -713,13 +856,22 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
-    );
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataIdFromViewerId
+    )(this.viewer.id);
+    let imageTransformId = this.store.selectSnapshot(
+      WorkbenchState.getImageTransformIdFromViewerId
+    )(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(
+      WorkbenchState.getViewportTransformIdFromViewerId
+    )(this.viewer.id);
 
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) {
+    if (
+      !this.viewer.viewportSize ||
+      !normalizedImageDataId ||
+      !imageTransformId ||
+      !viewportTransformId
+    ) {
       return;
     }
     this.store.dispatch(
@@ -738,12 +890,22 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
-    );
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
+    let normalizedImageDataId = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataIdFromViewerId
+    )(this.viewer.id);
+    let imageTransformId = this.store.selectSnapshot(
+      WorkbenchState.getImageTransformIdFromViewerId
+    )(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(
+      WorkbenchState.getViewportTransformIdFromViewerId
+    )(this.viewer.id);
+    if (
+      !this.viewer.viewportSize ||
+      !normalizedImageDataId ||
+      !imageTransformId ||
+      !viewportTransformId
+    )
+      return;
     this.store.dispatch(
       new ZoomBy(
         normalizedImageDataId,
@@ -760,13 +922,23 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
-    );
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataIdFromViewerId
+    )(this.viewer.id);
+    let imageTransformId = this.store.selectSnapshot(
+      WorkbenchState.getImageTransformIdFromViewerId
+    )(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(
+      WorkbenchState.getViewportTransformIdFromViewerId
+    )(this.viewer.id);
 
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
+    if (
+      !this.viewer.viewportSize ||
+      !normalizedImageDataId ||
+      !imageTransformId ||
+      !viewportTransformId
+    )
+      return;
     this.store.dispatch(
       new ZoomTo(
         normalizedImageDataId,
@@ -783,21 +955,39 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
-    );
-    let normalizedImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[normalizedImageDataId];
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataIdFromViewerId
+    )(this.viewer.id);
+    let normalizedImageData = this.store.selectSnapshot(
+      DataFilesState.getImageDataEntities
+    )[normalizedImageDataId];
+    let imageTransformId = this.store.selectSnapshot(
+      WorkbenchState.getImageTransformIdFromViewerId
+    )(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(
+      WorkbenchState.getViewportTransformIdFromViewerId
+    )(this.viewer.id);
 
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
+    if (
+      !this.viewer.viewportSize ||
+      !normalizedImageDataId ||
+      !imageTransformId ||
+      !viewportTransformId
+    )
+      return;
     this.store.dispatch(
-      new CenterRegionInViewport(normalizedImageDataId, imageTransformId, viewportTransformId, this.viewer.viewportSize, {
-        x: 1,
-        y: 1,
-        width: normalizedImageData.width,
-        height: normalizedImageData.height,
-      })
+      new CenterRegionInViewport(
+        normalizedImageDataId,
+        imageTransformId,
+        viewportTransformId,
+        this.viewer.viewportSize,
+        {
+          x: 1,
+          y: 1,
+          width: normalizedImageData.width,
+          height: normalizedImageData.height,
+        }
+      )
     );
   }
 
@@ -830,9 +1020,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     // should only need to load the raw data
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
-    let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
+    let headerEntities = this.store.selectSnapshot(
+      DataFilesState.getHeaderEntities
+    );
+    let dataFileEntities = this.store.selectSnapshot(
+      DataFilesState.getFileEntities
+    );
+    let imageDataEntities = this.store.selectSnapshot(
+      DataFilesState.getImageDataEntities
+    );
     let hduIds = [this.viewer.hduId];
     let loadComposite = false;
 
@@ -855,7 +1051,8 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       )
         return;
 
-      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
+      let normalizedImageData =
+        imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
         loadComposite = false;
         return;
@@ -870,14 +1067,20 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       if (!tile.pixelsLoaded) {
         loadComposite = false;
       }
-      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
+      if (
+        !rawTile.pixelsLoading &&
+        !rawTile.pixelLoadingFailed &&
+        (!tile.isValid || !tile.pixelsLoaded)
+      ) {
         loadComposite = false;
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
     });
 
     if (loadComposite) {
-      this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
+      this.store.dispatch(
+        new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex)
+      );
     }
   }
 
@@ -887,44 +1090,48 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     // http://svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/
     let markerSvg = this.imageViewerMarkerOverlayComponent.svg;
     let svgXml = new XMLSerializer().serializeToString(markerSvg);
-    let data = "data:image/svg+xml;base64," + btoa(svgXml);
+    let data = 'data:image/svg+xml;base64,' + btoa(svgXml);
 
     let image = new Image();
     image.onload = () => {
-      let canvas: HTMLCanvasElement = document.createElement("canvas");
-      let context: CanvasRenderingContext2D = canvas.getContext("2d");
+      let canvas: HTMLCanvasElement = document.createElement('canvas');
+      let context: CanvasRenderingContext2D = canvas.getContext('2d');
       canvas.width = imageCanvas.width;
       canvas.height = imageCanvas.height;
 
       context.drawImage(imageCanvas, 0, 0);
       context.drawImage(image, 0, 0);
 
-      var lnk = document.createElement("a");
+      var lnk = document.createElement('a');
 
       /// the key here is to set the download attribute of the a tag
-      lnk.download = "afterglow_screenshot.jpg";
+      lnk.download = 'afterglow_screenshot.jpg';
 
       /// convert canvas content to data-uri for link. When download
       /// attribute is set the content pointed to by link will be
       /// pushed as "download" in HTML5 capable browsers
       let dataUrl = canvas.toDataURL('image/jpeg');
 
-      
-
-      if(this.viewer.hduId) {
-        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-        let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+      if (this.viewer.hduId) {
+        let hduEntities = this.store.selectSnapshot(
+          DataFilesState.getHduEntities
+        );
+        let headerEntities = this.store.selectSnapshot(
+          DataFilesState.getHeaderEntities
+        );
         let user = this.store.selectSnapshot(AuthState.user);
-        let header = headerEntities[hduEntities[this.viewer.hduId].headerId]
-        if(header) {
+        let header = headerEntities[hduEntities[this.viewer.hduId].headerId];
+        if (header) {
           let zeroth = {};
           let exif = {};
           let gps = {};
-          zeroth[piexif.ImageIFD.Software] = "Afterglow Access";
-          let artist = user ? `${user.firstName} ${user.lastName} (${user.username})` : '';
-          let observer = getObserver(header)
-          if(observer)  {
-            artist = artist.concat(`, ${observer}`)
+          zeroth[piexif.ImageIFD.Software] = 'Afterglow Access';
+          let artist = user
+            ? `${user.firstName} ${user.lastName} (${user.username})`
+            : '';
+          let observer = getObserver(header);
+          if (observer) {
+            artist = artist.concat(`, ${observer}`);
           }
           zeroth[piexif.ImageIFD.Artist] = artist;
 
@@ -938,25 +1145,40 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
           //   zeroth[piexif.ImageIFD.ExposureTime] = expTime;
           // }
           let startTime = getStartTime(header);
-          if(startTime) {
-            exif[piexif.ExifIFD.DateTimeOriginal] = moment(startTime).format('YYYY:MM:DD HH:mm:ss');
+          if (startTime) {
+            exif[piexif.ExifIFD.DateTimeOriginal] = moment(startTime).format(
+              'YYYY:MM:DD HH:mm:ss'
+            );
           }
-          let exifObj = {"0th":zeroth, "Exif":exif, "GPS":gps};
+          let exifObj = { '0th': zeroth, Exif: exif, GPS: gps };
           let exifStr = piexif.dump(exifObj);
-          dataUrl = piexif.insert(exifStr, dataUrl)
+          dataUrl = piexif.insert(exifStr, dataUrl);
         }
       }
-      
-
-
 
       lnk.href = dataUrl;
 
       /// create a "fake" click-event to trigger the download
       if (document.createEvent) {
         let e;
-        e = document.createEvent("MouseEvents");
-        e.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        e = document.createEvent('MouseEvents');
+        e.initMouseEvent(
+          'click',
+          true,
+          true,
+          window,
+          0,
+          0,
+          0,
+          0,
+          0,
+          false,
+          false,
+          false,
+          false,
+          0,
+          null
+        );
 
         lnk.dispatchEvent(e);
       }
