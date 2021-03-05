@@ -6,7 +6,7 @@
 
     <mat-tab label="Accessibility">
       <div class="p-3">
-        <h4 i18n>Accessibility</h4>
+        <h2 i18n>Accessibility</h2>
         <p i18n>
           IDATA, a project funded by the U.S. National Science Foundation (NSF)
           brought together blind and visually impaired (BVI) and sighted high
@@ -25,7 +25,7 @@
           because of their invaluable contribution.
         </p>
 
-        <h4 i18n>Shortcuts & Navigations</h4>
+        <h2 i18n>Shortcuts & Navigations</h2>
 
         <p i18n>
           BVI users often rely on keyboard navigation to explore the digital
@@ -35,7 +35,7 @@
           the “Shortcuts” Tab above.
         </p>
 
-        <h4 i18n>Screenreaders</h4>
+        <h2 i18n>Screenreaders</h2>
 
         <p i18n>
           Afterglow Access follows the guidelines to be as screenreader
@@ -45,7 +45,7 @@
           NVDA and Apple VoiceOver.
         </p>
 
-        <h4 i18n>Themes</h4>
+        <h2 i18n>Themes</h2>
 
         <p i18n>
           In UCD activities held by IDATA participants and co-designers, the
@@ -65,7 +65,7 @@
           top right “hamburger menu” with the title “Theme editor.”
         </p>
 
-        <h4 i18n>Sonification tool</h4>
+        <h2 i18n>Sonification tool</h2>
 
         <p i18n>
           The Sonification tool was developed as an innovative way to translate
@@ -82,7 +82,7 @@
     <mat-tab label="Keyboard Shortcuts">
       <div class="p-3">
         <div *ngFor="let group of shortcutGroups" class="shortcut-group">
-          <h4>{{ group.name }}</h4>
+          <h2>{{ group.name }}</h2>
           <table
             mat-table
             [dataSource]="group.shortcuts"
@@ -140,20 +140,28 @@
     </mat-tab>
     <mat-tab label="About Afterglow Access">
       <div class="p-3">
-        <h4 i18n>Software Development Team</h4>
+        <div style="width: 100%; text-align: left; padding: 20px 0px;">
+          Afterglow Access<br>
+          Version: {{version}}<br>
+          Build Date: {{buildDate}}<br>
+          Skynet Robotic Telescope Network<br>
+          University of North Carolina at Chapel Hill<br>
+        </div>
+
+        <hr>
+
+        <h2 i18n>Software Development Team</h2>
         <ul>
           <li>
-            Joshua Haislip - Principal Software Engineer - Skynet Robotic
-            Telescope Network
+            Joshua Haislip - Principal Software Engineer
           </li>
           <li>
-            Vladimir Kouprianov - Senior Software Engineer - Skynet Robotic
-            Telescope Network
+            Vladimir Kouprianov - Senior Software Engineer
           </li>
-          <li>Dan Reichart - Director - Skynet Robotic Telescope Network</li>
+          <li>Dan Reichart - Director</li>
         </ul>
 
-        <h4 i18n>IDATA Credits</h4>
+        <h2 i18n>IDATA Credits</h2>
 
         <p i18n>
           Innovators Developing Accessible Tools for Astronomy (IDATA),

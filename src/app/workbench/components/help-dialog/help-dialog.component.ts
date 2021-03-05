@@ -1,5 +1,6 @@
 import { Component, OnInit, Inject } from "@angular/core";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
+import { env } from '../../../../environments/environment'
 
 export interface KeyboardShortcutGroup {
   name: string;
@@ -11,7 +12,7 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
     name: "Workbench Shortcuts",
     shortcuts: [
       { key: "T", description: "Open Theme Settings" },
-      { key: "?", description: "Open Quick Start Guide" },
+      { key: "?", description: "Open Help Dialog" },
       { key: "F", description: "Open File Manager" },
       { key: "d", description: "Display Tool" },
       { key: "i", description: "File Info Tool" },
@@ -71,6 +72,8 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
   styleUrls: ["./help-dialog.component.scss"],
 })
 export class HelpDialogComponent implements OnInit {
+  version = env.version;
+  buildDate = env.buildDate;
   displayedColumns: string[] = ["key", "description"];
   shortcutGroups = KEYBOARD_SHORTCUT_GROUPS;
 

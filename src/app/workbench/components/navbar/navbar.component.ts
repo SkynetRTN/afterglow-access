@@ -49,7 +49,7 @@ export class NavbarComponent implements OnInit, OnChanges {
 
     this.shortcuts.push({
       key: '?',
-      label: 'Open Quick Start Guide',
+      label: 'Open Help Dialog',
       command: (e) => this.openQuickStartGuide(),
       preventDefault: true,
     });
@@ -59,7 +59,7 @@ export class NavbarComponent implements OnInit, OnChanges {
     this.dialog.open(HelpDialogComponent, {
       data: {},
       width: "900px",
-      maxWidth: "600px",
+      maxWidth: "900px",
     });
   }
 
