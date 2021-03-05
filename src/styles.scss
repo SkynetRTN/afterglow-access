@@ -1,34 +1,8 @@
+
 @import "~@angular/material/theming";
-// @import '~@covalent/core/theming/all-theme';
-// @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
-// @import url('https://fonts.googleapis.com/css?family=Anonymous+Pro|Lato|Roboto+Mono|Roboto');
 @import "./app-theme";
 
-// Include material core styles.
 @include mat-core();
-
-// @function afterglow-light-theme($primary, $accent, $warn: mat-palette($mat-red), $background-color: #fafafa, $foreground-color: #000000) {
-//   $theme:  mat-light-theme($primary, $accent, $warn);
-//   $background: map-get($theme, background);
-//   @debug $background;
-//   $background: map_merge($background, (background: $background-color));
-//   $theme: map_merge($theme, (background: $background));
-//   $foreground: map-get($theme, foreground);
-//   @debug $foreground;
-//   $foreground: map_merge($foreground, (foreground: $foreground-color));
-//   $theme: map_merge($theme, (foreground: $foreground));
-
-//   @return $theme;
-// }
-
-// @function afterglow-dark-theme($primary, $accent, $warn: mat-palette($mat-red), $background-color: #000000, $foreground-color: #fafafa) {
-//   $theme:  mat-dark-theme($primary, $accent, $warn);
-//   // $background: map-get($theme, background);
-//   // $background: map_merge($background, (background: $background-color));
-//   // $theme: map_merge($theme, (background: $background));
-
-//   @return $theme;
-// }
 
 //Define a light theme.
 $light-primary: mat-palette($mat-indigo, 600, 400, 800);
@@ -123,141 +97,7 @@ $dark-hc-theme: map_merge(
   }
 }
 
-.large {
-  label,
-  .h1,
-  .h2,
-  .h3,
-  .h4,
-  .h5,
-  .h6,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  th,
-  td,
-  p,
-  span,
-  input,
-  button,
-  a,
-  th,
-  td,
-  .mat-cell {
-    font-size: 1.25em;
-  }
-  .mat-slide-toggle {
-    line-height: normal;
-  }
-}
 
-.largest {
-  label,
-  .h1,
-  .h2,
-  .h3,
-  .h4,
-  .h5,
-  .h6,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  th,
-  td,
-  p,
-  span,
-  input,
-  button,
-  a,
-  th,
-  td,
-  .mat-cell {
-    font-size: 1.5em;
-  }
-  .mat-slide-toggle {
-    line-height: normal;
-  }
-}
-
-.bold {
-  label,
-  .h1,
-  .h2,
-  .h3,
-  .h4,
-  .h5,
-  .h6,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  th,
-  td,
-  p,
-  span,
-  input,
-  button,
-  a,
-  th,
-  td,
-  .mat-cell {
-    font-weight: bold;
-  }
-}
-
-.boldest {
-  label,
-  .h1,
-  .h2,
-  .h3,
-  .h4,
-  .h5,
-  .h6,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  th,
-  td,
-  p,
-  span,
-  input,
-  button,
-  a,
-  th,
-  td,
-  .mat-cell {
-    font-weight: bolder;
-  }
-}
-
-.data-provider-menu {
-  max-width: 350px !important;
-}
-
-.action-menu {
-  max-width: 450px !important;
-}
-
-// https://github.com/angular/components/issues/12171
-// don't show mat-icon until font is loaded, unless using a different font set
-// :not(.material-icons-loaded) .mat-icon:not([fontSet]) {
-//   display: none;
-// }
-
-.wf-loading body {
-  display: none;
-}
 
 $fa-font-path: "~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
@@ -266,16 +106,15 @@ $fa-font-path: "~font-awesome/fonts";
   @extend .fa-user;
 }
 
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 $custom-typography: mat-typography-config(
-  $font-family: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
-  $headline: mat-typography-level(32px, 48px, 700),
-  $body-1: mat-typography-level(16px, 24px, 500),
+  $font-family: 'Roboto'
 );
-
 @include angular-material-typography($custom-typography);
 
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
 }
 
 .mono {
@@ -289,6 +128,18 @@ body {
   width: 100%;
 }
 
+th {
+  font-weight: 500;
+}
+
+.data-provider-menu {
+  max-width: 350px !important;
+}
+
+.action-menu {
+  max-width: 450px !important;
+}
+
 .fx-workbench-outlet {
   height: 100%;
   width: 100%;
@@ -300,32 +151,6 @@ body {
   flex-direction: row;
 }
 
-/* Material Dialog */
-// .cdk-overlay-pane {
-//   max-width: 800px !important;
-// }
-
-/* Videogular 2 Player */
-
-vg-player {
-  background: rgb(240, 240, 240) !important;
-}
-
-vg-controls {
-  background: rgb(240, 240, 240) !important;
-}
-
-vg-controls * {
-  color: black !important;
-}
-
-vg-controls vg-scrub-bar-current-time .background {
-  border: 1px solid black !important;
-}
-
-vg-scrub-bar-current-time .background {
-  background-color: black !important;
-}
 
 /* fix bootstrap underlining and applying color to button font */
 a.mat-button {
@@ -348,18 +173,6 @@ label.mat-button-toggle-label {
   display: none;
 }
 
-/* fix for datatables which scroll bar is hidden, column widths don't match header widths */
-div.ui-datatable-scrollable-body {
-  overflow-y: scroll;
-}
-
-/* fix for kendo ui grid selected rows with bootstrap css theme */
-.k-grid tr.k-state-selected:hover,
-.k-grid th.k-state-selected:hover,
-.k-grid td.k-state-selected:hover {
-  background-color: rgba(0, 123, 255, 0.25);
-}
-
 .td-data-table-cell-content-wrapper {
   padding: 0px 5px 0px 5px !important;
 }
@@ -379,63 +192,8 @@ div.ui-datatable-scrollable-body {
   width: 100%;
 }
 
-// /* Material Icon */
-// /* Rules for sizing the icon. */
-// .material-icons.md-18 { font-size: 18px; }
-// .material-icons.md-24 { font-size: 24px; }
-// .material-icons.md-36 { font-size: 36px; }
-// .material-icons.md-48 { font-size: 48px; }
-
-// /* Rules for using icons as black on a light background. */
-// .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
-// .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
-
-// /* Rules for using icons as white on a dark background. */
-// .material-icons.md-light { color: rgba(255, 255, 255, 1); }
-// .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3)}
-
-.ngxp-title {
-  padding: 10px;
-  background: #fc5722;
-  color: #ffffff;
-}
-.ngxp__container {
-  background-color: #fff;
-  background-clip: border-box;
-  border: 1px solid rgba(0, 0, 0, 0.125);
-  border-radius: 0.25rem;
-  padding: 10px;
-  text-align: center;
-  z-index: 99999;
-  max-width: 400px;
-}
-
 #example10positionSelector {
   margin-top: 1em;
-}
-
-.ngxp__container[x-placement^="top"] .ngxp__arrow {
-  border-width: 10px 0px 10px 10px !important;
-  bottom: -10px !important;
-  border-color: #fc5722 transparent transparent transparent;
-}
-
-.ngxp__container[x-placement^="bottom"] .ngxp__arrow {
-  border-width: 0px 10px 10px 10px !important;
-  top: -10px !important;
-  border-color: transparent transparent #fc5722 transparent;
-}
-
-.ngxp__container[x-placement^="right"] .ngxp__arrow {
-  border-width: 10px 10px 10px 0px !important;
-  left: -10px !important;
-  border-color: transparent #fc5722 transparent transparent;
-}
-
-.ngxp__container[x-placement^="left"] .ngxp__arrow {
-  border-width: 10px 10px 0px 10px !important;
-  right: -10px !important;
-  border-color: transparent transparent transparent #fc5722;
 }
 
 /* Angular Material Tabs Full Height in Workbench View Manager */

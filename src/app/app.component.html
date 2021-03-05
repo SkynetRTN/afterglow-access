@@ -1,4 +1,4 @@
-<div *ngIf="ready$ | async; else loadingBlock" style="height: 100%; width: 100%">
+<div *ngIf="(ready$ | async); else loadingBlock" style="height: 100%; width: 100%">
   <div fxLayout="column" fxFill>
     <header fxFlex="0 0 auto" class="main-header">
       <app-navbar [dataProviders]="dataProviders$ | async" class="mat-elevation-z6" [user]="user$ | async"></app-navbar>
@@ -15,8 +15,9 @@
   <div style="height: 100%; width: 100%">
     <main fxLayout="row" class="main-content" fxFill fxLayoutAlign="center">
       <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" style="height: 100%; width: 400px;">
-        <div style="width: 100%; text-align: center">
-          <img style="width: 100%;" src="assets/img/access-logo-full-dark-theme.png" />
+        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px" style="width: 100%;">
+          <img style="height: 50px;" src="assets/img/logo_large.png"/>
+          <span style="font-size: 32px;">Afterglow Access</span>
         </div>
         
         <mat-progress-bar mode="indeterminate" color="accent"></mat-progress-bar>

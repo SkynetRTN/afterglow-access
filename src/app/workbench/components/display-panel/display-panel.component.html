@@ -8,7 +8,7 @@
 <ng-template #loadedBlock>
   <div *ngIf="hdu">
     <div>
-      <h6 i18n>Brightness and Contrast Presets</h6>
+      <h3 i18n>Brightness and Contrast Presets</h3>
       <div class="pb-1">
         <button
           mat-raised-button
@@ -47,7 +47,7 @@
     </div>
 
     <div class="pb-4 pt-1">
-      <h6 i18n>Brightness and Contrast Settings</h6>
+      <h3 i18n>Brightness and Contrast Settings</h3>
       <app-normalizer-form
         [normalizer]="hdu?.normalizer"
         (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
@@ -61,7 +61,7 @@
   </div>
 
   <div *ngIf="viewportTransform && imageTransform && imageData">
-    <h6 i18n>Image Orientation Options</h6>
+    <h3 i18n>Image Orientation Options</h3>
     <div class="pb-4">
       <!-- <button mat-raised-button class="m-1" (click)="onMirrorClick()">
         <mat-icon>flip</mat-icon>
