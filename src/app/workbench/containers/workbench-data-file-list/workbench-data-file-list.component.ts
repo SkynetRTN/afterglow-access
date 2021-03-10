@@ -243,12 +243,16 @@ export class WorkbenchDataFileListComponent implements OnDestroy {
 
   @ViewChild('selectionList', { static: true }) selectionList: MatSelectionList;
   @ViewChildren(FileListItemComponent) _items: QueryList<FileListItemComponent>;
-
+  
+  selectAllChecked$: Observable<boolean>;
+  selectAllIndeterminate$: Observable<boolean>;
   destroy$: Subject<boolean> = new Subject<boolean>();
   HduType = HduType;
   collapsedFileIds: { [id: string]: boolean } = {};
 
-  constructor(private store: Store) {}
+  constructor(private store: Store) {
+   
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

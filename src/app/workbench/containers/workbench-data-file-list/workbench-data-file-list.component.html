@@ -1,4 +1,8 @@
-<mat-selection-list #selectionList [multiple]="false" (selectionChange)="handleSelectionChange($event)">
+<mat-selection-list
+  #selectionList
+  [multiple]="false"
+  (selectionChange)="handleSelectionChange($event)"
+>
   <app-file-list-item
     *ngFor="let file of files; trackBy: trackById"
     [file]="file"

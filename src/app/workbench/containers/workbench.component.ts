@@ -255,21 +255,20 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
 
   layoutContainer$: Observable<ViewerPanelContainer>;
-
   inFullScreenMode$: Observable<boolean>;
   fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
   showSidebar$: Observable<boolean>;
   sidebarView$: Observable<SidebarView>;
+  allFiles$: Observable<DataFile[]>;
+
+  fileFilter$: Observable<string>;
+  fileFilterInput$ = new Subject<string>();
   files$: Observable<DataFile[]>;
-  fileListFilter$: Observable<string>;
-  fileListFilterInput$ = new Subject<string>();
-  filteredFileIds$: Observable<string[]>;
-  filteredFiles$: Observable<DataFile[]>;
-  filteredHdus$: Observable<IHdu[]>;
-  filteredHduIds$: Observable<string[]>;
+  hduIds$: Observable<string[]>;
+
   selectedFileIds$: Observable<string[]>;
-  fileListSelectAllChecked$: Observable<boolean>;
-  fileListSelectAllIndeterminate$: Observable<boolean>;
+  selectAllFilesChecked$: Observable<boolean>;
+  selectAllFilesIndeterminate$: Observable<boolean>;
 
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   hdus$: Observable<IHdu[]>;
@@ -364,26 +363,19 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     private dataFileService: AfterglowDataFileService,
     private jobService: JobService
   ) {
-    this.files$ = this.store
+    this.allFiles$ = this.store
       .select(DataFilesState.getFiles)
       .pipe(map((files) => files.sort((a, b) => a.name.localeCompare(b.name))));
 
-    this.fileListFilter$ = this.store.select(WorkbenchState.getFileListFilter);
-    this.fileListFilterInput$
+    //file filtering
+    this.fileFilter$ = this.store.select(WorkbenchState.getFileListFilter);
+    this.fileFilterInput$
       .pipe(takeUntil(this.destroy$), debounceTime(100))
       .subscribe((value) => {
         this.store.dispatch(new SetFileListFilter(value));
       });
-
-    this.filteredFiles$ = this.store.select(WorkbenchState.getFilteredFiles);
-    this.filteredFileIds$ = this.store.select(
-      WorkbenchState.getFilteredFileIds
-    );
-    this.selectedFileIds$ = this.store.select(
-      WorkbenchState.getSelectedFilteredFileIds
-    );
-
-    this.filteredHduIds$ = this.store
+    this.files$ = this.store.select(WorkbenchState.getFilteredFiles);
+    this.hduIds$ = this.store
       .select(WorkbenchState.getFilteredHduIds)
       .pipe(
         distinctUntilChanged(
@@ -394,20 +386,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
             a.every((value, index) => b[index] == value)
         )
       );
-    this.filteredHdus$ = this.filteredHduIds$.pipe(
-      switchMap((hduIds) => {
-        return combineLatest(
-          hduIds.map((hduId) =>
-            this.store
-              .select(DataFilesState.getHduById)
-              .pipe(map((fn) => fn(hduId)))
-          )
-        );
-      })
-    );
 
-    this.fileListSelectAllChecked$ = combineLatest(
-      this.filteredFiles$,
+    //file selection
+    this.selectedFileIds$ = this.store.select(
+      WorkbenchState.getSelectedFilteredFileIds
+    );
+    this.selectAllFilesChecked$ = combineLatest(
+      this.files$,
       this.selectedFileIds$
     ).pipe(
       map(([filteredFiles, selectedFileIds]) => {
@@ -418,8 +403,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.fileListSelectAllIndeterminate$ = combineLatest(
-      this.filteredFiles$,
+    this.selectAllFilesIndeterminate$ = combineLatest(
+      this.files$,
       this.selectedFileIds$
     ).pipe(
       map(([filteredFiles, selectedFileIds]) => {
@@ -429,6 +414,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         );
       })
     );
+
+    
+
+  
 
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
 
@@ -1435,17 +1424,21 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       preventDefault: true,
     });
 
-    let handleZoomKey = (cmd: 'in' | 'out' | 'reset' | 'fit')  => {
+    let handleZoomKey = (cmd: 'in' | 'out' | 'reset' | 'fit') => {
       let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-      if(!viewer || !viewer.viewportSize || !viewer.hduId) return;
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(viewer.hduId);
-      if(!hdu || hdu.hduType != HduType.IMAGE) return;
+      if (!viewer || !viewer.viewportSize || !viewer.hduId) return;
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(
+        viewer.hduId
+      );
+      if (!hdu || hdu.hduType != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
       let imageDataId = imageHdu.normalizedImageDataId;
-      let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById)(imageDataId);
+      let imageData = this.store.selectSnapshot(
+        DataFilesState.getImageDataById
+      )(imageDataId);
       let imageTransformId = imageHdu.imageTransformId;
       let viewportTransformId = imageHdu.viewportTransformId;
-      switch(cmd) {
+      switch (cmd) {
         case 'in': {
           this.store.dispatch(
             new ZoomBy(
@@ -1453,11 +1446,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               imageTransformId,
               viewportTransformId,
               viewer.viewportSize,
-              1.0/0.75,
+              1.0 / 0.75,
               null
             )
           );
-          break
+          break;
         }
         case 'out': {
           this.store.dispatch(
@@ -1470,7 +1463,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               null
             )
           );
-          break
+          break;
         }
         case 'reset': {
           this.store.dispatch(
@@ -1483,23 +1476,27 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               null
             )
           );
-          break
+          break;
         }
         case 'fit': {
           this.store.dispatch(
-            new CenterRegionInViewport(imageDataId, imageTransformId, viewportTransformId, viewer.viewportSize, {
-              x: 1,
-              y: 1,
-              width: imageData.width,
-              height: imageData.height,
-            })
+            new CenterRegionInViewport(
+              imageDataId,
+              imageTransformId,
+              viewportTransformId,
+              viewer.viewportSize,
+              {
+                x: 1,
+                y: 1,
+                width: imageData.width,
+                height: imageData.height,
+              }
+            )
           );
-          break
+          break;
         }
       }
-    
-
-    }
+    };
 
     this.shortcuts.push({
       key: '=',
@@ -1528,8 +1525,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       command: (e) => handleZoomKey('fit'),
       preventDefault: true,
     });
-
-
   }
 
   getViewerLabel(viewer: Viewer, index: number) {
@@ -2160,8 +2155,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     this.store.dispatch(new SetFileListFilter(''));
   }
 
-  toggleFileListSelectAll($event: MatCheckboxChange) {
-    if ($event.checked) {
+  handleSelectAllFilesChange(value: boolean) {
+    if (value) {
       // selectall
       let filteredFiles = this.store.selectSnapshot(
         WorkbenchState.getFilteredFiles
@@ -2173,12 +2168,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-
-
   // onFileListItemClick(item: IFileListItemId) {
   //   this.store.dispatch(new SelectDataFileListItem(item));
   // }
-
 
   afterLibrarySync() {
     this.store.dispatch(new LoadLibrary());
@@ -3032,13 +3024,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           );
           if (surveyFileId && surveyFileId in hduEntities) {
             let hdu = hduEntities[surveyFileId];
-            this.store.dispatch(
-              new SelectFile(
-                hdu.fileId,
-                hdu.id,
-                true
-              )
-            );
+            this.store.dispatch(new SelectFile(hdu.fileId, hdu.id, true));
           }
         },
         (err) => {},
