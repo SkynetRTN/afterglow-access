@@ -80,6 +80,7 @@ import { JobProgressDialogComponent } from "./components/job-progress-dialog/job
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
 import { SvgApertureMarkerComponent } from './components/svg-aperture-marker/svg-aperture-marker.component';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
+import { FileListItemToolbarComponent } from './components/file-list-item-toolbar/file-list-item-toolbar.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -122,6 +123,7 @@ export const COMPONENTS = [
   FileListItemComponent,
   JobProgressDialogComponent,
   WcsCalibrationPanelComponent,
+  FileListItemToolbarComponent
 ];
 
 @NgModule({

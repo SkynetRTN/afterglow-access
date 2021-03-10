@@ -1,0 +1,47 @@
+<div
+fxFlex="0 0 auto"
+fxAlign="row"
+class="node-buttons"
+>
+<button
+  fxFlex="0 0 auto"
+  *ngIf="showSave"
+  mat-icon-button
+  class="small m-1"
+  aria-label="Save File"
+  (click)="onSave.emit($event)"
+  matTooltip="Save File"
+  matTooltipShowDelay="500"
+>
+  <mat-icon>save</mat-icon>
+</button>
+<button
+  fxFlex="0 0 auto"
+  *ngIf="showClose; else modifiedIcon"
+  mat-icon-button
+  class="small m-1"
+  aria-label="Close File"
+  (click)="onClose.emit($event)"
+  matTooltip="Close File"
+  matTooltipShowDelay="500"
+>
+  <mat-icon>clear</mat-icon>
+</button>
+<ng-template #modifiedIcon>
+  <mat-icon
+    fxFlex="0 0 auto"
+    *ngIf="modified"
+    class="small m-1"
+    aria-label="modified"
+    >fiber_manual_record</mat-icon
+  >
+</ng-template>
+<div fxFlex="0 0 auto">
+  <mat-checkbox
+    class="m-1"
+    *ngIf="showSelect"
+    [ngModel]="selected"
+    (click)="onToggleSelection.emit($event)"
+  ></mat-checkbox>
+</div>
+</div>

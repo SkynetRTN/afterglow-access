@@ -10,7 +10,7 @@ import { Observable, Subject, BehaviorSubject } from "rxjs";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { map, distinctUntilChanged, tap, take, takeUntil } from "rxjs/operators";
 import { LoadLibrary } from "../../../data-files/data-files.actions";
-import { FocusFileListItem } from "../../../workbench/workbench.actions";
+import { SelectFile } from "../../../workbench/workbench.actions";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { DataProviderAsset } from "../../models/data-provider-asset";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
@@ -102,7 +102,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
         this.store.dispatch(new LoadLibrary()).subscribe(() => {
           if (action.fileIds.length != 0) {
             let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]];
-            this.store.dispatch(new FocusFileListItem({ fileId: hdu.fileId, hduId: hdu.id }));
+            this.store.dispatch(new SelectFile(hdu.fileId, hdu.id));
           }
         });
         this.dialogRef.close();

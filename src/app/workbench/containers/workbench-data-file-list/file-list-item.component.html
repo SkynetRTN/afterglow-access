@@ -1,100 +1,108 @@
-<ng-container *ngIf="file$ | async; let file">
-  <mat-list-option
-    #option
-    [value]="{ fileId: file?.id, hduId: null }"
-    [class.expandable]="(hdus$ | async)?.length > 1"
-    [selected]="focusedItem && focusedItem.fileId == file.id && focusedItem.hduId == null"
-    (dblclick)="onItemDoubleClick.emit(option.value)"
+<mat-list-option
+  #option
+  *ngIf="expandable$ | async"
+  [value]="{ fileId: file?.id, hduId: '' }"
+  class="expandable"
+  [selected]="active && activeHduId === ''"
+  (dblclick)="onItemDoubleClick.emit(option.value)"
+>
+  <!-- {{focusedItem.fileId}} - {{focusedItem.hduId}} -->
+  <div
+    class="item-wrapper"
+    fxLayout="row"
+    fxLayoutAlign="start center"
+    fxFlexFill
   >
-    <!-- {{focusedItem.fileId}} - {{focusedItem.hduId}} -->
-    <div class="item-wrapper" fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
-      <div fxFlex="0 0 auto" style="padding-right: 5px">
-        <button
-          *ngIf="(hdus$ | async).length > 1; else hduTypeIcon"
-          mat-icon-button
-          [attr.aria-label]="'Toggle ' + file.name"
-          (click)="toggleExpanded($event)"
-          class="small toggle-button"
-        >
-          <mat-icon class="mat-icon-rtl-mirror">
-            {{ !expanded ? "expand_more" : "chevron_right" }}
-          </mat-icon>
-        </button>
-        <ng-template #hduTypeIcon>
-          <mat-icon class="mat-icon small">
-            {{ (hdus$ | async)[0]?.hduType == HduType.IMAGE ? "insert_photo" : "toc" }}
-          </mat-icon>
-        </ng-template>
-      </div>
-
-      <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 15px">
-        <span [matTooltip]="fileTooltip$ | async" [matTooltipShowDelay]="750">{{ file.name }}</span>
-      </div>
-      <div fxFlex="0 0 auto" fxAlign="row" class="node-buttons" *ngIf="hasFocus || (modified$ | async) || !autoHideCheckbox">
-        <button
-          fxFlex="0 0 auto"
-          *ngIf="hasFocus"
-          mat-icon-button
-          class="small m-1"
-          aria-label="Save File"
-          (click)="save($event)"
-          matTooltip="Save File"
-          matTooltipShowDelay="500"
-        >
-          <mat-icon>save</mat-icon>
-        </button>
-        <button
-          fxFlex="0 0 auto"
-          *ngIf="hasFocus; else modifiedIcon"
-          mat-icon-button
-          class="small m-1"
-          aria-label="Close File"
-          (click)="close($event)"
-          matTooltip="Close File"
-          matTooltipShowDelay="500"
-        >
-          <mat-icon>clear</mat-icon>
-        </button>
-        <ng-template #modifiedIcon>
-          <mat-icon fxFlex="0 0 auto" *ngIf="modified$ | async" class="small m-1" aria-label="modified"
-            >fiber_manual_record</mat-icon
-          >
-        </ng-template>
-        <div fxFlex="0 0 auto">
-          <mat-checkbox
-            class="m-1"
-            *ngIf="!autoHideCheckbox || hasFocus"
-            [ngModel]="selected"
-            (click)="toggleCheckbox($event)"
-          ></mat-checkbox>
-        </div>
-      </div>
-    </div>
-  </mat-list-option>
-  <ng-container *ngIf="hdus$ | async; let hdus">
-    <ng-container *ngIf="hdus.length > 1 && expanded">
-      <mat-list-option
-        #option
-        *ngFor="let hdu of hdus; let i = index"
-        [value]="{ fileId: file.id, hduId: hdu.id }"
-        [selected]="focusedItem && focusedItem.fileId == file.id && focusedItem.hduId == hdu.id"
-        class="nested"
-        (dblclick)="onItemDoubleClick.emit(option.value)"
+    <div fxFlex="0 0 auto" style="padding-right: 5px">
+      <button
+        mat-icon-button
+        [attr.aria-label]="'Toggle ' + file.name"
+        (click)="handleToggleExpanded($event)"
+        class="small toggle-button"
       >
-        <div class="item-wrapper" fxLayout="row" fxLayoutAlign="start center" fxFlexFill>
-          <div fxFlex="0 0 auto" style="padding-right: 5px">
-            <mat-icon class="mat-icon small">
-              {{ hdu?.hduType == HduType.IMAGE ? "insert_photo" : "toc" }}
-            </mat-icon>
-          </div>
+        <mat-icon class="mat-icon-rtl-mirror">
+          {{ !expanded ? "expand_more" : "chevron_right" }}
+        </mat-icon>
+      </button>
+    </div>
 
-          <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 15px">
-            <span [matTooltip]="(fileTooltip$ | async)" [matTooltipShowDelay]="750"
-              >{{getHduLabel(hdu, i)}}</span
-            >
-          </div>
+    <div
+      fxFlex="1 1 auto"
+      style="
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 15px;
+      "
+    >
+      <span [matTooltip]="fileTooltip$ | async" [matTooltipShowDelay]="750">{{
+        file.name
+      }}</span>
+    </div>
+    <app-file-list-item-toolbar
+      *ngIf="hasFocus || (modified$ | async) || !autoHideCheckbox"
+      [showSave]="hasFocus"
+      [showClose]="hasFocus"
+      [showSelect]="!autoHideCheckbox || hasFocus"
+      [modified]="modified$ | async"
+      [selected]="selected"
+      (onSave)="handleSave($event)"
+      (onClose)="handleClose($event)"
+      (onToggleSelection)="handleToggleSelection($event)"
+    >
+    </app-file-list-item-toolbar>
+  </div>
+</mat-list-option>
+<ng-container *ngIf="hdus$ | async; let hdus">
+  <ng-container *ngIf="hdus.length == 1 || expanded">
+    <mat-list-option
+      #option
+      *ngFor="let hdu of hdus; let i = index"
+      [value]="{ fileId: file?.id, hduId: hdu?.id }"
+      [selected]="active && activeHduId === hdu.id"
+      [class.nested]="hdus.length > 1"
+      (dblclick)="onItemDoubleClick.emit(option.value)"
+    >
+      <div
+        class="item-wrapper"
+        fxLayout="row"
+        fxLayoutAlign="start center"
+        fxFlexFill
+      >
+        <div fxFlex="0 0 auto" style="padding-right: 5px">
+          <mat-icon class="mat-icon small">
+            {{ hdu?.hduType == HduType.IMAGE ? "insert_photo" : "toc" }}
+          </mat-icon>
         </div>
-      </mat-list-option>
-    </ng-container>
+
+        <div
+          fxFlex="1 1 auto"
+          style="
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 15px;
+          "
+        >
+          <span
+            [matTooltip]="fileTooltip$ | async"
+            [matTooltipShowDelay]="750"
+            >{{ getHduLabel(hdu, i) }}</span
+          >
+        </div>
+        <app-file-list-item-toolbar
+          *ngIf="!(expandable$ | async) && (hasFocus || (modified$ | async) || !autoHideCheckbox)"
+          [showSave]="hasFocus"
+          [showClose]="hasFocus"
+          [showSelect]="!autoHideCheckbox || hasFocus"
+          [modified]="modified$ | async"
+          [selected]="selected"
+          (onSave)="handleSave($event)"
+          (onClose)="handleClose($event)"
+          (onToggleSelection)="handleToggleSelection($event)"
+        >
+        </app-file-list-item-toolbar>
+      </div>
+    </mat-list-option>
   </ng-container>
 </ng-container>

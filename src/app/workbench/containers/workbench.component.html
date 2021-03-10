@@ -231,9 +231,7 @@
               #fileList
               [files]="filteredFiles$ | async"
               [selectedFileIds]="selectedFileIds$ | async"
-              [focusedItem]="focusedDataFileListItem$ | async"
-              (onFocusedItemChange)="onFileListFocusedItemChange($event)"
-              (onItemDoubleClick)="onFileListItemDoubleClick($event)"
+              [focusedViewer]="focusedViewer$ | async"
               (onSaveFile)="onSaveFileBtnClick($event)"
               (onCloseFile)="onCloseFileBtnClick($event)"
             >

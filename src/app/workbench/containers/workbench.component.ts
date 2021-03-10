@@ -67,7 +67,7 @@ import {
   ShowSidebar,
   LoadCatalogs,
   LoadFieldCals,
-  FocusFileListItem,
+  SelectFile,
   SetSidebarView,
   ToggleShowConfig,
   SetViewMode,
@@ -2173,37 +2173,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  onFileListFocusedItemChange(item: { fileId: string; hduId: string }) {
-    let fileEntities = this.store.selectSnapshot(
-      DataFilesState.getFileEntities
-    );
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let fileId = item.fileId;
-    let hduId = item.hduId;
-    if (!hduId) {
-      let file = fileEntities[fileId];
-      if (file && file.hduIds.length == 1) {
-        //if a single-hdu file is selected,  automatically select the hdu
-        hduId = file.hduIds[0];
-      }
-    }
-    this.store.dispatch(
-      new FocusFileListItem({ fileId: fileId, hduId: hduId })
-    );
-  }
+
 
   // onFileListItemClick(item: IFileListItemId) {
   //   this.store.dispatch(new SelectDataFileListItem(item));
   // }
 
-  onFileListItemDoubleClick(item: { fileId: string; hduId: string }) {
-    let focusedViewer = this.store.selectSnapshot(
-      WorkbenchState.getFocusedViewer
-    );
-    if (focusedViewer) {
-      this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
-    }
-  }
 
   afterLibrarySync() {
     this.store.dispatch(new LoadLibrary());
@@ -3058,11 +3033,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           if (surveyFileId && surveyFileId in hduEntities) {
             let hdu = hduEntities[surveyFileId];
             this.store.dispatch(
-              new FocusFileListItem(
-                {
-                  fileId: hdu.fileId,
-                  hduId: hdu.id,
-                },
+              new SelectFile(
+                hdu.fileId,
+                hdu.id,
                 true
               )
             );

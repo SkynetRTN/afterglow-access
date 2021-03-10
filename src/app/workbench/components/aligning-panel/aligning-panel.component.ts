@@ -9,7 +9,7 @@ import { AlignmentJob, AlignmentJobResult } from "../../../jobs/models/alignment
 import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { WorkbenchState } from "../../workbench.state";
-import { CreateAlignmentJob, UpdateAligningPanelConfig, FocusFileListItem } from "../../workbench.actions";
+import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile } from "../../workbench.actions";
 import { JobsState } from "../../../jobs/jobs.state";
 import { ImageHdu, DataFile, Header } from "../../../data-files/models/data-file";
 import { DataFilesState } from "../../../data-files/data-files.state";

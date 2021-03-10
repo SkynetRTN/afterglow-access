@@ -5,7 +5,7 @@ import { Observable, Subject, BehaviorSubject, combineLatest } from "rxjs";
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { map, distinctUntilChanged, tap, take, takeUntil, withLatestFrom } from "rxjs/operators";
 import { LoadLibrary } from "../../../data-files/data-files.actions";
-import { FocusFileListItem } from "../../../workbench/workbench.actions";
+import { SelectFile } from "../../../workbench/workbench.actions";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { DataProviderAsset } from "../../models/data-provider-asset";
 import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";

@@ -57,10 +57,10 @@ export class SetFullScreenPanel {
   constructor(public panel: "file" | "viewer" | "tool") { }
 }
 
-export class FocusFileListItem {
-  public static readonly type = "[Workbench] Focus File List Item";
+export class SelectFile {
+  public static readonly type = "[Workbench] Select File";
 
-  constructor(public item: { fileId: string; hduId: string }, public keepOpen: boolean = false) { }
+  constructor(public fileId: string, public hduId: string = '', public keepOpen: boolean = false) { }
 }
 
 export class ToggleFileSelection {

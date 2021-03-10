@@ -1,14 +1,15 @@
-<mat-selection-list #selectionList [multiple]="false" (selectionChange)="onFocusedItemChange.emit($event.option.value); this.focusedItem=$event.option.value">
+<mat-selection-list #selectionList [multiple]="false" (selectionChange)="handleSelectionChange($event)">
   <app-file-list-item
-    *ngFor="let file of files"
-    [fileId]="file.id"
-    [focusedItem]="focusedItem"
+    *ngFor="let file of files; trackBy: trackById"
+    [file]="file"
+    [active]="focusedViewer?.fileId == file?.id"
+    [activeHduId]="focusedViewer?.hduId"
     [expanded]="!collapsedFileIds[file.id]"
     [selected]="selectedFileIds.includes(file.id)"
     [autoHideCheckbox]="selectedFileIds.length == 0"
-    (onToggleExpanded)="onToggleExpanded(file.id)"
-    (onToggleSelection)="onToggleSelection($event)"
-    (onItemDoubleClick)="onItemDoubleClick.emit($event)"
+    (onToggleExpanded)="handleToggleExpanded($event)"
+    (onToggleSelection)="handleToggleSelection($event)"
+    (onItemDoubleClick)="handleItemDoubleClick($event)"
     (onClose)="onCloseFile.emit($event)"
     (onSave)="onSaveFile.emit($event)"
   >

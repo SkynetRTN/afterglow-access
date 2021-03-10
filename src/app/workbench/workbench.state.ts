@@ -41,7 +41,7 @@ import {
   InvalidateHeader,
 } from "../data-files/data-files.actions";
 import {
-  FocusFileListItem,
+  SelectFile,
   RemoveViewerLayoutItem,
   SetFocusedViewer,
   SetViewerData as SetViewerFile,
@@ -2188,25 +2188,25 @@ export class WorkbenchState {
     });
   }
 
-  @Action(FocusFileListItem)
+  @Action(SelectFile)
   @ImmutableContext()
-  public focusFileListItem(
+  public selectFile(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { item, keepOpen }: FocusFileListItem
+    { fileId, hduId, keepOpen }: SelectFile
   ) {
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
-    let file = fileEntities[item.fileId];
+    let file = fileEntities[fileId];
     let workbenchFileState = state.fileStateEntities[file.id];
-    let hdu = item.hduId ? hduEntities[item.hduId] : null;
+    let hdu = hduId ? hduEntities[hduId] : null;
     let workbenchHduState = hdu ? state.hduStateEntities[hdu.id] : null;
 
     let viewers = Object.values(state.viewers);
 
     //check if file is already open
-    let targetViewer = viewers.find((viewer) => viewer.fileId == item.fileId && viewer.hduId == item.hduId);
+    let targetViewer = viewers.find((viewer) => viewer.fileId == fileId && viewer.hduId == hduId);
     if (targetViewer) {
       dispatch(new SetFocusedViewer(targetViewer.id));
       if (keepOpen && !targetViewer.keepOpen) {
