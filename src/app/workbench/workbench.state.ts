@@ -711,9 +711,9 @@ export class WorkbenchState {
         return null;
       }
 
-      let normalizedImageDataId = fileEntities[viewer.fileId].compositeImageDataId;
+      let normalizedImageDataId = fileEntities[viewer.fileId].imageDataId;
       if (viewer.hduId) {
-        normalizedImageDataId = (hduEntities[viewer.hduId] as ImageHdu).normalizedImageDataId;
+        normalizedImageDataId = (hduEntities[viewer.hduId] as ImageHdu).imageDataId;
       }
 
       if (!normalizedImageDataId) {
@@ -2248,9 +2248,9 @@ export class WorkbenchState {
       let imageDataId: string = "";
       if (hdu) {
         headerId = hdu.headerId;
-        imageDataId = (hdu as ImageHdu).normalizedImageDataId;
+        imageDataId = (hdu as ImageHdu).imageDataId;
       } else {
-        imageDataId = file.compositeImageDataId;
+        imageDataId = file.imageDataId;
 
         //use header from first image hdu
         let firstImageHduId = file.hduIds.find((hduId) => hduEntities[hduId].hduType == HduType.IMAGE);

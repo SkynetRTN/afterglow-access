@@ -1052,7 +1052,7 @@ export class WorkbenchImageViewerComponent
         return;
 
       let normalizedImageData =
-        imageDataEntities[(hdu as ImageHdu).normalizedImageDataId];
+        imageDataEntities[(hdu as ImageHdu).imageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
         loadComposite = false;
         return;

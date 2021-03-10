@@ -125,7 +125,7 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../utils/correlated-action';
 import { DataProvidersState } from '../../data-providers/data-providers.state';
 import { Navigate } from '@ngxs/router-plugin';
-import { WorkbenchImageHduState } from '../models/workbench-file-state';
+import { WorkbenchImageHduState, WorkbenchFileState } from '../models/workbench-file-state';
 import {
   WorkbenchTool,
   PlottingPanelConfig,
@@ -270,8 +270,29 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   selectAllFilesChecked$: Observable<boolean>;
   selectAllFilesIndeterminate$: Observable<boolean>;
 
-  fileEntities$: Observable<{ [id: string]: DataFile }>;
+  viewer$: Observable<Viewer>;
+  viewerId$: Observable<string>;
+  canSplit$: Observable<boolean>;
+  imageViewer$: Observable<ImageViewer>;
+  imageViewerId$: Observable<string>;
+  tableViewer$: Observable<TableViewer>;
+  fileId$: Observable<string>;
+  file$: Observable<DataFile>;
+  workbenchFileState$: Observable<WorkbenchFileState>;
   hdus$: Observable<IHdu[]>;
+  imageHdus$: Observable<ImageHdu[]>;
+  hduId$: Observable<string>;
+  hdu$: Observable<IHdu>;
+
+
+
+  focusedViewerFileLastActiveHduHeader$: Observable<Header>;
+  focusedViewerFileLastActiveImageHduId$: Observable<string>;
+  focusedViewerFileLastActiveImageHdu$: Observable<ImageHdu>;
+
+
+  fileEntities$: Observable<{ [id: string]: DataFile }>;
+  // hdus$: Observable<IHdu[]>;
   loadingFiles$: Observable<boolean>;
 
   viewMode$: Observable<ViewMode>;
@@ -287,18 +308,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   activeTool$: Observable<WorkbenchTool>;
   showConfig$: Observable<boolean>;
 
-  focusedViewer$: Observable<Viewer>;
-  focusedViewerId$: Observable<string>;
-  canSplitFocusedViewer$: Observable<boolean>;
-  focusedImageViewer$: Observable<ImageViewer>;
-  focusedImageViewerId$: Observable<string>;
-  focusedTableViewer$: Observable<TableViewer>;
-  focusedViewerFileId$: Observable<string>;
-  focusedViewerFile$: Observable<DataFile>;
-  focusedViewerFileHduList$: Observable<IHdu[]>;
-  focusedViewerFileImageHduList$: Observable<ImageHdu[]>;
-  focusedViewerHduId$: Observable<string>;
-  focusedViewerHdu$: Observable<IHdu>;
+  
+
   focusedViewerImageHdu$: Observable<ImageHdu>;
   focusedViewerHeader$: Observable<Header>;
   focusedViewerWcs$: Observable<Wcs>;
@@ -334,12 +345,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   centroidSettings$: Observable<CentroidSettings>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
-  focusedViewerFileLastActiveHduId$: Observable<string>;
-  focusedViewerFileLastActiveHdu$: Observable<IHdu>;
-  focusedViewerFileLastActiveHduHeader$: Observable<Header>;
-  focusedViewerFileLastActiveImageHduId$: Observable<string>;
-  focusedViewerFileLastActiveImageHdu$: Observable<ImageHdu>;
-
+  
   focusedDataFileListItem$: Observable<{ fileId: string; hduId: string }>;
 
   fileLoaderSub: Subscription;
@@ -369,12 +375,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
     //file filtering
     this.fileFilter$ = this.store.select(WorkbenchState.getFileListFilter);
+
     this.fileFilterInput$
       .pipe(takeUntil(this.destroy$), debounceTime(100))
       .subscribe((value) => {
         this.store.dispatch(new SetFileListFilter(value));
       });
+
     this.files$ = this.store.select(WorkbenchState.getFilteredFiles);
+
     this.hduIds$ = this.store
       .select(WorkbenchState.getFilteredHduIds)
       .pipe(
@@ -391,6 +400,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedFileIds$ = this.store.select(
       WorkbenchState.getSelectedFilteredFileIds
     );
+
     this.selectAllFilesChecked$ = combineLatest(
       this.files$,
       this.selectedFileIds$
@@ -415,73 +425,34 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    
-
-  
-
-    this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
-
-    this.hdus$ = this.store.select(DataFilesState.getHdus).pipe(
-      map((hdus) => {
-        let fileEntities = this.store.selectSnapshot(
-          DataFilesState.getFileEntities
-        );
-        return hdus.sort((a, b) =>
-          fileEntities[a.fileId].name > fileEntities[b.fileId].name
-            ? 1
-            : a.fileId === b.fileId
-            ? a.order > b.order
-              ? 1
-              : -1
-            : -1
-        );
-      })
-    );
-
+    // viewers
     this.viewers$ = this.store.select(WorkbenchState.getViewers);
 
-    this.focusedViewer$ = this.store.select(WorkbenchState.getFocusedViewer);
-    this.focusedViewerId$ = this.store.select(
-      WorkbenchState.getFocusedViewerId
-    );
+    this.viewer$ = this.store.select(WorkbenchState.getFocusedViewer);
 
-    this.canSplitFocusedViewer$ = this.store
+    this.viewerId$ = this.store.select(WorkbenchState.getFocusedViewerId);
+
+    this.canSplit$ = this.store
       .select(WorkbenchState.getViewers)
       .pipe(map((viewers) => viewers && viewers.length > 1));
 
-    this.focusedImageViewer$ = this.store.select(
-      WorkbenchState.getFocusedImageViewer
-    );
-    this.focusedImageViewerId$ = this.focusedImageViewer$.pipe(
+    this.imageViewer$ = this.store.select(WorkbenchState.getFocusedImageViewer);
+
+    this.imageViewerId$ = this.imageViewer$.pipe(
       map((imageViewer) => (imageViewer ? imageViewer.id : null)),
       distinctUntilChanged()
     );
-    this.focusedTableViewer$ = this.store.select(
-      WorkbenchState.getFocusedTableViewer
-    );
 
-    this.focusedViewerFile$ = this.store.select(
-      WorkbenchState.getFocusedViewerFile
-    );
-    this.focusedViewerFileId$ = this.focusedViewerFile$.pipe(
+    this.tableViewer$ = this.store.select(WorkbenchState.getFocusedTableViewer);
+
+    this.file$ = this.store.select(WorkbenchState.getFocusedViewerFile);
+
+    this.fileId$ = this.file$.pipe(
       map((file) => (file ? file.id : null)),
       distinctUntilChanged()
     );
-    this.focusedViewerHdu$ = this.store.select(
-      WorkbenchState.getFocusedViewerHdu
-    );
-    this.focusedViewerHduId$ = this.focusedViewerHdu$.pipe(
-      map((hdu) => (hdu ? hdu.id : null)),
-      distinctUntilChanged()
-    );
-    this.focusedViewerImageHdu$ = this.store.select(
-      WorkbenchState.getFocusedViewerImageHdu
-    );
-    this.focusedViewerViewportSize$ = this.store.select(
-      WorkbenchState.getFocusedViewerViewportSize
-    );
 
-    this.focusedViewerFileHduList$ = this.focusedViewerFile$.pipe(
+    this.hdus$ = this.file$.pipe(
       distinctUntilChanged(
         (a, b) =>
           a &&
@@ -503,7 +474,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.focusedViewerFileImageHduList$ = this.focusedViewerFileHduList$.pipe(
+    this.imageHdus$ = this.hdus$.pipe(
       map((hdus) =>
         !hdus
           ? null
@@ -511,39 +482,56 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       )
     );
 
-    this.focusedViewerFileLastActiveHduId$ = combineLatest([
-      this.focusedViewerFile$,
-      this.focusedViewerHdu$,
-      this.focusedViewerFileHduList$,
-    ]).pipe(
-      switchMap(([file, hdu, allHdus]) => {
-        if (!file || !allHdus) {
-          return of(null);
-        }
-        if (hdu) {
-          //use the HDU assigned to the viewer
-          return of(hdu.id);
-        }
-        if (allHdus.length == 1) {
-          //if composite file assigned to viewer only has one image hdu,  use it
-          return of(allHdus[0].id);
-        }
-        return this.store
-          .select(WorkbenchState.getFileStateById)
-          .pipe(map((fn) => fn(file.id).selectedHduId));
-      }),
+    this.hdu$ = this.store.select(WorkbenchState.getFocusedViewerHdu);
+
+    this.hduId$ = this.hdu$.pipe(
+      map((hdu) => (hdu ? hdu.id : null)),
       distinctUntilChanged()
     );
 
-    this.focusedViewerFileLastActiveHdu$ = this.focusedViewerFileLastActiveHduId$.pipe(
-      switchMap((hduId) =>
-        this.store
-          .select(DataFilesState.getHduById)
-          .pipe(map((fn) => fn(hduId)))
-      )
+
+   
+
+    this.workbenchFileState$ = this.fileId$.pipe(
+      switchMap(fileId => this.store.select(WorkbenchState.getFileStateById).pipe(
+        map(fn => fn(fileId))
+      ))
+    )
+
+
+
+
+    this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
+
+    // this.hdus$ = this.store.select(DataFilesState.getHdus).pipe(
+    //   map((hdus) => {
+    //     let fileEntities = this.store.selectSnapshot(
+    //       DataFilesState.getFileEntities
+    //     );
+    //     return hdus.sort((a, b) =>
+    //       fileEntities[a.fileId].name > fileEntities[b.fileId].name
+    //         ? 1
+    //         : a.fileId === b.fileId
+    //         ? a.order > b.order
+    //           ? 1
+    //           : -1
+    //         : -1
+    //     );
+    //   })
+    // );
+
+    this.focusedViewerImageHdu$ = this.store.select(
+      WorkbenchState.getFocusedViewerImageHdu
+    );
+    this.focusedViewerViewportSize$ = this.store.select(
+      WorkbenchState.getFocusedViewerViewportSize
     );
 
-    this.focusedViewerFileLastActiveHduHeader$ = this.focusedViewerFileLastActiveHdu$.pipe(
+   
+
+    
+
+    this.focusedViewerFileLastActiveHduHeader$ = this.hdu$.pipe(
       switchMap((hdu) =>
         this.store
           .select(DataFilesState.getHeaderById)
@@ -551,7 +539,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       )
     );
 
-    this.focusedViewerFileLastActiveImageHduId$ = this.focusedViewerFileLastActiveHdu$.pipe(
+    this.focusedViewerFileLastActiveImageHduId$ = this.hdu$.pipe(
       map((hdu) => (!hdu || hdu.hduType != HduType.IMAGE ? null : hdu.id)),
       distinctUntilChanged()
     );
@@ -564,7 +552,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       )
     );
 
-    this.focusedViewerRawImageData$ = this.focusedImageViewerId$.pipe(
+    this.focusedViewerRawImageData$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getRawImageDataIdFromViewerId)
@@ -580,7 +568,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.focusedViewerNormalizedImageData$ = this.focusedImageViewerId$.pipe(
+    this.focusedViewerNormalizedImageData$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getNormalizedImageDataIdFromViewerId)
@@ -596,7 +584,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.focusedViewerImageTransform$ = this.focusedImageViewerId$.pipe(
+    this.focusedViewerImageTransform$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getImageTransformIdFromViewerId)
@@ -612,7 +600,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.focusedViewerViewportTransform$ = this.focusedImageViewerId$.pipe(
+    this.focusedViewerViewportTransform$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getViewportTransformIdFromViewerId)
@@ -640,7 +628,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.focusedViewerHeader$ = this.focusedImageViewerId$.pipe(
+    this.focusedViewerHeader$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getFirstImageHeaderIdFromViewerId)
@@ -662,7 +650,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       distinctUntilChanged()
     );
 
-    this.focusedDataFileListItem$ = this.focusedViewer$.pipe(
+    this.focusedDataFileListItem$ = this.viewer$.pipe(
       distinctUntilChanged(
         (a, b) => a && b && a.fileId == b.fileId && a.hduId == b.hduId
       ),
@@ -732,7 +720,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     /* CUSTOM MARKER PANEL */
-    this.customMarkerPanelState$ = this.focusedImageViewerId$.pipe(
+    this.customMarkerPanelState$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)
@@ -771,7 +759,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.plottingPanelState$ = this.focusedImageViewerId$.pipe(
+    this.plottingPanelState$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getPlottingPanelStateIdFromViewerId)
@@ -792,7 +780,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     /* SONIFICATION PANEL */
-    this.sonificationPanelState$ = this.focusedImageViewerId$.pipe(
+    this.sonificationPanelState$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getSonificationPanelStateIdFromViewerId)
@@ -813,7 +801,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       WorkbenchState.getPhotometryPanelConfig
     );
 
-    this.photometryPanelState$ = this.focusedImageViewerId$.pipe(
+    this.photometryPanelState$ = this.imageViewerId$.pipe(
       switchMap((viewerId) => {
         return this.store
           .select(WorkbenchState.getPhotometryPanelStateIdFromViewerId)
@@ -839,7 +827,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         map((config) => config.showSourcesFromAllFiles),
         distinctUntilChanged()
       ),
-      this.focusedViewerHduId$,
+      this.hduId$,
       this.focusedViewerHeader$
     ).pipe(
       filter(
@@ -927,7 +915,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       );
 
-    this.transformationSyncSub = this.focusedViewerId$
+    this.transformationSyncSub = this.viewerId$
       .pipe(
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
@@ -1053,7 +1041,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       );
 
-    this.normalizationSyncSub = this.focusedViewerId$
+    this.normalizationSyncSub = this.viewerId$
       .pipe(
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
@@ -1101,7 +1089,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       );
 
-    this.plottingPanelSyncSub = this.focusedViewerId$
+    this.plottingPanelSyncSub = this.viewerId$
       .pipe(
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
@@ -1432,7 +1420,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       );
       if (!hdu || hdu.hduType != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
-      let imageDataId = imageHdu.normalizedImageDataId;
+      let imageDataId = imageHdu.imageDataId;
       let imageData = this.store.selectSnapshot(
         DataFilesState.getImageDataById
       )(imageDataId);
@@ -1525,6 +1513,44 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       command: (e) => handleZoomKey('fit'),
       preventDefault: true,
     });
+  }
+
+  getActiveToolName(activeTool: string) {
+    switch (activeTool) {
+      case WorkbenchTool.VIEWER: {
+        return 'Display Settings';
+      }
+      case WorkbenchTool.INFO: {
+        return 'File Info';
+      }
+      case WorkbenchTool.CUSTOM_MARKER: {
+        return 'Custom Marker';
+      }
+      case WorkbenchTool.PLOTTER: {
+        return 'Plotter';
+      }
+      case WorkbenchTool.SONIFIER: {
+        return 'Sonifier';
+      }
+      case WorkbenchTool.PHOTOMETRY: {
+        return 'Photometry';
+      }
+      case WorkbenchTool.IMAGE_CALC: {
+        return 'Image Calculator';
+      }
+      case WorkbenchTool.WCS_CALIBRATION: {
+        return 'WCS Calibration';
+      }
+      case WorkbenchTool.ALIGNER: {
+        return 'Aligner';
+      }
+      case WorkbenchTool.STACKER: {
+        return 'Aligner';
+      }
+      default: {
+        return 'Unknown Tool';
+      }
+    }
   }
 
   getViewerLabel(viewer: Viewer, index: number) {

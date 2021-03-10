@@ -19,7 +19,13 @@ export enum PixelPrecision {
   float64 = "float64",
 }
 
-export interface DataFile {
+export interface ITransformableImageData {
+  viewportTransformId: string;
+  imageTransformId: string;
+  imageDataId: string;
+}
+
+export interface DataFile extends ITransformableImageData {
   readonly type: "file";
   id: string;
   name: string;
@@ -28,9 +34,7 @@ export interface DataFile {
   hduIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
-  viewportTransformId: string;
-  imageTransformId: string;
-  compositeImageDataId: string;
+
 }
 
 export interface Header {
@@ -52,14 +56,11 @@ export interface IHdu {
   name: string;
 }
 
-export interface ImageHdu extends IHdu {
+export interface ImageHdu extends IHdu, ITransformableImageData {
   readonly hduType: HduType.IMAGE;
   precision: PixelPrecision;
   hist: ImageHist;
   rawImageDataId: string;
-  viewportTransformId: string;
-  imageTransformId: string;
-  normalizedImageDataId: string;
   normalizer: PixelNormalizer;
   blendMode: BlendMode;
   alpha: number;

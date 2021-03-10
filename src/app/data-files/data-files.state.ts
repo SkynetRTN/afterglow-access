@@ -206,7 +206,7 @@ export class DataFilesState {
   @Selector([DataFilesState.getFileEntities])
   public static getFileByCompositeImageDataId(fileEntities: { [id: string]: DataFile }) {
     return (imageDataId: string) => {
-      return Object.values(fileEntities).find((file) => file.compositeImageDataId == imageDataId);
+      return Object.values(fileEntities).find((file) => file.imageDataId == imageDataId);
     };
   }
 
@@ -245,7 +245,7 @@ export class DataFilesState {
   public static getHduByNormalizedImageDataId(hduEntities: { [id: string]: IHdu }) {
     return (imageDataId: string) => {
       return Object.values(hduEntities).find(
-        (hdu) => hdu.hduType == HduType.IMAGE && (hdu as ImageHdu).normalizedImageDataId == imageDataId
+        (hdu) => hdu.hduType == HduType.IMAGE && (hdu as ImageHdu).imageDataId == imageDataId
       );
     };
   }
@@ -522,7 +522,7 @@ export class DataFilesState {
               tableHduIds: hdu.hduType == HduType.TABLE ? [hdu.id] : [],
               viewportTransformId: "",
               imageTransformId: "",
-              compositeImageDataId: "",
+              imageDataId: "",
             };
             dataFiles.push(dataFile);
           } else {
@@ -590,7 +590,7 @@ export class DataFilesState {
                   rawImageDataId: "",
                   viewportTransformId: "",
                   imageTransformId: "",
-                  normalizedImageDataId: "",
+                  imageDataId: "",
                   normalizer: {
                     backgroundPercentile: 10,
                     peakPercentile: 99,
@@ -792,11 +792,11 @@ export class DataFilesState {
             }
 
             // initialize normalized image data
-            if (imageHdu.normalizedImageDataId && imageHdu.normalizedImageDataId in state.imageDataEntities) {
+            if (imageHdu.imageDataId && imageHdu.imageDataId in state.imageDataEntities) {
               // HDU already has initialized normalized image data
-              let normalizedImageData = state.imageDataEntities[imageHdu.normalizedImageDataId];
+              let normalizedImageData = state.imageDataEntities[imageHdu.imageDataId];
               if (imageDataNeedsUpdate(normalizedImageData, hduImageDataBase)) {
-                state.imageDataEntities[imageHdu.normalizedImageDataId] = {
+                state.imageDataEntities[imageHdu.imageDataId] = {
                   ...normalizedImageData,
                   ...hduImageDataBase,
                   tiles: createTiles(width, height, this.config.tileSize, this.config.tileSize),
@@ -813,7 +813,7 @@ export class DataFilesState {
 
               state.imageDataEntities[normalizedImageDataId] = normalizedImageData;
               state.imageDataIds.push(normalizedImageDataId);
-              imageHdu.normalizedImageDataId = normalizedImageDataId;
+              imageHdu.imageDataId = normalizedImageDataId;
 
               actions.push(new InvalidateNormalizedImageTiles(imageHdu.id));
             }
@@ -868,11 +868,11 @@ export class DataFilesState {
               initialized: true,
             };
 
-            if (file.compositeImageDataId && file.compositeImageDataId in state.imageDataEntities) {
+            if (file.imageDataId && file.imageDataId in state.imageDataEntities) {
               // File already has initialized composite image data
-              let compositeImageData = state.imageDataEntities[file.compositeImageDataId];
+              let compositeImageData = state.imageDataEntities[file.imageDataId];
               if (imageDataNeedsUpdate(compositeImageData, compositeImageDataBase)) {
-                state.imageDataEntities[file.compositeImageDataId] = {
+                state.imageDataEntities[file.imageDataId] = {
                   ...compositeImageData,
                   ...compositeImageDataBase,
                   tiles: createTiles(compositeWidth, compositeHeight, this.config.tileSize, this.config.tileSize),
@@ -888,7 +888,7 @@ export class DataFilesState {
 
               state.imageDataEntities[compositeImageDataId] = compositeImageData;
               state.imageDataIds.push(compositeImageDataId);
-              file.compositeImageDataId = compositeImageDataId;
+              file.imageDataId = compositeImageDataId;
             }
 
             // initialize file transformation
@@ -1139,11 +1139,11 @@ export class DataFilesState {
     if (
       !(hduId in state.hduEntities) ||
       state.hduEntities[hduId].hduType != HduType.IMAGE ||
-      !(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId
+      !(state.hduEntities[hduId] as ImageHdu).imageDataId
     )
       return null;
 
-    let normalizedImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId];
+    let normalizedImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).imageDataId];
 
     return dispatch(normalizedImageData.tiles.map((tile) => new InvalidateNormalizedImageTile(hduId, tile.index)));
   }
@@ -1158,16 +1158,16 @@ export class DataFilesState {
     if (
       !(hduId in state.hduEntities) ||
       state.hduEntities[hduId].hduType != HduType.IMAGE ||
-      !(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId
+      !(state.hduEntities[hduId] as ImageHdu).imageDataId
     )
       return null;
 
     setState((state: DataFilesStateModel) => {
-      let normalizedImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId];
+      let normalizedImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).imageDataId];
       let tile = normalizedImageData.tiles[tileIndex];
       tile.isValid = false;
 
-      state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId] = { ...normalizedImageData };
+      state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).imageDataId] = { ...normalizedImageData };
 
       return state;
     });
@@ -1186,7 +1186,7 @@ export class DataFilesState {
     if (
       !(hduId in state.hduEntities) ||
       state.hduEntities[hduId].hduType != HduType.IMAGE ||
-      !(state.hduEntities[hduId] as ImageHdu).normalizedImageDataId
+      !(state.hduEntities[hduId] as ImageHdu).imageDataId
     ) {
       return null;
     }
@@ -1209,10 +1209,10 @@ export class DataFilesState {
       return onRawPixelsLoaded();
     } else if (!rawTile.pixelsLoading) {
       setState((state: DataFilesStateModel) => {
-        let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
+        let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
         let tile = normalizedImageData.tiles[tileIndex];
         tile.pixelsLoading = true;
-        state.imageDataEntities[hdu.normalizedImageDataId] = {
+        state.imageDataEntities[hdu.imageDataId] = {
           ...normalizedImageData,
         };
         return state;
@@ -1230,11 +1230,11 @@ export class DataFilesState {
         filter((v) => v.action.hduId == hduId && v.action.tileIndex == tileIndex),
         tap((v) => {
           setState((state: DataFilesStateModel) => {
-            let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
+            let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
             let tile = normalizedImageData.tiles[tileIndex];
             tile.pixelsLoading = false;
             tile.pixelLoadingFailed = true;
-            state.imageDataEntities[hdu.normalizedImageDataId] = {
+            state.imageDataEntities[hdu.imageDataId] = {
               ...normalizedImageData,
             };
             return state;
@@ -1265,7 +1265,7 @@ export class DataFilesState {
 
     let hist = (state.hduEntities[hduId] as ImageHdu).hist;
     let normalizer = (state.hduEntities[hduId] as ImageHdu).normalizer;
-    let normalizedPixels = state.imageDataEntities[hdu.normalizedImageDataId].tiles[tileIndex].pixels as Uint32Array;
+    let normalizedPixels = state.imageDataEntities[hdu.imageDataId].tiles[tileIndex].pixels as Uint32Array;
     if (!normalizedPixels || normalizedPixels.length != rawPixels.length) {
       normalizedPixels = new Uint32Array(rawPixels.length);
     }
@@ -1304,7 +1304,7 @@ export class DataFilesState {
     let actions: any[] = [];
 
     setState((state: DataFilesStateModel) => {
-      let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
+      let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
       let tile = normalizedImageData.tiles[tileIndex];
 
       tile.pixelsLoaded = true;
@@ -1313,7 +1313,7 @@ export class DataFilesState {
       tile.isValid = true;
       tile.pixels = normalizedPixels;
 
-      state.imageDataEntities[hdu.normalizedImageDataId] = {
+      state.imageDataEntities[hdu.imageDataId] = {
         ...normalizedImageData,
       };
 
@@ -1442,9 +1442,9 @@ export class DataFilesState {
     { fileId }: InvalidateCompositeImageTiles
   ) {
     let state = getState();
-    if (!(fileId in state.fileEntities) || !state.fileEntities[fileId].compositeImageDataId) return null;
+    if (!(fileId in state.fileEntities) || !state.fileEntities[fileId].imageDataId) return null;
 
-    let compositeImageData = state.imageDataEntities[state.fileEntities[fileId].compositeImageDataId];
+    let compositeImageData = state.imageDataEntities[state.fileEntities[fileId].imageDataId];
 
     return dispatch(compositeImageData.tiles.map((tile) => new InvalidateCompositeImageTile(fileId, tile.index)));
   }
@@ -1456,14 +1456,14 @@ export class DataFilesState {
     { fileId, tileIndex }: InvalidateCompositeImageTile
   ) {
     let state = getState();
-    if (!(fileId in state.fileEntities) || !state.fileEntities[fileId].compositeImageDataId) return;
+    if (!(fileId in state.fileEntities) || !state.fileEntities[fileId].imageDataId) return;
 
     setState((state: DataFilesStateModel) => {
-      let compositeImageData = state.imageDataEntities[state.fileEntities[fileId].compositeImageDataId];
+      let compositeImageData = state.imageDataEntities[state.fileEntities[fileId].imageDataId];
       let tile = compositeImageData.tiles[tileIndex];
       tile.isValid = false;
 
-      state.imageDataEntities[state.fileEntities[fileId].compositeImageDataId] = { ...compositeImageData };
+      state.imageDataEntities[state.fileEntities[fileId].imageDataId] = { ...compositeImageData };
 
       return state;
     });
@@ -1481,7 +1481,7 @@ export class DataFilesState {
     let getNormalizationActions = () => {
       let state = getState();
       let file = state.fileEntities[fileId];
-      let imageData = state.imageDataEntities[file.compositeImageDataId];
+      let imageData = state.imageDataEntities[file.imageDataId];
       if (!imageData.initialized) return [];
       let hdus = file.hduIds
         .map((hduId) => state.hduEntities[hduId])
@@ -1489,8 +1489,8 @@ export class DataFilesState {
 
       return hdus
         .filter((hdu) => {
-          if (!hdu.normalizedImageDataId || !(hdu.normalizedImageDataId in state.imageDataEntities)) return false;
-          let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
+          if (!hdu.imageDataId || !(hdu.imageDataId in state.imageDataEntities)) return false;
+          let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
           if (!normalizedImageData.initialized) return false;
           let normalizedTile = normalizedImageData.tiles[tileIndex];
           if (normalizedTile.isValid && (normalizedTile.pixelsLoaded || normalizedTile.pixelsLoading)) return false;
@@ -1502,7 +1502,7 @@ export class DataFilesState {
     let onAllTilesNormalized = () => {
       setState((state: DataFilesStateModel) => {
         let file = state.fileEntities[fileId];
-        let compositeImageData = state.imageDataEntities[file.compositeImageDataId];
+        let compositeImageData = state.imageDataEntities[file.imageDataId];
         let tile = compositeImageData.tiles[tileIndex];
         let hdus = file.hduIds
           .map((hduId) => state.hduEntities[hduId])
@@ -1511,10 +1511,10 @@ export class DataFilesState {
               return false;
             }
             let imageHdu = hdu as ImageHdu;
-            if (!imageHdu.normalizedImageDataId || !(imageHdu.normalizedImageDataId in state.imageDataEntities)) {
+            if (!imageHdu.imageDataId || !(imageHdu.imageDataId in state.imageDataEntities)) {
               return false;
             }
-            let normalizedImageData = state.imageDataEntities[imageHdu.normalizedImageDataId];
+            let normalizedImageData = state.imageDataEntities[imageHdu.imageDataId];
             if (!normalizedImageData.initialized || !normalizedImageData.tiles[tileIndex].pixelsLoaded) {
               return false;
             }
@@ -1524,7 +1524,7 @@ export class DataFilesState {
         let layers = hdus
           .sort((a, b) => (a.order > b.order ? 1 : -1))
           .map((hdu) => {
-            let normalizedImageData = state.imageDataEntities[hdu.normalizedImageDataId];
+            let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
             return {
               pixels: normalizedImageData.tiles[tileIndex].pixels as Uint32Array,
               blendMode: hdu.blendMode,
@@ -1541,7 +1541,7 @@ export class DataFilesState {
         tile.pixelsLoading = false;
         tile.isValid = true;
 
-        state.imageDataEntities[file.compositeImageDataId] = {
+        state.imageDataEntities[file.imageDataId] = {
           ...compositeImageData,
         };
 
@@ -1558,10 +1558,10 @@ export class DataFilesState {
     } else {
       setState((state: DataFilesStateModel) => {
         let file = state.fileEntities[fileId];
-        let compositeImageData = state.imageDataEntities[file.compositeImageDataId];
+        let compositeImageData = state.imageDataEntities[file.imageDataId];
         let tile = compositeImageData.tiles[tileIndex];
         tile.pixelsLoading = true;
-        state.imageDataEntities[file.compositeImageDataId] = {
+        state.imageDataEntities[file.imageDataId] = {
           ...compositeImageData,
         };
         return state;

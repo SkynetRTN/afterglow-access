@@ -287,7 +287,7 @@
               #fileList
               [files]="files$ | async"
               [selectedFileIds]="selectedFileIds$ | async"
-              [focusedViewer]="focusedViewer$ | async"
+              [focusedViewer]="viewer$ | async"
               (onSaveFile)="onSaveFileBtnClick($event)"
               (onCloseFile)="onCloseFileBtnClick($event)"
             >
@@ -306,7 +306,7 @@
         <mat-form-field style="width: 100%">
           <mat-select
             placeholder="Focused Viewer"
-            [value]="(focusedViewer$ | async)?.id"
+            [value]="(viewer$ | async)?.id"
             (selectionChange)="onFocusedViewerIdChange($event)"
             style="width: 200px"
           >
@@ -320,9 +320,9 @@
         </mat-form-field>
       </div>
       <div class="form-group">
-        <div *ngIf="focusedViewer$ | async; let focusedViewer">
+        <div *ngIf="viewer$ | async; let focusedViewer">
           <button
-            [disabled]="!focusedViewer || !(canSplitFocusedViewer$ | async)"
+            [disabled]="!focusedViewer || !(canSplit$ | async)"
             (click)="splitViewerPanel(focusedViewer, 'right')"
             class="mt-2"
             mat-raised-button
@@ -330,7 +330,7 @@
             Split Viewer Right
           </button>
           <button
-            [disabled]="!focusedViewer || !(canSplitFocusedViewer$ | async)"
+            [disabled]="!focusedViewer || !(canSplit$ | async)"
             (click)="splitViewerPanel(focusedViewer, 'left')"
             class="mt-2"
             mat-raised-button
@@ -338,7 +338,7 @@
             Split Viewer Left
           </button>
           <button
-            [disabled]="!focusedViewer || !(canSplitFocusedViewer$ | async)"
+            [disabled]="!focusedViewer || !(canSplit$ | async)"
             (click)="splitViewerPanel(focusedViewer, 'down')"
             class="mt-2"
             mat-raised-button
@@ -346,7 +346,7 @@
             Split Viewer Down
           </button>
           <button
-            [disabled]="!focusedViewer || !(canSplitFocusedViewer$ | async)"
+            [disabled]="!focusedViewer || !(canSplit$ | async)"
             (click)="splitViewerPanel(focusedViewer, 'up')"
             class="mt-2"
             mat-raised-button
@@ -477,7 +477,7 @@
     >
     </app-workbench-viewer-layout>
   </div>
-  <ng-container *ngIf="focusedImageViewer$ | async; let focusedImageViewer">
+  <ng-container *ngIf="imageViewer$ | async; let focusedImageViewer">
     <div
       fxFlex="0 0 auto"
       class="workbench-tool-panel"
@@ -493,55 +493,31 @@
     >
       <div class="card workbench-settings-card" style="height: 100%">
         <div id="settings-header" class="card-header">
-          <ng-container [ngSwitch]="activeTool">
-            <h2 *ngSwitchCase="WorkbenchTool.VIEWER" i18n>Display Settings</h2>
-            <h2 *ngSwitchCase="WorkbenchTool.INFO" i18n>File Info</h2>
-            <h2 *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" i18n>
-              Custom Markers
-            </h2>
-            <h2 *ngSwitchCase="WorkbenchTool.PLOTTER" i18n>Plotter</h2>
-            <h2 *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</h2>
-            <h2 *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</h2>
-            <h2 *ngSwitchCase="WorkbenchTool.IMAGE_CALC" i18n>
-              Image Calculator
-            </h2>
-            <h2 *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>
-              WCS Calibration
-            </h2>
-            <h2 *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</h2>
-            <h2 *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</h2>
-          </ng-container>
+          <h2 i18n>{{getActiveToolName(activeTool)}}</h2>
         </div>
 
         <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-          <div
+          <!-- <div
             class="mb-4"
             *ngIf="
-              (focusedViewerFile$ | async) &&
+              (file$ | async) &&
               !(focusedViewerImageHdu$ | async) &&
               [WorkbenchTool.VIEWER, WorkbenchTool.INFO].includes(activeTool)
             "
           >
-            <h6 i18n>Layers</h6>
+            <h3 i18n>Layers</h3>
             <app-hdu-selector
-              [fileId]="(focusedViewerFile$ | async)?.id"
+              [fileId]="(file$ | async)?.id"
               [hduType]="HduType.IMAGE"
               [selectedHduId]="focusedViewerFileLastActiveImageHduId$ | async"
             ></app-hdu-selector>
-          </div>
+          </div> -->
 
           <app-display-panel
             *ngSwitchCase="WorkbenchTool.VIEWER"
-            [file]="focusedViewerFile$ | async"
-            [hdu]="
-              (focusedViewerImageHdu$ | async)
-                ? (focusedViewerImageHdu$ | async)
-                : (focusedViewerFileLastActiveImageHdu$ | async)
-            "
-            [imageTransform]="focusedViewerImageTransform$ | async"
-            [viewportTransform]="focusedViewerViewportTransform$ | async"
-            [imageData]="focusedViewerNormalizedImageData$ | async"
-            [viewportSize]="focusedViewerViewportSize$ | async"
+            [file]="file$ | async"
+            [hdu]="hdu$ | async"
+            [viewportSize]="(viewer$ | async)?.viewportSize"
           >
           </app-display-panel>
 
@@ -583,19 +559,18 @@
             [hdu]="focusedViewerImageHdu$ | async"
             [imageTransform]="focusedViewerImageTransform$ | async"
             [viewportTransform]="focusedViewerViewportTransform$ | async"
-            [viewportSize]="(focusedViewer$ | async)?.viewportSize"
+            [viewportSize]="(viewer$ | async)?.viewportSize"
             [state]="sonificationPanelState$ | async"
           >
           </app-sonification-panel>
 
           <app-photometry-panel
             *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
-            [primaryHdu]="focusedViewerHdu$ | async"
+            [primaryHdu]="hdu$ | async"
             [primaryHeader]="focusedViewerHeader$ | async"
             [viewportSize]="focusedViewerViewportSize$ | async"
             [state]="photometryPanelState$ | async"
             [sources]="photometryPanelSources$ | async"
-            [hdus]="hdus$ | async"
             [dataFileEntities]="fileEntities$ | async"
             [config]="photometryPanelConfig$ | async"
             [centroidSettings]="centroidSettings$ | async"
