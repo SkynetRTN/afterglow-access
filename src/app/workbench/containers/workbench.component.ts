@@ -533,7 +533,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     this.customMarkerPanelState$ = combineLatest(this.fileState$, this.hduState$).pipe(
-      tap(v => console.log("HERE::", v)),
       map(([fileState, hduState]) =>  {
         if(hduState && hduState.hduType != HduType.IMAGE) {
           // only image HDUs support custom markers
@@ -541,7 +540,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         return (hduState as WorkbenchImageHduState)?.customMarkerPanelStateId || fileState?.customMarkerPanelStateId
       }),
-      tap(v => console.log("HERE 2::", v)),
       distinctUntilChanged(),
       switchMap(id => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(
         map(fn => fn(id))
