@@ -1,3 +1,13 @@
+
+<ng-template #invalidHduTypeBlock>
+  <div i18n class="alert alert-info" i18n>This tool does not yet support tabular data.  Please select an image HDU.</div>
+</ng-template>
+
+<ng-template #fileNotSelectedBlock>
+  <div i18n class="alert alert-info" i18n>Please select a file.</div>
+</ng-template>
+
+
 <div *ngIf="!hdu || hdu.hduType == HduType.IMAGE; else invalidHduTypeBlock">
   <div *ngIf="file; else fileNotSelectedBlock">
     <div *ngIf="hdu">
@@ -93,11 +103,3 @@
   </div>
   
 </div>
-
-<ng-template #invalidHduTypeBlock>
-  <ng-container i18n>This tool does not yet support tabular data.  Please select an image HDU.</ng-container>
-</ng-template>
-
-<ng-template #fileNotSelectedBlock>
-  <ng-container i18n>Please select a file.</ng-container>
-</ng-template>

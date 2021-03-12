@@ -70,6 +70,7 @@ import {
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import * as moment from 'moment';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
+import { HduType } from '../../../data-files/models/data-file-type';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -79,14 +80,23 @@ import { ShortcutInput } from 'ng-keyboard-shortcuts';
 })
 export class SonificationPanelComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  @Input('hdu')
-  set hdu(hdu: ImageHdu) {
-    this.hdu$.next(hdu);
-  }
-  get hdu() {
-    return this.hdu$.getValue();
-  }
-  private hdu$ = new BehaviorSubject<ImageHdu>(null);
+    @Input('file')
+    set file(file: DataFile) {
+      this.file$.next(file);
+    }
+    get file() {
+      return this.file$.getValue();
+    }
+    private file$ = new BehaviorSubject<DataFile>(null);
+  
+    @Input('hdu')
+    set hdu(hdu: ImageHdu) {
+      this.hdu$.next(hdu);
+    }
+    get hdu() {
+      return this.hdu$.getValue();
+    }
+    private hdu$ = new BehaviorSubject<ImageHdu>(null);
 
   @Input('imageTransform')
   set imageTransform(imageTransform: Transform) {
@@ -132,7 +142,7 @@ export class SonificationPanelComponent
   region$: Observable<Region>;
   region: Region;
   shortcuts: ShortcutInput[] = [];
-
+  HduType = HduType;
   stop$ = new Subject();
   audioObj = new Audio();
   audioEvents = [
