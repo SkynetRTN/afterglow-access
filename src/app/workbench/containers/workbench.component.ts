@@ -125,7 +125,7 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../utils/correlated-action';
 import { DataProvidersState } from '../../data-providers/data-providers.state';
 import { Navigate } from '@ngxs/router-plugin';
-import { WorkbenchImageHduState, WorkbenchFileState } from '../models/workbench-file-state';
+import { WorkbenchImageHduState, WorkbenchFileState, IWorkbenchHduState, WorkbenchTableHduState } from '../models/workbench-file-state';
 import {
   WorkbenchTool,
   PlottingPanelConfig,
@@ -283,8 +283,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   imageHdus$: Observable<ImageHdu[]>;
   hduId$: Observable<string>;
   hdu$: Observable<IHdu>;
+  headerId$: Observable<string>;
+  header$: Observable<Header>;
 
+  fileState$: Observable<WorkbenchFileState>;
+  hduState$: Observable<IWorkbenchHduState>;
+  imageHduState$: Observable<WorkbenchImageHduState>;
+  tableHduState$: Observable<WorkbenchTableHduState>;
 
+  fileInfoPanelConfig$: Observable<FileInfoPanelConfig>;
+  customMarkerPanelConfig$: Observable<CustomMarkerPanelConfig>;
+  customMarkerPanelState$: Observable<CustomMarkerPanelState>;
 
   focusedViewerFileLastActiveHduHeader$: Observable<Header>;
   focusedViewerFileLastActiveImageHduId$: Observable<string>;
@@ -321,9 +330,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   focusedViewerImageTransform$: Observable<Transform>;
   focusedViewerViewportTransform$: Observable<Transform>;
   focusedViewerImageToViewportTransform$: Observable<Transform>;
-  fileInfoPanelConfig$: Observable<FileInfoPanelConfig>;
-  customMarkerPanelConfig$: Observable<CustomMarkerPanelConfig>;
-  customMarkerPanelState$: Observable<CustomMarkerPanelState>;
+  
   plottingPanelState$: Observable<PlottingPanelState>;
   plottingPanelConfig$: Observable<PlottingPanelConfig>;
   plottingPanelImageData$: Observable<IImageData<PixelType>>;
@@ -489,8 +496,70 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       distinctUntilChanged()
     );
 
+    this.headerId$ = this.hdu$.pipe(
+      map(hdu => hdu?.headerId || null),
+      distinctUntilChanged()
+    )
 
+    this.header$ = this.headerId$.pipe(
+      switchMap(headerId => this.store.select(DataFilesState.getHeaderById).pipe(
+        map(fn => fn(headerId))
+      ))
+    )
+
+    this.fileState$ = this.fileId$.pipe(
+      switchMap(fileId => this.store.select(WorkbenchState.getFileStateById).pipe(
+        map(fn => fn(fileId))
+      ))
+    )
+
+    this.hduState$ = this.hduId$.pipe(
+      switchMap(hduId => this.store.select(WorkbenchState.getHduStateById).pipe(
+        map(fn => fn(hduId))
+      ))
+    )
+
+    this.imageHduState$ = this.hduState$.pipe(
+      map(state => state?.hduType == HduType.IMAGE ? state as WorkbenchImageHduState : null)
+    )
+
+    this.tableHduState$ = this.hduState$.pipe(
+      map(state => state?.hduType == HduType.TABLE ? state as WorkbenchTableHduState : null)
+    )
+
+
+    this.fileInfoPanelConfig$ = store.select(
+      WorkbenchState.getFileInfoPanelConfig
+    );
+
+    this.customMarkerPanelState$ = combineLatest(this.fileState$, this.hduState$).pipe(
+      tap(v => console.log("HERE::", v)),
+      map(([fileState, hduState]) =>  {
+        if(hduState && hduState.hduType != HduType.IMAGE) {
+          // only image HDUs support custom markers
+          return null;
+        }
+        return (hduState as WorkbenchImageHduState)?.customMarkerPanelStateId || fileState?.customMarkerPanelStateId
+      }),
+      tap(v => console.log("HERE 2::", v)),
+      distinctUntilChanged(),
+      switchMap(id => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(
+        map(fn => fn(id))
+      ))
+    )
    
+    this.customMarkerPanelConfig$ = store.select(
+      WorkbenchState.getCustomMarkerPanelConfig
+    );
+
+
+
+
+
+
+
+
+
 
     this.workbenchFileState$ = this.fileId$.pipe(
       switchMap(fileId => this.store.select(WorkbenchState.getFileStateById).pipe(
@@ -715,30 +784,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     /* DISPLAY PANEL */
 
     /* FILE INFO PANEL */
-    this.fileInfoPanelConfig$ = store.select(
-      WorkbenchState.getFileInfoPanelConfig
-    );
+    
 
     /* CUSTOM MARKER PANEL */
-    this.customMarkerPanelState$ = this.imageViewerId$.pipe(
-      switchMap((viewerId) => {
-        return this.store
-          .select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged(),
-            switchMap((stateId) =>
-              this.store
-                .select(WorkbenchState.getCustomMarkerPanelStateById)
-                .pipe(map((fn) => fn(stateId)))
-            )
-          );
-      })
-    );
+    
 
-    this.customMarkerPanelConfig$ = store.select(
-      WorkbenchState.getCustomMarkerPanelConfig
-    );
+ 
 
     /* PLOTTING PANEL */
     this.plottingPanelImageData$ = combineLatest(

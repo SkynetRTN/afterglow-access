@@ -477,7 +477,7 @@
     >
     </app-workbench-viewer-layout>
   </div>
-  <ng-container *ngIf="imageViewer$ | async; let focusedImageViewer">
+  <ng-container>
     <div
       fxFlex="0 0 auto"
       class="workbench-tool-panel"
@@ -523,11 +523,7 @@
 
           <app-file-info-panel
             *ngSwitchCase="WorkbenchTool.INFO"
-            [header]="
-              (focusedViewerImageHdu$ | async)
-                ? (focusedViewerHeader$ | async)
-                : (focusedViewerFileLastActiveHduHeader$ | async)
-            "
+            [header]="header$ | async"
             [config]="fileInfoPanelConfig$ | async"
             (configChange)="onFileInfoPanelConfigChange($event)"
           >
@@ -545,8 +541,8 @@
 
           <app-plotting-panel
             *ngSwitchCase="WorkbenchTool.PLOTTER"
-            [imageData]="plottingPanelImageData$ | async"
-            [header]="focusedViewerHeader$ | async"
+            [file]="file$ | async"
+            [hdu]="hdu$ | async"
             [state]="plottingPanelState$ | async"
             [config]="plottingPanelConfig$ | async"
             [colorMode]="plottingPanelColorMode$ | async"

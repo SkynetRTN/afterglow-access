@@ -1,6 +1,4 @@
-<div *ngIf="!header" class="alert alert-info" i18n>Select a data file to see file info.</div>
-
-<div *ngIf="header">
+<div *ngIf="header; else headerMissingBlock">
   <div class="p-2">
     <mat-slide-toggle [color]="'primary'" [checked]="config?.showRawHeader" (change)="onShowRawHeaderChange($event)" i18n>
       Show Raw Header Data
@@ -59,3 +57,7 @@
     </table>
   </div>
 </div>
+
+<ng-template #headerMissingBlock>
+  <div class="alert alert-info" i18n>No header was found for the selected file/HDU.</div>
+</ng-template>

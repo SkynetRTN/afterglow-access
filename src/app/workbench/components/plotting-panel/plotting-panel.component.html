@@ -12,8 +12,8 @@
     <div>
       <app-plotter
         #plotter
-        [wcs]="header?.wcs"
-        [imageData]="imageData"
+        [wcs]="(header$ | async)?.wcs"
+        [imageData]="imageData$ | async"
         [plotMode]="config?.plotMode"
         [colorMode]="colorMode"
         [width]="500"
