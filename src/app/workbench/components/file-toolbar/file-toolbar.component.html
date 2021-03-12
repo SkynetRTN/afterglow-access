@@ -1,8 +1,3 @@
-<div
-fxFlex="0 0 auto"
-fxAlign="row"
-class="node-buttons"
->
 <button
   fxFlex="0 0 auto"
   *ngIf="showSave"
@@ -36,12 +31,3 @@ class="node-buttons"
     >fiber_manual_record</mat-icon
   >
 </ng-template>
-<div fxFlex="0 0 auto">
-  <mat-checkbox
-    class="m-1"
-    *ngIf="showSelect"
-    [ngModel]="selected"
-    (click)="onToggleSelection.emit($event)"
-  ></mat-checkbox>
-</div>
-</div>
