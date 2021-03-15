@@ -828,23 +828,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       WorkbenchState.getPlottingPanelConfig
     );
 
-    /* SONIFICATION PANEL */
-    this.sonificationPanelState$ = this.imageViewerId$.pipe(
-      switchMap((viewerId) => {
-        return this.store
-          .select(WorkbenchState.getSonificationPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged(),
-            switchMap((stateId) =>
-              this.store
-                .select(WorkbenchState.getSonificationPanelStateById)
-                .pipe(map((fn) => fn(stateId)))
-            )
-          );
-      })
-    );
-
     /* PHOTOMETRY PANEL */
     this.photometryPanelConfig$ = this.store.select(
       WorkbenchState.getPhotometryPanelConfig

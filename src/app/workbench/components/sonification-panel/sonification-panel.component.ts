@@ -33,6 +33,7 @@ import {
   take,
   shareReplay,
   share,
+  switchMap,
 } from 'rxjs/operators';
 
 import {
@@ -71,6 +72,9 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import * as moment from 'moment';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
 import { HduType } from '../../../data-files/models/data-file-type';
+import { Viewer } from '../../models/viewer';
+import { WorkbenchState } from '../../workbench.state';
+import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -80,65 +84,26 @@ import { HduType } from '../../../data-files/models/data-file-type';
 })
 export class SonificationPanelComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-    @Input('file')
-    set file(file: DataFile) {
-      this.file$.next(file);
-    }
-    get file() {
-      return this.file$.getValue();
-    }
-    private file$ = new BehaviorSubject<DataFile>(null);
-  
-    @Input('hdu')
-    set hdu(hdu: ImageHdu) {
-      this.hdu$.next(hdu);
-    }
-    get hdu() {
-      return this.hdu$.getValue();
-    }
-    private hdu$ = new BehaviorSubject<ImageHdu>(null);
-
-  @Input('imageTransform')
-  set imageTransform(imageTransform: Transform) {
-    this.imageTransform$.next(imageTransform);
+  //viewer is currently needed to determine the source extraction region
+  @Input('viewer')
+  set viewer(viewer: Viewer) {
+    this.viewer$.next(viewer);
   }
-  get imageTransform() {
-    return this.imageTransform$.getValue();
+  get viewer() {
+    return this.viewer$.getValue();
   }
-  private imageTransform$ = new BehaviorSubject<Transform>(null);
-
-  @Input('viewportTransform')
-  set viewportTransform(viewportTransform: Transform) {
-    this.viewportTransform$.next(viewportTransform);
-  }
-  get viewportTransform() {
-    return this.viewportTransform$.getValue();
-  }
-  private viewportTransform$ = new BehaviorSubject<Transform>(null);
-
-  @Input('viewportSize')
-  set viewportSize(viewportSize: { width: number; height: number }) {
-    this.viewportSize$.next(viewportSize);
-  }
-  get viewportSize() {
-    return this.viewportSize$.getValue();
-  }
-  private viewportSize$ = new BehaviorSubject<{
-    width: number;
-    height: number;
-  }>(null);
-
-  @Input('state')
-  set state(state: SonificationPanelState) {
-    this.state$.next(state);
-  }
-  get state() {
-    return this.state$.getValue();
-  }
-  private state$ = new BehaviorSubject<SonificationPanelState>(null);
+  private viewer$ = new BehaviorSubject<Viewer>(null);
 
   destroy$: Subject<boolean> = new Subject<boolean>();
   SonifierRegionMode = SonifierRegionMode;
+  file$: Observable<DataFile>;
+  hdu$: Observable<ImageHdu>;
+  state$: Observable<SonificationPanelState>;
+  state: SonificationPanelState;
+  viewportTransform$: Observable<Transform>;
+  imageTransform$: Observable<Transform>;
+  viewportSize$: Observable<{ width: number; height: number }>;
+
   region$: Observable<Region>;
   region: Region;
   shortcuts: ShortcutInput[] = [];
@@ -168,6 +133,79 @@ export class SonificationPanelComponent
     private store: Store,
     private router: Router
   ) {
+    this.viewportSize$ = this.viewer$.pipe(
+      map((viewer) => viewer?.viewportSize)
+    );
+
+    this.file$ = this.viewer$.pipe(
+      map((viewer) => viewer?.fileId),
+      distinctUntilChanged(),
+      switchMap((fileId) =>
+        this.store
+          .select(DataFilesState.getFileById)
+          .pipe(map((fn) => fn(fileId)))
+      )
+    );
+
+    let hduId$ = this.viewer$.pipe(
+      map((viewer) => viewer?.hduId),
+      distinctUntilChanged()
+    );
+
+    this.hdu$ = hduId$.pipe(
+      switchMap((hduId) =>
+        this.store.select(DataFilesState.getHduById).pipe(
+          map((fn) => {
+            let hdu = fn(hduId);
+            if (hdu.hduType != HduType.IMAGE) return null;
+            return hdu as ImageHdu;
+          })
+        )
+      )
+    );
+
+    let hduState$ = hduId$.pipe(
+      switchMap(hduId => this.store.select(WorkbenchState.getHduStateById).pipe(
+        map(fn => fn(hduId))
+      ))
+    )
+    this.state$ = hduState$.pipe(
+      map(hduState =>  {
+        if(hduState && hduState.hduType != HduType.IMAGE) {
+          // only image HDUs support sonification
+          return null;
+        }
+        return (hduState as WorkbenchImageHduState)?.sonificationPanelStateId
+      }),
+      distinctUntilChanged(),
+      switchMap(id => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(
+        map(fn => fn(id))
+      ))
+    )
+
+    this.state$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      this.state = state;
+    })
+   
+
+    this.viewportTransform$ = this.hdu$.pipe(
+      switchMap((hdu) =>
+        this.store
+          .select(DataFilesState.getTransformById)
+          .pipe(map((fn) => fn(hdu?.viewportTransformId)))
+      )
+    );
+
+    this.imageTransform$ = this.hdu$.pipe(
+      switchMap((hdu) =>
+        this.store
+          .select(DataFilesState.getTransformById)
+          .pipe(map((fn) => fn(hdu?.imageTransformId)))
+      )
+    );
+
     let imageToViewportTransform$ = combineLatest(
       this.viewportTransform$,
       this.imageTransform$
@@ -217,25 +255,32 @@ export class SonificationPanelComponent
           a.y == b.y &&
           a.width == b.width &&
           a.height == b.height
-      ),
-      tap((region) => {
-        this.stop();
-        this.store.dispatch(new SetProgressLine(this.hdu.id, null))
-      })
+      )
     );
 
-    
-    this.actions$.pipe(
-      ofActionDispatched(SonificationCompleted),
-      takeUntil(this.destroy$),
-    ).subscribe((action => {
+    this.region$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.hdu$))
+      .subscribe(([region, hdu]) => {
+        if (!hdu) return;
+
+        this.stop();
+        this.store.dispatch(new SetProgressLine(hdu.id, null));
+      });
+
+    this.actions$
+      .pipe(
+        ofActionDispatched(SonificationCompleted),
+        takeUntil(this.destroy$),
+        withLatestFrom(this.hdu$)
+      )
+      .subscribe(([action, hdu]) => {
         let a = action as SonificationCompleted;
-        if(!a.error && a.url) {
-          this.store.dispatch(new SetProgressLine(this.hdu.id, null))
+        if (!a.error && a.url) {
+          this.store.dispatch(new SetProgressLine(hdu.id, null));
           this.stop();
           this.playStream(a.url);
         }
-    }))
+      });
   }
 
   ngOnInit() {}
@@ -246,7 +291,7 @@ export class SonificationPanelComponent
       label: 'Select low frequency region from beginning of sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregion(0,0);
+        this.selectSubregion(0, 0);
       },
       preventDefault: true,
     });
@@ -256,7 +301,7 @@ export class SonificationPanelComponent
       label: 'Select mid frequency region from beginning of sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregion(0,1);
+        this.selectSubregion(0, 1);
       },
       preventDefault: true,
     });
@@ -266,7 +311,7 @@ export class SonificationPanelComponent
       label: 'Select high frequency region from beginning of sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregion(0,2);
+        this.selectSubregion(0, 2);
       },
       preventDefault: true,
     });
@@ -336,7 +381,7 @@ export class SonificationPanelComponent
       label: 'Select low frequency region from sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregionByFrequency(0)
+        this.selectSubregionByFrequency(0);
       },
       preventDefault: true,
     });
@@ -346,7 +391,7 @@ export class SonificationPanelComponent
       label: 'Select high frequency region from sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregionByFrequency(2)
+        this.selectSubregionByFrequency(2);
       },
       preventDefault: true,
     });
@@ -356,7 +401,7 @@ export class SonificationPanelComponent
       label: 'Select central frequency region from sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregionByFrequency(1)
+        this.selectSubregionByFrequency(1);
       },
       preventDefault: true,
     });
@@ -366,7 +411,7 @@ export class SonificationPanelComponent
       label: 'Select region from beginning of sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregionByTime(0)
+        this.selectSubregionByTime(0);
       },
       preventDefault: true,
     });
@@ -376,7 +421,7 @@ export class SonificationPanelComponent
       label: 'Select region from end of sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregionByTime(2)
+        this.selectSubregionByTime(2);
       },
       preventDefault: true,
     });
@@ -386,7 +431,7 @@ export class SonificationPanelComponent
       label: 'Select region from middle of sonification',
       command: (e) => {
         if (this.state.regionMode != SonifierRegionMode.CUSTOM) return;
-        this.selectSubregionByTime(1)
+        this.selectSubregionByTime(1);
       },
       preventDefault: true,
     });
@@ -429,7 +474,6 @@ export class SonificationPanelComponent
       },
       preventDefault: true,
     });
-
   }
 
   ngOnDestroy() {
@@ -442,7 +486,7 @@ export class SonificationPanelComponent
   getStream(url: string): Observable<Event> {
     return new Observable((observer) => {
       // Play audio
-      console.log("Observable Loaded!  ", url)
+      console.log('Observable Loaded!  ', url);
       this.audioObj.src = url;
       this.audioObj.load();
       this.audioObj.play();
@@ -464,59 +508,67 @@ export class SonificationPanelComponent
 
   playStream(url: string) {
     let indexToneDuration = 0.852 / 2.0;
-    
+
     let events$ = this.getStream(url).pipe(
       takeUntil(merge(this.destroy$, this.stop$)),
       share()
-    )
+    );
 
     let stopUpdating$ = merge(
       this.stop$,
       events$.pipe(
-        filter(event => event.type == 'ended' || event.type == 'pause')
+        filter((event) => event.type == 'ended' || event.type == 'pause')
       )
     ).pipe(
       take(1),
-      tap(() => {
-        this.store.dispatch(new SetProgressLine(this.hdu.id, null));
+      withLatestFrom(this.hdu$),
+      tap(([value, hdu]) => {
+        this.store.dispatch(new SetProgressLine(hdu.id, null));
       })
-    )
+    );
 
-    
-    events$.pipe(
-      filter(event => event.type == 'play'),
-      withLatestFrom(this.region$),
-      flatMap(([event, region]) => {
-        return interval(10).pipe(
-          takeUntil(stopUpdating$),
-          map(() => {
-            if (!region || !this.audioObj.duration || !this.audioObj.currentTime) {
-              return null;
-            }
-            let y =
-              region.y +
-              Math.max(
-                0,
-                Math.min(
-                  1,
-                  (this.audioObj.currentTime - indexToneDuration) /
-                    (this.audioObj.duration - 2 * indexToneDuration)
-                )
-              ) *
-                region.height;
-    
-            return  {
-              x1: region.x,
-              y1: y,
-              x2: region.x + region.width,
-              y2: y,
-            };
-          })
-        )
-      })
-    ).subscribe((line => {
-      this.store.dispatch(new SetProgressLine(this.hdu.id, line));
-    }));
+    events$
+      .pipe(
+        filter((event) => event.type == 'play'),
+        withLatestFrom(this.region$),
+        flatMap(([event, region]) => {
+          return interval(10).pipe(
+            takeUntil(stopUpdating$),
+            map(() => {
+              if (
+                !region ||
+                !this.audioObj.duration ||
+                !this.audioObj.currentTime
+              ) {
+                return null;
+              }
+              let y =
+                region.y +
+                Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    (this.audioObj.currentTime - indexToneDuration) /
+                      (this.audioObj.duration - 2 * indexToneDuration)
+                  )
+                ) *
+                  region.height;
+
+              return {
+                x1: region.x,
+                y1: y,
+                x2: region.x + region.width,
+                y2: y,
+              };
+            })
+          );
+        }),
+
+        withLatestFrom(this.hdu$)
+      )
+      .subscribe(([line, hdu]) => {
+        this.store.dispatch(new SetProgressLine(hdu.id, line));
+      });
   }
 
   openFile(url: string) {}
@@ -580,7 +632,7 @@ export class SonificationPanelComponent
       height /= 2;
     }
     this.store.dispatch(
-      new AddRegionToHistory(this.hdu.id, {
+      new AddRegionToHistory(this.viewer.hduId, {
         x: region.x + xShift,
         y: region.y + yShift,
         width: width,
@@ -592,11 +644,12 @@ export class SonificationPanelComponent
   resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[
-      this.hdu.headerId
-    ];
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(this.viewer?.hduId);
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderById)(hdu.headerId);
+    if(!hdu || !header) return ;
+
     this.store.dispatch(
-      new AddRegionToHistory(this.hdu.id, {
+      new AddRegionToHistory(hdu.id, {
         x: 0.5,
         y: 0.5,
         width: getWidth(header),
@@ -606,43 +659,44 @@ export class SonificationPanelComponent
   }
 
   undoRegionSelection() {
-    this.store.dispatch(new UndoRegionSelection(this.hdu.id));
+    this.store.dispatch(new UndoRegionSelection(this.viewer.hduId));
   }
 
   redoRegionSelection() {
-    this.store.dispatch(new RedoRegionSelection(this.hdu.id));
+    this.store.dispatch(new RedoRegionSelection(this.viewer.hduId));
   }
 
   setRegionMode($event: MatButtonToggleChange) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.hdu.id, {
+      new UpdateSonifierFileState(this.viewer.hduId, {
         regionMode: $event.value,
       })
     );
   }
 
   setDuration(value: number) {
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(this.viewer?.hduId);
     this.store.dispatch(
-      new UpdateSonifierFileState(this.hdu.id, { duration: value })
+      new UpdateSonifierFileState(this.viewer.hduId, { duration: value })
     );
   }
 
   setToneCount(value: number) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.hdu.id, { toneCount: value })
+      new UpdateSonifierFileState(this.viewer.hduId, { toneCount: value })
     );
   }
 
   setViewportSync(value: MatCheckboxChange) {
     this.store.dispatch(
-      new UpdateSonifierFileState(this.hdu.id, {
+      new UpdateSonifierFileState(this.viewer.hduId, {
         viewportSync: value.checked,
       })
     );
   }
 
   sonify() {
-    if (!this.hdu || !this.region) return;
-    this.store.dispatch(new Sonify(this.hdu.id, this.region));
+    if (!this.viewer.hduId || !this.region) return;
+    this.store.dispatch(new Sonify(this.viewer.hduId, this.region));
   }
 }

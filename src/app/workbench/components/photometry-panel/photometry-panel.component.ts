@@ -16,7 +16,7 @@ import * as moment from "moment";
 import { MatCheckboxChange } from "@angular/material/checkbox";
 import { MatDialog } from "@angular/material/dialog";
 import { Select, Store, Actions, ofActionSuccessful, ofAction } from "@ngxs/store";
-import { Observable, Subscription, combineLatest, BehaviorSubject } from "rxjs";
+import { Observable, Subscription, combineLatest, BehaviorSubject, of } from "rxjs";
 import {
   map,
   flatMap,
@@ -66,6 +66,7 @@ import { SourceExtractionSettings } from "../../models/source-extraction-setting
 import { JobsState } from "../../../jobs/jobs.state";
 import { DataFilesState } from '../../../data-files/data-files.state';
 import * as snakeCaseKeys from "snakecase-keys";
+import { Viewer } from '../../models/viewer';
 
 @Component({
   selector: "app-photometry-panel",
@@ -74,41 +75,42 @@ import * as snakeCaseKeys from "snakecase-keys";
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  @Input("primaryHdu")
-  set primaryHdu(primaryHdu: ImageHdu) {
-    this.primaryHdu$.next(primaryHdu);
+  @Input('file')
+  set file(file: DataFile) {
+    this.file$.next(file);
   }
-  get primaryHdu() {
-    return this.primaryHdu$.getValue();
+  get file() {
+    return this.file$.getValue();
   }
-  private primaryHdu$ = new BehaviorSubject<ImageHdu>(null);
+  private file$ = new BehaviorSubject<DataFile>(null);
 
-  @Input("primaryHeader")
-  set primaryHeader(primaryHeader: Header) {
-    this.primaryHeader$.next(primaryHeader);
+  @Input("hdu")
+  set hdu(hdu: ImageHdu) {
+    this.hdu$.next(hdu);
   }
-  get primaryHeader() {
-    return this.primaryHeader$.getValue();
+  get hdu() {
+    return this.hdu$.getValue();
   }
-  private primaryHeader$ = new BehaviorSubject<Header>(null);
+  private hdu$ = new BehaviorSubject<ImageHdu>(null);
 
-  @Input("viewportSize")
-  set viewportSize(viewportSize: {width: number, height: number}) {
-    this.viewportSize$.next(viewportSize);
+  @Input("batchHdus")
+  set batchHduOptions(batchHduOptions: ImageHdu[]) {
+    this.batchHduOptions$.next(batchHduOptions);
   }
-  get viewportSize() {
-    return this.viewportSize$.getValue();
+  get batchHduOptions() {
+    return this.batchHduOptions$.getValue();
   }
-  private viewportSize$ = new BehaviorSubject<{width: number, height: number}>(null);
+  private batchHduOptions$ = new BehaviorSubject<ImageHdu[]>(null);
 
-  @Input("state")
-  set state(state: PhotometryPanelState) {
-    this.state$.next(state);
+  //viewer is currently needed to determine the source extraction region
+  @Input("viewer")
+  set viewer(viewer: Viewer) {
+    this.viewer$.next(viewer);
   }
-  get state() {
-    return this.state$.getValue();
+  get viewer() {
+    return this.viewer$.getValue();
   }
-  private state$ = new BehaviorSubject<PhotometryPanelState>(null);
+  private viewer$ = new BehaviorSubject<Viewer>(null);
 
   @Input("sources")
   set sources(sources: Source[]) {
@@ -119,23 +121,14 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   }
   private sources$ = new BehaviorSubject<Source[]>(null);
 
-  @Input("hdus")
-  set hdus(hdus: ImageHdu[]) {
-    this.hdus$.next(hdus);
+  @Input("state")
+  set state(state: PhotometryPanelState) {
+    this.state$.next(state);
   }
-  get hdus() {
-    return this.hdus$.getValue();
+  get state() {
+    return this.state$.getValue();
   }
-  private hdus$ = new BehaviorSubject<ImageHdu[]>(null);
-
-  @Input("dataFileEntities")
-  set dataFileEntities(dataFileEntities: { [id: string]: DataFile }) {
-    this.dataFileEntities$.next(dataFileEntities);
-  }
-  get dataFileEntities() {
-    return this.dataFileEntities$.getValue();
-  }
-  private dataFileEntities$ = new BehaviorSubject<{ [id: string]: DataFile }>(null);
+  private state$ = new BehaviorSubject<PhotometryPanelState>(null);
 
   @Input("config")
   set config(config: PhotometryPanelConfig) {
@@ -158,9 +151,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   DECIMAL_FORMAT: (v: any) => any = (v: number) => (v ? v.toFixed(2) : "N/A");
   SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : "N/A");
   SourcePosType = PosType;
-
+  header$: Observable<Header>;
+  viewportSize$: Observable<{width: number, height: number}>
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
-
   batchPhotJob$: Observable<PhotometryJob>;
   batchFormDataSub: Subscription;
   photometryUpdater: Subscription;
@@ -183,6 +176,15 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     private store: Store,
     private router: Router
   ) {
+    this.header$ = this.hdu$.pipe(
+      switchMap(hdu => !hdu ? of(null) : this.store.select(DataFilesState.getHeaderById).pipe(
+        map(fn => fn(hdu.headerId))
+      ))
+    )
+    this.viewportSize$ = this.viewer$.pipe(
+      map(viewer => viewer?.viewportSize)
+    )
+
     this.tableData$ = combineLatest(
       this.sources$,
       this.state$.pipe(
@@ -234,7 +236,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       // }
     });
 
-    this.selectedImageHdus$ = combineLatest(this.hdus$, this.batchPhotFormData$).pipe(
+    this.selectedImageHdus$ = combineLatest(this.batchHduOptions$, this.batchPhotFormData$).pipe(
       map(([hdus, data]) => data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)))
     );
 
@@ -258,29 +260,12 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
         this.store.dispatch(
           new PhotometerSources(
             rows.map((row) => row.source.id),
-            [this.primaryHdu.id],
+            [this.hdu.id],
             this.photometrySettings,
             false
           )
         );
       });
-    // this.photometryUpdater = this.tableData$
-    // .pipe(
-    //   filter((sources) => sources && sources.length != 0 && this.config && this.config.autoPhot),
-    //   map(sources => sources.map(s => s.id)),
-    //   distinctUntilChanged(),
-    //   switchMap((sourceIds) => {
-    //     return this.store.dispatch(
-    //       new PhotometerSources(
-    //         sourceIds,
-    //         [this.selectedFile.id],
-    //         this.photometrySettings,
-    //         false
-    //       )
-    //     );
-    //   })
-    // )
-    // .subscribe();
   }
 
   ngOnInit() {}
@@ -578,10 +563,12 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       data: { ...this.sourceExtractionSettings },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().pipe(
+      withLatestFrom(this.viewportSize$)
+    ).subscribe(([result, viewportSize]) => {
       if (result) {
         this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.primaryHdu.id, this.viewportSize, result)]);
+        this.store.dispatch([new ExtractSources(this.hdu.id, viewportSize, result)]);
       }
     });
   }

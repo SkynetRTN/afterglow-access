@@ -1,12 +1,12 @@
-<div *ngIf="!primaryHeader?.loaded" class="alert alert-info" i18n>Select a data file to see options.</div>
-<div *ngIf="primaryHdu; let activeImageFile">
-  <div *ngIf="primaryHeader?.loaded">
+<div *ngIf="!(header$ | async)?.loaded" class="alert alert-info" i18n>Select a data file to see options.</div>
+<div *ngIf="hdu; let activeImageFile">
+  <div *ngIf="(header$ | async)?.loaded">
     <div class="mb-3">
       <mat-button-toggle-group
         name="coordMode"
         aria-label="Coordinate Mode"
-        [value]="primaryHeader?.wcs?.isValid() ? config?.coordMode : 'pixel'"
-        [disabled]="!primaryHeader?.wcs?.isValid()"
+        [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
+        [disabled]="!(header$ | async)?.wcs?.isValid()"
         (change)="onCoordModeChange($event)"
       >
         <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
@@ -328,21 +328,21 @@
 
     <hr />
     <div>
-      <p i18n>Use batch photometry to photometer all of your sources in multiple hdus.</p>
+      <p i18n>Use batch photometry to photometer all of your sources in multiple batchHduOptions.</p>
 
-      <div *ngIf="hdus">
+      <div *ngIf="batchHduOptions">
         <form [formGroup]="batchPhotForm">
           <div>
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Select Image(s) to Photometer</mat-label>
               <mat-select multiple formControlName="selectedHduIds">
-                <mat-option *ngFor="let hdu of hdus" [value]="hdu.id">
+                <mat-option *ngFor="let hdu of batchHduOptions" [value]="hdu.id">
                   {{getHduOptionLabel(hdu.id) | async}}
                 </mat-option>
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="selectHdus(hdus)">
+            <button mat-icon-button (click)="selectHdus(batchHduOptions)">
               <mat-icon>select_all</mat-icon>
             </button>
 

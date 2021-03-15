@@ -550,20 +550,15 @@
           >
           </app-plotting-panel>
 
-          <app-sonification-panel
+          <!-- <app-sonification-panel
             *ngSwitchCase="WorkbenchTool.SONIFIER"
-            [file]="file$ | async"
-            [hdu]="focusedViewerImageHdu$ | async"
-            [imageTransform]="focusedViewerImageTransform$ | async"
-            [viewportTransform]="focusedViewerViewportTransform$ | async"
-            [viewportSize]="(viewer$ | async)?.viewportSize"
-            [state]="sonificationPanelState$ | async"
+            [viewer]="focusedViewer$ | async"
           >
-          </app-sonification-panel>
+          </app-sonification-panel> -->
 
-          <app-photometry-panel
+          <!-- <app-photometry-panel
             *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
-            [primaryHdu]="hdu$ | async"
+            [hdu]="hdu$ | async"
             [primaryHeader]="focusedViewerHeader$ | async"
             [viewportSize]="focusedViewerViewportSize$ | async"
             [state]="photometryPanelState$ | async"
@@ -579,7 +574,7 @@
               onSourceExtractionSettingsChange($event)
             "
           >
-          </app-photometry-panel>
+          </app-photometry-panel> -->
 
           <app-pixel-ops-panel
             *ngSwitchCase="WorkbenchTool.IMAGE_CALC"
