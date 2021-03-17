@@ -15,9 +15,6 @@ export class FileToolbarComponent implements OnInit {
   @Input()
   showModified: boolean = false;
 
-  @Input()
-  modified: boolean = false;
-
   @Output() onSave = new EventEmitter<MouseEvent>();
   @Output() onClose = new EventEmitter<MouseEvent>();
 

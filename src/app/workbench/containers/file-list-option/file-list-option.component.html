@@ -30,7 +30,10 @@
     </span>
   </div>
 
-  <span *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect" class="node-toolbar">
+  <span
+    *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect || (fileModified$ | async)"
+    class="node-toolbar"
+  >
     <app-file-toolbar
       *ngIf="showFileToolbar"
       style="height: 100%"
@@ -39,11 +42,11 @@
       fxLayoutAlign="center center"
       [showSave]="true"
       [showClose]="true"
-      [modified]="fileModified$ | async"
       (onSave)="handleSave($event)"
       (onClose)="handleClose($event)"
     >
     </app-file-toolbar>
+
     <ng-container *ngIf="imageHdu$ | async; let hdu">
       <app-image-hdu-toolbar
         *ngIf="showImageHduLayerToolbar"
@@ -63,7 +66,15 @@
       >
       </app-image-hdu-toolbar>
     </ng-container>
-
+    <div
+      *ngIf="!showFileToolbar && (fileModified$ | async)"
+      style="height: 100%"
+      fxFlex="0 0 auto"
+      fxLayout="row"
+      fxLayoutAlign="center center"
+    >
+      <mat-icon fxFlex="0 0 auto" class="small m-1" aria-label="modified">fiber_manual_record</mat-icon>
+    </div>
     <div *ngIf="showSelect" style="height: 100%" fxFlex="0 0 auto" fxLayout="row" fxLayoutAlign="center center">
       <mat-checkbox #checkbox class="m-1" [ngModel]="selected" (click)="handleToggleSelection($event)"></mat-checkbox>
     </div>
