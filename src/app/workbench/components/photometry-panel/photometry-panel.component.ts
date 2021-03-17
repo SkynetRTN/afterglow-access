@@ -72,7 +72,7 @@ import { SourceExtractionSettings } from '../../models/source-extraction-setting
 import { JobsState } from '../../../jobs/jobs.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import * as snakeCaseKeys from 'snakecase-keys';
-import { Viewer } from '../../models/viewer';
+import { IViewer } from '../../models/viewer';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { WorkbenchImageHduState } from '../../models/workbench-file-state';

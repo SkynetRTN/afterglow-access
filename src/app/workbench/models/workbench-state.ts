@@ -1,35 +1,35 @@
-import { SidebarView } from "./sidebar-view";
-import { ViewMode } from "./view-mode";
-import { Viewer } from "./viewer";
-import { CentroidSettings } from "./centroid-settings";
-import { Catalog } from "./catalog";
-import { FieldCal } from "./field-cal";
-import { PhotometrySettings } from "./photometry-settings";
-import { SourceExtractionSettings } from "./source-extraction-settings";
-import { FileInfoPanelConfig } from "./file-info-panel";
-import { WorkbenchFileState, IWorkbenchHduState } from "./workbench-file-state";
-import { PlottingPanelState } from "./plotter-file-state";
-import { CustomMarkerPanelState } from "./marker-file-state";
-import { SonificationPanelState } from "./sonifier-file-state";
-import { PhotometryPanelState } from "./photometry-file-state";
+import { SidebarView } from './sidebar-view';
+import { ViewMode } from './view-mode';
+import { IViewer } from './viewer';
+import { CentroidSettings } from './centroid-settings';
+import { Catalog } from './catalog';
+import { FieldCal } from './field-cal';
+import { PhotometrySettings } from './photometry-settings';
+import { SourceExtractionSettings } from './source-extraction-settings';
+import { FileInfoPanelConfig } from './file-info-panel';
+import { WorkbenchFileState, IWorkbenchHduState } from './workbench-file-state';
+import { PlottingPanelState } from './plotter-file-state';
+import { CustomMarkerPanelState } from './marker-file-state';
+import { SonificationPanelState } from './sonifier-file-state';
+import { PhotometryPanelState } from './photometry-file-state';
 
 export enum WorkbenchTool {
-  VIEWER = "display",
-  PLOTTER = "plotter",
-  SONIFIER = "sonfiier",
-  PHOTOMETRY = "photometry",
-  CUSTOM_MARKER = "marker",
-  INFO = "info",
-  FIELD_CAL = "field-cal",
-  IMAGE_CALC = "image-calculator",
-  STACKER = "stacker",
-  ALIGNER = "aligner",
-  WCS_CALIBRATION = "wcs-calibration"
+  VIEWER = 'display',
+  PLOTTER = 'plotter',
+  SONIFIER = 'sonfiier',
+  PHOTOMETRY = 'photometry',
+  CUSTOM_MARKER = 'marker',
+  INFO = 'info',
+  FIELD_CAL = 'field-cal',
+  IMAGE_CALC = 'image-calculator',
+  STACKER = 'stacker',
+  ALIGNER = 'aligner',
+  WCS_CALIBRATION = 'wcs-calibration',
 }
 
 export interface PixelOpsFormData {
-  operand: "+" | "-" | "/" | "*";
-  mode: "scalar" | "image";
+  operand: '+' | '-' | '/' | '*';
+  mode: 'scalar' | 'image';
   primaryHduIds: string[];
   auxHduId: string;
   auxHduIds: string[];
@@ -41,7 +41,7 @@ export interface PixelOpsFormData {
 export interface AlignFormData {
   selectedHduIds: string[];
   refHduId: string;
-  mode: "astrometric" | "manual_source";
+  mode: 'astrometric' | 'manual_source';
   crop: boolean;
 }
 
@@ -51,9 +51,9 @@ export interface BatchPhotometryFormData {
 
 export interface StackFormData {
   selectedHduIds: string[];
-  mode: "average" | "percentile" | "mode" | "sum";
-  scaling: "none" | "average" | "median" | "mode";
-  rejection: "none" | "chauvenet" | "iraf" | "minmax" | "sigclip";
+  mode: 'average' | 'percentile' | 'mode' | 'sum';
+  scaling: 'none' | 'average' | 'median' | 'mode';
+  rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';
   percentile?: number;
   low?: number;
   high?: number;
@@ -69,7 +69,7 @@ export interface PlottingPanelConfig {
   centroidClicks: boolean;
   planetCentroiding: boolean;
   plotterSyncEnabled: boolean;
-  plotMode: "1D" | "2D" | "3D";
+  plotMode: '1D' | '2D' | '3D';
 }
 
 export interface PhotometryPanelConfig {
@@ -77,7 +77,7 @@ export interface PhotometryPanelConfig {
   showSourceLabels: boolean;
   showSourcesFromAllFiles: boolean;
   selectedSourceIds: string[];
-  coordMode: "pixel" | "sky";
+  coordMode: 'pixel' | 'sky';
   batchPhotFormData: BatchPhotometryFormData;
   autoPhot: boolean;
   batchPhotProgress: number | null;
@@ -116,14 +116,14 @@ export interface WcsCalibrationSettings {
 
 export interface ViewerPanelContainer {
   id: string;
-  type: "container";
-  direction: "row" | "row-reverse" | "column" | "column-reverse";
+  type: 'container';
+  direction: 'row' | 'row-reverse' | 'column' | 'column-reverse';
   itemIds: Array<string>;
 }
 
 export interface ViewerPanel {
   id: string;
-  type: "panel";
+  type: 'panel';
   viewerIds: string[];
   selectedViewerId: string;
 }
@@ -137,7 +137,7 @@ export interface WorkbenchStateModel {
   sidebarView: SidebarView;
   showSidebar: boolean;
   showConfig: boolean;
-  fullScreenPanel: "file" | "viewer" | "tool";
+  fullScreenPanel: 'file' | 'viewer' | 'tool';
   activeTool: WorkbenchTool;
   viewMode: ViewMode;
   rootViewerPanelContainerId: string;
@@ -145,14 +145,14 @@ export interface WorkbenchStateModel {
   nextViewerPanelIdSeed: number;
   nextViewerPanelContainerIdSeed: number;
   viewerIds: string[];
-  viewers: { [id: string]: Viewer };
+  viewers: { [id: string]: IViewer };
   viewerLayoutItems: { [id: string]: ViewerLayoutItem };
   viewerLayoutItemIds: string[];
   focusedViewerPanelId: string;
   selectedFileIds: string[];
   fileListFilter: string;
   viewerSyncEnabled: boolean;
-  viewerSyncMode: "sky" | "pixel";
+  viewerSyncMode: 'sky' | 'pixel';
   normalizationSyncEnabled: boolean;
   centroidSettings: CentroidSettings;
   sourceExtractionSettings: SourceExtractionSettings;
@@ -175,7 +175,7 @@ export interface WorkbenchStateModel {
   aligningPanelConfig: AligningPanelConfig;
   stackingPanelConfig: StackingPanelConfig;
   wcsCalibrationPanelState: WcsCalibrationPanelState;
-  wcsCalibrationSettings: WcsCalibrationSettings
+  wcsCalibrationSettings: WcsCalibrationSettings;
   fileIds: string[];
   fileStateEntities: { [id: string]: WorkbenchFileState };
   hduIds: string[];

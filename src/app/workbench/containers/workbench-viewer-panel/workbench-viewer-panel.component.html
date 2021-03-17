@@ -1,58 +1,29 @@
 <div class="viewer-panel" [class.focused]="hasFocus" style="height: 100%">
-  <mat-tab-group
-    [id]="id"
-    cdkDropListOrientation="horizontal"
-    (cdkDropListDropped)="drop($event)"
-    cdkDropList
-    [cdkDropListConnectedTo]="dropListConnections$ | async"
-    class="mat-tab-fill-height"
-    style="height: 100%"
-    [animationDuration]="'0ms'"
-    [selectedIndex]="selectedViewerIndex"
-    (selectedIndexChange)="onSelectedViewerIndexChange($event)"
-  >
+  <mat-tab-group [id]="id" cdkDropListOrientation="horizontal" (cdkDropListDropped)="drop($event)" cdkDropList
+    [cdkDropListConnectedTo]="dropListConnections$ | async" class="mat-tab-fill-height" style="height: 100%"
+    [animationDuration]="'0ms'" [selectedIndex]="selectedViewerIndex"
+    (selectedIndexChange)="onSelectedViewerIndexChange($event)">
     <mat-tab *ngFor="let viewer of viewers$ | async; let i = index; trackBy: viewerTrackByFn">
       <ng-template mat-tab-label>
-        <div
-          class="viewer-tab-label"
-          [class.active-viewer]="selectedViewerId == viewer.id"
+        <div class="viewer-tab-label" [class.active-viewer]="selectedViewerId == viewer.id"
           [class.inactive-viewer]="selectedViewerId != viewer.id"
           (mouseup)="$event.which === 2 ? closeViewer(viewer.id) : null"
           (click)="setFocusedViewer($event, viewer.id, viewer)"
-          (mousedown)="setFocusedViewer($event, viewer.id, viewer)"
-          cdkDropList
-          cdkDrag
-          [cdkDragData]="viewer"
-          (contextmenu)="onContextMenu($event, viewer)"
-        >
+          (mousedown)="setFocusedViewer($event, viewer.id, viewer)" cdkDropList cdkDrag [cdkDragData]="viewer"
+          (contextmenu)="onContextMenu($event, viewer)">
           <div fxLayout="row" fxFlexFill>
-            <div
-              fxFlex="1 1 auto"
-              class="label"
-              [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'"
-              matTooltipClass="file-path-tooltip"
-              matTooltipShowDelay="500"
-            >
-              <span *ngIf="(fileEntities$ | async)[viewer.fileId]; let file" class="ml-4" [matTooltip]="file?.assetPath">
+            <div fxFlex="1 1 auto" class="label" [style.font-style]="viewer.keepOpen ? 'normal' : 'italic'"
+              matTooltipClass="file-path-tooltip" matTooltipShowDelay="500">
+              <span *ngIf="(fileEntities$ | async)[viewer.fileId]; let file" class="ml-4"
+                [matTooltip]="file?.assetPath">
                 {{ getTabLabel(viewer) }}
               </span>
             </div>
-            <div
-              fxFlex="0 0 auto"
-              class="icon-group"
-              (mouseenter)="mouseOverCloseViewerId = viewer.id"
-              (mouseleave)="mouseOverCloseViewerId = null"
-            >
+            <div fxFlex="0 0 auto" class="icon-group" (mouseenter)="mouseOverCloseViewerId = viewer.id"
+              (mouseleave)="mouseOverCloseViewerId = null">
               <span class="mr-2 ml-2">
-                <button
-                  class="close-button"
-                  mat-icon-button
-                  aria-label="Close"
-                  (click)="closeViewer(viewer.id)"
-                  matTooltipClass="file-path-tooltip"
-                  matTooltip="Close Viewer"
-                  matTooltipShowDelay="500"
-                >
+                <button class="close-button" mat-icon-button aria-label="Close" (click)="closeViewer(viewer.id)"
+                  matTooltipClass="file-path-tooltip" matTooltip="Close Viewer" matTooltipShowDelay="500">
                   <mat-icon class="close-button">close</mat-icon>
                 </button>
               </span>
@@ -61,53 +32,39 @@
         </div>
       </ng-template>
       <ng-template matTabContent>
-        <ng-container [ngSwitch]="viewer.type">
-          <app-workbench-image-viewer
-            *ngSwitchCase="'image'"
-            (mousedown)="setFocusedViewer($event, viewer.id, viewer)"
-            [viewer]="viewer"
-            [active]="selectedViewerId == viewer.id && hasFocus"
-            (onImageMouseMove)="handleImageMouseMove($event, viewer.id, viewer)"
-            (onImageMouseDown)="handleImageMouseDown($event, viewer.id, viewer)"
-            (onImageMouseUp)="handleImageMouseUp($event, viewer.id, viewer)"
-            (onImageMouseDragStart)="handleImageMouseDragStart($event, viewer.id, viewer)"
-            (onImageMouseDrag)="handleImageMouseDrag($event, viewer.id, viewer)"
-            (onImageMouseDragEnd)="handleImageMouseDragEnd($event, viewer.id, viewer)"
-            (onImageClick)="handleImageClick($event, viewer.id, viewer)"
-            (onMarkerClick)="handleMarkerClick($event, viewer.id, viewer)"
-            (onFileClose)="onFileClose.emit($event)"
-            (onFileSave)="onFileSave.emit($event)"
-          >
-          </app-workbench-image-viewer>
-          <div *ngSwitchCase="'table'">Tables are not yet supported.</div>
-        </ng-container>
+        <app-workbench-image-viewer *ngIf="viewer| guardType: isImageViewer as imageViewer"
+          (mousedown)="setFocusedViewer($event, viewer.id, viewer)" [viewer]="imageViewer"
+          [active]="selectedViewerId == viewer.id && hasFocus"
+          (onImageMouseMove)="handleImageMouseMove($event, viewer.id, viewer)"
+          (onImageMouseDown)="handleImageMouseDown($event, viewer.id, viewer)"
+          (onImageMouseUp)="handleImageMouseUp($event, viewer.id, viewer)"
+          (onImageMouseDragStart)="handleImageMouseDragStart($event, viewer.id, viewer)"
+          (onImageMouseDrag)="handleImageMouseDrag($event, viewer.id, viewer)"
+          (onImageMouseDragEnd)="handleImageMouseDragEnd($event, viewer.id, viewer)"
+          (onImageClick)="handleImageClick($event, viewer.id, viewer)"
+          (onMarkerClick)="handleMarkerClick($event, viewer.id, viewer)" (onFileClose)="onFileClose.emit($event)"
+          (onFileSave)="onFileSave.emit($event)">
+        </app-workbench-image-viewer>
+        <div *ngIf="viewer| guardType: isTableViewer as tableViewer">Tables are not yet supported.</div>
       </ng-template>
     </mat-tab>
   </mat-tab-group>
 </div>
 
-<div
-  style="visibility: hidden; position: fixed"
-  [style.left]="contextMenuPosition.x"
-  [style.top]="contextMenuPosition.y"
-  [matMenuTriggerFor]="contextMenu"
-></div>
+<div style="visibility: hidden; position: fixed" [style.left]="contextMenuPosition.x"
+  [style.top]="contextMenuPosition.y" [matMenuTriggerFor]="contextMenu"></div>
 
 <mat-menu class="context-menu" #contextMenu="matMenu">
   <ng-template matMenuContent let-viewer="viewer">
     <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewer(viewer.id)">
       <div class="context-label" fxFlex="1 1 auto">Close</div>
     </div>
-    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeOtherViewers(viewer.id)" [disabled]="viewers.length == 1">
+    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeOtherViewers(viewer.id)"
+      [disabled]="viewers.length == 1">
       <div class="context-label" fxFlex="1 1 auto">Close Others</div>
     </div>
-    <div
-      mat-menu-item
-      fxLayout="row"
-      fxFlexFill
-      (click)="closeViewersToTheRight(viewer.id)"
-      [disabled]="viewers.length == 1"
-    >
+    <div mat-menu-item fxLayout="row" fxFlexFill (click)="closeViewersToTheRight(viewer.id)"
+      [disabled]="viewers.length == 1">
       <div class="context-label" fxFlex="1 1 auto">Close to the Right</div>
 
     </div>
@@ -118,48 +75,28 @@
     </div>
     <mat-divider></mat-divider>
 
-    <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewer.keepOpen" (click)="keepViewerOpen(viewer.id, 'left')">
+    <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewer.keepOpen" (click)="keepViewerOpen(viewer.id)">
       <div class="context-label" fxFlex="1 1 auto">Keep Open</div>
 
     </div>
     <mat-divider></mat-divider>
-    <div
-      mat-menu-item
-      fxLayout="row"
-      fxFlexFill
-      [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.id, 'up')"
-    >
+    <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
+      (click)="splitViewerPanel(viewer.id, 'up')">
       <div class="context-label" fxFlex="1 1 auto">Split Up</div>
 
     </div>
-    <div
-      mat-menu-item
-      fxLayout="row"
-      fxFlexFill
-      [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.id, 'down')"
-    >
+    <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
+      (click)="splitViewerPanel(viewer.id, 'down')">
       <div class="context-label" fxFlex="1 1 auto">Split Down</div>
 
     </div>
-    <div
-      mat-menu-item
-      fxLayout="row"
-      fxFlexFill
-      [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.id, 'left')"
-    >
+    <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
+      (click)="splitViewerPanel(viewer.id, 'left')">
       <div class="context-label" fxFlex="1 1 auto">Split Left</div>
 
     </div>
-    <div
-      mat-menu-item
-      fxLayout="row"
-      fxFlexFill
-      [disabled]="viewers.length == 1"
-      (click)="splitViewerPanel(viewer.id, 'right')"
-    >
+    <div mat-menu-item fxLayout="row" fxFlexFill [disabled]="viewers.length == 1"
+      (click)="splitViewerPanel(viewer.id, 'right')">
       <div class="context-label" fxFlex="1 1 auto">Split Right</div>
 
     </div>

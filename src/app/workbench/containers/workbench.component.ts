@@ -77,7 +77,7 @@ import { ViewMode } from '../models/view-mode';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { MatRadioChange } from '@angular/material/radio';
 import { MatSelectChange } from '@angular/material/select';
-import { Viewer, ImageViewer, TableViewer } from '../models/viewer';
+import { IViewer, ImageViewer, TableViewer, ViewerType } from '../models/viewer';
 import { DataProvider } from '../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../utils/correlated-action';
 import { DataProvidersState } from '../../data-providers/data-providers.state';
@@ -159,7 +159,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   selectAllFilesChecked$: Observable<boolean>;
   selectAllFilesIndeterminate$: Observable<boolean>;
 
-  viewer$: Observable<Viewer>;
+  viewer$: Observable<IViewer>;
   viewerId$: Observable<string>;
   canSplit$: Observable<boolean>;
   imageViewer$: Observable<ImageViewer>;
@@ -182,7 +182,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   viewMode$: Observable<ViewMode>;
 
   selectedCustomMarkers$: Observable<CustomMarker[]>;
-  viewers$: Observable<Viewer[]>;
+  viewers$: Observable<IViewer[]>;
   viewerSyncEnabled$: Observable<boolean>;
   viewerSyncMode$: Observable<'sky' | 'pixel'>;
   normalizationSyncEnabled$: Observable<boolean>;
@@ -831,7 +831,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  getViewerLabel(viewer: Viewer, index: number) {
+  getViewerLabel(viewer: IViewer, index: number) {
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
@@ -854,7 +854,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     this.imageClickEvent = $event;
 
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != 'image') {
+    if (!viewer || viewer.type != ViewerType.IMAGE) {
       return;
     }
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
@@ -885,7 +885,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   onImageMouseMove($event: ViewerPanelCanvasMouseEvent) {
     this.imageMouseMoveEvent = $event;
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != 'image') {
+    if (!viewer || viewer.type != ViewerType.IMAGE) {
       return;
     }
 
@@ -909,7 +909,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   onImageMouseDragStart($event: ViewerPanelCanvasMouseDragEvent) {
     this.imageDragStartEvent = $event;
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != 'image') {
+    if (!viewer || viewer.type != ViewerType.IMAGE) {
       return;
     }
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
@@ -927,7 +927,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   onImageMouseDrag($event: ViewerPanelCanvasMouseDragEvent) {
     this.imageDragEvent = $event;
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != 'image') {
+    if (!viewer || viewer.type != ViewerType.IMAGE) {
       return;
     }
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
@@ -945,7 +945,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   onImageMouseDragEnd($event: ViewerPanelCanvasMouseDragEvent) {
     this.imageDragEndEvent = $event;
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != 'image') {
+    if (!viewer || viewer.type != ViewerType.IMAGE) {
       return;
     }
     let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
@@ -964,7 +964,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     this.markerClickEvent = $event;
 
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != 'image') {
+    if (!viewer || viewer.type != ViewerType.IMAGE) {
       return;
     }
 
@@ -1794,7 +1794,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     this.useWcsCenter = $event.value == 'wcs';
   }
 
-  splitViewerPanel(viewer: Viewer, direction: 'up' | 'down' | 'left' | 'right' = 'right') {
+  splitViewerPanel(viewer: IViewer, direction: 'up' | 'down' | 'left' | 'right' = 'right') {
     this.store.dispatch(new SplitViewerPanel(viewer.id, direction));
   }
 

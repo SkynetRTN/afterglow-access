@@ -15,16 +15,7 @@ import {
 import { DomSanitizer, SafeValue } from '@angular/platform-browser';
 
 import { Observable, combineLatest, of } from 'rxjs';
-import {
-  distinctUntilChanged,
-  map,
-  flatMap,
-  filter,
-  withLatestFrom,
-  tap,
-  switchMap,
-  takeUntil,
-} from 'rxjs/operators';
+import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap, switchMap, takeUntil } from 'rxjs/operators';
 import {
   DataFile,
   getWidth,
@@ -86,21 +77,15 @@ import {
   LoadImageHduHistogram,
 } from '../../../data-files/data-files.actions';
 import { HduType } from '../../../data-files/models/data-file-type';
-import {
-  Transform,
-  getImageToViewportTransform,
-} from '../../../data-files/models/transformation';
+import { Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
 import { IImageData } from '../../../data-files/models/image-data';
 import { UpdateCurrentViewportSize } from '../../workbench.actions';
-import { Viewer, ImageViewer } from '../../models/viewer';
+import { IViewer, ImageViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
 import { WorkbenchTool } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { PlottingPanelState } from '../../models/plotter-file-state';
-import {
-  SonificationPanelState,
-  SonifierRegionMode,
-} from '../../models/sonifier-file-state';
+import { SonificationPanelState, SonifierRegionMode } from '../../models/sonifier-file-state';
 import { ImageHist } from '../../../data-files/models/image-hist';
 import * as moment from 'moment';
 import { Papa } from 'ngx-papaparse';
@@ -116,8 +101,7 @@ import * as piexif from 'piexifjs';
   styleUrls: ['./workbench-image-viewer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkbenchImageViewerComponent
-  implements OnInit, OnChanges, OnDestroy {
+export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Input('viewer')
   set viewer(viewer: ImageViewer) {
     this.viewer$.next(viewer);
@@ -206,11 +190,7 @@ export class WorkbenchImageViewerComponent
   selectedFieldCalId$: Observable<string>;
   fieldCalMarkers$: Observable<Marker[]>;
 
-  constructor(
-    private store: Store,
-    private sanitization: DomSanitizer,
-    private papa: Papa
-  ) {
+  constructor(private store: Store, private sanitization: DomSanitizer, private papa: Papa) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
     let viewerId$ = this.viewer$.pipe(
@@ -224,102 +204,57 @@ export class WorkbenchImageViewerComponent
     );
 
     this.file$ = this.viewer$.pipe(
-      switchMap((viewer) =>
-        this.store
-          .select(DataFilesState.getFileById)
-          .pipe(map((fn) => fn(viewer.fileId)))
-      ),
+      switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId)))),
       distinctUntilChanged()
     );
 
     this.hduIds$ = this.file$.pipe(
       map((file) => file.hduIds),
-      distinctUntilChanged(
-        (a, b) =>
-          a &&
-          b &&
-          a.length == b.length &&
-          a.every((value, index) => b[index] == value)
-      )
+      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
 
     this.hdus$ = this.hduIds$.pipe(
       switchMap((hduIds) => {
         return combineLatest(
-          hduIds.map((hduId) =>
-            this.store
-              .select(DataFilesState.getHduById)
-              .pipe(map((fn) => fn(hduId)))
-          )
-        ).pipe(
-          map(
-            (hdus) =>
-              hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[]
-          )
-        );
+          hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
+        ).pipe(map((hdus) => hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[]));
       })
     );
 
     this.headerIds$ = this.hdus$.pipe(
       map((hdus) => hdus.map((hdu) => hdu.headerId)),
-      distinctUntilChanged(
-        (a, b) =>
-          a &&
-          b &&
-          a.length == b.length &&
-          a.every((value, index) => b[index] == value)
-      )
+      distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
 
     this.headers$ = this.headerIds$.pipe(
       switchMap((headerIds) => {
         return combineLatest(
-          headerIds.map((headerId) =>
-            this.store
-              .select(DataFilesState.getHeaderById)
-              .pipe(map((fn) => fn(headerId)))
-          )
+          headerIds.map((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
         );
       })
     );
 
     this.selectedHdu$ = combineLatest([this.selectedHduId$, this.hdus$]).pipe(
-      map(([hduId, hdus]) =>
-        hduId ? hdus.find((hdu) => hdu.id == hduId) : null
-      )
+      map(([hduId, hdus]) => (hduId ? hdus.find((hdu) => hdu.id == hduId) : null))
     );
 
-    this.selectedHduHeader$ = combineLatest([
-      this.selectedHdu$,
-      this.headers$,
-    ]).pipe(
-      map(([hdu, headers]) =>
-        hdu ? headers.find((header) => header.id == hdu.headerId) : null
-      )
+    this.selectedHduHeader$ = combineLatest([this.selectedHdu$, this.headers$]).pipe(
+      map(([hdu, headers]) => (hdu ? headers.find((header) => header.id == hdu.headerId) : null))
     );
 
-    this.headersLoaded$ = combineLatest([
-      this.headers$,
-      this.selectedHduHeader$,
-    ]).pipe(
-      map(([headers, header]) =>
-        header ? header.loaded : headers.every((header) => header.loaded)
-      )
+    this.headersLoaded$ = combineLatest([this.headers$, this.selectedHduHeader$]).pipe(
+      map(([headers, header]) => (header ? header.loaded : headers.every((header) => header.loaded)))
     );
 
     this.histsLoaded$ = combineLatest([this.hdus$, this.selectedHdu$]).pipe(
-      map(([hdus, hdu]) =>
-        hdu ? hdu.hist.loaded : hdus.every((hdu) => hdu.hist.loaded)
-      )
+      map(([hdus, hdu]) => (hdu ? hdu.hist.loaded : hdus.every((hdu) => hdu.hist.loaded)))
     );
 
     this.ready$ = combineLatest([this.headersLoaded$, this.histsLoaded$]).pipe(
       map(([headerLoaded, histLoaded]) => headerLoaded && histLoaded)
     );
 
-    this.firstHeader$ = this.headers$.pipe(
-      map((headers) => (headers.length > 0 ? headers[0] : null))
-    );
+    this.firstHeader$ = this.headers$.pipe(map((headers) => (headers.length > 0 ? headers[0] : null)));
 
     // // watch for changes to header and reload when necessary
     // combineLatest([this.hduId$, this.header$]).pipe(
@@ -355,52 +290,40 @@ export class WorkbenchImageViewerComponent
 
     this.rawImageData$ = rawImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store
-          .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
+        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
       ),
       distinctUntilChanged()
     );
 
     let normalizedImageDataId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getNormalizedImageDataIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
+        this.store.select(WorkbenchState.getNormalizedImageDataIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
       ),
       distinctUntilChanged()
     );
 
     this.normalizedImageData$ = normalizedImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store
-          .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
+        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
       ),
       distinctUntilChanged()
     );
 
     let viewportTransformId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getViewportTransformIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
+        this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
       ),
       distinctUntilChanged()
     );
 
     this.viewportTransform$ = viewportTransformId$.pipe(
-      switchMap((transformId) =>
-        this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(transformId)))
-      ),
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
       distinctUntilChanged()
     );
 
@@ -415,18 +338,11 @@ export class WorkbenchImageViewerComponent
     );
 
     this.imageTransform$ = imageTransformId$.pipe(
-      switchMap((transformId) =>
-        this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(transformId)))
-      ),
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
       distinctUntilChanged()
     );
 
-    this.imageToViewportTransform$ = combineLatest(
-      this.imageTransform$,
-      this.viewportTransform$
-    ).pipe(
+    this.imageToViewportTransform$ = combineLatest(this.imageTransform$, this.viewportTransform$).pipe(
       map(([imageTransform, viewportTransform]) => {
         if (!imageTransform || !viewportTransform) {
           return null;
@@ -437,85 +353,61 @@ export class WorkbenchImageViewerComponent
 
     let customMarkerPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
+        this.store.select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
       ),
       distinctUntilChanged()
     );
 
     this.customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store
-          .select(WorkbenchState.getCustomMarkerPanelStateById)
-          .pipe(map((fn) => fn(id)))
-      ),
+      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
       distinctUntilChanged()
     );
 
     let plottingPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getPlottingPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
+        this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
       ),
       distinctUntilChanged()
     );
 
     this.plottingPanelState$ = plottingPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store
-          .select(WorkbenchState.getPlottingPanelStateById)
-          .pipe(map((fn) => fn(id)))
-      ),
+      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id)))),
       distinctUntilChanged()
     );
 
     let sonificationPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getSonificationPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
+        this.store.select(WorkbenchState.getSonificationPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
       ),
       distinctUntilChanged()
     );
 
     this.sonificationPanelState$ = sonificationPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store
-          .select(WorkbenchState.getSonificationPanelStateById)
-          .pipe(map((fn) => fn(id)))
-      ),
+      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id)))),
       distinctUntilChanged()
     );
 
     let photometryPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
-        this.store
-          .select(WorkbenchState.getPhotometryPanelStateIdFromViewerId)
-          .pipe(
-            map((fn) => fn(viewerId)),
-            distinctUntilChanged()
-          )
+        this.store.select(WorkbenchState.getPhotometryPanelStateIdFromViewerId).pipe(
+          map((fn) => fn(viewerId)),
+          distinctUntilChanged()
+        )
       ),
       distinctUntilChanged()
     );
 
     let photometryPanelState$ = photometryPanelStateId$.pipe(
-      switchMap((id) =>
-        this.store
-          .select(WorkbenchState.getPhotometryPanelStateById)
-          .pipe(map((fn) => fn(id)))
-      ),
+      switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id)))),
       distinctUntilChanged()
     );
 
@@ -530,9 +422,7 @@ export class WorkbenchImageViewerComponent
     this.markers$ = this.activeTool$.pipe(
       switchMap((activeTool) => {
         if (activeTool == WorkbenchTool.CUSTOM_MARKER) {
-          return this.customMarkerPanelState$.pipe(
-            map((state) => Object.values(state.markerEntities))
-          );
+          return this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
         } else if (activeTool == WorkbenchTool.PLOTTER) {
           return combineLatest(
             this.firstHeader$,
@@ -542,10 +432,10 @@ export class WorkbenchImageViewerComponent
           ).pipe(
             map(([firstHeader, selectedHeader, plottingState, config]) => {
               let header = selectedHeader;
-              if(!header) {
-                header = firstHeader
+              if (!header) {
+                header = firstHeader;
               }
-              if (!plottingState || !header ) {
+              if (!plottingState || !header) {
                 return [];
               }
 
@@ -573,10 +463,7 @@ export class WorkbenchImageViewerComponent
                 }
                 let wcs = header.wcs;
                 if (startPosType == PosType.SKY) {
-                  let xy = wcs.worldToPix([
-                    startPrimaryCoord,
-                    startSecondaryCoord,
-                  ]);
+                  let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
                   x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
                   y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
                 }
@@ -596,9 +483,9 @@ export class WorkbenchImageViewerComponent
                   y1: y1,
                   x2: x2,
                   y2: y2,
-                }
+                };
 
-                markers = [ lineMarker];
+                markers = [lineMarker];
               } else {
                 let rectangleMarker: RectangleMarker = {
                   id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
@@ -607,7 +494,7 @@ export class WorkbenchImageViewerComponent
                   y: Math.min(y1, y2),
                   width: Math.abs(x2 - x1),
                   height: Math.abs(y2 - y1),
-                }
+                };
                 markers = [rectangleMarker];
               }
               return markers;
@@ -640,10 +527,7 @@ export class WorkbenchImageViewerComponent
             })
           );
         } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
-          let sourceSelectionRegionMarkers$ = combineLatest(
-            this.selectedHduId$,
-            photometryPanelState$
-          ).pipe(
+          let sourceSelectionRegionMarkers$ = combineLatest(this.selectedHduId$, photometryPanelState$).pipe(
             map(([hduId, state]) => {
               if (!state || !state.markerSelectionRegion) return [];
               let region = state.markerSelectionRegion;
@@ -673,9 +557,7 @@ export class WorkbenchImageViewerComponent
               let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
               let showSourceLabels = config.showSourceLabels;
 
-              let markers: Array<
-                CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker
-              > = [];
+              let markers: Array<CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker> = [];
               let mode = coordMode;
 
               if (!header.wcs || !header.wcs.isValid()) mode = 'pixel';
@@ -691,35 +573,19 @@ export class WorkbenchImageViewerComponent
                 }
 
                 let photData = sourcePhotometryData[source.id];
-                if (
-                  photData &&
-                  photData.x !== null &&
-                  photData.y !== null &&
-                  photData.aperA !== null
-                ) {
+                if (photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
                   let tooltipMessage = [];
                   if (photData.raHours !== null && photData.decDegs !== null) {
                     tooltipMessage.push(
-                      `RA,DEC: (${formatDms(
-                        photData.raHours,
-                        2,
-                        3
-                      )}, ${formatDms(photData.decDegs, 2, 3)})`
+                      `RA,DEC: (${formatDms(photData.raHours, 2, 3)}, ${formatDms(photData.decDegs, 2, 3)})`
                     );
                   }
                   if (photData.x !== null && photData.y !== null) {
-                    tooltipMessage.push(
-                      `X,Y: (${round(photData.x, 3)}, ${round(photData.y, 3)})`
-                    );
+                    tooltipMessage.push(`X,Y: (${round(photData.x, 3)}, ${round(photData.y, 3)})`);
                   }
 
                   if (photData.mag !== null && photData.magError !== null) {
-                    tooltipMessage.push(
-                      `${round(photData.mag, 3)} +/- ${round(
-                        photData.magError,
-                        3
-                      )} mag`
-                    );
+                    tooltipMessage.push(`${round(photData.mag, 3)} +/- ${round(photData.magError, 3)} mag`);
                   }
 
                   let apertureMarker: ApertureMarker = {
@@ -735,8 +601,7 @@ export class WorkbenchImageViewerComponent
                     annulusAOut: photData.annulusAOut,
                     annulusBOut: photData.annulusBOut,
                     labelTheta: 0,
-                    labelRadius:
-                      Math.max(photData.annulusAOut, photData.annulusBOut) + 15,
+                    labelRadius: Math.max(photData.annulusAOut, photData.annulusBOut) + 15,
                     label: showSourceLabels ? source.label : '',
                     selected: selected,
                     data: { source: source },
@@ -784,13 +649,8 @@ export class WorkbenchImageViewerComponent
             })
           );
 
-          return combineLatest(
-            sourceSelectionRegionMarkers$,
-            sourceMarkers$
-          ).pipe(
-            map(([sourceSelectionRegionMarkers, sourceMarkers]) =>
-              sourceMarkers.concat(sourceSelectionRegionMarkers)
-            )
+          return combineLatest(sourceSelectionRegionMarkers$, sourceMarkers$).pipe(
+            map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
           );
         }
 
@@ -856,22 +716,15 @@ export class WorkbenchImageViewerComponent
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(
-      WorkbenchState.getNormalizedImageDataIdFromViewerId
-    )(this.viewer.id);
-    let imageTransformId = this.store.selectSnapshot(
-      WorkbenchState.getImageTransformIdFromViewerId
-    )(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(
-      WorkbenchState.getViewportTransformIdFromViewerId
-    )(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
+    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
+      this.viewer.id
+    );
 
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    ) {
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) {
       return;
     }
     this.store.dispatch(
@@ -890,22 +743,14 @@ export class WorkbenchImageViewerComponent
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(
-      WorkbenchState.getNormalizedImageDataIdFromViewerId
-    )(this.viewer.id);
-    let imageTransformId = this.store.selectSnapshot(
-      WorkbenchState.getImageTransformIdFromViewerId
-    )(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(
-      WorkbenchState.getViewportTransformIdFromViewerId
-    )(this.viewer.id);
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
-      return;
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
+    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
+      this.viewer.id
+    );
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
     this.store.dispatch(
       new ZoomBy(
         normalizedImageDataId,
@@ -922,23 +767,15 @@ export class WorkbenchImageViewerComponent
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(
-      WorkbenchState.getNormalizedImageDataIdFromViewerId
-    )(this.viewer.id);
-    let imageTransformId = this.store.selectSnapshot(
-      WorkbenchState.getImageTransformIdFromViewerId
-    )(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(
-      WorkbenchState.getViewportTransformIdFromViewerId
-    )(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
+    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
+      this.viewer.id
+    );
 
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
-      return;
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
     this.store.dispatch(
       new ZoomTo(
         normalizedImageDataId,
@@ -955,26 +792,16 @@ export class WorkbenchImageViewerComponent
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(
-      WorkbenchState.getNormalizedImageDataIdFromViewerId
-    )(this.viewer.id);
-    let normalizedImageData = this.store.selectSnapshot(
-      DataFilesState.getImageDataEntities
-    )[normalizedImageDataId];
-    let imageTransformId = this.store.selectSnapshot(
-      WorkbenchState.getImageTransformIdFromViewerId
-    )(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(
-      WorkbenchState.getViewportTransformIdFromViewerId
-    )(this.viewer.id);
+    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
+      this.viewer.id
+    );
+    let normalizedImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[normalizedImageDataId];
+    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
+    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
+      this.viewer.id
+    );
 
-    if (
-      !this.viewer.viewportSize ||
-      !normalizedImageDataId ||
-      !imageTransformId ||
-      !viewportTransformId
-    )
-      return;
+    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
     this.store.dispatch(
       new CenterRegionInViewport(
         normalizedImageDataId,
@@ -1020,15 +847,9 @@ export class WorkbenchImageViewerComponent
     // should only need to load the raw data
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let headerEntities = this.store.selectSnapshot(
-      DataFilesState.getHeaderEntities
-    );
-    let dataFileEntities = this.store.selectSnapshot(
-      DataFilesState.getFileEntities
-    );
-    let imageDataEntities = this.store.selectSnapshot(
-      DataFilesState.getImageDataEntities
-    );
+    let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+    let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
     let hduIds = [this.viewer.hduId];
     let loadComposite = false;
 
@@ -1051,8 +872,7 @@ export class WorkbenchImageViewerComponent
       )
         return;
 
-      let normalizedImageData =
-        imageDataEntities[(hdu as ImageHdu).imageDataId];
+      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
         loadComposite = false;
         return;
@@ -1067,20 +887,14 @@ export class WorkbenchImageViewerComponent
       if (!tile.pixelsLoaded) {
         loadComposite = false;
       }
-      if (
-        !rawTile.pixelsLoading &&
-        !rawTile.pixelLoadingFailed &&
-        (!tile.isValid || !tile.pixelsLoaded)
-      ) {
+      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
         loadComposite = false;
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
     });
 
     if (loadComposite) {
-      this.store.dispatch(
-        new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex)
-      );
+      this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
   }
 
@@ -1113,12 +927,8 @@ export class WorkbenchImageViewerComponent
       let dataUrl = canvas.toDataURL('image/jpeg');
 
       if (this.viewer.hduId) {
-        let hduEntities = this.store.selectSnapshot(
-          DataFilesState.getHduEntities
-        );
-        let headerEntities = this.store.selectSnapshot(
-          DataFilesState.getHeaderEntities
-        );
+        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
         let user = this.store.selectSnapshot(AuthState.user);
         let header = headerEntities[hduEntities[this.viewer.hduId].headerId];
         if (header) {
@@ -1126,9 +936,7 @@ export class WorkbenchImageViewerComponent
           let exif = {};
           let gps = {};
           zeroth[piexif.ImageIFD.Software] = 'Afterglow Access';
-          let artist = user
-            ? `${user.firstName} ${user.lastName} (${user.username})`
-            : '';
+          let artist = user ? `${user.firstName} ${user.lastName} (${user.username})` : '';
           let observer = getObserver(header);
           if (observer) {
             artist = artist.concat(`, ${observer}`);
@@ -1146,9 +954,7 @@ export class WorkbenchImageViewerComponent
           // }
           let startTime = getStartTime(header);
           if (startTime) {
-            exif[piexif.ExifIFD.DateTimeOriginal] = moment(startTime).format(
-              'YYYY:MM:DD HH:mm:ss'
-            );
+            exif[piexif.ExifIFD.DateTimeOriginal] = moment(startTime).format('YYYY:MM:DD HH:mm:ss');
           }
           let exifObj = { '0th': zeroth, Exif: exif, GPS: gps };
           let exifStr = piexif.dump(exifObj);
@@ -1162,23 +968,7 @@ export class WorkbenchImageViewerComponent
       if (document.createEvent) {
         let e;
         e = document.createEvent('MouseEvents');
-        e.initMouseEvent(
-          'click',
-          true,
-          true,
-          window,
-          0,
-          0,
-          0,
-          0,
-          0,
-          false,
-          false,
-          false,
-          false,
-          0,
-          null
-        );
+        e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 
         lnk.dispatchEvent(e);
       }

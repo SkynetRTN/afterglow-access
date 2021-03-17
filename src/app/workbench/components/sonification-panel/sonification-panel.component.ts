@@ -51,7 +51,7 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import * as moment from 'moment';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { Viewer } from '../../models/viewer';
+import { IViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
 import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';

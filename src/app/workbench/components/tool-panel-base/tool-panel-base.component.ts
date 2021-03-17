@@ -1,59 +1,34 @@
-import {
-  Component,
-  AfterViewInit,
-  OnDestroy,
-  OnChanges,
-  OnInit,
-  Input,
-} from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, OnChanges, OnInit, Input } from '@angular/core';
 
 // import { VgAPI } from "videogular2/compiled/core";
-import {
-  Observable,
-  combineLatest,
-  BehaviorSubject,
-  Subject,
-  forkJoin,
-} from 'rxjs';
-import {
-  map,
-  distinctUntilChanged,
-  switchMap,
-  flatMap,
-  mergeMap,
-  tap,
-} from 'rxjs/operators';
+import { Observable, combineLatest, BehaviorSubject, Subject, forkJoin } from 'rxjs';
+import { map, distinctUntilChanged, switchMap, flatMap, mergeMap, tap } from 'rxjs/operators';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
-import {
-  DataFile,
-  ImageHdu,
-  IHdu,
-  Header,
-  PixelType,
-} from '../../../data-files/models/data-file';
+import { DataFile, ImageHdu, IHdu, Header, PixelType } from '../../../data-files/models/data-file';
 import { Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import {
-  Transform,
-  getImageToViewportTransform,
-} from '../../../data-files/models/transformation';
+import { Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { Viewer } from '../../models/viewer';
+import { IViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
 import { IWorkbenchHduState, WorkbenchFileState, WorkbenchImageHduState } from '../../models/workbench-file-state';
-import { ViewerPanelCanvasMouseDragEvent, ViewerPanelCanvasMouseEvent, ViewerPanelMarkerMouseEvent } from '../../containers/workbench-viewer-layout/workbench-viewer-layout.component';
+import {
+  ViewerPanelCanvasMouseDragEvent,
+  ViewerPanelCanvasMouseEvent,
+  ViewerPanelMarkerMouseEvent,
+} from '../../containers/workbench-viewer-layout/workbench-viewer-layout.component';
 import { IImageData } from '../../../data-files/models/image-data';
 
 export interface ToolPanelViewerState {
-  file: DataFile,
+  file: DataFile;
   // hdus: IHdu[],
-  hdu: IHdu,
-  header: Header,
-  imageHdu: ImageHdu,
+  hdu: IHdu;
+  header: Header;
+  imageHdu: ImageHdu;
   normalizedImageData: IImageData<Uint32Array>;
   rawImageData: IImageData<PixelType>;
-  fileState: WorkbenchFileState,
-  hduState: IWorkbenchHduState,
+  fileState: WorkbenchFileState;
+  hduState: IWorkbenchHduState;
   // viewportTransform: Transform,
   // imageTransform: Transform,
   // imageToViewportTransform: Transform
@@ -62,18 +37,17 @@ export interface ToolPanelViewerState {
 @Component({
   selector: 'app-tool-panel-base',
   templateUrl: './tool-panel-base.component.html',
-  styleUrls: ['./tool-panel-base.component.scss']
+  styleUrls: ['./tool-panel-base.component.scss'],
 })
-export class ToolPanelBaseComponent
-  implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
   @Input('viewer')
-  set viewer(viewer: Viewer) {
+  set viewer(viewer: IViewer) {
     this.viewer$.next(viewer);
   }
   get viewer() {
     return this.viewer$.getValue();
   }
-  protected viewer$ = new BehaviorSubject<Viewer>(null);
+  protected viewer$ = new BehaviorSubject<IViewer>(null);
 
   @Input('imageMouseDownEvent')
   set imageMouseDownEvent(imageMouseDownEvent: ViewerPanelCanvasMouseEvent) {
@@ -169,22 +143,14 @@ export class ToolPanelBaseComponent
 
   HduType = HduType;
 
-  constructor(
-    protected store: Store
-  ) {
-   
-
+  constructor(protected store: Store) {
     this.fileId$ = this.viewer$.pipe(
       map((viewer) => viewer?.fileId),
       distinctUntilChanged()
     );
 
     this.file$ = this.fileId$.pipe(
-      switchMap((fileId) =>
-        this.store
-          .select(DataFilesState.getFileById)
-          .pipe(map((fn) => fn(fileId)))
-      )
+      switchMap((fileId) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId))))
     );
 
     // this.hdus$ = this.file$.pipe(
@@ -201,68 +167,47 @@ export class ToolPanelBaseComponent
     //   distinctUntilChanged((a,b) => a && b && a.length == b.length && a.every((value, index) => b[index]==value))
     // );
 
-    
     this.hduId$ = this.viewer$.pipe(
       map((viewer) => viewer?.hduId),
       distinctUntilChanged()
     );
 
     this.hdu$ = this.hduId$.pipe(
-      switchMap((hduId) =>
-        this.store.select(DataFilesState.getHduById).pipe(
-          map((fn) => fn(hduId))
-        )
-      )
+      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
     );
 
     this.headerId$ = this.hdu$.pipe(
-      map(hdu => hdu?.headerId || null),
+      map((hdu) => hdu?.headerId || null),
       distinctUntilChanged()
-    )
+    );
 
     this.header$ = this.headerId$.pipe(
-      switchMap(headerId => this.store.select(DataFilesState.getHeaderById).pipe(
-        map(fn => fn(headerId))
-      ))
-    )
+      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+    );
 
-    this.imageHdu$ = this.hdu$.pipe(
-      map(hdu => hdu && hdu.hduType == HduType.IMAGE ? hdu as ImageHdu : null)
-    )
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
 
     this.hduState$ = this.hduId$.pipe(
-      switchMap(hduId => this.store.select(WorkbenchState.getHduStateById).pipe(
-        map(fn => fn(hduId))
-      ))
-    )
+      switchMap((hduId) => this.store.select(WorkbenchState.getHduStateById).pipe(map((fn) => fn(hduId))))
+    );
 
     this.fileState$ = this.fileId$.pipe(
-      switchMap(fileId => this.store.select(WorkbenchState.getFileStateById).pipe(
-        map(fn => fn(fileId))
-      ))
-    )
-
-    this.viewportSize$ = this.viewer$.pipe(
-      map((viewer) => viewer?.viewportSize)
+      switchMap((fileId) => this.store.select(WorkbenchState.getFileStateById).pipe(map((fn) => fn(fileId))))
     );
+
+    this.viewportSize$ = this.viewer$.pipe(map((viewer) => viewer?.viewportSize));
 
     this.rawImageData$ = combineLatest(this.file$, this.imageHdu$).pipe(
       map(([file, hdu]) => hdu?.rawImageDataId || null),
       distinctUntilChanged(),
-      switchMap((id) =>
-        this.store
-          .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(id)))
-      )
+      switchMap((id) => this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(id))))
     );
 
     this.normalizedImageData$ = combineLatest(this.file$, this.imageHdu$).pipe(
-      map(([file, hdu]) => hdu ? hdu.imageDataId : file?.imageDataId),
+      map(([file, hdu]) => (hdu ? hdu.imageDataId : file?.imageDataId)),
       distinctUntilChanged(),
       switchMap((id) =>
-        this.store
-          .select(DataFilesState.getImageDataById)
-          .pipe(map((fn) => fn(id) as IImageData<Uint32Array>))
+        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(id) as IImageData<Uint32Array>))
       )
     );
 
@@ -313,20 +258,20 @@ export class ToolPanelBaseComponent
           rawImageData,
           normalizedImageData,
           fileState,
-          hduState
-        } as ToolPanelViewerState
+          hduState,
+        } as ToolPanelViewerState;
       })
-    )
+    );
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
 
-  ngOnChanges() { }
+  ngOnChanges() {}
 }

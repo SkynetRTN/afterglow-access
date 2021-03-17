@@ -9,16 +9,20 @@ import {
   ViewContainerRef,
   OnChanges,
   SimpleChanges,
-} from "@angular/core";
-import { Viewer } from "../../models/viewer";
-import { ViewMode } from "../../models/view-mode";
-import { Store } from "@ngxs/store";
-import { SplitViewerPanel, SetFocusedViewer } from "../../workbench.actions";
-import { MatMenuTrigger } from "@angular/material/menu";
-import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from "../../models/workbench-state";
-import { Observable } from "rxjs";
-import { WorkbenchState } from "../../workbench.state";
-import { ViewerMarkerMouseEvent, ViewerCanvasMouseEvent, ViewerCanvasMouseDragEvent } from "../workbench-viewer-panel/workbench-viewer-panel.component";
+} from '@angular/core';
+import { IViewer } from '../../models/viewer';
+import { ViewMode } from '../../models/view-mode';
+import { Store } from '@ngxs/store';
+import { SplitViewerPanel, SetFocusedViewer } from '../../workbench.actions';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { ViewerPanelContainer, ViewerPanel, ViewerLayoutItem } from '../../models/workbench-state';
+import { Observable } from 'rxjs';
+import { WorkbenchState } from '../../workbench.state';
+import {
+  ViewerMarkerMouseEvent,
+  ViewerCanvasMouseEvent,
+  ViewerCanvasMouseDragEvent,
+} from '../workbench-viewer-panel/workbench-viewer-panel.component';
 
 export interface ViewerPanelCanvasMouseEvent extends ViewerCanvasMouseEvent {
   panelId: string;
@@ -35,29 +39,27 @@ export interface ViewerPanelMarkerMouseEvent extends ViewerMarkerMouseEvent {
   panel: ViewerPanel;
 }
 
-
-
 @Component({
-  selector: "app-workbench-viewer-layout",
-  templateUrl: "./workbench-viewer-layout.component.html",
-  styleUrls: ["./workbench-viewer-layout.component.css"],
+  selector: 'app-workbench-viewer-layout',
+  templateUrl: './workbench-viewer-layout.component.html',
+  styleUrls: ['./workbench-viewer-layout.component.css'],
 })
 export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
   @ViewChild(MatMenuTrigger)
   contextMenu: MatMenuTrigger;
-  contextMenuPosition = { x: "0px", y: "0px" };
+  contextMenuPosition = { x: '0px', y: '0px' };
   mouseOverCloseViewerId: string = null;
   focusedViewerPanelId$: Observable<string>;
   layoutItems$: Observable<{ [id: string]: ViewerLayoutItem }>;
   containers$: Observable<{ [id: string]: ViewerPanelContainer }>;
   panels$: Observable<{ [id: string]: ViewerPanel }>;
 
-  onContextMenu(event: MouseEvent, viewer: Viewer) {
+  onContextMenu(event: MouseEvent, viewer: IViewer) {
     event.preventDefault();
-    this.contextMenuPosition.x = event.clientX + "px";
-    this.contextMenuPosition.y = event.clientY + "px";
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = { viewer: viewer };
-    this.contextMenu.menu.focusFirstItem("mouse");
+    this.contextMenu.menu.focusFirstItem('mouse');
     this.contextMenu.openMenu();
   }
 
@@ -166,7 +168,7 @@ export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
     });
   }
 
-  setFocusedPanel($event: MouseEvent, panel: ViewerPanel) {
+  setFocusedPanel($event: Event, panel: ViewerPanel) {
     if (panel.id == this.store.selectSnapshot(WorkbenchState.getFocusedViewerPanelId)) return;
     if (!panel.selectedViewerId) return;
     this.store.dispatch(new SetFocusedViewer(panel.selectedViewerId));

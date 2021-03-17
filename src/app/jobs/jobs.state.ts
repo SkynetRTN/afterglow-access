@@ -8,13 +8,13 @@ import {
   ofActionCompleted,
   ofActionSuccessful,
   ofActionErrored,
-} from "@ngxs/store";
-import { ImmutableSelector, ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip } from "rxjs/operators";
-import { of, merge, interval, Observable } from "rxjs";
+} from '@ngxs/store';
+import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip } from 'rxjs/operators';
+import { of, merge, interval, Observable } from 'rxjs';
 
-import { Job } from "./models/job";
-import { JobResult } from "./models/job-result";
+import { Job } from './models/job';
+import { JobResult } from './models/job-result';
 import {
   CreateJob,
   CreateJobSuccess,
@@ -26,9 +26,9 @@ import {
   UpdateJobResult,
   UpdateJobResultSuccess,
   UpdateJobResultFail,
-} from "./jobs.actions";
-import { JobService } from "./services/jobs";
-import { ResetState } from "../auth/auth.actions";
+} from './jobs.actions';
+import { JobService } from './services/jobs';
+import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 
 export interface JobsStateModel {
@@ -38,13 +38,13 @@ export interface JobsStateModel {
 }
 
 const jobsDefaultState: JobsStateModel = {
-  version: "5a36ed27-d3f5-4b33-8d19-dd815f8e5ed5",
+  version: 'ab09d088-0def-4429-b834-3c8fc5313fe9',
   ids: [],
   entities: {},
 };
 
 @State<JobsStateModel>({
-  name: "jobs",
+  name: 'jobs',
   defaults: jobsDefaultState,
 })
 @Injectable()
@@ -93,7 +93,7 @@ export class JobsState {
         setState((state: JobsStateModel) => {
           state.entities[job.id] = {
             ...job,
-            result: null
+            result: null,
           };
           if (!state.ids.includes(job.id)) {
             state.ids.push(job.id);
@@ -107,7 +107,7 @@ export class JobsState {
         let jobCompleted$ = this.actions$.pipe(
           ofActionSuccessful(UpdateJob),
           filter<UpdateJob>((a) => {
-            return a.job.id == job.id && ["canceled", "completed"].includes(getState().entities[a.job.id].state.status);
+            return a.job.id == job.id && ['canceled', 'completed'].includes(getState().entities[a.job.id].state.status);
           })
         );
 
@@ -134,7 +134,7 @@ export class JobsState {
         return jobCompleted$.pipe(
           take(1),
           flatMap((a) => {
-            if (getState().entities[a.job.id].state.status != "completed") return of();
+            if (getState().entities[a.job.id].state.status != 'completed') return of();
 
             return this.jobService.getJobResult(job).pipe(
               tap((value) => {
@@ -166,7 +166,10 @@ export class JobsState {
 
   @Action(UpdateJobResult)
   @ImmutableContext()
-  public updateJobResult({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJobResult) {
+  public updateJobResult(
+    { setState, dispatch }: StateContext<JobsStateModel>,
+    { job, correlationId }: UpdateJobResult
+  ) {
     return this.jobService.getJobResult(job).pipe(
       map((value) => {
         setState((state: JobsStateModel) => {

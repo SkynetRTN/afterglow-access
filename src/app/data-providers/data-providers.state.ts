@@ -11,12 +11,12 @@ import {
   ofActionErrored,
   ofActionSuccessful,
   Store,
-} from "@ngxs/store";
-import { of, merge, interval, Observable } from "rxjs";
-import { tap, skip, takeUntil, flatMap, map, takeWhile, filter, catchError, take } from "rxjs/operators";
+} from '@ngxs/store';
+import { of, merge, interval, Observable } from 'rxjs';
+import { tap, skip, takeUntil, flatMap, map, takeWhile, filter, catchError, take } from 'rxjs/operators';
 
-import { DataProvider } from "./models/data-provider";
-import { DataProviderAsset } from "./models/data-provider-asset";
+import { DataProvider } from './models/data-provider';
+import { DataProviderAsset } from './models/data-provider-asset';
 import {
   LoadDataProviders,
   LoadDataProvidersSuccess,
@@ -27,16 +27,16 @@ import {
   ImportAssets,
   ImportAssetsCompleted,
   ImportAssetsStatusUpdated,
-  SetCurrentPath
-} from "./data-providers.actions";
-import { AfterglowDataProviderService } from "../workbench/services/afterglow-data-providers";
-import { CreateJob, UpdateJob } from "../jobs/jobs.actions";
-import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from "../jobs/models/batch-import";
-import { JobType } from "../jobs/models/job-types";
-import { CorrelationIdGenerator } from "../utils/correlated-action";
-import { ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { JobsState } from "../jobs/jobs.state";
-import { ResetState } from "../auth/auth.actions";
+  SetCurrentPath,
+} from './data-providers.actions';
+import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
+import { CreateJob, UpdateJob } from '../jobs/jobs.actions';
+import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jobs/models/batch-import';
+import { JobType } from '../jobs/models/job-types';
+import { CorrelationIdGenerator } from '../utils/correlated-action';
+import { ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { JobsState } from '../jobs/jobs.state';
+import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 
 export interface DataProviderPath {
@@ -57,7 +57,7 @@ export interface DataProvidersStateModel {
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: "c2cf1dcb-52a8-4579-82a4-2708fb21cc1c",
+  version: '3bed78ef-bfde-4942-877f-251ae4d88b71',
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
@@ -65,11 +65,11 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importing: false,
   importErrors: [],
   importProgress: null,
-  lastPath: null
+  lastPath: null,
 };
 
 @State<DataProvidersStateModel>({
-  name: "dataProviders",
+  name: 'dataProviders',
   defaults: dataProvidersDefaultState,
 })
 @Injectable()
@@ -128,13 +128,10 @@ export class DataProvidersState {
     return state.importErrors;
   }
 
-
   @Selector()
   public static getLastPath(state: DataProvidersStateModel) {
     return state.lastPath;
   }
-
-
 
   @Action(ResetState)
   @ImmutableContext()
@@ -267,11 +264,10 @@ export class DataProvidersState {
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
     { path }: SetCurrentPath
   ) {
-
     setState((state: DataProvidersStateModel) => {
-        state.lastPath = path;
-        return state;
-    })
+      state.lastPath = path;
+      return state;
+    });
   }
 
   // @Action(SortDataProviderAssets)
@@ -401,13 +397,16 @@ export class DataProvidersState {
 
   @Action(ImportAssets)
   @ImmutableContext()
-  public importAssets({ setState, getState, dispatch }: StateContext<DataProvidersStateModel>, { assets, correlationId}: ImportAssets) {
+  public importAssets(
+    { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
+    { assets, correlationId }: ImportAssets
+  ) {
     let job: BatchImportJob = {
       id: null,
       type: JobType.BatchImport,
       settings: assets.map((asset) => {
         let assetPath = asset.assetPath;
-        if (assetPath && assetPath[0] == "/") {
+        if (assetPath && assetPath[0] == '/') {
           assetPath = assetPath.slice(1);
         }
         return {
@@ -432,10 +431,10 @@ export class DataProvidersState {
           let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.action.job.id];
           let result = jobEntity.result as BatchImportJobResult;
           if (result.errors.length != 0) {
-            console.error("Errors encountered during import: ", result.errors);
+            console.error('Errors encountered during import: ', result.errors);
           }
           if (result.warnings.length != 0) {
-            console.error("Warnings encountered during import: ", result.warnings);
+            console.error('Warnings encountered during import: ', result.warnings);
           }
           dispatch(
             new ImportAssetsCompleted(
@@ -446,7 +445,9 @@ export class DataProvidersState {
             )
           );
         } else if (a.result.canceled) {
-          dispatch(new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`], correlationId));
+          dispatch(
+            new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`], correlationId)
+          );
         } else if (a.result.error) {
           dispatch(
             new ImportAssetsCompleted(

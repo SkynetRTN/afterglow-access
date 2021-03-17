@@ -14,7 +14,7 @@ import { BehaviorSubject, Observable, combineLatest, Subject, concat } from 'rxj
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ToggleFileSelection, SelectFile } from '../../workbench.actions';
-import { Viewer } from '../../models/viewer';
+import { IViewer } from '../../models/viewer';
 import { LoadLibrary } from '../../../data-files/data-files.actions';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
@@ -36,13 +36,13 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
   private files$ = new BehaviorSubject<DataFile[]>(null);
 
   @Input('focusedViewer')
-  set focusedViewer(focusedViewer: Viewer) {
+  set focusedViewer(focusedViewer: IViewer) {
     this.focusedViewer$.next(focusedViewer);
   }
   get focusedViewer() {
     return this.focusedViewer$.getValue();
   }
-  private focusedViewer$ = new BehaviorSubject<Viewer>(null);
+  private focusedViewer$ = new BehaviorSubject<IViewer>(null);
 
   @Input('selectedFileIds')
   set selectedFileIds(selectedFileIds: string[]) {

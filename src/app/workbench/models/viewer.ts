@@ -1,9 +1,13 @@
-import { Marker } from "./marker";
-import { DataFile, IHdu } from "../../data-files/models/data-file";
+import { Marker } from './marker';
+import { DataFile, IHdu } from '../../data-files/models/data-file';
+import { TypeGuard } from '../../utils/guard-type.pipe';
 
-export type ViewerType = "image" | "table";
+export enum ViewerType {
+  IMAGE,
+  TABLE,
+}
 
-export interface Viewer {
+export interface IViewer {
   id: string;
   type: ViewerType;
   fileId: string;
@@ -12,12 +16,20 @@ export interface Viewer {
   viewportSize: { width: number; height: number };
 }
 
-export interface ImageViewer extends Viewer {
-  type: "image";
+export interface ImageViewer extends IViewer {
+  type: ViewerType.IMAGE;
   panEnabled: boolean;
   zoomEnabled: boolean;
 }
 
-export interface TableViewer extends Viewer {
-  type: "table";
+export interface TableViewer extends IViewer {
+  type: ViewerType.TABLE;
 }
+
+export type Viewer = ImageViewer | TableViewer;
+
+export const isImageViewer: TypeGuard<Viewer, ImageViewer> = (viewer: Viewer): viewer is ImageViewer =>
+  viewer.type === ViewerType.IMAGE;
+
+export const isTableViewer: TypeGuard<Viewer, TableViewer> = (viewer: Viewer): viewer is TableViewer =>
+  viewer.type === ViewerType.TABLE;
