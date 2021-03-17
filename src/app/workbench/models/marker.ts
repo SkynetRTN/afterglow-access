@@ -1,3 +1,5 @@
+import { TypeGuard } from '../../utils/guard-type.pipe';
+
 export enum MarkerType {
   LINE,
   RECTANGLE,
@@ -15,11 +17,11 @@ interface IMarker {
   selected?: boolean;
   data?: { [key: string]: any };
   tooltip?: {
-    hideDelay: number,
-    showDelay: number,
-    message: string,
-    class: string
-  }
+    hideDelay: number;
+    showDelay: number;
+    message: string;
+    class: string;
+  };
 }
 
 export interface LineMarker extends IMarker {
@@ -69,3 +71,18 @@ export interface TextMarker extends IMarker {
 }
 
 export type Marker = LineMarker | RectangleMarker | CircleMarker | TeardropMarker | TextMarker | ApertureMarker;
+
+export const isLineMarker: TypeGuard<Marker, LineMarker> = (marker: Marker): marker is LineMarker =>
+  marker.type === MarkerType.LINE;
+
+export const isCircleMarker: TypeGuard<Marker, CircleMarker> = (marker: Marker): marker is CircleMarker =>
+  marker.type === MarkerType.CIRCLE;
+
+export const isRectangleMarker: TypeGuard<Marker, RectangleMarker> = (marker: Marker): marker is RectangleMarker =>
+  marker.type === MarkerType.RECTANGLE;
+
+export const isApertureMarker: TypeGuard<Marker, ApertureMarker> = (marker: Marker): marker is ApertureMarker =>
+  marker.type === MarkerType.APERTURE;
+
+export const isTeardropMarker: TypeGuard<Marker, TeardropMarker> = (marker: Marker): marker is TeardropMarker =>
+  marker.type === MarkerType.TEARDROP;

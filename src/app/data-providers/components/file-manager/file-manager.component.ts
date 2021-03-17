@@ -1,24 +1,7 @@
-import {
-  Component,
-  OnInit,
-  ViewChild,
-  Output,
-  EventEmitter,
-  Input,
-  AfterViewInit,
-  ElementRef,
-} from '@angular/core';
-import {DataProvidersState, DataProviderPath} from '../../data-providers.state';
-import {Store, Actions, ofActionDispatched} from '@ngxs/store';
-import {
-  Observable,
-  of,
-  merge,
-  Subject,
-  combineLatest,
-  BehaviorSubject,
-  forkJoin,
-} from 'rxjs';
+import { Component, OnInit, ViewChild, Output, EventEmitter, Input, AfterViewInit, ElementRef } from '@angular/core';
+import { DataProvidersState, DataProviderPath } from '../../data-providers.state';
+import { Store, Actions, ofActionDispatched } from '@ngxs/store';
+import { Observable, of, merge, Subject, combineLatest, BehaviorSubject, forkJoin } from 'rxjs';
 import {
   map,
   distinctUntilChanged,
@@ -33,42 +16,35 @@ import {
   startWith,
   catchError,
 } from 'rxjs/operators';
-import {DataProviderAsset} from '../../models/data-provider-asset';
-import {AfterglowDataProviderService} from '../../../workbench/services/afterglow-data-providers';
-import {HttpErrorResponse} from '@angular/common/http';
-import {BatchAssetDownloadJob} from '../../../jobs/models/batch-asset-download';
-import {JobType} from '../../../jobs/models/job-types';
-import {CorrelationIdGenerator} from '../../../utils/correlated-action';
+import { DataProviderAsset } from '../../models/data-provider-asset';
+import { AfterglowDataProviderService } from '../../../workbench/services/afterglow-data-providers';
+import { HttpErrorResponse } from '@angular/common/http';
+import { BatchAssetDownloadJob } from '../../../jobs/models/batch-asset-download';
+import { JobType } from '../../../jobs/models/job-types';
+import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import {
   JobProgressDialogConfig,
   JobProgressDialogComponent,
 } from '../../../workbench/components/job-progress-dialog/job-progress-dialog.component';
-import {JobsState} from '../../../jobs/jobs.state';
-import {MatDialog} from '@angular/material/dialog';
-import {JobService} from '../../../jobs/services/jobs';
-import {
-  CreateJobSuccess,
-  CreateJobFail,
-  CreateJob,
-} from '../../../jobs/jobs.actions';
-import {DataProvider} from '../../models/data-provider';
-import {SelectionModel} from '@angular/cdk/collections';
-import {MatSort} from '@angular/material/sort';
-import {MatTableDataSource} from '@angular/material/table';
-import {NameDialogComponent} from '../name-dialog/name-dialog.component';
-import {
-  AlertDialogConfig,
-  AlertDialogComponent,
-} from '../../../utils/alert-dialog/alert-dialog.component';
-import {TargetDialogComponent} from '../target-dialog/target-dialog.component';
-import {UploadDialogComponent} from '../upload-dialog/upload-dialog.component';
-import {saveAs} from 'file-saver/dist/FileSaver';
+import { JobsState } from '../../../jobs/jobs.state';
+import { MatDialog } from '@angular/material/dialog';
+import { JobService } from '../../../jobs/services/jobs';
+import { CreateJobSuccess, CreateJobFail, CreateJob } from '../../../jobs/jobs.actions';
+import { DataProvider } from '../../models/data-provider';
+import { SelectionModel } from '@angular/cdk/collections';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { NameDialogComponent } from '../name-dialog/name-dialog.component';
+import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
+import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
+import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
+import { saveAs } from 'file-saver/dist/FileSaver';
 
 export interface FileSystemItem {
   id: string;
   name: string;
   isDirectory: boolean;
-  metadata: {[key: string]: number | string | Date};
+  metadata: { [key: string]: number | string | Date };
   dataProvider: DataProvider;
   asset: DataProviderAsset;
 }
@@ -178,9 +154,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   readonly onPathChange: EventEmitter<DataProviderPath> = new EventEmitter<DataProviderPath>();
 
   @Output()
-  readonly onSelectionChange: EventEmitter<FileSystemItem[]> = new EventEmitter<
-    FileSystemItem[]
-  >();
+  readonly onSelectionChange: EventEmitter<FileSystemItem[]> = new EventEmitter<FileSystemItem[]>();
 
   @Output()
   readonly onCurrentDirectoryChange: EventEmitter<FileSystemItem> = new EventEmitter<FileSystemItem>();
@@ -197,8 +171,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   isAllSelected$: Observable<boolean>;
   isIndeterminate$: Observable<boolean>;
   onToggle$ = new Subject<boolean>();
-  onRowClick$ = new Subject<{$event: MouseEvent; item: FileSystemItem}>();
-  onRowDblClick$ = new Subject<{$event: MouseEvent; item: FileSystemItem}>();
+  onRowClick$ = new Subject<{ $event: MouseEvent; item: FileSystemItem }>();
+  onRowDblClick$ = new Subject<{ $event: MouseEvent; item: FileSystemItem }>();
   lastSelectedItem: FileSystemItem = null;
   checkboxLabel$: Observable<string>;
   columns$: Observable<FileSystemDetailsColumn[]>;
@@ -232,23 +206,19 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.onSelectionChange.emit(this.selection.selected));
 
-    this.error$
-      .pipe(takeUntil(this.destroy$), debounceTime(3000))
-      .subscribe(e => {
-        if (!e) return;
-        this.error$.next(null);
-      });
+    this.error$.pipe(takeUntil(this.destroy$), debounceTime(3000)).subscribe((e) => {
+      if (!e) return;
+      this.error$.next(null);
+    });
 
     this.currentDirectory$ = this.path$.pipe(
-      map(path => {
+      map((path) => {
         if (!path) {
           //root file system item
           return null;
         }
 
-        const dataProvider = this.store.selectSnapshot(
-          DataProvidersState.getDataProviderEntities
-        )[path.dataProviderId];
+        const dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[path.dataProviderId];
 
         if (path.assets.length === 0) {
           //data provider root
@@ -259,17 +229,12 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.currentDirectory$.pipe(takeUntil(this.destroy$)).subscribe(parent => {
+    this.currentDirectory$.pipe(takeUntil(this.destroy$)).subscribe((parent) => {
       this.currentDirectory = parent;
       this.onCurrentDirectoryChange.emit(parent);
     });
 
-    combineLatest(
-      this.currentDirectory$.pipe(
-        distinctUntilChanged((a, b) => a && b && a.id === b.id)
-      ),
-      this.refresh$
-    )
+    combineLatest(this.currentDirectory$.pipe(distinctUntilChanged((a, b) => a && b && a.id === b.id)), this.refresh$)
       .pipe(
         takeUntil(this.destroy$),
         switchMap(([parent]) => {
@@ -277,50 +242,41 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           if (!parent) {
             return this.dataProviderService.getDataProviders().pipe(
               // delay(50000),
-              map(dataProviders => {
+              map((dataProviders) => {
                 return {
                   items: dataProviders
-                    .filter(dataProvider => dataProvider.browseable)
-                    .map(dataProvider =>
-                      this.providerToFileSystemItem(dataProvider)
-                    ),
+                    .filter((dataProvider) => dataProvider.browseable)
+                    .map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
                   error: null,
                 };
               }),
-              catchError(err => of({items: [], error: err}))
+              catchError((err) => of({ items: [], error: err }))
             );
           } else {
             return this.dataProviderService
-              .getAssets(
-                parent.dataProvider.id,
-                parent.asset ? parent.asset.assetPath : ''
-              )
+              .getAssets(parent.dataProvider.id, parent.asset ? parent.asset.assetPath : '')
               .pipe(
-                map(assets => {
+                map((assets) => {
                   return {
-                    items: assets.map(asset =>
-                      this.assetToFileSystemItem(asset)
-                    ),
+                    items: assets.map((asset) => this.assetToFileSystemItem(asset)),
                     error: null,
                   };
                 }),
-                catchError(err => of({items: [], error: err}))
+                catchError((err) => of({ items: [], error: err }))
               );
           }
         })
       )
-      .subscribe(({items, error}) => {
+      .subscribe(({ items, error }) => {
         this.isLoading = false;
         if (error) {
           this.error$.next((error as HttpErrorResponse).error.message);
           this.navigateToRoot(false);
           return;
         }
-        const selectedIds = this.selection.selected.map(item => item.id);
+        const selectedIds = this.selection.selected.map((item) => item.id);
         this.selection.clear();
-        this.selection.select(
-          ...items.filter(item => selectedIds.includes(item.id))
-        );
+        this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
         items = items.sort((a, b) => {
           if (a.isDirectory === b.isDirectory) {
             return a.name.toLowerCase() < b.name.toLowerCase()
@@ -336,23 +292,21 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       });
 
     this.parentDataProvider$ = this.currentDirectory$.pipe(
-      map(parent => (parent ? parent.dataProvider.id : null)),
+      map((parent) => (parent ? parent.dataProvider.id : null)),
       distinctUntilChanged(),
-      switchMap(id => {
+      switchMap((id) => {
         if (!id) return of(null);
-        return this.store
-          .select(DataProvidersState.getDataProviderById)
-          .pipe(map(fn => fn(id)));
+        return this.store.select(DataProvidersState.getDataProviderById).pipe(map((fn) => fn(id)));
       })
     );
 
     this.isWriteable$ = this.parentDataProvider$.pipe(
-      map(dataProvider => dataProvider && !dataProvider.readonly),
+      map((dataProvider) => dataProvider && !dataProvider.readonly),
       distinctUntilChanged()
     );
 
     this.columns$ = this.parentDataProvider$.pipe(
-      map(dataProvider => {
+      map((dataProvider) => {
         if (!dataProvider) {
           return [
             {
@@ -365,7 +319,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             },
           ];
         }
-        return dataProvider.columns.map(column => {
+        return dataProvider.columns.map((column) => {
           const result: FileSystemDetailsColumn = {
             dataField: 'metadata.' + column.fieldName,
             caption: column.name,
@@ -376,12 +330,11 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     );
 
     this.displayedColumns$ = this.columns$.pipe(
-      map(columns => {
+      map((columns) => {
         let result = [];
         if (this.selectionMode !== 'none') result.push('select');
         result.push('name');
-        if (this.showMetadataColumns)
-          result = result.concat(columns.map(column => column.caption));
+        if (this.showMetadataColumns) result = result.concat(columns.map((column) => column.caption));
         return result;
       })
     );
@@ -394,29 +347,21 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.isIndeterminate$ = combineLatest(
-      this.isAllSelected$,
-      selectionChange$
-    ).pipe(
+    this.isIndeterminate$ = combineLatest(this.isAllSelected$, selectionChange$).pipe(
       map(([isAllSelected]) => {
         return this.selection.selected.length !== 0 && !isAllSelected;
       })
     );
 
     this.onToggle$
-      .pipe(
-        takeUntil(this.destroy$),
-        withLatestFrom(this.isAllSelected$, this.items$)
-      )
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.isAllSelected$, this.items$))
       .subscribe(([toggle, isAllSelected, items]) => {
-        isAllSelected
-          ? this.selection.clear()
-          : items.forEach(row => this.selection.select(row));
+        isAllSelected ? this.selection.clear() : items.forEach((row) => this.selection.select(row));
       });
 
     this.onRowDblClick$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{$event, item}, items]) => {
+      .subscribe(([{ $event, item }, items]) => {
         //double click
         if (item.isDirectory) {
           this.navigateToChildItem(item);
@@ -427,13 +372,11 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
     this.onRowClick$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{$event, item}, items]) => {
+      .subscribe(([{ $event, item }, items]) => {
         if (this.selectionMode === 'none') return;
         if (
           !this.selection.isMultipleSelection() ||
-          (!$event.shiftKey &&
-            !$event.ctrlKey &&
-            this.selection.selected.length <= 1)
+          (!$event.shiftKey && !$event.ctrlKey && this.selection.selected.length <= 1)
         ) {
           this.lastSelectedItem = item;
           //single-selection mode
@@ -450,7 +393,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           const index2 = items.indexOf(item);
           const selection = items
             .slice(Math.min(index1, index2), Math.max(index1, index2) + 1)
-            .filter(item => !this.selection.isSelected(item));
+            .filter((item) => !this.selection.isSelected(item));
           this.selection.select(...selection);
           this.lastSelectedItem = item;
           return;
@@ -472,35 +415,22 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         if (!allowCopy) return false;
         const selected = this.selection.selected;
         //disallow copying the entire data provider
-        if (selected.length === 0 || selected.some(v => !v.asset)) return false;
+        if (selected.length === 0 || selected.some((v) => !v.asset)) return false;
         return true;
       })
     );
 
-    this.showMove$ = combineLatest(
-      this.allowMove$,
-      this.showCopy$,
-      this.isWriteable$
-    ).pipe(
-      map(
-        ([allowMove, showCopy, isWriteable]) =>
-          allowMove && showCopy && isWriteable
-      )
+    this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
+      map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
     );
 
     this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
       map(([allowDelete, showMove]) => allowDelete && showMove)
     );
 
-    this.showRename$ = combineLatest(
-      this.allowRename$,
-      this.isWriteable$,
-      selectionChange$
-    ).pipe(
+    this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
       map(([allowRename, isWriteable]) => {
-        return (
-          allowRename && isWriteable && this.selection.selected.length === 1
-        );
+        return allowRename && isWriteable && this.selection.selected.length === 1;
       })
     );
 
@@ -510,15 +440,11 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       })
     );
 
-    this.showDownload$ = combineLatest(
-      this.allowDownload$,
-      selectionChange$
-    ).pipe(
+    this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
       map(() => {
         if (!this.allowDownload) return false;
         const selected = this.selection.selected;
-        if (selected.length === 0 || selected.some(v => v.isDirectory))
-          return false;
+        if (selected.length === 0 || selected.some((v) => v.isDirectory)) return false;
         return true;
       })
     );
@@ -547,9 +473,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   }
 
   assetToFileSystemItem(asset: DataProviderAsset): FileSystemItem {
-    const dataProvider = this.store.selectSnapshot(
-      DataProvidersState.getDataProviderEntities
-    )[asset.dataProviderId];
+    const dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[asset.dataProviderId];
     return {
       id: `${asset.dataProviderId}:${asset.assetPath}`,
       name: asset.name,
@@ -567,17 +491,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   }
 
   public navigateToChildItem(item: FileSystemItem) {
-    this.navigateTo(
-      item.dataProvider.id,
-      item.asset ? this.path.assets.concat(item.asset) : []
-    );
+    this.navigateTo(item.dataProvider.id, item.asset ? this.path.assets.concat(item.asset) : []);
   }
 
-  public navigateTo(
-    dataProviderId: string,
-    assets: DataProviderAsset[],
-    clearError = true
-  ) {
+  public navigateTo(dataProviderId: string, assets: DataProviderAsset[], clearError = true) {
     if (clearError) this.clearError();
     this.path = {
       dataProviderId: dataProviderId,
@@ -605,16 +522,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           this.isLoading = true;
           const parentAssetPath = parent.asset ? parent.asset.assetPath : '';
           this.dataProviderService
-            .createCollectionAsset(
-              parent.dataProvider.id,
-              `${parentAssetPath}${result}`
-            )
+            .createCollectionAsset(parent.dataProvider.id, `${parentAssetPath}${result}`)
             .pipe(take(1))
             .subscribe(
               () => {
                 this.refresh$.next(true);
               },
-              err => {},
+              (err) => {},
               () => {
                 this.isLoading = false;
               }
@@ -637,45 +551,33 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.isLoading = true;
         const path = result.path as DataProviderPath;
         const target = result.target as FileSystemItem;
-        const assets = selectedItems
-          .map(item => item.asset)
-          .filter(asset => asset !== null);
+        const assets = selectedItems.map((item) => item.asset).filter((asset) => asset !== null);
         const parentAssetPath = target.asset ? target.asset.assetPath : '';
-        const reqs = assets.map(asset => {
+        const reqs = assets.map((asset) => {
           const newAssetPath = `${parentAssetPath}/${asset.name}`;
           return this.dataProviderService
-            .copyAsset(
-              asset.dataProviderId,
-              asset.assetPath,
-              target.dataProvider.id,
-              newAssetPath,
-              keepOriginal
-            )
+            .copyAsset(asset.dataProviderId, asset.assetPath, target.dataProvider.id, newAssetPath, keepOriginal)
             .pipe(
               take(1),
-              map(result => ({asset: asset, error: null})),
-              catchError(err =>
-                of({asset: asset, error: err as HttpErrorResponse})
-              )
+              map((result) => ({ asset: asset, error: null })),
+              catchError((err) => of({ asset: asset, error: err as HttpErrorResponse }))
             );
         });
         forkJoin(reqs).subscribe(
-          result => {
-            const errors = result.filter(result => result.error);
+          (result) => {
+            const errors = result.filter((result) => result.error);
 
             if (errors.length !== 0) {
               const dialogConfig: Partial<AlertDialogConfig> = {
                 title: 'Error',
                 message: `Unable to ${actionName.toLowerCase()} ${
                   errors.length
-                } of the selected files/folders. ${errors
-                  .map(error => error.asset.name)
-                  .join(', ')}`,
+                } of the selected files/folders. ${errors.map((error) => error.asset.name).join(', ')}`,
                 buttons: [
                   {
                     color: null,
@@ -692,7 +594,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
               this.navigateTo(path.dataProviderId, path.assets);
             }
           },
-          err => {},
+          (err) => {},
           () => {
             this.isLoading = false;
           }
@@ -732,34 +634,26 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.isLoading = true;
-        const assets = this.selection.selected
-          .map(item => item.asset)
-          .filter(asset => asset !== null);
-        const reqs = assets.map(asset =>
-          this.dataProviderService
-            .deleteAsset(asset.dataProviderId, asset.assetPath, true)
-            .pipe(
-              take(1),
-              map(result => ({asset: asset, error: null})),
-              catchError(err =>
-                of({asset: asset, error: err as HttpErrorResponse})
-              )
-            )
+        const assets = this.selection.selected.map((item) => item.asset).filter((asset) => asset !== null);
+        const reqs = assets.map((asset) =>
+          this.dataProviderService.deleteAsset(asset.dataProviderId, asset.assetPath, true).pipe(
+            take(1),
+            map((result) => ({ asset: asset, error: null })),
+            catchError((err) => of({ asset: asset, error: err as HttpErrorResponse }))
+          )
         );
         forkJoin(reqs).subscribe(
-          result => {
-            const errors = result.filter(result => result.error);
+          (result) => {
+            const errors = result.filter((result) => result.error);
 
             if (errors.length !== 0) {
               const dialogConfig: Partial<AlertDialogConfig> = {
                 title: 'Error',
-                message: `Unable to delete ${
-                  errors.length
-                } of the selected files/folders. ${errors
-                  .map(error => error.asset.name)
+                message: `Unable to delete ${errors.length} of the selected files/folders. ${errors
+                  .map((error) => error.asset.name)
                   .join(', ')}`,
                 buttons: [
                   {
@@ -777,7 +671,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
             this.refresh$.next(true);
           },
-          err => {},
+          (err) => {},
           () => {
             this.isLoading = false;
           }
@@ -797,7 +691,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.isLoading = true;
         this.dataProviderService
@@ -807,7 +701,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             () => {
               this.refresh$.next(true);
             },
-            err => {},
+            (err) => {},
             () => {
               this.isLoading = false;
             }
@@ -822,7 +716,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   onUploadChange(files: FileList) {
     if (files.length === 0) return;
-    const maxSize = Math.max(...Array.from(files).map(file => file.size));
+    const maxSize = Math.max(...Array.from(files).map((file) => file.size));
     if (this.maxUploadSize !== null && maxSize > this.maxUploadSize) {
       const dialogConfig: Partial<AlertDialogConfig> = {
         title: 'Exceeds Maximum Allowed Size',
@@ -853,29 +747,27 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       this.fileUpload.nativeElement.value = '';
       this.refresh$.next(true);
     });
   }
 
   onDownloadClick() {
-    let assets = this.selection.selected
-      .map(item => item.asset)
-      .filter(asset => asset !== null);
+    let assets = this.selection.selected.map((item) => item.asset).filter((asset) => asset !== null);
     if (assets.length === 0) {
       return;
     }
 
     const dataProviderId = assets[0].dataProviderId;
     //only assets from the same data provider can be downloaded
-    assets = assets.filter(asset => asset.dataProviderId === dataProviderId);
+    assets = assets.filter((asset) => asset.dataProviderId === dataProviderId);
 
     const job: BatchAssetDownloadJob = {
       type: JobType.BatchAssetDownload,
       id: null,
       providerId: dataProviderId,
-      paths: assets.map(asset => asset.assetPath),
+      paths: assets.map((asset) => asset.assetPath),
       state: null,
       result: null,
     };
@@ -883,17 +775,15 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     const corrId = this.corrGen.next();
     const onCreateJobSuccess$ = this.actions$.pipe(
       ofActionDispatched(CreateJobSuccess),
-      filter(action => (action as CreateJobSuccess).correlationId === corrId),
+      filter((action) => (action as CreateJobSuccess).correlationId === corrId),
       take(1),
-      flatMap(action => {
+      flatMap((action) => {
         const jobId = (action as CreateJobSuccess).job.id;
         const dialogConfig: JobProgressDialogConfig = {
           title: 'Preparing download',
           message: 'Please wait while we prepare the files for download.',
           progressMode: 'indeterminate',
-          job$: this.store
-            .select(JobsState.getJobById)
-            .pipe(map(fn => fn(jobId))),
+          job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
         };
         const dialogRef = this.dialog.open(JobProgressDialogComponent, {
           width: '400px',
@@ -902,17 +792,14 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         });
 
         return dialogRef.afterClosed().pipe(
-          flatMap(result => {
+          flatMap((result) => {
             if (!result) {
               return of(null);
             }
 
             return this.jobService.getJobResultFile(jobId, 'download').pipe(
-              tap(data => {
-                saveAs(
-                  data,
-                  assets.length === 1 ? assets[0].name : 'afterglow-files.zip'
-                );
+              tap((data) => {
+                saveAs(data, assets.length === 1 ? assets[0].name : 'afterglow-files.zip');
               })
             );
           })
@@ -922,7 +809,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
     const onCreateJobFail$ = this.actions$.pipe(
       ofActionDispatched(CreateJobFail),
-      filter(action => (action as CreateJobFail).correlationId === corrId),
+      filter((action) => (action as CreateJobFail).correlationId === corrId),
       take(1)
     );
 
@@ -936,7 +823,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {}
 
   ngAfterViewInit() {
-    this.items$.subscribe(items => {
+    this.items$.subscribe((items) => {
       this.dataSource.data = items;
       this.dataSource.sort = this.sort;
     });
@@ -953,5 +840,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   checkboxLabel(item: FileSystemItem): string {
     return `${this.selection.isSelected(item) ? 'deselect' : 'select'}`;
+  }
+
+  handleUploadFilesChange($event: Event) {
+    this.onUploadChange(($event.target as HTMLInputElement).files);
   }
 }

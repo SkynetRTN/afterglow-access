@@ -12,29 +12,44 @@ import {
   ChangeDetectorRef,
   SimpleChange,
   SimpleChanges,
-} from "@angular/core";
-import { Point, Matrix, Rectangle } from "paper";
-import { Marker, MarkerType, CircleMarker, TeardropMarker, RectangleMarker, LineMarker, ApertureMarker } from "../../models/marker";
-import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
-import { Transform, transformToMatrix } from "../../../data-files/models/transformation";
-import { BehaviorSubject, combineLatest, Observable } from "rxjs";
-import { map, tap } from "rxjs/operators";
+} from '@angular/core';
+import { Point, Matrix, Rectangle } from 'paper';
+import {
+  Marker,
+  MarkerType,
+  CircleMarker,
+  TeardropMarker,
+  RectangleMarker,
+  LineMarker,
+  ApertureMarker,
+  isCircleMarker,
+  isRectangleMarker,
+  isLineMarker,
+  isTeardropMarker,
+  isApertureMarker,
+} from '../../models/marker';
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { Transform, transformToMatrix } from '../../../data-files/models/transformation';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 export type MarkerMouseEvent = {
   marker: Marker;
   mouseEvent: MouseEvent;
 };
 
+export type Anchor = 'start' | 'middle' | 'end' | 'inherit';
+
 @Component({
-  selector: "app-image-viewer-marker-overlay",
+  selector: 'app-image-viewer-marker-overlay',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: "./image-viewer-marker-overlay.component.html",
-  styleUrls: ["./image-viewer-marker-overlay.component.css"],
+  templateUrl: './image-viewer-marker-overlay.component.html',
+  styleUrls: ['./image-viewer-marker-overlay.component.css'],
 })
 export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, AfterViewInit {
   MarkerType = MarkerType;
 
-  @Input("transform")
+  @Input('transform')
   set transform(transform: Transform) {
     this.transform$.next(transform);
   }
@@ -43,8 +58,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   }
   private transform$ = new BehaviorSubject<Transform>(null);
 
-
-  @Input("markers")
+  @Input('markers')
   set markers(markers: Marker[]) {
     this.markers$.next(markers);
   }
@@ -53,7 +67,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   }
   private markers$ = new BehaviorSubject<Marker[]>(null);
 
-  @Input("svgWidth")
+  @Input('svgWidth')
   set svgWidth(svgWidth: number) {
     this.svgWidth$.next(svgWidth);
   }
@@ -62,7 +76,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   }
   private svgWidth$ = new BehaviorSubject<number>(null);
 
-  @Input("svgHeight")
+  @Input('svgHeight')
   set svgHeight(svgHeight: number) {
     this.svgHeight$.next(svgHeight);
   }
@@ -73,9 +87,9 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   @Output() onMarkerClick = new EventEmitter<MarkerMouseEvent>();
 
-  @ViewChild("svgGroup", { static: true }) svgGroup: ElementRef;
-  @ViewChild("svgTextGroup", { static: true }) svgTextGroup: ElementRef;
-  @ViewChild("svgElementRef", { static: true }) svgElementRef: ElementRef;
+  @ViewChild('svgGroup', { static: true }) svgGroup: ElementRef;
+  @ViewChild('svgTextGroup', { static: true }) svgTextGroup: ElementRef;
+  @ViewChild('svgElementRef', { static: true }) svgElementRef: ElementRef;
 
   transformAttr$: Observable<string>;
   circleMarkers$: Observable<CircleMarker[]>;
@@ -84,46 +98,55 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   lineMarkers$: Observable<LineMarker[]>;
   apertureMarkers$: Observable<ApertureMarker[]>;
 
-  markerTexts$: Observable<Array<{
-    x: number;
-    y: number;
-    dx: number;
-    dy: number;
-    text: string;
-    transform: string;
-    selected: boolean;
-    anchor: string;
-  }>>;
+  markerTexts$: Observable<
+    Array<{
+      x: number;
+      y: number;
+      dx: number;
+      dy: number;
+      text: string;
+      transform: string;
+      selected: boolean;
+      anchor: Anchor;
+    }>
+  >;
 
   constructor(private cdr: ChangeDetectorRef) {
-    this.transformAttr$ = this.transform$.pipe(
-      map(t => `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`)
-    )
+    this.transformAttr$ = this.transform$.pipe(map((t) => `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`));
 
     this.circleMarkers$ = this.markers$.pipe(
-      map(markers => markers.filter(m => m.type == MarkerType.CIRCLE) as CircleMarker[])
-    )
+      map((markers) => markers.filter((m) => m.type == MarkerType.CIRCLE) as CircleMarker[])
+    );
     this.rectangleMarkers$ = this.markers$.pipe(
-      map(markers => markers.filter(m => m.type == MarkerType.RECTANGLE) as RectangleMarker[])
-    )
+      map((markers) => markers.filter((m) => m.type == MarkerType.RECTANGLE) as RectangleMarker[])
+    );
 
     this.tearDropMarkers$ = this.markers$.pipe(
-      map(markers => markers.filter(m => m.type == MarkerType.TEARDROP) as TeardropMarker[])
-    )
+      map((markers) => markers.filter((m) => m.type == MarkerType.TEARDROP) as TeardropMarker[])
+    );
 
     this.lineMarkers$ = this.markers$.pipe(
-      map(markers => markers.filter(m => m.type == MarkerType.LINE) as LineMarker[])
-    )
+      map((markers) => markers.filter((m) => m.type == MarkerType.LINE) as LineMarker[])
+    );
 
     this.apertureMarkers$ = this.markers$.pipe(
-      map(markers => markers.filter(m => m.type == MarkerType.APERTURE) as ApertureMarker[])
-    )
+      map((markers) => markers.filter((m) => m.type == MarkerType.APERTURE) as ApertureMarker[])
+    );
 
-    this.markerTexts$ = combineLatest([this.circleMarkers$, this.tearDropMarkers$, this.apertureMarkers$, this.transform$]).pipe(
+    this.markerTexts$ = combineLatest([
+      this.circleMarkers$,
+      this.tearDropMarkers$,
+      this.apertureMarkers$,
+      this.transform$,
+    ]).pipe(
       map(([circleMarkers, tearDropMarkers, apertureMarkers, transform]) => {
         if (!circleMarkers || !tearDropMarkers || !apertureMarkers) return [];
-        let markers: (CircleMarker | TeardropMarker | ApertureMarker)[] = [...circleMarkers, ...tearDropMarkers, ...apertureMarkers].filter(marker => marker.label && marker.label != '');
-        return markers.map(m => {
+        let markers: (CircleMarker | TeardropMarker | ApertureMarker)[] = [
+          ...circleMarkers,
+          ...tearDropMarkers,
+          ...apertureMarkers,
+        ].filter((marker) => marker.label && marker.label != '');
+        return markers.map((m) => {
           let matrix = transformToMatrix(transform);
           let p = matrix.transform(new Point(m.x, m.y));
           let mirrored = matrix.scaling.x < 0;
@@ -164,40 +187,37 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
           }
           let dx = radius * Math.sin((labelTheta * Math.PI) / 180);
           let dy = -radius * Math.cos((labelTheta * Math.PI) / 180);
-          let anchor = "middle";
-          if (labelTheta > 0 && labelTheta < 180) anchor = "start";
-          if (labelTheta > 180 && labelTheta < 360) anchor = "end";
+          let anchor: Anchor = 'middle';
+          if (labelTheta > 0 && labelTheta < 180) anchor = 'start';
+          if (labelTheta > 180 && labelTheta < 360) anchor = 'end';
 
           return {
             x: p.x,
             y: p.y,
             dx: 0,
             dy: 0,
-            text: m.label ? m.label : "",
+            text: m.label ? m.label : '',
             transform: `translate(${p.x},${p.y}) scale(${Math.abs(matrix.scaling.x)}, ${Math.abs(
               matrix.scaling.y
             )}) translate(${-p.x},${-p.y}) translate(${dx},${dy}) `,
             selected: m.selected,
             anchor: anchor,
           };
-        })
-
+        });
       })
-
-    )
+    );
   }
   get svg(): SVGElement {
     return this.svgElementRef.nativeElement;
   }
 
-  trackById(m: Marker) {
+  trackMarkerById(index: number, m: Marker) {
     return m.id;
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
-  ngOnChanges(changes: SimpleChanges) {
-  }
+  ngOnChanges(changes: SimpleChanges) {}
 
   ngAfterViewInit() {
     //this.cdr.detach();
@@ -209,4 +229,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
       mouseEvent: $event,
     });
   }
+
+  isCircleMarker = isCircleMarker;
+  isRectangleMarker = isRectangleMarker;
+  isApertureMarker = isApertureMarker;
+  isLineMarker = isLineMarker;
+  isTeardropMarker = isTeardropMarker;
 }
