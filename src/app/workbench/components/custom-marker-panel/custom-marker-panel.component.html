@@ -40,11 +40,11 @@
         <ng-container *ngIf="selectedMarkers.length == 1">
           <hr />
           <h3 i18n>Marker Customization</h3>
-          <app-circle-marker-editor *ngIf="selectedMarkers[0].type == MarkerType.CIRCLE" [marker]="selectedMarkers[0]"
+          <app-circle-marker-editor *ngIf="circleMarker$ | async as circleMarker" [marker]="circleMarker"
             (changed)="onMarkerChange($event, selectedMarkers[0])">
           </app-circle-marker-editor>
-          <app-rectangle-marker-editor *ngIf="selectedMarkers[0].type == MarkerType.RECTANGLE"
-            [marker]="selectedMarkers[0]" (changed)="onMarkerChange($event, selectedMarkers[0])">
+          <app-rectangle-marker-editor *ngIf="rectangleMarker$ | async as rectangleMarker" [marker]="rectangleMarker"
+            (changed)="onMarkerChange($event, selectedMarkers[0])">
           </app-rectangle-marker-editor>
         </ng-container>
         <button mat-raised-button i18n-aria-label aria-label="Delete Selected Markers" i18n-matTooltip

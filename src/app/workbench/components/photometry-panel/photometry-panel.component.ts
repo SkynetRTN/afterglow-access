@@ -9,14 +9,14 @@ import {
   EventEmitter,
   Output,
   ChangeDetectionStrategy,
-} from "@angular/core";
+} from '@angular/core';
 
-import * as moment from "moment";
+import * as moment from 'moment';
 
-import { MatCheckboxChange } from "@angular/material/checkbox";
-import { MatDialog } from "@angular/material/dialog";
-import { Select, Store, Actions, ofActionSuccessful, ofAction } from "@ngxs/store";
-import { Observable, Subscription, combineLatest, BehaviorSubject, of } from "rxjs";
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { Select, Store, Actions, ofActionSuccessful, ofAction } from '@ngxs/store';
+import { Observable, Subscription, combineLatest, BehaviorSubject, of } from 'rxjs';
 import {
   map,
   flatMap,
@@ -31,24 +31,24 @@ import {
   auditTime,
   distinct,
   takeUntil,
-} from "rxjs/operators";
+} from 'rxjs/operators';
 
-import * as jStat from "jstat";
-import { saveAs } from "file-saver/dist/FileSaver";
+import * as jStat from 'jstat';
+import { saveAs } from 'file-saver/dist/FileSaver';
 
-import { getCenterTime, getSourceCoordinates, DataFile, ImageHdu, Header } from "../../../data-files/models/data-file";
-import { DmsPipe } from "../../../pipes/dms.pipe";
-import { PhotometryPanelState } from "../../models/photometry-file-state";
-import { PhotSettingsDialogComponent } from "../phot-settings-dialog/phot-settings-dialog.component";
-import { SourceExtractionDialogComponent } from "../source-extraction-dialog/source-extraction-dialog.component";
-import { Source, PosType } from "../../models/source";
-import { PhotometryPanelConfig, BatchPhotometryFormData } from "../../models/workbench-state";
-import { SelectionModel } from "@angular/cdk/collections";
-import { CentroidSettings } from "../../models/centroid-settings";
-import { PhotometryJob, PhotometryJobResult, PhotometryData } from "../../../jobs/models/photometry";
-import { Router } from "@angular/router";
-import { MatButtonToggleChange } from "@angular/material/button-toggle";
-import { WorkbenchState } from "../../workbench.state";
+import { getCenterTime, getSourceCoordinates, DataFile, ImageHdu, Header } from '../../../data-files/models/data-file';
+import { DmsPipe } from '../../../pipes/dms.pipe';
+import { PhotometryPanelState } from '../../models/photometry-file-state';
+import { PhotSettingsDialogComponent } from '../phot-settings-dialog/phot-settings-dialog.component';
+import { SourceExtractionDialogComponent } from '../source-extraction-dialog/source-extraction-dialog.component';
+import { Source, PosType } from '../../models/source';
+import { PhotometryPanelConfig, BatchPhotometryFormData } from '../../models/workbench-state';
+import { SelectionModel } from '@angular/cdk/collections';
+import { CentroidSettings } from '../../models/centroid-settings';
+import { PhotometryJob, PhotometryJobResult, PhotometryData } from '../../../jobs/models/photometry';
+import { Router } from '@angular/router';
+import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { WorkbenchState } from '../../workbench.state';
 import {
   UpdatePhotometryPanelConfig,
   ExtractSources,
@@ -59,41 +59,44 @@ import {
   UpdatePhotometrySourceSelectionRegion,
   EndPhotometrySourceSelectionRegion,
   UpdatePhotometrySettings,
-  UpdateSourceExtractionSettings
-} from "../../workbench.actions";
-import { AddSources, RemoveSources, UpdateSource } from "../../sources.actions";
-import { PhotData } from "../../models/source-phot-data";
-import { PhotometrySettings } from "../../models/photometry-settings";
-import { FormGroup, FormControl, Validators } from "@angular/forms";
-import { Papa } from "ngx-papaparse";
-import { datetimeToJd, jdToMjd } from "../../../utils/skynet-astro";
-import { DatePipe } from "@angular/common";
-import { SourceExtractionSettings } from "../../models/source-extraction-settings";
-import { JobsState } from "../../../jobs/jobs.state";
+  UpdateSourceExtractionSettings,
+} from '../../workbench.actions';
+import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
+import { PhotData } from '../../models/source-phot-data';
+import { PhotometrySettings } from '../../models/photometry-settings';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { Papa } from 'ngx-papaparse';
+import { datetimeToJd, jdToMjd } from '../../../utils/skynet-astro';
+import { DatePipe } from '@angular/common';
+import { SourceExtractionSettings } from '../../models/source-extraction-settings';
+import { JobsState } from '../../../jobs/jobs.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import * as snakeCaseKeys from "snakecase-keys";
+import * as snakeCaseKeys from 'snakecase-keys';
 import { Viewer } from '../../models/viewer';
-import { ToolPanelBaseComponent } from "../tool-panel-base/tool-panel-base.component";
-import { HduType } from "../../../data-files/models/data-file-type";
-import { WorkbenchImageHduState } from "../../models/workbench-file-state";
-import { SourcesState } from "../../sources.state";
-import { centroidPsf } from "../../models/centroider";
+import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
+import { HduType } from '../../../data-files/models/data-file-type';
+import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { SourcesState } from '../../sources.state';
+import { centroidPsf } from '../../models/centroider';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 @Component({
-  selector: "app-photometry-panel",
-  templateUrl: "./photometry-panel.component.html",
-  styleUrls: ["./photometry-panel.component.css"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-photometry-panel',
+  templateUrl: './photometry-panel.component.html',
+  styleUrls: ['./photometry-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PhotometryPageComponent extends ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  @Input("hduIds")
-  set hduIds(hduIds: ImageHdu[]) {
+export class PhotometryPageComponent
+  extends ToolPanelBaseComponent
+  implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+  @Input('hduIds')
+  set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
   }
   get hduIds() {
     return this.hduIds$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<ImageHdu[]>(null);
+  private hduIds$ = new BehaviorSubject<string[]>(null);
 
   sources$: Observable<Source[]>;
   state$: Observable<PhotometryPanelState>;
@@ -102,9 +105,9 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
   centroidSettings$: Observable<CentroidSettings>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
-  NUMBER_FORMAT: (v: any) => any = (v: number) => (v ? v : "N/A");
-  DECIMAL_FORMAT: (v: any) => any = (v: number) => (v ? v.toFixed(2) : "N/A");
-  SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : "N/A");
+  NUMBER_FORMAT: (v: any) => any = (v: number) => (v ? v : 'N/A');
+  DECIMAL_FORMAT: (v: any) => any = (v: number) => (v ? v.toFixed(2) : 'N/A');
+  SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : 'N/A');
   SourcePosType = PosType;
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
   batchPhotJob$: Observable<PhotometryJob>;
@@ -124,24 +127,22 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
     private dmsPipe: DmsPipe,
     private datePipe: DatePipe,
     private papa: Papa,
-    store: Store,
+    store: Store
   ) {
     super(store);
 
     this.config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
     this.state$ = this.hduState$.pipe(
-      map(hduState => {
+      map((hduState) => {
         if (hduState && hduState.hduType != HduType.IMAGE) {
           // only image HDUs support sonification
           return null;
         }
-        return (hduState as WorkbenchImageHduState)?.photometryPanelStateId
+        return (hduState as WorkbenchImageHduState)?.photometryPanelStateId;
       }),
       distinctUntilChanged(),
-      switchMap(id => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(
-        map(fn => fn(id))
-      ))
-    )
+      switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id))))
+    );
 
     this.sources$ = combineLatest(
       this.store.select(SourcesState.getSources),
@@ -156,10 +157,7 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
       this.hduId$,
       this.header$
     ).pipe(
-      filter(
-        ([sources, coordMode, showSourcesFromAllFiles, hduId, header]) =>
-          header != null
-      ),
+      filter(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => header != null),
       map(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => {
         if (!header) return [];
         if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
@@ -178,12 +176,11 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
     this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
-
     this.tableData$ = combineLatest(
       this.sources$,
       this.state$.pipe(
-        map((state) => state ? state.sourcePhotometryData : null),
-        distinctUntilChanged(),
+        map((state) => (state ? state.sourcePhotometryData : null)),
+        distinctUntilChanged()
       )
     ).pipe(
       filter(([sources, sourcePhotometryData]) => {
@@ -204,10 +201,10 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
       this.config$.pipe(
         map((s) => s.batchPhotJobId),
         distinctUntilChanged()
-      )
+      ),
     ]).pipe(
       map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob),
-      filter((job) => job != null && job != undefined),
+      filter((job) => job != null && job != undefined)
     );
 
     this.batchPhotFormData$ = this.config$.pipe(
@@ -229,7 +226,6 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
       );
       // }
     });
-
 
     this.sourceSelectionUpdater = combineLatest(this.sources$, this.config$)
       .pipe(
@@ -259,180 +255,125 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
         );
       });
 
-
-    this.imageClickEvent$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
-    ).subscribe(([$event, state, config, header, imageData]) => {
-      if (!$event || !imageData) {
-        return;
-      }
-
-      let selectedSourceIds = config.selectedSourceIds;
-      let centroidClicks = config.centroidClicks;
-      let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
-
-      if ($event.hitImage) {
-        if (selectedSourceIds.length == 0 || $event.mouseEvent.altKey) {
-          let primaryCoord = $event.imageX;
-          let secondaryCoord = $event.imageY;
-          let posType = PosType.PIXEL;
-          if (centroidClicks) {
-            let result = centroidPsf(
-              imageData,
-              primaryCoord,
-              secondaryCoord,
-              centroidSettings.psfCentroiderSettings
-            );
-            primaryCoord = result.x;
-            secondaryCoord = result.y;
-          }
-          if (
-            config.coordMode == 'sky' &&
-            header?.wcs?.isValid()
-          ) {
-            let wcs = header.wcs;
-            let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
-            primaryCoord = raDec[0];
-            secondaryCoord = raDec[1];
-            posType = PosType.SKY;
-          }
-
-          let centerEpoch = getCenterTime(header);
-
-          let source: Source = {
-            id: null,
-            label: null,
-            objectId: null,
-            hduId: this.viewer.hduId,
-            primaryCoord: primaryCoord,
-            secondaryCoord: secondaryCoord,
-            posType: posType,
-            pm: null,
-            pmPosAngle: null,
-            pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
-          };
-          this.store.dispatch(new AddSources([source]));
-        } else if (!$event.mouseEvent.ctrlKey) {
-          this.store.dispatch(
-            new UpdatePhotometryPanelConfig({
-              selectedSourceIds: [],
-            })
-          );
+    this.imageClickEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+      .subscribe(([$event, state, config, header, imageData]) => {
+        if (!$event || !imageData) {
+          return;
         }
-      }
-    })
 
-    this.imageMouseDragStartEvent$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
-    ).subscribe(([$event, state, config, header, imageData]) => {
-      if(!$event) {
-        return;
-      }
-      if (
-        !$event.$mouseDownEvent.ctrlKey &&
-        !$event.$mouseDownEvent.metaKey &&
-        !$event.$mouseDownEvent.shiftKey
-      )
-        return;
-      if (this.viewer.hduId == null) return;
+        let selectedSourceIds = config.selectedSourceIds;
+        let centroidClicks = config.centroidClicks;
+        let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
 
-      this.store.dispatch(
-        new StartPhotometrySourceSelectionRegion(
-          this.viewer.hduId,
-          $event.imageStart
-        )
-      );
+        if ($event.hitImage) {
+          if (selectedSourceIds.length == 0 || $event.mouseEvent.altKey) {
+            let primaryCoord = $event.imageX;
+            let secondaryCoord = $event.imageY;
+            let posType = PosType.PIXEL;
+            if (centroidClicks) {
+              let result = centroidPsf(imageData, primaryCoord, secondaryCoord, centroidSettings.psfCentroiderSettings);
+              primaryCoord = result.x;
+              secondaryCoord = result.y;
+            }
+            if (config.coordMode == 'sky' && header?.wcs?.isValid()) {
+              let wcs = header.wcs;
+              let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
+              primaryCoord = raDec[0];
+              secondaryCoord = raDec[1];
+              posType = PosType.SKY;
+            }
 
-    })
+            let centerEpoch = getCenterTime(header);
 
-    this.imageMouseDragEvent$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
-    ).subscribe(([$event, state, config, header, imageData]) => {
-      if(!$event) {
-        return;
-      }
-      if (
-        !$event.$mouseDownEvent.ctrlKey &&
-        !$event.$mouseDownEvent.metaKey &&
-        !$event.$mouseDownEvent.shiftKey
-      )
-        return;
-      if (this.viewer.hduId == null) return;
+            let source: Source = {
+              id: null,
+              label: null,
+              objectId: null,
+              hduId: this.viewer.hduId,
+              primaryCoord: primaryCoord,
+              secondaryCoord: secondaryCoord,
+              posType: posType,
+              pm: null,
+              pmPosAngle: null,
+              pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
+            };
+            this.store.dispatch(new AddSources([source]));
+          } else if (!$event.mouseEvent.ctrlKey) {
+            this.store.dispatch(
+              new UpdatePhotometryPanelConfig({
+                selectedSourceIds: [],
+              })
+            );
+          }
+        }
+      });
 
-      this.store.dispatch(
-        new UpdatePhotometrySourceSelectionRegion(
-          this.viewer.hduId,
-          $event.imageEnd
-        )
-      );
+    this.imageMouseDragStartEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+      .subscribe(([$event, state, config, header, imageData]) => {
+        if (!$event) {
+          return;
+        }
+        if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
+          return;
+        if (this.viewer.hduId == null) return;
 
-    })
+        this.store.dispatch(new StartPhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageStart));
+      });
 
-    this.imageMouseDragEndEvent$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
-    ).subscribe(([$event, state, config, header, imageData]) => {
-      if(!$event) {
-        return;
-      }
-      if (
-        !$event.$mouseDownEvent.ctrlKey &&
-        !$event.$mouseDownEvent.metaKey &&
-        !$event.$mouseDownEvent.shiftKey
-      )
-        return;
-      if (this.viewer.hduId == null) return;
+    this.imageMouseDragEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+      .subscribe(([$event, state, config, header, imageData]) => {
+        if (!$event) {
+          return;
+        }
+        if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
+          return;
+        if (this.viewer.hduId == null) return;
 
-      this.store.dispatch(
-        new EndPhotometrySourceSelectionRegion(
-          this.viewer.hduId,
-          $event.$mouseUpEvent.shiftKey ? 'remove' : 'append'
-        )
-      );
+        this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageEnd));
+      });
 
-    })
+    this.imageMouseDragEndEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+      .subscribe(([$event, state, config, header, imageData]) => {
+        if (!$event) {
+          return;
+        }
+        if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
+          return;
+        if (this.viewer.hduId == null) return;
 
-    this.markerClickEvent$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(($event) => {
-      if(!$event) {
+        this.store.dispatch(
+          new EndPhotometrySourceSelectionRegion(this.viewer.hduId, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
+        );
+      });
+
+    this.markerClickEvent$.pipe(takeUntil(this.destroy$)).subscribe(($event) => {
+      if (!$event) {
         return;
       }
       if ($event.mouseEvent.altKey) return;
       let sources = this.store.selectSnapshot(SourcesState.getSources);
       let source = sources.find(
-        (source) =>
-          $event.marker.data &&
-          $event.marker.data.source &&
-          source.id == $event.marker.data.source.id
+        (source) => $event.marker.data && $event.marker.data.source && source.id == $event.marker.data.source.id
       );
       if (!source) return;
 
-      let photometryPanelConfig = this.store.selectSnapshot(
-        WorkbenchState.getPhotometryPanelConfig
-      );
-      let sourceSelected = photometryPanelConfig.selectedSourceIds.includes(
-        source.id
-      );
+      let photometryPanelConfig = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
+      let sourceSelected = photometryPanelConfig.selectedSourceIds.includes(source.id);
       if ($event.mouseEvent.ctrlKey) {
         if (!sourceSelected) {
           // select the source
           this.store.dispatch(
             new UpdatePhotometryPanelConfig({
-              selectedSourceIds: [
-                ...photometryPanelConfig.selectedSourceIds,
-                source.id,
-              ],
+              selectedSourceIds: [...photometryPanelConfig.selectedSourceIds, source.id],
             })
           );
         } else {
           // deselect the source
-          let selectedSourceIds = photometryPanelConfig.selectedSourceIds.filter(
-            (id) => id != source.id
-          );
+          let selectedSourceIds = photometryPanelConfig.selectedSourceIds.filter((id) => id != source.id);
           this.store.dispatch(
             new UpdatePhotometryPanelConfig({
               selectedSourceIds: selectedSourceIds,
@@ -448,13 +389,12 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
       }
       $event.mouseEvent.stopImmediatePropagation();
       $event.mouseEvent.preventDefault();
-    })
-
+    });
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   ngOnDestroy() {
     this.batchFormDataSub.unsubscribe();
@@ -462,16 +402,14 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
     this.photometryUpdater.unsubscribe();
   }
 
-  ngOnChanges() { }
+  ngOnChanges() {}
 
-  
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById).pipe(
-      map(fn => fn(hduId)?.name),
-      distinctUntilChanged(),
-    )
+      map((fn) => fn(hduId)?.name),
+      distinctUntilChanged()
+    );
   }
-
 
   selectSources(sources: Source[]) {
     let selectedSourceIds = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig).selectedSourceIds;
@@ -521,18 +459,18 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
     let selectedSources = sources.filter((s) => selectedSourceIds.includes(s.id));
     this.mergeError = null;
     if (!selectedSources.every((source) => source.posType == selectedSources[0].posType)) {
-      this.mergeError = "You cannot merge sources with different position types";
+      this.mergeError = 'You cannot merge sources with different position types';
       return;
     }
     if (selectedSources.some((source) => source.pmEpoch == null)) {
-      this.mergeError = "You can only merge sources which have epochs defined";
+      this.mergeError = 'You can only merge sources which have epochs defined';
       return;
     }
     //verify unique epochs
     let sortedEpochs = selectedSources.map((source) => new Date(source.pmEpoch)).sort();
     for (let i = 0; i < sortedEpochs.length - 1; i++) {
       if (sortedEpochs[i + 1] == sortedEpochs[i]) {
-        this.mergeError = "All source epochs must be unique when merging";
+        this.mergeError = 'All source epochs must be unique when merging';
         return;
       }
     }
@@ -544,7 +482,7 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
       return [
         (new Date(source.pmEpoch).getTime() - t0) / 1000.0,
         (source.primaryCoord - primaryCoord0) *
-        (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos((centerSecondaryCoord * Math.PI) / 180.0)),
+          (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos((centerSecondaryCoord * Math.PI) / 180.0)),
         (source.secondaryCoord - secondaryCoord0) * (source.posType == PosType.PIXEL ? 1 : 3600),
       ];
     });
@@ -596,22 +534,22 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
   exportSourceData(rows: Array<{ source: Source; data: PhotometryData }>) {
     let data = this.papa.unparse(
       rows.map((row) => {
-        let time = row.data.time ? moment.utc(row.data.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
-        let pmEpoch = row.source.pmEpoch ? moment.utc(row.source.pmEpoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
+        let time = row.data.time ? moment.utc(row.data.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+        let pmEpoch = row.source.pmEpoch ? moment.utc(row.source.pmEpoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
         // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
         let jd = time ? datetimeToJd(time) : null;
         return {
           ...row.source,
           ...row.data,
-          time: time ? this.datePipe.transform(time, "yyyy-MM-dd HH:mm:ss.SSS") : null,
-          pm_epoch: pmEpoch ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS") : null,
+          time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
+          pm_epoch: pmEpoch ? this.datePipe.transform(pmEpoch, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
           jd: jd,
           mjd: jd ? jdToMjd(jd) : null,
         };
       })
       // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
     );
-    var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
+    var blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `afterglow_sources.csv`);
   }
 
@@ -673,45 +611,47 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
 
   downloadBatchPhotData(result: PhotometryJobResult) {
     let data = this.papa.unparse(
-      snakeCaseKeys(result.data.map((d) => {
-        let time = d.time ? moment.utc(d.time, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
-        let pmEpoch = d.pmEpoch ? moment.utc(d.pmEpoch, "YYYY-MM-DD HH:mm:ss.SSS").toDate() : null;
-        // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
-        let jd = time ? datetimeToJd(time) : null;
-        return {
-          ...d,
-          time: time ? this.datePipe.transform(time, "yyyy-MM-dd HH:mm:ss.SSS") : null,
-          pmEpoch: pmEpoch ? this.datePipe.transform(pmEpoch, "yyyy-MM-dd HH:mm:ss.SSS") : null,
-          jd: jd,
-          mjd: jd ? jdToMjd(jd) : null,
-        };
-      })),
+      snakeCaseKeys(
+        result.data.map((d) => {
+          let time = d.time ? moment.utc(d.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+          let pmEpoch = d.pmEpoch ? moment.utc(d.pmEpoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+          // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
+          let jd = time ? datetimeToJd(time) : null;
+          return {
+            ...d,
+            time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
+            pmEpoch: pmEpoch ? this.datePipe.transform(pmEpoch, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
+            jd: jd,
+            mjd: jd ? jdToMjd(jd) : null,
+          };
+        })
+      ),
       {
         columns: [
-          "file_id",
-          "id",
-          "time",
-          "jd",
-          "mjd",
-          "ra_hours",
-          "dec_degs",
-          "x",
-          "y",
-          "telescope",
-          "filter",
-          "exp_length",
-          "mag",
-          "mag_error",
-          "flux",
-          "flux_error",
-          "pm_sky",
-          "pm_epoch",
-          "pm_pos_angle_sky",
+          'file_id',
+          'id',
+          'time',
+          'jd',
+          'mjd',
+          'ra_hours',
+          'dec_degs',
+          'x',
+          'y',
+          'telescope',
+          'filter',
+          'exp_length',
+          'mag',
+          'mag_error',
+          'flux',
+          'flux_error',
+          'pm_sky',
+          'pm_epoch',
+          'pm_pos_angle_sky',
         ],
       }
       // .sort((a, b) => (a.jd > b.jd ? 1 : -1))
     );
-    var blob = new Blob([data], { type: "text/plain;charset=utf-8" });
+    var blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `afterglow_photometry.csv`);
 
     // let sources = this.store.selectSnapshot(SourcesState.getEntities);
@@ -728,25 +668,29 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
   openSourceExtractionDialog() {
     let sourceExtractionSettings = this.store.selectSnapshot(WorkbenchState.getSourceExtractionSettings);
     let dialogRef = this.dialog.open(SourceExtractionDialogComponent, {
-      width: "500px",
+      width: '500px',
       data: { ...sourceExtractionSettings },
     });
 
-    dialogRef.afterClosed().pipe(
-      withLatestFrom(this.imageHdu$, this.viewportSize$)
-    ).subscribe(([result, imageHdu, viewportSize]) => {
-      if (result) {
-        this.store.dispatch([new UpdateSourceExtractionSettings(result), new ExtractSources(imageHdu.id, viewportSize, result)]);
-      }
-    });
+    dialogRef
+      .afterClosed()
+      .pipe(withLatestFrom(this.imageHdu$, this.viewportSize$))
+      .subscribe(([result, imageHdu, viewportSize]) => {
+        if (result) {
+          this.store.dispatch([
+            new UpdateSourceExtractionSettings(result),
+            new ExtractSources(imageHdu.id, viewportSize, result),
+          ]);
+        }
+      });
   }
 
   openPhotometrySettingsDialog() {
     let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
     let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
-      width: "700px",
+      width: '700px',
       data: { ...photometrySettings },
-      disableClose: true
+      disableClose: true,
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -773,11 +717,11 @@ export class PhotometryPageComponent extends ToolPanelBaseComponent implements A
     this.store.dispatch(new UpdatePhotometryPanelConfig({ centroidClicks: $event.checked }));
   }
 
-  onShowSourcesFromAllFilesChange($event: MatCheckboxChange) {
+  onShowSourcesFromAllFilesChange($event: MatSlideToggleChange) {
     this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourcesFromAllFiles: $event.checked }));
   }
 
-  onShowSourceLabelsChange($event: MatCheckboxChange) {
+  onShowSourceLabelsChange($event: MatSlideToggleChange) {
     this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceLabels: $event.checked }));
   }
 }

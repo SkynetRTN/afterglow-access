@@ -4,7 +4,7 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Calibrate</mat-label>
         <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hduId of hduIds; trackBy: trackHdu"  [value]="hduId">
+          <mat-option *ngFor="let hduId of hduIds;" [value]="hduId">
             {{ getHduOptionLabel(hduId) | async }}
           </mat-option>
         </mat-select>
@@ -25,36 +25,36 @@
         Extract values from current viewer
       </button>
     </div>
-    
+
 
     <div>
       <mat-form-field appearance="outline">
         <mat-label>RA (hours)</mat-label>
-        <input matInput formControlName="ra"/>
+        <input matInput formControlName="ra" />
       </mat-form-field>
       <mat-form-field class="ml-2" appearance="outline">
         <mat-label>Dec (degs)</mat-label>
-        <input matInput formControlName="dec"/>
+        <input matInput formControlName="dec" />
       </mat-form-field>
     </div>
     <div>
       <mat-form-field appearance="outline">
         <mat-label>Radius (degs)</mat-label>
-        <input matInput type="number" formControlName="radius"/>
+        <input matInput type="number" formControlName="radius" />
       </mat-form-field>
       <mat-form-field class="ml-2" appearance="outline">
         <mat-label>Max Sources</mat-label>
-        <input matInput type="number" formControlName="maxSources"/>
+        <input matInput type="number" formControlName="maxSources" />
       </mat-form-field>
     </div>
     <div>
       <mat-form-field appearance="outline">
         <mat-label>Min Scale (arcsec/pixel)</mat-label>
-        <input matInput type="number" formControlName="minScale"/>
+        <input matInput type="number" formControlName="minScale" />
       </mat-form-field>
       <mat-form-field class="ml-2" appearance="outline">
         <mat-label>Max Scale (arcsec/pixel)</mat-label>
-        <input matInput type="number" formControlName="maxScale"/>
+        <input matInput type="number" formControlName="maxScale" />
       </mat-form-field>
     </div>
 
@@ -71,7 +71,7 @@
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
   <div *ngIf="(activeJob$ | async); let job" style="margin-top: 10px">
     <div class="alert alert-info"
-      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(activeJob.state.status); else jobComplete">
+      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
       <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: "1.0-0" }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">

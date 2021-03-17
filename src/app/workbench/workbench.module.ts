@@ -4,23 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 //Angular Material
-import { MaterialModule } from '../material';
-
-//Covalent
-// import { CovalentDataTableModule } from '@covalent/core';
-
-// Videogular2
-// import { VgCoreModule } from "videogular2/compiled/core";
-// import { VgControlsModule } from "videogular2/compiled/controls";
-// import { VgOverlayPlayModule } from "videogular2/compiled/overlay-play";
-// import { VgBufferingModule } from "videogular2/compiled/buffering";
-
-// import { NvD3Module } from 'ng2-nvd3';
-// import 'd3';
-// import 'nvd3';
-
-// import { TreeModule,  } from '@circlon/angular-tree-component';
-
+import { AppMaterialModule } from '../app-material';
 import { UtilsModule } from '../utils/utils.module';
 import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
@@ -60,7 +44,6 @@ import { SvgTextMarkerComponent } from './components/svg-text-marker/svg-text-ma
 
 import { ReactiveFormsModule } from '@angular/forms';
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
-import { CreateFieldCalDialogComponent } from './components/create-field-cal-dialog/create-field-cal-dialog.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { ThemePickerModule } from '../theme-picker';
@@ -80,6 +63,7 @@ import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FileListOptionComponent } from './containers/file-list-option/file-list-option.component';
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
 import { ImageHduToolbarComponent } from './components/image-hdu-toolbar/image-hdu-toolbar.component';
+import { MatDialogModule } from '@angular/material/dialog';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -107,7 +91,6 @@ export const COMPONENTS = [
   AlignerPageComponent,
   PhotSettingsDialogComponent,
   SourceExtractionDialogComponent,
-  CreateFieldCalDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
   CircleMarkerEditorComponent,
@@ -123,7 +106,7 @@ export const COMPONENTS = [
   WcsCalibrationPanelComponent,
   FileToolbarComponent,
   ImageHduToolbarComponent,
-  FileListOptionComponent
+  FileListOptionComponent,
 ];
 
 @NgModule({
@@ -137,7 +120,7 @@ export const COMPONENTS = [
     DataProvidersModule,
     DataFilesModule,
     JobsModule,
-    MaterialModule,
+    AppMaterialModule,
     KeyboardShortcutsModule.forRoot(),
     FlexLayoutModule,
     ThemePickerModule,
@@ -150,7 +133,6 @@ export const COMPONENTS = [
   entryComponents: [
     PhotSettingsDialogComponent,
     SourceExtractionDialogComponent,
-    CreateFieldCalDialogComponent,
     PixelOpsJobsDialogComponent,
     HelpDialogComponent,
     ThemeDialogComponent,

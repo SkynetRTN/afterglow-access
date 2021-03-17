@@ -1,15 +1,15 @@
-import { NgModule } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 //Angular Material
-import { MaterialModule } from "../material";
-import { SvgModule } from "../svg/svg.module";
-import { PipesModule } from "../pipes/pipes.module";
-import { OpenFileDialogComponent } from "./components/open-file-dialog/open-file-dialog.component";
-import { FileManagerComponent } from "./components/file-manager/file-manager.component";
-import { SaveDialogComponent } from "./components/save-dialog/save-dialog.component";
+import { AppMaterialModule } from '../app-material';
+import { SvgModule } from '../svg/svg.module';
+import { PipesModule } from '../pipes/pipes.module';
+import { OpenFileDialogComponent } from './components/open-file-dialog/open-file-dialog.component';
+import { FileManagerComponent } from './components/file-manager/file-manager.component';
+import { SaveDialogComponent } from './components/save-dialog/save-dialog.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { NameDialogComponent } from './components/name-dialog/name-dialog.component';
 import { UtilsModule } from '../utils/utils.module';
@@ -17,7 +17,16 @@ import { TargetDialogComponent } from './components/target-dialog/target-dialog.
 import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.component';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, MaterialModule, RouterModule, PipesModule, ReactiveFormsModule, FlexLayoutModule, UtilsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AppMaterialModule,
+    RouterModule,
+    PipesModule,
+    ReactiveFormsModule,
+    FlexLayoutModule,
+    UtilsModule,
+  ],
   declarations: [
     OpenFileDialogComponent,
     SaveDialogComponent,
@@ -25,10 +34,16 @@ import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.
     SaveDialogComponent,
     NameDialogComponent,
     TargetDialogComponent,
-    UploadDialogComponent
+    UploadDialogComponent,
   ],
   exports: [],
   providers: [],
-  entryComponents: [OpenFileDialogComponent, SaveDialogComponent, NameDialogComponent, TargetDialogComponent, UploadDialogComponent],
+  entryComponents: [
+    OpenFileDialogComponent,
+    SaveDialogComponent,
+    NameDialogComponent,
+    TargetDialogComponent,
+    UploadDialogComponent,
+  ],
 })
 export class DataProvidersModule {}

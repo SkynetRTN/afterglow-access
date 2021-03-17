@@ -12,9 +12,7 @@ import { Store } from '@ngxs/store';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { BehaviorSubject, Observable, combineLatest, Subject, concat } from 'rxjs';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import {
-  MatSelectionListChange
-} from '@angular/material/list';
+import { MatSelectionListChange } from '@angular/material/list';
 import { ToggleFileSelection, SelectFile } from '../../workbench.actions';
 import { Viewer } from '../../models/viewer';
 import { LoadLibrary } from '../../../data-files/data-files.actions';
@@ -55,7 +53,6 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
   }
   private selectedFileIds$ = new BehaviorSubject<string[]>([]);
 
-  
   @Output() onCloseFile = new EventEmitter<string>();
   @Output() onSaveFile = new EventEmitter<string>();
 
@@ -64,21 +61,18 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
   destroy$: Subject<boolean> = new Subject<boolean>();
   HduType = HduType;
   collapsedFileIds: { [id: string]: boolean } = {};
-  focusedValue: {fileId: string, hduId: string} = null;
+  focusedValue: { fileId: string; hduId: string } = null;
 
-  constructor(private store: Store, private fileService: AfterglowDataFileService) {
-   
-  }
+  constructor(private store: Store, private fileService: AfterglowDataFileService) {}
 
-  ngAfterViewInit() {
-  }
+  ngAfterViewInit() {}
 
   ngOnDestroy(): void {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
 
-  handleItemDoubleClick(value: {fileId: string, hduId: string}) {
+  handleItemDoubleClick(value: { fileId: string; hduId: string }) {
     this.selectFile(value.fileId, value.hduId, true);
   }
 
@@ -93,7 +87,7 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
     this.store.dispatch(new SelectFile(fileId, hduId, keepOpen));
   }
 
-  handleToggleExpanded($event: {fileId: string, hduId: string}) {
+  handleToggleExpanded($event: { fileId: string; hduId: string }) {
     if ($event.fileId in this.collapsedFileIds) {
       delete this.collapsedFileIds[$event.fileId];
     } else {
@@ -101,17 +95,17 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
     }
   }
 
-  handleToggleSelected($event: { fileId: string; hduId: string, $event: MouseEvent }) {
+  handleToggleSelected($event: { fileId: string; hduId: string; $event: MouseEvent }) {
     //TODO handle multi-selection based on modifier keys
     this.store.dispatch(new ToggleFileSelection($event.fileId));
   }
 
-  trackById(file: DataFile) {
+  trackById(index: number, file: DataFile) {
     return file?.id;
   }
 
   onChannelDrop($event: CdkDragDrop<IHdu[]>) {
-    console.log("DROPPPED!!!!!!!!!!: ", $event);
+    console.log('DROPPPED!!!!!!!!!!: ', $event);
     return;
 
     let hdus = $event.container.data;
@@ -140,11 +134,11 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
     );
   }
 
-  handleFocus(value: {fileId: string, hduId: string}) {
+  handleFocus(value: { fileId: string; hduId: string }) {
     this.focusedValue = value;
   }
 
-  handleMouseEnter(value: {fileId: string, hduId: string}) {
+  handleMouseEnter(value: { fileId: string; hduId: string }) {
     this.focusedValue = value;
   }
 
@@ -153,19 +147,16 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
   }
 
   handleMouseLeave($event: MouseEvent) {
-    
     // when a toolbar button opens a menu, mouseleave event is dispatched
     // this causes the toolbar to be removed leading to the immediately closing of the menu
     // TODO find a better solution
-    if(($event.relatedTarget as HTMLElement)?.tagName?.toLowerCase() == 'div') {
+    if (($event.relatedTarget as HTMLElement)?.tagName?.toLowerCase() == 'div') {
       let div = $event.relatedTarget as HTMLDivElement;
-      if(div.classList.contains('cdk-overlay-backdrop')) {
+      if (div.classList.contains('cdk-overlay-backdrop')) {
         return;
       }
     }
 
     this.focusedValue = null;
   }
-
-
 }

@@ -11,16 +11,7 @@ import {
 } from '@angular/core';
 
 // import { VgAPI } from "videogular2/compiled/core";
-import {
-  Observable,
-  Subscription,
-  from,
-  merge,
-  interval,
-  combineLatest,
-  BehaviorSubject,
-  Subject,
-} from 'rxjs';
+import { Observable, Subscription, from, merge, interval, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 import {
   filter,
   map,
@@ -36,17 +27,9 @@ import {
   switchMap,
 } from 'rxjs/operators';
 
-import {
-  SonifierRegionMode,
-  SonificationPanelState,
-} from '../../models/sonifier-file-state';
+import { SonifierRegionMode, SonificationPanelState } from '../../models/sonifier-file-state';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
-import {
-  getWidth,
-  getHeight,
-  DataFile,
-  ImageHdu,
-} from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
@@ -63,11 +46,7 @@ import {
 } from '../../workbench.actions';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { Region } from '../../../data-files/models/region';
-import {
-  getViewportRegion,
-  Transform,
-  getImageToViewportTransform,
-} from '../../../data-files/models/transformation';
+import { getViewportRegion, Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import * as moment from 'moment';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
@@ -77,6 +56,7 @@ import { WorkbenchState } from '../../workbench.state';
 import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { isNotEmpty } from '../../../utils/utils';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -84,9 +64,9 @@ import { isNotEmpty } from '../../../utils/utils';
   styleUrls: ['./sonification-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SonificationPanelComponent extends ToolPanelBaseComponent
+export class SonificationPanelComponent
+  extends ToolPanelBaseComponent
   implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-
   SonifierRegionMode = SonifierRegionMode;
   state$: Observable<SonificationPanelState>;
   state: SonificationPanelState;
@@ -98,67 +78,43 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
   shortcuts: ShortcutInput[] = [];
   stop$ = new Subject();
   audioObj = new Audio();
-  audioEvents = [
-    'ended',
-    'error',
-    'play',
-    'playing',
-    'pause',
-    'timeupdate',
-    'canplay',
-    'loadedmetadata',
-    'loadstart',
-  ];
+  audioEvents = ['ended', 'error', 'play', 'playing', 'pause', 'timeupdate', 'canplay', 'loadedmetadata', 'loadstart'];
 
   subs: Subscription[] = [];
   progressLine$: Observable<{ x1: number; y1: number; x2: number; y2: number }>;
 
-  constructor(
-    private actions$: Actions,
-    store: Store
-  ) {
+  constructor(private actions$: Actions, store: Store) {
     super(store);
 
     this.state$ = this.hduState$.pipe(
-      map(hduState => {
+      map((hduState) => {
         if (hduState && hduState.hduType != HduType.IMAGE) {
           // only image HDUs support sonification
           return null;
         }
-        return (hduState as WorkbenchImageHduState)?.sonificationPanelStateId
+        return (hduState as WorkbenchImageHduState)?.sonificationPanelStateId;
       }),
       distinctUntilChanged(),
-      switchMap(id => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(
-        map(fn => fn(id))
-      ))
-    )
+      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id))))
+    );
 
-    this.state$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(state => {
+    this.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
       this.state = state;
-    })
+    });
 
     this.viewportTransform$ = this.imageHdu$.pipe(
       switchMap((hdu) =>
-        this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(hdu?.viewportTransformId)))
+        this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(hdu?.viewportTransformId)))
       )
     );
 
     this.imageTransform$ = this.imageHdu$.pipe(
       switchMap((hdu) =>
-        this.store
-          .select(DataFilesState.getTransformById)
-          .pipe(map((fn) => fn(hdu?.imageTransformId)))
+        this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(hdu?.imageTransformId)))
       )
     );
 
-    this.imageToViewportTransform$ = combineLatest(
-      this.viewportTransform$,
-      this.imageTransform$
-    ).pipe(
+    this.imageToViewportTransform$ = combineLatest(this.viewportTransform$, this.imageTransform$).pipe(
       map(([viewportTransform, imageTransform]) => {
         if (!viewportTransform || !imageTransform) {
           return null;
@@ -167,24 +123,15 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
       })
     );
 
-
-
-    this.region$ = combineLatest(
-      this.imageHdu$,
-      this.imageToViewportTransform$,
-      this.viewportSize$,
-      this.state$
-    ).pipe(
-      filter(([hdu, transform, viewportSize, state]) => isNotEmpty(state) && isNotEmpty(hdu) ),
+    this.region$ = combineLatest(this.imageHdu$, this.imageToViewportTransform$, this.viewportSize$, this.state$).pipe(
+      filter(([hdu, transform, viewportSize, state]) => isNotEmpty(state) && isNotEmpty(hdu)),
       map(([hdu, transform, viewportSize, state]) => {
         if (state.regionMode == SonifierRegionMode.CUSTOM) {
           this.region = state.regionHistory[state.regionHistoryIndex];
         } else if (!hdu || !transform || !viewportSize) {
           this.region = null;
         } else {
-          let rawImageData = this.store.selectSnapshot(
-            DataFilesState.getImageDataEntities
-          )[hdu.rawImageDataId];
+          let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[hdu.rawImageDataId];
           this.region = getViewportRegion(
             transform,
             rawImageData.width,
@@ -196,32 +143,18 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
 
         return this.region;
       }),
-      distinctUntilChanged(
-        (a, b) =>
-          a &&
-          b &&
-          a.x == b.x &&
-          a.y == b.y &&
-          a.width == b.width &&
-          a.height == b.height
-      )
+      distinctUntilChanged((a, b) => a && b && a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height)
     );
 
-    this.region$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.imageHdu$))
-      .subscribe(([region, hdu]) => {
-        if (!hdu) return;
+    this.region$.pipe(takeUntil(this.destroy$), withLatestFrom(this.imageHdu$)).subscribe(([region, hdu]) => {
+      if (!hdu) return;
 
-        this.stop();
-        this.store.dispatch(new SetProgressLine(hdu.id, null));
-      });
+      this.stop();
+      this.store.dispatch(new SetProgressLine(hdu.id, null));
+    });
 
     this.actions$
-      .pipe(
-        ofActionDispatched(SonificationCompleted),
-        takeUntil(this.destroy$),
-        withLatestFrom(this.imageHdu$)
-      )
+      .pipe(ofActionDispatched(SonificationCompleted), takeUntil(this.destroy$), withLatestFrom(this.imageHdu$))
       .subscribe(([action, hdu]) => {
         let a = action as SonificationCompleted;
         if (!a.error && a.url) {
@@ -232,7 +165,7 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
       });
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
   ngAfterViewInit() {
     this.shortcuts.push({
@@ -430,7 +363,7 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
     this.destroy$.unsubscribe();
   }
 
-  ngOnChanges() { }
+  ngOnChanges() {}
 
   getStream(url: string): Observable<Event> {
     return new Observable((observer) => {
@@ -458,16 +391,11 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
   playStream(url: string) {
     let indexToneDuration = 0.852 / 2.0;
 
-    let events$ = this.getStream(url).pipe(
-      takeUntil(merge(this.destroy$, this.stop$)),
-      share()
-    );
+    let events$ = this.getStream(url).pipe(takeUntil(merge(this.destroy$, this.stop$)), share());
 
     let stopUpdating$ = merge(
       this.stop$,
-      events$.pipe(
-        filter((event) => event.type == 'ended' || event.type == 'pause')
-      )
+      events$.pipe(filter((event) => event.type == 'ended' || event.type == 'pause'))
     ).pipe(
       take(1),
       withLatestFrom(this.imageHdu$),
@@ -484,11 +412,7 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
           return interval(10).pipe(
             takeUntil(stopUpdating$),
             map(() => {
-              if (
-                !region ||
-                !this.audioObj.duration ||
-                !this.audioObj.currentTime
-              ) {
+              if (!region || !this.audioObj.duration || !this.audioObj.currentTime) {
                 return null;
               }
               let y =
@@ -497,11 +421,10 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
                   0,
                   Math.min(
                     1,
-                    (this.audioObj.currentTime - indexToneDuration) /
-                    (this.audioObj.duration - 2 * indexToneDuration)
+                    (this.audioObj.currentTime - indexToneDuration) / (this.audioObj.duration - 2 * indexToneDuration)
                   )
                 ) *
-                region.height;
+                  region.height;
 
               return {
                 x1: region.x,
@@ -520,7 +443,7 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
       });
   }
 
-  openFile(url: string) { }
+  openFile(url: string) {}
 
   play() {
     this.audioObj.play();
@@ -563,10 +486,7 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
     this.selectSubregion(subregion, null);
   }
 
-  selectSubregion(
-    timeSubregion: number = null,
-    frequencySubregion: number = null
-  ) {
+  selectSubregion(timeSubregion: number = null, frequencySubregion: number = null) {
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
     let xShift = 0;
     let width = region.width;
@@ -625,18 +545,14 @@ export class SonificationPanelComponent extends ToolPanelBaseComponent
 
   setDuration(value: number) {
     let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(this.viewer?.hduId);
-    this.store.dispatch(
-      new UpdateSonifierFileState(this.viewer.hduId, { duration: value })
-    );
+    this.store.dispatch(new UpdateSonifierFileState(this.viewer.hduId, { duration: value }));
   }
 
   setToneCount(value: number) {
-    this.store.dispatch(
-      new UpdateSonifierFileState(this.viewer.hduId, { toneCount: value })
-    );
+    this.store.dispatch(new UpdateSonifierFileState(this.viewer.hduId, { toneCount: value }));
   }
 
-  setViewportSync(value: MatCheckboxChange) {
+  setViewportSync(value: MatSlideToggleChange) {
     this.store.dispatch(
       new UpdateSonifierFileState(this.viewer.hduId, {
         viewportSync: value.checked,

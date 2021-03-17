@@ -1,17 +1,17 @@
-import { NgModule } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 //Angular Material
-import { MaterialModule } from "../material";
+import { AppMaterialModule } from '../app-material';
 
-import { SvgModule } from "../svg/svg.module";
+import { SvgModule } from '../svg/svg.module';
 
-import { PipesModule } from "../pipes/pipes.module";
-import { JobService } from "./services/jobs";
+import { PipesModule } from '../pipes/pipes.module';
+import { JobService } from './services/jobs';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, MaterialModule, PipesModule, SvgModule],
+  imports: [CommonModule, FormsModule, AppMaterialModule, PipesModule, SvgModule],
   declarations: [],
   exports: [],
   providers: [JobService],
