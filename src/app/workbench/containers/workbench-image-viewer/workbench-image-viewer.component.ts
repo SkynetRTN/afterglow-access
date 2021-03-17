@@ -520,7 +520,7 @@ export class WorkbenchImageViewerComponent
     );
 
     let sourcePhotometryData$ = photometryPanelState$.pipe(
-      map((state) => state.sourcePhotometryData),
+      map((state) => state?.sourcePhotometryData),
       distinctUntilChanged()
     );
 
@@ -666,7 +666,7 @@ export class WorkbenchImageViewerComponent
             sourcePhotometryData$
           ).pipe(
             map(([hduId, header, config, sources, sourcePhotometryData]) => {
-              if (!header) return [];
+              if (!header || !sourcePhotometryData) return [];
 
               let selectedSourceIds = config.selectedSourceIds;
               let coordMode = config.coordMode;

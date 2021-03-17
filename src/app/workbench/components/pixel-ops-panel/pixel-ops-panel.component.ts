@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from "rxjs";
-import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap } from "rxjs/operators";
+import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap, withLatestFrom } from "rxjs/operators";
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors, AbstractControl } from "@angular/forms";
 import { JobType } from "../../../jobs/models/job-types";
 import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
@@ -22,6 +22,7 @@ import { JobsState } from "../../../jobs/jobs.state";
 import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
 import { DataFilesState } from "../../../data-files/data-files.state";
 import { isNumber } from '../../../utils/validators';
+import { ToolPanelBaseComponent } from "../tool-panel-base/tool-panel-base.component";
 
 interface PixelOpVariable {
   name: string;
@@ -44,19 +45,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  @Input("config")
-  set config(config: PixelOpsPanelConfig) {
-    this.config$.next(config);
-  }
-  get config() {
-    return this.config$.getValue();
-  }
-  private config$ = new BehaviorSubject<PixelOpsPanelConfig>(null);
-
   destroy$: Subject<boolean> = new Subject<boolean>();
-
+  config$: Observable<PixelOpsPanelConfig>;
   selectedHduIds$: Observable<string[]>;
-
   pixelOpsJobs$: Observable<PixelOpsJob[]>;
   currentPixelOpsJob$: Observable<PixelOpsJob>;
   showCurrentPixelOpsJobState$: Observable<boolean>;
@@ -105,9 +96,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   });
 
   constructor(public dialog: MatDialog, private store: Store, private router: Router) {
-    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
-      if (!hduIds || !this.config) return;
-      let formData = this.config.pixelOpsFormData;
+    this.config$ = this.store.select(WorkbenchState.getPixelOpsPanelConfig);
+
+    this.hduIds$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.config$),
+    ).subscribe(([hduIds, config]) => {
+      if (!hduIds || !config) return;
+      let formData = config.pixelOpsFormData;
       let primaryHduIds = formData.primaryHduIds.filter((hduId) => hduIds.includes(hduId));
       let auxHduIds = formData.auxHduIds.filter((hduId) => hduIds.includes(hduId));
       let auxHduId = formData.auxHduId;
@@ -317,33 +313,10 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
 
   getHduOptionLabel(hduId: string) {
-    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)),
-      filter((hdu) => hdu != null)
-    );
-
-    let file$ = hdu$.pipe(
-      map((hdu) => hdu.fileId),
+    return this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)?.name),
       distinctUntilChanged(),
-      flatMap((fileId) => {
-        return this.store.select(DataFilesState.getFileById).pipe(
-          map((fn) => fn(fileId)),
-          filter((file) => file != null)
-        );
-      })
-    );
-
-    return combineLatest(hdu$, file$).pipe(
-      map(([hdu, file]) => {
-        if (!hdu || !file) return "???";
-        if (file.hduIds.length > 1) {
-          return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
-        }
-        return file.name;
-      }),
-
-      distinctUntilChanged()
-    );
+    )
   }
 
   onSelectAllPrimaryHdusBtnClick() {

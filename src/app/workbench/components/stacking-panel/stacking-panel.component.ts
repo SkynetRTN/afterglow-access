@@ -1,6 +1,6 @@
 import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
-import { map, tap, takeUntil, distinctUntilChanged, flatMap } from "rxjs/operators";
+import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from "rxjs/operators";
 import { StackFormData, WorkbenchTool, StackingPanelConfig } from "../../models/workbench-state";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { StackingJob, StackingJobResult } from "../../../jobs/models/stacking";
@@ -28,14 +28,7 @@ export class StackerPanelComponent implements OnInit {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  @Input("config")
-  set config(config: StackingPanelConfig) {
-    this.config$.next(config);
-  }
-  get config() {
-    return this.config$.getValue();
-  }
-  private config$ = new BehaviorSubject<StackingPanelConfig>(null);
+  config$: Observable<StackingPanelConfig>;
 
   destroy$: Subject<boolean> = new Subject<boolean>();
   selectedHdus$: Observable<Array<ImageHdu>>;
@@ -55,11 +48,15 @@ export class StackerPanelComponent implements OnInit {
 
   constructor(private store: Store, private router: Router) {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
+    this.config$ = this.store.select(WorkbenchState.getStackingPanelConfig);
 
-    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
-      if (!hduIds || !this.config) return;
-      let selectedHduIds = this.config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
-      if (selectedHduIds.length != this.config.stackFormData.selectedHduIds.length) {
+    this.hduIds$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.config$)
+    ).subscribe(([hduIds, config]) => {
+      if (!hduIds || !config) return;
+      let selectedHduIds = config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+      if (selectedHduIds.length != config.stackFormData.selectedHduIds.length) {
         setTimeout(() => {
           this.setSelectedHduIds(selectedHduIds);
         });
@@ -120,25 +117,10 @@ export class StackerPanelComponent implements OnInit {
   }
 
   getHduOptionLabel(hduId: string) {
-    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId)));
-
-    let file$ = hdu$.pipe(
-      map((hdu) => hdu.fileId),
+    return this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)?.name),
       distinctUntilChanged(),
-      flatMap((fileId) => {
-        return this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId)));
-      })
-    );
-
-    return combineLatest(hdu$, file$).pipe(
-      map(([hdu, file]) => {
-        if (!hdu || !file) return "???";
-        if (file.hduIds.length > 1) {
-          return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
-        }
-        return file.name;
-      })
-    );
+    )
   }
 
   setSelectedHduIds(hduIds: string[]) {

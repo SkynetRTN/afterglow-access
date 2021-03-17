@@ -19,8 +19,8 @@
       </button>
     </div>
 
-    <div class="mb-3">
-      <button mat-raised-button [disabled]="!autofillHeader" (click)="onAutofillFromFocusedViewerClick()">
+    <div *ngIf="(header$ | async) as header" class="mb-3">
+      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
         <mat-icon>colorize</mat-icon>
         Extract values from current viewer
       </button>
@@ -69,9 +69,9 @@
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
-  <div *ngIf="activeJob; let job" style="margin-top: 10px">
+  <div *ngIf="(activeJob$ | async); let job" style="margin-top: 10px">
     <div class="alert alert-info"
-      *ngIf="!activeJobResult || ['pending', 'in_progress'].includes(activeJob.state.status); else jobComplete">
+      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(activeJob.state.status); else jobComplete">
       <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: "1.0-0" }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">
@@ -82,8 +82,8 @@
       </ng-container>
     </div>
     <ng-template #jobComplete>
-      <div *ngIf="activeJobResult?.errors?.length != 0; else noErrors" class="alert alert-danger">
-        {{ activeJobResult?.errors }}
+      <div *ngIf="(activeJobResult$ | async)?.errors?.length != 0; else noErrors" class="alert alert-danger">
+        {{ (activeJobResult$ | async)?.errors }}
       </div>
       <ng-template #noErrors>
         <div class="alert alert-success" i18n>Processing is complete.</div>

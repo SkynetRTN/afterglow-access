@@ -10,10 +10,7 @@ import {
   getExpLength,
   getObject,
   getTelescope,
-  getFilter,
-  DataFile,
-  ImageHdu,
-  IHdu,
+  getFilter
 } from "../../../data-files/models/data-file";
 import { DecimalPipe, DatePipe } from "@angular/common";
 import { MatSlideToggleChange } from "@angular/material/slide-toggle";
@@ -21,10 +18,12 @@ import { Router } from "@angular/router";
 import { Store } from "@ngxs/store";
 import { datetimeToJd } from "../../../utils/skynet-astro";
 import { FileInfoPanelConfig } from "../../models/file-info-panel";
-import { BehaviorSubject, Subject, Observable, combineLatest } from "rxjs";
-import { map, distinctUntilChanged, filter } from "rxjs/operators";
-import { MatSelectChange } from "@angular/material/select";
+import { Observable, combineLatest } from "rxjs";
+import { map } from "rxjs/operators";
 import { HeaderEntry } from "../../../data-files/models/header-entry";
+import { ToolPanelBaseComponent } from "../tool-panel-base/tool-panel-base.component";
+import { WorkbenchState } from "../../workbench.state";
+import { UpdateFileInfoPanelConfig } from "../../workbench.actions";
 
 @Component({
   selector: "app-file-info-panel",
@@ -32,31 +31,21 @@ import { HeaderEntry } from "../../../data-files/models/header-entry";
   styleUrls: ["./file-info-panel.component.css"],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input("header")
-  set header(header: Header) {
-    this.header$.next(header);
-  }
-  get header() {
-    return this.header$.getValue();
-  }
-  private header$ = new BehaviorSubject<Header>(null);
-
-  @Input("config")
-  set config(config: FileInfoPanelConfig) {
-    this.config$.next(config);
-  }
-  get config() {
-    return this.config$.getValue();
-  }
-  private config$ = new BehaviorSubject<FileInfoPanelConfig>(null);
-
-  @Output() configChange: EventEmitter<Partial<FileInfoPanelConfig>> = new EventEmitter();
+export class FileInfoToolsetComponent extends ToolPanelBaseComponent implements OnInit, AfterViewInit, OnDestroy {
+ 
+  config$: Observable<FileInfoPanelConfig>;
 
   columnsDisplayed = ["key", "value", "comment"];
   headerSummary$: Observable<HeaderEntry[]>;
 
   constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, store: Store, router: Router) {
+    super(store)
+
+
+    this.config$ = this.store.select(
+      WorkbenchState.getFileInfoPanelConfig
+    );
+
     this.headerSummary$ = combineLatest(this.header$, this.config$).pipe(
       map(([header, config]) => {
         if (!header) return [];
@@ -108,7 +97,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
                 value: `${this.datePipe.transform(
                   startTime,
                   "yyyy-MM-dd HH:mm:ss z",
-                  this.config.useSystemTime ? systemTimeZone : "UTC"
+                  config.useSystemTime ? systemTimeZone : "UTC"
                 )}`,
                 comment: "",
               });
@@ -125,7 +114,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
                 value: `${this.datePipe.transform(
                   centerTime,
                   "yyyy-MM-dd HH:mm:ss z",
-                  this.config.useSystemTime ? systemTimeZone : "UTC"
+                  config.useSystemTime ? systemTimeZone : "UTC"
                 )}`,
                 comment: "",
               });
@@ -179,10 +168,10 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
   ngAfterViewInit() {}
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
-    this.configChange.emit({ showRawHeader: $event.checked });
+    this.store.dispatch(new UpdateFileInfoPanelConfig({ showRawHeader: $event.checked }));
   }
 
   onUseSystemTimeChange($event: MatSlideToggleChange) {
-    this.configChange.emit({ useSystemTime: $event.checked });
+    this.store.dispatch(new UpdateFileInfoPanelConfig({ useSystemTime: $event.checked }));
   }
 }

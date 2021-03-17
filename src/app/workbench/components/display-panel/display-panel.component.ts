@@ -14,6 +14,8 @@ import {
   switchMap,
   distinct,
   distinctUntilChanged,
+  withLatestFrom,
+  concatMap,
 } from 'rxjs/operators';
 
 declare let d3: any;
@@ -45,6 +47,7 @@ import { WorkbenchState } from '../../workbench.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { BlendMode } from '../../../data-files/models/blend-mode';
 import { AfterglowConfigService } from '../../../afterglow-config.service';
+import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 
 @Component({
   selector: 'app-display-panel',
@@ -52,36 +55,8 @@ import { AfterglowConfigService } from '../../../afterglow-config.service';
   styleUrls: ['./display-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DisplayToolsetComponent
+export class DisplayToolsetComponent extends ToolPanelBaseComponent
   implements OnInit, AfterViewInit, OnDestroy {
-  @Input('file')
-  set file(file: DataFile) {
-    this.file$.next(file);
-  }
-  get file() {
-    return this.file$.getValue();
-  }
-  private file$ = new BehaviorSubject<DataFile>(null);
-
-  @Input('hdu')
-  set hdu(hdu: ImageHdu) {
-    this.hdu$.next(hdu);
-  }
-  get hdu() {
-    return this.hdu$.getValue();
-  }
-  private hdu$ = new BehaviorSubject<ImageHdu>(null);
-
-  @Input('viewportSize')
-  set viewportSize(viewportSize: { width: number; height: number }) {
-    this.viewportSize$.next(viewportSize);
-  }
-  get viewportSize() {
-    return this.viewportSize$.getValue();
-  }
-  private viewportSize$ = new BehaviorSubject<{ width: number; height: number }>(null);
-
-  HduType = HduType;
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -94,24 +69,29 @@ export class DisplayToolsetComponent
   lowerPercentileDefault: number;
 
   constructor(
-    private corrGen: CorrelationIdGenerator,
-    private store: Store,
-    private router: Router,
+    store: Store,
     private afterglowConfig: AfterglowConfigService
   ) {
+    super(store);
 
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
 
-    this.backgroundPercentile$.pipe(auditTime(25)).subscribe((value) => {
+    this.backgroundPercentile$.pipe(
+      auditTime(25),
+      withLatestFrom(this.imageHdu$)
+    ).subscribe(([value, imageHdu]) => {
       this.store.dispatch(
-        new UpdateNormalizer(this.hdu.id, { backgroundPercentile: value })
+        new UpdateNormalizer(imageHdu.id, { backgroundPercentile: value })
       );
     });
 
-    this.peakPercentile$.pipe(auditTime(25)).subscribe((value) => {
+    this.peakPercentile$.pipe(
+      auditTime(25),
+      withLatestFrom(this.imageHdu$)
+    ).subscribe(([value, imageHdu]) => {
       this.store.dispatch(
-        new UpdateNormalizer(this.hdu.id, { peakPercentile: value })
+        new UpdateNormalizer(imageHdu.id, { peakPercentile: value })
       );
     });
   }
@@ -124,85 +104,78 @@ export class DisplayToolsetComponent
     this.peakPercentile$.next(value);
   }
 
-  onColorMapChange(value: string) {
+  onColorMapChange(hdu: ImageHdu, value: string) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, { colorMapName: value })
+      new UpdateNormalizer(hdu.id, { colorMapName: value })
     );
   }
 
-  onStretchModeChange(value: StretchMode) {
+  onStretchModeChange(hdu: ImageHdu, value: StretchMode) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, { stretchMode: value })
+      new UpdateNormalizer(hdu.id, { stretchMode: value })
     );
   }
 
-  onInvertedChange(value: boolean) {
-    this.store.dispatch(new UpdateNormalizer(this.hdu.id, { inverted: value }));
+  onInvertedChange(hdu: ImageHdu, value: boolean) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { inverted: value }));
   }
 
-  onPresetClick(lowerPercentile: number, upperPercentile: number) {
+  onPresetClick(hdu: ImageHdu, lowerPercentile: number, upperPercentile: number) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, {
+      new UpdateNormalizer(hdu.id, {
         backgroundPercentile: lowerPercentile,
         peakPercentile: upperPercentile,
       })
     );
   }
 
-  onInvertClick() {
+  onInvertClick(hdu: ImageHdu) {
     this.store.dispatch(
-      new UpdateNormalizer(this.hdu.id, {
-        backgroundPercentile: this.hdu.normalizer.peakPercentile,
-        peakPercentile: this.hdu.normalizer.backgroundPercentile,
+      new UpdateNormalizer(hdu.id, {
+        backgroundPercentile: hdu.normalizer.peakPercentile,
+        peakPercentile: hdu.normalizer.backgroundPercentile,
       })
     );
   }
 
-  onFlipClick() {
-    let t: ITransformableImageData = this.hdu || this.file;
-
+  onFlipClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
+    
     this.store.dispatch(
       new Flip(
         t.imageDataId,
         t.imageTransformId,
         t.viewportTransformId,
         'horizontal',
-        this.viewportSize
+        viewportSize
       )
     );
   }
 
-  onMirrorClick() {
-    let t: ITransformableImageData = this.hdu || this.file;
-
+  onMirrorClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
     this.store.dispatch(
       new Flip(
         t.imageDataId,
         t.imageTransformId,
         t.viewportTransformId,
         'vertical',
-        this.viewportSize
+        viewportSize
       )
     );
   }
 
-  onRotateClick() {
-    let t: ITransformableImageData = this.hdu || this.file;
-
+  onRotateClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
     this.store.dispatch(
       new RotateBy(
         t.imageDataId,
         t.imageTransformId,
         t.viewportTransformId,
-        this.viewportSize,
+        viewportSize,
         90
       )
     );
   }
 
-  onResetOrientationClick() {
-    let t: ITransformableImageData = this.hdu || this.file;
-
+  onResetOrientationClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
     this.store.dispatch(
       new ResetImageTransform(
         t.imageDataId,
@@ -219,9 +192,9 @@ export class DisplayToolsetComponent
     );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  ngOnDestroy() {}
+  ngOnDestroy() { }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 }

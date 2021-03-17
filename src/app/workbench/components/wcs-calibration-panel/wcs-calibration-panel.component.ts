@@ -6,13 +6,17 @@ import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, map, takeUntil } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { getDecDegs, getDegsPerPixel, getHeight, getRaHours, getWidth, Header, IHdu } from '../../../data-files/models/data-file';
+import { JobsState } from '../../../jobs/jobs.state';
 import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../jobs/models/wcs_calibration';
 import { formatDms, parseDms } from '../../../utils/skynet-astro';
 import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../utils/validators';
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
-import { WcsCalibrationSettings } from '../../models/workbench-state';
-import { CreateWcsCalibrationJob } from '../../workbench.actions';
+import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { WcsCalibrationPanelState, WcsCalibrationSettings } from '../../models/workbench-state';
+import { CreateWcsCalibrationJob, UpdateSourceExtractionSettings, UpdateWcsCalibrationPanelState, UpdateWcsCalibrationSettings } from '../../workbench.actions';
+import { WorkbenchState } from '../../workbench.state';
 import { SourceExtractionDialogComponent } from '../source-extraction-dialog/source-extraction-dialog.component';
+import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 
 
 
@@ -22,7 +26,7 @@ import { SourceExtractionDialogComponent } from '../source-extraction-dialog/sou
   styleUrls: ['./wcs-calibration-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
+export class WcsCalibrationPanelComponent extends ToolPanelBaseComponent implements OnInit, OnDestroy {
   @Input("hduIds")
   set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
@@ -32,56 +36,12 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  @Input("selectedHduIds")
-  set selectedHduIds(selectedHduIds: string[]) {
-    this.selectedHduIds$.next(selectedHduIds);
-  }
-  get selectedHduIds() {
-    return this.selectedHduIds$.getValue();
-  }
-  private selectedHduIds$ = new BehaviorSubject<string[]>(null);
-
-  @Input("activeJob")
-  set activeJob(activeJob: WcsCalibrationJob) {
-    this.activeJob$.next(activeJob);
-  }
-  get activeJob() {
-    return this.activeJob$.getValue();
-  }
-  private activeJob$ = new BehaviorSubject<WcsCalibrationJob>(null);
-
-  @Input("activeJobResult")
-  set activeJobResult(activeJobResult: WcsCalibrationJobResult) {
-    this.activeJobResult$.next(activeJobResult);
-  }
-  get activeJobResult() {
-    return this.activeJobResult$.getValue();
-  }
-  private activeJobResult$ = new BehaviorSubject<WcsCalibrationJobResult>(null);
-
-  @Input("wcsCalibrationSettings")
-  set wcsCalibrationSettings(wcsCalibrationSettings: WcsCalibrationSettings) {
-    this.wcsCalibrationSettings$.next(wcsCalibrationSettings);
-  }
-  get wcsCalibrationSettings() {
-    return this.wcsCalibrationSettings$.getValue();
-  }
-  private wcsCalibrationSettings$ = new BehaviorSubject<WcsCalibrationSettings>(null);
-
-  @Input("sourceExtractionSettings")
-  set sourceExtractionSettings(sourceExtractionSettings: SourceExtractionSettings) {
-    this.sourceExtractionSettings$.next(sourceExtractionSettings);
-  }
-  get sourceExtractionSettings() {
-    return this.sourceExtractionSettings$.getValue();
-  }
-  private sourceExtractionSettings$ = new BehaviorSubject<SourceExtractionSettings>(null);
-
-  @Input() autofillHeader: Header = null;
-
-  @Output() onSelectedHduIdsChange = new EventEmitter<string[]>();
-  @Output() onWcsCalibrationSettingsChange = new EventEmitter<WcsCalibrationSettings>();
-  @Output() onSourceExtractionSettingsChange = new EventEmitter<SourceExtractionSettings>();
+  state$: Observable<WcsCalibrationPanelState>;
+  selectedHduIds$: Observable<string[]>;
+  activeJob$: Observable<WcsCalibrationJob>;
+  activeJobResult$: Observable<WcsCalibrationJobResult>;
+  wcsCalibrationSettings$: Observable<WcsCalibrationSettings>;
+  sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
@@ -98,7 +58,34 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     maxSources: new FormControl("", this.minZero),
   });
 
-  constructor(private store: Store, private dialog: MatDialog) {
+  constructor(store: Store, private dialog: MatDialog) {
+    super(store);
+
+    this.state$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
+    this.selectedHduIds$ = this.state$.pipe(
+      map(state => state.selectedHduIds)
+    )
+
+    this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationSettings);
+    this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
+
+    this.activeJob$ = combineLatest([
+      this.store.select(JobsState.getJobEntities),
+      this.state$.pipe(
+        map((state) => (state ? state.activeJobId : null)),
+        distinctUntilChanged()
+      ),
+    ]).pipe(
+      map(([jobEntities, activeJobId]) => {
+        if (!activeJobId) return null;
+        return jobEntities[activeJobId] as WcsCalibrationJob;
+      })
+    );
+
+    this.activeJobResult$ = this.activeJob$.pipe(
+      map(job => job.result)
+    )
+
     combineLatest([this.selectedHduIds$, this.wcsCalibrationSettings$]).pipe(
       takeUntil(this.destroy$)
     ).subscribe(([selectedHduIds, settings]) => {
@@ -125,7 +112,9 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(value => {
       if (this.wcsCalibrationForm.valid) {
-        this.onSelectedHduIdsChange.emit(value.selectedHduIds);
+        this.store.dispatch(
+          new UpdateWcsCalibrationPanelState({ selectedHduIds: value.selectedHduIds })
+        );
 
         let raString: string = value.ra;
         let ra: number = null;
@@ -140,14 +129,14 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
           dec = Number(decString);
           if (isNaN(dec)) dec = parseDms(decString);
         }
-        this.onWcsCalibrationSettingsChange.emit({
+        this.store.dispatch(new UpdateWcsCalibrationSettings({
           ra: ra,
           dec: dec,
           radius: value.radius,
           maxScale: value.maxScale,
           minScale: value.minScale,
           maxSources: value.maxSources
-        });
+        }));
       }
 
     })
@@ -163,30 +152,9 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
 
   getHduOptionLabel(hduId: string) {
-    let file$ = this.store.select(DataFilesState.getFileByHduId).pipe(
-      map(fn => fn(hduId))
-    )
-
-    let hasMultipleHdus$ = file$.pipe(
-      map(file => file && file.hduIds.length > 1),
-      distinctUntilChanged()
-    )
-
-    let filename$ = file$.pipe(
-      map(file => file && file.name),
+    return this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)?.name),
       distinctUntilChanged(),
-    )
-
-    let hduLabel$ = this.store.select(DataFilesState.getHduLabel).pipe(
-      map(fn => fn(hduId)),
-      distinctUntilChanged(),
-    )
-
-    return combineLatest([hasMultipleHdus$, filename$, hduLabel$]).pipe(
-      map(([hasMultipleHdus, filename, hduLabel]) => {
-        if (!hasMultipleHdus$) return filename;
-        return `${filename} - ${hduLabel}`
-      })
     )
   }
 
@@ -212,37 +180,38 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onOpenSourceExtractionSettingsClick() {
+    let sourceExtractionSettings = this.store.selectSnapshot(WorkbenchState.getSourceExtractionSettings);
     let dialogRef = this.dialog.open(SourceExtractionDialogComponent, {
       width: "500px",
-      data: { ...this.sourceExtractionSettings },
+      data: { ...sourceExtractionSettings },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.onSourceExtractionSettingsChange.emit(result);
+        this.store.dispatch(new UpdateSourceExtractionSettings(result));
       }
     });
   }
 
-  onAutofillFromFocusedViewerClick() {
-    if (!this.autofillHeader) return;
+  onAutofillFromFocusedViewerClick(header: Header) {
+    if (!header) return;
 
     let ra: number = null;
     let dec: number = null;
-    let width = getWidth(this.autofillHeader);
-    let height = getHeight(this.autofillHeader);
-    let wcs = this.autofillHeader.wcs;
+    let width = getWidth(header);
+    let height = getHeight(header);
+    let wcs = header.wcs;
     if (width && height && wcs && wcs.isValid) {
       let raDec: [number, number] = wcs.pixToWorld([width / 2, height / 2]) as [number, number];
       ra = raDec[0];
       dec = raDec[1];
     }
     else {
-      ra = getRaHours(this.autofillHeader);
-      dec = getDecDegs(this.autofillHeader);
+      ra = getRaHours(header);
+      dec = getDecDegs(header);
     }
 
-    let degsPerPixel = getDegsPerPixel(this.autofillHeader);
+    let degsPerPixel = getDegsPerPixel(header);
 
 
     let changes: Partial<WcsCalibrationSettings> = {
@@ -264,11 +233,11 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       changes.maxScale = Math.round(degsPerPixel * 1.1 * 3600 * 100000) / 100000;
     }
 
-    this.onWcsCalibrationSettingsChange.emit({
-      ...this.wcsCalibrationSettings,
+    let wcsCalibrationSettings = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationSettings);
+    this.store.dispatch(new UpdateWcsCalibrationSettings({
+      ...wcsCalibrationSettings,
       ...changes
-    });
-
+    }));
 
   }
 }

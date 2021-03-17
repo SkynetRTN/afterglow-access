@@ -1,7 +1,7 @@
 import { PLATFORM_ID, Inject, Injectable } from "@angular/core";
 import { isPlatformServer } from "@angular/common";
 import { NgxsPlugin, setValue, getValue, InitState, UpdateState, actionMatcher, NgxsNextPluginFn } from "@ngxs/store";
-import { takeUntil, tap, throttleTime } from "rxjs/operators";
+import { debounceTime, takeUntil, tap, throttleTime } from "rxjs/operators";
 
 import { StorageEngine, NgxsStoragePluginOptions, STORAGE_ENGINE, NGXS_STORAGE_PLUGIN_OPTIONS } from "./symbols";
 import { DEFAULT_STATE_KEY } from "./internals";
@@ -18,7 +18,7 @@ export class AfterglowStoragePlugin implements NgxsPlugin {
   ) {
 
     this.stateWriter.pipe(
-      throttleTime(1000)
+      debounceTime(1000)
     ).subscribe(nextState => {
         const keys = this._options.key as string[];
         for (const key of keys) {

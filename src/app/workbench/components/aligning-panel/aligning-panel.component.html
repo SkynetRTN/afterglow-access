@@ -23,7 +23,7 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Reference Image File</mat-label>
         <mat-select formControlName="refHduId" [value]="(refHdu$ | async)?.id">
-          <mat-option *ngFor="let hduId of config?.alignFormData?.selectedHduIds" [value]="hduId">
+          <mat-option *ngFor="let hduId of (config$ | async)?.alignFormData?.selectedHduIds" [value]="hduId">
             {{ getHduOptionLabel(hduId) | async }}
           </mat-option>
         </mat-select>

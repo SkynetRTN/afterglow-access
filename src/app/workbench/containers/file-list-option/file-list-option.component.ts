@@ -146,6 +146,7 @@ export class FileListOptionComponent implements OnInit {
           a?.every((value, index) => b[index] === value)
       ),
       switchMap((hduIds) => {
+        if(!hduIds) return of([])
         return combineLatest(
           hduIds.map((hduId) => {
             return this.store.select(DataFilesState.getHduById).pipe(
@@ -191,7 +192,7 @@ export class FileListOptionComponent implements OnInit {
     this.tooltip$ = combineLatest(this.file$, this.hdu$, this.dataProvider$).pipe(
       switchMap(([file, hdu, dataProvider]) => {
         if(!hdu || file.hduIds.length == 1) {
-          if (!dataProvider || !file.assetPath) return of(file.name);
+          if (!dataProvider || !file?.assetPath) return of(file?.name);
           return of(`${dataProvider.displayName}${file.assetPath}`);
         }
         return this.label$;

@@ -782,10 +782,24 @@ export class WorkbenchState {
     };
   }
 
-  @Selector([WorkbenchState.getViewerEntities, WorkbenchState.getFileStateEntities, WorkbenchState.getHduStateEntities])
+  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getHduEntities])
+  public static getHduFromViewerId(
+    viewerEntities: { [id: string]: Viewer },
+    hduEntities: { [id: string]: IHdu }
+  ) {
+    return (id: string) => {
+      let viewer = viewerEntities[id];
+      if (!viewer || !viewer.hduId) {
+        return null;
+      }
+
+      return hduEntities[viewer.hduId];
+    };
+  }
+
+  @Selector([WorkbenchState.getViewerEntities, WorkbenchState.getHduStateEntities])
   public static getSonificationPanelStateIdFromViewerId(
     viewerEntities: { [id: string]: Viewer },
-    fileStateEntities: { [id: string]: WorkbenchFileState },
     hduStateEntities: { [id: string]: IWorkbenchHduState }
   ) {
     return (id: string) => {
@@ -1669,6 +1683,13 @@ export class WorkbenchState {
       return state;
     });
 
+    setState((state: WorkbenchStateModel) => {
+      let viewer = state.viewers[viewerId];
+      viewer.fileId = fileId;
+      viewer.hduId = hduId;
+      return state;
+    });
+
     function onLoadComplete(store: Store) {
       //normalization
       if (refHeaderId && refImageTransformId && refViewportTransformId) {
@@ -1684,13 +1705,7 @@ export class WorkbenchState {
         }
       }
 
-      //wait to set the viewer file and hdu until after it has loaded the header/hist
-      setState((state: WorkbenchStateModel) => {
-        let viewer = state.viewers[viewerId];
-        viewer.fileId = fileId;
-        viewer.hduId = hduId;
-        return state;
-      });
+      
 
       return dispatch([]);
     }
@@ -3118,7 +3133,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public photometerSources(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceIds, fileIds, settings, isBatch }: PhotometerSources
+    { sourceIds, hduIds: fileIds, settings, isBatch }: PhotometerSources
   ) {
     let state = getState();
     let sourcesState = this.store.selectSnapshot(SourcesState.getState);
@@ -3192,7 +3207,7 @@ export class WorkbenchState {
 
         let s: Astrometry & SourceId = {
           id: source.id,
-          pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : "",
+          pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
           x: x,
           y: y,
           pmPixel: pmPixel,

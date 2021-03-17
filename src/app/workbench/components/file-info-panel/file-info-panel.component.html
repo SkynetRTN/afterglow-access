@@ -1,63 +1,94 @@
-<div *ngIf="header; else headerMissingBlock">
-  <div class="p-2">
-    <mat-slide-toggle [color]="'primary'" [checked]="config?.showRawHeader" (change)="onShowRawHeaderChange($event)" i18n>
-      Show Raw Header Data
-    </mat-slide-toggle>
+<ng-template #invalidHduTypeBlock>
+  <div i18n class="alert alert-info" i18n>
+    This tool does not yet support tabular data. Please select an image HDU.
   </div>
-
-  <div *ngIf="!config?.showRawHeader">
-    <div class="p-2">
-      <mat-slide-toggle [color]="'primary'" [checked]="config?.useSystemTime" (change)="onUseSystemTimeChange($event)" i18n>
-        Use System Time
-      </mat-slide-toggle>
-    </div>
-
-    <table mat-table [dataSource]="headerSummary$ | async">
-      <ng-container matColumnDef="key">
-        <th mat-header-cell *matHeaderCellDef i18n class="key-column">Key</th>
-        <td mat-cell *matCellDef="let row" class="key-column">
-          <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="value">
-        <th mat-header-cell *matHeaderCellDef i18n>Value</th>
-        <td mat-cell *matCellDef="let row">{{ row.value }}</td>
-      </ng-container>
-      <ng-container matColumnDef="comment">
-        <th mat-header-cell *matHeaderCellDef i18n>Comment</th>
-        <td mat-cell *matCellDef="let row">
-          <mat-icon *ngIf="row.comment" [matTooltip]="row.comment">comment</mat-icon>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
-      <tr mat-row *matRowDef="let myRowData; columns: columnsDisplayed"></tr>
-    </table>
-  </div>
-
-  <div *ngIf="config?.showRawHeader">
-    <table mat-table [dataSource]="header.entries">
-      <ng-container matColumnDef="key">
-        <th mat-header-cell *matHeaderCellDef i18n>Key</th>
-        <td mat-cell *matCellDef="let row">
-          <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="value">
-        <th mat-header-cell *matHeaderCellDef i18n>Value</th>
-        <td mat-cell *matCellDef="let row">{{ row.value }}</td>
-      </ng-container>
-      <ng-container matColumnDef="comment">
-        <th mat-header-cell *matHeaderCellDef i18n>Comment</th>
-        <td mat-cell *matCellDef="let row">
-          <mat-icon *ngIf="row.comment" [matTooltip]="row.comment">comment</mat-icon>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
-      <tr mat-row *matRowDef="let myRowData; columns: columnsDisplayed"></tr>
-    </table>
-  </div>
-</div>
-
-<ng-template #headerMissingBlock>
-  <div class="alert alert-info" i18n>No header was found for the selected file/HDU.</div>
 </ng-template>
+
+<ng-template #hduNotSelectedBlock>
+  <div i18n class="alert alert-info" i18n>
+    Please select an HDU. This tool does not yet support composite image data.
+  </div>
+</ng-template>
+
+<ng-template #headerNotAvailable>
+  <div i18n class="alert alert-info" i18n>
+    Header is not available for selected HDU.
+  </div>
+</ng-template>
+
+<ng-template #headerLoading>
+  <div i18n class="alert alert-info" i18n>
+    Header is loading...
+  </div>
+</ng-template>
+
+
+<ng-container *ngIf="viewerState$ | async; let vs">
+  <ng-container *ngIf="vs.hdu; else hduNotSelectedBlock">
+    <ng-container *ngIf="vs.imageHdu; else invalidHduTypeBlock">
+      <ng-container *ngIf="vs.header?.loaded; else headerLoading">
+        <ng-container *ngIf="config$ | async; let config">
+          <div class="p-2">
+            <mat-slide-toggle [color]="'primary'" [checked]="(config$ | async)?.showRawHeader"
+              (change)="onShowRawHeaderChange($event)" i18n>
+              Show Raw Header Data
+            </mat-slide-toggle>
+          </div>
+
+          <div *ngIf="!((config$ | async)?.showRawHeader)">
+            <div class="p-2">
+              <mat-slide-toggle [color]="'primary'" [checked]="(config$ | async)?.useSystemTime"
+                (change)="onUseSystemTimeChange($event)" i18n>
+                Use System Time
+              </mat-slide-toggle>
+            </div>
+
+            <table mat-table [dataSource]="headerSummary$ | async">
+              <ng-container matColumnDef="key">
+                <th mat-header-cell *matHeaderCellDef i18n class="key-column">Key</th>
+                <td mat-cell *matCellDef="let row" class="key-column">
+                  <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef i18n>Value</th>
+                <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+              </ng-container>
+              <ng-container matColumnDef="comment">
+                <th mat-header-cell *matHeaderCellDef i18n>Comment</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-icon *ngIf="row.comment" [matTooltip]="row.comment">comment</mat-icon>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
+              <tr mat-row *matRowDef="let myRowData; columns: columnsDisplayed"></tr>
+            </table>
+          </div>
+
+          <div *ngIf="(config$ | async)?.showRawHeader">
+            <table mat-table [dataSource]="vs.header.entries">
+              <ng-container matColumnDef="key">
+                <th mat-header-cell *matHeaderCellDef i18n>Key</th>
+                <td mat-cell *matCellDef="let row">
+                  <span *ngIf="row.key" class="kbd"> {{ row.key }} </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef i18n>Value</th>
+                <td mat-cell *matCellDef="let row">{{ row.value }}</td>
+              </ng-container>
+              <ng-container matColumnDef="comment">
+                <th mat-header-cell *matHeaderCellDef i18n>Comment</th>
+                <td mat-cell *matCellDef="let row">
+                  <mat-icon *ngIf="row.comment" [matTooltip]="row.comment">comment</mat-icon>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columnsDisplayed"></tr>
+              <tr mat-row *matRowDef="let myRowData; columns: columnsDisplayed"></tr>
+            </table>
+          </div>
+        </ng-container>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</ng-container>

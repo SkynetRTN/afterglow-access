@@ -632,7 +632,7 @@ export class PhotometerSources {
 
   constructor(
     public sourceIds: string[],
-    public fileIds: string[],
+    public hduIds: string[],
     public settings: PhotometrySettings,
     public isBatch: boolean
   ) { }

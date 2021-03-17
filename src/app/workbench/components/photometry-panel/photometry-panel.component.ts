@@ -30,6 +30,7 @@ import {
   debounceTime,
   auditTime,
   distinct,
+  takeUntil,
 } from "rxjs/operators";
 
 import * as jStat from "jstat";
@@ -54,8 +55,13 @@ import {
   PhotometerSources,
   RemovePhotDatas,
   RemoveAllPhotDatas,
+  StartPhotometrySourceSelectionRegion,
+  UpdatePhotometrySourceSelectionRegion,
+  EndPhotometrySourceSelectionRegion,
+  UpdatePhotometrySettings,
+  UpdateSourceExtractionSettings
 } from "../../workbench.actions";
-import { RemoveSources, UpdateSource } from "../../sources.actions";
+import { AddSources, RemoveSources, UpdateSource } from "../../sources.actions";
 import { PhotData } from "../../models/source-phot-data";
 import { PhotometrySettings } from "../../models/photometry-settings";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
@@ -67,6 +73,11 @@ import { JobsState } from "../../../jobs/jobs.state";
 import { DataFilesState } from '../../../data-files/data-files.state';
 import * as snakeCaseKeys from "snakecase-keys";
 import { Viewer } from '../../models/viewer';
+import { ToolPanelBaseComponent } from "../tool-panel-base/tool-panel-base.component";
+import { HduType } from "../../../data-files/models/data-file-type";
+import { WorkbenchImageHduState } from "../../models/workbench-file-state";
+import { SourcesState } from "../../sources.state";
+import { centroidPsf } from "../../models/centroider";
 
 @Component({
   selector: "app-photometry-panel",
@@ -74,85 +85,27 @@ import { Viewer } from '../../models/viewer';
   styleUrls: ["./photometry-panel.component.css"],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  @Input('file')
-  set file(file: DataFile) {
-    this.file$.next(file);
+export class PhotometryPageComponent extends ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+  @Input("hduIds")
+  set hduIds(hduIds: ImageHdu[]) {
+    this.hduIds$.next(hduIds);
   }
-  get file() {
-    return this.file$.getValue();
+  get hduIds() {
+    return this.hduIds$.getValue();
   }
-  private file$ = new BehaviorSubject<DataFile>(null);
+  private hduIds$ = new BehaviorSubject<ImageHdu[]>(null);
 
-  @Input("hdu")
-  set hdu(hdu: ImageHdu) {
-    this.hdu$.next(hdu);
-  }
-  get hdu() {
-    return this.hdu$.getValue();
-  }
-  private hdu$ = new BehaviorSubject<ImageHdu>(null);
-
-  @Input("batchHdus")
-  set batchHduOptions(batchHduOptions: ImageHdu[]) {
-    this.batchHduOptions$.next(batchHduOptions);
-  }
-  get batchHduOptions() {
-    return this.batchHduOptions$.getValue();
-  }
-  private batchHduOptions$ = new BehaviorSubject<ImageHdu[]>(null);
-
-  //viewer is currently needed to determine the source extraction region
-  @Input("viewer")
-  set viewer(viewer: Viewer) {
-    this.viewer$.next(viewer);
-  }
-  get viewer() {
-    return this.viewer$.getValue();
-  }
-  private viewer$ = new BehaviorSubject<Viewer>(null);
-
-  @Input("sources")
-  set sources(sources: Source[]) {
-    this.sources$.next(sources);
-  }
-  get sources() {
-    return this.sources$.getValue();
-  }
-  private sources$ = new BehaviorSubject<Source[]>(null);
-
-  @Input("state")
-  set state(state: PhotometryPanelState) {
-    this.state$.next(state);
-  }
-  get state() {
-    return this.state$.getValue();
-  }
-  private state$ = new BehaviorSubject<PhotometryPanelState>(null);
-
-  @Input("config")
-  set config(config: PhotometryPanelConfig) {
-    this.config$.next(config);
-  }
-  get config() {
-    return this.config$.getValue();
-  }
-  private config$ = new BehaviorSubject<PhotometryPanelConfig>(null);
-
-  @Input() photometrySettings: PhotometrySettings;
-  @Input() centroidSettings: CentroidSettings;
-  @Input() sourceExtractionSettings: SourceExtractionSettings;
-
-  @Output() configChange: EventEmitter<Partial<PhotometryPanelConfig>> = new EventEmitter();
-  @Output() photometrySettingsChange: EventEmitter<Partial<PhotometrySettings>> = new EventEmitter();
-  @Output() sourceExtractionSettingsChange: EventEmitter<Partial<SourceExtractionSettings>> = new EventEmitter();
+  sources$: Observable<Source[]>;
+  state$: Observable<PhotometryPanelState>;
+  config$: Observable<PhotometryPanelConfig>;
+  photometrySettings$: Observable<PhotometrySettings>;
+  centroidSettings$: Observable<CentroidSettings>;
+  sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
   NUMBER_FORMAT: (v: any) => any = (v: number) => (v ? v : "N/A");
   DECIMAL_FORMAT: (v: any) => any = (v: number) => (v ? v.toFixed(2) : "N/A");
   SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : "N/A");
   SourcePosType = PosType;
-  header$: Observable<Header>;
-  viewportSize$: Observable<{width: number, height: number}>
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
   batchPhotJob$: Observable<PhotometryJob>;
   batchFormDataSub: Subscription;
@@ -165,25 +118,66 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     selectedHduIds: new FormControl([], Validators.required),
   });
   batchPhotFormData$: Observable<BatchPhotometryFormData>;
-  selectedImageHdus$: Observable<ImageHdu[]>;
 
   constructor(
     private dialog: MatDialog,
     private dmsPipe: DmsPipe,
     private datePipe: DatePipe,
     private papa: Papa,
-    private actions$: Actions,
-    private store: Store,
-    private router: Router
+    store: Store,
   ) {
-    this.header$ = this.hdu$.pipe(
-      switchMap(hdu => !hdu ? of(null) : this.store.select(DataFilesState.getHeaderById).pipe(
-        map(fn => fn(hdu.headerId))
+    super(store);
+
+    this.config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
+    this.state$ = this.hduState$.pipe(
+      map(hduState => {
+        if (hduState && hduState.hduType != HduType.IMAGE) {
+          // only image HDUs support sonification
+          return null;
+        }
+        return (hduState as WorkbenchImageHduState)?.photometryPanelStateId
+      }),
+      distinctUntilChanged(),
+      switchMap(id => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(
+        map(fn => fn(id))
       ))
     )
-    this.viewportSize$ = this.viewer$.pipe(
-      map(viewer => viewer?.viewportSize)
-    )
+
+    this.sources$ = combineLatest(
+      this.store.select(SourcesState.getSources),
+      this.config$.pipe(
+        map((config) => config.coordMode),
+        distinctUntilChanged()
+      ),
+      this.config$.pipe(
+        map((config) => config.showSourcesFromAllFiles),
+        distinctUntilChanged()
+      ),
+      this.hduId$,
+      this.header$
+    ).pipe(
+      filter(
+        ([sources, coordMode, showSourcesFromAllFiles, hduId, header]) =>
+          header != null
+      ),
+      map(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => {
+        if (!header) return [];
+        if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
+        return sources.filter((source) => {
+          if (coordMode != source.posType) return false;
+          if (source.hduId == hduId) return true;
+          if (!showSourcesFromAllFiles) return false;
+          let coord = getSourceCoordinates(header, source);
+          if (coord == null) return false;
+          return true;
+        });
+      })
+    );
+
+    this.photometrySettings$ = this.store.select(WorkbenchState.getPhotometrySettings);
+    this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
+    this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
+
 
     this.tableData$ = combineLatest(
       this.sources$,
@@ -193,7 +187,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       )
     ).pipe(
       filter(([sources, sourcePhotometryData]) => {
-        if(sources && sourcePhotometryData) return true;
+        if (sources && sourcePhotometryData) return true;
         return false;
       }),
       map(([sources, sourcePhotometryData]) => {
@@ -211,11 +205,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
         map((s) => s.batchPhotJobId),
         distinctUntilChanged()
       )
-      ]).pipe(
+    ]).pipe(
       map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob),
       filter((job) => job != null && job != undefined),
     );
-    
+
     this.batchPhotFormData$ = this.config$.pipe(
       filter((config) => config !== null),
       map((config) => config.batchPhotFormData),
@@ -236,9 +230,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       // }
     });
 
-    this.selectedImageHdus$ = combineLatest(this.batchHduOptions$, this.batchPhotFormData$).pipe(
-      map(([hdus, data]) => data.selectedHduIds.map((id) => hdus.find((f) => f.id == id)))
-    );
 
     this.sourceSelectionUpdater = combineLatest(this.sources$, this.config$)
       .pipe(
@@ -253,24 +244,217 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     this.photometryUpdater = this.tableData$
       .pipe(
         map((rows) => rows.filter((row) => row.data == null)),
-        filter((rows) => rows.length != 0 && this.config && this.config.autoPhot),
+        withLatestFrom(this.imageHdu$, this.config$, this.photometrySettings$),
+        filter(([rows, imageHdu, config]) => rows.length != 0 && imageHdu && config && config.autoPhot),
         auditTime(2000)
       )
-      .subscribe((rows) => {
+      .subscribe(([rows, imageHdu, config, photometrySettings]) => {
         this.store.dispatch(
           new PhotometerSources(
             rows.map((row) => row.source.id),
-            [this.hdu.id],
-            this.photometrySettings,
+            [imageHdu.id],
+            photometrySettings,
             false
           )
         );
       });
+
+
+    this.imageClickEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
+    ).subscribe(([$event, state, config, header, imageData]) => {
+      if (!$event || !imageData) {
+        return;
+      }
+
+      let selectedSourceIds = config.selectedSourceIds;
+      let centroidClicks = config.centroidClicks;
+      let centroidSettings = this.store.selectSnapshot(WorkbenchState.getCentroidSettings);
+
+      if ($event.hitImage) {
+        if (selectedSourceIds.length == 0 || $event.mouseEvent.altKey) {
+          let primaryCoord = $event.imageX;
+          let secondaryCoord = $event.imageY;
+          let posType = PosType.PIXEL;
+          if (centroidClicks) {
+            let result = centroidPsf(
+              imageData,
+              primaryCoord,
+              secondaryCoord,
+              centroidSettings.psfCentroiderSettings
+            );
+            primaryCoord = result.x;
+            secondaryCoord = result.y;
+          }
+          if (
+            config.coordMode == 'sky' &&
+            header?.wcs?.isValid()
+          ) {
+            let wcs = header.wcs;
+            let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
+            primaryCoord = raDec[0];
+            secondaryCoord = raDec[1];
+            posType = PosType.SKY;
+          }
+
+          let centerEpoch = getCenterTime(header);
+
+          let source: Source = {
+            id: null,
+            label: null,
+            objectId: null,
+            hduId: this.viewer.hduId,
+            primaryCoord: primaryCoord,
+            secondaryCoord: secondaryCoord,
+            posType: posType,
+            pm: null,
+            pmPosAngle: null,
+            pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
+          };
+          this.store.dispatch(new AddSources([source]));
+        } else if (!$event.mouseEvent.ctrlKey) {
+          this.store.dispatch(
+            new UpdatePhotometryPanelConfig({
+              selectedSourceIds: [],
+            })
+          );
+        }
+      }
+    })
+
+    this.imageMouseDragStartEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
+    ).subscribe(([$event, state, config, header, imageData]) => {
+      if(!$event) {
+        return;
+      }
+      if (
+        !$event.$mouseDownEvent.ctrlKey &&
+        !$event.$mouseDownEvent.metaKey &&
+        !$event.$mouseDownEvent.shiftKey
+      )
+        return;
+      if (this.viewer.hduId == null) return;
+
+      this.store.dispatch(
+        new StartPhotometrySourceSelectionRegion(
+          this.viewer.hduId,
+          $event.imageStart
+        )
+      );
+
+    })
+
+    this.imageMouseDragEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
+    ).subscribe(([$event, state, config, header, imageData]) => {
+      if(!$event) {
+        return;
+      }
+      if (
+        !$event.$mouseDownEvent.ctrlKey &&
+        !$event.$mouseDownEvent.metaKey &&
+        !$event.$mouseDownEvent.shiftKey
+      )
+        return;
+      if (this.viewer.hduId == null) return;
+
+      this.store.dispatch(
+        new UpdatePhotometrySourceSelectionRegion(
+          this.viewer.hduId,
+          $event.imageEnd
+        )
+      );
+
+    })
+
+    this.imageMouseDragEndEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$)
+    ).subscribe(([$event, state, config, header, imageData]) => {
+      if(!$event) {
+        return;
+      }
+      if (
+        !$event.$mouseDownEvent.ctrlKey &&
+        !$event.$mouseDownEvent.metaKey &&
+        !$event.$mouseDownEvent.shiftKey
+      )
+        return;
+      if (this.viewer.hduId == null) return;
+
+      this.store.dispatch(
+        new EndPhotometrySourceSelectionRegion(
+          this.viewer.hduId,
+          $event.$mouseUpEvent.shiftKey ? 'remove' : 'append'
+        )
+      );
+
+    })
+
+    this.markerClickEvent$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(($event) => {
+      if(!$event) {
+        return;
+      }
+      if ($event.mouseEvent.altKey) return;
+      let sources = this.store.selectSnapshot(SourcesState.getSources);
+      let source = sources.find(
+        (source) =>
+          $event.marker.data &&
+          $event.marker.data.source &&
+          source.id == $event.marker.data.source.id
+      );
+      if (!source) return;
+
+      let photometryPanelConfig = this.store.selectSnapshot(
+        WorkbenchState.getPhotometryPanelConfig
+      );
+      let sourceSelected = photometryPanelConfig.selectedSourceIds.includes(
+        source.id
+      );
+      if ($event.mouseEvent.ctrlKey) {
+        if (!sourceSelected) {
+          // select the source
+          this.store.dispatch(
+            new UpdatePhotometryPanelConfig({
+              selectedSourceIds: [
+                ...photometryPanelConfig.selectedSourceIds,
+                source.id,
+              ],
+            })
+          );
+        } else {
+          // deselect the source
+          let selectedSourceIds = photometryPanelConfig.selectedSourceIds.filter(
+            (id) => id != source.id
+          );
+          this.store.dispatch(
+            new UpdatePhotometryPanelConfig({
+              selectedSourceIds: selectedSourceIds,
+            })
+          );
+        }
+      } else {
+        this.store.dispatch(
+          new UpdatePhotometryPanelConfig({
+            selectedSourceIds: [source.id],
+          })
+        );
+      }
+      $event.mouseEvent.stopImmediatePropagation();
+      $event.mouseEvent.preventDefault();
+    })
+
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy() {
     this.batchFormDataSub.unsubscribe();
@@ -278,35 +462,16 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     this.photometryUpdater.unsubscribe();
   }
 
-  ngOnChanges() {}
+  ngOnChanges() { }
 
+  
   getHduOptionLabel(hduId: string) {
-    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)),
-      filter((hdu) => hdu != null)
-    );
-
-    let file$ = hdu$.pipe(
-      map((hdu) => hdu.fileId),
+    return this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)?.name),
       distinctUntilChanged(),
-      flatMap((fileId) => {
-        return this.store.select(DataFilesState.getFileById).pipe(
-          map((fn) => fn(fileId)),
-          filter((hdu) => hdu != null)
-        );
-      })
-    );
-
-    return combineLatest(hdu$, file$).pipe(
-      map(([hdu, file]) => {
-        if (!hdu || !file) return "???";
-        if (file.hduIds.length > 1) {
-          return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
-        }
-        return file.name;
-      })
-    );
+    )
   }
+
 
   selectSources(sources: Source[]) {
     let selectedSourceIds = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig).selectedSourceIds;
@@ -342,18 +507,18 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     }
   }
 
-  removeSelectedSources() {
-    let selectedSourceIds = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig).selectedSourceIds;
+  removeSelectedSources(sources: Source[], config: PhotometryPanelConfig) {
+    let selectedSourceIds = config.selectedSourceIds;
     this.store.dispatch(new RemoveSources(selectedSourceIds));
   }
 
-  removeAllSources() {
-    this.store.dispatch(new RemoveSources(this.sources.map((s) => s.id)));
+  removeSources(sources: Source[]) {
+    this.store.dispatch(new RemoveSources(sources.map((s) => s.id)));
   }
 
-  mergeSelectedSources() {
-    let selectedSourceIds = this.config.selectedSourceIds;
-    let selectedSources = this.sources.filter((s) => selectedSourceIds.includes(s.id));
+  mergeSelectedSources(sources: Source[], config: PhotometryPanelConfig) {
+    let selectedSourceIds = config.selectedSourceIds;
+    let selectedSources = sources.filter((s) => selectedSourceIds.includes(s.id));
     this.mergeError = null;
     if (!selectedSources.every((source) => source.posType == selectedSources[0].posType)) {
       this.mergeError = "You cannot merge sources with different position types";
@@ -379,7 +544,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
       return [
         (new Date(source.pmEpoch).getTime() - t0) / 1000.0,
         (source.primaryCoord - primaryCoord0) *
-          (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos((centerSecondaryCoord * Math.PI) / 180.0)),
+        (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos((centerSecondaryCoord * Math.PI) / 180.0)),
         (source.secondaryCoord - secondaryCoord0) * (source.posType == PosType.PIXEL ? 1 : 3600),
       ];
     });
@@ -404,25 +569,27 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     ]);
   }
 
-  photometerAllSources(imageFile) {
+  photometerSources(imageFile: ImageHdu, sources: Source[]) {
+    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
+
     this.store.dispatch(new RemoveAllPhotDatas());
     this.store.dispatch(
       new PhotometerSources(
-        this.sources.map((s) => s.id),
+        sources.map((s) => s.id),
         [imageFile.id],
-        this.photometrySettings,
+        photometrySettings,
         false
       )
     );
   }
 
-  showSelectAll() {
-    return this.sources && this.sources.length != 0;
+  showSelectAll(sources: Source[]) {
+    return sources && sources.length != 0;
   }
 
-  isAllSelected() {
+  isAllSelected(sources: Source[]) {
     const numSelected = this.selectionModel.selected.length;
-    const numRows = this.sources.length;
+    const numRows = sources.length;
     return numSelected === numRows;
   }
 
@@ -449,8 +616,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
-  masterToggle() {
-    if (this.isAllSelected()) {
+  masterToggle(sources: Source[]) {
+    if (this.isAllSelected(sources)) {
       this.store.dispatch(
         new UpdatePhotometryPanelConfig({
           selectedSourceIds: [],
@@ -459,7 +626,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     } else {
       this.store.dispatch(
         new UpdatePhotometryPanelConfig({
-          selectedSourceIds: this.sources.map((s) => s.id),
+          selectedSourceIds: sources.map((s) => s.id),
         })
       );
     }
@@ -481,23 +648,24 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
     this.store.dispatch(new RemoveAllPhotDatas());
   }
 
-  selectHdus(hdus: ImageHdu[]) {
+  selectHdus(hduIds: string[]) {
     this.store.dispatch(
       new UpdatePhotometryPanelConfig({
         batchPhotFormData: {
           ...this.batchPhotForm.value,
-          selectedHduIds: hdus.map((f) => f.id),
+          selectedHduIds: hduIds,
         },
       })
     );
   }
 
-  batchPhotometer() {
+  batchPhotometer(sources: Source[], config: PhotometryPanelConfig) {
+    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
     this.store.dispatch(
       new PhotometerSources(
-        this.sources.map((s) => s.id),
-        this.config.batchPhotFormData.selectedHduIds,
-        this.photometrySettings,
+        sources.map((s) => s.id),
+        config.batchPhotFormData.selectedHduIds,
+        photometrySettings,
         true
       )
     );
@@ -558,31 +726,32 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   }
 
   openSourceExtractionDialog() {
+    let sourceExtractionSettings = this.store.selectSnapshot(WorkbenchState.getSourceExtractionSettings);
     let dialogRef = this.dialog.open(SourceExtractionDialogComponent, {
       width: "500px",
-      data: { ...this.sourceExtractionSettings },
+      data: { ...sourceExtractionSettings },
     });
 
     dialogRef.afterClosed().pipe(
-      withLatestFrom(this.viewportSize$)
-    ).subscribe(([result, viewportSize]) => {
+      withLatestFrom(this.imageHdu$, this.viewportSize$)
+    ).subscribe(([result, imageHdu, viewportSize]) => {
       if (result) {
-        this.sourceExtractionSettingsChange.emit(result);
-        this.store.dispatch([new ExtractSources(this.hdu.id, viewportSize, result)]);
+        this.store.dispatch([new UpdateSourceExtractionSettings(result), new ExtractSources(imageHdu.id, viewportSize, result)]);
       }
     });
   }
 
   openPhotometrySettingsDialog() {
+    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
     let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
       width: "700px",
-      data: { ...this.photometrySettings },
+      data: { ...photometrySettings },
       disableClose: true
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.photometrySettingsChange.emit(result);
+        this.store.dispatch(new UpdatePhotometrySettings(result));
         this.store.dispatch(new RemoveAllPhotDatas());
       }
     });
@@ -597,18 +766,18 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnChan
   // }
 
   onCoordModeChange($event: MatButtonToggleChange) {
-    this.configChange.emit({ coordMode: $event.value });
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ coordMode: $event.value }));
   }
 
   onCentroidClicksChange($event) {
-    this.configChange.emit({ centroidClicks: $event.checked });
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ centroidClicks: $event.checked }));
   }
 
   onShowSourcesFromAllFilesChange($event: MatCheckboxChange) {
-    this.configChange.emit({ showSourcesFromAllFiles: $event.checked });
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourcesFromAllFiles: $event.checked }));
   }
 
   onShowSourceLabelsChange($event: MatCheckboxChange) {
-    this.configChange.emit({ showSourceLabels: $event.checked });
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceLabels: $event.checked }));
   }
 }

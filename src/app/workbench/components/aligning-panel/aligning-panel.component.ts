@@ -1,7 +1,7 @@
 import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
 import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
 
-import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter } from "rxjs/operators";
+import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom } from "rxjs/operators";
 import { FormGroup, FormControl, Validators } from "@angular/forms";
 import { AlignFormData, AligningPanelConfig } from "../../models/workbench-state";
 import { MatSelectChange } from "@angular/material/select";
@@ -31,14 +31,7 @@ export class AlignerPageComponent implements OnInit {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  @Input("config")
-  set config(config: AligningPanelConfig) {
-    this.config$.next(config);
-  }
-  get config() {
-    return this.config$.getValue();
-  }
-  private config$ = new BehaviorSubject<AligningPanelConfig>(null);
+  config$: Observable<AligningPanelConfig>;
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
@@ -58,10 +51,15 @@ export class AlignerPageComponent implements OnInit {
   });
 
   constructor(private store: Store, private router: Router) {
-    this.hduIds$.pipe(takeUntil(this.destroy$)).subscribe((hduIds) => {
-      if (!hduIds || !this.config) return;
-      let selectedHduIds = this.config.alignFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
-      if (selectedHduIds.length != this.config.alignFormData.selectedHduIds.length) {
+    this.config$ = this.store.select(WorkbenchState.getAligningPanelConfig);
+
+    this.hduIds$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.config$)
+    ).subscribe(([hduIds, config]) => {
+      if (!hduIds || !config) return;
+      let selectedHduIds = config.alignFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+      if (selectedHduIds.length != config.alignFormData.selectedHduIds.length) {
         setTimeout(() => {
           this.setSelectedHduIds(selectedHduIds);
         });
@@ -153,32 +151,10 @@ export class AlignerPageComponent implements OnInit {
   }
 
   getHduOptionLabel(hduId: string) {
-    let hdu$ = this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)),
-      filter((hdu) => hdu !== null)
-    );
-
-    let file$ = hdu$.pipe(
-      filter(hdu => hdu !== null),
-      map((hdu) => hdu?.fileId),
+    return this.store.select(DataFilesState.getHduById).pipe(
+      map(fn => fn(hduId)?.name),
       distinctUntilChanged(),
-      flatMap((fileId) => {
-        return this.store.select(DataFilesState.getFileById).pipe(
-          map((fn) => fn(fileId)),
-          filter((hdu) => hdu != null)
-        );
-      })
-    );
-
-    return combineLatest(hdu$, file$).pipe(
-      map(([hdu, file]) => {
-        if (!hdu || !file) return "???";
-        if (file.hduIds.length > 1) {
-          return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`
-        }
-        return file.name;
-      })
-    );
+    )
   }
 
   setSelectedHduIds(hduIds: string[]) {
