@@ -10,7 +10,14 @@ import {
   ViewChild,
 } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
-import { MarkerType, Marker, CircleMarker, RectangleMarker } from '../../models/marker';
+import {
+  MarkerType,
+  Marker,
+  CircleMarker,
+  RectangleMarker,
+  isCircleMarker,
+  isRectangleMarker,
+} from '../../models/marker';
 import { DELETE, ESCAPE } from '@angular/cdk/keycodes';
 import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
@@ -46,10 +53,10 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   state: CustomMarkerPanelState;
   config$: Observable<CustomMarkerPanelConfig>;
   selectedMarkers$: Observable<Marker[]>;
-  circleMarker$: Observable<CircleMarker>;
-  rectangleMarker$: Observable<RectangleMarker>;
 
   MarkerType = MarkerType;
+  isCircleMarker = isCircleMarker;
+  isRectangleMarker = isRectangleMarker;
   shortcuts: ShortcutInput[] = [];
   @ViewChild(KeyboardShortcutsComponent) private keyboard: KeyboardShortcutsComponent;
 
@@ -75,17 +82,6 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
     this.selectedMarkers$ = this.state$.pipe(
       map((state) => Object.values(state.markerEntities)),
       map((markers) => markers.filter((m) => m.selected))
-    );
-
-    this.circleMarker$ = this.selectedMarkers$.pipe(
-      map((markers) =>
-        markers.length == 1 && markers[0].type == MarkerType.CIRCLE ? (markers[0] as CircleMarker) : null
-      )
-    );
-    this.rectangleMarker$ = this.selectedMarkers$.pipe(
-      map((markers) =>
-        markers.length == 1 && markers[0].type == MarkerType.RECTANGLE ? (markers[0] as RectangleMarker) : null
-      )
     );
 
     let imageData$ = combineLatest(this.rawImageData$, this.normalizedImageData$).pipe(
@@ -159,7 +155,7 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
               x: x,
               y: y,
               radius: 10,
-              labelRadius: 8,
+              labelRadius: 14,
               labelTheta: 0,
             };
 
@@ -192,10 +188,10 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
       });
   }
 
-  onMarkerChange($event, marker: Marker) {
+  onMarkerChange($event: Partial<Marker>, marker: Marker) {
     if (!this.viewer || !this.state) return;
 
-    this.store.dispatch(new UpdateCustomMarker(this.state.id, $event.id, $event.changes));
+    this.store.dispatch(new UpdateCustomMarker(this.state.id, $event.id, $event));
   }
 
   deleteSelectedMarkers(markers: Marker[]) {

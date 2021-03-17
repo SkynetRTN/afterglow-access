@@ -23,7 +23,7 @@ import { debounceTime } from 'rxjs/operators';
 })
 export class RectangleMarkerEditorComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() marker: RectangleMarker;
-  @Output() changed = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<RectangleMarker>();
 
   @ViewChild('labelField', { static: true }) labelField: ElementRef;
 
@@ -31,7 +31,7 @@ export class RectangleMarkerEditorComponent implements OnInit, OnChanges, AfterV
     label: [''],
     width: [null, [Validators.required, CustomValidators.validateNumber, Validators.min(1)]],
     height: [null, [Validators.required, CustomValidators.validateNumber, Validators.min(1)]],
-    labelGap: [null, [Validators.required, CustomValidators.validateNumber]],
+    labelRadius: [null, [Validators.required, CustomValidators.validateNumber]],
     labelTheta: [null, [Validators.required, CustomValidators.validateNumber, Validators.min(0), Validators.max(360)]],
     x: [null, [Validators.required, CustomValidators.validateNumber, Validators.min(0)]],
     y: [null, [Validators.required, CustomValidators.validateNumber, Validators.min(0)]],
@@ -41,7 +41,12 @@ export class RectangleMarkerEditorComponent implements OnInit, OnChanges, AfterV
 
   ngOnInit() {
     this.form.valueChanges.pipe(debounceTime(250)).subscribe((data) => {
-      if (this.form.valid) this.changed.emit(data);
+      if (this.form.valid) {
+        this.onChange.emit({
+          id: this.marker.id,
+          ...data,
+        });
+      }
     });
   }
 

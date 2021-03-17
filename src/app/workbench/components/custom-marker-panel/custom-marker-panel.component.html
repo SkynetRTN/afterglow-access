@@ -47,15 +47,15 @@
           <hr />
           <h3 i18n>Marker Customization</h3>
           <app-circle-marker-editor
-            *ngIf="circleMarker$ | async as circleMarker"
+            *ngIf="selectedMarkers[0] | guardType: isCircleMarker as circleMarker"
             [marker]="circleMarker"
-            (changed)="onMarkerChange($event, selectedMarkers[0])"
+            (onChange)="onMarkerChange($event, selectedMarkers[0])"
           >
           </app-circle-marker-editor>
           <app-rectangle-marker-editor
-            *ngIf="rectangleMarker$ | async as rectangleMarker"
+            *ngIf="selectedMarkers[0] | guardType: isRectangleMarker as rectangleMarker"
             [marker]="rectangleMarker"
-            (changed)="onMarkerChange($event, selectedMarkers[0])"
+            (onChange)="onMarkerChange($event, selectedMarkers[0])"
           >
           </app-rectangle-marker-editor>
         </ng-container>
