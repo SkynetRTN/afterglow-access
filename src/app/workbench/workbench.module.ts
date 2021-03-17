@@ -64,6 +64,7 @@ import { FileListOptionComponent } from './containers/file-list-option/file-list
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
 import { ImageHduToolbarComponent } from './components/image-hdu-toolbar/image-hdu-toolbar.component';
 import { MatDialogModule } from '@angular/material/dialog';
+import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/svg-outlined-ellipse.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -81,6 +82,7 @@ export const COMPONENTS = [
   SvgTeardropMarkerComponent,
   SvgLineMarkerComponent,
   SvgApertureMarkerComponent,
+  SvgOutlinedEllipseComponent,
   WorkbenchComponent,
   DisplayToolsetComponent,
   PlottingPanelComponent,
