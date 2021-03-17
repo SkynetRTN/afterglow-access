@@ -145,11 +145,6 @@ export class AlignerPageComponent implements OnInit {
 
   ngOnInit() {}
 
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
-  }
-
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById).pipe(
       map((fn) => fn(hduId)?.name),

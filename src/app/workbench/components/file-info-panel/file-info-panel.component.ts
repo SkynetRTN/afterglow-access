@@ -24,6 +24,7 @@ import { HeaderEntry } from '../../../data-files/models/header-entry';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { WorkbenchState } from '../../workbench.state';
 import { UpdateFileInfoPanelConfig } from '../../workbench.actions';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
   selector: 'app-file-info-panel',
@@ -39,7 +40,6 @@ export class FileInfoToolsetComponent extends ToolPanelBaseComponent implements 
 
   constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, store: Store, router: Router) {
     super(store);
-
     this.config$ = this.store.select(WorkbenchState.getFileInfoPanelConfig);
 
     this.headerSummary$ = combineLatest(this.header$, this.config$).pipe(
@@ -161,8 +161,6 @@ export class FileInfoToolsetComponent extends ToolPanelBaseComponent implements 
     );
   }
   ngOnInit() {}
-
-  ngOnDestroy() {}
 
   ngAfterViewInit() {}
 

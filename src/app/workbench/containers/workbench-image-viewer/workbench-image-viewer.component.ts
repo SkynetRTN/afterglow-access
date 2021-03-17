@@ -406,6 +406,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       distinctUntilChanged()
     );
 
+    let customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
+      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
+      distinctUntilChanged()
+    );
+
     let photometryPanelState$ = photometryPanelStateId$.pipe(
       switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id)))),
       distinctUntilChanged()
@@ -422,7 +427,27 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.markers$ = this.activeTool$.pipe(
       switchMap((activeTool) => {
         if (activeTool == WorkbenchTool.CUSTOM_MARKER) {
-          return this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
+          let markerSelectionRegionMarkers$ = combineLatest(this.selectedHduId$, customMarkerPanelState$).pipe(
+            map(([hduId, state]) => {
+              if (!state || !state.markerSelectionRegion) return [];
+              let region = state.markerSelectionRegion;
+              let sourceSelectionMarker: RectangleMarker = {
+                id: `MARKER_SELECTION_${hduId}`,
+                x: Math.min(region.x, region.x + region.width),
+                y: Math.min(region.y, region.y + region.height),
+                width: Math.abs(region.width),
+                height: Math.abs(region.height),
+                type: MarkerType.RECTANGLE,
+              };
+              return [sourceSelectionMarker];
+            })
+          );
+
+          let markers$ = this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
+
+          return combineLatest(markerSelectionRegionMarkers$, markers$).pipe(
+            map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
+          );
         } else if (activeTool == WorkbenchTool.PLOTTER) {
           return combineLatest(
             this.firstHeader$,

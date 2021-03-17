@@ -34,13 +34,16 @@ import { KeyboardShortcutsComponent, ShortcutInput } from 'ng-keyboard-shortcuts
 import {
   AddCustomMarkers,
   DeselectCustomMarkers,
+  EndCustomMarkerSelectionRegion,
   RemoveCustomMarkers,
   SelectCustomMarkers,
   SetCustomMarkerSelection,
   UpdateCustomMarker,
   UpdateCustomMarkerPanelConfig,
+  UpdateCustomMarkerSelectionRegion,
 } from '../../workbench.actions';
 import { centroidDisk, centroidPsf } from '../../models/centroider';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
   selector: 'app-custom-marker-panel',
@@ -60,7 +63,7 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   shortcuts: ShortcutInput[] = [];
   @ViewChild(KeyboardShortcutsComponent) private keyboard: KeyboardShortcutsComponent;
 
-  constructor(store: Store) {
+  constructor(store: Store, private eventService: ImageViewerEventService) {
     super(store);
 
     this.state$ = combineLatest(this.fileState$, this.hduState$).pipe(
@@ -90,41 +93,43 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
       })
     );
 
-    this.markerClickEvent$.pipe(takeUntil(this.destroy$), withLatestFrom(this.state$)).subscribe(([$event, state]) => {
-      if (!$event) {
-        return;
-      }
-      if ($event.mouseEvent.altKey) {
-        return;
-      }
-      if (typeof $event.marker.id == 'undefined') {
-        return;
-      }
-
-      if (!state.markerIds.includes($event.marker.id)) {
-        return;
-      }
-
-      let customMarker = state.markerEntities[$event.marker.id];
-      if (!customMarker) return;
-      let customMarkerSelected = customMarker.selected;
-
-      if ($event.mouseEvent.ctrlKey) {
-        if (!customMarkerSelected) {
-          // select the source
-          this.selectCustomMarkers(state.id, [customMarker]);
-        } else {
-          // deselect the source
-          this.deselectCustomMarkers(state.id, [customMarker]);
+    this.eventService.markerClickEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$))
+      .subscribe(([$event, state]) => {
+        if (!$event) {
+          return;
         }
-      } else {
-        this.store.dispatch(new SetCustomMarkerSelection(state.id, [customMarker]));
-      }
-      $event.mouseEvent.stopImmediatePropagation();
-      $event.mouseEvent.preventDefault();
-    });
+        if ($event.mouseEvent.altKey) {
+          return;
+        }
+        if (typeof $event.marker.id == 'undefined') {
+          return;
+        }
 
-    this.imageClickEvent$
+        if (!state.markerIds.includes($event.marker.id)) {
+          return;
+        }
+
+        let customMarker = state.markerEntities[$event.marker.id];
+        if (!customMarker) return;
+        let customMarkerSelected = customMarker.selected;
+
+        if ($event.mouseEvent.ctrlKey) {
+          if (!customMarkerSelected) {
+            // select the source
+            this.selectCustomMarkers(state.id, [customMarker]);
+          } else {
+            // deselect the source
+            this.deselectCustomMarkers(state.id, [customMarker]);
+          }
+        } else {
+          this.store.dispatch(new SetCustomMarkerSelection(state.id, [customMarker]));
+        }
+        $event.mouseEvent.stopImmediatePropagation();
+        $event.mouseEvent.preventDefault();
+      });
+
+    this.eventService.imageClickEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, imageData$))
       .subscribe(([$event, state, settings, imageData]) => {
         if (!$event || !imageData) {
@@ -165,6 +170,41 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
           }
         }
       });
+
+    this.eventService.dragEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+      .subscribe(([$event, state, config, header, imageData]) => {
+        if (!$event) {
+          return;
+        }
+        if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
+          return;
+        if (this.viewer.hduId == null) return;
+
+        let region = {
+          x: $event.imageStart.x,
+          y: $event.imageStart.y,
+          width: $event.imageEnd.x - $event.imageStart.x,
+          height: $event.imageEnd.y - $event.imageStart.y,
+        };
+
+        this.store.dispatch(new UpdateCustomMarkerSelectionRegion(this.viewer.hduId, region));
+      });
+
+    this.eventService.dropEvent$
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+      .subscribe(([$event, state, config, header, imageData]) => {
+        if (!$event) {
+          return;
+        }
+        if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
+          return;
+        if (this.viewer.hduId == null) return;
+
+        this.store.dispatch(
+          new EndCustomMarkerSelectionRegion(this.viewer.hduId, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
+        );
+      });
   }
 
   selectCustomMarkers(fileId: string, customMarkers: Marker[]) {
@@ -176,8 +216,6 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   }
 
   ngOnInit() {}
-
-  ngOnDestroy() {}
 
   ngAfterViewInit() {
     this.keyboard

@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 
 import { Observable, Subscription, Subject, BehaviorSubject, combineLatest, of } from 'rxjs';
-import { map, withLatestFrom, switchMap, distinctUntilChanged, takeUntil, tap } from 'rxjs/operators';
+import { map, withLatestFrom, switchMap, distinctUntilChanged, takeUntil, tap, skip } from 'rxjs/operators';
 import { getDegsPerPixel, DataFile, ImageHdu, PixelType, Header } from '../../../data-files/models/data-file';
 import { PlottingPanelState } from '../../models/plotter-file-state';
 import { PlotterComponent } from '../plotter/plotter.component';
@@ -32,6 +32,7 @@ import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { centroidDisk, centroidPsf } from '../../models/centroider';
 import { StartLine, UpdateLine, UpdatePlottingPanelConfig } from '../../workbench.actions';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
   selector: 'app-plotting-panel',
@@ -67,7 +68,7 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
     skyPosAngle: number;
   }>;
 
-  constructor(store: Store) {
+  constructor(store: Store, private eventService: ImageViewerEventService) {
     super(store);
 
     this.config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
@@ -170,13 +171,12 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
       })
     );
 
-    this.imageClickEvent$
+    this.eventService.imageClickEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, imageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event || !imageData) {
           return;
         }
-
         if ($event.viewerId != this.viewer?.id) return;
 
         if ($event.hitImage) {
@@ -215,7 +215,7 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
         }
       });
 
-    this.imageMouseMoveEvent$
+    this.eventService.mouseMoveEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.config$))
       .subscribe(([$event, config]) => {
         if (!$event) {
@@ -284,8 +284,6 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
   ngOnInit() {}
 
   ngAfterViewInit() {}
-
-  ngOnDestroy() {}
 
   onModeChange(mode: '1D' | '2D' | '3D') {
     this.store.dispatch(new UpdatePlottingPanelConfig({ plotMode: mode }));

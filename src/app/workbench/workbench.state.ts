@@ -138,10 +138,11 @@ import {
   UpdateWcsCalibrationSettings,
   CreateWcsCalibrationJob,
   ImportFromSurveyFail,
-  StartPhotometrySourceSelectionRegion,
   UpdatePhotometrySourceSelectionRegion,
   EndPhotometrySourceSelectionRegion,
   SonificationCompleted,
+  UpdateCustomMarkerSelectionRegion,
+  EndCustomMarkerSelectionRegion,
 } from './workbench.actions';
 import {
   getWidth,
@@ -3393,6 +3394,7 @@ export class WorkbenchState {
           id: customMarkerPanelStateId,
           markerEntities: {},
           markerIds: [],
+          markerSelectionRegion: null,
         };
         state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
 
@@ -3481,6 +3483,7 @@ export class WorkbenchState {
         id: customMarkerPanelStateId,
         markerEntities: {},
         markerIds: [],
+        markerSelectionRegion: null,
       };
       state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
 
@@ -3555,6 +3558,57 @@ export class WorkbenchState {
         })
       );
     }
+  }
+
+  @Action(UpdateCustomMarkerSelectionRegion)
+  @ImmutableContext()
+  public updateCustomMarkerSelectionRegion(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId, region }: UpdateCustomMarkerSelectionRegion
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
+      let markerPanelStateId = hduState.customMarkerPanelStateId;
+      let markerState = state.customMarkerPanelStateEntities[markerPanelStateId];
+      markerState.markerSelectionRegion = {
+        ...region,
+      };
+      return state;
+    });
+  }
+
+  @Action(EndCustomMarkerSelectionRegion)
+  @ImmutableContext()
+  public endCustomMarkerSelectionRegion(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId, mode }: EndCustomMarkerSelectionRegion
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
+      let markerPanelStateId = hduState.customMarkerPanelStateId;
+      let markerState = state.customMarkerPanelStateEntities[markerPanelStateId];
+
+      let region = markerState.markerSelectionRegion;
+      let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId)(hduId);
+      if (!header || !region) return state;
+
+      markerState.markerIds.forEach((id) => {
+        let marker = markerState.markerEntities[id];
+        if (marker.type != MarkerType.CIRCLE) return;
+        let circleMarker = marker as CircleMarker;
+        let x1 = Math.min(region!.x, region!.x + region!.width);
+        let y1 = Math.min(region!.y, region!.y + region!.height);
+        let x2 = x1 + Math.abs(region!.width);
+        let y2 = y1 + Math.abs(region!.height);
+
+        if (circleMarker.x >= x1 && circleMarker.x < x2 && circleMarker.y >= y1 && circleMarker.y < y2) {
+          marker.selected = mode != 'remove';
+        }
+      });
+      markerState.markerSelectionRegion = null;
+
+      return state;
+    });
   }
 
   @Action([AddRegionToHistory, UndoRegionSelection, RedoRegionSelection])
@@ -3847,42 +3901,18 @@ export class WorkbenchState {
     });
   }
 
-  @Action(StartPhotometrySourceSelectionRegion)
-  @ImmutableContext()
-  public startPhotometryMarkerRegionSelection(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, point }: StartPhotometrySourceSelectionRegion
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
-      let photPanelStateId = hduState.photometryPanelStateId;
-      let photState = state.photometryPanelStateEntities[photPanelStateId];
-      photState.markerSelectionRegion = {
-        x: point.x,
-        y: point.y,
-        width: 0,
-        height: 0,
-      };
-      return state;
-    });
-  }
-
   @Action(UpdatePhotometrySourceSelectionRegion)
   @ImmutableContext()
   public updatePhotometryMarkerRegionSelection(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, point }: UpdatePhotometrySourceSelectionRegion
+    { hduId, region }: UpdatePhotometrySourceSelectionRegion
   ) {
     setState((state: WorkbenchStateModel) => {
       let hduState = state.hduStateEntities[hduId] as WorkbenchImageHduState;
       let photPanelStateId = hduState.photometryPanelStateId;
       let photState = state.photometryPanelStateEntities[photPanelStateId];
-      if (!photState.markerSelectionRegion) return state;
-      let region = photState.markerSelectionRegion;
       photState.markerSelectionRegion = {
         ...region,
-        width: point.x - region.x,
-        height: point.y - region.y,
       };
       return state;
     });

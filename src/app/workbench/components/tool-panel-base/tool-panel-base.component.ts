@@ -18,6 +18,7 @@ import {
   ViewerPanelMarkerMouseEvent,
 } from '../../containers/workbench-viewer-layout/workbench-viewer-layout.component';
 import { IImageData } from '../../../data-files/models/image-data';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 export interface ToolPanelViewerState {
   file: DataFile;
@@ -48,78 +49,6 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
     return this.viewer$.getValue();
   }
   protected viewer$ = new BehaviorSubject<IViewer>(null);
-
-  @Input('imageMouseDownEvent')
-  set imageMouseDownEvent(imageMouseDownEvent: ViewerPanelCanvasMouseEvent) {
-    this.imageMouseDownEvent$.next(imageMouseDownEvent);
-  }
-  get imageMouseDownEvent() {
-    return this.imageMouseDownEvent$.getValue();
-  }
-  protected imageMouseDownEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseEvent>(null);
-
-  @Input('imageMouseUpEvent')
-  set imageMouseUpEvent(imageMouseUpEvent: ViewerPanelCanvasMouseEvent) {
-    this.imageMouseUpEvent$.next(imageMouseUpEvent);
-  }
-  get imageMouseUpEvent() {
-    return this.imageMouseUpEvent$.getValue();
-  }
-  protected imageMouseUpEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseEvent>(null);
-
-  @Input('imageClickEvent')
-  set imageClickEvent(imageClickEvent: ViewerPanelCanvasMouseEvent) {
-    this.imageClickEvent$.next(imageClickEvent);
-  }
-  get imageClickEvent() {
-    return this.imageClickEvent$.getValue();
-  }
-  protected imageClickEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseEvent>(null);
-
-  @Input('imageMouseMoveEvent')
-  set imageMouseMoveEvent(imageMouseMoveEvent: ViewerPanelCanvasMouseEvent) {
-    this.imageMouseMoveEvent$.next(imageMouseMoveEvent);
-  }
-  get imageMouseMoveEvent() {
-    return this.imageMouseMoveEvent$.getValue();
-  }
-  protected imageMouseMoveEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseEvent>(null);
-
-  @Input('imageMouseDragStartEvent')
-  set imageMouseDragStartEvent(imageMouseDragStartEvent: ViewerPanelCanvasMouseDragEvent) {
-    this.imageMouseDragStartEvent$.next(imageMouseDragStartEvent);
-  }
-  get imageMouseDragStartEvent() {
-    return this.imageMouseDragStartEvent$.getValue();
-  }
-  protected imageMouseDragStartEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseDragEvent>(null);
-
-  @Input('imageMouseDragEvent')
-  set imageMouseDragEvent(imageMouseDragEvent: ViewerPanelCanvasMouseDragEvent) {
-    this.imageMouseDragEvent$.next(imageMouseDragEvent);
-  }
-  get imageMouseDragEvent() {
-    return this.imageMouseDragEvent$.getValue();
-  }
-  protected imageMouseDragEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseDragEvent>(null);
-
-  @Input('imageMouseDragEndEvent')
-  set imageMouseDragEndEvent(imageMouseDragEndEvent: ViewerPanelCanvasMouseDragEvent) {
-    this.imageMouseDragEndEvent$.next(imageMouseDragEndEvent);
-  }
-  get imageMouseDragEndEvent() {
-    return this.imageMouseDragEndEvent$.getValue();
-  }
-  protected imageMouseDragEndEvent$ = new BehaviorSubject<ViewerPanelCanvasMouseDragEvent>(null);
-
-  @Input('markerClickEvent')
-  set markerClickEvent(markerClickEvent: ViewerPanelMarkerMouseEvent) {
-    this.markerClickEvent$.next(markerClickEvent);
-  }
-  get markerClickEvent() {
-    return this.markerClickEvent$.getValue();
-  }
-  protected markerClickEvent$ = new BehaviorSubject<ViewerPanelMarkerMouseEvent>(null);
 
   destroy$: Subject<boolean> = new Subject<boolean>();
   hduId$: Observable<string>;

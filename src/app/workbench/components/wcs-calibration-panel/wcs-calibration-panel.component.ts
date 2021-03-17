@@ -21,6 +21,7 @@ import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
 import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { WcsCalibrationPanelState, WcsCalibrationSettings } from '../../models/workbench-state';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import {
   CreateWcsCalibrationJob,
   UpdateSourceExtractionSettings,
@@ -155,11 +156,6 @@ export class WcsCalibrationPanelComponent extends ToolPanelBaseComponent impleme
   }
 
   ngOnInit(): void {}
-
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
-  }
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById).pipe(

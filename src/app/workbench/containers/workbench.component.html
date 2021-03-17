@@ -390,21 +390,10 @@
 
           <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewer]="viewer$ | async"> </app-file-info-panel>
 
-          <app-custom-marker-panel
-            *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER"
-            [viewer]="viewer$ | async"
-            [imageClickEvent]="imageClickEvent"
-            [markerClickEvent]="markerClickEvent"
-          >
+          <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [viewer]="viewer$ | async">
           </app-custom-marker-panel>
 
-          <app-plotting-panel
-            *ngSwitchCase="WorkbenchTool.PLOTTER"
-            [viewer]="viewer$ | async"
-            [imageClickEvent]="imageClickEvent"
-            [imageMouseMoveEvent]="imageMouseMoveEvent"
-          >
-          </app-plotting-panel>
+          <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [viewer]="viewer$ | async"> </app-plotting-panel>
 
           <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [viewer]="viewer$ | async">
           </app-sonification-panel>
@@ -413,11 +402,6 @@
             *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
             [viewer]="viewer$ | async"
             [hduIds]="imageHduIds$ | async"
-            [imageClickEvent]="imageClickEvent"
-            [imageMouseDragStartEvent]="imageDragStartEvent"
-            [imageMouseDragEvent]="imageDragEvent"
-            [imageMouseDragEndEvent]="imageDragEndEvent"
-            [markerClickEvent]="markerClickEvent"
           >
           </app-photometry-panel>
 

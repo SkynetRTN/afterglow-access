@@ -92,11 +92,6 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   @ViewChild('svgElementRef', { static: true }) svgElementRef: ElementRef;
 
   transformAttr$: Observable<string>;
-  circleMarkers$: Observable<CircleMarker[]>;
-  rectangleMarkers$: Observable<RectangleMarker[]>;
-  tearDropMarkers$: Observable<TeardropMarker[]>;
-  lineMarkers$: Observable<LineMarker[]>;
-  apertureMarkers$: Observable<ApertureMarker[]>;
 
   markerTexts$: Observable<
     Array<{
@@ -114,39 +109,16 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   constructor(private cdr: ChangeDetectorRef) {
     this.transformAttr$ = this.transform$.pipe(map((t) => `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`));
 
-    this.circleMarkers$ = this.markers$.pipe(
-      map((markers) => markers.filter((m) => m.type == MarkerType.CIRCLE) as CircleMarker[])
-    );
-    this.rectangleMarkers$ = this.markers$.pipe(
-      map((markers) => markers.filter((m) => m.type == MarkerType.RECTANGLE) as RectangleMarker[])
-    );
-
-    this.tearDropMarkers$ = this.markers$.pipe(
-      map((markers) => markers.filter((m) => m.type == MarkerType.TEARDROP) as TeardropMarker[])
-    );
-
-    this.lineMarkers$ = this.markers$.pipe(
-      map((markers) => markers.filter((m) => m.type == MarkerType.LINE) as LineMarker[])
-    );
-
-    this.apertureMarkers$ = this.markers$.pipe(
-      map((markers) => markers.filter((m) => m.type == MarkerType.APERTURE) as ApertureMarker[])
-    );
-
-    this.markerTexts$ = combineLatest([
-      this.circleMarkers$,
-      this.tearDropMarkers$,
-      this.apertureMarkers$,
-      this.transform$,
-    ]).pipe(
-      map(([circleMarkers, tearDropMarkers, apertureMarkers, transform]) => {
-        if (!circleMarkers || !tearDropMarkers || !apertureMarkers) return [];
-        let markers: (CircleMarker | TeardropMarker | ApertureMarker)[] = [
-          ...circleMarkers,
-          ...tearDropMarkers,
-          ...apertureMarkers,
-        ].filter((marker) => marker.label && marker.label != '');
-        return markers.map((m) => {
+    this.markerTexts$ = combineLatest([this.markers$, this.transform$]).pipe(
+      map(([markers, transform]) => {
+        if (!markers) return [];
+        let radialMarkers = markers.filter(
+          (marker) =>
+            [MarkerType.CIRCLE, MarkerType.TEARDROP, MarkerType.APERTURE].includes(marker.type) &&
+            marker.label &&
+            marker.label != ''
+        ) as (CircleMarker | TeardropMarker | ApertureMarker)[];
+        return radialMarkers.map((m) => {
           let matrix = transformToMatrix(transform);
           let p = matrix.transform(new Point(m.x, m.y));
           let mirrored = matrix.scaling.x < 0;

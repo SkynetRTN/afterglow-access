@@ -35,6 +35,7 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { BlendMode } from '../../../data-files/models/blend-mode';
 import { AfterglowConfigService } from '../../../afterglow-config.service';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
   selector: 'app-display-panel',
@@ -124,8 +125,6 @@ export class DisplayToolsetComponent extends ToolPanelBaseComponent implements O
   }
 
   ngOnInit() {}
-
-  ngOnDestroy() {}
 
   ngAfterViewInit() {}
 }

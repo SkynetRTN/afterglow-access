@@ -55,7 +55,6 @@ import {
   PhotometerSources,
   RemovePhotDatas,
   RemoveAllPhotDatas,
-  StartPhotometrySourceSelectionRegion,
   UpdatePhotometrySourceSelectionRegion,
   EndPhotometrySourceSelectionRegion,
   UpdatePhotometrySettings,
@@ -79,6 +78,7 @@ import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { SourcesState } from '../../sources.state';
 import { centroidPsf } from '../../models/centroider';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
   selector: 'app-photometry-panel',
@@ -111,10 +111,7 @@ export class PhotometryPageComponent
   SourcePosType = PosType;
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
   batchPhotJob$: Observable<PhotometryJob>;
-  batchFormDataSub: Subscription;
-  photometryUpdater: Subscription;
   mergeError: string;
-  sourceSelectionUpdater: Subscription;
   selectionModel = new SelectionModel<string>(true, []);
 
   batchPhotForm = new FormGroup({
@@ -127,7 +124,8 @@ export class PhotometryPageComponent
     private dmsPipe: DmsPipe,
     private datePipe: DatePipe,
     private papa: Papa,
-    store: Store
+    store: Store,
+    private eventService: ImageViewerEventService
   ) {
     super(store);
 
@@ -216,8 +214,9 @@ export class PhotometryPageComponent
       })
     );
 
-    this.batchFormDataSub = this.batchPhotFormData$.subscribe();
-    this.batchPhotForm.valueChanges.subscribe((value) => {
+    this.batchPhotFormData$.pipe(takeUntil(this.destroy$)).subscribe();
+
+    this.batchPhotForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcForm.valid) {
       this.store.dispatch(
         new UpdatePhotometryPanelConfig({
@@ -227,18 +226,20 @@ export class PhotometryPageComponent
       // }
     });
 
-    this.sourceSelectionUpdater = combineLatest(this.sources$, this.config$)
+    combineLatest(this.sources$, this.config$)
       .pipe(
         filter(([sources, config]) => sources !== null && config !== null),
-        map(([sources, config]) => sources.filter((s) => config.selectedSourceIds.includes(s.id)).map((s) => s.id))
+        map(([sources, config]) => sources.filter((s) => config.selectedSourceIds.includes(s.id)).map((s) => s.id)),
+        takeUntil(this.destroy$)
       )
       .subscribe((selectedSourceIds) => {
         this.selectionModel.clear();
         this.selectionModel.select(...selectedSourceIds);
       });
 
-    this.photometryUpdater = this.tableData$
+    this.tableData$
       .pipe(
+        takeUntil(this.destroy$),
         map((rows) => rows.filter((row) => row.data == null)),
         withLatestFrom(this.imageHdu$, this.config$, this.photometrySettings$),
         filter(([rows, imageHdu, config]) => rows.length != 0 && imageHdu && config && config.autoPhot),
@@ -255,7 +256,7 @@ export class PhotometryPageComponent
         );
       });
 
-    this.imageClickEvent$
+    this.eventService.imageClickEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event || !imageData) {
@@ -309,7 +310,20 @@ export class PhotometryPageComponent
         }
       });
 
-    this.imageMouseDragStartEvent$
+    // this.eventService.dragStartEvent$
+    //   .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
+    //   .subscribe(([$event, state, config, header, imageData]) => {
+    //     if (!$event) {
+    //       return;
+    //     }
+    //     if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
+    //       return;
+    //     if (this.viewer.hduId == null) return;
+
+    //     this.store.dispatch(new StartPhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageStart));
+    //   });
+
+    this.eventService.dragEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event) {
@@ -319,23 +333,17 @@ export class PhotometryPageComponent
           return;
         if (this.viewer.hduId == null) return;
 
-        this.store.dispatch(new StartPhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageStart));
+        let region = {
+          x: $event.imageStart.x,
+          y: $event.imageStart.y,
+          width: $event.imageEnd.x - $event.imageStart.x,
+          height: $event.imageEnd.y - $event.imageStart.y,
+        };
+
+        this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(this.viewer.hduId, region));
       });
 
-    this.imageMouseDragEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-      .subscribe(([$event, state, config, header, imageData]) => {
-        if (!$event) {
-          return;
-        }
-        if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
-          return;
-        if (this.viewer.hduId == null) return;
-
-        this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageEnd));
-      });
-
-    this.imageMouseDragEndEvent$
+    this.eventService.dropEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event) {
@@ -350,7 +358,7 @@ export class PhotometryPageComponent
         );
       });
 
-    this.markerClickEvent$.pipe(takeUntil(this.destroy$)).subscribe(($event) => {
+    this.eventService.markerClickEvent$.pipe(takeUntil(this.destroy$)).subscribe(($event) => {
       if (!$event) {
         return;
       }
@@ -395,12 +403,6 @@ export class PhotometryPageComponent
   ngOnInit() {}
 
   ngAfterViewInit() {}
-
-  ngOnDestroy() {
-    this.batchFormDataSub.unsubscribe();
-    this.sourceSelectionUpdater.unsubscribe();
-    this.photometryUpdater.unsubscribe();
-  }
 
   ngOnChanges() {}
 

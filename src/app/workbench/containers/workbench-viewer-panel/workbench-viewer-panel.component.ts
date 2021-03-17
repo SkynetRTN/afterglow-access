@@ -27,6 +27,7 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { IWorkbenchHduState } from '../../models/workbench-file-state';
 import { CenterRegionInViewport, ZoomBy } from '../../../data-files/data-files.actions';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -117,7 +118,11 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   //   return this.viewers.find(v => v.viewerId == focusedViewerId);
   // }
 
-  constructor(private store: Store, public viewContainerRef: ViewContainerRef) {
+  constructor(
+    private store: Store,
+    public viewContainerRef: ViewContainerRef,
+    private viewerEventService: ImageViewerEventService
+  ) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
@@ -248,70 +253,88 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   }
 
   handleImageMouseMove($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    this.onImageMouseMove.emit({
+    let event: ViewerCanvasMouseEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+
+    this.viewerEventService.mouseMoveEvent$.next(event);
+    this.onImageMouseMove.emit(event);
   }
 
   handleImageMouseDown($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    this.onImageMouseDown.emit({
+    let event: ViewerCanvasMouseEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+    this.viewerEventService.mouseDownEvent$.next(event);
+    this.onImageMouseDown.emit(event);
   }
 
   handleImageMouseUp($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    this.onImageMouseUp.emit({
+    let event: ViewerCanvasMouseEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+    this.viewerEventService.mouseUpEvent$.next(event);
+    this.onImageMouseUp.emit(event);
   }
 
   handleImageMouseDragStart($event: CanvasMouseDragEvent, viewerId: string, viewer: IViewer) {
-    this.onImageMouseDragStart.emit({
+    let event: ViewerCanvasMouseDragEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+
+    this.viewerEventService.dragEvent$.next(event);
+    this.onImageMouseDragStart.emit(event);
   }
 
   handleImageMouseDrag($event: CanvasMouseDragEvent, viewerId: string, viewer: IViewer) {
-    this.onImageMouseDrag.emit({
+    let event: ViewerCanvasMouseDragEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+
+    this.viewerEventService.dragEvent$.next(event);
+    this.onImageMouseDrag.emit(event);
   }
 
   handleImageMouseDragEnd($event: CanvasMouseDragEvent, viewerId: string, viewer: IViewer) {
-    this.onImageMouseDragEnd.emit({
+    let event: ViewerCanvasMouseDragEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+
+    this.viewerEventService.dropEvent$.next(event);
+    this.onImageMouseDragEnd.emit(event);
   }
 
   handleImageClick($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    // if (viewerId != this.mouseDownActiveViewerId) return;
-    this.onImageClick.emit({
+    let event: ViewerCanvasMouseEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+    this.viewerEventService.imageClickEvent$.next(event);
+    this.onImageClick.emit(event);
   }
 
   handleMarkerClick($event: MarkerMouseEvent, viewerId: string, viewer: IViewer) {
-    // if (viewerId != this.mouseDownActiveViewerId) return;
-
-    this.onMarkerClick.emit({
+    let event: ViewerMarkerMouseEvent = {
       viewerId: viewerId,
       viewer: viewer,
       ...$event,
-    });
+    };
+
+    this.viewerEventService.markerClickEvent$.next(event);
+    this.onMarkerClick.emit(event);
   }
 
   onSelectedViewerIndexChange(index) {

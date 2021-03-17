@@ -57,6 +57,7 @@ import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { isNotEmpty } from '../../../utils/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -356,11 +357,6 @@ export class SonificationPanelComponent
       },
       preventDefault: true,
     });
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
   }
 
   ngOnChanges() {}
