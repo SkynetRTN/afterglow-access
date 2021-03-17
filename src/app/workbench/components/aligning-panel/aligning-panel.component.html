@@ -39,22 +39,34 @@
       </mat-form-field>
     </div>
     <div>
-      <mat-slide-toggle [labelPosition]="'after'" [checked]="(alignFormData$ | async).crop" color="primary"
-        formControlName="crop">Crop to largest overlapping region</mat-slide-toggle>
+      <mat-slide-toggle
+        [labelPosition]="'after'"
+        [checked]="(alignFormData$ | async).crop"
+        color="primary"
+        formControlName="crop"
+        >Crop to largest overlapping region</mat-slide-toggle
+      >
     </div>
 
     <div *ngIf="refHeader$ | async">
-      <div *ngIf="(refHeader$ | async).loading; else hasWcsBlock" class="alert alert-info" style="margin-top: 10px"
-        i18n>
+      <div
+        *ngIf="(refHeader$ | async).loading; else hasWcsBlock"
+        class="alert alert-info"
+        style="margin-top: 10px"
+        i18n
+      >
         Reference header loading...
       </div>
       <ng-template #hasWcsBlock>
-        <div *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)" class="alert alert-warning"
-          style="margin-top: 10px" i18n>
+        <div
+          *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)"
+          class="alert alert-warning"
+          style="margin-top: 10px"
+          i18n
+        >
           This image does not have astrometric data in its header and cannot be aligned using the selected mode.
         </div>
       </ng-template>
-
     </div>
     <div style="clear: both"></div>
     <button mat-raised-button (click)="submit(alignForm.value)" [disabled]="!alignForm.valid" class="float-right" i18n>
@@ -65,9 +77,11 @@
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
   <div *ngIf="alignmentJob$ | async; let job" style="margin-top: 10px">
-    <div class="alert alert-info"
-      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
-      <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: "1.0-0" }}%)
+    <div
+      class="alert alert-info"
+      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
+    >
+      <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">
         <div style="margin-top: 5px">

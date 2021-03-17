@@ -1,4 +1,4 @@
-<div *ngIf="(ready$ | async); else loadingBlock" style="height: 100%; width: 100%">
+<div *ngIf="ready$ | async; else loadingBlock" style="height: 100%; width: 100%">
   <div fxLayout="column" fxFill>
     <header fxFlex="0 0 auto" class="main-header">
       <app-navbar [dataProviders]="dataProviders$ | async" class="mat-elevation-z6" [user]="user$ | async"></app-navbar>
@@ -14,18 +14,20 @@
 <ng-template #loadingBlock>
   <div style="height: 100%; width: 100%">
     <main fxLayout="row" class="main-content" fxFill fxLayoutAlign="center">
-      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" style="height: 100%; width: 400px;">
-        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px" style="width: 100%;">
-          <img style="height: 50px;" src="assets/img/logo_large.png"/>
-          <span style="font-size: 32px;">Afterglow Access</span>
+      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" style="height: 100%; width: 400px">
+        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px" style="width: 100%">
+          <img style="height: 50px" src="assets/img/logo_large.png" />
+          <span style="font-size: 32px">Afterglow Access</span>
         </div>
-        
+
         <mat-progress-bar mode="indeterminate" color="accent"></mat-progress-bar>
         <div *ngIf="!(wasmReady$ | async)" class="loading-ellipsis">loading WCSLib</div>
         <div *ngIf="!(configReady$ | async)">
-          <span *ngIf="!(configError$ | async); else configErrorBlock" class="loading-ellipsis">loading Afterglow Access configuration</span>
+          <span *ngIf="!(configError$ | async); else configErrorBlock" class="loading-ellipsis"
+            >loading Afterglow Access configuration</span
+          >
           <ng-template #configErrorBlock>
-            <span class="alert-danger" style="padding: 5px;">Error: unable to load afterglow configuration file</span>
+            <span class="alert-danger" style="padding: 5px">Error: unable to load afterglow configuration file</span>
           </ng-template>
         </div>
       </div>

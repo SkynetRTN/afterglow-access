@@ -1,10 +1,10 @@
-import { JobType } from "./job-types";
-import { JobBase, JobResultBase } from "./job-base";
+import { JobType } from './job-types';
+import { JobBase, JobResultBase } from './job-base';
 
 export interface BatchImportSettings {
   providerId?: string;
   path?: string;
-  duplicates?: "ignore";
+  duplicates?: 'ignore';
   recurse?: boolean;
 }
 
@@ -18,5 +18,3 @@ export interface BatchImportJob extends JobBase {
   settings: Array<BatchImportSettings>;
   result: BatchImportJobResult | null;
 }
-
-

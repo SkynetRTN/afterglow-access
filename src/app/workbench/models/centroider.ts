@@ -1,5 +1,5 @@
-import { getWidth, getHeight, ImageHdu, PixelType } from "../../data-files/models/data-file";
-import { getPixel, IImageData } from "../../data-files/models/image-data";
+import { getWidth, getHeight, ImageHdu, PixelType } from '../../data-files/models/data-file';
+import { getPixel, IImageData } from '../../data-files/models/image-data';
 
 export interface DiskCentroiderSettings {
   maxIterations: number;
@@ -36,7 +36,7 @@ export function centroidDisk(
   let failedResult = { x: x0, y: y0, xErr: null, yErr: null };
 
   while (true) {
-    if(isNaN(x0) || isNaN(y0)) return failedResult;
+    if (isNaN(x0) || isNaN(y0)) return failedResult;
     let recenterSub = false;
     let expandSub = false;
 
@@ -60,7 +60,7 @@ export function centroidDisk(
     let count = 0,
       index = 0;
     while (true) {
-      if(isNaN(count)) return failedResult;
+      if (isNaN(count)) return failedResult;
       count += diffsHist[index];
       if (count >= lowerPercentile) break;
       index += 1;
@@ -121,13 +121,12 @@ export function centroidDisk(
 
       xShift = (leftEdge + rightEdge) / 2 - cxc;
       yShift = (upperEdge + lowerEdge) / 2 - cyc;
-      if(isNaN(xShift) || isNaN(yShift)) return failedResult;
+      if (isNaN(xShift) || isNaN(yShift)) return failedResult;
 
       cxc += xShift;
       cyc += yShift;
       nIter++;
 
-      
       if (leftEdge == 0 || rightEdge == subWidth - 1) recenterSub = true;
       if (leftEdge == 0 && rightEdge == subWidth - 1) expandSub = true;
       if (upperEdge == 0 || lowerEdge == subWidth - 1) recenterSub = true;
@@ -178,7 +177,12 @@ export function createPsfCentroiderSettings(): PsfCentroiderSettings {
   };
 }
 
-export function centroidPsf(imageData: IImageData<PixelType>, x: number, y: number, settings: PsfCentroiderSettings = null) {
+export function centroidPsf(
+  imageData: IImageData<PixelType>,
+  x: number,
+  y: number,
+  settings: PsfCentroiderSettings = null
+) {
   if (settings == null) settings = createPsfCentroiderSettings();
   //let oxinit: number;            // initial output x center
   //let oyinit: number;            // initial output y center
@@ -209,9 +213,9 @@ export function centroidPsf(imageData: IImageData<PixelType>, x: number, y: numb
   let niter = 0;
   //bool low_signal_to_noise: number
 
-  let failedResult = { x: x, y: y, xErr: null, yErr: null }
+  let failedResult = { x: x, y: y, xErr: null, yErr: null };
   while (true) {
-    if(isNaN(ox) || isNaN(oy)) return failedResult;
+    if (isNaN(ox) || isNaN(oy)) return failedResult;
 
     let subframeResult = getSubframe(settings.centeringBoxWidth, imageData, ox, oy);
     cxc = subframeResult.cxc;
@@ -301,7 +305,7 @@ function getSubframe(size: number, imageData: IImageData<PixelType>, x: number, 
   let xl2 = Math.floor(y + halfCenteringBoxWidth);
 
   if (xc1 >= ncols || xc2 < 0.0 || xl1 >= nlines || xl2 < 0.0) {
-    throw new Error("centering box does not intersect image");
+    throw new Error('centering box does not intersect image');
   }
 
   // Get column and line limits, dimensions and center of subraster.
@@ -423,7 +427,12 @@ function centroidAlgorithm(settings: PsfCentroiderSettings, marg: Array<number>)
 //     return 0.0;
 // }
 
-function getMarginalDistributions(settings: PsfCentroiderSettings, subframe: Array<number>, width: number, height: number) {
+function getMarginalDistributions(
+  settings: PsfCentroiderSettings,
+  subframe: Array<number>,
+  width: number,
+  height: number
+) {
   let xm = new Array(width);
   let ym = new Array(height);
   //printf("Marginal Dist\n");

@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageCalculatorPageComponent } from "./pixel-ops-panel.component";
+import { ImageCalculatorPageComponent } from './pixel-ops-panel.component';
 
-describe("ImageCalculatorPageComponent", () => {
+describe('ImageCalculatorPageComponent', () => {
   let component: ImageCalculatorPageComponent;
   let fixture: ComponentFixture<ImageCalculatorPageComponent>;
 
@@ -18,7 +18,7 @@ describe("ImageCalculatorPageComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

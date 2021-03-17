@@ -22,19 +22,19 @@ import {
   OnChanges,
   HostBinding,
   Renderer2,
-} from "@angular/core";
-import { DomSanitizer, SafeStyle } from "@angular/platform-browser";
-import { ActivatedRoute, Params, Router } from "@angular/router";
-import { Location, DOCUMENT } from "@angular/common";
-import { MatCheckboxChange, MatCheckbox } from "@angular/material/checkbox";
-import { MatSort, Sort, MatSortHeader } from "@angular/material/sort";
-import { MatTableDataSource, MatCell, MatRow, MatColumnDef, MatHeaderCell, MatTable } from "@angular/material/table";
-import { ENTER, SPACE, UP_ARROW, DOWN_ARROW } from "@angular/cdk/keycodes";
-import { SelectionModel } from "@angular/cdk/collections";
-import { CollectionViewer, DataSource } from "@angular/cdk/collections";
-import { FocusableOption, FocusKeyManager } from "@angular/cdk/a11y";
+} from '@angular/core';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
+import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Location, DOCUMENT } from '@angular/common';
+import { MatCheckboxChange, MatCheckbox } from '@angular/material/checkbox';
+import { MatSort, Sort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatCell, MatRow, MatColumnDef, MatHeaderCell, MatTable } from '@angular/material/table';
+import { ENTER, SPACE, UP_ARROW, DOWN_ARROW } from '@angular/cdk/keycodes';
+import { SelectionModel } from '@angular/cdk/collections';
+import { CollectionViewer, DataSource } from '@angular/cdk/collections';
+import { FocusableOption, FocusKeyManager } from '@angular/cdk/a11y';
 
-import { Subscription } from "rxjs";
+import { Subscription } from 'rxjs';
 import {
   // UP_ARROW,
   // DOWN_ARROW,
@@ -45,8 +45,8 @@ import {
   Z,
   ZERO,
   NINE,
-} from "@angular/cdk/keycodes";
-import { CdkColumnDef } from "@angular/cdk/table";
+} from '@angular/cdk/keycodes';
+import { CdkColumnDef } from '@angular/cdk/table';
 
 export interface IFocusableCell {
   rowIndex: number;
@@ -55,11 +55,11 @@ export interface IFocusableCell {
 }
 
 @Directive({
-  selector: "[app-cell-focuser]",
+  selector: '[app-cell-focuser]',
   host: {
-    "(keydown)": "onKeydown($event)",
+    '(keydown)': 'onKeydown($event)',
   },
-  exportAs: "cellFocuser",
+  exportAs: 'cellFocuser',
 })
 export class CellFocuser {
   activeCell: IFocusableCell = null;
@@ -150,13 +150,13 @@ export class CellFocuser {
 }
 
 @Directive({
-  selector: "[app-focusable-cell]",
+  selector: '[app-focusable-cell]',
   host: {
-    "[tabIndex]": "cellInTabOrder && isActiveCell ? 0 : -1",
-    "(focus)": "_handleFocus()",
-    "(focusin)": "_handleFocusIn()",
+    '[tabIndex]': 'cellInTabOrder && isActiveCell ? 0 : -1',
+    '(focus)': '_handleFocus()',
+    '(focusin)': '_handleFocusIn()',
   },
-  exportAs: "cell",
+  exportAs: 'cell',
 })
 export class FocusableCell implements IFocusableCell, OnDestroy, OnInit {
   @Input() rowIndex: number;
@@ -168,7 +168,7 @@ export class FocusableCell implements IFocusableCell, OnDestroy, OnInit {
   sortHeaderButton: HTMLButtonElement;
 
   constructor(protected elementRef: ElementRef, @Optional() public cellFocuser: CellFocuser) {
-    if (!cellFocuser) throw Error("FocusableCell not included in CellFocuser");
+    if (!cellFocuser) throw Error('FocusableCell not included in CellFocuser');
 
     this.cellFocuserSub = this.cellFocuser.activeCellChange.subscribe((activeCell) => {
       this.isActiveCell = this == activeCell;
@@ -181,7 +181,7 @@ export class FocusableCell implements IFocusableCell, OnDestroy, OnInit {
   }
 
   ngAfterViewInit() {
-    let buttons = this.elementRef.nativeElement.querySelectorAll("button.mat-sort-header-button");
+    let buttons = this.elementRef.nativeElement.querySelectorAll('button.mat-sort-header-button');
     if (buttons.length == 0) return;
     this.sortHeaderButton = buttons[0];
     this.sortHeaderButton.tabIndex = this.cellFocuser.activeCell == this ? 0 : -1;

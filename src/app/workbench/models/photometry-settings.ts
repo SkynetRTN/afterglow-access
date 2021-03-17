@@ -2,7 +2,7 @@ export interface PhotometrySettings {
   gain: number;
   centroidRadius: number;
   zeroPoint: number;
-  mode: "adaptive" | "constant";
+  mode: 'adaptive' | 'constant';
   //constant
   a: number;
   aIn: number;

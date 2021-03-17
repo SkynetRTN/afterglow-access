@@ -1,7 +1,7 @@
-import { StretchMode } from "./stretch-mode";
-import { ColorMap, COLOR_MAPS } from "./color-map";
-import { ImageHist, calcLevels } from "../../data-files/models/image-hist";
-import { PixelType } from "../../data-files/models/data-file";
+import { StretchMode } from './stretch-mode';
+import { ColorMap, COLOR_MAPS } from './color-map';
+import { ImageHist, calcLevels } from '../../data-files/models/image-hist';
+import { PixelType } from '../../data-files/models/data-file';
 
 export interface PixelNormalizer {
   backgroundPercentile: number;

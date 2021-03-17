@@ -1,4 +1,4 @@
-import { PsfCentroiderSettings, DiskCentroiderSettings } from "./centroider";
+import { PsfCentroiderSettings, DiskCentroiderSettings } from './centroider';
 
 export interface CentroidSettings {
   useDiskCentroiding: boolean;

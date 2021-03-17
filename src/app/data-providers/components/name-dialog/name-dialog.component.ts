@@ -1,14 +1,7 @@
-import {
-  Component,
-  OnInit,
-  Inject,
-  ViewChild,
-  AfterViewInit,
-  ElementRef,
-} from '@angular/core';
-import {MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
-import {FormControl, FormGroup, Validators} from '@angular/forms';
-import {isValidFilename} from '../../../utils/validators';
+import { Component, OnInit, Inject, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { isValidFilename } from '../../../utils/validators';
 
 @Component({
   selector: 'app-name-dialog',
@@ -23,10 +16,7 @@ export class NameDialogComponent implements OnInit, AfterViewInit {
     name: new FormControl('', [Validators.required, isValidFilename()]),
   });
 
-  constructor(
-    private dialogRef: MatDialogRef<NameDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) private data: any
-  ) {
+  constructor(private dialogRef: MatDialogRef<NameDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: any) {
     this.title = data.title;
     this.nameForm.get('name').setValue(data.name);
     this.nameForm.updateValueAndValidity();
@@ -35,9 +25,7 @@ export class NameDialogComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {}
 
   ngAfterViewInit() {
-    setTimeout(() =>
-      (this.nameInput.nativeElement as HTMLInputElement).select()
-    );
+    setTimeout(() => (this.nameInput.nativeElement as HTMLInputElement).select());
   }
 
   save() {

@@ -1,24 +1,24 @@
-import { State, Action, Selector, StateContext, Store } from "@ngxs/store";
-import { Router, UrlSerializer } from "@angular/router";
-import { CookieService } from "ngx-cookie";
-import { tap, catchError, finalize } from "rxjs/operators";
-import { of, config } from "rxjs";
+import { State, Action, Selector, StateContext, Store } from '@ngxs/store';
+import { Router, UrlSerializer } from '@angular/router';
+import { CookieService } from 'ngx-cookie';
+import { tap, catchError, finalize } from 'rxjs/operators';
+import { of, config } from 'rxjs';
 
-import { InitAuth, Login, LoginSuccess, Logout, CheckSession, ResetState } from "./auth.actions";
-import { OAuthClient } from "./models/oauth-client";
-import { CoreUser } from "./models/user";
-import { AuthService } from "./services/auth.service";
-import { env } from "../../environments/environment";
-import { AuthMethod } from "./models/auth-method";
-import { Navigate } from "@ngxs/router-plugin";
-import { AuthGuard } from "./services/auth-guard.service";
+import { InitAuth, Login, LoginSuccess, Logout, CheckSession, ResetState } from './auth.actions';
+import { OAuthClient } from './models/oauth-client';
+import { CoreUser } from './models/user';
+import { AuthService } from './services/auth.service';
+import { env } from '../../environments/environment';
+import { AuthMethod } from './models/auth-method';
+import { Navigate } from '@ngxs/router-plugin';
+import { AuthGuard } from './services/auth-guard.service';
 
-import jwt_decode from "jwt-decode";
+import jwt_decode from 'jwt-decode';
 
-import { HttpParams } from "@angular/common/http";
-import { LocationStrategy } from "@angular/common";
-import { AppState } from "../app.state";
-import { AfterglowConfigService } from "../afterglow-config.service";
+import { HttpParams } from '@angular/common/http';
+import { LocationStrategy } from '@angular/common';
+import { AppState } from '../app.state';
+import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 
 export interface AuthStateModel {
@@ -33,10 +33,10 @@ export interface AuthStateModel {
 }
 
 @State<AuthStateModel>({
-  name: "auth",
+  name: 'auth',
   defaults: {
     loginPending: false,
-    loginError: "",
+    loginError: '',
     user: null,
     loadingOAuthClients: false,
     loadingPermittedOAuthClientIds: false,
@@ -103,8 +103,8 @@ export class AuthState {
   public init(ctx: StateContext<AuthStateModel>, action: InitAuth) {
     //redirect to authorizing page to get user info
     //watch for localstorage changes
-    window.addEventListener("storage", (event: StorageEvent) => {
-      if (["aa_user", "aa_access_token"].includes(event.key)) {
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (['aa_user', 'aa_access_token'].includes(event.key)) {
         let state = ctx.getState();
         if (state.user && this.authGuard.user) {
           if (state.user.id != this.authGuard.user.id) {
@@ -113,12 +113,12 @@ export class AuthState {
             ctx.patchState({
               user: null,
             });
-            ctx.dispatch(new Navigate(["/login"]));
+            ctx.dispatch(new Navigate(['/login']));
           }
         } else if (state.user) {
           //user no longer exists in local storage/cookie
           //login could be in-progress at the oauth authorized endpoint or the login endpoint of the app
-          ctx.dispatch(new Navigate(["/logout"]));
+          ctx.dispatch(new Navigate(['/logout']));
         } else {
           //app state user is logged out
           //local storage/cookie user is not null
@@ -149,32 +149,32 @@ export class AuthState {
 
       ctx.patchState({
         loginPending: false,
-        loginError: "",
+        loginError: '',
         user: this.authGuard.user,
       });
 
-      let nextUrl = localStorage.getItem("nextUrl");
-      localStorage.removeItem("nextUrl");
+      let nextUrl = localStorage.getItem('nextUrl');
+      localStorage.removeItem('nextUrl');
 
-      this.router.navigateByUrl(nextUrl && nextUrl != "" ? nextUrl : "/");
+      this.router.navigateByUrl(nextUrl && nextUrl != '' ? nextUrl : '/');
     } else {
       ctx.patchState({
         loginPending: false,
         user: null,
-        loginError: "We encountered an unexpected error.  Please try again later.",
+        loginError: 'We encountered an unexpected error.  Please try again later.',
       });
     }
   }
 
   @Action(Logout)
   public logout(ctx: StateContext<AuthStateModel>, {}: Logout) {
-    if (this.config.authMethod == "cookie") {
+    if (this.config.authMethod == 'cookie') {
       this.cookieService.remove(this.config.authCookieName);
-    } else if (this.config.authMethod == "oauth2") {
+    } else if (this.config.authMethod == 'oauth2') {
     }
-    localStorage.removeItem("aa_user");
-    localStorage.removeItem("aa_expires_at");
-    localStorage.removeItem("aa_access_token");
+    localStorage.removeItem('aa_user');
+    localStorage.removeItem('aa_expires_at');
+    localStorage.removeItem('aa_access_token');
 
     ctx.dispatch(new ResetState());
     ctx.patchState({ user: null });

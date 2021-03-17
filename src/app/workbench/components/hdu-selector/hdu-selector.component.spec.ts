@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HduSelectorComponent } from "./hdu-selector.component";
+import { HduSelectorComponent } from './hdu-selector.component';
 
-describe("HduSelectorComponent", () => {
+describe('HduSelectorComponent', () => {
   let component: HduSelectorComponent;
   let fixture: ComponentFixture<HduSelectorComponent>;
 
@@ -18,7 +18,7 @@ describe("HduSelectorComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

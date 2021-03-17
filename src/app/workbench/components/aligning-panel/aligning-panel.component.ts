@@ -1,28 +1,28 @@
-import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
-import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
+import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
-import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom } from "rxjs/operators";
-import { FormGroup, FormControl, Validators } from "@angular/forms";
-import { AlignFormData, AligningPanelConfig } from "../../models/workbench-state";
-import { MatSelectChange } from "@angular/material/select";
-import { AlignmentJob, AlignmentJobResult } from "../../../jobs/models/alignment";
-import { Router } from "@angular/router";
-import { Store } from "@ngxs/store";
-import { WorkbenchState } from "../../workbench.state";
-import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile } from "../../workbench.actions";
-import { JobsState } from "../../../jobs/jobs.state";
-import { ImageHdu, DataFile, Header } from "../../../data-files/models/data-file";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { LoadHduHeader } from "../../../data-files/data-files.actions";
+import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom } from 'rxjs/operators';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { AlignFormData, AligningPanelConfig } from '../../models/workbench-state';
+import { MatSelectChange } from '@angular/material/select';
+import { AlignmentJob, AlignmentJobResult } from '../../../jobs/models/alignment';
+import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../workbench.state';
+import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile } from '../../workbench.actions';
+import { JobsState } from '../../../jobs/jobs.state';
+import { ImageHdu, DataFile, Header } from '../../../data-files/models/data-file';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { LoadHduHeader } from '../../../data-files/data-files.actions';
 
 @Component({
-  selector: "app-aligning-panel",
-  templateUrl: "./aligning-panel.component.html",
-  styleUrls: ["./aligning-panel.component.css"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-aligning-panel',
+  templateUrl: './aligning-panel.component.html',
+  styleUrls: ['./aligning-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlignerPageComponent implements OnInit {
-  @Input("hduIds")
+  @Input('hduIds')
   set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
   }
@@ -45,18 +45,15 @@ export class AlignerPageComponent implements OnInit {
 
   alignForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
-    refHduId: new FormControl("", Validators.required),
-    mode: new FormControl("", Validators.required),
-    crop: new FormControl("", Validators.required),
+    refHduId: new FormControl('', Validators.required),
+    mode: new FormControl('', Validators.required),
+    crop: new FormControl('', Validators.required),
   });
 
   constructor(private store: Store, private router: Router) {
     this.config$ = this.store.select(WorkbenchState.getAligningPanelConfig);
 
-    this.hduIds$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.config$)
-    ).subscribe(([hduIds, config]) => {
+    this.hduIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([hduIds, config]) => {
       if (!hduIds || !config) return;
       let selectedHduIds = config.alignFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
       if (selectedHduIds.length != config.alignFormData.selectedHduIds.length) {
@@ -129,7 +126,10 @@ export class AlignerPageComponent implements OnInit {
       // }
     });
 
-    this.alignmentJob$ = combineLatest(store.select(WorkbenchState.getState), store.select(JobsState.getJobEntities)).pipe(
+    this.alignmentJob$ = combineLatest(
+      store.select(WorkbenchState.getState),
+      store.select(JobsState.getJobEntities)
+    ).pipe(
       map(([state, jobEntities]) => {
         if (
           !state.aligningPanelConfig.currentAlignmentJobId ||
@@ -143,7 +143,7 @@ export class AlignerPageComponent implements OnInit {
     );
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -152,9 +152,9 @@ export class AlignerPageComponent implements OnInit {
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById).pipe(
-      map(fn => fn(hduId)?.name),
-      distinctUntilChanged(),
-    )
+      map((fn) => fn(hduId)?.name),
+      distinctUntilChanged()
+    );
   }
 
   setSelectedHduIds(hduIds: string[]) {

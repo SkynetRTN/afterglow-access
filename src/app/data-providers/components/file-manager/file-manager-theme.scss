@@ -7,7 +7,7 @@
 
   app-file-manager {
     .wrapper {
-      background-color: mat-color($background, "app-bar");
+      background-color: mat-color($background, 'app-bar');
       border: 1px solid mat-color($foreground, divider);
     }
 
@@ -18,7 +18,7 @@
 
     .path {
       border: 1px solid mat-color($foreground, divider);
-      background: mat-color($background, "card");
+      background: mat-color($background, 'card');
       min-height: 50px;
     }
 
@@ -34,7 +34,7 @@
     .path .path-item:after {
       border-style: solid;
       border-width: 0.1em 0.1em 0 0;
-      content: "";
+      content: '';
       display: inline-block;
       height: 0.45em;
       left: 0.15em;
@@ -78,8 +78,6 @@
       user-select: none;
     }
 
-    
-
     tr.mat-header-row {
       height: 40px;
     }
@@ -117,7 +115,7 @@
 
     tr {
       cursor: default;
-      background-color: mat-color($background, "app-bar") !important;
+      background-color: mat-color($background, 'app-bar') !important;
 
       &.selected td {
         background: mat-color($primary);
@@ -129,10 +127,8 @@
       }
 
       &:hover td {
-        background: mat-color($background, "hover");
+        background: mat-color($background, 'hover');
       }
     }
-
-    
   }
 }

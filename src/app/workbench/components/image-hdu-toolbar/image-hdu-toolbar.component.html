@@ -1,30 +1,57 @@
 <div fxFlex="0 0 auto">
-  <button *ngIf="showVisibility" class="small m-1" (click)="$event.stopPropagation(); onVisibilityChange.emit(!visible)"
-    mat-icon-button aria-label="Toggle layer visibility">
-    <mat-icon>{{ visible ? "visibility" : "visibility_off" }}</mat-icon>
+  <button
+    *ngIf="showVisibility"
+    class="small m-1"
+    (click)="$event.stopPropagation(); onVisibilityChange.emit(!visible)"
+    mat-icon-button
+    aria-label="Toggle layer visibility"
+  >
+    <mat-icon>{{ visible ? 'visibility' : 'visibility_off' }}</mat-icon>
   </button>
 </div>
 <div fxFlex="0 0 auto">
-  <button #colorMapMenuTrigger="matMenuTrigger" *ngIf="showColorMap" class="small m-1" mat-icon-button
-    [matMenuTriggerFor]="colorMapMenu" aria-label="colorMap menu"
-    (click)="$event.stopPropagation(); colorMapMenuTrigger.openMenu()">
+  <button
+    #colorMapMenuTrigger="matMenuTrigger"
+    *ngIf="showColorMap"
+    class="small m-1"
+    mat-icon-button
+    [matMenuTriggerFor]="colorMapMenu"
+    aria-label="colorMap menu"
+    (click)="$event.stopPropagation(); colorMapMenuTrigger.openMenu()"
+  >
     <mat-icon>palette</mat-icon>
   </button>
   <mat-menu #colorMapMenu="matMenu">
-    <label mat-menu-item role="menuitemradio" *ngFor="let cm of colorMaps" [class.selected]="cm.name == colorMapName"
-      (click)="onColorMapChange.emit(cm.name)">{{ cm.name }}
+    <label
+      mat-menu-item
+      role="menuitemradio"
+      *ngFor="let cm of colorMaps"
+      [class.selected]="cm.name == colorMapName"
+      (click)="onColorMapChange.emit(cm.name)"
+      >{{ cm.name }}
     </label>
   </mat-menu>
 </div>
 <div fxFlex="0 0 auto">
-  <button #blendModeMenuTrigger="matMenuTrigger" *ngIf="showBlendMode" class="small m-1" mat-icon-button
-    [matMenuTriggerFor]="blendModeMenu" aria-label="blendMode menu"
-    (click)="$event.stopPropagation(); blendModeMenuTrigger.openMenu()">
+  <button
+    #blendModeMenuTrigger="matMenuTrigger"
+    *ngIf="showBlendMode"
+    class="small m-1"
+    mat-icon-button
+    [matMenuTriggerFor]="blendModeMenu"
+    aria-label="blendMode menu"
+    (click)="$event.stopPropagation(); blendModeMenuTrigger.openMenu()"
+  >
     <mat-icon>layers</mat-icon>
   </button>
   <mat-menu #blendModeMenu="matMenu">
-    <label mat-menu-item role="menuitemradio" *ngFor="let bm of blendModeOptions"
-      [class.selected]="bm.value == blendMode" (click)="onBlendModeChange.emit(bm.value)">{{ bm.label }}
+    <label
+      mat-menu-item
+      role="menuitemradio"
+      *ngFor="let bm of blendModeOptions"
+      [class.selected]="bm.value == blendMode"
+      (click)="onBlendModeChange.emit(bm.value)"
+      >{{ bm.label }}
     </label>
   </mat-menu>
 </div>

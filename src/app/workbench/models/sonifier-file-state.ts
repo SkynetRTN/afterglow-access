@@ -1,4 +1,4 @@
-import { Region } from "../../data-files/models/region";
+import { Region } from '../../data-files/models/region';
 import { SonificationJob } from '../../jobs/models/sonification';
 
 export enum SonifierRegionMode {

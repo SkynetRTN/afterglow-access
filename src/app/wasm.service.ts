@@ -1,10 +1,10 @@
-import { Injectable } from "@angular/core";
-import { Observable, BehaviorSubject } from "rxjs";
+import { Injectable } from '@angular/core';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 // set Module.locateFile in index.html
 // @ts-ignore
-import * as Module from "../wasm/wcs.js";
-import "!!file-loader?name=wasm/wcslib.wasm!../wasm/wcslib.wasm";
+import * as Module from '../wasm/wcs.js';
+import '!!file-loader?name=wasm/wcslib.wasm!../wasm/wcslib.wasm';
 
 let WcsModule: any;
 
@@ -13,7 +13,7 @@ export class WasmService {
   wasmReady$ = new BehaviorSubject<boolean>(false);
 
   constructor() {
-    this.instantiateWasm("wasm/wcslib.wasm");
+    this.instantiateWasm('wasm/wcslib.wasm');
   }
 
   private async instantiateWasm(url: string) {
@@ -39,12 +39,12 @@ export class WasmService {
 }
 
 const wcsRegEx = [
-  "DATE-OBS",
-  "EQUINOX",
-  "WCSAXES",
-  "RADESYS",
-  "LONPOLE",
-  "LATPOLE",
+  'DATE-OBS',
+  'EQUINOX',
+  'WCSAXES',
+  'RADESYS',
+  'LONPOLE',
+  'LATPOLE',
   /NAXIS\d*/,
   /CTYPE\d+/,
   /CRPIX\d+/,
@@ -72,23 +72,23 @@ export class WcsLib {
   isValid: any;
 
   constructor(header: any) {
-    this._getWCS = WcsModule.cwrap("getWcs", "number", ["String", "number"]);
+    this._getWCS = WcsModule.cwrap('getWcs', 'number', ['String', 'number']);
 
-    this._hasCelestial = WcsModule.cwrap("hasCelestial", "number", ["number"]);
+    this._hasCelestial = WcsModule.cwrap('hasCelestial', 'number', ['number']);
 
-    this._pix2sky = WcsModule.cwrap("pix2sky", "number", ["number", "number", "number", "number"]);
+    this._pix2sky = WcsModule.cwrap('pix2sky', 'number', ['number', 'number', 'number', 'number']);
 
-    this._sky2pix = WcsModule.cwrap("sky2pix", "number", ["number", "number", "number", "number"]);
+    this._sky2pix = WcsModule.cwrap('sky2pix', 'number', ['number', 'number', 'number', 'number']);
 
     var headerStr, nkeyrec, nHeaderBytes, headerPtr, headerHeap;
 
-    if (typeof header === "object") {
+    if (typeof header === 'object') {
       header = this.toHeader(header);
     }
 
     // Split the string into an array and filter based on the WCS regular expressions
     var headerArray: any[] = header.match(/.{1,80}/g);
-    headerArray = headerArray.filter(line => {
+    headerArray = headerArray.filter((line) => {
       // Extract the keyword
       var keyword = line.slice(0, 8).trim();
 
@@ -101,7 +101,7 @@ export class WcsLib {
 
       return false;
     });
-    headerStr = headerArray.join("\n");
+    headerStr = headerArray.join('\n');
 
     nkeyrec = headerArray.length;
     header = this.string2buffer(headerStr);
@@ -137,7 +137,7 @@ export class WcsLib {
 
   private toHeader(wcsObj: any) {
     let header = [];
-    let line = "                                                                                ";
+    let line = '                                                                                ';
 
     for (let card in wcsObj) {
       let value = wcsObj[card];
@@ -145,33 +145,33 @@ export class WcsLib {
         continue;
       }
 
-      if (typeof value === "string" && value !== "T" && value !== "F") {
+      if (typeof value === 'string' && value !== 'T' && value !== 'F') {
         value = "'" + value + "'";
       }
 
       let entry = this.splice(line, 0, card.length, card);
-      entry = this.splice(entry, 8, 1, "=");
+      entry = this.splice(entry, 8, 1, '=');
       entry = this.splice(entry, 10, value.toString().length, value);
 
       header.push(entry);
     }
 
-    return header.join("\n");
+    return header.join('\n');
   }
 
   public pix2sky(x: number, y: number) {
     const retVal = this._pix2sky(this.wcsPtr, x, y, this.coordinatePtr);
     const world = new Float64Array(WcsModule.HEAPF64.buffer, this.coordinatePtr, 2);
     return new Float64Array(world);
-  };
+  }
 
   public hasCelestial() {
     return this._hasCelestial(this.wcsPtr);
-  };
+  }
 
   public sky2pix(ra: number, dec: number) {
     this._sky2pix(this.wcsPtr, ra, dec, this.coordinatePtr);
     const pixcrd = new Float64Array(WcsModule.HEAPU8.buffer, this.coordinatePtr, 2);
     return pixcrd.slice(0);
-  };
+  }
 }

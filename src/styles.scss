@@ -1,6 +1,5 @@
-
-@import "~@angular/material/theming";
-@import "./app-theme";
+@import '~@angular/material/theming';
+@import './app-theme';
 
 @include mat-core();
 
@@ -49,7 +48,7 @@ $foreground: map_merge(
   $foreground,
   (
     text: $dark-hc-text,
-    "secondary-text": $dark-hc-text,
+    'secondary-text': $dark-hc-text,
     icon: $dark-hc-icons,
   )
 );
@@ -97,10 +96,8 @@ $dark-hc-theme: map_merge(
   }
 }
 
-
-
-$fa-font-path: "~font-awesome/fonts";
-@import "~font-awesome/scss/font-awesome";
+$fa-font-path: '~font-awesome/fonts';
+@import '~font-awesome/scss/font-awesome';
 .icon-user {
   @extend .fa;
   @extend .fa-user;
@@ -108,10 +105,9 @@ $fa-font-path: "~font-awesome/fonts";
 
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 $custom-typography: mat-typography-config(
-  $font-family: 'Roboto'
+  $font-family: 'Roboto',
 );
 @include angular-material-typography($custom-typography);
-
 
 body {
   font-family: Roboto, Arial, sans-serif;
@@ -119,7 +115,7 @@ body {
 
 .mono {
   // font-family: 'Anonymous Pro', monospace;
-  font-family: "Roboto Mono", monospace;
+  font-family: 'Roboto Mono', monospace;
 }
 
 html,
@@ -150,7 +146,6 @@ th {
   outline: none;
   flex-direction: row;
 }
-
 
 /* fix bootstrap underlining and applying color to button font */
 a.mat-button {
@@ -212,7 +207,6 @@ label.mat-button-toggle-label {
 .dx-drawer-panel-content.dx-drawer-panel-content-initial {
   display: none !important;
 }
-
 
 /* Photometry Data Tooltips */
 .photometry-data-tooltip {

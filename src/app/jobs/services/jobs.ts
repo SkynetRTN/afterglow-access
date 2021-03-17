@@ -1,12 +1,12 @@
-import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { map, tap } from "rxjs/operators";
-import { Job } from "../models/job";
-import { JobStateBase } from "../models/job-base";
-import { JobResult } from "../models/job-result";
-import { getCoreApiUrl } from "../../afterglow-config";
-import { AfterglowConfigService } from "../../afterglow-config.service";
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { Job } from '../models/job';
+import { JobStateBase } from '../models/job-base';
+import { JobResult } from '../models/job-result';
+import { getCoreApiUrl } from '../../afterglow-config';
+import { AfterglowConfigService } from '../../afterglow-config.service';
 
 @Injectable()
 export class JobService {
@@ -36,7 +36,7 @@ export class JobService {
 
   getJobResultFile(jobId: string, fileId: string): Observable<any> {
     return this.http.get(`${getCoreApiUrl(this.config)}/jobs/${jobId}/result/files/${fileId}`, {
-      responseType: "blob",
+      responseType: 'blob',
     });
   }
 }

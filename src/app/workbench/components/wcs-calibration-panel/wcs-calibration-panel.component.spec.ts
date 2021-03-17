@@ -8,9 +8,8 @@ describe('WcsCalibrationPanelComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ WcsCalibrationPanelComponent ]
-    })
-    .compileComponents();
+      declarations: [WcsCalibrationPanelComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {

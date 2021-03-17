@@ -1,20 +1,20 @@
-import { Component, OnInit, Inject, ViewChild, OnDestroy, AfterViewInit, ElementRef } from "@angular/core";
-import { ImportAssets, ImportAssetsCompleted } from "../../data-providers.actions";
-import { Store, Actions, ofActionCompleted } from "@ngxs/store";
-import { Observable, Subject, BehaviorSubject, combineLatest } from "rxjs";
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { map, distinctUntilChanged, tap, take, takeUntil, withLatestFrom } from "rxjs/operators";
-import { LoadLibrary } from "../../../data-files/data-files.actions";
-import { SelectFile } from "../../../workbench/workbench.actions";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { DataProviderAsset } from "../../models/data-provider-asset";
-import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
-import { DataProvidersModule } from "../../data-providers.module";
-import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
-import { DataProvider } from "../../models/data-provider";
-import { FormControl, Validators } from "@angular/forms";
-import { HttpErrorResponse } from "@angular/common/http";
-import { FileSystemItem, FileManagerComponent } from "../file-manager/file-manager.component";
+import { Component, OnInit, Inject, ViewChild, OnDestroy, AfterViewInit, ElementRef } from '@angular/core';
+import { ImportAssets, ImportAssetsCompleted } from '../../data-providers.actions';
+import { Store, Actions, ofActionCompleted } from '@ngxs/store';
+import { Observable, Subject, BehaviorSubject, combineLatest } from 'rxjs';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { map, distinctUntilChanged, tap, take, takeUntil, withLatestFrom } from 'rxjs/operators';
+import { LoadLibrary } from '../../../data-files/data-files.actions';
+import { SelectFile } from '../../../workbench/workbench.actions';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { DataProviderAsset } from '../../models/data-provider-asset';
+import { AfterglowDataProviderService } from '../../../workbench/services/afterglow-data-providers';
+import { DataProvidersModule } from '../../data-providers.module';
+import { DataProvidersState, DataProviderPath } from '../../data-providers.state';
+import { DataProvider } from '../../models/data-provider';
+import { FormControl, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FileSystemItem, FileManagerComponent } from '../file-manager/file-manager.component';
 
 export interface SaveDialogResult {
   dataProviderId: string;
@@ -22,9 +22,9 @@ export interface SaveDialogResult {
 }
 
 @Component({
-  selector: "app-save-dialog",
-  templateUrl: "./save-dialog.component.html",
-  styleUrls: ["./save-dialog.component.scss"],
+  selector: 'app-save-dialog',
+  templateUrl: './save-dialog.component.html',
+  styleUrls: ['./save-dialog.component.scss'],
 })
 export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedAssets$ = new Subject<FileSystemItem[]>();
@@ -33,9 +33,9 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   destinationValid$: Observable<boolean>;
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  @ViewChild("nameInput") nameInput: ElementRef;
-  @ViewChild("fileManager") fileManager: FileManagerComponent;
-  nameFormControl = new FormControl("", [Validators.required, Validators.pattern(/^[\w\-. ]+/)]);
+  @ViewChild('nameInput') nameInput: ElementRef;
+  @ViewChild('fileManager') fileManager: FileManagerComponent;
+  nameFormControl = new FormControl('', [Validators.required, Validators.pattern(/^[\w\-. ]+/)]);
   lastPath$: Observable<DataProviderPath>;
 
   constructor(
@@ -66,7 +66,7 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.onSaveClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.currentDirectory$)).subscribe(([v, cwd]) => {
       let currentDataProvider = cwd.dataProvider;
-      let parentAssetPath = cwd.asset ? cwd.asset.assetPath : "";
+      let parentAssetPath = cwd.asset ? cwd.asset.assetPath : '';
       this.saveAs(currentDataProvider.id, `${parentAssetPath}/${this.nameFormControl.value}`);
     });
   }

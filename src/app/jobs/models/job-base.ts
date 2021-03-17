@@ -1,7 +1,7 @@
-import { JobType } from "./job-types";
+import { JobType } from './job-types';
 
 export interface JobStateBase {
-  status: "pending" | "in_progress" | "canceled" | "completed";
+  status: 'pending' | 'in_progress' | 'canceled' | 'completed';
   createdOn: Date;
   completedOn: Date;
   progress: number;

@@ -1,26 +1,35 @@
-import { Component, OnInit, OnChanges, Input, Output, EventEmitter, ChangeDetectionStrategy, OnDestroy } from "@angular/core";
-import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
-import { Subject, timer, BehaviorSubject } from "rxjs";
-import { MatDialog } from "@angular/material/dialog";
-import { takeUntil } from "rxjs/operators";
-import { Store } from "@ngxs/store";
-import { CloseDataFile, ZoomTo } from "../../../data-files/data-files.actions";
-import { getPixel, IImageData } from "../../../data-files/models/image-data";
-import { DataFilesState } from "../../../data-files/data-files.state";
+import {
+  Component,
+  OnInit,
+  OnChanges,
+  Input,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy,
+  OnDestroy,
+} from '@angular/core';
+import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
+import { Subject, timer, BehaviorSubject } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { takeUntil } from 'rxjs/operators';
+import { Store } from '@ngxs/store';
+import { CloseDataFile, ZoomTo } from '../../../data-files/data-files.actions';
+import { getPixel, IImageData } from '../../../data-files/models/image-data';
+import { DataFilesState } from '../../../data-files/data-files.state';
 import {
   MoveByEvent,
   ZoomByEvent,
   LoadTileEvent,
   ZoomToEvent,
   ZoomToFitEvent,
-} from "../pan-zoom-canvas/pan-zoom-canvas.component";
-import { Wcs } from "../../../image-tools/wcs";
+} from '../pan-zoom-canvas/pan-zoom-canvas.component';
+import { Wcs } from '../../../image-tools/wcs';
 
 @Component({
-  selector: "app-image-viewer-status-bar",
-  templateUrl: "./image-viewer-status-bar.component.html",
-  styleUrls: ["./image-viewer-status-bar.component.css"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-image-viewer-status-bar',
+  templateUrl: './image-viewer-status-bar.component.html',
+  styleUrls: ['./image-viewer-status-bar.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rawImageData: IImageData<PixelType>;
@@ -28,7 +37,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
   @Input() wcs: Wcs;
   @Input() imageMouseX: number;
   @Input() imageMouseY: number;
-  @Input("hasFocus")
+  @Input('hasFocus')
   set hasFocus(hasFocus: boolean) {
     this.hasFocus$.next(hasFocus);
   }
@@ -58,11 +67,9 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
   private startZoomOut$ = new Subject<boolean>();
   private stopZoomOut$ = new Subject<boolean>();
 
-  constructor(private store: Store, private dialog: MatDialog) {
-  }
+  constructor(private store: Store, private dialog: MatDialog) {}
 
-  ngOnDestroy() {
-  }
+  ngOnDestroy() {}
 
   ngOnInit() {}
 

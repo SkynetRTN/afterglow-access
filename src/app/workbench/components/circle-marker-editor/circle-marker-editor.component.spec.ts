@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CircleMarkerEditorComponent } from "./circle-marker-editor.component";
+import { CircleMarkerEditorComponent } from './circle-marker-editor.component';
 
-describe("CircleMarkerEditorComponent", () => {
+describe('CircleMarkerEditorComponent', () => {
   let component: CircleMarkerEditorComponent;
   let fixture: ComponentFixture<CircleMarkerEditorComponent>;
 
@@ -18,7 +18,7 @@ describe("CircleMarkerEditorComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

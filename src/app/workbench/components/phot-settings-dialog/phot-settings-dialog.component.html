@@ -1,13 +1,17 @@
 <h2 mat-dialog-title>Photometry Settings</h2>
 <mat-dialog-content>
-  <mat-button-toggle-group class="mb-4" name="mode" aria-label="Photometry Mode"
-    [(ngModel)]="settings && settings.mode">
+  <mat-button-toggle-group
+    class="mb-4"
+    name="mode"
+    aria-label="Photometry Mode"
+    [(ngModel)]="settings && settings.mode"
+  >
     <mat-button-toggle value="adaptive">Adaptive Aperture</mat-button-toggle>
     <mat-button-toggle value="constant">Constant Aperture</mat-button-toggle>
   </mat-button-toggle-group>
 
   <form *ngIf="settings.mode == 'adaptive'" [formGroup]="adaptiveApertureForm">
-    <div fxLayout="column" style="width: 100%;" class="form-wrapper">
+    <div fxLayout="column" style="width: 100%" class="form-wrapper">
       <div fxFlex="1 1 auto" fxLayout="row">
         <div class="form-field-wrapper">
           <mat-form-field>
@@ -32,7 +36,6 @@
           </mat-form-field>
           <app-print-form-error [control]="adaptiveApertureForm.get('gain')"></app-print-form-error>
         </div>
-
       </div>
 
       <div fxFlex="1 1 auto" fxLayout="row">
@@ -59,13 +62,12 @@
           </mat-form-field>
           <app-print-form-error [control]="adaptiveApertureForm.get('aOutKrFactor')"></app-print-form-error>
         </div>
-
       </div>
     </div>
   </form>
 
   <form *ngIf="settings.mode == 'constant'" [formGroup]="constantApertureForm">
-    <div fxLayout="column" style="width: 100%;" class="form-wrapper">
+    <div fxLayout="column" style="width: 100%" class="form-wrapper">
       <div fxFlex="1 1 auto" fxLayout="row">
         <div class="form-field-wrapper">
           <mat-form-field>
@@ -88,8 +90,6 @@
           </mat-form-field>
           <app-print-form-error [control]="constantApertureForm.get('gain')"></app-print-form-error>
         </div>
-
-
       </div>
 
       <div fxFlex="1 1 auto" fxLayout="row">
@@ -114,13 +114,11 @@
           </mat-form-field>
           <app-print-form-error [control]="constantApertureForm.get('aOut')"></app-print-form-error>
         </div>
-
       </div>
 
-      <div fxFlex="1 1 auto" fxLayout="column" style="margin-top: 0px; margin-bottom: 0px;" class="form-wrapper">
-        <div fxFlex="1 1 auto" fxLayout="row" style="margin-bottom: 15px; margin-left: 20px;">
+      <div fxFlex="1 1 auto" fxLayout="column" style="margin-top: 0px; margin-bottom: 0px" class="form-wrapper">
+        <div fxFlex="1 1 auto" fxLayout="row" style="margin-bottom: 15px; margin-left: 20px">
           <mat-checkbox formControlName="elliptical">Use elliptical aperture</mat-checkbox>
-
         </div>
         <div fxFlex="1 1 auto" fxLayout="row">
           <div class="form-field-wrapper">
@@ -158,10 +156,15 @@
       </div>
     </div>
   </form>
-
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-raised-button mat-dialog-close i18n>Cancel</button>
-  <button mat-raised-button [mat-dialog-close]="settings" i18n
-    [disabled]="settings.mode == 'constant' ? constantApertureForm.invalid : adaptiveApertureForm.invalid">Save</button>
+  <button
+    mat-raised-button
+    [mat-dialog-close]="settings"
+    i18n
+    [disabled]="settings.mode == 'constant' ? constantApertureForm.invalid : adaptiveApertureForm.invalid"
+  >
+    Save
+  </button>
 </mat-dialog-actions>

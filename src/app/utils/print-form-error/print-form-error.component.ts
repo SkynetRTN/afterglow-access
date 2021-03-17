@@ -3,15 +3,13 @@ import { Component, Input, OnInit } from '@angular/core';
 @Component({
   selector: 'app-print-form-error',
   templateUrl: './print-form-error.component.html',
-  styleUrls: ['./print-form-error.component.scss']
+  styleUrls: ['./print-form-error.component.scss'],
 })
 export class PrintFormErrorComponent implements OnInit {
-  @Input("control")
+  @Input('control')
   control: any;
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit(): void {
-  }
-
+  ngOnInit(): void {}
 }

@@ -1,5 +1,5 @@
-import { Component, OnInit, Inject } from "@angular/core";
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
+import { Component, OnInit, Inject } from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 export interface AlertDialogConfig {
   title: string;
@@ -13,9 +13,9 @@ export interface AlertDialogConfig {
 }
 
 @Component({
-  selector: "app-alert-dialog",
-  templateUrl: "./alert-dialog.component.html",
-  styleUrls: ["./alert-dialog.component.scss"],
+  selector: 'app-alert-dialog',
+  templateUrl: './alert-dialog.component.html',
+  styleUrls: ['./alert-dialog.component.scss'],
 })
 export class AlertDialogComponent implements OnInit {
   config: AlertDialogConfig;
@@ -25,14 +25,14 @@ export class AlertDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: Partial<AlertDialogConfig>
   ) {
     this.config = {
-      title: "Confirm",
-      message: "",
-      description: "",
+      title: 'Confirm',
+      message: '',
+      description: '',
       buttons: [
         {
           color: null,
           value: false,
-          label: "Close",
+          label: 'Close',
         },
       ],
       ...data,

@@ -13,39 +13,24 @@
       class="small toggle-button"
     >
       <mat-icon class="mat-icon-rtl-mirror">
-        {{ expanded ? "expand_more" : "chevron_right" }}
+        {{ expanded ? 'expand_more' : 'chevron_right' }}
       </mat-icon>
     </button>
   </div>
 
-  <div
-    *ngIf="hdu$ | async; let hdu"
-    fxFlex="0 0 auto"
-    style="padding-right: 5px"
-  >
+  <div *ngIf="hdu$ | async; let hdu" fxFlex="0 0 auto" style="padding-right: 5px">
     <mat-icon class="mat-icon small">
-      {{ hdu?.hduType == HduType.IMAGE ? "insert_photo" : "toc" }}
+      {{ hdu?.hduType == HduType.IMAGE ? 'insert_photo' : 'toc' }}
     </mat-icon>
   </div>
 
-  <div
-    fxFlex="1 1 auto"
-    style="
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      padding-right: 15px;
-    "
-  >
+  <div fxFlex="1 1 auto" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 15px">
     <span [matTooltip]="tooltip$ | async" [matTooltipShowDelay]="750">
       {{ label$ | async }}
     </span>
   </div>
 
-  <span
-    *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect"
-    class="node-toolbar"
-  >
+  <span *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect" class="node-toolbar">
     <app-file-toolbar
       *ngIf="showFileToolbar"
       style="height: 100%"
@@ -61,37 +46,26 @@
     </app-file-toolbar>
     <ng-container *ngIf="imageHdu$ | async; let hdu">
       <app-image-hdu-toolbar
-      *ngIf="showImageHduLayerToolbar"
-      style="height: 100%"
-      fxFlex="0 0 auto"
-      fxLayout="row"
-      fxLayoutAlign="center center"
-      [showVisibility]="true"
-      [visible]="hdu.visible"
-      [showColorMap]="true"
-      [colorMapName]="hdu?.normalizer?.colorMapName"
-      [showBlendMode]="true"
-      [blendMode]="hdu.blendMode"
-      (onVisibilityChange)="handleVisibilityChange(hdu.id, $event)"
-      (onColorMapChange)="handleColorMapChange(hdu.id, $event)"
-      (onBlendModeChange)="handleBlendModeChange(hdu.id, $event)"
-    >
-    </app-image-hdu-toolbar>
+        *ngIf="showImageHduLayerToolbar"
+        style="height: 100%"
+        fxFlex="0 0 auto"
+        fxLayout="row"
+        fxLayoutAlign="center center"
+        [showVisibility]="true"
+        [visible]="hdu.visible"
+        [showColorMap]="true"
+        [colorMapName]="hdu?.normalizer?.colorMapName"
+        [showBlendMode]="true"
+        [blendMode]="hdu.blendMode"
+        (onVisibilityChange)="handleVisibilityChange(hdu.id, $event)"
+        (onColorMapChange)="handleColorMapChange(hdu.id, $event)"
+        (onBlendModeChange)="handleBlendModeChange(hdu.id, $event)"
+      >
+      </app-image-hdu-toolbar>
     </ng-container>
-   
-    <div
-      *ngIf="showSelect"
-      style="height: 100%"
-      fxFlex="0 0 auto"
-      fxLayout="row"
-      fxLayoutAlign="center center"
-    >
-      <mat-checkbox
-        #checkbox
-        class="m-1"
-        [ngModel]="selected"
-        (click)="handleToggleSelection($event)"
-      ></mat-checkbox>
+
+    <div *ngIf="showSelect" style="height: 100%" fxFlex="0 0 auto" fxLayout="row" fxLayoutAlign="center center">
+      <mat-checkbox #checkbox class="m-1" [ngModel]="selected" (click)="handleToggleSelection($event)"></mat-checkbox>
     </div>
   </span>
 </div>

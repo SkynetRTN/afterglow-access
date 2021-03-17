@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PhotometryPageComponent } from "./photometry-panel.component";
+import { PhotometryPageComponent } from './photometry-panel.component';
 
-describe("SourceExtractorPageComponent", () => {
+describe('SourceExtractorPageComponent', () => {
   let component: PhotometryPageComponent;
   let fixture: ComponentFixture<PhotometryPageComponent>;
 
@@ -18,7 +18,7 @@ describe("SourceExtractorPageComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

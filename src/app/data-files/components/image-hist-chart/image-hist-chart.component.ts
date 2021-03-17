@@ -1,19 +1,19 @@
-import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from "@angular/core";
+import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
 
-import { ImageHist, getBinCenter, calcLevels } from "../../models/image-hist";
-import { ThemePicker } from "../../../theme-picker";
-import { ThemeStorage, PlotlyTheme } from "../../../theme-picker/theme-storage/theme-storage";
-import { MatCheckboxChange } from "@angular/material/checkbox";
+import { ImageHist, getBinCenter, calcLevels } from '../../models/image-hist';
+import { ThemePicker } from '../../../theme-picker';
+import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
-  selector: "app-image-hist-chart",
+  selector: 'app-image-hist-chart',
   // template:
   //   '<nvd3 id="hist-chart" class="" [options]="chartOptions" [data]="chartData"></nvd3>',
-  templateUrl: "./image-hist-chart.html",
-  styleUrls: ["./image-hist-chart.component.scss"],
+  templateUrl: './image-hist-chart.html',
+  styleUrls: ['./image-hist-chart.component.scss'],
 })
 export class ImageHistChartComponent implements OnInit, OnChanges {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
@@ -50,7 +50,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   public theme: PlotlyTheme;
 
   public logXButton = {
-    name: "Toggle Log-X",
+    name: 'Toggle Log-X',
     click: () => {
       this.logarithmicX = !this.logarithmicX;
       this.updateChart();
@@ -60,12 +60,12 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       width: 24,
       height: 24,
       path:
-        "M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z",
+        'M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z',
     },
   };
 
   public logYButton = {
-    name: "Toggle Log-Y",
+    name: 'Toggle Log-Y',
     click: () => {
       this.logarithmicY = !this.logarithmicY;
       this.updateChart();
@@ -75,8 +75,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       width: 24,
       height: 24,
       path:
-        "M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z",
-      transform: "rotate(90 12 12)",
+        'M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z',
+      transform: 'rotate(90 12 12)',
     },
   };
 
@@ -87,7 +87,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     displaylogo: false,
     modeBarButtons: [
       [this.logXButton, this.logYButton],
-      ["toImage", "zoomIn2d", "zoomOut2d", "autoScale2d"],
+      ['toImage', 'zoomIn2d', 'zoomOut2d', 'autoScale2d'],
     ],
   };
 
@@ -200,7 +200,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   }
 
   updateChart() {
-    if(!this.hist || !this.hist.loaded || !this.hist.data) return;
+    if (!this.hist || !this.hist.loaded || !this.hist.data) return;
 
     let x = [];
     let y = [];
@@ -217,7 +217,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
           x: x,
           y: y,
           // fill: "tozeroy",
-          type: "scatter",
+          type: 'scatter',
           // mode: "none"
         },
       ];
@@ -235,36 +235,36 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       ...this.layout,
       xaxis: {
         ...this.layout.xaxis,
-        type: this.logarithmicX ? "log" : "linear",
+        type: this.logarithmicX ? 'log' : 'linear',
       },
       yaxis: {
         ...this.layout.yaxis,
-        type: this.logarithmicY ? "log" : "linear",
+        type: this.logarithmicY ? 'log' : 'linear',
       },
       shapes: [
         // Line Vertical
         {
-          type: "line",
+          type: 'line',
           x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
           y0: 1,
           x1: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
           y1: this.yMax,
           line: {
-            color: "red",
+            color: 'red',
             width: 2,
-            dash: "dot",
+            dash: 'dot',
           },
         },
         {
-          type: "line",
+          type: 'line',
           x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
           y0: 1,
           x1: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
           y1: this.yMax,
           line: {
-            color: "red",
+            color: 'red',
             width: 2,
-            dash: "dot",
+            dash: 'dot',
           },
         },
       ],

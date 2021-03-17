@@ -7,14 +7,14 @@ import {
   ChangeDetectorRef,
   IterableDiffers,
   KeyValueDiffers,
-} from "@angular/core";
+} from '@angular/core';
 // import { PlotComponent as AngularPlotlyPlotComponent, PlotlyService } from 'angular-plotly.js';
-import { PlotlyTheme } from "../../theme-picker/theme-storage/theme-storage";
-import * as deepmerge from "deepmerge";
-import { PlotlyService, PlotlyComponent } from "angular-plotly.js";
+import { PlotlyTheme } from '../../theme-picker/theme-storage/theme-storage';
+import * as deepmerge from 'deepmerge';
+import { PlotlyService, PlotlyComponent } from 'angular-plotly.js';
 
 @Component({
-  selector: "afterglow-plot",
+  selector: 'afterglow-plot',
   template: `<plotly-plot #plot *ngIf="data" [data]="data" [config]="config" [layout]="layout"></plotly-plot>`,
   providers: [PlotlyService],
 })
@@ -24,7 +24,7 @@ export class AfterglowPlotComponent implements OnChanges {
   @Input() data: any;
   @Input() layout: any;
 
-  @Input("layout")
+  @Input('layout')
   set _layout(value: any) {
     this.layout = value;
   }

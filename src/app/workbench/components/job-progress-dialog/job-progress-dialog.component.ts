@@ -1,9 +1,9 @@
-import { Component, OnInit, Inject } from "@angular/core";
-import { Observable, Subject } from "rxjs";
-import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { takeUntil, map } from "rxjs/operators";
-import { Job } from "../../../jobs/models/job";
-import { ProgressBarMode } from "@angular/material/progress-bar";
+import { Component, OnInit, Inject } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { takeUntil, map } from 'rxjs/operators';
+import { Job } from '../../../jobs/models/job';
+import { ProgressBarMode } from '@angular/material/progress-bar';
 
 export interface JobProgressDialogConfig {
   title: string;
@@ -13,9 +13,9 @@ export interface JobProgressDialogConfig {
 }
 
 @Component({
-  selector: "app-progress-dialog",
-  templateUrl: "./job-progress-dialog.component.html",
-  styleUrls: ["./job-progress-dialog.component.scss"],
+  selector: 'app-progress-dialog',
+  templateUrl: './job-progress-dialog.component.html',
+  styleUrls: ['./job-progress-dialog.component.scss'],
 })
 export class JobProgressDialogComponent implements OnInit {
   destroy$: Subject<boolean> = new Subject<boolean>();
@@ -31,9 +31,9 @@ export class JobProgressDialogComponent implements OnInit {
     );
 
     this.config.job$.pipe(takeUntil(this.destroy$)).subscribe((job) => {
-      if (job.state.status == "completed") {
+      if (job.state.status == 'completed') {
         this.dialogRef.close(true);
-      } else if (job.state.status == "canceled") {
+      } else if (job.state.status == 'canceled') {
         this.dialogRef.close(false);
       }
     });

@@ -8,9 +8,8 @@ describe('RenameDialogComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RenameDialogComponent ]
-    })
-    .compileComponents();
+      declarations: [RenameDialogComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {

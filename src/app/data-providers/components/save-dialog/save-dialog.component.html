@@ -32,7 +32,11 @@
   <span class="alert alert-danger mr-4" *ngIf="(currentDirectory$ | async)?.dataProvider?.readonly"
     >This location is read-only. Please choose a different directory.</span
   >
-  <button mat-raised-button (click)="onSaveClick$.next(true)" [disabled]="!nameFormControl.valid || !(destinationValid$ | async)">
+  <button
+    mat-raised-button
+    (click)="onSaveClick$.next(true)"
+    [disabled]="!nameFormControl.valid || !(destinationValid$ | async)"
+  >
     Save
   </button>
   <button mat-raised-button [mat-dialog-close]="false">Cancel</button>

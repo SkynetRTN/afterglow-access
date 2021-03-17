@@ -1,4 +1,4 @@
-import { WcsLib } from "../wasm.service";
+import { WcsLib } from '../wasm.service';
 
 declare var WCS: any;
 // import "!!file-loader?name=wcslib.wasm!../../../wasm/wcsjs/wcslib.wasm"
@@ -136,7 +136,7 @@ function splice(str1, index, remove, str2) {
 
 function toHeader(wcsObj) {
   let header = [];
-  let line = "                                                                                ";
+  let line = '                                                                                ';
 
   for (let card in wcsObj) {
     let value = wcsObj[card];
@@ -144,18 +144,18 @@ function toHeader(wcsObj) {
       continue;
     }
 
-    if (typeof value === "string" && value !== "T" && value !== "F") {
+    if (typeof value === 'string' && value !== 'T' && value !== 'F') {
       value = "'" + value + "'";
     }
 
     let entry = splice(line, 0, card.length, card);
-    entry = splice(entry, 8, 1, "=");
+    entry = splice(entry, 8, 1, '=');
     entry = splice(entry, 10, value.toString().length, value);
 
     header.push(entry);
   }
 
-  return header.join("\n");
+  return header.join('\n');
 }
 
 export class Wcs {
@@ -171,54 +171,54 @@ export class Wcs {
     return (
       this.wcs &&
       this.wcs.isValid &&
-      ["CTYPE1", "CTYPE2", "CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2"].every((key) => key in this.params) &&
-      (["CD1_1", "CD1_2", "CD2_1", "CD2_2"].every((key) => key in this.params) ||
-        ["CDELT1", "CDELT2"].every((key) => key in this.params) ||
-        ["PC1_1", "PC1_2", "PC2_1", "PC2_2"].every((key) => key in this.params))
+      ['CTYPE1', 'CTYPE2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2'].every((key) => key in this.params) &&
+      (['CD1_1', 'CD1_2', 'CD2_1', 'CD2_2'].every((key) => key in this.params) ||
+        ['CDELT1', 'CDELT2'].every((key) => key in this.params) ||
+        ['PC1_1', 'PC1_2', 'PC2_1', 'PC2_2'].every((key) => key in this.params))
     );
   }
 
   public get crpix1() {
-    return this.params["CRPIX1"];
+    return this.params['CRPIX1'];
   }
 
   public get crpix2() {
-    return this.params["CRPIX2"];
+    return this.params['CRPIX2'];
   }
 
   public get crval1() {
-    return this.params["CRVAL1"];
+    return this.params['CRVAL1'];
   }
 
   public get crval2() {
-    return this.params["CRVAL2"];
+    return this.params['CRVAL2'];
   }
 
   public get m11() {
-    if ("CD1_1" in this.params) return this.params["CD1_1"];
-    if ("PC1_1" in this.params) return this.params["PC1_1"];
-    if ("CDELT1" in this.params) return this.params["CDELT1"];
+    if ('CD1_1' in this.params) return this.params['CD1_1'];
+    if ('PC1_1' in this.params) return this.params['PC1_1'];
+    if ('CDELT1' in this.params) return this.params['CDELT1'];
     return null;
   }
 
   public get m12() {
-    if ("CD1_2" in this.params) return this.params["CD1_2"];
-    if ("PC1_2" in this.params) return this.params["PC1_2"];
-    if ("CDELT1" in this.params) return 0;
+    if ('CD1_2' in this.params) return this.params['CD1_2'];
+    if ('PC1_2' in this.params) return this.params['PC1_2'];
+    if ('CDELT1' in this.params) return 0;
     return null;
   }
 
   public get m21() {
-    if ("CD2_1" in this.params) return this.params["CD2_1"];
-    if ("PC2_1" in this.params) return this.params["PC2_1"];
-    if ("CDELT1" in this.params) return 0;
+    if ('CD2_1' in this.params) return this.params['CD2_1'];
+    if ('PC2_1' in this.params) return this.params['PC2_1'];
+    if ('CDELT1' in this.params) return 0;
     return null;
   }
 
   public get m22() {
-    if ("CD2_2" in this.params) return this.params["CD2_2"];
-    if ("PC2_2" in this.params) return this.params["PC2_2"];
-    if ("CDELT2" in this.params) return this.params["CDELT2"];
+    if ('CD2_2' in this.params) return this.params['CD2_2'];
+    if ('PC2_2' in this.params) return this.params['PC2_2'];
+    if ('CDELT2' in this.params) return this.params['CDELT2'];
     return null;
   }
 

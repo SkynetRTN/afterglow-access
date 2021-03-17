@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DisplayToolsetComponent } from "./display-panel.component";
+import { DisplayToolsetComponent } from './display-panel.component';
 
-describe("ViewerPageComponent", () => {
+describe('ViewerPageComponent', () => {
   let component: DisplayToolsetComponent;
   let fixture: ComponentFixture<DisplayToolsetComponent>;
 
@@ -18,7 +18,7 @@ describe("ViewerPageComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

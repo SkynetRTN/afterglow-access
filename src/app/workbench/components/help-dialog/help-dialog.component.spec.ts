@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HelpDialogComponent } from "./help-dialog.component";
+import { HelpDialogComponent } from './help-dialog.component';
 
-describe("HelpDialogComponent", () => {
+describe('HelpDialogComponent', () => {
   let component: HelpDialogComponent;
   let fixture: ComponentFixture<HelpDialogComponent>;
 
@@ -18,7 +18,7 @@ describe("HelpDialogComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

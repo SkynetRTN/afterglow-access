@@ -1,18 +1,18 @@
-import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDetectorRef } from "@angular/core";
+import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
 
-import { Subject } from "rxjs";
-import { debounceTime, throttleTime } from "rxjs/operators";
+import { Subject } from 'rxjs';
+import { debounceTime, throttleTime } from 'rxjs/operators';
 
-import { DataFile, ImageHdu, PixelType } from "../../../data-files/models/data-file";
-import { PlotlyTheme, ThemeStorage } from "../../../theme-picker/theme-storage/theme-storage";
-import { getPixel, getPixels, IImageData } from "../../../data-files/models/image-data";
-import { Wcs } from "../../../image-tools/wcs";
+import { DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
+import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
+import { getPixel, getPixels, IImageData } from '../../../data-files/models/image-data';
+import { Wcs } from '../../../image-tools/wcs';
 // import { NvD3Component } from "ng2-nvd3";
 
 @Component({
-  selector: "app-plotter",
-  templateUrl: "./plotter.component.html",
-  styleUrls: ["./plotter.component.css"],
+  selector: 'app-plotter',
+  templateUrl: './plotter.component.html',
+  styleUrls: ['./plotter.component.css'],
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
@@ -20,9 +20,9 @@ export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   imageData: IImageData<PixelType>;
   @Input()
-  plotMode: "1D" | "2D" | "3D";
+  plotMode: '1D' | '2D' | '3D';
   @Input()
-  colorMode: "grayscale" | "rgba";
+  colorMode: 'grayscale' | 'rgba';
   @Input()
   width: number = 200;
   @Input()
@@ -48,11 +48,11 @@ export class PlotterComponent implements OnInit, OnChanges {
     width: null,
     height: null,
     xaxis: {
-      type: "linear",
+      type: 'linear',
       autorange: true,
     },
     yaxis: {
-      type: "linear",
+      type: 'linear',
       autorange: true,
     },
     margin: {
@@ -83,7 +83,7 @@ export class PlotterComponent implements OnInit, OnChanges {
     displaylogo: false,
     modeBarButtons: [
       //[this.customButton],
-      ["toImage", "zoomIn2d", "zoomOut2d", "autoScale2d"],
+      ['toImage', 'zoomIn2d', 'zoomOut2d', 'autoScale2d'],
     ],
   };
 
@@ -169,7 +169,7 @@ export class PlotterComponent implements OnInit, OnChanges {
   updateTheme() {
     this.theme = {
       ...this.baseTheme,
-      colorWay: this.colorMode == "rgba" ? ["#DB4437", "#0F9D58", "#4285F4"] : this.baseTheme.colorWay,
+      colorWay: this.colorMode == 'rgba' ? ['#DB4437', '#0F9D58', '#4285F4'] : this.baseTheme.colorWay,
     };
   }
 
@@ -182,7 +182,7 @@ export class PlotterComponent implements OnInit, OnChanges {
     let start = this.lineMeasureStart;
     let end = this.lineMeasureEnd;
 
-    if (this.plotMode == "1D") {
+    if (this.plotMode == '1D') {
       let v = { x: end.x - start.x, y: end.y - start.y };
       let vLength = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
 
@@ -221,7 +221,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         // };
       }
 
-      if (this.colorMode == "rgba") {
+      if (this.colorMode == 'rgba') {
         let ry = vs.map((v) => v & 0xff);
         let gy = vs.map((v) => (v >> 8) & 0xff);
         let by = vs.map((v) => (v >> 16) & 0xff);
@@ -230,25 +230,25 @@ export class PlotterComponent implements OnInit, OnChanges {
             x: ts,
             y: ry,
             // fill: "tozeroy",
-            type: "scatter",
+            type: 'scatter',
             // mode: "none",
-            name: "red",
+            name: 'red',
           },
           {
             x: ts,
             y: gy,
             // fill: "tozeroy",
-            type: "scatter",
+            type: 'scatter',
             // mode: "none",
-            name: "green",
+            name: 'green',
           },
           {
             x: ts,
             y: by,
             // fill: "tozeroy",
-            type: "scatter",
+            type: 'scatter',
             // mode: "none",
-            name: "blue",
+            name: 'blue',
           },
         ];
       } else {
@@ -257,16 +257,16 @@ export class PlotterComponent implements OnInit, OnChanges {
             x: ts,
             y: vs,
             // fill: "tozeroy",
-            type: "scatter",
+            type: 'scatter',
             // mode: "none",
           },
         ];
-        if ("colorWay" in this.layout) {
-          delete this.layout["colorWay"];
+        if ('colorWay' in this.layout) {
+          delete this.layout['colorWay'];
         }
       }
       this.updateTheme();
-    } else if (this.plotMode == "3D" || this.plotMode == "2D") {
+    } else if (this.plotMode == '3D' || this.plotMode == '2D') {
       let x = Math.floor(Math.min(start.x, end.x));
       let y = Math.floor(Math.min(start.y, end.y));
       let width = Math.floor(Math.abs(start.x - end.x));
@@ -276,7 +276,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         this.data = [
           {
             z: getPixels(this.imageData, x, y, width, height),
-            type: this.plotMode == "3D" ? "surface" : "heatmap",
+            type: this.plotMode == '3D' ? 'surface' : 'heatmap',
           },
         ];
       }
@@ -316,18 +316,19 @@ export class PlotterComponent implements OnInit, OnChanges {
         2 *
         Math.asin(
           Math.sqrt(
-            Math.pow(Math.sin(deltaPhi / 2), 2) + Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2), 2)
+            Math.pow(Math.sin(deltaPhi / 2), 2) +
+              Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2), 2)
           )
         );
       separationScaled *= 180.0 / Math.PI;
-      let separationScaledUnits = "degrees";
+      let separationScaledUnits = 'degrees';
       if (separationScaled < 1.0) {
         separationScaled *= 60.0;
-        separationScaledUnits = "arcmins";
+        separationScaledUnits = 'arcmins';
       }
       if (separationScaled < 1.0) {
         separationScaled *= 60.0;
-        separationScaledUnits = "arcsecs";
+        separationScaledUnits = 'arcsecs';
       }
       this.currentSeparationScaled = separationScaled;
       this.currentSeparationScaledUnits = separationScaledUnits;

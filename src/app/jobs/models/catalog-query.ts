@@ -1,6 +1,6 @@
-import { JobBase, JobResultBase } from "./job-base";
-import { JobType } from "./job-types";
-import { CatalogSource } from "../../workbench/models/source";
+import { JobBase, JobResultBase } from './job-base';
+import { JobType } from './job-types';
+import { CatalogSource } from '../../workbench/models/source';
 
 export interface CatalogQueryJobResult extends JobResultBase {
   readonly type: JobType.CatalogQuery;
@@ -20,5 +20,3 @@ export interface CatalogQueryJob extends JobBase {
   sourceIds?: string[];
   result: CatalogQueryJobResult;
 }
-
-

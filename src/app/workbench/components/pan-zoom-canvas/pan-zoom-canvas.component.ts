@@ -13,26 +13,26 @@ import {
   EventEmitter,
   Directive,
   SimpleChanges,
-} from "@angular/core";
+} from '@angular/core';
 
-import { Point, Rectangle } from "paper";
-import * as SVG from "svgjs";
+import { Point, Rectangle } from 'paper';
+import * as SVG from 'svgjs';
 // @ts-ignore
-import * as normalizeWheel from "normalize-wheel";
+import * as normalizeWheel from 'normalize-wheel';
 
-import { Source } from "../../models/source";
-import { Store } from "@ngxs/store";
-import { LoadRawImageTile } from "../../../data-files/data-files.actions";
-import { animateChild } from "@angular/animations";
-import { IImageData, ImageTile, findTiles } from "../../../data-files/models/image-data";
-import { BlendMode } from "../../../data-files/models/blend-mode";
+import { Source } from '../../models/source';
+import { Store } from '@ngxs/store';
+import { LoadRawImageTile } from '../../../data-files/data-files.actions';
+import { animateChild } from '@angular/animations';
+import { IImageData, ImageTile, findTiles } from '../../../data-files/models/image-data';
+import { BlendMode } from '../../../data-files/models/blend-mode';
 import {
   Transform,
   invertTransform,
   transformPoint,
   getViewportRegion,
   transformToMatrix,
-} from "../../../data-files/models/transformation";
+} from '../../../data-files/models/transformation';
 
 export type ViewportChangeEvent = {
   imageX: number;
@@ -96,17 +96,17 @@ export type LoadTileEvent = {
 export type BoundMouseEventListener = ($event: MouseEvent) => void;
 
 @Directive({
-  selector: "[app-pan-zoom-canvas]",
+  selector: '[app-pan-zoom-canvas]',
   host: {
     // 'class': 'viewer',
-    "(click)": "onViewportClick($event)",
-    "(mousemove)": "onViewportMove($event)",
+    '(click)': 'onViewportClick($event)',
+    '(mousemove)': 'onViewportMove($event)',
     // '(touchmove)': 'onViewportMove($event)',
-    "[class.dragging]": "dragging",
-    "[class.panning]": "panning",
-    "[class.mouse-over-image]": "mouseOverImage",
+    '[class.dragging]': 'dragging',
+    '[class.panning]': 'panning',
+    '[class.mouse-over-image]': 'mouseOverImage',
   },
-  exportAs: "panZoomCanvas",
+  exportAs: 'panZoomCanvas',
 })
 export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() imageData: IImageData<Uint32Array>;
@@ -196,35 +196,35 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     // background pattern
     let patternWidth = 8;
     this.placeholder = this.viewerPlaceholder.nativeElement;
-    this.backgroundCanvas = document.createElement("canvas");
+    this.backgroundCanvas = document.createElement('canvas');
     this.backgroundCanvas.width = patternWidth * 2;
     this.backgroundCanvas.height = patternWidth * 2;
-    this.backgroundCtx = <CanvasRenderingContext2D>this.backgroundCanvas.getContext("2d");
-    this.backgroundCtx.fillStyle = "rgb(215, 215, 215)";
+    this.backgroundCtx = <CanvasRenderingContext2D>this.backgroundCanvas.getContext('2d');
+    this.backgroundCtx.fillStyle = 'rgb(215, 215, 215)';
     this.backgroundCtx.fillRect(0, 0, patternWidth, patternWidth);
     this.backgroundCtx.fillRect(patternWidth, patternWidth, patternWidth, patternWidth);
-    this.backgroundCtx.fillStyle = "rgb(255, 255, 255)";
+    this.backgroundCtx.fillStyle = 'rgb(255, 255, 255)';
     this.backgroundCtx.fillRect(patternWidth, 0, patternWidth, patternWidth);
     this.backgroundCtx.fillRect(0, patternWidth, patternWidth, patternWidth);
 
-    this.imageCanvas = document.createElement("canvas");
-    this.imageCtx = <CanvasRenderingContext2D>this.imageCanvas.getContext("2d");
+    this.imageCanvas = document.createElement('canvas');
+    this.imageCtx = <CanvasRenderingContext2D>this.imageCanvas.getContext('2d');
     this.setSmoothing(this.imageCtx, false);
 
     // add different canvas to placeholder.  the target canvas will hold the transformations
     // and the actual canvas will be drawn onto the target canvas
-    this.targetCanvas = document.createElement("canvas");
+    this.targetCanvas = document.createElement('canvas');
     this.targetCanvas.width = this.placeholder.clientWidth;
     this.targetCanvas.height = this.placeholder.clientHeight;
-    this.targetCtx = <CanvasRenderingContext2D>this.targetCanvas.getContext("2d");
+    this.targetCtx = <CanvasRenderingContext2D>this.targetCanvas.getContext('2d');
     this.setSmoothing(this.targetCtx, false);
-    window.addEventListener("resize", this.debounce(this.handleWindowResizeBound, this, 250));
-    this.placeholder.addEventListener("mousedown", this.handleImageMouseDownBound);
+    window.addEventListener('resize', this.debounce(this.handleWindowResizeBound, this, 250));
+    this.placeholder.addEventListener('mousedown', this.handleImageMouseDownBound);
     // this.placeholder.addEventListener('touchstart', this.handleImageMouseDownBound);
-    this.placeholder.addEventListener("mousemove", this.handleImageMouseMoveBound);
+    this.placeholder.addEventListener('mousemove', this.handleImageMouseMoveBound);
     // this.placeholder.addEventListener('touchmove', this.handleImageMouseDownBound);
-    this.placeholder.addEventListener("mousewheel", this.handleImageMouseWheelBound);
-    this.placeholder.addEventListener("DOMMouseScroll", this.handleImageMouseWheelBound);
+    this.placeholder.addEventListener('mousewheel', this.handleImageMouseWheelBound);
+    this.placeholder.addEventListener('DOMMouseScroll', this.handleImageMouseWheelBound);
     this.placeholder.appendChild(this.targetCanvas);
     this.viewInitialized = true;
 
@@ -450,11 +450,11 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     this.$dragStartMouseDownEvent = $event;
 
     this.mouseDragVector.topLeft = new Point(viewportCoord.x, viewportCoord.y);
-    this.placeholder.removeEventListener("mousedown", this.handleImageMouseDownBound);
+    this.placeholder.removeEventListener('mousedown', this.handleImageMouseDownBound);
     // this.placeholder.removeEventListener('touchstart', this.handleImageMouseDownBound);
-    document.addEventListener("mouseup", this.handleDocumentMouseUpBound);
+    document.addEventListener('mouseup', this.handleDocumentMouseUpBound);
     // document.addEventListener('mouseup', this.handleImageMouseUpBound);
-    document.addEventListener("mousemove", this.handleDocumentMouseMoveWhileDownBound);
+    document.addEventListener('mousemove', this.handleDocumentMouseMoveWhileDownBound);
     // document.addEventListener('touchmove', this.handleDocumentMouseMoveWhileDownBound);
 
     this.sumPixelsMoved = 0;
@@ -476,7 +476,9 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     let imageDragStart = this.viewportCoordToImageCoord(this.mouseDragVector.topLeft);
 
     this.sumPixelsMoved += this.mouseDragVector.topLeft.getDistance(this.mouseDragVector.bottomRight);
-    let modifierPressed = ["shiftKey", "altKey", "metaKey", "ctrlKey"].some((key) => this.$dragStartMouseDownEvent[key]);
+    let modifierPressed = ['shiftKey', 'altKey', 'metaKey', 'ctrlKey'].some(
+      (key) => this.$dragStartMouseDownEvent[key]
+    );
 
     let viewportStart = {
       x: this.mouseDragVector.topLeft.x,
@@ -527,10 +529,10 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   public handleDocumentMouseUp($event: MouseEvent) {
     if (!this.initialized) return;
-    document.removeEventListener("mouseup", this.handleDocumentMouseUpBound);
-    document.removeEventListener("mousemove", this.handleDocumentMouseMoveWhileDownBound);
+    document.removeEventListener('mouseup', this.handleDocumentMouseUpBound);
+    document.removeEventListener('mousemove', this.handleDocumentMouseMoveWhileDownBound);
     // document.removeEventListener('touchmove', this.handleDocumentMouseMoveWhileDownBound);
-    this.placeholder.addEventListener("mousedown", this.handleImageMouseDownBound);
+    this.placeholder.addEventListener('mousedown', this.handleImageMouseDownBound);
     // this.placeholder.addEventListener('touchstart', this.handleImageMouseDownBound);
     if (this.dragging) {
       let viewportStart = {
@@ -690,7 +692,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   public draw() {
     if (!this.viewInitialized) return;
-    let backgroundPattern = this.targetCtx.createPattern(this.backgroundCanvas, "repeat");
+    let backgroundPattern = this.targetCtx.createPattern(this.backgroundCanvas, 'repeat');
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     this.setSmoothing(this.targetCtx, false);
     this.targetCtx.globalAlpha = 1.0;
@@ -704,7 +706,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       tiles.forEach((tile) => {
         if (!tile.pixelsLoaded) {
           // fill in tile with solid background when image file pixels have not been loaded
-          this.imageCtx.fillStyle = "rgb(100, 100, 100)";
+          this.imageCtx.fillStyle = 'rgb(100, 100, 100)';
           this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
         } else {
           if (this.bufferedTiles[tile.index] === tile) {

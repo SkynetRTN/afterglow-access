@@ -1,4 +1,4 @@
-import { PixelType } from "./data-file";
+import { PixelType } from './data-file';
 
 export interface IImageData<T> {
   id: string;
@@ -65,8 +65,8 @@ export function createTiles<T>(width: number, height: number, tileWidth: number,
 export function getTilePixel<T>(tile: ImageTile<T>, x: number, y: number) {
   let index: number = Math.floor(y) * tile.width + Math.floor(x);
   if (!tile.pixelsLoaded || !tile.pixels) return NaN;
-  let result: number = tile.pixels[index]
-  return result ;
+  let result: number = tile.pixels[index];
+  return result;
 }
 
 export function getPixels<T>(imageData: IImageData<T>, x: number, y: number, width: number, height: number) {
@@ -186,7 +186,10 @@ export function getTile<T>(imageData: IImageData<T>, i: number, j: number) {
   return imageData.tiles[j * xTileDim + i];
 }
 
-export function findTiles<T>(imageData: IImageData<T>, region: { x: number; y: number; width: number; height: number }) {
+export function findTiles<T>(
+  imageData: IImageData<T>,
+  region: { x: number; y: number; width: number; height: number }
+) {
   let result: ImageTile<T>[] = [];
   let xTileDim = Math.ceil(imageData.width / imageData.tileWidth);
   let yTileDim = Math.ceil(imageData.height / imageData.tileHeight);

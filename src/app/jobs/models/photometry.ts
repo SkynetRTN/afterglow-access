@@ -1,8 +1,8 @@
-import { JobBase, JobResultBase } from "./job-base";
-import { JobType } from "./job-types";
-import { Astrometry } from "./astrometry";
-import { SourceId } from "./source-id";
-import { SourceMeta } from "./source-meta";
+import { JobBase, JobResultBase } from './job-base';
+import { JobType } from './job-types';
+import { Astrometry } from './astrometry';
+import { SourceId } from './source-id';
+import { SourceMeta } from './source-meta';
 
 export interface Photometry {
   mag: number | null;
@@ -19,7 +19,7 @@ export interface Photometry {
 }
 
 export interface PhotometryJobSettings {
-  mode: "aperture" | "auto";
+  mode: 'aperture' | 'auto';
   a: number | null; // aperture radius/semi-major axis [pixels]
   b: number | null; // (optional) semi-minor axis
   theta: number | null; // (optional) position angle of semi-major axis
@@ -46,5 +46,3 @@ export interface PhotometryJob extends JobBase {
   settings?: PhotometryJobSettings;
   result: PhotometryJobResult | null;
 }
-
-

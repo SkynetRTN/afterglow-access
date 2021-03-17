@@ -1,11 +1,11 @@
-import { NgModule, ModuleWithProviders, PLATFORM_ID, InjectionToken } from "@angular/core";
-import { NGXS_PLUGINS } from "@ngxs/store";
+import { NgModule, ModuleWithProviders, PLATFORM_ID, InjectionToken } from '@angular/core';
+import { NGXS_PLUGINS } from '@ngxs/store';
 
-import { NgxsStoragePluginOptions, STORAGE_ENGINE, NGXS_STORAGE_PLUGIN_OPTIONS } from "./symbols";
-import { AfterglowStoragePlugin } from "./storage.plugin";
-import { storageOptionsFactory, engineFactory } from "./internals";
+import { NgxsStoragePluginOptions, STORAGE_ENGINE, NGXS_STORAGE_PLUGIN_OPTIONS } from './symbols';
+import { AfterglowStoragePlugin } from './storage.plugin';
+import { storageOptionsFactory, engineFactory } from './internals';
 
-export const USER_OPTIONS = new InjectionToken("USER_OPTIONS");
+export const USER_OPTIONS = new InjectionToken('USER_OPTIONS');
 
 @NgModule()
 export class AfterglowStoragePluginModule {

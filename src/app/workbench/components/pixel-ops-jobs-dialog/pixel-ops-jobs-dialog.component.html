@@ -48,7 +48,11 @@
         >
           <ng-container *ngIf="row.job.state.status == 'in_progress'">
             <div class="pl-5 pr-5">
-              <mat-progress-bar mode="determinate" [value]="row.job.state.progress" [color]="'primary'"></mat-progress-bar>
+              <mat-progress-bar
+                mode="determinate"
+                [value]="row.job.state.progress"
+                [color]="'primary'"
+              ></mat-progress-bar>
             </div>
           </ng-container>
           <ng-container *ngIf="row.job.state.status != 'in_progress'">

@@ -1,16 +1,14 @@
-@import "~@angular/material/theming";
-@import "./app/workbench/components/navbar/navbar-theme";
-@import "./app/workbench/containers/workbench-theme";
-@import "./app/workbench/containers/workbench-image-viewer/workbench-image-viewer-theme";
-@import "./app/workbench/containers/workbench-viewer-panel/workbench-viewer-panel-theme";
-@import "./app/workbench/containers/workbench-data-file-list/workbench-data-file-list-theme";
-@import "./app/workbench/components/display-panel/display-panel-theme";
-@import "./app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme";
-@import "./app/data-providers/components/file-manager/file-manager-theme";
-@import "./app/utils/alert-dialog/alert-dialog-theme";
-@import "./app/workbench/components/hdu-selector/hdu-selector-theme";
-
-
+@import '~@angular/material/theming';
+@import './app/workbench/components/navbar/navbar-theme';
+@import './app/workbench/containers/workbench-theme';
+@import './app/workbench/containers/workbench-image-viewer/workbench-image-viewer-theme';
+@import './app/workbench/containers/workbench-viewer-panel/workbench-viewer-panel-theme';
+@import './app/workbench/containers/workbench-data-file-list/workbench-data-file-list-theme';
+@import './app/workbench/components/display-panel/display-panel-theme';
+@import './app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme';
+@import './app/data-providers/components/file-manager/file-manager-theme';
+@import './app/utils/alert-dialog/alert-dialog-theme';
+@import './app/workbench/components/hdu-selector/hdu-selector-theme';
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -75,7 +73,7 @@
     opacity: 0.9;
   }
 
-  .mat-button-toggle-button:focus {  
+  .mat-button-toggle-button:focus {
     outline: none !important;
     // border-top: solid 2px mat-color($foreground, text);
     // border-bottom: solid 2px mat-color($foreground, text);
@@ -83,7 +81,7 @@
 
   .mat-button-toggle-checked {
     background: mat-color($background, app-bar);
-    opacity: 1.0;
+    opacity: 1;
     outline: none;
     color: mat-color($foreground, text) !important;
     border-top: solid 2px mat-color($primary);
@@ -104,14 +102,12 @@
     color: mat-color($foreground, hint-text) !important;
   }
 
-
   /* Layer menu for blend mode and color map */
-  .mat-menu-item.selected, .mat-menu-item:hover:not([disabled]) {
+  .mat-menu-item.selected,
+  .mat-menu-item:hover:not([disabled]) {
     background: mat-color($primary);
     color: mat-color($primary, default-contrast);
   }
-
- 
 
   theme-picker {
     .mat-button,
@@ -130,7 +126,7 @@
     background-color: mat-color($foreground, text, 1);
     color: mat-color($background, card);
     max-width: 600px !important;
-    white-space:nowrap;
+    white-space: nowrap;
   }
 
   .mat-dialog-container {

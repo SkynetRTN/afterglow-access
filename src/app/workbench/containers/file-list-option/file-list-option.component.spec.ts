@@ -8,9 +8,8 @@ describe('FileListOptionComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ FileListOptionComponent ]
-    })
-    .compileComponents();
+      declarations: [FileListOptionComponent],
+    }).compileComponents();
   });
 
   beforeEach(() => {

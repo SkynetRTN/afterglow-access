@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageViewerStatusBarComponent } from "./image-viewer-status-bar.component";
+import { ImageViewerStatusBarComponent } from './image-viewer-status-bar.component';
 
-describe("ImageViewerStatusBarComponent", () => {
+describe('ImageViewerStatusBarComponent', () => {
   let component: ImageViewerStatusBarComponent;
   let fixture: ComponentFixture<ImageViewerStatusBarComponent>;
 
@@ -18,7 +18,7 @@ describe("ImageViewerStatusBarComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

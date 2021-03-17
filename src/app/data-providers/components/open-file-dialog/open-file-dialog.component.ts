@@ -1,44 +1,44 @@
-import { Component, OnInit, Inject, ViewChild, OnDestroy } from "@angular/core";
+import { Component, OnInit, Inject, ViewChild, OnDestroy } from '@angular/core';
 import {
   ImportAssets,
   ImportAssetsCompleted,
   ImportAssetsStatusUpdated,
   SetCurrentPath,
-} from "../../data-providers.actions";
-import { Store, Actions, ofActionCompleted, ofActionDispatched } from "@ngxs/store";
-import { Observable, Subject, BehaviorSubject } from "rxjs";
-import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { map, distinctUntilChanged, tap, take, takeUntil } from "rxjs/operators";
-import { LoadLibrary } from "../../../data-files/data-files.actions";
-import { SelectFile } from "../../../workbench/workbench.actions";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { DataProviderAsset } from "../../models/data-provider-asset";
-import { AfterglowDataProviderService } from "../../../workbench/services/afterglow-data-providers";
-import { BatchImportJob } from "../../../jobs/models/batch-import";
-import { DataProvidersState, DataProviderPath } from "../../data-providers.state";
-import { FileSystemItem, FileManagerComponent } from "../file-manager/file-manager.component";
+} from '../../data-providers.actions';
+import { Store, Actions, ofActionCompleted, ofActionDispatched } from '@ngxs/store';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { map, distinctUntilChanged, tap, take, takeUntil } from 'rxjs/operators';
+import { LoadLibrary } from '../../../data-files/data-files.actions';
+import { SelectFile } from '../../../workbench/workbench.actions';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { DataProviderAsset } from '../../models/data-provider-asset';
+import { AfterglowDataProviderService } from '../../../workbench/services/afterglow-data-providers';
+import { BatchImportJob } from '../../../jobs/models/batch-import';
+import { DataProvidersState, DataProviderPath } from '../../data-providers.state';
+import { FileSystemItem, FileManagerComponent } from '../file-manager/file-manager.component';
 
 @Component({
-  selector: "app-open-file-dialog",
-  templateUrl: "./open-file-dialog.component.html",
-  styleUrls: ["./open-file-dialog.component.scss"],
+  selector: 'app-open-file-dialog',
+  templateUrl: './open-file-dialog.component.html',
+  styleUrls: ['./open-file-dialog.component.scss'],
 })
 export class OpenFileDialogComponent implements OnInit, OnDestroy {
-  @ViewChild("fileManager") fileManager: FileManagerComponent;
+  @ViewChild('fileManager') fileManager: FileManagerComponent;
   lastPath$: Observable<DataProviderPath>;
   selectedFileSystemItems$ = new BehaviorSubject<FileSystemItem[]>([]);
   selectionIsValid$: Observable<boolean>;
   destroy$: Subject<boolean> = new Subject<boolean>();
   loading: boolean = false;
   progress: number = 0;
-  allowedFileExtensions = [".fits,.fit"];
+  allowedFileExtensions = ['.fits,.fit'];
 
   constructor(
     private store: Store,
     private actions$: Actions,
     private dataProviderService: AfterglowDataProviderService,
     private dialogRef: MatDialogRef<OpenFileDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) private data: any,
+    @Inject(MAT_DIALOG_DATA) private data: any
   ) {
     this.selectionIsValid$ = this.selectedFileSystemItems$.pipe(
       map(
@@ -80,7 +80,11 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
 
   open(assets: DataProviderAsset[]) {
     if (assets && assets.length != 0) {
-      let importCompleted$ = this.actions$.pipe(ofActionCompleted(ImportAssetsCompleted), takeUntil(this.destroy$), take(1));
+      let importCompleted$ = this.actions$.pipe(
+        ofActionCompleted(ImportAssetsCompleted),
+        takeUntil(this.destroy$),
+        take(1)
+      );
 
       let importStatusUpdated$: Observable<ImportAssetsStatusUpdated> = this.actions$.pipe(
         ofActionDispatched(ImportAssetsStatusUpdated),
@@ -91,7 +95,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
       importStatusUpdated$.subscribe((action) => {
         let job: BatchImportJob = action.job;
         this.progress = job.state.progress;
-        if (job.state.status == "pending" || job.state.status == "in_progress") {
+        if (job.state.status == 'pending' || job.state.status == 'in_progress') {
           this.progress = job.state.progress;
         }
       });

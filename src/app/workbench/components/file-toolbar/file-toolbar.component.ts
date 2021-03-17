@@ -3,10 +3,9 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 @Component({
   selector: 'app-file-toolbar',
   templateUrl: './file-toolbar.component.html',
-  styleUrls: ['./file-toolbar.component.scss']
+  styleUrls: ['./file-toolbar.component.scss'],
 })
 export class FileToolbarComponent implements OnInit {
-
   @Input()
   showSave: boolean = false;
 
@@ -19,12 +18,10 @@ export class FileToolbarComponent implements OnInit {
   @Input()
   modified: boolean = false;
 
-  @Output() onSave= new EventEmitter<MouseEvent>();
-  @Output() onClose= new EventEmitter<MouseEvent>();
+  @Output() onSave = new EventEmitter<MouseEvent>();
+  @Output() onClose = new EventEmitter<MouseEvent>();
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit(): void {
-  }
-
+  ngOnInit(): void {}
 }

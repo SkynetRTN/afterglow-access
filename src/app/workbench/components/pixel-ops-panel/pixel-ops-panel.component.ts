@@ -1,28 +1,33 @@
-import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
-import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from "rxjs";
-import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap, withLatestFrom } from "rxjs/operators";
-import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors, AbstractControl } from "@angular/forms";
-import { JobType } from "../../../jobs/models/job-types";
-import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
-import { PixelOpsFormData, WorkbenchStateModel, WorkbenchTool, PixelOpsPanelConfig } from "../../models/workbench-state";
-import { MatDialog } from "@angular/material/dialog";
-import { MatTabChangeEvent } from "@angular/material/tabs";
-import { PixelOpsJobsDialogComponent } from "../pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component";
-import { Router } from "@angular/router";
-import { Store } from "@ngxs/store";
-import { WorkbenchState } from "../../workbench.state";
+import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from 'rxjs';
+import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap, withLatestFrom } from 'rxjs/operators';
+import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors, AbstractControl } from '@angular/forms';
+import { JobType } from '../../../jobs/models/job-types';
+import { PixelOpsJob, PixelOpsJobResult } from '../../../jobs/models/pixel-ops';
+import {
+  PixelOpsFormData,
+  WorkbenchStateModel,
+  WorkbenchTool,
+  PixelOpsPanelConfig,
+} from '../../models/workbench-state';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTabChangeEvent } from '@angular/material/tabs';
+import { PixelOpsJobsDialogComponent } from '../pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
+import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../workbench.state';
 import {
   HideCurrentPixelOpsJobState,
   SetActiveTool,
   CreatePixelOpsJob,
   CreateAdvPixelOpsJob,
   UpdatePixelOpsPageSettings,
-} from "../../workbench.actions";
-import { JobsState } from "../../../jobs/jobs.state";
-import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
-import { DataFilesState } from "../../../data-files/data-files.state";
+} from '../../workbench.actions';
+import { JobsState } from '../../../jobs/jobs.state';
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFilesState } from '../../../data-files/data-files.state';
 import { isNumber } from '../../../utils/validators';
-import { ToolPanelBaseComponent } from "../tool-panel-base/tool-panel-base.component";
+import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 
 interface PixelOpVariable {
   name: string;
@@ -30,13 +35,13 @@ interface PixelOpVariable {
 }
 
 @Component({
-  selector: "app-pixel-ops-panel",
-  templateUrl: "./pixel-ops-panel.component.html",
-  styleUrls: ["./pixel-ops-panel.component.css"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-pixel-ops-panel',
+  templateUrl: './pixel-ops-panel.component.html',
+  styleUrls: ['./pixel-ops-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
-  @Input("hduIds")
+  @Input('hduIds')
   set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
   }
@@ -56,40 +61,40 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   panelOpenState: boolean;
 
   operands = [
-    { label: "Add", symbol: "+" },
-    { label: "Subtract", symbol: "-" },
-    { label: "Multiply", symbol: "*" },
-    { label: "Divide", symbol: "/" },
+    { label: 'Add', symbol: '+' },
+    { label: 'Subtract', symbol: '-' },
+    { label: 'Multiply', symbol: '*' },
+    { label: 'Divide', symbol: '/' },
   ];
 
   modes = [
-    { label: "Scalar", value: "scalar" },
-    { label: "Image", value: "image" },
+    { label: 'Scalar', value: 'scalar' },
+    { label: 'Image', value: 'image' },
   ];
 
   divideByZero(control: AbstractControl): ValidationErrors | null {
-    const mode = control.get("mode");
-    const scalarValue = control.get("scalarValue");
-    const operand = control.get("operand");
-    return mode && scalarValue && operand && mode.value == "scalar" && operand.value == "/" && scalarValue.value == 0
+    const mode = control.get('mode');
+    const scalarValue = control.get('scalarValue');
+    const operand = control.get('operand');
+    return mode && scalarValue && operand && mode.value == 'scalar' && operand.value == '/' && scalarValue.value == 0
       ? { divideByZero: true }
       : null;
   }
 
   imageCalcForm = new FormGroup(
     {
-      operand: new FormControl("+", Validators.required),
-      mode: new FormControl("image", Validators.required),
+      operand: new FormControl('+', Validators.required),
+      mode: new FormControl('image', Validators.required),
       primaryHduIds: new FormControl([], Validators.required),
-      auxHduId: new FormControl("", Validators.required),
-      scalarValue: new FormControl("", [Validators.required, isNumber]),
+      auxHduId: new FormControl('', Validators.required),
+      scalarValue: new FormControl('', [Validators.required, isNumber]),
       inPlace: new FormControl(false, Validators.required),
     },
     { validators: this.divideByZero }
   );
 
   imageCalcFormAdv = new FormGroup({
-    opString: new FormControl("", Validators.required),
+    opString: new FormControl('', Validators.required),
     primaryHduIds: new FormControl([], Validators.required),
     auxHduIds: new FormControl([]),
     inPlace: new FormControl(false, Validators.required),
@@ -98,10 +103,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   constructor(public dialog: MatDialog, private store: Store, private router: Router) {
     this.config$ = this.store.select(WorkbenchState.getPixelOpsPanelConfig);
 
-    this.hduIds$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.config$),
-    ).subscribe(([hduIds, config]) => {
+    this.hduIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([hduIds, config]) => {
       if (!hduIds || !config) return;
       let formData = config.pixelOpsFormData;
       let primaryHduIds = formData.primaryHduIds.filter((hduId) => hduIds.includes(hduId));
@@ -142,15 +144,15 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     });
 
     this.imageCalcForm
-      .get("mode")
+      .get('mode')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (value == "scalar") {
-          this.imageCalcForm.get("scalarValue").enable();
-          this.imageCalcForm.get("auxHduId").disable();
+        if (value == 'scalar') {
+          this.imageCalcForm.get('scalarValue').enable();
+          this.imageCalcForm.get('auxHduId').disable();
         } else {
-          this.imageCalcForm.get("scalarValue").disable();
-          this.imageCalcForm.get("auxHduId").enable();
+          this.imageCalcForm.get('scalarValue').disable();
+          this.imageCalcForm.get('auxHduId').enable();
         }
       });
 
@@ -197,10 +199,10 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
         let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         return [
           {
-            name: "aux_img",
-            value: auxHduVars.length == 0 ? "N/A" : auxHduVars[0],
+            name: 'aux_img',
+            value: auxHduVars.length == 0 ? 'N/A' : auxHduVars[0],
           },
-          { name: "img", value: "for each image file" },
+          { name: 'img', value: 'for each image file' },
           ...primaryHduVars.map((value, index) => {
             return {
               name: `imgs[${index}]`,
@@ -217,9 +219,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.pixelOpsJobs$ = store.select(JobsState.getJobs).pipe(
-      map(allJobRows => allJobRows.filter((row) => row.type == JobType.PixelOps) as PixelOpsJob[])
-    );
+    this.pixelOpsJobs$ = store
+      .select(JobsState.getJobs)
+      .pipe(map((allJobRows) => allJobRows.filter((row) => row.type == JobType.PixelOps) as PixelOpsJob[]));
 
     this.currentPixelOpsJob$ = combineLatest([store.select(WorkbenchState.getState), this.pixelOpsJobs$]).pipe(
       filter(
@@ -261,7 +263,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     // );
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -279,7 +281,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
   openPixelOpsJobsDialog() {
     let dialogRef = this.dialog.open(PixelOpsJobsDialogComponent, {
-      width: "600px",
+      width: '600px',
       data: {
         rows$: this.pixelOpsJobs$,
         allImageFiles$: this.store.select(DataFilesState.getHdus),
@@ -314,9 +316,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById).pipe(
-      map(fn => fn(hduId)?.name),
-      distinctUntilChanged(),
-    )
+      map((fn) => fn(hduId)?.name),
+      distinctUntilChanged()
+    );
   }
 
   onSelectAllPrimaryHdusBtnClick() {

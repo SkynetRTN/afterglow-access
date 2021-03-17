@@ -1,6 +1,6 @@
-import { JobBase, JobResultBase } from "./job-base";
-import { JobType } from "./job-types";
-import { SourceExtractionJobSettings } from "./source-extraction";
+import { JobBase, JobResultBase } from './job-base';
+import { JobType } from './job-types';
+import { SourceExtractionJobSettings } from './source-extraction';
 
 export interface WcsCalibrationJobSettings {
   raHours?: number;
@@ -24,5 +24,3 @@ export interface WcsCalibrationJob extends JobBase {
   inplace: boolean;
   result: WcsCalibrationJobResult | null;
 }
-
-

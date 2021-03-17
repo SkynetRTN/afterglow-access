@@ -1,9 +1,9 @@
-import { JobBase, JobResultBase } from "./job-base";
-import { JobType } from "./job-types";
-import { SourceExtractionData } from "./source-extraction";
+import { JobBase, JobResultBase } from './job-base';
+import { JobType } from './job-types';
+import { SourceExtractionData } from './source-extraction';
 
 export interface AlignmentSettings {
-  refImage: "first" | "central" | "last" | number;
+  refImage: 'first' | 'central' | 'last' | number;
   wcsGridPoints: number;
   prefilter: boolean;
 }
@@ -22,5 +22,3 @@ export interface AlignmentJob extends JobBase {
   crop: boolean;
   result: AlignmentJobResult | null;
 }
-
-

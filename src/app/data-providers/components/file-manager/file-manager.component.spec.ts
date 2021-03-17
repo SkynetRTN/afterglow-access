@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FileManagerComponent } from "./file-manager.component";
+import { FileManagerComponent } from './file-manager.component';
 
-describe("FileManagerComponent", () => {
+describe('FileManagerComponent', () => {
   let component: FileManagerComponent;
   let fixture: ComponentFixture<FileManagerComponent>;
 
@@ -18,7 +18,7 @@ describe("FileManagerComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

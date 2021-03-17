@@ -1,6 +1,6 @@
-import { Point, Matrix, Rectangle } from "paper";
+import { Point, Matrix, Rectangle } from 'paper';
 
-import { Region } from "./region";
+import { Region } from './region';
 
 export interface Transform {
   id: string;

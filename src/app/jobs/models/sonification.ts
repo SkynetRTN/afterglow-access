@@ -1,12 +1,12 @@
-import { JobBase, JobResultBase } from "./job-base";
-import { JobType } from "./job-types";
+import { JobBase, JobResultBase } from './job-base';
+import { JobType } from './job-types';
 
 export interface SonificationJobSettings {
   x?: number;
   y?: number;
   width?: number;
   height?: number;
-  coord?: "rect" | "radial" | "circ";
+  coord?: 'rect' | 'radial' | 'circ';
   barycenter?: boolean;
   tempo?: number;
   samplingRate?: number;
@@ -34,5 +34,3 @@ export interface SonificationJob extends JobBase {
   settings?: SonificationJobSettings;
   result: SonificationJobResult | null;
 }
-
-

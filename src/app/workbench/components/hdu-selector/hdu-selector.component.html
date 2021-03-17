@@ -1,14 +1,27 @@
 <div class="pb-1 list-wrapper" *ngIf="hdus$ | async; let hdus">
-  <mat-selection-list cdkDropList [cdkDropListData]="hdus" (cdkDropListDropped)="onChannelDrop($event)"
-    [multiple]="false" (selectionChange)="onSelectedHduIdChange($event)">
-    <mat-list-option *ngFor="let hdu of hdus$ | async; let index = index" [value]="hdu.id" cdkDrag [cdkDragData]="hdu"
-      [selected]="hdu.id == selectedHduId">
+  <mat-selection-list
+    cdkDropList
+    [cdkDropListData]="hdus"
+    (cdkDropListDropped)="onChannelDrop($event)"
+    [multiple]="false"
+    (selectionChange)="onSelectedHduIdChange($event)"
+  >
+    <mat-list-option
+      *ngFor="let hdu of hdus$ | async; let index = index"
+      [value]="hdu.id"
+      cdkDrag
+      [cdkDragData]="hdu"
+      [selected]="hdu.id == selectedHduId"
+    >
       <div fxLayout="row-reverse" fxLayoutAlign="center center" style="width: 100%">
         <ng-container *ngIf="(imageHduEntities$ | async)[hdu.id]; let imageHdu">
           <div fxFlex="0 0 auto">
-            <button (click)="onVisibilityBtnClick($event, hdu.id, !imageHdu.visible)" mat-icon-button
-              aria-label="Toggle channel visibility">
-              <mat-icon>{{ imageHdu.visible ? "visibility" : "visibility_off" }}</mat-icon>
+            <button
+              (click)="onVisibilityBtnClick($event, hdu.id, !imageHdu.visible)"
+              mat-icon-button
+              aria-label="Toggle channel visibility"
+            >
+              <mat-icon>{{ imageHdu.visible ? 'visibility' : 'visibility_off' }}</mat-icon>
             </button>
           </div>
 
@@ -39,33 +52,51 @@
           </div> -->
 
           <div fxFlex="0 0 auto">
-            <button #colorMapMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="colorMapMenu"
-              aria-label="colorMap menu" (click)="$event.stopPropagation()">
+            <button
+              #colorMapMenuTrigger="matMenuTrigger"
+              mat-icon-button
+              [matMenuTriggerFor]="colorMapMenu"
+              aria-label="colorMap menu"
+              (click)="$event.stopPropagation()"
+            >
               <mat-icon>opacity</mat-icon>
             </button>
             <mat-menu #colorMapMenu="matMenu">
-              <label mat-menu-item  role="menuitemradio" *ngFor="let colorMap of colorMaps"
-                [class.selected]="colorMap.name==imageHdu?.normalizer?.colorMapName"
-                (click)="onColorMapChange(imageHdu, colorMap.name)">{{colorMap.name}}
+              <label
+                mat-menu-item
+                role="menuitemradio"
+                *ngFor="let colorMap of colorMaps"
+                [class.selected]="colorMap.name == imageHdu?.normalizer?.colorMapName"
+                (click)="onColorMapChange(imageHdu, colorMap.name)"
+                >{{ colorMap.name }}
               </label>
             </mat-menu>
           </div>
 
           <div fxFlex="0 0 auto">
-            <button #blendModeMenuTrigger="matMenuTrigger" mat-icon-button [matMenuTriggerFor]="blendModeMenu"
-              aria-label="blend mode menu" (click)="$event.stopPropagation()">
+            <button
+              #blendModeMenuTrigger="matMenuTrigger"
+              mat-icon-button
+              [matMenuTriggerFor]="blendModeMenu"
+              aria-label="blend mode menu"
+              (click)="$event.stopPropagation()"
+            >
               <mat-icon>layers</mat-icon>
             </button>
             <mat-menu #blendModeMenu="matMenu">
-              <label mat-menu-item  role="menuitemradio" *ngFor="let blendMode of blendModeOptions"
-                [class.selected]="blendMode.value==imageHdu?.blendMode"
-                (click)="onBlendModeChange(imageHdu, blendMode.value)">{{blendMode.label}}
+              <label
+                mat-menu-item
+                role="menuitemradio"
+                *ngFor="let blendMode of blendModeOptions"
+                [class.selected]="blendMode.value == imageHdu?.blendMode"
+                (click)="onBlendModeChange(imageHdu, blendMode.value)"
+                >{{ blendMode.label }}
               </label>
             </mat-menu>
           </div>
         </ng-container>
         <div fxFlex="1 1 auto" class="label">
-          {{getHduLabel(hdu, index) | async}}
+          {{ getHduLabel(hdu, index) | async }}
         </div>
       </div>
     </mat-list-option>

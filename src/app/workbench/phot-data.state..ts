@@ -1,9 +1,9 @@
-import { State, Action, Selector, StateContext, Store, Actions, ofActionSuccessful } from "@ngxs/store";
-import { ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { PhotData } from "./models/source-phot-data";
-import { UpdatePhotData } from "./phot-data.actions";
-import { CorrelationIdGenerator } from "../utils/correlated-action";
-import { ResetState } from "../auth/auth.actions";
+import { State, Action, Selector, StateContext, Store, Actions, ofActionSuccessful } from '@ngxs/store';
+import { ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { PhotData } from './models/source-phot-data';
+import { UpdatePhotData } from './phot-data.actions';
+import { CorrelationIdGenerator } from '../utils/correlated-action';
+import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 
 export interface PhotDataStateModel {
@@ -13,18 +13,22 @@ export interface PhotDataStateModel {
 }
 
 const photDataDefaultState: PhotDataStateModel = {
-  version: "7960c17e-fca1-43ba-9559-1376f42ae8ca",
+  version: '7960c17e-fca1-43ba-9559-1376f42ae8ca',
   ids: [],
   entities: {},
 };
 
 @State<PhotDataStateModel>({
-  name: "sourcesPhotData",
+  name: 'sourcesPhotData',
   defaults: photDataDefaultState,
 })
 @Injectable()
 export class PhotDataState {
-  constructor(private store: Store, private correlationIdGenerator: CorrelationIdGenerator, private actions$: Actions) {}
+  constructor(
+    private store: Store,
+    private correlationIdGenerator: CorrelationIdGenerator,
+    private actions$: Actions
+  ) {}
 
   @Selector()
   public static getState(state: PhotDataStateModel) {

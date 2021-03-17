@@ -8,9 +8,8 @@ describe('HduToolbarComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ImageHduToolbarComponent ]
-    })
-    .compileComponents();
+      declarations: [ImageHduToolbarComponent],
+    }).compileComponents();
   });
 
   beforeEach(() => {

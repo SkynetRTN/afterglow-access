@@ -1,12 +1,12 @@
-import { SourceExtractionJobResult } from "./source-extraction";
-import { SourceMergeJobResult } from "./source-merge";
-import { PhotometryJobResult } from "./photometry";
-import { CatalogQueryJobResult } from "./catalog-query";
-import { PixelOpsJobResult } from "./pixel-ops";
-import { AlignmentJobResult } from "./alignment";
-import { StackingJobResult } from "./stacking";
-import { BatchImportJobResult } from "./batch-import";
-import { SonificationJobResult } from "./sonification";
+import { SourceExtractionJobResult } from './source-extraction';
+import { SourceMergeJobResult } from './source-merge';
+import { PhotometryJobResult } from './photometry';
+import { CatalogQueryJobResult } from './catalog-query';
+import { PixelOpsJobResult } from './pixel-ops';
+import { AlignmentJobResult } from './alignment';
+import { StackingJobResult } from './stacking';
+import { BatchImportJobResult } from './batch-import';
+import { SonificationJobResult } from './sonification';
 import { WcsCalibrationJobResult } from './wcs_calibration';
 
 export type JobResult =

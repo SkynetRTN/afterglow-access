@@ -4,7 +4,7 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Calibrate</mat-label>
         <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hduId of hduIds;" [value]="hduId">
+          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
             {{ getHduOptionLabel(hduId) | async }}
           </mat-option>
         </mat-select>
@@ -19,13 +19,12 @@
       </button>
     </div>
 
-    <div *ngIf="(header$ | async) as header" class="mb-3">
+    <div *ngIf="header$ | async as header" class="mb-3">
       <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
         <mat-icon>colorize</mat-icon>
         Extract values from current viewer
       </button>
     </div>
-
 
     <div>
       <mat-form-field appearance="outline">
@@ -58,26 +57,25 @@
       </mat-form-field>
     </div>
 
-    <div style="text-align: right; width: 100%;">
+    <div style="text-align: right; width: 100%">
       <button class="mr-4" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
         Open Source Extraction Settings...
       </button>
-      <button mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>
-        Submit
-      </button>
+      <button mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>Submit</button>
     </div>
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
-  <div *ngIf="(activeJob$ | async); let job" style="margin-top: 10px">
-    <div class="alert alert-info"
-      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
-      <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: "1.0-0" }}%)
+  <div *ngIf="activeJob$ | async; let job" style="margin-top: 10px">
+    <div
+      class="alert alert-info"
+      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
+    >
+      <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">
         <div style="margin-top: 5px">
-          <mat-progress-bar mode="determinate" [value]="job.state.progress" [color]="'primary'">
-          </mat-progress-bar>
+          <mat-progress-bar mode="determinate" [value]="job.state.progress" [color]="'primary'"> </mat-progress-bar>
         </div>
       </ng-container>
     </div>

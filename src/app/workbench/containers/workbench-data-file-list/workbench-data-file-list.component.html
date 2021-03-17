@@ -1,9 +1,7 @@
 <mat-selection-list
   #selectionList
   [multiple]="false"
-  (selectionChange)="
-    selectFile($event.option.value.fileId, $event.option.value.hduId, false)
-  "
+  (selectionChange)="selectFile($event.option.value.fileId, $event.option.value.hduId, false)"
   cdkDropList
   (cdkDropListDropped)="onChannelDrop($event)"
   (mouseleave)="handleMouseLeave($event)"
@@ -15,9 +13,7 @@
       class="expandable"
       *ngIf="file.hduIds.length > 1"
       [value]="{ fileId: file?.id, hduId: '' }"
-      [selected]="
-        focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''
-      "
+      [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''"
       cdkDrag
       [cdkDragData]="fileOption.value"
       (dblclick)="handleItemDoubleClick(fileOption.value)"
@@ -30,9 +26,7 @@
         [showFileToolbar]="focusedValue?.fileId == file.id"
         [showExpand]="true"
         [expanded]="!collapsedFileIds[file.id]"
-        [showSelect]="
-          selectedFileIds.length != 0 || focusedValue?.fileId == file.id
-        "
+        [showSelect]="selectedFileIds.length != 0 || focusedValue?.fileId == file.id"
         [selected]="selectedFileIds.includes(file.id)"
         (onToggleExpanded)="handleToggleExpanded($event)"
         (onToggleSelected)="handleToggleSelected($event)"
@@ -48,9 +42,7 @@
         *ngFor="let hduId of file.hduIds; let i = index"
         [class.nested]="file.hduIds.length > 1"
         [value]="{ fileId: file?.id, hduId: hduId }"
-        [selected]="
-          focusedViewer?.fileId == file?.id && focusedViewer?.hduId === hduId
-        "
+        [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === hduId"
         cdkDrag
         [cdkDragData]="hduOption.value"
         (dblclick)="handleItemDoubleClick(hduOption.value)"
@@ -61,16 +53,11 @@
           style="height: 100%"
           [fileId]="file.id"
           [hduId]="hduId"
-          [showFileToolbar]="
-            file.hduIds.length == 1 && focusedValue?.fileId == file.id
-          "
+          [showFileToolbar]="file.hduIds.length == 1 && focusedValue?.fileId == file.id"
           [showImageHduLayerToolbar]="
             file.hduIds.length != 1 && focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''
           "
-          [showSelect]="
-            file.hduIds.length == 1 &&
-            (selectedFileIds.length != 0 || focusedValue?.fileId == file.id)
-          "
+          [showSelect]="file.hduIds.length == 1 && (selectedFileIds.length != 0 || focusedValue?.fileId == file.id)"
           [selected]="selectedFileIds.includes(file.id)"
           (onToggleSelected)="handleToggleSelected($event)"
           (onSave)="onSaveFile.emit(file.id)"

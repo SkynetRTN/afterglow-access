@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AlignerPageComponent } from "./aligning-panel.component";
+import { AlignerPageComponent } from './aligning-panel.component';
 
-describe("AlignerPageComponent", () => {
+describe('AlignerPageComponent', () => {
   let component: AlignerPageComponent;
   let fixture: ComponentFixture<AlignerPageComponent>;
 
@@ -18,7 +18,7 @@ describe("AlignerPageComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,14 +1,14 @@
-import { isPlatformServer } from "@angular/common";
-import { StateClass } from "@ngxs/store/internals";
-import { StateToken } from "@ngxs/store";
+import { isPlatformServer } from '@angular/common';
+import { StateClass } from '@ngxs/store/internals';
+import { StateToken } from '@ngxs/store';
 
-import { StorageOption, StorageEngine, NgxsStoragePluginOptions } from "./symbols";
+import { StorageOption, StorageEngine, NgxsStoragePluginOptions } from './symbols';
 
 /**
  * If the `key` option is not provided then the below constant
  * will be used as a default key
  */
-export const DEFAULT_STATE_KEY = "@@STATE";
+export const DEFAULT_STATE_KEY = '@@STATE';
 
 /**
  * Internal type definition for the `key` option provided
@@ -20,7 +20,7 @@ export type StorageKey = string | StateClass | StateToken<any> | (string | State
  * This key is used to retrieve static metadatas on state classes.
  * This constant is taken from the core codebase
  */
-const META_OPTIONS_KEY = "NGXS_OPTIONS_META";
+const META_OPTIONS_KEY = 'NGXS_OPTIONS_META';
 
 function transformKeyOption(key: StorageKey): string[] {
   if (!Array.isArray(key)) {
@@ -28,7 +28,7 @@ function transformKeyOption(key: StorageKey): string[] {
   }
 
   return key.map((token: string | StateClass | StateToken<any>) => {
-    if (typeof token === "string") {
+    if (typeof token === 'string') {
       return token;
     } else if (token instanceof StateToken) {
       return token.getName();

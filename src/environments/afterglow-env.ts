@@ -7,5 +7,3 @@ export interface AfterglowEnv {
   configUrl: string;
   plugins: any[];
 }
-
-

@@ -1,8 +1,8 @@
-import { Mag } from "./mag";
+import { Mag } from './mag';
 
 export enum PosType {
-  PIXEL = "pixel",
-  SKY = "sky",
+  PIXEL = 'pixel',
+  SKY = 'sky',
 }
 
 export interface Source {

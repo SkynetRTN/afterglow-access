@@ -1,22 +1,22 @@
-import * as moment from "moment";
+import * as moment from 'moment';
 
-import { HduType } from "./data-file-type";
-import { HeaderEntry } from "./header-entry";
-import { ImageHist } from "./image-hist";
-import { Wcs } from "../../image-tools/wcs";
-import { Source, PosType } from "../../workbench/models/source";
-import { parseDms } from "../../utils/skynet-astro";
-import { PixelNormalizer } from "./pixel-normalizer";
-import { BlendMode } from "./blend-mode";
+import { HduType } from './data-file-type';
+import { HeaderEntry } from './header-entry';
+import { ImageHist } from './image-hist';
+import { Wcs } from '../../image-tools/wcs';
+import { Source, PosType } from '../../workbench/models/source';
+import { parseDms } from '../../utils/skynet-astro';
+import { PixelNormalizer } from './pixel-normalizer';
+import { BlendMode } from './blend-mode';
 
 export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
 
 export enum PixelPrecision {
-  uint8 = "uint8",
-  uint16 = "uint16",
-  uint32 = "uint32",
-  float32 = "float32",
-  float64 = "float64",
+  uint8 = 'uint8',
+  uint16 = 'uint16',
+  uint32 = 'uint32',
+  float32 = 'float32',
+  float64 = 'float64',
 }
 
 export interface ITransformableImageData {
@@ -26,7 +26,7 @@ export interface ITransformableImageData {
 }
 
 export interface DataFile extends ITransformableImageData {
-  readonly type: "file";
+  readonly type: 'file';
   id: string;
   name: string;
   dataProviderId: string;
@@ -34,7 +34,6 @@ export interface DataFile extends ITransformableImageData {
   hduIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
-
 }
 
 export interface Header {
@@ -46,7 +45,7 @@ export interface Header {
 }
 
 export interface IHdu {
-  readonly type: "hdu";
+  readonly type: 'hdu';
   readonly hduType: HduType;
   id: string;
   fileId: string;
@@ -91,7 +90,7 @@ export function toKeyValueHash(header: Header) {
 }
 
 export function getWidth(header: Header): number {
-  let naxis1 = getHeaderEntry(header, "NAXIS1");
+  let naxis1 = getHeaderEntry(header, 'NAXIS1');
   if (naxis1) {
     return naxis1.value;
   }
@@ -99,15 +98,15 @@ export function getWidth(header: Header): number {
 }
 
 export function getHeight(header: Header): number {
-  let naxis2 = getHeaderEntry(header, "NAXIS2");
+  let naxis2 = getHeaderEntry(header, 'NAXIS2');
   if (naxis2) {
     return naxis2.value;
   }
   return 0;
 }
 
-export function getObserver(header: Header) : string | undefined {
-  let observer = getHeaderEntry(header, "OBSERVER");
+export function getObserver(header: Header): string | undefined {
+  let observer = getHeaderEntry(header, 'OBSERVER');
   if (observer) {
     return observer.value;
   }
@@ -115,7 +114,7 @@ export function getObserver(header: Header) : string | undefined {
 }
 
 export function getDegsPerPixel(header: Header) {
-  let secpix = getHeaderEntry(header, "SECPIX");
+  let secpix = getHeaderEntry(header, 'SECPIX');
   if (secpix) {
     return secpix.value / 3600.0;
   }
@@ -124,13 +123,13 @@ export function getDegsPerPixel(header: Header) {
 }
 
 export function getStartTime(header: Header) {
-  let imageDateStr = "";
-  let imageTimeStr = "";
-  let dateObs = getHeaderEntry(header, "DATE-OBS");
+  let imageDateStr = '';
+  let imageTimeStr = '';
+  let dateObs = getHeaderEntry(header, 'DATE-OBS');
   if (dateObs) {
     imageDateStr = dateObs.value;
-    if (imageDateStr.includes("T")) {
-      let s = moment.utc(imageDateStr, "YYYY-MM-DDTHH:mm:ss.SSS", false);
+    if (imageDateStr.includes('T')) {
+      let s = moment.utc(imageDateStr, 'YYYY-MM-DDTHH:mm:ss.SSS', false);
       if (s.isValid()) {
         return s.toDate();
       }
@@ -138,12 +137,12 @@ export function getStartTime(header: Header) {
     }
   }
 
-  let timeObs = getHeaderEntry(header, "TIME-OBS");
+  let timeObs = getHeaderEntry(header, 'TIME-OBS');
   if (timeObs) {
     imageTimeStr = timeObs.value;
   }
 
-  let s = moment.utc(imageDateStr + " " + imageTimeStr, "YYYY-MM-DD HH:mm:ss.SSS", false);
+  let s = moment.utc(imageDateStr + ' ' + imageTimeStr, 'YYYY-MM-DD HH:mm:ss.SSS', false);
   if (s.isValid()) {
     return s.toDate();
   }
@@ -151,7 +150,7 @@ export function getStartTime(header: Header) {
 }
 
 export function getExpLength(header: Header) {
-  let expLength = getHeaderEntry(header, "EXPTIME");
+  let expLength = getHeaderEntry(header, 'EXPTIME');
   if (expLength) {
     return expLength.value;
   }
@@ -168,7 +167,7 @@ export function getCenterTime(header: Header) {
 }
 
 export function getTelescope(header: Header) {
-  let observat = getHeaderEntry(header, "OBSERVAT");
+  let observat = getHeaderEntry(header, 'OBSERVAT');
   if (observat) {
     return observat.value;
   }
@@ -176,7 +175,7 @@ export function getTelescope(header: Header) {
 }
 
 export function getObject(header: Header) {
-  let obj = getHeaderEntry(header, "OBJECT");
+  let obj = getHeaderEntry(header, 'OBJECT');
   if (obj) {
     return obj.value;
   }
@@ -184,17 +183,17 @@ export function getObject(header: Header) {
 }
 
 export function getRaHours(header: Header) {
-  let raEntry = getHeaderEntry(header, "RA");
+  let raEntry = getHeaderEntry(header, 'RA');
   if (!raEntry) {
-    raEntry = getHeaderEntry(header, "RAOBJ");
+    raEntry = getHeaderEntry(header, 'RAOBJ');
   }
   if (!raEntry) {
-    raEntry = getHeaderEntry(header, "OBJCTRA");
+    raEntry = getHeaderEntry(header, 'OBJCTRA');
   }
   if (!raEntry) return undefined;
 
   let ra;
-  if (typeof raEntry.value == "string" && raEntry.value.includes(":")) {
+  if (typeof raEntry.value == 'string' && raEntry.value.includes(':')) {
     ra = parseDms(raEntry.value);
   } else {
     ra = parseFloat(raEntry.value);
@@ -206,17 +205,17 @@ export function getRaHours(header: Header) {
 }
 
 export function getDecDegs(header: Header) {
-  let decEntry = getHeaderEntry(header, "DEC");
+  let decEntry = getHeaderEntry(header, 'DEC');
   if (!decEntry) {
-    decEntry = getHeaderEntry(header, "DECOBJ");
+    decEntry = getHeaderEntry(header, 'DECOBJ');
   }
   if (!decEntry) {
-    decEntry = getHeaderEntry(header, "OBJCTDEC");
+    decEntry = getHeaderEntry(header, 'OBJCTDEC');
   }
   if (!decEntry) return undefined;
 
   let dec;
-  if (typeof decEntry.value == "string" && decEntry.value.includes(":")) {
+  if (typeof decEntry.value == 'string' && decEntry.value.includes(':')) {
     dec = parseDms(decEntry.value);
   } else {
     dec = parseFloat(decEntry.value);
@@ -228,7 +227,7 @@ export function getDecDegs(header: Header) {
 }
 
 export function getExpNum(header: Header) {
-  let expNum = getHeaderEntry(header, "EXPNUM");
+  let expNum = getHeaderEntry(header, 'EXPNUM');
   if (expNum) {
     return expNum.value;
   }
@@ -236,7 +235,7 @@ export function getExpNum(header: Header) {
 }
 
 export function getFilter(header: Header) {
-  let filter = getHeaderEntry(header, "FILTER");
+  let filter = getHeaderEntry(header, 'FILTER');
   if (filter) {
     return filter.value;
   }
@@ -316,6 +315,7 @@ export function hasOverlap(headerA: Header, headerB: Header) {
     y2: Math.min(pixelLowerLeft[1], pixelUpperRight[1]),
   };
   let regionB = { x1: 0, y1: getHeight(headerB), x2: getWidth(headerB), y2: 0 };
-  let overlap = regionA.x1 < regionB.x2 && regionA.x2 > regionB.x1 && regionA.y1 > regionB.y2 && regionA.y2 < regionB.y1;
+  let overlap =
+    regionA.x1 < regionB.x2 && regionA.x2 > regionB.x1 && regionA.y1 > regionB.y2 && regionA.y2 < regionB.y1;
   return overlap;
 }

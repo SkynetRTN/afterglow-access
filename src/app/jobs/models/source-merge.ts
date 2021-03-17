@@ -1,10 +1,10 @@
-import { Astrometry } from "./astrometry";
-import { JobResultBase, JobBase } from "./job-base";
-import { JobType } from "./job-types";
-import { SourceExtractionData } from "./source-extraction";
+import { Astrometry } from './astrometry';
+import { JobResultBase, JobBase } from './job-base';
+import { JobType } from './job-types';
+import { SourceExtractionData } from './source-extraction';
 
 export interface SourceMergeSettings {
-  posType: "sky" | "pixel" | "auto";
+  posType: 'sky' | 'pixel' | 'auto';
 }
 
 export interface SourceMergeJobResult extends JobResultBase {
@@ -18,5 +18,3 @@ export interface SourceMergeJob extends JobBase {
   settings: SourceMergeSettings;
   result: SourceMergeJobResult;
 }
-
-

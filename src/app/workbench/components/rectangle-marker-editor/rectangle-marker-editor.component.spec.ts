@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RectangleMarkerEditorComponent } from "./rectangle-marker-editor.component";
+import { RectangleMarkerEditorComponent } from './rectangle-marker-editor.component';
 
-describe("RectangleMarkerEditorComponent", () => {
+describe('RectangleMarkerEditorComponent', () => {
   let component: RectangleMarkerEditorComponent;
   let fixture: ComponentFixture<RectangleMarkerEditorComponent>;
 
@@ -18,7 +18,7 @@ describe("RectangleMarkerEditorComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

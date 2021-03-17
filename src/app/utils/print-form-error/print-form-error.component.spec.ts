@@ -8,9 +8,8 @@ describe('PrintFormErrorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PrintFormErrorComponent ]
-    })
-    .compileComponents();
+      declarations: [PrintFormErrorComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {

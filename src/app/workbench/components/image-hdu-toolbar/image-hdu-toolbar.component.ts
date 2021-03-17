@@ -11,20 +11,17 @@ import {
   blueColorMap,
   aColorMap,
   ColorMap,
-} from "../../../data-files/models/color-map";
+} from '../../../data-files/models/color-map';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-
-
 @Component({
   selector: 'app-image-hdu-toolbar',
   templateUrl: './image-hdu-toolbar.component.html',
-  styleUrls: ['./image-hdu-toolbar.component.scss']
+  styleUrls: ['./image-hdu-toolbar.component.scss'],
 })
 export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestroy {
-
   @Input()
   showBlendMode: boolean = false;
 
@@ -58,27 +55,22 @@ export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestro
     aColorMap,
   ];
   blendModeOptions = [
-    { label: "Normal", value: BlendMode.Normal },
-    { label: "Screen", value: BlendMode.Screen },
-    { label: "Luminosity", value: BlendMode.Luminosity },
+    { label: 'Normal', value: BlendMode.Normal },
+    { label: 'Screen', value: BlendMode.Screen },
+    { label: 'Luminosity', value: BlendMode.Luminosity },
   ];
 
   @ViewChild('colorMapMenuTrigger') colorMapMenuTrigger: MatMenuTrigger;
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
-  ngAfterViewInit(): void {
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
-
-  
-
 }

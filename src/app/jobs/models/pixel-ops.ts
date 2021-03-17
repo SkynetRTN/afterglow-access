@@ -1,5 +1,5 @@
-import { JobBase, JobResultBase } from "./job-base";
-import { JobType } from "./job-types";
+import { JobBase, JobResultBase } from './job-base';
+import { JobType } from './job-types';
 
 export interface PixelOpsJobResult extends JobResultBase {
   readonly type: JobType.PixelOps;
@@ -15,5 +15,3 @@ export interface PixelOpsJob extends JobBase {
   inplace: boolean;
   result: PixelOpsJobResult | null;
 }
-
-

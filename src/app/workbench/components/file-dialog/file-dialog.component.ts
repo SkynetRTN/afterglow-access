@@ -1,21 +1,24 @@
-import { Component, OnInit, Inject, OnDestroy, AfterViewInit } from "@angular/core";
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { DataFile } from "../../../data-files/models/data-file";
-import { Store, Actions, ofActionDispatched } from "@ngxs/store";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { DataProvidersState } from "../../../data-providers/data-providers.state";
-import { CloseDataFile, CloseDataFileSuccess, CloseDataFileFail } from "../../../data-files/data-files.actions";
-import { tap, take, map, catchError, flatMap, filter, takeUntil, switchMap, takeWhile } from "rxjs/operators";
-import { Observable, throwError, of, merge, Subject, BehaviorSubject } from "rxjs";
-import { AfterglowDataProviderService } from "../../services/afterglow-data-providers";
-import { SaveDialogComponent, SaveDialogResult } from "../../../data-providers/components/save-dialog/save-dialog.component";
-import { DataProviderAsset } from "../../../data-providers/models/data-provider-asset";
-import { HttpErrorResponse } from "@angular/common/http";
+import { Component, OnInit, Inject, OnDestroy, AfterViewInit } from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { DataFile } from '../../../data-files/models/data-file';
+import { Store, Actions, ofActionDispatched } from '@ngxs/store';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { DataProvidersState } from '../../../data-providers/data-providers.state';
+import { CloseDataFile, CloseDataFileSuccess, CloseDataFileFail } from '../../../data-files/data-files.actions';
+import { tap, take, map, catchError, flatMap, filter, takeUntil, switchMap, takeWhile } from 'rxjs/operators';
+import { Observable, throwError, of, merge, Subject, BehaviorSubject } from 'rxjs';
+import { AfterglowDataProviderService } from '../../services/afterglow-data-providers';
+import {
+  SaveDialogComponent,
+  SaveDialogResult,
+} from '../../../data-providers/components/save-dialog/save-dialog.component';
+import { DataProviderAsset } from '../../../data-providers/models/data-provider-asset';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 
 export interface FileDialogConfig {
   files: DataFile[];
-  mode: "close" | "save";
+  mode: 'close' | 'save';
 }
 
 export interface SaveChangesDialogResult {
@@ -36,9 +39,9 @@ enum FileDialogAction {
 }
 
 @Component({
-  selector: "app-file-dialog",
-  templateUrl: "./file-dialog.component.html",
-  styleUrls: ["./file-dialog.component.scss"],
+  selector: 'app-file-dialog',
+  templateUrl: './file-dialog.component.html',
+  styleUrls: ['./file-dialog.component.scss'],
 })
 export class SaveChangesDialogComponent implements OnDestroy {
   autoSave: boolean = null;
@@ -71,12 +74,12 @@ export class SaveChangesDialogComponent implements OnDestroy {
           } else if (input == FileDialogAction.close) {
             next$ = of(true);
           } else {
-            return throwError("Unexpected user input");
+            return throwError('Unexpected user input');
           }
 
           return next$.pipe(
             flatMap((success) => {
-              if (success && this.config.mode == "close") {
+              if (success && this.config.mode == 'close') {
                 return this.close();
               }
               return of(success);
@@ -87,7 +90,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
       .subscribe((success) => {
         if (success) {
           this.index$.next(this.index$.getValue() + 1);
-        } else if (this.config.mode == "save") {
+        } else if (this.config.mode == 'save') {
           this.dialogRef.close();
         }
       });
@@ -103,7 +106,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
           let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
           let file = this.config.files[index];
           let modified = file.hduIds.map((hduId) => hduEntities[hduId].modified).some((v) => v);
-          if (this.config.mode == "save") {
+          if (this.config.mode == 'save') {
             if (modified || this.isReadOnly) {
               this.action$.next(FileDialogAction.save);
             } else {
@@ -160,7 +163,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
     let failure$ = this.actions$.pipe(
       ofActionDispatched(CloseDataFileFail),
       filter((action) => (action as CloseDataFileFail).fileId == file.id),
-      map((action) => throwError("Failed to close file"))
+      map((action) => throwError('Failed to close file'))
     );
 
     return merge(success$, failure$).pipe(take(1));
@@ -175,23 +178,23 @@ export class SaveChangesDialogComponent implements OnDestroy {
 
     if (modifiedFiles.length > 1 && this.autoDiscard === null) {
       let dialogConfig: Partial<AlertDialogConfig> = {
-        title: "Discard all changes?",
+        title: 'Discard all changes?',
         message: `Do you want to discard changes for the ${modifiedFiles.length} remaining files which have been modified?`,
         buttons: [
           {
             color: null,
             value: true,
-            label: "Discard all changes",
+            label: 'Discard all changes',
           },
           {
             color: null,
             value: false,
-            label: "Let me decide for each file",
+            label: 'Let me decide for each file',
           },
         ],
       };
       let dialogRef = this.dialog.open(AlertDialogComponent, {
-        width: "600px",
+        width: '600px',
         data: dialogConfig,
       });
 
@@ -217,7 +220,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
     let assetPath = file.assetPath;
     if (this.autoSave && this.lastSaveResult && readOnly) {
       dataProviderId = this.lastSaveResult.dataProviderId;
-      let parentAssetPath = this.lastSaveResult.assetPath.slice(0, this.lastSaveResult.assetPath.lastIndexOf("/"));
+      let parentAssetPath = this.lastSaveResult.assetPath.slice(0, this.lastSaveResult.assetPath.lastIndexOf('/'));
       assetPath = `${parentAssetPath}/${file.name}`;
     }
 
@@ -230,8 +233,8 @@ export class SaveChangesDialogComponent implements OnDestroy {
       next$ = of({ dataProviderId: dataProviderId, assetPath: assetPath });
     } else {
       let saveDialogRef = this.dialog.open(SaveDialogComponent, {
-        width: "80vw",
-        maxWidth: "1200px",
+        width: '80vw',
+        maxWidth: '1200px',
         data: {
           name: file.name,
         },
@@ -258,10 +261,10 @@ export class SaveChangesDialogComponent implements OnDestroy {
               }),
               catchError((error) => {
                 let errorDialog = this.dialog.open(AlertDialogComponent, {
-                  width: "400px",
+                  width: '400px',
                   data: {
-                    title: "Error",
-                    message: "An unexpected error was encountered when attempting to save the file.",
+                    title: 'Error',
+                    message: 'An unexpected error was encountered when attempting to save the file.',
                   },
                 });
                 return errorDialog.afterClosed().pipe(map((v) => false));
@@ -276,7 +279,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
               let respAssets = resp as DataProviderAsset[];
               if (resp.length != 1) {
                 //is collection
-                return throwError("Cannot save to chosen path.  Existing asset is a collection.");
+                return throwError('Cannot save to chosen path.  Existing asset is a collection.');
               } else {
                 //exists
                 if (dataProviderId == file.dataProviderId && assetPath == file.assetPath) {
@@ -284,19 +287,19 @@ export class SaveChangesDialogComponent implements OnDestroy {
                   return createSaveRequest(true);
                 }
                 let dialogRef = this.dialog.open(AlertDialogComponent, {
-                  width: "400px",
+                  width: '400px',
                   data: {
                     message: `Overwrite existing file? '${dataProvider.displayName}${assetPath}'?`,
                     buttons: [
                       {
                         color: null,
                         value: true,
-                        label: "Overwrite",
+                        label: 'Overwrite',
                       },
                       {
                         color: null,
                         value: false,
-                        label: "Cancel",
+                        label: 'Cancel',
                       },
                     ],
                   },
@@ -313,11 +316,11 @@ export class SaveChangesDialogComponent implements OnDestroy {
               }
             }),
             catchError((err) => {
-              if ((err as HttpErrorResponse).error.exception == "AssetNotFoundError") {
+              if ((err as HttpErrorResponse).error.exception == 'AssetNotFoundError') {
                 return createSaveRequest(false);
               } else {
                 // unknown error
-                return throwError("Encountered unexpected error when saving file.");
+                return throwError('Encountered unexpected error when saving file.');
               }
             })
           );
@@ -341,23 +344,23 @@ export class SaveChangesDialogComponent implements OnDestroy {
 
           if (readOnlyFiles.length != 0 && this.autoSave === null) {
             let dialogConfig: Partial<AlertDialogConfig> = {
-              title: "Auto-Save Remaining Files",
+              title: 'Auto-Save Remaining Files',
               message: `Would you like to automatically save the remaining ${readOnlyFiles.length} read-only files to the same location?`,
               buttons: [
                 {
                   color: null,
                   value: true,
-                  label: "Auto-save to same location",
+                  label: 'Auto-save to same location',
                 },
                 {
                   color: null,
                   value: false,
-                  label: "Let me choose the location for each file",
+                  label: 'Let me choose the location for each file',
                 },
               ],
             };
             let dialogRef = this.dialog.open(AlertDialogComponent, {
-              width: "600px",
+              width: '600px',
               data: dialogConfig,
             });
 

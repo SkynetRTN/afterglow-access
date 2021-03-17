@@ -1,4 +1,4 @@
 export enum HduType {
-  IMAGE = "image",
-  TABLE = "table",
+  IMAGE = 'image',
+  TABLE = 'table',
 }

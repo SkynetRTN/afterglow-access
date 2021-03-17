@@ -116,13 +116,12 @@ export function calcLevels(
   upperPercentile: number = 99,
   round: boolean = false
 ) {
-
   let result = {
     peakLevel: 0,
     backgroundLevel: 0,
-  }
+  };
 
-  if(hist.data.length == 0) return result;
+  if (hist.data.length == 0) return result;
 
   let total = 0;
   for (let i = 0; i < hist.data.length; i++) {
@@ -135,7 +134,6 @@ export function calcLevels(
 
   let blackComplete = false;
   let whiteComplete = false;
-  
 
   if (lowerPercentile == 100) {
     blackComplete = true;
@@ -179,9 +177,9 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
   let result = {
     lowerPercentile: 0,
     upperPercentile: 0,
-  }
+  };
 
-  if(hist.data.length == 0) return result;
+  if (hist.data.length == 0) return result;
 
   let total = 0;
   for (let i = 0; i < hist.data.length; i++) {
@@ -191,7 +189,8 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
   let y0 = 0;
   let lowerComplete = false;
   let upperComplete = false;
-  let maxPixCount: number = 0, minPixCount: number = 0;
+  let maxPixCount: number = 0,
+    minPixCount: number = 0;
   for (let i = 0; i < hist.data.length - 1; i++) {
     y0 += hist.data[i];
     let x1 = getBinCenter(hist, i + 1);

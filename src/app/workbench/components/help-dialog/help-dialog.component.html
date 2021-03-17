@@ -8,74 +8,58 @@
       <div class="p-3">
         <h2 i18n>Accessibility</h2>
         <p i18n>
-          IDATA, a project funded by the U.S. National Science Foundation (NSF)
-          brought together blind and visually impaired (BVI) and sighted high
-          school students and their teachers to create a version of Afterglow
-          Access that is as accessible as possible for BVI users.
+          IDATA, a project funded by the U.S. National Science Foundation (NSF) brought together blind and visually
+          impaired (BVI) and sighted high school students and their teachers to create a version of Afterglow Access
+          that is as accessible as possible for BVI users.
         </p>
 
         <p i18n>
-          Over the course of 3 years, Students and teachers collaborated with
-          astronomy, education, research and design professionals in the design
-          and development of the software. The team utilized User-Centered
-          Design (UCD) and an iterative method for the development and testing
-          of Afterglow Access. Teachers and students who participated in IDATA
-          will are considered co-developers in the project. Below are some
-          highlights of their work and features that have been integrated
-          because of their invaluable contribution.
+          Over the course of 3 years, Students and teachers collaborated with astronomy, education, research and design
+          professionals in the design and development of the software. The team utilized User-Centered Design (UCD) and
+          an iterative method for the development and testing of Afterglow Access. Teachers and students who
+          participated in IDATA will are considered co-developers in the project. Below are some highlights of their
+          work and features that have been integrated because of their invaluable contribution.
         </p>
 
         <h2 i18n>Shortcuts & Navigations</h2>
 
         <p i18n>
-          BVI users often rely on keyboard navigation to explore the digital
-          space. IDATA students and teachers were instrumental in creating
-          intuitive shortcuts that allow users to move through Afterglow Access
-          easily without having to use a mouse. You can find these shortcuts in
-          the “Shortcuts” Tab above.
+          BVI users often rely on keyboard navigation to explore the digital space. IDATA students and teachers were
+          instrumental in creating intuitive shortcuts that allow users to move through Afterglow Access easily without
+          having to use a mouse. You can find these shortcuts in the “Shortcuts” Tab above.
         </p>
 
         <h2 i18n>Screenreaders</h2>
 
         <p i18n>
-          Afterglow Access follows the guidelines to be as screenreader
-          compliant. In addition, IDATA worked with BVI students and BVI
-          astronomers associated with IDATA to learn how Afterglow Access worked
-          with their screen reader of choice. We tested Afterglow Access with
-          NVDA and Apple VoiceOver.
+          Afterglow Access follows the guidelines to be as screenreader compliant. In addition, IDATA worked with BVI
+          students and BVI astronomers associated with IDATA to learn how Afterglow Access worked with their screen
+          reader of choice. We tested Afterglow Access with NVDA and Apple VoiceOver.
         </p>
 
         <h2 i18n>Themes</h2>
 
         <p i18n>
-          In UCD activities held by IDATA participants and co-designers, the
-          team discovered that the tool could be much more accessible to BVI
-          users if Afterglow Access were customizable. One such customization
-          that IDATA students shared with us was the ability to change the look
-          and feel of the software. Depending on their BVI condition and person
-          preferences some students preferred white on black themes and others
-          preferred a yellow on black theme. In addition to the traditional
-          “zoom” feature, students also expressed wanting to be able to change
-          the size and weight of the font which can help heighten the contrast
-          between text and background. This method also allows users to retain
-          the same layout which is helpful for BVI students who often “lose
-          their place” when Zoomed in on a part of the screen. Using student
-          feedback, we developed three colored themes and offered the ability to
-          select font weight and font size. These settings can be found in the
-          top right “hamburger menu” with the title “Theme editor.”
+          In UCD activities held by IDATA participants and co-designers, the team discovered that the tool could be much
+          more accessible to BVI users if Afterglow Access were customizable. One such customization that IDATA students
+          shared with us was the ability to change the look and feel of the software. Depending on their BVI condition
+          and person preferences some students preferred white on black themes and others preferred a yellow on black
+          theme. In addition to the traditional “zoom” feature, students also expressed wanting to be able to change the
+          size and weight of the font which can help heighten the contrast between text and background. This method also
+          allows users to retain the same layout which is helpful for BVI students who often “lose their place” when
+          Zoomed in on a part of the screen. Using student feedback, we developed three colored themes and offered the
+          ability to select font weight and font size. These settings can be found in the top right “hamburger menu”
+          with the title “Theme editor.”
         </p>
 
         <h2 i18n>Sonification tool</h2>
 
         <p i18n>
-          The Sonification tool was developed as an innovative way to translate
-          astronomical images into informative sounds for BVI users. This tool
-          can be found under “sonification” which uses a musical note as its
-          symbol. Once you have an image uploaded to your viewer. You may push
-          the “Sonify” button to “hear” the image. The sounds start at the base
-          of the image and travel upward. The pitch determines where light
-          representing objects such as stars, planets, and asteroids exist in
-          the image.
+          The Sonification tool was developed as an innovative way to translate astronomical images into informative
+          sounds for BVI users. This tool can be found under “sonification” which uses a musical note as its symbol.
+          Once you have an image uploaded to your viewer. You may push the “Sonify” button to “hear” the image. The
+          sounds start at the base of the image and travel upward. The pitch determines where light representing objects
+          such as stars, planets, and asteroids exist in the image.
         </p>
       </div>
     </mat-tab>
@@ -83,26 +67,16 @@
       <div class="p-3">
         <div *ngFor="let group of shortcutGroups" class="shortcut-group">
           <h2>{{ group.name }}</h2>
-          <table
-            mat-table
-            [dataSource]="group.shortcuts"
-            class="mat-elevation-z8"
-          >
+          <table mat-table [dataSource]="group.shortcuts" class="mat-elevation-z8">
             <!-- Name Column -->
             <ng-container matColumnDef="key">
               <th mat-header-cell *matHeaderCellDef i18n>Key</th>
               <td mat-cell *matCellDef="let shortcut">
                 <span *ngIf="shortcut.key !== ','; else commaBlock">
-                  <span
-                    *ngFor="let key of shortcut.key.split(','); let i = index"
-                    class="pr-1"
-                  >
+                  <span *ngFor="let key of shortcut.key.split(','); let i = index" class="pr-1">
                     <span *ngIf="i > 0">, </span>
                     <ng-container *ngIf="key != '+'; else showPlus">
-                      <span
-                        *ngFor="let subKey of key.split('+'); let j = index"
-                        class="pr-1"
-                      >
+                      <span *ngFor="let subKey of key.split('+'); let j = index" class="pr-1">
                         <span *ngIf="j > 0"> + </span>
 
                         <span class="cfp-hotkeys-key">
@@ -140,54 +114,41 @@
     </mat-tab>
     <mat-tab label="About Afterglow Access">
       <div class="p-3">
-        <div style="width: 100%; text-align: left; padding: 20px 0px;">
-          Afterglow Access<br>
-          Version: {{version}}<br>
-          Build Date: {{buildDate}}<br>
-          Skynet Robotic Telescope Network<br>
-          University of North Carolina at Chapel Hill<br>
+        <div style="width: 100%; text-align: left; padding: 20px 0px">
+          Afterglow Access<br />
+          Version: {{ version }}<br />
+          Build Date: {{ buildDate }}<br />
+          Skynet Robotic Telescope Network<br />
+          University of North Carolina at Chapel Hill<br />
         </div>
 
-        <hr>
+        <hr />
 
         <h2 i18n>Software Development Team</h2>
         <ul>
-          <li>
-            Joshua Haislip - Principal Software Engineer
-          </li>
-          <li>
-            Vladimir Kouprianov - Senior Software Engineer
-          </li>
+          <li>Joshua Haislip - Principal Software Engineer</li>
+          <li>Vladimir Kouprianov - Senior Software Engineer</li>
           <li>Dan Reichart - Director</li>
         </ul>
 
         <h2 i18n>IDATA Credits</h2>
 
         <p i18n>
-          Innovators Developing Accessible Tools for Astronomy (IDATA),
-          officially known as Research Supporting Multisensory Engagement by
-          Blind, Visually Impaired, and Sighted Students to Advance Integrated
-          Learning of Astronomy and Computer Science, and the resulting
-          curricular resources, Afterglow Access software, and project research
-          were made possible with support from the U.S. National Science
-          Foundation’s STEM+C program (Award 1640131). IDATA institutional
-          collaborators include AUI, GLAS Education, Linder Research &
-          Development Inc., Logos Consulting Group, TERC, University of Nevada -
-          Las Vegas, University of North Carolina at Chapel Hill, and
-          Universidad Diego Portales. Individual consultants on the project
-          include Kathy Gustavson and Alexandra Dean Grossi. IDATA Teacher
-          collaborators in the U.S. include Amanda Allen, Jacqueline Barge,
-          Holly Bensel, Neal Boys, Tim Fahlberg, Kristin Grender, David Lockett,
-          Matthew McCutcheon, Caroline Odden, Michael Prokosch, Kara Rowbotham,
-          Rick Sanchez, and Barbara Stachelski. IDATA Student collaborators in
-          the U.S. include Evan Blad, Naleah Boys, Ellen Butler, Jayden Dimas,
-          Riley Kappell, Joseph Murphy, Logan Ruby, Alex Scerba, Charlize
-          Sentosa, Meg Sorensen, Remy Streichenberger, and Trevor Warren. IDATA
-          Undergraduate Mentors include Tia Bertz, Katya Gozman, Chris Mathews,
-          Kendall Mehling, Andrea Salazar, Ben Shafer, Alex Traub, and Sophia
-          Vlahakis. Special thanks to the IDATA external advisors including Nic
-          Bonne, Al Harper, Sue Ann Heatherly, Russ Laher, Luisa Rebull, Ed
-          Summers, Kathryn Williamson, and Wanda Diaz Merced.
+          Innovators Developing Accessible Tools for Astronomy (IDATA), officially known as Research Supporting
+          Multisensory Engagement by Blind, Visually Impaired, and Sighted Students to Advance Integrated Learning of
+          Astronomy and Computer Science, and the resulting curricular resources, Afterglow Access software, and project
+          research were made possible with support from the U.S. National Science Foundation’s STEM+C program (Award
+          1640131). IDATA institutional collaborators include AUI, GLAS Education, Linder Research & Development Inc.,
+          Logos Consulting Group, TERC, University of Nevada - Las Vegas, University of North Carolina at Chapel Hill,
+          and Universidad Diego Portales. Individual consultants on the project include Kathy Gustavson and Alexandra
+          Dean Grossi. IDATA Teacher collaborators in the U.S. include Amanda Allen, Jacqueline Barge, Holly Bensel,
+          Neal Boys, Tim Fahlberg, Kristin Grender, David Lockett, Matthew McCutcheon, Caroline Odden, Michael Prokosch,
+          Kara Rowbotham, Rick Sanchez, and Barbara Stachelski. IDATA Student collaborators in the U.S. include Evan
+          Blad, Naleah Boys, Ellen Butler, Jayden Dimas, Riley Kappell, Joseph Murphy, Logan Ruby, Alex Scerba, Charlize
+          Sentosa, Meg Sorensen, Remy Streichenberger, and Trevor Warren. IDATA Undergraduate Mentors include Tia Bertz,
+          Katya Gozman, Chris Mathews, Kendall Mehling, Andrea Salazar, Ben Shafer, Alex Traub, and Sophia Vlahakis.
+          Special thanks to the IDATA external advisors including Nic Bonne, Al Harper, Sue Ann Heatherly, Russ Laher,
+          Luisa Rebull, Ed Summers, Kathryn Williamson, and Wanda Diaz Merced.
         </p>
       </div>
     </mat-tab>

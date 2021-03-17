@@ -1,11 +1,11 @@
-import { Injectable } from "@angular/core";
-import { Location } from "@angular/common";
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { Injectable } from '@angular/core';
+import { Location } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-import { DataProvider } from "../../data-providers/models/data-provider";
-import { DataProviderAsset } from "../../data-providers/models/data-provider-asset";
+import { DataProvider } from '../../data-providers/models/data-provider';
+import { DataProviderAsset } from '../../data-providers/models/data-provider-asset';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { AfterglowConfigService } from '../../afterglow-config.service';
 
@@ -22,15 +22,15 @@ export class AfterglowDataProviderService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   getDataProviders(): Observable<DataProvider[]> {
-    return this.http.get<DataProvider[]>(`${getCoreApiUrl(this.config)}/data-providers`)
+    return this.http.get<DataProvider[]>(`${getCoreApiUrl(this.config)}/data-providers`);
   }
 
   getAssets(dataProviderId: string, path: string): Observable<DataProviderAsset[]> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    if (path) params = params.set("path", path);
+    if (path) params = params.set('path', path);
 
     return this.http
       .get<any>(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString())
@@ -40,7 +40,7 @@ export class AfterglowDataProviderService {
             let asset: DataProviderAsset = {
               name: r.name,
               isDirectory: r.collection,
-              assetPath: "/" + r.path,
+              assetPath: '/' + r.path,
               metadata: r.metadata,
               dataProviderId: dataProviderId,
             };
@@ -51,35 +51,40 @@ export class AfterglowDataProviderService {
   }
 
   downloadAsset(dataProviderId: string, path: string): Observable<any> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", path);
+    params = params.set('path', path);
 
-    return this.http.get(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(), {
-      responseType: "blob",
-    });
+    return this.http.get(
+      `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
+      {
+        responseType: 'blob',
+      }
+    );
   }
 
   deleteAsset(dataProviderId: string, path: string, recursive: boolean = false) {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", path);
+    params = params.set('path', path);
     if (recursive) {
-      params = params.set("force", "1");
+      params = params.set('force', '1');
     }
 
-    return this.http.delete(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString());
+    return this.http.delete(
+      `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString()
+    );
   }
 
   moveAsset(dataProviderId: string, path: string, newDataProviderId: string, newPath: string): Observable<any> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
-    if (newPath && newPath[0] == "/") {
+    if (newPath && newPath[0] == '/') {
       newPath = path.slice(1);
     }
     return this.copyAsset(dataProviderId, path, newDataProviderId, newPath, false);
@@ -92,16 +97,16 @@ export class AfterglowDataProviderService {
     newPath: string,
     keepOriginal: boolean = true
   ): Observable<any> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
-    if (newPath && newPath[0] == "/") {
+    if (newPath && newPath[0] == '/') {
       newPath = newPath.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", newPath);
+    params = params.set('path', newPath);
     if (!keepOriginal) {
-      params = params.set("move", "1");
+      params = params.set('move', '1');
     }
 
     return this.http.post(
@@ -114,11 +119,11 @@ export class AfterglowDataProviderService {
   }
 
   renameAsset(dataProviderId: string, path: string, name: string): Observable<any> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", path);
+    params = params.set('path', path);
 
     return this.http.put(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString(), {
       name: name,
@@ -126,11 +131,11 @@ export class AfterglowDataProviderService {
   }
 
   createCollectionAsset(dataProviderId: string, path: string): Observable<any> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", path);
+    params = params.set('path', path);
 
     return this.http.post(
       `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
@@ -139,14 +144,14 @@ export class AfterglowDataProviderService {
   }
 
   createAsset(dataProviderId: string, path: string, file: File, uploadInfo: UploadInfo): Observable<any> {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", path);
+    params = params.set('path', path);
 
     let formData = new FormData();
-    formData.append("file", uploadInfo.chunkBlob);
+    formData.append('file', uploadInfo.chunkBlob);
 
     return this.http.post(
       `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString(),
@@ -155,12 +160,12 @@ export class AfterglowDataProviderService {
   }
 
   saveFile(fileId: string, dataProviderId: string, path: string, create: boolean = false) {
-    if (path && path[0] == "/") {
+    if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
-    params = params.set("path", path);
-    params = params.set("group_name", fileId);
+    params = params.set('path', path);
+    params = params.set('group_name', fileId);
 
     let uri = `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets/data?` + params.toString();
     if (!create) {

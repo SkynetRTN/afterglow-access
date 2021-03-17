@@ -1,11 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  AfterViewInit,
-  Input,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Subject, BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import {
   auditTime,
@@ -23,13 +16,7 @@ declare let d3: any;
 import { Router } from '@angular/router';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
-import {
-  DataFile,
-  ImageHdu,
-  IHdu,
-  PixelType,
-  ITransformableImageData,
-} from '../../../data-files/models/data-file';
+import { DataFile, ImageHdu, IHdu, PixelType, ITransformableImageData } from '../../../data-files/models/data-file';
 import {
   UpdateNormalizer,
   RotateBy,
@@ -55,9 +42,7 @@ import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.compo
   styleUrls: ['./display-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DisplayToolsetComponent extends ToolPanelBaseComponent
-  implements OnInit, AfterViewInit, OnDestroy {
-
+export class DisplayToolsetComponent extends ToolPanelBaseComponent implements OnInit, AfterViewInit, OnDestroy {
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
     peak: number;
@@ -68,31 +53,18 @@ export class DisplayToolsetComponent extends ToolPanelBaseComponent
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
 
-  constructor(
-    store: Store,
-    private afterglowConfig: AfterglowConfigService
-  ) {
+  constructor(store: Store, private afterglowConfig: AfterglowConfigService) {
     super(store);
 
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
 
-    this.backgroundPercentile$.pipe(
-      auditTime(25),
-      withLatestFrom(this.imageHdu$)
-    ).subscribe(([value, imageHdu]) => {
-      this.store.dispatch(
-        new UpdateNormalizer(imageHdu.id, { backgroundPercentile: value })
-      );
+    this.backgroundPercentile$.pipe(auditTime(25), withLatestFrom(this.imageHdu$)).subscribe(([value, imageHdu]) => {
+      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { backgroundPercentile: value }));
     });
 
-    this.peakPercentile$.pipe(
-      auditTime(25),
-      withLatestFrom(this.imageHdu$)
-    ).subscribe(([value, imageHdu]) => {
-      this.store.dispatch(
-        new UpdateNormalizer(imageHdu.id, { peakPercentile: value })
-      );
+    this.peakPercentile$.pipe(auditTime(25), withLatestFrom(this.imageHdu$)).subscribe(([value, imageHdu]) => {
+      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakPercentile: value }));
     });
   }
 
@@ -105,15 +77,11 @@ export class DisplayToolsetComponent extends ToolPanelBaseComponent
   }
 
   onColorMapChange(hdu: ImageHdu, value: string) {
-    this.store.dispatch(
-      new UpdateNormalizer(hdu.id, { colorMapName: value })
-    );
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { colorMapName: value }));
   }
 
   onStretchModeChange(hdu: ImageHdu, value: StretchMode) {
-    this.store.dispatch(
-      new UpdateNormalizer(hdu.id, { stretchMode: value })
-    );
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
   }
 
   onInvertedChange(hdu: ImageHdu, value: boolean) {
@@ -138,63 +106,26 @@ export class DisplayToolsetComponent extends ToolPanelBaseComponent
     );
   }
 
-  onFlipClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
-    
-    this.store.dispatch(
-      new Flip(
-        t.imageDataId,
-        t.imageTransformId,
-        t.viewportTransformId,
-        'horizontal',
-        viewportSize
-      )
-    );
+  onFlipClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
+    this.store.dispatch(new Flip(t.imageDataId, t.imageTransformId, t.viewportTransformId, 'horizontal', viewportSize));
   }
 
-  onMirrorClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
-    this.store.dispatch(
-      new Flip(
-        t.imageDataId,
-        t.imageTransformId,
-        t.viewportTransformId,
-        'vertical',
-        viewportSize
-      )
-    );
+  onMirrorClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
+    this.store.dispatch(new Flip(t.imageDataId, t.imageTransformId, t.viewportTransformId, 'vertical', viewportSize));
   }
 
-  onRotateClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
-    this.store.dispatch(
-      new RotateBy(
-        t.imageDataId,
-        t.imageTransformId,
-        t.viewportTransformId,
-        viewportSize,
-        90
-      )
-    );
+  onRotateClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
+    this.store.dispatch(new RotateBy(t.imageDataId, t.imageTransformId, t.viewportTransformId, viewportSize, 90));
   }
 
-  onResetOrientationClick(t: ITransformableImageData, viewportSize: {width: number, height: number}) {
-    this.store.dispatch(
-      new ResetImageTransform(
-        t.imageDataId,
-        t.imageTransformId,
-        t.viewportTransformId,
-      )
-    );
-    this.store.dispatch(
-      new ResetViewportTransform(
-        t.imageDataId,
-        t.imageTransformId,
-        t.viewportTransformId,
-      )
-    );
+  onResetOrientationClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
+    this.store.dispatch(new ResetImageTransform(t.imageDataId, t.imageTransformId, t.viewportTransformId));
+    this.store.dispatch(new ResetViewportTransform(t.imageDataId, t.imageTransformId, t.viewportTransformId));
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
-  ngOnDestroy() { }
+  ngOnDestroy() {}
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 }

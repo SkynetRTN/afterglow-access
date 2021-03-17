@@ -1,9 +1,9 @@
-import { PipeTransform, Pipe } from "@angular/core";
+import { PipeTransform, Pipe } from '@angular/core';
 
-import { DataFile } from "../data-files/models/data-file";
+import { DataFile } from '../data-files/models/data-file';
 
 @Pipe({
-  name: "filteredFiles",
+  name: 'filteredFiles',
   pure: false,
 })
 export class FilteredFilesPipe implements PipeTransform {

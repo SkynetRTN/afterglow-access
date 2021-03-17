@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from "@angular/core";
+import { Pipe, PipeTransform } from '@angular/core';
 /*
  * Raise the value exponentially
  * Takes an exponent argument that defaults to 1.
@@ -8,7 +8,7 @@ import { Pipe, PipeTransform } from "@angular/core";
  *   {{ 2 |  exponentialStrength:10}}
  *   formats to: 1024
  */
-@Pipe({ name: "region-filter" })
+@Pipe({ name: 'region-filter' })
 export class RegionFilterPipe implements PipeTransform {
   transform(
     value: Array<{ x: number; y: number }>,

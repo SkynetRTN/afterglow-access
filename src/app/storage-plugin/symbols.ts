@@ -1,8 +1,8 @@
-import { InjectionToken } from "@angular/core";
+import { InjectionToken } from '@angular/core';
 
-import { StorageKey } from "./internals";
-import { StateClass } from "@ngxs/store/internals";
-import { StateToken } from "@ngxs/store";
+import { StorageKey } from './internals';
+import { StateClass } from '@ngxs/store/internals';
+import { StateToken } from '@ngxs/store';
 
 export const enum StorageOption {
   LocalStorage,
@@ -73,9 +73,9 @@ export interface NgxsStoragePluginOptions {
   deserialize?(obj: any): any;
 }
 
-export const NGXS_STORAGE_PLUGIN_OPTIONS = new InjectionToken("NGXS_STORAGE_PLUGIN_OPTION");
+export const NGXS_STORAGE_PLUGIN_OPTIONS = new InjectionToken('NGXS_STORAGE_PLUGIN_OPTION');
 
-export const STORAGE_ENGINE = new InjectionToken("STORAGE_ENGINE");
+export const STORAGE_ENGINE = new InjectionToken('STORAGE_ENGINE');
 
 export interface StorageEngine {
   readonly length: number;

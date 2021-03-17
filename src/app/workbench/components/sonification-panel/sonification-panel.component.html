@@ -1,7 +1,5 @@
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>
-    This tool does not yet support tabular data. Please select an image HDU.
-  </div>
+  <div i18n class="alert alert-info" i18n>This tool does not yet support tabular data. Please select an image HDU.</div>
 </ng-template>
 
 <ng-template #hduNotSelectedBlock>
@@ -9,7 +7,6 @@
     Please select an HDU. This tool does not yet support composite image data.
   </div>
 </ng-template>
-
 
 <ng-container *ngIf="viewerState$ | async; let vs">
   <ng-container *ngIf="vs.hdu; else hduNotSelectedBlock">
@@ -34,73 +31,58 @@
           <tr *ngIf="state?.regionMode == SonifierRegionMode.CUSTOM">
             <th scope="row" i18n>Time Navigation:</th>
             <td>
-              <button mat-raised-button (click)="selectSubregionByTime(0)" i18n>
-                Early
-              </button>
-              <button mat-raised-button (click)="selectSubregionByTime(1)" i18n>
-                Mid
-              </button>
-              <button mat-raised-button (click)="selectSubregionByTime(2)" i18n>
-                Late
-              </button>
+              <button mat-raised-button (click)="selectSubregionByTime(0)" i18n>Early</button>
+              <button mat-raised-button (click)="selectSubregionByTime(1)" i18n>Mid</button>
+              <button mat-raised-button (click)="selectSubregionByTime(2)" i18n>Late</button>
             </td>
           </tr>
           <tr *ngIf="state?.regionMode == SonifierRegionMode.CUSTOM">
             <th scope="row" i18n>Tone Navigation:</th>
             <td>
-              <button mat-raised-button (click)="selectSubregionByFrequency(0)" i18n>
-                Low
-              </button>
-              <button mat-raised-button (click)="selectSubregionByFrequency(1)" i18n>
-                Mid
-              </button>
-              <button mat-raised-button (click)="selectSubregionByFrequency(2)" i18n>
-                High
-              </button>
+              <button mat-raised-button (click)="selectSubregionByFrequency(0)" i18n>Low</button>
+              <button mat-raised-button (click)="selectSubregionByFrequency(1)" i18n>Mid</button>
+              <button mat-raised-button (click)="selectSubregionByFrequency(2)" i18n>High</button>
             </td>
           </tr>
           <tr *ngIf="state?.regionMode == SonifierRegionMode.CUSTOM">
             <th scope="row" i18n>Selection Options:</th>
             <td>
-              <button mat-raised-button [disabled]="state?.regionHistoryIndex <= 0" (click)="undoRegionSelection()"
-                i18n>
+              <button
+                mat-raised-button
+                [disabled]="state?.regionHistoryIndex <= 0"
+                (click)="undoRegionSelection()"
+                i18n
+              >
                 Undo
               </button>
-              <button mat-raised-button [disabled]="
-                state?.regionHistoryIndex >= state?.regionHistory?.length - 1
-              " (click)="redoRegionSelection()" i18n>
+              <button
+                mat-raised-button
+                [disabled]="state?.regionHistoryIndex >= state?.regionHistory?.length - 1"
+                (click)="redoRegionSelection()"
+                i18n
+              >
                 Redo
               </button>
-              <button mat-raised-button (click)="resetRegionSelection()" i18n>
-                Reset
-              </button>
+              <button mat-raised-button (click)="resetRegionSelection()" i18n>Reset</button>
             </td>
           </tr>
           <tr *ngIf="state?.regionMode == SonifierRegionMode.CUSTOM"></tr>
           <tr>
             <th scope="row" i18n>Region Size:</th>
             <td>
-              {{ (region$ | async)?.height | number: "1.0-2" }} x
-              {{ (region$ | async)?.width | number: "1.0-2" }} pixels
+              {{ (region$ | async)?.height | number: '1.0-2' }} x
+              {{ (region$ | async)?.width | number: '1.0-2' }} pixels
             </td>
           </tr>
           <tr>
             <th scope="row" i18n>Start Pixel:</th>
-            <td>
-              ({{ (region$ | async)?.x | number: "1.0-2" }},
-              {{ (region$ | async)?.y | number: "1.0-2" }})
-            </td>
+            <td>({{ (region$ | async)?.x | number: '1.0-2' }}, {{ (region$ | async)?.y | number: '1.0-2' }})</td>
           </tr>
           <tr>
             <th scope="row" i18n>End Pixel:</th>
             <td>
-              ({{
-              (region$ | async)?.x + (region$ | async)?.width | number: "1.0-2"
-            }},
-              {{
-              (region$ | async)?.y + (region$ | async)?.height
-                | number: "1.0-2"
-            }})
+              ({{ (region$ | async)?.x + (region$ | async)?.width | number: '1.0-2' }},
+              {{ (region$ | async)?.y + (region$ | async)?.height | number: '1.0-2' }})
             </td>
           </tr>
         </tbody>
@@ -109,19 +91,41 @@
       <div class="row">
         <div class="col-6">
           <mat-form-field class="">
-            <input matInput i18n-placeholder placeholder="Duration" [ngModel]="state?.duration"
-              (ngModelChange)="setDuration($event)" type="number" step="1" min="5" max="60" />
+            <input
+              matInput
+              i18n-placeholder
+              placeholder="Duration"
+              [ngModel]="state?.duration"
+              (ngModelChange)="setDuration($event)"
+              type="number"
+              step="1"
+              min="5"
+              max="60"
+            />
           </mat-form-field>
         </div>
         <div class="col-6">
           <mat-form-field class="">
-            <input matInput i18n-placeholder placeholder="Tones" [ngModel]="state?.toneCount"
-              (ngModelChange)="setToneCount($event)" type="number" step="1" min="1" max="100" />
+            <input
+              matInput
+              i18n-placeholder
+              placeholder="Tones"
+              [ngModel]="state?.toneCount"
+              (ngModelChange)="setToneCount($event)"
+              type="number"
+              step="1"
+              min="1"
+              max="100"
+            />
           </mat-form-field>
         </div>
       </div>
-      <mat-slide-toggle [checked]="state?.viewportSync" [labelPosition]="'before'" (change)="setViewportSync($event)"
-        i18n>
+      <mat-slide-toggle
+        [checked]="state?.viewportSync"
+        [labelPosition]="'before'"
+        (change)="setViewportSync($event)"
+        i18n
+      >
         Keep selected region in viewer
       </mat-slide-toggle>
 
@@ -137,6 +141,5 @@
     </ng-container>
   </ng-container>
 </ng-container>
-
 
 <ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>

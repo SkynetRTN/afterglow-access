@@ -1,18 +1,25 @@
-import { Component, OnInit, Input, EventEmitter, Output } from "@angular/core";
-import { MatSelectChange } from "@angular/material/select";
-import { DataFile, getFilter, IHdu, ImageHdu } from "../../../data-files/models/data-file";
-import { BehaviorSubject, merge, Observable, Subject, concat, combineLatest } from "rxjs";
-import { HduType } from "../../../data-files/models/data-file-type";
-import { Store } from "@ngxs/store";
-import { DataFilesState } from "../../../data-files/data-files.state";
-import { switchMap, map, debounce, debounceTime, distinctUntilChanged, concatAll, tap, take } from "rxjs/operators";
-import { SetSelectedHduId } from "../../workbench.actions";
-import { MatSelectionListChange } from "@angular/material/list";
-import { LoadLibrary, UpdateAlpha, UpdateBlendMode, UpdateColorMap, UpdateNormalizer, UpdateVisibility } from "../../../data-files/data-files.actions";
-import { MatSliderChange } from "@angular/material/slider";
-import { BlendMode } from "../../../data-files/models/blend-mode";
-import { CdkDragDrop } from "@angular/cdk/drag-drop";
-import { AfterglowDataFileService } from "../../services/afterglow-data-files";
+import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
+import { MatSelectChange } from '@angular/material/select';
+import { DataFile, getFilter, IHdu, ImageHdu } from '../../../data-files/models/data-file';
+import { BehaviorSubject, merge, Observable, Subject, concat, combineLatest } from 'rxjs';
+import { HduType } from '../../../data-files/models/data-file-type';
+import { Store } from '@ngxs/store';
+import { DataFilesState } from '../../../data-files/data-files.state';
+import { switchMap, map, debounce, debounceTime, distinctUntilChanged, concatAll, tap, take } from 'rxjs/operators';
+import { SetSelectedHduId } from '../../workbench.actions';
+import { MatSelectionListChange } from '@angular/material/list';
+import {
+  LoadLibrary,
+  UpdateAlpha,
+  UpdateBlendMode,
+  UpdateColorMap,
+  UpdateNormalizer,
+  UpdateVisibility,
+} from '../../../data-files/data-files.actions';
+import { MatSliderChange } from '@angular/material/slider';
+import { BlendMode } from '../../../data-files/models/blend-mode';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import {
   grayColorMap,
   rainbowColorMap,
@@ -22,12 +29,12 @@ import {
   greenColorMap,
   blueColorMap,
   aColorMap,
-} from "../../../data-files/models/color-map";
+} from '../../../data-files/models/color-map';
 
 @Component({
-  selector: "app-hdu-selector",
-  templateUrl: "./hdu-selector.component.html",
-  styleUrls: ["./hdu-selector.component.scss"],
+  selector: 'app-hdu-selector',
+  templateUrl: './hdu-selector.component.html',
+  styleUrls: ['./hdu-selector.component.scss'],
 })
 export class HduSelectorComponent implements OnInit {
   @Input()
@@ -36,7 +43,7 @@ export class HduSelectorComponent implements OnInit {
   @Input()
   hduType: HduType = null;
 
-  @Input("fileId")
+  @Input('fileId')
   set fileId(fileId: string) {
     this.fileId$.next(fileId);
   }
@@ -60,9 +67,9 @@ export class HduSelectorComponent implements OnInit {
   ];
 
   blendModeOptions = [
-    { label: "Normal", value: BlendMode.Normal },
-    { label: "Screen", value: BlendMode.Screen },
-    { label: "Luminosity", value: BlendMode.Luminosity },
+    { label: 'Normal', value: BlendMode.Normal },
+    { label: 'Screen', value: BlendMode.Screen },
+    { label: 'Luminosity', value: BlendMode.Luminosity },
   ];
   file$: Observable<DataFile>;
   hdus$: Observable<IHdu[]>;
@@ -81,9 +88,9 @@ export class HduSelectorComponent implements OnInit {
 
     this.hdus$ = hduIds$.pipe(
       switchMap((hduIds) =>
-        combineLatest(hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))).pipe(
-          map((hdus) => hdus.sort((a, b) => (a.order > b.order ? 1 : -1)))
-        )
+        combineLatest(
+          hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
+        ).pipe(map((hdus) => hdus.sort((a, b) => (a.order > b.order ? 1 : -1))))
       )
     );
 
@@ -158,19 +165,15 @@ export class HduSelectorComponent implements OnInit {
 
   getHduLabel(hdu: IHdu, index: number) {
     return combineLatest(
-      this.store.select(DataFilesState.getHduById).pipe(
-        map((fn) => fn(hdu.id))
-      ),
-      this.store.select(DataFilesState.getHeaderByHduId).pipe(
-        map((fn) => fn(hdu.id)),
-      )
+      this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hdu.id))),
+      this.store.select(DataFilesState.getHeaderByHduId).pipe(map((fn) => fn(hdu.id)))
     ).pipe(
       map(([hdu, header]) => {
-        let name = hdu && hdu.name ? hdu.name : `Layer ${index}`
-        let filter = header && getFilter(header) as string
+        let name = hdu && hdu.name ? hdu.name : `Layer ${index}`;
+        let filter = header && (getFilter(header) as string);
         return name;
         // return name + (filter ? `- ${filter}` : '')
       })
-    )
+    );
   }
 }

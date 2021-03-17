@@ -1,11 +1,11 @@
-import { Component, OnInit, AfterViewInit } from "@angular/core";
-import { Select, Store } from "@ngxs/store";
-import { Logout } from "../../auth.actions";
+import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Select, Store } from '@ngxs/store';
+import { Logout } from '../../auth.actions';
 
 @Component({
-  selector: "app-logout-page",
-  templateUrl: "./logout-page.component.html",
-  styleUrls: ["./logout-page.component.css"],
+  selector: 'app-logout-page',
+  templateUrl: './logout-page.component.html',
+  styleUrls: ['./logout-page.component.css'],
 })
 export class LogoutPageComponent implements OnInit, AfterViewInit {
   constructor(private store: Store) {}

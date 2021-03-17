@@ -1,4 +1,4 @@
-import { FormControl, Validators, ValidationErrors } from "@angular/forms";
+import { FormControl, Validators, ValidationErrors } from '@angular/forms';
 
 function isEmptyInputValue(value: any): boolean {
   // we don't check for string here so it also works with arrays

@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SaveChangesDialogComponent } from "./file-dialog.component";
+import { SaveChangesDialogComponent } from './file-dialog.component';
 
-describe("FileDialogComponent", () => {
+describe('FileDialogComponent', () => {
   let component: SaveChangesDialogComponent;
   let fixture: ComponentFixture<SaveChangesDialogComponent>;
 
@@ -18,7 +18,7 @@ describe("FileDialogComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

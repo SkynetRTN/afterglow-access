@@ -1,16 +1,16 @@
-import { Component, OnInit, Inject } from "@angular/core";
+import { Component, OnInit, Inject } from '@angular/core';
 
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { PixelOpsJob, PixelOpsJobResult } from "../../../jobs/models/pixel-ops";
-import { Observable, combineLatest } from "rxjs";
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { PixelOpsJob, PixelOpsJobResult } from '../../../jobs/models/pixel-ops';
+import { Observable, combineLatest } from 'rxjs';
 
-import { map, tap, filter, flatMap } from "rxjs/operators";
-import { DataFile } from "../../../data-files/models/data-file";
+import { map, tap, filter, flatMap } from 'rxjs/operators';
+import { DataFile } from '../../../data-files/models/data-file';
 
 @Component({
-  selector: "app-pixel-ops-jobs-dialog",
-  templateUrl: "./pixel-ops-jobs-dialog.component.html",
-  styleUrls: ["./pixel-ops-jobs-dialog.component.scss"],
+  selector: 'app-pixel-ops-jobs-dialog',
+  templateUrl: './pixel-ops-jobs-dialog.component.html',
+  styleUrls: ['./pixel-ops-jobs-dialog.component.scss'],
 })
 export class PixelOpsJobsDialogComponent implements OnInit {
   filenameLookup$: Observable<{ [fileId: string]: string }>;

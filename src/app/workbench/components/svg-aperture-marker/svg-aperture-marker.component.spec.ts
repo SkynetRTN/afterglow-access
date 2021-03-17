@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SvgApertureMarkerComponent } from "./svg-aperture-marker.component";
+import { SvgApertureMarkerComponent } from './svg-aperture-marker.component';
 
-describe("SvgApertureMarkerComponent", () => {
+describe('SvgApertureMarkerComponent', () => {
   let component: SvgApertureMarkerComponent;
   let fixture: ComponentFixture<SvgApertureMarkerComponent>;
 
@@ -18,7 +18,7 @@ describe("SvgApertureMarkerComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,6 +1,6 @@
-import { Observable, merge, empty, defer, throwError } from "rxjs";
+import { Observable, merge, empty, defer, throwError } from 'rxjs';
 
-import { tap, skip, takeUntil, flatMap, catchError, concat } from "rxjs/operators";
+import { tap, skip, takeUntil, flatMap, catchError, concat } from 'rxjs/operators';
 
 export function mergeDelayError(...sources: Observable<any>[]) {
   const errors = [];

@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SonificationPanelComponent } from "./sonification-panel.component";
+import { SonificationPanelComponent } from './sonification-panel.component';
 
-describe("SonifierPageComponent", () => {
+describe('SonifierPageComponent', () => {
   let component: SonificationPanelComponent;
   let fixture: ComponentFixture<SonificationPanelComponent>;
 
@@ -18,7 +18,7 @@ describe("SonifierPageComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

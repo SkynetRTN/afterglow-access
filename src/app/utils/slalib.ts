@@ -2180,7 +2180,8 @@ export function sla_ue2pv(DATE, U) {
     S3 =
       (PSJ *
         PSJ2 *
-        (((((((((((BETA / 210.0 + 1.0) * BETA) / 156.0 + 1.0) * BETA) / 110.0 + 1.0) * BETA) / 72.0 + 1.0) * BETA) / 42.0 +
+        (((((((((((BETA / 210.0 + 1.0) * BETA) / 156.0 + 1.0) * BETA) / 110.0 + 1.0) * BETA) / 72.0 + 1.0) * BETA) /
+          42.0 +
           1.0) *
           BETA) /
           20.0 +
@@ -2188,7 +2189,8 @@ export function sla_ue2pv(DATE, U) {
       6.0;
     S2 =
       (PSJ2 *
-        (((((((((((BETA / 182.0 + 1.0) * BETA) / 132.0 + 1.0) * BETA) / 90.0 + 1.0) * BETA) / 56.0 + 1.0) * BETA) / 30.0 +
+        (((((((((((BETA / 182.0 + 1.0) * BETA) / 132.0 + 1.0) * BETA) / 90.0 + 1.0) * BETA) / 56.0 + 1.0) * BETA) /
+          30.0 +
           1.0) *
           BETA) /
           12.0 +
@@ -2431,7 +2433,7 @@ export function sla_prec(EP0, EP1) {
   THETA = (2004.3109 + (-0.8533 - 0.000217 * T0) * T0 + (-0.42665 - 0.000217 * T0 - 0.041833 * T) * T) * TAS2R;
 
   //  Rotation matrix
-  let RMATP = sla_deuler("ZYZ", -ZETA, THETA, -Z);
+  let RMATP = sla_deuler('ZYZ', -ZETA, THETA, -Z);
 
   return RMATP;
 }
@@ -2974,19 +2976,19 @@ export function sla_deuler(ORDER, PHI, THETA, PSI) {
 
       //  Identify the axis
       let AXIS = ORDER[n];
-      if (AXIS == "X" || AXIS == "x" || AXIS == "1") {
+      if (AXIS == 'X' || AXIS == 'x' || AXIS == '1') {
         //  Matrix for x-rotation
         ROTN[1][1] = C;
         ROTN[1][2] = S;
         ROTN[2][1] = -S;
         ROTN[2][2] = C;
-      } else if (AXIS == "Y" || AXIS == "y" || AXIS == "2") {
+      } else if (AXIS == 'Y' || AXIS == 'y' || AXIS == '2') {
         //  Matrix for y-rotation
         ROTN[0][0] = C;
         ROTN[0][2] = -S;
         ROTN[2][0] = S;
         ROTN[2][2] = C;
-      } else if (AXIS == "Z" || AXIS == "z" || AXIS == "3") {
+      } else if (AXIS == 'Z' || AXIS == 'z' || AXIS == '3') {
         //  Matrix for z-rotation
         ROTN[0][0] = C;
         ROTN[0][1] = S;
@@ -3708,16 +3710,20 @@ export function sla_nutc(mjd) {
   T = (mjd - DJM0) / DJC;
 
   //  Mean anomaly of the Moon.
-  EL = 134.96340251 * DD2R + MOD(T * (1717915923.2178 + T * (31.8792 + T * (0.051635 + T * -0.0002447))), TURNAS) * DAS2R;
+  EL =
+    134.96340251 * DD2R + MOD(T * (1717915923.2178 + T * (31.8792 + T * (0.051635 + T * -0.0002447))), TURNAS) * DAS2R;
 
   //  Mean anomaly of the Sun.
-  ELP = 357.52910918 * DD2R + MOD(T * (129596581.0481 + T * (-0.5532 + T * (0.000136 + T * -0.00001149))), TURNAS) * DAS2R;
+  ELP =
+    357.52910918 * DD2R + MOD(T * (129596581.0481 + T * (-0.5532 + T * (0.000136 + T * -0.00001149))), TURNAS) * DAS2R;
 
   //  Mean argument of the latitude of the Moon.
-  F = 93.27209062 * DD2R + MOD(T * (1739527262.8478 + T * (-12.7512 + T * (-0.001037 + T * 0.00000417))), TURNAS) * DAS2R;
+  F =
+    93.27209062 * DD2R + MOD(T * (1739527262.8478 + T * (-12.7512 + T * (-0.001037 + T * 0.00000417))), TURNAS) * DAS2R;
 
   //  Mean elongation of the Moon from the Sun.
-  D = 297.85019547 * DD2R + MOD(T * (1602961601.209 + T * (-6.3706 + T * (0.006539 + T * -0.00003169))), TURNAS) * DAS2R;
+  D =
+    297.85019547 * DD2R + MOD(T * (1602961601.209 + T * (-6.3706 + T * (0.006539 + T * -0.00003169))), TURNAS) * DAS2R;
 
   //  Mean longitude of the ascending node of the Moon.
   OM = 125.04455501 * DD2R + MOD(T * (-6962890.5431 + T * (7.4722 + T * (0.007702 + T * -0.00005939))), TURNAS) * DAS2R;
@@ -3831,7 +3837,7 @@ export function sla_nut(mjd) {
   EPS0 = result[2];
 
   //  Rotation matrix
-  let RMAIN = sla_deuler("XZX", EPS0, -DPSI, -(EPS0 + DEPS));
+  let RMAIN = sla_deuler('XZX', EPS0, -DPSI, -(EPS0 + DEPS));
   return RMAIN;
 }
 

@@ -1,25 +1,25 @@
-import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from "@angular/core";
-import { Observable, combineLatest, BehaviorSubject, Subject } from "rxjs";
-import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from "rxjs/operators";
-import { StackFormData, WorkbenchTool, StackingPanelConfig } from "../../models/workbench-state";
-import { FormGroup, FormControl, Validators } from "@angular/forms";
-import { StackingJob, StackingJobResult } from "../../../jobs/models/stacking";
-import { Router } from "@angular/router";
-import { Store } from "@ngxs/store";
-import { WorkbenchState } from "../../workbench.state";
-import { JobsState } from "../../../jobs/jobs.state";
-import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from "../../workbench.actions";
-import { DataFile, ImageHdu } from "../../../data-files/models/data-file";
-import { DataFilesState } from "../../../data-files/data-files.state";
+import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
+import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from 'rxjs/operators';
+import { StackFormData, WorkbenchTool, StackingPanelConfig } from '../../models/workbench-state';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { StackingJob, StackingJobResult } from '../../../jobs/models/stacking';
+import { Router } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { WorkbenchState } from '../../workbench.state';
+import { JobsState } from '../../../jobs/jobs.state';
+import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../../workbench.actions';
+import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFilesState } from '../../../data-files/data-files.state';
 
 @Component({
-  selector: "app-stacking-panel",
-  templateUrl: "./stacking-panel.component.html",
-  styleUrls: ["./stacking-panel.component.css"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-stacking-panel',
+  templateUrl: './stacking-panel.component.html',
+  styleUrls: ['./stacking-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StackerPanelComponent implements OnInit {
-  @Input("hduIds")
+  @Input('hduIds')
   set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
   }
@@ -38,22 +38,19 @@ export class StackerPanelComponent implements OnInit {
 
   stackForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
-    mode: new FormControl("average", Validators.required),
-    scaling: new FormControl("none", Validators.required),
-    rejection: new FormControl("none", Validators.required),
+    mode: new FormControl('average', Validators.required),
+    scaling: new FormControl('none', Validators.required),
+    rejection: new FormControl('none', Validators.required),
     percentile: new FormControl(50),
-    low: new FormControl(""),
-    high: new FormControl(""),
+    low: new FormControl(''),
+    high: new FormControl(''),
   });
 
   constructor(private store: Store, private router: Router) {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.config$ = this.store.select(WorkbenchState.getStackingPanelConfig);
 
-    this.hduIds$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.config$)
-    ).subscribe(([hduIds, config]) => {
+    this.hduIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([hduIds, config]) => {
       if (!hduIds || !config) return;
       let selectedHduIds = config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
       if (selectedHduIds.length != config.stackFormData.selectedHduIds.length) {
@@ -64,26 +61,26 @@ export class StackerPanelComponent implements OnInit {
     });
 
     this.stackForm
-      .get("mode")
+      .get('mode')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (value == "percentile") {
-          this.stackForm.get("percentile").enable();
+        if (value == 'percentile') {
+          this.stackForm.get('percentile').enable();
         } else {
-          this.stackForm.get("percentile").disable();
+          this.stackForm.get('percentile').disable();
         }
       });
 
     this.stackForm
-      .get("rejection")
+      .get('rejection')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (["iraf", "minmax", "sigclip"].includes(value)) {
-          this.stackForm.get("high").enable();
-          this.stackForm.get("low").enable();
+        if (['iraf', 'minmax', 'sigclip'].includes(value)) {
+          this.stackForm.get('high').enable();
+          this.stackForm.get('low').enable();
         } else {
-          this.stackForm.get("high").disable();
-          this.stackForm.get("low").disable();
+          this.stackForm.get('high').disable();
+          this.stackForm.get('low').disable();
         }
       });
 
@@ -99,10 +96,13 @@ export class StackerPanelComponent implements OnInit {
 
     this.stackingJob$ = combineLatest([
       store.select(WorkbenchState.getState),
-      store.select(JobsState.getJobEntities)
+      store.select(JobsState.getJobEntities),
     ]).pipe(
       map(([state, jobEntities]) => {
-        if (!state.stackingPanelConfig.currentStackingJobId || !jobEntities[state.stackingPanelConfig.currentStackingJobId]) {
+        if (
+          !state.stackingPanelConfig.currentStackingJobId ||
+          !jobEntities[state.stackingPanelConfig.currentStackingJobId]
+        ) {
           return null;
         }
         return jobEntities[state.stackingPanelConfig.currentStackingJobId] as StackingJob;
@@ -118,9 +118,9 @@ export class StackerPanelComponent implements OnInit {
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById).pipe(
-      map(fn => fn(hduId)?.name),
-      distinctUntilChanged(),
-    )
+      map((fn) => fn(hduId)?.name),
+      distinctUntilChanged()
+    );
   }
 
   setSelectedHduIds(hduIds: string[]) {
@@ -147,7 +147,7 @@ export class StackerPanelComponent implements OnInit {
     this.store.dispatch(new CreateStackingJob(selectedHduIds));
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

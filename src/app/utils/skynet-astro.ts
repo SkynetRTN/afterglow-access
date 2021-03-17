@@ -1,7 +1,7 @@
 /* Utility functions that are useful for doing astronomy */
 
-import { sprintf } from "sprintf-js";
-import { sla_rdplan, sla_eqeqx, sla_dtt, sla_dsep, sla_pa } from "./slalib";
+import { sprintf } from 'sprintf-js';
+import { sla_rdplan, sla_eqeqx, sla_dtt, sla_dsep, sla_pa } from './slalib';
 
 let gmas000 = 2451545.0; /* Epoch gmas000 in julian days */
 export let J2000 = 2451545.0; /* Epoch J2000 in julian days */
@@ -130,34 +130,34 @@ export function formatDms(value, digits?, decimals?, sep1?, sep2?, sep3?, showpl
 
   if (digits == null) digits = 3;
   if (decimals == null) decimals = 1;
-  if (sep1 == null) sep1 = ":";
-  if (sep2 == null) sep2 = ":";
-  if (sep3 == null) sep3 = "";
+  if (sep1 == null) sep1 = ':';
+  if (sep2 == null) sep2 = ':';
+  if (sep3 == null) sep3 = '';
   if (showplus == null) showplus = false;
 
-  if (digits == 2 && sep2 == ":") {
+  if (digits == 2 && sep2 == ':') {
     // Probably don't want a trailing colon...
-    sep2 = "";
+    sep2 = '';
   }
 
   let result = degToDms(value);
   let signVal = result[0];
-  let sign = "";
+  let sign = '';
   let d = result[1];
   let m = result[2];
   let s = result[3];
 
   if (signVal < 0) {
-    sign = "-";
+    sign = '-';
   } else if (showplus) {
-    sign = "+";
+    sign = '+';
   } else {
-    sign = "";
+    sign = '';
   }
 
-  let lastFormat = "%02d";
+  let lastFormat = '%02d';
   if (decimals != 0) {
-    lastFormat = sprintf("%%0%d.%df", decimals + 3, decimals);
+    lastFormat = sprintf('%%0%d.%df', decimals + 3, decimals);
   }
 
   let r;
@@ -166,10 +166,10 @@ export function formatDms(value, digits?, decimals?, sep1?, sep2?, sep3?, showpl
     let lastDigit = truncFloat(m + s / 60.0, decimals);
 
     let lastDigitStr = sprintf(lastFormat, lastDigit);
-    r = sprintf("%s%02d%s%s%s", sign, d, sep1, lastDigitStr, sep2);
+    r = sprintf('%s%02d%s%s%s', sign, d, sep1, lastDigitStr, sep2);
   } else {
     let lastDigit = sprintf(lastFormat, truncFloat(s, decimals));
-    r = sprintf("%s%02d%s%02d%s%s%s", sign, d, sep1, m, sep2, lastDigit, sep3);
+    r = sprintf('%s%02d%s%02d%s%s%s', sign, d, sep1, m, sep2, lastDigit, sep3);
   }
 
   return r;
@@ -301,7 +301,10 @@ export function galacticToRaDec(l, b) {
   l = deg2rad(l);
   b = deg2rad(b);
 
-  let y = Math.atan2(Math.sin(l - pole_lon), Math.cos(l - pole_lon) * Math.sin(pole_lat) - Math.tan(b) * Math.cos(pole_lat));
+  let y = Math.atan2(
+    Math.sin(l - pole_lon),
+    Math.cos(l - pole_lon) * Math.sin(pole_lat) - Math.tan(b) * Math.cos(pole_lat)
+  );
   let ra = (rad2deg(y) + 12.25) / 15.0;
 
   let dec = Math.asin(Math.sin(b) * Math.sin(pole_lat) + Math.cos(b) * Math.cos(pole_lat) * Math.cos(l - pole_lon));
@@ -750,7 +753,8 @@ export function meanObliquity(jde) {
   let T2 = T * T;
   let T3 = T2 * T;
 
-  let e0 = 23 + 26 / 60.0 + 31.448 / 3600.0 - (46.815 / 3600.0) * T - (0.00059 / 3600.0) * T2 + (0.001813 / 3600.0) * T3;
+  let e0 =
+    23 + 26 / 60.0 + 31.448 / 3600.0 - (46.815 / 3600.0) * T - (0.00059 / 3600.0) * T2 + (0.001813 / 3600.0) * T3;
 
   return e0;
 }
@@ -1071,7 +1075,12 @@ export function moonPhase(sunRaHours, sunDecDegs, moonRaHours, moonDecDegs) {
   /*Determines the phase of the moon expressed as a percentage of
      illumination. */
 
-  var sepRads = sla_dsep(radians(sunRaHours * 15.0), radians(sunDecDegs), radians(moonRaHours * 15.0), radians(moonDecDegs));
+  var sepRads = sla_dsep(
+    radians(sunRaHours * 15.0),
+    radians(sunDecDegs),
+    radians(moonRaHours * 15.0),
+    radians(moonDecDegs)
+  );
   /* Convert angular separation into percentage illumination */
   var phase = (1.0 - Math.cos(sepRads)) / 2.0;
   var phaseAngle = degrees(sepRads);

@@ -1,7 +1,7 @@
-import { Actions, ofActionDispatched } from "@ngxs/store";
-import { filter, take, takeUntil, map, flatMap } from "rxjs/operators";
-import { merge, Observable } from "rxjs";
-import { CreateJobSuccess, JobCompleted, UpdateJobSuccess, CreateJobFail } from "../jobs.actions";
+import { Actions, ofActionDispatched } from '@ngxs/store';
+import { filter, take, takeUntil, map, flatMap } from 'rxjs/operators';
+import { merge, Observable } from 'rxjs';
+import { CreateJobSuccess, JobCompleted, UpdateJobSuccess, CreateJobFail } from '../jobs.actions';
 
 export class JobActionHandler {
   public static getJobStreams(correlationId: string, actions$: Actions) {

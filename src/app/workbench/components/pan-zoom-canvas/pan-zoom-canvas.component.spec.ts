@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PanZoomCanvasComponent } from "./pan-zoom-canvas.component";
+import { PanZoomCanvasComponent } from './pan-zoom-canvas.component';
 
-describe("PanZoomViewerComponent", () => {
+describe('PanZoomViewerComponent', () => {
   let component: PanZoomCanvasComponent;
   let fixture: ComponentFixture<PanZoomCanvasComponent>;
 
@@ -18,7 +18,7 @@ describe("PanZoomViewerComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

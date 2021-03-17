@@ -1,7 +1,5 @@
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>
-    This tool does not yet support tabular data. Please select an image HDU.
-  </div>
+  <div i18n class="alert alert-info" i18n>This tool does not yet support tabular data. Please select an image HDU.</div>
 </ng-template>
 
 <ng-template #hduNotSelectedBlock>
@@ -11,17 +9,12 @@
 </ng-template>
 
 <ng-template #headerNotAvailable>
-  <div i18n class="alert alert-info" i18n>
-    Header is not available for selected HDU.
-  </div>
+  <div i18n class="alert alert-info" i18n>Header is not available for selected HDU.</div>
 </ng-template>
 
 <ng-template #headerLoading>
-  <div i18n class="alert alert-info" i18n>
-    Header is loading...
-  </div>
+  <div i18n class="alert alert-info" i18n>Header is loading...</div>
 </ng-template>
-
 
 <ng-container *ngIf="viewerState$ | async; let vs">
   <ng-container *ngIf="vs.hdu; else hduNotSelectedBlock">
@@ -29,16 +22,24 @@
       <ng-container *ngIf="vs.header?.loaded; else headerLoading">
         <ng-container *ngIf="config$ | async; let config">
           <div class="p-2">
-            <mat-slide-toggle [color]="'primary'" [checked]="(config$ | async)?.showRawHeader"
-              (change)="onShowRawHeaderChange($event)" i18n>
+            <mat-slide-toggle
+              [color]="'primary'"
+              [checked]="(config$ | async)?.showRawHeader"
+              (change)="onShowRawHeaderChange($event)"
+              i18n
+            >
               Show Raw Header Data
             </mat-slide-toggle>
           </div>
 
-          <div *ngIf="!((config$ | async)?.showRawHeader)">
+          <div *ngIf="!(config$ | async)?.showRawHeader">
             <div class="p-2">
-              <mat-slide-toggle [color]="'primary'" [checked]="(config$ | async)?.useSystemTime"
-                (change)="onUseSystemTimeChange($event)" i18n>
+              <mat-slide-toggle
+                [color]="'primary'"
+                [checked]="(config$ | async)?.useSystemTime"
+                (change)="onUseSystemTimeChange($event)"
+                i18n
+              >
                 Use System Time
               </mat-slide-toggle>
             </div>

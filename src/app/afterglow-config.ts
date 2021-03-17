@@ -1,5 +1,4 @@
-
-import { env } from '../environments/environment'
+import { env } from '../environments/environment';
 
 export function getCoreApiUrl(config: AfterglowConfig) {
   return `${config.coreUrl}/api/${env.coreVersion}`;
@@ -7,7 +6,7 @@ export function getCoreApiUrl(config: AfterglowConfig) {
 
 export interface AfterglowConfig {
   coreUrl: string;
-  authMethod: "cookie" | "oauth2";
+  authMethod: 'cookie' | 'oauth2';
   authCookieName: string;
   oauth2ClientId: string;
   tileSize: number;

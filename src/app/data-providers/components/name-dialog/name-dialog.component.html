@@ -1,10 +1,10 @@
 <div mat-dialog-title class="dialog-title">
-  <h4 i18n>{{title}}</h4>
+  <h4 i18n>{{ title }}</h4>
 </div>
 
 <mat-dialog-content>
   <form [formGroup]="nameForm" (keyup.enter)="save()" (keyup.esc)="cancel()">
-    <mat-form-field appearance="fill" style="width: 300px;">
+    <mat-form-field appearance="fill" style="width: 300px">
       <mat-label>Name</mat-label>
       <input #nameInput matInput formControlName="name" />
     </mat-form-field>
@@ -13,8 +13,6 @@
 </mat-dialog-content>
 
 <mat-dialog-actions style="justify-content: flex-end; flex-wrap: nowrap" class="pb-4">
-  <button fxFlex="0 0 auto" mat-raised-button (click)="save()"  [disabled]="!nameForm.valid">
-    Save
-  </button>
+  <button fxFlex="0 0 auto" mat-raised-button (click)="save()" [disabled]="!nameForm.valid">Save</button>
   <button fxFlex="0 0 auto" mat-raised-button (click)="cancel()">Cancel</button>
 </mat-dialog-actions>

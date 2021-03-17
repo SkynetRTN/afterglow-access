@@ -1,5 +1,5 @@
-import { NgxsLoggerPluginModule } from "@ngxs/logger-plugin";
-import { AfterglowEnv } from "./afterglow-env";
+import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
+import { AfterglowEnv } from './afterglow-env';
 
 export const env: AfterglowEnv = {
   production: true,

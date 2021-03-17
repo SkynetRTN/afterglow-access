@@ -1,5 +1,5 @@
-import { LineMarker } from "./marker";
-import { PosType } from "./source";
+import { LineMarker } from './marker';
+import { PosType } from './source';
 
 export interface PlottingPanelState {
   id: string;

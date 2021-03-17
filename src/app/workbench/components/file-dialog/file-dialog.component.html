@@ -1,12 +1,12 @@
 <div mat-dialog-title class="dialog-title" i18n>
-  {{ config.mode == "close" ? "Closing Files" : "Saving Files" }}
+  {{ config.mode == 'close' ? 'Closing Files' : 'Saving Files' }}
   <span *ngIf="config.files && config.files.length > 1"></span>
 </div>
 <mat-dialog-content *ngIf="currentFile">
   <div class="status pb-3" style="text-align: center" *ngIf="config.files && config.files.length > 1">
     <mat-progress-bar mode="determinate" [value]="(index$.getValue() / config.files.length) * 100"></mat-progress-bar>
     <div>
-      {{ config.mode == "close" ? "Closing" : "Saving" }} file {{ index$.getValue() + 1 }} of {{ config.files.length }}
+      {{ config.mode == 'close' ? 'Closing' : 'Saving' }} file {{ index$.getValue() + 1 }} of {{ config.files.length }}
     </div>
   </div>
 
@@ -21,7 +21,7 @@
   </span>
 
   <button *ngIf="currentFile" mat-raised-button (click)="onSaveBtnClick()" [hidden]="!waitingForUserInput">
-    {{ isReadOnly ? "Save As..." : "Save" }}
+    {{ isReadOnly ? 'Save As...' : 'Save' }}
   </button>
   <button *ngIf="currentFile" mat-raised-button (click)="onDiscardBtnClick()" [hidden]="!waitingForUserInput">
     Discard changes

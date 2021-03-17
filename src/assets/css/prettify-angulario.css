@@ -1,7 +1,7 @@
 .prettyprint {
   white-space: pre-wrap;
   background: #f5f6f7;
-  font-family: Monaco, "Lucida Console", monospace;
+  font-family: Monaco, 'Lucida Console', monospace;
   color: #5c707a;
   width: auto;
   overflow: auto;
@@ -15,8 +15,8 @@
 }
 
 .prettyprint.linenums,
-.prettyprint[class^="linenums:"],
-.prettyprint[class*=" linenums:"] {
+.prettyprint[class^='linenums:'],
+.prettyprint[class*=' linenums:'] {
   padding: 0;
 }
 
@@ -172,7 +172,7 @@ h2 .prettyprint,
 h3 .prettyprint,
 h4 .prettyprint {
   background: none;
-  font-family: Monaco, "Lucida Console", monospace;
+  font-family: Monaco, 'Lucida Console', monospace;
   color: #253238;
   overflow: hidden;
   position: relative;

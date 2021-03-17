@@ -1,7 +1,7 @@
-import { State, Action, Selector, StateContext, Store } from "@ngxs/store";
-import { LoadAfterglowConfig, LoadAfterglowConfigSuccess, LoadAfterglowConfigFail } from "./app.actions";
-import { AfterglowConfigService } from "./afterglow-config.service";
-import { ImmutableContext } from "@ngxs-labs/immer-adapter";
+import { State, Action, Selector, StateContext, Store } from '@ngxs/store';
+import { LoadAfterglowConfig, LoadAfterglowConfigSuccess, LoadAfterglowConfigFail } from './app.actions';
+import { AfterglowConfigService } from './afterglow-config.service';
+import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { tap, flatMap, catchError } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AfterglowConfig } from './afterglow-config';
@@ -14,7 +14,7 @@ export interface AppStateModel {
 }
 
 @State<AppStateModel>({
-  name: "app",
+  name: 'app',
   defaults: {
     configLoading: false,
     configLoaded: false,
@@ -40,7 +40,6 @@ export class AppState {
     return state.configLoaded;
   }
 
-
   @Selector()
   public static getConfigError(state: AppStateModel) {
     return state.configError;
@@ -52,15 +51,15 @@ export class AppState {
     setState((state: AppStateModel) => {
       state.configLoading = true;
       return state;
-    })
+    });
     return this.configService.loadConfig().pipe(
-      flatMap(config => {
+      flatMap((config) => {
         setState((state: AppStateModel) => {
           state.configLoading = false;
           state.configLoaded = true;
           return state;
-        })
-        return dispatch(new LoadAfterglowConfigSuccess(config))
+        });
+        return dispatch(new LoadAfterglowConfigSuccess(config));
       }),
       catchError((err) => {
         setState((state: AppStateModel) => {
@@ -68,10 +67,9 @@ export class AppState {
           state.configLoaded = false;
           state.configError = (err as HttpErrorResponse).error;
           return state;
-        })
-        return dispatch(new LoadAfterglowConfigFail(err))
+        });
+        return dispatch(new LoadAfterglowConfigFail(err));
       })
-    )
-    
+    );
   }
 }

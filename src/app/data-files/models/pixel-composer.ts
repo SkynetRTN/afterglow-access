@@ -1,5 +1,5 @@
-import { PixelType } from "./data-file";
-import { BlendMode } from "./blend-mode";
+import { PixelType } from './data-file';
+import { BlendMode } from './blend-mode';
 
 export function compose(
   layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number; visible: boolean }>,

@@ -8,9 +8,8 @@ describe('ToolPanelBaseComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ToolPanelBaseComponent ]
-    })
-    .compileComponents();
+      declarations: [ToolPanelBaseComponent],
+    }).compileComponents();
   });
 
   beforeEach(() => {

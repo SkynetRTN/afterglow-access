@@ -1,6 +1,6 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy } from "@angular/core";
-import { PixelNormalizer } from "../../../data-files/models/pixel-normalizer";
-import { StretchMode } from "../../../data-files/models/stretch-mode";
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy } from '@angular/core';
+import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
+import { StretchMode } from '../../../data-files/models/stretch-mode';
 import {
   grayColorMap,
   rainbowColorMap,
@@ -10,13 +10,13 @@ import {
   greenColorMap,
   blueColorMap,
   aColorMap,
-} from "../../../data-files/models/color-map";
+} from '../../../data-files/models/color-map';
 
 @Component({
-  selector: "app-normalizer-form",
-  templateUrl: "./normalizer-form.component.html",
-  styleUrls: ["./normalizer-form.component.scss"],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-normalizer-form',
+  templateUrl: './normalizer-form.component.html',
+  styleUrls: ['./normalizer-form.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
@@ -31,10 +31,10 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   peakStep = 0.1;
 
   stretchModeOptions = [
-    { label: "Linear", value: StretchMode.Linear },
-    { label: "Logarithmic", value: StretchMode.Log },
-    { label: "Square Root", value: StretchMode.SquareRoot },
-    { label: "Hyperbolic Arcsine", value: StretchMode.ArcSinh },
+    { label: 'Linear', value: StretchMode.Linear },
+    { label: 'Logarithmic', value: StretchMode.Log },
+    { label: 'Square Root', value: StretchMode.SquareRoot },
+    { label: 'Hyperbolic Arcsine', value: StretchMode.ArcSinh },
   ];
 
   colorMaps = [

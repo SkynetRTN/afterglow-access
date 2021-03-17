@@ -1,8 +1,8 @@
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageViewerMarkerOverlayComponent } from "./image-viewer-marker-overlay.component";
+import { ImageViewerMarkerOverlayComponent } from './image-viewer-marker-overlay.component';
 
-describe("ImageViewerMarkerOverlayComponent", () => {
+describe('ImageViewerMarkerOverlayComponent', () => {
   let component: ImageViewerMarkerOverlayComponent;
   let fixture: ComponentFixture<ImageViewerMarkerOverlayComponent>;
 
@@ -18,7 +18,7 @@ describe("ImageViewerMarkerOverlayComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,4 +1,4 @@
-import { CatalogSource } from "./source";
+import { CatalogSource } from './source';
 
 export interface FieldCal {
   id: string;

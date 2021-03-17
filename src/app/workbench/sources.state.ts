@@ -1,8 +1,8 @@
-import { State, Action, Selector, StateContext } from "@ngxs/store";
-import { UpdateSource, AddSources, RemoveSources } from "./sources.actions";
-import { ImmutableContext } from "@ngxs-labs/immer-adapter";
-import { Source } from "./models/source";
-import { ResetState } from "../auth/auth.actions";
+import { State, Action, Selector, StateContext } from '@ngxs/store';
+import { UpdateSource, AddSources, RemoveSources } from './sources.actions';
+import { ImmutableContext } from '@ngxs-labs/immer-adapter';
+import { Source } from './models/source';
+import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 
 export interface SourcesStateModel {
@@ -13,19 +13,19 @@ export interface SourcesStateModel {
 }
 
 const sourcesDefaultState: SourcesStateModel = {
-  version: "7edaa969-843e-445a-bbaf-83bf0c5ae260",
+  version: '7edaa969-843e-445a-bbaf-83bf0c5ae260',
   nextIdSeed: 0,
   ids: [],
   entities: {},
 };
 
 @State<SourcesStateModel>({
-  name: "sources",
+  name: 'sources',
   defaults: sourcesDefaultState,
 })
 @Injectable()
 export class SourcesState {
-  protected prefix = "SRC";
+  protected prefix = 'SRC';
 
   @Selector()
   public static getState(state: SourcesStateModel) {
@@ -83,7 +83,7 @@ export class SourcesState {
           id: id,
         };
         if (state.entities[id].label == null) {
-          state.entities[id].label = "" + nextSeed;
+          state.entities[id].label = '' + nextSeed;
         }
       });
 
@@ -93,7 +93,10 @@ export class SourcesState {
 
   @Action(RemoveSources)
   @ImmutableContext()
-  public removeSources({ getState, setState, dispatch }: StateContext<SourcesStateModel>, { sourceIds }: RemoveSources) {
+  public removeSources(
+    { getState, setState, dispatch }: StateContext<SourcesStateModel>,
+    { sourceIds }: RemoveSources
+  ) {
     let state = getState();
 
     setState((state: SourcesStateModel) => {

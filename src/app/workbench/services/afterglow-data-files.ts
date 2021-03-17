@@ -1,14 +1,14 @@
-import { Injectable } from "@angular/core";
-import { Location } from "@angular/common";
-import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-import { PixelPrecision, PixelType } from "../../data-files/models/data-file";
-import { Source, PosType } from "../models/source";
-import { HduType } from "../../data-files/models/data-file-type";
-import { Region } from "../../data-files/models/region";
-import { HeaderEntry } from "../../data-files/models/header-entry";
-import { AfterglowConfigService } from "../../afterglow-config.service";
+import { Injectable } from '@angular/core';
+import { Location } from '@angular/common';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { PixelPrecision, PixelType } from '../../data-files/models/data-file';
+import { Source, PosType } from '../models/source';
+import { HduType } from '../../data-files/models/data-file-type';
+import { Region } from '../../data-files/models/region';
+import { HeaderEntry } from '../../data-files/models/header-entry';
+import { AfterglowConfigService } from '../../afterglow-config.service';
 import { getCoreApiUrl } from '../../afterglow-config';
 
 export interface CoreDataFile {
@@ -66,17 +66,17 @@ export class AfterglowDataFileService {
     let params: HttpParams = new HttpParams();
     if (region) {
       params = params
-        .set("x", (region.x + 1).toString())
-        .set("y", (region.y + 1).toString())
-        .set("width", region.width.toString())
-        .set("height", region.height.toString());
+        .set('x', (region.x + 1).toString())
+        .set('y', (region.y + 1).toString())
+        .set('width', region.width.toString())
+        .set('height', region.height.toString());
     }
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
       .get(`${getCoreApiUrl(this.config)}/data-files/${hduId}/pixels`, {
         headers: headers,
-        responseType: "arraybuffer",
+        responseType: 'arraybuffer',
         params: params,
       })
       .pipe(
