@@ -12,11 +12,6 @@ import { HduType } from '../../../data-files/models/data-file-type';
 import { IViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
 import { IWorkbenchHduState, WorkbenchFileState, WorkbenchImageHduState } from '../../models/workbench-file-state';
-import {
-  ViewerPanelCanvasMouseDragEvent,
-  ViewerPanelCanvasMouseEvent,
-  ViewerPanelMarkerMouseEvent,
-} from '../../containers/workbench-viewer-layout/workbench-viewer-layout.component';
 import { IImageData } from '../../../data-files/models/image-data';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 

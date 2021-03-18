@@ -183,7 +183,7 @@ import { PhotometryJob, PhotometryJobSettings, PhotometryJobResult, PhotometryDa
 import { Astrometry } from '../jobs/models/astrometry';
 import { SourceId } from '../jobs/models/source-id';
 import { PhotData } from './models/source-phot-data';
-import { IViewer, ImageViewer, TableViewer, ViewerType } from './models/viewer';
+import { IViewer, ImageViewer, TableViewer, ViewerType, Viewer } from './models/viewer';
 import { ResetState } from '../auth/auth.actions';
 import {
   WorkbenchImageHduState,
@@ -418,6 +418,11 @@ export class WorkbenchState {
     return Object.values(state.viewers);
   }
 
+  @Selector([WorkbenchState.getViewers])
+  public static canSplit(viewers: Viewer[]) {
+    return viewers && viewers.length > 1;
+  }
+
   @Selector()
   public static getViewerLayoutItemIds(state: WorkbenchStateModel) {
     return state.viewerLayoutItemIds;
@@ -484,6 +489,16 @@ export class WorkbenchState {
     return (id: string) => {
       return selectedFileIds.includes(id);
     };
+  }
+
+  @Selector([WorkbenchState.getFilteredFiles, WorkbenchState.getSelectedFileIds])
+  public static getSelectAllFilesCheckboxState(filteredFiles: DataFile[], selectedFileIds: string[]) {
+    return filteredFiles.length != 0 && selectedFileIds.length == filteredFiles.length;
+  }
+
+  @Selector([WorkbenchState.getFilteredFiles, WorkbenchState.getSelectedFileIds])
+  public static getSelectAllFilesCheckboxIndeterminate(filteredFiles: DataFile[], selectedFileIds: string[]) {
+    return selectedFileIds.length != 0 && selectedFileIds.length != filteredFiles.length;
   }
 
   @Selector([WorkbenchState.getViewerLayoutItems])
@@ -567,6 +582,108 @@ export class WorkbenchState {
       .filter((id) => id !== null);
   }
 
+  @Selector([WorkbenchState.getViewerById])
+  public static getFileIdByViewerId(getViewerById: (id: string) => IViewer) {
+    return (viewerId: string) => {
+      return getViewerById(viewerId)?.fileId;
+    };
+  }
+
+  @Selector([WorkbenchState.getFileIdByViewerId, DataFilesState.getFileById])
+  public static getFileByViewerId(getFileIdByViewerId: (id: string) => string, getFileById: (id: string) => DataFile) {
+    return (viewerId: string) => {
+      return getFileById(getFileIdByViewerId(viewerId));
+    };
+  }
+
+  @Selector([WorkbenchState.getFileByViewerId, DataFilesState.getHdusByIds])
+  public static getFileHdusFromViewerId(
+    getFileByViewerId: (id: string) => DataFile,
+    getHdusByIds: (ids: string[]) => IHdu[]
+  ) {
+    return (viewerId: string) => {
+      return getHdusByIds(getFileByViewerId(viewerId)?.hduIds);
+    };
+  }
+
+  @Selector([WorkbenchState.getViewerById])
+  public static getHduIdByViewerId(getViewerById: (id: string) => IViewer) {
+    return (viewerId: string) => {
+      return getViewerById(viewerId)?.hduId;
+    };
+  }
+
+  @Selector([WorkbenchState.getHduIdByViewerId, DataFilesState.getHduById])
+  public static getHduByViewerId(getHduIdByViewerId: (id: string) => string, getHduById: (id: string) => IHdu) {
+    return (viewerId: string) => {
+      return getHduById(getHduIdByViewerId(viewerId));
+    };
+  }
+
+  @Selector([WorkbenchState.getHduByViewerId])
+  public static getHduHeaderIdByViewerId(getHduByViewerId: (id: string) => IHdu) {
+    return (viewerId: string) => {
+      return getHduByViewerId(viewerId)?.headerId;
+    };
+  }
+
+  @Selector([WorkbenchState.getHduHeaderIdByViewerId, DataFilesState.getHeaderById])
+  public static getHduHeaderByViewerId(
+    getHduHeaderIdByViewerId: (id: string) => string,
+    getHeaderById: (id: string) => Header
+  ) {
+    return (viewerId: string) => {
+      return getHeaderById(getHduHeaderIdByViewerId(viewerId));
+    };
+  }
+
+  @Selector([WorkbenchState.getFileIdByViewerId, DataFilesState.getFirstHduByFileId, DataFilesState.getHeaderById])
+  public static getFileHeaderByViewerId(
+    getFileIdByViewerId: (id: string) => string,
+    getFirstHduByFileId: (id: string) => IHdu,
+    getHeaderById: (id: string) => Header
+  ) {
+    //return header from first HDU
+    return (viewerId: string) => {
+      return getHeaderById(getFirstHduByFileId(getFileIdByViewerId(viewerId))?.headerId);
+    };
+  }
+
+  @Selector([WorkbenchState.getFileIdByViewerId, DataFilesState.getFirstImageHduByFileId, DataFilesState.getHeaderById])
+  public static getFileImageHeaderByViewerId(
+    getFileIdByViewerId: (id: string) => string,
+    getFirstImageHduByFileId: (id: string) => IHdu,
+    getHeaderById: (id: string) => Header
+  ) {
+    //return header from first image HDU
+    return (viewerId: string) => {
+      return getHeaderById(getFirstImageHduByFileId(getFileIdByViewerId(viewerId))?.headerId);
+    };
+  }
+
+  @Selector([WorkbenchState.getFileIdByViewerId, DataFilesState.getFirstTableHduByFileId, DataFilesState.getHeaderById])
+  public static getFileTableHeaderByViewerId(
+    getFileIdByViewerId: (id: string) => string,
+    getFirstTableHduByFileId: (id: string) => IHdu,
+    getHeaderById: (id: string) => Header
+  ) {
+    //return header from first table HDU
+    return (viewerId: string) => {
+      return getHeaderById(getFirstTableHduByFileId(getFileIdByViewerId(viewerId))?.headerId);
+    };
+  }
+
+  @Selector([WorkbenchState.getFileHeaderByViewerId, WorkbenchState.getHduHeaderByViewerId])
+  public static getHeaderByViewerId(
+    getFileHeaderByViewerId: (id: string) => Header,
+    getHduHeaderByViewerId: (id: string) => Header
+  ) {
+    //return file header if viewer has no HDU
+    return (viewerId: string) => {
+      return getHduHeaderByViewerId(viewerId) || getFileHeaderByViewerId(viewerId);
+    };
+  }
+
   @Selector([WorkbenchState.getFocusedViewerPanelId, WorkbenchState.getViewerPanelEntities])
   public static getFocusedViewerId(focusedViewerPanelId: string, viewerPanelEntities: { [id: string]: ViewerPanel }) {
     return viewerPanelEntities[focusedViewerPanelId]
@@ -574,10 +691,9 @@ export class WorkbenchState {
       : null;
   }
 
-  @Selector([WorkbenchState.getFocusedViewerId, WorkbenchState.getViewerEntities])
-  public static getFocusedViewer(focusedViewerId: string, viewerEntities: { [id: string]: IViewer }) {
-    if (!focusedViewerId || !viewerEntities[focusedViewerId]) return null;
-    return viewerEntities[focusedViewerId];
+  @Selector([WorkbenchState.getFocusedViewerId, WorkbenchState.getViewerById])
+  public static getFocusedViewer(focusedViewerId: string, fn: (id: string) => IViewer) {
+    return focusedViewerId ? fn(focusedViewerId) : null;
   }
 
   @Selector([WorkbenchState.getFocusedViewer])
@@ -586,28 +702,40 @@ export class WorkbenchState {
     return focusedViewer as ImageViewer;
   }
 
+  @Selector([WorkbenchState.getFocusedImageViewer])
+  public static getFocusedImageViewerId(imageViewer: ImageViewer) {
+    return imageViewer?.id;
+  }
+
   @Selector([WorkbenchState.getFocusedViewer])
   public static getFocusedTableViewer(focusedViewer: IViewer) {
     if (!focusedViewer || focusedViewer.type != ViewerType.TABLE) return null;
     return focusedViewer as TableViewer;
   }
 
-  @Selector([WorkbenchState.getFocusedViewer, DataFilesState.getFileEntities])
-  public static getFocusedViewerFile(focusedViewer: IViewer, dataFileEntities: { [id: string]: DataFile }) {
-    if (!focusedViewer || !focusedViewer.fileId || !(focusedViewer.fileId in dataFileEntities)) return null;
-    return dataFileEntities[focusedViewer.fileId];
+  @Selector([WorkbenchState.getFocusedTableViewer])
+  public static getFocusedTableViewerId(tableViewer: TableViewer) {
+    return tableViewer?.id;
   }
 
-  @Selector([WorkbenchState.getFocusedViewer, DataFilesState.getHduEntities])
-  public static getFocusedViewerHdu(focusedViewer: IViewer, hduEntities: { [id: string]: IHdu }) {
-    if (!focusedViewer || !focusedViewer.hduId) {
-      return null;
-    }
-    let hdu = hduEntities[focusedViewer.hduId];
-    if (!hdu) {
-      return null;
-    }
-    return hdu;
+  @Selector([WorkbenchState.getFocusedViewer])
+  public static getFocusedViewerFileId(focusedViewer: Viewer) {
+    return focusedViewer?.fileId;
+  }
+
+  @Selector([WorkbenchState.getFocusedViewerFileId, DataFilesState.getFileById])
+  public static getFocusedViewerFile(fileId: string, fn: (id: string) => DataFile) {
+    return fileId ? fn(fileId) : null;
+  }
+
+  @Selector([WorkbenchState.getFocusedViewer])
+  public static getFocusedViewerHduId(focusedViewer: Viewer) {
+    return focusedViewer?.hduId;
+  }
+
+  @Selector([WorkbenchState.getFocusedViewerHduId, DataFilesState.getHduById])
+  public static getFocusedViewerHdu(hduId: string, fn: (id: string) => IHdu) {
+    return hduId ? fn(hduId) : null;
   }
 
   @Selector([WorkbenchState.getFocusedViewerHdu])
@@ -624,36 +752,7 @@ export class WorkbenchState {
     return focusedViewer.viewportSize;
   }
 
-  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
-  public static getFirstImageHeaderIdFromViewerId(
-    viewerEntities: { [id: string]: IViewer },
-    fileEntities: { [id: string]: DataFile },
-    hduEntities: { [id: string]: IHdu }
-  ) {
-    return (id: string) => {
-      let viewer = viewerEntities[id];
-      if (!viewer || viewer.type != ViewerType.IMAGE || !viewer.fileId) {
-        return '';
-      }
-
-      let hduId: string | undefined = viewer.hduId;
-      if (!hduId) {
-        //use first image HDU from file
-        let file = fileEntities[viewer.fileId];
-        hduId = file.hduIds.find((hduId) => hduEntities[hduId].hduType == HduType.IMAGE);
-        if (!hduId) {
-          return '';
-        }
-      }
-
-      let hdu = hduEntities[hduId];
-      if (!hdu) {
-        return '';
-      }
-
-      return hdu.headerId;
-    };
-  }
+  /** TODO Refactor the following selectors using functional selectors instead of entities */
 
   @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
   public static getViewportTransformIdFromViewerId(
@@ -791,18 +890,6 @@ export class WorkbenchState {
       return viewer.hduId
         ? (hduStateEntities[viewer.hduId] as WorkbenchImageHduState).plottingPanelStateId
         : fileStateEntities[viewer.fileId].plottingPanelStateId;
-    };
-  }
-
-  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getHduEntities])
-  public static getHduFromViewerId(viewerEntities: { [id: string]: IViewer }, hduEntities: { [id: string]: IHdu }) {
-    return (id: string) => {
-      let viewer = viewerEntities[id];
-      if (!viewer || !viewer.hduId) {
-        return null;
-      }
-
-      return hduEntities[viewer.hduId];
     };
   }
 
@@ -1239,7 +1326,7 @@ export class WorkbenchState {
     let refViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let refImageTransformId: string;
     let refViewportTransformId: string;
-    let refHeaderId: string;
+    let refHeader: Header;
     let refNormalization: PixelNormalizer;
     let refImageDataId: string;
 
@@ -1248,7 +1335,7 @@ export class WorkbenchState {
         refViewer.id
       );
       refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(refViewer.id);
-      refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(refViewer.id);
+      refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId)(refViewer.id);
       refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(refViewer.id);
 
       if (refViewer.hduId) {
@@ -1267,11 +1354,11 @@ export class WorkbenchState {
 
     function onLoadComplete(store: Store) {
       //normalization
-      if (refHeaderId && refImageTransformId && refViewportTransformId) {
+      if (refHeader && refImageTransformId && refViewportTransformId) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(
-            new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId)
+            new SyncViewerTransformations(refHeader.id, refImageTransformId, refViewportTransformId, refImageDataId)
           );
         }
       }
@@ -1676,7 +1763,7 @@ export class WorkbenchState {
       viewer.id
     );
     let refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
-    let refHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
+    let refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId)(viewer.id);
     let refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
 
     let refNormalization: PixelNormalizer;
@@ -1708,11 +1795,11 @@ export class WorkbenchState {
 
     function onLoadComplete(store: Store) {
       //normalization
-      if (refHeaderId && refImageTransformId && refViewportTransformId) {
+      if (refHeader && refImageTransformId && refViewportTransformId) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(
-            new SyncViewerTransformations(refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId)
+            new SyncViewerTransformations(refHeader.id, refImageTransformId, refViewportTransformId, refImageDataId)
           );
         }
 
@@ -4266,8 +4353,7 @@ export class WorkbenchState {
     visibleViewers.forEach((viewer) => {
       let targetImageTransform: Transform | null = null;
       let targetViewportTransform: Transform | null = null;
-      let targetHeaderId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
-      let targetHeader = headerEntities[targetHeaderId];
+      let targetHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId)(viewer.id);
       let targetImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
       let targetViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
         viewer.id

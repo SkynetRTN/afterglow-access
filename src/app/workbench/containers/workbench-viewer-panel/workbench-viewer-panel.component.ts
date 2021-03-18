@@ -29,21 +29,6 @@ import { IWorkbenchHduState } from '../../models/workbench-file-state';
 import { CenterRegionInViewport, ZoomBy } from '../../../data-files/data-files.actions';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
-export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
-  viewerId: string;
-  viewer: IViewer;
-}
-
-export interface ViewerCanvasMouseDragEvent extends CanvasMouseDragEvent {
-  viewerId: string;
-  viewer: IViewer;
-}
-
-export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
-  viewerId: string;
-  viewer: IViewer;
-}
-
 @Component({
   selector: 'app-workbench-viewer-panel',
   templateUrl: './workbench-viewer-panel.component.html',
@@ -85,16 +70,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Input() selectedViewerId: string;
   @Input() hasFocus: boolean;
 
-  @Output() onImageClick = new EventEmitter<ViewerCanvasMouseEvent>();
-  @Output() onImageMouseMove = new EventEmitter<ViewerCanvasMouseEvent>();
-  @Output() onImageMouseDown = new EventEmitter<ViewerCanvasMouseEvent>();
-  @Output() onImageMouseUp = new EventEmitter<ViewerCanvasMouseEvent>();
-  @Output()
-  onImageMouseDragStart = new EventEmitter<ViewerCanvasMouseDragEvent>();
-  @Output() onImageMouseDrag = new EventEmitter<ViewerCanvasMouseDragEvent>();
-  @Output()
-  onImageMouseDragEnd = new EventEmitter<ViewerCanvasMouseDragEvent>();
-  @Output() onMarkerClick = new EventEmitter<ViewerMarkerMouseEvent>();
   @Output() onFileClose = new EventEmitter<string>();
   @Output() onFileSave = new EventEmitter<string>();
 
@@ -148,45 +123,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
     }
     return filename;
   }
-
-  // public zoomIn(hduId: string, imageAnchor: { x: number; y: number } = null) {
-  //   this.zoomBy(hduId, 1.0 / this.zoomStepFactor, imageAnchor);
-  // }
-
-  // public zoomOut(hduId: string, imageAnchor: { x: number; y: number } = null) {
-  //   this.zoomBy(hduId, this.zoomStepFactor, imageAnchor);
-  // }
-
-  // TODO: LAYER
-  // public zoomBy(
-  //   fileId: string,
-  //   factor: number,
-  //   imageAnchor: { x: number; y: number } = null
-  // ) {
-  //   this.store.dispatch(new ZoomBy(fileId, factor, imageAnchor));
-  // }
-
-  // public zoomToFit(hduId: string, padding: number = 0) {
-  //   // TODO: LAYER
-  //   let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities);
-  //   let hdu = hdus[hduId] as ImageHdu;
-  //   let imageData =
-  //   if (hdu) {
-  //     this.store.dispatch(
-  //       new CenterRegionInViewport(hduId, {
-  //         x: 1,
-  //         y: 1,
-  //         width: getWidth(hdu),
-  //         height: getHeight(hdu),
-  //       })
-  //     );
-  //   }
-  // }
-
-  // public zoomTo(hduId: string, value: number) {
-  //   // TODO: LAYER
-  //   this.store.dispatch(new ZoomTo(hduId, value, null));
-  // }
 
   ngOnInit() {}
 
@@ -250,91 +186,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
       $event.preventDefault();
       $event.stopImmediatePropagation();
     }
-  }
-
-  handleImageMouseMove($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-
-    this.viewerEventService.mouseMoveEvent$.next(event);
-    this.onImageMouseMove.emit(event);
-  }
-
-  handleImageMouseDown($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-    this.viewerEventService.mouseDownEvent$.next(event);
-    this.onImageMouseDown.emit(event);
-  }
-
-  handleImageMouseUp($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-    this.viewerEventService.mouseUpEvent$.next(event);
-    this.onImageMouseUp.emit(event);
-  }
-
-  handleImageMouseDragStart($event: CanvasMouseDragEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseDragEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-
-    this.viewerEventService.dragEvent$.next(event);
-    this.onImageMouseDragStart.emit(event);
-  }
-
-  handleImageMouseDrag($event: CanvasMouseDragEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseDragEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-
-    this.viewerEventService.dragEvent$.next(event);
-    this.onImageMouseDrag.emit(event);
-  }
-
-  handleImageMouseDragEnd($event: CanvasMouseDragEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseDragEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-
-    this.viewerEventService.dropEvent$.next(event);
-    this.onImageMouseDragEnd.emit(event);
-  }
-
-  handleImageClick($event: CanvasMouseEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerCanvasMouseEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-    this.viewerEventService.imageClickEvent$.next(event);
-    this.onImageClick.emit(event);
-  }
-
-  handleMarkerClick($event: MarkerMouseEvent, viewerId: string, viewer: IViewer) {
-    let event: ViewerMarkerMouseEvent = {
-      viewerId: viewerId,
-      viewer: viewer,
-      ...$event,
-    };
-
-    this.viewerEventService.markerClickEvent$.next(event);
-    this.onMarkerClick.emit(event);
   }
 
   onSelectedViewerIndexChange(index) {

@@ -16,6 +16,7 @@ import {
   flatMap,
   catchError,
   concatAll,
+  mergeMap,
 } from 'rxjs/operators';
 
 import {
@@ -36,7 +37,7 @@ import { SidebarView } from '../models/sidebar-view';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from '../../../../node_modules/rxjs';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { Store, Actions, ofActionCompleted, ofActionDispatched } from '@ngxs/store';
+import { Store, Actions, ofActionCompleted, ofActionDispatched, Select } from '@ngxs/store';
 import { DataFilesState } from '../../data-files/data-files.state';
 import { WorkbenchState } from '../workbench.state';
 import {
@@ -84,12 +85,6 @@ import { DataProvidersState } from '../../data-providers/data-providers.state';
 import { Navigate } from '@ngxs/router-plugin';
 import { WorkbenchImageHduState } from '../models/workbench-file-state';
 import { WorkbenchTool, ViewerPanelContainer } from '../models/workbench-state';
-import { CustomMarker } from '../models/custom-marker';
-import {
-  ViewerPanelCanvasMouseEvent,
-  ViewerPanelMarkerMouseEvent,
-  ViewerPanelCanvasMouseDragEvent,
-} from './workbench-viewer-layout/workbench-viewer-layout.component';
 import { HduType } from '../../data-files/models/data-file-type';
 import {
   LoadLibrary,
@@ -139,68 +134,45 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 
-  layoutContainer$: Observable<ViewerPanelContainer>;
-  inFullScreenMode$: Observable<boolean>;
-  fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
-  loadingFiles$: Observable<boolean>;
-  showSidebar$: Observable<boolean>;
-  sidebarView$: Observable<SidebarView>;
-  allFiles$: Observable<DataFile[]>;
-
-  fileFilter$: Observable<string>;
-  fileFilterInput$ = new Subject<string>();
-  files$: Observable<DataFile[]>;
-  hduIds$: Observable<string[]>;
-  hdus$: Observable<IHdu[]>;
-  imageHdus$: Observable<ImageHdu[]>;
-  imageHduIds$: Observable<string[]>;
-
-  selectedFileIds$: Observable<string[]>;
-  selectAllFilesChecked$: Observable<boolean>;
-  selectAllFilesIndeterminate$: Observable<boolean>;
-
-  viewer$: Observable<IViewer>;
-  viewerId$: Observable<string>;
-  canSplit$: Observable<boolean>;
-  imageViewer$: Observable<ImageViewer>;
-  imageViewerId$: Observable<string>;
-  tableViewer$: Observable<TableViewer>;
-
-  //viewer events
-  imageMouseDownEvent: ViewerPanelCanvasMouseEvent;
-  imageMouseUpEvent: ViewerPanelCanvasMouseEvent;
-  imageMouseMoveEvent: ViewerPanelCanvasMouseEvent;
-  imageClickEvent: ViewerPanelCanvasMouseEvent;
-  imageDragStartEvent: ViewerPanelCanvasMouseDragEvent;
-  imageDragEvent: ViewerPanelCanvasMouseDragEvent;
-  imageDragEndEvent: ViewerPanelCanvasMouseDragEvent;
-  markerClickEvent: ViewerPanelMarkerMouseEvent;
-
-  //dss import
-  header$: Observable<Header>;
-
-  viewMode$: Observable<ViewMode>;
-
-  selectedCustomMarkers$: Observable<CustomMarker[]>;
-  viewers$: Observable<IViewer[]>;
-  viewerSyncEnabled$: Observable<boolean>;
-  viewerSyncMode$: Observable<'sky' | 'pixel'>;
-  normalizationSyncEnabled$: Observable<boolean>;
-  surveyDataProvider$: Observable<DataProvider>;
-  surveyImportCorrId$: Observable<string>;
-  dssImportLoading$: Observable<boolean>;
-  activeTool$: Observable<WorkbenchTool>;
-  showConfig$: Observable<boolean>;
-
-  fileLoaderSub: Subscription;
-  queryParamSub: Subscription;
-  transformationSyncSub: Subscription;
-  normalizationSyncSub: Subscription;
-  plottingPanelSyncSub: Subscription;
-
-  useWcsCenter: boolean = false;
+  @Select(WorkbenchState.getInFullScreenMode) inFullScreenMode$: Observable<boolean>;
+  @Select(WorkbenchState.getFullScreenPanel) fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;
+  @Select(DataFilesState.getLoading) loadingFiles$: Observable<boolean>;
+  @Select(WorkbenchState.getShowSidebar) showSidebar$: Observable<boolean>;
+  @Select(WorkbenchState.getSidebarView) sidebarView$: Observable<SidebarView>;
+  @Select(WorkbenchState.canSplit) canSplit$: Observable<boolean>;
+  @Select(WorkbenchState.getActiveTool) activeTool$: Observable<WorkbenchTool>;
+  @Select(WorkbenchState.getShowConfig) showConfig$: Observable<boolean>;
   currentSidebarView = SidebarView.FILES;
   SidebarView = SidebarView;
+
+  @Select(DataFilesState.getFilesSorted) filesSorted$: Observable<DataFile[]>;
+  @Select(WorkbenchState.getFileListFilter) fileFilter$: Observable<string>;
+
+  @Select(WorkbenchState.getFilteredFiles) filteredFiles$: Observable<DataFile[]>;
+  filteredHduIds$: Observable<string[]>;
+  filteredHdus$: Observable<IHdu[]>;
+  filteredImageHdus$: Observable<ImageHdu[]>;
+  filteredImageHduIds$: Observable<string[]>;
+  fileFilterInput$ = new Subject<string>();
+
+  @Select(WorkbenchState.getSelectedFilteredFileIds) selectedFileIds$: Observable<string[]>;
+  @Select(WorkbenchState.getSelectAllFilesCheckboxState) selectAllFilesCheckboxState$: Observable<boolean>;
+  @Select(WorkbenchState.getSelectAllFilesCheckboxIndeterminate)
+  selectAllFilesCheckboxIndeterminate$: Observable<boolean>;
+
+  @Select(WorkbenchState.getRootViewerPanelContainer) layoutContainer$: Observable<ViewerPanelContainer>;
+  @Select(WorkbenchState.getViewers) viewers$: Observable<IViewer[]>;
+  @Select(WorkbenchState.getFocusedViewer) focusedViewer$: Observable<IViewer>;
+  @Select(WorkbenchState.getFocusedViewerHdu) focusedViewerHdu$: Observable<IHdu>;
+  @Select(WorkbenchState.getFocusedViewerId) focusedViewerId$: Observable<string>;
+  @Select(WorkbenchState.getFocusedImageViewer) focusedImageViewer$: Observable<ImageViewer>;
+  @Select(WorkbenchState.getFocusedImageViewerId) focusedImageViewerId$: Observable<string>;
+  @Select(WorkbenchState.getFocusedTableViewer) focusedTableViewer$: Observable<TableViewer>;
+
+  //global settings panel
+  @Select(WorkbenchState.getViewerSyncEnabled) viewerSyncEnabled$: Observable<boolean>;
+  @Select(WorkbenchState.getViewerSyncMode) viewerSyncMode$: Observable<'sky' | 'pixel'>;
+  @Select(WorkbenchState.getNormalizationSyncEnabled) normalizationSyncEnabled$: Observable<boolean>;
 
   constructor(
     private actions$: Actions,
@@ -213,104 +185,27 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     private dataFileService: AfterglowDataFileService,
     private jobService: JobService
   ) {
-    this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
-    this.sidebarView$ = this.store.select(WorkbenchState.getSidebarView);
-    this.showConfig$ = this.store.select(WorkbenchState.getShowConfig);
-    this.showSidebar$ = this.store.select(WorkbenchState.getShowSidebar);
-    this.loadingFiles$ = this.store.select(DataFilesState.getLoading);
-    this.viewMode$ = this.store.select(WorkbenchState.getViewMode);
-    this.fullScreenPanel$ = this.store.select(WorkbenchState.getFullScreenPanel);
-    this.inFullScreenMode$ = this.store.select(WorkbenchState.getInFullScreenMode);
-    this.viewerSyncEnabled$ = store.select(WorkbenchState.getViewerSyncEnabled);
-    this.viewerSyncMode$ = store.select(WorkbenchState.getViewerSyncMode);
-    this.normalizationSyncEnabled$ = store.select(WorkbenchState.getNormalizationSyncEnabled);
-
-    this.allFiles$ = this.store
-      .select(DataFilesState.getFiles)
-      .pipe(map((files) => files.sort((a, b) => a.name.localeCompare(b.name))));
-
-    //file filtering
-    this.fileFilter$ = this.store.select(WorkbenchState.getFileListFilter);
-
     this.fileFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));
     });
 
-    this.files$ = this.store.select(WorkbenchState.getFilteredFiles);
-
-    this.hduIds$ = this.store
+    this.filteredHduIds$ = this.store
       .select(WorkbenchState.getFilteredHduIds)
       .pipe(
         distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
       );
 
-    this.hdus$ = this.hduIds$.pipe(
-      switchMap((hduIds) =>
-        combineLatest(hduIds.map((id) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(id)))))
-      )
+    this.filteredHdus$ = this.filteredHduIds$.pipe(
+      switchMap((hduIds) => this.store.select(DataFilesState.getHdusByIds).pipe(map((fn) => fn(hduIds))))
     );
 
-    this.imageHdus$ = this.hdus$.pipe(
+    this.filteredImageHdus$ = this.filteredHdus$.pipe(
       map((hdus) => (!hdus ? null : (hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[])))
     );
 
-    this.imageHduIds$ = this.imageHdus$.pipe(map((hdus) => hdus.map((hdu) => hdu.id)));
+    this.filteredImageHduIds$ = this.filteredImageHdus$.pipe(map((hdus) => hdus.map((hdu) => hdu.id)));
 
-    //file selection
-    this.selectedFileIds$ = this.store.select(WorkbenchState.getSelectedFilteredFileIds);
-
-    this.selectAllFilesChecked$ = combineLatest(this.files$, this.selectedFileIds$).pipe(
-      map(([filteredFiles, selectedFileIds]) => {
-        return filteredFiles.length != 0 && selectedFileIds.length == filteredFiles.length;
-      })
-    );
-
-    this.selectAllFilesIndeterminate$ = combineLatest(this.files$, this.selectedFileIds$).pipe(
-      map(([filteredFiles, selectedFileIds]) => {
-        return selectedFileIds.length != 0 && selectedFileIds.length != filteredFiles.length;
-      })
-    );
-
-    // viewers
-    this.layoutContainer$ = this.store.select(WorkbenchState.getRootViewerPanelContainer);
-    this.viewers$ = this.store.select(WorkbenchState.getViewers);
-    this.viewer$ = this.store.select(WorkbenchState.getFocusedViewer);
-    this.viewerId$ = this.store.select(WorkbenchState.getFocusedViewerId);
-
-    this.canSplit$ = this.store.select(WorkbenchState.getViewers).pipe(map((viewers) => viewers && viewers.length > 1));
-
-    this.imageViewer$ = this.store.select(WorkbenchState.getFocusedImageViewer);
-
-    this.imageViewerId$ = this.imageViewer$.pipe(
-      map((imageViewer) => (imageViewer ? imageViewer.id : null)),
-      distinctUntilChanged()
-    );
-
-    this.tableViewer$ = this.store.select(WorkbenchState.getFocusedTableViewer);
-
-    //DSS Import
-    //TODO Move to separate component
-
-    let hduId$ = this.viewer$.pipe(
-      map((viewer) => viewer?.hduId),
-      distinctUntilChanged()
-    );
-    let hdu$ = hduId$.pipe(
-      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
-    );
-    let headerId$ = hdu$.pipe(
-      map((hdu) => hdu?.headerId || null),
-      distinctUntilChanged()
-    );
-    this.header$ = headerId$.pipe(
-      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
-    );
-    this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
-    this.surveyDataProvider$ = this.store
-      .select(DataProvidersState.getDataProviders)
-      .pipe(map((dataProviders) => dataProviders.find((dp) => dp.displayName == 'Imaging Surveys')));
-
-    this.queryParamSub = this.activeRoute.queryParams.subscribe((p) => {
+    this.activeRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe((p) => {
       let tool = WorkbenchTool.VIEWER;
       if (p.tool && Object.values(WorkbenchTool).includes(p.tool)) {
         tool = p.tool;
@@ -325,18 +220,26 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    this.transformationSyncSub = this.viewerId$
+    this.focusedViewerId$
       .pipe(
+        takeUntil(this.destroy$),
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
 
-          let refHeader$ = this.store.select(WorkbenchState.getFirstImageHeaderIdFromViewerId).pipe(
+          let refFileHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId).pipe(
             map((fn) => fn(focusedViewerId)),
-            distinctUntilChanged(),
-            switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)))),
-            distinctUntilChanged()
-            // tap(v => console.log("REF HEADER CHANGED"))
+            tap((v) => console.log('REF FILE HEADER CHANGED: ', v))
+          );
+
+          let refHduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            tap((v) => console.log('REF HDU HEADER CHANGED: ', v))
+          );
+
+          let refHeader$ = this.store.select(WorkbenchState.getHeaderByViewerId).pipe(
+            map((fn) => fn(focusedViewerId)),
+            tap((v) => console.log('REF HEADER CHANGED: ', v))
           );
 
           let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
@@ -399,8 +302,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       );
 
-    this.normalizationSyncSub = this.viewerId$
+    this.focusedViewerId$
       .pipe(
+        takeUntil(this.destroy$),
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
@@ -435,8 +339,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         this.store.dispatch(new SyncViewerNormalizations(refNormalizer));
       });
 
-    this.plottingPanelSyncSub = this.viewerId$
+    this.focusedViewerId$
       .pipe(
+        takeUntil(this.destroy$),
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           let refPlottingPanelState$ = this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
@@ -504,13 +409,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy() {
-    // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));
-    // this.fileLoaderSub.unsubscribe();
-    this.queryParamSub.unsubscribe();
-    this.transformationSyncSub.unsubscribe();
-    this.normalizationSyncSub.unsubscribe();
-    this.plottingPanelSyncSub.unsubscribe();
-
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
@@ -839,148 +737,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (file) return file.name;
     return `Viewer ${index}`;
-  }
-
-  onImageMouseDown($event: ViewerPanelCanvasMouseEvent) {
-    this.imageMouseDownEvent = $event;
-  }
-
-  onImageMouseUp($event: ViewerPanelCanvasMouseEvent) {
-    this.imageMouseUpEvent = $event;
-  }
-
-  /* image viewer mouse event handlers */
-  onImageClick($event: ViewerPanelCanvasMouseEvent) {
-    this.imageClickEvent = $event;
-
-    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != ViewerType.IMAGE) {
-      return;
-    }
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let targetFile = fileEntities[viewer.fileId];
-    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
-    let headerId = headerSelector(viewer.id);
-    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
-
-    let hduStateEntities = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
-    let fileStateEntities = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-
-    switch (activeTool) {
-      case WorkbenchTool.CUSTOM_MARKER: {
-        break;
-      }
-      case WorkbenchTool.PLOTTER: {
-        break;
-      }
-      case WorkbenchTool.PHOTOMETRY: {
-        break;
-      }
-    }
-  }
-
-  onImageMouseMove($event: ViewerPanelCanvasMouseEvent) {
-    this.imageMouseMoveEvent = $event;
-    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != ViewerType.IMAGE) {
-      return;
-    }
-
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let targetFile = this.store.selectSnapshot(DataFilesState.getFileEntities)[viewer.fileId];
-    let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[viewer.hduId] as ImageHdu;
-    let headerId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
-    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
-
-    let hduStateEntities = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
-    let fileStateEntities = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-
-    switch (activeTool) {
-      case WorkbenchTool.PLOTTER: {
-        break;
-      }
-    }
-  }
-
-  onImageMouseDragStart($event: ViewerPanelCanvasMouseDragEvent) {
-    this.imageDragStartEvent = $event;
-    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != ViewerType.IMAGE) {
-      return;
-    }
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
-    let headerId = headerSelector(viewer.id);
-    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
-    switch (activeTool) {
-      case WorkbenchTool.PHOTOMETRY: {
-        break;
-      }
-    }
-  }
-
-  onImageMouseDrag($event: ViewerPanelCanvasMouseDragEvent) {
-    this.imageDragEvent = $event;
-    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != ViewerType.IMAGE) {
-      return;
-    }
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
-    let headerId = headerSelector(viewer.id);
-    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
-    switch (activeTool) {
-      case WorkbenchTool.PHOTOMETRY: {
-        break;
-      }
-    }
-  }
-
-  onImageMouseDragEnd($event: ViewerPanelCanvasMouseDragEvent) {
-    this.imageDragEndEvent = $event;
-    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != ViewerType.IMAGE) {
-      return;
-    }
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let headerSelector = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId);
-    let headerId = headerSelector(viewer.id);
-    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
-    switch (activeTool) {
-      case WorkbenchTool.PHOTOMETRY: {
-        break;
-      }
-    }
-  }
-
-  onMarkerClick($event: ViewerPanelMarkerMouseEvent) {
-    this.markerClickEvent = $event;
-
-    let viewer = this.store.selectSnapshot(WorkbenchState.getViewerEntities)[$event.viewerId] as ImageViewer;
-    if (!viewer || viewer.type != ViewerType.IMAGE) {
-      return;
-    }
-
-    let activeTool = this.store.selectSnapshot(WorkbenchState.getActiveTool);
-    let targetFile = this.store.selectSnapshot(DataFilesState.getFileEntities)[viewer.fileId];
-    let targetHdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[viewer.hduId] as ImageHdu;
-    let headerId = this.store.selectSnapshot(WorkbenchState.getFirstImageHeaderIdFromViewerId)(viewer.id);
-    let targetHeader = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[headerId];
-
-    switch (activeTool) {
-      case WorkbenchTool.CUSTOM_MARKER: {
-        break;
-      }
-      case WorkbenchTool.PHOTOMETRY: {
-      }
-    }
   }
 
   clearFileListFilter() {
@@ -1683,115 +1439,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onNormalizationSyncEnabledChange($event: MatSlideToggleChange) {
     this.store.dispatch(new SetNormalizationSyncEnabled($event.checked));
-  }
-
-  importFromSurvey(surveyDataProvider: DataProvider) {
-    let centerRaDec;
-    let pixelScale;
-
-    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-    if (!focusedViewer) return;
-
-    let hduId = focusedViewer.hduId;
-    if (!hduId) {
-      hduId = this.store.selectSnapshot(DataFilesState.getFileEntities)[focusedViewer.fileId].hduIds[0];
-    }
-
-    if (!hduId) return;
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[hdu.headerId];
-
-    if (header.wcs && header.wcs.isValid() && this.useWcsCenter) {
-      centerRaDec = header.wcs.pixToWorld([getWidth(header) / 2, getHeight(header) / 2]);
-      pixelScale = header.wcs.getPixelScale() * 60;
-    } else {
-      let centerRa = getRaHours(header);
-      let centerDec = getDecDegs(header);
-      if (centerRa == undefined || centerDec == undefined) return;
-
-      centerRaDec = [centerRa, centerDec];
-      pixelScale = getDegsPerPixel(header) * 60;
-
-      if (pixelScale == undefined) return;
-    }
-
-    let width = pixelScale * getWidth(header);
-    let height = pixelScale * getHeight(header);
-    if (!focusedViewer.keepOpen) {
-      this.store.dispatch(new KeepViewerOpen(focusedViewer.id));
-    }
-
-    let correlationId = this.corrGen.next();
-
-    let importFromSurveyFail$ = this.actions$.pipe(
-      ofActionDispatched(ImportFromSurveyFail),
-      filter<ImportFromSurveyFail>((action) => action.correlationId == correlationId),
-      take(1),
-      flatMap((v) => {
-        let dialogConfig: Partial<AlertDialogConfig> = {
-          title: 'Error',
-          message: `An unexpected error occurred when importing the survey image.  Please try again later.`,
-          buttons: [
-            {
-              color: null,
-              value: false,
-              label: 'Close',
-            },
-          ],
-        };
-        let dialogRef = this.dialog.open(AlertDialogComponent, {
-          width: '400px',
-          data: dialogConfig,
-          disableClose: true,
-        });
-
-        return dialogRef.afterClosed();
-      })
-    );
-
-    this.actions$
-      .pipe(
-        takeUntil(importFromSurveyFail$),
-        ofActionDispatched(ImportFromSurveySuccess),
-        filter<ImportFromSurveySuccess>((action) => action.correlationId == correlationId),
-        take(1),
-        flatMap((action) => {
-          let surveyFileId = action.fileId;
-          this.store.dispatch(new LoadLibrary());
-
-          let loadLibraryFail$ = this.actions$.pipe(ofActionDispatched(LoadLibraryFail), take(1));
-
-          return this.actions$.pipe(
-            ofActionDispatched(LoadLibrarySuccess),
-            takeUntil(loadLibraryFail$),
-            take(1),
-            map((action) => surveyFileId)
-          );
-        })
-      )
-      .subscribe(
-        (surveyFileId) => {
-          let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-          if (surveyFileId && surveyFileId in hduEntities) {
-            let hdu = hduEntities[surveyFileId];
-            this.store.dispatch(new SelectFile(hdu.fileId, hdu.id, true));
-          }
-        },
-        (err) => {},
-        () => {}
-      );
-
-    this.store.dispatch(
-      new ImportFromSurvey(surveyDataProvider.id, centerRaDec[0], centerRaDec[1], width, height, correlationId)
-    );
-  }
-
-  // onUseWcsCenterChange($event: MatCheckboxChange) {
-  //   this.useWcsCenter = $event.checked;
-  // }
-
-  onUseWcsCenterChange($event: MatRadioChange) {
-    this.useWcsCenter = $event.value == 'wcs';
   }
 
   splitViewerPanel(viewer: IViewer, direction: 'up' | 'down' | 'left' | 'right' = 'right') {

@@ -8,7 +8,6 @@
 @import './app/workbench/components/image-viewer-status-bar/image-viewer-status-bar-theme';
 @import './app/data-providers/components/file-manager/file-manager-theme';
 @import './app/utils/alert-dialog/alert-dialog-theme';
-@import './app/workbench/components/hdu-selector/hdu-selector-theme';
 
 // Styles for the docs app that are based on the current theme.
 @mixin afterglow-app-theme($theme) {
@@ -44,7 +43,6 @@
   @include workbench-data-file-list-theme($theme);
   @include file-manager-theme($theme);
   @include alert-dialog-theme($theme);
-  @include hdu-selector-theme($theme);
 
   .context-menu .context-label {
     padding-right: 30px;

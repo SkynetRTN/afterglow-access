@@ -54,7 +54,6 @@ import { RectangleMarkerEditorComponent } from './components/rectangle-marker-ed
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { AvatarModule } from 'ngx-avatar';
 import { WorkbenchViewerLayoutComponent } from './containers/workbench-viewer-layout/workbench-viewer-layout.component';
-import { HduSelectorComponent } from './components/hdu-selector/hdu-selector.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
 import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
@@ -66,13 +65,13 @@ import { ImageHduToolbarComponent } from './components/image-hdu-toolbar/image-h
 import { MatDialogModule } from '@angular/material/dialog';
 import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/svg-outlined-ellipse.component';
 import { ImageViewerEventService } from './services/image-viewer-event.service';
+import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
 
 export const COMPONENTS = [
   NavbarComponent,
   AppFooterComponent,
   WorkbenchDataFileListComponent,
   WorkbenchImageViewerComponent,
-  HduSelectorComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
   ImageViewerStatusBarComponent,
@@ -110,6 +109,7 @@ export const COMPONENTS = [
   FileToolbarComponent,
   ImageHduToolbarComponent,
   FileListOptionComponent,
+  CatalogImportComponent,
 ];
 
 @NgModule({

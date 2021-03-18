@@ -164,6 +164,13 @@ export class DataFilesState {
   }
 
   @Selector()
+  static getLoading(state: DataFilesStateModel) {
+    return state.loading;
+  }
+
+  /** File Selectors */
+
+  @Selector()
   public static getFileEntities(state: DataFilesStateModel) {
     return state.fileEntities;
   }
@@ -171,6 +178,11 @@ export class DataFilesState {
   @Selector()
   static getFiles(state: DataFilesStateModel) {
     return Object.values(state.fileEntities);
+  }
+
+  @Selector([DataFilesState.getFiles])
+  static getFilesSorted(files: DataFile[]) {
+    return files.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   @Selector()
@@ -185,15 +197,7 @@ export class DataFilesState {
     };
   }
 
-  @Selector([DataFilesState.getHduEntities, DataFilesState.getFileEntities])
-  public static getFileByHduId(hduEntities: { [id: string]: IHdu }, fileEntities: { [id: string]: DataFile }) {
-    return (hduId: string) => {
-      let hdu = hduEntities[hduId];
-      if (!hdu) return null;
-
-      return hdu.fileId in fileEntities ? fileEntities[hdu.fileId] : null;
-    };
-  }
+  /** HDU Selectors */
 
   @Selector()
   public static getHduEntities(state: DataFilesStateModel) {
@@ -205,20 +209,6 @@ export class DataFilesState {
     return Object.values(state.hduEntities);
   }
 
-  @Selector([DataFilesState.getHduEntities, DataFilesState.getFileEntities])
-  static getHdusByFileId(hduEntities: { [id: string]: IHdu }, fileEntities: { [id: string]: DataFile }) {
-    return (fileId: string) => {
-      return fileEntities[fileId].hduIds.map((hduId) => hduEntities[hduId]);
-    };
-  }
-
-  @Selector([DataFilesState.getFileEntities])
-  public static getFileByCompositeImageDataId(fileEntities: { [id: string]: DataFile }) {
-    return (imageDataId: string) => {
-      return Object.values(fileEntities).find((file) => file.imageDataId == imageDataId);
-    };
-  }
-
   @Selector([DataFilesState.getHduEntities])
   public static getHduById(hduEntities: { [id: string]: IHdu }) {
     return (hduId: string) => {
@@ -226,38 +216,14 @@ export class DataFilesState {
     };
   }
 
-  @Selector([DataFilesState.getHduEntities, DataFilesState.getFileEntities, DataFilesState.getHeaderEntities])
-  public static getHduLabel(
-    hduEntities: { [id: string]: IHdu },
-    fileEntities: { [id: string]: DataFile },
-    headerEntities: { [id: string]: Header }
-  ) {
-    return (hduId: string) => {
-      let hdu = hduEntities[hduId];
-      if (!hdu) return '';
-
-      let header = headerEntities[hdu.headerId];
-      if (header) {
-        let filter = getFilter(header);
-        if (filter) return filter;
-      }
-
-      let file = fileEntities[hdu.fileId];
-      if (!file) return '';
-      let index = file.hduIds.indexOf(hdu.id);
-
-      return `Layer ${index}`;
+  @Selector([DataFilesState.getHduById])
+  public static getHdusByIds(getHduById: (id: string) => IHdu) {
+    return (hduIds: string[]) => {
+      return hduIds.map((id) => getHduById(id));
     };
   }
 
-  @Selector([DataFilesState.getHduEntities])
-  public static getHduByNormalizedImageDataId(hduEntities: { [id: string]: IHdu }) {
-    return (imageDataId: string) => {
-      return Object.values(hduEntities).find(
-        (hdu) => hdu.hduType == HduType.IMAGE && (hdu as ImageHdu).imageDataId == imageDataId
-      );
-    };
-  }
+  /** Header Selectors */
 
   @Selector()
   public static getHeaderEntities(state: DataFilesStateModel) {
@@ -276,83 +242,56 @@ export class DataFilesState {
     };
   }
 
-  @Selector([DataFilesState.getFileEntities, DataFilesState.getHduEntities, DataFilesState.getHeaderEntities])
-  public static getFirstImageHduHeaderIdByFileId(
-    fileEntities: { [id: string]: DataFile },
-    hduEntities: { [id: string]: IHdu },
-    headerEntities: { [id: string]: Header }
-  ) {
+  /** File/HDU/Header Join Selectors */
+
+  @Selector([DataFilesState.getHduEntities, DataFilesState.getFileById])
+  public static getFileByHduId(hduEntities: { [id: string]: IHdu }, getFileById: (id: string) => DataFile) {
+    return (hduId: string) => {
+      return getFileById(hduEntities[hduId]?.fileId);
+    };
+  }
+
+  @Selector([DataFilesState.getFileById, DataFilesState.getHdusByIds])
+  static getHdusByFileId(getFileById: (id: string) => DataFile, getHdusByIds: (ids: string[]) => IHdu[]) {
     return (fileId: string) => {
-      let file = fileEntities[fileId];
-      if (!file) return null;
-      let result = file.hduIds
-        .map((hduId) => hduEntities[hduId])
-        .sort((a, b) => (a.order > b.order ? 1 : -1))
-        .find((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu;
-      return result?.headerId || null;
+      let file = getFileById(fileId);
+      let hduIds = file?.hduIds || [];
+      return getHdusByIds(hduIds).sort((a, b) => (a.order > b.order ? 1 : -1));
     };
   }
 
-  @Selector([DataFilesState.getHduEntities, DataFilesState.getHeaderEntities])
-  public static getHeaderByHduId(hduEntities: { [id: string]: IHdu }, headerEntities: { [id: string]: Header }) {
+  @Selector([DataFilesState.getHdusByFileId])
+  static getFirstHduByFileId(getHdusByFileId: (id: string) => IHdu[]) {
+    return (fileId: string) => {
+      let hdus = getHdusByFileId(fileId);
+      return hdus.length > 0 ? hdus[0] : null;
+    };
+  }
+
+  @Selector([DataFilesState.getHdusByFileId])
+  static getFirstImageHduByFileId(getHdusByFileId: (id: string) => IHdu[]) {
+    return (fileId: string) => {
+      let hdus = getHdusByFileId(fileId).filter((hdu) => hdu.hduType == HduType.IMAGE);
+      return hdus?.length > 0 ? hdus[0] : null;
+    };
+  }
+
+  @Selector([DataFilesState.getHdusByFileId])
+  static getFirstTableHduByFileId(getHdusByFileId: (id: string) => IHdu[]) {
+    return (fileId: string) => {
+      let hdus = getHdusByFileId(fileId).filter((hdu) => hdu.hduType == HduType.TABLE);
+      return hdus?.length > 0 ? hdus[0] : null;
+    };
+  }
+
+  @Selector([DataFilesState.getHduById, DataFilesState.getHeaderById])
+  public static getHeaderByHduId(getHduById: (id: string) => IHdu, getHeaderById: (id: string) => Header) {
     return (hduId: string) => {
-      if (!(hduId in hduEntities)) {
-        return null;
-      }
-      let hdu = hduEntities[hduId];
-
-      if (!hdu.headerId || !headerEntities[hdu.headerId]) {
-        return null;
-      }
-      return headerEntities[hdu.headerId];
+      return getHeaderById(getHduById(hduId)?.headerId);
     };
   }
 
-  @Selector([DataFilesState.getHduEntities, DataFilesState.getHeaderEntities])
-  public static getHeaderLoaded(hduEntities: { [id: string]: IHdu }, headerEntities: { [id: string]: Header }) {
-    return (hduId: string) => {
-      if (!(hduId in hduEntities)) {
-        return false;
-      }
-      let hdu = hduEntities[hduId];
-
-      if (!hdu.headerId || !headerEntities[hdu.headerId]) {
-        return false;
-      }
-
-      return headerEntities[hdu.headerId].loaded;
-    };
-  }
-
-  @Selector([DataFilesState.getHduEntities])
-  public static getHistLoaded(hduEntities: { [id: string]: IHdu }) {
-    return (hduId: string) => {
-      if (!(hduId in hduEntities)) return false;
-      let hdu = hduEntities[hduId];
-      if (hdu.hduType != HduType.IMAGE) return null;
-      let imageHdu = hdu as ImageHdu;
-      return imageHdu.hist && imageHdu.hist.loaded;
-    };
-  }
-
-  @Selector([DataFilesState.getHduEntities])
-  public static getHist(hduEntities: { [id: string]: IHdu }) {
-    return (hduId: string) => {
-      if (!(hduId in hduEntities)) return null;
-      let hdu = hduEntities[hduId];
-      return hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu).hist : null;
-    };
-  }
-
-  @Selector([DataFilesState.getHduEntities])
-  public static getNormalizer(hduEntities: { [id: string]: IHdu }) {
-    return (hduId: string) => {
-      if (!(hduId in hduEntities)) return null;
-      let hdu = hduEntities[hduId];
-      return hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu).normalizer : null;
-    };
-  }
-
+  /** Image Data Selectors */
   @Selector()
   public static getImageDataEntities(state: DataFilesStateModel) {
     return state.imageDataEntities;
@@ -370,6 +309,7 @@ export class DataFilesState {
     };
   }
 
+  /** Transform Selectors */
   @Selector()
   public static getTransformEntities(state: DataFilesStateModel) {
     return state.transformEntities;
@@ -387,10 +327,7 @@ export class DataFilesState {
     };
   }
 
-  @Selector()
-  static getLoading(state: DataFilesStateModel) {
-    return state.loading;
-  }
+  /** Actions */
 
   @Action(Initialize)
   @ImmutableContext()

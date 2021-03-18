@@ -94,6 +94,22 @@ import { round } from '../../../utils/math';
 import { formatDms } from '../../../utils/skynet-astro';
 // @ts-ignore
 import * as piexif from 'piexifjs';
+import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+
+export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
+  viewerId: string;
+  viewer: IViewer;
+}
+
+export interface ViewerCanvasMouseDragEvent extends CanvasMouseDragEvent {
+  viewerId: string;
+  viewer: IViewer;
+}
+
+export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
+  viewerId: string;
+  viewer: IViewer;
+}
 
 @Component({
   selector: 'app-workbench-image-viewer',
@@ -120,22 +136,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   @Input()
   hasFocus: boolean = true;
 
-  @Output()
-  onImageClick = new EventEmitter<CanvasMouseEvent>();
-  @Output()
-  onImageMouseMove = new EventEmitter<CanvasMouseEvent>();
-  @Output()
-  onImageMouseDown = new EventEmitter<CanvasMouseEvent>();
-  @Output()
-  onImageMouseUp = new EventEmitter<CanvasMouseEvent>();
-  @Output()
-  onImageMouseDragStart = new EventEmitter<CanvasMouseDragEvent>();
-  @Output()
-  onImageMouseDrag = new EventEmitter<CanvasMouseDragEvent>();
-  @Output()
-  onImageMouseDragEnd = new EventEmitter<CanvasMouseDragEvent>();
-  @Output()
-  onMarkerClick = new EventEmitter<MarkerMouseEvent>();
   @Output()
   onFileClose = new EventEmitter<string>();
   @Output()
@@ -190,7 +190,12 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   selectedFieldCalId$: Observable<string>;
   fieldCalMarkers$: Observable<Marker[]>;
 
-  constructor(private store: Store, private sanitization: DomSanitizer, private papa: Papa) {
+  constructor(
+    private store: Store,
+    private sanitization: DomSanitizer,
+    private papa: Papa,
+    private viewerEventService: ImageViewerEventService
+  ) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
     let viewerId$ = this.viewer$.pipe(
@@ -702,7 +707,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.onImageMouseMove.emit($event);
+    this.viewerEventService.mouseMoveEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
   }
 
   handleImageMouseDown($event: CanvasMouseEvent) {
@@ -714,7 +723,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.onImageMouseDown.emit($event);
+    this.viewerEventService.mouseDownEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
   }
 
   handleImageMouseUp($event: CanvasMouseEvent) {
@@ -726,15 +739,51 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.onImageMouseUp.emit($event);
+    this.viewerEventService.mouseUpEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
   }
 
   handleImageClick($event: CanvasMouseEvent) {
-    this.onImageClick.emit($event);
+    this.viewerEventService.imageClickEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
   }
 
   handleMarkerClick($event: MarkerMouseEvent) {
-    this.onMarkerClick.emit($event);
+    this.viewerEventService.markerClickEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
+  }
+
+  handleImageDragStart($event: CanvasMouseDragEvent) {
+    this.viewerEventService.dragEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
+  }
+
+  handleImageDrag($event: CanvasMouseDragEvent) {
+    this.viewerEventService.dragEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
+  }
+
+  handleImageDragEnd($event: CanvasMouseDragEvent) {
+    this.viewerEventService.dropEvent$.next({
+      viewerId: this.viewer.id,
+      viewer: this.viewer,
+      ...$event,
+    });
   }
 
   handleMoveBy($event: MoveByEvent) {
