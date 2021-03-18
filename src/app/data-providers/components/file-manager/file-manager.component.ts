@@ -826,6 +826,14 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     this.items$.subscribe((items) => {
       this.dataSource.data = items;
       this.dataSource.sort = this.sort;
+
+      this.dataSource.sortingDataAccessor = (item, property) => {
+        if (property === 'name') {
+          return item.name;
+        } else {
+          return this.resolvePath(item, property);
+        }
+      };
     });
   }
 

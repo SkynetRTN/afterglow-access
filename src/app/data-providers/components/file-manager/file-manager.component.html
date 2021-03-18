@@ -110,7 +110,7 @@
 
         <!-- Name Column -->
         <ng-container matColumnDef="name" sticky>
-          <th class="name" mat-header-cell mat-sort-header *matHeaderCellDef>Name</th>
+          <th class="name" mat-header-cell mat-sort-header="name" *matHeaderCellDef>Name</th>
           <td class="name" mat-cell *matCellDef="let item">
             <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px">
               <mat-icon *ngIf="item.isDirectory; else fileIcon"> folder </mat-icon>
@@ -123,7 +123,9 @@
         </ng-container>
 
         <ng-container *ngFor="let column of columns$ | async" [matColumnDef]="column.caption">
-          <th mat-header-cell mat-sort-header class="meta-column" *matHeaderCellDef>{{ column.caption }}</th>
+          <th mat-header-cell [mat-sort-header]="column.dataField" class="meta-column" *matHeaderCellDef>
+            {{ column.caption }}
+          </th>
           <td mat-cell class="meta-column" *matCellDef="let item">
             <span class="">{{ resolvePath(item, column.dataField) }} </span>
           </td>
