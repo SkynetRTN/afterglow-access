@@ -178,7 +178,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
       .pipe(
         takeUntil(this.destroy$),
         switchMap((viewerIds) => {
-          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId))).pipe(takeUntil(this.destroy$));
         })
       )
       .subscribe((v) => {
@@ -387,6 +387,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     let state$ = this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId));
     return state$.pipe(
       map((state) => {
+        if (!state) return { viewerId: viewerId, markers: [] as Marker[] };
         let region = state.regionHistory[state.regionHistoryIndex];
         let regionMode = state.regionMode;
         let progressLine = state.progressLine;
@@ -403,6 +404,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
             type: MarkerType.LINE,
             ...progressLine,
           } as LineMarker);
+
         return {
           viewerId: viewerId,
           markers: markers,
@@ -439,6 +441,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     let events$ = this.getStream(url).pipe(takeUntil(merge(this.destroy$, this.stop$)), share());
 
     let stopUpdating$ = merge(
+      this.destroy$,
       this.stop$,
       events$.pipe(filter((event) => event.type == 'ended' || event.type == 'pause'))
     ).pipe(

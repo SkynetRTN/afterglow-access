@@ -2,27 +2,27 @@
   <svg:line
     *ngIf="showShadow"
     class="shadow"
-    [attr.x1]="marker.x1 - 0.5"
-    [attr.y1]="marker.y1 - 0.5"
-    [attr.x2]="marker.x2 - 0.5"
-    [attr.y2]="marker.y2 - 0.5"
+    [attr.x1]="marker.x1"
+    [attr.y1]="marker.y1"
+    [attr.x2]="marker.x2"
+    [attr.y2]="marker.y2"
     [attr.vector-effect]="'non-scaling-stroke'"
   />
   <svg:line
     *ngIf="showOutline"
     class="outline"
-    [attr.x1]="marker.x1 - 0.5"
-    [attr.y1]="marker.y1 - 0.5"
-    [attr.x2]="marker.x2 - 0.5"
-    [attr.y2]="marker.y2 - 0.5"
+    [attr.x1]="marker.x1"
+    [attr.y1]="marker.y1"
+    [attr.x2]="marker.x2"
+    [attr.y2]="marker.y2"
     [attr.vector-effect]="'non-scaling-stroke'"
   />
   <svg:line
     class="stroke"
-    [attr.x1]="marker.x1 - 0.5"
-    [attr.y1]="marker.y1 - 0.5"
-    [attr.x2]="marker.x2 - 0.5"
-    [attr.y2]="marker.y2 - 0.5"
+    [attr.x1]="marker.x1"
+    [attr.y1]="marker.y1"
+    [attr.x2]="marker.x2"
+    [attr.y2]="marker.y2"
     [attr.vector-effect]="'non-scaling-stroke'"
   />
 </svg:g>

@@ -1871,7 +1871,7 @@ export class WorkbenchState {
 
     function onLoadComplete(store: Store) {
       //normalization
-      if (refHeader && refImageTransform && refViewportTransform) {
+      if (refHeader && refImageTransform && refViewportTransform && refImageData) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(

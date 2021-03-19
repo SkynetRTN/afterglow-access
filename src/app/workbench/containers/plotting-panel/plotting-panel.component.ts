@@ -299,7 +299,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
       .pipe(
         takeUntil(this.destroy$),
         switchMap((viewerIds) => {
-          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId))).pipe(takeUntil(this.destroy$));
         })
       )
       .subscribe((v) => {
