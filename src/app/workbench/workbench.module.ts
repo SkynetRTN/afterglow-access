@@ -28,7 +28,7 @@ import { PlotterComponent } from './components/plotter/plotter.component';
 import { AppFooterComponent } from './components/app-footer/app-footer.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { WorkbenchComponent } from './containers/workbench.component';
-import { DisplayToolsetComponent } from './components/display-panel/display-panel.component';
+import { DisplayToolPanelComponent } from './components/display-panel/display-panel.component';
 import { PlottingPanelComponent } from './components/plotting-panel/plotting-panel.component';
 import { CustomMarkerPanelComponent } from './components/custom-marker-panel/custom-marker-panel.component';
 import { SonificationPanelComponent } from './components/sonification-panel/sonification-panel.component';
@@ -67,6 +67,7 @@ import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/s
 import { ImageViewerEventService } from './services/image-viewer-event.service';
 import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
 import { ImageViewerMarkerService } from './services/image-viewer-marker.service';
+import { ImageOrientationToolbarComponent } from './components/image-orientation-toolbar/image-orientation-toolbar.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -85,7 +86,7 @@ export const COMPONENTS = [
   SvgApertureMarkerComponent,
   SvgOutlinedEllipseComponent,
   WorkbenchComponent,
-  DisplayToolsetComponent,
+  DisplayToolPanelComponent,
   PlottingPanelComponent,
   SonificationPanelComponent,
   PhotometryPageComponent,
@@ -111,6 +112,7 @@ export const COMPONENTS = [
   ImageHduToolbarComponent,
   FileListOptionComponent,
   CatalogImportComponent,
+  ImageOrientationToolbarComponent,
 ];
 
 @NgModule({

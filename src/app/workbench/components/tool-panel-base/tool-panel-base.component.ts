@@ -11,7 +11,12 @@ import { Transform, getImageToViewportTransform } from '../../../data-files/mode
 import { HduType } from '../../../data-files/models/data-file-type';
 import { IViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
-import { IWorkbenchHduState, WorkbenchFileState, WorkbenchImageHduState } from '../../models/workbench-file-state';
+import {
+  IWorkbenchState,
+  WorkbenchFileState,
+  WorkbenchImageHduState,
+  WorkbenchStateType,
+} from '../../models/workbench-file-state';
 import { IImageData } from '../../../data-files/models/image-data';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
@@ -23,8 +28,7 @@ export interface ToolPanelViewerState {
   imageHdu: ImageHdu;
   normalizedImageData: IImageData<Uint32Array>;
   rawImageData: IImageData<PixelType>;
-  fileState: WorkbenchFileState;
-  hduState: IWorkbenchHduState;
+  workbenchState: IWorkbenchState;
   // viewportTransform: Transform,
   // imageTransform: Transform,
   // imageToViewportTransform: Transform
@@ -57,8 +61,7 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
   imageHdu$: Observable<ImageHdu>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
-  hduState$: Observable<IWorkbenchHduState>;
-  fileState$: Observable<WorkbenchFileState>;
+  workbenchState$: Observable<IWorkbenchState>;
   // viewportTransform$: Observable<Transform>;
   // imageTransform$: Observable<Transform>;
   // imageToViewportTransform$: Observable<Transform>;
@@ -107,12 +110,8 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
 
     this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
 
-    this.hduState$ = this.hduId$.pipe(
-      switchMap((hduId) => this.store.select(WorkbenchState.getHduStateById).pipe(map((fn) => fn(hduId))))
-    );
-
-    this.fileState$ = this.fileId$.pipe(
-      switchMap((fileId) => this.store.select(WorkbenchState.getFileStateById).pipe(map((fn) => fn(fileId))))
+    this.workbenchState$ = this.viewer$.pipe(
+      switchMap((viewer) => this.store.select(WorkbenchState.getWorkbenchStateByViewerId(viewer?.id)))
     );
 
     this.viewportSize$ = this.viewer$.pipe(map((viewer) => viewer?.viewportSize));
@@ -168,10 +167,9 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
       this.imageHdu$,
       this.rawImageData$,
       this.normalizedImageData$,
-      this.fileState$,
-      this.hduState$,
+      this.workbenchState$,
     ]).pipe(
-      map(([file, hdu, header, imageHdu, rawImageData, normalizedImageData, fileState, hduState]) => {
+      map(([file, hdu, header, imageHdu, rawImageData, normalizedImageData, workbenchState]) => {
         return {
           file,
           hdu,
@@ -179,8 +177,7 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
           imageHdu,
           rawImageData,
           normalizedImageData,
-          fileState,
-          hduState,
+          workbenchState,
         } as ToolPanelViewerState;
       })
     );

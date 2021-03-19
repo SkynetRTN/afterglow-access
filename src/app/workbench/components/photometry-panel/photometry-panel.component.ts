@@ -74,7 +74,7 @@ import * as snakeCaseKeys from 'snakecase-keys';
 import { IViewer } from '../../models/viewer';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { SourcesState } from '../../sources.state';
 import { centroidPsf } from '../../models/centroider';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -130,13 +130,13 @@ export class PhotometryPageComponent
     super(store);
 
     this.config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
-    this.state$ = this.hduState$.pipe(
-      map((hduState) => {
-        if (hduState && hduState.hduType != HduType.IMAGE) {
+    this.state$ = this.workbenchState$.pipe(
+      map((workbenchState) => {
+        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) {
           // only image HDUs support sonification
           return null;
         }
-        return (hduState as WorkbenchImageHduState)?.photometryPanelStateId;
+        return (workbenchState as WorkbenchImageHduState)?.photometryPanelStateId;
       }),
       distinctUntilChanged(),
       switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id))))

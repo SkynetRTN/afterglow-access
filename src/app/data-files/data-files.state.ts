@@ -462,7 +462,6 @@ export class DataFilesState {
 
         coreFiles.forEach((coreFile, index) => {
           let hdu: IHdu = {
-            type: 'hdu',
             id: coreFile.id,
             fileId: coreFile.groupName,
             hduType: coreFile.type,
@@ -477,7 +476,6 @@ export class DataFilesState {
           let dataFile = dataFiles.find((dataFile) => dataFile.id == hdu.fileId);
           if (!dataFile) {
             dataFile = {
-              type: 'file',
               id: hdu.fileId,
               assetPath: '/' + coreFile.assetPath,
               dataProviderId: coreFile.dataProvider,

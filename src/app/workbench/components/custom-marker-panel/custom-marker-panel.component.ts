@@ -71,6 +71,8 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   ) {
     super(store);
 
+    this.markerService.clearMarkers();
+
     let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
       distinctUntilChanged((x, y) => {
         return x.length == y.length && x.every((value, index) => value == y[index]);
@@ -85,7 +87,6 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
         })
       )
       .subscribe((v) => {
-        console.log('UPDATING MARKERS: ', v);
         this.markerService.updateMarkers(v.viewerId, v.markers);
       });
 
@@ -98,7 +99,7 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
     this.config$ = store.select(WorkbenchState.getCustomMarkerPanelConfig);
 
     this.selectedMarkers$ = this.state$.pipe(
-      map((state) => Object.values(state.markerEntities)),
+      map((state) => (state?.markerEntities ? Object.values(state.markerEntities) : [])),
       map((markers) => markers.filter((m) => m.selected))
     );
 

@@ -83,7 +83,7 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../utils/correlated-action';
 import { DataProvidersState } from '../../data-providers/data-providers.state';
 import { Navigate } from '@ngxs/router-plugin';
-import { WorkbenchImageHduState } from '../models/workbench-file-state';
+import { WorkbenchFileState, WorkbenchImageHduState, WorkbenchStateType } from '../models/workbench-file-state';
 import { WorkbenchTool, ViewerPanelContainer } from '../models/workbench-state';
 import { HduType } from '../../data-files/models/data-file-type';
 import {
@@ -327,20 +327,12 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         takeUntil(this.destroy$),
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
-          let refPlottingPanelState$ = this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            distinctUntilChanged(),
-            switchMap((plottingPanelStateId) =>
-              this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(plottingPanelStateId)))
-            ),
-            distinctUntilChanged()
+          let refPlottingPanelState$ = this.store.select(
+            WorkbenchState.getPlottingPanelStateByViewerId(focusedViewerId)
           );
 
           return combineLatest(
-            this.store.select(WorkbenchState.getPlottingPanelConfig).pipe(
-              map((config) => config.plotterSyncEnabled),
-              distinctUntilChanged()
-            ),
+            this.store.select(WorkbenchState.getPlottingPanelConfig).pipe(map((config) => config.plotterSyncEnabled)),
             visibleViewerIds$,
             refPlottingPanelState$
           ).pipe();
@@ -352,27 +344,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
-        let viewerEntities = this.store.selectSnapshot(WorkbenchState.getViewerEntities);
-        let workbenchFileStates = this.store.selectSnapshot(WorkbenchState.getFileStateEntities);
-        let workbenchHduStates = this.store.selectSnapshot(WorkbenchState.getHduStateEntities);
         let targetPlottingPanelStateIds: string[] = [];
         visibleViewerIds.forEach((viewerId) => {
-          let viewer = viewerEntities[viewerId];
-          if (viewer.hduId) {
-            let workbenchHduState = workbenchHduStates[viewer.hduId];
-            if (
-              workbenchHduState &&
-              workbenchHduState.hduType == HduType.IMAGE &&
-              (workbenchHduState as WorkbenchImageHduState).plottingPanelStateId
-            ) {
-              targetPlottingPanelStateIds.push((workbenchHduState as WorkbenchImageHduState).plottingPanelStateId);
-            }
-          } else {
-            let workbenchFileState = workbenchFileStates[viewer.fileId];
-            if (workbenchFileState && workbenchFileState.plottingPanelStateId) {
-              targetPlottingPanelStateIds.push(workbenchFileState.plottingPanelStateId);
-            }
+          let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByViewerId(viewerId));
+          if (
+            !workbenchState ||
+            ![WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState.type)
+          ) {
+            return;
           }
+          targetPlottingPanelStateIds.push(
+            (workbenchState as WorkbenchFileState | WorkbenchImageHduState).plottingPanelStateId
+          );
         });
 
         if (targetPlottingPanelStateIds.length == 0) {

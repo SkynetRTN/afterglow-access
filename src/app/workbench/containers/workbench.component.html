@@ -343,7 +343,7 @@
         </div>
 
         <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-          <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [viewer]="focusedViewer$ | async">
+          <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [viewerId]="focusedViewerId$ | async">
           </app-display-panel>
 
           <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewer]="focusedViewer$ | async">

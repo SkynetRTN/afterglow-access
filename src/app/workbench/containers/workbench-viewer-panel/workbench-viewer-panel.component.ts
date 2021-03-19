@@ -21,7 +21,6 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { SetFocusedViewer, CloseViewer, KeepViewerOpen, SplitViewerPanel, MoveViewer } from '../../workbench.actions';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { IWorkbenchHduState } from '../../models/workbench-file-state';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
@@ -71,7 +70,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   selectedViewerIndex = 0;
   hduEntities$: Observable<{ [id: string]: IHdu }>;
   fileEntities$: Observable<{ [id: string]: DataFile }>;
-  hduStates$: Observable<{ [id: string]: IWorkbenchHduState }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
   mouseDownActiveViewerId: string;
@@ -84,7 +82,6 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   ) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
-    this.hduStates$ = this.store.select(WorkbenchState.getHduStateEntities);
     this.dropListConnections$ = this.store.select(WorkbenchState.getViewerPanelIds);
   }
 

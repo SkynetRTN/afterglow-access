@@ -4,26 +4,30 @@ import { SonificationPanelState } from './sonifier-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
 import { HduType } from '../../data-files/models/data-file-type';
 
-export interface WorkbenchFileState {
+export enum WorkbenchStateType {
+  FILE = 'file',
+  IMAGE_HDU = 'image',
+  TABLE_HDU = 'table',
+}
+export interface IWorkbenchState {
   id: string;
+  type: WorkbenchStateType;
+}
+
+export interface WorkbenchFileState extends IWorkbenchState {
+  type: WorkbenchStateType.FILE;
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
-  selectedHduId: string;
 }
 
-export interface IWorkbenchHduState {
-  id: string;
-  hduType: HduType;
-}
-
-export interface WorkbenchImageHduState extends IWorkbenchHduState {
-  hduType: HduType.IMAGE;
+export interface WorkbenchImageHduState extends IWorkbenchState {
+  type: WorkbenchStateType.IMAGE_HDU;
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
   sonificationPanelStateId: string;
   photometryPanelStateId: string;
 }
 
-export interface WorkbenchTableHduState extends IWorkbenchHduState {
-  hduType: HduType.TABLE;
+export interface WorkbenchTableHduState extends IWorkbenchState {
+  type: WorkbenchStateType.TABLE_HDU;
 }

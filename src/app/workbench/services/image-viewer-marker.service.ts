@@ -26,4 +26,10 @@ export class ImageViewerMarkerService {
   updateMarkers(viewerId: string, markers: Marker[]) {
     this.getMarkerStream(viewerId).next(markers);
   }
+
+  clearMarkers() {
+    Object.keys(this.entities).forEach((viewerId) => {
+      this.entities[viewerId].next([]);
+    });
+  }
 }

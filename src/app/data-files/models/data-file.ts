@@ -26,7 +26,6 @@ export interface ITransformableImageData {
 }
 
 export interface DataFile extends ITransformableImageData {
-  readonly type: 'file';
   id: string;
   name: string;
   dataProviderId: string;
@@ -45,7 +44,6 @@ export interface Header {
 }
 
 export interface IHdu {
-  readonly type: 'hdu';
   readonly hduType: HduType;
   id: string;
   fileId: string;

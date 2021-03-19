@@ -368,54 +368,16 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     //   distinctUntilChanged()
     // );
 
-    let plottingPanelStateId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getPlottingPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
+    this.plottingPanelState$ = viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId)))
     );
 
-    this.plottingPanelState$ = plottingPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id)))),
-      distinctUntilChanged()
+    this.sonificationPanelState$ = viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId)))
     );
 
-    let sonificationPanelStateId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getSonificationPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
-    );
-
-    this.sonificationPanelState$ = sonificationPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id)))),
-      distinctUntilChanged()
-    );
-
-    let photometryPanelStateId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getPhotometryPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
-    );
-
-    // let customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-    //   switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
-    //   distinctUntilChanged()
-    // );
-
-    let photometryPanelState$ = photometryPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id)))),
-      distinctUntilChanged()
+    let photometryPanelState$ = viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)))
     );
 
     let sourcePhotometryData$ = photometryPanelState$.pipe(
@@ -456,73 +418,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
             this.store.select(WorkbenchState.getPlottingPanelConfig)
           ).pipe(
             map(([firstHeader, selectedHeader, plottingState, config]) => {
-              let header = selectedHeader;
-              if (!header) {
-                header = firstHeader;
-              }
-              if (!plottingState || !header) {
-                return [];
-              }
-
-              let lineMeasureStart = plottingState.lineMeasureStart;
-              let lineMeasureEnd = plottingState.lineMeasureEnd;
-              if (!lineMeasureStart || !lineMeasureEnd) {
-                return [];
-              }
-
-              let startPrimaryCoord = lineMeasureStart.primaryCoord;
-              let startSecondaryCoord = lineMeasureStart.secondaryCoord;
-              let startPosType = lineMeasureStart.posType;
-              let endPrimaryCoord = lineMeasureEnd.primaryCoord;
-              let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
-              let endPosType = lineMeasureEnd.posType;
-
-              let x1 = startPrimaryCoord;
-              let y1 = startSecondaryCoord;
-              let x2 = endPrimaryCoord;
-              let y2 = endSecondaryCoord;
-
-              if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-                if (!header.loaded || !header.wcs.isValid()) {
-                  return [];
-                }
-                let wcs = header.wcs;
-                if (startPosType == PosType.SKY) {
-                  let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
-                  x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
-                  y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
-                }
-
-                if (endPosType == PosType.SKY) {
-                  let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
-                  x2 = Math.max(Math.min(xy[0], getWidth(header)), 0);
-                  y2 = Math.max(Math.min(xy[1], getHeight(header)), 0);
-                }
-              }
-              let markers: Marker[] = [];
-              if (config.plotMode == '1D') {
-                let lineMarker: LineMarker = {
-                  id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
-                  type: MarkerType.LINE,
-                  x1: x1,
-                  y1: y1,
-                  x2: x2,
-                  y2: y2,
-                };
-
-                markers = [lineMarker];
-              } else {
-                let rectangleMarker: RectangleMarker = {
-                  id: `PLOTTING_MARKER_${this.viewer.fileId}_${this.viewer.hduId}`,
-                  type: MarkerType.RECTANGLE,
-                  x: Math.min(x1, x2),
-                  y: Math.min(y1, y2),
-                  width: Math.abs(x2 - x1),
-                  height: Math.abs(y2 - y1),
-                };
-                markers = [rectangleMarker];
-              }
-              return markers;
+              return [];
             })
           );
         } else if (activeTool == WorkbenchTool.SONIFIER) {

@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 
 // import { VgAPI } from "videogular2/compiled/core";
-import { Observable, Subscription, from, merge, interval, combineLatest, BehaviorSubject, Subject } from 'rxjs';
+import { Observable, Subscription, from, merge, interval, combineLatest, BehaviorSubject, Subject, of } from 'rxjs';
 import {
   filter,
   map,
@@ -53,11 +53,13 @@ import { ShortcutInput } from 'ng-keyboard-shortcuts';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { IViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
-import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { isNotEmpty } from '../../../utils/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { Marker } from '../../models/marker';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -84,16 +86,33 @@ export class SonificationPanelComponent
   subs: Subscription[] = [];
   progressLine$: Observable<{ x1: number; y1: number; x2: number; y2: number }>;
 
-  constructor(private actions$: Actions, store: Store) {
+  constructor(private actions$: Actions, store: Store, private markerService: ImageViewerMarkerService) {
     super(store);
 
-    this.state$ = this.hduState$.pipe(
-      map((hduState) => {
-        if (hduState && hduState.hduType != HduType.IMAGE) {
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
+
+    this.state$ = this.workbenchState$.pipe(
+      map((workbenchState) => {
+        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) {
           // only image HDUs support sonification
           return null;
         }
-        return (hduState as WorkbenchImageHduState)?.sonificationPanelStateId;
+        return (workbenchState as WorkbenchImageHduState)?.sonificationPanelStateId;
       }),
       distinctUntilChanged(),
       switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id))))
@@ -160,6 +179,98 @@ export class SonificationPanelComponent
           this.playStream(a.url);
         }
       });
+  }
+
+  private getViewerMarkers(viewerId: string) {
+    let markers: Marker[] = [];
+    return of({
+      viewerId: viewerId,
+      markers: markers,
+    });
+    // let state$ = this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId));
+    // let config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
+    // let hduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId));
+    // let fileImageHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(viewerId));
+    // let header$ = combineLatest(hduHeader$, fileImageHeader$).pipe(
+    //   map(([hduHeader, fileHeader]) => hduHeader || fileHeader)
+    // );
+
+    // let markers$ = combineLatest(config$, state$, header$).pipe(
+    //   map(([config, state, header]) => {
+    //     if (!config || !state || !header) {
+    //       return [];
+    //     }
+
+    //     let lineMeasureStart = state.lineMeasureStart;
+    //     let lineMeasureEnd = state.lineMeasureEnd;
+    //     if (!lineMeasureStart || !lineMeasureEnd) {
+    //       return [];
+    //     }
+
+    //     let startPrimaryCoord = lineMeasureStart.primaryCoord;
+    //     let startSecondaryCoord = lineMeasureStart.secondaryCoord;
+    //     let startPosType = lineMeasureStart.posType;
+    //     let endPrimaryCoord = lineMeasureEnd.primaryCoord;
+    //     let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
+    //     let endPosType = lineMeasureEnd.posType;
+
+    //     let x1 = startPrimaryCoord;
+    //     let y1 = startSecondaryCoord;
+    //     let x2 = endPrimaryCoord;
+    //     let y2 = endSecondaryCoord;
+
+    //     if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
+    //       if (!header.loaded || !header.wcs.isValid()) {
+    //         return [];
+    //       }
+    //       let wcs = header.wcs;
+    //       if (startPosType == PosType.SKY) {
+    //         let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
+    //         x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
+    //         y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
+    //       }
+
+    //       if (endPosType == PosType.SKY) {
+    //         let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
+    //         x2 = Math.max(Math.min(xy[0], getWidth(header)), 0);
+    //         y2 = Math.max(Math.min(xy[1], getHeight(header)), 0);
+    //       }
+    //     }
+    //     let markers: Marker[] = [];
+    //     if (config.plotMode == '1D') {
+    //       let lineMarker: LineMarker = {
+    //         id: `PLOTTING_MARKER`,
+    //         type: MarkerType.LINE,
+    //         x1: x1,
+    //         y1: y1,
+    //         x2: x2,
+    //         y2: y2,
+    //       };
+
+    //       markers = [lineMarker];
+    //     } else {
+    //       let rectangleMarker: RectangleMarker = {
+    //         id: `PLOTTING_MARKER`,
+    //         type: MarkerType.RECTANGLE,
+    //         x: Math.min(x1, x2),
+    //         y: Math.min(y1, y2),
+    //         width: Math.abs(x2 - x1),
+    //         height: Math.abs(y2 - y1),
+    //       };
+    //       markers = [rectangleMarker];
+    //     }
+    //     return markers;
+    //   })
+    // );
+
+    // return markers$.pipe(
+    //   map((markers) => {
+    //     return {
+    //       viewerId: viewerId,
+    //       markers: markers,
+    //     };
+    //   })
+    // );
   }
 
   ngOnInit() {}

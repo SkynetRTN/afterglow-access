@@ -12,9 +12,17 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 
-import { Observable, Subscription, Subject, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject, combineLatest, of, merge } from 'rxjs';
 import { map, withLatestFrom, switchMap, distinctUntilChanged, takeUntil, tap, skip } from 'rxjs/operators';
-import { getDegsPerPixel, DataFile, ImageHdu, PixelType, Header } from '../../../data-files/models/data-file';
+import {
+  getDegsPerPixel,
+  DataFile,
+  ImageHdu,
+  PixelType,
+  Header,
+  getWidth,
+  getHeight,
+} from '../../../data-files/models/data-file';
 import { PlottingPanelState } from '../../models/plotter-file-state';
 import { PlotterComponent } from '../plotter/plotter.component';
 import { PlottingPanelConfig } from '../../models/workbench-state';
@@ -28,11 +36,13 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { WorkbenchState } from '../../workbench.state';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { WorkbenchFileState, WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { centroidDisk, centroidPsf } from '../../models/centroider';
 import { StartLine, UpdateLine, UpdatePlottingPanelConfig } from '../../workbench.actions';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../models/marker';
 
 @Component({
   selector: 'app-plotting-panel',
@@ -68,18 +78,42 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
     skyPosAngle: number;
   }>;
 
-  constructor(store: Store, private eventService: ImageViewerEventService) {
+  constructor(
+    store: Store,
+    private eventService: ImageViewerEventService,
+    private markerService: ImageViewerMarkerService
+  ) {
     super(store);
+
+    this.markerService.clearMarkers();
+
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
 
     this.config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
 
-    this.state$ = combineLatest(this.fileState$, this.hduState$).pipe(
-      map(([fileState, hduState]) => {
-        if (hduState && hduState.hduType != HduType.IMAGE) {
-          // only image HDUs support plotting
+    this.state$ = this.workbenchState$.pipe(
+      map((workbenchState) => {
+        if (!workbenchState || ![WorkbenchStateType.IMAGE_HDU, WorkbenchStateType.FILE].includes(workbenchState.type)) {
+          // only image HDUs and files support plotting
           return null;
         }
-        return (hduState as WorkbenchImageHduState)?.plottingPanelStateId || fileState?.plottingPanelStateId;
+        let hduState = workbenchState as WorkbenchImageHduState | WorkbenchFileState;
+        return hduState.plottingPanelStateId;
       }),
       distinctUntilChanged(),
       switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id))))
@@ -224,8 +258,7 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
 
         //allow events from different viewers
         let header = null;
-        let stateId = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateIdFromViewerId)($event.viewerId);
-        let state = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateById)(stateId);
+        let state = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateByViewerId($event.viewerId));
         if (!state) {
           return;
         }
@@ -279,6 +312,93 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
       }
     }
     return { x: x, y: y, raHours: raHours, decDegs: decDegs };
+  }
+
+  private getViewerMarkers(viewerId: string) {
+    let state$ = this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId));
+    let config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
+    let hduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId));
+    let fileImageHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(viewerId));
+    let header$ = combineLatest(hduHeader$, fileImageHeader$).pipe(
+      map(([hduHeader, fileHeader]) => hduHeader || fileHeader)
+    );
+
+    let markers$ = combineLatest(config$, state$, header$).pipe(
+      map(([config, state, header]) => {
+        if (!config || !state || !header) {
+          return [];
+        }
+
+        let lineMeasureStart = state.lineMeasureStart;
+        let lineMeasureEnd = state.lineMeasureEnd;
+        if (!lineMeasureStart || !lineMeasureEnd) {
+          return [];
+        }
+
+        let startPrimaryCoord = lineMeasureStart.primaryCoord;
+        let startSecondaryCoord = lineMeasureStart.secondaryCoord;
+        let startPosType = lineMeasureStart.posType;
+        let endPrimaryCoord = lineMeasureEnd.primaryCoord;
+        let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
+        let endPosType = lineMeasureEnd.posType;
+
+        let x1 = startPrimaryCoord;
+        let y1 = startSecondaryCoord;
+        let x2 = endPrimaryCoord;
+        let y2 = endSecondaryCoord;
+
+        if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
+          if (!header.loaded || !header.wcs.isValid()) {
+            return [];
+          }
+          let wcs = header.wcs;
+          if (startPosType == PosType.SKY) {
+            let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
+            x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
+            y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
+          }
+
+          if (endPosType == PosType.SKY) {
+            let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
+            x2 = Math.max(Math.min(xy[0], getWidth(header)), 0);
+            y2 = Math.max(Math.min(xy[1], getHeight(header)), 0);
+          }
+        }
+        let markers: Marker[] = [];
+        if (config.plotMode == '1D') {
+          let lineMarker: LineMarker = {
+            id: `PLOTTING_MARKER`,
+            type: MarkerType.LINE,
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2,
+          };
+
+          markers = [lineMarker];
+        } else {
+          let rectangleMarker: RectangleMarker = {
+            id: `PLOTTING_MARKER`,
+            type: MarkerType.RECTANGLE,
+            x: Math.min(x1, x2),
+            y: Math.min(y1, y2),
+            width: Math.abs(x2 - x1),
+            height: Math.abs(y2 - y1),
+          };
+          markers = [rectangleMarker];
+        }
+        return markers;
+      })
+    );
+
+    return markers$.pipe(
+      map((markers) => {
+        return {
+          viewerId: viewerId,
+          markers: markers,
+        };
+      })
+    );
   }
 
   ngOnInit() {}

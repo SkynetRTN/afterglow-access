@@ -7,11 +7,11 @@ import { FieldCal } from './field-cal';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
 import { FileInfoPanelConfig } from './file-info-panel';
-import { WorkbenchFileState, IWorkbenchHduState } from './workbench-file-state';
 import { PlottingPanelState } from './plotter-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
 import { SonificationPanelState } from './sonifier-file-state';
 import { PhotometryPanelState } from './photometry-file-state';
+import { IWorkbenchState } from './workbench-file-state';
 
 export enum WorkbenchTool {
   VIEWER = 'display',
@@ -176,10 +176,11 @@ export interface WorkbenchStateModel {
   stackingPanelConfig: StackingPanelConfig;
   wcsCalibrationPanelState: WcsCalibrationPanelState;
   wcsCalibrationSettings: WcsCalibrationSettings;
-  fileIds: string[];
-  fileStateEntities: { [id: string]: WorkbenchFileState };
-  hduIds: string[];
-  hduStateEntities: { [id: string]: IWorkbenchHduState };
+  fileIdToWorkbenchStateIdMap: { [id: string]: string };
+  hduIdToWorkbenchStateIdMap: { [id: string]: string };
+  nextWorkbenchStateId: number;
+  workbenchStateIds: string[];
+  workbenchStateEntities: { [id: string]: IWorkbenchState };
   nextMarkerId: number;
   nextCustomMarkerPanelStateId: number;
   customMarkerPanelStateIds: string[];

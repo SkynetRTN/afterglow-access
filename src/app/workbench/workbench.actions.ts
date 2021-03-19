@@ -694,12 +694,6 @@ export class RemovePhotDatas {
   constructor(public sourceId: string) {}
 }
 
-export class SetSelectedHduId {
-  public static readonly type = '[Workbench] Set Selected HDU id';
-
-  constructor(public fileId: string, public hduId: string) {}
-}
-
 export class SyncViewerTransformations {
   public static readonly type = '[Workbench] Sync Viewer Transformations';
 

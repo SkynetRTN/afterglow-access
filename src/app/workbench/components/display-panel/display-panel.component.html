@@ -2,104 +2,79 @@
   <div i18n class="alert alert-info" i18n>Select an HDU or composite file to see the display settings.</div>
 </ng-template>
 
-<ng-container *ngIf="viewerState$ | async; let vs">
-  <ng-container *ngIf="vs.file; else fileNotSelectedBlock">
-    <ng-container *ngIf="vs.hdu">
-      <ng-template #invalidHduTypeBlock>
-        <div i18n class="alert alert-info" i18n>Select an image HDU to adjust brightness and contrast settings.</div>
-      </ng-template>
-      <ng-container *ngIf="vs.imageHdu; else invalidHduTypeBlock">
-        <div>
-          <h3 i18n>Brightness and Contrast Presets</h3>
-          <div class="pb-1">
-            <button
-              mat-raised-button
-              class="m-1"
-              (click)="onPresetClick(vs.imageHdu, 10, 95)"
-              i18n-aria-label
-              aria-label="Faint Target Preset"
-            >
-              <mat-icon>brightness_3</mat-icon>Faint Target
-            </button>
-            <button
-              mat-raised-button
-              class="m-1"
-              (click)="onPresetClick(vs.imageHdu, 10, 99)"
-              i18n-aria-label
-              aria-label="Default Preset"
-            >
-              <mat-icon>brightness_2</mat-icon>Default
-            </button>
-            <button
-              mat-raised-button
-              class="m-1"
-              (click)="onPresetClick(vs.imageHdu, 10, 99.999)"
-              i18n-aria-label
-              aria-label="Bright Target Preset"
-            >
-              <mat-icon>brightness_5</mat-icon>Bright Target
-            </button>
-          </div>
-        </div>
-
-        <div *ngIf="vs.imageHdu.hist?.loaded" class="pr-3 pl-3 pb-0">
-          <app-image-hist-chart
-            [width]="440"
-            [height]="250"
-            [hist]="vs.imageHdu?.hist"
-            [backgroundPercentile]="vs.imageHdu?.normalizer?.backgroundPercentile"
-            [peakPercentile]="vs.imageHdu?.normalizer?.peakPercentile"
-          >
-          </app-image-hist-chart>
-          <div style="clear: both"></div>
-        </div>
-
-        <div class="pb-4 pt-1">
-          <h3 i18n>Brightness and Contrast Settings</h3>
-          <app-normalizer-form
-            [normalizer]="vs.imageHdu?.normalizer"
-            (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-            (peakPercentileChange)="onPeakPercentileChange($event)"
-            (colorMapChange)="onColorMapChange(vs.imageHdu, $event)"
-            (stretchModeChange)="onStretchModeChange(vs.imageHdu, $event)"
-            (invertedChange)="onInvertedChange(vs.imageHdu, $event)"
-          >
-          </app-normalizer-form>
-        </div>
-      </ng-container>
-    </ng-container>
-
-    <ng-container *ngIf="(vs.file && !vs.hdu) || vs.imageHdu">
+<ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
+  <ng-container *ngIf="hdu$ | async as hdu">
+    <ng-template #invalidHduTypeBlock>
+      <div i18n class="alert alert-info" i18n>Select an image HDU to adjust brightness and contrast settings.</div>
+    </ng-template>
+    <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
       <div>
-        <h3 i18n>Image Orientation Options</h3>
-        <div class="pb-4">
-          <!-- <button mat-raised-button class="m-1" (click)="onMirrorClick()">
-            <mat-icon>flip</mat-icon>
-            <ng-container i18n>Mirror</ng-container>
-          </button> -->
-          <button mat-raised-button class="m-1" (click)="onFlipClick(vs.imageHdu || vs.file, viewer?.viewportSize)">
-            <mat-icon class="" style="transform: rotate(90deg)">flip</mat-icon>
-            <ng-container i18n>Flip</ng-container>
-          </button>
-          <button mat-raised-button class="m-1" (click)="onMirrorClick(vs.imageHdu || vs.file, viewer?.viewportSize)">
-            <mat-icon class="">flip</mat-icon>
-            <ng-container i18n>Mirror</ng-container>
-          </button>
-          <button mat-raised-button class="m-1" (click)="onRotateClick(vs.imageHdu || vs.file, viewer?.viewportSize)">
-            <mat-icon>rotate_right</mat-icon>
-            <ng-container i18n>Rotate</ng-container>
+        <h3 i18n>Brightness and Contrast Presets</h3>
+        <div class="pb-1">
+          <button
+            mat-raised-button
+            class="m-1"
+            (click)="onPresetClick(imageHdu, 10, 95)"
+            i18n-aria-label
+            aria-label="Faint Target Preset"
+          >
+            <mat-icon>brightness_3</mat-icon>Faint Target
           </button>
           <button
             mat-raised-button
             class="m-1"
-            color="warn"
-            (click)="onResetOrientationClick(vs.imageHdu || vs.file, viewer?.viewportSize)"
+            (click)="onPresetClick(imageHdu, 10, 99)"
+            i18n-aria-label
+            aria-label="Default Preset"
           >
-            <mat-icon>crop_din</mat-icon>
-            <ng-container i18n>Reset Orientation</ng-container>
+            <mat-icon>brightness_2</mat-icon>Default
+          </button>
+          <button
+            mat-raised-button
+            class="m-1"
+            (click)="onPresetClick(imageHdu, 10, 99.999)"
+            i18n-aria-label
+            aria-label="Bright Target Preset"
+          >
+            <mat-icon>brightness_5</mat-icon>Bright Target
           </button>
         </div>
       </div>
+
+      <div *ngIf="imageHdu.hist?.loaded" class="pr-3 pl-3 pb-0">
+        <app-image-hist-chart
+          [width]="440"
+          [height]="250"
+          [hist]="imageHdu?.hist"
+          [backgroundPercentile]="imageHdu?.normalizer?.backgroundPercentile"
+          [peakPercentile]="imageHdu?.normalizer?.peakPercentile"
+        >
+        </app-image-hist-chart>
+        <div style="clear: both"></div>
+      </div>
+
+      <div class="pb-4 pt-1">
+        <h3 i18n>Brightness and Contrast Settings</h3>
+        <app-normalizer-form
+          [normalizer]="imageHdu?.normalizer"
+          (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+          (peakPercentileChange)="onPeakPercentileChange($event)"
+          (colorMapChange)="onColorMapChange(imageHdu, $event)"
+          (stretchModeChange)="onStretchModeChange(imageHdu, $event)"
+          (invertedChange)="onInvertedChange(imageHdu, $event)"
+        >
+        </app-normalizer-form>
+      </div>
     </ng-container>
   </ng-container>
+
+  <div>
+    <h3 i18n>Image Orientation Options</h3>
+    <div class="pb-4">
+      <app-image-orientation-toolbar
+        [data]="(imageHdu$ | async) || (file$ | async)"
+        [viewportSize]="viewportSize$ | async"
+      ></app-image-orientation-toolbar>
+    </div>
+  </div>
 </ng-container>

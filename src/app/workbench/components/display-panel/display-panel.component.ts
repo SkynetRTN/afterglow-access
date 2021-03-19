@@ -16,7 +16,14 @@ declare let d3: any;
 import { Router } from '@angular/router';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
 import { Store } from '@ngxs/store';
-import { DataFile, ImageHdu, IHdu, PixelType, ITransformableImageData } from '../../../data-files/models/data-file';
+import {
+  DataFile,
+  ImageHdu,
+  IHdu,
+  PixelType,
+  ITransformableImageData,
+  TableHdu,
+} from '../../../data-files/models/data-file';
 import {
   UpdateNormalizer,
   RotateBy,
@@ -43,7 +50,24 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
   styleUrls: ['./display-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DisplayToolsetComponent extends ToolPanelBaseComponent implements OnInit, AfterViewInit, OnDestroy {
+export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
+  viewportSize$: Observable<{ width: number; height: number }>;
+  file$: Observable<DataFile>;
+  hdu$: Observable<IHdu>;
+  imageHdu$: Observable<ImageHdu>;
+  tableHdu$: Observable<TableHdu>;
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
     peak: number;
@@ -54,8 +78,22 @@ export class DisplayToolsetComponent extends ToolPanelBaseComponent implements O
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
 
-  constructor(store: Store, private afterglowConfig: AfterglowConfigService) {
-    super(store);
+  constructor(private store: Store, private afterglowConfig: AfterglowConfigService) {
+    this.viewportSize$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
+    );
+
+    this.file$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
+    );
+
+    this.hdu$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+    );
+
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+
+    this.tableHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.TABLE ? (hdu as TableHdu) : null)));
 
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
@@ -107,24 +145,12 @@ export class DisplayToolsetComponent extends ToolPanelBaseComponent implements O
     );
   }
 
-  onFlipClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
-    this.store.dispatch(new Flip(t.imageDataId, t.imageTransformId, t.viewportTransformId, 'horizontal', viewportSize));
-  }
-
-  onMirrorClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
-    this.store.dispatch(new Flip(t.imageDataId, t.imageTransformId, t.viewportTransformId, 'vertical', viewportSize));
-  }
-
-  onRotateClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
-    this.store.dispatch(new RotateBy(t.imageDataId, t.imageTransformId, t.viewportTransformId, viewportSize, 90));
-  }
-
-  onResetOrientationClick(t: ITransformableImageData, viewportSize: { width: number; height: number }) {
-    this.store.dispatch(new ResetImageTransform(t.imageDataId, t.imageTransformId, t.viewportTransformId));
-    this.store.dispatch(new ResetViewportTransform(t.imageDataId, t.imageTransformId, t.viewportTransformId));
-  }
-
   ngOnInit() {}
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
 
   ngAfterViewInit() {}
 }
