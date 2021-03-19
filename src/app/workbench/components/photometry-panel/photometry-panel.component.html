@@ -1,5 +1,5 @@
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>This tool does not yet support tabular data. Please select an image HDU.</div>
+  <div i18n class="alert alert-info" i18n>This HDU type is not yet supported by the photometry tool.</div>
 </ng-template>
 
 <ng-template #hduNotSelectedBlock>
@@ -8,54 +8,53 @@
   </div>
 </ng-template>
 
-<ng-container *ngIf="viewerState$ | async; let vs">
-  <ng-container *ngIf="config$ | async; let config">
-    <ng-container *ngIf="vs.hdu; else hduNotSelectedBlock">
-      <ng-container *ngIf="vs.imageHdu; else invalidHduTypeBlock">
-        <div class="mb-3">
-          <mat-button-toggle-group
-            name="coordMode"
-            aria-label="Coordinate Mode"
-            [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
-            [disabled]="!(header$ | async)?.wcs?.isValid()"
-            (change)="onCoordModeChange($event)"
+<ng-container *ngIf="config$ | async; let config">
+  <ng-container *ngIf="hdu$ | async as hdu; else hduNotSelectedBlock">
+    <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
+      <div class="mb-3">
+        <mat-button-toggle-group
+          name="coordMode"
+          aria-label="Coordinate Mode"
+          [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
+          [disabled]="!(header$ | async)?.wcs?.isValid()"
+          (change)="onCoordModeChange($event)"
+        >
+          <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
+          <mat-button-toggle value="sky">Sky Coordinate Mode</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <div>
+        <p i18n>
+          Manually add sources by clicking on them in your image or automatically add them using the options below.
+        </p>
+        <p class="pb-2">
+          Tip: Hold
+          <span class="kbd">Alt</span> to click beneath existing markers
+        </p>
+
+        <div class="form-row mt-3">
+          <mat-slide-toggle
+            [checked]="config?.centroidClicks"
+            [labelPosition]="'before'"
+            (change)="onCentroidClicksChange($event)"
+            i18n
           >
-            <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
-            <mat-button-toggle value="sky">Sky Coordinate Mode</mat-button-toggle>
-          </mat-button-toggle-group>
-        </div>
-
-        <div>
-          <p i18n>
-            Manually add sources by clicking on them in your image or automatically add them using the options below.
-          </p>
-          <p class="pb-2">
-            Tip: Hold
-            <span class="kbd">Alt</span> to click beneath existing markers
-          </p>
-
-          <div class="form-row mt-3">
-            <mat-slide-toggle
-              [checked]="config?.centroidClicks"
-              [labelPosition]="'before'"
-              (change)="onCentroidClicksChange($event)"
-              i18n
-            >
-              Centroid clicks
-            </mat-slide-toggle>
-            <button class="" mat-raised-button (click)="openPhotometrySettingsDialog()" i18n>
-              Photometry Settings...
+            Centroid clicks
+          </mat-slide-toggle>
+          <button class="" mat-raised-button (click)="openPhotometrySettingsDialog()" i18n>
+            Photometry Settings...
+          </button>
+          <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
+            <mat-icon>add</mat-icon>
+            <span i18n>Add Sources...</span>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="openSourceExtractionDialog()">
+              <mat-icon>location_searching</mat-icon>
+              <span i18n>Source Extraction...</span>
             </button>
-            <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
-              <mat-icon>add</mat-icon>
-              <span i18n>Add Sources...</span>
-            </button>
-            <mat-menu #menu="matMenu">
-              <button mat-menu-item (click)="openSourceExtractionDialog()">
-                <mat-icon>location_searching</mat-icon>
-                <span i18n>Source Extraction...</span>
-              </button>
-              <!-- <button mat-menu-item>
+            <!-- <button mat-menu-item>
                 <mat-icon>import_export</mat-icon>
                 <span>Import from File...</span>
               </button>
@@ -63,364 +62,359 @@
                 <mat-icon>input</mat-icon>
                 <span>Manual Entry... </span>
               </button> -->
-            </mat-menu>
-          </div>
+          </mat-menu>
+        </div>
+      </div>
+
+      <hr />
+
+      <ng-container *ngIf="sources$ | async; let sources">
+        <div class="form-row mb-2">
+          <mat-slide-toggle
+            [checked]="config?.showSourcesFromAllFiles"
+            [labelPosition]="'after'"
+            (change)="onShowSourcesFromAllFilesChange($event)"
+            i18n
+          >
+            Show Sources From All Files
+          </mat-slide-toggle>
+
+          <mat-slide-toggle
+            [checked]="config?.showSourceLabels"
+            [labelPosition]="'after'"
+            (change)="onShowSourceLabelsChange($event)"
+            i18n
+          >
+            Source Labels
+          </mat-slide-toggle>
+
+          <mat-slide-toggle
+            [checked]="config?.autoPhot"
+            [labelPosition]="'after'"
+            (change)="onAutoPhotChange($event)"
+            i18n
+          >
+            Auto-phot
+          </mat-slide-toggle>
+        </div>
+
+        <div class="mb-3" style="max-height: 300px; overflow: auto">
+          <mat-table
+            app-cell-focuser
+            #cellFocuser="cellFocuser"
+            #table
+            [dataSource]="tableData$"
+            matSort
+            [matSortDisableClear]="true"
+          >
+            <ng-container matColumnDef="select">
+              <mat-header-cell
+                *matHeaderCellDef
+                class="select-header-cell"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="0"
+                [columnIndex]="0"
+                (focus)="cb?.focus()"
+                [cellInTabOrder]="false"
+              >
+                <mat-checkbox
+                  #cb
+                  [disabled]="!showSelectAll(sources)"
+                  (change)="$event ? masterToggle(sources) : null"
+                  [checked]="selectionModel.hasValue() && isAllSelected(sources)"
+                  [indeterminate]="selectionModel.hasValue() && !isAllSelected(sources)"
+                  [tabIndex]="cell.isActiveCell ? 0 : -1"
+                >
+                </mat-checkbox>
+              </mat-header-cell>
+              <mat-cell
+                *matCellDef="let row; let rowIndex = index"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="rowIndex + 1"
+                [columnIndex]="0"
+                (focus)="cb?.focus()"
+                [cellInTabOrder]="selectionModel.isSelected(row.source.id)"
+              >
+                <mat-checkbox
+                  #cb
+                  (click)="$event.stopPropagation()"
+                  (change)="$event ? toggleSource(row.source) : null"
+                  [checked]="selectionModel.isSelected(row.source.id)"
+                  [tabIndex]="cell.isActiveCell ? 0 : -1"
+                >
+                </mat-checkbox>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="primaryCoord">
+              <mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                class="select-header-cell"
+                app-focusable-cell
+                [rowIndex]="0"
+                [columnIndex]="1"
+                [cellInTabOrder]="true"
+              >
+                X | RA
+              </mat-header-cell>
+              <mat-cell
+                *matCellDef="let row; let rowIndex = index"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="rowIndex + 1"
+                [columnIndex]="1"
+                [cellInTabOrder]="true"
+              >
+                {{
+                  row.source.posType == SourcePosType.PIXEL
+                    ? (row.source.primaryCoord | number: '0.0-5')
+                    : (row.source.primaryCoord | dms: '0.0-3')
+                }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="secondaryCoord">
+              <mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                class="select-header-cell"
+                app-focusable-cell
+                [rowIndex]="0"
+                [columnIndex]="2"
+                [cellInTabOrder]="true"
+              >
+                Y | DEC
+              </mat-header-cell>
+              <mat-cell
+                *matCellDef="let row; let rowIndex = index"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="rowIndex + 1"
+                [columnIndex]="2"
+                [cellInTabOrder]="true"
+              >
+                {{
+                  row.source.posType == SourcePosType.PIXEL
+                    ? (row.source.secondaryCoord | number: '0.0-5')
+                    : (row.source.secondaryCoord | dms: '0.0-3')
+                }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="label">
+              <mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                class="select-header-cell"
+                app-focusable-cell
+                [rowIndex]="0"
+                [columnIndex]="3"
+                [cellInTabOrder]="true"
+              >
+                Label
+              </mat-header-cell>
+              <mat-cell
+                *matCellDef="let row; let rowIndex = index"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="rowIndex + 1"
+                [columnIndex]="3"
+                [cellInTabOrder]="true"
+              >
+                {{ row.source.label }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="mag">
+              <mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                class="select-header-cell"
+                app-focusable-cell
+                [rowIndex]="0"
+                [columnIndex]="4"
+                [cellInTabOrder]="true"
+              >
+                Mag
+              </mat-header-cell>
+              <mat-cell
+                *matCellDef="let row; let rowIndex = index"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="rowIndex + 1"
+                [columnIndex]="4"
+                [cellInTabOrder]="true"
+              >
+                {{ row.data?.mag | number: '1.0-3' }}
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="magError">
+              <mat-header-cell
+                *matHeaderCellDef
+                mat-sort-header
+                class="select-header-cell"
+                app-focusable-cell
+                [rowIndex]="0"
+                [columnIndex]="5"
+                [cellInTabOrder]="true"
+              >
+                Mag Err
+              </mat-header-cell>
+              <mat-cell
+                *matCellDef="let row; let rowIndex = index"
+                app-focusable-cell
+                #cell="cell"
+                [rowIndex]="rowIndex + 1"
+                [columnIndex]="5"
+                [cellInTabOrder]="true"
+              >
+                {{ row.data?.magError | number: '1.0-3' }}
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="['select', 'label', 'primaryCoord', 'secondaryCoord', 'mag', 'magError']">
+            </mat-header-row>
+            <mat-row
+              *matRowDef="let row; columns: ['select', 'label', 'primaryCoord', 'secondaryCoord', 'mag', 'magError']"
+            >
+            </mat-row>
+          </mat-table>
+        </div>
+
+        <div class="form-row" *ngIf="tableData$ | async; let tableData">
+          <button
+            mat-raised-button
+            aria-label="Merge Selected Sources"
+            matTooltip="Merge Selected Sources"
+            color="primary"
+            (click)="mergeSelectedSources(sources, config)"
+            [disabled]="selectionModel.selected.length < 2"
+          >
+            <mat-icon>merge_type</mat-icon>
+          </button>
+
+          <button
+            mat-raised-button
+            aria-label="Remove Selected Sources"
+            matTooltip="Remove Selected Sources"
+            color="warn"
+            (click)="removeSelectedSources(sources, config)"
+            [disabled]="selectionModel.selected.length == 0"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+          <button
+            mat-raised-button
+            aria-label="Remove All Sources"
+            matTooltip="Remove All Sources"
+            color="warn"
+            (click)="removeSources(sources)"
+            [disabled]="sources?.length == 0"
+          >
+            <mat-icon>delete_sweep</mat-icon>
+          </button>
+          <button
+            mat-raised-button
+            aria-label="Update Photometry"
+            matTooltip="Update Photometry"
+            color="primary"
+            (click)="photometerSources(imageHdu, sources)"
+            [disabled]="sources?.length == 0"
+          >
+            <mat-icon>wb_incandescent</mat-icon>
+          </button>
+          <button
+            mat-raised-button
+            aria-label="Export Data"
+            matTooltip="Export Data"
+            color="primary"
+            (click)="exportSourceData(tableData)"
+            [disabled]="sources?.length == 0"
+          >
+            <mat-icon>get_app</mat-icon>
+          </button>
+        </div>
+        <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+          {{ mergeError }}
+        </div>
+
+        <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+          {{ mergeError }}
         </div>
 
         <hr />
+        <div>
+          <div *ngIf="hduIds">
+            <p i18n>Use batch photometry to photometer all of your sources in multiple hdus.</p>
+            <form [formGroup]="batchPhotForm">
+              <div>
+                <mat-form-field appearance="outline" style="width: 300px">
+                  <mat-label i18n>Select Image(s) to Photometer</mat-label>
+                  <mat-select multiple formControlName="selectedHduIds">
+                    <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+                      {{ getHduOptionLabel(hduId) | async }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
 
-        <ng-container *ngIf="sources$ | async; let sources">
-          <div class="form-row mb-2">
-            <mat-slide-toggle
-              [checked]="config?.showSourcesFromAllFiles"
-              [labelPosition]="'after'"
-              (change)="onShowSourcesFromAllFilesChange($event)"
-              i18n
-            >
-              Show Sources From All Files
-            </mat-slide-toggle>
+                <button mat-icon-button (click)="selectHdus(hduIds)">
+                  <mat-icon>select_all</mat-icon>
+                </button>
 
-            <mat-slide-toggle
-              [checked]="config?.showSourceLabels"
-              [labelPosition]="'after'"
-              (change)="onShowSourceLabelsChange($event)"
-              i18n
-            >
-              Source Labels
-            </mat-slide-toggle>
-
-            <mat-slide-toggle
-              [checked]="config?.autoPhot"
-              [labelPosition]="'after'"
-              (change)="onAutoPhotChange($event)"
-              i18n
-            >
-              Auto-phot
-            </mat-slide-toggle>
-          </div>
-
-          <div class="mb-3" style="max-height: 300px; overflow: auto">
-            <mat-table
-              app-cell-focuser
-              #cellFocuser="cellFocuser"
-              #table
-              [dataSource]="tableData$"
-              matSort
-              [matSortDisableClear]="true"
-            >
-              <ng-container matColumnDef="select">
-                <mat-header-cell
-                  *matHeaderCellDef
-                  class="select-header-cell"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="0"
-                  [columnIndex]="0"
-                  (focus)="cb?.focus()"
-                  [cellInTabOrder]="false"
+                <button mat-icon-button (click)="selectHdus([])">
+                  <mat-icon>clear</mat-icon>
+                </button>
+                <button
+                  class="ml-4"
+                  mat-raised-button
+                  color="primary"
+                  (click)="batchPhotometer(sources, config)"
+                  [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0"
                 >
-                  <mat-checkbox
-                    #cb
-                    [disabled]="!showSelectAll(sources)"
-                    (change)="$event ? masterToggle(sources) : null"
-                    [checked]="selectionModel.hasValue() && isAllSelected(sources)"
-                    [indeterminate]="selectionModel.hasValue() && !isAllSelected(sources)"
-                    [tabIndex]="cell.isActiveCell ? 0 : -1"
-                  >
-                  </mat-checkbox>
-                </mat-header-cell>
-                <mat-cell
-                  *matCellDef="let row; let rowIndex = index"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="rowIndex + 1"
-                  [columnIndex]="0"
-                  (focus)="cb?.focus()"
-                  [cellInTabOrder]="selectionModel.isSelected(row.source.id)"
-                >
-                  <mat-checkbox
-                    #cb
-                    (click)="$event.stopPropagation()"
-                    (change)="$event ? toggleSource(row.source) : null"
-                    [checked]="selectionModel.isSelected(row.source.id)"
-                    [tabIndex]="cell.isActiveCell ? 0 : -1"
-                  >
-                  </mat-checkbox>
-                </mat-cell>
-              </ng-container>
-
-              <ng-container matColumnDef="primaryCoord">
-                <mat-header-cell
-                  *matHeaderCellDef
-                  mat-sort-header
-                  class="select-header-cell"
-                  app-focusable-cell
-                  [rowIndex]="0"
-                  [columnIndex]="1"
-                  [cellInTabOrder]="true"
-                >
-                  X | RA
-                </mat-header-cell>
-                <mat-cell
-                  *matCellDef="let row; let rowIndex = index"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="rowIndex + 1"
-                  [columnIndex]="1"
-                  [cellInTabOrder]="true"
-                >
-                  {{
-                    row.source.posType == SourcePosType.PIXEL
-                      ? (row.source.primaryCoord | number: '0.0-5')
-                      : (row.source.primaryCoord | dms: '0.0-3')
-                  }}
-                </mat-cell>
-              </ng-container>
-
-              <ng-container matColumnDef="secondaryCoord">
-                <mat-header-cell
-                  *matHeaderCellDef
-                  mat-sort-header
-                  class="select-header-cell"
-                  app-focusable-cell
-                  [rowIndex]="0"
-                  [columnIndex]="2"
-                  [cellInTabOrder]="true"
-                >
-                  Y | DEC
-                </mat-header-cell>
-                <mat-cell
-                  *matCellDef="let row; let rowIndex = index"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="rowIndex + 1"
-                  [columnIndex]="2"
-                  [cellInTabOrder]="true"
-                >
-                  {{
-                    row.source.posType == SourcePosType.PIXEL
-                      ? (row.source.secondaryCoord | number: '0.0-5')
-                      : (row.source.secondaryCoord | dms: '0.0-3')
-                  }}
-                </mat-cell>
-              </ng-container>
-
-              <ng-container matColumnDef="label">
-                <mat-header-cell
-                  *matHeaderCellDef
-                  mat-sort-header
-                  class="select-header-cell"
-                  app-focusable-cell
-                  [rowIndex]="0"
-                  [columnIndex]="3"
-                  [cellInTabOrder]="true"
-                >
-                  Label
-                </mat-header-cell>
-                <mat-cell
-                  *matCellDef="let row; let rowIndex = index"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="rowIndex + 1"
-                  [columnIndex]="3"
-                  [cellInTabOrder]="true"
-                >
-                  {{ row.source.label }}
-                </mat-cell>
-              </ng-container>
-
-              <ng-container matColumnDef="mag">
-                <mat-header-cell
-                  *matHeaderCellDef
-                  mat-sort-header
-                  class="select-header-cell"
-                  app-focusable-cell
-                  [rowIndex]="0"
-                  [columnIndex]="4"
-                  [cellInTabOrder]="true"
-                >
-                  Mag
-                </mat-header-cell>
-                <mat-cell
-                  *matCellDef="let row; let rowIndex = index"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="rowIndex + 1"
-                  [columnIndex]="4"
-                  [cellInTabOrder]="true"
-                >
-                  {{ row.data?.mag | number: '1.0-3' }}
-                </mat-cell>
-              </ng-container>
-
-              <ng-container matColumnDef="magError">
-                <mat-header-cell
-                  *matHeaderCellDef
-                  mat-sort-header
-                  class="select-header-cell"
-                  app-focusable-cell
-                  [rowIndex]="0"
-                  [columnIndex]="5"
-                  [cellInTabOrder]="true"
-                >
-                  Mag Err
-                </mat-header-cell>
-                <mat-cell
-                  *matCellDef="let row; let rowIndex = index"
-                  app-focusable-cell
-                  #cell="cell"
-                  [rowIndex]="rowIndex + 1"
-                  [columnIndex]="5"
-                  [cellInTabOrder]="true"
-                >
-                  {{ row.data?.magError | number: '1.0-3' }}
-                </mat-cell>
-              </ng-container>
-
-              <mat-header-row
-                *matHeaderRowDef="['select', 'label', 'primaryCoord', 'secondaryCoord', 'mag', 'magError']"
-              >
-              </mat-header-row>
-              <mat-row
-                *matRowDef="let row; columns: ['select', 'label', 'primaryCoord', 'secondaryCoord', 'mag', 'magError']"
-              >
-              </mat-row>
-            </mat-table>
-          </div>
-
-          <div class="form-row" *ngIf="tableData$ | async; let tableData">
-            <button
-              mat-raised-button
-              aria-label="Merge Selected Sources"
-              matTooltip="Merge Selected Sources"
-              color="primary"
-              (click)="mergeSelectedSources(sources, config)"
-              [disabled]="selectionModel.selected.length < 2"
-            >
-              <mat-icon>merge_type</mat-icon>
-            </button>
-
-            <button
-              mat-raised-button
-              aria-label="Remove Selected Sources"
-              matTooltip="Remove Selected Sources"
-              color="warn"
-              (click)="removeSelectedSources(sources, config)"
-              [disabled]="selectionModel.selected.length == 0"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-            <button
-              mat-raised-button
-              aria-label="Remove All Sources"
-              matTooltip="Remove All Sources"
-              color="warn"
-              (click)="removeSources(sources)"
-              [disabled]="sources?.length == 0"
-            >
-              <mat-icon>delete_sweep</mat-icon>
-            </button>
-            <button
-              mat-raised-button
-              aria-label="Update Photometry"
-              matTooltip="Update Photometry"
-              color="primary"
-              (click)="photometerSources(vs.imageHdu, sources)"
-              [disabled]="sources?.length == 0"
-            >
-              <mat-icon>wb_incandescent</mat-icon>
-            </button>
-            <button
-              mat-raised-button
-              aria-label="Export Data"
-              matTooltip="Export Data"
-              color="primary"
-              (click)="exportSourceData(tableData)"
-              [disabled]="sources?.length == 0"
-            >
-              <mat-icon>get_app</mat-icon>
-            </button>
-          </div>
-          <div *ngIf="mergeError" class="mt-2 alert alert-danger">
-            {{ mergeError }}
-          </div>
-
-          <div *ngIf="mergeError" class="mt-2 alert alert-danger">
-            {{ mergeError }}
-          </div>
-
-          <hr />
-          <div>
-            <div *ngIf="hduIds">
-              <p i18n>Use batch photometry to photometer all of your sources in multiple hdus.</p>
-              <form [formGroup]="batchPhotForm">
-                <div>
-                  <mat-form-field appearance="outline" style="width: 300px">
-                    <mat-label i18n>Select Image(s) to Photometer</mat-label>
-                    <mat-select multiple formControlName="selectedHduIds">
-                      <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-                        {{ getHduOptionLabel(hduId) | async }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <button mat-icon-button (click)="selectHdus(hduIds)">
-                    <mat-icon>select_all</mat-icon>
-                  </button>
-
-                  <button mat-icon-button (click)="selectHdus([])">
-                    <mat-icon>clear</mat-icon>
-                  </button>
-                  <button
-                    class="ml-4"
-                    mat-raised-button
-                    color="primary"
-                    (click)="batchPhotometer(sources, config)"
-                    [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0"
-                  >
-                    <mat-icon>wb_incandescent</mat-icon>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <div
-              *ngIf="
-                config?.batchPhotProgress != null && config?.batchPhotProgress != 100;
-                else downloadBatchResultsBlock
-              "
-            >
-              <mat-progress-bar mode="determinate" [value]="config?.batchPhotProgress" [color]="'accent'">
-              </mat-progress-bar>
-            </div>
-            <ng-template #downloadBatchResultsBlock>
-              <div class="mb-3" *ngIf="(batchPhotJob$ | async)?.result; let batchPhotJobResult">
-                <div
-                  *ngIf="
-                    batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0;
-                    else resultsBlock
-                  "
-                >
-                  <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
-                </div>
-                <ng-template #resultsBlock>
-                  <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobResult)">
-                    <mat-icon>save_alt</mat-icon>
-                    <span i18n
-                      >Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }} source(s) in
-                      {{ (batchPhotJob$ | async)?.fileIds.length }}
-                      file(s)</span
-                    >
-                  </button>
-                </ng-template>
+                  <mat-icon>wb_incandescent</mat-icon>
+                </button>
               </div>
-            </ng-template>
+            </form>
           </div>
-        </ng-container>
 
-        <hr />
+          <div
+            *ngIf="
+              config?.batchPhotProgress != null && config?.batchPhotProgress != 100;
+              else downloadBatchResultsBlock
+            "
+          >
+            <mat-progress-bar mode="determinate" [value]="config?.batchPhotProgress" [color]="'accent'">
+            </mat-progress-bar>
+          </div>
+          <ng-template #downloadBatchResultsBlock>
+            <div class="mb-3" *ngIf="(batchPhotJob$ | async)?.result; let batchPhotJobResult">
+              <div
+                *ngIf="batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0; else resultsBlock"
+              >
+                <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
+              </div>
+              <ng-template #resultsBlock>
+                <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobResult)">
+                  <mat-icon>save_alt</mat-icon>
+                  <span i18n
+                    >Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }} source(s) in
+                    {{ (batchPhotJob$ | async)?.fileIds.length }}
+                    file(s)</span
+                  >
+                </button>
+              </ng-template>
+            </div>
+          </ng-template>
+        </div>
+      </ng-container>
 
-        <!-- 
+      <hr />
+
+      <!-- 
     <div>
       <button class="" mat-raised-button color="warn" (click)="clearPhotDataFromAllFiles()">
         <mat-icon>wb_incandescent</mat-icon>
@@ -428,7 +422,6 @@
       </button>
     </div>
 -->
-      </ng-container>
     </ng-container>
   </ng-container>
 </ng-container>

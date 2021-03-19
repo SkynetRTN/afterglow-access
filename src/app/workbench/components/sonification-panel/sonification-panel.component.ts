@@ -29,7 +29,7 @@ import {
 
 import { SonifierRegionMode, SonificationPanelState } from '../../models/sonifier-file-state';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
-import { getWidth, getHeight, DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageHdu, IHdu } from '../../../data-files/models/data-file';
 import { ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
@@ -59,7 +59,7 @@ import { isNotEmpty } from '../../../utils/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
-import { Marker } from '../../models/marker';
+import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../models/marker';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -67,14 +67,25 @@ import { Marker } from '../../models/marker';
   styleUrls: ['./sonification-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SonificationPanelComponent
-  extends ToolPanelBaseComponent
-  implements AfterViewInit, OnDestroy, OnChanges, OnInit {
-  SonifierRegionMode = SonifierRegionMode;
+export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnInit {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+
+  viewportSize$: Observable<{ width: number; height: number }>;
+  file$: Observable<DataFile>;
+  hdu$: Observable<IHdu>;
+  imageHdu$: Observable<ImageHdu>;
+  imageHdu: ImageHdu;
   state$: Observable<SonificationPanelState>;
   state: SonificationPanelState;
-  viewportTransform$: Observable<Transform>;
-  imageTransform$: Observable<Transform>;
   imageToViewportTransform$: Observable<Transform>;
   region$: Observable<Region>;
   region: Region;
@@ -82,61 +93,36 @@ export class SonificationPanelComponent
   stop$ = new Subject();
   audioObj = new Audio();
   audioEvents = ['ended', 'error', 'play', 'playing', 'pause', 'timeupdate', 'canplay', 'loadedmetadata', 'loadstart'];
-
-  subs: Subscription[] = [];
   progressLine$: Observable<{ x1: number; y1: number; x2: number; y2: number }>;
 
-  constructor(private actions$: Actions, store: Store, private markerService: ImageViewerMarkerService) {
-    super(store);
+  SonifierRegionMode = SonifierRegionMode;
 
-    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
-      distinctUntilChanged((x, y) => {
-        return x.length == y.length && x.every((value, index) => value == y[index]);
-      })
+  constructor(private actions$: Actions, private store: Store, private markerService: ImageViewerMarkerService) {
+    this.viewportSize$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
     );
 
-    visibleViewerIds$
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap((viewerIds) => {
-          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
-        })
-      )
-      .subscribe((v) => {
-        this.markerService.updateMarkers(v.viewerId, v.markers);
-      });
+    this.file$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
+    );
 
-    this.state$ = this.workbenchState$.pipe(
-      map((workbenchState) => {
-        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) {
-          // only image HDUs support sonification
-          return null;
-        }
-        return (workbenchState as WorkbenchImageHduState)?.sonificationPanelStateId;
-      }),
-      distinctUntilChanged(),
-      switchMap((id) => this.store.select(WorkbenchState.getSonificationPanelStateById).pipe(map((fn) => fn(id))))
+    this.hdu$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+    );
+
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$.pipe(takeUntil(this.destroy$)).subscribe((imageHdu) => (this.imageHdu = imageHdu));
+
+    this.state$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId)))
     );
 
     this.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
       this.state = state;
     });
 
-    this.viewportTransform$ = this.imageHdu$.pipe(
-      switchMap((hdu) => this.store.select(DataFilesState.getTransformById(hdu?.viewportTransformId)))
-    );
-
-    this.imageTransform$ = this.imageHdu$.pipe(
-      switchMap((hdu) => this.store.select(DataFilesState.getTransformById(hdu?.imageTransformId)))
-    );
-
-    this.imageToViewportTransform$ = combineLatest(this.viewportTransform$, this.imageTransform$).pipe(
-      map(([viewportTransform, imageTransform]) => {
-        if (!viewportTransform || !imageTransform) {
-          return null;
-        }
-        return getImageToViewportTransform(viewportTransform, imageTransform);
-      })
+    this.imageToViewportTransform$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduImageToViewportTransformByViewerId(viewerId)))
     );
 
     this.region$ = combineLatest(this.imageHdu$, this.imageToViewportTransform$, this.viewportSize$, this.state$).pipe(
@@ -179,98 +165,24 @@ export class SonificationPanelComponent
           this.playStream(a.url);
         }
       });
-  }
 
-  private getViewerMarkers(viewerId: string) {
-    let markers: Marker[] = [];
-    return of({
-      viewerId: viewerId,
-      markers: markers,
-    });
-    // let state$ = this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId));
-    // let config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
-    // let hduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId));
-    // let fileImageHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(viewerId));
-    // let header$ = combineLatest(hduHeader$, fileImageHeader$).pipe(
-    //   map(([hduHeader, fileHeader]) => hduHeader || fileHeader)
-    // );
+    /** markers */
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
 
-    // let markers$ = combineLatest(config$, state$, header$).pipe(
-    //   map(([config, state, header]) => {
-    //     if (!config || !state || !header) {
-    //       return [];
-    //     }
-
-    //     let lineMeasureStart = state.lineMeasureStart;
-    //     let lineMeasureEnd = state.lineMeasureEnd;
-    //     if (!lineMeasureStart || !lineMeasureEnd) {
-    //       return [];
-    //     }
-
-    //     let startPrimaryCoord = lineMeasureStart.primaryCoord;
-    //     let startSecondaryCoord = lineMeasureStart.secondaryCoord;
-    //     let startPosType = lineMeasureStart.posType;
-    //     let endPrimaryCoord = lineMeasureEnd.primaryCoord;
-    //     let endSecondaryCoord = lineMeasureEnd.secondaryCoord;
-    //     let endPosType = lineMeasureEnd.posType;
-
-    //     let x1 = startPrimaryCoord;
-    //     let y1 = startSecondaryCoord;
-    //     let x2 = endPrimaryCoord;
-    //     let y2 = endSecondaryCoord;
-
-    //     if (startPosType == PosType.SKY || endPosType == PosType.SKY) {
-    //       if (!header.loaded || !header.wcs.isValid()) {
-    //         return [];
-    //       }
-    //       let wcs = header.wcs;
-    //       if (startPosType == PosType.SKY) {
-    //         let xy = wcs.worldToPix([startPrimaryCoord, startSecondaryCoord]);
-    //         x1 = Math.max(Math.min(xy[0], getWidth(header)), 0);
-    //         y1 = Math.max(Math.min(xy[1], getHeight(header)), 0);
-    //       }
-
-    //       if (endPosType == PosType.SKY) {
-    //         let xy = wcs.worldToPix([endPrimaryCoord, endSecondaryCoord]);
-    //         x2 = Math.max(Math.min(xy[0], getWidth(header)), 0);
-    //         y2 = Math.max(Math.min(xy[1], getHeight(header)), 0);
-    //       }
-    //     }
-    //     let markers: Marker[] = [];
-    //     if (config.plotMode == '1D') {
-    //       let lineMarker: LineMarker = {
-    //         id: `PLOTTING_MARKER`,
-    //         type: MarkerType.LINE,
-    //         x1: x1,
-    //         y1: y1,
-    //         x2: x2,
-    //         y2: y2,
-    //       };
-
-    //       markers = [lineMarker];
-    //     } else {
-    //       let rectangleMarker: RectangleMarker = {
-    //         id: `PLOTTING_MARKER`,
-    //         type: MarkerType.RECTANGLE,
-    //         x: Math.min(x1, x2),
-    //         y: Math.min(y1, y2),
-    //         width: Math.abs(x2 - x1),
-    //         height: Math.abs(y2 - y1),
-    //       };
-    //       markers = [rectangleMarker];
-    //     }
-    //     return markers;
-    //   })
-    // );
-
-    // return markers$.pipe(
-    //   map((markers) => {
-    //     return {
-    //       viewerId: viewerId,
-    //       markers: markers,
-    //     };
-    //   })
-    // );
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
   }
 
   ngOnInit() {}
@@ -466,12 +378,43 @@ export class SonificationPanelComponent
     });
   }
 
-  ngOnChanges() {}
+  ngOnDestroy() {
+    this.markerService.clearMarkers();
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
+
+  private getViewerMarkers(viewerId: string) {
+    let state$ = this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId));
+    return state$.pipe(
+      map((state) => {
+        let region = state.regionHistory[state.regionHistoryIndex];
+        let regionMode = state.regionMode;
+        let progressLine = state.progressLine;
+        let markers: Array<RectangleMarker | LineMarker> = [];
+        if (region && regionMode == SonifierRegionMode.CUSTOM)
+          markers.push({
+            id: `SONIFICATION_REGION`,
+            type: MarkerType.RECTANGLE,
+            ...region,
+          } as RectangleMarker);
+        if (progressLine)
+          markers.push({
+            id: `SONIFICATION_PROGRESS`,
+            type: MarkerType.LINE,
+            ...progressLine,
+          } as LineMarker);
+        return {
+          viewerId: viewerId,
+          markers: markers,
+        };
+      })
+    );
+  }
 
   getStream(url: string): Observable<Event> {
     return new Observable((observer) => {
       // Play audio
-      console.log('Observable Loaded!  ', url);
       this.audioObj.src = url;
       this.audioObj.load();
       this.audioObj.play();
@@ -590,6 +533,8 @@ export class SonificationPanelComponent
   }
 
   selectSubregion(timeSubregion: number = null, frequencySubregion: number = null) {
+    if (!this.imageHdu) return;
+
     let region = this.state.regionHistory[this.state.regionHistoryIndex];
     let xShift = 0;
     let width = region.width;
@@ -604,7 +549,7 @@ export class SonificationPanelComponent
       height /= 2;
     }
     this.store.dispatch(
-      new AddRegionToHistory(this.viewer.hduId, {
+      new AddRegionToHistory(this.imageHdu.id, {
         x: region.x + xShift,
         y: region.y + yShift,
         width: width,
@@ -614,14 +559,14 @@ export class SonificationPanelComponent
   }
 
   resetRegionSelection() {
+    if (!this.imageHdu) return;
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer?.hduId));
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(hdu.headerId));
-    if (!hdu || !header) return;
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(this.imageHdu.headerId));
+    if (!header) return;
 
     this.store.dispatch(
-      new AddRegionToHistory(hdu.id, {
+      new AddRegionToHistory(this.imageHdu.id, {
         x: 0.5,
         y: 0.5,
         width: getWidth(header),
@@ -631,40 +576,53 @@ export class SonificationPanelComponent
   }
 
   undoRegionSelection() {
-    this.store.dispatch(new UndoRegionSelection(this.viewer.hduId));
+    if (!this.imageHdu) return;
+
+    this.store.dispatch(new UndoRegionSelection(this.imageHdu.id));
   }
 
   redoRegionSelection() {
-    this.store.dispatch(new RedoRegionSelection(this.viewer.hduId));
+    if (!this.imageHdu) return;
+
+    this.store.dispatch(new RedoRegionSelection(this.imageHdu.id));
   }
 
   setRegionMode($event: MatButtonToggleChange) {
+    if (!this.imageHdu) return;
+
     this.store.dispatch(
-      new UpdateSonifierFileState(this.viewer.hduId, {
+      new UpdateSonifierFileState(this.imageHdu.id, {
         regionMode: $event.value,
       })
     );
   }
 
   setDuration(value: number) {
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer?.hduId));
-    this.store.dispatch(new UpdateSonifierFileState(this.viewer.hduId, { duration: value }));
+    if (!this.imageHdu) return;
+
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.imageHdu.id));
+    this.store.dispatch(new UpdateSonifierFileState(this.imageHdu.id, { duration: value }));
   }
 
   setToneCount(value: number) {
-    this.store.dispatch(new UpdateSonifierFileState(this.viewer.hduId, { toneCount: value }));
+    if (!this.imageHdu) return;
+
+    this.store.dispatch(new UpdateSonifierFileState(this.imageHdu.id, { toneCount: value }));
   }
 
   setViewportSync(value: MatSlideToggleChange) {
+    if (!this.imageHdu) return;
+
     this.store.dispatch(
-      new UpdateSonifierFileState(this.viewer.hduId, {
+      new UpdateSonifierFileState(this.imageHdu.id, {
         viewportSync: value.checked,
       })
     );
   }
 
   sonify() {
-    if (!this.viewer.hduId || !this.region) return;
-    this.store.dispatch(new Sonify(this.viewer.hduId, this.region));
+    if (!this.imageHdu || !this.region) return;
+
+    this.store.dispatch(new Sonify(this.imageHdu.id, this.region));
   }
 }

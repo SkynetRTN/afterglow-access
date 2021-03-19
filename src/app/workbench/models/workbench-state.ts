@@ -16,7 +16,7 @@ import { IWorkbenchState } from './workbench-file-state';
 export enum WorkbenchTool {
   VIEWER = 'display',
   PLOTTER = 'plotter',
-  SONIFIER = 'sonfiier',
+  SONIFIER = 'sonifier',
   PHOTOMETRY = 'photometry',
   CUSTOM_MARKER = 'marker',
   INFO = 'info',

@@ -1,16 +1,14 @@
+<ng-template #fileNotSelectedBlock>
+  <div i18n class="alert alert-info" i18n>Select an image HDU to see the sonification tool.</div>
+</ng-template>
+
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>This tool does not yet support tabular data. Please select an image HDU.</div>
+  <div i18n class="alert alert-info" i18n>This HDU type is not yet supported by the sonification tool.</div>
 </ng-template>
 
-<ng-template #hduNotSelectedBlock>
-  <div i18n class="alert alert-info" i18n>
-    Please select an HDU. This tool does not yet support composite image data.
-  </div>
-</ng-template>
-
-<ng-container *ngIf="viewerState$ | async; let vs">
-  <ng-container *ngIf="vs.hdu; else hduNotSelectedBlock">
-    <ng-container *ngIf="vs.imageHdu; else invalidHduTypeBlock">
+<ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
+  <ng-container *ngIf="hdu$ | async as hdu; else fileNotSelectedBlock">
+    <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
       <table class="table header-value-table">
         <tbody>
           <tr>
@@ -136,10 +134,11 @@
         </button>
         <div style="clear: both"></div>
       </div>
-
-      <mat-progress-bar *ngIf="state?.sonificationLoading" color="accent" mode="indeterminate"></mat-progress-bar>
+      <ng-container *ngIf="state$ | async as state">
+        <mat-progress-bar *ngIf="state.sonificationLoading" color="accent" mode="indeterminate"></mat-progress-bar>
+      </ng-container>
     </ng-container>
   </ng-container>
-</ng-container>
 
-<ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>
+  <ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>
+</ng-container>

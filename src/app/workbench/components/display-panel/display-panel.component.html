@@ -2,11 +2,12 @@
   <div i18n class="alert alert-info" i18n>Select an HDU or composite file to see the display settings.</div>
 </ng-template>
 
+<ng-template #invalidHduTypeBlock>
+  <div i18n class="alert alert-info" i18n>Select an image HDU to adjust brightness and contrast settings.</div>
+</ng-template>
+
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
   <ng-container *ngIf="hdu$ | async as hdu">
-    <ng-template #invalidHduTypeBlock>
-      <div i18n class="alert alert-info" i18n>Select an image HDU to adjust brightness and contrast settings.</div>
-    </ng-template>
     <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
       <div>
         <h3 i18n>Brightness and Contrast Presets</h3>

@@ -22,6 +22,7 @@ import {
   Header,
   getWidth,
   getHeight,
+  IHdu,
 } from '../../../data-files/models/data-file';
 import { PlottingPanelState } from '../../models/plotter-file-state';
 import { PlotterComponent } from '../plotter/plotter.component';
@@ -50,15 +51,30 @@ import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../models/ma
   styleUrls: ['./plotting-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlottingPanelComponent extends ToolPanelBaseComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  file$: Observable<DataFile>;
+  hdu$: Observable<IHdu>;
+  header$: Observable<Header>;
+  rawImageData$: Observable<IImageData<PixelType>>;
+  normalizedImageData$: Observable<IImageData<Uint32Array>>;
+  imageData$: Observable<IImageData<PixelType>>;
   state$: Observable<PlottingPanelState>;
   config$: Observable<PlottingPanelConfig>;
   dataSource$: Observable<'raw' | 'normalized'>;
   colorMode$: Observable<'grayscale' | 'rgba'>;
-  imageData$: Observable<IImageData<PixelType>>;
   @ViewChild('plotter') plotter: PlotterComponent;
   PosType = PosType;
-
+  HduType = HduType;
   lineStart$: Observable<{
     x: number;
     y: number;
@@ -79,12 +95,10 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
   }>;
 
   constructor(
-    store: Store,
+    private store: Store,
     private eventService: ImageViewerEventService,
     private markerService: ImageViewerMarkerService
   ) {
-    super(store);
-
     this.markerService.clearMarkers();
 
     let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
@@ -104,19 +118,36 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
         this.markerService.updateMarkers(v.viewerId, v.markers);
       });
 
+    this.file$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
+    );
+
+    this.hdu$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+    );
+
+    this.header$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHeaderByViewerId(viewerId)))
+    );
+
+    this.rawImageData$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getRawImageDataByViewerId(viewerId)))
+    );
+
+    this.normalizedImageData$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getNormalizedImageDataByViewerId(viewerId)))
+    );
+
+    this.imageData$ = combineLatest(this.rawImageData$, this.normalizedImageData$).pipe(
+      map(([rawImageData, normalizedImageData]) => {
+        return rawImageData || normalizedImageData;
+      })
+    );
+
     this.config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
 
-    this.state$ = this.workbenchState$.pipe(
-      map((workbenchState) => {
-        if (!workbenchState || ![WorkbenchStateType.IMAGE_HDU, WorkbenchStateType.FILE].includes(workbenchState.type)) {
-          // only image HDUs and files support plotting
-          return null;
-        }
-        let hduState = workbenchState as WorkbenchImageHduState | WorkbenchFileState;
-        return hduState.plottingPanelStateId;
-      }),
-      distinctUntilChanged(),
-      switchMap((id) => this.store.select(WorkbenchState.getPlottingPanelStateById).pipe(map((fn) => fn(id))))
+    this.state$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId)))
     );
 
     this.dataSource$ = combineLatest(this.rawImageData$, this.normalizedImageData$, this.config$).pipe(
@@ -127,12 +158,6 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
     );
 
     this.colorMode$ = this.dataSource$.pipe(map((dataSource) => (dataSource == 'raw' ? 'grayscale' : 'rgba')));
-
-    this.imageData$ = combineLatest(this.rawImageData$, this.normalizedImageData$, this.dataSource$).pipe(
-      map(([rawImageData, normalizedImageData, dataSource]) => {
-        return dataSource == 'raw' ? rawImageData : normalizedImageData;
-      })
-    );
 
     this.lineStart$ = combineLatest(this.header$, this.state$).pipe(
       map(([header, state]) => {
@@ -199,19 +224,13 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
       })
     );
 
-    let imageData$ = combineLatest(this.rawImageData$, this.normalizedImageData$).pipe(
-      map(([rawImageData, normalizedImageData]) => {
-        return rawImageData || normalizedImageData;
-      })
-    );
-
     this.eventService.imageClickEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, imageData$))
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.imageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event || !imageData) {
           return;
         }
-        if ($event.viewerId != this.viewer?.id) return;
+        if ($event.viewerId != this.viewerId) return;
 
         if ($event.hitImage) {
           let x = $event.imageX;
@@ -287,6 +306,16 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
           );
         }
       });
+  }
+
+  ngOnInit() {}
+
+  ngAfterViewInit() {}
+
+  ngOnDestroy() {
+    this.markerService.clearMarkers();
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   private normalizeLine(header: Header, line: { primaryCoord: number; secondaryCoord: number; posType: PosType }) {
@@ -400,10 +429,6 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
       })
     );
   }
-
-  ngOnInit() {}
-
-  ngAfterViewInit() {}
 
   onModeChange(mode: '1D' | '2D' | '3D') {
     this.store.dispatch(new UpdatePlottingPanelConfig({ plotMode: mode }));

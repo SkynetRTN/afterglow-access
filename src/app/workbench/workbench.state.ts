@@ -154,6 +154,7 @@ import {
   Header,
   PixelType,
   hasOverlap,
+  TableHdu,
 } from '../data-files/models/data-file';
 
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
@@ -838,6 +839,32 @@ export class WorkbenchState {
     return state.focusedViewerPanelId;
   }
 
+  /** Workbench State */
+
+  static getWorkbenchStateIdByHduId(hduId: string) {
+    return createSelector(
+      [WorkbenchState.getHduIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
+      (
+        hduIdToWorkbenchStateId: { [id: string]: string },
+        workbenchStateEntities: { [id: string]: IWorkbenchState }
+      ) => {
+        return workbenchStateEntities[hduIdToWorkbenchStateId[hduId]] || null;
+      }
+    );
+  }
+
+  static getWorkbenchStateIdByFileId(fileId: string) {
+    return createSelector(
+      [WorkbenchState.getFileIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
+      (
+        fileIdToWorkbenchStateId: { [id: string]: string },
+        workbenchStateEntities: { [id: string]: IWorkbenchState }
+      ) => {
+        return workbenchStateEntities[fileIdToWorkbenchStateId[fileId]] || null;
+      }
+    );
+  }
+
   /** Viewer
    *
    */
@@ -885,6 +912,18 @@ export class WorkbenchState {
     );
   }
 
+  public static getImageHduByViewerId(viewerId: string) {
+    return createSelector([WorkbenchState.getHduByViewerId(viewerId)], (hdu: IHdu) => {
+      return hdu?.type == HduType.IMAGE ? (hdu as ImageHdu) : null;
+    });
+  }
+
+  public static getTableHduByViewerId(viewerId: string) {
+    return createSelector([WorkbenchState.getHduByViewerId(viewerId)], (hdu: IHdu) => {
+      return hdu?.type == HduType.TABLE ? (hdu as TableHdu) : null;
+    });
+  }
+
   public static getHduHeaderByViewerId(viewerId: string) {
     return createSelector(
       [WorkbenchState.getHduByViewerId(viewerId), DataFilesState.getHeaderEntities],
@@ -926,15 +965,245 @@ export class WorkbenchState {
   public static getHeaderByViewerId(viewerId: string) {
     return createSelector(
       [
-        WorkbenchState.getViewerEntities,
+        WorkbenchState.getViewerById(viewerId),
         WorkbenchState.getHduHeaderByViewerId(viewerId),
         WorkbenchState.getFileHeaderByViewerId,
       ],
-      (viewerEntities: { [id: string]: Viewer }, hduHeader: Header, fileHeader: Header) => {
-        return viewerEntities[viewerId]?.hduId ? hduHeader : fileHeader;
+      (viewer: Viewer, hduHeader: Header, fileHeader: Header) => {
+        return viewer?.hduId ? hduHeader : fileHeader;
       }
     );
   }
+
+  public static getRawImageDataByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getImageDataEntities],
+      (imageHdu: ImageHdu, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
+        return imageDataEntities[imageHdu?.rawImageDataId] || null;
+      }
+    );
+  }
+
+  public static getHduNormalizedImageDataByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getImageDataEntities],
+      (imageHdu: ImageHdu, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
+        return (imageDataEntities[imageHdu?.imageDataId] as IImageData<Uint32Array>) || null;
+      }
+    );
+  }
+
+  public static getFileNormalizedImageDataByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getFileByViewerId(viewerId), DataFilesState.getImageDataEntities],
+      (file: DataFile, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
+        return (imageDataEntities[file?.imageDataId] as IImageData<Uint32Array>) || null;
+      }
+    );
+  }
+
+  public static getNormalizedImageDataByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerById(viewerId),
+        WorkbenchState.getHduNormalizedImageDataByViewerId(viewerId),
+        WorkbenchState.getFileNormalizedImageDataByViewerId(viewerId),
+      ],
+      (viewer: Viewer, hduImageData: IImageData<PixelType>, fileImageData: IImageData<PixelType>) => {
+        return (viewer?.hduId ? hduImageData : fileImageData) as IImageData<Uint32Array>;
+      }
+    );
+  }
+
+  public static getHduImageTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getTransformEntities],
+      (imageHdu: ImageHdu, transformEntities: { [id: string]: Transform }) => {
+        return transformEntities[imageHdu?.imageTransformId] || null;
+      }
+    );
+  }
+
+  public static getHduViewportTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getTransformEntities],
+      (imageHdu: ImageHdu, transformEntities: { [id: string]: Transform }) => {
+        return transformEntities[imageHdu?.viewportTransformId] || null;
+      }
+    );
+  }
+
+  public static getHduImageToViewportTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getHduImageTransformByViewerId(viewerId),
+        WorkbenchState.getHduViewportTransformByViewerId(viewerId),
+      ],
+      (imageTransform: Transform, viewportTransform: Transform) => {
+        return imageTransform && viewportTransform
+          ? getImageToViewportTransform(viewportTransform, imageTransform)
+          : null;
+      }
+    );
+  }
+
+  public static getFileImageTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getFileByViewerId(viewerId), DataFilesState.getTransformEntities],
+      (file: DataFile, transformEntities: { [id: string]: Transform }) => {
+        return transformEntities[file?.imageTransformId] || null;
+      }
+    );
+  }
+
+  public static getFileViewportTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getFileByViewerId(viewerId), DataFilesState.getTransformEntities],
+      (file: DataFile, transformEntities: { [id: string]: Transform }) => {
+        return transformEntities[file?.viewportTransformId] || null;
+      }
+    );
+  }
+
+  public static getFileImageToViewportTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getFileImageTransformByViewerId(viewerId),
+        WorkbenchState.getFileViewportTransformByViewerId(viewerId),
+      ],
+      (imageTransform: Transform, viewportTransform: Transform) => {
+        return imageTransform && viewportTransform
+          ? getImageToViewportTransform(viewportTransform, imageTransform)
+          : null;
+      }
+    );
+  }
+
+  public static getImageTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerById(viewerId),
+        WorkbenchState.getFileImageTransformByViewerId(viewerId),
+        WorkbenchState.getHduImageTransformByViewerId(viewerId),
+      ],
+      (viewer: Viewer, fileImageTransform: Transform, hduImageTransform: Transform) => {
+        return viewer?.hduId ? hduImageTransform : fileImageTransform;
+      }
+    );
+  }
+
+  public static getViewportTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerById(viewerId),
+        WorkbenchState.getFileViewportTransformByViewerId(viewerId),
+        WorkbenchState.getHduViewportTransformByViewerId(viewerId),
+      ],
+      (viewer: Viewer, fileViewportTransform: Transform, hduViewportTransform: Transform) => {
+        return viewer?.hduId ? hduViewportTransform : fileViewportTransform;
+      }
+    );
+  }
+
+  public static getImageToViewportTransformByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerById(viewerId),
+        WorkbenchState.getFileImageToViewportTransformByViewerId(viewerId),
+        WorkbenchState.getHduImageToViewportTransformByViewerId(viewerId),
+      ],
+      (viewer: Viewer, fileImageToViewportTransform: Transform, hduImageToViewportTransform: Transform) => {
+        return viewer?.hduId ? hduImageToViewportTransform : fileImageToViewportTransform;
+      }
+    );
+  }
+
+  static getWorkbenchStateIdByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerEntities,
+        WorkbenchState.getHduIdToWorkbenchStateIdMap,
+        WorkbenchState.getFileIdToWorkbenchStateIdMap,
+      ],
+      (
+        viewerEntities: { [id: string]: Viewer },
+        hduIdToWorkbenchStateId: { [id: string]: string },
+        fileIdToWorkbenchStateId: { [id: string]: string }
+      ) => {
+        let viewer = viewerEntities[viewerId];
+        if (!viewer) return null;
+        return viewer.hduId ? hduIdToWorkbenchStateId[viewer.hduId] : fileIdToWorkbenchStateId[viewer.fileId];
+      }
+    );
+  }
+
+  static getWorkbenchStateByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getWorkbenchStateIdByViewerId(viewerId), WorkbenchState.getWorkbenchStateEntities],
+      (workbenchStateId: string, workbenchStateEntities: { [id: string]: IWorkbenchState }) => {
+        return workbenchStateEntities[workbenchStateId] || null;
+      }
+    );
+  }
+
+  static getCustomMarkerPanelStateByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getCustomMarkerPanelStateEntities],
+      (workbenchState: IWorkbenchState, customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState }) => {
+        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+          let s = workbenchState as WorkbenchFileState | WorkbenchImageHduState;
+          return customMarkerPanelStateEntities[s.customMarkerPanelStateId] || null;
+        } else {
+          return null;
+        }
+      }
+    );
+  }
+
+  static getPlottingPanelStateByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPlottingPanelStateEntities],
+      (workbenchState: IWorkbenchState, plottingPanelStateEntities: { [id: string]: PlottingPanelState }) => {
+        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+          let s = workbenchState as WorkbenchFileState | WorkbenchImageHduState;
+          return plottingPanelStateEntities[s.plottingPanelStateId] || null;
+        } else {
+          return null;
+        }
+      }
+    );
+  }
+
+  static getSonificationPanelStateByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSonificationPanelStateEntities],
+      (workbenchState: IWorkbenchState, sonificationPanelStateEntities: { [id: string]: SonificationPanelState }) => {
+        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+          let s = workbenchState as WorkbenchImageHduState;
+          let result = sonificationPanelStateEntities[s.sonificationPanelStateId];
+          return sonificationPanelStateEntities[s.sonificationPanelStateId] || null;
+        } else {
+          return null;
+        }
+      }
+    );
+  }
+
+  static getPhotometryPanelStateByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPhotometryPanelStateEntities],
+      (workbenchState: IWorkbenchState, photometryPanelStateEntities: { [id: string]: PhotometryPanelState }) => {
+        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+          let s = workbenchState as WorkbenchImageHduState;
+          return photometryPanelStateEntities[s.photometryPanelStateId] || null;
+        } else {
+          return null;
+        }
+      }
+    );
+  }
+
+  /** Focused Viewer */
 
   @Selector([WorkbenchState.getFocusedViewerPanelId, WorkbenchState.getViewerPanelEntities])
   public static getFocusedViewerId(focusedViewerPanelId: string, viewerPanelEntities: { [id: string]: ViewerPanel }) {
@@ -1002,219 +1271,6 @@ export class WorkbenchState {
   public static getFocusedViewerViewportSize(focusedViewer: IViewer) {
     if (!focusedViewer) return null;
     return focusedViewer.viewportSize;
-  }
-
-  static getWorkbenchStateIdByHduId(hduId: string) {
-    return createSelector(
-      [WorkbenchState.getHduIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
-      (
-        hduIdToWorkbenchStateId: { [id: string]: string },
-        workbenchStateEntities: { [id: string]: IWorkbenchState }
-      ) => {
-        return workbenchStateEntities[hduIdToWorkbenchStateId[hduId]] || null;
-      }
-    );
-  }
-
-  static getWorkbenchStateIdByFileId(fileId: string) {
-    return createSelector(
-      [WorkbenchState.getFileIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
-      (
-        fileIdToWorkbenchStateId: { [id: string]: string },
-        workbenchStateEntities: { [id: string]: IWorkbenchState }
-      ) => {
-        return workbenchStateEntities[fileIdToWorkbenchStateId[fileId]] || null;
-      }
-    );
-  }
-
-  static getWorkbenchStateIdByViewerId(viewerId: string) {
-    return createSelector(
-      [
-        WorkbenchState.getViewerEntities,
-        WorkbenchState.getHduIdToWorkbenchStateIdMap,
-        WorkbenchState.getFileIdToWorkbenchStateIdMap,
-      ],
-      (
-        viewerEntities: { [id: string]: Viewer },
-        hduIdToWorkbenchStateId: { [id: string]: string },
-        fileIdToWorkbenchStateId: { [id: string]: string }
-      ) => {
-        let viewer = viewerEntities[viewerId];
-        if (!viewer) return null;
-        return viewer.hduId ? hduIdToWorkbenchStateId[viewer.hduId] : fileIdToWorkbenchStateId[viewer.fileId];
-      }
-    );
-  }
-
-  static getWorkbenchStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateIdByViewerId(viewerId), WorkbenchState.getWorkbenchStateEntities],
-      (workbenchStateId: string, workbenchStateEntities: { [id: string]: IWorkbenchState }) => {
-        return workbenchStateEntities[workbenchStateId] || null;
-      }
-    );
-  }
-
-  static getCustomMarkerPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getCustomMarkerPanelStateEntities],
-      (workbenchState: IWorkbenchState, customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchFileState | WorkbenchImageHduState;
-          return customMarkerPanelStateEntities[s.customMarkerPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-  static getPlottingPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPlottingPanelStateEntities],
-      (workbenchState: IWorkbenchState, plottingPanelStateEntities: { [id: string]: PlottingPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchFileState | WorkbenchImageHduState;
-          return plottingPanelStateEntities[s.plottingPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-  static getSonificationPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSonificationPanelStateEntities],
-      (workbenchState: IWorkbenchState, sonificationPanelStateEntities: { [id: string]: SonificationPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchImageHduState;
-          return sonificationPanelStateEntities[s.sonificationPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-  static getPhotometryPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPhotometryPanelStateEntities],
-      (workbenchState: IWorkbenchState, photometryPanelStateEntities: { [id: string]: PhotometryPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchImageHduState;
-          return photometryPanelStateEntities[s.photometryPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-  /** TODO Refactor the following selectors using functional selectors instead of entities */
-
-  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
-  public static getViewportTransformIdFromViewerId(
-    viewerEntities: { [id: string]: IViewer },
-    fileEntities: { [id: string]: DataFile },
-    hduEntities: { [id: string]: IHdu }
-  ) {
-    return (id: string) => {
-      let viewer = viewerEntities[id];
-      if (!viewer || viewer.type != ViewerType.IMAGE || !viewer.fileId || !fileEntities[viewer.fileId]) {
-        return '';
-      }
-
-      let viewportTransformId = fileEntities[viewer.fileId].viewportTransformId;
-      if (viewer.hduId) {
-        viewportTransformId = (hduEntities[viewer.hduId] as ImageHdu).viewportTransformId;
-      }
-
-      if (!viewportTransformId) {
-        return '';
-      }
-
-      return viewportTransformId;
-    };
-  }
-
-  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
-  public static getImageTransformIdFromViewerId(
-    viewerEntities: { [id: string]: IViewer },
-    fileEntities: { [id: string]: DataFile },
-    hduEntities: { [id: string]: IHdu }
-  ) {
-    return (id: string) => {
-      let viewer = viewerEntities[id];
-      if (!viewer || viewer.type != ViewerType.IMAGE || !viewer.fileId || !fileEntities[viewer.fileId]) {
-        return '';
-      }
-
-      let imageTransformId = fileEntities[viewer.fileId].imageTransformId;
-      if (viewer.hduId) {
-        imageTransformId = (hduEntities[viewer.hduId] as ImageHdu).imageTransformId;
-      }
-
-      if (!imageTransformId) {
-        return '';
-      }
-
-      return imageTransformId;
-    };
-  }
-
-  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
-  public static getNormalizedImageDataIdFromViewerId(
-    viewerEntities: { [id: string]: IViewer },
-    fileEntities: { [id: string]: DataFile },
-    hduEntities: { [id: string]: IHdu }
-  ) {
-    return (id: string) => {
-      let viewer = viewerEntities[id];
-      if (!viewer || viewer.type != ViewerType.IMAGE || !viewer.fileId || !fileEntities[viewer.fileId]) {
-        return null;
-      }
-
-      let normalizedImageDataId = fileEntities[viewer.fileId].imageDataId;
-      if (viewer.hduId) {
-        normalizedImageDataId = (hduEntities[viewer.hduId] as ImageHdu).imageDataId;
-      }
-
-      if (!normalizedImageDataId) {
-        return null;
-      }
-
-      return normalizedImageDataId;
-    };
-  }
-
-  @Selector([WorkbenchState.getViewerEntities, DataFilesState.getFileEntities, DataFilesState.getHduEntities])
-  public static getRawImageDataIdFromViewerId(
-    viewerEntities: { [id: string]: IViewer },
-    fileEntities: { [id: string]: DataFile },
-    hduEntities: { [id: string]: IHdu }
-  ) {
-    return (id: string) => {
-      let viewer = viewerEntities[id];
-      if (
-        !viewer ||
-        viewer.type != ViewerType.IMAGE ||
-        !viewer.fileId ||
-        !viewer.hduId ||
-        !fileEntities[viewer.fileId]
-      ) {
-        return '';
-      }
-
-      let rawImageDataId = (hduEntities[viewer.hduId] as ImageHdu).rawImageDataId;
-
-      if (!rawImageDataId) {
-        return '';
-      }
-
-      return rawImageDataId;
-    };
   }
 
   @Action(Initialize)
@@ -1348,19 +1404,17 @@ export class WorkbenchState {
     }
 
     let refViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-    let refImageTransformId: string;
-    let refViewportTransformId: string;
+    let refImageTransform: Transform;
+    let refViewportTransform: Transform;
     let refHeader: Header;
     let refNormalization: PixelNormalizer;
     let refImageDataId: string;
 
     if (refViewer) {
-      refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-        refViewer.id
-      );
-      refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(refViewer.id);
+      refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(refViewer.id));
+      refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(refViewer.id));
       refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(refViewer.id));
-      refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(refViewer.id);
+      refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(refViewer.id))?.id;
 
       if (refViewer.hduId) {
         let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
@@ -1378,11 +1432,11 @@ export class WorkbenchState {
 
     function onLoadComplete(store: Store) {
       //normalization
-      if (refHeader && refImageTransformId && refViewportTransformId) {
+      if (refHeader && refImageTransform && refViewportTransform) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(
-            new SyncViewerTransformations(refHeader.id, refImageTransformId, refViewportTransformId, refImageDataId)
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageDataId)
           );
         }
       }
@@ -1783,12 +1837,10 @@ export class WorkbenchState {
 
     if (!viewer) return null;
 
-    let refViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-      viewer.id
-    );
-    let refImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
+    let refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(viewer.id));
+    let refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(viewer.id));
     let refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(viewer.id));
-    let refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
+    let refImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(viewer.id));
 
     let refNormalization: PixelNormalizer;
     if (viewer.hduId) {
@@ -1819,11 +1871,11 @@ export class WorkbenchState {
 
     function onLoadComplete(store: Store) {
       //normalization
-      if (refHeader && refImageTransformId && refViewportTransformId) {
+      if (refHeader && refImageTransform && refViewportTransform) {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(
-            new SyncViewerTransformations(refHeader.id, refImageTransformId, refViewportTransformId, refImageDataId)
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id)
           );
         }
 
@@ -3694,15 +3746,12 @@ export class WorkbenchState {
   @ImmutableContext()
   public updateCustomMarkerSelectionRegion(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, region }: UpdateCustomMarkerSelectionRegion
+    { customMarkerPanelStateId, region }: UpdateCustomMarkerSelectionRegion
   ) {
     setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
-      if (!workbenchState || ![WorkbenchStateType.IMAGE_HDU, WorkbenchStateType.FILE].includes(workbenchState.type))
-        return state;
-      let hduState = workbenchState as WorkbenchFileState | WorkbenchImageHduState;
-      let markerPanelStateId = hduState.customMarkerPanelStateId;
-      let markerState = state.customMarkerPanelStateEntities[markerPanelStateId];
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
+      if (!markerState) return state;
+
       markerState.markerSelectionRegion = {
         ...region,
       };
@@ -3714,19 +3763,14 @@ export class WorkbenchState {
   @ImmutableContext()
   public endCustomMarkerSelectionRegion(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, mode }: EndCustomMarkerSelectionRegion
+    { customMarkerPanelStateId, mode }: EndCustomMarkerSelectionRegion
   ) {
     setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
-      if (!workbenchState || ![WorkbenchStateType.IMAGE_HDU, WorkbenchStateType.FILE].includes(workbenchState.type))
-        return state;
-      let hduState = workbenchState as WorkbenchFileState | WorkbenchImageHduState;
-      let markerPanelStateId = hduState.customMarkerPanelStateId;
-      let markerState = state.customMarkerPanelStateEntities[markerPanelStateId];
+      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
+      if (!markerState) return state;
 
       let region = markerState.markerSelectionRegion;
-      let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId));
-      if (!header || !region) return state;
+      if (!region) return state;
 
       markerState.markerIds.forEach((id) => {
         let marker = markerState.markerEntities[id];
@@ -3890,8 +3934,8 @@ export class WorkbenchState {
       let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
       if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
       let hduState = workbenchState as WorkbenchImageHduState;
-      let sonfiicationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-      sonfiicationPanelState.progressLine = line;
+      let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
+      sonificationPanelState.progressLine = line;
       return state;
     });
   }
@@ -3954,7 +3998,7 @@ export class WorkbenchState {
     dispatch(new CreateJob(job, 1000, correlationId));
 
     setState((state: WorkbenchStateModel) => {
-      let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
+      let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
       sonificationPanelState.sonificationLoading = true;
       return state;
     });
@@ -4004,6 +4048,10 @@ export class WorkbenchState {
             let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
             sonificationPanelState.sonificationLoading = false;
             sonificationPanelState.sonificationJobId = job.id;
+
+            state.sonificationPanelStateEntities[sonificationPanelStateId] = {
+              ...sonificationPanelState,
+            };
             return state;
           });
 
@@ -4386,15 +4434,11 @@ export class WorkbenchState {
 
     let actions: any[] = [];
     visibleViewers.forEach((viewer) => {
-      let targetImageTransform: Transform | null = null;
-      let targetViewportTransform: Transform | null = null;
       let targetHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(viewer.id));
-      let targetImageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(viewer.id);
-      let targetViewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-        viewer.id
-      );
+      let targetImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(viewer.id));
+      let targetViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(viewer.id));
 
-      if (!targetHeader || !targetHeader.loaded || !targetImageTransformId || !targetViewportTransformId) return;
+      if (!targetHeader || !targetHeader.loaded || !targetImageTransform || !targetViewportTransform) return;
 
       if (state.viewerSyncMode == 'sky') {
         let targetHasWcs = targetHeader.wcs && targetHeader.wcs.isValid();
@@ -4420,19 +4464,18 @@ export class WorkbenchState {
               .translate(-originPixels[0], -originPixels[1]);
 
             targetImageTransform = appendTransform(
-              targetImageTransformId,
+              targetImageTransform.id,
               refImageTransform,
-              matrixToTransform(targetImageTransformId, srcToTargetMat)
+              matrixToTransform(targetImageTransform.id, srcToTargetMat)
             );
             targetViewportTransform = {
               ...refViewportTransform,
-              id: targetViewportTransformId,
+              id: targetViewportTransform.id,
             };
           }
         }
       } else {
-        let targetImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataIdFromViewerId)(viewer.id);
-        let targetImageData = imageDataEntities[targetImageDataId];
+        let targetImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(viewer.id));
         let refImageData = imageDataEntities[refImageDataId];
 
         if (
@@ -4443,20 +4486,20 @@ export class WorkbenchState {
         ) {
           targetViewportTransform = {
             ...refViewportTransform,
-            id: targetViewportTransformId,
+            id: targetViewportTransform.id,
           };
           targetImageTransform = {
             ...refImageTransform,
-            id: targetImageTransformId,
+            id: targetImageTransform.id,
           };
         }
       }
 
       if (targetViewportTransform && targetImageTransform) {
-        if (targetImageTransformId != refImageTransformId) {
+        if (targetImageTransform.id != refImageTransformId) {
           actions.push(new UpdateTransform(targetImageTransform.id, targetImageTransform));
         }
-        if (targetViewportTransformId != refViewportTransformId) {
+        if (targetViewportTransform.id != refViewportTransformId) {
           actions.push(new UpdateTransform(targetViewportTransform.id, targetViewportTransform));
         }
       }

@@ -48,7 +48,6 @@ function idToNumber(o: Object) {
         if ((k == 'id' || k.endsWith('Id')) && typeof o[k] === 'string' && isPositiveInteger(o[k])) {
           let parsed = parseInt(o[k]);
           if (!isNaN(parsed)) {
-            console.log('id to number: ', k, o[k], parsed);
             o[k] = parsed;
           }
         } else if ((k == 'ids' || k.endsWith('Ids')) && Array.isArray(o[k]) && isPositiveInteger(o[k])) {

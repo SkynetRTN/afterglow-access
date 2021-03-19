@@ -226,35 +226,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
-
-          let refFileHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(focusedViewerId));
-
-          let refHduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(focusedViewerId));
-
           let refHeader$ = this.store.select(WorkbenchState.getHeaderByViewerId(focusedViewerId));
-
-          let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            distinctUntilChanged(),
-            switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
-            distinctUntilChanged()
-            // tap(v => console.log("REF IMAGE TRANSFORM CHANGED"))
-          );
-
-          let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            distinctUntilChanged(),
-            switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
-            distinctUntilChanged()
-            // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
-          );
-
-          let refImageData$ = this.store.select(WorkbenchState.getRawImageDataIdFromViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            distinctUntilChanged(),
-            switchMap((imageDataId) => this.store.select(DataFilesState.getImageDataById(imageDataId))),
-            distinctUntilChanged()
-          );
+          let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformByViewerId(focusedViewerId));
+          let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformByViewerId(focusedViewerId));
+          let refImageData$ = this.store.select(WorkbenchState.getRawImageDataByViewerId(focusedViewerId));
 
           let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$).pipe(
             withLatestFrom(refHeader$),

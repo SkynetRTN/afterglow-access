@@ -23,8 +23,8 @@ import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
 import { CustomMarkerPanelConfig } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
-import { BehaviorSubject, Observable, combineLatest, merge } from 'rxjs';
-import { DataFile, ImageHdu, IHdu } from '../../../data-files/models/data-file';
+import { BehaviorSubject, Observable, combineLatest, merge, Subject } from 'rxjs';
+import { DataFile, ImageHdu, IHdu, PixelType } from '../../../data-files/models/data-file';
 import { MatSelectChange } from '@angular/material/select';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
@@ -45,6 +45,7 @@ import {
 import { centroidDisk, centroidPsf } from '../../models/centroider';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { IImageData } from '../../../data-files/models/image-data';
 
 @Component({
   selector: 'app-custom-marker-panel',
@@ -52,12 +53,27 @@ import { ImageViewerMarkerService } from '../../services/image-viewer-marker.ser
   styleUrls: ['./custom-marker-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implements OnInit, OnDestroy {
+export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  file$: Observable<DataFile>;
+  hdu$: Observable<IHdu>;
+  rawImageData$: Observable<IImageData<PixelType>>;
+  normalizedImageData$: Observable<IImageData<Uint32Array>>;
   state$: Observable<CustomMarkerPanelState>;
   state: CustomMarkerPanelState;
   config$: Observable<CustomMarkerPanelConfig>;
   selectedMarkers$: Observable<Marker[]>;
 
+  HduType = HduType;
   MarkerType = MarkerType;
   isCircleMarker = isCircleMarker;
   isRectangleMarker = isRectangleMarker;
@@ -65,12 +81,10 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   @ViewChild(KeyboardShortcutsComponent) private keyboard: KeyboardShortcutsComponent;
 
   constructor(
-    store: Store,
+    private store: Store,
     private eventService: ImageViewerEventService,
     private markerService: ImageViewerMarkerService
   ) {
-    super(store);
-
     this.markerService.clearMarkers();
 
     let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
@@ -90,10 +104,9 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
         this.markerService.updateMarkers(v.viewerId, v.markers);
       });
 
-    this.state$ = this.viewer$.pipe(
-      switchMap((viewer) => this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewer?.id)))
+    this.state$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewerId)))
     );
-
     this.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => (this.state = state));
 
     this.config$ = store.select(WorkbenchState.getCustomMarkerPanelConfig);
@@ -101,6 +114,22 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
     this.selectedMarkers$ = this.state$.pipe(
       map((state) => (state?.markerEntities ? Object.values(state.markerEntities) : [])),
       map((markers) => markers.filter((m) => m.selected))
+    );
+
+    this.file$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
+    );
+
+    this.hdu$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+    );
+
+    this.rawImageData$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getRawImageDataByViewerId(viewerId)))
+    );
+
+    this.normalizedImageData$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getNormalizedImageDataByViewerId(viewerId)))
     );
 
     let imageData$ = combineLatest(this.rawImageData$, this.normalizedImageData$).pipe(
@@ -188,14 +217,13 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
       });
 
     this.eventService.mouseDragEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-      .subscribe(([$event, state, config, header, imageData]) => {
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$))
+      .subscribe(([$event, state]) => {
         if (!$event) {
           return;
         }
         if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
           return;
-        if (this.viewer.hduId == null) return;
 
         let region = {
           x: $event.imageStart.x,
@@ -204,23 +232,30 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
           height: $event.imageEnd.y - $event.imageStart.y,
         };
 
-        this.store.dispatch(new UpdateCustomMarkerSelectionRegion(this.viewer.hduId, region));
+        this.store.dispatch(new UpdateCustomMarkerSelectionRegion(state.id, region));
       });
 
     this.eventService.mouseDropEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-      .subscribe(([$event, state, config, header, imageData]) => {
+      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$))
+      .subscribe(([$event, state]) => {
         if (!$event) {
           return;
         }
         if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
           return;
-        if (this.viewer.hduId == null) return;
 
         this.store.dispatch(
-          new EndCustomMarkerSelectionRegion(this.viewer.hduId, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
+          new EndCustomMarkerSelectionRegion(state.id, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
         );
       });
+  }
+
+  ngOnInit() {}
+
+  ngOnDestroy() {
+    this.markerService.clearMarkers();
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   private getViewerMarkers(viewerId: string) {
@@ -264,8 +299,6 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
     this.store.dispatch(new DeselectCustomMarkers(fileId, customMarkers));
   }
 
-  ngOnInit() {}
-
   ngAfterViewInit() {
     this.keyboard
       .select('del')
@@ -276,13 +309,13 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   }
 
   onMarkerChange($event: Partial<Marker>, marker: Marker) {
-    if (!this.viewer || !this.state) return;
+    if (!this.state) return;
 
     this.store.dispatch(new UpdateCustomMarker(this.state.id, $event.id, $event));
   }
 
   deleteSelectedMarkers(markers: Marker[]) {
-    if (!this.viewer || !this.state) return;
+    if (!this.state) return;
     this.store.dispatch(new RemoveCustomMarkers(this.state.id, markers));
   }
 

@@ -349,18 +349,18 @@
           <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewerId]="focusedViewerId$ | async">
           </app-file-info-panel>
 
-          <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [viewer]="focusedViewer$ | async">
+          <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [viewerId]="focusedViewerId$ | async">
           </app-custom-marker-panel>
 
-          <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [viewer]="focusedViewer$ | async">
+          <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [viewerId]="focusedViewerId$ | async">
           </app-plotting-panel>
 
-          <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [viewer]="focusedViewer$ | async">
+          <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [viewerId]="focusedViewerId$ | async">
           </app-sonification-panel>
 
           <app-photometry-panel
             *ngSwitchCase="WorkbenchTool.PHOTOMETRY"
-            [viewer]="focusedViewer$ | async"
+            [viewerId]="focusedViewerId$ | async"
             [hduIds]="filteredImageHduIds$ | async"
           >
           </app-photometry-panel>

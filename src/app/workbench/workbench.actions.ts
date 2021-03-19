@@ -630,13 +630,13 @@ export class PhotometerSources {
 export class UpdateCustomMarkerSelectionRegion {
   public static readonly type = '[Markers] Update Custom Marker Selection Region';
 
-  constructor(public hduId: string, public region: Region) {}
+  constructor(public customMarkerPanelStateId: string, public region: Region) {}
 }
 
 export class EndCustomMarkerSelectionRegion {
   public static readonly type = '[Markers] End Custom Marker Selection Region';
 
-  constructor(public hduId: string, public mode: 'append' | 'remove') {}
+  constructor(public customMarkerPanelStateId: string, public mode: 'append' | 'remove') {}
 }
 
 export class UpdateCustomMarker {

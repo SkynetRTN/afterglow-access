@@ -16,7 +16,7 @@ import * as moment from 'moment';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { Select, Store, Actions, ofActionSuccessful, ofAction } from '@ngxs/store';
-import { Observable, Subscription, combineLatest, BehaviorSubject, of } from 'rxjs';
+import { Observable, Subscription, combineLatest, BehaviorSubject, of, Subject, merge } from 'rxjs';
 import {
   map,
   flatMap,
@@ -36,7 +36,15 @@ import {
 import * as jStat from 'jstat';
 import { saveAs } from 'file-saver/dist/FileSaver';
 
-import { getCenterTime, getSourceCoordinates, DataFile, ImageHdu, Header } from '../../../data-files/models/data-file';
+import {
+  getCenterTime,
+  getSourceCoordinates,
+  DataFile,
+  ImageHdu,
+  Header,
+  IHdu,
+  PixelType,
+} from '../../../data-files/models/data-file';
 import { DmsPipe } from '../../../pipes/dms.pipe';
 import { PhotometryPanelState } from '../../models/photometry-file-state';
 import { PhotSettingsDialogComponent } from '../phot-settings-dialog/phot-settings-dialog.component';
@@ -65,20 +73,22 @@ import { PhotData } from '../../models/source-phot-data';
 import { PhotometrySettings } from '../../models/photometry-settings';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Papa } from 'ngx-papaparse';
-import { datetimeToJd, jdToMjd } from '../../../utils/skynet-astro';
+import { datetimeToJd, formatDms, jdToMjd } from '../../../utils/skynet-astro';
 import { DatePipe } from '@angular/common';
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
 import { JobsState } from '../../../jobs/jobs.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import * as snakeCaseKeys from 'snakecase-keys';
-import { IViewer } from '../../models/viewer';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
-import { HduType } from '../../../data-files/models/data-file-type';
 import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { SourcesState } from '../../sources.state';
 import { centroidPsf } from '../../models/centroider';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { HduType } from '../../../data-files/models/data-file-type';
+import { IImageData } from '../../../data-files/models/image-data';
+import { ApertureMarker, CircleMarker, MarkerType, RectangleMarker, TeardropMarker } from '../../models/marker';
+import { round } from '../../../utils/math';
 
 @Component({
   selector: 'app-photometry-panel',
@@ -86,9 +96,16 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
   styleUrls: ['./photometry-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PhotometryPageComponent
-  extends ToolPanelBaseComponent
-  implements AfterViewInit, OnDestroy, OnChanges, OnInit {
+export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
   @Input('hduIds')
   set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
@@ -98,6 +115,13 @@ export class PhotometryPageComponent
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  viewportSize$: Observable<{ width: number; height: number }>;
+  file$: Observable<DataFile>;
+  hdu$: Observable<IHdu>;
+  imageHdu$: Observable<ImageHdu>;
+  header$: Observable<Header>;
+  rawImageData$: Observable<IImageData<PixelType>>;
   sources$: Observable<Source[]>;
   state$: Observable<PhotometryPanelState>;
   config$: Observable<PhotometryPanelConfig>;
@@ -124,22 +148,36 @@ export class PhotometryPageComponent
     private dmsPipe: DmsPipe,
     private datePipe: DatePipe,
     private papa: Papa,
-    store: Store,
-    private eventService: ImageViewerEventService
+    private store: Store,
+    private eventService: ImageViewerEventService,
+    private markerService: ImageViewerMarkerService
   ) {
-    super(store);
+    this.viewportSize$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
+    );
 
     this.config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
-    this.state$ = this.workbenchState$.pipe(
-      map((workbenchState) => {
-        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) {
-          // only image HDUs support sonification
-          return null;
-        }
-        return (workbenchState as WorkbenchImageHduState)?.photometryPanelStateId;
-      }),
-      distinctUntilChanged(),
-      switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id))))
+
+    this.state$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)))
+    );
+
+    this.file$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
+    );
+
+    this.hdu$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+    );
+
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+
+    this.header$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
+    );
+
+    this.rawImageData$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getRawImageDataByViewerId(viewerId)))
     );
 
     this.sources$ = combineLatest(
@@ -152,16 +190,16 @@ export class PhotometryPageComponent
         map((config) => config.showSourcesFromAllFiles),
         distinctUntilChanged()
       ),
-      this.hduId$,
+      this.imageHdu$,
       this.header$
     ).pipe(
-      filter(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => header != null),
-      map(([sources, coordMode, showSourcesFromAllFiles, hduId, header]) => {
+      filter(([sources, coordMode, showSourcesFromAllFiles, imageHdu, header]) => header != null),
+      map(([sources, coordMode, showSourcesFromAllFiles, imageHdu, header]) => {
         if (!header) return [];
         if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
         return sources.filter((source) => {
           if (coordMode != source.posType) return false;
-          if (source.hduId == hduId) return true;
+          if (source.hduId == imageHdu?.id) return true;
           if (!showSourcesFromAllFiles) return false;
           let coord = getSourceCoordinates(header, source);
           if (coord == null) return false;
@@ -257,8 +295,11 @@ export class PhotometryPageComponent
       });
 
     this.eventService.imageClickEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-      .subscribe(([$event, state, config, header, imageData]) => {
+      .pipe(
+        takeUntil(this.destroy$),
+        withLatestFrom(this.state$, this.config$, this.imageHdu$, this.header$, this.rawImageData$)
+      )
+      .subscribe(([$event, state, config, imageHdu, header, imageData]) => {
         if (!$event || !imageData) {
           return;
         }
@@ -291,7 +332,7 @@ export class PhotometryPageComponent
               id: null,
               label: null,
               objectId: null,
-              hduId: this.viewer.hduId,
+              hduId: imageHdu.id,
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -310,28 +351,18 @@ export class PhotometryPageComponent
         }
       });
 
-    // this.eventService.dragStartEvent$
-    //   .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-    //   .subscribe(([$event, state, config, header, imageData]) => {
-    //     if (!$event) {
-    //       return;
-    //     }
-    //     if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
-    //       return;
-    //     if (this.viewer.hduId == null) return;
-
-    //     this.store.dispatch(new StartPhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageStart));
-    //   });
-
     this.eventService.mouseDragEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-      .subscribe(([$event, state, config, header, imageData]) => {
+      .pipe(
+        takeUntil(this.destroy$),
+        withLatestFrom(this.state$, this.config$, this.imageHdu$, this.header$, this.rawImageData$)
+      )
+      .subscribe(([$event, state, config, imageHdu, header, imageData]) => {
         if (!$event) {
           return;
         }
         if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
           return;
-        if (this.viewer.hduId == null) return;
+        if (!imageHdu) return;
 
         let region = {
           x: $event.imageStart.x,
@@ -340,21 +371,24 @@ export class PhotometryPageComponent
           height: $event.imageEnd.y - $event.imageStart.y,
         };
 
-        this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(this.viewer.hduId, region));
+        this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(imageHdu.id, region));
       });
 
     this.eventService.mouseDropEvent$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
-      .subscribe(([$event, state, config, header, imageData]) => {
+      .pipe(
+        takeUntil(this.destroy$),
+        withLatestFrom(this.state$, this.config$, this.imageHdu$, this.header$, this.rawImageData$)
+      )
+      .subscribe(([$event, state, config, imageHdu, header, imageData]) => {
         if (!$event) {
           return;
         }
         if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
           return;
-        if (this.viewer.hduId == null) return;
+        if (!imageHdu) return;
 
         this.store.dispatch(
-          new EndPhotometrySourceSelectionRegion(this.viewer.hduId, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
+          new EndPhotometrySourceSelectionRegion(imageHdu.id, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
         );
       });
 
@@ -398,13 +432,173 @@ export class PhotometryPageComponent
       $event.mouseEvent.stopImmediatePropagation();
       $event.mouseEvent.preventDefault();
     });
+
+    /** markers */
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
   }
 
   ngOnInit() {}
 
   ngAfterViewInit() {}
 
-  ngOnChanges() {}
+  ngOnDestroy() {
+    this.markerService.clearMarkers();
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
+
+  private getViewerMarkers(viewerId: string) {
+    let config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
+    let state$ = this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId));
+    let hduId$ = this.imageHdu$.pipe(
+      map((hdu) => hdu?.id),
+      distinctUntilChanged()
+    );
+    let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId));
+    let sources$ = this.store.select(SourcesState.getSources);
+
+    let sourceSelectionRegionMarkers$ = combineLatest(hduId$, state$).pipe(
+      map(([hduId, state]) => {
+        if (!state || !state.markerSelectionRegion) return [];
+        let region = state.markerSelectionRegion;
+        let sourceSelectionMarker: RectangleMarker = {
+          id: `PHOTOMETRY_SOURCE_SELECTION_${hduId}`,
+          x: Math.min(region.x, region.x + region.width),
+          y: Math.min(region.y, region.y + region.height),
+          width: Math.abs(region.width),
+          height: Math.abs(region.height),
+          type: MarkerType.RECTANGLE,
+        };
+        return [sourceSelectionMarker];
+      })
+    );
+
+    let sourceMarkers$ = combineLatest(config$, state$, header$, hduId$, sources$).pipe(
+      map(([config, state, header, hduId, sources]) => {
+        if (!header || !state?.sourcePhotometryData) return [];
+        let sourcePhotometryData = state.sourcePhotometryData;
+        let selectedSourceIds = config.selectedSourceIds;
+        let coordMode = config.coordMode;
+        let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
+        let showSourceLabels = config.showSourceLabels;
+
+        let markers: Array<CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker> = [];
+        let mode = coordMode;
+
+        if (!header.wcs || !header.wcs.isValid()) mode = 'pixel';
+
+        sources.forEach((source) => {
+          if (source.hduId != hduId && !showSourcesFromAllFiles) return;
+          if (source.posType != mode) return;
+          let selected = selectedSourceIds.includes(source.id);
+          let coord = getSourceCoordinates(header, source);
+
+          if (coord == null) {
+            return;
+          }
+
+          let photData = sourcePhotometryData[source.id];
+          if (photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
+            let tooltipMessage = [];
+            if (photData.raHours !== null && photData.decDegs !== null) {
+              tooltipMessage.push(
+                `RA,DEC: (${formatDms(photData.raHours, 2, 3)}, ${formatDms(photData.decDegs, 2, 3)})`
+              );
+            }
+            if (photData.x !== null && photData.y !== null) {
+              tooltipMessage.push(`X,Y: (${round(photData.x, 3)}, ${round(photData.y, 3)})`);
+            }
+
+            if (photData.mag !== null && photData.magError !== null) {
+              tooltipMessage.push(`${round(photData.mag, 3)} +/- ${round(photData.magError, 3)} mag`);
+            }
+
+            let apertureMarker: ApertureMarker = {
+              id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+              type: MarkerType.APERTURE,
+              x: photData.x,
+              y: photData.y,
+              apertureA: photData.aperA,
+              apertureB: photData.aperB,
+              apertureTheta: photData.aperTheta,
+              annulusAIn: photData.annulusAIn,
+              annulusBIn: photData.annulusBIn,
+              annulusAOut: photData.annulusAOut,
+              annulusBOut: photData.annulusBOut,
+              labelTheta: 0,
+              labelRadius: Math.max(photData.annulusAOut, photData.annulusBOut) + 15,
+              label: showSourceLabels ? source.label : '',
+              selected: selected,
+              data: { source: source },
+              tooltip: {
+                class: 'photometry-data-tooltip',
+                message: tooltipMessage.join('\n'),
+                showDelay: 500,
+                hideDelay: null,
+              },
+            };
+
+            markers.push(apertureMarker);
+          } else {
+            if (source.pm) {
+              markers.push({
+                id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+                type: MarkerType.TEARDROP,
+                x: coord.x,
+                y: coord.y,
+                radius: 15,
+                labelRadius: 30,
+                labelTheta: 0,
+                label: showSourceLabels ? source.label : '',
+                theta: coord.theta,
+                selected: selected,
+                data: { source: source },
+              } as TeardropMarker);
+            } else {
+              markers.push({
+                id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+                type: MarkerType.CIRCLE,
+                x: coord.x,
+                y: coord.y,
+                radius: 15,
+                labelRadius: 30,
+                labelTheta: 0,
+                label: showSourceLabels ? source.label : '',
+                selected: selected,
+                data: { source: source },
+              } as CircleMarker);
+            }
+          }
+        });
+
+        return markers;
+      })
+    );
+
+    return combineLatest(sourceSelectionRegionMarkers$, sourceMarkers$).pipe(
+      map(([sourceSelectionRegionMarkers, sourceMarkers]) => {
+        return {
+          viewerId: viewerId,
+          markers: sourceMarkers.concat(sourceSelectionRegionMarkers),
+        };
+      })
+    );
+  }
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById(hduId)).pipe(

@@ -159,8 +159,6 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
-  imageTransform$: Observable<Transform>;
-  viewportTransform$: Observable<Transform>;
   imageToViewportTransform$: Observable<Transform>;
   customMarkerPanelState$: Observable<CustomMarkerPanelState>;
   plottingPanelState$: Observable<PlottingPanelState>;
@@ -277,80 +275,24 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     //   }
     // });
 
-    let rawImageDataId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getRawImageDataIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
+    this.rawImageData$ = viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getRawImageDataByViewerId(viewerId)))
+    );
+
+    this.normalizedImageData$ = this.viewer$.pipe(
+      switchMap((viewer) =>
+        viewer.hduId
+          ? this.store.select(WorkbenchState.getHduNormalizedImageDataByViewerId(viewer?.id))
+          : this.store.select(WorkbenchState.getFileNormalizedImageDataByViewerId(viewer?.id))
       )
     );
 
-    this.rawImageData$ = rawImageDataId$.pipe(
-      switchMap((imageDataId) =>
-        this.store
-          .select(DataFilesState.getImageDataById(imageDataId))
-          .pipe(map((imageData) => imageData as IImageData<PixelType>))
-      ),
-      distinctUntilChanged()
-    );
-
-    let normalizedImageDataId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getNormalizedImageDataIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
-    );
-
-    this.normalizedImageData$ = normalizedImageDataId$.pipe(
-      switchMap((imageDataId) =>
-        this.store
-          .select(DataFilesState.getImageDataById(imageDataId))
-          .pipe(map((imageData) => imageData as IImageData<Uint32Array>))
-      ),
-      distinctUntilChanged()
-    );
-
-    let viewportTransformId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
-    );
-
-    this.viewportTransform$ = viewportTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
-      distinctUntilChanged()
-    );
-
-    let imageTransformId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
-    );
-
-    this.imageTransform$ = imageTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
-      distinctUntilChanged()
-    );
-
-    this.imageToViewportTransform$ = combineLatest(this.imageTransform$, this.viewportTransform$).pipe(
-      map(([imageTransform, viewportTransform]) => {
-        if (!imageTransform || !viewportTransform) {
-          return null;
-        }
-        return getImageToViewportTransform(viewportTransform, imageTransform);
-      })
+    this.imageToViewportTransform$ = this.viewer$.pipe(
+      switchMap((viewer) =>
+        viewer.hduId
+          ? this.store.select(WorkbenchState.getHduImageToViewportTransformByViewerId(viewer?.id))
+          : this.store.select(WorkbenchState.getFileImageToViewportTransformByViewerId(viewer?.id))
+      )
     );
 
     // let customMarkerPanelStateId$ = viewerId$.pipe(
@@ -428,151 +370,11 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
                 return [];
               }
 
-              let region = state.regionHistory[state.regionHistoryIndex];
-              let regionMode = state.regionMode;
-              let progressLine = state.progressLine;
-              let markers: Array<RectangleMarker | LineMarker> = [];
-              if (region && regionMode == SonifierRegionMode.CUSTOM)
-                markers.push({
-                  id: `SONIFICATION_REGION_${this.viewer.id}`,
-                  type: MarkerType.RECTANGLE,
-                  ...region,
-                } as RectangleMarker);
-              if (progressLine)
-                markers.push({
-                  id: `SONIFICATION_PROGRESS_${this.viewer.id}`,
-                  type: MarkerType.LINE,
-                  ...progressLine,
-                } as LineMarker);
-              return markers;
+              return [];
             })
           );
         } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
-          let sourceSelectionRegionMarkers$ = combineLatest(this.selectedHduId$, photometryPanelState$).pipe(
-            map(([hduId, state]) => {
-              if (!state || !state.markerSelectionRegion) return [];
-              let region = state.markerSelectionRegion;
-              let sourceSelectionMarker: RectangleMarker = {
-                id: `PHOTOMETRY_SOURCE_SELECTION_${hduId}`,
-                x: Math.min(region.x, region.x + region.width),
-                y: Math.min(region.y, region.y + region.height),
-                width: Math.abs(region.width),
-                height: Math.abs(region.height),
-                type: MarkerType.RECTANGLE,
-              };
-              return [sourceSelectionMarker];
-            })
-          );
-          let sourceMarkers$ = combineLatest(
-            this.selectedHduId$,
-            this.firstHeader$,
-            this.store.select(WorkbenchState.getPhotometryPanelConfig),
-            this.store.select(SourcesState.getSources),
-            sourcePhotometryData$
-          ).pipe(
-            map(([hduId, header, config, sources, sourcePhotometryData]) => {
-              if (!header || !sourcePhotometryData) return [];
-
-              let selectedSourceIds = config.selectedSourceIds;
-              let coordMode = config.coordMode;
-              let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
-              let showSourceLabels = config.showSourceLabels;
-
-              let markers: Array<CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker> = [];
-              let mode = coordMode;
-
-              if (!header.wcs || !header.wcs.isValid()) mode = 'pixel';
-
-              sources.forEach((source) => {
-                if (source.hduId != hduId && !showSourcesFromAllFiles) return;
-                if (source.posType != mode) return;
-                let selected = selectedSourceIds.includes(source.id);
-                let coord = getSourceCoordinates(header, source);
-
-                if (coord == null) {
-                  return;
-                }
-
-                let photData = sourcePhotometryData[source.id];
-                if (photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
-                  let tooltipMessage = [];
-                  if (photData.raHours !== null && photData.decDegs !== null) {
-                    tooltipMessage.push(
-                      `RA,DEC: (${formatDms(photData.raHours, 2, 3)}, ${formatDms(photData.decDegs, 2, 3)})`
-                    );
-                  }
-                  if (photData.x !== null && photData.y !== null) {
-                    tooltipMessage.push(`X,Y: (${round(photData.x, 3)}, ${round(photData.y, 3)})`);
-                  }
-
-                  if (photData.mag !== null && photData.magError !== null) {
-                    tooltipMessage.push(`${round(photData.mag, 3)} +/- ${round(photData.magError, 3)} mag`);
-                  }
-
-                  let apertureMarker: ApertureMarker = {
-                    id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                    type: MarkerType.APERTURE,
-                    x: photData.x,
-                    y: photData.y,
-                    apertureA: photData.aperA,
-                    apertureB: photData.aperB,
-                    apertureTheta: photData.aperTheta,
-                    annulusAIn: photData.annulusAIn,
-                    annulusBIn: photData.annulusBIn,
-                    annulusAOut: photData.annulusAOut,
-                    annulusBOut: photData.annulusBOut,
-                    labelTheta: 0,
-                    labelRadius: Math.max(photData.annulusAOut, photData.annulusBOut) + 15,
-                    label: showSourceLabels ? source.label : '',
-                    selected: selected,
-                    data: { source: source },
-                    tooltip: {
-                      class: 'photometry-data-tooltip',
-                      message: tooltipMessage.join('\n'),
-                      showDelay: 500,
-                      hideDelay: null,
-                    },
-                  };
-
-                  markers.push(apertureMarker);
-                } else {
-                  if (source.pm) {
-                    markers.push({
-                      id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                      type: MarkerType.TEARDROP,
-                      x: coord.x,
-                      y: coord.y,
-                      radius: 15,
-                      labelRadius: 30,
-                      labelTheta: 0,
-                      label: showSourceLabels ? source.label : '',
-                      theta: coord.theta,
-                      selected: selected,
-                      data: { source: source },
-                    } as TeardropMarker);
-                  } else {
-                    markers.push({
-                      id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                      type: MarkerType.CIRCLE,
-                      x: coord.x,
-                      y: coord.y,
-                      radius: 15,
-                      labelRadius: 30,
-                      labelTheta: 0,
-                      label: showSourceLabels ? source.label : '',
-                      selected: selected,
-                      data: { source: source },
-                    } as CircleMarker);
-                  }
-                }
-              });
-              return markers;
-            })
-          );
-
-          return combineLatest(sourceSelectionRegionMarkers$, sourceMarkers$).pipe(
-            map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
-          );
+          return of([]);
         }
 
         return of([]);
@@ -673,22 +475,21 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
-    );
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-      this.viewer.id
-    );
 
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) {
+    let normalizedImageData = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
+    );
+    let imageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(this.viewer.id));
+    let viewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(this.viewer.id));
+
+    if (!this.viewer.viewportSize || !normalizedImageData || !imageTransform || !viewportTransform) {
       return;
     }
     this.store.dispatch(
       new MoveBy(
-        normalizedImageDataId,
-        imageTransformId,
-        viewportTransformId,
+        normalizedImageData.id,
+        imageTransform.id,
+        viewportTransform.id,
         this.viewer.viewportSize,
         $event.xShift,
         $event.yShift
@@ -700,19 +501,21 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
+    let normalizedImageData = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
     );
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-      this.viewer.id
-    );
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
+    let imageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(this.viewer.id));
+    let viewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(this.viewer.id));
+
+    if (!this.viewer.viewportSize || !normalizedImageData || !imageTransform || !viewportTransform) {
+      return;
+    }
+
     this.store.dispatch(
       new ZoomBy(
-        normalizedImageDataId,
-        imageTransformId,
-        viewportTransformId,
+        normalizedImageData.id,
+        imageTransform.id,
+        viewportTransform.id,
         this.viewer.viewportSize,
         $event.factor,
         $event.anchor
@@ -724,20 +527,21 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
+    let normalizedImageData = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
     );
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-      this.viewer.id
-    );
+    let imageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(this.viewer.id));
+    let viewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(this.viewer.id));
 
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
+    if (!this.viewer.viewportSize || !normalizedImageData || !imageTransform || !viewportTransform) {
+      return;
+    }
+
     this.store.dispatch(
       new ZoomTo(
-        normalizedImageDataId,
-        imageTransformId,
-        viewportTransformId,
+        normalizedImageData.id,
+        imageTransform.id,
+        viewportTransform.id,
         this.viewer.viewportSize,
         $event.factor,
         $event.anchor
@@ -749,21 +553,20 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     if (!this.viewer) {
       return;
     }
-    let normalizedImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataIdFromViewerId)(
-      this.viewer.id
+    let normalizedImageData = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
     );
-    let normalizedImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[normalizedImageDataId];
-    let imageTransformId = this.store.selectSnapshot(WorkbenchState.getImageTransformIdFromViewerId)(this.viewer.id);
-    let viewportTransformId = this.store.selectSnapshot(WorkbenchState.getViewportTransformIdFromViewerId)(
-      this.viewer.id
-    );
+    let imageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(this.viewer.id));
+    let viewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(this.viewer.id));
 
-    if (!this.viewer.viewportSize || !normalizedImageDataId || !imageTransformId || !viewportTransformId) return;
+    if (!this.viewer.viewportSize || !normalizedImageData || !imageTransform || !viewportTransform) {
+      return;
+    }
     this.store.dispatch(
       new CenterRegionInViewport(
-        normalizedImageDataId,
-        imageTransformId,
-        viewportTransformId,
+        normalizedImageData.id,
+        imageTransform.id,
+        viewportTransform.id,
         this.viewer.viewportSize,
         {
           x: 1,
