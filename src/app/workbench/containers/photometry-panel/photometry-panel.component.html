@@ -349,7 +349,7 @@
         <hr />
         <div>
           <div *ngIf="hduIds">
-            <p i18n>Use batch photometry to photometer all of your sources in multiple hdus.</p>
+            <p i18n>Use batch photometry to photometer all of your sources in multiple HDUs.</p>
             <form [formGroup]="batchPhotForm">
               <div>
                 <mat-form-field appearance="outline" style="width: 300px">
@@ -361,11 +361,21 @@
                   </mat-select>
                 </mat-form-field>
 
-                <button mat-icon-button (click)="selectHdus(hduIds)">
+                <button
+                  mat-icon-button
+                  (click)="selectHdus(hduIds)"
+                  aria-label="Select all HDUs"
+                  matTooltip="Select all HDUs"
+                >
                   <mat-icon>select_all</mat-icon>
                 </button>
 
-                <button mat-icon-button (click)="selectHdus([])">
+                <button
+                  mat-icon-button
+                  (click)="selectHdus([])"
+                  aria-label="Clear Selection"
+                  matTooltip="Clear Selection"
+                >
                   <mat-icon>clear</mat-icon>
                 </button>
                 <button
@@ -374,6 +384,8 @@
                   color="primary"
                   (click)="batchPhotometer(sources, config)"
                   [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0"
+                  aria-label="Batch Photometer"
+                  matTooltip="Batch Photometer"
                 >
                   <mat-icon>wb_incandescent</mat-icon>
                 </button>
