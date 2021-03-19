@@ -47,8 +47,8 @@ import {
 } from '../../../data-files/models/data-file';
 import { DmsPipe } from '../../../pipes/dms.pipe';
 import { PhotometryPanelState } from '../../models/photometry-file-state';
-import { PhotSettingsDialogComponent } from '../phot-settings-dialog/phot-settings-dialog.component';
-import { SourceExtractionDialogComponent } from '../source-extraction-dialog/source-extraction-dialog.component';
+import { PhotSettingsDialogComponent } from '../../components/phot-settings-dialog/phot-settings-dialog.component';
+import { SourceExtractionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 import { Source, PosType } from '../../models/source';
 import { PhotometryPanelConfig, BatchPhotometryFormData } from '../../models/workbench-state';
 import { SelectionModel } from '@angular/cdk/collections';

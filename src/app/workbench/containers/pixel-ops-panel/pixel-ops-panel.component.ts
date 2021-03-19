@@ -12,7 +12,7 @@ import {
 } from '../../models/workbench-state';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTabChangeEvent } from '@angular/material/tabs';
-import { PixelOpsJobsDialogComponent } from '../pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
+import { PixelOpsJobsDialogComponent } from '../../components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';

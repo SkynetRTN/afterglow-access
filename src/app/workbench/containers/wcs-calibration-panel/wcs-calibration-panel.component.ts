@@ -29,7 +29,7 @@ import {
   UpdateWcsCalibrationSettings,
 } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
-import { SourceExtractionDialogComponent } from '../source-extraction-dialog/source-extraction-dialog.component';
+import { SourceExtractionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 
 @Component({
   selector: 'app-wcs-calibration-panel',

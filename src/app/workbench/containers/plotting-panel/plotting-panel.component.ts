@@ -25,11 +25,11 @@ import {
   IHdu,
 } from '../../../data-files/models/data-file';
 import { PlottingPanelState } from '../../models/plotter-file-state';
-import { PlotterComponent } from '../plotter/plotter.component';
+import { PlotterComponent } from '../../components/plotter/plotter.component';
 import { PlottingPanelConfig } from '../../models/workbench-state';
 import { PosType } from '../../models/source';
 import { Router } from '@angular/router';
-import { MarkerMouseEvent } from '../image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { MarkerMouseEvent } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Store, Actions } from '@ngxs/store';
 import { IImageData } from '../../../data-files/models/image-data';
 import { MatCheckboxChange } from '@angular/material/checkbox';
