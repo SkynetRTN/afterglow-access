@@ -230,7 +230,7 @@ export class PlottingPanelComponent extends ToolPanelBaseComponent implements On
           return;
         }
         if ($event.viewer.hduId) {
-          header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId)($event.viewer.hduId);
+          header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId($event.viewer.hduId));
         }
 
         let measuring = state.measuring;

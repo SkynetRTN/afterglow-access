@@ -23,7 +23,7 @@ import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
 import { CustomMarkerPanelConfig } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, merge } from 'rxjs';
 import { DataFile, ImageHdu, IHdu } from '../../../data-files/models/data-file';
 import { MatSelectChange } from '@angular/material/select';
 import { HduType } from '../../../data-files/models/data-file-type';
@@ -44,6 +44,7 @@ import {
 } from '../../workbench.actions';
 import { centroidDisk, centroidPsf } from '../../models/centroider';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 
 @Component({
   selector: 'app-custom-marker-panel',
@@ -63,19 +64,33 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
   shortcuts: ShortcutInput[] = [];
   @ViewChild(KeyboardShortcutsComponent) private keyboard: KeyboardShortcutsComponent;
 
-  constructor(store: Store, private eventService: ImageViewerEventService) {
+  constructor(
+    store: Store,
+    private eventService: ImageViewerEventService,
+    private markerService: ImageViewerMarkerService
+  ) {
     super(store);
 
-    this.state$ = combineLatest(this.fileState$, this.hduState$).pipe(
-      map(([fileState, hduState]) => {
-        if (hduState && hduState.hduType != HduType.IMAGE) {
-          // only image HDUs support custom markers
-          return null;
-        }
-        return (hduState as WorkbenchImageHduState)?.customMarkerPanelStateId || fileState?.customMarkerPanelStateId;
-      }),
-      distinctUntilChanged(),
-      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id))))
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        console.log('UPDATING MARKERS: ', v);
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
+
+    this.state$ = this.viewer$.pipe(
+      switchMap((viewer) => this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewer?.id)))
     );
 
     this.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => (this.state = state));
@@ -171,7 +186,7 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
         }
       });
 
-    this.eventService.dragEvent$
+    this.eventService.mouseDragEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event) {
@@ -191,7 +206,7 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
         this.store.dispatch(new UpdateCustomMarkerSelectionRegion(this.viewer.hduId, region));
       });
 
-    this.eventService.dropEvent$
+    this.eventService.mouseDropEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event) {
@@ -205,6 +220,39 @@ export class CustomMarkerPanelComponent extends ToolPanelBaseComponent implement
           new EndCustomMarkerSelectionRegion(this.viewer.hduId, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
         );
       });
+  }
+
+  private getViewerMarkers(viewerId: string) {
+    let state$ = this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewerId));
+
+    let regionSelectionMarkers$: Observable<Marker[]> = state$.pipe(
+      map((state) => state?.markerSelectionRegion),
+      distinctUntilChanged(),
+      map((region) => {
+        if (!region) return [];
+
+        let sourceSelectionMarker: RectangleMarker = {
+          id: `MARKER_SELECTION_REGION`,
+          x: Math.min(region.x, region.x + region.width),
+          y: Math.min(region.y, region.y + region.height),
+          width: Math.abs(region.width),
+          height: Math.abs(region.height),
+          type: MarkerType.RECTANGLE,
+        };
+        return [sourceSelectionMarker];
+      })
+    );
+
+    let customMarkers$ = state$.pipe(map((state) => (state ? Object.values(state.markerEntities) : [])));
+
+    return combineLatest([regionSelectionMarkers$, customMarkers$]).pipe(
+      map(([regionSelectionMarkers, customMarkers]) => {
+        return {
+          viewerId: viewerId,
+          markers: regionSelectionMarkers.concat(customMarkers),
+        };
+      })
+    );
   }
 
   selectCustomMarkers(fileId: string, customMarkers: Marker[]) {

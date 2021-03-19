@@ -95,6 +95,7 @@ import { formatDms } from '../../../utils/skynet-astro';
 // @ts-ignore
 import * as piexif from 'piexifjs';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -194,24 +195,18 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     private store: Store,
     private sanitization: DomSanitizer,
     private papa: Papa,
-    private viewerEventService: ImageViewerEventService
+    private eventService: ImageViewerEventService,
+    private markerService: ImageViewerMarkerService
   ) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
-    let viewerId$ = this.viewer$.pipe(
-      map((viewer) => (viewer ? viewer.id : null)),
-      distinctUntilChanged()
-    );
+    let viewerId$ = this.viewer$.pipe(map((viewer) => (viewer ? viewer.id : null)));
 
-    this.selectedHduId$ = this.viewer$.pipe(
-      map((viewer) => (viewer ? viewer.hduId : null)),
-      distinctUntilChanged()
-    );
+    this.markers$ = viewerId$.pipe(switchMap((viewerId) => this.markerService.getMarkerStream(viewerId)));
 
-    this.file$ = this.viewer$.pipe(
-      switchMap((viewer) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(viewer.fileId)))),
-      distinctUntilChanged()
-    );
+    this.selectedHduId$ = this.viewer$.pipe(map((viewer) => (viewer ? viewer.hduId : null)));
+
+    this.file$ = this.viewer$.pipe(switchMap((viewer) => this.store.select(DataFilesState.getFileById(viewer.fileId))));
 
     this.hduIds$ = this.file$.pipe(
       map((file) => file.hduIds),
@@ -220,9 +215,9 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.hdus$ = this.hduIds$.pipe(
       switchMap((hduIds) => {
-        return combineLatest(
-          hduIds.map((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
-        ).pipe(map((hdus) => hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[]));
+        return combineLatest(hduIds.map((hduId) => this.store.select(DataFilesState.getHduById(hduId)))).pipe(
+          map((hdus) => hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[])
+        );
       })
     );
 
@@ -233,9 +228,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.headers$ = this.headerIds$.pipe(
       switchMap((headerIds) => {
-        return combineLatest(
-          headerIds.map((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
-        );
+        return combineLatest(headerIds.map((headerId) => this.store.select(DataFilesState.getHeaderById(headerId))));
       })
     );
 
@@ -295,7 +288,9 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.rawImageData$ = rawImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<PixelType>))
+        this.store
+          .select(DataFilesState.getImageDataById(imageDataId))
+          .pipe(map((imageData) => imageData as IImageData<PixelType>))
       ),
       distinctUntilChanged()
     );
@@ -312,7 +307,9 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
 
     this.normalizedImageData$ = normalizedImageDataId$.pipe(
       switchMap((imageDataId) =>
-        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId) as IImageData<Uint32Array>))
+        this.store
+          .select(DataFilesState.getImageDataById(imageDataId))
+          .pipe(map((imageData) => imageData as IImageData<Uint32Array>))
       ),
       distinctUntilChanged()
     );
@@ -328,7 +325,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.viewportTransform$ = viewportTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
       distinctUntilChanged()
     );
 
@@ -343,7 +340,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     );
 
     this.imageTransform$ = imageTransformId$.pipe(
-      switchMap((transformId) => this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))),
+      switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
       distinctUntilChanged()
     );
 
@@ -356,20 +353,20 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       })
     );
 
-    let customMarkerPanelStateId$ = viewerId$.pipe(
-      switchMap((viewerId) =>
-        this.store.select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId).pipe(
-          map((fn) => fn(viewerId)),
-          distinctUntilChanged()
-        )
-      ),
-      distinctUntilChanged()
-    );
+    // let customMarkerPanelStateId$ = viewerId$.pipe(
+    //   switchMap((viewerId) =>
+    //     this.store.select(WorkbenchState.getCustomMarkerPanelStateIdFromViewerId).pipe(
+    //       map((fn) => fn(viewerId)),
+    //       distinctUntilChanged()
+    //     )
+    //   ),
+    //   distinctUntilChanged()
+    // );
 
-    this.customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
-      distinctUntilChanged()
-    );
+    // this.customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
+    //   switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
+    //   distinctUntilChanged()
+    // );
 
     let plottingPanelStateId$ = viewerId$.pipe(
       switchMap((viewerId) =>
@@ -411,10 +408,10 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       distinctUntilChanged()
     );
 
-    let customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
-      switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
-      distinctUntilChanged()
-    );
+    // let customMarkerPanelState$ = customMarkerPanelStateId$.pipe(
+    //   switchMap((id) => this.store.select(WorkbenchState.getCustomMarkerPanelStateById).pipe(map((fn) => fn(id)))),
+    //   distinctUntilChanged()
+    // );
 
     let photometryPanelState$ = photometryPanelStateId$.pipe(
       switchMap((id) => this.store.select(WorkbenchState.getPhotometryPanelStateById).pipe(map((fn) => fn(id)))),
@@ -429,30 +426,28 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
     this.sources$ = this.store.select(SourcesState.getSources);
 
-    this.markers$ = this.activeTool$.pipe(
+    let test$ = this.activeTool$.pipe(
       switchMap((activeTool) => {
         if (activeTool == WorkbenchTool.CUSTOM_MARKER) {
-          let markerSelectionRegionMarkers$ = combineLatest(this.selectedHduId$, customMarkerPanelState$).pipe(
-            map(([hduId, state]) => {
-              if (!state || !state.markerSelectionRegion) return [];
-              let region = state.markerSelectionRegion;
-              let sourceSelectionMarker: RectangleMarker = {
-                id: `MARKER_SELECTION_${hduId}`,
-                x: Math.min(region.x, region.x + region.width),
-                y: Math.min(region.y, region.y + region.height),
-                width: Math.abs(region.width),
-                height: Math.abs(region.height),
-                type: MarkerType.RECTANGLE,
-              };
-              return [sourceSelectionMarker];
-            })
-          );
-
-          let markers$ = this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
-
-          return combineLatest(markerSelectionRegionMarkers$, markers$).pipe(
-            map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
-          );
+          // let markerSelectionRegionMarkers$ = combineLatest(this.selectedHduId$, customMarkerPanelState$).pipe(
+          //   map(([hduId, state]) => {
+          //     if (!state || !state.markerSelectionRegion) return [];
+          //     let region = state.markerSelectionRegion;
+          //     let sourceSelectionMarker: RectangleMarker = {
+          //       id: `MARKER_SELECTION_${hduId}`,
+          //       x: Math.min(region.x, region.x + region.width),
+          //       y: Math.min(region.y, region.y + region.height),
+          //       width: Math.abs(region.width),
+          //       height: Math.abs(region.height),
+          //       type: MarkerType.RECTANGLE,
+          //     };
+          //     return [sourceSelectionMarker];
+          //   })
+          // );
+          // let markers$ = this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
+          // return combineLatest(markerSelectionRegionMarkers$, markers$).pipe(
+          //   map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
+          // );
         } else if (activeTool == WorkbenchTool.PLOTTER) {
           return combineLatest(
             this.firstHeader$,
@@ -707,7 +702,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.viewerEventService.mouseMoveEvent$.next({
+    this.eventService.mouseMoveEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
@@ -723,7 +718,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.viewerEventService.mouseDownEvent$.next({
+    this.eventService.mouseDownEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
@@ -739,7 +734,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       this.imageMouseY = null;
     }
 
-    this.viewerEventService.mouseUpEvent$.next({
+    this.eventService.mouseUpEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
@@ -747,7 +742,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleImageClick($event: CanvasMouseEvent) {
-    this.viewerEventService.imageClickEvent$.next({
+    this.eventService.imageClickEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
@@ -755,15 +750,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleMarkerClick($event: MarkerMouseEvent) {
-    this.viewerEventService.markerClickEvent$.next({
-      viewerId: this.viewer.id,
-      viewer: this.viewer,
-      ...$event,
-    });
-  }
-
-  handleImageDragStart($event: CanvasMouseDragEvent) {
-    this.viewerEventService.dragEvent$.next({
+    this.eventService.markerClickEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
@@ -771,15 +758,15 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
   }
 
   handleImageDrag($event: CanvasMouseDragEvent) {
-    this.viewerEventService.dragEvent$.next({
+    this.eventService.mouseDragEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
     });
   }
 
-  handleImageDragEnd($event: CanvasMouseDragEvent) {
-    this.viewerEventService.dropEvent$.next({
+  handleImageDrop($event: CanvasMouseDragEvent) {
+    this.eventService.mouseDropEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,

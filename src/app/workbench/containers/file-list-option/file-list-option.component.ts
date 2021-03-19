@@ -111,15 +111,11 @@ export class FileListOptionComponent implements OnInit {
 
   constructor(private store: Store, private _changeDetector: ChangeDetectorRef) {
     this.file$ = this.fileId$.pipe(
-      switchMap((fileId) =>
-        !fileId ? of(null) : this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId)))
-      )
+      switchMap((fileId) => (!fileId ? of(null) : this.store.select(DataFilesState.getFileById(fileId))))
     );
 
     this.hdu$ = this.hduId$.pipe(
-      switchMap((hduId) =>
-        !hduId ? of(null) : this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId)))
-      )
+      switchMap((hduId) => (!hduId ? of(null) : this.store.select(DataFilesState.getHduById(hduId))))
     );
 
     this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu?.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
@@ -131,10 +127,7 @@ export class FileListOptionComponent implements OnInit {
         if (!hduIds) return of([]);
         return combineLatest(
           hduIds.map((hduId) => {
-            return this.store.select(DataFilesState.getHduById).pipe(
-              map((fn) => fn(hduId)),
-              filter((hdu) => hdu != null)
-            );
+            return this.store.select(DataFilesState.getHduById(hduId)).pipe(filter((hdu) => hdu != null));
           })
         ).pipe(map((hdus) => hdus.sort((a, b) => (a.order > b.order ? 1 : -1))));
       })

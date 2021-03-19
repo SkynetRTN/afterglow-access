@@ -66,6 +66,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/svg-outlined-ellipse.component';
 import { ImageViewerEventService } from './services/image-viewer-event.service';
 import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
+import { ImageViewerMarkerService } from './services/image-viewer-marker.service';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -153,6 +154,7 @@ export class WorkbenchModule {
         AfterglowCatalogService,
         AfterglowFieldCalService,
         ImageViewerEventService,
+        ImageViewerMarkerService,
       ],
     };
   }

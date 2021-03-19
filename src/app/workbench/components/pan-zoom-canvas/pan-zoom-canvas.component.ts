@@ -118,8 +118,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   @Output() onImageMouseDown = new EventEmitter<CanvasMouseEvent>();
   @Output() onImageMouseUp = new EventEmitter<CanvasMouseEvent>();
   @Output() onImageMouseMove = new EventEmitter<CanvasMouseEvent>();
-  @Output() onImageMouseDragStart = new EventEmitter<CanvasMouseDragEvent>();
-  @Output() onImageMouseDragEnd = new EventEmitter<CanvasMouseDragEvent>();
+  @Output() onImageMouseDrop = new EventEmitter<CanvasMouseDragEvent>();
   @Output() onImageMouseDrag = new EventEmitter<CanvasMouseDragEvent>();
   @Output() onImageClick = new EventEmitter<CanvasMouseEvent>();
 
@@ -473,8 +472,6 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
     this.mouseDragVector.bottomRight = new Point(viewportCoord.x, viewportCoord.y);
 
-    let imageDragStart = this.viewportCoordToImageCoord(this.mouseDragVector.topLeft);
-
     this.sumPixelsMoved += this.mouseDragVector.topLeft.getDistance(this.mouseDragVector.bottomRight);
     let modifierPressed = ['shiftKey', 'altKey', 'metaKey', 'ctrlKey'].some(
       (key) => this.$dragStartMouseDownEvent[key]
@@ -493,7 +490,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
     if (!this.dragging) {
       if (this.sumPixelsMoved > this.maxDeltaBeforeMove) {
-        this.onImageMouseDragStart.emit({
+        this.onImageMouseDrag.emit({
           $mouseDownEvent: this.$dragStartMouseDownEvent,
           $mouseMoveEvent: $event,
           $mouseUpEvent: null,
@@ -546,7 +543,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       let imageStart = this.viewportCoordToImageCoord(viewportStart);
       let imageEnd = this.viewportCoordToImageCoord(viewportEnd);
 
-      this.onImageMouseDragEnd.emit({
+      this.onImageMouseDrop.emit({
         $mouseDownEvent: this.$dragStartMouseDownEvent,
         $mouseMoveEvent: null,
         $mouseUpEvent: $event,

@@ -78,7 +78,7 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
 
   selectFile(fileId: string, hduId: string, keepOpen: boolean) {
     if (!hduId) {
-      let file = this.store.selectSnapshot(DataFilesState.getFileById)(fileId);
+      let file = this.store.selectSnapshot(DataFilesState.getFileById(fileId));
       if (file && file.hduIds.length == 1) {
         //if a single-hdu file is selected,  automatically select the hdu
         hduId = file.hduIds[0];
@@ -105,7 +105,6 @@ export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit 
   }
 
   onChannelDrop($event: CdkDragDrop<IHdu[]>) {
-    console.log('DROPPPED!!!!!!!!!!: ', $event);
     return;
 
     let hdus = $event.container.data;

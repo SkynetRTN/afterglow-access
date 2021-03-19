@@ -117,8 +117,8 @@ export class StackerPanelComponent implements OnInit {
   }
 
   getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)?.name),
+    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
+      map((hdu) => hdu?.name),
       distinctUntilChanged()
     );
   }

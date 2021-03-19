@@ -14,8 +14,8 @@ export class ImageViewerEventService {
   mouseDownEvent$ = new Subject<ViewerCanvasMouseEvent>();
   mouseMoveEvent$ = new Subject<ViewerCanvasMouseEvent>();
   imageClickEvent$ = new Subject<ViewerCanvasMouseEvent>();
-  dragEvent$ = new Subject<ViewerCanvasMouseDragEvent>();
-  dropEvent$ = new Subject<ViewerCanvasMouseDragEvent>();
+  mouseDragEvent$ = new Subject<ViewerCanvasMouseDragEvent>();
+  mouseDropEvent$ = new Subject<ViewerCanvasMouseDragEvent>();
   markerClickEvent$ = new Subject<ViewerMarkerMouseEvent>();
 
   constructor() {}

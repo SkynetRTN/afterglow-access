@@ -314,8 +314,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
 
   getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)?.name),
+    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
+      map((hdu) => hdu?.name),
       distinctUntilChanged()
     );
   }

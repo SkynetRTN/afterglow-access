@@ -104,15 +104,11 @@ export class SonificationPanelComponent
     });
 
     this.viewportTransform$ = this.imageHdu$.pipe(
-      switchMap((hdu) =>
-        this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(hdu?.viewportTransformId)))
-      )
+      switchMap((hdu) => this.store.select(DataFilesState.getTransformById(hdu?.viewportTransformId)))
     );
 
     this.imageTransform$ = this.imageHdu$.pipe(
-      switchMap((hdu) =>
-        this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(hdu?.imageTransformId)))
-      )
+      switchMap((hdu) => this.store.select(DataFilesState.getTransformById(hdu?.imageTransformId)))
     );
 
     this.imageToViewportTransform$ = combineLatest(this.viewportTransform$, this.imageTransform$).pipe(
@@ -509,8 +505,8 @@ export class SonificationPanelComponent
   resetRegionSelection() {
     // let region = this.lastSonifierStateConfig.region;
     // this.store.dispatch(new workbenchActions.ClearSonifierRegionHistory({file: this.lastImageFile}));
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(this.viewer?.hduId);
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderById)(hdu.headerId);
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer?.hduId));
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(hdu.headerId));
     if (!hdu || !header) return;
 
     this.store.dispatch(
@@ -540,7 +536,7 @@ export class SonificationPanelComponent
   }
 
   setDuration(value: number) {
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(this.viewer?.hduId);
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer?.hduId));
     this.store.dispatch(new UpdateSonifierFileState(this.viewer.hduId, { duration: value }));
   }
 

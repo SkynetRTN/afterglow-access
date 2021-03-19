@@ -73,9 +73,7 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
       distinctUntilChanged()
     );
 
-    this.file$ = this.fileId$.pipe(
-      switchMap((fileId) => this.store.select(DataFilesState.getFileById).pipe(map((fn) => fn(fileId))))
-    );
+    this.file$ = this.fileId$.pipe(switchMap((fileId) => this.store.select(DataFilesState.getFileById(fileId))));
 
     // this.hdus$ = this.file$.pipe(
     //   map(file => file.hduIds),
@@ -96,9 +94,7 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
       distinctUntilChanged()
     );
 
-    this.hdu$ = this.hduId$.pipe(
-      switchMap((hduId) => this.store.select(DataFilesState.getHduById).pipe(map((fn) => fn(hduId))))
-    );
+    this.hdu$ = this.hduId$.pipe(switchMap((hduId) => this.store.select(DataFilesState.getHduById(hduId))));
 
     this.headerId$ = this.hdu$.pipe(
       map((hdu) => hdu?.headerId || null),
@@ -106,7 +102,7 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
     );
 
     this.header$ = this.headerId$.pipe(
-      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId))))
+      switchMap((headerId) => this.store.select(DataFilesState.getHeaderById(headerId)))
     );
 
     this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
@@ -124,14 +120,16 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
     this.rawImageData$ = combineLatest(this.file$, this.imageHdu$).pipe(
       map(([file, hdu]) => hdu?.rawImageDataId || null),
       distinctUntilChanged(),
-      switchMap((id) => this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(id))))
+      switchMap((id) => this.store.select(DataFilesState.getImageDataById(id)))
     );
 
     this.normalizedImageData$ = combineLatest(this.file$, this.imageHdu$).pipe(
       map(([file, hdu]) => (hdu ? hdu.imageDataId : file?.imageDataId)),
       distinctUntilChanged(),
       switchMap((id) =>
-        this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(id) as IImageData<Uint32Array>))
+        this.store
+          .select(DataFilesState.getImageDataById(id))
+          .pipe(map((imageData) => imageData as IImageData<Uint32Array>))
       )
     );
 

@@ -196,7 +196,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       );
 
     this.filteredHdus$ = this.filteredHduIds$.pipe(
-      switchMap((hduIds) => this.store.select(DataFilesState.getHdusByIds).pipe(map((fn) => fn(hduIds))))
+      switchMap((hduIds) => this.store.select(DataFilesState.getHdusByIds(hduIds)))
     );
 
     this.filteredImageHdus$ = this.filteredHdus$.pipe(
@@ -227,27 +227,16 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
 
-          let refFileHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            tap((v) => console.log('REF FILE HEADER CHANGED: ', v))
-          );
+          let refFileHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(focusedViewerId));
 
-          let refHduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            tap((v) => console.log('REF HDU HEADER CHANGED: ', v))
-          );
+          let refHduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(focusedViewerId));
 
-          let refHeader$ = this.store.select(WorkbenchState.getHeaderByViewerId).pipe(
-            map((fn) => fn(focusedViewerId)),
-            tap((v) => console.log('REF HEADER CHANGED: ', v))
-          );
+          let refHeader$ = this.store.select(WorkbenchState.getHeaderByViewerId(focusedViewerId));
 
           let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformIdFromViewerId).pipe(
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
-            switchMap((transformId) =>
-              this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
-            ),
+            switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
             distinctUntilChanged()
             // tap(v => console.log("REF IMAGE TRANSFORM CHANGED"))
           );
@@ -255,9 +244,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformIdFromViewerId).pipe(
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
-            switchMap((transformId) =>
-              this.store.select(DataFilesState.getTransformById).pipe(map((fn) => fn(transformId)))
-            ),
+            switchMap((transformId) => this.store.select(DataFilesState.getTransformById(transformId))),
             distinctUntilChanged()
             // tap(v => console.log("REF VIEWPORT TRANSFORM CHANGED"))
           );
@@ -265,9 +252,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           let refImageData$ = this.store.select(WorkbenchState.getRawImageDataIdFromViewerId).pipe(
             map((fn) => fn(focusedViewerId)),
             distinctUntilChanged(),
-            switchMap((imageDataId) =>
-              this.store.select(DataFilesState.getImageDataById).pipe(map((fn) => fn(imageDataId)))
-            ),
+            switchMap((imageDataId) => this.store.select(DataFilesState.getImageDataById(imageDataId))),
             distinctUntilChanged()
           );
 
@@ -308,15 +293,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
-          let refImageHdu$ = this.store.select(WorkbenchState.getViewerById).pipe(
-            map((fn) => fn(focusedViewerId)),
+          let refImageHdu$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId)).pipe(
             map((viewer) => (viewer ? viewer.hduId : null)),
             distinctUntilChanged(),
             switchMap((hduId) =>
-              this.store.select(DataFilesState.getHduById).pipe(
-                map((fn) => fn(hduId)),
-                map((hdu) => (hdu && hdu.hduType != HduType.IMAGE ? null : (hdu as ImageHdu)))
-              )
+              this.store
+                .select(DataFilesState.getHduById(hduId))
+                .pipe(map((hdu) => (hdu && hdu.hduType != HduType.IMAGE ? null : (hdu as ImageHdu))))
             ),
             distinctUntilChanged()
           );
@@ -622,11 +605,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     let handleZoomKey = (cmd: 'in' | 'out' | 'reset' | 'fit') => {
       let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
       if (!viewer || !viewer.viewportSize || !viewer.hduId) return;
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduById)(viewer.hduId);
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(viewer.hduId));
       if (!hdu || hdu.hduType != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
       let imageDataId = imageHdu.imageDataId;
-      let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById)(imageDataId);
+      let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));
       let imageTransformId = imageHdu.imageTransformId;
       let viewportTransformId = imageHdu.viewportTransformId;
       switch (cmd) {

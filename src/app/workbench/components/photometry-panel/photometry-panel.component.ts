@@ -323,7 +323,7 @@ export class PhotometryPageComponent
     //     this.store.dispatch(new StartPhotometrySourceSelectionRegion(this.viewer.hduId, $event.imageStart));
     //   });
 
-    this.eventService.dragEvent$
+    this.eventService.mouseDragEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event) {
@@ -343,7 +343,7 @@ export class PhotometryPageComponent
         this.store.dispatch(new UpdatePhotometrySourceSelectionRegion(this.viewer.hduId, region));
       });
 
-    this.eventService.dropEvent$
+    this.eventService.mouseDropEvent$
       .pipe(takeUntil(this.destroy$), withLatestFrom(this.state$, this.config$, this.header$, this.rawImageData$))
       .subscribe(([$event, state, config, header, imageData]) => {
         if (!$event) {
@@ -407,8 +407,8 @@ export class PhotometryPageComponent
   ngOnChanges() {}
 
   getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)?.name),
+    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
+      map((hdu) => hdu?.name),
       distinctUntilChanged()
     );
   }

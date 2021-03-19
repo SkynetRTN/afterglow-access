@@ -5,18 +5,14 @@ import {
   EventEmitter,
   Input,
   ViewChild,
-  TemplateRef,
   ViewContainerRef,
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { Observable, combineLatest, fromEvent, BehaviorSubject } from 'rxjs';
-import { map, filter, take, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { isImageViewer, isTableViewer, IViewer } from '../../models/viewer';
 
-import { DataFile, getWidth, getHeight, ImageHdu, IHdu } from '../../../data-files/models/data-file';
-import { CanvasMouseEvent, CanvasMouseDragEvent } from '../../components/pan-zoom-canvas/pan-zoom-canvas.component';
-import { MarkerMouseEvent } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
+import { DataFile, IHdu } from '../../../data-files/models/data-file';
 import { Subscription } from 'rxjs';
 import { ViewMode } from '../../models/view-mode';
 import { Store } from '@ngxs/store';
@@ -26,7 +22,6 @@ import { SetFocusedViewer, CloseViewer, KeepViewerOpen, SplitViewerPanel, MoveVi
 import { MatMenuTrigger } from '@angular/material/menu';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { IWorkbenchHduState } from '../../models/workbench-file-state';
-import { CenterRegionInViewport, ZoomBy } from '../../../data-files/data-files.actions';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
@@ -74,24 +69,13 @@ export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
   @Output() onFileSave = new EventEmitter<string>();
 
   selectedViewerIndex = 0;
-
-  // viewers$: Observable<Viewer[]>;
-  // viewMode$: Observable<ViewMode>;
-  // activeViewerIndex$: Observable<number>;
-
   hduEntities$: Observable<{ [id: string]: IHdu }>;
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   hduStates$: Observable<{ [id: string]: IWorkbenchHduState }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
-  // activeViewerIndex: number;
   mouseDownActiveViewerId: string;
   zoomStepFactor: number = 0.75;
-
-  // private get focusedViewer() {
-  //   let focusedViewerId = this.primaryViewerHasFocus ? this.selectedPrimaryViewerId : this.selectedSecondaryViewerId;
-  //   return this.viewers.find(v => v.viewerId == focusedViewerId);
-  // }
 
   constructor(
     private store: Store,

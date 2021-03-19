@@ -80,8 +80,8 @@ export class AlignerPageComponent implements OnInit {
 
     this.refHdu$ = this.refHduId$.pipe(
       switchMap((hduId) => {
-        return this.store.select(DataFilesState.getHduById).pipe(
-          map((fn) => fn(hduId) as ImageHdu),
+        return this.store.select(DataFilesState.getHduById(hduId)).pipe(
+          map((hdu) => hdu as ImageHdu),
           distinctUntilChanged()
         );
       })
@@ -91,7 +91,7 @@ export class AlignerPageComponent implements OnInit {
       map((hdu) => hdu && hdu.headerId),
       distinctUntilChanged(),
       switchMap((headerId) => {
-        return this.store.select(DataFilesState.getHeaderById).pipe(map((fn) => fn(headerId)));
+        return this.store.select(DataFilesState.getHeaderById(headerId));
       })
     );
 
@@ -146,8 +146,8 @@ export class AlignerPageComponent implements OnInit {
   ngOnInit() {}
 
   getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById).pipe(
-      map((fn) => fn(hduId)?.name),
+    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
+      map((hdu) => hdu?.name),
       distinctUntilChanged()
     );
   }
