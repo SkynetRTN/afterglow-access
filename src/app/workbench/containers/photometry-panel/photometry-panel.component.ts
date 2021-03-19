@@ -432,7 +432,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       $event.mouseEvent.stopImmediatePropagation();
       $event.mouseEvent.preventDefault();
     });
+  }
 
+  ngOnInit() {
     /** markers */
     let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
       distinctUntilChanged((x, y) => {
@@ -451,8 +453,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         this.markerService.updateMarkers(v.viewerId, v.markers);
       });
   }
-
-  ngOnInit() {}
 
   ngAfterViewInit() {}
 

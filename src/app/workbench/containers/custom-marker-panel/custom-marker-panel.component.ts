@@ -84,25 +84,6 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
     private eventService: ImageViewerEventService,
     private markerService: ImageViewerMarkerService
   ) {
-    this.markerService.clearMarkers();
-
-    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
-      distinctUntilChanged((x, y) => {
-        return x.length == y.length && x.every((value, index) => value == y[index]);
-      })
-    );
-
-    visibleViewerIds$
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap((viewerIds) => {
-          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
-        })
-      )
-      .subscribe((v) => {
-        this.markerService.updateMarkers(v.viewerId, v.markers);
-      });
-
     this.state$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewerId)))
     );
@@ -249,7 +230,24 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
+  }
 
   ngOnDestroy() {
     this.markerService.clearMarkers();

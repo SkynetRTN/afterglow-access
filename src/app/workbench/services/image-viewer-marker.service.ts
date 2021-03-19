@@ -13,6 +13,9 @@ export class ImageViewerMarkerService {
   getMarkerStream(viewerId: string) {
     if (!this.entities[viewerId]) {
       this.entities[viewerId] = new BehaviorSubject<Marker[]>([]);
+      this.entities[viewerId].subscribe((markers) => {
+        console.log('marker update: ', viewerId, markers);
+      });
     }
     return this.entities[viewerId];
   }
@@ -28,6 +31,7 @@ export class ImageViewerMarkerService {
   }
 
   clearMarkers() {
+    console.log('markers cleared');
     Object.keys(this.entities).forEach((viewerId) => {
       this.entities[viewerId].next([]);
     });

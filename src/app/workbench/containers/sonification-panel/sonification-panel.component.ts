@@ -164,7 +164,9 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
           this.playStream(a.url);
         }
       });
+  }
 
+  ngOnInit() {
     /** markers */
     let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
       distinctUntilChanged((x, y) => {
@@ -183,8 +185,6 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
         this.markerService.updateMarkers(v.viewerId, v.markers);
       });
   }
-
-  ngOnInit() {}
 
   ngAfterViewInit() {
     this.shortcuts.push({

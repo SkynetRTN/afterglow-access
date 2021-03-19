@@ -98,25 +98,6 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     private eventService: ImageViewerEventService,
     private markerService: ImageViewerMarkerService
   ) {
-    this.markerService.clearMarkers();
-
-    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
-      distinctUntilChanged((x, y) => {
-        return x.length == y.length && x.every((value, index) => value == y[index]);
-      })
-    );
-
-    visibleViewerIds$
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap((viewerIds) => {
-          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
-        })
-      )
-      .subscribe((v) => {
-        this.markerService.updateMarkers(v.viewerId, v.markers);
-      });
-
     this.file$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
@@ -190,7 +171,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
           if (pixelPosAngle < 0) pixelPosAngle += 360;
           pixelSeparation = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
 
-          if (header) {
+          if (header && header.loaded) {
             let degsPerPixel =
               header.wcs && header.wcs.isValid() ? header.wcs.getPixelScale() : getDegsPerPixel(header);
             if (degsPerPixel) {
@@ -307,7 +288,24 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
       });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
+  }
 
   ngAfterViewInit() {}
 
