@@ -1,17 +1,17 @@
 <ng-container *ngFor="let itemId of itemIds">
   <ng-container [ngSwitch]="(layoutItems$ | async)[itemId]?.type">
     <ng-container *ngSwitchCase="'container'">
-      <app-workbench-viewer-layout
+      <app-viewer-panel-layout
         *ngIf="(containers$ | async)[itemId]; let childContainer"
         fxFlex="1 1 100%"
         [fxLayout]="childContainer.direction"
         [id]="childContainer.id"
         [itemIds]="childContainer.itemIds"
         style="overflow: hidden"
-      ></app-workbench-viewer-layout>
+      ></app-viewer-panel-layout>
     </ng-container>
     <ng-container *ngSwitchCase="'panel'">
-      <app-workbench-viewer-panel
+      <app-viewer-panel
         *ngIf="(panels$ | async)[itemId]; let panel"
         fxFlex="1 1 100%"
         [id]="panel.id"
@@ -25,7 +25,7 @@
         (mousewheel)="setFocusedPanel($event, panel)"
         style="overflow: hidden"
       >
-      </app-workbench-viewer-panel>
+      </app-viewer-panel>
     </ng-container>
   </ng-container>
   <div *ngIf="true" class="handler"></div>

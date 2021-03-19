@@ -113,12 +113,12 @@ export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
 }
 
 @Component({
-  selector: 'app-workbench-image-viewer',
-  templateUrl: './workbench-image-viewer.component.html',
-  styleUrls: ['./workbench-image-viewer.component.scss'],
+  selector: 'app-image-viewer',
+  templateUrl: './image-viewer.component.html',
+  styleUrls: ['./image-viewer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestroy {
+export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Input('viewer')
   set viewer(viewer: ImageViewer) {
     this.viewer$.next(viewer);

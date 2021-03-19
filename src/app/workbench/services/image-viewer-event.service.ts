@@ -4,7 +4,7 @@ import {
   ViewerCanvasMouseDragEvent,
   ViewerCanvasMouseEvent,
   ViewerMarkerMouseEvent,
-} from '../containers/workbench-image-viewer/workbench-image-viewer.component';
+} from '../containers/image-viewer/image-viewer.component';
 
 @Injectable({
   providedIn: 'root',

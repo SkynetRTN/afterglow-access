@@ -20,11 +20,11 @@ import { Observable } from 'rxjs';
 import { WorkbenchState } from '../../workbench.state';
 
 @Component({
-  selector: 'app-workbench-viewer-layout',
-  templateUrl: './workbench-viewer-layout.component.html',
-  styleUrls: ['./workbench-viewer-layout.component.css'],
+  selector: 'app-viewer-panel-layout',
+  templateUrl: './viewer-panel-layout.component.html',
+  styleUrls: ['./viewer-panel-layout.component.css'],
 })
-export class WorkbenchViewerLayoutComponent implements OnInit, OnChanges {
+export class ViewerPanelLayoutComponent implements OnInit, OnChanges {
   @ViewChild(MatMenuTrigger)
   contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: '0px', y: '0px' };

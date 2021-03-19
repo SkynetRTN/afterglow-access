@@ -20,12 +20,12 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 
 @Component({
-  selector: 'app-workbench-data-file-list',
-  templateUrl: './workbench-data-file-list.component.html',
-  styleUrls: ['./workbench-data-file-list.component.css'],
+  selector: 'app-data-file-list',
+  templateUrl: './data-file-list.component.html',
+  styleUrls: ['./data-file-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WorkbenchDataFileListComponent implements OnDestroy, AfterViewInit {
+export class DataFileListComponent implements OnDestroy, AfterViewInit {
   @Input('files')
   set files(files: DataFile[]) {
     this.files$.next(files);

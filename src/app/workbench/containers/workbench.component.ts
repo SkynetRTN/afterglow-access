@@ -95,7 +95,7 @@ import {
   CenterRegionInViewport,
   ZoomTo,
 } from '../../data-files/data-files.actions';
-import { WorkbenchDataFileListComponent } from './workbench-data-file-list/workbench-data-file-list.component';
+import { DataFileListComponent } from './data-file-list/data-file-list.component';
 import { OpenFileDialogComponent } from '../../data-providers/components/open-file-dialog/open-file-dialog.component';
 import { AfterglowDataProviderService } from '../services/afterglow-data-providers';
 import { SaveChangesDialogComponent, FileDialogConfig } from '../components/file-dialog/file-dialog.component';
@@ -129,8 +129,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   HduType = HduType;
   shortcuts: ShortcutInput[] = [];
 
-  @ViewChild(WorkbenchDataFileListComponent)
-  fileList: WorkbenchDataFileListComponent;
+  @ViewChild(DataFileListComponent)
+  fileList: DataFileListComponent;
 
   destroy$: Subject<boolean> = new Subject<boolean>();
 

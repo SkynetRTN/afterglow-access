@@ -10,10 +10,10 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
-import { WorkbenchImageViewerComponent } from './containers/workbench-image-viewer/workbench-image-viewer.component';
-import { WorkbenchViewerPanelComponent } from './containers/workbench-viewer-panel/workbench-viewer-panel.component';
+import { ImageViewerComponent } from './containers/image-viewer/image-viewer.component';
+import { ViewerPanelComponent } from './containers/viewer-panel/viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
-import { WorkbenchDataFileListComponent } from './containers/workbench-data-file-list/workbench-data-file-list.component';
+import { DataFileListComponent } from './containers/data-file-list/data-file-list.component';
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
@@ -53,7 +53,7 @@ import { HelpDialogComponent } from './components/help-dialog/help-dialog.compon
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { AvatarModule } from 'ngx-avatar';
-import { WorkbenchViewerLayoutComponent } from './containers/workbench-viewer-layout/workbench-viewer-layout.component';
+import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/viewer-panel-layout.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
 import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
 import { WcsCalibrationPanelComponent } from './components/wcs-calibration-panel/wcs-calibration-panel.component';
@@ -72,8 +72,8 @@ import { ImageOrientationToolbarComponent } from './components/image-orientation
 export const COMPONENTS = [
   NavbarComponent,
   AppFooterComponent,
-  WorkbenchDataFileListComponent,
-  WorkbenchImageViewerComponent,
+  DataFileListComponent,
+  ImageViewerComponent,
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
   ImageViewerStatusBarComponent,
@@ -103,8 +103,8 @@ export const COMPONENTS = [
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
   ThemeDialogComponent,
-  WorkbenchViewerPanelComponent,
-  WorkbenchViewerLayoutComponent,
+  ViewerPanelComponent,
+  ViewerPanelLayoutComponent,
   SaveChangesDialogComponent,
   JobProgressDialogComponent,
   WcsCalibrationPanelComponent,

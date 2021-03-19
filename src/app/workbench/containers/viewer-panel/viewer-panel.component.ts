@@ -24,11 +24,11 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 
 @Component({
-  selector: 'app-workbench-viewer-panel',
-  templateUrl: './workbench-viewer-panel.component.html',
-  styleUrls: ['./workbench-viewer-panel.component.css'],
+  selector: 'app-viewer-panel',
+  templateUrl: './viewer-panel.component.html',
+  styleUrls: ['./viewer-panel.component.css'],
 })
-export class WorkbenchViewerPanelComponent implements OnInit, OnChanges {
+export class ViewerPanelComponent implements OnInit, OnChanges {
   @ViewChild(MatMenuTrigger)
   contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: '0px', y: '0px' };

@@ -65,7 +65,7 @@
         </div>
       </ng-template>
       <ng-template matTabContent>
-        <app-workbench-image-viewer
+        <app-image-viewer
           *ngIf="viewer | guardType: isImageViewer as imageViewer"
           (mousedown)="setFocusedViewer($event, viewer.id, viewer)"
           [viewer]="imageViewer"
@@ -73,7 +73,7 @@
           (onFileClose)="onFileClose.emit($event)"
           (onFileSave)="onFileSave.emit($event)"
         >
-        </app-workbench-image-viewer>
+        </app-image-viewer>
         <div *ngIf="viewer | guardType: isTableViewer as tableViewer">Tables are not yet supported.</div>
       </ng-template>
     </mat-tab>
