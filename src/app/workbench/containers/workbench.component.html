@@ -388,7 +388,6 @@
       class="workbench-tool-nav"
       [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'"
       [class.collapsed]="!(showConfig$ | async)"
-      *ngIf="(filesSorted$ | async)?.length != 0"
     >
       <nav role="navigation" aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
         <div class="vertical-icon-nav-item-group">
