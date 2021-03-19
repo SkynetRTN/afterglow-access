@@ -346,7 +346,7 @@
           <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [viewerId]="focusedViewerId$ | async">
           </app-display-panel>
 
-          <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewer]="focusedViewer$ | async">
+          <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewerId]="focusedViewerId$ | async">
           </app-file-info-panel>
 
           <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [viewer]="focusedViewer$ | async">

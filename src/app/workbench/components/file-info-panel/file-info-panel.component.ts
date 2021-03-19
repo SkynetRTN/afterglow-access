@@ -11,6 +11,7 @@ import {
   getObject,
   getTelescope,
   getFilter,
+  IHdu,
 } from '../../../data-files/models/data-file';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -18,8 +19,8 @@ import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { datetimeToJd } from '../../../utils/skynet-astro';
 import { FileInfoPanelConfig } from '../../models/file-info-panel';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, combineLatest, Subject, BehaviorSubject } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { HeaderEntry } from '../../../data-files/models/header-entry';
 import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { WorkbenchState } from '../../workbench.state';
@@ -32,14 +33,33 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
   styleUrls: ['./file-info-panel.component.css'],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FileInfoToolsetComponent extends ToolPanelBaseComponent implements OnInit, AfterViewInit, OnDestroy {
+export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  hdu$: Observable<IHdu>;
+  header$: Observable<Header>;
   config$: Observable<FileInfoPanelConfig>;
 
   columnsDisplayed = ['key', 'value', 'comment'];
   headerSummary$: Observable<HeaderEntry[]>;
 
-  constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, store: Store, router: Router) {
-    super(store);
+  constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, private store: Store) {
+    this.hdu$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+    );
+
+    this.header$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
+    );
+
     this.config$ = this.store.select(WorkbenchState.getFileInfoPanelConfig);
 
     this.headerSummary$ = combineLatest(this.header$, this.config$).pipe(
@@ -163,6 +183,11 @@ export class FileInfoToolsetComponent extends ToolPanelBaseComponent implements 
   ngOnInit() {}
 
   ngAfterViewInit() {}
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
     this.store.dispatch(new UpdateFileInfoPanelConfig({ showRawHeader: $event.checked }));
