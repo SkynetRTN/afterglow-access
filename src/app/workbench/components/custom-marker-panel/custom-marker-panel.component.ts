@@ -27,7 +27,6 @@ import { BehaviorSubject, Observable, combineLatest, merge, Subject } from 'rxjs
 import { DataFile, ImageHdu, IHdu, PixelType } from '../../../data-files/models/data-file';
 import { MatSelectChange } from '@angular/material/select';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { WorkbenchImageHduState } from '../../models/workbench-file-state';
 import { WorkbenchState } from '../../workbench.state';
 import { KeyboardShortcutsComponent, ShortcutInput } from 'ng-keyboard-shortcuts';

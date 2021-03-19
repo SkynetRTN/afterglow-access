@@ -54,7 +54,6 @@ import { HduType } from '../../../data-files/models/data-file-type';
 import { IViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
 import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { isNotEmpty } from '../../../utils/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';

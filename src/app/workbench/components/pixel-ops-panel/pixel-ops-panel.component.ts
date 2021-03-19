@@ -27,7 +27,6 @@ import { JobsState } from '../../../jobs/jobs.state';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { isNumber } from '../../../utils/validators';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 
 interface PixelOpVariable {
   name: string;

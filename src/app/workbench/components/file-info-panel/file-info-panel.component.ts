@@ -22,7 +22,6 @@ import { FileInfoPanelConfig } from '../../models/file-info-panel';
 import { Observable, combineLatest, Subject, BehaviorSubject } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { HeaderEntry } from '../../../data-files/models/header-entry';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { WorkbenchState } from '../../workbench.state';
 import { UpdateFileInfoPanelConfig } from '../../workbench.actions';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';

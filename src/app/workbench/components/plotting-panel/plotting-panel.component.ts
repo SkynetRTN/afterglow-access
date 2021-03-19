@@ -34,7 +34,6 @@ import { Store, Actions } from '@ngxs/store';
 import { IImageData } from '../../../data-files/models/image-data';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 import { WorkbenchState } from '../../workbench.state';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { WorkbenchFileState, WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';

@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
-import { distinctUntilChanged, filter, flatMap, map, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, filter, flatMap, map, switchMap, takeUntil } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import {
   getDecDegs,
@@ -30,7 +30,6 @@ import {
 } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
 import { SourceExtractionDialogComponent } from '../source-extraction-dialog/source-extraction-dialog.component';
-import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.component';
 
 @Component({
   selector: 'app-wcs-calibration-panel',
@@ -38,7 +37,16 @@ import { ToolPanelBaseComponent } from '../tool-panel-base/tool-panel-base.compo
   styleUrls: ['./wcs-calibration-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WcsCalibrationPanelComponent extends ToolPanelBaseComponent implements OnInit, OnDestroy {
+export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
+  @Input('viewerId')
+  set viewerId(viewer: string) {
+    this.viewerId$.next(viewer);
+  }
+  get viewerId() {
+    return this.viewerId$.getValue();
+  }
+  protected viewerId$ = new BehaviorSubject<string>(null);
+
   @Input('hduIds')
   set hduIds(hduIds: string[]) {
     this.hduIds$.next(hduIds);
@@ -48,14 +56,14 @@ export class WcsCalibrationPanelComponent extends ToolPanelBaseComponent impleme
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  header$: Observable<Header>;
   state$: Observable<WcsCalibrationPanelState>;
   selectedHduIds$: Observable<string[]>;
   activeJob$: Observable<WcsCalibrationJob>;
   activeJobResult$: Observable<WcsCalibrationJobResult>;
   wcsCalibrationSettings$: Observable<WcsCalibrationSettings>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
-
-  destroy$: Subject<boolean> = new Subject<boolean>();
 
   isNumber = [Validators.required, isNumber];
   greaterThanZero = [Validators.required, isNumber, greaterThan(0)];
@@ -70,8 +78,10 @@ export class WcsCalibrationPanelComponent extends ToolPanelBaseComponent impleme
     maxSources: new FormControl('', this.minZero),
   });
 
-  constructor(store: Store, private dialog: MatDialog) {
-    super(store);
+  constructor(private store: Store, private dialog: MatDialog) {
+    this.header$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
+    );
 
     this.state$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
     this.selectedHduIds$ = this.state$.pipe(map((state) => state.selectedHduIds));
@@ -156,6 +166,11 @@ export class WcsCalibrationPanelComponent extends ToolPanelBaseComponent impleme
   }
 
   ngOnInit(): void {}
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById(hduId)).pipe(

@@ -370,7 +370,7 @@
 
           <app-wcs-calibration-panel
             *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION"
-            [viewer]="focusedViewer$ | async"
+            [viewerId]="focusedViewerId$ | async"
             [hduIds]="filteredHduIds$ | async"
           >
           </app-wcs-calibration-panel>
