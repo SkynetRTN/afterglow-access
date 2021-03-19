@@ -907,7 +907,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileHdusByViewerId(viewerId), DataFilesState.getHeaderEntities],
       (hdus: IHdu[], headerEntities: { [id: string]: Header }) => {
-        hdus = hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[];
+        hdus = hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[];
         return !hdus || hdus.length == 0 ? null : headerEntities[hdus[0]?.headerId];
       }
     );
@@ -917,7 +917,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileHdusByViewerId(viewerId), DataFilesState.getHeaderEntities],
       (hdus: IHdu[], headerEntities: { [id: string]: Header }) => {
-        hdus = hdus.filter((hdu) => hdu.hduType == HduType.TABLE) as ImageHdu[];
+        hdus = hdus.filter((hdu) => hdu.type == HduType.TABLE) as ImageHdu[];
         return !hdus || hdus.length == 0 ? null : headerEntities[hdus[0]?.headerId];
       }
     );
@@ -992,7 +992,7 @@ export class WorkbenchState {
 
   @Selector([WorkbenchState.getFocusedViewerHdu])
   public static getFocusedViewerImageHdu(focusedViewerHdu: IHdu) {
-    if (!focusedViewerHdu || focusedViewerHdu.hduType != HduType.IMAGE) {
+    if (!focusedViewerHdu || focusedViewerHdu.type != HduType.IMAGE) {
       return null;
     }
     return focusedViewerHdu as ImageHdu;
@@ -1364,7 +1364,7 @@ export class WorkbenchState {
 
       if (refViewer.hduId) {
         let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
-        if (refHdu.hduType == HduType.IMAGE) {
+        if (refHdu.type == HduType.IMAGE) {
           refNormalization = refHdu.normalizer;
         }
       }
@@ -1793,7 +1793,7 @@ export class WorkbenchState {
     let refNormalization: PixelNormalizer;
     if (viewer.hduId) {
       let refHdu = hduEntities[viewer.hduId] as ImageHdu;
-      if (refHdu.hduType == HduType.IMAGE) {
+      if (refHdu.type == HduType.IMAGE) {
         refNormalization = refHdu.normalizer;
       }
     }
@@ -2367,7 +2367,7 @@ export class WorkbenchState {
     //check if existing viewer is available
     // if no HDU is specified,  use an image viewer for composite image data
     let focusedPanel: ViewerPanel = state.viewerLayoutItems[state.focusedViewerPanelId] as ViewerPanel;
-    let targetViewerType = !hdu || hdu.hduType == HduType.IMAGE ? ViewerType.IMAGE : ViewerType.TABLE;
+    let targetViewerType = !hdu || hdu.type == HduType.IMAGE ? ViewerType.IMAGE : ViewerType.TABLE;
     targetViewer = viewers.find(
       (viewer) =>
         !viewer.keepOpen &&
@@ -2404,7 +2404,7 @@ export class WorkbenchState {
         imageDataId = file.imageDataId;
 
         //use header from first image hdu
-        let firstImageHduId = file.hduIds.find((hduId) => hduEntities[hduId].hduType == HduType.IMAGE);
+        let firstImageHduId = file.hduIds.find((hduId) => hduEntities[hduId].type == HduType.IMAGE);
         if (firstImageHduId) {
           headerId = hduEntities[firstImageHduId].headerId;
         }
@@ -3492,7 +3492,7 @@ export class WorkbenchState {
       state.hduIdToWorkbenchStateIdMap[hduId] = workbenchStateId;
 
       //initialize HDU states
-      if (hdu.hduType == HduType.IMAGE) {
+      if (hdu.type == HduType.IMAGE) {
         let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`;
         state.plottingPanelStateEntities[plottingPanelStateId] = {
           id: plottingPanelStateId,
@@ -3550,7 +3550,7 @@ export class WorkbenchState {
         state.workbenchStateIds.push(workbenchState.id);
 
         actions.push(new InitializeWorkbenchFileState(hdu.fileId));
-      } else if (hdu.hduType == HduType.TABLE) {
+      } else if (hdu.type == HduType.TABLE) {
         let tableHduState: WorkbenchTableHduState = {
           id: workbenchStateId,
           type: WorkbenchStateType.TABLE_HDU,
@@ -4481,7 +4481,7 @@ export class WorkbenchState {
         return;
       }
       let hdu = hduEntities[hduId] as ImageHdu;
-      if (hdu.hduType != HduType.IMAGE) {
+      if (hdu.type != HduType.IMAGE) {
         return;
       }
 

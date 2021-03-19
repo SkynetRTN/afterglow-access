@@ -108,7 +108,7 @@ export class ToolPanelBaseComponent implements AfterViewInit, OnDestroy, OnChang
       switchMap((headerId) => this.store.select(DataFilesState.getHeaderById(headerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
 
     this.workbenchState$ = this.viewer$.pipe(
       switchMap((viewer) => this.store.select(WorkbenchState.getWorkbenchStateByViewerId(viewer?.id)))

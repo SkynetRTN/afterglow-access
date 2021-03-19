@@ -20,7 +20,7 @@
 
   <div *ngIf="hdu$ | async; let hdu" fxFlex="0 0 auto" style="padding-right: 5px">
     <mat-icon class="mat-icon small">
-      {{ hdu?.hduType == HduType.IMAGE ? 'insert_photo' : 'toc' }}
+      {{ hdu?.type == HduType.IMAGE ? 'insert_photo' : 'toc' }}
     </mat-icon>
   </div>
 

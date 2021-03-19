@@ -216,7 +216,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
     this.hdus$ = this.hduIds$.pipe(
       switchMap((hduIds) => {
         return combineLatest(hduIds.map((hduId) => this.store.select(DataFilesState.getHduById(hduId)))).pipe(
-          map((hdus) => hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[])
+          map((hdus) => hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[])
         );
       })
     );
@@ -821,7 +821,7 @@ export class WorkbenchImageViewerComponent implements OnInit, OnChanges, OnDestr
       let hdu = hduEntities[hduId];
       if (
         !hdu ||
-        hdu.hduType != HduType.IMAGE ||
+        hdu.type != HduType.IMAGE ||
         !headerEntities[hdu.headerId] ||
         !headerEntities[hdu.headerId].loaded ||
         !(hdu as ImageHdu).hist ||

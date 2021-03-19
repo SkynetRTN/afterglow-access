@@ -200,7 +200,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     this.filteredImageHdus$ = this.filteredHdus$.pipe(
-      map((hdus) => (!hdus ? null : (hdus.filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[])))
+      map((hdus) => (!hdus ? null : (hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[])))
     );
 
     this.filteredImageHduIds$ = this.filteredImageHdus$.pipe(map((hdus) => hdus.map((hdu) => hdu.id)));
@@ -299,7 +299,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
             switchMap((hduId) =>
               this.store
                 .select(DataFilesState.getHduById(hduId))
-                .pipe(map((hdu) => (hdu && hdu.hduType != HduType.IMAGE ? null : (hdu as ImageHdu))))
+                .pipe(map((hdu) => (hdu && hdu.type != HduType.IMAGE ? null : (hdu as ImageHdu))))
             ),
             distinctUntilChanged()
           );
@@ -589,7 +589,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
       if (!viewer || !viewer.viewportSize || !viewer.hduId) return;
       let hdu = this.store.selectSnapshot(DataFilesState.getHduById(viewer.hduId));
-      if (!hdu || hdu.hduType != HduType.IMAGE) return;
+      if (!hdu || hdu.type != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
       let imageDataId = imageHdu.imageDataId;
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));

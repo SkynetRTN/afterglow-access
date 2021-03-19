@@ -44,7 +44,7 @@ export interface Header {
 }
 
 export interface IHdu {
-  readonly hduType: HduType;
+  readonly type: HduType;
   id: string;
   fileId: string;
   headerId: string;
@@ -54,7 +54,7 @@ export interface IHdu {
 }
 
 export interface ImageHdu extends IHdu, ITransformableImageData {
-  readonly hduType: HduType.IMAGE;
+  readonly type: HduType.IMAGE;
   precision: PixelPrecision;
   hist: ImageHist;
   rawImageDataId: string;
@@ -65,7 +65,7 @@ export interface ImageHdu extends IHdu, ITransformableImageData {
 }
 
 export interface TableHdu extends IHdu {
-  readonly hduType: HduType.TABLE;
+  readonly type: HduType.TABLE;
 }
 
 export function getHeaderEntry(header: Header, key: string) {

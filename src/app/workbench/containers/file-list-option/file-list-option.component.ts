@@ -118,7 +118,7 @@ export class FileListOptionComponent implements OnInit {
       switchMap((hduId) => (!hduId ? of(null) : this.store.select(DataFilesState.getHduById(hduId))))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu?.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu?.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
 
     this.hdus$ = this.file$.pipe(
       map((file) => file?.hduIds),

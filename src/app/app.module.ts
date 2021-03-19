@@ -71,7 +71,7 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
       ...state.hduEntities[key],
     };
 
-    if (hdu.hduType == HduType.IMAGE) {
+    if (hdu.type == HduType.IMAGE) {
       hdu = {
         ...hdu,
         hist: {

@@ -91,9 +91,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
 
-    this.tableHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.hduType == HduType.TABLE ? (hdu as TableHdu) : null)));
+    this.tableHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.TABLE ? (hdu as TableHdu) : null)));
 
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;

@@ -129,7 +129,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: '0ddebaab-6149-4919-8db5-2263ed309088',
+  version: 'e4612996-a740-497c-8878-74e8a6d45dca',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -270,7 +270,7 @@ export class DataFilesState {
   public static getFirstImageHduByFileId(id: string) {
     return createSelector([DataFilesState.getHdusByFileId(id)], (hdus: IHdu[]) => {
       if (!hdus) return null;
-      hdus = hdus.filter((hdu) => hdu.hduType == HduType.IMAGE);
+      hdus = hdus.filter((hdu) => hdu.type == HduType.IMAGE);
       return hdus.length == 0 ? null : (hdus[0] as ImageHdu);
     });
   }
@@ -278,7 +278,7 @@ export class DataFilesState {
   public static getFirstTableHduByFileId(id: string) {
     return createSelector([DataFilesState.getHdusByFileId(id)], (hdus: IHdu[]) => {
       if (!hdus) return null;
-      hdus = hdus.filter((hdu) => hdu.hduType == HduType.TABLE);
+      hdus = hdus.filter((hdu) => hdu.type == HduType.TABLE);
       return hdus.length == 0 ? null : (hdus[0] as ImageHdu);
     });
   }
@@ -438,7 +438,7 @@ export class DataFilesState {
       if (
         !header ||
         (!header.loaded && !header.loading) ||
-        (hdu.hduType == HduType.IMAGE && !(hdu as ImageHdu).hist.loaded && !(hdu as ImageHdu).hist.loading)
+        (hdu.type == HduType.IMAGE && !(hdu as ImageHdu).hist.loaded && !(hdu as ImageHdu).hist.loading)
       ) {
         actions.push(new LoadHdu(hdu.id));
       }
@@ -464,7 +464,7 @@ export class DataFilesState {
           let hdu: IHdu = {
             id: coreFile.id,
             fileId: coreFile.groupName,
-            hduType: coreFile.type,
+            type: coreFile.type,
             order: coreFile.groupOrder,
             modified: coreFile.modified,
             headerId: '',
@@ -481,8 +481,8 @@ export class DataFilesState {
               dataProviderId: coreFile.dataProvider,
               name: coreFile.groupName,
               hduIds: [hdu.id],
-              imageHduIds: hdu.hduType == HduType.IMAGE ? [hdu.id] : [],
-              tableHduIds: hdu.hduType == HduType.TABLE ? [hdu.id] : [],
+              imageHduIds: hdu.type == HduType.IMAGE ? [hdu.id] : [],
+              tableHduIds: hdu.type == HduType.TABLE ? [hdu.id] : [],
               viewportTransformId: '',
               imageTransformId: '',
               imageDataId: '',
@@ -490,9 +490,9 @@ export class DataFilesState {
             dataFiles.push(dataFile);
           } else {
             dataFile.hduIds.push(hdu.id);
-            if (hdu.hduType == HduType.IMAGE) {
+            if (hdu.type == HduType.IMAGE) {
               dataFile.imageHduIds.push(hdu.id);
-            } else if (hdu.hduType == HduType.TABLE) {
+            } else if (hdu.type == HduType.TABLE) {
               dataFile.tableHduIds.push(hdu.id);
             }
           }
@@ -533,11 +533,11 @@ export class DataFilesState {
               state.headerIds.push(header.id);
               state.headerEntities[header.id] = header;
 
-              if (hdu.hduType == HduType.IMAGE) {
+              if (hdu.type == HduType.IMAGE) {
                 let imageHdu: ImageHdu = {
                   ...hdu,
                   headerId: header.id,
-                  hduType: HduType.IMAGE,
+                  type: HduType.IMAGE,
                   precision: PixelPrecision.float32,
                   blendMode: BlendMode.Screen,
                   visible: true,
@@ -563,11 +563,11 @@ export class DataFilesState {
                   },
                 };
                 hdu = imageHdu;
-              } else if (hdu.hduType == HduType.TABLE) {
+              } else if (hdu.type == HduType.TABLE) {
                 let tableHdu: TableHdu = {
                   ...hdu,
                   headerId: header.id,
-                  hduType: HduType.TABLE,
+                  type: HduType.TABLE,
                 };
                 hdu = tableHdu;
               } else {
@@ -637,7 +637,7 @@ export class DataFilesState {
       actions.push(new LoadHduHeader(hdu.id));
     }
 
-    if (hdu.hduType == HduType.IMAGE) {
+    if (hdu.type == HduType.IMAGE) {
       let imageHdu = hdu as ImageHdu;
       if (imageHdu.hist.loading) {
         pendingActions.push(
@@ -697,7 +697,7 @@ export class DataFilesState {
           });
           header.wcs = new Wcs(wcsHeader);
 
-          if (hdu.hduType == HduType.IMAGE) {
+          if (hdu.type == HduType.IMAGE) {
             let imageHdu = hdu as ImageHdu;
             //extract width and height from the header using FITS standards
             let width = getWidth(header);
@@ -819,7 +819,7 @@ export class DataFilesState {
             let fileHdus = file.hduIds
               .map((id) => state.hduEntities[id])
               .filter(
-                (hdu) => hdu.hduType == HduType.IMAGE && hdu.headerId && state.headerEntities[hdu.headerId].loaded
+                (hdu) => hdu.type == HduType.IMAGE && hdu.headerId && state.headerEntities[hdu.headerId].loaded
               ) as ImageHdu[];
             let compositeWidth = Math.min(...fileHdus.map((hdu) => getWidth(state.headerEntities[hdu.headerId])));
             let compositeHeight = Math.min(...fileHdus.map((hdu) => getHeight(state.headerEntities[hdu.headerId])));
@@ -906,7 +906,7 @@ export class DataFilesState {
     { setState, getState, dispatch }: StateContext<DataFilesStateModel>,
     { hduId }: LoadImageHduHistogram
   ) {
-    if (getState().hduEntities[hduId].hduType != HduType.IMAGE) return null;
+    if (getState().hduEntities[hduId].type != HduType.IMAGE) return null;
 
     let fileId = getState().hduEntities[hduId].fileId;
     const cancel$ = merge(
@@ -966,7 +966,7 @@ export class DataFilesState {
     { hduId, tileIndex }: LoadRawImageTile
   ) {
     let state = getState();
-    if (state.hduEntities[hduId].hduType != HduType.IMAGE) return null;
+    if (state.hduEntities[hduId].type != HduType.IMAGE) return null;
 
     let fileId = getState().hduEntities[hduId].fileId;
     const cancel$ = merge(
@@ -1060,7 +1060,7 @@ export class DataFilesState {
     let state = getState();
     if (
       !(hduId in state.hduEntities) ||
-      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      state.hduEntities[hduId].type != HduType.IMAGE ||
       !(state.hduEntities[hduId] as ImageHdu).rawImageDataId
     )
       return null;
@@ -1079,7 +1079,7 @@ export class DataFilesState {
     let state = getState();
     if (
       !(hduId in state.hduEntities) ||
-      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      state.hduEntities[hduId].type != HduType.IMAGE ||
       !(state.hduEntities[hduId] as ImageHdu).rawImageDataId
     )
       return null;
@@ -1106,7 +1106,7 @@ export class DataFilesState {
     let state = getState();
     if (
       !(hduId in state.hduEntities) ||
-      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      state.hduEntities[hduId].type != HduType.IMAGE ||
       !(state.hduEntities[hduId] as ImageHdu).imageDataId
     )
       return null;
@@ -1125,7 +1125,7 @@ export class DataFilesState {
     let state = getState();
     if (
       !(hduId in state.hduEntities) ||
-      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      state.hduEntities[hduId].type != HduType.IMAGE ||
       !(state.hduEntities[hduId] as ImageHdu).imageDataId
     )
       return null;
@@ -1153,7 +1153,7 @@ export class DataFilesState {
     let state = getState();
     if (
       !(hduId in state.hduEntities) ||
-      state.hduEntities[hduId].hduType != HduType.IMAGE ||
+      state.hduEntities[hduId].type != HduType.IMAGE ||
       !(state.hduEntities[hduId] as ImageHdu).imageDataId
     ) {
       return null;
@@ -1301,7 +1301,7 @@ export class DataFilesState {
     { hduId, changes }: UpdateNormalizer
   ) {
     let state = getState();
-    if (!(hduId in state.hduEntities) || state.hduEntities[hduId].hduType != HduType.IMAGE) return null;
+    if (!(hduId in state.hduEntities) || state.hduEntities[hduId].type != HduType.IMAGE) return null;
 
     setState((state: DataFilesStateModel) => {
       let hdu = state.hduEntities[hduId] as ImageHdu;
@@ -1458,7 +1458,7 @@ export class DataFilesState {
       if (!imageData.initialized) return [];
       let hdus = file.hduIds
         .map((hduId) => state.hduEntities[hduId])
-        .filter((hdu) => hdu.hduType == HduType.IMAGE) as ImageHdu[];
+        .filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[];
 
       return hdus
         .filter((hdu) => {
@@ -1480,7 +1480,7 @@ export class DataFilesState {
         let hdus = file.hduIds
           .map((hduId) => state.hduEntities[hduId])
           .filter((hdu) => {
-            if (hdu.hduType != HduType.IMAGE) {
+            if (hdu.type != HduType.IMAGE) {
               return false;
             }
             let imageHdu = hdu as ImageHdu;
