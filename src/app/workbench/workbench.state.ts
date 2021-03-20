@@ -217,7 +217,7 @@ import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '82393ec4-5b5c-4d68-8c76-0d24d2dab043',
+  version: '4e43bb3f-91d2-40a5-a85c-2729712d9e59',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -2489,25 +2489,6 @@ export class WorkbenchState {
     let state = getState();
     let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getHduEntities);
-
-    // if (
-    //   !state.plottingPanelConfig.plotterSyncEnabled ||
-    //   !focusedViewer ||
-    //   focusedViewer.data[0] != hduId
-    // )
-    //   return;
-
-    // TODO VIEWER CHANGE
-    // let referenceFile = dataFiles[focusedViewer.fileId] as ImageFile;
-    // let files = WorkbenchState.getViewers(state)
-    //   .filter(
-    //     (viewer, index) =>
-    //       viewer.viewerId != state.selectedPrimaryViewerId &&
-    //       viewer.fileId !== null
-    //   )
-    //   .map((viewer) => dataFiles[viewer.fileId] as ImageFile);
-
-    // return dispatch(new SyncFilePlotters(referenceFile, files));
     return;
   }
 
@@ -3681,7 +3662,7 @@ export class WorkbenchState {
         delete state.fileIdToWorkbenchStateIdMap[fileId];
       }
       if (workbenchStateId in state.workbenchStateEntities) {
-        state.workbenchStateIds.filter((id) => id != workbenchStateId);
+        state.workbenchStateIds = state.workbenchStateIds.filter((id) => id != workbenchStateId);
         delete state.workbenchStateEntities[workbenchStateId];
       }
       return state;
@@ -3700,7 +3681,7 @@ export class WorkbenchState {
         delete state.fileIdToWorkbenchStateIdMap[hduId];
       }
       if (workbenchStateId in state.workbenchStateEntities) {
-        state.workbenchStateIds.filter((id) => id != workbenchStateId);
+        state.workbenchStateIds = state.workbenchStateIds.filter((id) => id != workbenchStateId);
         delete state.workbenchStateEntities[workbenchStateId];
       }
 
