@@ -662,7 +662,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         return 'Aligner';
       }
       case WorkbenchTool.STACKER: {
-        return 'Aligner';
+        return 'Stacker';
       }
       default: {
         return 'Unknown Tool';
