@@ -5,13 +5,18 @@ module.exports = {
   module: {
     defaultRules: [
       {
-        type: "javascript/auto",
-        resolve: {}
+        type: 'javascript/auto',
+        resolve: {},
       },
       {
         test: /\.json$/i,
-        type: "json"
-      }
-    ]
-  }
+        type: 'json',
+      },
+      {
+        test: /\.wasm$/,
+        loaders: ['base64-loader'],
+        type: 'javascript/auto',
+      },
+    ],
+  },
 };
