@@ -129,7 +129,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: 'e4612996-a740-497c-8878-74e8a6d45dca',
+  version: '474a61fb-2115-4423-b925-173b27c0fb89',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},

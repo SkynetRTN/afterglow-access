@@ -28,7 +28,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
   lastPath$: Observable<DataProviderPath>;
   selectedFileSystemItems$ = new BehaviorSubject<FileSystemItem[]>([]);
   selectionIsValid$: Observable<boolean>;
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   loading: boolean = false;
   progress: number = 0;
   allowedFileExtensions = ['.fits,.fit'];

@@ -142,7 +142,7 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   @Output()
   onFileSave = new EventEmitter<string>();
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
   hduIds$: Observable<string[]>;
   hdus$: Observable<ImageHdu[]>;

@@ -76,7 +76,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;

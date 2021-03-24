@@ -60,7 +60,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
   hdu$: Observable<IHdu>;
   header$: Observable<Header>;

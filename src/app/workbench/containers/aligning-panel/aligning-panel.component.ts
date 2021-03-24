@@ -33,7 +33,7 @@ export class AlignerPageComponent implements OnInit {
 
   config$: Observable<AligningPanelConfig>;
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   selectedHduIds$: Observable<string[]>;
   refHduId$: Observable<string>;

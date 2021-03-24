@@ -56,7 +56,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   header$: Observable<Header>;
   state$: Observable<WcsCalibrationPanelState>;
   selectedHduIds$: Observable<string[]>;

@@ -62,7 +62,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
   hdu$: Observable<IHdu>;
   rawImageData$: Observable<IImageData<PixelType>>;

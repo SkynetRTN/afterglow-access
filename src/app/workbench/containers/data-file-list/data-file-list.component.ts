@@ -58,7 +58,7 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
 
   selectAllChecked$: Observable<boolean>;
   selectAllIndeterminate$: Observable<boolean>;
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   HduType = HduType;
   collapsedFileIds: { [id: string]: boolean } = {};
   focusedValue: { fileId: string; hduId: string } = null;

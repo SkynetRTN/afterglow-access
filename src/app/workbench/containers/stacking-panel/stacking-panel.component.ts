@@ -30,7 +30,7 @@ export class StackerPanelComponent implements OnInit {
 
   config$: Observable<StackingPanelConfig>;
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   selectedHdus$: Observable<Array<ImageHdu>>;
   stackFormData$: Observable<StackFormData>;
   stackingJob$: Observable<StackingJob>;

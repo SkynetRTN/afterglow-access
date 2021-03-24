@@ -49,7 +49,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
   autoDiscard: boolean = null;
   index$ = new BehaviorSubject<number>(0);
   waitingForUserInput: boolean = false;
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   action$: Subject<FileDialogAction> = new Subject<FileDialogAction>();
 
   constructor(
