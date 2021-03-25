@@ -490,8 +490,10 @@ export class DataFilesState {
               imageTransformId: '',
               imageDataId: '',
             };
+            console.log('NEW DATA FILE: ', dataFile);
             dataFiles.push(dataFile);
           } else {
+            console.log('EXISTING DATA FILE: ', dataFile);
             dataFile.hduIds.push(hdu.id);
             if (hdu.type == HduType.IMAGE) {
               dataFile.imageHduIds.push(hdu.id);
