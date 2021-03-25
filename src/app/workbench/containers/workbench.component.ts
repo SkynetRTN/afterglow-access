@@ -1127,7 +1127,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           if (files.length == 0) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: 'Error',
-              message: `None of the selected files contain multiple HDUs.`,
+              message: `None of the selected files contain multiple layers.`,
               buttons: [
                 {
                   color: null,
@@ -1147,7 +1147,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: 'Split Files',
-            message: `Are you sure you want to split the HDUs within each selected file into separate single-HDU files?`,
+            message: `Are you sure you want to split the layers within each selected file into separate single-layer files?`,
             buttons: [
               {
                 color: null,
@@ -1222,7 +1222,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           if (hduCount > 5) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: 'Error',
-              message: `The number of channels within a file is currently limited to no more than five.  Please reduce he number of channels and try grouping again.`,
+              message: `The number of layers within a file is currently limited to no more than five.  Please reduce the number of layers and try grouping again.`,
               buttons: [
                 {
                   color: null,
@@ -1242,7 +1242,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
           let dialogConfig: Partial<AlertDialogConfig> = {
             title: 'Group Files',
-            message: `Are you sure you want to group the selected files into a single file with multiple channels?`,
+            message: `Are you sure you want to group the selected files into a single file with multiple layers?`,
             buttons: [
               {
                 color: null,

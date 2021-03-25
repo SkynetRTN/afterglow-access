@@ -4463,12 +4463,7 @@ export class WorkbenchState {
         let targetImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(viewer.id));
         let refImageData = imageDataEntities[refImageDataId];
 
-        if (
-          refImageData &&
-          targetImageData &&
-          refImageData.width == targetImageData.width &&
-          refImageData.height == targetImageData.height
-        ) {
+        if (refImageData && targetImageData) {
           targetViewportTransform = {
             ...refViewportTransform,
             id: targetViewportTransform.id,

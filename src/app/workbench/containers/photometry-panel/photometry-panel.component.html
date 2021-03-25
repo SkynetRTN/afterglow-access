@@ -1,11 +1,9 @@
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>This HDU type is not yet supported by the photometry tool.</div>
+  <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the photometry tool.</div>
 </ng-template>
 
 <ng-template #hduNotSelectedBlock>
-  <div i18n class="alert alert-info" i18n>
-    Please select an HDU. This tool does not yet support composite image data.
-  </div>
+  <div i18n class="alert alert-info" i18n>Please select an image layer instead of a file.</div>
 </ng-template>
 
 <ng-container *ngIf="config$ | async; let config">
@@ -349,7 +347,7 @@
         <hr />
         <div>
           <div *ngIf="hduIds">
-            <p i18n>Use batch photometry to photometer all of your sources in multiple HDUs.</p>
+            <p i18n>Use batch photometry to photometer all of your sources in multiple image layers/files.</p>
             <form [formGroup]="batchPhotForm">
               <div>
                 <mat-form-field appearance="outline" style="width: 300px">
@@ -361,12 +359,7 @@
                   </mat-select>
                 </mat-form-field>
 
-                <button
-                  mat-icon-button
-                  (click)="selectHdus(hduIds)"
-                  aria-label="Select all HDUs"
-                  matTooltip="Select all HDUs"
-                >
+                <button mat-icon-button (click)="selectHdus(hduIds)" aria-label="Select all" matTooltip="Select all">
                   <mat-icon>select_all</mat-icon>
                 </button>
 
