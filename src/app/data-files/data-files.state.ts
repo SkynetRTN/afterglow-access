@@ -129,7 +129,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: '474a61fb-2115-4423-b925-173b27c0fb89',
+  version: 'e4612996-a740-497c-8878-74e8a6d45dca',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -596,6 +596,21 @@ export class DataFilesState {
           });
 
           state.loading = false;
+
+          //temporary bugfix
+          //remove any entities which are not in the keys array
+          let fileEntities = {};
+          state.fileIds.forEach((id) => {
+            fileEntities[id] = state.fileEntities[id];
+          });
+          state.fileEntities = fileEntities;
+
+          let hduEntities = {};
+          state.hduIds.forEach((id) => {
+            hduEntities[id] = state.hduEntities[id];
+          });
+          state.hduEntities = hduEntities;
+
           return state;
         });
 
