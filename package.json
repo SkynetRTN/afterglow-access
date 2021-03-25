@@ -1,11 +1,11 @@
 {
   "name": "afterglow-access",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.config.json",
     "build": "ng build --prod",
-    "build-prod": "npm version patch && node ./replace.build.js && ng build --prod",
+    "patch-version": "npm --no-git-tag-version version patch && node ./patch-version.js",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",

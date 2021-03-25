@@ -164,8 +164,16 @@ export function getCenterTime(header: Header) {
   return undefined;
 }
 
-export function getTelescope(header: Header) {
+export function getObservatory(header: Header) {
   let observat = getHeaderEntry(header, 'OBSERVAT');
+  if (observat) {
+    return observat.value;
+  }
+  return undefined;
+}
+
+export function getTelescope(header: Header) {
+  let observat = getHeaderEntry(header, 'TELESCOP');
   if (observat) {
     return observat.value;
   }
