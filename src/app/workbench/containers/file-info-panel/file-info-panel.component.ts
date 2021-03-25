@@ -12,6 +12,7 @@ import {
   getTelescope,
   getFilter,
   IHdu,
+  getObservatory,
 } from '../../../data-files/models/data-file';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -72,6 +73,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
         let startTime = getStartTime(header);
         let expLength = getExpLength(header);
         let centerTime = getCenterTime(header);
+        let observatory = getObservatory(header);
         let telescope = getTelescope(header);
         let object = getObject(header);
         let filter = getFilter(header);
@@ -139,6 +141,14 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
               result.push({
                 key: 'Center JD',
                 value: `${datetimeToJd(centerTime)} JD`,
+                comment: '',
+              });
+            }
+
+            if (observatory) {
+              result.push({
+                key: 'Observatory',
+                value: `${observatory}`,
                 comment: '',
               });
             }
