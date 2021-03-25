@@ -24,7 +24,7 @@ let CHUNK_SIZE = 1000000000; //Core does not support multi-part uploads
   styleUrls: ['./upload-dialog.component.scss'],
 })
 export class UploadDialogComponent implements OnInit, AfterViewInit, OnDestroy {
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   files: FileList;
   target: FileSystemItem;
   completed: boolean = false;

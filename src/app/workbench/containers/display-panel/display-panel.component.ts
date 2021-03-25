@@ -65,7 +65,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   imageHdu$: Observable<ImageHdu>;
   tableHdu$: Observable<TableHdu>;
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;

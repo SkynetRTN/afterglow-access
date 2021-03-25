@@ -42,7 +42,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   hdu$: Observable<IHdu>;
   header$: Observable<Header>;
   config$: Observable<FileInfoPanelConfig>;

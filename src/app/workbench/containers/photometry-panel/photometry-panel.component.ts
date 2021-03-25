@@ -115,7 +115,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
   hdu$: Observable<IHdu>;

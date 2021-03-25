@@ -61,7 +61,7 @@ export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestro
   ];
 
   @ViewChild('colorMapMenuTrigger') colorMapMenuTrigger: MatMenuTrigger;
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   constructor() {}
 

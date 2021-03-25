@@ -49,7 +49,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   config$: Observable<PixelOpsPanelConfig>;
   selectedHduIds$: Observable<string[]>;
   pixelOpsJobs$: Observable<PixelOpsJob[]>;

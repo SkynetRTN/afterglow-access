@@ -14,7 +14,7 @@ import { PhotometrySettings } from '../../models/photometry-settings';
 export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
   settings: PhotometrySettings;
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   isNumber = [Validators.required, isNumber];
   greaterThanZero = [Validators.required, isNumber, greaterThan(0)];

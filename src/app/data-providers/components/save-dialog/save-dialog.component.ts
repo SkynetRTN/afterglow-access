@@ -31,7 +31,7 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   currentDirectory$ = new BehaviorSubject<FileSystemItem>(null);
   onSaveClick$ = new Subject<boolean>();
   destinationValid$: Observable<boolean>;
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   @ViewChild('nameInput') nameInput: ElementRef;
   @ViewChild('fileManager') fileManager: FileManagerComponent;

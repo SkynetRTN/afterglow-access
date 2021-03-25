@@ -18,7 +18,7 @@ export interface JobProgressDialogConfig {
   styleUrls: ['./job-progress-dialog.component.scss'],
 })
 export class JobProgressDialogComponent implements OnInit {
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
   progress$: Observable<number>;
 
   constructor(

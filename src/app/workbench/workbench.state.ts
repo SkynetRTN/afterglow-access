@@ -3142,8 +3142,12 @@ export class WorkbenchState {
           return state;
         });
 
+        if (action.errors.length != 0) {
+          return dispatch(new ImportFromSurveyFail(correlationId, action.errors.join(',')));
+        }
+
         if (action.fileIds.length == 0) {
-          return dispatch(new ImportFromSurveyFail(correlationId));
+          return dispatch(new ImportFromSurveyFail(correlationId, 'A file ID was not returned by the server.'));
         }
 
         return dispatch([new LoadLibrary(), new ImportFromSurveySuccess(action.fileIds[0], correlationId)]);

@@ -132,7 +132,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(DataFileListComponent)
   fileList: DataFileListComponent;
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   @Select(WorkbenchState.getInFullScreenMode) inFullScreenMode$: Observable<boolean>;
   @Select(WorkbenchState.getFullScreenPanel) fullScreenPanel$: Observable<'file' | 'viewer' | 'tool'>;

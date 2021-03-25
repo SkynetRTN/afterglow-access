@@ -159,7 +159,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @Output()
   readonly onCurrentDirectoryChange: EventEmitter<FileSystemItem> = new EventEmitter<FileSystemItem>();
 
-  destroy$: Subject<boolean> = new Subject<boolean>();
+  destroy$ = new Subject<boolean>();
 
   currentDirectory$: Observable<FileSystemItem>;
   currentDirectory: FileSystemItem;

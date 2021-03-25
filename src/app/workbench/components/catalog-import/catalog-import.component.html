@@ -1,31 +1,25 @@
-<!-- <div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
-    <div *ngIf="header$ | async; let header">
-      <h4 i18n>DSS Catalog Import</h4>
-      <div class="pb-3">
-        <mat-radio-group
-          aria-label="DSS Import Image Center"
-          [disabled]="!header.wcs || !header.wcs?.isValid()"
-          [value]="useWcsCenter && header.wcs && header.wcs?.isValid() ? 'wcs' : 'header'"
-          (change)="onUseWcsCenterChange($event)"
-        >
-          <mat-radio-button value="header" i18n>Use intended pointing for image center</mat-radio-button>
-          <mat-radio-button value="wcs" i18n>Use WCS for image center</mat-radio-button>
-        </mat-radio-group>
-      </div>
-      <div>
-        <button
-          mat-raised-button
-          class="mb-2"
-          [disabled]="(surveyImportCorrId$ | async) !== null"
-          (click)="importFromSurvey(surveyDataProvider)"
-          i18n
-        >
-          Import DSS
-        </button>
-      </div>
-
-      <div *ngIf="dssImportLoading$ | async">
-        <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
-      </div>
+<div *ngIf="surveyDataProvider$ | async; let surveyDataProvider" class="pt-4">
+  <div *ngIf="header$ | async; let header">
+    <h4 i18n>DSS Catalog Import</h4>
+    <div class="pb-3">
+      <mat-radio-group
+        aria-label="DSS Import Image Center"
+        [disabled]="!header.wcs || !header.wcs?.isValid()"
+        [value]="useWcsCenter && header.wcs && header.wcs?.isValid() ? 'wcs' : 'header'"
+        (change)="onUseWcsCenterChange($event)"
+      >
+        <mat-radio-button value="header" i18n>Use intended pointing for image center</mat-radio-button>
+        <mat-radio-button value="wcs" i18n>Use WCS for image center</mat-radio-button>
+      </mat-radio-group>
     </div>
-  </div> -->
+    <div>
+      <button mat-raised-button class="mb-2" [disabled]="dssImportLoading$ | async" (click)="onImportFromSurvey()" i18n>
+        Import DSS
+      </button>
+    </div>
+
+    <div *ngIf="dssImportLoading$ | async">
+      <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
+    </div>
+  </div>
+</div>
