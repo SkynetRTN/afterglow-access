@@ -456,6 +456,7 @@ export class DataFilesState {
 
     return this.dataFileService.getFiles().pipe(
       tap((coreFiles) => {
+        console.log('CORE FILES: ', coreFiles);
         let actions: any[] = [];
         let hdus: IHdu[] = [];
         let dataFiles: DataFile[] = [];
@@ -470,10 +471,12 @@ export class DataFilesState {
             headerId: '',
             name: coreFile.name,
           };
+          console.log('HDU: ', hdu);
 
           hdus.push(hdu);
 
           let dataFile = dataFiles.find((dataFile) => dataFile.id == hdu.fileId);
+          console.log('DATA FILE MATCH: ', dataFile);
           if (!dataFile) {
             dataFile = {
               id: hdu.fileId,
