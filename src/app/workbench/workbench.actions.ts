@@ -448,7 +448,7 @@ export class ImportFromSurveySuccess {
 export class ImportFromSurveyFail {
   public static readonly type = '[Survey] Import From Survey Fail';
 
-  constructor(public correlationId: string = null) {}
+  constructor(public correlationId: string = null, public error: string) {}
 }
 
 /* Layout */
