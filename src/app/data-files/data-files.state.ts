@@ -129,7 +129,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: 'e4612996-a740-497c-8878-74e8a6d45dca',
+  version: '08325cfc-1521-4783-8549-49bfc7119229',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -463,7 +463,7 @@ export class DataFilesState {
         coreFiles.forEach((coreFile, index) => {
           let hdu: IHdu = {
             id: coreFile.id,
-            fileId: coreFile.groupName,
+            fileId: coreFile.groupName || 'no name',
             type: coreFile.type,
             order: coreFile.groupOrder,
             modified: coreFile.modified,
@@ -596,21 +596,6 @@ export class DataFilesState {
           });
 
           state.loading = false;
-
-          //temporary bugfix
-          //remove any entities which are not in the keys array
-          let fileEntities = {};
-          state.fileIds.forEach((id) => {
-            fileEntities[id] = state.fileEntities[id];
-          });
-          state.fileEntities = fileEntities;
-
-          let hduEntities = {};
-          state.hduIds.forEach((id) => {
-            hduEntities[id] = state.hduEntities[id];
-          });
-          state.hduEntities = hduEntities;
-
           return state;
         });
 
