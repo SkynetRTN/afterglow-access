@@ -129,7 +129,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: '08325cfc-1521-4783-8549-49bfc7119229',
+  version: '8df8a779-4874-472f-a21d-182f7e5ae460',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -456,7 +456,6 @@ export class DataFilesState {
 
     return this.dataFileService.getFiles().pipe(
       tap((coreFiles) => {
-        console.log('CORE FILES: ', coreFiles);
         let actions: any[] = [];
         let hdus: IHdu[] = [];
         let dataFiles: DataFile[] = [];
@@ -464,19 +463,17 @@ export class DataFilesState {
         coreFiles.forEach((coreFile, index) => {
           let hdu: IHdu = {
             id: coreFile.id,
-            fileId: coreFile.groupName || 'no name',
+            fileId: coreFile.groupName,
             type: coreFile.type,
             order: coreFile.groupOrder,
             modified: coreFile.modified,
             headerId: '',
             name: coreFile.name,
           };
-          console.log('HDU: ', hdu);
 
           hdus.push(hdu);
 
           let dataFile = dataFiles.find((dataFile) => dataFile.id == hdu.fileId);
-          console.log('DATA FILE MATCH: ', dataFile);
           if (!dataFile) {
             dataFile = {
               id: hdu.fileId,
@@ -490,10 +487,8 @@ export class DataFilesState {
               imageTransformId: '',
               imageDataId: '',
             };
-            console.log('NEW DATA FILE: ', dataFile);
             dataFiles.push(dataFile);
           } else {
-            console.log('EXISTING DATA FILE: ', dataFile);
             dataFile.hduIds.push(hdu.id);
             if (hdu.type == HduType.IMAGE) {
               dataFile.imageHduIds.push(hdu.id);
