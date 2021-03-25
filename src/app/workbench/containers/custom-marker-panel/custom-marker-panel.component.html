@@ -1,9 +1,9 @@
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>This HDU type is not yet supported by the custom marker tool.</div>
+  <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the custom marker tool.</div>
 </ng-template>
 
 <ng-template #fileNotSelectedBlock>
-  <div i18n class="alert alert-info" i18n>Select an HDU or composite file to see the custom marker tool.</div>
+  <div i18n class="alert alert-info" i18n>Select an file or image layer to see the custom marker tool.</div>
 </ng-template>
 
 <ng-container *ngIf="file$ | async; else fileNotSelectedBlock">

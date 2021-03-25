@@ -1,9 +1,9 @@
 <ng-template #fileNotSelectedBlock>
-  <div i18n class="alert alert-info" i18n>Select an image HDU to see the sonification tool.</div>
+  <div i18n class="alert alert-info" i18n>Select an image layer to see the sonification tool.</div>
 </ng-template>
 
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>This HDU type is not yet supported by the sonification tool.</div>
+  <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the sonification tool.</div>
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">

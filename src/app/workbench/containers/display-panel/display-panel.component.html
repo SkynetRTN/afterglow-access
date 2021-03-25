@@ -1,9 +1,9 @@
 <ng-template #fileNotSelectedBlock>
-  <div i18n class="alert alert-info" i18n>Select an HDU or composite file to see the display settings.</div>
+  <div i18n class="alert alert-info" i18n>Select a file or image layer to see the display settings.</div>
 </ng-template>
 
 <ng-template #invalidHduTypeBlock>
-  <div i18n class="alert alert-info" i18n>Select an image HDU to adjust brightness and contrast settings.</div>
+  <div i18n class="alert alert-info" i18n>Select an image layer to adjust brightness and contrast settings.</div>
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
