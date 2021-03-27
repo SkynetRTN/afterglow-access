@@ -28,6 +28,7 @@ import {
   ImportAssetsCompleted,
   ImportAssetsStatusUpdated,
   SetCurrentPath,
+  UpdateDefaultSort,
 } from './data-providers.actions';
 import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
 import { CreateJob, UpdateJob } from '../jobs/jobs.actions';
@@ -57,7 +58,7 @@ export interface DataProvidersStateModel {
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: '3bed78ef-bfde-4942-877f-251ae4d88b71',
+  version: '0bc2c139-10d0-480b-9b3a-7d18d0700605',
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
@@ -149,7 +150,26 @@ export class DataProvidersState {
         setState((state: DataProvidersStateModel) => {
           state.dataProvidersLoaded = true;
           state.dataProviderIds = dataProviders.map((dp) => dp.id);
-          dataProviders.forEach((dp) => (state.dataProviderEntities[dp.id] = dp));
+
+          dataProviders.forEach((dp) => {
+            if (!dp.defaultSort) {
+              dp.defaultSort = {
+                field: 'name',
+                direction: '',
+              };
+            }
+
+            if (dp.id in state.dataProviderEntities) {
+              //preserve user-specified default sort
+              dp = {
+                ...dp,
+                defaultSort: {
+                  ...state.dataProviderEntities[dp.id].defaultSort,
+                },
+              };
+            }
+            state.dataProviderEntities[dp.id] = dp;
+          });
 
           // //remove data providers from file system root which are no longer present
           // state.fileSystem = state.fileSystem.filter(fsObject => state.dataProviderIds.includes(fsObject.assetPath))
@@ -191,6 +211,20 @@ export class DataProvidersState {
         return dispatch(new LoadDataProvidersFail(err));
       })
     );
+  }
+
+  @Action(UpdateDefaultSort)
+  @ImmutableContext()
+  public updateDefaultSort(
+    { setState, dispatch }: StateContext<DataProvidersStateModel>,
+    { id, sort }: UpdateDefaultSort
+  ) {
+    setState((state: DataProvidersStateModel) => {
+      if (id in state.dataProviderEntities) {
+        state.dataProviderEntities[id].defaultSort = sort;
+      }
+      return state;
+    });
   }
 
   // @Action(LoadAssets)

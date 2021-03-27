@@ -32,13 +32,14 @@ import { JobService } from '../../../jobs/services/jobs';
 import { CreateJobSuccess, CreateJobFail, CreateJob } from '../../../jobs/jobs.actions';
 import { DataProvider } from '../../models/data-provider';
 import { SelectionModel } from '@angular/cdk/collections';
-import { MatSort } from '@angular/material/sort';
+import { MatSort, Sort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { NameDialogComponent } from '../name-dialog/name-dialog.component';
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
 import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
 import { saveAs } from 'file-saver/dist/FileSaver';
+import { UpdateDefaultSort } from '../../data-providers.actions';
 
 export interface FileSystemItem {
   id: string;
@@ -164,6 +165,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   currentDirectory$: Observable<FileSystemItem>;
   currentDirectory: FileSystemItem;
   parentDataProvider$: Observable<DataProvider>;
+  parentDataProvider: DataProvider;
   refresh$ = new BehaviorSubject<boolean>(null);
   items$ = new Subject<FileSystemItem[]>();
   isLoading = false;
@@ -299,6 +301,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         return this.store.select(DataProvidersState.getDataProviderById).pipe(map((fn) => fn(id)));
       })
     );
+
+    this.parentDataProvider$.pipe(takeUntil(this.destroy$)).subscribe((dp) => (this.parentDataProvider = dp));
 
     this.isWriteable$ = this.parentDataProvider$.pipe(
       map((dataProvider) => dataProvider && !dataProvider.readonly),
@@ -447,6 +451,14 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         if (selected.length === 0 || selected.some((v) => v.isDirectory)) return false;
         return true;
       })
+    );
+  }
+
+  onSortChange($event: Sort) {
+    console.log('SORT CHANGE EVENT: ', this.parentDataProvider, $event);
+    if (!this.parentDataProvider) return;
+    this.store.dispatch(
+      new UpdateDefaultSort(this.parentDataProvider.id, { field: $event.active, direction: $event.direction })
     );
   }
 

@@ -82,6 +82,9 @@
       <table
         mat-table
         matSort
+        [matSortActive]="(parentDataProvider$ | async)?.defaultSort?.field || 'name'"
+        [matSortDirection]="(parentDataProvider$ | async)?.defaultSort?.direction || 'asc'"
+        (matSortChange)="onSortChange($event)"
         [class.multi-selection-mode]="selection.selected.length > 1"
         [dataSource]="dataSource"
         class="mat-elevation-z8"
