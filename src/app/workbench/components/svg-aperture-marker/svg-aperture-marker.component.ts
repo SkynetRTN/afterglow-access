@@ -21,9 +21,7 @@ export class SvgApertureMarkerComponent implements OnInit, AfterViewInit {
   constructor(private cdr: ChangeDetectorRef) {}
 
   getTransform() {
-    return `translate(${this.marker.x - 0.5}, ${this.marker.y - 0.5}) rotate(${
-      this.marker.apertureTheta * (180.0 / Math.PI)
-    })`;
+    return `translate(${this.marker.x}, ${this.marker.y}) rotate(${this.marker.apertureTheta * (180.0 / Math.PI)})`;
   }
 
   ngOnInit() {}
