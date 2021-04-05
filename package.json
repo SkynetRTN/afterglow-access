@@ -1,11 +1,12 @@
 {
   "name": "afterglow-access",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.config.json",
     "build": "ng build --prod",
     "patch-version": "npm --no-git-tag-version version patch && node ./patch-version.js",
+    "i18n": "ng extract-i18n --out-file src/locale/messages.xlf && cpy src/locale/messages.xlf src/locale/es --rename=messages.es.xlf",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
