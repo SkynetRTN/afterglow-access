@@ -25,12 +25,14 @@ export class AfterglowDataProviderService {
     return this.http.get<DataProvider[]>(`${getCoreApiUrl(this.config)}/data-providers`);
   }
 
-  getAssets(dataProviderId: string, path: string): Observable<DataProviderAsset[]> {
+  getAssets(dataProviderId: string, path: string, from = 0, limit = 100): Observable<DataProviderAsset[]> {
     if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
     if (path) params = params.set('path', path);
+    // params = params.set('from', from.toString());
+    // params = params.set('limit', limit.toString());
 
     return this.http
       .get<any>(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString())

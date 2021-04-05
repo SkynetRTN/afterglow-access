@@ -15,6 +15,7 @@ import {
   debounceTime,
   startWith,
   catchError,
+  share,
 } from 'rxjs/operators';
 import { DataProviderAsset } from '../../models/data-provider-asset';
 import { AfterglowDataProviderService } from '../../../workbench/services/afterglow-data-providers';
@@ -40,6 +41,7 @@ import { TargetDialogComponent } from '../target-dialog/target-dialog.component'
 import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
 import { saveAs } from 'file-saver/dist/FileSaver';
 import { UpdateDefaultSort } from '../../data-providers.actions';
+import { MatPaginator } from '@angular/material/paginator';
 
 export interface FileSystemItem {
   id: string;
@@ -166,8 +168,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   currentDirectory: FileSystemItem;
   parentDataProvider$: Observable<DataProvider>;
   parentDataProvider: DataProvider;
-  refresh$ = new BehaviorSubject<boolean>(null);
-  items$ = new Subject<FileSystemItem[]>();
+  refresh$ = new Subject<boolean>();
+  items$: Observable<FileSystemItem[]>;
   isLoading = false;
   selection = new SelectionModel<FileSystemItem>(true, []);
   isAllSelected$: Observable<boolean>;
@@ -185,6 +187,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @ViewChild('fileUpload') fileUpload: ElementRef;
 
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
   dataSource = new MatTableDataSource<FileSystemItem>();
   showCreate$: Observable<boolean>;
   showCopy$: Observable<boolean>;
@@ -228,6 +231,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         }
 
         return this.assetToFileSystemItem(path.assets[path.assets.length - 1]);
+      }),
+      distinctUntilChanged((a, b) => {
+        return a && b && a.id === b.id;
       })
     );
 
@@ -235,63 +241,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       this.currentDirectory = parent;
       this.onCurrentDirectoryChange.emit(parent);
     });
-
-    combineLatest(this.currentDirectory$.pipe(distinctUntilChanged((a, b) => a && b && a.id === b.id)), this.refresh$)
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap(([parent]) => {
-          this.isLoading = true;
-          if (!parent) {
-            return this.dataProviderService.getDataProviders().pipe(
-              // delay(50000),
-              map((dataProviders) => {
-                return {
-                  items: dataProviders
-                    .filter((dataProvider) => dataProvider.browseable)
-                    .map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
-                  error: null,
-                };
-              }),
-              catchError((err) => of({ items: [], error: err }))
-            );
-          } else {
-            return this.dataProviderService
-              .getAssets(parent.dataProvider.id, parent.asset ? parent.asset.assetPath : '')
-              .pipe(
-                map((assets) => {
-                  return {
-                    items: assets.map((asset) => this.assetToFileSystemItem(asset)),
-                    error: null,
-                  };
-                }),
-                catchError((err) => of({ items: [], error: err }))
-              );
-          }
-        })
-      )
-      .subscribe(({ items, error }) => {
-        this.isLoading = false;
-        if (error) {
-          this.error$.next((error as HttpErrorResponse).error.message);
-          this.navigateToRoot(false);
-          return;
-        }
-        const selectedIds = this.selection.selected.map((item) => item.id);
-        this.selection.clear();
-        this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
-        items = items.sort((a, b) => {
-          if (a.isDirectory === b.isDirectory) {
-            return a.name.toLowerCase() < b.name.toLowerCase()
-              ? -1
-              : a.name.toLowerCase() > b.name.toLowerCase()
-              ? 1
-              : 0;
-          } else {
-            return a.isDirectory ? -1 : 1;
-          }
-        });
-        this.items$.next(items);
-      });
 
     this.parentDataProvider$ = this.currentDirectory$.pipe(
       map((parent) => (parent ? parent.dataProvider.id : null)),
@@ -342,120 +291,205 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         return result;
       })
     );
+  }
 
-    this.isAllSelected$ = combineLatest(this.items$, selectionChange$).pipe(
-      map(([items]) => {
-        const numSelected = this.selection.selected.length;
-        const numRows = items.length;
-        return numSelected === numRows;
-      })
-    );
+  ngOnInit(): void {}
 
-    this.isIndeterminate$ = combineLatest(this.isAllSelected$, selectionChange$).pipe(
-      map(([isAllSelected]) => {
-        return this.selection.selected.length !== 0 && !isAllSelected;
-      })
-    );
+  ngAfterViewInit() {
+    const selectionChange$ = this.selection.changed.pipe(startWith(null));
 
-    this.onToggle$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.isAllSelected$, this.items$))
-      .subscribe(([toggle, isAllSelected, items]) => {
-        isAllSelected ? this.selection.clear() : items.forEach((row) => this.selection.select(row));
+    setTimeout(() => {
+      this.items$ = merge(this.currentDirectory$, this.refresh$, this.paginator.page, this.sort.sortChange).pipe(
+        withLatestFrom(this.currentDirectory$),
+        switchMap(([v, parent]) => {
+          console.log('GETTING ITEMS: ', parent, this.sort, this.paginator.pageIndex);
+          this.isLoading = true;
+          let result$: Observable<FileSystemItem[]>;
+
+          if (!parent) {
+            result$ = this.dataProviderService.getDataProviders().pipe(
+              // delay(50000),
+              map((dataProviders) => {
+                return dataProviders
+                  .filter((dataProvider) => dataProvider.browseable)
+                  .map((dataProvider) => this.providerToFileSystemItem(dataProvider));
+              })
+            );
+          } else {
+            result$ = this.dataProviderService
+              .getAssets(
+                parent.dataProvider.id,
+                parent.asset ? parent.asset.assetPath : '',
+                this.paginator.pageIndex,
+                this.paginator.pageSize
+              )
+              .pipe(map((assets) => assets.map((asset) => this.assetToFileSystemItem(asset))));
+          }
+
+          return result$.pipe(
+            map((result) => {
+              this.isLoading = false;
+              const selectedIds = this.selection.selected.map((item) => item.id);
+              this.selection.clear();
+              this.selection.select(...result.filter((item) => selectedIds.includes(item.id)));
+              return result.sort((a, b) => {
+                if (a.isDirectory === b.isDirectory) {
+                  return a.name.toLowerCase() < b.name.toLowerCase()
+                    ? -1
+                    : a.name.toLowerCase() > b.name.toLowerCase()
+                    ? 1
+                    : 0;
+                } else {
+                  return a.isDirectory ? -1 : 1;
+                }
+              });
+            }),
+            catchError((error) => {
+              this.isLoading = false;
+              this.error$.next((error as HttpErrorResponse).error.message);
+              this.navigateToRoot(false);
+              return of([]);
+            })
+          );
+        }),
+        share()
+      );
+
+      this.items$.subscribe((items) => {
+        this.dataSource.data = items;
+        this.dataSource.sort = this.sort;
+        this.dataSource.paginator = this.paginator;
+
+        this.dataSource.sortingDataAccessor = (item, property) => {
+          if (property === 'name') {
+            return item.name;
+          } else {
+            return this.resolvePath(item, property);
+          }
+        };
       });
 
-    this.onRowDblClick$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{ $event, item }, items]) => {
-        //double click
-        if (item.isDirectory) {
-          this.navigateToChildItem(item);
-        } else {
-          this.onSelectedAssetOpened.emit(item.asset);
-        }
-      });
+      this.isAllSelected$ = combineLatest(this.items$, selectionChange$).pipe(
+        map(([items]) => {
+          const numSelected = this.selection.selected.length;
+          const numRows = items.length;
+          return numSelected === numRows;
+        })
+      );
 
-    this.onRowClick$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{ $event, item }, items]) => {
-        if (this.selectionMode === 'none') return;
-        if (
-          !this.selection.isMultipleSelection() ||
-          (!$event.shiftKey && !$event.ctrlKey && this.selection.selected.length <= 1)
-        ) {
-          this.lastSelectedItem = item;
-          //single-selection mode
-          if (this.selection.isSelected(item)) return;
+      this.isIndeterminate$ = combineLatest(this.isAllSelected$, selectionChange$).pipe(
+        map(([isAllSelected]) => {
+          return this.selection.selected.length !== 0 && !isAllSelected;
+        })
+      );
 
-          this.selection.clear();
-          this.selection.select(item);
+      this.onToggle$
+        .pipe(takeUntil(this.destroy$), withLatestFrom(this.isAllSelected$, this.items$))
+        .subscribe(([toggle, isAllSelected, items]) => {
+          isAllSelected ? this.selection.clear() : items.forEach((row) => this.selection.select(row));
+        });
+
+      this.onRowDblClick$
+        .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
+        .subscribe(([{ $event, item }, items]) => {
+          //double click
+          if (item.isDirectory) {
+            this.navigateToChildItem(item);
+          } else {
+            this.onSelectedAssetOpened.emit(item.asset);
+          }
+        });
+
+      this.onRowClick$
+        .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
+        .subscribe(([{ $event, item }, items]) => {
+          if (this.selectionMode === 'none') return;
+          if (
+            !this.selection.isMultipleSelection() ||
+            (!$event.shiftKey && !$event.ctrlKey && this.selection.selected.length <= 1)
+          ) {
+            this.lastSelectedItem = item;
+            //single-selection mode
+            if (this.selection.isSelected(item)) return;
+
+            this.selection.clear();
+            this.selection.select(item);
+            return;
+          }
+
+          if ($event.shiftKey) {
+            if (!this.lastSelectedItem) this.lastSelectedItem = item;
+            const index1 = items.indexOf(this.lastSelectedItem);
+            const index2 = items.indexOf(item);
+            const selection = items
+              .slice(Math.min(index1, index2), Math.max(index1, index2) + 1)
+              .filter((item) => !this.selection.isSelected(item));
+            this.selection.select(...selection);
+            this.lastSelectedItem = item;
+            return;
+          }
+
+          this.selection.toggle(item);
+          this.lastSelectedItem = this.selection.isSelected(item) ? item : null;
           return;
-        }
+        });
 
-        if ($event.shiftKey) {
-          if (!this.lastSelectedItem) this.lastSelectedItem = item;
-          const index1 = items.indexOf(this.lastSelectedItem);
-          const index2 = items.indexOf(item);
-          const selection = items
-            .slice(Math.min(index1, index2), Math.max(index1, index2) + 1)
-            .filter((item) => !this.selection.isSelected(item));
-          this.selection.select(...selection);
-          this.lastSelectedItem = item;
-          return;
-        }
+      this.showCreate$ = combineLatest(this.allowCreate$, this.isWriteable$).pipe(
+        map(([allowCreate, isWriteable]) => {
+          return allowCreate && isWriteable;
+        })
+      );
 
-        this.selection.toggle(item);
-        this.lastSelectedItem = this.selection.isSelected(item) ? item : null;
-        return;
-      });
+      this.showCopy$ = combineLatest(this.allowCopy$, selectionChange$).pipe(
+        map(([allowCopy]) => {
+          if (!allowCopy) return false;
+          const selected = this.selection.selected;
+          //disallow copying the entire data provider
+          if (selected.length === 0 || selected.some((v) => !v.asset)) return false;
+          return true;
+        })
+      );
 
-    this.showCreate$ = combineLatest(this.allowCreate$, this.isWriteable$).pipe(
-      map(([allowCreate, isWriteable]) => {
-        return allowCreate && isWriteable;
-      })
-    );
+      this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
+        map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
+      );
 
-    this.showCopy$ = combineLatest(this.allowCopy$, selectionChange$).pipe(
-      map(([allowCopy]) => {
-        if (!allowCopy) return false;
-        const selected = this.selection.selected;
-        //disallow copying the entire data provider
-        if (selected.length === 0 || selected.some((v) => !v.asset)) return false;
-        return true;
-      })
-    );
+      this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
+        map(([allowDelete, showMove]) => allowDelete && showMove)
+      );
 
-    this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
-      map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
-    );
+      this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
+        map(([allowRename, isWriteable]) => {
+          return allowRename && isWriteable && this.selection.selected.length === 1;
+        })
+      );
 
-    this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
-      map(([allowDelete, showMove]) => allowDelete && showMove)
-    );
+      this.showUpload$ = combineLatest(this.allowUpload$, this.isWriteable$).pipe(
+        map(([allowUpload, isWriteable]) => {
+          return allowUpload && isWriteable;
+        })
+      );
 
-    this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
-      map(([allowRename, isWriteable]) => {
-        return allowRename && isWriteable && this.selection.selected.length === 1;
-      })
-    );
+      this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
+        map(() => {
+          if (!this.allowDownload) return false;
+          const selected = this.selection.selected;
+          if (selected.length === 0 || selected.some((v) => v.isDirectory)) return false;
+          return true;
+        })
+      );
+    });
+  }
 
-    this.showUpload$ = combineLatest(this.allowUpload$, this.isWriteable$).pipe(
-      map(([allowUpload, isWriteable]) => {
-        return allowUpload && isWriteable;
-      })
-    );
-
-    this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
-      map(() => {
-        if (!this.allowDownload) return false;
-        const selected = this.selection.selected;
-        if (selected.length === 0 || selected.some((v) => v.isDirectory)) return false;
-        return true;
-      })
-    );
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   onSortChange($event: Sort) {
-    console.log('SORT CHANGE EVENT: ', this.parentDataProvider, $event);
+    //reset paging
+    this.paginator.pageIndex = 0;
+
     if (!this.parentDataProvider) return;
     this.store.dispatch(
       new UpdateDefaultSort(this.parentDataProvider.id, { field: $event.active, direction: $event.direction })
@@ -830,28 +864,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     merge(onCreateJobSuccess$, onCreateJobFail$)
       .pipe(take(1))
       .subscribe(() => {});
-  }
-
-  ngOnInit(): void {}
-
-  ngAfterViewInit() {
-    this.items$.subscribe((items) => {
-      this.dataSource.data = items;
-      this.dataSource.sort = this.sort;
-
-      this.dataSource.sortingDataAccessor = (item, property) => {
-        if (property === 'name') {
-          return item.name;
-        } else {
-          return this.resolvePath(item, property);
-        }
-      };
-    });
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
   }
 
   masterToggle() {

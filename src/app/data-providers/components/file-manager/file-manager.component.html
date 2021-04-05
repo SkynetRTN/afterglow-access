@@ -78,71 +78,76 @@
     <div class="loading-shade" *ngIf="isLoading">
       <mat-spinner *ngIf="isLoading"></mat-spinner>
     </div>
-    <div class="table-wrapper" style="height: 100%">
-      <table
-        mat-table
-        matSort
-        [matSortActive]="(parentDataProvider$ | async)?.defaultSort?.field || 'name'"
-        [matSortDirection]="(parentDataProvider$ | async)?.defaultSort?.direction || 'asc'"
-        (matSortChange)="onSortChange($event)"
-        [class.multi-selection-mode]="selection.selected.length > 1"
-        [dataSource]="dataSource"
-        class="mat-elevation-z8"
-      >
-        <!-- Checkbox Column -->
-        <ng-container matColumnDef="select" sticky>
-          <th class="select" mat-header-cell *matHeaderCellDef>
-            <mat-checkbox
-              (change)="masterToggle()"
-              [checked]="isAllSelected$ | async"
-              [indeterminate]="isIndeterminate$ | async"
-              [aria-label]="(isAllSelected$ | async) ? 'select all' : 'deselect all'"
-            >
-            </mat-checkbox>
-          </th>
-          <td class="select" mat-cell *matCellDef="let row">
-            <mat-checkbox
-              (click)="$event.stopPropagation()"
-              (change)="$event ? selection.toggle(row) : null"
-              [checked]="selection.isSelected(row)"
-              [aria-label]="checkboxLabel(row)"
-            >
-            </mat-checkbox>
-          </td>
-        </ng-container>
+    <div class="table-wrapper" fxLayout="column" style="height: 100%">
+      <div fxFlex="1 1 auto" style="overflow: auto">
+        <table
+          mat-table
+          matSort
+          [matSortActive]="(parentDataProvider$ | async)?.defaultSort?.field || 'name'"
+          [matSortDirection]="(parentDataProvider$ | async)?.defaultSort?.direction || 'asc'"
+          (matSortChange)="onSortChange($event)"
+          [class.multi-selection-mode]="selection.selected.length > 1"
+          [dataSource]="dataSource"
+          class="mat-elevation-z8"
+        >
+          <!-- Checkbox Column -->
+          <ng-container matColumnDef="select" sticky>
+            <th class="select" mat-header-cell *matHeaderCellDef>
+              <mat-checkbox
+                (change)="masterToggle()"
+                [checked]="isAllSelected$ | async"
+                [indeterminate]="isIndeterminate$ | async"
+                [aria-label]="(isAllSelected$ | async) ? 'select all' : 'deselect all'"
+              >
+              </mat-checkbox>
+            </th>
+            <td class="select" mat-cell *matCellDef="let row">
+              <mat-checkbox
+                (click)="$event.stopPropagation()"
+                (change)="$event ? selection.toggle(row) : null"
+                [checked]="selection.isSelected(row)"
+                [aria-label]="checkboxLabel(row)"
+              >
+              </mat-checkbox>
+            </td>
+          </ng-container>
 
-        <!-- Name Column -->
-        <ng-container matColumnDef="name" sticky>
-          <th class="name" mat-header-cell mat-sort-header="name" *matHeaderCellDef>Name</th>
-          <td class="name" mat-cell *matCellDef="let item">
-            <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px">
-              <mat-icon *ngIf="item.isDirectory; else fileIcon"> folder </mat-icon>
-              <ng-template #fileIcon>
-                <mat-icon> insert_drive_file </mat-icon>
-              </ng-template>
-              <span>{{ item.name }}</span>
-            </div>
-          </td>
-        </ng-container>
+          <!-- Name Column -->
+          <ng-container matColumnDef="name" sticky>
+            <th class="name" mat-header-cell mat-sort-header="name" *matHeaderCellDef>Name</th>
+            <td class="name" mat-cell *matCellDef="let item">
+              <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px">
+                <mat-icon *ngIf="item.isDirectory; else fileIcon"> folder </mat-icon>
+                <ng-template #fileIcon>
+                  <mat-icon> insert_drive_file </mat-icon>
+                </ng-template>
+                <span>{{ item.name }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-        <ng-container *ngFor="let column of columns$ | async" [matColumnDef]="column.caption">
-          <th mat-header-cell [mat-sort-header]="column.dataField" class="meta-column" *matHeaderCellDef>
-            {{ column.caption }}
-          </th>
-          <td mat-cell class="meta-column" *matCellDef="let item">
-            <span class="">{{ resolvePath(item, column.dataField) }} </span>
-          </td>
-        </ng-container>
+          <ng-container *ngFor="let column of columns$ | async" [matColumnDef]="column.caption">
+            <th mat-header-cell [mat-sort-header]="column.dataField" class="meta-column" *matHeaderCellDef>
+              {{ column.caption }}
+            </th>
+            <td mat-cell class="meta-column" *matCellDef="let item">
+              <span class="">{{ resolvePath(item, column.dataField) }} </span>
+            </td>
+          </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; let rowIndex = index; columns: displayedColumns$ | async"
-          [class.selected]="selection.isSelected(row)"
-          (click)="onRowClick$.next({ $event: $event, item: row })"
-          (dblclick)="onRowDblClick$.next({ $event: $event, item: row })"
-        ></tr>
-      </table>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; let rowIndex = index; columns: displayedColumns$ | async"
+            [class.selected]="selection.isSelected(row)"
+            (click)="onRowClick$.next({ $event: $event, item: row })"
+            (dblclick)="onRowDblClick$.next({ $event: $event, item: row })"
+          ></tr>
+        </table>
+      </div>
+      <div fxFlex="0 0 auto">
+        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+      </div>
     </div>
   </div>
 </div>
