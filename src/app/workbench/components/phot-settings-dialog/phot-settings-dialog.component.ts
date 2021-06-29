@@ -41,6 +41,9 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     aKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     aInKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     aOutKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
+    fixAper: new FormControl(false, { updateOn: 'blur' }),
+    fixEll: new FormControl(false, { updateOn: 'blur' }),
+    fixRot: new FormControl(false, { updateOn: 'blur' }),
   });
 
   constructor(

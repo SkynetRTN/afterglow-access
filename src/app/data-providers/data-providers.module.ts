@@ -15,6 +15,7 @@ import { NameDialogComponent } from './components/name-dialog/name-dialog.compon
 import { UtilsModule } from '../utils/utils.module';
 import { TargetDialogComponent } from './components/target-dialog/target-dialog.component';
 import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.component';
+import { PaginatorComponent } from './components/paginator/paginator.component';
 
 @NgModule({
   imports: [
@@ -35,6 +36,7 @@ import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.
     NameDialogComponent,
     TargetDialogComponent,
     UploadDialogComponent,
+    PaginatorComponent,
   ],
   exports: [],
   providers: [],

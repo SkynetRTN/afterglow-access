@@ -26,25 +26,25 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   constructor(private store: Store, private cookieService: CookieService, private config: AfterglowConfigService) {}
 
   get user() {
-    if (!localStorage.getItem('aa_user')) return null;
+    if (!localStorage.getItem('user')) return null;
     if (this.config.authMethod == 'cookie') {
       if (!this.cookieService.get(this.config.authCookieName)) {
         return null;
-      } else if (this.cookieService.get(this.config.authCookieName) != localStorage.getItem('aa_access_token')) {
+      } else if (this.cookieService.get(this.config.authCookieName) != localStorage.getItem('access_token')) {
         //unexpected cookie change.  //could be that a different user has logged in
         return null;
       }
     }
     if (this.config.authMethod == 'oauth2') {
-      let expiresAt = moment(localStorage.getItem('aa_expires_at'));
+      let expiresAt = moment(localStorage.getItem('expires_at'));
       if (moment().isSameOrAfter(expiresAt)) {
-        localStorage.removeItem('aa_user');
+        localStorage.removeItem('user');
         return null;
       }
     }
 
     try {
-      return JSON.parse(localStorage.getItem('aa_user'));
+      return JSON.parse(localStorage.getItem('user'));
     } catch (err) {
       return null;
     }

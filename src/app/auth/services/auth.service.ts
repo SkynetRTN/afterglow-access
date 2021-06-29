@@ -11,12 +11,17 @@ import { getCoreApiUrl } from '../../afterglow-config';
 import { Store } from '@ngxs/store';
 import { AppState } from '../../app.state';
 import { AfterglowConfigService } from '../../afterglow-config.service';
+import { CoreApiResponse } from '../../utils/core-api-response';
+
+interface GetUserResponse extends CoreApiResponse {
+  data: CoreUser;
+}
 
 @Injectable()
 export class AuthService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   getUser() {
-    return this.http.get<CoreUser>(`${getCoreApiUrl(this.config)}/user`);
+    return this.http.get<GetUserResponse>(`${getCoreApiUrl(this.config)}/user`);
   }
 }

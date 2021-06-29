@@ -42,6 +42,7 @@ import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component'
 import { saveAs } from 'file-saver/dist/FileSaver';
 import { UpdateDefaultSort } from '../../data-providers.actions';
 import { MatPaginator } from '@angular/material/paginator';
+import { PaginatorComponent } from '../paginator/paginator.component';
 
 export interface FileSystemItem {
   id: string;
@@ -187,7 +188,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @ViewChild('fileUpload') fileUpload: ElementRef;
 
   @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(PaginatorComponent) paginator: PaginatorComponent;
   dataSource = new MatTableDataSource<FileSystemItem>();
   showCreate$: Observable<boolean>;
   showCopy$: Observable<boolean>;
@@ -197,6 +198,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   showUpload$: Observable<boolean>;
   showDownload$: Observable<boolean>;
 
+  showFirstLastButtons = true;
   constructor(
     private store: Store,
     private actions$: Actions,
@@ -299,40 +301,86 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     const selectionChange$ = this.selection.changed.pipe(startWith(null));
 
     setTimeout(() => {
-      this.items$ = merge(this.currentDirectory$, this.refresh$, this.paginator.page, this.sort.sortChange).pipe(
+      this.items$ = merge(
+        this.currentDirectory$,
+        this.refresh$,
+        this.sort.sortChange,
+        this.paginator.pageSizeChange
+      ).pipe(
         withLatestFrom(this.currentDirectory$),
         switchMap(([v, parent]) => {
-          console.log('GETTING ITEMS: ', parent, this.sort, this.paginator.pageIndex);
           this.isLoading = true;
-          let result$: Observable<FileSystemItem[]>;
+          let result$: Observable<{
+            links?: { first: string; prev: string; next: string; last: string };
+            items: FileSystemItem[];
+          }>;
+
+          let key$ = this.paginator.keyChange.pipe(
+            distinctUntilChanged(),
+            filter((key) => key !== undefined)
+          );
 
           if (!parent) {
-            result$ = this.dataProviderService.getDataProviders().pipe(
+            result$ = merge(
+              this.dataProviderService.getDataProviders(),
+              key$.pipe(switchMap((key) => this.dataProviderService.getDataProvidersByLink(key)))
+            ).pipe(
               // delay(50000),
-              map((dataProviders) => {
-                return dataProviders
-                  .filter((dataProvider) => dataProvider.browseable)
-                  .map((dataProvider) => this.providerToFileSystemItem(dataProvider));
+              map((resp) => {
+                let dataProviders = resp.data;
+                return {
+                  links: resp.links.pagination,
+                  items: dataProviders
+                    .filter((dataProvider) => dataProvider.browseable)
+                    .map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
+                };
+              }),
+              catchError((error) => {
+                this.isLoading = false;
+                this.error$.next((error as HttpErrorResponse).error.message);
+                this.navigateToRoot(false);
+                return of({ items: [] });
               })
             );
           } else {
-            result$ = this.dataProviderService
-              .getAssets(
+            result$ = merge(
+              this.dataProviderService.getAssets(
                 parent.dataProvider.id,
                 parent.asset ? parent.asset.assetPath : '',
-                this.paginator.pageIndex,
                 this.paginator.pageSize
-              )
-              .pipe(map((assets) => assets.map((asset) => this.assetToFileSystemItem(asset))));
+              ),
+              key$.pipe(switchMap((key) => this.dataProviderService.getAssetsByLink(parent.dataProvider.id, key)))
+            ).pipe(
+              map((resp) => {
+                return {
+                  links: resp.links.pagination,
+                  items: resp.assets.map((asset) => this.assetToFileSystemItem(asset)),
+                };
+              }),
+              catchError((error) => {
+                this.isLoading = false;
+                this.error$.next((error as HttpErrorResponse).error.message);
+                this.navigateToRoot(false);
+                return of({ items: [] });
+              })
+            );
           }
 
           return result$.pipe(
+            takeUntil(this.destroy$),
             map((result) => {
+              this.paginator.first = result.links?.first;
+              this.paginator.last = result.links?.last;
+              this.paginator.next = result.links?.next;
+              this.paginator.previous = result.links?.prev;
+
+              let items = result.items;
+
               this.isLoading = false;
               const selectedIds = this.selection.selected.map((item) => item.id);
               this.selection.clear();
-              this.selection.select(...result.filter((item) => selectedIds.includes(item.id)));
-              return result.sort((a, b) => {
+              this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
+              return items.sort((a, b) => {
                 if (a.isDirectory === b.isDirectory) {
                   return a.name.toLowerCase() < b.name.toLowerCase()
                     ? -1
@@ -343,12 +391,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
                   return a.isDirectory ? -1 : 1;
                 }
               });
-            }),
-            catchError((error) => {
-              this.isLoading = false;
-              this.error$.next((error as HttpErrorResponse).error.message);
-              this.navigateToRoot(false);
-              return of([]);
             })
           );
         }),
@@ -358,7 +400,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       this.items$.subscribe((items) => {
         this.dataSource.data = items;
         this.dataSource.sort = this.sort;
-        this.dataSource.paginator = this.paginator;
+        // if(!this.dataSource.paginator && this.paginator) {
+        //   this.dataSource.paginator = this.paginator;
+        // }
 
         this.dataSource.sortingDataAccessor = (item, property) => {
           if (property === 'name') {
@@ -877,4 +921,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   handleUploadFilesChange($event: Event) {
     this.onUploadChange(($event.target as HTMLInputElement).files);
   }
+
+  onPaginationLinkClick() {}
 }

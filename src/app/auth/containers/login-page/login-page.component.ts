@@ -29,7 +29,7 @@ export class LoginPageComponent implements OnInit, OnDestroy, AfterViewInit {
     let redirectUri = location.origin + '/authorized';
     if (this.config.authMethod == 'oauth2') {
       let nonce = uuid.v4();
-      localStorage.setItem('aa_oauth_nonce', nonce);
+      localStorage.setItem('oauth_nonce', nonce);
 
       let params: HttpParams = new HttpParams();
       params = params.set('client_id', this.config.oauth2ClientId);

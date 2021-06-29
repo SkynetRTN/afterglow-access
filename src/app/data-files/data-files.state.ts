@@ -455,7 +455,8 @@ export class DataFilesState {
     });
 
     return this.dataFileService.getFiles().pipe(
-      tap((coreFiles) => {
+      tap((resp) => {
+        let coreFiles = resp.data;
         let actions: any[] = [];
         let hdus: IHdu[] = [];
         let dataFiles: DataFile[] = [];
@@ -682,7 +683,8 @@ export class DataFilesState {
 
     return this.dataFileService.getHeader(hduId).pipe(
       takeUntil(cancel$),
-      tap((entries) => {
+      tap((resp) => {
+        let entries = resp.data;
         let actions: any[] = [];
         setState((state: DataFilesStateModel) => {
           let hdu = state.hduEntities[hduId];

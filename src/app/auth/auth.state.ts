@@ -20,6 +20,7 @@ import { LocationStrategy } from '@angular/common';
 import { AppState } from '../app.state';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
+import { Initialize } from '../workbench/workbench.actions';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -104,7 +105,7 @@ export class AuthState {
     //redirect to authorizing page to get user info
     //watch for localstorage changes
     window.addEventListener('storage', (event: StorageEvent) => {
-      if (['aa_user', 'aa_access_token'].includes(event.key)) {
+      if (['user', 'access_token'].includes(event.key)) {
         let state = ctx.getState();
         if (state.user && this.authGuard.user) {
           if (state.user.id != this.authGuard.user.id) {
@@ -130,6 +131,12 @@ export class AuthState {
     ctx.patchState({
       user: this.authGuard.user,
     });
+
+    if(this.authGuard.user) {
+      ctx.dispatch(new LoginSuccess())
+    }
+
+    
   }
 
   @Action(CheckSession)
@@ -157,6 +164,7 @@ export class AuthState {
       localStorage.removeItem('nextUrl');
 
       this.router.navigateByUrl(nextUrl && nextUrl != '' ? nextUrl : '/');
+      ctx.dispatch(new Initialize());
     } else {
       ctx.patchState({
         loginPending: false,
@@ -172,9 +180,9 @@ export class AuthState {
       this.cookieService.remove(this.config.authCookieName);
     } else if (this.config.authMethod == 'oauth2') {
     }
-    localStorage.removeItem('aa_user');
-    localStorage.removeItem('aa_expires_at');
-    localStorage.removeItem('aa_access_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('expires_at');
+    localStorage.removeItem('access_token');
 
     ctx.dispatch(new ResetState());
     ctx.patchState({ user: null });

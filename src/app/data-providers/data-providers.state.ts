@@ -146,7 +146,8 @@ export class DataProvidersState {
   @ImmutableContext()
   public loadDataProviders({ setState, dispatch }: StateContext<DataProvidersStateModel>) {
     return this.dataProviderService.getDataProviders().pipe(
-      tap((dataProviders) => {
+      tap((resp) => {
+        let dataProviders = resp.data;
         setState((state: DataProvidersStateModel) => {
           state.dataProvidersLoaded = true;
           state.dataProviderIds = dataProviders.map((dp) => dp.id);
@@ -204,8 +205,8 @@ export class DataProvidersState {
           return state;
         });
       }),
-      flatMap((dataProviders) => {
-        return dispatch(new LoadDataProvidersSuccess(dataProviders));
+      flatMap((resp) => {
+        return dispatch(new LoadDataProvidersSuccess(resp.data));
       }),
       catchError((err) => {
         return dispatch(new LoadDataProvidersFail(err));

@@ -8,6 +8,7 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { DataProviderAsset } from '../../data-providers/models/data-provider-asset';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { AfterglowConfigService } from '../../afterglow-config.service';
+import { CoreApiResponse } from '../../utils/core-api-response';
 
 export interface UploadInfo {
   bytesUploaded: number;
@@ -17,39 +18,81 @@ export interface UploadInfo {
   chunkIndex: number;
 }
 
+interface DataProvidersResponse extends CoreApiResponse {
+  data: DataProvider[];
+  links: {
+    pagination: {
+      currentPage: number;
+      first: string;
+      last: string;
+      next: string;
+      prev: string;
+      totalPages: number;
+    };
+    self: string;
+  };
+}
+
+interface AssetsResponse extends CoreApiResponse {
+  data: Array<{ name: string; path: string; collection: boolean; metadata: { [key: string]: any } }>;
+  links: {
+    pagination: {
+      currentPage: number;
+      first: string;
+      last: string;
+      next: string;
+      prev: string;
+      totalPages: number;
+    };
+    self: string;
+  };
+}
+
 @Injectable()
 export class AfterglowDataProviderService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
-  getDataProviders(): Observable<DataProvider[]> {
-    return this.http.get<DataProvider[]>(`${getCoreApiUrl(this.config)}/data-providers`);
+  getDataProvidersByLink(link: string) {
+    return this.http.get<DataProvidersResponse>(link);
   }
 
-  getAssets(dataProviderId: string, path: string, from = 0, limit = 100): Observable<DataProviderAsset[]> {
+  getDataProviders() {
+    return this.getDataProvidersByLink(`${getCoreApiUrl(this.config)}/data-providers`);
+  }
+
+  getAssetsByLink(dataProviderId: string, link: string) {
+    return this.http.get<AssetsResponse>(link).pipe(
+      map((resp) => {
+        let assets = resp.data.map((r) => {
+          let asset: DataProviderAsset = {
+            name: r.name,
+            isDirectory: r.collection,
+            assetPath: '/' + r.path,
+            metadata: r.metadata,
+            dataProviderId: dataProviderId,
+          };
+          return asset;
+        });
+
+        return {
+          assets,
+          links: resp.links,
+        };
+      })
+    );
+  }
+
+  getAssets(dataProviderId: string, path: string, pageSize = 20) {
     if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
     if (path) params = params.set('path', path);
-    // params = params.set('from', from.toString());
-    // params = params.set('limit', limit.toString());
-
-    return this.http
-      .get<any>(`${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString())
-      .pipe(
-        map((resp) =>
-          resp.map((r) => {
-            let asset: DataProviderAsset = {
-              name: r.name,
-              isDirectory: r.collection,
-              assetPath: '/' + r.path,
-              metadata: r.metadata,
-              dataProviderId: dataProviderId,
-            };
-            return asset;
-          })
-        )
-      );
+    params = params.set('page[size]', pageSize.toString());
+    return this.getAssetsByLink(
+      dataProviderId,
+      `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString()
+    );
   }
 
   downloadAsset(dataProviderId: string, path: string): Observable<any> {
