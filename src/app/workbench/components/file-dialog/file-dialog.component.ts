@@ -276,7 +276,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
           return this.dataProviderService.getAssets(dataProviderId, assetPath).pipe(
             take(1),
             flatMap((resp) => {
-              if (resp.assets.length != 1) {
+              if (resp.data.length != 1) {
                 //is collection
                 return throwError('Cannot save to chosen path.  Existing asset is a collection.');
               } else {

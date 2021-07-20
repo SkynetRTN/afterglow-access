@@ -8,7 +8,7 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { DataProviderAsset } from '../../data-providers/models/data-provider-asset';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { AfterglowConfigService } from '../../afterglow-config.service';
-import { CoreApiResponse } from '../../utils/core-api-response';
+import { CoreApiResponse, PaginationLinks } from '../../utils/core-api-response';
 
 export interface UploadInfo {
   bytesUploaded: number;
@@ -21,14 +21,7 @@ export interface UploadInfo {
 interface DataProvidersResponse extends CoreApiResponse {
   data: DataProvider[];
   links: {
-    pagination: {
-      currentPage: number;
-      first: string;
-      last: string;
-      next: string;
-      prev: string;
-      totalPages: number;
-    };
+    pagination: PaginationLinks;
     self: string;
   };
 }
@@ -36,14 +29,7 @@ interface DataProvidersResponse extends CoreApiResponse {
 interface AssetsResponse extends CoreApiResponse {
   data: Array<{ name: string; path: string; collection: boolean; metadata: { [key: string]: any } }>;
   links: {
-    pagination: {
-      currentPage: number;
-      first: string;
-      last: string;
-      next: string;
-      prev: string;
-      totalPages: number;
-    };
+    pagination: PaginationLinks;
     self: string;
   };
 }
@@ -75,20 +61,33 @@ export class AfterglowDataProviderService {
         });
 
         return {
-          assets,
+          data: assets,
           links: resp.links,
         };
       })
     );
   }
 
-  getAssets(dataProviderId: string, path: string, pageSize = 20) {
+  getAssets(
+    dataProviderId: string,
+    path: string,
+    pageSize = 20,
+    sortField = '',
+    sortDirection: 'asc' | 'desc' | '' = 'asc',
+    nameFilter = ''
+  ) {
     if (path && path[0] == '/') {
       path = path.slice(1);
     }
     let params: HttpParams = new HttpParams();
     if (path) params = params.set('path', path);
     params = params.set('page[size]', pageSize.toString());
+    if (sortField) {
+      params = params.set('sort', (sortDirection == 'desc' ? '-' : '') + sortField);
+    }
+    if (nameFilter) {
+      params = params.set('name', nameFilter);
+    }
     return this.getAssetsByLink(
       dataProviderId,
       `${getCoreApiUrl(this.config)}/data-providers/${dataProviderId}/assets?` + params.toString()

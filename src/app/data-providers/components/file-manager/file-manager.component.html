@@ -75,8 +75,8 @@
     </ng-template>
   </div>
   <div fxFlex="1 1 auto" class="file-items-panel">
-    <div class="loading-shade" *ngIf="isLoading">
-      <mat-spinner *ngIf="isLoading"></mat-spinner>
+    <div class="loading-shade" *ngIf="isLoading || (dataSource?.loading$ | async)">
+      <mat-spinner></mat-spinner>
     </div>
     <div class="table-wrapper" fxLayout="column" style="height: 100%">
       <div fxFlex="1 1 auto" style="overflow: auto">
@@ -131,7 +131,7 @@
               {{ column.caption }}
             </th>
             <td mat-cell class="meta-column" *matCellDef="let item">
-              <span class="">{{ resolvePath(item, column.dataField) }} </span>
+              <span class="">{{ resolvePath(item, 'metadata.' + column.dataField) }} </span>
             </td>
           </ng-container>
 
@@ -145,12 +145,105 @@
           ></tr>
         </table>
       </div>
-      <div fxFlex="0 0 auto">
-        <app-paginator
-          [pageSizeOptions]="[5, 25, 50, 100, 200, 500]"
-          [pageSize]="50"
-          [showFirstLastButtons]="true"
-        ></app-paginator>
+      <div fxFlex="0 0 auto" class="bottom-toolbar">
+        <div class="mat-paginator-outer-container">
+          <div *ngIf="showNameFilter" class="name-filter p-2">
+            <mat-form-field appearance="outline">
+              <mat-label>Filter by name</mat-label>
+              <input
+                #nameFilterInput
+                matInput
+                placeholder="Filter by name"
+                (input)="onNameFilterChange(nameFilterInput.value)"
+                [value]="nameFilter"
+              />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="mat-paginator-container">
+            <div class="mat-paginator-page-size">
+              <div class="mat-paginator-page-size-label">Items per page:</div>
+
+              <mat-form-field class="mat-paginator-page-size-select">
+                <mat-select
+                  [value]="pageSize"
+                  [aria-label]="'Items per page'"
+                  (selectionChange)="_changePageSize($event.value)"
+                >
+                  <mat-option *ngFor="let pageSizeOption of pageSizeOptions" [value]="pageSizeOption">
+                    {{ pageSizeOption }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="mat-paginator-page-size-value" *ngIf="pageSizeOptions.length <= 1">{{ pageSize }}</div>
+            </div>
+            <div class="mat-paginator-range-actions">
+              <button
+                mat-icon-button
+                type="button"
+                class="mat-paginator-navigation-first"
+                (click)="dataSource.first(); selection.clear()"
+                [attr.aria-label]="'first page'"
+                [matTooltip]="'first page'"
+                [matTooltipDisabled]="!(dataSource?.firstLink$ | async)"
+                [matTooltipPosition]="'above'"
+                [disabled]="!(dataSource?.firstLink$ | async)"
+                *ngIf="showFirstLastButtons"
+              >
+                <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
+                  <path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z" />
+                </svg>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                class="mat-paginator-navigation-previous"
+                (click)="dataSource.previous(); selection.clear()"
+                [attr.aria-label]="'previous page'"
+                [matTooltip]="'previous page'"
+                [matTooltipDisabled]="!(dataSource?.prevLink$ | async)"
+                [matTooltipPosition]="'above'"
+                [disabled]="!(dataSource?.prevLink$ | async)"
+              >
+                <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
+                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                </svg>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                class="mat-paginator-navigation-next"
+                (click)="dataSource.next(); selection.clear()"
+                [attr.aria-label]="'next page'"
+                [matTooltip]="'next page'"
+                [matTooltipDisabled]="!(dataSource?.nextLink$ | async)"
+                [matTooltipPosition]="'above'"
+                [disabled]="!(dataSource?.nextLink$ | async)"
+              >
+                <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
+                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                </svg>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                class="mat-paginator-navigation-last"
+                (click)="dataSource.last(); selection.clear()"
+                [attr.aria-label]="'last page'"
+                [matTooltip]="'last page'"
+                [matTooltipDisabled]="!(dataSource?.lastLink$ | async)"
+                [matTooltipPosition]="'above'"
+                [disabled]="!(dataSource?.lastLink$ | async)"
+                *ngIf="showFirstLastButtons"
+              >
+                <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
+                  <path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
