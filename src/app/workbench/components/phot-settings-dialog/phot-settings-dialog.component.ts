@@ -41,6 +41,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     aKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     aInKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     aOutKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
+    autoAper: new FormControl(false),
     fixAper: new FormControl(false, { updateOn: 'blur' }),
     fixEll: new FormControl(false, { updateOn: 'blur' }),
     fixRot: new FormControl(false, { updateOn: 'blur' }),
@@ -76,6 +77,14 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     this.constantApertureForm.controls.elliptical.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((value) => this.updateDisabledControls(value));
+
+    this.adaptiveApertureForm.controls.autoAper.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+      if (value) {
+        this.adaptiveApertureForm.controls.aKrFactor.disable();
+      } else {
+        this.adaptiveApertureForm.controls.aKrFactor.enable();
+      }
+    });
 
     this.adaptiveApertureForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       this.settings = {

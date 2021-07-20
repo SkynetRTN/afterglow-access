@@ -19,6 +19,7 @@ export interface PhotometrySettings {
   aKrFactor: number;
   aInKrFactor: number;
   aOutKrFactor: number;
+  autoAper: boolean;
   fixAper: boolean;
   fixEll: boolean;
   fixRot: boolean;
