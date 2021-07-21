@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 import { Catalog } from '../models/catalog';
 import { AfterglowConfigService } from '../../afterglow-config.service';
 import { getCoreApiUrl } from '../../afterglow-config';
+import { CoreApiResponse } from '../../utils/core-api-response';
 
 @Injectable()
 export class AfterglowCatalogService {
@@ -14,7 +15,7 @@ export class AfterglowCatalogService {
   getCatalogs(): Observable<Catalog[]> {
     return this.http.get<any>(`${getCoreApiUrl(this.config)}/catalogs`).pipe(
       map((res) =>
-        res.map((c) => {
+        res.data.map((c) => {
           return {
             name: c.name,
             displayName: c.display_name,

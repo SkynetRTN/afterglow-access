@@ -13,6 +13,7 @@
     [allowUpload]="false"
     [allowDownload]="false"
     [selectionMode]="'single'"
+    [showNameFilter]="false"
     (onSelectionChange)="selectedAssets$.next($event)"
     (onSelectedAssetOpened)="onSelectedAssetOpened($event)"
     (onCurrentDirectoryChange)="onCurrentDirectoryChange($event)"

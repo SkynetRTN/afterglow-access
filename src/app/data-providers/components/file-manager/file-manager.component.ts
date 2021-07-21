@@ -1,4 +1,14 @@
-import { Component, OnInit, ViewChild, Output, EventEmitter, Input, AfterViewInit, ElementRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  Output,
+  EventEmitter,
+  Input,
+  AfterViewInit,
+  ElementRef,
+  ViewEncapsulation,
+} from '@angular/core';
 import { DataProvidersState, DataProviderPath } from '../../data-providers.state';
 import { Store, Actions, ofActionDispatched } from '@ngxs/store';
 import { Observable, of, merge, Subject, combineLatest, BehaviorSubject, forkJoin } from 'rxjs';
@@ -15,6 +25,8 @@ import {
   debounceTime,
   startWith,
   catchError,
+  share,
+  finalize,
 } from 'rxjs/operators';
 import { DataProviderAsset } from '../../models/data-provider-asset';
 import { AfterglowDataProviderService } from '../../../workbench/services/afterglow-data-providers';
@@ -31,14 +43,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { JobService } from '../../../jobs/services/jobs';
 import { CreateJobSuccess, CreateJobFail, CreateJob } from '../../../jobs/jobs.actions';
 import { DataProvider } from '../../models/data-provider';
-import { SelectionModel } from '@angular/cdk/collections';
-import { MatSort } from '@angular/material/sort';
+import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
+import { MatSort, Sort, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { NameDialogComponent } from '../name-dialog/name-dialog.component';
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
 import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
 import { saveAs } from 'file-saver/dist/FileSaver';
+import { UpdateDefaultSort } from '../../data-providers.actions';
+import { MatPaginator } from '@angular/material/paginator';
+import { PaginationLinks } from '../../../utils/core-api-response';
 
 export interface FileSystemItem {
   id: string;
@@ -54,10 +69,186 @@ export interface FileSystemDetailsColumn {
   caption: string;
 }
 
+export interface FileSystemItemsResponse {
+  pagination?: PaginationLinks;
+  items: FileSystemItem[];
+}
+
+export class FileSystemItemsDataSource implements DataSource<FileSystemItem> {
+  private fileSystemItemsSubject = new BehaviorSubject<FileSystemItem[]>([]);
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  private writeableSubject = new BehaviorSubject<boolean>(false);
+  private firstLinkSubject = new BehaviorSubject<string>('');
+  private prevLinkSubject = new BehaviorSubject<string>('');
+  private nextLinkSubject = new BehaviorSubject<string>('');
+  private lastLinkSubject = new BehaviorSubject<string>('');
+
+  private currentPath: DataProviderPath;
+
+  public loading$ = this.loadingSubject.asObservable();
+  public writeable$ = this.writeableSubject.asObservable();
+  public items$ = this.fileSystemItemsSubject.asObservable();
+  public firstLink$ = this.firstLinkSubject.asObservable();
+  public prevLink$ = this.prevLinkSubject.asObservable();
+  public nextLink$ = this.nextLinkSubject.asObservable();
+  public lastLink$ = this.lastLinkSubject.asObservable();
+
+  constructor(private dataProviderService: AfterglowDataProviderService, private store: Store) {}
+
+  connect(collectionViewer: CollectionViewer): Observable<FileSystemItem[]> {
+    return this.items$;
+  }
+
+  disconnect(collectionViewer: CollectionViewer): void {
+    this.fileSystemItemsSubject.complete();
+    this.loadingSubject.complete();
+  }
+
+  parseProviderResponse(resp: {
+    data: DataProvider[];
+    links: { pagination: PaginationLinks };
+  }): FileSystemItemsResponse {
+    let dataProviders = resp.data;
+    return {
+      pagination: resp.links.pagination,
+      items: dataProviders
+        .filter((dataProvider) => dataProvider.browseable)
+        .map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
+    };
+  }
+
+  providerToFileSystemItem(dataProvider: DataProvider): FileSystemItem {
+    return {
+      id: dataProvider.id,
+      name: dataProvider.displayName,
+      dataProvider: dataProvider,
+      asset: null,
+      isDirectory: true,
+      metadata: {
+        description: dataProvider.description,
+        permissions: dataProvider.readonly ? 'readonly' : '',
+      },
+    };
+  }
+
+  parseAssetsResponse(resp: {
+    data: DataProviderAsset[];
+    links: { pagination: PaginationLinks };
+  }): FileSystemItemsResponse {
+    return {
+      pagination: resp.links.pagination,
+      items: resp.data.map((asset) => this.assetToFileSystemItem(asset)),
+    };
+  }
+
+  assetToFileSystemItem(asset: DataProviderAsset): FileSystemItem {
+    const dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[asset.dataProviderId];
+    return {
+      id: `${asset.dataProviderId}:${asset.assetPath}`,
+      name: asset.name,
+      dataProvider: dataProvider,
+      asset: asset,
+      isDirectory: asset.isDirectory,
+      metadata: asset.metadata,
+    };
+  }
+
+  get items() {
+    return this.fileSystemItemsSubject.value;
+  }
+
+  first() {
+    if (this.firstLinkSubject.value) this.loadFileSystemItemsByLink(this.firstLinkSubject.value);
+  }
+
+  previous() {
+    if (this.prevLinkSubject.value) this.loadFileSystemItemsByLink(this.prevLinkSubject.value);
+  }
+
+  next() {
+    if (this.nextLinkSubject.value) this.loadFileSystemItemsByLink(this.nextLinkSubject.value);
+  }
+
+  last() {
+    if (this.lastLinkSubject.value) this.loadFileSystemItemsByLink(this.lastLinkSubject.value);
+  }
+
+  private loadFileSystemItemsByLink(link: string) {
+    let result$: Observable<FileSystemItemsResponse>;
+
+    if (!this.currentPath) {
+      result$ = this.dataProviderService
+        .getDataProvidersByLink(link)
+        .pipe(map((resp) => this.parseProviderResponse(resp)));
+    } else {
+      result$ = this.dataProviderService
+        .getAssetsByLink(this.currentPath.dataProviderId, link)
+        .pipe(map((resp) => this.parseAssetsResponse(resp)));
+    }
+
+    this.loadingSubject.next(true);
+
+    result$
+      .pipe(
+        catchError(() => of({ items: [] } as FileSystemItemsResponse)),
+        finalize(() => this.loadingSubject.next(false))
+      )
+      .subscribe((result) => {
+        this.firstLinkSubject.next(result.pagination?.first);
+        this.prevLinkSubject.next(result.pagination?.prev);
+        this.nextLinkSubject.next(result.pagination?.next);
+        this.lastLinkSubject.next(result.pagination?.last);
+        this.fileSystemItemsSubject.next(result.items);
+      });
+  }
+
+  loadFileSystemItems(
+    path: DataProviderPath,
+    nameFilter: string,
+    sortField: string,
+    sortDirection: '' | 'asc' | 'desc',
+    pageSize: number
+  ) {
+    this.loadingSubject.next(true);
+
+    let result$: Observable<FileSystemItemsResponse>;
+
+    if (!path) {
+      result$ = this.dataProviderService.getDataProviders().pipe(map((resp) => this.parseProviderResponse(resp)));
+    } else {
+      result$ = this.dataProviderService
+        .getAssets(
+          path.dataProviderId,
+          path.assets?.length != 0 ? path.assets[path.assets.length - 1].assetPath : '',
+          pageSize,
+          sortField,
+          sortDirection,
+          nameFilter
+        )
+        .pipe(map((resp) => this.parseAssetsResponse(resp)));
+    }
+
+    result$
+      .pipe(
+        catchError(() => of({ items: [] } as FileSystemItemsResponse)),
+        finalize(() => this.loadingSubject.next(false))
+      )
+      .subscribe((result) => {
+        this.currentPath = path;
+        this.firstLinkSubject.next(result.pagination?.first);
+        this.prevLinkSubject.next(result.pagination?.prev);
+        this.nextLinkSubject.next(result.pagination?.next);
+        this.lastLinkSubject.next(result.pagination?.last);
+        this.fileSystemItemsSubject.next(result.items);
+      });
+  }
+}
+
 @Component({
   selector: 'app-file-manager',
   templateUrl: './file-manager.component.html',
   styleUrls: ['./file-manager.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class FileManagerComponent implements OnInit, AfterViewInit {
   @Input('path')
@@ -74,6 +265,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   @Input()
   showToolbar = true;
+
+  @Input()
+  showNameFilter = true;
 
   @Input()
   showMetadataColumns = true;
@@ -159,13 +353,17 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @Output()
   readonly onCurrentDirectoryChange: EventEmitter<FileSystemItem> = new EventEmitter<FileSystemItem>();
 
+  @Output() pageSizeChange = new EventEmitter<number>();
+
   destroy$ = new Subject<boolean>();
 
+  dataSource: FileSystemItemsDataSource;
   currentDirectory$: Observable<FileSystemItem>;
   currentDirectory: FileSystemItem;
   parentDataProvider$: Observable<DataProvider>;
-  refresh$ = new BehaviorSubject<boolean>(null);
-  items$ = new Subject<FileSystemItem[]>();
+  parentDataProvider: DataProvider;
+  refresh$ = new Subject<boolean>();
+  // items$: Observable<FileSystemItem[]>;
   isLoading = false;
   selection = new SelectionModel<FileSystemItem>(true, []);
   isAllSelected$: Observable<boolean>;
@@ -183,7 +381,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @ViewChild('fileUpload') fileUpload: ElementRef;
 
   @ViewChild(MatSort) sort: MatSort;
-  dataSource = new MatTableDataSource<FileSystemItem>();
+  pageSize = 50;
+  pageSizeOptions = [50, 100, 250, 500];
+  nameFilter: string = '';
+  nameFilterChange$ = new Subject<string>();
   showCreate$: Observable<boolean>;
   showCopy$: Observable<boolean>;
   showMove$: Observable<boolean>;
@@ -192,6 +393,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   showUpload$: Observable<boolean>;
   showDownload$: Observable<boolean>;
 
+  showFirstLastButtons = true;
   constructor(
     private store: Store,
     private actions$: Actions,
@@ -201,6 +403,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     private jobService: JobService
   ) {
     const selectionChange$ = this.selection.changed.pipe(startWith(null));
+
+    this.dataSource = new FileSystemItemsDataSource(this.dataProviderService, this.store);
 
     this.selection.changed
       .pipe(takeUntil(this.destroy$))
@@ -222,10 +426,13 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
         if (path.assets.length === 0) {
           //data provider root
-          return this.providerToFileSystemItem(dataProvider);
+          return this.dataSource.providerToFileSystemItem(dataProvider);
         }
 
-        return this.assetToFileSystemItem(path.assets[path.assets.length - 1]);
+        return this.dataSource.assetToFileSystemItem(path.assets[path.assets.length - 1]);
+      }),
+      distinctUntilChanged((a, b) => {
+        return a && b && a.id === b.id;
       })
     );
 
@@ -233,63 +440,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       this.currentDirectory = parent;
       this.onCurrentDirectoryChange.emit(parent);
     });
-
-    combineLatest(this.currentDirectory$.pipe(distinctUntilChanged((a, b) => a && b && a.id === b.id)), this.refresh$)
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap(([parent]) => {
-          this.isLoading = true;
-          if (!parent) {
-            return this.dataProviderService.getDataProviders().pipe(
-              // delay(50000),
-              map((dataProviders) => {
-                return {
-                  items: dataProviders
-                    .filter((dataProvider) => dataProvider.browseable)
-                    .map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
-                  error: null,
-                };
-              }),
-              catchError((err) => of({ items: [], error: err }))
-            );
-          } else {
-            return this.dataProviderService
-              .getAssets(parent.dataProvider.id, parent.asset ? parent.asset.assetPath : '')
-              .pipe(
-                map((assets) => {
-                  return {
-                    items: assets.map((asset) => this.assetToFileSystemItem(asset)),
-                    error: null,
-                  };
-                }),
-                catchError((err) => of({ items: [], error: err }))
-              );
-          }
-        })
-      )
-      .subscribe(({ items, error }) => {
-        this.isLoading = false;
-        if (error) {
-          this.error$.next((error as HttpErrorResponse).error.message);
-          this.navigateToRoot(false);
-          return;
-        }
-        const selectedIds = this.selection.selected.map((item) => item.id);
-        this.selection.clear();
-        this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
-        items = items.sort((a, b) => {
-          if (a.isDirectory === b.isDirectory) {
-            return a.name.toLowerCase() < b.name.toLowerCase()
-              ? -1
-              : a.name.toLowerCase() > b.name.toLowerCase()
-              ? 1
-              : 0;
-          } else {
-            return a.isDirectory ? -1 : 1;
-          }
-        });
-        this.items$.next(items);
-      });
 
     this.parentDataProvider$ = this.currentDirectory$.pipe(
       map((parent) => (parent ? parent.dataProvider.id : null)),
@@ -299,6 +449,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         return this.store.select(DataProvidersState.getDataProviderById).pipe(map((fn) => fn(id)));
       })
     );
+
+    this.parentDataProvider$.pipe(takeUntil(this.destroy$)).subscribe((dp) => (this.parentDataProvider = dp));
 
     this.isWriteable$ = this.parentDataProvider$.pipe(
       map((dataProvider) => dataProvider && !dataProvider.readonly),
@@ -310,18 +462,18 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         if (!dataProvider) {
           return [
             {
-              dataField: 'metadata.description',
+              dataField: 'description',
               caption: 'description',
             },
             {
-              dataField: 'metadata.permissions',
+              dataField: 'permissions',
               caption: 'permissions',
             },
           ];
         }
         return dataProvider.columns.map((column) => {
           const result: FileSystemDetailsColumn = {
-            dataField: 'metadata.' + column.fieldName,
+            dataField: column.fieldName,
             caption: column.name,
           };
           return result;
@@ -338,30 +490,28 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
         return result;
       })
     );
+  }
 
-    this.isAllSelected$ = combineLatest(this.items$, selectionChange$).pipe(
-      map(([items]) => {
-        const numSelected = this.selection.selected.length;
-        const numRows = items.length;
-        return numSelected === numRows;
-      })
-    );
+  ngOnInit(): void {}
 
-    this.isIndeterminate$ = combineLatest(this.isAllSelected$, selectionChange$).pipe(
-      map(([isAllSelected]) => {
-        return this.selection.selected.length !== 0 && !isAllSelected;
-      })
-    );
+  ngAfterViewInit() {
+    setTimeout(() => {
+      const selectionChange$ = this.selection.changed.pipe(startWith(null));
 
-    this.onToggle$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.isAllSelected$, this.items$))
-      .subscribe(([toggle, isAllSelected, items]) => {
-        isAllSelected ? this.selection.clear() : items.forEach((row) => this.selection.select(row));
-      });
+      combineLatest([
+        this.path$.pipe(distinctUntilChanged()),
+        this.pageSizeChange.pipe(startWith(this.pageSize)),
+        this.sort.sortChange.pipe(startWith({ active: this.sort.active, direction: this.sort.direction })),
+        this.nameFilterChange$.pipe(startWith(''), debounceTime(500), distinctUntilChanged()),
+        this.refresh$.pipe(startWith(true)),
+      ])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(([path, pageSize, sort]) => {
+          this.selection.clear();
+          this.dataSource.loadFileSystemItems(path, this.nameFilter, sort.active, sort.direction, pageSize);
+        });
 
-    this.onRowDblClick$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{ $event, item }, items]) => {
+      this.onRowDblClick$.pipe(takeUntil(this.destroy$)).subscribe(({ $event, item }) => {
         //double click
         if (item.isDirectory) {
           this.navigateToChildItem(item);
@@ -369,10 +519,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           this.onSelectedAssetOpened.emit(item.asset);
         }
       });
-
-    this.onRowClick$
-      .pipe(takeUntil(this.destroy$), withLatestFrom(this.items$))
-      .subscribe(([{ $event, item }, items]) => {
+      this.onRowClick$.pipe(takeUntil(this.destroy$)).subscribe(({ $event, item }) => {
+        let items = this.dataSource.items;
         if (this.selectionMode === 'none') return;
         if (
           !this.selection.isMultipleSelection() ||
@@ -381,12 +529,10 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           this.lastSelectedItem = item;
           //single-selection mode
           if (this.selection.isSelected(item)) return;
-
           this.selection.clear();
           this.selection.select(item);
           return;
         }
-
         if ($event.shiftKey) {
           if (!this.lastSelectedItem) this.lastSelectedItem = item;
           const index1 = items.indexOf(this.lastSelectedItem);
@@ -398,55 +544,213 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           this.lastSelectedItem = item;
           return;
         }
-
         this.selection.toggle(item);
         this.lastSelectedItem = this.selection.isSelected(item) ? item : null;
         return;
       });
 
-    this.showCreate$ = combineLatest(this.allowCreate$, this.isWriteable$).pipe(
-      map(([allowCreate, isWriteable]) => {
-        return allowCreate && isWriteable;
-      })
-    );
+      this.isAllSelected$ = combineLatest(this.dataSource.items$, selectionChange$).pipe(
+        map(([items]) => {
+          const numSelected = this.selection.selected.length;
+          const numRows = items.length;
+          return numSelected === numRows;
+        })
+      );
+      this.isIndeterminate$ = combineLatest(this.isAllSelected$, selectionChange$).pipe(
+        map(([isAllSelected]) => {
+          return this.selection.selected.length !== 0 && !isAllSelected;
+        })
+      );
+      this.onToggle$
+        .pipe(takeUntil(this.destroy$), withLatestFrom(this.isAllSelected$, this.dataSource.items$))
+        .subscribe(([toggle, isAllSelected, items]) => {
+          isAllSelected ? this.selection.clear() : items.forEach((row) => this.selection.select(row));
+        });
 
-    this.showCopy$ = combineLatest(this.allowCopy$, selectionChange$).pipe(
-      map(([allowCopy]) => {
-        if (!allowCopy) return false;
-        const selected = this.selection.selected;
-        //disallow copying the entire data provider
-        if (selected.length === 0 || selected.some((v) => !v.asset)) return false;
-        return true;
-      })
-    );
+      this.showCreate$ = combineLatest(this.allowCreate$, this.isWriteable$).pipe(
+        map(([allowCreate, isWriteable]) => {
+          return allowCreate && isWriteable;
+        })
+      );
+      this.showCopy$ = combineLatest(this.allowCopy$, selectionChange$).pipe(
+        map(([allowCopy]) => {
+          if (!allowCopy) return false;
+          const selected = this.selection.selected;
+          //disallow copying the entire data provider
+          if (selected.length === 0 || selected.some((v) => !v.asset)) return false;
+          return true;
+        })
+      );
+      this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
+        map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
+      );
+      this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
+        map(([allowDelete, showMove]) => allowDelete && showMove)
+      );
+      this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
+        map(([allowRename, isWriteable]) => {
+          return allowRename && isWriteable && this.selection.selected.length === 1;
+        })
+      );
+      this.showUpload$ = combineLatest(this.allowUpload$, this.isWriteable$).pipe(
+        map(([allowUpload, isWriteable]) => {
+          return allowUpload && isWriteable;
+        })
+      );
+      this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
+        map(() => {
+          if (!this.allowDownload) return false;
+          const selected = this.selection.selected;
+          if (selected.length === 0 || selected.some((v) => v.isDirectory)) return false;
+          return true;
+        })
+      );
+    });
 
-    this.showMove$ = combineLatest(this.allowMove$, this.showCopy$, this.isWriteable$).pipe(
-      map(([allowMove, showCopy, isWriteable]) => allowMove && showCopy && isWriteable)
-    );
+    // this.paginator.keyChange
+    //   .pipe(
+    //     takeUntil(this.destroy$),
+    //     distinctUntilChanged(),
+    //     filter((key) => key !== undefined)
+    //   )
+    //   .subscribe((link) => this.dataSource.loadFileSystemItemsByLink(link));
 
-    this.showDelete$ = combineLatest(this.allowDelete$, this.showMove$).pipe(
-      map(([allowDelete, showMove]) => allowDelete && showMove)
-    );
+    setTimeout(() => {
+      // this.items$ = merge(
+      //   this.currentDirectory$,
+      //   this.refresh$,
+      //   this.sort.sortChange,
+      //   this.paginator.pageSizeChange
+      // ).pipe(
+      //   withLatestFrom(this.currentDirectory$),
+      //   switchMap(([v, parent]) => {
+      //     this.isLoading = true;
+      //     let result$: Observable<{
+      //       pagination?: {
+      //         first: string;
+      //         prev: string;
+      //         next: string;
+      //         last: string;
+      //         pageSize: number;
+      //         totalPages: number;
+      //         sort: string;
+      //       };
+      //       items: FileSystemItem[];
+      //     }>;
+      //     let key$ = this.paginator.keyChange.pipe(
+      //       distinctUntilChanged(),
+      //       filter((key) => key !== undefined)
+      //     );
+      //     if (!parent) {
+      //       result$ = merge(
+      //         this.dataProviderService.getDataProviders(),
+      //         key$.pipe(switchMap((key) => this.dataProviderService.getDataProvidersByLink(key)))
+      //       ).pipe(
+      //         // delay(50000),
+      //         map((resp) => {
+      //           let dataProviders = resp.data;
+      //           return {
+      //             links: resp.links.pagination,
+      //             items: dataProviders
+      //               .filter((dataProvider) => dataProvider.browseable)
+      //               .map((dataProvider) => this.providerToFileSystemItem(dataProvider)),
+      //           };
+      //         }),
+      //         catchError((error) => {
+      //           this.isLoading = false;
+      //           this.error$.next((error as HttpErrorResponse).error.message);
+      //           this.navigateToRoot(false);
+      //           return of({ items: [] });
+      //         })
+      //       );
+      //     } else {
+      //       result$ = merge(
+      //         this.dataProviderService.getAssets(
+      //           parent.dataProvider.id,
+      //           parent.asset ? parent.asset.assetPath : '',
+      //           this.paginator.pageSize
+      //         ),
+      //         key$.pipe(switchMap((key) => this.dataProviderService.getAssetsByLink(parent.dataProvider.id, key)))
+      //       ).pipe(
+      //         map((resp) => {
+      //           return {
+      //             links: resp.links.pagination,
+      //             items: resp.assets.map((asset) => this.assetToFileSystemItem(asset)),
+      //           };
+      //         }),
+      //         catchError((error) => {
+      //           this.isLoading = false;
+      //           this.error$.next((error as HttpErrorResponse).error.message);
+      //           this.navigateToRoot(false);
+      //           return of({ items: [] });
+      //         })
+      //       );
+      //     }
+      //     return result$.pipe(
+      //       takeUntil(this.destroy$),
+      //       map((result) => {
+      //         this.paginator.first = result.pagination?.first;
+      //         this.paginator.last = result.pagination?.last;
+      //         this.paginator.next = result.pagination?.next;
+      //         this.paginator.previous = result.pagination?.prev;
+      //         if (!result.pagination?.sort) {
+      //           this.sort.direction = '';
+      //         } else {
+      //           let direction = 'asc';
+      //           let column = result.pagination.sort;
+      //           if (column[0] == '-') {
+      //             direction = 'desc';
+      //             column = column.substr(1);
+      //           }
+      //         }
+      //         let items = result.items;
+      //         this.isLoading = false;
+      //         const selectedIds = this.selection.selected.map((item) => item.id);
+      //         this.selection.clear();
+      //         this.selection.select(...items.filter((item) => selectedIds.includes(item.id)));
+      //         return items;
+      //         // return items.sort((a, b) => {
+      //         //   if (a.isDirectory === b.isDirectory) {
+      //         //     return a.name.toLowerCase() < b.name.toLowerCase()
+      //         //       ? -1
+      //         //       : a.name.toLowerCase() > b.name.toLowerCase()
+      //         //       ? 1
+      //         //       : 0;
+      //         //   } else {
+      //         //     return a.isDirectory ? -1 : 1;
+      //         //   }
+      //         // });
+      //       })
+      //     );
+      //   }),
+      //   share()
+      // );
+      // this.items$.subscribe((items) => {
+      //   this.dataSource.data = items;
+      //   this.dataSource.sort = this.sort;
+      //   // if(!this.dataSource.paginator && this.paginator) {
+      //   //   this.dataSource.paginator = this.paginator;
+      //   // }
+      //   this.dataSource.sortingDataAccessor = (item, property) => {
+      //     if (property === 'name') {
+      //       return item.name;
+      //     } else {
+      //       return this.resolvePath(item, property);
+      //     }
+      //   };
+      // });
+    });
+  }
 
-    this.showRename$ = combineLatest(this.allowRename$, this.isWriteable$, selectionChange$).pipe(
-      map(([allowRename, isWriteable]) => {
-        return allowRename && isWriteable && this.selection.selected.length === 1;
-      })
-    );
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+  }
 
-    this.showUpload$ = combineLatest(this.allowUpload$, this.isWriteable$).pipe(
-      map(([allowUpload, isWriteable]) => {
-        return allowUpload && isWriteable;
-      })
-    );
-
-    this.showDownload$ = combineLatest(this.allowDownload$, selectionChange$).pipe(
-      map(() => {
-        if (!this.allowDownload) return false;
-        const selected = this.selection.selected;
-        if (selected.length === 0 || selected.some((v) => v.isDirectory)) return false;
-        return true;
-      })
+  onSortChange($event: Sort) {
+    if (!this.parentDataProvider) return;
+    this.store.dispatch(
+      new UpdateDefaultSort(this.parentDataProvider.id, { field: $event.active, direction: $event.direction })
     );
   }
 
@@ -456,32 +760,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   clearError() {
     this.error$.next(null);
-  }
-
-  providerToFileSystemItem(dataProvider: DataProvider): FileSystemItem {
-    return {
-      id: dataProvider.id,
-      name: dataProvider.displayName,
-      dataProvider: dataProvider,
-      asset: null,
-      isDirectory: true,
-      metadata: {
-        description: dataProvider.description,
-        permissions: dataProvider.readonly ? 'readonly' : '',
-      },
-    };
-  }
-
-  assetToFileSystemItem(asset: DataProviderAsset): FileSystemItem {
-    const dataProvider = this.store.selectSnapshot(DataProvidersState.getDataProviderEntities)[asset.dataProviderId];
-    return {
-      id: `${asset.dataProviderId}:${asset.assetPath}`,
-      name: asset.name,
-      dataProvider: dataProvider,
-      asset: asset,
-      isDirectory: asset.isDirectory,
-      metadata: asset.metadata,
-    };
   }
 
   public navigateToRoot(clearError = true) {
@@ -496,6 +774,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   public navigateTo(dataProviderId: string, assets: DataProviderAsset[], clearError = true) {
     if (clearError) this.clearError();
+    this.nameFilter = '';
     this.path = {
       dataProviderId: dataProviderId,
       assets: assets,
@@ -820,28 +1099,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       .subscribe(() => {});
   }
 
-  ngOnInit(): void {}
-
-  ngAfterViewInit() {
-    this.items$.subscribe((items) => {
-      this.dataSource.data = items;
-      this.dataSource.sort = this.sort;
-
-      this.dataSource.sortingDataAccessor = (item, property) => {
-        if (property === 'name') {
-          return item.name;
-        } else {
-          return this.resolvePath(item, property);
-        }
-      };
-    });
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
-  }
-
   masterToggle() {
     this.onToggle$.next(true);
   }
@@ -852,5 +1109,18 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
   handleUploadFilesChange($event: Event) {
     this.onUploadChange(($event.target as HTMLInputElement).files);
+  }
+
+  onPaginationLinkClick() {}
+
+  _changePageSize(pageSize: number) {
+    // Current page needs to be updated to reflect the new page size. Navigate to the page
+    this.pageSize = pageSize;
+    this.pageSizeChange.emit(this.pageSize);
+  }
+
+  onNameFilterChange(value: string) {
+    this.nameFilter = value;
+    this.nameFilterChange$.next(value);
   }
 }

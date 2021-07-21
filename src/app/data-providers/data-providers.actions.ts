@@ -94,3 +94,9 @@ export class ImportAssetsCancel {
 
   constructor(public correlationId?: string) {}
 }
+
+export class UpdateDefaultSort {
+  public static readonly type = '[DataProvider] Update Default Sort';
+
+  constructor(public id: string, public sort: { field: string; direction: 'asc' | 'desc' | '' }) {}
+}

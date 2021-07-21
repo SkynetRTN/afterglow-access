@@ -217,7 +217,7 @@ import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '4e43bb3f-91d2-40a5-a85c-2729712d9e59',
+  version: '3a7db059-3817-4c49-bedb-77255473224b',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -265,9 +265,14 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     bOut: 15,
     theta: 0,
     thetaOut: 0,
-    aKrFactor: 2.5,
-    aInKrFactor: 5.0,
-    aOutKrFactor: 7.5,
+    aKrFactor: 7,
+    aInKrFactor: 10,
+    aOutKrFactor: 15,
+    autoAper: true,
+    fixAper: false,
+    fixEll: true,
+    fixRot: true,
+    apcorrTol: 0.0001,
   },
   sourceExtractionSettings: {
     threshold: 3,
@@ -3329,7 +3334,7 @@ export class WorkbenchState {
     if (settings.mode == 'adaptive') {
       s = {
         mode: 'auto',
-        a: settings.aKrFactor,
+        a: settings.autoAper ? 0 : settings.aKrFactor,
         aIn: settings.aInKrFactor,
         aOut: settings.aOutKrFactor,
         b: null,

@@ -10,6 +10,7 @@ import { Region } from '../../data-files/models/region';
 import { HeaderEntry } from '../../data-files/models/header-entry';
 import { AfterglowConfigService } from '../../afterglow-config.service';
 import { getCoreApiUrl } from '../../afterglow-config';
+import { CoreApiResponse } from '../../utils/core-api-response';
 
 export interface CoreDataFile {
   id: string;
@@ -20,6 +21,14 @@ export interface CoreDataFile {
   groupName: string;
   groupOrder: number;
   modified: boolean;
+}
+
+interface FilesResponse extends CoreApiResponse {
+  data: CoreDataFile[]
+}
+
+interface HeaderResponse extends CoreApiResponse {
+  data: HeaderEntry[]
 }
 
 @Injectable()
@@ -36,8 +45,8 @@ export class AfterglowDataFileService {
     return this.http.put(`${getCoreApiUrl(this.config)}/data-files/${fileId}`, changes).pipe(map((res) => null));
   }
 
-  getFiles(): Observable<CoreDataFile[]> {
-    return this.http.get<CoreDataFile[]>(`${getCoreApiUrl(this.config)}/data-files`);
+  getFiles() {
+    return this.http.get<FilesResponse>(`${getCoreApiUrl(this.config)}/data-files`);
   }
 
   createFromDataProviderAsset(providerId: string, assetPath: string) {
@@ -46,18 +55,14 @@ export class AfterglowDataFileService {
     return this.http.post(`${getCoreApiUrl(this.config)}/data-files`, body);
   }
 
-  getHeader(fileId: string): Observable<HeaderEntry[]> {
-    return this.http.get<HeaderEntry[]>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
+  getHeader(fileId: string) {
+    return this.http.get<HeaderResponse>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
   }
 
   getHist(fileId: string): Observable<{ data: Uint32Array; minBin: number; maxBin: number }> {
     return this.http.get<any>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/hist`).pipe(
       map((res) => {
-        return {
-          data: res.data,
-          minBin: res.minBin,
-          maxBin: res.maxBin,
-        };
+        return res.data;
       })
     );
   }

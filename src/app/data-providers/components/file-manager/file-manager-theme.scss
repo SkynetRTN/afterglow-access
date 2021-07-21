@@ -131,4 +131,15 @@
       }
     }
   }
+
+  .bottom-toolbar {
+    border: 1px solid mat-color($foreground, divider);
+    background: mat-color($background, 'card');
+    min-height: 50px;
+  }
+
+  .name-filter .mat-form-field-wrapper {
+    padding-bottom: 0px;
+    margin-bottom: 0p;
+  }
 }
