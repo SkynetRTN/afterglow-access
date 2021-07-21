@@ -3334,7 +3334,7 @@ export class WorkbenchState {
     if (settings.mode == 'adaptive') {
       s = {
         mode: 'auto',
-        a: settings.aKrFactor,
+        a: settings.autoAper ? 0 : settings.aKrFactor,
         aIn: settings.aInKrFactor,
         aOut: settings.aOutKrFactor,
         b: null,
