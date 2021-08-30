@@ -17,9 +17,9 @@
       "sourceRoot": "src",
       "prefix": "app",
       "i18n": {
-        "sourceLocale": "en-US",
+        "sourceLocale": "en",
         "locales": {
-            "es-CL": "src/locale/messages.es.xtb"
+            "es": "src/locale/messages.es.xtb"
         }
       },
       "architect": {
@@ -78,10 +78,10 @@
               ]
             },
             "en": {
-              "localize": ["en-US"]
+              "localize": ["en"]
             },
             "es": {
-              "localize": ["es-CL"]
+              "localize": ["es"]
             }
           }
         },
