@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE messagebundle [
+<!ELEMENT messagebundle (msg)*>
+<!ATTLIST messagebundle class CDATA #IMPLIED>
+
+<!ELEMENT msg (#PCDATA|ph|source)*>
+<!ATTLIST msg id CDATA #IMPLIED>
+<!ATTLIST msg seq CDATA #IMPLIED>
+<!ATTLIST msg name CDATA #IMPLIED>
+<!ATTLIST msg desc CDATA #IMPLIED>
+<!ATTLIST msg meaning CDATA #IMPLIED>
+<!ATTLIST msg obsolete (obsolete) #IMPLIED>
+<!ATTLIST msg xml:space (default|preserve) "default">
+<!ATTLIST msg is_hidden CDATA #IMPLIED>
+
+<!ELEMENT source (#PCDATA)>
+
+<!ELEMENT ph (#PCDATA|ex)*>
+<!ATTLIST ph name CDATA #REQUIRED>
+
+<!ELEMENT ex (#PCDATA)>
+]>
+<messagebundle>
+  <msg id="3668985598679158542"><source>src/app/auth/containers/authorized-page/authorized-page.component.html:2</source>Logging In...</msg>
+  <msg id="6501823366003451712"><source>src/app/auth/containers/authorized-page/authorized-page.component.html:4</source>Please wait while we complete the login process.</msg>
+  <msg id="4163254967855624491"><source>src/app/auth/containers/logout-page/logout-page.component.html:3</source>You have been successfully logged out.</msg>
+  <msg id="187187500641108332"><source>src/app/data-providers/components/name-dialog/name-dialog.component.html:1</source><ph name="INTERPOLATION"/></msg>
+  <msg id="6519653818724683645"><source>src/app/data-providers/components/open-file-dialog/open-file-dialog.component.html:1</source>Open File</msg>
+  <msg id="2939714947607368087"><source>src/app/data-providers/components/save-dialog/save-dialog.component.html:1</source>Save As</msg>
+  <msg id="4979012475793743263"><source>src/app/data-providers/components/upload-dialog/upload-dialog.component.html:1</source>Upload Status</msg>
+  <msg id="718664953917016933"><source>src/app/utils/alert-dialog/alert-dialog.component.html:0,3</source> <ph name="INTERPOLATION"/>
+</msg>
+  <msg id="3562867368836355598"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:2</source>DSS Catalog Import</msg>
+  <msg id="7245614364638165175"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:10</source>Use intended pointing for image center</msg>
+  <msg id="8669943164659824812"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:11</source>Use WCS for image center</msg>
+  <msg id="36152964946435146"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:16,18</source> Import DSS </msg>
+  <msg id="4077520913910941990"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:4</source>Label</msg>
+  <msg id="1834459349046815332"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:10</source>Radius</msg>
+  <msg id="1658066613950952172"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:18</source>Label Radius</msg>
+  <msg id="7554806959602763526"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:24</source>Label Direction (degs)</msg>
+  <msg id="2995774437111770399"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:32</source>X</msg>
+  <msg id="9076533917901768566"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:38</source>Y</msg>
+  <msg id="7917456777567286248"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:0,3</source> <ph name="INTERPOLATION"/> <ph name="START_TAG_SPAN"/><ph name="CLOSE_TAG_SPAN"/></msg>
+  <msg id="663997663737307742"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:8</source>Accessibility</msg>
+  <msg id="3593716985894081868"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:10,14</source> IDATA, a project funded by the U.S. National Science Foundation (NSF) brought together blind and visually impaired (BVI) and sighted high school students and their teachers to create a version of Afterglow Access that is as accessible as possible for BVI users. </msg>
+  <msg id="2727592930963503754"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:16,22</source> Over the course of 3 years, Students and teachers collaborated with astronomy, education, research and design professionals in the design and development of the software. The team utilized User-Centered Design (UCD) and an iterative method for the development and testing of Afterglow Access. Teachers and students who participated in IDATA will are considered co-developers in the project. Below are some highlights of their work and features that have been integrated because of their invaluable contribution. </msg>
+  <msg id="6685779478750853448"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:23</source>Shortcuts &amp; Navigations</msg>
+  <msg id="5827313691369573091"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:26,30</source> BVI users often rely on keyboard navigation to explore the digital space. IDATA students and teachers were instrumental in creating intuitive shortcuts that allow users to move through Afterglow Access easily without having to use a mouse. You can find these shortcuts in the “Shortcuts” Tab above. </msg>
+  <msg id="1128351859283175357"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:31</source>Screenreaders</msg>
+  <msg id="8685867591536960153"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:34,38</source> Afterglow Access follows the guidelines to be as screenreader compliant. In addition, IDATA worked with BVI students and BVI astronomers associated with IDATA to learn how Afterglow Access worked with their screen reader of choice. We tested Afterglow Access with NVDA and Apple VoiceOver. </msg>
+  <msg id="2798270190074840767"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:39</source>Themes</msg>
+  <msg id="3322520232381895892"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:42,53</source> In UCD activities held by IDATA participants and co-designers, the team discovered that the tool could be much more accessible to BVI users if Afterglow Access were customizable. One such customization that IDATA students shared with us was the ability to change the look and feel of the software. Depending on their BVI condition and person preferences some students preferred white on black themes and others preferred a yellow on black theme. In addition to the traditional “zoom” feature, students also expressed wanting to be able to change the size and weight of the font which can help heighten the contrast between text and background. This method also allows users to retain the same layout which is helpful for BVI students who often “lose their place” when Zoomed in on a part of the screen. Using student feedback, we developed three colored themes and offered the ability to select font weight and font size. These settings can be found in the top right “hamburger menu” with the title “Theme editor.” </msg>
+  <msg id="2448908237711657222"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:54</source>Sonification tool</msg>
+  <msg id="3250870747355036527"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:57,63</source> The Sonification tool was developed as an innovative way to translate astronomical images into informative sounds for BVI users. This tool can be found under “sonification” which uses a musical note as its symbol. Once you have an image uploaded to your viewer. You may push the “Sonify” button to “hear” the image. The sounds start at the base of the image and travel upward. The pitch determines where light representing objects such as stars, planets, and asteroids exist in the image. </msg>
+  <msg id="2176659033176029418"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:72</source>Key</msg>
+  <msg id="4902817035128594900"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:101</source>Description</msg>
+  <msg id="7846992780508968595"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:126</source>Software Development Team</msg>
+  <msg id="5638200670455877362"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:133</source>IDATA Credits</msg>
+  <msg id="1433449965937152349"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:136,152</source> Innovators Developing Accessible Tools for Astronomy (IDATA), officially known as Research Supporting Multisensory Engagement by Blind, Visually Impaired, and Sighted Students to Advance Integrated Learning of Astronomy and Computer Science, and the resulting curricular resources, Afterglow Access software, and project research were made possible with support from the U.S. National Science Foundation’s STEM+C program (Award 1640131). IDATA institutional collaborators include AUI, GLAS Education, Linder Research &amp; Development Inc., Logos Consulting Group, TERC, University of Nevada - Las Vegas, University of North Carolina at Chapel Hill, and Universidad Diego Portales. Individual consultants on the project include Kathy Gustavson and Alexandra Dean Grossi. IDATA Teacher collaborators in the U.S. include Amanda Allen, Jacqueline Barge, Holly Bensel, Neal Boys, Tim Fahlberg, Kristin Grender, David Lockett, Matthew McCutcheon, Caroline Odden, Michael Prokosch, Kara Rowbotham, Rick Sanchez, and Barbara Stachelski. IDATA Student collaborators in the U.S. include Evan Blad, Naleah Boys, Ellen Butler, Jayden Dimas, Riley Kappell, Joseph Murphy, Logan Ruby, Alex Scerba, Charlize Sentosa, Meg Sorensen, Remy Streichenberger, and Trevor Warren. IDATA Undergraduate Mentors include Tia Bertz, Katya Gozman, Chris Mathews, Kendall Mehling, Andrea Salazar, Ben Shafer, Alex Traub, and Sophia Vlahakis. Special thanks to the IDATA external advisors including Nic Bonne, Al Harper, Sue Ann Heatherly, Russ Laher, Luisa Rebull, Ed Summers, Kathryn Williamson, and Wanda Diaz Merced. </msg>
+  <msg id="7819314041543176992"><source>src/app/workbench/components/help-dialog/help-dialog.component.html:157</source>Close</msg>
+  <msg id="7974748041091660034"><source>src/app/workbench/components/image-orientation-toolbar/image-orientation-toolbar.component.html:2</source>Flip</msg>
+  <msg id="4503408361537553733"><source>src/app/workbench/components/image-orientation-toolbar/image-orientation-toolbar.component.html:6</source>Mirror</msg>
+  <msg id="1050269006235116171"><source>src/app/workbench/components/image-orientation-toolbar/image-orientation-toolbar.component.html:10</source>Rotate</msg>
+  <msg id="8427593577968388296"><source>src/app/workbench/components/image-orientation-toolbar/image-orientation-toolbar.component.html:14</source>Reset Orientation</msg>
+  <msg id="9191840440276056250"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:30</source>Download Viewer Snapshot</msg>
+  <msg id="1470758907984185227"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:40</source>Zoom In</msg>
+  <msg id="1356460275822781324"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:51</source>Zoom Out</msg>
+  <msg id="2177807668161560077"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:62</source>Zoom to Fit</msg>
+  <msg id="2301657169428810697"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:65</source>Zoom To Fit</msg>
+  <msg id="8791824480246623851"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:72</source>Reset Zoom</msg>
+  <msg id="1908285951500318953"><source>src/app/workbench/components/navbar/navbar.component.html:12</source> Login </msg>
+  <msg id="5630543260825784280"><source>src/app/workbench/components/navbar/navbar.component.html:50</source>Option Menu</msg>
+  <msg id="7123425091251263945"><source>src/app/workbench/components/navbar/navbar.component.html:54</source>Open Theme Editor</msg>
+  <msg id="6368946273388493209"><source>src/app/workbench/components/navbar/navbar.component.html:56</source>Theme Editor...</msg>
+  <msg id="1476710246078344978"><source>src/app/workbench/components/navbar/navbar.component.html:60</source>Help...</msg>
+  <msg id="3797778920049399855"><source>src/app/workbench/components/navbar/navbar.component.html:62</source>Logout</msg>
+  <msg id="6267653828088289778"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:17</source>Zero Point</msg>
+  <msg id="6419909999138430228"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:25</source>Centroiding Radius</msg>
+  <msg id="2545064323240265995"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:33</source>Gain</msg>
+  <msg id="7871095434511949009"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:43</source>Aperture</msg>
+  <msg id="333295662273891999"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:72</source>Annulus Inner</msg>
+  <msg id="1009990344273584696"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:80</source>Annulus Outer</msg>
+  <msg id="5633032230761241825"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:146</source>Aperture Minor Axis</msg>
+  <msg id="8704782826103799435"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:153</source>Annulus Outer Minor Axis</msg>
+  <msg id="4221162609717375693"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:162</source>Aperture Position Angle</msg>
+  <msg id="7335858099668228830"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:170</source>Annulus Position Angle</msg>
+  <msg id="2159130950882492111"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:181</source>Cancel</msg>
+  <msg id="3620188369327429839"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:188,190</source> Save </msg>
+  <msg id="1484691810377259440"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:14,16</source> ID </msg>
+  <msg id="7396697477024945236"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:38,40</source> State </msg>
+  <msg id="5928868080162558607"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:73,75</source> Operation </msg>
+  <msg id="4642661615646709518"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:97,99</source> Result </msg>
+  <msg id="5963653123239768443"><source>src/app/workbench/components/source-extraction-dialog/source-extraction-dialog.component.html:9</source>Threshold</msg>
+  <msg id="5936138650776428060"><source>src/app/workbench/components/source-extraction-dialog/source-extraction-dialog.component.html:24</source>FWHM</msg>
+  <msg id="5962351927749211004"><source>src/app/workbench/components/source-extraction-dialog/source-extraction-dialog.component.html:44,46</source> Deblend </msg>
+  <msg id="5264958184927380118"><source>src/app/workbench/components/source-extraction-dialog/source-extraction-dialog.component.html:51</source>Search Region</msg>
+  <msg id="4968601658657660730"><source>src/app/workbench/components/source-extraction-dialog/source-extraction-dialog.component.html:64</source>Extract Sources</msg>
+  <msg id="7692790847372911476"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:4</source>Select Image(s) to Align</msg>
+  <msg id="585630393929909473"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:23</source>Reference Image File</msg>
+  <msg id="1713271461473302108"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:33</source>Mode</msg>
+  <msg id="6754825302648730565"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:57,59</source> Reference header loading... </msg>
+  <msg id="7657803399119001860"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:66,68</source> This image does not have astrometric data in its header and cannot be aligned using the selected mode. </msg>
+  <msg id="4943998242904350511"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:72,74</source> Submit </msg>
+  <msg id="1720106252940646253"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:83</source>Processing job</msg>
+  <msg id="7968709291949140871"><source>src/app/workbench/containers/aligning-panel/aligning-panel.component.html:96</source>Processing is complete.</msg>
+  <msg id="4678319359934274626"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:1</source>This layer type is not yet supported by the custom marker tool.</msg>
+  <msg id="1744282300258104662"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:5</source>Select an file or image layer to see the custom marker tool.</msg>
+  <msg id="8000818334581120210"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:20,22</source> Centroid clicks </msg>
+  <msg id="2177038335914574716"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:34,36</source> Planet Centroiding </msg>
+  <msg id="3077060055977470635"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:40</source>Add custom markers by clicking on your image.</msg>
+  <msg id="5680723559253848283"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:41</source>Tip: Hold <ph name="START_TAG_SPAN"/>Alt<ph name="CLOSE_TAG_SPAN"/> to click beneath existing markers</msg>
+  <msg id="7751179932990586298"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:46</source>Marker Customization</msg>
+  <msg id="3423526206544022786"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:63</source>Delete Selected Markers</msg>
+  <msg id="2673243192518037419"><source>src/app/workbench/containers/display-panel/display-panel.component.html:1</source>Select a file or image layer to see the display settings.</msg>
+  <msg id="6205896761596395655"><source>src/app/workbench/containers/display-panel/display-panel.component.html:5</source>Select an image layer to adjust brightness and contrast settings.</msg>
+  <msg id="2950543459367605312"><source>src/app/workbench/containers/display-panel/display-panel.component.html:12</source>Brightness and Contrast Presets</msg>
+  <msg id="6184759444958151835"><source>src/app/workbench/containers/display-panel/display-panel.component.html:19</source>Faint Target Preset</msg>
+  <msg id="8100602718516572607"><source>src/app/workbench/containers/display-panel/display-panel.component.html:28</source>Default Preset</msg>
+  <msg id="5731448816717757779"><source>src/app/workbench/containers/display-panel/display-panel.component.html:37</source>Bright Target Preset</msg>
+  <msg id="267834593427005219"><source>src/app/workbench/containers/display-panel/display-panel.component.html:57</source>Brightness and Contrast Settings</msg>
+  <msg id="4725943399307728524"><source>src/app/workbench/containers/display-panel/display-panel.component.html:72</source>Image Orientation Options</msg>
+  <msg id="4456532179377007819"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:1</source>Please select a layer instead of the file.</msg>
+  <msg id="5172438057468052393"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:5</source>Header is not available for selected layer.</msg>
+  <msg id="150907831913847828"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:9</source>Header is loading...</msg>
+  <msg id="2171204273550368490"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:23,25</source> Show Raw Header Data </msg>
+  <msg id="1027450964836001242"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:35,37</source> Use System Time </msg>
+  <msg id="6555318547274416232"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:47</source>Value</msg>
+  <msg id="2662644497259948010"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:51</source>Comment</msg>
+  <msg id="5627859738709949469"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:1</source>This layer type is not yet supported by the photometry tool.</msg>
+  <msg id="6359655488905730858"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:5</source>Please select an image layer instead of a file.</msg>
+  <msg id="3914231111375116518"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:26,28</source> Manually add sources by clicking on them in your image or automatically add them using the options below. </msg>
+  <msg id="3872004680089784418"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:43,45</source> Photometry Settings... </msg>
+  <msg id="5373027459566270272"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:47</source>Add Sources...</msg>
+  <msg id="4836097022064840410"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:52</source>Source Extraction...</msg>
+  <msg id="26569764274985109"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:76,78</source> Show Sources From All Files </msg>
+  <msg id="2591770509340870324"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:85,87</source> Source Labels </msg>
+  <msg id="8466862804224910823"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:94,96</source> Auto-phot </msg>
+  <msg id="2121019595189744185"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:349</source>Use batch photometry to photometer all of your sources in multiple image layers/files.</msg>
+  <msg id="6615770997789476440"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:353</source>Select Image(s) to Photometer</msg>
+  <msg id="7618675476438883751"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:408,411</source>Download Batch Photometry Data - <ph name="INTERPOLATION"/> source(s) in <ph name="INTERPOLATION_1"/> file(s)</msg>
+  <msg id="3894950702316166331"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:1</source>Loading...</msg>
+  <msg id="6470335908858800322"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:17</source>Image(s)</msg>
+  <msg id="2334748438301421985"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:35</source>Select a operand</msg>
+  <msg id="961403339653487157"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:36</source>operand</msg>
+  <msg id="3859670093006861095"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:44</source>Select an image</msg>
+  <msg id="1647545964982522530"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:53</source>Specify a scalar value</msg>
+  <msg id="1947383374331380462"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:57</source>Overwrite Files</msg>
+  <msg id="6927752235638938218"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:65,67</source> Dividing by zero would result in a catastrophic server meltdown </msg>
+  <msg id="5222797912888941333"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:104</source>Auxillary image(s)</msg>
+  <msg id="7844260077775222427"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:122</source>Operation String</msg>
+  <msg id="1968355052680316976"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:148,150</source> Variable Name </msg>
+  <msg id="7394649408594397312"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:173,175</source> Value </msg>
+  <msg id="6781548145974697589"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:223</source>Your operation resulted in</msg>
+  <msg id="6409679850992702859"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:224</source>new file(s)</msg>
+  <msg id="5768887786288202245"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:227</source>Your operation resulted in the following scalar values:</msg>
+  <msg id="246612979353520631"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:237</source>Show All Pixel Operation Jobs...</msg>
+  <msg id="8233910322353882865"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:1</source>This layer type is not yet supported by the plotting tool.</msg>
+  <msg id="3155051512435651243"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:5</source>Select an image layer or a file to see the plotting tool panel.</msg>
+  <msg id="3775898468688073188"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:12,15</source> Click once on the image to set the measurement&apos;s start point, move your mouse, then click a second time to set the end point. </msg>
+  <msg id="4601872475819502697"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:34</source>1D Cross Section</msg>
+  <msg id="8254924838956159878"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:35</source>2D Heat Map</msg>
+  <msg id="6952295386643082560"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:78,80</source> Interpolate pixels </msg>
+  <msg id="7028348040061417013"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:91,93</source> Sync Plot Across Files </msg>
+  <msg id="6503627862793600467"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:102</source>Measurement</msg>
+  <msg id="5162686434580248853"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:108</source>Start</msg>
+  <msg id="1241348629231510663"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:121</source>End</msg>
+  <msg id="2827233633791350200"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:134</source>Length</msg>
+  <msg id="642093017171576305"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:153</source>Orientation</msg>
+  <msg id="5078424414119573265"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:157</source>degrees CW of +Y</msg>
+  <msg id="4178033229771377293"><source>src/app/workbench/containers/plotting-panel/plotting-panel.component.html:161</source>degrees E of N</msg>
+  <msg id="1023046561076745273"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:1</source>Select an image layer to see the sonification tool.</msg>
+  <msg id="277230797733320020"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:5</source>This layer type is not yet supported by the sonification tool.</msg>
+  <msg id="1796444973626781008"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:14</source>Region Mode:</msg>
+  <msg id="7590013429208346303"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:19</source>Custom</msg>
+  <msg id="3115946500165928092"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:23</source>Viewport</msg>
+  <msg id="2331218027757682874"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:29</source>Time Navigation:</msg>
+  <msg id="1635475996221085184"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:31</source>Early</msg>
+  <msg id="9005163798035816176"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:32</source>Mid</msg>
+  <msg id="3973270758175692787"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:33</source>Late</msg>
+  <msg id="1371922786513735456"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:37</source>Tone Navigation:</msg>
+  <msg id="802458941707537739"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:39</source>Low</msg>
+  <msg id="8063651736083474594"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:41</source>High</msg>
+  <msg id="1929341422689512898"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:45</source>Selection Options:</msg>
+  <msg id="7997497639597459089"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:53,55</source> Undo </msg>
+  <msg id="5974167658394135492"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:61,63</source> Redo </msg>
+  <msg id="7808756054397155068"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:63</source>Reset</msg>
+  <msg id="3149912012181458312"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:68</source>Region Size:</msg>
+  <msg id="3268196960086785405"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:75</source>Start Pixel:</msg>
+  <msg id="3141657976569742849"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:79</source>End Pixel:</msg>
+  <msg id="7410432243549869948"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:94</source>Duration</msg>
+  <msg id="905565558867121682"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:109</source>Tones</msg>
+  <msg id="1651224735183214538"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:126,128</source> Keep selected region in viewer </msg>
+  <msg id="3818498395140831772"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:132</source>Sonify</msg>
+  <msg id="2688534110478758428"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:4</source>Select Image(s) to Stack</msg>
+  <msg id="610900955010644213"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:25</source>average</msg>
+  <msg id="6829183145920360259"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:26</source>percentile</msg>
+  <msg id="5276172031906098369"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:27</source>mode</msg>
+  <msg id="8365934210024441439"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:28</source>sum</msg>
+  <msg id="3535496178166723193"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:32</source>Percentile</msg>
+  <msg id="3121687807621232306"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:39</source>Rejection</msg>
+  <msg id="6252070156626006029"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:41</source>None</msg>
+  <msg id="8926359181631275536"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:42</source>chauvenet</msg>
+  <msg id="6768601275947819195"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:43</source>iraf</msg>
+  <msg id="4001861506166369953"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:44</source>minmax</msg>
+  <msg id="8335215387336773969"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:45</source>sigclip</msg>
+  <msg id="821283466068799389"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:70</source>Scaling</msg>
+  <msg id="2416079352525962375"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:74</source>median</msg>
+  <msg id="410147324553538903"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:4</source>Select Image(s) to Calibrate</msg>
+  <msg id="6543495595926613246"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:61,63</source> Open Source Extraction Settings... </msg>
+  <msg id="935187492052582731"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:63</source>Submit</msg>
+  <msg id="2697370011171889197"><source>src/app/workbench/containers/workbench.component.html:158</source>There are no open files associated with this session. </msg>
+  <msg id="4468741256615440810"><source>src/app/workbench/containers/workbench.component.html:210</source>Global Settings</msg>
+  <msg id="1447711954704598085"><source>src/app/workbench/containers/workbench.component.html:272</source>Sync orientations</msg>
+</messagebundle>

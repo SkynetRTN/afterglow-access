@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE translationbundle [
+<!ELEMENT translationbundle (translation)*>
+<!ATTLIST translationbundle lang CDATA #REQUIRED>
+
+<!ELEMENT translation (#PCDATA|ph)*>
+<!ATTLIST translation id CDATA #REQUIRED>
+<!ATTLIST translation desc CDATA #IMPLIED>
+<!ATTLIST translation meaning CDATA #IMPLIED>
+<!ATTLIST translation xml:space (default|preserve) "default">
+
+<!ELEMENT ph (#PCDATA|ex)*>
+<!ATTLIST ph name CDATA #REQUIRED>
+
+<!ELEMENT ex (#PCDATA)>
+]>
+<translationbundle lang="es-cl">
+  <translation id="3668985598679158542">Iniciando sesión...</translation>
+  <translation id="6501823366003451712">Espere mientras completamos el proceso de inicio de sesión.</translation>
+  <translation id="4163254967855624491">Ha sido desconectado exitosamente.</translation>
+  <translation id="187187500641108332">
+    <x id="INTERPOLATION" equiv-text="{{title}}"/>
+  </translation>
+  <translation id="6519653818724683645">Abrir documento</translation>
+  <translation id="2939714947607368087">Guardar como</translation>
+  <translation id="4979012475793743263">Estado de carga</translation>
+  <translation id="718664953917016933"> <x id="INTERPOLATION" equiv-text="{{config.title}"/>
+</translation>
+  <translation id="3562867368836355598">Importación del catálogo DSS</translation>
+  <translation id="7245614364638165175">Utilice el puntero previsto para el centro de la imagen</translation>
+  <translation id="8669943164659824812">Utilice WCS para el centro de la imagen</translation>
+  <translation id="36152964946435146"> Importar DSS </translation>
+  <translation id="4077520913910941990">Etiqueta</translation>
+  <translation id="1834459349046815332">Radio</translation>
+  <translation id="1658066613950952172">Radio de etiqueta</translation>
+  <translation id="7554806959602763526">Dirección de la etiqueta (grados)</translation>
+  <translation id="2995774437111770399">X</translation>
+  <translation id="9076533917901768566">Y</translation>
+  <translation id="7917456777567286248"> <x id="INTERPOLATION" equiv-text="{{config.mode == 'close'? 'Closing Files': 'Saving Files'}"/> <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&amp; lt; span * ngIf = &quot;config.files &amp; amp; &amp; amp; config.files.length &amp; gt; 1&quot; &amp; gt;"/> <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&amp; lt; / span &amp; gt;"/></translation>
+  <translation id="663997663737307742">Accesibilidad</translation>
+  <translation id="3593716985894081868"> IDATA, un proyecto financiado por la Fundación Nacional de Ciencias de EE. UU. (NSF) reunió a estudiantes de secundaria con y sin discapacidad visual (DV) y sus maestros para crear una versión de Afterglow Access que sea lo más accesible posible para los usuarios con DV. </translation>
+  <translation id="2727592930963503754"> A lo largo de 3 años, los estudiantes y profesores colaboraron con profesionales de la astronomía, la educación, la investigación y del diseño en el diseño y desarrollo del software. El equipo utilizó un diseño centrado en el usuario (UCD por sus siglas en Inglés) y un método iterativo para el desarrollo y las pruebas de Afterglow Access. Los profesores y estudiantes que participaron en IDATA serán considerados co-desarrolladores del proyecto. A continuación se muestran algunos aspectos destacados de su trabajo y características que se han integrado debido a su invaluable contribución. </translation>
+  <translation id="6685779478750853448">Accesos directos y navegaciones</translation>
+  <translation id="5827313691369573091"> Los usuarios con DV a menudo confían en la navegación por teclado para explorar el espacio digital. Los estudiantes y profesores de IDATA fueron fundamentales en la creación de accesos directos intuitivos que permiten a los usuarios moverse a través de Afterglow Access fácilmente sin tener que usar un mouse. Puede encontrar estos atajos en la pestaña &quot;Atajos&quot; arriba. </translation>
+  <translation id="1128351859283175357">Lectores de pantalla</translation>
+  <translation id="8685867591536960153"> Afterglow Access sigue las pautas para ser compatible con los lectores de pantalla. Además, IDATA trabajó con estudiantes con DV y astrónomos con DV asociados con IDATA para aprender cómo funcionaba Afterglow Access con el lector de pantalla de su elección. Probamos Afterglow Access con NVDA y Apple VoiceOver. </translation>
+  <translation id="2798270190074840767">Temas</translation>
+  <translation id="3322520232381895892"> En las actividades de UCD realizadas por los participantes y co-diseñadores de IDATA, el equipo descubrió que la herramienta podría ser mucho más accesible para los usuarios con DV si Afterglow Access fuera personalizable. Una de esas personalizaciones que los estudiantes de IDATA compartieron con nosotros fue la capacidad de cambiar la apariencia del software. Dependiendo de su condición de DV y preferencias personales, algunos estudiantes prefirieron temas blancos sobre negros y otros prefirieron un tema amarillo sobre negro. Además de la función tradicional de &quot;zoom&quot;, los estudiantes también expresaron su deseo de poder cambiar el tamaño y el peso de la fuente, lo que puede ayudar a aumentar el contraste entre el texto y el fondo. Este método también permite a los usuarios conservar el mismo diseño que es útil para los estudiantes con DV que a menudo &quot;pierden su lugar&quot; cuando se amplían en una parte de la pantalla. Utilizando los comentarios de los estudiantes, desarrollamos tres temas de colores y ofrecimos la posibilidad de seleccionar el peso y el tamaño de la fuente. Estos ajustes se pueden encontrar en el botón de menú superior derecho con el título &quot;Editor de temas&quot;. </translation>
+  <translation id="2448908237711657222">Herramienta de sonificación</translation>
+  <translation id="3250870747355036527"> La herramienta Sonificación se desarrolló como una forma innovadora de traducir imágenes astronómicas en sonidos informativos para los usuarios con DV. Esta herramienta se puede encontrar en &quot;sonificación&quot;, que utiliza una nota musical como símbolo. Una vez que haya subido una imagen a su visor, puede presionar el botón &quot;Sonificar&quot; para &quot;escuchar&quot; la imagen. Los sonidos comienzan en la base de la imagen y viajan hacia arriba. El tono determina dónde se encuentra la luz que representa objetos como estrellas, planetas y asteroides en la imagen. </translation>
+  <translation id="2176659033176029418">Clave</translation>
+  <translation id="4902817035128594900">Descripción</translation>
+  <translation id="7846992780508968595">Equipo de desarrollo de software</translation>
+  <translation id="5638200670455877362">Créditos IDATA</translation>
+  <translation id="1433449965937152349"> Los innovadores que desarrollan herramientas accesibles para la astronomía (IDATA por sus siglas en inglés), oficialmente conocido como investigación que respalda la participación multisensorial de estudiantes ciegos, con discapacidad visual y videntes para promover el aprendizaje integrado de astronomía y ciencias de la computación, y los recursos curriculares resultantes, el software Afterglow Access y la investigación del proyecto fueron hecho posible con el apoyo del programa STEM + C de la Fundación Nacional de Ciencias de EE. UU. (Premio 1640131). Los colaboradores institucionales de IDATA incluyen AUI, GLAS Education, Linder Research &amp; Development Inc., Logos Consulting Group, TERC, University of Nevada - Las Vegas, University of North Carolina en Chapel Hill y Universidad Diego Portales. Los consultores individuales del proyecto incluyen a Kathy Gustavson y Alexandra Dean Grossi. Los colaboradores de IDATA Teacher en los EE. UU. Incluyen a Amanda Allen, Jacqueline Barge, Holly Bensel, Neal Boys, Tim Fahlberg, Kristin Grender, David Lockett, Matthew McCutcheon, Caroline Odden, Michael Prokosch, Kara Rowbotham, Rick Sanchez y Barbara Stachelski. Los estudiantes colaboradores de IDATA en los EE. UU. Incluyen a Evan Blad, Naleah Boys, Ellen Butler, Jayden Dimas, Riley Kappell, Joseph Murphy, Logan Ruby, Alex Scerba, Charlize Sentosa, Meg Sorensen, Remy Streichenberger y Trevor Warren. Los mentores de pregrado de IDATA incluyen a Tia Bertz, Katya Gozman, Chris Mathews, Kendall Mehling, Andrea Salazar, Ben Shafer, Alex Traub y Sophia Vlahakis. Un agradecimiento especial a los asesores externos de IDATA, incluidos Nic Bonne, Al Harper, Sue Ann Heatherly, Russ Laher, Luisa Rebull, Ed Summers, Kathryn Williamson y Wanda Diaz Merced. </translation>
+  <translation id="7819314041543176992">Cerrar</translation>
+  <translation id="7974748041091660034">Dar la vuelta</translation>
+  <translation id="4503408361537553733">Espejo</translation>
+  <translation id="1050269006235116171">Girar</translation>
+  <translation id="8427593577968388296">Restablecer orientación</translation>
+  <translation id="9191840440276056250">Descargar la instantánea del visor</translation>
+  <translation id="1470758907984185227">Acercarse</translation>
+  <translation id="1356460275822781324">Disminuir el zoom</translation>
+  <translation id="2177807668161560077">Zoom para ajustar</translation>
+  <translation id="2301657169428810697">Zoom para ajustar</translation>
+  <translation id="8791824480246623851">Restablecer zoom</translation>
+  <translation id="1908285951500318953"> Acceso </translation>
+  <translation id="5630543260825784280">Menú de opciones</translation>
+  <translation id="7123425091251263945">Abrir editor de temas</translation>
+  <translation id="6368946273388493209">Editor de temas ...</translation>
+  <translation id="1476710246078344978">Ayuda...</translation>
+  <translation id="3797778920049399855">Cerrar sesión</translation>
+  <translation id="6267653828088289778">Punto cero</translation>
+  <translation id="6419909999138430228">Radio de centroide</translation>
+  <translation id="2545064323240265995">Ganar</translation>
+  <translation id="7871095434511949009">Abertura</translation>
+  <translation id="333295662273891999">Anillo interior</translation>
+  <translation id="1009990344273584696">Anillo exterior</translation>
+  <translation id="5633032230761241825">Eje menor de apertura</translation>
+  <translation id="8704782826103799435">Eje menor externo del anillo</translation>
+  <translation id="4221162609717375693">Ángulo de posición de apertura</translation>
+  <translation id="7335858099668228830">Ángulo de posición del anillo</translation>
+  <translation id="2159130950882492111">Cancelar</translation>
+  <translation id="3620188369327429839"> Salvar </translation>
+  <translation id="1484691810377259440"> IDENTIFICACIÓN </translation>
+  <translation id="7396697477024945236"> Estado </translation>
+  <translation id="5928868080162558607"> Operación </translation>
+  <translation id="4642661615646709518"> Resultado </translation>
+  <translation id="5963653123239768443">Límite</translation>
+  <translation id="5936138650776428060">FWHM</translation>
+  <translation id="5962351927749211004"> Deblend </translation>
+  <translation id="5264958184927380118">Región de búsqueda</translation>
+  <translation id="4968601658657660730">Extraer fuentes</translation>
+  <translation id="7692790847372911476">Seleccionar imagen (s) para alinear</translation>
+  <translation id="585630393929909473">Archivo de imagen de referencia</translation>
+  <translation id="1713271461473302108">Modo</translation>
+  <translation id="6754825302648730565"> Carga de encabezado de referencia ... </translation>
+  <translation id="7657803399119001860"> Esta imagen no tiene datos astrométricos en su encabezado y no se puede alinear usando el modo seleccionado. </translation>
+  <translation id="4943998242904350511"> Entregar </translation>
+  <translation id="1720106252940646253">Trabajo de procesamiento</translation>
+  <translation id="7968709291949140871">El procesamiento está completo.</translation>
+  <translation id="4678319359934274626">Este tipo de capa aún no es compatible con la herramienta de marcador personalizado.</translation>
+  <translation id="1744282300258104662">Seleccione un archivo o una capa de imagen para ver la herramienta de marcador personalizado.</translation>
+  <translation id="8000818334581120210"> Clics de centroide </translation>
+  <translation id="2177038335914574716"> Planeta Centroiding </translation>
+  <translation id="3077060055977470635">Agrega marcadores personalizados haciendo clic en tu imagen.</translation>
+  <translation id="5680723559253848283">Consejo: mantén <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&amp; lt; span class = &quot;kbd&quot; &amp; gt;"/> Alt <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&amp; lt; / span &amp; gt;"/> para hacer clic debajo de los marcadores existentes</translation>
+  <translation id="7751179932990586298">Personalización de marcadores</translation>
+  <translation id="3423526206544022786">Eliminar marcadores seleccionados</translation>
+  <translation id="2673243192518037419">Seleccione un archivo o una capa de imagen para ver la configuración de visualización.</translation>
+  <translation id="6205896761596395655">Seleccione una capa de imagen para ajustar la configuración de brillo y contraste.</translation>
+  <translation id="2950543459367605312">Ajustes preestablecidos de brillo y contraste</translation>
+  <translation id="6184759444958151835">Preajuste de objetivo tenue</translation>
+  <translation id="8100602718516572607">Preajuste predeterminado</translation>
+  <translation id="5731448816717757779">Preajuste de objetivo brillante</translation>
+  <translation id="267834593427005219">Configuración de brillo y contraste</translation>
+  <translation id="4725943399307728524">Opciones de orientación de la imagen</translation>
+  <translation id="4456532179377007819">Seleccione una capa en lugar del archivo.</translation>
+  <translation id="5172438057468052393">El encabezado no está disponible para la capa seleccionada.</translation>
+  <translation id="150907831913847828">El encabezado se está cargando ...</translation>
+  <translation id="2171204273550368490"> Mostrar datos de encabezado sin procesar </translation>
+  <translation id="1027450964836001242"> Usar hora del sistema </translation>
+  <translation id="6555318547274416232">Valor</translation>
+  <translation id="2662644497259948010">Comentario</translation>
+  <translation id="5627859738709949469">Este tipo de capa aún no es compatible con la herramienta de fotometría.</translation>
+  <translation id="6359655488905730858">Seleccione una capa de imagen en lugar de un archivo.</translation>
+  <translation id="3914231111375116518"> Agregue fuentes manualmente haciendo clic en ellas en su imagen o agréguelas automáticamente usando las opciones a continuación. </translation>
+  <translation id="3872004680089784418"> Configuración de fotometría ... </translation>
+  <translation id="5373027459566270272">Agregar fuentes ...</translation>
+  <translation id="4836097022064840410">Extracción de fuente ...</translation>
+  <translation id="26569764274985109"> Mostrar fuentes de todos los archivos </translation>
+  <translation id="2591770509340870324"> Etiquetas de origen </translation>
+  <translation id="8466862804224910823"> Foto automática </translation>
+  <translation id="2121019595189744185">Utilice fotometría por lotes para fotómetro de todas sus fuentes en múltiples capas / archivos de imágenes.</translation>
+  <translation id="6615770997789476440">Seleccionar imagen (s) para fotómetro</translation>
+  <translation id="7618675476438883751">Descargar datos de fotometría por lotes - <x id="INTERPOLATION" equiv-text="{{(batchPhotJob $ | async) ?. sources.length}}"/> fuente (s) en <x id="INTERPOLATION_1" equiv-text="{{(batchPhotJob $ | async) ?. fileIds.length}"/> archivo (s)</translation>
+  <translation id="3894950702316166331">Cargando...</translation>
+  <translation id="6470335908858800322">Imagen (s)</translation>
+  <translation id="2334748438301421985">Seleccionar un operando</translation>
+  <translation id="961403339653487157">operando</translation>
+  <translation id="3859670093006861095">Seleccionar una imagen</translation>
+  <translation id="1647545964982522530">Especifique un valor escalar</translation>
+  <translation id="1947383374331380462">Sobrescribir archivos</translation>
+  <translation id="6927752235638938218"> Dividir por cero resultaría en un colapso catastrófico del servidor </translation>
+  <translation id="5222797912888941333">Imágenes auxiliares</translation>
+  <translation id="7844260077775222427">Cadena de operación</translation>
+  <translation id="1968355052680316976"> Nombre de la variable </translation>
+  <translation id="7394649408594397312"> Valor </translation>
+  <translation id="6781548145974697589">Tu operación resultó en</translation>
+  <translation id="6409679850992702859">nuevo (s) archivo (s)</translation>
+  <translation id="5768887786288202245">Su operación resultó en los siguientes valores escalares:</translation>
+  <translation id="246612979353520631">Mostrar todos los trabajos de funcionamiento de píxeles ...</translation>
+  <translation id="8233910322353882865">Este tipo de capa aún no es compatible con la herramienta de trazado.</translation>
+  <translation id="3155051512435651243">Seleccione una capa de imagen o un archivo para ver el panel de la herramienta de trazado.</translation>
+  <translation id="3775898468688073188"> Haga clic una vez en la imagen para establecer el punto de inicio de la medición, mueva el mouse y luego haga clic una segunda vez para establecer el punto final. </translation>
+  <translation id="4601872475819502697">Sección transversal 1D</translation>
+  <translation id="8254924838956159878">Mapa de calor 2D</translation>
+  <translation id="6952295386643082560"> Interpolar píxeles </translation>
+  <translation id="7028348040061417013"> Sincronizar el gráfico entre archivos </translation>
+  <translation id="6503627862793600467">Medición</translation>
+  <translation id="5162686434580248853">Comienzo</translation>
+  <translation id="1241348629231510663">Fin</translation>
+  <translation id="2827233633791350200">Largo</translation>
+  <translation id="642093017171576305">Orientación</translation>
+  <translation id="5078424414119573265">grados CW de + Y</translation>
+  <translation id="4178033229771377293">grados E de N</translation>
+  <translation id="1023046561076745273">Seleccione una capa de imagen para ver la herramienta de sonificación.</translation>
+  <translation id="277230797733320020">Este tipo de capa aún no es compatible con la herramienta de sonificación.</translation>
+  <translation id="1796444973626781008">Modo de región:</translation>
+  <translation id="7590013429208346303">Personalizado</translation>
+  <translation id="3115946500165928092">Viewport</translation>
+  <translation id="2331218027757682874">Navegación en el tiempo:</translation>
+  <translation id="1635475996221085184">Temprano</translation>
+  <translation id="9005163798035816176">Medio</translation>
+  <translation id="3973270758175692787">Tarde</translation>
+  <translation id="1371922786513735456">Navegación de tono:</translation>
+  <translation id="802458941707537739">Bajo</translation>
+  <translation id="8063651736083474594">Elevado</translation>
+  <translation id="1929341422689512898">Opciones de selección:</translation>
+  <translation id="7997497639597459089"> Deshacer </translation>
+  <translation id="5974167658394135492"> Rehacer </translation>
+  <translation id="7808756054397155068">Reiniciar</translation>
+  <translation id="3149912012181458312">Tamaño de la región:</translation>
+  <translation id="3268196960086785405">Iniciar Pixel:</translation>
+  <translation id="3141657976569742849">Pixel final:</translation>
+  <translation id="7410432243549869948">Duración</translation>
+  <translation id="905565558867121682">Tonos</translation>
+  <translation id="1651224735183214538"> Mantener la región seleccionada en el visor </translation>
+  <translation id="3818498395140831772">Sonify</translation>
+  <translation id="2688534110478758428">Seleccionar imágenes para apilar</translation>
+  <translation id="610900955010644213">promedio</translation>
+  <translation id="6829183145920360259">percentil</translation>
+  <translation id="5276172031906098369">modo</translation>
+  <translation id="8365934210024441439">suma</translation>
+  <translation id="3535496178166723193">Percentil</translation>
+  <translation id="3121687807621232306">Rechazo</translation>
+  <translation id="6252070156626006029">Ninguno</translation>
+  <translation id="8926359181631275536">chauvenet</translation>
+  <translation id="6768601275947819195">iraf</translation>
+  <translation id="4001861506166369953">mínimo máximo</translation>
+  <translation id="8335215387336773969">sigclip</translation>
+  <translation id="821283466068799389">Escalada</translation>
+  <translation id="2416079352525962375">mediana</translation>
+  <translation id="410147324553538903">Seleccione imágenes para calibrar</translation>
+  <translation id="6543495595926613246"> Configuración de extracción de código abierto ... </translation>
+  <translation id="935187492052582731">Entregar</translation>
+  <translation id="2697370011171889197">No hay archivos abiertos asociados con esta sesión. </translation>
+  <translation id="4468741256615440810">Ajustes globales</translation>
+  <translation id="1447711954704598085">Sincronizar orientaciones</translation>
+</translationbundle>
