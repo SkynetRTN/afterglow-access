@@ -3,7 +3,7 @@
     <h4 i18n>DSS Catalog Import</h4>
     <div class="pb-3">
       <mat-radio-group
-        aria-label="DSS Import Image Center"
+        i18n-aria-label aria-label="DSS Import Image Center"
         [disabled]="!header.wcs || !header.wcs?.isValid()"
         [value]="useWcsCenter && header.wcs && header.wcs?.isValid() ? 'wcs' : 'header'"
         (change)="onUseWcsCenterChange($event)"

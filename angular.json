@@ -19,7 +19,7 @@
       "i18n": {
         "sourceLocale": "en-US",
         "locales": {
-            "es": "src/locale/messages.es.xtb"
+            "es-CL": "src/locale/messages.es.xtb"
         }
       },
       "architect": {
@@ -76,6 +76,12 @@
                   "maximumError": "10kb"
                 }
               ]
+            },
+            "en": {
+              "localize": ["en-US"]
+            },
+            "es": {
+              "localize": ["es-CL"]
             }
           }
         },
@@ -87,6 +93,12 @@
           "configurations": {
             "production": {
               "browserTarget": "afterglow-access:build:production"
+            },
+            "en": {
+              "browserTarget": "afterglow-access:build:en"
+            },
+            "es": {
+              "browserTarget": "afterglow-access:build:es"
             }
           }
         },

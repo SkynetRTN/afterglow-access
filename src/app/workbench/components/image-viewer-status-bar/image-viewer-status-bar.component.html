@@ -27,8 +27,6 @@
     <div class="tool-bar" style="height: 100%">
       <button
         mat-icon-button
-        i18n-aria-label
-        aria-label="Download Viewer Snapshot"
         (click)="onDownloadSnapshotClick()"
         i18n-matTooltip
         matTooltip="Download Viewer Snapshot"
@@ -37,8 +35,6 @@
       </button>
       <button
         mat-icon-button
-        i18n-aria-label
-        aria-label="Zoom In"
         (mousedown)="startZoomIn()"
         (mouseup)="stopZoomIn()"
         i18n-matTooltip
@@ -48,8 +44,6 @@
       </button>
       <button
         mat-icon-button
-        i18n-aria-label
-        aria-label="Zoom Out"
         (mousedown)="startZoomOut()"
         (mouseup)="stopZoomOut()"
         i18n-matTooltip
@@ -59,8 +53,6 @@
       </button>
       <button
         mat-icon-button
-        i18n-aria-label
-        aria-label="Zoom to Fit"
         (click)="zoomToFit()"
         i18n-matTooltip
         matTooltip="Zoom To Fit"
@@ -69,34 +61,12 @@
       </button>
       <button
         mat-icon-button
-        i18n-aria-label
-        aria-label="Reset Zoom"
         (click)="zoomTo(1)"
         i18n-matTooltip
         matTooltip="Reset Zoom"
       >
         <mat-icon>all_out</mat-icon>
       </button>
-      <!-- <button
-        mat-icon-button
-        i18n-aria-label
-        aria-label="Save file"
-        (click)="onSaveFileClick()"
-        i18n-matTooltip
-        matTooltip="Save file"
-      >
-        <mat-icon>save</mat-icon>
-      </button> -->
-      <!-- <button
-        mat-icon-button
-        i18n-aria-label
-        aria-label="Close file"
-        (click)="onCloseFileClick()"
-        i18n-matTooltip
-        matTooltip="Close file"
-      >
-        <mat-icon>close</mat-icon>
-      </button> -->
     </div>
   </div>
 </div>

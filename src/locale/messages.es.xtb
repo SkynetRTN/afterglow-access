@@ -14,7 +14,7 @@
 
 <!ELEMENT ex (#PCDATA)>
 ]>
-<translationbundle lang="es-cl">
+<translationbundle lang="es-CL">
   <translation id="3668985598679158542">Iniciando sesión...</translation>
   <translation id="6501823366003451712">Espere mientras completamos el proceso de inicio de sesión.</translation>
   <translation id="4163254967855624491">Ha sido desconectado exitosamente.</translation>

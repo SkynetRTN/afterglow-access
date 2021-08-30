@@ -10,17 +10,17 @@
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="onSelectAllBtnClick()">
+      <button mat-icon-button (click)="onSelectAllBtnClick()" i18n-matTooltip matTooltip="Select All">
         <mat-icon>select_all</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="onClearSelectionBtnClick()">
+      <button mat-icon-button (click)="onClearSelectionBtnClick()"  i18n-matTooltip matTooltip="Clear Selection">
         <mat-icon>clear</mat-icon>
       </button>
     </div>
 
     <div *ngIf="header$ | async as header" class="mb-3">
-      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
+      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)"  i18n>
         <mat-icon>colorize</mat-icon>
         Extract values from current viewer
       </button>
@@ -28,40 +28,40 @@
 
     <div>
       <mat-form-field appearance="outline">
-        <mat-label>RA (hours)</mat-label>
+        <mat-label i18n>RA (hours)</mat-label>
         <input matInput formControlName="ra" />
       </mat-form-field>
       <mat-form-field class="ml-2" appearance="outline">
-        <mat-label>Dec (degs)</mat-label>
+        <mat-label i18n>Dec (degs)</mat-label>
         <input matInput formControlName="dec" />
       </mat-form-field>
     </div>
     <div>
       <mat-form-field appearance="outline">
-        <mat-label>Radius (degs)</mat-label>
+        <mat-label i18n>Radius (degs)</mat-label>
         <input matInput type="number" formControlName="radius" />
       </mat-form-field>
       <mat-form-field class="ml-2" appearance="outline">
-        <mat-label>Max Sources</mat-label>
+        <mat-label i18n>Max Sources</mat-label>
         <input matInput type="number" formControlName="maxSources" />
       </mat-form-field>
     </div>
     <div>
       <mat-form-field appearance="outline">
-        <mat-label>Min Scale (arcsec/pixel)</mat-label>
+        <mat-label i18n>Min Scale (arcsec/pixel)</mat-label>
         <input matInput type="number" formControlName="minScale" />
       </mat-form-field>
       <mat-form-field class="ml-2" appearance="outline">
-        <mat-label>Max Scale (arcsec/pixel)</mat-label>
+        <mat-label i18n>Max Scale (arcsec/pixel)</mat-label>
         <input matInput type="number" formControlName="maxScale" />
       </mat-form-field>
     </div>
 
     <div style="text-align: right; width: 100%">
-      <button class="mr-4" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
+      <button class="mr-2 mt-3" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
         Open Source Extraction Settings...
       </button>
-      <button mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>Submit</button>
+      <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>Submit</button>
     </div>
   </form>
 
