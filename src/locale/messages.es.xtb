@@ -14,7 +14,7 @@
 
 <!ELEMENT ex (#PCDATA)>
 ]>
-<translationbundle lang="es-CL">
+<translationbundle lang="es-cl">
   <translation id="3668985598679158542">Iniciando sesión...</translation>
   <translation id="6501823366003451712">Espere mientras completamos el proceso de inicio de sesión.</translation>
   <translation id="4163254967855624491">Ha sido desconectado exitosamente.</translation>
@@ -61,7 +61,6 @@
   <translation id="9191840440276056250">Descargar la instantánea del visor</translation>
   <translation id="1470758907984185227">Acercarse</translation>
   <translation id="1356460275822781324">Disminuir el zoom</translation>
-  <translation id="2177807668161560077">Zoom para ajustar</translation>
   <translation id="2301657169428810697">Zoom para ajustar</translation>
   <translation id="8791824480246623851">Restablecer zoom</translation>
   <translation id="1908285951500318953"> Acceso </translation>
@@ -207,4 +206,75 @@
   <translation id="2697370011171889197">No hay archivos abiertos asociados con esta sesión. </translation>
   <translation id="4468741256615440810">Ajustes globales</translation>
   <translation id="1447711954704598085">Sincronizar orientaciones</translation>
+  <translation id="7420416191684565811">Seleccione su tema de color</translation>
+  <translation id="7708270344948043036"> <ph name="INTERPOLATION"> </ph> </translation>
+  <translation id="782086325279028453">Seleccione su peso de fuente</translation>
+  <translation id="5607669932062416162">Defecto</translation>
+  <translation id="771664384252640128">Negrita</translation>
+  <translation id="4297785826042166237">Extra negrita</translation>
+  <translation id="3905533329051691155">Grande</translation>
+  <translation id="1067433641518800382">Extra grande</translation>
+  <translation id="1541217682862985759">Centro de importación de imágenes de DSS</translation>
+  <translation id="3813315596480512127">Guardar el archivo</translation>
+  <translation id="5398208587620707842">Cerrar el archivo</translation>
+  <translation id="4831075576673859232">Atajos de teclado</translation>
+  <translation id="1194417025708727910">Acerca de Afterglow Access</translation>
+  <translation id="3960179027071125548">Alternar visibilidad de capa</translation>
+  <translation id="7508971482758777176">Menú de mapa de color</translation>
+  <translation id="1516703221650812175">menú del modo de mezcla</translation>
+  <translation id="2821179408673282599">Hogar</translation>
+  <translation id="2454050363478003966">Acceso</translation>
+  <translation id="6440145330529414400">Abrir cuadro de diálogo de ayuda</translation>
+  <translation id="2642143184461882540">Modo de fotometría</translation>
+  <translation id="1122545321238679571">Recortar a la región superpuesta más grande</translation>
+  <translation id="8836851211708808337">modificado</translation>
+  <translation id="2766839125635186843">Fusionar fuentes seleccionadas</translation>
+  <translation id="827190388284457027">Eliminar fuentes seleccionadas</translation>
+  <translation id="4419556934123009679">Eliminar todas las fuentes</translation>
+  <translation id="6054387271114219071">Actualizar fotometría</translation>
+  <translation id="8604673556809626581">Exportar datos</translation>
+  <translation id="1494518490116523821">Seleccionar todo</translation>
+  <translation id="8144723830352946980">Selección clara</translation>
+  <translation id="1774120414444554735">Fotómetro por lotes</translation>
+  <translation id="8227596913155490392">Sencillo</translation>
+  <translation id="6201638315245239510">Avanzado</translation>
+  <translation id="6612019587433987023">Cerrar visor</translation>
+  <translation id="8716359834484489616">Seleccionar todo</translation>
+  <translation id="6505839089131595761"><ph name="START_TAG_MAT_ICON"> </ph> colorear <ph name="CLOSE_TAG_MAT_ICON"> </ph> Extrae valores del visor actual </translation>
+  <translation id="6331012057589374366">RA (horas)</translation>
+  <translation id="5762374486100548957">Dic (grados)</translation>
+  <translation id="1404573827153155532">Radio (grados)</translation>
+  <translation id="4545011706625050745">Fuentes máximas</translation>
+  <translation id="4664476756660489042">Escala mínima (segundos de arco / píxel)</translation>
+  <translation id="6106415570330082780">Escala máxima (segundos de arco / píxel)</translation>
+  <translation id="5832573644934441476">Biblioteca de archivos</translation>
+  <translation id="7739851803530645066">Abrir archivos</translation>
+  <translation id="6172274186400299865">Guardar archivos seleccionados</translation>
+  <translation id="5944476234766948426">Guardar todos los archivos</translation>
+  <translation id="5565886834646080696">Cerrar archivos seleccionados</translation>
+  <translation id="8254559828297697863">Cerrar todos los archivos</translation>
+  <translation id="3415786763080851463">Actualizar lista de archivos</translation>
+  <translation id="3137154230731953959">menú de opciones de archivo seleccionado</translation>
+  <translation id="2359039039664868192">Descargar archivos seleccionados</translation>
+  <translation id="583028685669773314">Agrupar archivos seleccionados</translation>
+  <translation id="8382304137512019226">Dividir archivos seleccionados</translation>
+  <translation id="6851041726999384334">Seleccionar todos los archivos</translation>
+  <translation id="3464861411375198609">Borrar filtro de archivo</translation>
+  <translation id="4753924504317174426">Entrada de filtro de archivo</translation>
+  <translation id="6603468821974913817">Modo de sincronización del visor</translation>
+  <translation id="1778447127949313454">Sincronizar configuración de pantalla</translation>
+  <translation id="6812395957701547236">visores de imágenes</translation>
+  <translation id="57570583281993297">Configuración de pantalla</translation>
+  <translation id="8102697516877638695">Información del archivo</translation>
+  <translation id="3542956460984635744">Marcadores personalizados</translation>
+  <translation id="6560280488925179144">Trazador</translation>
+  <translation id="2311867436831741059">Sonificador</translation>
+  <translation id="3606571875564888356">Fotometría</translation>
+  <translation id="7938312165937347152">Calculadora de imágenes</translation>
+  <translation id="3340719036479371862">Calibración WCS</translation>
+  <translation id="8200942586419500488">Alineador</translation>
+  <translation id="7510915524822565919">Apilador</translation>
+  <translation id="8324545178989648652">banco de trabajo</translation>
+  <translation id="7058560051550513950">Cielo</translation>
+  <translation id="5144446219707910298">Pixel</translation>
 </translationbundle>
