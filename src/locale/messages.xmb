@@ -266,6 +266,8 @@
   <msg id="4468741256615440810"><source>src/app/workbench/containers/workbench.component.html:208</source>Global Settings</msg>
   <msg id="1447711954704598085"><source>src/app/workbench/containers/workbench.component.html:270</source>Sync orientations</msg>
   <msg id="6603468821974913817"><source>src/app/workbench/containers/workbench.component.html:277</source>Viewer Sync Mode</msg>
+  <msg id="7058560051550513950"><source>src/app/workbench/containers/workbench.component.html:280</source>Sky</msg>
+  <msg id="5144446219707910298"><source>src/app/workbench/containers/workbench.component.html:281</source>Pixel</msg>
   <msg id="1778447127949313454"><source>src/app/workbench/containers/workbench.component.html:295</source>Sync display settings</msg>
   <msg id="6812395957701547236"><source>src/app/workbench/containers/workbench.component.html:308</source>image viewers</msg>
   <msg id="57570583281993297"><source>src/app/workbench/containers/workbench.component.html:340</source>Display Settings</msg>
