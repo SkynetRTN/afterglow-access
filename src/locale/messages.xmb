@@ -92,6 +92,11 @@
   <msg id="6440145330529414400"><source>src/app/workbench/components/navbar/navbar.component.html:58</source>Open Help Dialog</msg>
   <msg id="1476710246078344978"><source>src/app/workbench/components/navbar/navbar.component.html:60</source>Help...</msg>
   <msg id="3797778920049399855"><source>src/app/workbench/components/navbar/navbar.component.html:62</source>Logout</msg>
+  <msg id="2286991609778656624"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:3</source>Background Level Percentile</msg>
+  <msg id="3397157764808735088"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:17</source>Saturation Level Percentile</msg>
+  <msg id="5027416828744562287"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:33</source>Color Map</msg>
+  <msg id="6460959206853371274"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:45</source>Stretch Mode</msg>
+  <msg id="5559619285162433931"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:67,69</source> Inverted </msg>
   <msg id="2642143184461882540"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:5</source>Photometry Mode</msg>
   <msg id="6267653828088289778"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:17</source>Zero Point</msg>
   <msg id="6419909999138430228"><source>src/app/workbench/components/phot-settings-dialog/phot-settings-dialog.component.html:25</source>Centroiding Radius</msg>
@@ -135,8 +140,10 @@
   <msg id="6205896761596395655"><source>src/app/workbench/containers/display-panel/display-panel.component.html:5</source>Select an image layer to adjust brightness and contrast settings.</msg>
   <msg id="2950543459367605312"><source>src/app/workbench/containers/display-panel/display-panel.component.html:12</source>Brightness and Contrast Presets</msg>
   <msg id="6184759444958151835"><source>src/app/workbench/containers/display-panel/display-panel.component.html:19</source>Faint Target Preset</msg>
+  <msg id="5650283338413212443"><source>src/app/workbench/containers/display-panel/display-panel.component.html:21</source>Faint Target</msg>
   <msg id="8100602718516572607"><source>src/app/workbench/containers/display-panel/display-panel.component.html:28</source>Default Preset</msg>
   <msg id="5731448816717757779"><source>src/app/workbench/containers/display-panel/display-panel.component.html:37</source>Bright Target Preset</msg>
+  <msg id="7807244529097884486"><source>src/app/workbench/containers/display-panel/display-panel.component.html:39</source>Bright Target</msg>
   <msg id="267834593427005219"><source>src/app/workbench/containers/display-panel/display-panel.component.html:57</source>Brightness and Contrast Settings</msg>
   <msg id="4725943399307728524"><source>src/app/workbench/containers/display-panel/display-panel.component.html:72</source>Image Orientation Options</msg>
   <msg id="4456532179377007819"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:1</source>Please select a layer instead of the file.</msg>

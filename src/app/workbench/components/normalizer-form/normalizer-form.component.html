@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
-      <mat-label>Background Level Percentile</mat-label>
+      <mat-label i18n>Background Level Percentile</mat-label>
       <input
         matInput
         [ngModel]="normalizer?.backgroundPercentile"
@@ -15,7 +15,7 @@
   </div>
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
-      <mat-label>Saturation Level Percentile</mat-label>
+      <mat-label i18n>Saturation Level Percentile</mat-label>
       <input
         matInput
         [ngModel]="normalizer?.peakPercentile"
@@ -31,7 +31,7 @@
 <div class="row">
   <div class="col-6">
     <mat-form-field appearance="outline">
-      <mat-label>Color Map</mat-label>
+      <mat-label i18n>Color Map</mat-label>
       <mat-select
         [value]="normalizer?.colorMapName"
         (selectionChange)="colorMapChange.emit($event.value)"
@@ -43,7 +43,7 @@
   </div>
   <div class="col-6">
     <mat-form-field appearance="outline">
-      <mat-label>Stretch Mode</mat-label>
+      <mat-label i18n>Stretch Mode</mat-label>
       <mat-select
         [value]="normalizer?.stretchMode"
         (selectionChange)="stretchModeChange.emit($event.value)"
@@ -63,6 +63,7 @@
       [labelPosition]="'before'"
       (change)="invertedChange.emit($event.checked)"
       color="primary"
+      i18n
     >
       Inverted
     </mat-slide-toggle>

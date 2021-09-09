@@ -402,6 +402,7 @@
         <div class="vertical-icon-nav-item-group">
           <div
             class="vertical-icon-nav-item"
+            i18n-matTooltip
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"
             [matTooltipPosition]="'left'"
             [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
@@ -415,6 +416,7 @@
           </div>
           <div
             class="vertical-icon-nav-item"
+            i18n-matTooltip
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')"
             [matTooltipPosition]="'left'"
             [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
@@ -428,6 +430,7 @@
           </div>
           <div
             class="vertical-icon-nav-item"
+            i18n-matTooltip
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
             [matTooltipPosition]="'left'"
             [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
