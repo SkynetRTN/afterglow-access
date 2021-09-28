@@ -1,6 +1,8 @@
-export interface CoreApiResponse {
-  data: any;
-  links: any;
+export interface CoreApiResponse<T> {
+  data: T;
+  links: {
+    pagination: PaginationLinks
+  }
 }
 
 export interface PaginationLinks {
@@ -12,4 +14,12 @@ export interface PaginationLinks {
   totalPages: number;
   sort: string;
   pageSize: number;
+}
+
+export interface CoreApiError {
+  error: {
+    code: string;
+    detail: string;
+    meta: {[key:string]: any}
+  };
 }

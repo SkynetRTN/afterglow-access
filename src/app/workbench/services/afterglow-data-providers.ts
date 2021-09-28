@@ -8,7 +8,7 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { DataProviderAsset } from '../../data-providers/models/data-provider-asset';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { AfterglowConfigService } from '../../afterglow-config.service';
-import { CoreApiResponse, PaginationLinks } from '../../utils/core-api-response';
+import { CoreApiResponse } from '../../utils/core-api-response';
 
 export interface UploadInfo {
   bytesUploaded: number;
@@ -18,28 +18,14 @@ export interface UploadInfo {
   chunkIndex: number;
 }
 
-interface DataProvidersResponse extends CoreApiResponse {
-  data: DataProvider[];
-  links: {
-    pagination: PaginationLinks;
-    self: string;
-  };
-}
-
-interface AssetsResponse extends CoreApiResponse {
-  data: Array<{ name: string; path: string; collection: boolean; metadata: { [key: string]: any } }>;
-  links: {
-    pagination: PaginationLinks;
-    self: string;
-  };
-}
+type AssetResponseData = Array<{ name: string; path: string; collection: boolean; metadata: { [key: string]: any } }>
 
 @Injectable()
 export class AfterglowDataProviderService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   getDataProvidersByLink(link: string) {
-    return this.http.get<DataProvidersResponse>(link);
+    return this.http.get<CoreApiResponse<DataProvider[]>>(link);
   }
 
   getDataProviders() {
@@ -47,7 +33,7 @@ export class AfterglowDataProviderService {
   }
 
   getAssetsByLink(dataProviderId: string, link: string) {
-    return this.http.get<AssetsResponse>(link).pipe(
+    return this.http.get<CoreApiResponse<AssetResponseData>>(link).pipe(
       map((resp) => {
         let assets = resp.data.map((r) => {
           let asset: DataProviderAsset = {

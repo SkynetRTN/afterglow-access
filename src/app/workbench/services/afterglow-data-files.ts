@@ -23,14 +23,6 @@ export interface CoreDataFile {
   modified: boolean;
 }
 
-interface FilesResponse extends CoreApiResponse {
-  data: CoreDataFile[]
-}
-
-interface HeaderResponse extends CoreApiResponse {
-  data: HeaderEntry[]
-}
-
 @Injectable()
 export class AfterglowDataFileService {
   private SOURCE_ID = 0;
@@ -46,7 +38,7 @@ export class AfterglowDataFileService {
   }
 
   getFiles() {
-    return this.http.get<FilesResponse>(`${getCoreApiUrl(this.config)}/data-files`);
+    return this.http.get<CoreApiResponse<CoreDataFile[]>>(`${getCoreApiUrl(this.config)}/data-files`);
   }
 
   createFromDataProviderAsset(providerId: string, assetPath: string) {
@@ -56,7 +48,7 @@ export class AfterglowDataFileService {
   }
 
   getHeader(fileId: string) {
-    return this.http.get<HeaderResponse>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
+    return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
   }
 
   getHist(fileId: string): Observable<{ data: Uint32Array; minBin: number; maxBin: number }> {
