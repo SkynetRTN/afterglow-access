@@ -67,6 +67,7 @@ export interface FileSystemItem {
 export interface FileSystemDetailsColumn {
   dataField: string;
   caption: string;
+  sortable: boolean;
 }
 
 export interface FileSystemItemsResponse {
@@ -464,10 +465,12 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             {
               dataField: 'description',
               caption: 'description',
+              sortable: false,
             },
             {
               dataField: 'permissions',
               caption: 'permissions',
+              sortable: false
             },
           ];
         }
@@ -475,6 +478,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           const result: FileSystemDetailsColumn = {
             dataField: column.fieldName,
             caption: column.name,
+            sortable: column.sortable
           };
           return result;
         });

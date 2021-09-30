@@ -127,7 +127,7 @@
           </ng-container>
 
           <ng-container *ngFor="let column of columns$ | async" [matColumnDef]="column.caption">
-            <th mat-header-cell [mat-sort-header]="column.dataField" class="meta-column" *matHeaderCellDef>
+            <th mat-header-cell [mat-sort-header]="column.dataField" [disabled]="!column.sortable" class="meta-column" *matHeaderCellDef>
               {{ column.caption }}
             </th>
             <td mat-cell class="meta-column" *matCellDef="let item">
