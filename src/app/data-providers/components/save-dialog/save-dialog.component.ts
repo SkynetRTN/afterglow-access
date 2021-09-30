@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject, ViewChild, OnDestroy, AfterViewInit, ElementRef } from '@angular/core';
-import { ImportAssets, ImportAssetsCompleted } from '../../data-providers.actions';
+import { ImportAssets, ImportAssetsCompleted, SetCurrentPath } from '../../data-providers.actions';
 import { Store, Actions, ofActionCompleted } from '@ngxs/store';
 import { Observable, Subject, BehaviorSubject, combineLatest } from 'rxjs';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -46,7 +46,7 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(MAT_DIALOG_DATA) private data: any,
     public dialog: MatDialog
   ) {
-    this.lastPath$ = this.store.select(DataProvidersState.getLastPath);
+    this.lastPath$ = this.store.select(DataProvidersState.getLastSavePath);
 
     if (data && data.name) {
       this.nameFormControl.setValue(data.name);
@@ -103,5 +103,9 @@ export class SaveDialogComponent implements OnInit, OnDestroy, AfterViewInit {
     this.nameFormControl.setValue(asset.name);
 
     this.saveAs(asset.dataProviderId, asset.assetPath);
+  }
+
+  onPathChange(path: DataProviderPath) {
+    this.store.dispatch(new SetCurrentPath(path, true));
   }
 }

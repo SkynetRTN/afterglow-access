@@ -55,10 +55,11 @@ export interface DataProvidersStateModel {
   importErrors: Array<string>;
   importProgress: number | null;
   lastPath: DataProviderPath | null;
+  lastSavePath: DataProviderPath | null;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: '0bc2c139-10d0-480b-9b3a-7d18d0700605',
+  version: '9ccbc82b-f8fb-4e1b-923d-48fa258cc310',
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
@@ -67,6 +68,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importErrors: [],
   importProgress: null,
   lastPath: null,
+  lastSavePath: null,
 };
 
 @State<DataProvidersStateModel>({
@@ -132,6 +134,11 @@ export class DataProvidersState {
   @Selector()
   public static getLastPath(state: DataProvidersStateModel) {
     return state.lastPath;
+  }
+
+  @Selector()
+  public static getLastSavePath(state: DataProvidersStateModel) {
+    return state.lastSavePath;
   }
 
   @Action(ResetState)
@@ -297,10 +304,14 @@ export class DataProvidersState {
   @ImmutableContext()
   public setCurrentFileSystemPath(
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { path }: SetCurrentPath
+    { path, isSave }: SetCurrentPath
   ) {
     setState((state: DataProvidersStateModel) => {
-      state.lastPath = path;
+      if (!isSave) {
+        state.lastPath = path;
+      } else {
+        state.lastSavePath = path;
+      }
       return state;
     });
   }

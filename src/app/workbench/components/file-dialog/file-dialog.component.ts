@@ -94,6 +94,8 @@ export class SaveChangesDialogComponent implements OnDestroy {
           this.index$.next(this.index$.getValue() + 1);
         } else if (this.config.mode == 'save') {
           this.dialogRef.close();
+        } else {
+          this.dialogRef.close();
         }
       });
 
@@ -254,7 +256,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
         },
       });
       return errorDialog.afterClosed().pipe(map((v) => false));
-    }
+    };
 
     return next$.pipe(
       flatMap((saveDialogResult) => {

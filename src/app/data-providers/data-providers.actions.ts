@@ -31,7 +31,7 @@ export class LoadAssets {
 export class SetCurrentPath {
   public static readonly type = '[DataProvider] Set Current Path';
 
-  constructor(public path: DataProviderPath) {}
+  constructor(public path: DataProviderPath, public isSave: boolean = false) {}
 }
 
 export class LoadDataProviderAssetsSuccess {
