@@ -278,7 +278,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.tableData$
       .pipe(
         takeUntil(this.destroy$),
-        map((rows) => rows.filter((row) => row.data == null)),
+        filter((rows) => rows.filter((row) => row.data === null).length != 0),
         withLatestFrom(this.imageHdu$, this.config$, this.photometrySettings$),
         filter(([rows, imageHdu, config]) => rows.length != 0 && imageHdu && config && config.autoPhot),
         auditTime(2000)

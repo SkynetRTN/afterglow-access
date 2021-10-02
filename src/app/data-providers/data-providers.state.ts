@@ -28,6 +28,7 @@ import {
   ImportAssetsCompleted,
   ImportAssetsStatusUpdated,
   SetCurrentPath,
+  UpdateDefaultSort,
 } from './data-providers.actions';
 import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
 import { CreateJob, UpdateJob } from '../jobs/jobs.actions';
@@ -54,10 +55,11 @@ export interface DataProvidersStateModel {
   importErrors: Array<string>;
   importProgress: number | null;
   lastPath: DataProviderPath | null;
+  lastSavePath: DataProviderPath | null;
 }
 
 const dataProvidersDefaultState: DataProvidersStateModel = {
-  version: '3bed78ef-bfde-4942-877f-251ae4d88b71',
+  version: '9ccbc82b-f8fb-4e1b-923d-48fa258cc310',
   dataProvidersLoaded: false,
   dataProviderIds: [],
   dataProviderEntities: {},
@@ -66,6 +68,7 @@ const dataProvidersDefaultState: DataProvidersStateModel = {
   importErrors: [],
   importProgress: null,
   lastPath: null,
+  lastSavePath: null,
 };
 
 @State<DataProvidersStateModel>({
@@ -133,6 +136,11 @@ export class DataProvidersState {
     return state.lastPath;
   }
 
+  @Selector()
+  public static getLastSavePath(state: DataProvidersStateModel) {
+    return state.lastSavePath;
+  }
+
   @Action(ResetState)
   @ImmutableContext()
   public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, {}: ResetState) {
@@ -145,11 +153,31 @@ export class DataProvidersState {
   @ImmutableContext()
   public loadDataProviders({ setState, dispatch }: StateContext<DataProvidersStateModel>) {
     return this.dataProviderService.getDataProviders().pipe(
-      tap((dataProviders) => {
+      tap((resp) => {
+        let dataProviders = resp.data;
         setState((state: DataProvidersStateModel) => {
           state.dataProvidersLoaded = true;
           state.dataProviderIds = dataProviders.map((dp) => dp.id);
-          dataProviders.forEach((dp) => (state.dataProviderEntities[dp.id] = dp));
+
+          dataProviders.forEach((dp) => {
+            if (!dp.defaultSort) {
+              dp.defaultSort = {
+                field: 'name',
+                direction: '',
+              };
+            }
+
+            if (dp.id in state.dataProviderEntities) {
+              //preserve user-specified default sort
+              dp = {
+                ...dp,
+                defaultSort: {
+                  ...state.dataProviderEntities[dp.id].defaultSort,
+                },
+              };
+            }
+            state.dataProviderEntities[dp.id] = dp;
+          });
 
           // //remove data providers from file system root which are no longer present
           // state.fileSystem = state.fileSystem.filter(fsObject => state.dataProviderIds.includes(fsObject.assetPath))
@@ -184,13 +212,27 @@ export class DataProvidersState {
           return state;
         });
       }),
-      flatMap((dataProviders) => {
-        return dispatch(new LoadDataProvidersSuccess(dataProviders));
+      flatMap((resp) => {
+        return dispatch(new LoadDataProvidersSuccess(resp.data));
       }),
       catchError((err) => {
         return dispatch(new LoadDataProvidersFail(err));
       })
     );
+  }
+
+  @Action(UpdateDefaultSort)
+  @ImmutableContext()
+  public updateDefaultSort(
+    { setState, dispatch }: StateContext<DataProvidersStateModel>,
+    { id, sort }: UpdateDefaultSort
+  ) {
+    setState((state: DataProvidersStateModel) => {
+      if (id in state.dataProviderEntities) {
+        state.dataProviderEntities[id].defaultSort = sort;
+      }
+      return state;
+    });
   }
 
   // @Action(LoadAssets)
@@ -262,10 +304,14 @@ export class DataProvidersState {
   @ImmutableContext()
   public setCurrentFileSystemPath(
     { setState, getState, dispatch }: StateContext<DataProvidersStateModel>,
-    { path }: SetCurrentPath
+    { path, isSave }: SetCurrentPath
   ) {
     setState((state: DataProvidersStateModel) => {
-      state.lastPath = path;
+      if (!isSave) {
+        state.lastPath = path;
+      } else {
+        state.lastSavePath = path;
+      }
       return state;
     });
   }

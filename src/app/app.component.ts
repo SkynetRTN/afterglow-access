@@ -96,7 +96,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe(() => {
         this.store.dispatch(new InitAuth());
-        this.store.dispatch(new Initialize());
+        
       });
   }
 

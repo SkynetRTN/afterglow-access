@@ -38,8 +38,8 @@ export class AuthorizedPageComponent implements OnInit, OnDestroy {
         //
         this.authService.getUser().subscribe(
           (user) => {
-            localStorage.setItem('aa_user', JSON.stringify(user));
-            localStorage.setItem('aa_access_token', this.cookieService.get(this.config.authCookieName));
+            localStorage.setItem('user', JSON.stringify(user.data));
+            localStorage.setItem('access_token', this.cookieService.get(this.config.authCookieName));
             this.store.dispatch(new LoginSuccess());
           },
           (error) => {
@@ -51,29 +51,29 @@ export class AuthorizedPageComponent implements OnInit, OnDestroy {
       this.sub = this.activatedRoute.fragment.subscribe((fragment) => {
         let params = qs.parse(fragment);
 
-        let nonce = localStorage.getItem('aa_oauth_nonce');
+        let nonce = localStorage.getItem('oauth_nonce');
         if (nonce !== null && params['access_token'] && params['expires_in'] && params['state']) {
           let state = JSON.parse(params['state'] as string);
           if (state['nonce'] && state['nonce'] == nonce) {
             let expiresIn = parseInt(params['expires_in'] as string);
-            localStorage.setItem('aa_access_token', params['access_token'] as string);
-            localStorage.setItem('aa_expires_at', moment().add(expiresIn, 'seconds').toJSON());
+            localStorage.setItem('access_token', params['access_token'] as string);
+            localStorage.setItem('expires_at', moment().add(expiresIn, 'seconds').toJSON());
 
             //get user
             this.authService.getUser().subscribe(
               (user) => {
-                localStorage.setItem('aa_user', JSON.stringify(user));
+                localStorage.setItem('user', JSON.stringify(user.data));
                 this.store.dispatch(new LoginSuccess());
               },
               (error) => {
-                localStorage.removeItem('aa_access_token');
-                localStorage.removeItem('aa_expires_at');
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('expires_at');
               }
             );
           }
         } else {
         }
-        localStorage.removeItem('aa_oauth_nonce');
+        localStorage.removeItem('oauth_nonce');
       });
     }
   }

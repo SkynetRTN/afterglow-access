@@ -31,7 +31,7 @@ export class LoadAssets {
 export class SetCurrentPath {
   public static readonly type = '[DataProvider] Set Current Path';
 
-  constructor(public path: DataProviderPath) {}
+  constructor(public path: DataProviderPath, public isSave: boolean = false) {}
 }
 
 export class LoadDataProviderAssetsSuccess {
@@ -93,4 +93,10 @@ export class ImportAssetsCancel {
   public static readonly type = '[DataProvider] Import Assets Cancel';
 
   constructor(public correlationId?: string) {}
+}
+
+export class UpdateDefaultSort {
+  public static readonly type = '[DataProvider] Update Default Sort';
+
+  constructor(public id: string, public sort: { field: string; direction: 'asc' | 'desc' | '' }) {}
 }

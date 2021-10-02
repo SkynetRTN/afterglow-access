@@ -50,21 +50,20 @@
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'file')
     "
     role="region"
-    aria-label="File Library"
+    i18n-aria-label aria-label="File Library"
     [ngSwitch]="sidebarView$ | async"
   >
     <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100" fxLayout="column">
       <div fxFlex="1 1 50px">
         <div class="file-list-toolbar">
-          <button mat-icon-button aria-label="Open files" (click)="openFiles()" matTooltip="Open files">
+          <button mat-icon-button (click)="openFiles()" i18n-matTooltip matTooltip="Open files">
             <mat-icon>folder_open</mat-icon>
           </button>
           <button
             mat-icon-button
             *ngIf="(selectedFileIds$ | async)?.length != 0; else saveAllButtonBlock"
-            aria-label="Save selected files"
             (click)="onSaveSelectedFileListItemsBtnClick()"
-            matTooltip="Save selected files"
+            i18n-matTooltip matTooltip="Save selected files"
           >
             <mat-icon>save</mat-icon>
           </button>
@@ -72,9 +71,8 @@
             <button
               mat-icon-button
               [disabled]="(filesSorted$ | async)?.length == 0"
-              aria-label="Save all files"
               (click)="onSaveAllFileListItemsBtnClick()"
-              matTooltip="Save all files"
+              i18n-matTooltip matTooltip="Save all files"
             >
               <mat-icon>save</mat-icon>
             </button>
@@ -85,7 +83,7 @@
             *ngIf="(selectedFileIds$ | async)?.length != 0; else closeAllButtonBlock"
             aria-label="Close selected files"
             (click)="onCloseSelectedFileListItemsBtnClick()"
-            matTooltip="Close selected files"
+            i18n-matTooltip matTooltip="Close selected files"
           >
             <mat-icon>highlight_off</mat-icon>
           </button>
@@ -93,21 +91,21 @@
             <button
               mat-icon-button
               [disabled]="(filesSorted$ | async)?.length == 0"
-              aria-label="Close all files"
               (click)="onCloseAllFileListItemsBtnClick()"
-              matTooltip="Close all files"
+              i18n-matTooltip matTooltip="Close all files"
             >
               <mat-icon>highlight_off</mat-icon>
             </button>
           </ng-template>
 
-          <button mat-icon-button aria-label="Refresh File List" (click)="refresh()" matTooltip="Refresh File List">
+          <button mat-icon-button (click)="refresh()"  i18n-matTooltip matTooltip="Refresh File List">
             <mat-icon>refresh</mat-icon>
           </button>
           <button
             mat-icon-button
             [matMenuTriggerFor]="menu"
-            aria-label="selected file options"
+            i18n-aria-label
+            aria-label="selected file options menu"
             [disabled]="(selectedFileIds$ | async)?.length == 0"
           >
             <mat-icon>more_vert</mat-icon>
@@ -116,7 +114,7 @@
             <button
               mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
-              aria-label="Download selected files"
+              i18n-aria-label aria-label="Download selected files"
               (click)="onDownloadSelectedFileListItemsBtnClick()"
             >
               <mat-icon>get_app</mat-icon>
@@ -125,7 +123,7 @@
             <button
               mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
-              aria-label="Group selected files"
+              i18n-aria-label aria-label="Group selected files"
               (click)="onGroupSelectedFileListItemsBtnClick()"
             >
               <mat-icon>call_merge</mat-icon>
@@ -134,7 +132,7 @@
             <button
               mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
-              aria-label="Split selected files"
+              i18n-aria-label aria-label="Split selected files"
               (click)="onSplitSelectedFileListItemsBtnClick()"
             >
               <mat-icon>call_split</mat-icon>
@@ -142,7 +140,7 @@
             </button>
           </mat-menu>
           <mat-checkbox
-            aria-label="Select all files"
+            i18n-aria-label aria-label="Select all files"
             [checked]="selectAllFilesCheckboxState$ | async"
             [indeterminate]="selectAllFilesCheckboxIndeterminate$ | async"
             (change)="handleSelectAllFilesChange($event.checked)"
@@ -175,13 +173,13 @@
                 mat-button
                 *ngIf="fileFilter$ | async"
                 mat-icon-button
-                aria-label="Clear File Filter"
+                i18n-aria-label aria-label="Clear File Filter"
                 (click)="clearFileListFilter()"
               >
                 <mat-icon>close</mat-icon>
               </button>
               <input
-                aria-label="File Filter Input"
+              i18n-aria-label aria-label="File Filter Input"
                 autocomplete="off"
                 class="file-list-filter"
                 fxFlex="1 1 auto"
@@ -277,11 +275,11 @@
             [disabled]="!(viewerSyncEnabled$ | async)"
             [value]="viewerSyncMode$ | async"
             name="viewerSyncMode"
-            aria-label="Viewer Sync Mode"
+            i18n-aria-label aria-label="Viewer Sync Mode"
             (change)="onViewerSyncModeChange($event)"
           >
-            <mat-button-toggle value="sky">Sky</mat-button-toggle>
-            <mat-button-toggle value="pixel">Pixel</mat-button-toggle>
+            <mat-button-toggle value="sky" i18n>Sky</mat-button-toggle>
+            <mat-button-toggle value="pixel" i18n>Pixel</mat-button-toggle>
           </mat-button-toggle-group>
         </div>
       </div>
@@ -295,7 +293,7 @@
           (change)="onNormalizationSyncEnabledChange($event)"
           color="primary"
         >
-          <ng-container>Sync display settings</ng-container>
+          <ng-container i18n>Sync display settings</ng-container>
         </mat-slide-toggle>
       </div>
 
@@ -308,7 +306,7 @@
     fxFlex="1 1 auto"
     class="image-viewer-grid-panel"
     role="region"
-    aria-label="image viewers"
+    i18n-aria-label aria-label="image viewers"
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'"
     style="overflow: auto"
   >
@@ -339,7 +337,18 @@
     >
       <div class="card workbench-settings-card" style="height: 100%">
         <div id="settings-header" class="card-header">
-          <h2 i18n>{{ getActiveToolName(activeTool) }}</h2>
+          <h2 [ngSwitch]="activeTool">
+            <ng-container *ngSwitchCase="WorkbenchTool.VIEWER" i18n>Display Settings</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.INFO" i18n>File Info</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" i18n>Custom Markers</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.PLOTTER" i18n>Plotter</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.IMAGE_CALC" i18n>Image Calculator</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</ng-container>
+          </h2>
         </div>
 
         <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
@@ -389,10 +398,11 @@
       [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'"
       [class.collapsed]="!(showConfig$ | async)"
     >
-      <nav role="navigation" aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
+      <nav role="navigation" i18n-aria-label aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
         <div class="vertical-icon-nav-item-group">
           <div
             class="vertical-icon-nav-item"
+            i18n-matTooltip
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"
             [matTooltipPosition]="'left'"
             [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
@@ -406,6 +416,7 @@
           </div>
           <div
             class="vertical-icon-nav-item"
+            i18n-matTooltip
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')"
             [matTooltipPosition]="'left'"
             [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
@@ -419,6 +430,7 @@
           </div>
           <div
             class="vertical-icon-nav-item"
+            i18n-matTooltip
             [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
             [matTooltipPosition]="'left'"
             [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"

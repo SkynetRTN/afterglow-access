@@ -3,9 +3,8 @@
   *ngIf="showSave"
   mat-icon-button
   class="small m-1"
-  aria-label="Save File"
   (click)="onSave.emit($event)"
-  matTooltip="Save File"
+  i18n-matTooltip matTooltip="Save File"
   matTooltipShowDelay="500"
 >
   <mat-icon>save</mat-icon>
@@ -15,9 +14,8 @@
   *ngIf="showClose"
   mat-icon-button
   class="small m-1"
-  aria-label="Close File"
   (click)="onClose.emit($event)"
-  matTooltip="Close File"
+  i18n-matTooltip matTooltip="Close File"
   matTooltipShowDelay="500"
 >
   <mat-icon>clear</mat-icon>

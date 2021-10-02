@@ -88,7 +88,8 @@ export class JobsState {
   @ImmutableContext()
   public createJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, createJobAction: CreateJob) {
     return this.jobService.createJob(createJobAction.job).pipe(
-      flatMap((job) => {
+      flatMap((resp) => {
+        let job = resp.data
         createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
           state.entities[job.id] = {
@@ -157,7 +158,7 @@ export class JobsState {
     return this.jobService.getJobState(job.id).pipe(
       tap((value) => {
         setState((state: JobsStateModel) => {
-          state.entities[job.id].state = value;
+          state.entities[job.id].state = value.data;
           return state;
         });
       })

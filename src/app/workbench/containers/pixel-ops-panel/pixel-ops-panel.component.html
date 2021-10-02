@@ -3,7 +3,7 @@
 </ng-template>
 <ng-container *ngIf="hduIds; else emptyLibrary">
   <mat-tab-group (selectedTabChange)="onTabChange($event)">
-    <mat-tab label="Simple">
+    <mat-tab i18n-label label="Simple">
       <div class="tab-contents">
         <form [formGroup]="imageCalcForm">
           <mat-form-field appearance="outline">
@@ -79,7 +79,7 @@
         </form>
       </div>
     </mat-tab>
-    <mat-tab label="Advanced">
+    <mat-tab i18n-label label="Advanced">
       <form [formGroup]="imageCalcFormAdv">
         <div>
           <mat-form-field appearance="outline" style="width: 300px">

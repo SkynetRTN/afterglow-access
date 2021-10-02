@@ -13,9 +13,11 @@
     [allowUpload]="false"
     [allowDownload]="false"
     [selectionMode]="'single'"
+    [showNameFilter]="false"
     (onSelectionChange)="selectedAssets$.next($event)"
     (onSelectedAssetOpened)="onSelectedAssetOpened($event)"
     (onCurrentDirectoryChange)="onCurrentDirectoryChange($event)"
+    (onPathChange)="onPathChange($event)"
   >
   </app-file-manager>
 </mat-dialog-content>

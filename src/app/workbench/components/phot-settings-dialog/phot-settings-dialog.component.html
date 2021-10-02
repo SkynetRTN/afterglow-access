@@ -3,7 +3,7 @@
   <mat-button-toggle-group
     class="mb-4"
     name="mode"
-    aria-label="Photometry Mode"
+    i18n-aria-label aria-label="Photometry Mode"
     [(ngModel)]="settings && settings.mode"
   >
     <mat-button-toggle value="adaptive">Adaptive Aperture</mat-button-toggle>
@@ -42,15 +42,36 @@
         <div class="form-field-wrapper">
           <mat-form-field>
             <input matInput i18n-placeholder placeholder="Aperture" formControlName="aKrFactor" />
-            <mat-hint>Kron factor</mat-hint>
+            <mat-hint>isophotal radii</mat-hint>
           </mat-form-field>
           <app-print-form-error [control]="adaptiveApertureForm.get('aKrFactor')"></app-print-form-error>
         </div>
 
+        <div fxFlex="1 1 auto" fxLayout="column">
+          <div class="form-field-wrapper">
+            <mat-slide-toggle formControlName="autoAper">Auto aperture</mat-slide-toggle>
+          </div>
+          <div class="form-field-wrapper">
+            <mat-slide-toggle formControlName="fixAper">Fix Aperture Size</mat-slide-toggle>
+          </div>
+        </div>
+
+        <div fxFlex="1 1 auto" fxLayout="column">
+          <div class="form-field-wrapper">
+            <mat-slide-toggle formControlName="fixEll">Fix Ellipticity</mat-slide-toggle>
+          </div>
+
+          <div class="form-field-wrapper">
+            <mat-slide-toggle formControlName="fixRot">Fix Rotation</mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex="1 1 auto" fxLayout="row">
         <div class="form-field-wrapper">
           <mat-form-field>
             <input matInput i18n-placeholder placeholder="Annulus Inner" formControlName="aInKrFactor" />
-            <mat-hint>scale factor in apertures</mat-hint>
+            <mat-hint>isophotal radii</mat-hint>
           </mat-form-field>
           <app-print-form-error [control]="adaptiveApertureForm.get('aInKrFactor')"></app-print-form-error>
         </div>
@@ -58,7 +79,7 @@
         <div class="form-field-wrapper">
           <mat-form-field>
             <input matInput i18n-placeholder placeholder="Annulus Outer" formControlName="aOutKrFactor" />
-            <mat-hint>scale factor in apertures</mat-hint>
+            <mat-hint>isophotal radii</mat-hint>
           </mat-form-field>
           <app-print-form-error [control]="adaptiveApertureForm.get('aOutKrFactor')"></app-print-form-error>
         </div>

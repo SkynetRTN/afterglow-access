@@ -4,7 +4,7 @@
     class="small m-1"
     (click)="$event.stopPropagation(); onVisibilityChange.emit(!visible)"
     mat-icon-button
-    aria-label="Toggle layer visibility"
+    i18n-aria-label aria-label="Toggle layer visibility"
   >
     <mat-icon>{{ visible ? 'visibility' : 'visibility_off' }}</mat-icon>
   </button>
@@ -16,7 +16,7 @@
     class="small m-1"
     mat-icon-button
     [matMenuTriggerFor]="colorMapMenu"
-    aria-label="colorMap menu"
+    i18n-aria-label aria-label="Color map menu"
     (click)="$event.stopPropagation(); colorMapMenuTrigger.openMenu()"
   >
     <mat-icon>palette</mat-icon>
@@ -39,7 +39,7 @@
     class="small m-1"
     mat-icon-button
     [matMenuTriggerFor]="blendModeMenu"
-    aria-label="blendMode menu"
+    i18n-aria-label aria-label="blend mode menu"
     (click)="$event.stopPropagation(); blendModeMenuTrigger.openMenu()"
   >
     <mat-icon>layers</mat-icon>

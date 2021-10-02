@@ -7,6 +7,7 @@ import { JobStateBase } from '../models/job-base';
 import { JobResult } from '../models/job-result';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { AfterglowConfigService } from '../../afterglow-config.service';
+import { CoreApiResponse } from '../../utils/core-api-response';
 
 @Injectable()
 export class JobService {
@@ -15,21 +16,21 @@ export class JobService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) {}
 
   createJob(job: Job) {
-    return this.http.post<Job>(`${getCoreApiUrl(this.config)}/jobs`, job);
+    return this.http.post<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs`, job);
   }
 
   getJob(jobId: string) {
-    return this.http.get<Job>(`${getCoreApiUrl(this.config)}/jobs/${jobId}`);
+    return this.http.get<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs/${jobId}`);
   }
 
   getJobState(jobId: string) {
-    return this.http.get<JobStateBase>(`${getCoreApiUrl(this.config)}/jobs/${jobId}/state`);
+    return this.http.get<CoreApiResponse<JobStateBase>>(`${getCoreApiUrl(this.config)}/jobs/${jobId}/state`);
   }
 
   getJobResult(job: Job): Observable<JobResult> {
     return this.http.get<any>(`${getCoreApiUrl(this.config)}/jobs/${job.id}/result`).pipe(
       map((resp) => {
-        return { ...resp, type: job.type };
+        return { ...resp.data, type: job.type };
       })
     );
   }

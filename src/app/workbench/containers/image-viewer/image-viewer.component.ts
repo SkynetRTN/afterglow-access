@@ -714,7 +714,7 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
           // }
           let startTime = getStartTime(header);
           if (startTime) {
-            exif[piexif.ExifIFD.DateTimeOriginal] = moment(startTime).format('YYYY:MM:DD HH:mm:ss');
+            exif[piexif.ExifIFD.DateTimeOriginal] = moment.utc(startTime).format('YYYY:MM:DD HH:mm:ss');
           }
           let exifObj = { '0th': zeroth, Exif: exif, GPS: gps };
           let exifStr = piexif.dump(exifObj);

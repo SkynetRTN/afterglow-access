@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
+import { combineLatest, Subject } from 'rxjs';
 import { takeUntil, tap } from 'rxjs/operators';
 import { greaterThan, isNumber, lessThan } from '../../../utils/validators';
 import { PhotometrySettings } from '../../models/photometry-settings';
@@ -41,6 +41,10 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     aKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     aInKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     aOutKrFactor: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
+    autoAper: new FormControl(false),
+    fixAper: new FormControl(false, { updateOn: 'blur' }),
+    fixEll: new FormControl(false, { updateOn: 'blur' }),
+    fixRot: new FormControl(false, { updateOn: 'blur' }),
   });
 
   constructor(
@@ -72,7 +76,13 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
 
     this.constantApertureForm.controls.elliptical.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => this.updateDisabledControls(value));
+      .subscribe((elliptical) => {
+        this.updateEllipticalControls(elliptical);
+      });
+
+    this.adaptiveApertureForm.controls.autoAper.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((autoAper) => {
+      this.updateAutoAperControls(autoAper);
+    });
 
     this.adaptiveApertureForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       this.settings = {
@@ -81,28 +91,37 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
       };
     });
 
-    this.updateDisabledControls(this.settings.elliptical);
+    this.updateEllipticalControls(this.settings.elliptical);
+    this.updateAutoAperControls(this.settings.autoAper);
   }
 
-  updateDisabledControls(elliptical: boolean) {
-    let controls = this.constantApertureForm.controls;
-    if (!elliptical) {
-      controls.b.disable();
-      controls.bOut.disable();
-      controls.theta.disable();
-      controls.thetaOut.disable();
+  updateAutoAperControls(autoAper: boolean) {
+    let adaptiveControls = this.adaptiveApertureForm.controls;
+    if (autoAper) {
+      adaptiveControls.aKrFactor.disable();
     } else {
-      controls.b.enable();
-      controls.bOut.enable();
-      controls.theta.enable();
-      controls.thetaOut.enable();
+      adaptiveControls.aKrFactor.enable();
+    }
+  }
+
+  updateEllipticalControls(elliptical: boolean) {
+    let constControls = this.constantApertureForm.controls;
+    if (!elliptical) {
+      constControls.b.disable();
+      constControls.bOut.disable();
+      constControls.theta.disable();
+      constControls.thetaOut.disable();
+    } else {
+      constControls.b.enable();
+      constControls.bOut.enable();
+      constControls.theta.enable();
+      constControls.thetaOut.enable();
     }
   }
 
   ngOnInit() {
     // this.dialogRef.updateSize('700px');
-
-    this.dialogRef.updateSize('800px', '750px');
+    // this.dialogRef.updateSize('800px', '750px');
   }
 
   ngOnDestroy(): void {

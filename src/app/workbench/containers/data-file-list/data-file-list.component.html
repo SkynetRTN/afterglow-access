@@ -54,9 +54,7 @@
           [fileId]="file.id"
           [hduId]="hduId"
           [showFileToolbar]="file.hduIds.length == 1 && focusedValue?.fileId == file.id"
-          [showImageHduLayerToolbar]="
-            file.hduIds.length != 1 && focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''
-          "
+          [showImageHduLayerToolbar]="file.hduIds.length != 1 && focusedViewer?.fileId == file?.id"
           [showSelect]="file.hduIds.length == 1 && (selectedFileIds.length != 0 || focusedValue?.fileId == file.id)"
           [selected]="selectedFileIds.includes(file.id)"
           (onToggleSelected)="handleToggleSelected($event)"

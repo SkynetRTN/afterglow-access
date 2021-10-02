@@ -1,5 +1,5 @@
-<nav class="navbar-header" role="navigation" aria-label="primary">
-  <a class="afterglow-button afterglow-logo" routerLink="/" aria-label="Home" routerLinkActive="active" mat-button>
+<nav class="navbar-header" role="navigation">
+  <a class="afterglow-button afterglow-logo" routerLink="/" i18n-aria-label aria-label="Home" routerLinkActive="active" mat-button>
     <img src="assets/img/core-logo.png" /><span class="pl-4" style="font-size: 1.4em"> Afterglow Access</span>
   </a>
 
@@ -10,7 +10,7 @@
   </button> -->
 
   <ng-container *ngIf="!user">
-    <a class="afterglow-button" (click)="login()" aria-label="Login" mat-button i18n> Login </a>
+    <a class="afterglow-button" (click)="login()" i18n-aria-label aria-label="Login" mat-button i18n> Login </a>
   </ng-container>
   <div>
     <ng-container *ngIf="user">
@@ -56,7 +56,7 @@
           <mat-icon>format_color_fill</mat-icon>
           <span i18n>Theme Editor...</span>
         </button>
-        <button mat-menu-item (click)="openQuickStartGuide()" aria-label="Open Help Dialog">
+        <button mat-menu-item (click)="openQuickStartGuide()" aria-label="Open Help Dialog" i18n-aria-label >
           <mat-icon>help</mat-icon>
           <span i18n>Help...</span>
         </button>

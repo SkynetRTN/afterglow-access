@@ -2,6 +2,8 @@ export interface PhotometrySettings {
   gain: number;
   centroidRadius: number;
   zeroPoint: number;
+  apcorrTol: number;
+
   mode: 'adaptive' | 'constant';
   //constant
   a: number;
@@ -17,4 +19,8 @@ export interface PhotometrySettings {
   aKrFactor: number;
   aInKrFactor: number;
   aOutKrFactor: number;
+  autoAper: boolean;
+  fixAper: boolean;
+  fixEll: boolean;
+  fixRot: boolean;
 }

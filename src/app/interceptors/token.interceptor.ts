@@ -14,7 +14,7 @@ import { AfterglowConfigService } from '../afterglow-config.service';
 export class TokenInterceptor implements HttpInterceptor {
   constructor(private store: Store, private config: AfterglowConfigService) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const idToken = localStorage.getItem('aa_access_token');
+    const idToken = localStorage.getItem('access_token');
     let req = request;
     if (this.config.authMethod == 'oauth2' && idToken) {
       req = request.clone({

@@ -443,7 +443,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     let stopUpdating$ = merge(
       this.destroy$,
       this.stop$,
-      events$.pipe(filter((event) => event.type == 'ended' || event.type == 'pause'))
+      events$.pipe(filter((event) => event.type == 'ended' || event.type == 'pause' || event.type == 'error'))
     ).pipe(
       take(1),
       withLatestFrom(this.imageHdu$),

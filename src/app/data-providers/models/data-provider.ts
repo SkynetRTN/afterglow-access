@@ -10,6 +10,7 @@ export interface DataProvider {
   icon: string;
   description: string;
   columns: Array<DataProviderColumn>;
+  defaultSort: { field: string; direction: 'asc' | 'desc' | '' };
   sortBy: string;
   sortAsc: boolean;
   browseable: boolean;

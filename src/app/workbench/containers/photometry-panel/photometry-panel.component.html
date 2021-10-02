@@ -286,8 +286,7 @@
         <div class="form-row" *ngIf="tableData$ | async; let tableData">
           <button
             mat-raised-button
-            aria-label="Merge Selected Sources"
-            matTooltip="Merge Selected Sources"
+            i18n-matTooltip matTooltip="Merge Selected Sources"
             color="primary"
             (click)="mergeSelectedSources(sources, config)"
             [disabled]="selectionModel.selected.length < 2"
@@ -297,8 +296,7 @@
 
           <button
             mat-raised-button
-            aria-label="Remove Selected Sources"
-            matTooltip="Remove Selected Sources"
+            i18n-matTooltip matTooltip="Remove Selected Sources"
             color="warn"
             (click)="removeSelectedSources(sources, config)"
             [disabled]="selectionModel.selected.length == 0"
@@ -307,8 +305,7 @@
           </button>
           <button
             mat-raised-button
-            aria-label="Remove All Sources"
-            matTooltip="Remove All Sources"
+            i18n-matTooltip matTooltip="Remove All Sources"
             color="warn"
             (click)="removeSources(sources)"
             [disabled]="sources?.length == 0"
@@ -317,8 +314,7 @@
           </button>
           <button
             mat-raised-button
-            aria-label="Update Photometry"
-            matTooltip="Update Photometry"
+            i18n-matTooltip matTooltip="Update Photometry"
             color="primary"
             (click)="photometerSources(imageHdu, sources)"
             [disabled]="sources?.length == 0"
@@ -327,8 +323,7 @@
           </button>
           <button
             mat-raised-button
-            aria-label="Export Data"
-            matTooltip="Export Data"
+            i18n-matTooltip matTooltip="Export Data"
             color="primary"
             (click)="exportSourceData(tableData)"
             [disabled]="sources?.length == 0"
@@ -359,15 +354,14 @@
                   </mat-select>
                 </mat-form-field>
 
-                <button mat-icon-button (click)="selectHdus(hduIds)" aria-label="Select all" matTooltip="Select all">
+                <button mat-icon-button (click)="selectHdus(hduIds)"  i18n-matTooltip matTooltip="Select all">
                   <mat-icon>select_all</mat-icon>
                 </button>
 
                 <button
                   mat-icon-button
                   (click)="selectHdus([])"
-                  aria-label="Clear Selection"
-                  matTooltip="Clear Selection"
+                  i18n-matTooltip matTooltip="Clear Selection"
                 >
                   <mat-icon>clear</mat-icon>
                 </button>
@@ -377,8 +371,7 @@
                   color="primary"
                   (click)="batchPhotometer(sources, config)"
                   [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0"
-                  aria-label="Batch Photometer"
-                  matTooltip="Batch Photometer"
+                  i18n-matTooltip matTooltip="Batch Photometer"
                 >
                   <mat-icon>wb_incandescent</mat-icon>
                 </button>

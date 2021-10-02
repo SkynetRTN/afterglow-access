@@ -15,6 +15,8 @@ import {
 import { DataProviderAsset } from '../../../data-providers/models/data-provider-asset';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
+import { CoreErrorCode } from '../../models/core-error-code';
+import { CoreApiError } from 'src/app/utils/core-api-response';
 
 export interface FileDialogConfig {
   files: DataFile[];
@@ -91,6 +93,8 @@ export class SaveChangesDialogComponent implements OnDestroy {
         if (success) {
           this.index$.next(this.index$.getValue() + 1);
         } else if (this.config.mode == 'save') {
+          this.dialogRef.close();
+        } else {
           this.dialogRef.close();
         }
       });
@@ -242,6 +246,18 @@ export class SaveChangesDialogComponent implements OnDestroy {
 
       next$ = saveDialogRef.afterClosed();
     }
+
+    let handleError = (error) => {
+      let errorDialog = this.dialog.open(AlertDialogComponent, {
+        width: '400px',
+        data: {
+          title: 'Error',
+          message: 'An unexpected error was encountered when attempting to save the file.',
+        },
+      });
+      return errorDialog.afterClosed().pipe(map((v) => false));
+    };
+
     return next$.pipe(
       flatMap((saveDialogResult) => {
         if (saveDialogResult) {
@@ -259,16 +275,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
                 };
                 return result;
               }),
-              catchError((error) => {
-                let errorDialog = this.dialog.open(AlertDialogComponent, {
-                  width: '400px',
-                  data: {
-                    title: 'Error',
-                    message: 'An unexpected error was encountered when attempting to save the file.',
-                  },
-                });
-                return errorDialog.afterClosed().pipe(map((v) => false));
-              })
+              catchError((error) => handleError(error))
             );
           };
 
@@ -276,8 +283,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
           return this.dataProviderService.getAssets(dataProviderId, assetPath).pipe(
             take(1),
             flatMap((resp) => {
-              let respAssets = resp as DataProviderAsset[];
-              if (resp.length != 1) {
+              if (resp.data.length != 1) {
                 //is collection
                 return throwError('Cannot save to chosen path.  Existing asset is a collection.');
               } else {
@@ -315,12 +321,14 @@ export class SaveChangesDialogComponent implements OnDestroy {
                 );
               }
             }),
-            catchError((err) => {
-              if ((err as HttpErrorResponse).error.exception == 'AssetNotFoundError') {
+            catchError((httpErrorResp: HttpErrorResponse) => {
+              let errorResp: CoreApiError = httpErrorResp.error;
+              if (errorResp.error.code == CoreErrorCode.AssetNotFound) {
                 return createSaveRequest(false);
               } else {
                 // unknown error
-                return throwError('Encountered unexpected error when saving file.');
+                console.log(httpErrorResp);
+                return handleError(httpErrorResp);
               }
             })
           );
