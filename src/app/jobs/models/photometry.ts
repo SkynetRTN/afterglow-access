@@ -30,6 +30,7 @@ export interface PhotometryJobSettings {
   gain: number | null; // (optional) default gain if not present in FITS headers
   centroidRadius: number | null; // 0 = disable centroiding
   zeroPoint: number | null;
+  apcorrTol: number | null; // 0 = disable aperture correction
 }
 
 export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {}

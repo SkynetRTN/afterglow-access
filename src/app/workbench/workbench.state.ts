@@ -215,9 +215,10 @@ import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
+import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3a7db059-3817-4c49-bedb-77255473224b',
+  version: '58700439-fc6a-4fef-b3c6-7874d113783c',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -253,26 +254,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     diskCentroiderSettings: createDiskCentroiderSettings(),
   },
   photometrySettings: {
-    gain: 1,
-    zeroPoint: 20,
-    centroidRadius: 5,
-    mode: 'constant',
-    a: 5,
-    aIn: 10,
-    aOut: 15,
-    elliptical: false,
-    b: 5,
-    bOut: 15,
-    theta: 0,
-    thetaOut: 0,
-    aKrFactor: 7,
-    aInKrFactor: 10,
-    aOutKrFactor: 15,
-    autoAper: true,
-    fixAper: false,
-    fixEll: true,
-    fixRot: true,
-    apcorrTol: 0.0001,
+    ...defaultPhotometrySettings,
   },
   sourceExtractionSettings: {
     threshold: 3,
@@ -3344,6 +3326,7 @@ export class WorkbenchState {
         theta: null,
         thetaOut: null,
         zeroPoint: null,
+        apcorrTol: settings.adaptiveAperCorr ? settings.aperCorrTol : 0,
       };
     } else {
       s = {
@@ -3358,6 +3341,7 @@ export class WorkbenchState {
         centroidRadius: null,
         gain: null,
         zeroPoint: null,
+        apcorrTol: settings.constantAperCorr ? settings.aperCorrTol : 0,
       };
     }
 

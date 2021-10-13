@@ -4,7 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { combineLatest, Subject } from 'rxjs';
 import { takeUntil, tap } from 'rxjs/operators';
 import { greaterThan, isNumber, lessThan } from '../../../utils/validators';
-import { PhotometrySettings } from '../../models/photometry-settings';
+import { PhotometrySettings, defaults as defaultPhotometrySettings } from '../../models/photometry-settings';
 
 @Component({
   selector: 'app-phot-settings-dialog',
@@ -32,6 +32,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     bOut: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     theta: new FormControl('', { validators: [...this.minZero, lessThan(360)], updateOn: 'blur' }),
     thetaOut: new FormControl('', { validators: [...this.minZero, lessThan(360)], updateOn: 'blur' }),
+    constantAperCorr: new FormControl(false, { updateOn: 'blur' }),
   });
 
   adaptiveApertureForm = new FormGroup({
@@ -45,6 +46,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     fixAper: new FormControl(false, { updateOn: 'blur' }),
     fixEll: new FormControl(false, { updateOn: 'blur' }),
     fixRot: new FormControl(false, { updateOn: 'blur' }),
+    adaptiveAperCorr: new FormControl(false, { updateOn: 'blur' }),
   });
 
   constructor(
@@ -127,5 +129,11 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
+  }
+
+  restoreDefaults() {
+    this.settings = { ...defaultPhotometrySettings };
+    this.constantApertureForm.patchValue(this.settings);
+    this.adaptiveApertureForm.patchValue(this.settings);
   }
 }
