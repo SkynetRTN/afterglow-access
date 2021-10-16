@@ -3157,7 +3157,7 @@ export class WorkbenchState {
             name: '',
             dataProviderId: surveyDataProviderId,
             isDirectory: false,
-            assetPath: `${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
+            assetPath: `${raHours},${decDegs}\\${widthArcmins},${heightArcmins}`,
             metadata: {},
           },
         ],
