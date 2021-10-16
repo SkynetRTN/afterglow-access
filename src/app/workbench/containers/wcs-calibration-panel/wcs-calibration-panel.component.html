@@ -14,13 +14,13 @@
         <mat-icon>select_all</mat-icon>
       </button>
 
-      <button mat-icon-button (click)="onClearSelectionBtnClick()"  i18n-matTooltip matTooltip="Clear Selection">
+      <button mat-icon-button (click)="onClearSelectionBtnClick()" i18n-matTooltip matTooltip="Clear Selection">
         <mat-icon>clear</mat-icon>
       </button>
     </div>
 
     <div *ngIf="header$ | async as header" class="mb-3">
-      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)"  i18n>
+      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)" i18n>
         <mat-icon>colorize</mat-icon>
         Extract values from current viewer
       </button>
@@ -61,7 +61,9 @@
       <button class="mr-2 mt-3" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
         Open Source Extraction Settings...
       </button>
-      <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>Submit</button>
+      <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>
+        Submit
+      </button>
     </div>
   </form>
 
@@ -81,7 +83,7 @@
     </div>
     <ng-template #jobComplete>
       <div *ngIf="(activeJobResult$ | async)?.errors?.length != 0; else noErrors" class="alert alert-danger">
-        {{ (activeJobResult$ | async)?.errors }}
+        <span *ngFor="let error of (activeJobResult$ | async)?.errors">{{ error.detail }}</span>
       </div>
       <ng-template #noErrors>
         <div class="alert alert-success" i18n>Processing is complete.</div>

@@ -3157,7 +3157,7 @@ export class WorkbenchState {
             name: '',
             dataProviderId: surveyDataProviderId,
             isDirectory: false,
-            assetPath: `DSS\\${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
+            assetPath: `${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
             metadata: {},
           },
         ],
@@ -3249,7 +3249,7 @@ export class WorkbenchState {
         let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as SourceExtractionJobResult;
         if (result.errors.length != 0) {
-          dispatch(new ExtractSourcesFail(result.errors.join(',')));
+          dispatch(new ExtractSourcesFail(result.errors.map((e) => e.detail).join(',')));
           return;
         }
         let sources = result.data.map((d) => {
@@ -4024,7 +4024,7 @@ export class WorkbenchState {
               sonificationUrl = getSonificationUrl(job.id);
               error = '';
             } else {
-              error = result.errors.join(', ');
+              error = result.errors.map((e) => e.detail).join(', ');
             }
           }
 

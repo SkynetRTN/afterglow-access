@@ -215,7 +215,7 @@
       </div>
       <ng-template #jobComplete>
         <div *ngIf="job.result.errors.length != 0; else noErrors" class="alert alert-danger">
-          {{ job.result.errors }}
+          <span *ngFor="let error of job.result.errors">{{ error.detail }}</span>
         </div>
         <ng-template #noErrors>
           <div class="alert alert-success">

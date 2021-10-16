@@ -39,6 +39,8 @@ import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
 import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
+import { SelectFile } from '../workbench/workbench.actions';
+import { DataFilesState } from '../data-files/data-files.state';
 
 export interface DataProviderPath {
   dataProviderId: string;
@@ -482,11 +484,19 @@ export class DataProvidersState {
           if (result.warnings.length != 0) {
             console.error('Warnings encountered during import: ', result.warnings);
           }
+
+          if (result.errors.length == 1 && result.errors[0].id == 'DuplicateDataFileNameError') {
+            let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[result.errors[0].meta.fileId];
+            if (hdu) dispatch(new SelectFile(hdu.fileId, hdu.id));
+          }
+
+          let errors = result.errors.map((error) => error.detail);
+
           dispatch(
             new ImportAssetsCompleted(
               assets,
               result.fileIds.map((id) => id.toString()),
-              result.errors,
+              errors,
               correlationId
             )
           );
