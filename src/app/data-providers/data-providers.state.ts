@@ -41,6 +41,8 @@ import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 import { SelectFile } from '../workbench/workbench.actions';
 import { DataFilesState } from '../data-files/data-files.state';
+import { JobResultError } from '../jobs/models/job-base'
+import { IHdu } from '../data-files/models/data-file';
 
 export interface DataProviderPath {
   dataProviderId: string;
@@ -485,18 +487,24 @@ export class DataProvidersState {
             console.error('Warnings encountered during import: ', result.warnings);
           }
 
-          if (result.errors.length == 1 && result.errors[0].id == 'DuplicateDataFileNameError') {
-            let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[result.errors[0].meta.fileId];
-            if (hdu) dispatch(new SelectFile(hdu.fileId, hdu.id));
-          }
+          let fileIds = result.fileIds.map((id) => id.toString())
+          result.errors.filter(e => e.id == 'DuplicateDataFileNameError').forEach((e, index) => {
+            let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[e.meta.fileId];
+            if (hdu) {
+              fileIds.push(hdu.id)
+              if(index == 0) dispatch(new SelectFile(hdu.fileId, hdu.id));
+            }
+          });
+          
+          let jobErrors = result.errors.filter(error => error.id != 'DuplicateDataFileNameError' || !result.fileIds.includes(error.meta.fileId))
 
           //ignore errors where the file has already been imported
-          let errors = result.errors.filter(e => e.id != 'DuplicateDataFileNameError').map((error) => error.detail);
+          let errors = jobErrors.map((error) => error.detail);
 
           dispatch(
             new ImportAssetsCompleted(
               assets,
-              result.fileIds.map((id) => id.toString()),
+              fileIds,
               errors,
               correlationId
             )
