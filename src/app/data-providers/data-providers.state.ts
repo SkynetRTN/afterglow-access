@@ -490,7 +490,8 @@ export class DataProvidersState {
             if (hdu) dispatch(new SelectFile(hdu.fileId, hdu.id));
           }
 
-          let errors = result.errors.map((error) => error.detail);
+          //ignore errors where the file has already been imported
+          let errors = result.errors.filter(e => e.id == 'DuplicateDataFileNameError').map((error) => error.detail);
 
           dispatch(
             new ImportAssetsCompleted(
