@@ -491,7 +491,7 @@ export class DataProvidersState {
           }
 
           //ignore errors where the file has already been imported
-          let errors = result.errors.filter(e => e.id == 'DuplicateDataFileNameError').map((error) => error.detail);
+          let errors = result.errors.filter(e => e.id != 'DuplicateDataFileNameError').map((error) => error.detail);
 
           dispatch(
             new ImportAssetsCompleted(
