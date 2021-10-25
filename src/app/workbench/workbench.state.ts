@@ -2714,7 +2714,15 @@ export class WorkbenchState {
         if (result.warnings.length != 0) {
           console.error('Warnings encountered during pixel ops job: ', result.warnings);
         }
-        dispatch(new LoadLibrary());
+
+        let actions: any[] = [];
+        if ((job as PixelOpsJob).inplace) {
+          let hduIds = result.fileIds.map((id) => id.toString());
+          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+        }
+
+        actions.push(new LoadLibrary());
       })
     );
 
