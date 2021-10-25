@@ -2723,6 +2723,7 @@ export class WorkbenchState {
         }
 
         actions.push(new LoadLibrary());
+        return dispatch(actions);
       })
     );
 
