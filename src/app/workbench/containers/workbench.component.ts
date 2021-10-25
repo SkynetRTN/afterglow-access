@@ -68,6 +68,7 @@ import {
   ImportFromSurveyFail,
   ImportFromSurveySuccess,
   CloseViewer,
+  ToggleFileSelection,
 } from '../workbench.actions';
 import {
   LoadDataProviders,
@@ -1286,6 +1287,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                     .filter((viewer) => viewer.hduId == hduId || viewer.fileId == hdu.fileId)
                     .forEach((viewer) => this.store.dispatch(new CloseViewer(viewer.id)));
                   this.store.dispatch(new InvalidateHeader(hduId));
+                  this.store.dispatch(new SetFileSelection([]));
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
                       groupName: uuid,
