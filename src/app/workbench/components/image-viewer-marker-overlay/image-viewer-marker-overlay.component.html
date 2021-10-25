@@ -1,85 +1,87 @@
 <svg [attr.width]="svgWidth" [attr.height]="svgHeight" #svgElementRef>
   <g #svgGroup [attr.transform]="transformAttr$ | async">
-    <ng-container *ngFor="let marker of markers; trackBy: trackMarkerById">
-      <g
-        *ngIf="marker | guardType: isCircleMarker as circleMarker"
-        app-svg-circle-marker
-        class="source-marker"
-        [marker]="circleMarker"
-        (click)="handleMarkerClick($event, marker)"
-        style="pointer-events: fill"
-        [matTooltip]="marker.tooltip?.message"
-        [matTooltipHideDelay]="marker.tooltip?.hideDelay"
-        [matTooltipShowDelay]="marker.tooltip?.showDelay"
-        [matTooltipClass]="marker.tooltip?.class"
-      ></g>
+    <g transform="translate(-0.5, -0.5)">
+      <ng-container *ngFor="let marker of markers; trackBy: trackMarkerById">
+        <g
+          *ngIf="marker | guardType: isCircleMarker as circleMarker"
+          app-svg-circle-marker
+          class="source-marker"
+          [marker]="circleMarker"
+          (click)="handleMarkerClick($event, marker)"
+          style="pointer-events: fill"
+          [matTooltip]="marker.tooltip?.message"
+          [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+          [matTooltipShowDelay]="marker.tooltip?.showDelay"
+          [matTooltipClass]="marker.tooltip?.class"
+        ></g>
 
-      <g
-        *ngIf="marker | guardType: isApertureMarker as apertureMarker"
-        app-svg-aperture-marker
-        class="source-marker"
-        [marker]="apertureMarker"
-        (click)="handleMarkerClick($event, marker)"
-        style="pointer-events: fill"
-        [matTooltip]="marker.tooltip?.message"
-        [matTooltipHideDelay]="marker.tooltip?.hideDelay"
-        [matTooltipShowDelay]="marker.tooltip?.showDelay"
-        [matTooltipClass]="marker.tooltip?.class"
-      ></g>
+        <g
+          *ngIf="marker | guardType: isApertureMarker as apertureMarker"
+          app-svg-aperture-marker
+          class="source-marker"
+          [marker]="apertureMarker"
+          (click)="handleMarkerClick($event, marker)"
+          style="pointer-events: fill"
+          [matTooltip]="marker.tooltip?.message"
+          [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+          [matTooltipShowDelay]="marker.tooltip?.showDelay"
+          [matTooltipClass]="marker.tooltip?.class"
+        ></g>
 
-      <g
-        *ngIf="marker | guardType: isRectangleMarker as rectangleMarker"
-        app-svg-rectangle-marker
-        class="region-marker"
-        [marker]="rectangleMarker"
-        (click)="handleMarkerClick($event, marker)"
-        style="pointer-events: fill"
-        [matTooltip]="marker.tooltip?.message"
-        [matTooltipHideDelay]="marker.tooltip?.hideDelay"
-        [matTooltipShowDelay]="marker.tooltip?.showDelay"
-        [matTooltipClass]="marker.tooltip?.class"
-      ></g>
+        <g
+          *ngIf="marker | guardType: isRectangleMarker as rectangleMarker"
+          app-svg-rectangle-marker
+          class="region-marker"
+          [marker]="rectangleMarker"
+          (click)="handleMarkerClick($event, marker)"
+          style="pointer-events: fill"
+          [matTooltip]="marker.tooltip?.message"
+          [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+          [matTooltipShowDelay]="marker.tooltip?.showDelay"
+          [matTooltipClass]="marker.tooltip?.class"
+        ></g>
 
-      <g
-        *ngIf="marker | guardType: isTeardropMarker as teardropMarker"
-        app-svg-teardrop-marker
-        class="source-marker"
-        [marker]="teardropMarker"
-        (click)="handleMarkerClick($event, marker)"
-        style="pointer-events: fill"
-        [matTooltip]="marker.tooltip?.message"
-        [matTooltipHideDelay]="marker.tooltip?.hideDelay"
-        [matTooltipShowDelay]="marker.tooltip?.showDelay"
-        [matTooltipClass]="marker.tooltip?.class"
-      ></g>
+        <g
+          *ngIf="marker | guardType: isTeardropMarker as teardropMarker"
+          app-svg-teardrop-marker
+          class="source-marker"
+          [marker]="teardropMarker"
+          (click)="handleMarkerClick($event, marker)"
+          style="pointer-events: fill"
+          [matTooltip]="marker.tooltip?.message"
+          [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+          [matTooltipShowDelay]="marker.tooltip?.showDelay"
+          [matTooltipClass]="marker.tooltip?.class"
+        ></g>
 
+        <g
+          *ngIf="marker | guardType: isLineMarker as lineMarker"
+          app-svg-line-marker
+          class="line-marker"
+          [marker]="lineMarker"
+          (click)="handleMarkerClick($event, marker)"
+          style="pointer-events: fill"
+          [matTooltip]="marker.tooltip?.message"
+          [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+          [matTooltipShowDelay]="marker.tooltip?.showDelay"
+          [matTooltipClass]="marker.tooltip?.class"
+        ></g>
+      </ng-container>
+    </g>
+    <g>
       <g
-        *ngIf="marker | guardType: isLineMarker as lineMarker"
-        app-svg-line-marker
-        class="line-marker"
-        [marker]="lineMarker"
-        (click)="handleMarkerClick($event, marker)"
+        *ngFor="let data of markerTexts$ | async"
+        app-svg-text-marker
+        [x]="data.x"
+        [y]="data.y"
+        [dx]="data.dx"
+        [dy]="data.dy"
+        [text]="data.text"
+        [attr.transform]="data.transform"
+        [selected]="data.selected"
+        [anchor]="data.anchor"
         style="pointer-events: fill"
-        [matTooltip]="marker.tooltip?.message"
-        [matTooltipHideDelay]="marker.tooltip?.hideDelay"
-        [matTooltipShowDelay]="marker.tooltip?.showDelay"
-        [matTooltipClass]="marker.tooltip?.class"
       ></g>
-    </ng-container>
-  </g>
-  <g>
-    <g
-      *ngFor="let data of markerTexts$ | async"
-      app-svg-text-marker
-      [x]="data.x"
-      [y]="data.y"
-      [dx]="data.dx"
-      [dy]="data.dy"
-      [text]="data.text"
-      [attr.transform]="data.transform"
-      [selected]="data.selected"
-      [anchor]="data.anchor"
-      style="pointer-events: fill"
-    ></g>
+    </g>
   </g>
 </svg>

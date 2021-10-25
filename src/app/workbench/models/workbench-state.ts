@@ -29,11 +29,13 @@ export enum WorkbenchTool {
 
 export interface PixelOpsFormData {
   operand: '+' | '-' | '/' | '*';
-  mode: 'scalar' | 'image';
+  mode: 'scalar' | 'image' | 'kernel';
   primaryHduIds: string[];
   auxHduId: string;
   auxHduIds: string[];
   scalarValue: number;
+  kernelFilter: 'median';
+  kernelSize: number;
   inPlace: boolean;
   opString: string;
 }

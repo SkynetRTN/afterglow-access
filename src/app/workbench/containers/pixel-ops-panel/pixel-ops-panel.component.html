@@ -32,7 +32,10 @@
             </button>
           </div>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field
+            appearance="outline"
+            [hidden]="imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar'"
+          >
             <mat-label i18n>Select a operand</mat-label>
             <mat-select formControlName="operand" i18n-aria-label aria-label="operand">
               <mat-option *ngFor="let operand of operands" [value]="operand.symbol"
@@ -53,6 +56,24 @@
           <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'scalar'">
             <mat-label i18n>Specify a scalar value</mat-label>
             <input matInput formControlName="scalarValue" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'kernel'">
+            <mat-label i18n>Kernel Filter</mat-label>
+            <mat-select formControlName="kernelFilter" i18n-aria-label aria-label="kernel filter">
+              <mat-option *ngFor="let kernelFilter of kernelFilters" [value]="kernelFilter.value">{{
+                kernelFilter.label
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'kernel'">
+            <mat-label i18n>Kernel Size</mat-label>
+            <mat-select formControlName="kernelSize" i18n-aria-label aria-label="kernel size">
+              <mat-option *ngFor="let kernelSize of kernelSizes" [value]="kernelSize.value">{{
+                kernelSize.label
+              }}</mat-option>
+            </mat-select>
           </mat-form-field>
 
           <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>

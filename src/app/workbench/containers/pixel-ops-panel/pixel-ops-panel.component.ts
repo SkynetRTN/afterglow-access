@@ -69,6 +69,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
   modes = [
     { label: 'Scalar', value: 'scalar' },
     { label: 'Image', value: 'image' },
+    { label: 'Kernel Filter', value: 'kernel' },
+  ];
+
+  kernelFilters = [{ label: 'Median', value: 'median' }];
+
+  kernelSizes = [
+    { label: '3 x 3', value: 3 },
+    { label: '5 x 5', value: 5 },
   ];
 
   divideByZero(control: AbstractControl): ValidationErrors | null {
@@ -88,6 +96,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       auxHduId: new FormControl('', Validators.required),
       scalarValue: new FormControl('', [Validators.required, isNumber]),
       inPlace: new FormControl(false, Validators.required),
+      kernelFilter: new FormControl('', Validators.required),
+      kernelSize: new FormControl('', [Validators.required, isNumber]),
     },
     { validators: this.divideByZero }
   );
@@ -146,13 +156,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       .get('mode')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (value == 'scalar') {
-          this.imageCalcForm.get('scalarValue').enable();
-          this.imageCalcForm.get('auxHduId').disable();
-        } else {
-          this.imageCalcForm.get('scalarValue').disable();
-          this.imageCalcForm.get('auxHduId').enable();
-        }
+        this.onModeChange();
       });
 
     this.imageCalcForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
@@ -260,6 +264,29 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     //       : []
     //   )
     // );
+
+    this.onModeChange();
+  }
+
+  onModeChange() {
+    let value = this.imageCalcForm.get('mode').value;
+
+    if (value == 'scalar') {
+      this.imageCalcForm.get('scalarValue').enable();
+      this.imageCalcForm.get('auxHduId').disable();
+      this.imageCalcForm.get('kernelFilter').disable();
+      this.imageCalcForm.get('kernelSize').disable();
+    } else if (value == 'image') {
+      this.imageCalcForm.get('scalarValue').disable();
+      this.imageCalcForm.get('auxHduId').enable();
+      this.imageCalcForm.get('kernelFilter').disable();
+      this.imageCalcForm.get('kernelSize').disable();
+    } else if (value == 'kernel') {
+      this.imageCalcForm.get('scalarValue').disable();
+      this.imageCalcForm.get('auxHduId').disable();
+      this.imageCalcForm.get('kernelFilter').enable();
+      this.imageCalcForm.get('kernelSize').enable();
+    }
   }
 
   ngOnInit() {}

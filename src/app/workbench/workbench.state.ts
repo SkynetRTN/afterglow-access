@@ -218,7 +218,7 @@ import { PhotometryPanelState } from './models/photometry-file-state';
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '58700439-fc6a-4fef-b3c6-7874d113783c',
+  version: 'ef5b4b76-167a-4d8e-a499-2f61e2cfaec7',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -302,6 +302,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       scalarValue: 1,
       inPlace: false,
       opString: '',
+      kernelFilter: 'median',
+      kernelSize: 3,
     },
   },
   aligningPanelConfig: {
@@ -2652,10 +2654,15 @@ export class WorkbenchState {
     let op;
     if (data.mode == 'scalar') {
       op = `img ${data.operand} ${data.scalarValue}`;
-    } else {
+    } else if (data.mode == 'image') {
       op = `img ${data.operand} aux_img`;
       auxFileIds.push(data.auxHduId);
+    } else if (data.mode == 'kernel') {
+      op = `median_filter(img, ${data.kernelSize})`;
+    } else {
+      return;
     }
+
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
       id: null,
