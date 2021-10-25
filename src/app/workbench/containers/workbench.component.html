@@ -50,7 +50,8 @@
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'file')
     "
     role="region"
-    i18n-aria-label aria-label="File Library"
+    i18n-aria-label
+    aria-label="File Library"
     [ngSwitch]="sidebarView$ | async"
   >
     <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100" fxLayout="column">
@@ -63,7 +64,8 @@
             mat-icon-button
             *ngIf="(selectedFileIds$ | async)?.length != 0; else saveAllButtonBlock"
             (click)="onSaveSelectedFileListItemsBtnClick()"
-            i18n-matTooltip matTooltip="Save selected files"
+            i18n-matTooltip
+            matTooltip="Save selected files"
           >
             <mat-icon>save</mat-icon>
           </button>
@@ -72,7 +74,8 @@
               mat-icon-button
               [disabled]="(filesSorted$ | async)?.length == 0"
               (click)="onSaveAllFileListItemsBtnClick()"
-              i18n-matTooltip matTooltip="Save all files"
+              i18n-matTooltip
+              matTooltip="Save all files"
             >
               <mat-icon>save</mat-icon>
             </button>
@@ -83,7 +86,8 @@
             *ngIf="(selectedFileIds$ | async)?.length != 0; else closeAllButtonBlock"
             aria-label="Close selected files"
             (click)="onCloseSelectedFileListItemsBtnClick()"
-            i18n-matTooltip matTooltip="Close selected files"
+            i18n-matTooltip
+            matTooltip="Close selected files"
           >
             <mat-icon>highlight_off</mat-icon>
           </button>
@@ -92,13 +96,14 @@
               mat-icon-button
               [disabled]="(filesSorted$ | async)?.length == 0"
               (click)="onCloseAllFileListItemsBtnClick()"
-              i18n-matTooltip matTooltip="Close all files"
+              i18n-matTooltip
+              matTooltip="Close all files"
             >
               <mat-icon>highlight_off</mat-icon>
             </button>
           </ng-template>
 
-          <button mat-icon-button (click)="refresh()"  i18n-matTooltip matTooltip="Refresh File List">
+          <button mat-icon-button (click)="refresh()" i18n-matTooltip matTooltip="Refresh File List">
             <mat-icon>refresh</mat-icon>
           </button>
           <button
@@ -114,7 +119,8 @@
             <button
               mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
-              i18n-aria-label aria-label="Download selected files"
+              i18n-aria-label
+              aria-label="Download selected files"
               (click)="onDownloadSelectedFileListItemsBtnClick()"
             >
               <mat-icon>get_app</mat-icon>
@@ -123,7 +129,8 @@
             <button
               mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
-              i18n-aria-label aria-label="Group selected files"
+              i18n-aria-label
+              aria-label="Group selected files"
               (click)="onGroupSelectedFileListItemsBtnClick()"
             >
               <mat-icon>call_merge</mat-icon>
@@ -132,7 +139,8 @@
             <button
               mat-menu-item
               [disabled]="(selectedFileIds$ | async)?.length == 0"
-              i18n-aria-label aria-label="Split selected files"
+              i18n-aria-label
+              aria-label="Split selected files"
               (click)="onSplitSelectedFileListItemsBtnClick()"
             >
               <mat-icon>call_split</mat-icon>
@@ -140,7 +148,8 @@
             </button>
           </mat-menu>
           <mat-checkbox
-            i18n-aria-label aria-label="Select all files"
+            i18n-aria-label
+            aria-label="Select all files"
             [checked]="selectAllFilesCheckboxState$ | async"
             [indeterminate]="selectAllFilesCheckboxIndeterminate$ | async"
             (change)="handleSelectAllFilesChange($event.checked)"
@@ -173,13 +182,15 @@
                 mat-button
                 *ngIf="fileFilter$ | async"
                 mat-icon-button
-                i18n-aria-label aria-label="Clear File Filter"
+                i18n-aria-label
+                aria-label="Clear File Filter"
                 (click)="clearFileListFilter()"
               >
                 <mat-icon>close</mat-icon>
               </button>
               <input
-              i18n-aria-label aria-label="File Filter Input"
+                i18n-aria-label
+                aria-label="File Filter Input"
                 autocomplete="off"
                 class="file-list-filter"
                 fxFlex="1 1 auto"
@@ -275,7 +286,8 @@
             [disabled]="!(viewerSyncEnabled$ | async)"
             [value]="viewerSyncMode$ | async"
             name="viewerSyncMode"
-            i18n-aria-label aria-label="Viewer Sync Mode"
+            i18n-aria-label
+            aria-label="Viewer Sync Mode"
             (change)="onViewerSyncModeChange($event)"
           >
             <mat-button-toggle value="sky" i18n>Sky</mat-button-toggle>
@@ -306,7 +318,8 @@
     fxFlex="1 1 auto"
     class="image-viewer-grid-panel"
     role="region"
-    i18n-aria-label aria-label="image viewers"
+    i18n-aria-label
+    aria-label="image viewers"
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'"
     style="overflow: auto"
   >
@@ -344,7 +357,7 @@
             <ng-container *ngSwitchCase="WorkbenchTool.PLOTTER" i18n>Plotter</ng-container>
             <ng-container *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</ng-container>
             <ng-container *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.IMAGE_CALC" i18n>Image Calculator</ng-container>
+            <ng-container *ngSwitchCase="WorkbenchTool.PIXEL_OPS" i18n>Pixel Operations</ng-container>
             <ng-container *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</ng-container>
             <ng-container *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</ng-container>
             <ng-container *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</ng-container>
@@ -374,7 +387,7 @@
           >
           </app-photometry-panel>
 
-          <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.IMAGE_CALC" [hduIds]="filteredImageHduIds$ | async">
+          <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [hduIds]="filteredImageHduIds$ | async">
           </app-pixel-ops-panel>
 
           <app-wcs-calibration-panel
@@ -484,12 +497,12 @@
           </div>
           <div
             class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.IMAGE_CALC, 'Image Calculator')"
+            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
             [matTooltipPosition]="'left'"
-            [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.IMAGE_CALC"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.IMAGE_CALC, 'Image Calculator')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.IMAGE_CALC"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.IMAGE_CALC)"
+            [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
+            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
+            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)"
           >
             <button mat-icon-button>
               <mat-icon>add_to_photos</mat-icon>

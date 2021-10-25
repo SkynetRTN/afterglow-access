@@ -463,7 +463,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         this.store.dispatch(
           new Navigate(
             [],
-            { tool: WorkbenchTool.IMAGE_CALC },
+            { tool: WorkbenchTool.PIXEL_OPS },
             { relativeTo: this.activeRoute, queryParamsHandling: 'merge' }
           )
         );
@@ -653,8 +653,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       case WorkbenchTool.PHOTOMETRY: {
         return 'Photometry';
       }
-      case WorkbenchTool.IMAGE_CALC: {
-        return 'Image Calculator';
+      case WorkbenchTool.PIXEL_OPS: {
+        return 'Pixel Operations';
       }
       case WorkbenchTool.WCS_CALIBRATION: {
         return 'WCS Calibration';

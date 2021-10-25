@@ -21,7 +21,7 @@ export enum WorkbenchTool {
   CUSTOM_MARKER = 'marker',
   INFO = 'info',
   FIELD_CAL = 'field-cal',
-  IMAGE_CALC = 'image-calculator',
+  PIXEL_OPS = 'pixel-operations',
   STACKER = 'stacker',
   ALIGNER = 'aligner',
   WCS_CALIBRATION = 'wcs-calibration',
