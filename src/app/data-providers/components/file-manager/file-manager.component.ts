@@ -382,7 +382,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
   @ViewChild('fileUpload') fileUpload: ElementRef;
 
   @ViewChild(MatSort) sort: MatSort;
-  pageSize = 50;
+  pageSize = 100;
   pageSizeOptions = [50, 100, 250, 500];
   nameFilter: string = '';
   nameFilterChange$ = new Subject<string>();
@@ -470,7 +470,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             {
               dataField: 'permissions',
               caption: 'permissions',
-              sortable: false
+              sortable: false,
             },
           ];
         }
@@ -478,7 +478,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           const result: FileSystemDetailsColumn = {
             dataField: column.fieldName,
             caption: column.name,
-            sortable: column.sortable
+            sortable: column.sortable,
           };
           return result;
         });
