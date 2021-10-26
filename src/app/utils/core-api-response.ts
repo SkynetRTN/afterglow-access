@@ -1,8 +1,8 @@
 export interface CoreApiResponse<T> {
   data: T;
   links: {
-    pagination: PaginationLinks
-  }
+    pagination: PaginationLinks;
+  };
 }
 
 export interface PaginationLinks {
@@ -18,8 +18,9 @@ export interface PaginationLinks {
 
 export interface CoreApiError {
   error: {
-    code: string;
+    id: string;
     detail: string;
-    meta: {[key:string]: any}
+    status: string;
+    meta: { [key: string]: any };
   };
 }

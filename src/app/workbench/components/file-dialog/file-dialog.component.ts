@@ -323,7 +323,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
             }),
             catchError((httpErrorResp: HttpErrorResponse) => {
               let errorResp: CoreApiError = httpErrorResp.error;
-              if (errorResp.error.code == CoreErrorCode.AssetNotFound) {
+              if (errorResp.error.id == 'AssetNotFoundError') {
                 return createSaveRequest(false);
               } else {
                 // unknown error
