@@ -9,6 +9,9 @@ import {
   WorkbenchStateModel,
   WorkbenchTool,
   PixelOpsPanelConfig,
+  KernelFilter,
+  SIGMA_KERNELS,
+  SIZE_KERNELS,
 } from '../../models/workbench-state';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTabChangeEvent } from '@angular/material/tabs';
@@ -26,7 +29,7 @@ import {
 import { JobsState } from '../../../jobs/jobs.state';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import { isNumber } from '../../../utils/validators';
+import { isNumber, lessThan, greaterThan } from '../../../utils/validators';
 
 interface PixelOpVariable {
   name: string;
@@ -72,7 +75,24 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     { label: 'Kernel Filter', value: 'kernel' },
   ];
 
-  kernelFilters = [{ label: 'Median', value: 'median' }];
+  kernelFilters = [
+    { label: 'Gaussian', value: KernelFilter.GAUSSIAN_FILTER },
+    { label: 'Gaussian Gradient Magnitude', value: KernelFilter.GAUSSIAN_GRADIENT_MAGNITUDE },
+    { label: 'Gaussian Laplace', value: KernelFilter.GAUSSIAN_LAPLACE },
+    { label: 'Grey Closing', value: KernelFilter.GREY_CLOSING },
+    { label: 'Grey Dilation', value: KernelFilter.GREY_DILATION },
+    { label: 'Grey Erosion', value: KernelFilter.GREY_EROSION },
+    { label: 'Grey Opening', value: KernelFilter.GREY_OPENING },
+    { label: 'Laplace', value: KernelFilter.LAPLACE },
+    { label: 'Maximum', value: KernelFilter.MAXIMUM_FILTER },
+    { label: 'Median', value: KernelFilter.MEDIAN_FILTER },
+    { label: 'Minimum', value: KernelFilter.MINIMUM_FILTER },
+    { label: 'Morphological Gradient', value: KernelFilter.MORPHOLOGICAL_GRADIENT },
+    { label: 'Morphological Laplace', value: KernelFilter.MORPHOLOGICAL_LAPLACE },
+    { label: 'Prewitt', value: KernelFilter.PREWITT },
+    { label: 'Sobel', value: KernelFilter.SOBEL },
+    { label: 'Uniform', value: KernelFilter.UNIFORM_FILTER },
+  ];
 
   kernelSizes = [
     { label: '3 x 3', value: 3 },
@@ -98,6 +118,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       inPlace: new FormControl(false, Validators.required),
       kernelFilter: new FormControl('', Validators.required),
       kernelSize: new FormControl('', [Validators.required, isNumber]),
+      kernelSigma: new FormControl('', [Validators.required, isNumber, lessThan(10), greaterThan(0)]),
     },
     { validators: this.divideByZero }
   );
@@ -156,7 +177,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
       .get('mode')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        this.onModeChange();
+        this.updateSimpleFormUI();
+      });
+
+      this.imageCalcForm
+      .get('kernelFilter')
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        this.updateSimpleFormUI();
       });
 
     this.imageCalcForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
@@ -265,28 +293,54 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     //   )
     // );
 
-    this.onModeChange();
+    this.updateSimpleFormUI();
   }
 
-  onModeChange() {
+  updateSimpleFormUI() {
     let value = this.imageCalcForm.get('mode').value;
 
     if (value == 'scalar') {
-      this.imageCalcForm.get('scalarValue').enable();
-      this.imageCalcForm.get('auxHduId').disable();
-      this.imageCalcForm.get('kernelFilter').disable();
-      this.imageCalcForm.get('kernelSize').disable();
+      this.imageCalcForm.get('scalarValue').enable({emitEvent: false});
+      this.imageCalcForm.get('auxHduId').disable({emitEvent: false});
+      this.imageCalcForm.get('kernelFilter').disable({emitEvent: false});
+      this.imageCalcForm.get('kernelSize').disable({emitEvent: false});
+      this.imageCalcForm.get('kernelSigma').disable({emitEvent: false});
     } else if (value == 'image') {
-      this.imageCalcForm.get('scalarValue').disable();
-      this.imageCalcForm.get('auxHduId').enable();
-      this.imageCalcForm.get('kernelFilter').disable();
-      this.imageCalcForm.get('kernelSize').disable();
+      this.imageCalcForm.get('scalarValue').disable({emitEvent: false});
+      this.imageCalcForm.get('auxHduId').enable({emitEvent: false});
+      this.imageCalcForm.get('kernelFilter').disable({emitEvent: false});
+      this.imageCalcForm.get('kernelSize').disable({emitEvent: false});
+      this.imageCalcForm.get('kernelSigma').disable({emitEvent: false});
     } else if (value == 'kernel') {
-      this.imageCalcForm.get('scalarValue').disable();
-      this.imageCalcForm.get('auxHduId').disable();
-      this.imageCalcForm.get('kernelFilter').enable();
-      this.imageCalcForm.get('kernelSize').enable();
+      this.imageCalcForm.get('scalarValue').disable({emitEvent: false});
+      this.imageCalcForm.get('auxHduId').disable({emitEvent: false});
+      this.imageCalcForm.get('kernelFilter').enable({emitEvent: false});
+      if(this.kernelSizeEnabled) {
+        this.imageCalcForm.get('kernelSize').enable({emitEvent: false});
+      }
+      else {
+        this.imageCalcForm.get('kernelSize').disable({emitEvent: false});
+      }
+      
+      if(this.kernelSigmaEnabled) {
+        this.imageCalcForm.get('kernelSigma').enable({emitEvent: false});
+      }
+      else {
+        this.imageCalcForm.get('kernelSigma').disable({emitEvent: false});
+      }
     }
+  }
+
+  get kernelSigmaEnabled() {
+    let mode = this.imageCalcForm.get('mode').value;
+    let kernelFilter = this.imageCalcForm.get('kernelFilter').value
+    return mode == 'kernel' && SIGMA_KERNELS.includes(kernelFilter)
+  }
+
+  get kernelSizeEnabled() {
+    let mode = this.imageCalcForm.get('mode').value;
+    let kernelFilter = this.imageCalcForm.get('kernelFilter').value
+    return mode == 'kernel' && SIZE_KERNELS.includes(kernelFilter)
   }
 
   ngOnInit() {}
@@ -304,25 +358,28 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy {
     this.store.dispatch(new CreateAdvPixelOpsJob());
   }
 
-  openPixelOpsJobsDialog() {
-    let dialogRef = this.dialog.open(PixelOpsJobsDialogComponent, {
-      width: '600px',
-      data: {
-        rows$: this.pixelOpsJobs$,
-        allImageFiles$: this.store.select(DataFilesState.getHdus),
-      },
-    });
+  // openPixelOpsJobsDialog() {
+  //   console.log(this.imageCalcForm.valid, this.imageCalcForm.errors)
 
-    // dialogRef.afterClosed().subscribe(result => {
-    //   if (result) {
-    //     this.store.dispatch(
-    //       new UpdateSourceExtractionSettings({
-    //         changes: result
-    //       })
-    //     );
-    //   }
-    // });
-  }
+
+  //   // let dialogRef = this.dialog.open(PixelOpsJobsDialogComponent, {
+  //   //   width: '600px',
+  //   //   data: {
+  //   //     rows$: this.pixelOpsJobs$,
+  //   //     allImageFiles$: this.store.select(DataFilesState.getHdus),
+  //   //   },
+  //   // });
+
+  //   // dialogRef.afterClosed().subscribe(result => {
+  //   //   if (result) {
+  //   //     this.store.dispatch(
+  //   //       new UpdateSourceExtractionSettings({
+  //   //         changes: result
+  //   //       })
+  //   //     );
+  //   //   }
+  //   // });
+  // }
 
   onTabChange($event: MatTabChangeEvent) {
     this.store.dispatch(new HideCurrentPixelOpsJobState());

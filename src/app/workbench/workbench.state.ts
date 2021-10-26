@@ -22,6 +22,9 @@ import {
   ViewerPanelContainer,
   WcsCalibrationSettings,
   ViewerLayoutItem,
+  KernelFilter,
+  SIZE_KERNELS,
+  SIGMA_KERNELS,
 } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
@@ -218,7 +221,7 @@ import { PhotometryPanelState } from './models/photometry-file-state';
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'ef5b4b76-167a-4d8e-a499-2f61e2cfaec7',
+  version: '43a1f9b4-5f85-47c7-bb8e-94ac46f5e067',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -302,8 +305,9 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       scalarValue: 1,
       inPlace: false,
       opString: '',
-      kernelFilter: 'median',
+      kernelFilter: KernelFilter.MEDIAN_FILTER,
       kernelSize: 3,
+      kernelSigma: 3
     },
   },
   aligningPanelConfig: {
@@ -2658,7 +2662,14 @@ export class WorkbenchState {
       op = `img ${data.operand} aux_img`;
       auxFileIds.push(data.auxHduId);
     } else if (data.mode == 'kernel') {
-      op = `median_filter(img, ${data.kernelSize})`;
+      op = `${data.kernelFilter}(img`;
+      if(SIZE_KERNELS.includes(data.kernelFilter)) {
+        op += `, ${data.kernelSize}`
+      }
+      if(SIGMA_KERNELS.includes(data.kernelFilter)) {
+        op += `, ${data.kernelSigma}`
+      }
+      op += ')'
     } else {
       return;
     }

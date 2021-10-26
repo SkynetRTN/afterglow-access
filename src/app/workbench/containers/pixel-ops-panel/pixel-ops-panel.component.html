@@ -67,13 +67,22 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'kernel'">
+          <mat-form-field appearance="outline" [hidden]="!kernelSizeEnabled">
             <mat-label i18n>Kernel Size</mat-label>
             <mat-select formControlName="kernelSize" i18n-aria-label aria-label="kernel size">
               <mat-option *ngFor="let kernelSize of kernelSizes" [value]="kernelSize.value">{{
                 kernelSize.label
               }}</mat-option>
             </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" [hidden]="!kernelSigmaEnabled">
+            <mat-label i18n>Kernel Sigma</mat-label>
+            <input matInput i18n-placeholder formControlName="kernelSigma" />
+            
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.isNumber as e">must be a number</mat-error>
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.greaterThan as e">must be greater than {{e.min}}.</mat-error>
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.lessThan as e">must be less than {{e.max}}.</mat-error>
           </mat-form-field>
 
           <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>
@@ -255,7 +264,7 @@
     </div>
   </div>
 
-  <div style="padding-top: 10px">
+  <!-- <div style="padding-top: 10px">
     <button mat-raised-button (click)="openPixelOpsJobsDialog()" i18n>Show All Pixel Operation Jobs...</button>
-  </div>
+  </div> -->
 </ng-container>
