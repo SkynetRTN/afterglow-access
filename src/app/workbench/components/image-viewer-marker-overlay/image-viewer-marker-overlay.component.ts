@@ -107,11 +107,13 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   >;
 
   constructor(private cdr: ChangeDetectorRef) {
-    this.transformAttr$ = this.transform$.pipe(map((t) => `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`));
+    this.transformAttr$ = this.transform$.pipe(
+      map((t) => (t ? `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})` : ''))
+    );
 
     this.markerTexts$ = combineLatest([this.markers$, this.transform$]).pipe(
       map(([markers, transform]) => {
-        if (!markers) return [];
+        if (!markers || !transform) return [];
         let radialMarkers = markers.filter(
           (marker) =>
             [MarkerType.CIRCLE, MarkerType.TEARDROP, MarkerType.APERTURE].includes(marker.type) &&

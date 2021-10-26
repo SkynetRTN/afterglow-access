@@ -1,12 +1,11 @@
 <div id="image-viewer-wrapper" fxLayout="column" class="h-100">
-  <ng-container *ngIf="normalizedImageData$ | async">
+  <ng-container>
     <div fxFlex="1 1 100%">
       <div class="viewer-marker-wrapper h-100">
         <div
           app-pan-zoom-canvas
           #panZoomCanvas="panZoomCanvas"
           class="viewer"
-          *ngIf="ready$ | async"
           [imageData]="normalizedImageData$ | async"
           [transform]="imageToViewportTransform$ | async"
           (onImageMouseMove)="handleImageMouseMove($event)"
@@ -51,6 +50,7 @@
         (onZoomToFit)="handleZoomToFit($event)"
         (onCloseFile)="handleCloseFile()"
         (onSaveFile)="handleSaveFile()"
+        (click)="test()"
       ></app-image-viewer-status-bar>
     </div>
   </ng-container>
