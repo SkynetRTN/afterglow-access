@@ -221,7 +221,7 @@ import { PhotometryPanelState } from './models/photometry-file-state';
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '43a1f9b4-5f85-47c7-bb8e-94ac46f5e067',
+  version: 'c45e3fd5-284f-4e93-950c-2cc669e559d3',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -299,6 +299,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     pixelOpsFormData: {
       operand: '+',
       mode: 'image',
+      selectedHduId: '',
       auxHduId: '',
       auxHduIds: [],
       primaryHduIds: [],
@@ -2653,7 +2654,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let imageHdus = [data.selectedHduId, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxFileIds: string[] = [];
     let op;
     if (data.mode == 'scalar') {
@@ -2764,7 +2765,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let imageHdus = [data.selectedHduId, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxImageFiles = data.auxHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
