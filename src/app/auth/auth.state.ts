@@ -132,11 +132,10 @@ export class AuthState {
       user: this.authGuard.user,
     });
 
-    if(this.authGuard.user) {
-      ctx.dispatch(new LoginSuccess())
+    if (this.authGuard.user) {
+      localStorage.setItem('nextUrl', this.router.url);
+      ctx.dispatch(new LoginSuccess());
     }
-
-    
   }
 
   @Action(CheckSession)
