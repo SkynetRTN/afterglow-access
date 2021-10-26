@@ -148,6 +148,10 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
     combineLatest([this.selectedHduId$, this.availableHduIds$]).pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([[selectedHduId, availableHduIds], config]) => {
       if (!availableHduIds || !config || !selectedHduId) return;
+
+      let updateRequired = (a: any[], b: any[]) => {
+        return a.length != b.length || a.some(value => !b.includes(value))
+      }
       let formData = config.pixelOpsFormData;
       let primaryHduIds = formData.primaryHduIds.filter((hduId) => availableHduIds.includes(hduId) && hduId != selectedHduId);
       let auxHduIds = formData.auxHduIds.filter((hduId) => availableHduIds.includes(hduId) && hduId != selectedHduId);
@@ -156,8 +160,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
         auxHduId = null;
       }
       if (
-        primaryHduIds.length != formData.primaryHduIds.length ||
-        auxHduIds.length != formData.auxHduIds.length ||
+        formData.selectedHduId != selectedHduId ||
+        updateRequired(primaryHduIds, formData.primaryHduIds) ||
+        updateRequired(auxHduIds, formData.auxHduIds) ||
         auxHduId != formData.auxHduId
       ) {
         setTimeout(() => {
@@ -203,13 +208,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
     this.imageCalcForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcForm.valid) {
-      let data: PixelOpsFormData = {...this.imageCalcForm.value}
-      if(!data.primaryHduIds.includes(this.selectedHduId)) {
-        data.primaryHduIds = [this.selectedHduId, ...data.primaryHduIds]
-      }
       this.store.dispatch(
         new UpdatePixelOpsPageSettings({
-          pixelOpsFormData: data,
+          pixelOpsFormData: this.imageCalcForm.value,
         })
       );
       this.store.dispatch(new HideCurrentPixelOpsJobState());
