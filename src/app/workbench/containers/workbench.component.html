@@ -387,7 +387,7 @@
           >
           </app-photometry-panel>
 
-          <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [selectedHduId]="(focusedViewerHdu$ | async)?.id" [availableHduIds]="filteredImageHduIds$ | async">
+          <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [viewerId]="focusedViewerId$ | async" [availableHduIds]="filteredImageHduIds$ | async">
           </app-pixel-ops-panel>
 
           <app-wcs-calibration-panel

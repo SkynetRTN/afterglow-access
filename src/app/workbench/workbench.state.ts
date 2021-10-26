@@ -299,7 +299,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     pixelOpsFormData: {
       operand: '+',
       mode: 'image',
-      selectedHduId: '',
+      selectedHduIds: [],
       auxHduId: '',
       auxHduIds: [],
       primaryHduIds: [],
@@ -2654,7 +2654,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = [data.selectedHduId, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let imageHdus = [...data.selectedHduIds, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxFileIds: string[] = [];
     let op;
     if (data.mode == 'scalar') {
@@ -2765,7 +2765,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = [data.selectedHduId, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let imageHdus = [...data.selectedHduIds, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxImageFiles = data.auxHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let job: PixelOpsJob = {
       type: JobType.PixelOps,

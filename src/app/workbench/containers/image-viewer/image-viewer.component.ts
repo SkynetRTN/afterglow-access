@@ -524,7 +524,6 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   }
 
   handleLoadTile($event: LoadTileEvent) {
-    console.log('loading tile: ', $event.imageDataId, $event.tileIndex);
     // should only need to load the raw data
     // the normalized and composite data will be updated automatically
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);

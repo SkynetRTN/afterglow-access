@@ -30,6 +30,7 @@ import { JobsState } from '../../../jobs/jobs.state';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { isNumber, lessThan, greaterThan } from '../../../utils/validators';
+import { Viewer } from '../../models/viewer';
 
 interface PixelOpVariable {
   name: string;
@@ -43,14 +44,14 @@ interface PixelOpVariable {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterViewInit {
-  @Input('selectedHduId')
-  set selectedHduId(hduId: string) {
-    this.selectedHduId$.next(hduId);
+  @Input('viewerId')
+  set viewerId(viewerId: string) {
+    this.viewerId$.next(viewerId);
   }
-  get selectedHduId() {
-    return this.selectedHduId$.getValue();
+  get viewerId() {
+    return this.viewerId$.getValue();
   }
-  private selectedHduId$ = new BehaviorSubject<string>(null);
+  private viewerId$ = new BehaviorSubject<string>(null);
 
   @Input('availableHduIds')
   set availableHduIds(hduIds: string[]) {
@@ -121,7 +122,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     {
       operand: new FormControl('+', Validators.required),
       mode: new FormControl('image', Validators.required),
-      selectedHduId: new FormControl('', Validators.required),
+      selectedHduIds: new FormControl({value: '', disabled: true}, Validators.required),
       primaryHduIds: new FormControl([]),
       auxHduId: new FormControl('', Validators.required),
       scalarValue: new FormControl('', [Validators.required, isNumber]),
@@ -135,7 +136,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
   imageCalcFormAdv = new FormGroup({
     opString: new FormControl('', Validators.required),
-    selectedHduId: new FormControl('', Validators.required),
+    selectedHduIds: new FormControl({value: '', disabled: true}, Validators.required),
     primaryHduIds: new FormControl([], Validators.required),
     auxHduIds: new FormControl([]),
     inPlace: new FormControl(false, Validators.required),
@@ -144,23 +145,38 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
   constructor(public dialog: MatDialog, private store: Store, private router: Router) {
     this.config$ = this.store.select(WorkbenchState.getPixelOpsPanelConfig);
 
+    let viewer$ = this.viewerId$.pipe(
+      switchMap(viewerId => this.store.select(WorkbenchState.getViewerById(viewerId))
+      ))
+
+    this.selectedHduIds$ = viewer$.pipe(
+      switchMap(viewer => {
+        if(!viewer) return of([]);
+        if(viewer.hduId) return of([viewer.hduId])
+        return this.store.select(DataFilesState.getFileById(viewer.fileId)).pipe(
+          map(file => file.hduIds),
+          distinctUntilChanged()
+        )
+      })
+    )
+
    
 
-    combineLatest([this.selectedHduId$, this.availableHduIds$]).pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([[selectedHduId, availableHduIds], config]) => {
-      if (!availableHduIds || !config || !selectedHduId) return;
+    combineLatest([this.selectedHduIds$, this.availableHduIds$]).pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([[selectedHduIds, availableHduIds], config]) => {
+      if (!availableHduIds || !config || !selectedHduIds) return;
 
       let updateRequired = (a: any[], b: any[]) => {
         return a.length != b.length || a.some(value => !b.includes(value))
       }
       let formData = config.pixelOpsFormData;
-      let primaryHduIds = formData.primaryHduIds.filter((hduId) => availableHduIds.includes(hduId) && hduId != selectedHduId);
-      let auxHduIds = formData.auxHduIds.filter((hduId) => availableHduIds.includes(hduId) && hduId != selectedHduId);
+      let primaryHduIds = formData.primaryHduIds.filter((hduId) => availableHduIds.includes(hduId) && !selectedHduIds.includes(hduId) );
+      let auxHduIds = formData.auxHduIds.filter((hduId) => availableHduIds.includes(hduId) &&  !selectedHduIds.includes(hduId));
       let auxHduId = formData.auxHduId;
       if (!availableHduIds.includes(auxHduId)) {
         auxHduId = null;
       }
       if (
-        formData.selectedHduId != selectedHduId ||
+        updateRequired(formData.selectedHduIds,selectedHduIds) ||
         updateRequired(primaryHduIds, formData.primaryHduIds) ||
         updateRequired(auxHduIds, formData.auxHduIds) ||
         auxHduId != formData.auxHduId
@@ -170,7 +186,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
             new UpdatePixelOpsPageSettings({
               pixelOpsFormData: {
                 ...formData,
-                selectedHduId: selectedHduId,
+                selectedHduIds: selectedHduIds,
                 primaryHduIds: primaryHduIds,
                 auxHduIds: auxHduIds,
                 auxHduId: auxHduId,
@@ -365,9 +381,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
   ngOnInit() {}
 
   ngAfterViewInit() {
-    this.selectedHduId$.pipe(takeUntil(this.destroy$)).subscribe((hduId) => {
-      if(hduId) this.imageCalcForm.get('primaryHduId')?.setValue(hduId);
-  })
+   
   }
 
   ngOnDestroy() {
