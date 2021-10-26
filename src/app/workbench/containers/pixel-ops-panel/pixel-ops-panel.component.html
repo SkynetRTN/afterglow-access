@@ -16,7 +16,12 @@
           <div>
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Primary Image</mat-label>
-              <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" />
+              <mat-select [disabled]="true" formControlName="selectedHduId">
+                <mat-option [value]="selectedHduId">
+                  {{ getHduOptionLabel(selectedHduId) | async }}
+                </mat-option>
+              </mat-select>
+              <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
             </mat-form-field>
 
             <mat-form-field appearance="outline" style="width: 300px">
@@ -121,7 +126,12 @@
         <div>
           <mat-form-field appearance="outline" style="width: 300px">
             <mat-label i18n>Primary Image</mat-label>
-            <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" />
+            <mat-select [disabled]="true" formControlName="selectedHduId">
+              <mat-option [value]="selectedHduId">
+                {{ getHduOptionLabel(selectedHduId) | async }}
+              </mat-option>
+            </mat-select>
+            <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
           </mat-form-field>
 
           <mat-form-field appearance="outline" style="width: 300px">

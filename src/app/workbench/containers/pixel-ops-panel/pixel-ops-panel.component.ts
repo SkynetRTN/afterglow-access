@@ -121,6 +121,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     {
       operand: new FormControl('+', Validators.required),
       mode: new FormControl('image', Validators.required),
+      selectedHduId: new FormControl('', Validators.required),
       primaryHduIds: new FormControl([]),
       auxHduId: new FormControl('', Validators.required),
       scalarValue: new FormControl('', [Validators.required, isNumber]),
@@ -134,6 +135,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
   imageCalcFormAdv = new FormGroup({
     opString: new FormControl('', Validators.required),
+    selectedHduId: new FormControl('', Validators.required),
     primaryHduIds: new FormControl([], Validators.required),
     auxHduIds: new FormControl([]),
     inPlace: new FormControl(false, Validators.required),
