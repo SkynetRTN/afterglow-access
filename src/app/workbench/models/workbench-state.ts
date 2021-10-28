@@ -106,6 +106,8 @@ export interface PlottingPanelConfig {
 export interface PhotometryPanelConfig {
   centroidClicks: boolean;
   showSourceLabels: boolean;
+  showSourceMarkers: boolean;
+  showSourceApertures: boolean;
   showSourcesFromAllFiles: boolean;
   selectedSourceIds: string[];
   coordMode: 'pixel' | 'sky';

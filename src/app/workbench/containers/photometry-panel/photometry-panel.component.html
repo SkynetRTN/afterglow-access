@@ -77,14 +77,7 @@
             Show Sources From All Files
           </mat-slide-toggle>
 
-          <mat-slide-toggle
-            [checked]="config?.showSourceLabels"
-            [labelPosition]="'after'"
-            (change)="onShowSourceLabelsChange($event)"
-            i18n
-          >
-            Source Labels
-          </mat-slide-toggle>
+       
 
           <mat-slide-toggle
             [checked]="config?.autoPhot"
@@ -95,6 +88,35 @@
             Auto-phot
           </mat-slide-toggle>
         </div>
+        <div class="form-row mb-2">
+          <mat-slide-toggle
+            [checked]="config?.showSourceMarkers"
+            [labelPosition]="'after'"
+            (change)="onShowSourceMarkersChange($event)"
+            i18n
+          >
+            Source Markers
+          </mat-slide-toggle>
+          <mat-slide-toggle
+            [disabled]="!config?.showSourceMarkers"
+            [checked]="config?.showSourceLabels"
+            [labelPosition]="'after'"
+            (change)="onShowSourceLabelsChange($event)"
+            i18n
+          >
+            Marker Labels
+          </mat-slide-toggle>
+          <mat-slide-toggle
+            [disabled]="!config?.showSourceMarkers"
+            [checked]="config?.showSourceApertures"
+            [labelPosition]="'after'"
+            (change)="onShowSourceAperturesChange($event)"
+            i18n
+          >
+            Show Apertures
+          </mat-slide-toggle>
+         
+        </div>
 
         <div class="mb-3" style="max-height: 300px; overflow: auto">
           <mat-table
@@ -104,6 +126,8 @@
             [dataSource]="tableData$"
             matSort
             [matSortDisableClear]="true"
+            [trackBy]="trackById"
+            recycleRows
           >
             <ng-container matColumnDef="select">
               <mat-header-cell

@@ -284,6 +284,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   },
   photometryPanelConfig: {
     showSourceLabels: false,
+    showSourceMarkers: true,
+    showSourceApertures: false,
     centroidClicks: true,
     showSourcesFromAllFiles: true,
     selectedSourceIds: [],

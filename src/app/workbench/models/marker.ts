@@ -7,6 +7,7 @@ export enum MarkerType {
   TEARDROP,
   TEXT,
   APERTURE,
+  CROSSHAIR
 }
 
 interface IMarker {
@@ -36,6 +37,14 @@ export interface RectangleMarker extends IMarker {
   y: number;
   width: number;
   height: number;
+}
+
+export interface CrosshairMarker extends IMarker {
+  x: number;
+  y: number;
+  radius: number;
+  labelRadius: number;
+  labelTheta: number;
 }
 
 export interface CircleMarker extends IMarker {
@@ -77,6 +86,9 @@ export const isLineMarker: TypeGuard<Marker, LineMarker> = (marker: Marker): mar
 
 export const isCircleMarker: TypeGuard<Marker, CircleMarker> = (marker: Marker): marker is CircleMarker =>
   marker.type === MarkerType.CIRCLE;
+
+export const isCrosshairMarker: TypeGuard<Marker, CrosshairMarker> = (marker: Marker): marker is CrosshairMarker =>
+  marker.type === MarkerType.CROSSHAIR;
 
 export const isRectangleMarker: TypeGuard<Marker, RectangleMarker> = (marker: Marker): marker is RectangleMarker =>
   marker.type === MarkerType.RECTANGLE;

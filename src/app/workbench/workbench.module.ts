@@ -68,6 +68,7 @@ import { ImageViewerEventService } from './services/image-viewer-event.service';
 import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
 import { ImageViewerMarkerService } from './services/image-viewer-marker.service';
 import { ImageOrientationToolbarComponent } from './components/image-orientation-toolbar/image-orientation-toolbar.component';
+import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -81,6 +82,7 @@ export const COMPONENTS = [
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
   SvgTextMarkerComponent,
+  SvgCrosshairMarkerComponent,
   SvgTeardropMarkerComponent,
   SvgLineMarkerComponent,
   SvgApertureMarkerComponent,

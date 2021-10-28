@@ -224,7 +224,8 @@ export class Wcs {
 
   public worldToPix(raDec: Array<number>) {
     if (!this.isValid()) return [null, null];
-    return this.wcs.sky2pix(raDec[0] * 15.0, raDec[1]);
+    let result = this.wcs.sky2pix(raDec[0] * 15.0, raDec[1]);
+    return [result[0], result[1]]
 
     // // let lng = raDec[0]*15;
     // // let lat = raDec[1];
