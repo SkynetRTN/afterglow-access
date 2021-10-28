@@ -576,6 +576,8 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
         return;
       }
 
+      if (!imageHdu.hist?.loaded || !header?.loaded) return;
+
       let normalizedImageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
         loadComposite = false;
@@ -595,6 +597,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
         loadComposite = false;
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
+
     });
 
     if (loadComposite) {
