@@ -219,6 +219,8 @@ import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
+import { getCoreApiUrl } from '../afterglow-config';
+import { AfterglowConfigService } from '../afterglow-config.service';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: 'c45e3fd5-284f-4e93-950c-2cc669e559d3',
@@ -385,7 +387,8 @@ export class WorkbenchState {
     private afterglowFieldCalService: AfterglowFieldCalService,
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private config: AfterglowConfigService
   ) {}
 
   /** Root Selectors */
@@ -3955,7 +3958,7 @@ export class WorkbenchState {
   @Action(Sonify)
   @ImmutableContext()
   public sonify({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { hduId, region }: Sonify) {
-    let getSonificationUrl = (jobId) => `core/api/v1/jobs/${jobId}/result/files/sonification`;
+    let getSonificationUrl = (jobId) => `${getCoreApiUrl(this.config)}/jobs/${jobId}/result/files/sonification`;
 
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
