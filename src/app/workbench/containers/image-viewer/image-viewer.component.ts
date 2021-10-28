@@ -546,6 +546,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
       let imageHdu = hdu as ImageHdu;
       if (!imageHdu.hist.loaded && !imageHdu.hist.loading) {
+        console.log("waiting for hist...", $event)
         this.actions$
           .pipe(
             ofActionCompleted(LoadImageHduHistogram),
@@ -553,6 +554,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             take(1)
           )
           .subscribe((a) => {
+            console.log("load hist complete!", a, $event)
             if (a.result.successful) this.handleLoadTile($event);
           });
 
@@ -562,6 +564,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
       let header = headerEntities[hdu.headerId];
       if (!header.loaded && !header.loading) {
+        console.log("waiting for header...", $event)
         this.actions$
           .pipe(
             ofActionCompleted(LoadHduHeader),
@@ -569,6 +572,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             take(1)
           )
           .subscribe((a) => {
+            console.log("load header complete!", a, $event)
             if (a.result.successful) this.handleLoadTile($event);
           });
 
@@ -576,7 +580,13 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (!imageHdu.hist?.loaded || !header?.loaded) return;
+      
+      if (!imageHdu.hist?.loaded || !header?.loaded) {
+        console.log("header or hist not loaded", !imageHdu.hist?.loaded, !header?.loaded)
+        return
+      };
+
+
 
       let normalizedImageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
       if (!normalizedImageData || !normalizedImageData.initialized) {
@@ -595,12 +605,14 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       }
       if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
         loadComposite = false;
+        console.log("updating normalized tile", $event)
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
 
     });
 
     if (loadComposite) {
+      console.log("updating composite tile", $event)
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
   }
