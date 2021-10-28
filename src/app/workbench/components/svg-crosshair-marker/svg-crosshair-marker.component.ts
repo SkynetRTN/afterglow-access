@@ -23,7 +23,7 @@ export class SvgCrosshairMarkerComponent implements OnInit, OnChanges {
   ngOnChanges() {}
 
   hitRegionRadius() {
-    return Math.max(5, this.marker?.radius)
+    return Math.max(3, this.marker?.radius)
   }
 
 }
