@@ -603,7 +603,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       if (!tile.pixelsLoaded) {
         loadComposite = false;
       }
-      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
+      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && !tile.pixelsLoading && (!tile.isValid || !tile.pixelsLoaded)) {
         loadComposite = false;
         console.log("updating normalized tile", $event)
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));

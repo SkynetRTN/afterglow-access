@@ -1173,10 +1173,10 @@ export class DataFilesState {
     let imageData = state.imageDataEntities[hdu.rawImageDataId];
     if (!imageData.initialized) return null;
     let rawTile = imageData.tiles[tileIndex];
-
-    if (rawTile.pixelsLoading) {
-      return null;
-    }
+    if (rawTile.pixelsLoading) return null;
+    let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
+    let tile = normalizedImageData.tiles[tileIndex];
+    if(tile.pixelsLoading) return null;
 
     let onRawPixelsLoaded = () => {
       let state = getState();
