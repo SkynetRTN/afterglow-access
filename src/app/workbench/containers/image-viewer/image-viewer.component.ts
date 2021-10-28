@@ -545,7 +545,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       if (!hdu || hdu.type != HduType.IMAGE) return;
 
       let imageHdu = hdu as ImageHdu;
-      if (!imageHdu.hist.loaded && !imageHdu.hist.loading) {
+      if (!imageHdu.hist.loaded) {
         console.log("waiting for hist...", $event)
         this.actions$
           .pipe(
@@ -558,12 +558,12 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             if (a.result.successful) this.handleLoadTile($event);
           });
 
-        this.store.dispatch(new LoadImageHduHistogram(hdu.id));
+        if(!imageHdu.hist.loading) this.store.dispatch(new LoadImageHduHistogram(hdu.id));
         return;
       }
 
       let header = headerEntities[hdu.headerId];
-      if (!header.loaded && !header.loading) {
+      if (!header.loaded) {
         console.log("waiting for header...", $event)
         this.actions$
           .pipe(
@@ -576,7 +576,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             if (a.result.successful) this.handleLoadTile($event);
           });
 
-        this.store.dispatch(new LoadHduHeader(hdu.id));
+        if(!header.loading) this.store.dispatch(new LoadHduHeader(hdu.id));
         return;
       }
 
