@@ -179,6 +179,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   imageMouseY: number = null;
 
   private lastImageData: IImageData<Uint32Array>;
+  private hduLoading: {[key: string]: boolean} = {}
 
   constructor(
     private store: Store,
@@ -541,12 +542,18 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     }
 
     hduIds.forEach((hduId) => {
+      if(this.hduLoading[hduId]) {
+        loadComposite= false;
+        return;
+      }
       let hdu = hduEntities[hduId];
       if (!hdu || hdu.type != HduType.IMAGE) return;
 
       let imageHdu = hdu as ImageHdu;
       if (!imageHdu.hist.loaded) {
         // console.log("waiting for hist...", $event)
+        this.hduLoading[hduId] = true;
+
         this.actions$
           .pipe(
             ofActionCompleted(LoadImageHduHistogram),
@@ -555,16 +562,19 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
           )
           .subscribe((a) => {
             // console.log("load hist complete!", a, $event)
+            this.hduLoading[hduId] = false;
             if (a.result.successful) this.handleLoadTile($event);
           });
 
         if(!imageHdu.hist.loading) this.store.dispatch(new LoadImageHduHistogram(hdu.id));
+        loadComposite = false;
         return;
       }
 
       let header = headerEntities[hdu.headerId];
       if (!header.loaded) {
         // console.log("waiting for header...", $event)
+        this.hduLoading[hduId] = true;
         this.actions$
           .pipe(
             ofActionCompleted(LoadHduHeader),
@@ -573,42 +583,36 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
           )
           .subscribe((a) => {
             // console.log("load header complete!", a, $event)
+            this.hduLoading[hduId] = false;
             if (a.result.successful) this.handleLoadTile($event);
           });
 
         if(!header.loading) this.store.dispatch(new LoadHduHeader(hdu.id));
-        return;
-      }
-
-      
-      if (!imageHdu.hist?.loaded || !header?.loaded) {
-        // console.log("header or hist not loaded", !imageHdu.hist?.loaded, !header?.loaded)
-        return
-      };
-
-
-
-      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
-      if (!normalizedImageData || !normalizedImageData.initialized) {
         loadComposite = false;
         return;
       }
-      let rawImageData = imageDataEntities[(hdu as ImageHdu).rawImageDataId];
-      if (!rawImageData || !rawImageData.initialized) {
+
+
+      let imageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
+      let tile = imageData.tiles[$event.tileIndex];
+      if (!tile.pixelsLoading && (!tile.pixelsLoaded || !tile.isValid)) {
+        this.hduLoading[hduId] = true;
+        this.actions$
+          .pipe(
+            ofActionCompleted(UpdateNormalizedImageTile),
+            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id),
+            take(1)
+          )
+          .subscribe((a) => {
+            // console.log("load header complete!", a, $event)
+            this.hduLoading[hduId] = false;
+            if (a.result.successful) this.handleLoadTile($event);
+          });
+
         loadComposite = false;
-        return;
-      }
-      let rawTile = rawImageData.tiles[$event.tileIndex];
-      let tile = normalizedImageData.tiles[$event.tileIndex];
-      if (!tile.pixelsLoaded) {
-        loadComposite = false;
-      }
-      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && !tile.pixelsLoading && (!tile.isValid || !tile.pixelsLoaded)) {
-        loadComposite = false;
-        // console.log("updating normalized tile", $event)
+
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
-
     });
 
     if (loadComposite) {
