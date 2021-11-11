@@ -39,6 +39,10 @@ import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { JobsState } from '../jobs/jobs.state';
 import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
+import { SelectFile } from '../workbench/workbench.actions';
+import { DataFilesState } from '../data-files/data-files.state';
+import { JobResultError } from '../jobs/models/job-base';
+import { IHdu } from '../data-files/models/data-file';
 
 export interface DataProviderPath {
   dataProviderId: string;
@@ -482,14 +486,25 @@ export class DataProvidersState {
           if (result.warnings.length != 0) {
             console.error('Warnings encountered during import: ', result.warnings);
           }
-          dispatch(
-            new ImportAssetsCompleted(
-              assets,
-              result.fileIds.map((id) => id.toString()),
-              result.errors,
-              correlationId
-            )
+
+          let fileIds = result.fileIds.map((id) => id.toString());
+          result.errors
+            .filter((e) => e.id == 'DuplicateDataFileNameError')
+            .forEach((e, index) => {
+              let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[e.meta.fileId];
+              if (hdu) {
+                fileIds.push(hdu.id);
+              }
+            });
+
+          let jobErrors = result.errors.filter(
+            (error) => error.id != 'DuplicateDataFileNameError' || !fileIds.includes(error.meta.fileId)
           );
+
+          //ignore errors where the file has already been imported
+          let errors = jobErrors.map((error) => error.detail);
+
+          dispatch(new ImportAssetsCompleted(assets, fileIds, errors, correlationId));
         } else if (a.result.canceled) {
           dispatch(
             new ImportAssetsCompleted(assets, [], [`Unable to import assets.  Operation was canceled`], correlationId)

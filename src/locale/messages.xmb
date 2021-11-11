@@ -283,7 +283,7 @@
   <msg id="6560280488925179144"><source>src/app/workbench/containers/workbench.component.html:343</source>Plotter</msg>
   <msg id="2311867436831741059"><source>src/app/workbench/containers/workbench.component.html:344</source>Sonifier</msg>
   <msg id="3606571875564888356"><source>src/app/workbench/containers/workbench.component.html:345</source>Photometry</msg>
-  <msg id="7938312165937347152"><source>src/app/workbench/containers/workbench.component.html:346</source>Image Calculator</msg>
+  <msg id="7938312165937347152"><source>src/app/workbench/containers/workbench.component.html:346</source>Pixel Operations</msg>
   <msg id="3340719036479371862"><source>src/app/workbench/containers/workbench.component.html:347</source>WCS Calibration</msg>
   <msg id="8200942586419500488"><source>src/app/workbench/containers/workbench.component.html:348</source>Aligner</msg>
   <msg id="7510915524822565919"><source>src/app/workbench/containers/workbench.component.html:349</source>Stacker</msg>

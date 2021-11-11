@@ -1,0 +1,87 @@
+<svg:g class="svg-crosshair-marker" [class.selected]="marker.selected">
+  <svg:line
+    *ngIf="showShadow"
+    class="shadow"
+    [attr.x1]="marker.x-marker.radius"
+    [attr.y1]="marker.y"
+    [attr.x2]="marker.x+marker.radius"
+    [attr.y2]="marker.y"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    [attr.stroke-linecap]="'butt'"
+    [style.stroke-width]="strokeWidth+2"
+    [style.stroke-opacity]="strokeOpacity"
+  />
+  <svg:line
+  *ngIf="showShadow"
+  class="shadow"
+  [attr.x1]="marker.x"
+  [attr.y1]="marker.y-marker.radius"
+  [attr.x2]="marker.x"
+  [attr.y2]="marker.y+marker.radius"
+  [attr.vector-effect]="'non-scaling-stroke'"
+  [attr.stroke-linecap]="'butt'"
+  [style.stroke-width]="strokeWidth+2"
+  [style.stroke-opacity]="strokeOpacity"
+/>
+  <svg:line
+    *ngIf="showOutline"
+    class="outline"
+    [attr.x1]="marker.x-marker.radius"
+    [attr.y1]="marker.y"
+    [attr.x2]="marker.x+marker.radius"
+    [attr.y2]="marker.y"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    [attr.stroke-linecap]="'butt'"
+    [style.stroke-width]="strokeWidth+2"
+    [style.stroke-opacity]="strokeOpacity"
+  />
+  <svg:line
+  *ngIf="showOutline"
+  class="outline"
+  [attr.x1]="marker.x"
+  [attr.y1]="marker.y-marker.radius"
+  [attr.x2]="marker.x"
+  [attr.y2]="marker.y+marker.radius"
+  [attr.vector-effect]="'non-scaling-stroke'"
+  [attr.stroke-linecap]="'butt'"
+  [style.stroke-width]="strokeWidth+2"
+  [style.stroke-opacity]="strokeOpacity"
+/>
+  <svg:line
+    class="stroke"
+    [attr.x1]="marker.x-marker.radius"
+    [attr.y1]="marker.y"
+    [attr.x2]="marker.x+marker.radius"
+    [attr.y2]="marker.y"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    [attr.stroke-linecap]="'butt'"
+    [style.stroke-width]="strokeWidth"
+    [style.stroke-opacity]="strokeOpacity"
+    [style.stroke]="marker.selected ? selectedStroke : stroke"
+   
+  />
+
+
+  <svg:line
+    class="stroke"
+    [attr.x1]="marker.x"
+    [attr.y1]="marker.y-marker.radius"
+    [attr.x2]="marker.x"
+    [attr.y2]="marker.y+marker.radius"
+    [attr.vector-effect]="'non-scaling-stroke'"
+    [attr.stroke-linecap]="'butt'"
+    [style.stroke-width]="strokeWidth"
+    [style.stroke-opacity]="strokeOpacity"
+    [style.stroke]="marker.selected ? selectedStroke : stroke"
+  />
+
+  <svg:ellipse
+  class="hit-region"
+  [attr.cx]="marker.x"
+  [attr.cy]="marker.y"
+  [attr.rx]="hitRegionRadius()"
+  [attr.ry]="hitRegionRadius()"
+  [attr.vector-effect]="'non-scaling-stroke'"
+  style="fill-opacity: 0; opacity: 0"
+/>
+</svg:g>

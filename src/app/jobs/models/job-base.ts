@@ -7,8 +7,15 @@ export interface JobStateBase {
   progress: number;
 }
 
+export interface JobResultError {
+  id: string;
+  detail: string;
+  status: string;
+  meta: { [key: string]: any };
+}
+
 export interface JobResultBase {
-  errors: string[];
+  errors: JobResultError[];
   warnings: string[];
 }
 

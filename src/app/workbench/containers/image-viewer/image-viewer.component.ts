@@ -15,7 +15,18 @@ import {
 import { DomSanitizer, SafeValue } from '@angular/platform-browser';
 
 import { Observable, combineLatest, of } from 'rxjs';
-import { distinctUntilChanged, map, flatMap, filter, withLatestFrom, tap, switchMap, takeUntil } from 'rxjs/operators';
+import {
+  distinctUntilChanged,
+  map,
+  flatMap,
+  filter,
+  withLatestFrom,
+  tap,
+  switchMap,
+  takeUntil,
+  first,
+  take,
+} from 'rxjs/operators';
 import {
   DataFile,
   getWidth,
@@ -61,7 +72,7 @@ import {
 import { Source, PosType } from '../../models/source';
 import { CustomMarker } from '../../models/custom-marker';
 import { FieldCal } from '../../models/field-cal';
-import { Store } from '@ngxs/store';
+import { Actions, ofActionCompleted, ofActionDispatched, Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';
 import {
@@ -75,6 +86,7 @@ import {
   LoadHduHeader,
   LoadHdu,
   LoadImageHduHistogram,
+  LoadHduHeaderSuccess,
 } from '../../../data-files/data-files.actions';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
@@ -118,7 +130,7 @@ export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
   styleUrls: ['./image-viewer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
+export class ImageViewerComponent implements OnInit, OnDestroy {
   @Input('viewer')
   set viewer(viewer: ImageViewer) {
     this.viewer$.next(viewer);
@@ -143,18 +155,6 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   onFileSave = new EventEmitter<string>();
 
   destroy$ = new Subject<boolean>();
-  file$: Observable<DataFile>;
-  hduIds$: Observable<string[]>;
-  hdus$: Observable<ImageHdu[]>;
-  headerIds$: Observable<string[]>;
-  headers$: Observable<Header[]>;
-  headersLoaded$: Observable<boolean>;
-  histsLoaded$: Observable<boolean>;
-  ready$: Observable<boolean>;
-
-  selectedHduId$: Observable<string>;
-  selectedHdu$: Observable<ImageHdu>;
-  selectedHduHeader$: Observable<Header>;
   firstHeader$: Observable<Header>;
 
   rawImageData$: Observable<IImageData<PixelType>>;
@@ -175,26 +175,19 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
   hduEntities$: Observable<{ [id: string]: IHdu }>;
   viewportSize: { width: number; height: number };
   currentCanvasSize: { width: number; height: number } = null;
-  tableData: any = null;
-  sourceMarkersLayer$: Observable<Marker[]>;
-  sourceExtractorRegionMarkerLayer$: Observable<Marker[]>;
-  sources$: Observable<Source[]>;
-  customMarkers$: Observable<CustomMarker[]>;
-  selectedCustomMarkers$: Observable<CustomMarker[]>;
-  showAllSources$: Observable<boolean>;
   imageMouseX: number = null;
   imageMouseY: number = null;
-  fieldCals$: Observable<FieldCal[]>;
-  selectedFieldCal$: Observable<FieldCal>;
-  selectedFieldCalId$: Observable<string>;
-  fieldCalMarkers$: Observable<Marker[]>;
+
+  private lastImageData: IImageData<Uint32Array>;
+  private hduLoading: {[key: string]: boolean} = {}
 
   constructor(
     private store: Store,
     private sanitization: DomSanitizer,
     private papa: Papa,
     private eventService: ImageViewerEventService,
-    private markerService: ImageViewerMarkerService
+    private markerService: ImageViewerMarkerService,
+    private actions$: Actions
   ) {
     this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
 
@@ -202,77 +195,57 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
 
     this.markers$ = viewerId$.pipe(switchMap((viewerId) => this.markerService.getMarkerStream(viewerId)));
 
-    this.selectedHduId$ = this.viewer$.pipe(map((viewer) => (viewer ? viewer.hduId : null)));
-
-    this.file$ = this.viewer$.pipe(switchMap((viewer) => this.store.select(DataFilesState.getFileById(viewer.fileId))));
-
-    this.hduIds$ = this.file$.pipe(
-      map((file) => file.hduIds),
+    let file$ = this.viewer$.pipe(
+      switchMap((viewer) => (viewer?.fileId ? this.store.select(DataFilesState.getFileById(viewer.fileId)) : of(null)))
+    );
+    let hduIds$: Observable<string[]> = file$.pipe(
+      map((file) => (file ? file.hduIds : [])),
       distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
-
-    this.hdus$ = this.hduIds$.pipe(
-      switchMap((hduIds) => {
+    let selectedHduId$ = this.viewer$.pipe(map((viewer) => viewer?.hduId));
+    let hdus$ = combineLatest(hduIds$, selectedHduId$).pipe(
+      switchMap(([hduIds, selectedHduId]) => {
+        if (selectedHduId) hduIds = [selectedHduId];
         return combineLatest(hduIds.map((hduId) => this.store.select(DataFilesState.getHduById(hduId)))).pipe(
           map((hdus) => hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[])
         );
       })
     );
 
-    this.headerIds$ = this.hdus$.pipe(
+    let headerIds$ = hdus$.pipe(
       map((hdus) => hdus.map((hdu) => hdu.headerId)),
       distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
 
-    this.headers$ = this.headerIds$.pipe(
+    let headers$ = headerIds$.pipe(
       switchMap((headerIds) => {
         return combineLatest(headerIds.map((headerId) => this.store.select(DataFilesState.getHeaderById(headerId))));
       })
     );
 
-    this.selectedHdu$ = combineLatest([this.selectedHduId$, this.hdus$]).pipe(
-      map(([hduId, hdus]) => (hduId ? hdus.find((hdu) => hdu.id == hduId) : null))
-    );
-
-    this.selectedHduHeader$ = combineLatest([this.selectedHdu$, this.headers$]).pipe(
-      map(([hdu, headers]) => (hdu ? headers.find((header) => header.id == hdu.headerId) : null))
-    );
-
-    this.headersLoaded$ = combineLatest([this.headers$, this.selectedHduHeader$]).pipe(
-      map(([headers, header]) => (header ? header.loaded : headers.every((header) => header.loaded)))
-    );
-
-    this.histsLoaded$ = combineLatest([this.hdus$, this.selectedHdu$]).pipe(
-      map(([hdus, hdu]) => (hdu ? hdu.hist.loaded : hdus.every((hdu) => hdu.hist.loaded)))
-    );
-
-    this.ready$ = combineLatest([this.headersLoaded$, this.histsLoaded$]).pipe(
-      map(([headerLoaded, histLoaded]) => headerLoaded && histLoaded)
-    );
-
-    this.firstHeader$ = this.headers$.pipe(map((headers) => (headers.length > 0 ? headers[0] : null)));
+    this.firstHeader$ = headers$.pipe(map((headers) => (headers.length > 0 ? headers[0] : null)));
 
     // // watch for changes to header and reload when necessary
-    // combineLatest([this.hduId$, this.header$]).pipe(
-    //   takeUntil(this.destroy$)
-    // ).subscribe(([hduId, header]) => {
-    //   if (hduId && header && !header.loaded && !header.loading) {
-    //     setTimeout(() => {
-    //       this.store.dispatch(new LoadHduHeader(hduId));
-    //     })
-
-    //   }
+    // hdus$.pipe(takeUntil(this.destroy$)).subscribe((hdus) => {
+    //   hdus.forEach((hdu) => {
+    //     if (hdu) {
+    //       if (hdu.hist && !hdu.hist.loaded && !hdu.hist.loading) {
+    //         setTimeout(() => {
+    //           this.store.dispatch(new LoadImageHduHistogram(hdu.id));
+    //         });
+    //       }
+    //     }
+    //   });
     // });
 
-    // combineLatest([this.hduId$, this.histLoaded$, this.histLoading$]).pipe(
-    //   takeUntil(this.destroy$)
-    // ).subscribe(([hduId, histLoaded, histLoading]) => {
-    //   if (hduId && !histLoaded && !histLoading ) {
-    //     setTimeout(() => {
-    //       this.store.dispatch(new LoadImageHduHistogram(hduId));
-    //     })
-
-    //   }
+    // headers$.pipe(takeUntil(this.destroy$), withLatestFrom(hduIds$)).subscribe(([headers, hduIds]) => {
+    //   headers.forEach((header, index) => {
+    //     if (header && !header.loaded && !header.loading) {
+    //       setTimeout(() => {
+    //         this.store.dispatch(new LoadHduHeader(hduIds[index]));
+    //       });
+    //     }
+    //   });
     // });
 
     this.rawImageData$ = viewerId$.pipe(
@@ -280,19 +253,21 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
     );
 
     this.normalizedImageData$ = this.viewer$.pipe(
-      switchMap((viewer) =>
-        viewer.hduId
+      switchMap((viewer) => {
+        if (!viewer) return of(null);
+        return viewer.hduId
           ? this.store.select(WorkbenchState.getHduNormalizedImageDataByViewerId(viewer?.id))
-          : this.store.select(WorkbenchState.getFileNormalizedImageDataByViewerId(viewer?.id))
-      )
+          : this.store.select(WorkbenchState.getFileNormalizedImageDataByViewerId(viewer?.id));
+      })
     );
 
     this.imageToViewportTransform$ = this.viewer$.pipe(
-      switchMap((viewer) =>
-        viewer.hduId
+      switchMap((viewer) => {
+        if (!viewer) return of(null);
+        return viewer.hduId
           ? this.store.select(WorkbenchState.getHduImageToViewportTransformByViewerId(viewer?.id))
-          : this.store.select(WorkbenchState.getFileImageToViewportTransformByViewerId(viewer?.id))
-      )
+          : this.store.select(WorkbenchState.getFileImageToViewportTransformByViewerId(viewer?.id));
+      })
     );
 
     // let customMarkerPanelStateId$ = viewerId$.pipe(
@@ -328,58 +303,6 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
     );
 
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
-    this.sources$ = this.store.select(SourcesState.getSources);
-
-    let test$ = this.activeTool$.pipe(
-      switchMap((activeTool) => {
-        if (activeTool == WorkbenchTool.CUSTOM_MARKER) {
-          // let markerSelectionRegionMarkers$ = combineLatest(this.selectedHduId$, customMarkerPanelState$).pipe(
-          //   map(([hduId, state]) => {
-          //     if (!state || !state.markerSelectionRegion) return [];
-          //     let region = state.markerSelectionRegion;
-          //     let sourceSelectionMarker: RectangleMarker = {
-          //       id: `MARKER_SELECTION_${hduId}`,
-          //       x: Math.min(region.x, region.x + region.width),
-          //       y: Math.min(region.y, region.y + region.height),
-          //       width: Math.abs(region.width),
-          //       height: Math.abs(region.height),
-          //       type: MarkerType.RECTANGLE,
-          //     };
-          //     return [sourceSelectionMarker];
-          //   })
-          // );
-          // let markers$ = this.customMarkerPanelState$.pipe(map((state) => Object.values(state.markerEntities)));
-          // return combineLatest(markerSelectionRegionMarkers$, markers$).pipe(
-          //   map(([sourceSelectionRegionMarkers, sourceMarkers]) => sourceMarkers.concat(sourceSelectionRegionMarkers))
-          // );
-        } else if (activeTool == WorkbenchTool.PLOTTER) {
-          return combineLatest(
-            this.firstHeader$,
-            this.selectedHduHeader$,
-            this.plottingPanelState$,
-            this.store.select(WorkbenchState.getPlottingPanelConfig)
-          ).pipe(
-            map(([firstHeader, selectedHeader, plottingState, config]) => {
-              return [];
-            })
-          );
-        } else if (activeTool == WorkbenchTool.SONIFIER) {
-          return this.sonificationPanelState$.pipe(
-            map((state) => {
-              if (!state) {
-                return [];
-              }
-
-              return [];
-            })
-          );
-        } else if (activeTool == WorkbenchTool.PHOTOMETRY) {
-          return of([]);
-        }
-
-        return of([]);
-      })
-    );
   }
 
   ngOnInit() {}
@@ -388,8 +311,6 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
-
-  ngOnChanges(changes: { [key: string]: SimpleChange }) {}
 
   handleImageMouseMove($event: CanvasMouseEvent) {
     if ($event.hitImage) {
@@ -621,39 +542,81 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     hduIds.forEach((hduId) => {
+      if(this.hduLoading[hduId]) {
+        loadComposite= false;
+        return;
+      }
       let hdu = hduEntities[hduId];
-      if (
-        !hdu ||
-        hdu.type != HduType.IMAGE ||
-        !headerEntities[hdu.headerId] ||
-        !headerEntities[hdu.headerId].loaded ||
-        !(hdu as ImageHdu).hist ||
-        !(hdu as ImageHdu).hist.loaded
-      )
-        return;
+      if (!hdu || hdu.type != HduType.IMAGE) return;
 
-      let normalizedImageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
-      if (!normalizedImageData || !normalizedImageData.initialized) {
+      let imageHdu = hdu as ImageHdu;
+      if (!imageHdu.hist.loaded) {
+        // console.log("waiting for hist...", $event)
+        this.hduLoading[hduId] = true;
+
+        this.actions$
+          .pipe(
+            ofActionCompleted(LoadImageHduHistogram),
+            filter((a) => (a.action as LoadImageHduHistogram).hduId == hdu.id),
+            take(1)
+          )
+          .subscribe((a) => {
+            // console.log("load hist complete!", a, $event)
+            this.hduLoading[hduId] = false;
+            if (a.result.successful) this.handleLoadTile($event);
+          });
+
+        if(!imageHdu.hist.loading) this.store.dispatch(new LoadImageHduHistogram(hdu.id));
         loadComposite = false;
         return;
       }
-      let rawImageData = imageDataEntities[(hdu as ImageHdu).rawImageDataId];
-      if (!rawImageData || !rawImageData.initialized) {
+
+      let header = headerEntities[hdu.headerId];
+      if (!header.loaded) {
+        // console.log("waiting for header...", $event)
+        this.hduLoading[hduId] = true;
+        this.actions$
+          .pipe(
+            ofActionCompleted(LoadHduHeader),
+            filter((a) => (a.action as LoadHduHeader).hduId == hdu.id),
+            take(1)
+          )
+          .subscribe((a) => {
+            // console.log("load header complete!", a, $event)
+            this.hduLoading[hduId] = false;
+            if (a.result.successful) this.handleLoadTile($event);
+          });
+
+        if(!header.loading) this.store.dispatch(new LoadHduHeader(hdu.id));
         loadComposite = false;
         return;
       }
-      let rawTile = rawImageData.tiles[$event.tileIndex];
-      let tile = normalizedImageData.tiles[$event.tileIndex];
-      if (!tile.pixelsLoaded) {
+
+
+      let imageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
+      let tile = imageData.tiles[$event.tileIndex];
+      if (!tile.pixelsLoading && (!tile.pixelsLoaded || !tile.isValid)) {
+        this.hduLoading[hduId] = true;
+        this.actions$
+          .pipe(
+            ofActionCompleted(UpdateNormalizedImageTile),
+            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id),
+            take(1)
+          )
+          .subscribe((a) => {
+            // console.log("load header complete!", a, $event)
+            this.hduLoading[hduId] = false;
+            if (a.result.successful) this.handleLoadTile($event);
+          });
+
         loadComposite = false;
-      }
-      if (!rawTile.pixelsLoading && !rawTile.pixelLoadingFailed && (!tile.isValid || !tile.pixelsLoaded)) {
-        loadComposite = false;
+
         this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
       }
     });
 
     if (loadComposite) {
+      // console.log("updating composite tile", $event)
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
   }
@@ -734,5 +697,9 @@ export class ImageViewerComponent implements OnInit, OnChanges, OnDestroy {
       }
     };
     image.src = data;
+  }
+
+  test() {
+    console.log(this.lastImageData == this.panZoomCanvasComponent.imageData);
   }
 }

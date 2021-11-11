@@ -94,7 +94,7 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
     this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
     this.surveyDataProvider$ = this.store
       .select(DataProvidersState.getDataProviders)
-      .pipe(map((dataProviders) => dataProviders.find((dp) => dp.displayName == 'Imaging Surveys')));
+      .pipe(map((dataProviders) => dataProviders.find((dp) => dp.name == 'dss')));
 
     this.surveyFileId$ = this.importFromSurveyEvent$.pipe(
       takeUntil(this.destroy$),

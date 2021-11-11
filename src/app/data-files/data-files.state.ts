@@ -665,6 +665,10 @@ export class DataFilesState {
   @Action(LoadHduHeader)
   @ImmutableContext()
   public loadHduHeader({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { hduId }: LoadHduHeader) {
+    let hdu = getState().hduEntities[hduId];
+    let header = getState().headerEntities[hdu?.headerId];
+    if (header && header.loading) return;
+
     let fileId = getState().hduEntities[hduId].fileId;
     const cancel$ = merge(
       this.actions$.pipe(
@@ -1133,11 +1137,15 @@ export class DataFilesState {
       return null;
 
     setState((state: DataFilesStateModel) => {
-      let normalizedImageData = state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).imageDataId];
+      let imageDataId = (state.hduEntities[hduId] as ImageHdu).imageDataId;
+      let normalizedImageData = state.imageDataEntities[imageDataId];
       let tile = normalizedImageData.tiles[tileIndex];
       tile.isValid = false;
+      tile.pixelsLoaded = false;
+      tile.pixelsLoading = false;
+      tile.pixelLoadingFailed = false;
 
-      state.imageDataEntities[(state.hduEntities[hduId] as ImageHdu).imageDataId] = { ...normalizedImageData };
+      state.imageDataEntities[imageDataId] = { ...normalizedImageData };
 
       return state;
     });
@@ -1165,10 +1173,10 @@ export class DataFilesState {
     let imageData = state.imageDataEntities[hdu.rawImageDataId];
     if (!imageData.initialized) return null;
     let rawTile = imageData.tiles[tileIndex];
-
-    if (rawTile.pixelsLoading) {
-      return null;
-    }
+    if (rawTile.pixelsLoading) return null;
+    let normalizedImageData = state.imageDataEntities[hdu.imageDataId];
+    let tile = normalizedImageData.tiles[tileIndex];
+    if(tile.pixelsLoading) return null;
 
     let onRawPixelsLoaded = () => {
       let state = getState();

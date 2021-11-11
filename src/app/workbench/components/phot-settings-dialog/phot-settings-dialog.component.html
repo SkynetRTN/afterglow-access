@@ -3,7 +3,8 @@
   <mat-button-toggle-group
     class="mb-4"
     name="mode"
-    i18n-aria-label aria-label="Photometry Mode"
+    i18n-aria-label
+    aria-label="Photometry Mode"
     [(ngModel)]="settings && settings.mode"
   >
     <mat-button-toggle value="adaptive">Adaptive Aperture</mat-button-toggle>
@@ -50,6 +51,9 @@
         <div fxFlex="1 1 auto" fxLayout="column">
           <div class="form-field-wrapper">
             <mat-slide-toggle formControlName="autoAper">Auto aperture</mat-slide-toggle>
+          </div>
+          <div class="form-field-wrapper">
+            <mat-slide-toggle formControlName="adaptiveAperCorr">Aperture Correction</mat-slide-toggle>
           </div>
           <div class="form-field-wrapper">
             <mat-slide-toggle formControlName="fixAper">Fix Aperture Size</mat-slide-toggle>
@@ -136,6 +140,11 @@
           <app-print-form-error [control]="constantApertureForm.get('aOut')"></app-print-form-error>
         </div>
       </div>
+      <div fxFlex="1 1 auto" fxLayout="row">
+        <div class="form-field-wrapper">
+          <mat-slide-toggle formControlName="constantAperCorr">Aperture Correction</mat-slide-toggle>
+        </div>
+      </div>
 
       <div fxFlex="1 1 auto" fxLayout="column" style="margin-top: 0px; margin-bottom: 0px" class="form-wrapper">
         <div fxFlex="1 1 auto" fxLayout="row" style="margin-bottom: 15px; margin-left: 20px">
@@ -178,14 +187,21 @@
     </div>
   </form>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-raised-button mat-dialog-close i18n>Cancel</button>
-  <button
-    mat-raised-button
-    [mat-dialog-close]="settings"
-    i18n
-    [disabled]="settings.mode == 'constant' ? constantApertureForm.invalid : adaptiveApertureForm.invalid"
-  >
-    Save
-  </button>
+<mat-dialog-actions>
+  <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%" style="justify-content: flex-end">
+    <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%">
+      <button mat-raised-button i18n (click)="restoreDefaults()">Restore Defaults</button>
+    </div>
+    <div fxFlex="0 0 auto" fxLayout="row">
+      <button mat-raised-button mat-dialog-close i18n>Cancel</button>
+      <button
+        mat-raised-button
+        [mat-dialog-close]="settings"
+        i18n
+        [disabled]="settings.mode == 'constant' ? constantApertureForm.invalid : adaptiveApertureForm.invalid"
+      >
+        Save
+      </button>
+    </div>
+  </div>
 </mat-dialog-actions>

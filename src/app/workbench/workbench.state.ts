@@ -22,6 +22,9 @@ import {
   ViewerPanelContainer,
   WcsCalibrationSettings,
   ViewerLayoutItem,
+  KernelFilter,
+  SIZE_KERNELS,
+  SIGMA_KERNELS,
 } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
@@ -215,9 +218,12 @@ import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
+import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
+import { getCoreApiUrl } from '../afterglow-config';
+import { AfterglowConfigService } from '../afterglow-config.service';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3a7db059-3817-4c49-bedb-77255473224b',
+  version: 'c45e3fd5-284f-4e93-950c-2cc669e559d3',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -253,26 +259,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     diskCentroiderSettings: createDiskCentroiderSettings(),
   },
   photometrySettings: {
-    gain: 1,
-    zeroPoint: 20,
-    centroidRadius: 5,
-    mode: 'constant',
-    a: 5,
-    aIn: 10,
-    aOut: 15,
-    elliptical: false,
-    b: 5,
-    bOut: 15,
-    theta: 0,
-    thetaOut: 0,
-    aKrFactor: 7,
-    aInKrFactor: 10,
-    aOutKrFactor: 15,
-    autoAper: true,
-    fixAper: false,
-    fixEll: true,
-    fixRot: true,
-    apcorrTol: 0.0001,
+    ...defaultPhotometrySettings,
   },
   sourceExtractionSettings: {
     threshold: 3,
@@ -297,6 +284,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   },
   photometryPanelConfig: {
     showSourceLabels: false,
+    showSourceMarkers: true,
+    showSourceApertures: false,
     centroidClicks: true,
     showSourcesFromAllFiles: true,
     selectedSourceIds: [],
@@ -314,12 +303,16 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     pixelOpsFormData: {
       operand: '+',
       mode: 'image',
+      selectedHduIds: [],
       auxHduId: '',
       auxHduIds: [],
       primaryHduIds: [],
       scalarValue: 1,
       inPlace: false,
       opString: '',
+      kernelFilter: KernelFilter.MEDIAN_FILTER,
+      kernelSize: 3,
+      kernelSigma: 3
     },
   },
   aligningPanelConfig: {
@@ -396,7 +389,8 @@ export class WorkbenchState {
     private afterglowFieldCalService: AfterglowFieldCalService,
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private config: AfterglowConfigService
   ) {}
 
   /** Root Selectors */
@@ -2665,15 +2659,27 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let imageHdus = [...data.selectedHduIds, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxFileIds: string[] = [];
     let op;
     if (data.mode == 'scalar') {
       op = `img ${data.operand} ${data.scalarValue}`;
-    } else {
+    } else if (data.mode == 'image') {
       op = `img ${data.operand} aux_img`;
       auxFileIds.push(data.auxHduId);
+    } else if (data.mode == 'kernel') {
+      op = `${data.kernelFilter}(img`;
+      if(SIZE_KERNELS.includes(data.kernelFilter)) {
+        op += `, ${data.kernelSize}`
+      }
+      if(SIGMA_KERNELS.includes(data.kernelFilter)) {
+        op += `, ${data.kernelSigma}`
+      }
+      op += ')'
+    } else {
+      return;
     }
+
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
       id: null,
@@ -2725,7 +2731,16 @@ export class WorkbenchState {
         if (result.warnings.length != 0) {
           console.error('Warnings encountered during pixel ops job: ', result.warnings);
         }
-        dispatch(new LoadLibrary());
+
+        let actions: any[] = [];
+        if ((job as PixelOpsJob).inplace) {
+          let hduIds = result.fileIds.map((id) => id.toString());
+          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+        }
+
+        actions.push(new LoadLibrary());
+        return dispatch(actions);
       })
     );
 
@@ -2755,7 +2770,7 @@ export class WorkbenchState {
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageHdus = data.primaryHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let imageHdus = [...data.selectedHduIds, ...data.primaryHduIds].map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let auxImageFiles = data.auxHduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
     let job: PixelOpsJob = {
       type: JobType.PixelOps,
@@ -2816,7 +2831,17 @@ export class WorkbenchState {
         if (result.warnings.length != 0) {
           console.error('Warnings encountered during pixel ops: ', result.warnings);
         }
-        dispatch(new LoadLibrary());
+
+        let actions: any[] = [];
+        if ((job as PixelOpsJob).inplace) {
+          let hduIds = result.fileIds.map((id) => id.toString());
+          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+        }
+
+        actions.push(new LoadLibrary());
+
+        return dispatch(actions);
       })
     );
 
@@ -3165,7 +3190,7 @@ export class WorkbenchState {
             name: '',
             dataProviderId: surveyDataProviderId,
             isDirectory: false,
-            assetPath: `DSS\\${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
+            assetPath: `${raHours * 15},${decDegs}\\${widthArcmins},${heightArcmins}`,
             metadata: {},
           },
         ],
@@ -3257,7 +3282,7 @@ export class WorkbenchState {
         let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
         let result = jobEntity.result as SourceExtractionJobResult;
         if (result.errors.length != 0) {
-          dispatch(new ExtractSourcesFail(result.errors.join(',')));
+          dispatch(new ExtractSourcesFail(result.errors.map((e) => e.detail).join(',')));
           return;
         }
         let sources = result.data.map((d) => {
@@ -3344,6 +3369,7 @@ export class WorkbenchState {
         theta: null,
         thetaOut: null,
         zeroPoint: null,
+        apcorrTol: settings.adaptiveAperCorr ? settings.aperCorrTol : 0,
       };
     } else {
       s = {
@@ -3358,6 +3384,7 @@ export class WorkbenchState {
         centroidRadius: null,
         gain: null,
         zeroPoint: null,
+        apcorrTol: settings.constantAperCorr ? settings.aperCorrTol : 0,
       };
     }
 
@@ -3933,7 +3960,7 @@ export class WorkbenchState {
   @Action(Sonify)
   @ImmutableContext()
   public sonify({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { hduId, region }: Sonify) {
-    let getSonificationUrl = (jobId) => `core/api/v1/jobs/${jobId}/result/files/sonification`;
+    let getSonificationUrl = (jobId) => `${getCoreApiUrl(this.config)}/jobs/${jobId}/result/files/sonification`;
 
     let state = getState();
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -4030,7 +4057,7 @@ export class WorkbenchState {
               sonificationUrl = getSonificationUrl(job.id);
               error = '';
             } else {
-              error = result.errors.join(', ');
+              error = result.errors.map((e) => e.detail).join(', ');
             }
           }
 

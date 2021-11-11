@@ -27,6 +27,8 @@ import {
   isLineMarker,
   isTeardropMarker,
   isApertureMarker,
+  isCrosshairMarker,
+  CrosshairMarker,
 } from '../../models/marker';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Transform, transformToMatrix } from '../../../data-files/models/transformation';
@@ -107,17 +109,19 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   >;
 
   constructor(private cdr: ChangeDetectorRef) {
-    this.transformAttr$ = this.transform$.pipe(map((t) => `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})`));
+    this.transformAttr$ = this.transform$.pipe(
+      map((t) => (t ? `matrix(${t.a} ${t.b} ${t.c} ${t.d} ${t.tx} ${t.ty})` : ''))
+    );
 
     this.markerTexts$ = combineLatest([this.markers$, this.transform$]).pipe(
       map(([markers, transform]) => {
-        if (!markers) return [];
+        if (!markers || !transform) return [];
         let radialMarkers = markers.filter(
           (marker) =>
-            [MarkerType.CIRCLE, MarkerType.TEARDROP, MarkerType.APERTURE].includes(marker.type) &&
+            [MarkerType.CIRCLE, MarkerType.TEARDROP, MarkerType.APERTURE, MarkerType.CROSSHAIR].includes(marker.type) &&
             marker.label &&
             marker.label != ''
-        ) as (CircleMarker | TeardropMarker | ApertureMarker)[];
+        ) as (CircleMarker | TeardropMarker | ApertureMarker | CrosshairMarker)[];
         return radialMarkers.map((m) => {
           let matrix = transformToMatrix(transform);
           let p = matrix.transform(new Point(m.x, m.y));
@@ -207,4 +211,5 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   isApertureMarker = isApertureMarker;
   isLineMarker = isLineMarker;
   isTeardropMarker = isTeardropMarker;
+  isCrosshairMarker = isCrosshairMarker;
 }

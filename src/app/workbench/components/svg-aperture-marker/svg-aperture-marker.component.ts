@@ -15,7 +15,7 @@ export class SvgApertureMarkerComponent implements OnInit, AfterViewInit {
   @Input() apertureStroke: string = 'rgb(0,33,117,0.9)';
   @Input() innerAnnulusStroke: string = 'rgb(0,33,117,0.7)';
   @Input() outerAnnulusStroke: string = 'rgb(0,33,117,0.7)';
-  @Input() strokeWidth: number = 3;
+  @Input() strokeWidth: number = 2;
   @Input() selectedStroke: string = '#ff8b00';
 
   constructor(private cdr: ChangeDetectorRef) {}

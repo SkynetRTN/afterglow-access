@@ -87,7 +87,7 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { IImageData } from '../../../data-files/models/image-data';
-import { ApertureMarker, CircleMarker, MarkerType, RectangleMarker, TeardropMarker } from '../../models/marker';
+import { ApertureMarker, CircleMarker, CrosshairMarker, MarkerType, RectangleMarker, TeardropMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
 
 @Component({
@@ -232,6 +232,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         });
       })
     );
+
     this.batchPhotJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
       this.config$.pipe(
@@ -490,7 +491,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     let sourceMarkers$ = combineLatest(config$, state$, header$, hduId$, sources$).pipe(
       map(([config, state, header, hduId, sources]) => {
-        if (!header || !state?.sourcePhotometryData) return [];
+        if (!config?.showSourceMarkers || !header || !state?.sourcePhotometryData) return [];
         let sourcePhotometryData = state.sourcePhotometryData;
         let selectedSourceIds = config.selectedSourceIds;
         let coordMode = config.coordMode;
@@ -513,7 +514,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           }
 
           let photData = sourcePhotometryData[source.id];
-          if (photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
+          if (config.showSourceApertures && photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
             let tooltipMessage = [];
             if (photData.raHours !== null && photData.decDegs !== null) {
               tooltipMessage.push(
@@ -554,7 +555,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             };
 
             markers.push(apertureMarker);
-          } else {
+          } 
+          // else {
             if (source.pm) {
               markers.push({
                 id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
@@ -564,25 +566,38 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
                 radius: 15,
                 labelRadius: 30,
                 labelTheta: 0,
-                label: showSourceLabels ? source.label : '',
+                label: !config.showSourceApertures && showSourceLabels ? source.label : '',
                 theta: coord.theta,
                 selected: selected,
                 data: { source: source },
               } as TeardropMarker);
             } else {
+              // markers.push({
+              //   id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+              //   type: MarkerType.CIRCLE,
+              //   x: coord.x,
+              //   y: coord.y,
+              //   radius: 15,
+              //   labelRadius: 30,
+              //   labelTheta: 0,
+              //   label: showSourceLabels ? source.label : '',
+              //   selected: selected,
+              //   data: { source: source },
+              // } as CircleMarker);
+
               markers.push({
                 id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                type: MarkerType.CIRCLE,
+                type: MarkerType.CROSSHAIR,
                 x: coord.x,
                 y: coord.y,
-                radius: 15,
-                labelRadius: 30,
+                radius: 1,
+                labelRadius: 4,
                 labelTheta: 0,
-                label: showSourceLabels ? source.label : '',
+                label: !config.showSourceApertures && showSourceLabels ? source.label : '',
                 selected: selected,
                 data: { source: source },
-              } as CircleMarker);
-            }
+              } as CrosshairMarker)
+            // }
           }
         });
 
@@ -919,5 +934,17 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   onShowSourceLabelsChange($event: MatSlideToggleChange) {
     this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceLabels: $event.checked }));
+  }
+
+  onShowSourceMarkersChange($event: MatSlideToggleChange) {
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceMarkers: $event.checked }));
+  }
+
+  onShowSourceAperturesChange($event: MatSlideToggleChange) {
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceApertures: $event.checked }));
+  }
+
+  trackById(index: number, row: { source: Source; data: PhotometryData }) {
+    return row.source.id
   }
 }

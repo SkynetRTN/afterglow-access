@@ -1,7 +1,7 @@
-<ng-template #emptyLibrary>
-  <div class="alert alert-info" i18n>Loading...</div>
+<ng-template #nullSelection>
+  <div class="alert alert-info" i18n>Select an image file</div>
 </ng-template>
-<ng-container *ngIf="hduIds; else emptyLibrary">
+<ng-container *ngIf="selectedHduIds$ | async as selectedHduIds; else nullSelection">
   <mat-tab-group (selectedTabChange)="onTabChange($event)">
     <mat-tab i18n-label label="Simple">
       <div class="tab-contents">
@@ -15,11 +15,23 @@
 
           <div>
             <mat-form-field appearance="outline" style="width: 300px">
-              <mat-label i18n>Image(s)</mat-label>
-              <mat-select multiple formControlName="primaryHduIds">
-                <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-                  {{ getHduOptionLabel(hduId) | async }}
+              <mat-label i18n>Selected Image(s)</mat-label>
+              <mat-select multiple formControlName="selectedHduIds">
+                <mat-option *ngFor="let selectedHduId of selectedHduIds" [value]="selectedHduId">
+                  {{ getHduOptionLabel(selectedHduId) | async }}
                 </mat-option>
+              </mat-select>
+              <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" style="width: 300px">
+              <mat-label i18n>Additional Image(s)</mat-label>
+              <mat-select multiple formControlName="primaryHduIds">
+                <ng-container *ngFor="let hduId of availableHduIds">
+                  <mat-option *ngIf="!selectedHduIds.includes(hduId)" [value]="hduId">
+                  {{ getHduOptionLabel(hduId) | async }}
+                </mat-option></ng-container>
+                
               </mat-select>
             </mat-form-field>
 
@@ -32,7 +44,10 @@
             </button>
           </div>
 
-          <mat-form-field appearance="outline">
+          <mat-form-field
+            appearance="outline"
+            [hidden]="imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar'"
+          >
             <mat-label i18n>Select a operand</mat-label>
             <mat-select formControlName="operand" i18n-aria-label aria-label="operand">
               <mat-option *ngFor="let operand of operands" [value]="operand.symbol"
@@ -44,7 +59,7 @@
           <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'image'">
             <mat-label i18n>Select an image</mat-label>
             <mat-select formControlName="auxHduId">
-              <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+              <mat-option *ngFor="let hduId of availableHduIds" [value]="hduId">
                 {{ getHduOptionLabel(hduId) | async }}
               </mat-option>
             </mat-select>
@@ -53,6 +68,33 @@
           <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'scalar'">
             <mat-label i18n>Specify a scalar value</mat-label>
             <input matInput formControlName="scalarValue" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'kernel'">
+            <mat-label i18n>Kernel Filter</mat-label>
+            <mat-select formControlName="kernelFilter" i18n-aria-label aria-label="kernel filter">
+              <mat-option *ngFor="let kernelFilter of kernelFilters" [value]="kernelFilter.value">{{
+                kernelFilter.label
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" [hidden]="!kernelSizeEnabled">
+            <mat-label i18n>Kernel Size</mat-label>
+            <mat-select formControlName="kernelSize" i18n-aria-label aria-label="kernel size">
+              <mat-option *ngFor="let kernelSize of kernelSizes" [value]="kernelSize.value">{{
+                kernelSize.label
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" [hidden]="!kernelSigmaEnabled">
+            <mat-label i18n>Kernel Sigma</mat-label>
+            <input matInput i18n-placeholder formControlName="kernelSigma" />
+            
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.isNumber as e">must be a number</mat-error>
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.greaterThan as e">must be greater than {{e.min}}.</mat-error>
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.lessThan as e">must be less than {{e.max}}.</mat-error>
           </mat-form-field>
 
           <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>
@@ -83,11 +125,23 @@
       <form [formGroup]="imageCalcFormAdv">
         <div>
           <mat-form-field appearance="outline" style="width: 300px">
-            <mat-label i18n>Image(s)</mat-label>
-            <mat-select multiple formControlName="primaryHduIds">
-              <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-                {{ getHduOptionLabel(hduId) | async }}
+            <mat-label i18n>Selected Image(s)</mat-label>
+            <mat-select multiple formControlName="selectedHduIds">
+              <mat-option *ngFor="let selectedHduId of selectedHduIds" [value]="selectedHduId">
+                {{ getHduOptionLabel(selectedHduId) | async }}
               </mat-option>
+            </mat-select>
+            <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" style="width: 300px">
+            <mat-label i18n>Additional Image(s)</mat-label>
+            <mat-select multiple formControlName="primaryHduIds">
+              <ng-container *ngFor="let hduId of availableHduIds">
+                <mat-option *ngIf="!selectedHduIds.includes(hduId)" [value]="hduId">
+                {{ getHduOptionLabel(hduId) | async }}
+              </mat-option></ng-container>
+              
             </mat-select>
           </mat-form-field>
 
@@ -104,7 +158,7 @@
           <mat-form-field appearance="outline" style="width: 300px">
             <mat-label i18n>Auxillary image(s)</mat-label>
             <mat-select multiple formControlName="auxHduIds">
-              <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+              <mat-option *ngFor="let hduId of availableHduIds" [value]="hduId">
                 {{ getHduOptionLabel(hduId) | async }}
               </mat-option>
             </mat-select>
@@ -215,7 +269,7 @@
       </div>
       <ng-template #jobComplete>
         <div *ngIf="job.result.errors.length != 0; else noErrors" class="alert alert-danger">
-          {{ job.result.errors }}
+          <span *ngFor="let error of job.result.errors">{{ error.detail }}</span>
         </div>
         <ng-template #noErrors>
           <div class="alert alert-success">
@@ -234,7 +288,7 @@
     </div>
   </div>
 
-  <div style="padding-top: 10px">
+  <!-- <div style="padding-top: 10px">
     <button mat-raised-button (click)="openPixelOpsJobsDialog()" i18n>Show All Pixel Operation Jobs...</button>
-  </div>
+  </div> -->
 </ng-container>
