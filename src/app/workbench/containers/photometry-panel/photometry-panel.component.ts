@@ -899,7 +899,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   openPhotometrySettingsDialog() {
     let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
     let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
-      width: '700px',
+      width: '750px',
       data: { ...photometrySettings },
       disableClose: true,
     });

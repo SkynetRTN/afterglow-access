@@ -1,7 +1,6 @@
 export interface PhotometrySettings {
   gain: number;
   centroidRadius: number;
-  zeroPoint: number;
   aperCorrTol: number;
   constantAperCorr: boolean;
   adaptiveAperCorr: boolean;
@@ -25,11 +24,22 @@ export interface PhotometrySettings {
   fixAper: boolean;
   fixEll: boolean;
   fixRot: boolean;
+
+  //calibration
+  calibrationMode: 'fixed' | 'catalog';
+  zeroPoint: number;
+  catalog: string;
+  sourceInclusionPercentageEnabled: boolean;
+  sourceInclusionPercentage: number;
+  minSnrEnabled: boolean;
+  minSnr: number;
+  maxSnrEnable: boolean;
+  maxSnr: number;
+  sourceMatchTolerance: number;
 }
 
 export const defaults: PhotometrySettings = {
   gain: 1,
-  zeroPoint: 20,
   centroidRadius: 5,
   mode: 'constant',
   a: 5,
@@ -50,4 +60,14 @@ export const defaults: PhotometrySettings = {
   constantAperCorr: false,
   adaptiveAperCorr: true,
   aperCorrTol: 0.0001,
+  calibrationMode: 'fixed',
+  zeroPoint: 20,
+  catalog: 'APASS',
+  sourceInclusionPercentageEnabled: true,
+  sourceInclusionPercentage: 100,
+  minSnrEnabled: false,
+  minSnr: null,
+  maxSnrEnable: false,
+  maxSnr: null,
+  sourceMatchTolerance: 5
 };

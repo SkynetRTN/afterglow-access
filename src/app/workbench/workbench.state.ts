@@ -223,7 +223,7 @@ import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'c45e3fd5-284f-4e93-950c-2cc669e559d3',
+  version: '2d82137e-5ea2-4b65-9378-413fce9f268a',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -452,6 +452,11 @@ export class WorkbenchState {
   @Selector()
   public static getDssImportLoading(state: WorkbenchStateModel) {
     return state.dssImportLoading;
+  }
+
+  @Selector()
+  public static getCatalogs(state: WorkbenchStateModel) {
+    return state.catalogs;
   }
 
   @Selector()

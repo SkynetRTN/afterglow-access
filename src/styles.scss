@@ -1,5 +1,5 @@
-@import '~@angular/material/theming';
-@import './app-theme';
+@import "~@angular/material/theming";
+@import "./app-theme";
 
 @include mat-core();
 
@@ -48,7 +48,7 @@ $foreground: map_merge(
   $foreground,
   (
     text: $dark-hc-text,
-    'secondary-text': $dark-hc-text,
+    "secondary-text": $dark-hc-text,
     icon: $dark-hc-icons,
   )
 );
@@ -96,16 +96,16 @@ $dark-hc-theme: map_merge(
   }
 }
 
-$fa-font-path: '~font-awesome/fonts';
-@import '~font-awesome/scss/font-awesome';
+$fa-font-path: "~font-awesome/fonts";
+@import "~font-awesome/scss/font-awesome";
 .icon-user {
   @extend .fa;
   @extend .fa-user;
 }
 
-@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
 $custom-typography: mat-typography-config(
-  $font-family: 'Roboto',
+  $font-family: "Roboto",
 );
 @include angular-material-typography($custom-typography);
 
@@ -115,7 +115,7 @@ body {
 
 .mono {
   // font-family: 'Anonymous Pro', monospace;
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
 }
 
 html,
@@ -211,4 +211,10 @@ label.mat-button-toggle-label {
 /* Photometry Data Tooltips */
 .photometry-data-tooltip {
   white-space: pre !important;
+}
+
+/* Force Material Dialogs to position relative to top of window */
+.cdk-global-overlay-wrapper {
+  align-items: start !important;
+  padding: 150px;
 }
