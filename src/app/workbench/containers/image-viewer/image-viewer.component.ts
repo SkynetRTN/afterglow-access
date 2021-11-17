@@ -71,7 +71,6 @@ import {
 } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Source, PosType } from '../../models/source';
 import { CustomMarker } from '../../models/custom-marker';
-import { FieldCal } from '../../models/field-cal';
 import { Actions, ofActionCompleted, ofActionDispatched, Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';

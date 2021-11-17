@@ -30,6 +30,8 @@ import {
 import { JobService } from './services/jobs';
 import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
+import { JobType } from './models/job-types';
+import { FieldCalibrationJobResult } from './models/field-calibration';
 
 export interface JobsStateModel {
   version: string;
@@ -49,7 +51,7 @@ const jobsDefaultState: JobsStateModel = {
 })
 @Injectable()
 export class JobsState {
-  constructor(private jobService: JobService, private actions$: Actions) {}
+  constructor(private jobService: JobService, private actions$: Actions) { }
 
   @Selector()
   @ImmutableSelector()
@@ -78,7 +80,7 @@ export class JobsState {
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<JobsStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<JobsStateModel>, { }: ResetState) {
     setState((state: JobsStateModel) => {
       return jobsDefaultState;
     });
@@ -140,6 +142,15 @@ export class JobsState {
             return this.jobService.getJobResult(job).pipe(
               tap((value) => {
                 setState((state: JobsStateModel) => {
+
+                  if (state.entities[job.id].type == JobType.FieldCalibration) {
+                    let result = value as FieldCalibrationJobResult;
+                    result.errors = []
+                    result.warnings = []
+                    result.zeroPoint = 10.123456789
+                    result.zeroPointError = 0.123456789
+                    value = result;
+                  }
                   state.entities[job.id].result = value;
                   return state;
                 });

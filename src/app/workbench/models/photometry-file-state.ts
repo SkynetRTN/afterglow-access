@@ -7,4 +7,6 @@ export interface PhotometryPanelState {
   sourceExtractionJobId: string;
   sourcePhotometryData: { [sourceId: string]: PhotometryData };
   markerSelectionRegion: Region | null;
+  autoPhotJobId: string;
+  autoCalJobId: string;
 }

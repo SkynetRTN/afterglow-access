@@ -158,28 +158,21 @@
       </mat-tab>
       <mat-tab label="Calibration Settings">
         <div style="padding: 10px">
-          <div class="form-field-wrapper">
-            <mat-form-field appearance="outline">
-              <mat-label>Calibration Mode</mat-label>
-              <mat-select formControlName="calibrationMode">
-                <mat-option *ngFor="let mode of calibrationModes" [value]="mode.value">{{ mode.label }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
           <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
-            <ng-container *ngIf="settings.calibrationMode == 'fixed'">
-              <div fxFlex="1 1 auto" fxLayout="row">
-                <div class="form-field-wrapper">
-                  <mat-form-field>
-                    <input matInput i18n-placeholder placeholder="Zero Point" formControlName="zeroPoint" />
-                    <mat-hint>offset in magnitudes</mat-hint>
-                  </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('zeroPoint')"></app-print-form-error>
-                </div>
-              </div>
-            </ng-container>
-            <ng-container *ngIf="settings.calibrationMode == 'catalog'">
-              <div fxFlex="1 1 auto" fxLayout="row">
+            <div class="form-field-wrapper">
+              <mat-form-field>
+                <input matInput i18n-placeholder placeholder="Zero Point" formControlName="zeroPoint" />
+                <mat-hint>offset in magnitudes</mat-hint>
+              </mat-form-field>
+              <app-print-form-error [control]="photSettingsForm.get('zeroPoint')"></app-print-form-error>
+            </div>
+            <div class="form-field-wrapper">
+              <mat-slide-toggle formControlName="calibrationEnabled"> Use catalog to calibrate zero point offset
+              </mat-slide-toggle>
+            </div>
+
+            <ng-container *ngIf="settings.calibrationEnabled">
+              <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%;">
                 <div class="form-field-wrapper">
                   <mat-form-field appearance="outline">
                     <mat-label>Catalog</mat-label>
@@ -188,6 +181,14 @@
                         catalog.name }}</mat-option>
                     </mat-select>
                   </mat-form-field>
+                </div>
+                <div class="form-field-wrapper">
+                  <mat-form-field>
+                    <input matInput i18n-placeholder placeholder="Source Matching Tolerance"
+                      formControlName="sourceMatchTol" />
+                    <mat-hint>pixels</mat-hint>
+                  </mat-form-field>
+                  <app-print-form-error [control]="photSettingsForm.get('sourceMatchTol')"></app-print-form-error>
                 </div>
               </div>
               <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
@@ -230,9 +231,126 @@
                   </app-print-form-error>
                 </div>
               </div>
+
             </ng-container>
           </div>
         </div>
+      </mat-tab>
+      <mat-tab label="Source Extraction Settings">
+        <div style="padding: 10px">
+          <div fxLayout="column" fxLayoutGap="30px">
+            <div fxFlex="1 1 auto" fxLayout="row">
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Threshold" formControlName="threshold" />
+                  <mat-hint>extraction threshold in units of RMS</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('threshold')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Background Size" formControlName="bkSize" />
+                  <mat-hint>box size for background estimation</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('bkSize')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Background Filter Size"
+                    formControlName="bkFilterSize" />
+                  <mat-hint>window size of background median filter</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('bkFilterSize')"></app-print-form-error>
+              </div>
+            </div>
+            <div fxFlex="1 1 auto" fxLayout="row">
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="FWHM" formControlName="fwhm" />
+                  <mat-hint>source FWHM [pixels]</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('fwhm')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Min FWHM" formControlName="minFwhm" />
+                  <mat-hint>mininum allowed FWHM [pixels]</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('minFwhm')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Max FWHM" formControlName="maxFwhm" />
+                  <mat-hint>maximum allowed FWHM [pixels]</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('maxFwhm')"></app-print-form-error>
+              </div>
+            </div>
+            <div fxFlex="1 1 auto" fxLayout="row">
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Min Pixel Count" formControlName="minPixels" />
+                  <mat-hint>mininum pixels required per object</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('minPixels')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Max Ellipticity" formControlName="maxEllipticity" />
+                  <mat-hint>maximum allowed ellipticity</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('maxEllipticity')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Clean" formControlName="clean" />
+                  <mat-hint>cleaning parameter</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('clean')"></app-print-form-error>
+              </div>
+            </div>
+            <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="start center">
+              <div fxFlex="1 1 auto" fxLayout="column" fxLayoutAlign="start center">
+                <div class="form-field-wrapper">
+                  <mat-slide-toggle formControlName="deblend">Deblend</mat-slide-toggle>
+                </div>
+                <div class="form-field-wrapper">
+                  <mat-slide-toggle formControlName="centroid">Centroid</mat-slide-toggle>
+                </div>
+                <div class="form-field-wrapper">
+                  <mat-slide-toggle formControlName="discardSaturated">Discard Saturated</mat-slide-toggle>
+                </div>
+              </div>
+
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Deblend Levels" formControlName="deblendLevels" />
+                  <mat-hint>number of deblending levels</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('deblendLevels')"></app-print-form-error>
+              </div>
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Deblend Contrast" formControlName="deblendContrast" />
+                  <mat-hint>deblending contrast</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('deblendContrast')"></app-print-form-error>
+              </div>
+            </div>
+            <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="end center">
+              <div class="form-field-wrapper">
+                <mat-form-field>
+                  <input matInput i18n-placeholder placeholder="Saturation Level" formControlName="satLevel" />
+                  <mat-hint>saturation level</mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="photSettingsForm.get('satLevel')"></app-print-form-error>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
       </mat-tab>
     </mat-tab-group>
 

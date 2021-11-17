@@ -14,6 +14,9 @@ export interface SourceExtractionJobSettings {
   bkSize?: number;
   bkFilterSize?: number;
   fwhm?: number;
+  minFwhm?: number;
+  maxFwhm?: number;
+  maxEllipticity?: number;
   ratio?: number;
   theta?: number;
   minPixels?: number;
@@ -23,10 +26,12 @@ export interface SourceExtractionJobSettings {
   gain?: number;
   clean?: number;
   centroid?: boolean;
+  satLevel?: number;
+  discardSaturated?: boolean;
   limit?: number;
 }
 
-export interface SourceExtractionData extends SourceMeta, Astrometry, SourceId {}
+export interface SourceExtractionData extends SourceMeta, Astrometry, SourceId { }
 
 export interface SourceExtractionJobResult extends JobResultBase {
   readonly type: JobType.SourceExtraction;

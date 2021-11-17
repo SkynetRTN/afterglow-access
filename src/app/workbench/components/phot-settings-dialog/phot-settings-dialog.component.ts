@@ -4,8 +4,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
+import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { greaterThan, isNumber, lessThan } from '../../../utils/validators';
-import { Catalog } from '../../models/catalog';
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from '../../models/photometry-settings';
 import { WorkbenchState } from '../../workbench.state';
 
@@ -56,7 +56,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     fixEll: new FormControl(false),
     fixRot: new FormControl(false),
     adaptiveAperCorr: new FormControl(false, { updateOn: 'blur' }),
-    calibrationMode: new FormControl('', { validators: [Validators.required] }),
+    calibrationEnabled: new FormControl(false),
     zeroPoint: new FormControl('', { validators: this.isNumber, updateOn: 'blur' }),
     catalog: new FormControl('', { validators: [Validators.required] }),
     sourceInclusionPercentageEnabled: new FormControl(false),
@@ -65,6 +65,23 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     minSnr: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     maxSnrEnabled: new FormControl(false),
     maxSnr: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    sourceMatchTol: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    threshold: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    bkSize: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    bkFilterSize: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    fwhm: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
+    minFwhm: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    maxFwhm: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    minPixels: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    maxEllipticity: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    deblend: new FormControl(false),
+    deblendLevels: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    deblendContrast: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    centroid: new FormControl(false),
+    clean: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    satLevel: new FormControl('', { validators: [Validators.required, isNumber], updateOn: 'blur' }),
+    discardSaturated: new FormControl(false),
+
   });
 
   constructor(
@@ -92,10 +109,10 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     let controls = this.photSettingsForm.controls;
     let elliptical = controls.elliptical.value;
     if (!elliptical) {
-      controls.b.disable({emitEvent: false});
-      controls.bOut.disable({emitEvent: false});
-      controls.theta.disable({emitEvent: false});
-      controls.thetaOut.disable({emitEvent: false});
+      controls.b.disable({ emitEvent: false });
+      controls.bOut.disable({ emitEvent: false });
+      controls.theta.disable({ emitEvent: false });
+      controls.thetaOut.disable({ emitEvent: false });
 
       value = {
         ...value,
@@ -108,24 +125,32 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
       this.photSettingsForm.patchValue(value, { emitEvent: false });
 
     } else {
-      controls.b.enable({emitEvent: false});
-      controls.bOut.enable({emitEvent: false});
-      controls.theta.enable({emitEvent: false});
-      controls.thetaOut.enable({emitEvent: false});
+      controls.b.enable({ emitEvent: false });
+      controls.bOut.enable({ emitEvent: false });
+      controls.theta.enable({ emitEvent: false });
+      controls.thetaOut.enable({ emitEvent: false });
     }
 
     let autoAper = controls.autoAper.value;
     if (autoAper) {
-      controls.aKrFactor.disable({emitEvent: false});
+      controls.aKrFactor.disable({ emitEvent: false });
     } else {
-      controls.aKrFactor.enable({emitEvent: false});
+      controls.aKrFactor.enable({ emitEvent: false });
     }
 
-    let inCatalogMode = controls.calibrationMode.value == 'catalog';
-    inCatalogMode ? controls.zeroPoint.disable({emitEvent: false}) : controls.zeroPoint.enable({emitEvent: false});
-    (inCatalogMode && controls.sourceInclusionPercentageEnabled.value) ? controls.sourceInclusionPercentage.enable({emitEvent: false}) : controls.sourceInclusionPercentage.disable({emitEvent: false});
-    (inCatalogMode && controls.minSnrEnabled.value) ? controls.minSnr.enable({emitEvent: false}) : controls.minSnr.disable({emitEvent: false});
-    (inCatalogMode && controls.maxSnrEnabled.value) ? controls.maxSnr.enable({emitEvent: false}) : controls.maxSnr.disable({emitEvent: false});
+    let calibrationEnabled = controls.calibrationEnabled.value;
+    (calibrationEnabled && controls.sourceInclusionPercentageEnabled.value) ? controls.sourceInclusionPercentage.enable({ emitEvent: false }) : controls.sourceInclusionPercentage.disable({ emitEvent: false });
+    (calibrationEnabled && controls.minSnrEnabled.value) ? controls.minSnr.enable({ emitEvent: false }) : controls.minSnr.disable({ emitEvent: false });
+    (calibrationEnabled && controls.maxSnrEnabled.value) ? controls.maxSnr.enable({ emitEvent: false }) : controls.maxSnr.disable({ emitEvent: false });
+
+    if (controls.deblend.value) {
+      controls.deblendLevels.enable({ emitEvent: false });
+      controls.deblendContrast.enable({ emitEvent: false });
+    }
+    else {
+      controls.deblendLevels.disable({ emitEvent: false });
+      controls.deblendContrast.disable({ emitEvent: false });
+    }
 
     this.settings = {
       ...this.settings,

@@ -11,4 +11,5 @@ export enum JobType {
   BatchDownload = 'batch_download',
   BatchAssetDownload = 'batch_asset_download',
   WcsCalibration = 'wcs_calibration',
+  FieldCalibration = 'field_cal'
 }

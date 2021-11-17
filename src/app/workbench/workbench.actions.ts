@@ -16,9 +16,7 @@ import {
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
-import { Catalog } from './models/catalog';
-import { FieldCal } from './models/field-cal';
-import { CatalogQueryJob } from '../jobs/models/catalog-query';
+import { Catalog, CatalogQueryJob } from '../jobs/models/catalog-query';
 import { PhotometrySettings } from './models/photometry-settings';
 import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Source, PosType } from './models/source';
@@ -33,6 +31,7 @@ import { PhotometryPanelState } from './models/photometry-file-state';
 import { PhotData } from './models/source-phot-data';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { PhotometryData } from '../jobs/models/photometry';
+import { FieldCalibration } from '../jobs/models/field-calibration';
 
 /* Core */
 
@@ -48,73 +47,73 @@ export class ToggleFullScreen {
 export class SetFullScreen {
   public static readonly type = '[Workbench] Set Full Screen';
 
-  constructor(public value: boolean) {}
+  constructor(public value: boolean) { }
 }
 
 export class SetFullScreenPanel {
   public static readonly type = '[Workbench] Set Full Screen Panel';
 
-  constructor(public panel: 'file' | 'viewer' | 'tool') {}
+  constructor(public panel: 'file' | 'viewer' | 'tool') { }
 }
 
 export class SelectFile {
   public static readonly type = '[Workbench] Select File';
 
-  constructor(public fileId: string, public hduId: string = '', public keepOpen: boolean = false) {}
+  constructor(public fileId: string, public hduId: string = '', public keepOpen: boolean = false) { }
 }
 
 export class ToggleFileSelection {
   public static readonly type = '[Workbench] Toggle File Selection';
 
-  constructor(public id: string) {}
+  constructor(public id: string) { }
 }
 
 export class SetFileListFilter {
   public static readonly type = '[Workbench] Set File List Filter';
 
-  constructor(public value: string) {}
+  constructor(public value: string) { }
 }
 
 export class SetFileSelection {
   public static readonly type = '[Workbench] Set File Selection';
 
-  constructor(public ids: string[]) {}
+  constructor(public ids: string[]) { }
 }
 
 export class SetFocusedViewer {
   public static readonly type = '[Workbench] Set Focused Viewer';
 
-  constructor(public viewerId: string) {}
+  constructor(public viewerId: string) { }
 }
 
 export class CreateViewer {
   public static readonly type = '[Workbench] Create Viewer';
 
-  constructor(public viewer: IViewer, public panelId: string) {}
+  constructor(public viewer: IViewer, public panelId: string) { }
 }
 
 export class RemoveViewerLayoutItem {
   public static readonly type = '[Workbench] Remove Viewer Layout Item';
 
-  constructor(public viewerLayoutItemId: string) {}
+  constructor(public viewerLayoutItemId: string) { }
 }
 
 export class CloseViewer {
   public static readonly type = '[Workbench] Close Viewer';
 
-  constructor(public viewerId: string) {}
+  constructor(public viewerId: string) { }
 }
 
 export class KeepViewerOpen {
   public static readonly type = '[Workbench] Keep Viewer Open ';
 
-  constructor(public viewerId: string) {}
+  constructor(public viewerId: string) { }
 }
 
 export class SplitViewerPanel {
   public static readonly type = '[Workbench] Split Viewer Panel ';
 
-  constructor(public viewerId: string, public direction: 'up' | 'down' | 'left' | 'right' = 'right') {}
+  constructor(public viewerId: string, public direction: 'up' | 'down' | 'left' | 'right' = 'right') { }
 }
 
 export class MoveViewer {
@@ -125,79 +124,79 @@ export class MoveViewer {
     public sourcePanelId: string,
     public targetPanelId: string,
     public targetIndex: number
-  ) {}
+  ) { }
 }
 
 export class SetViewerData {
   public static readonly type = '[Workbench] Set Viewer File';
 
-  constructor(public viewerId: string, public fileId: string, public hduId: string = null) {}
+  constructor(public viewerId: string, public fileId: string, public hduId: string = null) { }
 }
 
 export class UpdateCurrentViewportSize {
   public static readonly type = '[Workbench] Update Current Viewport Size';
 
-  constructor(public viewerId: string, public viewportSize: { width: number; height: number }) {}
+  constructor(public viewerId: string, public viewportSize: { width: number; height: number }) { }
 }
 
 export class SetViewerMarkers {
   public static readonly type = '[Workbench] Set Viewer Markers';
 
-  constructor(public viewerId: string, public markers: Marker[]) {}
+  constructor(public viewerId: string, public markers: Marker[]) { }
 }
 
 export class ClearViewerMarkers {
   public static readonly type = '[Workbench] Clear Viewer Markers';
 
-  constructor() {}
+  constructor() { }
 }
 
 export class SetViewerFileSuccess {
   public static readonly type = '[Workbench] Set Viewer File Success';
 
-  constructor(public viewerId: string) {}
+  constructor(public viewerId: string) { }
 }
 
 export class SetViewMode {
   public static readonly type = '[Workbench] Set View Mode';
 
-  constructor(public viewMode: ViewMode) {}
+  constructor(public viewMode: ViewMode) { }
 }
 
 export class SetViewerSyncEnabled {
   public static readonly type = '[Workbench] Set Viewer Sync Enabled';
 
-  constructor(public value: boolean) {}
+  constructor(public value: boolean) { }
 }
 
 export class SetViewerSyncMode {
   public static readonly type = '[Workbench] Set Viewer Sync Mode';
 
-  constructor(public value: 'sky' | 'pixel') {}
+  constructor(public value: 'sky' | 'pixel') { }
 }
 
 export class SetNormalizationSyncEnabled {
   public static readonly type = '[Workbench] Set Normalization Sync Enabled';
 
-  constructor(public value: boolean) {}
+  constructor(public value: boolean) { }
 }
 
 export class SyncPlottingPanelStates {
   public static readonly type = '[Workbench] Sync Plotting Panel States';
 
-  constructor(public referenceId: string, public ids: string[]) {}
+  constructor(public referenceId: string, public ids: string[]) { }
 }
 
 export class SetActiveTool {
   public static readonly type = '[Workbench] Set Active Tool';
 
-  constructor(public tool: WorkbenchTool) {}
+  constructor(public tool: WorkbenchTool) { }
 }
 
 export class SetSidebarView {
   public static readonly type = '[Workbench] Set Sidebar View';
 
-  constructor(public sidebarView: SidebarView) {}
+  constructor(public sidebarView: SidebarView) { }
 }
 
 export class ShowSidebar {
@@ -211,7 +210,7 @@ export class HideSidebar {
 export class SetShowConfig {
   public static readonly type = '[Workbench] Set Show Config';
 
-  constructor(public showConfig: boolean) {}
+  constructor(public showConfig: boolean) { }
 }
 
 export class ToggleShowConfig {
@@ -221,73 +220,73 @@ export class ToggleShowConfig {
 export class UpdateCentroidSettings {
   public static readonly type = '[Workbench] Update Centroid Settings';
 
-  constructor(public changes: Partial<CentroidSettings>) {}
+  constructor(public changes: Partial<CentroidSettings>) { }
 }
 
 export class UpdatePhotometrySettings {
   public static readonly type = '[Workbench] Update Photometry Settings';
 
-  constructor(public changes: Partial<PhotometrySettings>) {}
+  constructor(public changes: Partial<PhotometrySettings>) { }
 }
 
 export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
-  constructor(public changes: Partial<SourceExtractionSettings>) {}
+  constructor(public changes: Partial<SourceExtractionSettings>) { }
 }
 
 export class UpdateCustomMarkerPanelConfig {
   public static readonly type = '[Workbench] Update Custom Marker Panel Config';
 
-  constructor(public changes: Partial<CustomMarkerPanelConfig>) {}
+  constructor(public changes: Partial<CustomMarkerPanelConfig>) { }
 }
 
 export class UpdateFileInfoPanelConfig {
   public static readonly type = '[Workbench] Update File Info Panel Config';
 
-  constructor(public changes: Partial<FileInfoPanelConfig>) {}
+  constructor(public changes: Partial<FileInfoPanelConfig>) { }
 }
 
 export class UpdatePlottingPanelConfig {
   public static readonly type = '[Workbench] Update Plotter Panel Config';
 
-  constructor(public changes: Partial<PlottingPanelConfig>) {}
+  constructor(public changes: Partial<PlottingPanelConfig>) { }
 }
 
 export class UpdatePhotometryPanelConfig {
   public static readonly type = '[Workbench] Update Photometry Panel Config';
 
-  constructor(public changes: Partial<PhotometryPanelConfig>) {}
+  constructor(public changes: Partial<PhotometryPanelConfig>) { }
 }
 
 export class UpdatePixelOpsPageSettings {
   public static readonly type = '[Workbench] Update Pixel Ops Panel Config';
 
-  constructor(public changes: Partial<PixelOpsPanelConfig>) {}
+  constructor(public changes: Partial<PixelOpsPanelConfig>) { }
 }
 
 export class UpdateAligningPanelConfig {
   public static readonly type = '[Workbench] Update Aligning Panel Config';
 
-  constructor(public changes: Partial<AligningPanelConfig>) {}
+  constructor(public changes: Partial<AligningPanelConfig>) { }
 }
 
 export class UpdateStackingPanelConfig {
   public static readonly type = '[Workbench] Update Stacking Panel Config';
 
-  constructor(public changes: Partial<StackingPanelConfig>) {}
+  constructor(public changes: Partial<StackingPanelConfig>) { }
 }
 
 export class UpdateWcsCalibrationPanelState {
   public static readonly type = '[Workbench] Update Wcs Calibration Panel';
 
-  constructor(public changes: Partial<WcsCalibrationPanelState>) {}
+  constructor(public changes: Partial<WcsCalibrationPanelState>) { }
 }
 
 export class UpdateWcsCalibrationSettings {
   public static readonly type = '[Workbench] Update Wcs Calibration Settings';
 
-  constructor(public changes: Partial<WcsCalibrationSettings>) {}
+  constructor(public changes: Partial<WcsCalibrationSettings>) { }
 }
 
 export class LoadCatalogs {
@@ -297,49 +296,49 @@ export class LoadCatalogs {
 export class LoadCatalogsSuccess {
   public static readonly type = '[Workbench] Load Catalogs Success';
 
-  constructor(public catalogs: Array<Catalog>) {}
+  constructor(public catalogs: Array<Catalog>) { }
 }
 
 export class LoadCatalogsFail {
   public static readonly type = '[Workbench] Load Catalogs Fail';
 
-  constructor(public error: any) {}
+  constructor(public error: any) { }
 }
 
 export class CreateFieldCal {
   public static readonly type = '[Workbench] Create Field Cal';
 
-  constructor(public fieldCal: FieldCal) {}
+  constructor(public fieldCal: FieldCalibration) { }
 }
 
 export class CreateFieldCalSuccess {
   public static readonly type = '[Workbench] Create Field Cal Success';
 
-  constructor(public fieldCal: FieldCal) {}
+  constructor(public fieldCal: FieldCalibration) { }
 }
 
 export class CreateFieldCalFail {
   public static readonly type = '[Workbench] Create Field Cal Fail';
 
-  constructor(public error: any) {}
+  constructor(public error: any) { }
 }
 
 export class UpdateFieldCal {
   public static readonly type = '[Workbench] Update Field Cal';
 
-  constructor(public fieldCal: FieldCal) {}
+  constructor(public fieldCal: FieldCalibration) { }
 }
 
 export class UpdateFieldCalSuccess {
   public static readonly type = '[Workbench] Update Field Cal Success';
 
-  constructor(public fieldCal: FieldCal) {}
+  constructor(public fieldCal: FieldCalibration) { }
 }
 
 export class UpdateFieldCalFail {
   public static readonly type = '[Workbench] Update Field Cal Fail';
 
-  constructor(public error: any) {}
+  constructor(public error: any) { }
 }
 
 export class LoadFieldCals {
@@ -349,31 +348,31 @@ export class LoadFieldCals {
 export class LoadFieldCalsSuccess {
   public static readonly type = '[Workbench] Load Field Cals Success';
 
-  constructor(public fieldCals: Array<FieldCal>) {}
+  constructor(public fieldCals: Array<FieldCalibration>) { }
 }
 
 export class LoadFieldCalsFail {
   public static readonly type = '[Workbench] Load Field Cals Fail';
 
-  constructor(public error: any) {}
+  constructor(public error: any) { }
 }
 
 export class SetSelectedCatalog {
   public static readonly type = '[Workbench] Set Selected Catalog';
 
-  constructor(public catalogId: string) {}
+  constructor(public catalogId: string) { }
 }
 
 export class SetSelectedFieldCal {
   public static readonly type = '[Workbench] Set Selected Field Cal';
 
-  constructor(public fieldCalId: string) {}
+  constructor(public fieldCalId: string) { }
 }
 
 export class AddFieldCalSourcesFromCatalog {
   public static readonly type = '[Workbench] Add Field Cal Sources From Catalog';
 
-  constructor(public fieldCalId: string, public catalogQueryJob: CatalogQueryJob) {}
+  constructor(public fieldCalId: string, public catalogQueryJob: CatalogQueryJob) { }
 }
 
 export class CreatePixelOpsJob {
@@ -390,17 +389,17 @@ export class HideCurrentPixelOpsJobState {
 
 export class CreateAlignmentJob {
   public static readonly type = '[Workbench] Create Alignment Job';
-  constructor(public hduIds: string[]) {}
+  constructor(public hduIds: string[]) { }
 }
 
 export class CreateStackingJob {
   public static readonly type = '[Workbench] Create Stacking Job';
-  constructor(public hduIds: string[]) {}
+  constructor(public hduIds: string[]) { }
 }
 
 export class CreateWcsCalibrationJob {
   public static readonly type = '[Workbench] Create Wcs Calibration Job';
-  constructor(public hduIds: string[]) {}
+  constructor(public hduIds: string[]) { }
 }
 
 export class ExtractSources {
@@ -410,19 +409,19 @@ export class ExtractSources {
     public hduId: string,
     public viewportSize: { width: number; height: number },
     public settings: SourceExtractionSettings
-  ) {}
+  ) { }
 }
 
 export class ExtractSourcesSuccess {
   public static readonly type = '[Workbench] Extract Sources Success';
 
-  constructor(public hduId: string, public sources: Source[]) {}
+  constructor(public hduId: string, public sources: Source[]) { }
 }
 
 export class ExtractSourcesFail {
   public static readonly type = '[Workbench] Extract Sources Fail';
 
-  constructor(public error: string) {}
+  constructor(public error: string) { }
 }
 
 /* Survey */
@@ -436,19 +435,19 @@ export class ImportFromSurvey {
     public widthArcmins: number,
     public heightArcmins: number,
     public correlationId?: string
-  ) {}
+  ) { }
 }
 
 export class ImportFromSurveySuccess {
   public static readonly type = '[Survey] Import From Survey Success';
 
-  constructor(public fileId: string, public correlationId: string = null) {}
+  constructor(public fileId: string, public correlationId: string = null) { }
 }
 
 export class ImportFromSurveyFail {
   public static readonly type = '[Survey] Import From Survey Fail';
 
-  constructor(public correlationId: string = null, public error: string) {}
+  constructor(public correlationId: string = null, public error: string) { }
 }
 
 /* Layout */
@@ -463,80 +462,80 @@ export class CloseSidenav {
 export class InitializeWorkbenchHduState {
   public static readonly type = '[Workbench HDU State] Initialize Workbench HDU State';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class InitializeWorkbenchFileState {
   public static readonly type = '[Workbench File State] Initialize Workbench File State';
 
-  constructor(public fileId: string) {}
+  constructor(public fileId: string) { }
 }
 
 /* Sonification */
 export class SonificationViewportSync {
   public static readonly type = '[Sonifier] Sonification Viewport Sync';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class SonificationRegionChanged {
   public static readonly type = '[Sonifier] Region Changed';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class AddRegionToHistory {
   public static readonly type = '[Sonifier] Add Region to History';
 
-  constructor(public hduId: string, public region: Region) {}
+  constructor(public hduId: string, public region: Region) { }
 }
 
 export class ClearRegionHistory {
   public static readonly type = '[Sonifier] Clear Region History';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class UndoRegionSelection {
   public static readonly type = '[Sonifier] Undo Region Selection';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class RedoRegionSelection {
   public static readonly type = '[Sonifier] Redo Region Selection';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class UpdateSonifierFileState {
   public static readonly type = '[Sonifier] Update File State';
 
-  constructor(public hduId: string, public changes: Partial<SonificationPanelState>) {}
+  constructor(public hduId: string, public changes: Partial<SonificationPanelState>) { }
 }
 
 export class SetProgressLine {
   public static readonly type = '[Sonifier] Set Progress Line';
 
-  constructor(public hduId: string, public line: { x1: number; y1: number; x2: number; y2: number }) {}
+  constructor(public hduId: string, public line: { x1: number; y1: number; x2: number; y2: number }) { }
 }
 
 export class Sonify {
   public static readonly type = '[Sonifier] Sonify';
 
-  constructor(public hduId: string, public region: Region) {}
+  constructor(public hduId: string, public region: Region) { }
 }
 
 export class ClearSonification {
   public static readonly type = '[Sonifier] Clear Sonification';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class SonificationCompleted {
   public static readonly type = '[Sonifier] Sonification Completed';
 
-  constructor(public hduId: string, public url: string, public error: string) {}
+  constructor(public hduId: string, public url: string, public error: string) { }
 }
 
 /* Plotting */
@@ -544,7 +543,7 @@ export class SonificationCompleted {
 export class UpdatePlottingPanelState {
   public static readonly type = '[Plotter] Update HDU Plotting Panel State';
 
-  constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) {}
+  constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) { }
 }
 
 export class StartLine {
@@ -553,7 +552,7 @@ export class StartLine {
   constructor(
     public plottingPanelStateId: string,
     public point: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) {}
+  ) { }
 }
 
 export class UpdateLine {
@@ -562,7 +561,7 @@ export class UpdateLine {
   constructor(
     public plottingPanelStateId: string,
     public point: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) {}
+  ) { }
 }
 
 /*Photometry*/
@@ -570,49 +569,49 @@ export class UpdateLine {
 export class UpdatePhotometrySourceSelectionRegion {
   public static readonly type = '[Photometry] Update Photometry Source Selection Region';
 
-  constructor(public hduId: string, public region: Region) {}
+  constructor(public hduId: string, public region: Region) { }
 }
 
 export class EndPhotometrySourceSelectionRegion {
   public static readonly type = '[Photometry] End Photometry Source Selection Region';
 
-  constructor(public hduId: string, public mode: 'append' | 'remove') {}
+  constructor(public hduId: string, public mode: 'append' | 'remove') { }
 }
 
 export class UpdateFilteredSources {
   public static readonly type = '[Photometry] Update Filtered Sources';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class UpdatePhotometryFileState {
   public static readonly type = '[Photometry] Update File State';
 
-  constructor(public hduId: string, public changes: Partial<PhotometryPanelState>) {}
+  constructor(public hduId: string, public changes: Partial<PhotometryPanelState>) { }
 }
 
 export class RemoveSelectedSources {
   public static readonly type = '[Photometry] Remove Selected Sources';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class RemoveAllSources {
   public static readonly type = '[Photometry] Remove All Sources';
 
-  constructor(public hduId: string) {}
+  constructor(public hduId: string) { }
 }
 
 export class SetSourceLabel {
   public static readonly type = '[Photometry] Set Source Label';
 
-  constructor(public hduId: string, public source: Source, public label: string) {}
+  constructor(public hduId: string, public source: Source, public label: string) { }
 }
 
 export class BatchPhotometerSources {
   public static readonly type = '[Phot Data] Batch Photometer Sources';
 
-  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings) {}
+  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings) { }
 }
 
 export class PhotometerSources {
@@ -623,75 +622,85 @@ export class PhotometerSources {
     public hduIds: string[],
     public settings: PhotometrySettings,
     public isBatch: boolean
-  ) {}
+  ) { }
+}
+
+export class CalibrateField {
+  public static readonly type = '[Phot Data] Calibrate Field';
+
+  constructor(
+    public hduIds: string[],
+    public settings: PhotometrySettings,
+    public isBatch: boolean
+  ) { }
 }
 
 /* Markers */
 export class UpdateCustomMarkerSelectionRegion {
   public static readonly type = '[Markers] Update Custom Marker Selection Region';
 
-  constructor(public customMarkerPanelStateId: string, public region: Region) {}
+  constructor(public customMarkerPanelStateId: string, public region: Region) { }
 }
 
 export class EndCustomMarkerSelectionRegion {
   public static readonly type = '[Markers] End Custom Marker Selection Region';
 
-  constructor(public customMarkerPanelStateId: string, public mode: 'append' | 'remove') {}
+  constructor(public customMarkerPanelStateId: string, public mode: 'append' | 'remove') { }
 }
 
 export class UpdateCustomMarker {
   public static readonly type = '[Markers] Update Custom Marker';
 
   /* TODO:  Figure out why error TS2322 is thrown by compiler when changes type is set to Partial<Marker> */
-  constructor(public customMarkerPanelStateId: string, public markerId: string, public changes: any) {}
+  constructor(public customMarkerPanelStateId: string, public markerId: string, public changes: any) { }
 }
 
 export class AddCustomMarkers {
   public static readonly type = '[Markers] Add Custom Marker';
 
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) {}
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class RemoveCustomMarkers {
   public static readonly type = '[Markers] Remove Custom Marker';
 
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) {}
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class SelectCustomMarkers {
   public static readonly type = '[Markers] Select Custom Markers';
 
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) {}
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class DeselectCustomMarkers {
   public static readonly type = '[Markers] Deselect Custom Markers';
 
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) {}
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class SetCustomMarkerSelection {
   public static readonly type = '[Markers] Set Custom Marker Selection';
 
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) {}
+  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
 export class AddPhotDatas {
   public static readonly type = '[Sources Phot Data] Add Source Phot Datas';
 
-  constructor(public photDatas: PhotometryData[]) {}
+  constructor(public photDatas: PhotometryData[]) { }
 }
 
 export class RemoveAllPhotDatas {
   public static readonly type = '[Phot Data] Remove All Phot Data';
 
-  constructor() {}
+  constructor() { }
 }
 
 export class RemovePhotDatas {
   public static readonly type = '[Phot Data] Remove Source Phot Datas';
 
-  constructor(public sourceId: string) {}
+  constructor(public sourceId: string) { }
 }
 
 export class SyncViewerTransformations {
@@ -702,11 +711,11 @@ export class SyncViewerTransformations {
     public refImageTransformId: string,
     public refViewportTransformId: string,
     public refImageDataId: string
-  ) {}
+  ) { }
 }
 
 export class SyncViewerNormalizations {
   public static readonly type = '[Workbench] Sync Viewer Normalizations';
 
-  constructor(public normalization: PixelNormalizer) {}
+  constructor(public normalization: PixelNormalizer) { }
 }

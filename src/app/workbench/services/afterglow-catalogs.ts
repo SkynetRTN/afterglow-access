@@ -3,10 +3,10 @@ import { Location } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Catalog } from '../models/catalog';
 import { AfterglowConfigService } from '../../afterglow-config.service';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { CoreApiResponse } from '../../utils/core-api-response';
+import { Catalog } from 'src/app/jobs/models/catalog-query';
 
 @Injectable()
 export class AfterglowCatalogService {

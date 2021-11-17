@@ -146,6 +146,7 @@ import {
   SonificationCompleted,
   UpdateCustomMarkerSelectionRegion,
   EndCustomMarkerSelectionRegion,
+  CalibrateField,
 } from './workbench.actions';
 import {
   getWidth,
@@ -218,12 +219,13 @@ import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
-import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
+import { PhotometrySettings, defaults as defaultPhotometrySettings, toPhotometryJobSettings, toFieldCalibration, toSourceExtractionJobSettings } from './models/photometry-settings';
 import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
+import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '2d82137e-5ea2-4b65-9378-413fce9f268a',
+  version: 'cf22193a-8f35-4e17-9ea5-10c71e58e352',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -294,8 +296,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     batchPhotFormData: {
       selectedHduIds: [],
     },
-    batchPhotProgress: null,
     batchPhotJobId: '',
+    batchCalJobId: ''
   },
   pixelOpsPanelConfig: {
     currentPixelOpsJobId: '',
@@ -391,7 +393,7 @@ export class WorkbenchState {
     private actions$: Actions,
     private dialog: MatDialog,
     private config: AfterglowConfigService
-  ) {}
+  ) { }
 
   /** Root Selectors */
   @Selector()
@@ -1279,7 +1281,7 @@ export class WorkbenchState {
 
   @Action(Initialize)
   @ImmutableContext()
-  public initialize({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: Initialize) {
+  public initialize({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: Initialize) {
     let state = getState();
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -1316,7 +1318,7 @@ export class WorkbenchState {
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ResetState) {
     setState((state: WorkbenchStateModel) => {
       return workbenchStateDefaults;
     });
@@ -1324,7 +1326,7 @@ export class WorkbenchState {
 
   @Action(ToggleFullScreen)
   @ImmutableContext()
-  public toggleFullScreen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ToggleFullScreen) {
+  public toggleFullScreen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ToggleFullScreen) {
     setState((state: WorkbenchStateModel) => {
       state.inFullScreenMode = !state.inFullScreenMode;
       return state;
@@ -1371,7 +1373,7 @@ export class WorkbenchState {
 
   @Action(ShowSidebar)
   @ImmutableContext()
-  public showSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ShowSidebar) {
+  public showSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ShowSidebar) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = true;
       return state;
@@ -1380,7 +1382,7 @@ export class WorkbenchState {
 
   @Action(HideSidebar)
   @ImmutableContext()
-  public hideSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: HideSidebar) {
+  public hideSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: HideSidebar) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = false;
       return state;
@@ -1964,7 +1966,7 @@ export class WorkbenchState {
 
   @Action(ToggleShowConfig)
   @ImmutableContext()
-  public toggleShowConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ToggleShowConfig) {
+  public toggleShowConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ToggleShowConfig) {
     setState((state: WorkbenchStateModel) => {
       state.showConfig = !state.showConfig;
       return state;
@@ -2220,7 +2222,7 @@ export class WorkbenchState {
 
   @Action(CloseSidenav)
   @ImmutableContext()
-  public closeSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CloseSidenav) {
+  public closeSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CloseSidenav) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = false;
       return state;
@@ -2229,7 +2231,7 @@ export class WorkbenchState {
 
   @Action(OpenSidenav)
   @ImmutableContext()
-  public openSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: OpenSidenav) {
+  public openSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: OpenSidenav) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = true;
       return state;
@@ -2550,7 +2552,7 @@ export class WorkbenchState {
 
   @Action(LoadCatalogs)
   @ImmutableContext()
-  public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: LoadCatalogs) {
+  public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadCatalogs) {
     return this.afterglowCatalogService.getCatalogs().pipe(
       tap((catalogs) => {
         setState((state: WorkbenchStateModel) => {
@@ -2570,7 +2572,7 @@ export class WorkbenchState {
 
   @Action(LoadFieldCals)
   @ImmutableContext()
-  public loadFieldCals({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: LoadFieldCals) {
+  public loadFieldCals({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadFieldCals) {
     return this.afterglowFieldCalService.getFieldCals().pipe(
       tap((fieldCals) => {
         setState((state: WorkbenchStateModel) => {
@@ -2621,7 +2623,7 @@ export class WorkbenchState {
     { fieldCal }: UpdateFieldCal
   ) {
     return this.afterglowFieldCalService.updateFieldCal(fieldCal).pipe(
-      tap((fieldCal) => {}),
+      tap((fieldCal) => { }),
       flatMap((fieldCal) => {
         return dispatch([new UpdateFieldCalSuccess(fieldCal), new LoadFieldCals()]);
       }),
@@ -2659,7 +2661,7 @@ export class WorkbenchState {
 
   @Action(CreatePixelOpsJob)
   @ImmutableContext()
-  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CreatePixelOpsJob) {
+  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreatePixelOpsJob) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
@@ -2674,10 +2676,10 @@ export class WorkbenchState {
       auxFileIds.push(data.auxHduId);
     } else if (data.mode == 'kernel') {
       op = `${data.kernelFilter}(img`;
-      if(SIZE_KERNELS.includes(data.kernelFilter)) {
+      if (SIZE_KERNELS.includes(data.kernelFilter)) {
         op += `, ${data.kernelSize}`
       }
-      if(SIGMA_KERNELS.includes(data.kernelFilter)) {
+      if (SIGMA_KERNELS.includes(data.kernelFilter)) {
         op += `, ${data.kernelSigma}`
       }
       op += ')'
@@ -2693,8 +2695,8 @@ export class WorkbenchState {
           return dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0;
+              ? 1
+              : 0;
         })
         .map((f) => f.id),
       auxFileIds: auxFileIds,
@@ -2769,7 +2771,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAdvPixelOpsJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreateAdvPixelOpsJob
+    { }: CreateAdvPixelOpsJob
   ) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
@@ -2785,8 +2787,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       auxFileIds: auxImageFiles
@@ -2794,8 +2796,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       op: data.opString,
@@ -2885,8 +2887,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       inplace: true,
@@ -2981,8 +2983,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       stackingSettings: {
@@ -3352,56 +3354,25 @@ export class WorkbenchState {
   @ImmutableContext()
   public photometerSources(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceIds, hduIds: fileIds, settings, isBatch }: PhotometerSources
+    { sourceIds, hduIds, settings, isBatch }: PhotometerSources
   ) {
     let state = getState();
     let sourcesState = this.store.selectSnapshot(SourcesState.getState);
 
     sourceIds = sourceIds.filter((id) => sourcesState.ids.includes(id));
 
-    let s: PhotometryJobSettings;
+    let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduIds[0]]];
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+    let hduState = workbenchState as WorkbenchImageHduState;
+    let photPanelStateId = hduState.photometryPanelStateId;
 
-    if (settings.mode == 'adaptive') {
-      s = {
-        mode: 'auto',
-        a: settings.autoAper ? 0 : settings.aKrFactor,
-        aIn: settings.aInKrFactor,
-        aOut: settings.aOutKrFactor,
-        b: null,
-        bOut: null,
-        centroidRadius: null,
-        gain: null,
-        theta: null,
-        thetaOut: null,
-        zeroPoint: null,
-        apcorrTol: settings.adaptiveAperCorr ? settings.aperCorrTol : 0,
-      };
-    } else {
-      s = {
-        mode: 'aperture',
-        a: settings.a,
-        b: settings.b,
-        aIn: settings.aIn,
-        aOut: settings.aOut,
-        bOut: settings.bOut,
-        theta: settings.theta,
-        thetaOut: settings.thetaOut,
-        centroidRadius: null,
-        gain: null,
-        zeroPoint: null,
-        apcorrTol: settings.constantAperCorr ? settings.aperCorrTol : 0,
-      };
-    }
-
-    s.gain = settings.gain;
-    s.centroidRadius = settings.centroidRadius;
-    s.zeroPoint = settings.zeroPoint;
+    let photometryJobSettings = toPhotometryJobSettings(settings);
 
     let job: PhotometryJob = {
       type: JobType.Photometry,
-      settings: s,
+      settings: photometryJobSettings,
       id: null,
-      fileIds: fileIds,
+      fileIds: hduIds,
       sources: sourceIds.map((id, index) => {
         let source = sourcesState.entities[id];
         let x = null;
@@ -3451,14 +3422,42 @@ export class WorkbenchState {
     dispatch(new CreateJob(job, 1000, correlationId));
 
     setState((state: WorkbenchStateModel) => {
-      if (isBatch) state.photometryPanelConfig.batchPhotProgress = null;
+      if (isBatch) {
+        state.photometryPanelConfig.batchPhotJobId = null
+      }
+      else {
+        let photState = state.photometryPanelStateEntities[photPanelStateId];
+        photState.autoPhotJobId = null
+      }
       return state;
     });
 
     let jobFinished$ = this.actions$.pipe(
       ofActionCompleted(CreateJob),
       filter((v) => v.action.correlationId == correlationId),
-      take(1),
+      take(1)
+    );
+
+    let jobUpdated$ = this.actions$.pipe(
+      ofActionSuccessful(UpdateJob),
+      filter<CreateJob>((a) => a.correlationId == correlationId),
+      takeUntil(jobFinished$),
+      tap((a) => {
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
+        setState((state: WorkbenchStateModel) => {
+          if (isBatch) {
+            state.photometryPanelConfig.batchPhotJobId = job.id
+          }
+          else {
+            let photState = state.photometryPanelStateEntities[photPanelStateId];
+            photState.autoPhotJobId = job.id
+          }
+          return state;
+        });
+      })
+    );
+
+    return merge(jobFinished$.pipe(
       tap((v) => {
         if (v.result.successful) {
           let a = v.action as CreateJob;
@@ -3471,13 +3470,19 @@ export class WorkbenchState {
             console.error('Warnings encountered while photometering sources: ', result.warnings);
           }
 
-          setState((state: WorkbenchStateModel) => {
-            if (isBatch) state.photometryPanelConfig.batchPhotProgress = null;
-            return state;
-          });
+          // setState((state: WorkbenchStateModel) => {
+          //   if (isBatch) {
+          //     state.photometryPanelConfig.batchPhotJobId = null;
+          //   }
+          //   else {
+          //     let photState = state.photometryPanelStateEntities[photPanelStateId];
+          //     photState.autoPhotJobId = null
+          //   }
+          //   return state;
+          // });
 
           let photDatas: PhotometryData[] = [];
-          fileIds.forEach((fileId) => {
+          hduIds.forEach((fileId) => {
             sourceIds.forEach((sourceId) => {
               let d = result.data.find((d) => d.id == sourceId && d.fileId == fileId);
               if (!d) {
@@ -3529,6 +3534,56 @@ export class WorkbenchState {
           console.error('Photometry job error');
         }
       })
+    ), jobUpdated$);
+  }
+
+
+  @Action(CalibrateField)
+  @ImmutableContext()
+  public calibrateField(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduIds, settings, isBatch }: CalibrateField
+  ) {
+    let state = getState();
+
+    let photometryJobSettings = toPhotometryJobSettings(settings);
+    let fieldCalibration = toFieldCalibration(settings);
+    let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+
+    let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduIds[0]]];
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+    let hduState = workbenchState as WorkbenchImageHduState;
+    let photPanelStateId = hduState.photometryPanelStateId;
+
+    let job: FieldCalibrationJob = {
+      type: JobType.FieldCalibration,
+      id: null,
+      photometrySettings: photometryJobSettings,
+      sourceExtractionSettings: sourceExtractionJobSettings,
+      fieldCal: fieldCalibration,
+      fileIds: hduIds,
+      state: null,
+      result: null,
+    };
+
+    let correlationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(job, 1000, correlationId));
+
+    setState((state: WorkbenchStateModel) => {
+      if (isBatch) {
+        state.photometryPanelConfig.batchCalJobId = null
+      }
+      else {
+        let photState = state.photometryPanelStateEntities[photPanelStateId];
+        photState.autoCalJobId = null
+      }
+      return state;
+    });
+
+    let jobFinished$ = this.actions$.pipe(
+      ofActionCompleted(CreateJob),
+      filter((v) => v.action.correlationId == correlationId),
+      take(1)
     );
 
     let jobUpdated$ = this.actions$.pipe(
@@ -3536,18 +3591,49 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobFinished$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
         setState((state: WorkbenchStateModel) => {
           if (isBatch) {
-            state.photometryPanelConfig.batchPhotJobId = a.job.id;
-            state.photometryPanelConfig.batchPhotProgress = job.state ? job.state.progress : null;
+            state.photometryPanelConfig.batchCalJobId = job.id
+          }
+          else {
+            let photState = state.photometryPanelStateEntities[photPanelStateId];
+            photState.autoCalJobId = job.id
           }
           return state;
         });
       })
     );
 
-    return merge(jobFinished$, jobUpdated$);
+    return merge(jobFinished$.pipe(
+      tap((v) => {
+        if (v.result.successful) {
+          let a = v.action as CreateJob;
+          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+          let result = jobEntity.result as FieldCalibrationJobResult;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered while calibrating field: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered while calibrating field: ', result.warnings);
+          }
+
+          // setState((state: WorkbenchStateModel) => {
+          //   if (isBatch) {
+          //     state.photometryPanelConfig.batchCalJobId = null;
+          //   }
+          //   else {
+          //     let photState = state.photometryPanelStateEntities[photPanelStateId];
+          //     photState.autoCalJobId = null
+          //   }
+          //   return state;
+          // });
+
+
+        } else {
+        }
+      })
+    ), jobUpdated$);
   }
 
   @Action(InitializeWorkbenchHduState)
@@ -3607,6 +3693,8 @@ export class WorkbenchState {
           sourceExtractionJobId: '',
           sourcePhotometryData: {},
           markerSelectionRegion: null,
+          autoPhotJobId: '',
+          autoCalJobId: '',
         };
         state.photometryPanelStateIds.push(photometryPanelStateId);
 
@@ -4401,7 +4489,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public removeAllPhotDatas(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: RemoveAllPhotDatas
+    { }: RemoveAllPhotDatas
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {

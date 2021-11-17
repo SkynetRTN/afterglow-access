@@ -2,8 +2,6 @@ import { SidebarView } from './sidebar-view';
 import { ViewMode } from './view-mode';
 import { IViewer } from './viewer';
 import { CentroidSettings } from './centroid-settings';
-import { Catalog } from './catalog';
-import { FieldCal } from './field-cal';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
 import { FileInfoPanelConfig } from './file-info-panel';
@@ -12,6 +10,8 @@ import { CustomMarkerPanelState } from './marker-file-state';
 import { SonificationPanelState } from './sonifier-file-state';
 import { PhotometryPanelState } from './photometry-file-state';
 import { IWorkbenchState } from './workbench-file-state';
+import { Catalog } from 'src/app/jobs/models/catalog-query';
+import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 
 export enum KernelFilter {
   MEDIAN_FILTER = 'median_filter',
@@ -113,8 +113,8 @@ export interface PhotometryPanelConfig {
   coordMode: 'pixel' | 'sky';
   batchPhotFormData: BatchPhotometryFormData;
   autoPhot: boolean;
-  batchPhotProgress: number | null;
   batchPhotJobId: string;
+  batchCalJobId: string;
 }
 
 export interface PixelOpsPanelConfig {
@@ -193,7 +193,7 @@ export interface WorkbenchStateModel {
 
   catalogs: Array<Catalog>;
   selectedCatalogId: string;
-  fieldCals: Array<FieldCal>;
+  fieldCals: Array<FieldCalibration>;
   selectedFieldCalId: string;
   creatingAddFieldCalSourcesFromCatalogJob: boolean;
   addFieldCalSourcesFromCatalogJobId: string;

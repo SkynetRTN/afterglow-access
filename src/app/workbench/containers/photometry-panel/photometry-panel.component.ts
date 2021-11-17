@@ -31,6 +31,8 @@ import {
   auditTime,
   distinct,
   takeUntil,
+  startWith,
+  shareReplay,
 } from 'rxjs/operators';
 
 import * as jStat from 'jstat';
@@ -67,6 +69,7 @@ import {
   EndPhotometrySourceSelectionRegion,
   UpdatePhotometrySettings,
   UpdateSourceExtractionSettings,
+  CalibrateField,
 } from '../../workbench.actions';
 import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
 import { PhotData } from '../../models/source-phot-data';
@@ -89,6 +92,7 @@ import { HduType } from '../../../data-files/models/data-file-type';
 import { IImageData } from '../../../data-files/models/image-data';
 import { ApertureMarker, CircleMarker, CrosshairMarker, MarkerType, RectangleMarker, TeardropMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
+import { FieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
 
 @Component({
   selector: 'app-photometry-panel',
@@ -135,8 +139,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   SourcePosType = PosType;
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
   batchPhotJob$: Observable<PhotometryJob>;
+  autoPhotJob$: Observable<PhotometryJob>;
+  autoCalJob$: Observable<FieldCalibrationJob>;
   mergeError: string;
   selectionModel = new SelectionModel<string>(true, []);
+  zeroPointCorrection$: Observable<number>;
 
   batchPhotForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
@@ -181,7 +188,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     );
 
     this.sources$ = combineLatest(
-      this.store.select(SourcesState.getSources),
+      this.store.select(SourcesState.getEntities),
       this.config$.pipe(
         map((config) => config.coordMode),
         distinctUntilChanged()
@@ -190,48 +197,92 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         map((config) => config.showSourcesFromAllFiles),
         distinctUntilChanged()
       ),
-      this.imageHdu$,
+      this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged()),
       this.header$
     ).pipe(
-      filter(([sources, coordMode, showSourcesFromAllFiles, imageHdu, header]) => header != null),
-      map(([sources, coordMode, showSourcesFromAllFiles, imageHdu, header]) => {
+      map(([sourceEntities, coordMode, showSourcesFromAllFiles, imageHduId, header]) => {
         if (!header) return [];
         if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
-        return sources.filter((source) => {
+        return Object.values(sourceEntities).filter((source) => {
           if (coordMode != source.posType) return false;
-          if (source.hduId == imageHdu?.id) return true;
+          if (source.hduId == imageHduId) return true;
           if (!showSourcesFromAllFiles) return false;
           let coord = getSourceCoordinates(header, source);
           if (coord == null) return false;
           return true;
         });
-      })
+      }),
+      shareReplay(1)
     );
 
     this.photometrySettings$ = this.store.select(WorkbenchState.getPhotometrySettings);
     this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
+    this.autoCalJob$ = combineLatest([
+      this.store.select(JobsState.getJobEntities),
+      this.state$.pipe(
+        map((s) => s?.autoCalJobId),
+        distinctUntilChanged()
+      ),
+    ]).pipe(
+      map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob)
+    );
+
+    let calibrationEnabled$ = this.photometrySettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
+    let fixedZeroPoint$ = this.photometrySettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
+    let calibratedZeroPoint$ = this.autoCalJob$.pipe(
+      map(job => job?.result?.zeroPoint),
+      startWith(null),
+      distinctUntilChanged()
+    )
+
+    this.zeroPointCorrection$ = combineLatest([calibrationEnabled$, fixedZeroPoint$, calibratedZeroPoint$]).pipe(
+      map(([calibrationEnabled, fixedZeroPoint, calibratedZeroPoint]) => !calibrationEnabled || calibratedZeroPoint === null || calibratedZeroPoint === undefined ? 0 : calibratedZeroPoint - fixedZeroPoint),
+      distinctUntilChanged()
+    )
+
     this.tableData$ = combineLatest(
-      this.sources$,
+      [this.sources$,
       this.state$.pipe(
         map((state) => (state ? state.sourcePhotometryData : null)),
         distinctUntilChanged()
-      )
+      ),
+      this.zeroPointCorrection$]
     ).pipe(
-      filter(([sources, sourcePhotometryData]) => {
+      filter(([sources, sourcePhotometryData, zeroPointCorrection]) => {
         if (sources && sourcePhotometryData) return true;
         return false;
       }),
-      map(([sources, sourcePhotometryData]) => {
+      map(([sources, sourcePhotometryData, zeroPointCorrection]) => {
         return sources.map((source) => {
+          let d = sourcePhotometryData[source.id] || null;
+          if (d) {
+            d = {
+              ...d,
+              mag: d.mag + zeroPointCorrection
+            }
+          }
           return {
             source: source,
-            data: source.id in sourcePhotometryData ? sourcePhotometryData[source.id] : null,
+            data: d,
           };
         });
-      })
+      }),
+      shareReplay(1)
     );
+
+    this.autoPhotJob$ = combineLatest([
+      this.store.select(JobsState.getJobEntities),
+      this.state$.pipe(
+        map((s) => s.autoPhotJobId),
+        distinctUntilChanged()
+      ),
+    ]).pipe(
+      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
+    );
+
+
 
     this.batchPhotJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
@@ -282,7 +333,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         filter((rows) => rows.filter((row) => row.data === null).length != 0),
         withLatestFrom(this.imageHdu$, this.config$, this.photometrySettings$),
         filter(([rows, imageHdu, config]) => rows.length != 0 && imageHdu && config && config.autoPhot),
-        auditTime(2000)
+        auditTime(100)
       )
       .subscribe(([rows, imageHdu, config, photometrySettings]) => {
         this.store.dispatch(
@@ -294,6 +345,17 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           )
         );
       });
+
+    let imageHduId$ = this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged())
+    combineLatest([this.photometrySettings$, imageHduId$]).pipe().pipe(
+      takeUntil(this.destroy$),
+      filter(([settings, imageHduId]) => !!imageHduId && !!settings)
+    ).subscribe(([settings, imageHduId]) => {
+      if (settings.calibrationEnabled) {
+        this.store.dispatch(new CalibrateField([imageHduId], settings, false))
+      }
+
+    })
 
     this.eventService.imageClickEvent$
       .pipe(
@@ -455,7 +517,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       });
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy() {
     this.markerService.clearMarkers();
@@ -555,48 +617,48 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             };
 
             markers.push(apertureMarker);
-          } 
+          }
           // else {
-            if (source.pm) {
-              markers.push({
-                id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                type: MarkerType.TEARDROP,
-                x: coord.x,
-                y: coord.y,
-                radius: 15,
-                labelRadius: 30,
-                labelTheta: 0,
-                label: !config.showSourceApertures && showSourceLabels ? source.label : '',
-                theta: coord.theta,
-                selected: selected,
-                data: { source: source },
-              } as TeardropMarker);
-            } else {
-              // markers.push({
-              //   id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-              //   type: MarkerType.CIRCLE,
-              //   x: coord.x,
-              //   y: coord.y,
-              //   radius: 15,
-              //   labelRadius: 30,
-              //   labelTheta: 0,
-              //   label: showSourceLabels ? source.label : '',
-              //   selected: selected,
-              //   data: { source: source },
-              // } as CircleMarker);
+          if (source.pm) {
+            markers.push({
+              id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+              type: MarkerType.TEARDROP,
+              x: coord.x,
+              y: coord.y,
+              radius: 15,
+              labelRadius: 30,
+              labelTheta: 0,
+              label: !config.showSourceApertures && showSourceLabels ? source.label : '',
+              theta: coord.theta,
+              selected: selected,
+              data: { source: source },
+            } as TeardropMarker);
+          } else {
+            // markers.push({
+            //   id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+            //   type: MarkerType.CIRCLE,
+            //   x: coord.x,
+            //   y: coord.y,
+            //   radius: 15,
+            //   labelRadius: 30,
+            //   labelTheta: 0,
+            //   label: showSourceLabels ? source.label : '',
+            //   selected: selected,
+            //   data: { source: source },
+            // } as CircleMarker);
 
-              markers.push({
-                id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-                type: MarkerType.CROSSHAIR,
-                x: coord.x,
-                y: coord.y,
-                radius: 1,
-                labelRadius: 4,
-                labelTheta: 0,
-                label: !config.showSourceApertures && showSourceLabels ? source.label : '',
-                selected: selected,
-                data: { source: source },
-              } as CrosshairMarker)
+            markers.push({
+              id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+              type: MarkerType.CROSSHAIR,
+              x: coord.x,
+              y: coord.y,
+              radius: 1,
+              labelRadius: 4,
+              labelTheta: 0,
+              label: !config.showSourceApertures && showSourceLabels ? source.label : '',
+              selected: selected,
+              data: { source: source },
+            } as CrosshairMarker)
             // }
           }
         });
@@ -693,7 +755,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       return [
         (new Date(source.pmEpoch).getTime() - t0) / 1000.0,
         (source.primaryCoord - primaryCoord0) *
-          (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos((centerSecondaryCoord * Math.PI) / 180.0)),
+        (source.posType == PosType.PIXEL ? 1 : 15 * 3600 * Math.cos((centerSecondaryCoord * Math.PI) / 180.0)),
         (source.secondaryCoord - secondaryCoord0) * (source.posType == PosType.PIXEL ? 1 : 3600),
       ];
     });
