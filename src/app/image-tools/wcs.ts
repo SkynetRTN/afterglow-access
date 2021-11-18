@@ -164,6 +164,18 @@ export class Wcs {
 
   constructor(params: { [key: string]: any }) {
     this.params = params;
+
+    //strip any header entries for axes > 2
+    let n = 3;
+    let prefixes = ['CRPIX', 'CRVAL', 'CTYPE', 'CDELT', 'CUNIT']
+    while (true) {
+      let keys = prefixes.map(v => `${v}${n}`)
+      if (!keys.some(v => v in params)) break;
+      keys.forEach(key => {
+        if (key in params) delete params[key]
+      })
+      n++;
+    }
     this.wcs = new WcsLib(params);
   }
 
