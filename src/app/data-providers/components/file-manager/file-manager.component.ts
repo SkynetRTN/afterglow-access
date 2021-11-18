@@ -94,7 +94,7 @@ export class FileSystemItemsDataSource implements DataSource<FileSystemItem> {
   public nextLink$ = this.nextLinkSubject.asObservable();
   public lastLink$ = this.lastLinkSubject.asObservable();
 
-  constructor(private dataProviderService: AfterglowDataProviderService, private store: Store) {}
+  constructor(private dataProviderService: AfterglowDataProviderService, private store: Store) { }
 
   connect(collectionViewer: CollectionViewer): Observable<FileSystemItem[]> {
     return this.items$;
@@ -496,7 +496,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -811,7 +811,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
               () => {
                 this.refresh$.next(true);
               },
-              (err) => {},
+              (err) => { },
               () => {
                 this.isLoading = false;
               }
@@ -858,9 +858,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             if (errors.length !== 0) {
               const dialogConfig: Partial<AlertDialogConfig> = {
                 title: 'Error',
-                message: `Unable to ${actionName.toLowerCase()} ${
-                  errors.length
-                } of the selected files/folders. ${errors.map((error) => error.asset.name).join(', ')}`,
+                message: `Unable to ${actionName.toLowerCase()} ${errors.length
+                  } of the selected files/folders. ${errors.map((error) => error.asset.name).join(', ')}`,
                 buttons: [
                   {
                     color: null,
@@ -877,7 +876,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
               this.navigateTo(path.dataProviderId, path.assets);
             }
           },
-          (err) => {},
+          (err) => { },
           () => {
             this.isLoading = false;
           }
@@ -954,7 +953,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
             this.refresh$.next(true);
           },
-          (err) => {},
+          (err) => { },
           () => {
             this.isLoading = false;
           }
@@ -984,7 +983,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             () => {
               this.refresh$.next(true);
             },
-            (err) => {},
+            (err) => { },
             () => {
               this.isLoading = false;
             }
@@ -1003,9 +1002,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     if (this.maxUploadSize !== null && maxSize > this.maxUploadSize) {
       const dialogConfig: Partial<AlertDialogConfig> = {
         title: 'Exceeds Maximum Allowed Size',
-        message: `The maximum allowed size for each file is ${
-          Math.round((100 * this.maxUploadSize) / 1000000) / 100
-        } Mb.`,
+        message: `The maximum allowed size for each file is ${Math.round((100 * this.maxUploadSize) / 1000000) / 100
+          } Mb.`,
         buttons: [
           {
             color: null,
@@ -1066,7 +1064,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           title: 'Preparing download',
           message: 'Please wait while we prepare the files for download.',
           progressMode: 'indeterminate',
-          job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
+          job$: this.store.select(JobsState.getJobById(jobId)),
         };
         const dialogRef = this.dialog.open(JobProgressDialogComponent, {
           width: '400px',
@@ -1100,7 +1098,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
     merge(onCreateJobSuccess$, onCreateJobFail$)
       .pipe(take(1))
-      .subscribe(() => {});
+      .subscribe(() => { });
   }
 
   masterToggle() {
@@ -1115,7 +1113,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     this.onUploadChange(($event.target as HTMLInputElement).files);
   }
 
-  onPaginationLinkClick() {}
+  onPaginationLinkClick() { }
 
   _changePageSize(pageSize: number) {
     // Current page needs to be updated to reflect the new page size. Navigate to the page

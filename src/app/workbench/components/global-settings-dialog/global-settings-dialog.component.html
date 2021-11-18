@@ -1,10 +1,10 @@
-<h2 mat-dialog-title>Photometry Settings</h2>
+<h2 mat-dialog-title>Settings</h2>
 <mat-dialog-content style="overflow: visible;">
 
 
-  <form [formGroup]="photSettingsForm">
-    <mat-tab-group>
-      <mat-tab label="Aperture Settings">
+  <mat-tab-group>
+    <mat-tab label="Aperture Photometry">
+      <form [formGroup]="photometryForm">
         <div style="padding: 10px">
           <div class="form-field-wrapper">
             <mat-form-field appearance="outline">
@@ -21,7 +21,7 @@
                   <input matInput i18n-placeholder placeholder="Centroiding Radius" formControlName="centroidRadius" />
                   <mat-hint>radius in pixels</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('centroidRadius')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('centroidRadius')"></app-print-form-error>
               </div>
 
               <div class="form-field-wrapper">
@@ -29,31 +29,31 @@
                   <input matInput i18n-placeholder placeholder="Gain" formControlName="gain" />
                   <mat-hint>CCD gain in e-/ADU</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('gain')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('gain')"></app-print-form-error>
               </div>
             </div>
-            <ng-container *ngIf="settings.mode == 'constant'">
+            <ng-container *ngIf="settings.photometry.mode == 'constant'">
               <div fxFlex="1 1 auto" fxLayout="row">
                 <div class="form-field-wrapper">
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Aperture" formControlName="a" />
                     <mat-hint>radius in pixels</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('a')"></app-print-form-error>
+                  <app-print-form-error [control]="photometryForm.get('a')"></app-print-form-error>
                 </div>
                 <div class="form-field-wrapper">
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Annulus Inner" formControlName="aIn" />
                     <mat-hint>radius in pixels</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('aIn')"></app-print-form-error>
+                  <app-print-form-error [control]="photometryForm.get('aIn')"></app-print-form-error>
                 </div>
                 <div class="form-field-wrapper">
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Annulus Outer" formControlName="aOut" />
                     <mat-hint>radius in pixels</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('aOut')"></app-print-form-error>
+                  <app-print-form-error [control]="photometryForm.get('aOut')"></app-print-form-error>
                 </div>
               </div>
               <div fxFlex="1 1 auto" fxLayout="row">
@@ -73,14 +73,14 @@
                       <input matInput i18n-placeholder placeholder="Aperture Minor Axis" formControlName="b" />
                       <mat-hint>radius in pixels</mat-hint>
                     </mat-form-field>
-                    <app-print-form-error [control]="photSettingsForm.get('b')"></app-print-form-error>
+                    <app-print-form-error [control]="photometryForm.get('b')"></app-print-form-error>
                   </div>
                   <div class="form-field-wrapper">
                     <mat-form-field>
                       <input matInput i18n-placeholder placeholder="Annulus Outer Minor Axis" formControlName="bOut" />
                       <mat-hint>radius in pixels</mat-hint>
                     </mat-form-field>
-                    <app-print-form-error [control]="photSettingsForm.get('bOut')"></app-print-form-error>
+                    <app-print-form-error [control]="photometryForm.get('bOut')"></app-print-form-error>
                   </div>
                 </div>
                 <div fxFlex="1 1 auto" fxLayout="row">
@@ -89,7 +89,7 @@
                       <input matInput i18n-placeholder placeholder="Aperture Position Angle" formControlName="theta" />
                       <mat-hint>angle in degrees</mat-hint>
                     </mat-form-field>
-                    <app-print-form-error [control]="photSettingsForm.get('theta')"></app-print-form-error>
+                    <app-print-form-error [control]="photometryForm.get('theta')"></app-print-form-error>
                   </div>
 
                   <div class="form-field-wrapper">
@@ -98,26 +98,26 @@
                         formControlName="thetaOut" />
                       <mat-hint>angle in degrees</mat-hint>
                     </mat-form-field>
-                    <app-print-form-error [control]="photSettingsForm.get('thetaOut')"></app-print-form-error>
+                    <app-print-form-error [control]="photometryForm.get('thetaOut')"></app-print-form-error>
                   </div>
                 </div>
               </div>
             </ng-container>
-            <ng-container *ngIf="settings.mode == 'adaptive'">
+            <ng-container *ngIf="settings.photometry.mode == 'adaptive'">
               <div fxFlex="1 1 auto" fxLayout="row">
                 <div class="form-field-wrapper">
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Aperture" formControlName="aKrFactor" />
                     <mat-hint>isophotal radii</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('aKrFactor')"></app-print-form-error>
+                  <app-print-form-error [control]="photometryForm.get('aKrFactor')"></app-print-form-error>
                 </div>
                 <div class="form-field-wrapper">
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Annulus Inner" formControlName="aInKrFactor" />
                     <mat-hint>isophotal radii</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('aInKrFactor')"></app-print-form-error>
+                  <app-print-form-error [control]="photometryForm.get('aInKrFactor')"></app-print-form-error>
                 </div>
 
                 <div class="form-field-wrapper">
@@ -125,7 +125,7 @@
                     <input matInput i18n-placeholder placeholder="Annulus Outer" formControlName="aOutKrFactor" />
                     <mat-hint>isophotal radii</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('aOutKrFactor')"></app-print-form-error>
+                  <app-print-form-error [control]="photometryForm.get('aOutKrFactor')"></app-print-form-error>
                 </div>
               </div>
               <div fxFlex="1 1 auto" fxLayout="row">
@@ -155,8 +155,11 @@
           </div>
         </div>
 
-      </mat-tab>
-      <mat-tab label="Calibration Settings">
+      </form>
+
+    </mat-tab>
+    <mat-tab label="Photometry Calibration">
+      <form [formGroup]="calibrationForm">
         <div style="padding: 10px">
           <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
             <div class="form-field-wrapper">
@@ -164,14 +167,14 @@
                 <input matInput i18n-placeholder placeholder="Zero Point" formControlName="zeroPoint" />
                 <mat-hint>offset in magnitudes</mat-hint>
               </mat-form-field>
-              <app-print-form-error [control]="photSettingsForm.get('zeroPoint')"></app-print-form-error>
+              <app-print-form-error [control]="calibrationForm.get('zeroPoint')"></app-print-form-error>
             </div>
             <div class="form-field-wrapper">
               <mat-slide-toggle formControlName="calibrationEnabled"> Use catalog to calibrate zero point offset
               </mat-slide-toggle>
             </div>
 
-            <ng-container *ngIf="settings.calibrationEnabled">
+            <ng-container *ngIf="settings.calibration.calibrationEnabled">
               <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%;">
                 <div class="form-field-wrapper">
                   <mat-form-field appearance="outline">
@@ -188,7 +191,7 @@
                       formControlName="sourceMatchTol" />
                     <mat-hint>pixels</mat-hint>
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('sourceMatchTol')"></app-print-form-error>
+                  <app-print-form-error [control]="calibrationForm.get('sourceMatchTol')"></app-print-form-error>
                 </div>
               </div>
               <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
@@ -201,7 +204,7 @@
                     <input matInput i18n-placeholder placeholder="Source Inclusion Percentage"
                       formControlName="sourceInclusionPercentage" />
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('sourceInclusionPercentage')">
+                  <app-print-form-error [control]="calibrationForm.get('sourceInclusionPercentage')">
                   </app-print-form-error>
                 </div>
               </div>
@@ -214,7 +217,7 @@
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Minimum SNR" formControlName="minSnr" />
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('minSnr')">
+                  <app-print-form-error [control]="calibrationForm.get('minSnr')">
                   </app-print-form-error>
                 </div>
               </div>
@@ -227,7 +230,7 @@
                   <mat-form-field>
                     <input matInput i18n-placeholder placeholder="Maximum SNR" formControlName="maxSnr" />
                   </mat-form-field>
-                  <app-print-form-error [control]="photSettingsForm.get('maxSnr')">
+                  <app-print-form-error [control]="calibrationForm.get('maxSnr')">
                   </app-print-form-error>
                 </div>
               </div>
@@ -235,8 +238,10 @@
             </ng-container>
           </div>
         </div>
-      </mat-tab>
-      <mat-tab label="Source Extraction Settings">
+      </form>
+    </mat-tab>
+    <mat-tab label="Source Extraction">
+      <form [formGroup]="sourceExtractionForm">
         <div style="padding: 10px">
           <div fxLayout="column" fxLayoutGap="30px">
             <div fxFlex="1 1 auto" fxLayout="row">
@@ -245,14 +250,14 @@
                   <input matInput i18n-placeholder placeholder="Threshold" formControlName="threshold" />
                   <mat-hint>extraction threshold in units of RMS</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('threshold')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('threshold')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
                   <input matInput i18n-placeholder placeholder="Background Size" formControlName="bkSize" />
                   <mat-hint>box size for background estimation</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('bkSize')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('bkSize')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
@@ -260,7 +265,7 @@
                     formControlName="bkFilterSize" />
                   <mat-hint>window size of background median filter</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('bkFilterSize')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('bkFilterSize')"></app-print-form-error>
               </div>
             </div>
             <div fxFlex="1 1 auto" fxLayout="row">
@@ -269,21 +274,21 @@
                   <input matInput i18n-placeholder placeholder="FWHM" formControlName="fwhm" />
                   <mat-hint>source FWHM [pixels]</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('fwhm')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('fwhm')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
                   <input matInput i18n-placeholder placeholder="Min FWHM" formControlName="minFwhm" />
                   <mat-hint>mininum allowed FWHM [pixels]</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('minFwhm')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('minFwhm')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
                   <input matInput i18n-placeholder placeholder="Max FWHM" formControlName="maxFwhm" />
                   <mat-hint>maximum allowed FWHM [pixels]</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('maxFwhm')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('maxFwhm')"></app-print-form-error>
               </div>
             </div>
             <div fxFlex="1 1 auto" fxLayout="row">
@@ -292,21 +297,21 @@
                   <input matInput i18n-placeholder placeholder="Min Pixel Count" formControlName="minPixels" />
                   <mat-hint>mininum pixels required per object</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('minPixels')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('minPixels')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
                   <input matInput i18n-placeholder placeholder="Max Ellipticity" formControlName="maxEllipticity" />
                   <mat-hint>maximum allowed ellipticity</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('maxEllipticity')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('maxEllipticity')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
                   <input matInput i18n-placeholder placeholder="Clean" formControlName="clean" />
                   <mat-hint>cleaning parameter</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('clean')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('clean')"></app-print-form-error>
               </div>
             </div>
             <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="start center">
@@ -327,14 +332,14 @@
                   <input matInput i18n-placeholder placeholder="Deblend Levels" formControlName="deblendLevels" />
                   <mat-hint>number of deblending levels</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('deblendLevels')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('deblendLevels')"></app-print-form-error>
               </div>
               <div class="form-field-wrapper">
                 <mat-form-field>
                   <input matInput i18n-placeholder placeholder="Deblend Contrast" formControlName="deblendContrast" />
                   <mat-hint>deblending contrast</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('deblendContrast')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('deblendContrast')"></app-print-form-error>
               </div>
             </div>
             <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="end center">
@@ -343,19 +348,18 @@
                   <input matInput i18n-placeholder placeholder="Saturation Level" formControlName="satLevel" />
                   <mat-hint>saturation level</mat-hint>
                 </mat-form-field>
-                <app-print-form-error [control]="photSettingsForm.get('satLevel')"></app-print-form-error>
+                <app-print-form-error [control]="photometryForm.get('satLevel')"></app-print-form-error>
               </div>
             </div>
 
           </div>
         </div>
 
+      </form>
+    </mat-tab>
+  </mat-tab-group>
 
-      </mat-tab>
-    </mat-tab-group>
 
-
-  </form>
 
 
 </mat-dialog-content>
@@ -366,7 +370,8 @@
     </div>
     <div fxFlex="0 0 auto" fxLayout="row">
       <button mat-raised-button mat-dialog-close i18n>Cancel</button>
-      <button mat-raised-button [mat-dialog-close]="settings" i18n [disabled]="photSettingsForm.invalid">
+      <button mat-raised-button [mat-dialog-close]="settings" i18n
+        [disabled]="photometryForm.invalid || calibrationForm.invalid || sourceExtractionForm.invalid">
         Save
       </button>
     </div>

@@ -1,19 +1,7 @@
 import { getWidth, getHeight, ImageHdu, PixelType } from '../../data-files/models/data-file';
 import { getPixel, IImageData } from '../../data-files/models/image-data';
+import { CentroidSettings, defaults as defaultCentroidSettings } from './centroid-settings';
 
-export interface DiskCentroiderSettings {
-  maxIterations: number;
-  maxCenterShift: number;
-  diskSearchBoxWidth: number;
-}
-
-export function createDiskCentroiderSettings(): DiskCentroiderSettings {
-  return {
-    maxIterations: 10,
-    maxCenterShift: 0.2,
-    diskSearchBoxWidth: 200,
-  };
-}
 
 function getMedian(data: Array<number>) {
   data.sort((a, b) => a - b);
@@ -26,9 +14,9 @@ export function centroidDisk(
   imageData: IImageData<PixelType>,
   x: number,
   y: number,
-  settings: DiskCentroiderSettings = null
+  settings: CentroidSettings = null
 ) {
-  if (settings == null) settings = createDiskCentroiderSettings();
+  if (settings == null) settings = { ...defaultCentroidSettings }
   let subWidth = settings.diskSearchBoxWidth;
   let nIter = 0;
   let x0 = x;
@@ -152,38 +140,15 @@ export function centroidDisk(
   return { x: x0, y: y0, xErr: null, yErr: null };
 }
 
-export enum CentroidNoiseModel {
-  POISSON,
-  CONSTANT,
-}
 
-export interface PsfCentroiderSettings {
-  centeringBoxWidth: number;
-  minSignalToNoise: number;
-  maxIterations: number;
-  maxCenterShift: number;
-  noiseModel: CentroidNoiseModel;
-  gain: number;
-}
-
-export function createPsfCentroiderSettings(): PsfCentroiderSettings {
-  return {
-    centeringBoxWidth: 5,
-    minSignalToNoise: 1.0,
-    maxIterations: 10,
-    maxCenterShift: 0.2,
-    noiseModel: CentroidNoiseModel.POISSON,
-    gain: 10.0,
-  };
-}
 
 export function centroidPsf(
   imageData: IImageData<PixelType>,
   x: number,
   y: number,
-  settings: PsfCentroiderSettings = null
+  settings: CentroidSettings = null
 ) {
-  if (settings == null) settings = createPsfCentroiderSettings();
+  if (settings == null) settings = { ...defaultCentroidSettings }
   //let oxinit: number;            // initial output x center
   //let oyinit: number;            // initial output y center
   let xcenter: number; // computed x center
@@ -333,7 +298,7 @@ function getSubframe(size: number, imageData: IImageData<PixelType>, x: number, 
   return { cxc: cxc, cyc: cyc, cnx: cnx, cny: cny, pixels: result };
 }
 
-function handleCentroidMethod(settings: PsfCentroiderSettings, subframe: Array<number>, width: number, height: number) {
+function handleCentroidMethod(settings: CentroidSettings, subframe: Array<number>, width: number, height: number) {
   let md = getMarginalDistributions(settings, subframe, width, height);
   let xm = md.xm;
   let ym = md.ym;
@@ -352,7 +317,7 @@ function handleCentroidMethod(settings: PsfCentroiderSettings, subframe: Array<n
   return { xCenter: xResult.center, xErr: xResult.error, yCenter: yResult.center, yErr: yResult.error };
 }
 
-function centroidAlgorithm(settings: PsfCentroiderSettings, marg: Array<number>) {
+function centroidAlgorithm(settings: CentroidSettings, marg: Array<number>) {
   let sum = 0.0;
   for (let i = 0; i < marg.length; i++) {
     sum += marg[i];
@@ -428,7 +393,7 @@ function centroidAlgorithm(settings: PsfCentroiderSettings, marg: Array<number>)
 // }
 
 function getMarginalDistributions(
-  settings: PsfCentroiderSettings,
+  settings: CentroidSettings,
   subframe: Array<number>,
   width: number,
   height: number

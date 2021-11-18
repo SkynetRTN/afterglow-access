@@ -32,9 +32,7 @@
             (change)="onCentroidClicksChange($event)" i18n>
             Centroid clicks
           </mat-slide-toggle>
-          <button class="" mat-raised-button (click)="openPhotometrySettingsDialog()" i18n>
-            Photometry Settings...
-          </button>
+
           <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
             <mat-icon>add</mat-icon>
             <span i18n>Add Sources...</span>
@@ -228,7 +226,7 @@
 
             </ng-container>
             <ng-template #progressBlock>
-              <div i18n fxFill fxLayoutAlign="center center">
+              <div *ngIf="(sources$ | async)?.length != 0" i18n fxFill fxLayoutAlign="center center">
                 <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
               </div>
               <!-- <mat-progress-bar *ngIf="job.state?.progress && job.state?.progress != 100" mode="indeterminate"
@@ -236,7 +234,7 @@
             </ng-template>
 
           </div>
-          <div *ngIf="(photometrySettings$ | async)?.calibrationEnabled" fxFlex="1 1 auto"
+          <div *ngIf="(calibrationSettings$ | async)?.calibrationEnabled" fxFlex="1 1 auto"
             style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
               <ng-container *ngIf="job.state.status == 'completed' && job.result; else progressBlock">

@@ -49,8 +49,8 @@ import {
 } from '../../../data-files/models/data-file';
 import { DmsPipe } from '../../../pipes/dms.pipe';
 import { PhotometryPanelState } from '../../models/photometry-file-state';
-import { PhotSettingsDialogComponent } from '../../components/phot-settings-dialog/phot-settings-dialog.component';
-import { SourceExtractionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
+import { GlobalSettingsDialogComponent } from '../../components/global-settings-dialog/global-settings-dialog.component';
+import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 import { Source, PosType } from '../../models/source';
 import { PhotometryPanelConfig, BatchPhotometryFormData } from '../../models/workbench-state';
 import { SelectionModel } from '@angular/cdk/collections';
@@ -93,6 +93,9 @@ import { IImageData } from '../../../data-files/models/image-data';
 import { MarkerType, PhotometryMarker, RectangleMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
 import { FieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
+import { CalibrationSettings } from '../../models/calibration-settings';
+import { GlobalSettings } from '../../models/global-settings';
+import { SourceExtractionRegion } from '../../models/source-extraction-region';
 
 @Component({
   selector: 'app-photometry-panel',
@@ -129,7 +132,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   sources$: Observable<Source[]>;
   state$: Observable<PhotometryPanelState>;
   config$: Observable<PhotometryPanelConfig>;
+  globalSettings$: Observable<GlobalSettings>;
   photometrySettings$: Observable<PhotometrySettings>;
+  calibrationSettings$: Observable<CalibrationSettings>;
   centroidSettings$: Observable<CentroidSettings>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
@@ -215,7 +220,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       shareReplay(1)
     );
 
+    this.globalSettings$ = this.store.select(WorkbenchState.getSettings)
     this.photometrySettings$ = this.store.select(WorkbenchState.getPhotometrySettings);
+    this.calibrationSettings$ = this.store.select(WorkbenchState.getCalibrationSettings);
     this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
@@ -229,8 +236,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob)
     );
 
-    let calibrationEnabled$ = this.photometrySettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
-    let fixedZeroPoint$ = this.photometrySettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
+    let calibrationEnabled$ = this.calibrationSettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
+    let fixedZeroPoint$ = this.calibrationSettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
     let calibratedZeroPoint$ = this.autoCalJob$.pipe(
       map(job => job?.result?.zeroPoint),
       startWith(null),
@@ -347,15 +354,26 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       });
 
     let imageHduId$ = this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged())
-    combineLatest([this.photometrySettings$, imageHduId$]).pipe().pipe(
-      takeUntil(this.destroy$),
-      filter(([settings, imageHduId]) => !!imageHduId && !!settings)
-    ).subscribe(([settings, imageHduId]) => {
-      if (settings.calibrationEnabled) {
-        this.store.dispatch(new CalibrateField([imageHduId], settings, false))
-      }
 
+    combineLatest([imageHduId$, this.photometrySettings$, this.calibrationSettings$, this.sourceExtractionSettings$]).pipe(
+      takeUntil(this.destroy$),
+      filter(([imageHduId]) => !!imageHduId)
+    ).subscribe(([imageHduId, photometrySettings, calibrationSettings, sourceExtractionSettings]) => {
+      if (calibrationSettings.calibrationEnabled) {
+        //recalibrate the field
+        this.store.dispatch(new CalibrateField([imageHduId], photometrySettings, sourceExtractionSettings, calibrationSettings, false))
+      }
     })
+
+    combineLatest([imageHduId$, this.photometrySettings$]).pipe(
+      takeUntil(this.destroy$),
+      filter(([imageHduId]) => !!imageHduId)
+    ).subscribe(([imageHduId, photometrySettings]) => {
+      //trigger rephotometering of all data
+      this.store.dispatch(new RemoveAllPhotDatas());
+    })
+
+
 
     this.eventService.imageClickEvent$
       .pipe(
@@ -377,7 +395,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             let secondaryCoord = $event.imageY;
             let posType = PosType.PIXEL;
             if (centroidClicks) {
-              let result = centroidPsf(imageData, primaryCoord, secondaryCoord, centroidSettings.psfCentroiderSettings);
+              let result = centroidPsf(imageData, primaryCoord, secondaryCoord, centroidSettings);
               primaryCoord = result.x;
               secondaryCoord = result.y;
             }
@@ -940,9 +958,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   openSourceExtractionDialog() {
     let sourceExtractionSettings = this.store.selectSnapshot(WorkbenchState.getSourceExtractionSettings);
-    let dialogRef = this.dialog.open(SourceExtractionDialogComponent, {
+    let dialogRef = this.dialog.open(SourceExtractionRegionDialogComponent, {
       width: '500px',
-      data: { ...sourceExtractionSettings },
+      data: { viewerId: this.viewerId, region: SourceExtractionRegion.ENTIRE_IMAGE },
     });
 
     dialogRef
@@ -950,37 +968,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       .pipe(withLatestFrom(this.imageHdu$, this.viewportSize$))
       .subscribe(([result, imageHdu, viewportSize]) => {
         if (result) {
-          this.store.dispatch([
-            new UpdateSourceExtractionSettings(result),
-            new ExtractSources(imageHdu.id, viewportSize, result),
-          ]);
+
         }
       });
   }
-
-  openPhotometrySettingsDialog() {
-    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
-    let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
-      width: '750px',
-      data: { ...photometrySettings },
-      disableClose: true,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.store.dispatch(new UpdatePhotometrySettings(result));
-        this.store.dispatch(new RemoveAllPhotDatas());
-      }
-    });
-  }
-
-  // onSelectedRowChanges($event: ITdDataTableSelectEvent) {
-  //   if ($event.selected) {
-  //     this.selectSources([$event.row]);
-  //   } else {
-  //     this.deselectSources([$event.row]);
-  //   }
-  // }
 
   onCoordModeChange($event: MatButtonToggleChange) {
     this.store.dispatch(new UpdatePhotometryPanelConfig({ coordMode: $event.value }));

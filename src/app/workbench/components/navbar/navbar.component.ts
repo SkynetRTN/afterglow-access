@@ -10,8 +10,8 @@ import { Logout, Login } from '../../../auth/auth.actions';
 import { Navigate } from '@ngxs/router-plugin';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
 import { WorkbenchState } from '../../workbench.state';
-import { PhotSettingsDialogComponent } from '../phot-settings-dialog/phot-settings-dialog.component';
-import { UpdatePhotometrySettings } from '../../workbench.actions';
+import { GlobalSettingsDialogComponent } from '../global-settings-dialog/global-settings-dialog.component';
+import { UpdatePhotometrySettings, UpdateSettings } from '../../workbench.actions';
 
 @Component({
   selector: 'app-navbar',
@@ -81,17 +81,17 @@ export class NavbarComponent implements OnInit, OnChanges {
   }
 
   openCoreSettingsDialog() {
-    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
-    let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
+    let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
+    let dialogRef = this.dialog.open(GlobalSettingsDialogComponent, {
       width: '80vw',
       maxWidth: '900px',
-      data: { ...photometrySettings },
+      data: { ...settings },
       disableClose: true,
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.store.dispatch(new UpdatePhotometrySettings(result));
+        this.store.dispatch(new UpdateSettings(result));
       }
     });
   }

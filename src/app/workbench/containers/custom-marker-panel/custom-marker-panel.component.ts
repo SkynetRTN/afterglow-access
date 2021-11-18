@@ -171,9 +171,9 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
             if (settings.centroidClicks) {
               let result: { x: number; y: number };
               if (settings.usePlanetCentroiding) {
-                result = centroidDisk(imageData, x, y, centroidSettings.diskCentroiderSettings);
+                result = centroidDisk(imageData, x, y, centroidSettings);
               } else {
-                result = centroidPsf(imageData, x, y, centroidSettings.psfCentroiderSettings);
+                result = centroidPsf(imageData, x, y, centroidSettings);
               }
               x = result.x;
               y = result.y;

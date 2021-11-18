@@ -28,7 +28,6 @@ import {
 } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
-import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import {
   LoadLibrarySuccess,
   LoadLibrary,
@@ -147,6 +146,8 @@ import {
   UpdateCustomMarkerSelectionRegion,
   EndCustomMarkerSelectionRegion,
   CalibrateField,
+  UpdateSettings,
+  UpdateCalibrationSettings,
 } from './workbench.actions';
 import {
   getWidth,
@@ -176,7 +177,6 @@ import { PosType, Source } from './models/source';
 import { MarkerType, LineMarker, RectangleMarker, CircleMarker } from './models/marker';
 import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
-import { SourceExtractionRegionOption } from './models/source-extraction-settings';
 import {
   SourceExtractionJobSettings,
   SourceExtractionJob,
@@ -219,13 +219,13 @@ import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
-import { PhotometrySettings, defaults as defaultPhotometrySettings, toPhotometryJobSettings, toFieldCalibration, toSourceExtractionJobSettings } from './models/photometry-settings';
+import { GlobalSettings, defaults as defaultGlobalSettings, toPhotometryJobSettings, toSourceExtractionJobSettings, toFieldCalibration } from './models/global-settings';
 import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '40b0b73c-39cd-4fb5-a733-7e6d9b70af3e',
+  version: '60654b2e-0010-4a8b-b9e5-92f5e1e1e76d',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -255,20 +255,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   sidebarView: SidebarView.FILES,
   showSidebar: true,
   showConfig: true,
-  centroidSettings: {
-    useDiskCentroiding: false,
-    psfCentroiderSettings: createPsfCentroiderSettings(),
-    diskCentroiderSettings: createDiskCentroiderSettings(),
-  },
-  photometrySettings: {
-    ...defaultPhotometrySettings,
-  },
-  sourceExtractionSettings: {
-    threshold: 3,
-    fwhm: 0,
-    deblend: false,
-    region: SourceExtractionRegionOption.ENTIRE_IMAGE,
-  },
+  settings: { ...defaultGlobalSettings },
   fileInfoPanelConfig: {
     showRawHeader: false,
     useSystemTime: false,
@@ -482,18 +469,28 @@ export class WorkbenchState {
   }
 
   @Selector()
+  public static getSettings(state: WorkbenchStateModel) {
+    return state.settings;
+  }
+
+  @Selector()
   public static getPhotometrySettings(state: WorkbenchStateModel) {
-    return state.photometrySettings;
+    return state.settings.photometry;
+  }
+
+  @Selector()
+  public static getCalibrationSettings(state: WorkbenchStateModel) {
+    return state.settings.calibration;
   }
 
   @Selector()
   public static getSourceExtractionSettings(state: WorkbenchStateModel) {
-    return state.sourceExtractionSettings;
+    return state.settings.sourceExtraction;
   }
 
   @Selector()
   public static getCentroidSettings(state: WorkbenchStateModel) {
-    return state.centroidSettings;
+    return state.settings.centroid;
   }
 
   @Selector()
@@ -695,6 +692,30 @@ export class WorkbenchState {
   @Selector()
   public static getSonificationPanelStates(state: WorkbenchStateModel) {
     return Object.values(state.sonificationPanelStateEntities);
+  }
+
+  static getSonificationPanelStateIdByHduId(hduId: string) {
+    return createSelector(
+      [WorkbenchState.getHduIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
+      (
+        hduIdToWorkbenchStateId: { [id: string]: string },
+        workbenchStateEntities: { [id: string]: IWorkbenchState }
+      ) => {
+        return (workbenchStateEntities[hduIdToWorkbenchStateId[hduId]] as WorkbenchImageHduState)?.sonificationPanelStateId || null;
+      }
+    );
+  }
+
+  static getSonificationPanelStateByHduId(hduId: string) {
+    return createSelector(
+      [WorkbenchState.getSonificationPanelStateIdByHduId(hduId), WorkbenchState.getSonificationPanelStateEntities],
+      (
+        stateId: string,
+        sonificationStateEntities: { [id: string]: SonificationPanelState }
+      ) => {
+        return sonificationStateEntities[stateId] || null;
+      }
+    );
   }
 
   @Selector([WorkbenchState.getSonificationPanelStateEntities])
@@ -1982,6 +2003,21 @@ export class WorkbenchState {
     });
   }
 
+  @Action(UpdateSettings)
+  @ImmutableContext()
+  public updateSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.settings = {
+        ...state.settings,
+        ...changes,
+      }
+      return state;
+    });
+  }
+
   @Action(UpdateCentroidSettings)
   @ImmutableContext()
   public updateCentroidSettings(
@@ -1989,8 +2025,8 @@ export class WorkbenchState {
     { changes }: UpdateCentroidSettings
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.centroidSettings = {
-        ...state.centroidSettings,
+      state.settings.centroid = {
+        ...state.settings.centroid,
         ...changes,
       };
       return state;
@@ -2004,10 +2040,10 @@ export class WorkbenchState {
     { changes }: UpdatePhotometrySettings
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.photometrySettings = {
-        ...state.photometrySettings,
+      state.settings.photometry = {
+        ...state.settings.photometry,
         ...changes,
-      };
+      }
       return state;
     });
   }
@@ -2019,10 +2055,25 @@ export class WorkbenchState {
     { changes }: UpdateSourceExtractionSettings
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.sourceExtractionSettings = {
-        ...state.sourceExtractionSettings,
+      state.settings.sourceExtraction = {
+        ...state.settings.sourceExtraction,
         ...changes,
       };
+      return state;
+    });
+  }
+
+  @Action(UpdateCalibrationSettings)
+  @ImmutableContext()
+  public updateCalibrationSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateCalibrationSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.settings.calibration = {
+        ...state.settings.calibration,
+        ...changes,
+      }
       return state;
     });
   }
@@ -3073,7 +3124,7 @@ export class WorkbenchState {
       maxSources: wcsSettings.maxSources,
     };
 
-    let sourceExtractionSettings = state.sourceExtractionSettings;
+    let sourceExtractionSettings = state.settings.sourceExtraction;
     let sourceExtractionJobSettings: SourceExtractionJobSettings = {
       threshold: sourceExtractionSettings.threshold,
       fwhm: sourceExtractionSettings.fwhm,
@@ -3214,123 +3265,7 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { hduId, viewportSize, settings }: ExtractSources
   ) {
-    let state = getState();
-    let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-    let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
-    let hdu = hduEntities[hduId] as ImageHdu;
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[hdu.headerId];
-    let rawImageData = imageDataEntities[hdu.rawImageDataId];
-    let viewportTransform = transformEntities[hdu.viewportTransformId];
-    let imageTransform = transformEntities[hdu.imageTransformId];
-    let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
-    let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
-    if (workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
-    let hduState = workbenchState as WorkbenchImageHduState;
-    let sonificationState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
 
-    let jobSettings: SourceExtractionJobSettings = {
-      threshold: settings.threshold,
-      fwhm: settings.fwhm,
-      deblend: settings.deblend,
-      limit: settings.limit,
-    };
-    if (
-      settings.region == SourceExtractionRegionOption.VIEWPORT ||
-      (settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-        sonificationState.regionMode == SonifierRegionMode.VIEWPORT)
-    ) {
-      let region = getViewportRegion(
-        imageToViewportTransform,
-        rawImageData.width,
-        rawImageData.height,
-        viewportSize.width,
-        viewportSize.height
-      );
-
-      jobSettings = {
-        ...jobSettings,
-        x: Math.min(getWidth(header), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(header), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(header), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(header), Math.max(0, region.height + 1)),
-      };
-    } else if (
-      settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-      sonificationState.regionMode == SonifierRegionMode.CUSTOM &&
-      sonificationState.regionHistoryIndex !== null
-    ) {
-      let region = sonificationState.regionHistory[sonificationState.regionHistoryIndex];
-      jobSettings = {
-        ...jobSettings,
-        x: Math.min(getWidth(header), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(header), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(header), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(header), Math.max(0, region.height + 1)),
-      };
-    }
-    let job: SourceExtractionJob = {
-      id: null,
-      type: JobType.SourceExtraction,
-      fileIds: [hduId],
-      sourceExtractionSettings: jobSettings,
-      mergeSources: false,
-      state: null,
-      result: null,
-    };
-
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-    return this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as SourceExtractionJobResult;
-        if (result.errors.length != 0) {
-          dispatch(new ExtractSourcesFail(result.errors.map((e) => e.detail).join(',')));
-          return;
-        }
-        let sources = result.data.map((d) => {
-          let posType = PosType.PIXEL;
-          let primaryCoord = d.x;
-          let secondaryCoord = d.y;
-
-          if (
-            photometryPageSettings.coordMode == 'sky' &&
-            header.wcs &&
-            header.wcs.isValid() &&
-            'raHours' in d &&
-            d.raHours !== null &&
-            'decDegs' in d &&
-            d.decDegs !== null
-          ) {
-            posType = PosType.SKY;
-            primaryCoord = d.raHours;
-            secondaryCoord = d.decDegs;
-          }
-
-          let pmEpoch = null;
-          if (d.time && Date.parse(d.time + ' GMT')) {
-            pmEpoch = new Date(Date.parse(d.time + ' GMT')).toISOString();
-          }
-          return {
-            id: null,
-            objectId: '',
-            hduId: d.fileId.toString(),
-            posType: posType,
-            primaryCoord: primaryCoord,
-            secondaryCoord: secondaryCoord,
-            pm: 0,
-            pmPosAngle: 0,
-            pmEpoch: pmEpoch,
-          } as Source;
-        });
-
-        dispatch(new AddSources(sources));
-      })
-    );
   }
 
   @Action(RemoveSources)
@@ -3365,7 +3300,7 @@ export class WorkbenchState {
     let hduState = workbenchState as WorkbenchImageHduState;
     let photPanelStateId = hduState.photometryPanelStateId;
 
-    let photometryJobSettings = toPhotometryJobSettings(settings);
+    let photometryJobSettings = toPhotometryJobSettings(state.settings);
 
     let job: PhotometryJob = {
       type: JobType.Photometry,
@@ -3541,13 +3476,13 @@ export class WorkbenchState {
   @ImmutableContext()
   public calibrateField(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduIds, settings, isBatch }: CalibrateField
+    { hduIds, photometrySettings, calibrationSettings, sourceExtractionSettings, isBatch }: CalibrateField
   ) {
     let state = getState();
 
-    let photometryJobSettings = toPhotometryJobSettings(settings);
-    let fieldCalibration = toFieldCalibration(settings);
-    let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+    let photometryJobSettings = toPhotometryJobSettings(state.settings);
+    let fieldCalibration = toFieldCalibration(state.settings);
+    let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
 
     let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduIds[0]]];
     if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;

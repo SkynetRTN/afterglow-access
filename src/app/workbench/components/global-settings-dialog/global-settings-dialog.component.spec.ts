@@ -1,19 +1,19 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PhotSettingsDialogComponent } from './phot-settings-dialog.component';
+import { GlobalSettingsDialogComponent } from './global-settings-dialog.component';
 
 describe('PhotSettingsDialogComponent', () => {
-  let component: PhotSettingsDialogComponent;
-  let fixture: ComponentFixture<PhotSettingsDialogComponent>;
+  let component: GlobalSettingsDialogComponent;
+  let fixture: ComponentFixture<GlobalSettingsDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [PhotSettingsDialogComponent],
+      declarations: [GlobalSettingsDialogComponent],
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PhotSettingsDialogComponent);
+    fixture = TestBed.createComponent(GlobalSettingsDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -32,6 +32,8 @@ import { PhotData } from './models/source-phot-data';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { PhotometryData } from '../jobs/models/photometry';
 import { FieldCalibration } from '../jobs/models/field-calibration';
+import { GlobalSettings } from './models/global-settings';
+import { CalibrationSettings } from './models/calibration-settings';
 
 /* Core */
 
@@ -217,6 +219,12 @@ export class ToggleShowConfig {
   public static readonly type = '[Workbench] Toggle Show Config';
 }
 
+export class UpdateSettings {
+  public static readonly type = '[Workbench] Update Settings';
+
+  constructor(public changes: Partial<GlobalSettings>) { }
+}
+
 export class UpdateCentroidSettings {
   public static readonly type = '[Workbench] Update Centroid Settings';
 
@@ -233,6 +241,12 @@ export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
   constructor(public changes: Partial<SourceExtractionSettings>) { }
+}
+
+export class UpdateCalibrationSettings {
+  public static readonly type = '[Workbench] Update Calibration Settings';
+
+  constructor(public changes: Partial<CalibrationSettings>) { }
 }
 
 export class UpdateCustomMarkerPanelConfig {
@@ -630,7 +644,9 @@ export class CalibrateField {
 
   constructor(
     public hduIds: string[],
-    public settings: PhotometrySettings,
+    public photometrySettings: PhotometrySettings,
+    public sourceExtractionSettings: SourceExtractionSettings,
+    public calibrationSettings: CalibrationSettings,
     public isBatch: boolean
   ) { }
 }

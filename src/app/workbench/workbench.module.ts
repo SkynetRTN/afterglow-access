@@ -17,8 +17,8 @@ import { DataFileListComponent } from './containers/data-file-list/data-file-lis
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
-import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
-import { SourceExtractionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
+import { GlobalSettingsDialogComponent } from './components/global-settings-dialog/global-settings-dialog.component';
+import { SourceExtractionRegionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
@@ -95,8 +95,8 @@ export const COMPONENTS = [
   ImageCalculatorPageComponent,
   StackerPanelComponent,
   AlignerPageComponent,
-  PhotSettingsDialogComponent,
-  SourceExtractionDialogComponent,
+  GlobalSettingsDialogComponent,
+  SourceExtractionRegionDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
   CircleMarkerEditorComponent,
@@ -139,8 +139,8 @@ export const COMPONENTS = [
   declarations: COMPONENTS,
   exports: COMPONENTS,
   entryComponents: [
-    PhotSettingsDialogComponent,
-    SourceExtractionDialogComponent,
+    GlobalSettingsDialogComponent,
+    SourceExtractionRegionDialogComponent,
     PixelOpsJobsDialogComponent,
     HelpDialogComponent,
     ThemeDialogComponent,

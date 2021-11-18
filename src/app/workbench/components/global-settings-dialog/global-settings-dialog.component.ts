@@ -6,15 +6,16 @@ import { combineLatest, Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { greaterThan, isNumber, lessThan } from '../../../utils/validators';
-import { PhotometrySettings, defaults as defaultPhotometrySettings } from '../../models/photometry-settings';
+import { GlobalSettings } from '../../models/global-settings';
+import { defaults } from '../../models/global-settings';
 import { WorkbenchState } from '../../workbench.state';
 
 @Component({
-  selector: 'app-phot-settings-dialog',
-  templateUrl: './phot-settings-dialog.component.html',
-  styleUrls: ['./phot-settings-dialog.component.scss'],
+  selector: 'app-global-settings-dialog',
+  templateUrl: './global-settings-dialog.component.html',
+  styleUrls: ['./global-settings-dialog.component.scss'],
 })
-export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
+export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
   apertureModes = [
     { label: 'Adaptive Aperture', value: 'adaptive' },
     { label: 'Constant Aperture', value: 'constant' },
@@ -27,7 +28,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
 
   catalogs$: Observable<Catalog[]>;
 
-  settings: PhotometrySettings;
+  settings: GlobalSettings;
 
   destroy$ = new Subject<boolean>();
 
@@ -35,7 +36,7 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
   greaterThanZero = [Validators.required, isNumber, greaterThan(0)];
   minZero = [Validators.required, isNumber, Validators.min(0)];
 
-  photSettingsForm = new FormGroup({
+  photometryForm = new FormGroup({
     mode: new FormControl('', { validators: [Validators.required] }),
     gain: new FormControl('', { validators: this.greaterThanZero, updateOn: 'blur' }),
     centroidRadius: new FormControl('', { validators: this.minZero, updateOn: 'blur' }),
@@ -56,6 +57,9 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     fixEll: new FormControl(false),
     fixRot: new FormControl(false),
     adaptiveAperCorr: new FormControl(false, { updateOn: 'blur' }),
+  });
+
+  calibrationForm = new FormGroup({
     calibrationEnabled: new FormControl(false),
     zeroPoint: new FormControl('', { validators: this.isNumber, updateOn: 'blur' }),
     catalog: new FormControl('', { validators: [Validators.required] }),
@@ -66,6 +70,9 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     maxSnrEnabled: new FormControl(false),
     maxSnr: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     sourceMatchTol: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+  })
+
+  sourceExtractionForm = new FormGroup({
     threshold: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     bkSize: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     bkFilterSize: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
@@ -81,32 +88,47 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
     clean: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     satLevel: new FormControl('', { validators: [Validators.required, isNumber], updateOn: 'blur' }),
     discardSaturated: new FormControl(false),
-
-  });
+  })
 
   constructor(
-    public dialogRef: MatDialogRef<PhotSettingsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: PhotometrySettings,
+    public dialogRef: MatDialogRef<GlobalSettingsDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: GlobalSettings,
     private store: Store
   ) {
     this.settings = data;
     this.catalogs$ = this.store.select(WorkbenchState.getCatalogs);
 
-    this.photSettingsForm.patchValue(this.settings);
+    this.photometryForm.patchValue(this.settings.photometry);
+    this.calibrationForm.patchValue(this.settings.calibration);
+    this.sourceExtractionForm.patchValue(this.settings.sourceExtraction)
 
-    this.photSettingsForm.valueChanges
+    this.photometryForm.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.onPhotSettingsFormValueChange();
+        this.onPhotometryFormChange();
       });
 
-    this.onPhotSettingsFormValueChange();
+    this.calibrationForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.onCalibrationFormChange();
+      });
+
+    this.sourceExtractionForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.onSourceExtractionFormChange();
+      });
+
+    this.onPhotometryFormChange();
+    this.onCalibrationFormChange();
+    this.onSourceExtractionFormChange();
   }
 
 
-  onPhotSettingsFormValueChange() {
-    let value = this.photSettingsForm.value;
-    let controls = this.photSettingsForm.controls;
+  onPhotometryFormChange() {
+    let value = this.photometryForm.value;
+    let controls = this.photometryForm.controls;
     let elliptical = controls.elliptical.value;
     if (!elliptical) {
       controls.b.disable({ emitEvent: false });
@@ -116,13 +138,13 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
 
       value = {
         ...value,
-        b: this.photSettingsForm.value.a,
-        bOut: this.photSettingsForm.value.aOut,
+        b: this.photometryForm.value.a,
+        bOut: this.photometryForm.value.aOut,
         theta: 0,
         thetaOut: 0,
       };
 
-      this.photSettingsForm.patchValue(value, { emitEvent: false });
+      this.photometryForm.patchValue(value, { emitEvent: false });
 
     } else {
       controls.b.enable({ emitEvent: false });
@@ -138,10 +160,35 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
       controls.aKrFactor.enable({ emitEvent: false });
     }
 
+
+
+
+    this.settings.photometry = {
+      ...this.settings.photometry,
+      ...value,
+    };
+
+  }
+
+  onCalibrationFormChange() {
+    let value = this.calibrationForm.value;
+    let controls = this.calibrationForm.controls;
+
     let calibrationEnabled = controls.calibrationEnabled.value;
     (calibrationEnabled && controls.sourceInclusionPercentageEnabled.value) ? controls.sourceInclusionPercentage.enable({ emitEvent: false }) : controls.sourceInclusionPercentage.disable({ emitEvent: false });
     (calibrationEnabled && controls.minSnrEnabled.value) ? controls.minSnr.enable({ emitEvent: false }) : controls.minSnr.disable({ emitEvent: false });
     (calibrationEnabled && controls.maxSnrEnabled.value) ? controls.maxSnr.enable({ emitEvent: false }) : controls.maxSnr.disable({ emitEvent: false });
+
+    this.settings.calibration = {
+      ...this.settings.calibration,
+      ...value,
+    };
+
+  }
+
+  onSourceExtractionFormChange() {
+    let value = this.sourceExtractionForm.value;
+    let controls = this.sourceExtractionForm.controls;
 
     if (controls.deblend.value) {
       controls.deblendLevels.enable({ emitEvent: false });
@@ -152,8 +199,8 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
       controls.deblendContrast.disable({ emitEvent: false });
     }
 
-    this.settings = {
-      ...this.settings,
+    this.settings.sourceExtraction = {
+      ...this.settings.sourceExtraction,
       ...value,
     };
 
@@ -170,7 +217,10 @@ export class PhotSettingsDialogComponent implements OnInit, OnDestroy {
   }
 
   restoreDefaults() {
-    this.settings = { ...defaultPhotometrySettings };
-    this.photSettingsForm.patchValue(this.settings);
+    this.settings = { ...defaults };
+
+    this.photometryForm.patchValue(this.settings.photometry);
+    this.calibrationForm.patchValue(this.settings.calibration);
+    this.sourceExtractionForm.patchValue(this.settings.sourceExtraction)
   }
 }

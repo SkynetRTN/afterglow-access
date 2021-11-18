@@ -29,7 +29,7 @@ import {
   UpdateWcsCalibrationSettings,
 } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
-import { SourceExtractionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
+import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 
 @Component({
   selector: 'app-wcs-calibration-panel',
@@ -165,7 +165,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -193,20 +193,6 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
   onSubmitClick() {
     this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedHduIds.value));
-  }
-
-  onOpenSourceExtractionSettingsClick() {
-    let sourceExtractionSettings = this.store.selectSnapshot(WorkbenchState.getSourceExtractionSettings);
-    let dialogRef = this.dialog.open(SourceExtractionDialogComponent, {
-      width: '500px',
-      data: { ...sourceExtractionSettings },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.store.dispatch(new UpdateSourceExtractionSettings(result));
-      }
-    });
   }
 
   onAutofillFromFocusedViewerClick(header: Header) {

@@ -824,8 +824,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -870,8 +870,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -915,8 +915,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -944,8 +944,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -990,8 +990,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1035,8 +1035,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1067,7 +1067,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                 title: 'Preparing download',
                 message: `Please wait while we prepare the files for download.`,
                 progressMode: 'indeterminate',
-                job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
+                job$: this.store.select(JobsState.getJobById(jobId)),
               };
               let dialogRef = this.dialog.open(JobProgressDialogComponent, {
                 width: '400px',
@@ -1103,9 +1103,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
-        () => {}
+        () => { },
+        (err) => { },
+        () => { }
       );
   }
 
@@ -1203,7 +1203,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
+        () => { },
         (err) => {
           throw err;
         },
@@ -1306,7 +1306,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
+        () => { },
         (err) => {
           throw err;
         },
@@ -1325,7 +1325,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       maxWidth: '1200px',
     });
 
-    dialogRef.afterClosed().subscribe((assets) => {});
+    dialogRef.afterClosed().subscribe((assets) => { });
   }
 
   refresh() {

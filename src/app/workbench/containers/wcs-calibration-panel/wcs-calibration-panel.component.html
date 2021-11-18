@@ -58,9 +58,6 @@
     </div>
 
     <div style="text-align: right; width: 100%">
-      <button class="mr-2 mt-3" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
-        Open Source Extraction Settings...
-      </button>
       <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>
         Submit
       </button>
@@ -69,10 +66,8 @@
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
   <div *ngIf="activeJob$ | async; let job" style="margin-top: 10px">
-    <div
-      class="alert alert-info"
-      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
-    >
+    <div class="alert alert-info"
+      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
       <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">

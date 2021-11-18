@@ -8,6 +8,7 @@ import {
   ofActionCompleted,
   ofActionSuccessful,
   ofActionErrored,
+  createSelector,
 } from '@ngxs/store';
 import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip } from 'rxjs/operators';
@@ -32,6 +33,7 @@ import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 import { JobType } from './models/job-types';
 import { FieldCalibrationJobResult } from './models/field-calibration';
+import { SourceExtractionJobResult } from './models/source-extraction';
 
 export interface JobsStateModel {
   version: string;
@@ -70,12 +72,15 @@ export class JobsState {
     return Object.values(state.entities);
   }
 
-  @Selector()
-  @ImmutableSelector()
-  public static getJobById(state: JobsStateModel) {
-    return (jobId) => {
-      return jobId in state.entities ? state.entities[jobId] : null;
-    };
+  static getJobById(id: string) {
+    return createSelector(
+      [JobsState.getJobEntities],
+      (
+        jobEntities: { [id: string]: Job }
+      ) => {
+        return jobEntities[id] || null;
+      }
+    );
   }
 
   @Action(ResetState)
@@ -151,6 +156,12 @@ export class JobsState {
                     result.zeroPointError = 0.123456789
                     value = result;
                   }
+                  // else if (state.entities[job.id].type == JobType.SourceExtraction) {
+                  //   let result = value as SourceExtractionJobResult;
+                  //   result.errors = [{ id: '1', detail: 'Test error for debugging', status: '', meta: {} }]
+                  //   result.warnings = ['This is a test warning']
+                  //   value = result;
+                  // }
                   state.entities[job.id].result = value;
                   return state;
                 });
