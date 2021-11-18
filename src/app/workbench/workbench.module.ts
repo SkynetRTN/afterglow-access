@@ -57,7 +57,6 @@ import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/vie
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
 import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
 import { WcsCalibrationPanelComponent } from './containers/wcs-calibration-panel/wcs-calibration-panel.component';
-import { SvgApertureMarkerComponent } from './components/svg-aperture-marker/svg-aperture-marker.component';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FileListOptionComponent } from './containers/file-list-option/file-list-option.component';
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
@@ -68,6 +67,7 @@ import { ImageViewerEventService } from './services/image-viewer-event.service';
 import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
 import { ImageViewerMarkerService } from './services/image-viewer-marker.service';
 import { ImageOrientationToolbarComponent } from './components/image-orientation-toolbar/image-orientation-toolbar.component';
+import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker/svg-photometry-marker.component';
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 
 export const COMPONENTS = [
@@ -82,10 +82,10 @@ export const COMPONENTS = [
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
   SvgTextMarkerComponent,
-  SvgCrosshairMarkerComponent,
   SvgTeardropMarkerComponent,
+  SvgPhotometryMarkerComponent,
   SvgLineMarkerComponent,
-  SvgApertureMarkerComponent,
+  SvgCrosshairMarkerComponent,
   SvgOutlinedEllipseComponent,
   WorkbenchComponent,
   DisplayToolPanelComponent,

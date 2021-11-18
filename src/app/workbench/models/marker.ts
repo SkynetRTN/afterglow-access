@@ -1,19 +1,22 @@
+import { PhotometryData } from 'src/app/jobs/models/photometry';
 import { TypeGuard } from '../../utils/guard-type.pipe';
+import { Source } from './source';
 
 export enum MarkerType {
   LINE,
   RECTANGLE,
   CIRCLE,
-  TEARDROP,
   TEXT,
-  APERTURE,
-  CROSSHAIR
+  PHOTOMETRY
 }
 
 interface IMarker {
   readonly type: MarkerType;
   id?: string;
   label?: string;
+  labelTheta?: number;
+  labelRadius?: number;
+  labelOpacity?: number;
   class?: string;
   selected?: boolean;
   data?: { [key: string]: any };
@@ -25,7 +28,22 @@ interface IMarker {
   };
 }
 
+export interface PhotometryMarker extends IMarker {
+  type: MarkerType.PHOTOMETRY;
+  x: number;
+  y: number;
+  theta: number;
+  raHours: number;
+  decDegs: number;
+  source: Source;
+  photometryData: PhotometryData;
+  showAperture: boolean;
+  showCrosshair: boolean;
+}
+
+
 export interface LineMarker extends IMarker {
+  type: MarkerType.LINE;
   x1: number;
   y1: number;
   x2: number;
@@ -33,45 +51,37 @@ export interface LineMarker extends IMarker {
 }
 
 export interface RectangleMarker extends IMarker {
+  type: MarkerType.RECTANGLE;
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export interface CrosshairMarker extends IMarker {
-  x: number;
-  y: number;
-  radius: number;
-  labelRadius: number;
-  labelTheta: number;
-}
-
 export interface CircleMarker extends IMarker {
+  type: MarkerType.CIRCLE;
   x: number;
   y: number;
   radius: number;
   labelRadius: number;
-  labelTheta: number;
 }
 
-export interface ApertureMarker extends IMarker {
-  x: number;
-  y: number;
-  apertureA: number;
-  apertureB: number;
-  apertureTheta: number;
-  annulusAIn: number;
-  annulusBIn: number;
-  annulusAOut: number;
-  annulusBOut: number;
-  labelRadius: number;
-  labelTheta: number;
-}
+// export interface ApertureMarker extends IMarker {
+//   x: number;
+//   y: number;
+//   apertureA: number;
+//   apertureB: number;
+//   apertureTheta: number;
+//   annulusAIn: number;
+//   annulusBIn: number;
+//   annulusAOut: number;
+//   annulusBOut: number;
+//   labelRadius: number;
+// }
 
-export interface TeardropMarker extends CircleMarker {
-  theta: number;
-}
+// export interface TeardropMarker extends CircleMarker {
+//   theta: number;
+// }
 
 export interface TextMarker extends IMarker {
   x: number;
@@ -79,7 +89,8 @@ export interface TextMarker extends IMarker {
   text: string;
 }
 
-export type Marker = LineMarker | RectangleMarker | CircleMarker | TeardropMarker | TextMarker | ApertureMarker;
+
+export type Marker = LineMarker | RectangleMarker | CircleMarker | TextMarker | PhotometryMarker;
 
 export const isLineMarker: TypeGuard<Marker, LineMarker> = (marker: Marker): marker is LineMarker =>
   marker.type === MarkerType.LINE;
@@ -87,14 +98,8 @@ export const isLineMarker: TypeGuard<Marker, LineMarker> = (marker: Marker): mar
 export const isCircleMarker: TypeGuard<Marker, CircleMarker> = (marker: Marker): marker is CircleMarker =>
   marker.type === MarkerType.CIRCLE;
 
-export const isCrosshairMarker: TypeGuard<Marker, CrosshairMarker> = (marker: Marker): marker is CrosshairMarker =>
-  marker.type === MarkerType.CROSSHAIR;
-
 export const isRectangleMarker: TypeGuard<Marker, RectangleMarker> = (marker: Marker): marker is RectangleMarker =>
   marker.type === MarkerType.RECTANGLE;
 
-export const isApertureMarker: TypeGuard<Marker, ApertureMarker> = (marker: Marker): marker is ApertureMarker =>
-  marker.type === MarkerType.APERTURE;
-
-export const isTeardropMarker: TypeGuard<Marker, TeardropMarker> = (marker: Marker): marker is TeardropMarker =>
-  marker.type === MarkerType.TEARDROP;
+export const isPhotometryMarker: TypeGuard<Marker, PhotometryMarker> = (marker: Marker): marker is PhotometryMarker =>
+  marker.type === MarkerType.PHOTOMETRY;

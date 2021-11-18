@@ -173,7 +173,7 @@ import { StackingJob } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PosType, Source } from './models/source';
-import { MarkerType, LineMarker, RectangleMarker, CircleMarker, TeardropMarker, Marker } from './models/marker';
+import { MarkerType, LineMarker, RectangleMarker, CircleMarker } from './models/marker';
 import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
 import { SourceExtractionRegionOption } from './models/source-extraction-settings';
@@ -225,7 +225,7 @@ import { AfterglowConfigService } from '../afterglow-config.service';
 import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'cf22193a-8f35-4e17-9ea5-10c71e58e352',
+  version: '40b0b73c-39cd-4fb5-a733-7e6d9b70af3e',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -287,7 +287,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   photometryPanelConfig: {
     showSourceLabels: false,
     showSourceMarkers: true,
-    showSourceApertures: false,
+    showSourceApertures: true,
     centroidClicks: true,
     showSourcesFromAllFiles: true,
     selectedSourceIds: [],
@@ -3317,7 +3317,6 @@ export class WorkbenchState {
           }
           return {
             id: null,
-            label: '',
             objectId: '',
             hduId: d.fileId.toString(),
             posType: posType,

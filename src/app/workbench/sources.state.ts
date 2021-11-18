@@ -82,7 +82,7 @@ export class SourcesState {
           ...source,
           id: id,
         };
-        if (state.entities[id].label == null) {
+        if (!state.entities[id].label) {
           state.entities[id].label = '' + nextSeed;
         }
       });

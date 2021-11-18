@@ -9,6 +9,9 @@ import { Store } from '@ngxs/store';
 import { Logout, Login } from '../../../auth/auth.actions';
 import { Navigate } from '@ngxs/router-plugin';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
+import { WorkbenchState } from '../../workbench.state';
+import { PhotSettingsDialogComponent } from '../phot-settings-dialog/phot-settings-dialog.component';
+import { UpdatePhotometrySettings } from '../../workbench.actions';
 
 @Component({
   selector: 'app-navbar',
@@ -23,9 +26,9 @@ export class NavbarComponent implements OnInit, OnChanges {
 
   shortcuts: ShortcutInput[] = [];
 
-  constructor(public dialog: MatDialog, private router: Router, private store: Store) {}
+  constructor(public dialog: MatDialog, private router: Router, private store: Store) { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnChanges() {
     if (!this.user) {
@@ -75,5 +78,21 @@ export class NavbarComponent implements OnInit, OnChanges {
 
   logout() {
     this.store.dispatch(new Navigate(['/logout']));
+  }
+
+  openCoreSettingsDialog() {
+    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
+    let dialogRef = this.dialog.open(PhotSettingsDialogComponent, {
+      width: '80vw',
+      maxWidth: '900px',
+      data: { ...photometrySettings },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.store.dispatch(new UpdatePhotometrySettings(result));
+      }
+    });
   }
 }

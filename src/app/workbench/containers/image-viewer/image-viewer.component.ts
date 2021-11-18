@@ -46,12 +46,6 @@ import {
 } from '../../../data-files/models/data-file';
 import {
   Marker,
-  LineMarker,
-  MarkerType,
-  TeardropMarker,
-  CircleMarker,
-  RectangleMarker,
-  ApertureMarker,
 } from '../../models/marker';
 import { BehaviorSubject, Subject } from 'rxjs';
 import {
@@ -178,7 +172,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   imageMouseY: number = null;
 
   private lastImageData: IImageData<Uint32Array>;
-  private hduLoading: {[key: string]: boolean} = {}
+  private hduLoading: { [key: string]: boolean } = {}
 
   constructor(
     private store: Store,
@@ -304,7 +298,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -541,8 +535,8 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     }
 
     hduIds.forEach((hduId) => {
-      if(this.hduLoading[hduId]) {
-        loadComposite= false;
+      if (this.hduLoading[hduId]) {
+        loadComposite = false;
         return;
       }
       let hdu = hduEntities[hduId];
@@ -565,7 +559,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             if (a.result.successful) this.handleLoadTile($event);
           });
 
-        if(!imageHdu.hist.loading) this.store.dispatch(new LoadImageHduHistogram(hdu.id));
+        if (!imageHdu.hist.loading) this.store.dispatch(new LoadImageHduHistogram(hdu.id));
         loadComposite = false;
         return;
       }
@@ -586,7 +580,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             if (a.result.successful) this.handleLoadTile($event);
           });
 
-        if(!header.loading) this.store.dispatch(new LoadHduHeader(hdu.id));
+        if (!header.loading) this.store.dispatch(new LoadHduHeader(hdu.id));
         loadComposite = false;
         return;
       }

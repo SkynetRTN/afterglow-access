@@ -90,7 +90,7 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { IImageData } from '../../../data-files/models/image-data';
-import { ApertureMarker, CircleMarker, CrosshairMarker, MarkerType, RectangleMarker, TeardropMarker } from '../../models/marker';
+import { MarkerType, PhotometryMarker, RectangleMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
 import { FieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
 
@@ -560,7 +560,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
         let showSourceLabels = config.showSourceLabels;
 
-        let markers: Array<CircleMarker | TeardropMarker | ApertureMarker | RectangleMarker> = [];
+        let markers: Array<PhotometryMarker | RectangleMarker> = [];
         let mode = coordMode;
 
         if (!header.wcs || !header.wcs.isValid()) mode = 'pixel';
@@ -575,92 +575,92 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             return;
           }
 
-          let photData = sourcePhotometryData[source.id];
-          if (config.showSourceApertures && photData && photData.x !== null && photData.y !== null && photData.aperA !== null) {
-            let tooltipMessage = [];
-            if (photData.raHours !== null && photData.decDegs !== null) {
+          let photometryData = sourcePhotometryData[source.id];
+          let tooltipMessage = [];
+          if (source.label) tooltipMessage.push(source.label)
+          if (photometryData) {
+
+            if (photometryData.raHours !== null && photometryData.decDegs !== null) {
               tooltipMessage.push(
-                `RA,DEC: (${formatDms(photData.raHours, 2, 3)}, ${formatDms(photData.decDegs, 2, 3)})`
+                `RA,DEC: (${formatDms(photometryData.raHours, 2, 3)}, ${formatDms(photometryData.decDegs, 2, 3)})`
               );
             }
-            if (photData.x !== null && photData.y !== null) {
-              tooltipMessage.push(`X,Y: (${round(photData.x, 3)}, ${round(photData.y, 3)})`);
+            if (photometryData.x !== null && photometryData.y !== null) {
+              tooltipMessage.push(`X,Y: (${round(photometryData.x, 3)}, ${round(photometryData.y, 3)})`);
             }
 
-            if (photData.mag !== null && photData.magError !== null) {
-              tooltipMessage.push(`${round(photData.mag, 3)} +/- ${round(photData.magError, 3)} mag`);
+            if (photometryData.mag !== null && photometryData.magError !== null) {
+              tooltipMessage.push(`${round(photometryData.mag, 3)} +/- ${round(photometryData.magError, 3)} mag`);
             }
-
-            let apertureMarker: ApertureMarker = {
-              id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-              type: MarkerType.APERTURE,
-              x: photData.x,
-              y: photData.y,
-              apertureA: photData.aperA,
-              apertureB: photData.aperB,
-              apertureTheta: photData.aperTheta,
-              annulusAIn: photData.annulusAIn,
-              annulusBIn: photData.annulusBIn,
-              annulusAOut: photData.annulusAOut,
-              annulusBOut: photData.annulusBOut,
-              labelTheta: 0,
-              labelRadius: Math.max(photData.annulusAOut, photData.annulusBOut) + 15,
-              label: showSourceLabels ? source.label : '',
-              selected: selected,
-              data: { source: source },
-              tooltip: {
-                class: 'photometry-data-tooltip',
-                message: tooltipMessage.join('\n'),
-                showDelay: 500,
-                hideDelay: null,
-              },
-            };
-
-            markers.push(apertureMarker);
           }
-          // else {
-          if (source.pm) {
-            markers.push({
-              id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-              type: MarkerType.TEARDROP,
-              x: coord.x,
-              y: coord.y,
-              radius: 15,
-              labelRadius: 30,
-              labelTheta: 0,
-              label: !config.showSourceApertures && showSourceLabels ? source.label : '',
-              theta: coord.theta,
-              selected: selected,
-              data: { source: source },
-            } as TeardropMarker);
-          } else {
-            // markers.push({
-            //   id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-            //   type: MarkerType.CIRCLE,
-            //   x: coord.x,
-            //   y: coord.y,
-            //   radius: 15,
-            //   labelRadius: 30,
-            //   labelTheta: 0,
-            //   label: showSourceLabels ? source.label : '',
-            //   selected: selected,
-            //   data: { source: source },
-            // } as CircleMarker);
 
-            markers.push({
-              id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-              type: MarkerType.CROSSHAIR,
-              x: coord.x,
-              y: coord.y,
-              radius: 1,
-              labelRadius: 4,
-              labelTheta: 0,
-              label: !config.showSourceApertures && showSourceLabels ? source.label : '',
-              selected: selected,
-              data: { source: source },
-            } as CrosshairMarker)
-            // }
+          let marker: PhotometryMarker = {
+            id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+            type: MarkerType.PHOTOMETRY,
+            ...coord,
+            source: source,
+            photometryData: photometryData,
+            selected: selected,
+            data: { source: source },
+            tooltip: {
+              class: 'photometry-data-tooltip',
+              message: tooltipMessage.join('\n'),
+              showDelay: 500,
+              hideDelay: null,
+            },
+            label: config.showSourceLabels ? source.label : '',
+            labelRadius: 10,
+            showAperture: config.showSourceApertures,
+            showCrosshair: true
           }
+
+          markers.push(marker);
+
+
+
+          // // else {
+          // if (source.pm) {
+          //   markers.push({
+          //     id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+          //     type: MarkerType.TEARDROP,
+          //     x: coord.x,
+          //     y: coord.y,
+          //     radius: 15,
+          //     labelRadius: 30,
+          //     labelTheta: 0,
+          //     label: !config.showSourceApertures && showSourceLabels ? source.label : '',
+          //     theta: coord.theta,
+          //     selected: selected,
+          //     data: { source: source },
+          //   } as TeardropMarker);
+          // } else {
+          //   // markers.push({
+          //   //   id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+          //   //   type: MarkerType.CIRCLE,
+          //   //   x: coord.x,
+          //   //   y: coord.y,
+          //   //   radius: 15,
+          //   //   labelRadius: 30,
+          //   //   labelTheta: 0,
+          //   //   label: showSourceLabels ? source.label : '',
+          //   //   selected: selected,
+          //   //   data: { source: source },
+          //   // } as CircleMarker);
+
+          //   markers.push({
+          //     id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+          //     type: MarkerType.CROSSHAIR,
+          //     x: coord.x,
+          //     y: coord.y,
+          //     radius: 1,
+          //     labelRadius: 4,
+          //     labelTheta: 0,
+          //     label: !config.showSourceApertures && showSourceLabels ? source.label : '',
+          //     selected: selected,
+          //     data: { source: source },
+          //   } as CrosshairMarker)
+          //   // }
+          // }
         });
 
         return markers;
