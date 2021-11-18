@@ -148,14 +148,14 @@ export class JobsState {
               tap((value) => {
                 setState((state: JobsStateModel) => {
 
-                  if (state.entities[job.id].type == JobType.FieldCalibration) {
-                    let result = value as FieldCalibrationJobResult;
-                    result.errors = []
-                    result.warnings = []
-                    result.zeroPoint = 10.123456789
-                    result.zeroPointError = 0.123456789
-                    value = result;
-                  }
+                  // if (state.entities[job.id].type == JobType.FieldCalibration) {
+                  //   let result = value as FieldCalibrationJobResult;
+                  //   result.errors = []
+                  //   result.warnings = []
+                  //   result.zeroPoint = 10.123456789
+                  //   result.zeroPointError = 0.123456789
+                  //   value = result;
+                  // }
                   // else if (state.entities[job.id].type == JobType.SourceExtraction) {
                   //   let result = value as SourceExtractionJobResult;
                   //   result.errors = [{ id: '1', detail: 'Test error for debugging', status: '', meta: {} }]
