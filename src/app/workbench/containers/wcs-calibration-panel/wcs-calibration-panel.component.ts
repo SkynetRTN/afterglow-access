@@ -119,11 +119,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
         if (settings) {
           this.wcsCalibrationForm.patchValue(
             {
-              ra: settings.ra || settings.ra == 0 ? formatDms(settings.ra, 3, 4, null, null, null, null) : settings.ra,
-              dec:
-                settings.dec || settings.dec == 0
-                  ? formatDms(settings.dec, 3, 4, null, null, null, null)
-                  : settings.dec,
+              ra: settings.ra,
+              dec: settings.dec,
               radius: settings.radius,
               minScale: settings.minScale,
               maxScale: settings.maxScale,
@@ -138,23 +135,23 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       if (this.wcsCalibrationForm.valid) {
         this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: value.selectedHduIds }));
 
-        let raString: string = value.ra;
-        let ra: number = null;
-        if (raString && raString.trim() != '') {
-          ra = Number(raString);
-          if (isNaN(ra)) ra = parseDms(raString);
-        }
+        // let raString: string = value.ra;
+        // let ra: number = null;
+        // if (raString && raString.trim() != '') {
+        //   ra = Number(raString);
+        //   if (isNaN(ra)) ra = parseDms(raString);
+        // }
 
-        let decString: string = value.dec;
-        let dec: number = null;
-        if (decString && decString.trim() != '') {
-          dec = Number(decString);
-          if (isNaN(dec)) dec = parseDms(decString);
-        }
+        // let decString: string = value.dec;
+        // let dec: number = null;
+        // if (decString && decString.trim() != '') {
+        //   dec = Number(decString);
+        //   if (isNaN(dec)) dec = parseDms(decString);
+        // }
         this.store.dispatch(
           new UpdateWcsCalibrationSettings({
-            ra: ra,
-            dec: dec,
+            ra: value.ra,
+            dec: value.dec,
             radius: value.radius,
             maxScale: value.maxScale,
             minScale: value.minScale,

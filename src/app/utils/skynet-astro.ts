@@ -64,20 +64,19 @@ export function degToDms(value) {
  *  @param str The string to parse
  *  @return The floating point value of the sexagesimal string
  */
-export function parseDms(str) {
-  let fields = str.split(/[ :_]/);
+export function parseDms(str: string) {
+  let fields = str.split(/[ :_]/).map(s => s.trim());
   let sign = 1;
   let result = 0;
 
-  if (Number(fields[0]) < 0) {
+  if (fields[0][0] == '-') {
     sign = -1;
-    fields[0] = -Number(fields[0]);
   }
 
   let denom = 1.0;
 
   for (let i in fields) {
-    let field = Number(fields[i]);
+    let field = Math.abs(Number(fields[i]));
     result += field / denom;
     denom *= 60;
   }
@@ -380,8 +379,8 @@ export function altHaToDec(alt, ha, lat) {
     Math.sin(lat) -
     Math.sqrt(
       Math.cos(ha) * Math.cos(ha) * Math.cos(lat) * Math.cos(lat) -
-        Math.sin(alt) * Math.sin(alt) +
-        Math.sin(lat) * Math.sin(lat)
+      Math.sin(alt) * Math.sin(alt) +
+      Math.sin(lat) * Math.sin(lat)
     );
 
   let bottom = Math.cos(ha) * Math.cos(lat) + Math.sin(alt);
@@ -725,16 +724,16 @@ export function _calculateSolarTimes(lat, lon, startTimeJd) {
     4 *
     rad2deg(
       vary * Math.sin(2 * deg2rad(gmls)) -
-        2 * eeo * Math.sin(deg2rad(gmas)) +
-        4 * eeo * vary * Math.sin(deg2rad(gmas)) * Math.cos(2 * deg2rad(gmls)) -
-        0.5 * vary * vary * Math.sin(4 * deg2rad(gmls)) -
-        1.25 * eeo * eeo * Math.sin(2 * deg2rad(gmas))
+      2 * eeo * Math.sin(deg2rad(gmas)) +
+      4 * eeo * vary * Math.sin(deg2rad(gmas)) * Math.cos(2 * deg2rad(gmls)) -
+      0.5 * vary * vary * Math.sin(4 * deg2rad(gmls)) -
+      1.25 * eeo * eeo * Math.sin(2 * deg2rad(gmas))
     );
 
   let sunriseHa = rad2deg(
     Math.acos(
       Math.cos(deg2rad(90.833)) / (Math.cos(deg2rad(lat)) * Math.cos(deg2rad(sunDec))) -
-        Math.tan(deg2rad(lat)) * Math.tan(deg2rad(sunDec))
+      Math.tan(deg2rad(lat)) * Math.tan(deg2rad(sunDec))
     )
   );
   let solarNoon = (720 - 4 * lon - eot) / 60.0;
@@ -994,7 +993,7 @@ export function sep(h1, v1, h2, v2) {
 
   let numerator = Math.sqrt(
     Math.pow(Math.cos(v2) * Math.sin(deltaH), 2.0) +
-      Math.pow(Math.cos(v1) * Math.sin(v2) - Math.sin(v1) * Math.cos(v2) * Math.cos(deltaH), 2.0)
+    Math.pow(Math.cos(v1) * Math.sin(v2) - Math.sin(v1) * Math.cos(v2) * Math.cos(deltaH), 2.0)
   );
   let denominator = Math.sin(v1) * Math.sin(v2) + Math.cos(v1) * Math.cos(v2) * Math.cos(deltaH);
 

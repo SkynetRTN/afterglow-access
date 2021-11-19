@@ -223,9 +223,10 @@ import { GlobalSettings, defaults as defaultGlobalSettings, toPhotometryJobSetti
 import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
+import { parseDms } from '../utils/skynet-astro';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '60654b2e-0010-4a8b-b9e5-92f5e1e1e76d',
+  version: '5bc9d4d6-25a3-4946-a64f-53e0aa76004d',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -284,7 +285,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       selectedHduIds: [],
     },
     batchPhotJobId: '',
-    batchCalJobId: ''
+    batchCalJobId: '',
+    batchCalEnabled: undefined,
   },
   pixelOpsPanelConfig: {
     currentPixelOpsJobId: '',
@@ -3115,9 +3117,11 @@ export class WorkbenchState {
 
     let state = getState();
     let wcsSettings = state.wcsCalibrationSettings;
+    let raHours = typeof (wcsSettings.ra) == 'string' ? parseDms(wcsSettings.ra) : wcsSettings.ra;
+    let decDegs = typeof (wcsSettings.dec) == 'string' ? parseDms(wcsSettings.dec) : wcsSettings.dec;
     let wcsCalibrationJobSettings: WcsCalibrationJobSettings = {
-      raHours: wcsSettings.ra,
-      decDegs: wcsSettings.dec,
+      raHours: raHours,
+      decDegs: decDegs,
       radius: wcsSettings.radius,
       minScale: wcsSettings.minScale,
       maxScale: wcsSettings.maxScale,
@@ -3288,7 +3292,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public photometerSources(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceIds, hduIds, settings, isBatch }: PhotometerSources
+    { sourceIds, hduIds, isBatch }: PhotometerSources
   ) {
     let state = getState();
     let sourcesState = this.store.selectSnapshot(SourcesState.getState);
@@ -3476,7 +3480,7 @@ export class WorkbenchState {
   @ImmutableContext()
   public calibrateField(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduIds, photometrySettings, calibrationSettings, sourceExtractionSettings, isBatch }: CalibrateField
+    { hduIds, isBatch }: CalibrateField
   ) {
     let state = getState();
 

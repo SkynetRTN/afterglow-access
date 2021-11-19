@@ -116,6 +116,7 @@ export interface PhotometryPanelConfig {
   autoPhot: boolean;
   batchPhotJobId: string;
   batchCalJobId: string;
+  batchCalEnabled: boolean;
 }
 
 export interface PixelOpsPanelConfig {
@@ -140,8 +141,8 @@ export interface WcsCalibrationPanelState {
 }
 
 export interface WcsCalibrationSettings {
-  ra?: number;
-  dec?: number;
+  ra?: number | string;
+  dec?: number | string;
   radius?: number;
   minScale?: number;
   maxScale?: number;
