@@ -297,26 +297,48 @@
           </div>
 
           <div *ngIf="batchPhotJob$ | async; let batchPhotJob">
-            <div *ngIf="batchPhotJob.state?.progress && batchPhotJob.state.progress != 100;
-            else downloadBatchResultsBlock
+            <div *ngIf="batchPhotJob.state?.progress != 100;
+            else batchPhotJobComplete
           ">
-              <mat-progress-bar mode="determinate" [value]="batchPhotJob.state.progress" [color]="'accent'">
+              <mat-progress-bar mode="determinate" [value]="batchPhotJob.state?.progress" [color]="'accent'">
               </mat-progress-bar>
             </div>
-            <ng-template #downloadBatchResultsBlock>
+            <ng-template #batchPhotJobComplete>
               <div class="mb-3" *ngIf="batchPhotJob.result; let batchPhotJobResult">
                 <div
-                  *ngIf="batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0; else resultsBlock">
+                  *ngIf="batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0; else batchPhotJobSuccess">
                   <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
                 </div>
-                <ng-template #resultsBlock>
-                  <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobResult)">
-                    <mat-icon>save_alt</mat-icon>
-                    <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }} source(s)
-                      in
-                      {{ (batchPhotJob$ | async)?.fileIds.length }}
-                      file(s)</span>
-                  </button>
+                <ng-template #batchPhotJobSuccess>
+                  <ng-container *ngIf="(batchCalEnabled$ | async); else batchPhotJobCalibrated">
+                    <div *ngIf="batchCalJob$ | async; let batchCalJob">
+                      <div *ngIf="batchCalJob.state?.progress != 100;
+                      else batchCalJobComplete
+                    ">
+                        <mat-progress-bar mode="indeterminate" [color]="'accent'">
+                        </mat-progress-bar>
+                      </div>
+                      <ng-template #batchCalJobComplete>
+                        <div class="mb-3" *ngIf="batchCalJob.result; let batchCalJobResult">
+                          <div *ngIf="batchCalJobResult.errors.length != 0; else batchPhotJobCalibrated">
+                            <div class="alert alert-danger">Calibration of batch photometry failed.</div>
+                          </div>
+
+                        </div>
+                      </ng-template>
+                    </div>
+                  </ng-container>
+                  <ng-template #batchPhotJobCalibrated>
+                    <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobResult)">
+                      <mat-icon>save_alt</mat-icon>
+                      <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
+                        source(s)
+                        in
+                        {{ (batchPhotJob$ | async)?.fileIds.length }}
+                        file(s)</span>
+                    </button>
+                  </ng-template>
+
                 </ng-template>
               </div>
             </ng-template>

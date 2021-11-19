@@ -144,6 +144,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   SourcePosType = PosType;
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
   batchPhotJob$: Observable<PhotometryJob>;
+  batchCalJob$: Observable<FieldCalibrationJob>;
+  batchCalEnabled$: Observable<boolean>;
   autoPhotJob$: Observable<PhotometryJob>;
   autoCalJob$: Observable<FieldCalibrationJob>;
   mergeError: string;
@@ -289,7 +291,17 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
     );
 
+    this.batchCalEnabled$ = this.store.select(WorkbenchState.getPhotometryPanelConfig).pipe(map(config => config.batchCalEnabled));
 
+    this.batchCalJob$ = combineLatest([
+      this.store.select(JobsState.getJobEntities),
+      this.config$.pipe(
+        map((s) => s.batchCalJobId),
+        distinctUntilChanged()
+      ),
+    ]).pipe(
+      map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob)
+    );
 
     this.batchPhotJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
@@ -298,8 +310,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         distinctUntilChanged()
       ),
     ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob),
-      filter((job) => job != null && job != undefined)
+      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
     );
 
     this.batchPhotFormData$ = this.config$.pipe(
@@ -347,7 +358,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           new PhotometerSources(
             rows.map((row) => row.source.id),
             [imageHdu.id],
-            photometrySettings,
             false
           )
         );
@@ -361,7 +371,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     ).subscribe(([imageHduId, photometrySettings, calibrationSettings, sourceExtractionSettings]) => {
       if (calibrationSettings.calibrationEnabled) {
         //recalibrate the field
-        this.store.dispatch(new CalibrateField([imageHduId], photometrySettings, sourceExtractionSettings, calibrationSettings, false))
+        this.store.dispatch(new CalibrateField([imageHduId], false))
       }
     })
 
@@ -806,7 +816,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       new PhotometerSources(
         sources.map((s) => s.id),
         [imageFile.id],
-        photometrySettings,
         false
       )
     );
@@ -889,15 +898,24 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   }
 
   batchPhotometer(sources: Source[], config: PhotometryPanelConfig) {
-    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
+    let calibrationSettings = this.store.selectSnapshot(WorkbenchState.getCalibrationSettings);
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ batchPhotJobId: null, batchCalJobId: null, batchCalEnabled: calibrationSettings.calibrationEnabled }));
     this.store.dispatch(
       new PhotometerSources(
         sources.map((s) => s.id),
         config.batchPhotFormData.selectedHduIds,
-        photometrySettings,
         true
       )
     );
+    if (calibrationSettings.calibrationEnabled) {
+      this.store.dispatch(
+        new CalibrateField(
+          config.batchPhotFormData.selectedHduIds,
+          true
+        )
+      );
+    }
+
   }
 
   downloadBatchPhotData(result: PhotometryJobResult) {

@@ -634,7 +634,6 @@ export class PhotometerSources {
   constructor(
     public sourceIds: string[],
     public hduIds: string[],
-    public settings: PhotometrySettings,
     public isBatch: boolean
   ) { }
 }
@@ -644,9 +643,6 @@ export class CalibrateField {
 
   constructor(
     public hduIds: string[],
-    public photometrySettings: PhotometrySettings,
-    public sourceExtractionSettings: SourceExtractionSettings,
-    public calibrationSettings: CalibrationSettings,
     public isBatch: boolean
   ) { }
 }
