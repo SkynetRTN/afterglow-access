@@ -4,7 +4,7 @@ Afterglow Access is the client-side component of the Afterglow Platform.  It was
 
 - [Afterglow Access](https://github.com/SkynetRTN/afterglow-access)
 - [Afterglow Core](https://github.com/SkynetRTN/afterglow-core)
-- [License](https://github.com/SkynetRTN/afterglow-core/blob/1_0/LICENSE.md)
+- [License](https://github.com/SkynetRTN/afterglow-access/blob/master/LICENSE.md)
 
 
 ## Getting Started
