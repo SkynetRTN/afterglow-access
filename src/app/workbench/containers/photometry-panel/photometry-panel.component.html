@@ -240,8 +240,8 @@
               <ng-container *ngIf="job.state.status == 'completed' && job.result; else progressBlock">
                 <div *ngIf="job.result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
                   fxLayout="column" fxFill fxLayoutAlign="center center">
-                  Calibration: {{(zeroPointCorrection$ | async) | number:'1.0-3'}} &#177;
-                  {{job.result.zeroPointError | number:'1.0-3'}} mag
+                  Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
+                  {{job.result.data[0]?.zeroPointError | number:'1.0-3'}} mag
                 </div>
                 <ng-template #errorBlock>
                   <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
@@ -329,7 +329,7 @@
                     </div>
                   </ng-container>
                   <ng-template #batchPhotJobCalibrated>
-                    <button class="" mat-raised-button (click)="downloadBatchPhotData(batchPhotJobResult)">
+                    <button class="" mat-raised-button (click)="downloadBatchPhotData()">
                       <mat-icon>save_alt</mat-icon>
                       <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
                         source(s)

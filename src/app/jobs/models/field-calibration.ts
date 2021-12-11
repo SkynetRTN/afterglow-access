@@ -16,14 +16,21 @@ export interface FieldCalibration {
   minSnr?: number;
   maxSnr?: number;
   sourceMatchTol: number;
+  variableCheckTol: number;
+  maxStarRms: number;
+  maxStars: number;
 }
 
 
 export interface FieldCalibrationJobResult extends JobResultBase {
   readonly type: JobType.FieldCalibration;
-  photResults: PhotometryData[];
-  zeroPoint: number;
-  zeroPointError: number;
+  data: Array<{
+    fileId: string;
+    photResults: PhotometryData[];
+    zeroPointCorr: number;
+    zeroPointError: number;
+  }>
+
 }
 
 export interface FieldCalibrationJob extends JobBase {

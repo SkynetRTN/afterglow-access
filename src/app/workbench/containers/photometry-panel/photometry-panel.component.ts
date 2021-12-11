@@ -92,7 +92,7 @@ import { HduType } from '../../../data-files/models/data-file-type';
 import { IImageData } from '../../../data-files/models/image-data';
 import { MarkerType, PhotometryMarker, RectangleMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
-import { FieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
+import { FieldCalibrationJob, FieldCalibrationJobResult } from 'src/app/jobs/models/field-calibration';
 import { CalibrationSettings } from '../../models/calibration-settings';
 import { GlobalSettings } from '../../models/global-settings';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
@@ -151,6 +151,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   mergeError: string;
   selectionModel = new SelectionModel<string>(true, []);
   zeroPointCorrection$: Observable<number>;
+  calibratedZeroPoint$: Observable<number>;
 
   batchPhotForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
@@ -240,14 +241,14 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     let calibrationEnabled$ = this.calibrationSettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
     let fixedZeroPoint$ = this.calibrationSettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
-    let calibratedZeroPoint$ = this.autoCalJob$.pipe(
-      map(job => job?.result?.zeroPoint),
+    this.zeroPointCorrection$ = this.autoCalJob$.pipe(
+      map(job => job?.result?.data[0]?.zeroPointCorr),
       startWith(null),
       distinctUntilChanged()
     )
 
-    this.zeroPointCorrection$ = combineLatest([calibrationEnabled$, fixedZeroPoint$, calibratedZeroPoint$]).pipe(
-      map(([calibrationEnabled, fixedZeroPoint, calibratedZeroPoint]) => !calibrationEnabled || calibratedZeroPoint === null || calibratedZeroPoint === undefined ? 0 : calibratedZeroPoint - fixedZeroPoint),
+    this.calibratedZeroPoint$ = combineLatest([calibrationEnabled$, this.zeroPointCorrection$, fixedZeroPoint$]).pipe(
+      map(([calibrationEnabled, zeroPointCorrection, fixedZeroPoint]) => fixedZeroPoint + zeroPointCorrection),
       distinctUntilChanged()
     )
 
@@ -269,7 +270,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           if (d) {
             d = {
               ...d,
-              mag: d.mag + zeroPointCorrection
+              mag: d.mag + (zeroPointCorrection || 0)
             }
           }
           return {
@@ -365,10 +366,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     let imageHduId$ = this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged())
 
-    combineLatest([imageHduId$, this.photometrySettings$, this.calibrationSettings$, this.sourceExtractionSettings$]).pipe(
+    combineLatest([imageHduId$, this.calibrationSettings$, this.photometrySettings$, this.sourceExtractionSettings$]).pipe(
       takeUntil(this.destroy$),
+      debounceTime(100),
       filter(([imageHduId]) => !!imageHduId)
-    ).subscribe(([imageHduId, photometrySettings, calibrationSettings, sourceExtractionSettings]) => {
+    ).subscribe(([imageHduId, calibrationSettings]) => {
       if (calibrationSettings.calibrationEnabled) {
         //recalibrate the field
         this.store.dispatch(new CalibrateField([imageHduId], false))
@@ -918,21 +920,53 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   }
 
-  downloadBatchPhotData(result: PhotometryJobResult) {
+  downloadBatchPhotData() {
+    let config = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
+    let jobEntities = this.store.selectSnapshot(JobsState.getJobEntities);
+    let photJob: PhotometryJob = jobEntities[config.batchPhotJobId] as PhotometryJob;
+    let calJob: FieldCalibrationJob;
+    if (config.batchCalEnabled) {
+      calJob = jobEntities[config.batchCalJobId] as FieldCalibrationJob;
+    }
+
+    let photData = photJob?.result?.data || [];
+
     let data = this.papa.unparse(
       snakeCaseKeys(
-        result.data.map((d) => {
-          let time = d.time ? moment.utc(d.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
-          let pmEpoch = d.pmEpoch ? moment.utc(d.pmEpoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+        photData.map((photRow) => {
+
+          let time = photRow.time ? moment.utc(photRow.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+          let pmEpoch = photRow.pmEpoch ? moment.utc(photRow.pmEpoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
           // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
           let jd = time ? datetimeToJd(time) : null;
-          return {
-            ...d,
+          let result = {
+            ...photRow,
             time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
             pmEpoch: pmEpoch ? this.datePipe.transform(pmEpoch, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
             jd: jd,
             mjd: jd ? jdToMjd(jd) : null,
+            zero_point: photJob.settings.zeroPoint
           };
+
+          if (config.batchCalEnabled) {
+            result['zero_point_correction'] = null;
+            result['zero_point_error'] = null;
+            result['calibrated_zero_point'] = null;
+            result['calibrated_mag'] = null;
+
+            if (calJob) {
+              let calRow = calJob.result?.data?.find(row => row.fileId == photRow.fileId);
+              if (calRow) {
+                result['zero_point_correction'] = calRow.zeroPointCorr;
+                result['zero_point_error'] = calRow.zeroPointError
+                result['calibrated_zero_point'] = calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr;
+                result['calibrated_mag'] = photRow.mag + ((calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr) - photJob.settings.zeroPoint);
+              }
+            }
+          }
+
+
+          return result;
         })
       ),
       {
@@ -951,11 +985,16 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           'exp_length',
           'mag',
           'mag_error',
+          'zero_point',
           'flux',
           'flux_error',
           'pm_sky',
           'pm_epoch',
           'pm_pos_angle_sky',
+          'zero_point_correction',
+          'zero_point_error',
+          'calibrated_zero_point',
+          'calibrated_mag'
         ],
       }
       // .sort((a, b) => (a.jd > b.jd ? 1 : -1))

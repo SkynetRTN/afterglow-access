@@ -70,7 +70,10 @@ export function toFieldCalibration(settings: GlobalSettings): FieldCalibration {
     let result: FieldCalibration = {
         catalogs: [c.catalog],
         sourceInclusionPercentage: c.sourceInclusionPercentageEnabled ? c.sourceInclusionPercentage : null,
-        sourceMatchTol: c.sourceMatchTol
+        sourceMatchTol: c.sourceMatchTol,
+        maxStarRms: c.maxStarRmsEnabled ? c.maxStarRms : 0,
+        maxStars: c.maxStarsEnabled ? c.maxStars : 0,
+        variableCheckTol: c.variableCheckEnabled ? c.variableCheckTol : 0,
     }
 
     if (c.minSnrEnabled) {

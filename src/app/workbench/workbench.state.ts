@@ -226,7 +226,7 @@ import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/f
 import { parseDms } from '../utils/skynet-astro';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '5bc9d4d6-25a3-4946-a64f-53e0aa76004d',
+  version: 'abf9ee7c-fbeb-49aa-9dcb-99ef3990890c',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',

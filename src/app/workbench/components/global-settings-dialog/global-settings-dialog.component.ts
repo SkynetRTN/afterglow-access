@@ -61,7 +61,7 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
 
   calibrationForm = new FormGroup({
     calibrationEnabled: new FormControl(false),
-    zeroPoint: new FormControl('', { validators: this.isNumber, updateOn: 'blur' }),
+    zeroPoint: new FormControl('', { validators: isNumber, updateOn: 'blur' }),
     catalog: new FormControl('', { validators: [Validators.required] }),
     sourceInclusionPercentageEnabled: new FormControl(false),
     sourceInclusionPercentage: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'blur' }),
@@ -70,6 +70,12 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
     maxSnrEnabled: new FormControl(false),
     maxSnr: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     sourceMatchTol: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    variableCheckEnabled: new FormControl(false),
+    variableCheckTol: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    maxStarRmsEnabled: new FormControl(false),
+    maxStarRms: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+    maxStarsEnabled: new FormControl(false),
+    maxStars: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
   })
 
   sourceExtractionForm = new FormGroup({
@@ -178,6 +184,9 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
     (calibrationEnabled && controls.sourceInclusionPercentageEnabled.value) ? controls.sourceInclusionPercentage.enable({ emitEvent: false }) : controls.sourceInclusionPercentage.disable({ emitEvent: false });
     (calibrationEnabled && controls.minSnrEnabled.value) ? controls.minSnr.enable({ emitEvent: false }) : controls.minSnr.disable({ emitEvent: false });
     (calibrationEnabled && controls.maxSnrEnabled.value) ? controls.maxSnr.enable({ emitEvent: false }) : controls.maxSnr.disable({ emitEvent: false });
+    (calibrationEnabled && controls.variableCheckEnabled.value) ? controls.variableCheckTol.enable({ emitEvent: false }) : controls.variableCheckTol.disable({ emitEvent: false });
+    (calibrationEnabled && controls.maxStarRmsEnabled.value) ? controls.maxStarRms.enable({ emitEvent: false }) : controls.maxStarRms.disable({ emitEvent: false });
+    (calibrationEnabled && controls.maxStarsEnabled.value) ? controls.maxStars.enable({ emitEvent: false }) : controls.maxStars.disable({ emitEvent: false });
 
     this.settings.calibration = {
       ...this.settings.calibration,

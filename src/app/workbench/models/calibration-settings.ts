@@ -9,6 +9,12 @@ export interface CalibrationSettings {
     maxSnrEnabled: boolean;
     maxSnr: number;
     sourceMatchTol: number;
+    variableCheckEnabled: boolean;
+    variableCheckTol: number;
+    maxStarRmsEnabled: boolean;
+    maxStarRms: number;
+    maxStarsEnabled: boolean;
+    maxStars: number;
 }
 
 export const defaults: CalibrationSettings = {
@@ -22,4 +28,10 @@ export const defaults: CalibrationSettings = {
     maxSnrEnabled: false,
     maxSnr: 800,
     sourceMatchTol: 5,
+    variableCheckEnabled: true,
+    variableCheckTol: 5,
+    maxStarRmsEnabled: false,
+    maxStarRms: 0.01,
+    maxStarsEnabled: false,
+    maxStars: 30
 };
