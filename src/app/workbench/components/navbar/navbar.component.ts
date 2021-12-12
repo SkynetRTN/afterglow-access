@@ -83,8 +83,10 @@ export class NavbarComponent implements OnInit, OnChanges {
   openCoreSettingsDialog() {
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
     let dialogRef = this.dialog.open(GlobalSettingsDialogComponent, {
-      width: '80vw',
-      maxWidth: '900px',
+      width: '100%',
+      height: '100%',
+      maxWidth: '1200px',
+      maxHeight: '800px',
       data: { ...settings },
       disableClose: true,
     });

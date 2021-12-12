@@ -70,6 +70,7 @@ import {
   UpdatePhotometrySettings,
   UpdateSourceExtractionSettings,
   CalibrateField,
+  RemoveAllAutoCalJobs,
 } from '../../workbench.actions';
 import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
 import { PhotData } from '../../models/source-phot-data';
@@ -229,6 +230,24 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
+    let autoPhotJobId$ = this.state$.pipe(
+      map((s) => s?.autoPhotJobId),
+      distinctUntilChanged()
+    )
+
+    this.autoPhotJob$ = combineLatest([
+      this.store.select(JobsState.getJobEntities),
+      autoPhotJobId$
+    ]).pipe(
+      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
+    );
+
+
+    let autoCalJobId$ = this.state$.pipe(
+      map((s) => s?.autoCalJobId),
+      distinctUntilChanged()
+    )
+
     this.autoCalJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
       this.state$.pipe(
@@ -282,15 +301,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       shareReplay(1)
     );
 
-    this.autoPhotJob$ = combineLatest([
-      this.store.select(JobsState.getJobEntities),
-      this.state$.pipe(
-        map((s) => s.autoPhotJobId),
-        distinctUntilChanged()
-      ),
-    ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
-    );
+
 
     this.batchCalEnabled$ = this.store.select(WorkbenchState.getPhotometryPanelConfig).pipe(map(config => config.batchCalEnabled));
 
@@ -301,7 +312,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         distinctUntilChanged()
       ),
     ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob)
+      map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob),
+      distinctUntilChanged()
     );
 
     this.batchPhotJob$ = combineLatest([
@@ -364,26 +376,40 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         );
       });
 
-    let imageHduId$ = this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged())
+    autoPhotJobId$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.store.select(JobsState.getJobEntities))
+    ).subscribe(([jobId, jobEntities]) => {
+      if (jobId && !jobEntities[jobId]) {
+        this.store.dispatch(new RemoveAllPhotDatas());
+      }
+    })
 
-    combineLatest([imageHduId$, this.calibrationSettings$, this.photometrySettings$, this.sourceExtractionSettings$]).pipe(
+    this.photometrySettings$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      //trigger rephotometering of all data
+      this.store.dispatch(new RemoveAllPhotDatas());
+    })
+
+    combineLatest([autoCalJobId$, calibrationEnabled$]).pipe(
       takeUntil(this.destroy$),
       debounceTime(100),
-      filter(([imageHduId]) => !!imageHduId)
-    ).subscribe(([imageHduId, calibrationSettings]) => {
-      if (calibrationSettings.calibrationEnabled) {
+      withLatestFrom(this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged()), this.store.select(JobsState.getJobEntities))
+    ).subscribe(([[autoCalJobId, calibrationEnabled], imageHduId, jobEntities]) => {
+      if ((!autoCalJobId || !jobEntities[autoCalJobId]) && calibrationEnabled) {
         //recalibrate the field
         this.store.dispatch(new CalibrateField([imageHduId], false))
       }
     })
 
-    combineLatest([imageHduId$, this.photometrySettings$]).pipe(
+    combineLatest([this.calibrationSettings$, this.photometrySettings$, this.sourceExtractionSettings$]).pipe(
       takeUntil(this.destroy$),
-      filter(([imageHduId]) => !!imageHduId)
-    ).subscribe(([imageHduId, photometrySettings]) => {
-      //trigger rephotometering of all data
-      this.store.dispatch(new RemoveAllPhotDatas());
+      debounceTime(100),
+    ).subscribe(([calibrationSettings]) => {
+      this.store.dispatch(new RemoveAllAutoCalJobs())
     })
+
 
 
 
@@ -396,6 +422,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         if (!$event || !imageData) {
           return;
         }
+
+        if (!$event.isActiveViewer) return;
 
         let selectedSourceIds = config.selectedSourceIds;
         let centroidClicks = config.centroidClicks;
@@ -456,6 +484,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
           return;
         if (!imageHdu) return;
+        if (!$event.isActiveViewer) return;
 
         let region = {
           x: $event.imageStart.x,
@@ -479,6 +508,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         if (!$event.$mouseDownEvent.ctrlKey && !$event.$mouseDownEvent.metaKey && !$event.$mouseDownEvent.shiftKey)
           return;
         if (!imageHdu) return;
+        if (!$event.isActiveViewer) return;
 
         this.store.dispatch(
           new EndPhotometrySourceSelectionRegion(imageHdu.id, $event.$mouseUpEvent.shiftKey ? 'remove' : 'append')
@@ -495,6 +525,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         (source) => $event.marker.data && $event.marker.data.source && source.id == $event.marker.data.source.id
       );
       if (!source) return;
+      if (!$event.isActiveViewer) return;
 
       let photometryPanelConfig = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
       let sourceSelected = photometryPanelConfig.selectedSourceIds.includes(source.id);
@@ -556,14 +587,15 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   }
 
   private getViewerMarkers(viewerId: string) {
-    let config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
-    let state$ = this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId));
-    let hduId$ = this.imageHdu$.pipe(
-      map((hdu) => hdu?.id),
-      distinctUntilChanged()
-    );
-    let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId));
-    let sources$ = this.store.select(SourcesState.getSources);
+    let config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig)
+    let state$ = this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
+    let hduId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(hdu => hdu?.id), distinctUntilChanged())
+    // let hduId$ = this.imageHdu$.pipe(
+    //   map((hdu) => hdu?.id),
+    //   distinctUntilChanged()
+    // );
+    let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId))
+    let sources$ = this.store.select(SourcesState.getSources)
 
     let sourceSelectionRegionMarkers$ = combineLatest(hduId$, state$).pipe(
       map(([hduId, state]) => {

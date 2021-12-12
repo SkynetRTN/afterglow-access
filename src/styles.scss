@@ -216,5 +216,9 @@ label.mat-button-toggle-label {
 /* Force Material Dialogs to position relative to top of window */
 .cdk-global-overlay-wrapper {
   align-items: start !important;
-  padding: 150px;
+  padding: 100px;
 }
+
+// .mat-dialog-content {
+//   overflow: unset !important;
+// }

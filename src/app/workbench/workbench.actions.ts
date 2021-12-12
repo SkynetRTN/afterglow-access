@@ -715,6 +715,12 @@ export class RemovePhotDatas {
   constructor(public sourceId: string) { }
 }
 
+export class RemoveAllAutoCalJobs {
+  public static readonly type = '[Phot Data] Remove All Auto Cal Jobs';
+
+  constructor() { }
+}
+
 export class SyncViewerTransformations {
   public static readonly type = '[Workbench] Sync Viewer Transformations';
 

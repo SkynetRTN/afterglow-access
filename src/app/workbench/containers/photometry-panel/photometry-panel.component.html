@@ -238,8 +238,8 @@
             style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
               <ng-container *ngIf="job.state.status == 'completed' && job.result; else progressBlock">
-                <div *ngIf="job.result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
-                  fxLayout="column" fxFill fxLayoutAlign="center center">
+                <div *ngIf="job.result?.data && job.result?.data?.length != 0; else errorBlock" i18n
+                  class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
                   Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
                   {{job.result.data[0]?.zeroPointError | number:'1.0-3'}} mag
                 </div>

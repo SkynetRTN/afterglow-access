@@ -148,6 +148,7 @@ import {
   CalibrateField,
   UpdateSettings,
   UpdateCalibrationSettings,
+  RemoveAllAutoCalJobs,
 } from './workbench.actions';
 import {
   getWidth,
@@ -4457,6 +4458,24 @@ export class WorkbenchState {
         if (sourceId in photometryPanelState.sourcePhotometryData) {
           delete photometryPanelState.sourcePhotometryData[sourceId];
         }
+      });
+      return state;
+    });
+  }
+
+  @Action(RemoveAllAutoCalJobs)
+  @ImmutableContext()
+  public removeAllAutoCalJobs(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { }: RemoveAllPhotDatas
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.workbenchStateIds.forEach((stateId) => {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+          return;
+        }
+        let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
+        state.photometryPanelStateEntities[hduState.photometryPanelStateId].autoCalJobId = null;
       });
       return state;
     });

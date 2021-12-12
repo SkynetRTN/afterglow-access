@@ -105,16 +105,19 @@ import { ImageViewerMarkerService } from '../../services/image-viewer-marker.ser
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
   viewer: IViewer;
+  isActiveViewer: boolean;
 }
 
 export interface ViewerCanvasMouseDragEvent extends CanvasMouseDragEvent {
   viewerId: string;
   viewer: IViewer;
+  isActiveViewer: boolean;
 }
 
 export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
   viewerId: string;
   viewer: IViewer;
+  isActiveViewer: boolean;
 }
 
 @Component({
@@ -170,6 +173,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   currentCanvasSize: { width: number; height: number } = null;
   imageMouseX: number = null;
   imageMouseY: number = null;
+  mouseDownIsActiveViewer: boolean = false;
 
   private lastImageData: IImageData<Uint32Array>;
   private hduLoading: { [key: string]: boolean } = {}
@@ -318,6 +322,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.active
     });
   }
 
@@ -330,10 +335,13 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       this.imageMouseY = null;
     }
 
+    this.mouseDownIsActiveViewer = this.active;
+
     this.eventService.mouseDownEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -350,6 +358,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -358,6 +367,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -366,6 +376,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -374,6 +385,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.active
     });
   }
 
@@ -382,6 +394,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.active
     });
   }
 
