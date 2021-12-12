@@ -21,7 +21,7 @@ import { PhotometrySettings } from './models/photometry-settings';
 import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Source, PosType } from './models/source';
 import { Marker } from './models/marker';
-import { IViewer } from './models/viewer';
+import { IViewer, Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
 import { DataFile, IHdu, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
@@ -91,7 +91,7 @@ export class SetFocusedViewer {
 export class CreateViewer {
   public static readonly type = '[Workbench] Create Viewer';
 
-  constructor(public viewer: IViewer, public panelId: string) { }
+  constructor(public viewer: Viewer, public panelId: string) { }
 }
 
 export class RemoveViewerLayoutItem {
@@ -728,7 +728,8 @@ export class SyncViewerTransformations {
     public refHeaderId: string,
     public refImageTransformId: string,
     public refViewportTransformId: string,
-    public refImageDataId: string
+    public refImageDataId: string,
+    public refViewer: Viewer,
   ) { }
 }
 

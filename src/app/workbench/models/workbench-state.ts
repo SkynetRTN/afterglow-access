@@ -1,6 +1,6 @@
 import { SidebarView } from './sidebar-view';
 import { ViewMode } from './view-mode';
-import { IViewer } from './viewer';
+import { IViewer, Viewer } from './viewer';
 import { CentroidSettings } from './centroid-settings';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
@@ -181,7 +181,7 @@ export interface WorkbenchStateModel {
   nextViewerPanelIdSeed: number;
   nextViewerPanelContainerIdSeed: number;
   viewerIds: string[];
-  viewers: { [id: string]: IViewer };
+  viewers: { [id: string]: Viewer };
   viewerLayoutItems: { [id: string]: ViewerLayoutItem };
   viewerLayoutItemIds: string[];
   focusedViewerPanelId: string;

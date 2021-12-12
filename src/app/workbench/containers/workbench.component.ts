@@ -231,8 +231,9 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformByViewerId(focusedViewerId));
           let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformByViewerId(focusedViewerId));
           let refImageData$ = this.store.select(WorkbenchState.getRawImageDataByViewerId(focusedViewerId));
+          let refViewer$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId));
 
-          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$).pipe(
+          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$, refViewer$).pipe(
             withLatestFrom(refHeader$),
             skip(1)
           );
@@ -245,7 +246,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           viewerSyncEnabled,
           viewerSyncMode,
           visibleViewerIds,
-          [[refImageTransform, refViewportTransform, refImageData], refHeader],
+          [[refImageTransform, refViewportTransform, refImageData, refViewer], refHeader],
         ]) => {
           if (
             !viewerSyncEnabled ||
@@ -258,7 +259,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
             return;
           }
           this.store.dispatch(
-            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id)
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id, refViewer)
           );
         }
       );
