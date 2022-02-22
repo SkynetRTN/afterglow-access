@@ -60,14 +60,7 @@
         <div class="form-row mb-2">
           <mat-slide-toggle [checked]="config?.showSourcesFromAllFiles" [labelPosition]="'after'"
             (change)="onShowSourcesFromAllFilesChange($event)" i18n>
-            Show Sources From All Files
-          </mat-slide-toggle>
-
-
-
-          <mat-slide-toggle [checked]="config?.autoPhot" [labelPosition]="'after'" (change)="onAutoPhotChange($event)"
-            i18n>
-            Auto-phot
+            Include sources from other files
           </mat-slide-toggle>
         </div>
         <div class="form-row mb-2">
@@ -193,8 +186,8 @@
             <mat-icon>delete_sweep</mat-icon>
           </button>
           <button mat-raised-button i18n-matTooltip matTooltip="Update Photometry" color="primary"
-            (click)="photometerSources(imageHdu, sources)" [disabled]="sources?.length == 0">
-            <mat-icon>wb_incandescent</mat-icon>
+            (click)="updatePhotometry()" [disabled]="sources?.length == 0">
+            <mat-icon>refresh</mat-icon>
           </button>
           <button mat-raised-button i18n-matTooltip matTooltip="Export Data" color="primary"
             (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
@@ -210,7 +203,7 @@
         </div>
 
         <div fxLayout="row" style="margin-top: 10px; width: 100%;" fxLayoutGap="10px">
-          <div *ngIf="config?.autoPhot" fxFlex="1 1 auto" style="width: 100%; height: 50px;">
+          <div fxFlex="1 1 auto" style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoPhotJob$ | async; let job; else progressBlock">
               <ng-container *ngIf="job.state.status == 'completed' && job.result; else progressBlock">
                 <div *ngIf="job.result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
@@ -267,27 +260,27 @@
 
         <hr />
         <div>
-          <div *ngIf="hduIds">
+          <div *ngIf="batchHduIdOptions">
             <p i18n>Use batch photometry to photometer all of your sources in multiple image layers/files.</p>
             <form [formGroup]="batchPhotForm">
               <div>
                 <mat-form-field appearance="outline" style="width: 300px">
                   <mat-label i18n>Select Image(s) to Photometer</mat-label>
                   <mat-select multiple formControlName="selectedHduIds">
-                    <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
+                    <mat-option *ngFor="let hduId of batchHduIdOptions" [value]="hduId">
                       {{ getHduOptionLabel(hduId) | async }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
 
-                <button mat-icon-button (click)="selectHdus(hduIds)" i18n-matTooltip matTooltip="Select all">
+                <button mat-icon-button (click)="selectHdus(batchHduIdOptions)" i18n-matTooltip matTooltip="Select all">
                   <mat-icon>select_all</mat-icon>
                 </button>
 
                 <button mat-icon-button (click)="selectHdus([])" i18n-matTooltip matTooltip="Clear Selection">
                   <mat-icon>clear</mat-icon>
                 </button>
-                <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer(sources, config)"
+                <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()"
                   [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0"
                   i18n-matTooltip matTooltip="Batch Photometer">
                   <mat-icon>wb_incandescent</mat-icon>
@@ -296,10 +289,40 @@
             </form>
           </div>
 
-          <div *ngIf="batchPhotJob$ | async; let batchPhotJob">
-            <div *ngIf="batchPhotJob.state?.progress != 100;
-            else batchPhotJobComplete
-          ">
+          <div *ngIf="batchInProgress$ | async; else batchComplete">
+            <div *ngIf="batchPhotJob$ | async; let batchPhotJob">
+              <mat-progress-bar mode="determinate" [value]="batchPhotJob.state?.progress" [color]="'accent'">
+              </mat-progress-bar>
+              <p>Photometering...</p>
+            </div>
+            <div *ngIf="batchCalJob$ | async; let batchCalJob">
+              <mat-progress-bar mode="determinate" [value]="batchCalJob.state?.progress" [color]="'accent'">
+              </mat-progress-bar>
+              <p>Calibrating fields...</p>
+            </div>
+
+          </div>
+          <ng-template #batchComplete>
+            <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
+              <div *ngIf="(batchErrors$ | async) && (batchErrors$ | async).length == 0; else batchErrors">
+                <button class="" mat-raised-button (click)="downloadBatchPhotData()">
+                  <mat-icon>save_alt</mat-icon>
+                  <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
+                    source(s)
+                    in
+                    {{ (batchPhotJob$ | async)?.fileIds.length }}
+                    file(s)</span>
+                </button>
+              </div>
+              <ng-template #batchErrors>
+                <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
+              </ng-template>
+            </ng-container>
+          </ng-template>
+
+
+          <!-- <div *ngIf="batchPhotJob$ | async; let batchPhotJob">
+            <div *ngIf="batchPhotJob.state?.progress != 100"; else batchPhotJobComplete>
               <mat-progress-bar mode="determinate" [value]="batchPhotJob.state?.progress" [color]="'accent'">
               </mat-progress-bar>
             </div>
@@ -342,7 +365,7 @@
                 </ng-template>
               </div>
             </ng-template>
-          </div>
+          </div> -->
 
 
 

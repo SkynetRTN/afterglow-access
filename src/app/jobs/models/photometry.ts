@@ -3,6 +3,8 @@ import { JobType } from './job-types';
 import { Astrometry } from './astrometry';
 import { SourceId } from './source-id';
 import { SourceMeta } from './source-meta';
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 
 export interface Photometry {
   mag: number | null;
@@ -33,7 +35,7 @@ export interface PhotometryJobSettings {
   apcorrTol: number | null; // 0 = disable aperture correction
 }
 
-export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId {}
+export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId { }
 
 export interface PhotometryJobResult extends JobResultBase {
   readonly type: JobType.Photometry;
@@ -47,3 +49,7 @@ export interface PhotometryJob extends JobBase {
   settings?: PhotometryJobSettings;
   result: PhotometryJobResult | null;
 }
+
+export const isPhotometryJob: TypeGuard<Job, PhotometryJob> = (
+  job: Job
+): job is PhotometryJob => job.type === JobType.Photometry;

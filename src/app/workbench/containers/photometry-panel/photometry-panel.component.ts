@@ -33,6 +33,7 @@ import {
   takeUntil,
   startWith,
   shareReplay,
+  skip,
 } from 'rxjs/operators';
 
 import * as jStat from 'jstat';
@@ -55,22 +56,23 @@ import { Source, PosType } from '../../models/source';
 import { PhotometryPanelConfig, BatchPhotometryFormData } from '../../models/workbench-state';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CentroidSettings } from '../../models/centroid-settings';
-import { PhotometryJob, PhotometryJobResult, PhotometryData } from '../../../jobs/models/photometry';
+import { PhotometryJob, PhotometryJobResult, PhotometryData, isPhotometryJob } from '../../../jobs/models/photometry';
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { WorkbenchState } from '../../workbench.state';
 import {
   UpdatePhotometryPanelConfig,
   ExtractSources,
-  PhotometerSources,
-  RemovePhotDatas,
-  RemoveAllPhotDatas,
+  RemovePhotDatasBySourceId,
+  RemovePhotDatasByHduId,
   UpdatePhotometrySourceSelectionRegion,
   EndPhotometrySourceSelectionRegion,
   UpdatePhotometrySettings,
   UpdateSourceExtractionSettings,
-  CalibrateField,
-  RemoveAllAutoCalJobs,
+  UpdateAutoPhotometry,
+  UpdateAutoFieldCalibration,
+  InvalidateAutoPhotByHduId,
+  BatchPhotometerSources,
 } from '../../workbench.actions';
 import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
 import { PhotData } from '../../models/source-phot-data';
@@ -93,7 +95,7 @@ import { HduType } from '../../../data-files/models/data-file-type';
 import { IImageData } from '../../../data-files/models/image-data';
 import { MarkerType, PhotometryMarker, RectangleMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
-import { FieldCalibrationJob, FieldCalibrationJobResult } from 'src/app/jobs/models/field-calibration';
+import { FieldCalibrationJob, FieldCalibrationJobResult, isFieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
 import { CalibrationSettings } from '../../models/calibration-settings';
 import { GlobalSettings } from '../../models/global-settings';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
@@ -107,21 +109,22 @@ import { SourceExtractionRegion } from '../../models/source-extraction-region';
 export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit {
   @Input('viewerId')
   set viewerId(viewer: string) {
-    this.viewerId$.next(viewer);
+    this.viewerIdSubject$.next(viewer);
   }
   get viewerId() {
-    return this.viewerId$.getValue();
+    return this.viewerIdSubject$.getValue();
   }
-  protected viewerId$ = new BehaviorSubject<string>(null);
+  protected viewerIdSubject$ = new BehaviorSubject<string>(null);
+  protected viewerId$ = this.viewerIdSubject$.asObservable().pipe(filter(viewerId => viewerId !== null))
 
-  @Input('hduIds')
-  set hduIds(hduIds: string[]) {
-    this.hduIds$.next(hduIds);
+  @Input('batchHduIdOptions')
+  set batchHduIdOptions(batchHduIdOptions: string[]) {
+    this.batchHduIdOptions$.next(batchHduIdOptions);
   }
-  get hduIds() {
-    return this.hduIds$.getValue();
+  get batchHduIdOptions() {
+    return this.batchHduIdOptions$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<string[]>(null);
+  private batchHduIdOptions$ = new BehaviorSubject<string[]>([]);
 
   destroy$ = new Subject<boolean>();
   viewportSize$: Observable<{ width: number; height: number }>;
@@ -144,10 +147,12 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : 'N/A');
   SourcePosType = PosType;
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
+  batchInProgress$: Observable<boolean>;
+  batchErrors$: Observable<string[]>;
   batchPhotJob$: Observable<PhotometryJob>;
   batchCalJob$: Observable<FieldCalibrationJob>;
-  batchCalEnabled$: Observable<boolean>;
   autoPhotJob$: Observable<PhotometryJob>;
+  autoPhotData$: Observable<{ [sourceId: string]: PhotometryData }>;
   autoCalJob$: Observable<FieldCalibrationJob>;
   mergeError: string;
   selectionModel = new SelectionModel<string>(true, []);
@@ -216,8 +221,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           if (coordMode != source.posType) return false;
           if (source.hduId == imageHduId) return true;
           if (!showSourcesFromAllFiles) return false;
-          let coord = getSourceCoordinates(header, source);
-          if (coord == null) return false;
+          // let coord = getSourceCoordinates(header, source);
+          // if (coord == null) return false;
           return true;
         });
       }),
@@ -230,33 +235,56 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
+    let autoPhotIsValid$ = this.state$.pipe(
+      map(s => s.autoPhotIsValid),
+      distinctUntilChanged()
+    );
+
     let autoPhotJobId$ = this.state$.pipe(
-      map((s) => s?.autoPhotJobId),
+      map((s) => s.autoPhotJobId),
       distinctUntilChanged()
     )
 
-    this.autoPhotJob$ = combineLatest([
-      this.store.select(JobsState.getJobEntities),
-      autoPhotJobId$
-    ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
-    );
+    this.autoPhotJob$ = autoPhotJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobById(id)).pipe(
+        map(job => job && isPhotometryJob(job) ? job : null)
+      )
+      ))
 
+    this.autoPhotData$ = this.autoPhotJob$.pipe(
+      map(job => {
+        let result = {};
+        if (!job || !job.result) return {};
+        job.result.data.forEach(d => {
+          let time: Date = null;
+          if (d.time && Date.parse(d.time + ' GMT')) {
+            time = new Date(Date.parse(d.time + ' GMT'));
+          }
+          result[d.id] = {
+            ...d,
+            time: time
+          }
+        })
+        return result;
+      })
+    )
+
+
+    let autoCalIsValid$ = this.state$.pipe(
+      map(s => s.autoCalIsValid),
+      distinctUntilChanged()
+    );
 
     let autoCalJobId$ = this.state$.pipe(
       map((s) => s?.autoCalJobId),
       distinctUntilChanged()
     )
 
-    this.autoCalJob$ = combineLatest([
-      this.store.select(JobsState.getJobEntities),
-      this.state$.pipe(
-        map((s) => s?.autoCalJobId),
-        distinctUntilChanged()
-      ),
-    ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob)
-    );
+    this.autoCalJob$ = autoCalJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobById(id)).pipe(
+        map(job => job && isFieldCalibrationJob(job) ? job : null)
+      )
+      ))
 
     let calibrationEnabled$ = this.calibrationSettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
     let fixedZeroPoint$ = this.calibrationSettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
@@ -273,58 +301,65 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     this.tableData$ = combineLatest(
       [this.sources$,
-      this.state$.pipe(
-        map((state) => (state ? state.sourcePhotometryData : null)),
-        distinctUntilChanged()
-      ),
+      this.autoPhotData$,
       this.zeroPointCorrection$]
     ).pipe(
-      filter(([sources, sourcePhotometryData, zeroPointCorrection]) => {
-        if (sources && sourcePhotometryData) return true;
-        return false;
-      }),
-      map(([sources, sourcePhotometryData, zeroPointCorrection]) => {
+      map(([sources, photometryData, zeroPointCorrection]) => {
         return sources.map((source) => {
-          let d = sourcePhotometryData[source.id] || null;
+          let d: PhotometryData = photometryData[source.id] || null;
           if (d) {
             d = {
               ...d,
               mag: d.mag + (zeroPointCorrection || 0)
             }
           }
+
           return {
             source: source,
             data: d,
           };
         });
-      }),
-      shareReplay(1)
+      })
     );
 
 
+    this.batchInProgress$ = this.config$.pipe(
+      map(config => config.batchInProgress)
+    )
 
-    this.batchCalEnabled$ = this.store.select(WorkbenchState.getPhotometryPanelConfig).pipe(map(config => config.batchCalEnabled));
-
-    this.batchCalJob$ = combineLatest([
-      this.store.select(JobsState.getJobEntities),
-      this.config$.pipe(
-        map((s) => s.batchCalJobId),
-        distinctUntilChanged()
-      ),
-    ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as FieldCalibrationJob),
+    let batchCalJobId$ = this.config$.pipe(
+      map((s) => s.batchCalJobId),
       distinctUntilChanged()
-    );
+    )
 
-    this.batchPhotJob$ = combineLatest([
-      this.store.select(JobsState.getJobEntities),
-      this.config$.pipe(
-        map((s) => s.batchPhotJobId),
-        distinctUntilChanged()
-      ),
-    ]).pipe(
-      map(([jobEntities, jobId]) => jobEntities[jobId] as PhotometryJob)
-    );
+    this.batchCalJob$ = batchCalJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobById(id)).pipe(
+        map(job => job && isFieldCalibrationJob(job) ? job : null)
+      )
+      ))
+
+    let batchPhotJobId$ = this.config$.pipe(
+      map((s) => s.batchPhotJobId),
+      distinctUntilChanged()
+    )
+
+    this.batchPhotJob$ = batchPhotJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobById(id)).pipe(
+        map(job => job && isPhotometryJob(job) ? job : null)
+      )
+      ))
+
+    this.batchErrors$ = combineLatest([this.batchInProgress$, this.batchPhotJob$, this.batchCalJob$]).pipe(
+      map(([inProgress, batchPhotJob, batchCalJob]) => {
+        if (inProgress) return [];
+        let result: string[] = [];
+        if (batchPhotJob) result = result.concat(batchPhotJob.result.errors.map(e => e.detail))
+        if (batchCalJob) result = result.concat(batchCalJob.result.errors.map(e => e.detail))
+
+        return result;
+      })
+    )
+
 
     this.batchPhotFormData$ = this.config$.pipe(
       filter((config) => config !== null),
@@ -358,57 +393,62 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         this.selectionModel.select(...selectedSourceIds);
       });
 
-    this.tableData$
-      .pipe(
-        takeUntil(this.destroy$),
-        filter((rows) => rows.filter((row) => row.data === null).length != 0),
-        withLatestFrom(this.imageHdu$, this.config$, this.photometrySettings$),
-        filter(([rows, imageHdu, config]) => rows.length != 0 && imageHdu && config && config.autoPhot),
-        auditTime(100)
-      )
-      .subscribe(([rows, imageHdu, config, photometrySettings]) => {
-        this.store.dispatch(
-          new PhotometerSources(
-            rows.map((row) => row.source.id),
-            [imageHdu.id],
-            false
-          )
-        );
-      });
+    // this.tableData$
+    //   .pipe(
+    //     takeUntil(this.destroy$),
+    //     filter((rows) => rows.filter((row) => row.data === null).length != 0),
+    //     withLatestFrom(this.imageHdu$, this.config$, this.photometrySettings$),
+    //     filter(([rows, imageHdu, config]) => rows.length != 0 && imageHdu && config && config.autoPhot),
+    //     auditTime(100)
+    //   )
+    //   .subscribe(([rows, imageHdu, config, photometrySettings]) => {
+    //     this.store.dispatch(
+    //       new PhotometerSources(
+    //         rows.map((row) => row.source.id),
+    //         [imageHdu.id],
+    //         false
+    //       )
+    //     );
+    //   });
 
-    autoPhotJobId$.pipe(
+    combineLatest([
+      this.header$.pipe(
+        map(header => header?.loaded),
+        distinctUntilChanged()
+      ),
+      autoPhotIsValid$
+    ]).pipe(
       takeUntil(this.destroy$),
-      withLatestFrom(this.store.select(JobsState.getJobEntities))
-    ).subscribe(([jobId, jobEntities]) => {
-      if (jobId && !jobEntities[jobId]) {
-        this.store.dispatch(new RemoveAllPhotDatas());
-      }
+      withLatestFrom(this.autoPhotJob$)
+    ).subscribe(([[headerLoaded, isValid], job]) => {
+      if (!headerLoaded || !this.viewerId) return;
+      //handle case where job ID is present and valid, but job is not in store
+      if (!isValid || !job) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
     })
 
-    this.photometrySettings$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      //trigger rephotometering of all data
-      this.store.dispatch(new RemoveAllPhotDatas());
-    })
-
-    combineLatest([autoCalJobId$, calibrationEnabled$]).pipe(
-      takeUntil(this.destroy$),
-      debounceTime(100),
-      withLatestFrom(this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged()), this.store.select(JobsState.getJobEntities))
-    ).subscribe(([[autoCalJobId, calibrationEnabled], imageHduId, jobEntities]) => {
-      if ((!autoCalJobId || !jobEntities[autoCalJobId]) && calibrationEnabled) {
-        //recalibrate the field
-        this.store.dispatch(new CalibrateField([imageHduId], false))
-      }
-    })
-
-    combineLatest([this.calibrationSettings$, this.photometrySettings$, this.sourceExtractionSettings$]).pipe(
+    combineLatest([
+      this.header$.pipe(
+        map(header => header?.loaded),
+        distinctUntilChanged()
+      ),
+      autoCalIsValid$,
+      calibrationEnabled$
+    ]).pipe(
       takeUntil(this.destroy$),
       debounceTime(100),
-    ).subscribe(([calibrationSettings]) => {
-      this.store.dispatch(new RemoveAllAutoCalJobs())
+      withLatestFrom(this.autoCalJob$)
+    ).subscribe(([[headerLoaded, isValid, calibrationEnabled], job]) => {
+      if (!headerLoaded || !this.viewerId || !calibrationEnabled) return;
+      if (!isValid || !job) this.store.dispatch(new UpdateAutoFieldCalibration(this.viewerId))
     })
+
+    // combineLatest([this.calibrationSettings$, this.photometrySettings$, this.sourceExtractionSettings$]).pipe(
+    //   takeUntil(this.destroy$),
+    //   debounceTime(100),
+
+    // ).subscribe(([calibrationSettings]) => {
+    //   this.store.dispatch(new RemoveAutoCalJobsByHduId())
+    // })
 
 
 
@@ -461,7 +501,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
               pmPosAngle: null,
               pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
             };
-            this.store.dispatch(new AddSources([source]));
+            this.store.dispatch([new AddSources([source]), new InvalidateAutoPhotByHduId()]);
           } else if (!$event.mouseEvent.ctrlKey) {
             this.store.dispatch(
               new UpdatePhotometryPanelConfig({
@@ -570,7 +610,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       .pipe(
         takeUntil(this.destroy$),
         switchMap((viewerIds) => {
-          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId)));
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId))).pipe(
+            takeUntil(this.destroy$),
+          );
         })
       )
       .subscribe((v) => {
@@ -597,7 +639,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId))
     let sources$ = this.store.select(SourcesState.getSources)
 
-    let sourceSelectionRegionMarkers$ = combineLatest(hduId$, state$).pipe(
+    let sourceSelectionRegionMarkers$ = combineLatest([hduId$, state$]).pipe(
       map(([hduId, state]) => {
         if (!state || !state.markerSelectionRegion) return [];
         let region = state.markerSelectionRegion;
@@ -613,10 +655,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       })
     );
 
-    let sourceMarkers$ = combineLatest(config$, state$, header$, hduId$, sources$).pipe(
-      map(([config, state, header, hduId, sources]) => {
-        if (!config?.showSourceMarkers || !header || !state?.sourcePhotometryData) return [];
-        let sourcePhotometryData = state.sourcePhotometryData;
+    let sourceMarkers$ = combineLatest([config$, this.autoPhotData$, this.zeroPointCorrection$, header$, hduId$, sources$]).pipe(
+      map(([config, autoPhotData, zeroPointCorrection, header, hduId, sources]) => {
+        if (!config?.showSourceMarkers || !header || !autoPhotData) return [];
         let selectedSourceIds = config.selectedSourceIds;
         let coordMode = config.coordMode;
         let showSourcesFromAllFiles = config.showSourcesFromAllFiles;
@@ -637,7 +678,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             return;
           }
 
-          let photometryData = sourcePhotometryData[source.id];
+          let photometryData = autoPhotData[source.id];
           let tooltipMessage = [];
           if (source.label) tooltipMessage.push(source.label)
           if (photometryData) {
@@ -652,7 +693,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             }
 
             if (photometryData.mag !== null && photometryData.magError !== null) {
-              tooltipMessage.push(`${round(photometryData.mag, 3)} +/- ${round(photometryData.magError, 3)} mag`);
+              tooltipMessage.push(`${round(photometryData.mag + (zeroPointCorrection || 0), 3)} +/- ${round(photometryData.magError, 3)} mag`);
             }
           }
 
@@ -838,21 +879,24 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         pmPosAngle: positionAngle,
       }),
       new RemoveSources(selectedSources.slice(1).map((s) => s.id)),
-      new RemovePhotDatas(selectedSources[0].id),
+      new RemovePhotDatasBySourceId(selectedSources[0].id),
     ]);
   }
 
-  photometerSources(imageFile: ImageHdu, sources: Source[]) {
-    let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
+  updatePhotometry() {
+    if (this.viewerId) {
+      this.store.dispatch([new UpdateAutoPhotometry(this.viewerId), new UpdateAutoFieldCalibration(this.viewerId)])
+    }
+    // let photometrySettings = this.store.selectSnapshot(WorkbenchState.getPhotometrySettings);
 
-    this.store.dispatch(new RemoveAllPhotDatas());
-    this.store.dispatch(
-      new PhotometerSources(
-        sources.map((s) => s.id),
-        [imageFile.id],
-        false
-      )
-    );
+    // this.store.dispatch(new RemovePhotDatasByHduId());
+    // this.store.dispatch(
+    //   new PhotometerSources(
+    //     sources.map((s) => s.id),
+    //     [imageFile.id],
+    //     false
+    //   )
+    // );
   }
 
   showSelectAll(sources: Source[]) {
@@ -868,13 +912,44 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   exportSourceData(rows: Array<{ source: Source; data: PhotometryData }>) {
     let data = this.papa.unparse(
       rows.map((row) => {
-        let time = row.data.time ? moment.utc(row.data.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
+        let data = {
+          annulusAIn: null,
+          annulusAOut: null,
+          annulusBIn: null,
+          annulusBOut: null,
+          annulusThetaIn: null,
+          annulusThetaOut: null,
+          aperA: null,
+          aperB: null,
+          aperTheta: null,
+          decDegs: null,
+          expLength: null,
+          fileId: null,
+          filter: null,
+          flux: null,
+          fluxError: null,
+          fwhmX: null,
+          fwhmY: null,
+          id: null,
+          mag: null,
+          magError: null,
+          pmEpoch: null,
+          pmPixel: null,
+          pmPosAnglePixel: null,
+          pmPosAngleSky: null,
+          pmSky: null,
+          raHours: null,
+          telescope: null,
+          theta: null,
+          ...row.data
+        }
+        let time = data?.time ? moment.utc(data.time, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
         let pmEpoch = row.source.pmEpoch ? moment.utc(row.source.pmEpoch, 'YYYY-MM-DD HH:mm:ss.SSS').toDate() : null;
         // console.log(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), datetimeToJd(time.getUTCFullYear(), time.getUTCMonth()+1, time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()))
         let jd = time ? datetimeToJd(time) : null;
         return {
           ...row.source,
-          ...row.data,
+          ...data,
           time: time ? this.datePipe.transform(time, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
           pm_epoch: pmEpoch ? this.datePipe.transform(pmEpoch, 'yyyy-MM-dd HH:mm:ss.SSS') : null,
           jd: jd,
@@ -908,16 +983,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     return value.id;
   }
 
-  onAutoPhotChange($event) {
-    this.store.dispatch(
-      new UpdatePhotometryPanelConfig({
-        autoPhot: $event.checked,
-      })
-    );
-  }
 
   clearPhotDataFromAllFiles() {
-    this.store.dispatch(new RemoveAllPhotDatas());
+    this.store.dispatch(new RemovePhotDatasByHduId());
   }
 
   selectHdus(hduIds: string[]) {
@@ -931,24 +999,25 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     );
   }
 
-  batchPhotometer(sources: Source[], config: PhotometryPanelConfig) {
-    let calibrationSettings = this.store.selectSnapshot(WorkbenchState.getCalibrationSettings);
-    this.store.dispatch(new UpdatePhotometryPanelConfig({ batchPhotJobId: null, batchCalJobId: null, batchCalEnabled: calibrationSettings.calibrationEnabled }));
-    this.store.dispatch(
-      new PhotometerSources(
-        sources.map((s) => s.id),
-        config.batchPhotFormData.selectedHduIds,
-        true
-      )
-    );
-    if (calibrationSettings.calibrationEnabled) {
-      this.store.dispatch(
-        new CalibrateField(
-          config.batchPhotFormData.selectedHduIds,
-          true
-        )
-      );
-    }
+  batchPhotometer() {
+    this.store.dispatch(new BatchPhotometerSources())
+    // let calibrationSettings = this.store.selectSnapshot(WorkbenchState.getCalibrationSettings);
+    // this.store.dispatch(new UpdatePhotometryPanelConfig({ batchPhotJobId: null, batchCalJobId: null, batchCalEnabled: calibrationSettings.calibrationEnabled }));
+    // this.store.dispatch(
+    //   new PhotometerSources(
+    //     sources.map((s) => s.id),
+    //     config.batchPhotFormData.selectedHduIds,
+    //     true
+    //   )
+    // );
+    // if (calibrationSettings.calibrationEnabled) {
+    //   this.store.dispatch(
+    //     new CalibrateField(
+    //       config.batchPhotFormData.selectedHduIds,
+    //       true
+    //     )
+    //   );
+    // }
 
   }
 
@@ -957,7 +1026,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     let jobEntities = this.store.selectSnapshot(JobsState.getJobEntities);
     let photJob: PhotometryJob = jobEntities[config.batchPhotJobId] as PhotometryJob;
     let calJob: FieldCalibrationJob;
-    if (config.batchCalEnabled) {
+    if (config.batchCalJobId) {
       calJob = jobEntities[config.batchCalJobId] as FieldCalibrationJob;
     }
 
@@ -980,20 +1049,18 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             zero_point: photJob.settings.zeroPoint
           };
 
-          if (config.batchCalEnabled) {
+          if (calJob) {
             result['zero_point_correction'] = null;
             result['zero_point_error'] = null;
             result['calibrated_zero_point'] = null;
             result['calibrated_mag'] = null;
 
-            if (calJob) {
-              let calRow = calJob.result?.data?.find(row => row.fileId == photRow.fileId);
-              if (calRow) {
-                result['zero_point_correction'] = calRow.zeroPointCorr;
-                result['zero_point_error'] = calRow.zeroPointError
-                result['calibrated_zero_point'] = calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr;
-                result['calibrated_mag'] = photRow.mag + ((calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr) - photJob.settings.zeroPoint);
-              }
+            let calRow = calJob.result?.data?.find(row => row.fileId == photRow.fileId);
+            if (calRow) {
+              result['zero_point_correction'] = calRow.zeroPointCorr;
+              result['zero_point_error'] = calRow.zeroPointError
+              result['calibrated_zero_point'] = calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr;
+              result['calibrated_mag'] = photRow.mag + ((calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr) - photJob.settings.zeroPoint);
             }
           }
 

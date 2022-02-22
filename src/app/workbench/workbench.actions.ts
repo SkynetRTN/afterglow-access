@@ -625,27 +625,37 @@ export class SetSourceLabel {
 export class BatchPhotometerSources {
   public static readonly type = '[Phot Data] Batch Photometer Sources';
 
-  constructor(public sourceIds: string[], public fileIds: string[], public settings: PhotometrySettings) { }
+  constructor() { }
 }
 
-export class PhotometerSources {
-  public static readonly type = '[Phot Data] Photometer Sources';
+export class UpdateAutoPhotometry {
+  public static readonly type = '[Phot Data] Update Auto Photometry';
 
   constructor(
-    public sourceIds: string[],
-    public hduIds: string[],
-    public isBatch: boolean
+    public viewerId: string
   ) { }
 }
 
-export class CalibrateField {
-  public static readonly type = '[Phot Data] Calibrate Field';
+export class UpdateAutoFieldCalibration {
+  public static readonly type = '[Phot Data] Update Auto Field Calibration';
 
   constructor(
-    public hduIds: string[],
-    public isBatch: boolean
+    public viewerId: string
   ) { }
 }
+
+export class InvalidateAutoCalByHduId {
+  public static readonly type = '[Phot Data] Invalidate Auto Cal By Hdu ID';
+
+  constructor(public hduId: string = null) { }
+}
+
+export class InvalidateAutoPhotByHduId {
+  public static readonly type = '[Phot Data] Invalidate Auto Phot By Hdu ID';
+
+  constructor(public hduId: string = null) { }
+}
+
 
 /* Markers */
 export class UpdateCustomMarkerSelectionRegion {
@@ -703,23 +713,19 @@ export class AddPhotDatas {
   constructor(public photDatas: PhotometryData[]) { }
 }
 
-export class RemoveAllPhotDatas {
-  public static readonly type = '[Phot Data] Remove All Phot Data';
+export class RemovePhotDatasByHduId {
+  public static readonly type = '[Phot Data] Remove Phot Datas By HDU Id';
 
-  constructor() { }
+  constructor(public hduId: string = null) { }
 }
 
-export class RemovePhotDatas {
-  public static readonly type = '[Phot Data] Remove Source Phot Datas';
+export class RemovePhotDatasBySourceId {
+  public static readonly type = '[Phot Data] Remove Phot Datas By Source Id';
 
   constructor(public sourceId: string) { }
 }
 
-export class RemoveAllAutoCalJobs {
-  public static readonly type = '[Phot Data] Remove All Auto Cal Jobs';
 
-  constructor() { }
-}
 
 export class SyncViewerTransformations {
   public static readonly type = '[Workbench] Sync Viewer Transformations';

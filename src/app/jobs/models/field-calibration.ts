@@ -4,6 +4,8 @@ import { Astrometry } from './astrometry';
 import { SourceExtractionJobSettings } from './source-extraction';
 import { CatalogSource } from './catalog-query';
 import { Photometry, PhotometryData, PhotometryJobSettings } from './photometry';
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 
 
 export interface FieldCalibration {
@@ -41,3 +43,7 @@ export interface FieldCalibrationJob extends JobBase {
   photometrySettings: PhotometryJobSettings;
   result: FieldCalibrationJobResult | null;
 }
+
+export const isFieldCalibrationJob: TypeGuard<Job, FieldCalibrationJob> = (
+  job: Job
+): job is FieldCalibrationJob => job.type === JobType.FieldCalibration;

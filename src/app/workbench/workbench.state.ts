@@ -11,10 +11,11 @@ import {
   ofActionCompleted,
   ofActionCanceled,
   createSelector,
+  ofAction,
 } from '@ngxs/store';
-import { tap, catchError, filter, take, takeUntil, flatMap } from 'rxjs/operators';
+import { tap, catchError, filter, take, takeUntil, flatMap, map } from 'rxjs/operators';
 import { Point, Matrix, Rectangle } from 'paper';
-import { merge, of } from 'rxjs';
+import { combineLatest, merge, of } from 'rxjs';
 import {
   WorkbenchStateModel,
   WorkbenchTool,
@@ -92,7 +93,6 @@ import {
   UpdatePhotometryPanelConfig,
   ExtractSources,
   ExtractSourcesFail,
-  PhotometerSources,
   SetViewerMarkers,
   UpdatePixelOpsPageSettings as UpdatePixelOpsPanelConfig,
   UpdateStackingPanelConfig,
@@ -125,8 +125,8 @@ import {
   DeselectCustomMarkers,
   SetCustomMarkerSelection,
   AddPhotDatas,
-  RemoveAllPhotDatas,
-  RemovePhotDatas,
+  RemovePhotDatasByHduId,
+  RemovePhotDatasBySourceId,
   Sonify,
   ClearSonification,
   SyncViewerTransformations,
@@ -145,10 +145,13 @@ import {
   SonificationCompleted,
   UpdateCustomMarkerSelectionRegion,
   EndCustomMarkerSelectionRegion,
-  CalibrateField,
   UpdateSettings,
   UpdateCalibrationSettings,
-  RemoveAllAutoCalJobs,
+  InvalidateAutoCalByHduId,
+  InvalidateAutoPhotByHduId,
+  UpdateAutoPhotometry,
+  UpdateAutoFieldCalibration,
+  BatchPhotometerSources,
 } from './workbench.actions';
 import {
   getWidth,
@@ -166,7 +169,7 @@ import {
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CreateJob, CreateJobFail, CreateJobSuccess, UpdateJob } from '../jobs/jobs.actions';
+import { CancelJob, CreateJob, CreateJobFail, CreateJobSuccess, UpdateJob } from '../jobs/jobs.actions';
 import { PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult } from '../jobs/models/alignment';
@@ -227,7 +230,7 @@ import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/f
 import { parseDms } from '../utils/skynet-astro';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'abf9ee7c-fbeb-49aa-9dcb-99ef3990890c',
+  version: '5d78f6b2-c3fc-43c4-85db-0ac49bb54ccd',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -281,13 +284,12 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     showSourcesFromAllFiles: true,
     selectedSourceIds: [],
     coordMode: 'sky',
-    autoPhot: true,
     batchPhotFormData: {
       selectedHduIds: [],
     },
+    batchInProgress: false,
     batchPhotJobId: '',
     batchCalJobId: '',
-    batchCalEnabled: undefined,
   },
   pixelOpsPanelConfig: {
     currentPixelOpsJobId: '',
@@ -476,9 +478,9 @@ export class WorkbenchState {
     return state.settings;
   }
 
-  @Selector()
-  public static getPhotometrySettings(state: WorkbenchStateModel) {
-    return state.settings.photometry;
+  @Selector([WorkbenchState.getSettings])
+  public static getPhotometrySettings(settings: GlobalSettings) {
+    return settings.photometry;
   }
 
   @Selector()
@@ -871,7 +873,7 @@ export class WorkbenchState {
 
   /** Workbench State */
 
-  static getWorkbenchStateIdByHduId(hduId: string) {
+  static getWorkbenchStateByHduId(hduId: string) {
     return createSelector(
       [WorkbenchState.getHduIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
       (
@@ -883,7 +885,7 @@ export class WorkbenchState {
     );
   }
 
-  static getWorkbenchStateIdByFileId(fileId: string) {
+  static getWorkbenchStateByFileId(fileId: string) {
     return createSelector(
       [WorkbenchState.getFileIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
       (
@@ -2019,6 +2021,13 @@ export class WorkbenchState {
       }
       return state;
     });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoPhotByHduId())
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
   }
 
   @Action(UpdateCentroidSettings)
@@ -2049,6 +2058,13 @@ export class WorkbenchState {
       }
       return state;
     });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoPhotByHduId())
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
   }
 
   @Action(UpdateSourceExtractionSettings)
@@ -2064,6 +2080,12 @@ export class WorkbenchState {
       };
       return state;
     });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
   }
 
   @Action(UpdateCalibrationSettings)
@@ -2079,6 +2101,13 @@ export class WorkbenchState {
       }
       return state;
     });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
+
   }
 
   @Action(UpdateCustomMarkerPanelConfig)
@@ -3289,31 +3318,232 @@ export class WorkbenchState {
     });
   }
 
-  @Action(PhotometerSources)
+  @Action(UpdateAutoPhotometry)
   @ImmutableContext()
-  public photometerSources(
+  public updateAutoPhotometry(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceIds, hduIds, isBatch }: PhotometerSources
+    { viewerId }: UpdateAutoPhotometry
   ) {
     let state = getState();
-    let sourcesState = this.store.selectSnapshot(SourcesState.getState);
 
-    sourceIds = sourceIds.filter((id) => sourcesState.ids.includes(id));
+    let imageHdu = this.store.selectSnapshot(WorkbenchState.getImageHduByViewerId(viewerId))
+    if (!imageHdu) return;
+    let hduId = imageHdu.id;
 
-    let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduIds[0]]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
-    let hduState = workbenchState as WorkbenchImageHduState;
-    let photPanelStateId = hduState.photometryPanelStateId;
+    let coordMode = state.photometryPanelConfig.coordMode;
+    let showSourcesFromAllFiles = state.photometryPanelConfig.showSourcesFromAllFiles;
+    let sources = this.store.selectSnapshot(SourcesState.getSources);
 
+
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId))
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId))
+
+    if (!hdu || !header) return;
+    if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
+    sources = sources.filter((source) => {
+      if (coordMode != source.posType) return false;
+      if (source.hduId == hduId) return true;
+      if (!showSourcesFromAllFiles) return false;
+      let coord = getSourceCoordinates(header, source);
+      if (coord == null) return false;
+      return true;
+    });
+
+    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByHduId(hduId))
+    if (!workbenchState) return;
+    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+      let hduState = workbenchState as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+
+      let photometryJobSettings = toPhotometryJobSettings(state.settings);
+
+      let job: PhotometryJob = {
+        type: JobType.Photometry,
+        settings: photometryJobSettings,
+        id: null,
+        fileIds: [hduId],
+        sources: sources.map((source, index) => {
+          let x = null;
+          let y = null;
+          let pmPixel = null;
+          let pmPosAnglePixel = null;
+          let raHours = null;
+          let decDegs = null;
+          let pmSky = null;
+          let pmPosAngleSky = null;
+
+          if (source.posType == PosType.PIXEL) {
+            x = source.primaryCoord;
+            y = source.secondaryCoord;
+            pmPixel = source.pm;
+            pmPosAnglePixel = source.pmPosAngle;
+          } else {
+            raHours = source.primaryCoord;
+            decDegs = source.secondaryCoord;
+            pmSky = source.pm;
+            if (pmSky) pmSky /= 3600.0;
+            pmPosAngleSky = source.pmPosAngle;
+          }
+
+          let s: Astrometry & SourceId = {
+            id: source.id,
+            pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
+            x: x,
+            y: y,
+            pmPixel: pmPixel,
+            pmPosAnglePixel: pmPosAnglePixel,
+            raHours: raHours,
+            decDegs: decDegs,
+            pmSky: pmSky,
+            pmPosAngleSky: pmPosAngleSky,
+            fwhmX: null,
+            fwhmY: null,
+            theta: null,
+          };
+          return s;
+        }),
+        state: null,
+        result: null,
+      };
+
+      let correlationId = this.correlationIdGenerator.next();
+      dispatch(new CreateJob(job, 1000, correlationId))
+
+      setState((state: WorkbenchStateModel) => {
+        let photState = state.photometryPanelStateEntities[photPanelStateId];
+        photState.autoPhotIsValid = true;
+        photState.autoPhotJobId = null;
+        return state;
+      });
+
+      let jobFinished$ = this.actions$.pipe(
+        ofActionCompleted(CreateJob),
+        filter((v) => v.action.correlationId == correlationId),
+        take(1)
+      );
+
+      this.actions$.pipe(
+        ofActionDispatched(CreateJobSuccess),
+        filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
+        takeUntil(jobFinished$),
+      ).subscribe(a => {
+        console.log("AUTO PHOT JOB CREATED")
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
+        setState((state: WorkbenchStateModel) => {
+          let photState = state.photometryPanelStateEntities[photPanelStateId];
+          photState.autoPhotJobId = job.id
+          return state;
+        });
+      })
+
+      return jobFinished$;
+    }
+
+  }
+
+  @Action(UpdateAutoFieldCalibration)
+  @ImmutableContext()
+  public updateAutoFieldCalibration(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { viewerId }: UpdateAutoFieldCalibration
+  ) {
+    let state = getState();
+
+    let imageHdu = this.store.selectSnapshot(WorkbenchState.getImageHduByViewerId(viewerId))
+    if (!imageHdu) return;
+    let hduId = imageHdu.id;
+
+    let coordMode = state.photometryPanelConfig.coordMode;
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId))
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId))
+
+    if (!hdu || !header) return;
+    if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
+
+
+    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByHduId(hduId))
+    if (!workbenchState) return;
+    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+      let hduState = workbenchState as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+
+      let photometryJobSettings = toPhotometryJobSettings(state.settings);
+      let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
+      let fieldCalibration = toFieldCalibration(state.settings);
+
+      let job: FieldCalibrationJob = {
+        type: JobType.FieldCalibration,
+        id: null,
+        photometrySettings: photometryJobSettings,
+        sourceExtractionSettings: sourceExtractionJobSettings,
+        fieldCal: fieldCalibration,
+        fileIds: [hduId],
+        state: null,
+        result: null,
+      };
+
+
+      let correlationId = this.correlationIdGenerator.next();
+      dispatch(new CreateJob(job, 1000, correlationId))
+
+      setState((state: WorkbenchStateModel) => {
+        let photState = state.photometryPanelStateEntities[photPanelStateId];
+        photState.autoCalIsValid = true;
+        photState.autoCalJobId = null;
+        return state;
+      });
+
+      let jobFinished$ = this.actions$.pipe(
+        ofActionCompleted(CreateJob),
+        filter((v) => v.action.correlationId == correlationId),
+        take(1)
+      );
+
+      this.actions$.pipe(
+        ofActionDispatched(CreateJobSuccess),
+        filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
+        takeUntil(jobFinished$),
+      ).subscribe(a => {
+        console.log("AUTO CAL JOB CREATED")
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
+        setState((state: WorkbenchStateModel) => {
+          let photState = state.photometryPanelStateEntities[photPanelStateId];
+          photState.autoCalJobId = job.id
+          return state;
+        });
+      })
+
+      return jobFinished$
+    }
+
+  }
+
+  @Action(BatchPhotometerSources)
+  @ImmutableContext()
+  public batchPhotometerSources(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { }: BatchPhotometerSources
+  ) {
+    let state = getState();
+
+    setState((state: WorkbenchStateModel) => {
+      state.photometryPanelConfig.batchInProgress = true;
+      state.photometryPanelConfig.batchCalJobId = null;
+      state.photometryPanelConfig.batchPhotJobId = null;
+      return state;
+    });
+
+
+    let sources = this.store.selectSnapshot(SourcesState.getSources);
     let photometryJobSettings = toPhotometryJobSettings(state.settings);
+    let hduIds = state.photometryPanelConfig.batchPhotFormData.selectedHduIds;
 
-    let job: PhotometryJob = {
+    let photJob: PhotometryJob = {
       type: JobType.Photometry,
       settings: photometryJobSettings,
       id: null,
       fileIds: hduIds,
-      sources: sourceIds.map((id, index) => {
-        let source = sourcesState.entities[id];
+      sources: sources.map((source, index) => {
         let x = null;
         let y = null;
         let pmPixel = null;
@@ -3357,223 +3587,85 @@ export class WorkbenchState {
       result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
+    let photJobCorrelationId = this.correlationIdGenerator.next();
+    dispatch(new CreateJob(photJob, 1000, photJobCorrelationId))
 
-    setState((state: WorkbenchStateModel) => {
-      if (isBatch) {
-        state.photometryPanelConfig.batchPhotJobId = null
-      }
-      else {
-        let photState = state.photometryPanelStateEntities[photPanelStateId];
-        photState.autoPhotJobId = null
-      }
-      return state;
-    });
 
-    let jobFinished$ = this.actions$.pipe(
+    let photJobFinished$ = this.actions$.pipe(
       ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
+      filter((v) => v.action.correlationId == photJobCorrelationId),
       take(1)
     );
 
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobFinished$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
+    this.actions$.pipe(
+      ofActionDispatched(CreateJobSuccess),
+      filter<CreateJobSuccess>((a) => a.correlationId == photJobCorrelationId),
+      takeUntil(photJobFinished$),
+    ).subscribe(a => {
+      let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
+      setState((state: WorkbenchStateModel) => {
+        state.photometryPanelConfig.batchPhotJobId = job.id;
+        return state;
+      });
+    })
+
+    let calJobFinished$ = of(null);
+
+    if (state.settings.calibration.calibrationEnabled) {
+
+      let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
+      let fieldCalibration = toFieldCalibration(state.settings);
+
+      let calJob: FieldCalibrationJob = {
+        type: JobType.FieldCalibration,
+        id: null,
+        photometrySettings: photometryJobSettings,
+        sourceExtractionSettings: sourceExtractionJobSettings,
+        fieldCal: fieldCalibration,
+        fileIds: hduIds,
+        state: null,
+        result: null,
+      };
+
+
+      let calJobCorrelationId = this.correlationIdGenerator.next();
+      dispatch(new CreateJob(calJob, 1000, calJobCorrelationId))
+
+      calJobFinished$ = this.actions$.pipe(
+        ofActionCompleted(CreateJob),
+        filter((v) => v.action.correlationId == calJobCorrelationId),
+        take(1)
+      );
+
+      this.actions$.pipe(
+        ofActionDispatched(CreateJobSuccess),
+        filter<CreateJobSuccess>((a) => a.correlationId == calJobCorrelationId),
+        takeUntil(calJobFinished$),
+      ).subscribe(a => {
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as FieldCalibrationJob;
         setState((state: WorkbenchStateModel) => {
-          if (isBatch) {
-            state.photometryPanelConfig.batchPhotJobId = job.id
-          }
-          else {
-            let photState = state.photometryPanelStateEntities[photPanelStateId];
-            photState.autoPhotJobId = job.id
-          }
+          state.photometryPanelConfig.batchCalJobId = job.id;
           return state;
         });
       })
-    );
-
-    return merge(jobFinished$.pipe(
-      tap((v) => {
-        if (v.result.successful) {
-          let a = v.action as CreateJob;
-          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-          let result = jobEntity.result as PhotometryJobResult;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered while photometering sources: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered while photometering sources: ', result.warnings);
-          }
-
-          // setState((state: WorkbenchStateModel) => {
-          //   if (isBatch) {
-          //     state.photometryPanelConfig.batchPhotJobId = null;
-          //   }
-          //   else {
-          //     let photState = state.photometryPanelStateEntities[photPanelStateId];
-          //     photState.autoPhotJobId = null
-          //   }
-          //   return state;
-          // });
-
-          let photDatas: PhotometryData[] = [];
-          hduIds.forEach((fileId) => {
-            sourceIds.forEach((sourceId) => {
-              let d = result.data.find((d) => d.id == sourceId && d.fileId == fileId);
-              if (!d) {
-                photDatas.push({
-                  id: sourceId,
-                  fileId: fileId,
-                  annulusAIn: null,
-                  annulusAOut: null,
-                  annulusBIn: null,
-                  annulusBOut: null,
-                  aperA: null,
-                  aperB: null,
-                  aperTheta: null,
-                  decDegs: null,
-                  expLength: null,
-                  filter: null,
-                  flux: null,
-                  fluxError: null,
-                  fwhmX: null,
-                  fwhmY: null,
-                  mag: null,
-                  magError: null,
-                  pmPixel: null,
-                  pmPosAnglePixel: null,
-                  pmPosAngleSky: null,
-                  pmSky: null,
-                  raHours: null,
-                  telescope: null,
-                  theta: null,
-                  time: null,
-                  x: null,
-                  y: null,
-                  pmEpoch: null,
-                });
-              } else {
-                let time = null;
-                if (d.time && Date.parse(d.time + ' GMT')) {
-                  time = new Date(Date.parse(d.time + ' GMT'));
-                }
-                photDatas.push({
-                  ...d,
-                  time: time,
-                });
-              }
-            });
-          });
-          dispatch(new AddPhotDatas(photDatas));
-        } else {
-          console.error('Photometry job error');
-        }
-      })
-    ), jobUpdated$);
-  }
+    }
 
 
-  @Action(CalibrateField)
-  @ImmutableContext()
-  public calibrateField(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduIds, isBatch }: CalibrateField
-  ) {
-    let state = getState();
 
-    let photometryJobSettings = toPhotometryJobSettings(state.settings);
-    let fieldCalibration = toFieldCalibration(state.settings);
-    let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
-
-    let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduIds[0]]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
-    let hduState = workbenchState as WorkbenchImageHduState;
-    let photPanelStateId = hduState.photometryPanelStateId;
-
-    let job: FieldCalibrationJob = {
-      type: JobType.FieldCalibration,
-      id: null,
-      photometrySettings: photometryJobSettings,
-      sourceExtractionSettings: sourceExtractionJobSettings,
-      fieldCal: fieldCalibration,
-      fileIds: hduIds,
-      state: null,
-      result: null,
-    };
-
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-
-    setState((state: WorkbenchStateModel) => {
-      if (isBatch) {
-        state.photometryPanelConfig.batchCalJobId = null
-      }
-      else {
-        let photState = state.photometryPanelStateEntities[photPanelStateId];
-        photState.autoCalJobId = null
-      }
-      return state;
-    });
-
-    let jobFinished$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
-      take(1)
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobFinished$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
+    return combineLatest([photJobFinished$, calJobFinished$]).pipe(
+      tap(() => {
         setState((state: WorkbenchStateModel) => {
-          if (isBatch) {
-            state.photometryPanelConfig.batchCalJobId = job.id
-          }
-          else {
-            let photState = state.photometryPanelStateEntities[photPanelStateId];
-            photState.autoCalJobId = job.id
-          }
+          state.photometryPanelConfig.batchInProgress = false;
           return state;
         });
       })
-    );
-
-    return merge(jobFinished$.pipe(
-      tap((v) => {
-        if (v.result.successful) {
-          let a = v.action as CreateJob;
-          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-          let result = jobEntity.result as FieldCalibrationJobResult;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered while calibrating field: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered while calibrating field: ', result.warnings);
-          }
-
-          // setState((state: WorkbenchStateModel) => {
-          //   if (isBatch) {
-          //     state.photometryPanelConfig.batchCalJobId = null;
-          //   }
-          //   else {
-          //     let photState = state.photometryPanelStateEntities[photPanelStateId];
-          //     photState.autoCalJobId = null
-          //   }
-          //   return state;
-          // });
+    )
 
 
-        } else {
-        }
-      })
-    ), jobUpdated$);
+
+
   }
+
 
   @Action(InitializeWorkbenchHduState)
   @ImmutableContext()
@@ -3632,7 +3724,9 @@ export class WorkbenchState {
           sourceExtractionJobId: '',
           sourcePhotometryData: {},
           markerSelectionRegion: null,
+          autoPhotIsValid: false,
           autoPhotJobId: '',
+          autoCalIsValid: false,
           autoCalJobId: '',
         };
         state.photometryPanelStateIds.push(photometryPanelStateId);
@@ -4424,29 +4518,32 @@ export class WorkbenchState {
     });
   }
 
-  @Action(RemoveAllPhotDatas)
+  @Action(RemovePhotDatasByHduId)
   @ImmutableContext()
-  public removeAllPhotDatas(
+  public removePhotDatasByHduId(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { }: RemoveAllPhotDatas
+    { hduId }: RemovePhotDatasByHduId
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
-          return;
+        if (hduId === null || hduId === stateId) {
+          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+            return;
+          }
+          let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
+          state.photometryPanelStateEntities[hduState.photometryPanelStateId].sourcePhotometryData = {};
         }
-        let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
-        state.photometryPanelStateEntities[hduState.photometryPanelStateId].sourcePhotometryData = {};
+
       });
       return state;
     });
   }
 
-  @Action(RemovePhotDatas)
+  @Action(RemovePhotDatasBySourceId)
   @ImmutableContext()
-  public removePhotDatas(
+  public removePhotDatasBySourceId(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceId }: RemovePhotDatas
+    { sourceId }: RemovePhotDatasBySourceId
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
@@ -4463,19 +4560,41 @@ export class WorkbenchState {
     });
   }
 
-  @Action(RemoveAllAutoCalJobs)
+  @Action(InvalidateAutoCalByHduId)
   @ImmutableContext()
-  public removeAllAutoCalJobs(
+  public resetAutoCalJobsByHduId(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { }: RemoveAllPhotDatas
+    { hduId }: RemovePhotDatasByHduId
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.workbenchStateIds.forEach((stateId) => {
+      let workbenchStateIds = state.workbenchStateIds;
+      if (hduId) workbenchStateIds = [state.hduIdToWorkbenchStateIdMap[hduId]]
+      workbenchStateIds.forEach((stateId) => {
         if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
           return;
         }
         let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
-        state.photometryPanelStateEntities[hduState.photometryPanelStateId].autoCalJobId = null;
+        state.photometryPanelStateEntities[hduState.photometryPanelStateId].autoCalIsValid = false;
+      });
+      return state;
+    });
+  }
+
+  @Action(InvalidateAutoPhotByHduId)
+  @ImmutableContext()
+  public resetAutoPhotJobsByHduId(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: InvalidateAutoPhotByHduId
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let workbenchStateIds = state.workbenchStateIds;
+      if (hduId) workbenchStateIds = [state.hduIdToWorkbenchStateIdMap[hduId]]
+      workbenchStateIds.forEach((stateId) => {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+          return;
+        }
+        let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
+        state.photometryPanelStateEntities[hduState.photometryPanelStateId].autoPhotIsValid = false;
       });
       return state;
     });
@@ -4612,4 +4731,33 @@ export class WorkbenchState {
 
     return dispatch(actions);
   }
+
+
+  @Action(InvalidateRawImageTiles)
+  @ImmutableContext()
+  public invalidateRawImageTiles(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: InvalidateRawImageTiles
+  ) {
+
+    let actions: any[] = [];
+    actions.push(new InvalidateAutoPhotByHduId(hduId))
+    actions.push(new InvalidateAutoCalByHduId(hduId))
+    return dispatch(actions);
+  }
+
+
+
+  @Action(AddSources)
+  @ImmutableContext()
+  public addSources(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { }: AddSources
+  ) {
+
+    let actions: any[] = [];
+    actions.push(new RemovePhotDatasByHduId())
+    return dispatch(actions);
+  }
 }
+
