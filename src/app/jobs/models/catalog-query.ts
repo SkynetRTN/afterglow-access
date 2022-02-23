@@ -11,8 +11,8 @@ export interface Catalog {
   t: CatalogSource
   displayName: string;
   numSources: number;
-  mags: string[];
-  filterLookup: {[catalogName: string]: { [filter: string]: string }};
+  mags: { [filter: string]: string[] };
+  filterLookup: { [catalogName: string]: { [filter: string]: string } };
 }
 
 export interface CatalogSource {
@@ -20,7 +20,7 @@ export interface CatalogSource {
   fileId: string;
   label: string;
   catalogName: string;
-  mags: {[filter: string]: Mag}
+  mags: { [filter: string]: Mag }
 }
 
 export interface CatalogQueryJobResult extends JobResultBase {

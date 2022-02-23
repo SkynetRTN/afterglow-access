@@ -358,6 +358,34 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     });
 
     this.shortcuts.push({
+      key: 'c',
+      label: 'Custom region mode',
+      command: (e) => {
+        if (this.state.regionMode == SonifierRegionMode.CUSTOM) return;
+        this.store.dispatch(
+          new UpdateSonifierFileState(this.imageHdu.id, {
+            regionMode: SonifierRegionMode.CUSTOM,
+          })
+        );
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'v',
+      label: 'Viewport region mode',
+      command: (e) => {
+        if (this.state.regionMode == SonifierRegionMode.VIEWPORT) return;
+        this.store.dispatch(
+          new UpdateSonifierFileState(this.imageHdu.id, {
+            regionMode: SonifierRegionMode.VIEWPORT,
+          })
+        );
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
       key: '0',
       label: 'Reset region selection',
       command: (e) => {
@@ -472,7 +500,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
                     (this.audioObj.currentTime - indexToneDuration) / (this.audioObj.duration - 2 * indexToneDuration)
                   )
                 ) *
-                  region.height;
+                region.height;
 
               return {
                 x1: region.x,
@@ -491,7 +519,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
       });
   }
 
-  openFile(url: string) {}
+  openFile(url: string) { }
 
   play() {
     this.audioObj.play();

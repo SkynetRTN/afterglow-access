@@ -230,7 +230,7 @@ import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/f
 import { parseDms } from '../utils/skynet-astro';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '5d78f6b2-c3fc-43c4-85db-0ac49bb54ccd',
+  version: 'b079125e-48ae-4fbe-bdd7-cad5796a8614',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -1669,6 +1669,8 @@ export class WorkbenchState {
     { viewerId, direction }: SplitViewerPanel
   ) {
     setState((state: WorkbenchStateModel) => {
+      let viewer = state.viewers[viewerId];
+      if (viewer) viewer.keepOpen = true;
       //find panel
       let panels = state.viewerLayoutItemIds
         .filter((itemId) => state.viewerLayoutItems[itemId].type == 'panel')
@@ -2618,7 +2620,7 @@ export class WorkbenchState {
     if (sonifierState.regionMode == SonifierRegionMode.CUSTOM && sonifierState.viewportSync) {
       //find viewer which contains file
       let viewer = this.store.selectSnapshot(WorkbenchState.getViewers).find((viewer) => viewer.hduId == hduId);
-      if (viewer && viewer.viewportSize && sonifierState.regionHistoryIndex !== null) {
+      if (viewer && viewer.viewportSize && viewer.viewportSize.width != 0 && viewer.viewportSize.height != 0 && sonifierState.regionHistoryIndex !== null) {
         let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
         dispatch(
           new CenterRegionInViewport(
@@ -3708,7 +3710,7 @@ export class WorkbenchState {
           regionHistory: [],
           regionHistoryIndex: null,
           regionHistoryInitialized: false,
-          regionMode: SonifierRegionMode.VIEWPORT,
+          regionMode: SonifierRegionMode.CUSTOM,
           viewportSync: true,
           duration: 10,
           toneCount: 22,

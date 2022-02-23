@@ -38,6 +38,9 @@ export function toPhotometryJobSettings(settings: GlobalSettings): PhotometryJob
             thetaOut: null,
             zeroPoint: null,
             apcorrTol: p.adaptiveAperCorr ? p.aperCorrTol : 0,
+            fixAper: p.fixAper,
+            fixEll: p.fixEll,
+            fixRot: p.fixRot
         };
     } else {
         result = {
@@ -53,6 +56,9 @@ export function toPhotometryJobSettings(settings: GlobalSettings): PhotometryJob
             gain: null,
             zeroPoint: null,
             apcorrTol: p.constantAperCorr ? p.aperCorrTol : 0,
+            fixAper: p.fixAper,
+            fixEll: p.fixEll,
+            fixRot: p.fixRot
         };
     }
 

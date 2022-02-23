@@ -200,7 +200,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     let width = getWidth(header);
     let height = getHeight(header);
     let wcs = header.wcs;
-    if (width && height && wcs && wcs.isValid) {
+    if (width && height && wcs && wcs.isValid()) {
       let raDec: [number, number] = wcs.pixToWorld([width / 2, height / 2]) as [number, number];
       ra = raDec[0];
       dec = raDec[1];

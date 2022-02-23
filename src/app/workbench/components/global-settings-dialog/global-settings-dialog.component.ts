@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { combineLatest, Observable, Subject } from 'rxjs';
-import { map, takeUntil, tap } from 'rxjs/operators';
+import { map, startWith, takeUntil, tap } from 'rxjs/operators';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { greaterThan, isNumber, lessThan } from '../../../utils/validators';
 import { GlobalSettings } from '../../models/global-settings';
@@ -27,6 +27,7 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
   ];
 
   catalogs$: Observable<Catalog[]>;
+  selectedCatalog$: Observable<Catalog>;
 
   settings: GlobalSettings;
 
@@ -125,6 +126,10 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.onSourceExtractionFormChange();
       });
+
+    this.selectedCatalog$ = combineLatest([this.catalogs$, this.calibrationForm.controls['catalog'].valueChanges.pipe(startWith(this.settings.calibration.catalog))]).pipe(
+      map(([catalogs, selectedCatalogName]) => catalogs.find(catalog => catalog.name == selectedCatalogName))
+    )
 
     this.onPhotometryFormChange();
     this.onCalibrationFormChange();
@@ -231,5 +236,16 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
     this.photometryForm.patchValue(this.settings.photometry);
     this.calibrationForm.patchValue(this.settings.calibration);
     this.sourceExtractionForm.patchValue(this.settings.sourceExtraction)
+  }
+
+  getCatalogLabel(catalog: Catalog) {
+    let filters = Object.keys(catalog.mags).join(', ');
+    let customFilters = catalog.filterLookup ? Object.keys(catalog.filterLookup).join('*, ') : '';
+    if (customFilters) {
+      filters = `${filters}, ${customFilters}`
+    }
+    return `${catalog.name} (${filters})`
+
+
   }
 }

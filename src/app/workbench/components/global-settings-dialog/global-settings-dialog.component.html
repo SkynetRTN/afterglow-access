@@ -7,7 +7,7 @@
       <mat-tab label="Aperture Photometry">
         <form [formGroup]="photometryForm">
           <div style="padding: 10px">
-            <div class="form-field-wrapper">
+            <div>
               <mat-form-field appearance="outline">
                 <mat-label>Aperture Mode</mat-label>
                 <mat-select formControlName="mode">
@@ -16,8 +16,8 @@
               </mat-form-field>
             </div>
             <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
-              <div fxFlex="1 1 auto" fxLayout="row">
-                <div class="form-field-wrapper">
+              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Centroiding Radius"
                       formControlName="centroidRadius" />
@@ -26,7 +26,7 @@
                   <app-print-form-error [control]="photometryForm.get('centroidRadius')"></app-print-form-error>
                 </div>
 
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Gain" formControlName="gain" />
                     <mat-hint>CCD gain in e-/ADU</mat-hint>
@@ -35,15 +35,15 @@
                 </div>
               </div>
               <ng-container *ngIf="settings.photometry.mode == 'constant'">
-                <div fxFlex="1 1 auto" fxLayout="row">
-                  <div class="form-field-wrapper">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Aperture" formControlName="a" />
                       <mat-hint>radius in pixels</mat-hint>
                     </mat-form-field>
                     <app-print-form-error [control]="photometryForm.get('a')"></app-print-form-error>
                   </div>
-                  <div class="form-field-wrapper">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Annulus Inner"
                         formControlName="aIn" />
@@ -51,7 +51,7 @@
                     </mat-form-field>
                     <app-print-form-error [control]="photometryForm.get('aIn')"></app-print-form-error>
                   </div>
-                  <div class="form-field-wrapper">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Annulus Outer"
                         formControlName="aOut" />
@@ -60,19 +60,20 @@
                     <app-print-form-error [control]="photometryForm.get('aOut')"></app-print-form-error>
                   </div>
                 </div>
-                <div fxFlex="1 1 auto" fxLayout="row">
-                  <div class="form-field-wrapper">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                  <div>
                     <mat-slide-toggle formControlName="constantAperCorr">Aperture Correction</mat-slide-toggle>
                   </div>
                 </div>
                 <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px" style="margin-top: 0px; margin-bottom: 0px"
                   class="form-wrapper">
 
-                  <div fxFlex="1 1 auto" fxLayout="row" style="margin-bottom: 15px; margin-left: 20px">
+                  <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px"
+                    style="margin-bottom: 15px; margin-left: 20px">
                     <mat-checkbox formControlName="elliptical">Use elliptical aperture</mat-checkbox>
                   </div>
-                  <div fxFlex="1 1 auto" fxLayout="row">
-                    <div class="form-field-wrapper">
+                  <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                    <div>
                       <mat-form-field>
                         <input type="number" matInput i18n-placeholder placeholder="Aperture Minor Axis"
                           formControlName="b" />
@@ -80,7 +81,7 @@
                       </mat-form-field>
                       <app-print-form-error [control]="photometryForm.get('b')"></app-print-form-error>
                     </div>
-                    <div class="form-field-wrapper">
+                    <div>
                       <mat-form-field>
                         <input type="number" matInput i18n-placeholder placeholder="Annulus Outer Minor Axis"
                           formControlName="bOut" />
@@ -89,8 +90,8 @@
                       <app-print-form-error [control]="photometryForm.get('bOut')"></app-print-form-error>
                     </div>
                   </div>
-                  <div fxFlex="1 1 auto" fxLayout="row">
-                    <div class="form-field-wrapper">
+                  <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                    <div>
                       <mat-form-field>
                         <input type="number" matInput i18n-placeholder placeholder="Aperture Position Angle"
                           formControlName="theta" />
@@ -99,7 +100,7 @@
                       <app-print-form-error [control]="photometryForm.get('theta')"></app-print-form-error>
                     </div>
 
-                    <div class="form-field-wrapper">
+                    <div>
                       <mat-form-field>
                         <input type="number" matInput i18n-placeholder placeholder="Annulus Position Angle"
                           formControlName="thetaOut" />
@@ -111,8 +112,8 @@
                 </div>
               </ng-container>
               <ng-container *ngIf="settings.photometry.mode == 'adaptive'">
-                <div fxFlex="1 1 auto" fxLayout="row">
-                  <div class="form-field-wrapper">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Aperture"
                         formControlName="aKrFactor" />
@@ -120,7 +121,7 @@
                     </mat-form-field>
                     <app-print-form-error [control]="photometryForm.get('aKrFactor')"></app-print-form-error>
                   </div>
-                  <div class="form-field-wrapper">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Annulus Inner"
                         formControlName="aInKrFactor" />
@@ -129,7 +130,7 @@
                     <app-print-form-error [control]="photometryForm.get('aInKrFactor')"></app-print-form-error>
                   </div>
 
-                  <div class="form-field-wrapper">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Annulus Outer"
                         formControlName="aOutKrFactor" />
@@ -138,25 +139,26 @@
                     <app-print-form-error [control]="photometryForm.get('aOutKrFactor')"></app-print-form-error>
                   </div>
                 </div>
-                <div fxFlex="1 1 auto" fxLayout="row">
-                  <div fxFlex="1 1 auto" fxLayout="column">
-                    <div class="form-field-wrapper">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                  <div fxLayout="column">
+                    <div>
                       <mat-slide-toggle formControlName="autoAper">Auto aperture</mat-slide-toggle>
                     </div>
-                    <div class="form-field-wrapper">
+                    <div>
                       <mat-slide-toggle formControlName="adaptiveAperCorr">Aperture Correction</mat-slide-toggle>
                     </div>
-                    <div class="form-field-wrapper">
-                      <mat-slide-toggle formControlName="fixAper">Fix Aperture Size</mat-slide-toggle>
-                    </div>
+
                   </div>
 
-                  <div fxFlex="1 1 auto" fxLayout="column">
-                    <div class="form-field-wrapper">
+                  <div fxLayout="column">
+                    <div>
+                      <mat-slide-toggle formControlName="fixAper">Fix Aperture Size</mat-slide-toggle>
+                    </div>
+                    <div>
                       <mat-slide-toggle formControlName="fixEll">Fix Ellipticity</mat-slide-toggle>
                     </div>
 
-                    <div class="form-field-wrapper">
+                    <div>
                       <mat-slide-toggle formControlName="fixRot">Fix Rotation</mat-slide-toggle>
                     </div>
                   </div>
@@ -172,30 +174,34 @@
         <form [formGroup]="calibrationForm">
           <div style="padding: 10px">
             <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
-              <div class="form-field-wrapper">
+              <div>
                 <mat-form-field>
                   <input type="number" matInput i18n-placeholder placeholder="Zero Point" formControlName="zeroPoint" />
                   <mat-hint>offset in magnitudes</mat-hint>
                 </mat-form-field>
                 <app-print-form-error [control]="calibrationForm.get('zeroPoint')"></app-print-form-error>
               </div>
-              <div class="form-field-wrapper">
+              <div>
                 <mat-slide-toggle formControlName="calibrationEnabled"> Use catalog to calibrate zero point offset
                 </mat-slide-toggle>
               </div>
 
               <ng-container *ngIf="settings.calibration.calibrationEnabled">
-                <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%;">
-                  <div class="form-field-wrapper">
-                    <mat-form-field appearance="outline">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px" style="width: 100%;">
+                  <div>
+                    <mat-form-field appearance="outline" style="width: 500px;">
                       <mat-label>Catalog</mat-label>
                       <mat-select formControlName="catalog">
-                        <mat-option *ngFor="let catalog of catalogs$ | async" [value]="catalog.name">{{
-                          catalog.name }}</mat-option>
+                        <mat-option *ngFor="let catalog of catalogs$ | async" [value]="catalog.name">
+                          {{getCatalogLabel(catalog)}}
+                        </mat-option>
                       </mat-select>
                     </mat-form-field>
                   </div>
-                  <div class="form-field-wrapper">
+
+                </div>
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px" style="width: 100%;">
+                  <div>
                     <mat-form-field>
                       <input type="number" matInput i18n-placeholder placeholder="Source Matching Tolerance"
                         formControlName="sourceMatchTol" />
@@ -204,14 +210,14 @@
                     <app-print-form-error [control]="calibrationForm.get('sourceMatchTol')"></app-print-form-error>
                   </div>
                 </div>
-                <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%;">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px" style="width: 100%;">
                   <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
                     <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-slide-toggle formControlName="sourceInclusionPercentageEnabled"> Reject catalog stars not
                           in all images</mat-slide-toggle>
                       </div>
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-form-field>
                           <input type="number" matInput i18n-placeholder placeholder="Source Inclusion Percentage"
                             formControlName="sourceInclusionPercentage" />
@@ -221,12 +227,12 @@
                       </div>
                     </div>
                     <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-slide-toggle formControlName="maxStarRmsEnabled"> Reject variable catalog stars from batch
                           RMS
                         </mat-slide-toggle>
                       </div>
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-form-field>
                           <input type="number" matInput i18n-placeholder placeholder="Maximum RMS"
                             formControlName="maxStarRms" />
@@ -236,11 +242,11 @@
                       </div>
                     </div>
                     <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-slide-toggle formControlName="minSnrEnabled"> Reject low signal-to-noise catalog stars
                         </mat-slide-toggle>
                       </div>
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-form-field>
                           <input type="number" matInput i18n-placeholder placeholder="Minimum SNR"
                             formControlName="minSnr" />
@@ -253,12 +259,12 @@
                   </div>
                   <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
                     <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-slide-toggle formControlName="variableCheckEnabled"> Reject variable catalog stars from VSX
                           Catalog
                         </mat-slide-toggle>
                       </div>
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-form-field>
                           <input type="number" matInput i18n-placeholder placeholder="Source Matching Tolerance"
                             formControlName="variableCheckTol" />
@@ -269,11 +275,11 @@
                       </div>
                     </div>
                     <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-slide-toggle formControlName="maxStarsEnabled"> Set maximum number of catalog stars
                         </mat-slide-toggle>
                       </div>
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-form-field>
                           <input type="number" matInput i18n-placeholder placeholder="Maximum number of stars"
                             formControlName="maxStars" />
@@ -283,11 +289,11 @@
                       </div>
                     </div>
                     <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px">
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-slide-toggle formControlName="maxSnrEnabled"> Reject high signal-to-noise catalog sources
                         </mat-slide-toggle>
                       </div>
-                      <div class="form-field-wrapper">
+                      <div>
                         <mat-form-field>
                           <input type="number" matInput i18n-placeholder placeholder="Maximum SNR"
                             formControlName="maxSnr" />
@@ -311,8 +317,8 @@
         <form [formGroup]="sourceExtractionForm">
           <div style="padding: 10px">
             <div fxLayout="column" fxLayoutGap="30px">
-              <div fxFlex="1 1 auto" fxLayout="row">
-                <div class="form-field-wrapper">
+              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Threshold"
                       formControlName="threshold" />
@@ -320,7 +326,7 @@
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('threshold')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Background Size"
                       formControlName="bkSize" />
@@ -328,7 +334,7 @@
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('bkSize')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Background Filter Size"
                       formControlName="bkFilterSize" />
@@ -337,22 +343,22 @@
                   <app-print-form-error [control]="photometryForm.get('bkFilterSize')"></app-print-form-error>
                 </div>
               </div>
-              <div fxFlex="1 1 auto" fxLayout="row">
-                <div class="form-field-wrapper">
+              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="FWHM" formControlName="fwhm" />
                     <mat-hint>source FWHM [pixels]</mat-hint>
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('fwhm')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Min FWHM" formControlName="minFwhm" />
                     <mat-hint>mininum allowed FWHM [pixels]</mat-hint>
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('minFwhm')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Max FWHM" formControlName="maxFwhm" />
                     <mat-hint>maximum allowed FWHM [pixels]</mat-hint>
@@ -360,8 +366,8 @@
                   <app-print-form-error [control]="photometryForm.get('maxFwhm')"></app-print-form-error>
                 </div>
               </div>
-              <div fxFlex="1 1 auto" fxLayout="row">
-                <div class="form-field-wrapper">
+              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Min Pixel Count"
                       formControlName="minPixels" />
@@ -369,7 +375,7 @@
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('minPixels')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Max Ellipticity"
                       formControlName="maxEllipticity" />
@@ -377,7 +383,7 @@
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('maxEllipticity')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Clean" formControlName="clean" />
                     <mat-hint>cleaning parameter</mat-hint>
@@ -385,20 +391,20 @@
                   <app-print-form-error [control]="photometryForm.get('clean')"></app-print-form-error>
                 </div>
               </div>
-              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="start center">
-                <div fxFlex="1 1 auto" fxLayout="column" fxLayoutAlign="start center">
-                  <div class="form-field-wrapper">
+              <div fxLayout="row" fxLayoutGap="20px">
+                <div fxLayout="column">
+                  <div>
                     <mat-slide-toggle formControlName="deblend">Deblend</mat-slide-toggle>
                   </div>
-                  <div class="form-field-wrapper">
+                  <div>
                     <mat-slide-toggle formControlName="centroid">Centroid</mat-slide-toggle>
                   </div>
-                  <div class="form-field-wrapper">
+                  <div>
                     <mat-slide-toggle formControlName="discardSaturated">Discard Saturated</mat-slide-toggle>
                   </div>
                 </div>
 
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Deblend Levels"
                       formControlName="deblendLevels" />
@@ -406,7 +412,7 @@
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('deblendLevels')"></app-print-form-error>
                 </div>
-                <div class="form-field-wrapper">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Deblend Contrast"
                       formControlName="deblendContrast" />
@@ -415,8 +421,8 @@
                   <app-print-form-error [control]="photometryForm.get('deblendContrast')"></app-print-form-error>
                 </div>
               </div>
-              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="end center">
-                <div class="form-field-wrapper">
+              <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Saturation Level"
                       formControlName="satLevel" />

@@ -33,6 +33,9 @@ export interface PhotometryJobSettings {
   centroidRadius: number | null; // 0 = disable centroiding
   zeroPoint: number | null;
   apcorrTol: number | null; // 0 = disable aperture correction
+  fixAper: boolean;
+  fixEll: boolean;
+  fixRot: boolean;
 }
 
 export interface PhotometryData extends SourceMeta, Astrometry, Photometry, SourceId { }

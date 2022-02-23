@@ -25,7 +25,7 @@
         <mat-select formControlName="mode">
           <mat-option value="average" i18n>average</mat-option>
           <mat-option value="percentile" i18n>percentile</mat-option>
-          <mat-option value="mode" i18n>mode</mat-option>
+          <!-- <mat-option value="mode" i18n>mode</mat-option> -->
           <mat-option value="sum" i18n>sum</mat-option>
         </mat-select>
       </mat-form-field>
@@ -49,18 +49,13 @@
     </div>
 
     <div>
-      <mat-form-field
-        appearance="outline"
-        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)"
-      >
+      <mat-form-field appearance="outline"
+        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)">
         <mat-label i18n>Low</mat-label>
         <input matInput formControlName="low" type="number" />
       </mat-form-field>
-      <mat-form-field
-        appearance="outline"
-        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)"
-        style="margin-left: 10px"
-      >
+      <mat-form-field appearance="outline"
+        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)" style="margin-left: 10px">
         <mat-label i18n>High</mat-label>
         <input matInput formControlName="high" type="number" />
       </mat-form-field>
@@ -87,10 +82,8 @@
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
   <div *ngIf="stackingJob$ | async; let job" style="margin-top: 10px">
-    <div
-      class="alert alert-info"
-      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
-    >
+    <div class="alert alert-info"
+      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
       Processing job {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">

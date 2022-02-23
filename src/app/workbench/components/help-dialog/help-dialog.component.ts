@@ -37,6 +37,8 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: 'space', description: 'Play Sonification' },
       { key: 'ctrl+z', description: 'Undo Region Change' },
       { key: 'ctrl+y', description: 'Redo Region Change' },
+      { key: 'c', description: 'Custom Region Mode' },
+      { key: 'v', description: 'Viewport Region Mode' },
       { key: 'left', description: 'Navigation: Low Frequency' },
       { key: 'right', description: 'Navigation: High Frequency' },
       { key: 'left right', description: 'Navigation: Mid Frequency' },
@@ -53,6 +55,7 @@ const KEYBOARD_SHORTCUT_GROUPS: KeyboardShortcutGroup[] = [
       { key: '8', description: 'Navigation: Mid Frequency | End' },
       { key: '9', description: 'Navigation: High Frequency | End' },
       { key: '0', description: 'Reset Sonification Region' },
+
     ],
   },
   {
@@ -81,7 +84,7 @@ export class HelpDialogComponent implements OnInit {
     return v == v.toUpperCase() && v != v.toLowerCase();
   }
 
-  constructor(public dialogRef: MatDialogRef<HelpDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {}
+  constructor(public dialogRef: MatDialogRef<HelpDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 }

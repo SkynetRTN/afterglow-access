@@ -62,7 +62,7 @@ function idToNumber(o: Object) {
 
 @Injectable()
 export class AfterglowCoreInterceptor implements HttpInterceptor {
-  constructor(private store: Store) {}
+  constructor(private store: Store) { }
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     let requiresIntercept = req.responseType == 'json';
     if (requiresIntercept && req.body && !(req.body instanceof FormData)) {
@@ -77,7 +77,7 @@ export class AfterglowCoreInterceptor implements HttpInterceptor {
       map((event) => {
         if (requiresIntercept && event instanceof HttpResponse && event.body) {
           idToString(event.body);
-          let body = camelCaseKeys(event.body, { deep: true });
+          let body = camelCaseKeys(event.body, { deep: true, exclude: ['Open', 'U', 'B', 'V', 'R', 'I', 'Open', 'G', 'J', 'H', 'K', 'L', 'M', 'Rc', 'Ic', 'Su', 'Sv'] });
           event = event.clone({ body: body });
         }
         return event;

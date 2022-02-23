@@ -10,21 +10,13 @@ import { Catalog } from 'src/app/jobs/models/catalog-query';
 
 @Injectable()
 export class AfterglowCatalogService {
-  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   getCatalogs(): Observable<Catalog[]> {
     return this.http.get<any>(`${getCoreApiUrl(this.config)}/catalogs`).pipe(
-      map((res) =>
-        res.data.map((c) => {
-          return {
-            name: c.name,
-            displayName: c.display_name,
-            numSources: c.num_sources,
-            mags: c.mags,
-            filterLookup: c.filter_lookup,
-          };
-        })
-      )
+      map((res) => {
+        return res.data;
+      })
     );
   }
 }

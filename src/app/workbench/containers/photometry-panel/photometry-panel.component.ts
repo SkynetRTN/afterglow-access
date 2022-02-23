@@ -180,7 +180,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
 
     this.state$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId))),
+      filter(state => !!state)
     );
 
     this.file$ = this.viewerId$.pipe(
