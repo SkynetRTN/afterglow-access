@@ -7,75 +7,59 @@
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
-  <ng-container *ngIf="hdu$ | async as hdu">
-    <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
+  <ng-container *ngIf="activeHdu$ | async as hdu; else multiLayerBlock">
+    <ng-container *ngIf="activeImageHdu$ | async as activeImageHdu; else invalidHduTypeBlock">
       <div>
         <h3 i18n>Brightness and Contrast Presets</h3>
         <div class="pb-1">
-          <button
-            mat-raised-button
-            class="m-1"
-            (click)="onPresetClick(imageHdu, 10, 95)"
-            i18n-aria-label
-            aria-label="Faint Target Preset"
-          >
+          <button mat-raised-button class="m-1" (click)="onPresetClick(activeImageHdu, 10, 95)" i18n-aria-label
+            aria-label="Faint Target Preset">
             <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
           </button>
-          <button
-            mat-raised-button
-            class="m-1"
-            (click)="onPresetClick(imageHdu, 10, 99)"
-            i18n-aria-label
-            aria-label="Default Preset"
-          >
+          <button mat-raised-button class="m-1" (click)="onPresetClick(activeImageHdu, 10, 99)" i18n-aria-label
+            aria-label="Default Preset">
             <mat-icon>brightness_2</mat-icon><span i18n>Default</span>
           </button>
-          <button
-            mat-raised-button
-            class="m-1"
-            (click)="onPresetClick(imageHdu, 10, 99.999)"
-            i18n-aria-label
-            aria-label="Bright Target Preset"
-          >
+          <button mat-raised-button class="m-1" (click)="onPresetClick(activeImageHdu, 10, 99.999)" i18n-aria-label
+            aria-label="Bright Target Preset">
             <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
           </button>
         </div>
       </div>
 
-      <div *ngIf="imageHdu.hist?.loaded" class="pr-3 pl-3 pb-0">
-        <app-image-hist-chart
-          [width]="440"
-          [height]="250"
-          [hist]="imageHdu?.hist"
-          [backgroundPercentile]="imageHdu?.normalizer?.backgroundPercentile"
-          [peakPercentile]="imageHdu?.normalizer?.peakPercentile"
-        >
+      <div *ngIf="activeImageHdu.hist?.loaded" class="pr-3 pl-3 pb-0">
+        <app-image-hist-chart [width]="440" [height]="250" [hist]="activeImageHdu?.hist"
+          [backgroundPercentile]="activeImageHdu?.normalizer?.backgroundPercentile"
+          [peakPercentile]="activeImageHdu?.normalizer?.peakPercentile">
         </app-image-hist-chart>
         <div style="clear: both"></div>
       </div>
 
       <div class="pb-4 pt-1">
         <h3 i18n>Brightness and Contrast Settings</h3>
-        <app-normalizer-form
-          [normalizer]="imageHdu?.normalizer"
+        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
           (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
           (peakPercentileChange)="onPeakPercentileChange($event)"
-          (colorMapChange)="onColorMapChange(imageHdu, $event)"
-          (stretchModeChange)="onStretchModeChange(imageHdu, $event)"
-          (invertedChange)="onInvertedChange(imageHdu, $event)"
-        >
+          (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
+          (stretchModeChange)="onStretchModeChange(activeImageHdu, $event)"
+          (invertedChange)="onInvertedChange(activeImageHdu, $event)">
         </app-normalizer-form>
       </div>
     </ng-container>
   </ng-container>
 
+  <ng-template #multiLayerBlock>
+    <ng-container *ngIf="hdus$ | async; let hdus">
+
+    </ng-container>
+
+  </ng-template>
+
   <div>
     <h3 i18n>Image Orientation Options</h3>
     <div class="pb-4">
-      <app-image-orientation-toolbar
-        [data]="(imageHdu$ | async) || (file$ | async)"
-        [viewportSize]="viewportSize$ | async"
-      ></app-image-orientation-toolbar>
+      <app-image-orientation-toolbar [data]="(activeImageHdu$ | async) || (file$ | async)"
+        [viewportSize]="viewportSize$ | async"></app-image-orientation-toolbar>
     </div>
   </div>
 </ng-container>

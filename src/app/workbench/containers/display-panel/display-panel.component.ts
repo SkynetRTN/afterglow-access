@@ -61,9 +61,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
-  imageHdu$: Observable<ImageHdu>;
-  tableHdu$: Observable<TableHdu>;
+  hdus$: Observable<IHdu[]>;
+  activeHdu$: Observable<IHdu>;
+  activeImageHdu$: Observable<ImageHdu>;
+  activeTableHdu$: Observable<TableHdu>;
 
   destroy$ = new Subject<boolean>();
 
@@ -86,22 +87,26 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.hdus$ = this.file$.pipe(
+      switchMap((file) => this.store.select(DataFilesState.getHdusByFileId(file.id)))
+    )
+
+    this.activeHdu$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.activeImageHdu$ = this.activeHdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
 
-    this.tableHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.TABLE ? (hdu as TableHdu) : null)));
+    this.activeTableHdu$ = this.activeHdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.TABLE ? (hdu as TableHdu) : null)));
 
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
 
-    this.backgroundPercentile$.pipe(auditTime(25), withLatestFrom(this.imageHdu$)).subscribe(([value, imageHdu]) => {
+    this.backgroundPercentile$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
       this.store.dispatch(new UpdateNormalizer(imageHdu.id, { backgroundPercentile: value }));
     });
 
-    this.peakPercentile$.pipe(auditTime(25), withLatestFrom(this.imageHdu$)).subscribe(([value, imageHdu]) => {
+    this.peakPercentile$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
       this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakPercentile: value }));
     });
   }
@@ -144,12 +149,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 }
