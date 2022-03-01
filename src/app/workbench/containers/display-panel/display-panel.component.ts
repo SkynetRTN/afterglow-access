@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Subject, BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import {
   auditTime,
   map,
   tap,
   switchMap,
+  takeUntil,
   distinct,
   distinctUntilChanged,
   withLatestFrom,
@@ -32,11 +33,12 @@ import {
   UpdateBlendMode,
   UpdateAlpha,
   ResetViewportTransform,
+  UpdateWhiteBalance,
 } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { Transform } from '../../../data-files/models/transformation';
-import { IImageData } from '../../../data-files/models/image-data';
+import { getPixel, IImageData } from '../../../data-files/models/image-data';
 import { WorkbenchState } from '../../workbench.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { BlendMode } from '../../../data-files/models/blend-mode';
@@ -45,6 +47,7 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
 import { MatDialog } from '@angular/material/dialog';
 import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
 import { FormControl } from '@angular/forms';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 @Component({
   selector: 'app-display-panel',
@@ -70,8 +73,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   activeTableHdu$: Observable<TableHdu>;
 
   destroy$ = new Subject<boolean>();
-  colorFormControl = new FormControl('#FFFFFF');
-  color = '#FFFFFF';
+
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -82,8 +84,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
+  colorPickerMode = false;
+  color = '#FFFFFF';
+  whiteBalanceMode = false;
+  resetWhiteBalance$ = new Subject<any>();
 
-  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog) {
+  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog, private eventService: ImageViewerEventService, private cd: ChangeDetectorRef) {
     this.viewportSize$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
     );
@@ -114,6 +120,74 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.peakPercentile$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
       this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakPercentile: value }));
     });
+
+    this.resetWhiteBalance$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.file$)
+    ).subscribe(([v, file]) => {
+      if (!file) return;
+      this.store.dispatch(new UpdateWhiteBalance(file.id, [1, 1, 1]))
+    })
+
+    this.eventService.imageClickEvent$
+      .pipe(
+        takeUntil(this.destroy$),
+        withLatestFrom(this.file$)
+      )
+      .subscribe(([$event, file]) => {
+
+        if (!this.whiteBalanceMode || !file || !file.imageDataId || !$event.hitImage) return
+        let compositeImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(file.imageDataId));
+        let color = getPixel(compositeImageData, $event.imageX, $event.imageY);
+        if (!color) return;
+        let b = (color >> 16) & 0xff;
+        let g = (color >> 8) & 0xff;
+        let r = (color >> 0) & 0xff;
+
+        let componentToHex = (c) => {
+          var hex = c.toString(16);
+          return hex.length == 1 ? "0" + hex : hex;
+        }
+
+        let rgbToHex = (r, g, b) => {
+          return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
+
+        let hexToRgb = (hex) => {
+          var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+          } : null;
+        }
+
+        let targetRGB = hexToRgb(this.color);
+        let rScale = targetRGB.r / r
+        let gScale = targetRGB.g / g
+        let bScale = targetRGB.b / b
+        this.store.dispatch(new UpdateWhiteBalance(file.id, [rScale, gScale, bScale]))
+
+
+
+        // if (this.colorPickerMode) {
+        //   let hex = rgbToHex(r, g, b);
+        //   this.color = hex;
+        //   this.cd.markForCheck();
+        // }
+        // else if (this.whiteBalanceMode) {
+        //   let targetRGB = hexToRgb(this.color);
+        //   let rScale = targetRGB.r / r
+        //   let gScale = targetRGB.g / g
+        //   let bScale = targetRGB.b / b
+        //   this.store.dispatch(new UpdateWhiteBalance(file.id, [rScale, gScale, bScale]))
+        // }
+
+
+
+
+      });
+
   }
 
   onBackgroundPercentileChange(value: number) {
@@ -134,6 +208,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   onInvertedChange(hdu: ImageHdu, value: boolean) {
     this.store.dispatch(new UpdateNormalizer(hdu.id, { inverted: value }));
+  }
+
+  onBalanceChange(hdu: ImageHdu, value: number) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { balance: value }));
   }
 
   onPresetClick(hdu: ImageHdu, lowerPercentile: number, upperPercentile: number) {
@@ -178,5 +256,17 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         //this.store.dispatch(new UpdateSettings(result));
       }
     });
+  }
+
+  onColorPickerOpen() {
+    this.whiteBalanceMode = true
+  }
+
+  onColorPickerClose() {
+    setTimeout(() => this.whiteBalanceMode = false, 100)
+  }
+
+  onResetWhiteBalance() {
+    this.resetWhiteBalance$.next(true);
   }
 }

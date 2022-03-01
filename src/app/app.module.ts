@@ -40,7 +40,7 @@ import { AfterglowConfigService } from './afterglow-config.service';
 import { AppState } from './app.state';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import localeEs from '@angular/common/locales/es';
-// import { ColorPickerModule } from 'ngx-color-picker';
+import { ColorPickerModule } from 'ngx-color-picker';
 
 
 registerLocaleData(localeEs, 'es');
@@ -148,7 +148,7 @@ export function jobSanitizer(v: JobsStateModel) {
     CookieModule.forRoot(),
     AvatarModule,
     ThemePickerModule,
-    // ColorPickerModule,
+    ColorPickerModule,
     WorkbenchModule.forRoot(),
     AuthModule.forRoot(),
     KeyboardShortcutsModule.forRoot(),

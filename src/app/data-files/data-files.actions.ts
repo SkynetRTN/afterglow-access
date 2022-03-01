@@ -119,6 +119,12 @@ export class LoadRawImageTileCancel {
   constructor(public hduId: string, public tileIndex: number) { }
 }
 
+export class UpdateWhiteBalance {
+  public static readonly type = '[File] Update White Balance';
+
+  constructor(public fileId: string, public whiteBalance: [number, number, number]) { }
+}
+
 export class UpdateBlendMode {
   public static readonly type = '[File] Update Blend Mode';
 

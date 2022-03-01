@@ -9,6 +9,7 @@ export interface PixelNormalizer {
   colorMapName: string;
   stretchMode: StretchMode;
   inverted: boolean;
+  balance: number;
 }
 
 // export function createPixelNormalizer(backgroundLevel: number, peakLevel: number, colorMap: ColorMap, stretchMode: StretchMode) : PixelNormalizer {
@@ -72,7 +73,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
     //swap values
     peakLevel = [backgroundLevel, (backgroundLevel = peakLevel)][0];
   }
-  let normalizationRange = peakLevel - backgroundLevel;
+  let normalizationRange = (peakLevel - backgroundLevel) / normalizer.balance;
   let maxColorIndex = colorMapLookup.length - 1;
   let colorIndexScaler = maxColorIndex / 65535.0;
   let dataLength = pixels.length;

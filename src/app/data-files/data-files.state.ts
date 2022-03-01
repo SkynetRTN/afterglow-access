@@ -87,6 +87,7 @@ import {
   UpdateColorMap,
   UpdateHduHeader,
   UpdateNormalizerSuccess,
+  UpdateWhiteBalance,
 } from './data-files.actions';
 import { HduType } from './models/data-file-type';
 import { env } from '../../environments/environment';
@@ -567,7 +568,8 @@ export class DataFilesState {
                     peakPercentile: 99,
                     colorMapName: grayColorMap.name,
                     stretchMode: StretchMode.Linear,
-                    inverted: false
+                    inverted: false,
+                    balance: 1
                   },
                 };
                 hdu = imageHdu;
@@ -1378,6 +1380,27 @@ export class DataFilesState {
   /**
    * Composite
    */
+
+  @Action(UpdateWhiteBalance)
+  @ImmutableContext()
+  public updateWhiteBalance(
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+    { fileId, whiteBalance }: UpdateWhiteBalance
+  ) {
+    let state = getState();
+    if (!(fileId in state.fileEntities)) return;
+
+    let actions: any[] = [];
+    setState((state: DataFilesStateModel) => {
+      let file = state.fileEntities[fileId];
+      file.whiteBalance = [...whiteBalance]
+
+      actions.push(new InvalidateCompositeImageTiles(fileId));
+      return state;
+    });
+
+    dispatch(actions);
+  }
 
   @Action(UpdateBlendMode)
   @ImmutableContext()

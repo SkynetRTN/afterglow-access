@@ -70,6 +70,7 @@ import { ImageOrientationToolbarComponent } from './components/image-orientation
 import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker/svg-photometry-marker.component';
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
+import { ColorPickerModule } from 'ngx-color-picker';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -120,25 +121,26 @@ export const COMPONENTS = [
 ];
 
 @NgModule({
-    imports: [
-        RouterModule,
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        UtilsModule.forRoot(),
-        PipesModule,
-        DataProvidersModule,
-        DataFilesModule,
-        JobsModule,
-        AppMaterialModule,
-        KeyboardShortcutsModule.forRoot(),
-        FlexLayoutModule,
-        ThemePickerModule,
-        AfterglowPlotlyModule,
-        AvatarModule,
-    ],
-    declarations: COMPONENTS,
-    exports: COMPONENTS
+  imports: [
+    RouterModule,
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    UtilsModule.forRoot(),
+    PipesModule,
+    DataProvidersModule,
+    DataFilesModule,
+    JobsModule,
+    AppMaterialModule,
+    KeyboardShortcutsModule.forRoot(),
+    FlexLayoutModule,
+    ThemePickerModule,
+    AfterglowPlotlyModule,
+    AvatarModule,
+    ColorPickerModule
+  ],
+  declarations: COMPONENTS,
+  exports: COMPONENTS
 })
 export class WorkbenchModule {
   static forRoot(): ModuleWithProviders<WorkbenchModule> {

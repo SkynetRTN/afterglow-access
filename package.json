@@ -3,8 +3,8 @@
   "version": "1.0.12",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --configuration=production,en --proxy-config proxy.config.json",
-    "start-es": "ng serve --configuration=production,es --proxy-config proxy.config.json",
+    "start": "ng serve --proxy-config proxy.config.json",
+    "start-es": "ng serve --configuration=development,es --proxy-config proxy.config.json",
     "build": "ng build --configuration production",
     "patch-version": "npm --no-git-tag-version version patch && node ./patch-version.js",
     "i18n": "ng extract-i18n --format=xmb --out-file src/locale/messages.xmb",

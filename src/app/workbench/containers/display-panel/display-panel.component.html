@@ -42,7 +42,8 @@
           (peakPercentileChange)="onPeakPercentileChange($event)"
           (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
           (stretchModeChange)="onStretchModeChange(activeImageHdu, $event)"
-          (invertedChange)="onInvertedChange(activeImageHdu, $event)">
+          (invertedChange)="onInvertedChange(activeImageHdu, $event)"
+          (balanceChange)="onBalanceChange(activeImageHdu, $event)">
         </app-normalizer-form>
       </div>
     </ng-container>
@@ -50,7 +51,7 @@
 
   <ng-template #multiLayerBlock>
     <ng-container *ngIf="hdus$ | async; let hdus">
-      <div *ngIf="hdus.length > 1">
+      <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
         <div>
           <h3 i18n>Color Composite Tools</h3>
           <div class="pb-4">
@@ -60,14 +61,19 @@
             </button>
           </div>
         </div>
-        <div>
-          <!-- <input [(colorPicker)]="color" [style.background]="color" /> -->
+        <div fxFlexLayout="row" fxLayoutGap="5px">
+          <input [(colorPicker)]="color" [value]="color" [style.background]="color" [cpSaveClickOutside]="true"
+            (colorPickerOpen)="onColorPickerOpen()" (colorPickerClose)="onColorPickerClose()" />
+          <button mat-icon-button (click)="onResetWhiteBalance()">
+            <mat-icon>format_color_reset</mat-icon>
+          </button>
         </div>
       </div>
     </ng-container>
 
   </ng-template>
 
+  <hr>
   <div>
     <h3 i18n>Image Orientation Options</h3>
     <div class="pb-4">

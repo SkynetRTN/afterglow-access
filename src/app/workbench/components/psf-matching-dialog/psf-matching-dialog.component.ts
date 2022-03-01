@@ -156,7 +156,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   canBlur(hdu: IHdu) {
     if (hdu.type != HduType.IMAGE) return false;
 
-    let fwhm = this.fwhmByHduId[hdu.id].fwhm || null;
+    let fwhm = this.fwhmByHduId[hdu.id]?.fwhm || null;
     let maxFwhm = this.getMaxFwhm();
     return maxFwhm && fwhm && fwhm < maxFwhm
   }
