@@ -1,3 +1,4 @@
+@use '~@angular/material' as mat;
 @mixin file-manager-theme($theme) {
   $primary: map-get($theme, primary);
   $accent: map-get($theme, accent);
@@ -7,8 +8,8 @@
 
   app-file-manager {
     .wrapper {
-      background-color: mat-color($background, 'app-bar');
-      border: 1px solid mat-color($foreground, divider);
+      background-color: mat.get-color-from-palette($background, 'app-bar');
+      border: 1px solid mat.get-color-from-palette($foreground, divider);
     }
 
     .toolbar {
@@ -17,8 +18,8 @@
     }
 
     .path {
-      border: 1px solid mat-color($foreground, divider);
-      background: mat-color($background, 'card');
+      border: 1px solid mat.get-color-from-palette($foreground, divider);
+      background: mat.get-color-from-palette($background, 'card');
       min-height: 50px;
     }
 
@@ -115,26 +116,26 @@
 
     tr {
       cursor: default;
-      background-color: mat-color($background, 'app-bar') !important;
+      background-color: mat.get-color-from-palette($background, 'app-bar') !important;
 
       &.selected td {
-        background: mat-color($primary);
-        color: mat-color($primary, default-contrast);
+        background: mat.get-color-from-palette($primary);
+        color: mat.get-color-from-palette($primary, default-contrast);
       }
 
       &.selected:hover td {
-        background: mat-color($primary, 0.88);
+        background: mat.get-color-from-palette($primary, 0.88);
       }
 
       &:hover td {
-        background: mat-color($background, 'hover');
+        background: mat.get-color-from-palette($background, 'hover');
       }
     }
   }
 
   .bottom-toolbar {
-    border: 1px solid mat-color($foreground, divider);
-    background: mat-color($background, 'card');
+    border: 1px solid mat.get-color-from-palette($foreground, divider);
+    background: mat.get-color-from-palette($background, 'card');
     min-height: 50px;
   }
 

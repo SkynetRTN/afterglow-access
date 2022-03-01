@@ -111,12 +111,9 @@ import {
 } from './models/transformation';
 import { StretchMode } from './models/stretch-mode';
 import { BlendMode } from './models/blend-mode';
-import { on } from 'process';
 import { compose } from './models/pixel-composer';
-import { AppState } from '../app.state';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
-import { HeaderEntry } from './models/header-entry';
 import { AfterglowHeaderKey } from './models/afterglow-header-key';
 
 export interface DataFilesStateModel {

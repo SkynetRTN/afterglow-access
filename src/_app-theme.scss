@@ -1,3 +1,4 @@
+@use '~@angular/material' as mat;
 @import '~@angular/material/theming';
 @import './app/workbench/components/navbar/navbar-theme';
 @import './app/workbench/containers/workbench-theme';
@@ -53,11 +54,11 @@
   }
 
   header {
-    box-shadow: 0 10px 6px -6px mat-color($foreground, divider);
+    box-shadow: 0 10px 6px -6px mat.get-color-from-palette($foreground, divider);
   }
 
   .mat-input-element {
-    color: mat-color($foreground, text);
+    color: mat.get-color-from-palette($foreground, text);
   }
 
   .mat-button-toggle-group-appearance-standard .mat-button-toggle + .mat-button-toggle {
@@ -66,8 +67,8 @@
 
   .mat-button-toggle {
     outline: none;
-    background: mat-color($background, unselected-chip);
-    color: mat-color($foreground, secondary-text);
+    background: mat.get-color-from-palette($background, unselected-chip);
+    color: mat.get-color-from-palette($foreground, secondary-text);
     opacity: 0.9;
   }
 
@@ -78,39 +79,39 @@
   }
 
   .mat-button-toggle-checked {
-    background: mat-color($background, app-bar);
+    background: mat.get-color-from-palette($background, app-bar);
     opacity: 1;
     outline: none;
-    color: mat-color($foreground, text) !important;
-    border-top: solid 2px mat-color($primary);
-    border-bottom: solid 2px mat-color($primary);
+    color: mat.get-color-from-palette($foreground, text) !important;
+    border-top: solid 2px mat.get-color-from-palette($primary);
+    border-bottom: solid 2px mat.get-color-from-palette($primary);
   }
 
   .mat-button-toggle-disabled.mat-button-toggle-checked {
-    background: mat-color($background, app-bar);
+    background: mat.get-color-from-palette($background, app-bar);
     outline: none;
     opacity: 0.7;
-    color: mat-color($foreground, secondary-text) !important;
+    color: mat.get-color-from-palette($foreground, secondary-text) !important;
     border: none;
   }
 
   .mat-button-toggle-disabled {
     outline: none;
     opacity: 0.5;
-    color: mat-color($foreground, hint-text) !important;
+    color: mat.get-color-from-palette($foreground, hint-text) !important;
   }
 
   /* Layer menu for blend mode and color map */
   .mat-menu-item.selected,
   .mat-menu-item:hover:not([disabled]) {
-    background: mat-color($primary);
-    color: mat-color($primary, default-contrast);
+    background: mat.get-color-from-palette($primary);
+    color: mat.get-color-from-palette($primary, default-contrast);
   }
 
   theme-picker {
     .mat-button,
     .mat-icon-button {
-      color: mat-color($primary, default-contrast);
+      color: mat.get-color-from-palette($primary, default-contrast);
       opacity: 0.8;
     }
 
@@ -121,30 +122,30 @@
 
   .mat-tooltip {
     font-size: 16px !important;
-    background-color: mat-color($foreground, text, 1);
-    color: mat-color($background, card);
+    background-color: mat.get-color-from-palette($foreground, text, 1);
+    color: mat.get-color-from-palette($background, card);
     max-width: 600px !important;
     white-space: nowrap;
   }
 
   .mat-dialog-container {
-    background: mat-color($background, card);
-    color: mat-color($foreground, text);
+    background: mat.get-color-from-palette($background, card);
+    color: mat.get-color-from-palette($foreground, text);
   }
 
   .kbd {
     display: inline-block;
-    border: 1px solid mat-color($primary, 0.5);
+    border: 1px solid mat.get-color-from-palette($primary, 0.5);
     border-radius: 4px;
     padding: 0.1em 0.5em;
     margin: 0 0.2em;
     box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff inset;
-    background-color: mat-color($primary);
-    color: mat-color($primary, default-contrast);
+    background-color: mat.get-color-from-palette($primary);
+    color: mat.get-color-from-palette($primary, default-contrast);
   }
 
   .cfp-hotkeys-container {
-    background-color: mat-color($background, card) !important;
+    background-color: mat.get-color-from-palette($background, card) !important;
   }
 
   .cfp-hotkeys-key {
@@ -162,15 +163,15 @@
 
   /* override bootstrap */
   .app-root {
-    color: mat-color($foreground, text);
+    color: mat.get-color-from-palette($foreground, text);
   }
 
   .main-content {
-    background: mat-color($background, background, 0.8);
+    background: mat.get-color-from-palette($background, background, 0.8);
   }
 
   .card {
-    background: mat-color($background, card);
+    background: mat.get-color-from-palette($background, card);
   }
 
   label,
@@ -189,19 +190,19 @@
   th,
   td,
   p {
-    color: mat-color($foreground, text);
+    color: mat.get-color-from-palette($foreground, text);
   }
 
   svg text {
-    fill: mat-color($foreground, text);
+    fill: mat.get-color-from-palette($foreground, text);
   }
 
   .breadcrumb {
-    background: mat-color($background, card);
+    background: mat.get-color-from-palette($background, card);
   }
 
   a {
-    color: mat-color($accent);
+    color: mat.get-color-from-palette($accent);
   }
 
   .alert-info a {

@@ -1,51 +1,52 @@
+@use '~@angular/material' as mat;
 @import "~@angular/material/theming";
 @import "./app-theme";
 
 
-@include mat-core();
+@include mat.core();
 
 
 
 
 //Define a light theme.
-$light-primary: mat-palette($mat-indigo, 600, 400, 800);
-$light-accent: mat-palette($mat-deep-orange);
-$light-warn: mat-palette($mat-red);
-$light-theme: mat-light-theme($light-primary, $light-accent, $light-warn);
-@include angular-material-theme($light-theme);
+$light-primary: mat.define-palette(mat.$indigo-palette, 600, 400, 800);
+$light-accent: mat.define-palette(mat.$deep-orange-palette);
+$light-warn: mat.define-palette(mat.$red-palette);
+$light-theme: mat.define-light-theme($light-primary, $light-accent, $light-warn);
+@include mat.all-component-themes($light-theme);
 @include afterglow-app-theme($light-theme);
 
 // Define a dark theme.
-$dark-primary: mat-palette($mat-cyan, 500, 400, 700);
-$dark-accent: mat-palette($mat-orange);
-$dark-warn: mat-palette($mat-red);
-$dark-theme: mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
+$dark-primary: mat.define-palette(mat.$cyan-palette, 500, 400, 700);
+$dark-accent: mat.define-palette(mat.$orange-palette);
+$dark-warn: mat.define-palette(mat.$red-palette);
+$dark-theme: mat.define-dark-theme($dark-primary, $dark-accent, $dark-warn);
 
 .cyan-dark-theme {
-  @include angular-material-theme($dark-theme);
+  @include mat.all-component-themes($dark-theme);
   @include afterglow-app-theme($dark-theme);
 
   app-navbar {
     .navbar,
     .navbar-header {
-      background: mat-color($mat-grey, 700);
+      background: mat.get-color-from-palette(mat.$grey-palette, 700);
     }
 
     .mat-button,
     .mat-icon-button {
       $foreground: map-get($dark-theme, foreground);
-      color: mat-color($foreground, text);
+      color: mat.get-color-from-palette($foreground, text);
     }
   }
 }
 
 // Define a dark high contrast theme.
-$dark-hc-primary: mat-palette($mat-yellow, 500, 400, 600);
-$dark-hc-text: mat-color($mat-yellow, 500);
-$dark-hc-disabled-text: mat-color($mat-yellow, 700);
-$dark-hc-icons: mat-color($mat-yellow, 400);
-$dark-hc-accent: mat-palette($mat-yellow, 600);
-$dark-hc-theme: mat-dark-theme($dark-hc-primary, $dark-hc-accent, $dark-warn);
+$dark-hc-primary: mat.define-palette(mat.$yellow-palette, 500, 400, 600);
+$dark-hc-text: mat.get-color-from-palette(mat.$yellow-palette, 500);
+$dark-hc-disabled-text: mat.get-color-from-palette(mat.$yellow-palette, 700);
+$dark-hc-icons: mat.get-color-from-palette(mat.$yellow-palette, 400);
+$dark-hc-accent: mat.define-palette(mat.$yellow-palette, 600);
+$dark-hc-theme: mat.define-dark-theme($dark-hc-primary, $dark-hc-accent, $dark-warn);
 $foreground: map-get($dark-hc-theme, foreground);
 // @debug $foreground;
 $foreground: map_merge(
@@ -70,32 +71,32 @@ $dark-hc-theme: map_merge(
 );
 
 .high-contrast-theme {
-  @include angular-material-theme($dark-hc-theme);
+  @include mat.all-component-themes($dark-hc-theme);
   @include afterglow-app-theme($dark-hc-theme);
 
   .mat-button,
   .mat-icon-button {
-    color: mat-color($foreground, text);
+    color: mat.get-color-from-palette($foreground, text);
   }
 
   app-navbar {
     .navbar,
     .navbar-header {
-      background: mat-color($background, background);
+      background: mat.get-color-from-palette($background, background);
     }
 
     a.mat-button,
     a.mat-icon-button,
     .mat-button,
     .mat-icon-button {
-      color: mat-color($foreground, text);
+      color: mat.get-color-from-palette($foreground, text);
     }
   }
 
   theme-picker {
     .mat-button,
     .mat-icon-button {
-      color: mat-color($foreground, text);
+      color: mat.get-color-from-palette($foreground, text);
     }
   }
 }
@@ -108,10 +109,10 @@ $fa-font-path: "~font-awesome/fonts";
 }
 
 @import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
-$custom-typography: mat-typography-config(
+$custom-typography: mat.define-typography-config(
   $font-family: "Roboto",
 );
-@include angular-material-typography($custom-typography);
+@include mat.all-component-typographies($custom-typography);
 
 body {
   font-family: Roboto, Arial, sans-serif;

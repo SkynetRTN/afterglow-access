@@ -14,8 +14,8 @@ module.exports = {
       },
       {
         test: /\.wasm$/,
-        loaders: ['base64-loader'],
         type: 'javascript/auto',
+        loader: 'base64-loader',
       },
     ],
   },
