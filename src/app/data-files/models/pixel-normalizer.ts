@@ -31,7 +31,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   }
 
   let stretchFn: (x: number) => number;
-  switch (+stretchMode) {
+  switch (stretchMode) {
     case StretchMode.ArcSinh: {
       stretchFn = function (x: number) {
         return Math.asinh(10.0 * x) / 3.0;
@@ -67,7 +67,6 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
 
   // console.log(stretchFn);
 
-  let normalizationScaler = 65535.0 / (peakLevel - backgroundLevel);
   let invert;
   if ((invert = backgroundLevel > peakLevel)) {
     //swap values

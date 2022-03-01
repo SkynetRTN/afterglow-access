@@ -578,7 +578,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       }
 
       let header = headerEntities[hdu.headerId];
-      if (!header.loaded) {
+      if (!header.loaded || !header.isValid) {
         // console.log("waiting for header...", $event)
         this.hduLoading[hduId] = true;
         this.actions$

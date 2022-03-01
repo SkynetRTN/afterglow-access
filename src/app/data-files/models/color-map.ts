@@ -65,7 +65,7 @@ function createColorMap(name: string, red: LIColor[], green: LIColor[], blue: LI
 }
 
 export let grayColorMap = createColorMap(
-  'Gray Color Map',
+  'Gray',
   [
     { x: 0, y: 0 },
     { x: 1, y: 1 },
@@ -81,7 +81,7 @@ export let grayColorMap = createColorMap(
 );
 
 export let rainbowColorMap = createColorMap(
-  'Rainbow Color Map',
+  'Rainbow',
   [
     { x: 0, y: 1 },
     { x: 0.2, y: 0 },
@@ -105,7 +105,7 @@ export let rainbowColorMap = createColorMap(
 );
 
 export let coolColorMap = createColorMap(
-  'Cool Color Map',
+  'Cool',
   [
     { x: 0, y: 0 },
     { x: 0.29, y: 0 },
@@ -126,7 +126,7 @@ export let coolColorMap = createColorMap(
 );
 
 export let heatColorMap = createColorMap(
-  'Heat Color Map',
+  'Heat',
   [
     { x: 0, y: 0 },
     { x: 0.34, y: 1 },
@@ -145,7 +145,7 @@ export let heatColorMap = createColorMap(
 );
 
 export let redColorMap = createColorMap(
-  'Red Color Map',
+  'Red',
   [
     { x: 0, y: 0 },
     { x: 1, y: 1 },
@@ -161,7 +161,7 @@ export let redColorMap = createColorMap(
 );
 
 export let greenColorMap = createColorMap(
-  'Green Color Map',
+  'Green',
   [
     { x: 0, y: 0 },
     { x: 0, y: 0 },
@@ -177,7 +177,7 @@ export let greenColorMap = createColorMap(
 );
 
 export let blueColorMap = createColorMap(
-  'Blue Color Map',
+  'Blue',
   [
     { x: 0, y: 0 },
     { x: 0, y: 0 },
@@ -193,7 +193,7 @@ export let blueColorMap = createColorMap(
 );
 
 export let aColorMap = createColorMap(
-  "'A' Color Map",
+  "'A'",
   [
     { x: 0, y: 0 },
     { x: 0.25, y: 0 },

@@ -240,7 +240,7 @@ export class GlobalSettingsDialogComponent implements OnInit, OnDestroy {
 
   getCatalogLabel(catalog: Catalog) {
     let filters = Object.keys(catalog.mags).join(', ');
-    let customFilters = catalog.filterLookup ? Object.keys(catalog.filterLookup).join('*, ') : '';
+    let customFilters = catalog.filterLookup ? Object.keys(catalog.filterLookup).map(f => `${f}*`).join(', ') : '';
     if (customFilters) {
       filters = `${filters}, ${customFilters}`
     }

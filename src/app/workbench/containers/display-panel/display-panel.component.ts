@@ -42,6 +42,9 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { BlendMode } from '../../../data-files/models/blend-mode';
 import { AfterglowConfigService } from '../../../afterglow-config.service';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { MatDialog } from '@angular/material/dialog';
+import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-display-panel',
@@ -67,6 +70,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   activeTableHdu$: Observable<TableHdu>;
 
   destroy$ = new Subject<boolean>();
+  colorFormControl = new FormControl('#FFFFFF');
+  color = '#FFFFFF';
 
   levels$: Subject<{ background: number; peak: number }> = new Subject<{
     background: number;
@@ -78,7 +83,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
 
-  constructor(private store: Store, private afterglowConfig: AfterglowConfigService) {
+  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog) {
     this.viewportSize$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
     );
@@ -157,4 +162,21 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   ngAfterViewInit() { }
+
+  openPsfMatchingDialog(file: DataFile) {
+    let dialogRef = this.dialog.open(PsfMatchingDialogComponent, {
+      width: '100%',
+      height: '100%',
+      maxWidth: '1200px',
+      maxHeight: '800px',
+      data: file.id,
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        //this.store.dispatch(new UpdateSettings(result));
+      }
+    });
+  }
 }

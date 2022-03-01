@@ -1061,7 +1061,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
               result['zero_point_correction'] = calRow.zeroPointCorr;
               result['zero_point_error'] = calRow.zeroPointError
               result['calibrated_zero_point'] = calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr;
-              result['calibrated_mag'] = photRow.mag + ((calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr) - photJob.settings.zeroPoint);
+              if (photRow.mag) result['calibrated_mag'] = photRow.mag + ((calJob.photometrySettings.zeroPoint + calRow.zeroPointCorr) - photJob.settings.zeroPoint);
             }
           }
 

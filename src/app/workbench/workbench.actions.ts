@@ -744,3 +744,9 @@ export class SyncViewerNormalizations {
 
   constructor(public normalization: PixelNormalizer) { }
 }
+
+export class SyncAfterglowHeaders {
+  public static readonly type = '[Workbench] Sync Afterglow Headers';
+
+  constructor(public hduId: string) { }
+}

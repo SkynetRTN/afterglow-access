@@ -122,7 +122,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     {
       operand: new FormControl('+', Validators.required),
       mode: new FormControl('image', Validators.required),
-      selectedHduIds: new FormControl({value: '', disabled: true}, Validators.required),
+      selectedHduIds: new FormControl({ value: '', disabled: true }, Validators.required),
       primaryHduIds: new FormControl([]),
       auxHduId: new FormControl('', Validators.required),
       scalarValue: new FormControl('', [Validators.required, isNumber]),
@@ -136,8 +136,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
   imageCalcFormAdv = new FormGroup({
     opString: new FormControl('', Validators.required),
-    selectedHduIds: new FormControl({value: '', disabled: true}, Validators.required),
-    primaryHduIds: new FormControl([], Validators.required),
+    selectedHduIds: new FormControl({ value: '', disabled: true }, Validators.required),
+    primaryHduIds: new FormControl([]),
     auxHduIds: new FormControl([]),
     inPlace: new FormControl(false, Validators.required),
   });
@@ -151,8 +151,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
     this.selectedHduIds$ = viewer$.pipe(
       switchMap(viewer => {
-        if(!viewer) return of([]);
-        if(viewer.hduId) return of([viewer.hduId])
+        if (!viewer) return of([]);
+        if (viewer.hduId) return of([viewer.hduId])
         return this.store.select(DataFilesState.getFileById(viewer.fileId)).pipe(
           map(file => file.hduIds),
           distinctUntilChanged()
@@ -160,7 +160,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
       })
     )
 
-   
+
 
     combineLatest([this.selectedHduIds$, this.availableHduIds$]).pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([[selectedHduIds, availableHduIds], config]) => {
       if (!availableHduIds || !config || !selectedHduIds) return;
@@ -169,14 +169,14 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
         return a.length != b.length || a.some(value => !b.includes(value))
       }
       let formData = config.pixelOpsFormData;
-      let primaryHduIds = formData.primaryHduIds.filter((hduId) => availableHduIds.includes(hduId) && !selectedHduIds.includes(hduId) );
-      let auxHduIds = formData.auxHduIds.filter((hduId) => availableHduIds.includes(hduId) &&  !selectedHduIds.includes(hduId));
+      let primaryHduIds = formData.primaryHduIds.filter((hduId) => availableHduIds.includes(hduId) && !selectedHduIds.includes(hduId));
+      let auxHduIds = formData.auxHduIds.filter((hduId) => availableHduIds.includes(hduId) && !selectedHduIds.includes(hduId));
       let auxHduId = formData.auxHduId;
       if (!availableHduIds.includes(auxHduId)) {
         auxHduId = null;
       }
       if (
-        updateRequired(formData.selectedHduIds,selectedHduIds) ||
+        updateRequired(formData.selectedHduIds, selectedHduIds) ||
         updateRequired(primaryHduIds, formData.primaryHduIds) ||
         updateRequired(auxHduIds, formData.auxHduIds) ||
         auxHduId != formData.auxHduId
@@ -215,7 +215,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
         this.updateSimpleFormUI();
       });
 
-      this.imageCalcForm
+    this.imageCalcForm
       .get('kernelFilter')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
@@ -335,33 +335,33 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     let value = this.imageCalcForm.get('mode').value;
 
     if (value == 'scalar') {
-      this.imageCalcForm.get('scalarValue').enable({emitEvent: false});
-      this.imageCalcForm.get('auxHduId').disable({emitEvent: false});
-      this.imageCalcForm.get('kernelFilter').disable({emitEvent: false});
-      this.imageCalcForm.get('kernelSize').disable({emitEvent: false});
-      this.imageCalcForm.get('kernelSigma').disable({emitEvent: false});
+      this.imageCalcForm.get('scalarValue').enable({ emitEvent: false });
+      this.imageCalcForm.get('auxHduId').disable({ emitEvent: false });
+      this.imageCalcForm.get('kernelFilter').disable({ emitEvent: false });
+      this.imageCalcForm.get('kernelSize').disable({ emitEvent: false });
+      this.imageCalcForm.get('kernelSigma').disable({ emitEvent: false });
     } else if (value == 'image') {
-      this.imageCalcForm.get('scalarValue').disable({emitEvent: false});
-      this.imageCalcForm.get('auxHduId').enable({emitEvent: false});
-      this.imageCalcForm.get('kernelFilter').disable({emitEvent: false});
-      this.imageCalcForm.get('kernelSize').disable({emitEvent: false});
-      this.imageCalcForm.get('kernelSigma').disable({emitEvent: false});
+      this.imageCalcForm.get('scalarValue').disable({ emitEvent: false });
+      this.imageCalcForm.get('auxHduId').enable({ emitEvent: false });
+      this.imageCalcForm.get('kernelFilter').disable({ emitEvent: false });
+      this.imageCalcForm.get('kernelSize').disable({ emitEvent: false });
+      this.imageCalcForm.get('kernelSigma').disable({ emitEvent: false });
     } else if (value == 'kernel') {
-      this.imageCalcForm.get('scalarValue').disable({emitEvent: false});
-      this.imageCalcForm.get('auxHduId').disable({emitEvent: false});
-      this.imageCalcForm.get('kernelFilter').enable({emitEvent: false});
-      if(this.kernelSizeEnabled) {
-        this.imageCalcForm.get('kernelSize').enable({emitEvent: false});
+      this.imageCalcForm.get('scalarValue').disable({ emitEvent: false });
+      this.imageCalcForm.get('auxHduId').disable({ emitEvent: false });
+      this.imageCalcForm.get('kernelFilter').enable({ emitEvent: false });
+      if (this.kernelSizeEnabled) {
+        this.imageCalcForm.get('kernelSize').enable({ emitEvent: false });
       }
       else {
-        this.imageCalcForm.get('kernelSize').disable({emitEvent: false});
+        this.imageCalcForm.get('kernelSize').disable({ emitEvent: false });
       }
-      
-      if(this.kernelSigmaEnabled) {
-        this.imageCalcForm.get('kernelSigma').enable({emitEvent: false});
+
+      if (this.kernelSigmaEnabled) {
+        this.imageCalcForm.get('kernelSigma').enable({ emitEvent: false });
       }
       else {
-        this.imageCalcForm.get('kernelSigma').disable({emitEvent: false});
+        this.imageCalcForm.get('kernelSigma').disable({ emitEvent: false });
       }
     }
   }
@@ -378,10 +378,10 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     return mode == 'kernel' && SIZE_KERNELS.includes(kernelFilter)
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngAfterViewInit() {
-   
+
   }
 
   ngOnDestroy() {

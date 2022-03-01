@@ -3,6 +3,7 @@ import { BlendMode } from './blend-mode';
 
 export function compose(
   layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number; visible: boolean }>,
+  whiteBalance: [number, number, number],
   result: Uint32Array
 ) {
   layers = layers.filter((layer) => layer.visible);
@@ -20,6 +21,8 @@ export function compose(
   // let baseHsy: [number, number, number] = [0, 0, 0];
   // let blendHsy: [number, number, number] = [0, 0, 0];
   // let resultRgb: [number, number, number] = [0, 0, 0];
+
+  let [redWB, greenWB, blueWB] = whiteBalance;
 
   //for each pixel in result
   for (let i = 0, j = 0, len = result.length; i != len; i++, j += 4) {
@@ -56,6 +59,10 @@ export function compose(
         result8[j + 3] = 255.0;
       }
     }
+    result8[j] = Math.min(255, result8[j] * redWB);
+    result8[j + 1] = Math.min(255, result8[j + 1] * greenWB);
+    result8[j + 2] = Math.min(255, result8[j + 2] * blueWB);
+
   }
   return result;
 }

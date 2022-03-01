@@ -13,9 +13,9 @@ import {
   createSelector,
   ofAction,
 } from '@ngxs/store';
-import { tap, catchError, filter, take, takeUntil, flatMap, map } from 'rxjs/operators';
+import { tap, catchError, filter, take, takeUntil, flatMap, map, startWith, debounceTime, delay } from 'rxjs/operators';
 import { Point, Matrix, Rectangle } from 'paper';
-import { combineLatest, merge, of } from 'rxjs';
+import { combineLatest, merge, Observable, of } from 'rxjs';
 import {
   WorkbenchStateModel,
   WorkbenchTool,
@@ -43,6 +43,10 @@ import {
   InvalidateRawImageTiles,
   LoadHduHeader,
   InvalidateHeader,
+  UpdateHduHeader,
+  InvalidateNormalizedImageTiles,
+  UpdateNormalizerSuccess,
+  UpdateColorMap,
 } from '../data-files/data-files.actions';
 import {
   SelectFile,
@@ -152,6 +156,7 @@ import {
   UpdateAutoPhotometry,
   UpdateAutoFieldCalibration,
   BatchPhotometerSources,
+  SyncAfterglowHeaders,
 } from './workbench.actions';
 import {
   getWidth,
@@ -164,6 +169,7 @@ import {
   PixelType,
   hasOverlap,
   TableHdu,
+  isImageHdu,
 } from '../data-files/models/data-file';
 
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
@@ -228,6 +234,8 @@ import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
 import { parseDms } from '../utils/skynet-astro';
+import { HeaderEntry } from '../data-files/models/header-entry';
+import { AfterglowHeaderKey } from '../data-files/models/afterglow-header-key';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: 'b079125e-48ae-4fbe-bdd7-cad5796a8614',
@@ -1334,7 +1342,7 @@ export class WorkbenchState {
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     hdus.forEach((hdu) => {
       let header = headerEntities[hdu.headerId];
-      if (!header || header.loaded || header.loading) return;
+      if (!header || (header.loaded && header.isValid) || header.loading) return;
 
       actions.push(new LoadHdu(hdu.id));
     });
@@ -3856,6 +3864,29 @@ export class WorkbenchState {
         (id) => id != hduId
       );
 
+      state.photometryPanelConfig.batchPhotFormData.selectedHduIds = state.photometryPanelConfig.batchPhotFormData.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+
+      state.pixelOpsPanelConfig.pixelOpsFormData.selectedHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+
+      state.pixelOpsPanelConfig.pixelOpsFormData.auxHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.auxHduIds.filter(
+        (id) => id != hduId
+      );
+
+      state.pixelOpsPanelConfig.pixelOpsFormData.primaryHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.primaryHduIds.filter(
+        (id) => id != hduId
+      );
+
+      if (state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId == hduId) state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId = null;
+
+      state.wcsCalibrationPanelState.selectedHduIds = state.wcsCalibrationPanelState.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+
+
       return state;
     });
   }
@@ -4760,6 +4791,56 @@ export class WorkbenchState {
     let actions: any[] = [];
     actions.push(new RemovePhotDatasByHduId())
     return dispatch(actions);
+  }
+
+  @Action(UpdateNormalizerSuccess)
+  @ImmutableContext()
+  public updateNormalizerSuccess(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: UpdateNormalizerSuccess
+  ) {
+
+    this.store.dispatch(new SyncAfterglowHeaders(hduId))
+  }
+
+  @Action([SyncAfterglowHeaders, UpdateColorMap])
+  @ImmutableContext()
+  public syncAfterglowHeaders(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    action: SyncAfterglowHeaders | UpdateColorMap
+  ) {
+
+    let hduId = action.hduId;
+
+    let nextSyncRequest$ = this.actions$.pipe(
+      ofActionDispatched(SyncAfterglowHeaders),
+      filter<SyncAfterglowHeaders>((a) => a.hduId == hduId)
+    )
+
+    of(action).pipe(
+      delay(1000),
+      take(1),
+      takeUntil(nextSyncRequest$),
+    ).subscribe(() => {
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId));
+      let entries: HeaderEntry[] = []
+      if (isImageHdu(hdu)) {
+        let normalizer = hdu.normalizer;
+        entries.push({ key: AfterglowHeaderKey.AG_BKG, value: normalizer.backgroundPercentile, comment: 'AgA background percentile' })
+        entries.push({ key: AfterglowHeaderKey.AG_PEAK, value: normalizer.peakPercentile, comment: 'AgA peak percentile' })
+        entries.push({ key: AfterglowHeaderKey.AG_CMAP, value: normalizer.colorMapName, comment: 'AgA color map' })
+        entries.push({ key: AfterglowHeaderKey.AG_STRCH, value: normalizer.stretchMode, comment: 'AgA stretch mode' })
+        entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })
+      }
+
+      if (entries.length != 0) {
+        this.store.dispatch([new UpdateHduHeader(hduId, entries)]);
+      }
+    })
+
+
+
+
   }
 }
 

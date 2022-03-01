@@ -1,0 +1,12 @@
+@import '../../../../mat-table-columns';
+
+@include mat-table-columns((
+    
+        order: (width: 6rem, color: gray),
+        name: (width: 20rem),
+        type: (width: 5rem),
+        fwhmX: (width: 5rem),
+        fwhmY: (width: 5rem),
+        status: (width: 20rem)
+    
+    ));

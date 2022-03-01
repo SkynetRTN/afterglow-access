@@ -1,7 +1,11 @@
 @import "~@angular/material/theming";
 @import "./app-theme";
 
+
 @include mat-core();
+
+
+
 
 //Define a light theme.
 $light-primary: mat-palette($mat-indigo, 600, 400, 800);

@@ -50,7 +50,20 @@
 
   <ng-template #multiLayerBlock>
     <ng-container *ngIf="hdus$ | async; let hdus">
-
+      <div *ngIf="hdus.length > 1">
+        <div>
+          <h3 i18n>Color Composite Tools</h3>
+          <div class="pb-4">
+            <button mat-raised-button class="m-1" (click)="openPsfMatchingDialog(file)" i18n-aria-label
+              aria-label="Open PSF Matching Dialog">
+              <mat-icon class="mr-1">balance</mat-icon><span i18n>PSF Matching Tool...</span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <!-- <input [(colorPicker)]="color" [style.background]="color" /> -->
+        </div>
+      </div>
     </ng-container>
 
   </ng-template>

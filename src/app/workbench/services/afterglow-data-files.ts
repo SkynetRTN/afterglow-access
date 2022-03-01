@@ -27,7 +27,7 @@ export interface CoreDataFile {
 export class AfterglowDataFileService {
   private SOURCE_ID = 0;
 
-  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   removeFile(fileId: string): Observable<null> {
     return this.http.delete(`${getCoreApiUrl(this.config)}/data-files/${fileId}`).pipe(map((res) => null));
@@ -49,6 +49,14 @@ export class AfterglowDataFileService {
 
   getHeader(fileId: string) {
     return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
+  }
+
+  updateHeader(fileId: string, changes: HeaderEntry[]) {
+    let body: { [key: string]: [number | string, string] } = {};
+    changes.forEach(change => {
+      body[change.key] = [change.value, change.comment]
+    })
+    return this.http.put(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`, body);
   }
 
   getHist(fileId: string): Observable<{ data: Uint32Array; minBin: number; maxBin: number }> {
@@ -100,11 +108,10 @@ export class AfterglowDataFileService {
   }
 
   getSonificationUri(fileId: string, region: Region, duration: number, toneCount: number) {
-    return `${getCoreApiUrl(this.config)}/data-files/${fileId}/sonification?x=${Math.floor(region.x) + 1}&y=${
-      Math.floor(region.y) + 1
-    }&width=${Math.floor(region.width)}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
-      region.height / duration
-    )}&num_tones=${Math.floor(toneCount)}&index_sounds=1`;
+    return `${getCoreApiUrl(this.config)}/data-files/${fileId}/sonification?x=${Math.floor(region.x) + 1}&y=${Math.floor(region.y) + 1
+      }&width=${Math.floor(region.width)}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
+        region.height / duration
+      )}&num_tones=${Math.floor(toneCount)}&index_sounds=1`;
   }
 
   private parseSource(s: any): Source {

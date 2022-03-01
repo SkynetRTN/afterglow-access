@@ -69,6 +69,7 @@ import { ImageViewerMarkerService } from './services/image-viewer-marker.service
 import { ImageOrientationToolbarComponent } from './components/image-orientation-toolbar/image-orientation-toolbar.component';
 import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker/svg-photometry-marker.component';
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
+import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -115,6 +116,7 @@ export const COMPONENTS = [
   FileListOptionComponent,
   CatalogImportComponent,
   ImageOrientationToolbarComponent,
+  PsfMatchingDialogComponent
 ];
 
 @NgModule({

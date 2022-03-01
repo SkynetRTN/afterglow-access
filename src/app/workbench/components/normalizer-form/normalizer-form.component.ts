@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy, SimpleChanges } from '@angular/core';
 import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import {
@@ -11,6 +11,7 @@ import {
   blueColorMap,
   aColorMap,
 } from '../../../data-files/models/color-map';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-normalizer-form',
@@ -48,9 +49,10 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     aColorMap,
   ];
 
-  constructor() {}
+  constructor() {
+  }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   calcStep(percentile: number) {
     if (percentile > 50) {
@@ -66,7 +68,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     }
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
     if (!this.normalizer || this.normalizer.peakPercentile == null || this.normalizer.backgroundPercentile == null) {
       this.backgroundStep = 0.1;
       this.peakStep = 0.1;
