@@ -15,11 +15,9 @@ import { GuardTypePipe } from './guard-type.pipe';
 export const COMPONENTS = [FocusableCell, CellFocuser, PrintFormErrorComponent, AlertDialogComponent, GuardTypePipe];
 
 @NgModule({
-  imports: [RouterModule, CommonModule, FormsModule, AppMaterialModule],
-
-  declarations: COMPONENTS,
-  exports: COMPONENTS,
-  entryComponents: [AlertDialogComponent],
+    imports: [RouterModule, CommonModule, FormsModule, AppMaterialModule],
+    declarations: COMPONENTS,
+    exports: COMPONENTS
 })
 export class UtilsModule {
   static forRoot(): ModuleWithProviders<UtilsModule> {

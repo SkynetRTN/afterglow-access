@@ -120,35 +120,25 @@ export const COMPONENTS = [
 ];
 
 @NgModule({
-  imports: [
-    RouterModule,
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    UtilsModule.forRoot(),
-    PipesModule,
-    DataProvidersModule,
-    DataFilesModule,
-    JobsModule,
-    AppMaterialModule,
-    KeyboardShortcutsModule.forRoot(),
-    FlexLayoutModule,
-    ThemePickerModule,
-    AfterglowPlotlyModule,
-    AvatarModule,
-  ],
-
-  declarations: COMPONENTS,
-  exports: COMPONENTS,
-  entryComponents: [
-    GlobalSettingsDialogComponent,
-    SourceExtractionRegionDialogComponent,
-    PixelOpsJobsDialogComponent,
-    HelpDialogComponent,
-    ThemeDialogComponent,
-    SaveChangesDialogComponent,
-    JobProgressDialogComponent,
-  ],
+    imports: [
+        RouterModule,
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        UtilsModule.forRoot(),
+        PipesModule,
+        DataProvidersModule,
+        DataFilesModule,
+        JobsModule,
+        AppMaterialModule,
+        KeyboardShortcutsModule.forRoot(),
+        FlexLayoutModule,
+        ThemePickerModule,
+        AfterglowPlotlyModule,
+        AvatarModule,
+    ],
+    declarations: COMPONENTS,
+    exports: COMPONENTS
 })
 export class WorkbenchModule {
   static forRoot(): ModuleWithProviders<WorkbenchModule> {
