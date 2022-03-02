@@ -23,7 +23,10 @@ export enum PixelPrecision {
 export interface ITransformableImageData {
   viewportTransformId: string;
   imageTransformId: string;
-  imageDataId: string;
+  compositeId: string;
+  redChannelId: string;
+  greenChannelId: string;
+  blueChannelId: string;
 }
 
 export interface DataFile extends ITransformableImageData {

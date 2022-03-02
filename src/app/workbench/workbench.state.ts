@@ -1028,7 +1028,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getImageDataEntities],
       (imageHdu: ImageHdu, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
-        return (imageDataEntities[imageHdu?.imageDataId] as IImageData<Uint32Array>) || null;
+        return (imageDataEntities[imageHdu?.compositeId] as IImageData<Uint32Array>) || null;
       }
     );
   }
@@ -1037,7 +1037,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileByViewerId(viewerId), DataFilesState.getImageDataEntities],
       (file: DataFile, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
-        return (imageDataEntities[file?.imageDataId] as IImageData<Uint32Array>) || null;
+        return (imageDataEntities[file?.compositeId] as IImageData<Uint32Array>) || null;
       }
     );
   }
@@ -2550,9 +2550,9 @@ export class WorkbenchState {
       let imageDataId: string = '';
       if (hdu) {
         headerId = hdu.headerId;
-        imageDataId = (hdu as ImageHdu).imageDataId;
+        imageDataId = (hdu as ImageHdu).compositeId;
       } else {
-        imageDataId = file.imageDataId;
+        imageDataId = file.compositeId;
 
         //use header from first image hdu
         let firstImageHduId = file.hduIds.find((hduId) => hduEntities[hduId].type == HduType.IMAGE);

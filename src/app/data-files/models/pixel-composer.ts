@@ -2,7 +2,7 @@ import { PixelType } from './data-file';
 import { BlendMode } from './blend-mode';
 
 export function compose(
-  layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number; visible: boolean }>,
+  layers: Array<{ redChannel: Uint16Array; greenChannel: Uint16Array; blueChannel: Uint16Array; composite: Uint32Array, blendMode: BlendMode; alpha: number; visible: boolean }>,
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]],
   result: Uint32Array
 ) {
@@ -14,16 +14,13 @@ export function compose(
     return new Uint32Array();
   }
 
-  result.set(layers[0].pixels);
+  result.set(layers[0].composite);
   let result8 = new Uint8ClampedArray(result.buffer);
-  let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.pixels.buffer));
+  let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.composite.buffer));
 
   // let baseHsy: [number, number, number] = [0, 0, 0];
   // let blendHsy: [number, number, number] = [0, 0, 0];
   // let resultRgb: [number, number, number] = [0, 0, 0];
-
-  let [redWB, greenWB, blueWB] = channelMixer;
-
   let rr = channelMixer[0][0];
   let rg = channelMixer[0][1];
   let rb = channelMixer[0][2];

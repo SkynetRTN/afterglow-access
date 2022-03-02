@@ -568,7 +568,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       let hdu = this.store.selectSnapshot(DataFilesState.getHduById(viewer.hduId));
       if (!hdu || hdu.type != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
-      let imageDataId = imageHdu.imageDataId;
+      let imageDataId = imageHdu.compositeId;
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));
       let imageTransformId = imageHdu.imageTransformId;
       let viewportTransformId = imageHdu.viewportTransformId;

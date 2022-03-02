@@ -599,7 +599,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       }
 
 
-      let imageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
+      let imageData = imageDataEntities[(hdu as ImageHdu).compositeId];
       let tile = imageData.tiles[$event.tileIndex];
       if (!tile.pixelsLoading && (!tile.pixelsLoaded || !tile.isValid)) {
         this.hduLoading[hduId] = true;

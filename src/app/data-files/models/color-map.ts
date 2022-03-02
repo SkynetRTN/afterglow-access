@@ -1,20 +1,24 @@
 /*jshint bitwise: false*/
-const LOOKUP_LENGTH: number = 16384;
+const LOOKUP_LENGTH: number = 65536;
 
-export interface LIColor {
+export interface PalettePoint {
   x: number;
   y: number;
 }
 
+type Palette = PalettePoint[];
+
 export interface ColorMap {
   name: string;
-  red: LIColor[];
-  green: LIColor[];
-  blue: LIColor[];
-  lookup: Uint32Array;
+  redPalette: Palette;
+  greenPalette: Palette;
+  bluePalette: Palette;
+  redLookup: Uint16Array;
+  greenLookup: Uint16Array;
+  blueLookup: Uint16Array;
 }
 
-function getColorFromChannel(i: number, count: number, cc: Array<LIColor>) {
+function getColorFromChannel(i: number, count: number, cc: Array<PalettePoint>) {
   // CC must have length >= 2
 
   let x = i / count;
@@ -24,41 +28,43 @@ function getColorFromChannel(i: number, count: number, cc: Array<LIColor>) {
   }
 
   if (index === 0) {
-    return cc[0].y * 255;
+    return cc[0].y * 65535;
   }
   if (index === cc.length) {
-    return cc[cc.length - 1].y * 255;
+    return cc[cc.length - 1].y * 65535;
   }
 
   // interpolate
   let m = (cc[index].y - cc[index - 1].y) / (cc[index].x - cc[index - 1].x);
   if (m !== 0) {
-    return (m * (x - cc[index - 1].x) + cc[index - 1].y) * 255;
+    return (m * (x - cc[index - 1].x) + cc[index - 1].y) * 65535;
   } else {
-    return cc[index - 1].y * 255;
+    return cc[index - 1].y * 65535;
   }
 }
 
-function getColor(i: number, count: number, red: LIColor[], green: LIColor[], blue: LIColor[]) {
+function getColor(i: number, count: number, red: Palette, green: Palette, blue: Palette) {
   let r = getColorFromChannel(i, count, red);
   let g = getColorFromChannel(i, count, green);
   let b = getColorFromChannel(i, count, blue);
   let a = 255;
 
-  return (a << 24) | (b << 16) | (g << 8) | r;
+  return [r, g, b]
 }
 
-function createColorMap(name: string, red: LIColor[], green: LIColor[], blue: LIColor[]): ColorMap {
+function createColorMap(name: string, red: Palette, green: Palette, blue: Palette): ColorMap {
   let colorMap: ColorMap = {
     name: name,
-    red: red,
-    green: green,
-    blue: blue,
-    lookup: new Uint32Array(LOOKUP_LENGTH),
+    redPalette: red,
+    greenPalette: green,
+    bluePalette: blue,
+    redLookup: new Uint16Array(LOOKUP_LENGTH),
+    greenLookup: new Uint16Array(LOOKUP_LENGTH),
+    blueLookup: new Uint16Array(LOOKUP_LENGTH),
   };
 
-  for (let i = 0; i < colorMap.lookup.length; i++) {
-    colorMap.lookup[i] = getColor(i, colorMap.lookup.length, colorMap.red, colorMap.green, colorMap.blue);
+  for (let i = 0; i < LOOKUP_LENGTH; i++) {
+    [colorMap.redLookup[i], colorMap.greenLookup[i], colorMap.blueLookup[i]] = getColor(i, LOOKUP_LENGTH, colorMap.redPalette, colorMap.greenPalette, colorMap.bluePalette);
   }
 
   return colorMap;

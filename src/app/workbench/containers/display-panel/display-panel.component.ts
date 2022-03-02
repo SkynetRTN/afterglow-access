@@ -180,8 +180,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       )
       .subscribe(([$event, file]) => {
 
-        if (!this.whiteBalanceMode || !file || !file.imageDataId || !$event.hitImage) return
-        let compositeImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(file.imageDataId));
+        if (!this.whiteBalanceMode || !file || !file.compositeId || !$event.hitImage) return
+        let compositeImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(file.compositeId));
         let color = getPixel(compositeImageData, $event.imageX, $event.imageY);
         if (!color) return;
         let b = (color >> 16) & 0xff;
