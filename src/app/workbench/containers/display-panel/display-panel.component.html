@@ -40,10 +40,12 @@
         <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
           (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
           (peakPercentileChange)="onPeakPercentileChange($event)"
+          (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
           (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
           (stretchModeChange)="onStretchModeChange(activeImageHdu, $event)"
           (invertedChange)="onInvertedChange(activeImageHdu, $event)"
-          (balanceChange)="onBalanceChange(activeImageHdu, $event)">
+          (balanceChange)="onBalanceChange(activeImageHdu, $event)"
+          (modeChange)="onNormalizerModeChange(activeImageHdu, $event)">
         </app-normalizer-form>
       </div>
     </ng-container>

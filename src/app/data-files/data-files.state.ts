@@ -116,6 +116,7 @@ import { compose } from './models/pixel-composer';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 import { AfterglowHeaderKey } from './models/afterglow-header-key';
+import { calcLevels, calcPercentiles } from './models/image-hist';
 
 export interface DataFilesStateModel {
   version: string;
@@ -564,6 +565,7 @@ export class DataFilesState {
                   imageTransformId: '',
                   imageDataId: '',
                   normalizer: {
+                    mode: 'percentile',
                     backgroundPercentile: 10,
                     peakPercentile: 99,
                     colorMapName: grayColorMap.name,
@@ -724,14 +726,29 @@ export class DataFilesState {
               if (colorMapName !== undefined && COLOR_MAPS[colorMapName]) {
                 hdu.normalizer.colorMapName = colorMapName;
               }
-              let backgroundPercentile = getHeaderEntry(header, AfterglowHeaderKey.AG_BKG)?.value;
+              let mode = getHeaderEntry(header, AfterglowHeaderKey.AG_NMODE)?.value;
+              if (mode !== undefined && ['percentile', 'pixel'].includes(mode)) {
+                hdu.normalizer.mode = mode;
+              }
+
+              let backgroundPercentile = getHeaderEntry(header, AfterglowHeaderKey.AG_BKGP)?.value;
               if (backgroundPercentile !== undefined) {
                 hdu.normalizer.backgroundPercentile = backgroundPercentile;
               }
-              let peakPercentile = getHeaderEntry(header, AfterglowHeaderKey.AG_PEAK)?.value;
+              let peakPercentile = getHeaderEntry(header, AfterglowHeaderKey.AG_PEAKP)?.value;
               if (peakPercentile !== undefined) {
                 hdu.normalizer.peakPercentile = peakPercentile;
               }
+
+              let backgroundLevel = getHeaderEntry(header, AfterglowHeaderKey.AG_BKGL)?.value;
+              if (backgroundPercentile !== undefined) {
+                hdu.normalizer.backgroundLevel = backgroundLevel;
+              }
+              let peakLevel = getHeaderEntry(header, AfterglowHeaderKey.AG_PEAKL)?.value;
+              if (peakPercentile !== undefined) {
+                hdu.normalizer.peakLevel = peakLevel;
+              }
+
               let stretchMode = getHeaderEntry(header, AfterglowHeaderKey.AG_STRCH)?.value;
               if (stretchMode !== undefined) {
                 hdu.normalizer.stretchMode = stretchMode;
@@ -1284,8 +1301,9 @@ export class DataFilesState {
   }
 
   @Action(CalculateNormalizedPixels)
+  @ImmutableContext()
   public calculateNormalizedPixels(
-    { getState }: StateContext<DataFilesStateModel>,
+    { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
     { hduId, tileIndex }: CalculateNormalizedPixels
   ) {
     let state = getState();
@@ -1318,6 +1336,32 @@ export class DataFilesState {
 
     //   return result$;
     // } else {
+
+
+    if (normalizer.backgroundLevel === undefined || normalizer.peakLevel === undefined) {
+      let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+      setState((state: DataFilesStateModel) => {
+        let hdu = state.hduEntities[hduId];
+        if (isImageHdu(hdu)) {
+          hdu.normalizer.backgroundLevel = levels.backgroundLevel;
+          hdu.normalizer.peakLevel = levels.peakLevel;
+        }
+        return state;
+      });
+    }
+    else if (normalizer.backgroundPercentile === undefined || normalizer.peakPercentile === undefined) {
+      let percentiles = calcPercentiles(hist, normalizer.backgroundLevel, normalizer.peakLevel)
+      setState((state: DataFilesStateModel) => {
+        let hdu = state.hduEntities[hduId];
+        if (isImageHdu(hdu)) {
+          hdu.normalizer.backgroundPercentile = percentiles.lowerPercentile;
+          hdu.normalizer.peakPercentile = percentiles.upperPercentile;
+        }
+        return state;
+      });
+    }
+    normalizer = (getState().hduEntities[hduId] as ImageHdu).normalizer;
+
     normalize(rawPixels, hist, normalizer, normalizedPixels);
     return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, normalizedPixels));
     // }
@@ -1371,6 +1415,13 @@ export class DataFilesState {
         ...hdu.normalizer,
         ...changes,
       };
+      if (hdu.normalizer.mode == 'percentile') {
+        hdu.normalizer.backgroundLevel = undefined;
+        hdu.normalizer.peakLevel = undefined;
+      } else if (hdu.normalizer.backgroundLevel !== undefined && hdu.normalizer.peakLevel !== undefined) {
+        hdu.normalizer.peakPercentile = undefined;
+        hdu.normalizer.backgroundPercentile = undefined;
+      }
       return state;
     });
 

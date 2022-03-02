@@ -12,6 +12,7 @@ import {
   aColorMap,
 } from '../../../data-files/models/color-map';
 import { FormControl } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-normalizer-form',
@@ -24,10 +25,13 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   @Output() backgroundPercentileChange = new EventEmitter<number>();
   @Output() peakPercentileChange = new EventEmitter<number>();
+  @Output() backgroundLevelChange = new EventEmitter<number>();
+  @Output() peakLevelChange = new EventEmitter<number>();
   @Output() colorMapChange = new EventEmitter<string>();
   @Output() stretchModeChange = new EventEmitter<StretchMode>();
   @Output() invertedChange = new EventEmitter<boolean>();
   @Output() balanceChange = new EventEmitter<number>();
+  @Output() modeChange = new EventEmitter<'percentile' | 'pixel'>();
 
   backgroundStep = 0.1;
   peakStep = 0.1;
@@ -50,7 +54,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     aColorMap,
   ];
 
-  constructor() {
+  constructor(private decimalPipe: DecimalPipe) {
   }
 
   ngOnInit() { }
@@ -101,5 +105,19 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     // }
 
     // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
+  }
+
+  getFormattedPeakLevel() {
+    let peak = this.normalizer.peakLevel;
+    if (!peak) return '';
+    let result = this.decimalPipe.transform(peak, '1.0-3').replace(',', '')
+    return result;
+  }
+
+  getFormattedBackgroundLevel() {
+    let background = this.normalizer.backgroundLevel;
+    if (!background) return ''
+    let result = this.decimalPipe.transform(background, '1.0-3').replace(',', '')
+    return result;
   }
 }

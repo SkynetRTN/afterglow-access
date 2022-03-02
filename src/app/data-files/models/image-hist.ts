@@ -186,17 +186,17 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
     total += hist.data[i];
   }
 
-  let y0 = 0;
+  let y1 = 0;
   let lowerComplete = false;
   let upperComplete = false;
-  let maxPixCount: number = 0,
+  let maxPixCount: number = total,
     minPixCount: number = 0;
-  for (let i = 0; i < hist.data.length - 1; i++) {
-    y0 += hist.data[i];
-    let x1 = getBinCenter(hist, i + 1);
+  for (let i = 0; i < hist.data.length; i++) {
+    y1 += hist.data[i];
+    let x1 = getBinRight(hist, i);
     if (!upperComplete && x1 > peakLevel) {
-      let x0 = getBinCenter(hist, i);
-      let y1 = y0 + hist.data[i + 1];
+      let x0 = getBinLeft(hist, i);
+      let y0 = y1 - hist.data[i];
       let x = peakLevel;
       let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
       maxPixCount = y;
@@ -206,8 +206,8 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
       upperComplete = true;
     }
     if (!lowerComplete && x1 > backgroundLevel) {
-      let x0 = getBinCenter(hist, i);
-      let y1 = y0 + hist.data[i + 1];
+      let x0 = getBinLeft(hist, i);
+      let y0 = y1 - hist.data[i];
       let x = backgroundLevel;
       let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
       minPixCount = y;

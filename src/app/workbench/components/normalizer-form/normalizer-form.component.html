@@ -1,8 +1,17 @@
-<div class="row">
+<div class="row pb-3">
+  <div class="col-6">
+    <mat-slide-toggle [checked]="normalizer?.mode == 'percentile'"
+      (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
+      Percentile Mode
+    </mat-slide-toggle>
+  </div>
+  <div class="col-6"></div>
+</div>
+<div class="row" *ngIf="normalizer?.mode == 'percentile'">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Background Level Percentile</mat-label>
-      <input matInput [ngModel]="normalizer?.backgroundPercentile"
+      <input matInput [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
         (ngModelChange)="backgroundPercentileChange.emit($event)" type="number" [step]="backgroundStep" min="0"
         max="100" />
     </mat-form-field>
@@ -10,8 +19,24 @@
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Saturation Level Percentile</mat-label>
-      <input matInput [ngModel]="normalizer?.peakPercentile" (ngModelChange)="peakPercentileChange.emit($event)"
-        type="number" [step]="peakStep" min="0" max="100" />
+      <input matInput [ngModel]="normalizer?.peakPercentile | number:'1.0-5'"
+        (ngModelChange)="peakPercentileChange.emit($event)" type="number" [step]="peakStep" min="0" max="100" />
+    </mat-form-field>
+  </div>
+</div>
+<div class="row" *ngIf="normalizer?.mode == 'pixel'">
+  <div class="col-6">
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Background Level</mat-label>
+      <input matInput [ngModel]="getFormattedBackgroundLevel()" (ngModelChange)="backgroundLevelChange.emit($event)"
+        type="number" />
+    </mat-form-field>
+  </div>
+  <div class="col-6">
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Saturation Level</mat-label>
+      <input matInput [ngModel]="getFormattedPeakLevel()" (ngModelChange)="peakLevelChange.emit($event)"
+        type="number" />
     </mat-form-field>
   </div>
 </div>

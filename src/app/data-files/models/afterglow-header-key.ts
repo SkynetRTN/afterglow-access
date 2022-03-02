@@ -1,6 +1,9 @@
 export enum AfterglowHeaderKey {
-    AG_BKG = 'AG_BKG',
-    AG_PEAK = 'AG_PEAK',
+    AG_NMODE = 'AG_NMODE',
+    AG_BKGP = 'AG_BKGP',
+    AG_PEAKP = 'AG_PEAKP',
+    AG_BKGL = 'AG_BKGL',
+    AG_PEAKL = 'AG_PEAKL',
     AG_CMAP = 'AG_CMAP',
     AG_STRCH = 'AG_STRCH',
     AG_INVRT = 'AG_INVRT'

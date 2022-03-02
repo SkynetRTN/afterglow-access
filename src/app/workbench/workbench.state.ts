@@ -4826,8 +4826,11 @@ export class WorkbenchState {
       let entries: HeaderEntry[] = []
       if (isImageHdu(hdu)) {
         let normalizer = hdu.normalizer;
-        entries.push({ key: AfterglowHeaderKey.AG_BKG, value: normalizer.backgroundPercentile, comment: 'AgA background percentile' })
-        entries.push({ key: AfterglowHeaderKey.AG_PEAK, value: normalizer.peakPercentile, comment: 'AgA peak percentile' })
+        entries.push({ key: AfterglowHeaderKey.AG_NMODE, value: normalizer.mode, comment: 'AgA background/peak mode' })
+        if (normalizer.backgroundPercentile !== undefined) entries.push({ key: AfterglowHeaderKey.AG_BKGP, value: normalizer.backgroundPercentile, comment: 'AgA background percentile' })
+        if (normalizer.peakPercentile !== undefined) entries.push({ key: AfterglowHeaderKey.AG_PEAKP, value: normalizer.peakPercentile, comment: 'AgA peak percentile' })
+        if (normalizer.backgroundLevel !== undefined) entries.push({ key: AfterglowHeaderKey.AG_BKGL, value: normalizer.backgroundPercentile, comment: 'AgA background percentile' })
+        if (normalizer.peakLevel !== undefined) entries.push({ key: AfterglowHeaderKey.AG_PEAKL, value: normalizer.peakPercentile, comment: 'AgA peak percentile' })
         entries.push({ key: AfterglowHeaderKey.AG_CMAP, value: normalizer.colorMapName, comment: 'AgA color map' })
         entries.push({ key: AfterglowHeaderKey.AG_STRCH, value: normalizer.stretchMode, comment: 'AgA stretch mode' })
         entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })

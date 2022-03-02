@@ -75,12 +75,11 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   destroy$ = new Subject<boolean>();
 
 
-  levels$: Subject<{ background: number; peak: number }> = new Subject<{
-    background: number;
-    peak: number;
-  }>();
+
   backgroundPercentile$: Subject<number> = new Subject<number>();
   peakPercentile$: Subject<number> = new Subject<number>();
+  backgroundLevel$: Subject<number> = new Subject<number>();
+  peakLevel$: Subject<number> = new Subject<number>();
 
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
@@ -119,6 +118,14 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
     this.peakPercentile$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
       this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakPercentile: value }));
+    });
+
+    this.backgroundLevel$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
+      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { backgroundLevel: value }));
+    });
+
+    this.peakLevel$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
+      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakLevel: value }));
     });
 
     this.resetWhiteBalance$.pipe(
@@ -198,6 +205,14 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.peakPercentile$.next(value);
   }
 
+  onBackgroundLevelChange(value: number) {
+    this.backgroundLevel$.next(value);
+  }
+
+  onPeakLevelChange(value: number) {
+    this.peakLevel$.next(value);
+  }
+
   onColorMapChange(hdu: ImageHdu, value: string) {
     this.store.dispatch(new UpdateNormalizer(hdu.id, { colorMapName: value }));
   }
@@ -214,11 +229,17 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.store.dispatch(new UpdateNormalizer(hdu.id, { balance: value }));
   }
 
+  onNormalizerModeChange(hdu: ImageHdu, value: 'percentile' | 'pixel') {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
+  }
+
   onPresetClick(hdu: ImageHdu, lowerPercentile: number, upperPercentile: number) {
     this.store.dispatch(
       new UpdateNormalizer(hdu.id, {
         backgroundPercentile: lowerPercentile,
         peakPercentile: upperPercentile,
+        backgroundLevel: undefined,
+        peakLevel: undefined,
       })
     );
   }

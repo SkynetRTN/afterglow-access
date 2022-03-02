@@ -4,8 +4,11 @@ import { ImageHist, calcLevels } from '../../data-files/models/image-hist';
 import { PixelType } from '../../data-files/models/data-file';
 
 export interface PixelNormalizer {
+  mode: 'percentile' | 'pixel';
   backgroundPercentile: number;
   peakPercentile: number;
+  backgroundLevel?: number;
+  peakLevel?: number;
   colorMapName: string;
   stretchMode: StretchMode;
   inverted: boolean;
@@ -22,13 +25,17 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   let stretchMode = normalizer.stretchMode;
   let colorMapLookup = COLOR_MAPS[normalizer.colorMapName].lookup;
 
-  let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
-  let backgroundLevel = levels.backgroundLevel;
-  let peakLevel = levels.peakLevel;
+  let backgroundLevel = normalizer.backgroundLevel;
+  let peakLevel = normalizer.peakLevel;
+  // if (normalizer.mode == 'percentile') {
+  //   let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+  //   backgroundLevel = levels.backgroundLevel;
+  //   peakLevel = levels.peakLevel;
+  // }
+
 
   if (normalizer.inverted) {
-    backgroundLevel = levels.peakLevel;
-    peakLevel = levels.backgroundLevel;
+    [backgroundLevel, peakLevel] = [peakLevel, backgroundLevel]
   }
 
   let stretchFn: (x: number) => number;
