@@ -87,7 +87,7 @@ import {
   UpdateColorMap,
   UpdateHduHeader,
   UpdateNormalizerSuccess,
-  UpdateWhiteBalance,
+  UpdateChannelMixer,
 } from './data-files.actions';
 import { HduType } from './models/data-file-type';
 import { env } from '../../environments/environment';
@@ -494,7 +494,7 @@ export class DataFilesState {
               viewportTransformId: '',
               imageTransformId: '',
               imageDataId: '',
-              whiteBalance: [1, 1, 1]
+              channelMixer: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
             };
             dataFiles.push(dataFile);
           } else {
@@ -1432,11 +1432,11 @@ export class DataFilesState {
    * Composite
    */
 
-  @Action(UpdateWhiteBalance)
+  @Action(UpdateChannelMixer)
   @ImmutableContext()
   public updateWhiteBalance(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { fileId, whiteBalance }: UpdateWhiteBalance
+    { fileId, channelMixer: whiteBalance }: UpdateChannelMixer
   ) {
     let state = getState();
     if (!(fileId in state.fileEntities)) return;
@@ -1444,7 +1444,7 @@ export class DataFilesState {
     let actions: any[] = [];
     setState((state: DataFilesStateModel) => {
       let file = state.fileEntities[fileId];
-      file.whiteBalance = [...whiteBalance]
+      file.channelMixer = whiteBalance
 
       actions.push(new InvalidateCompositeImageTiles(fileId));
       return state;
@@ -1643,7 +1643,7 @@ export class DataFilesState {
         if (!tile.pixels || tile.pixels.length != tile.width * tile.height) {
           tile.pixels = new Uint32Array(tile.width * tile.height);
         }
-        tile.pixels = compose(layers, file.whiteBalance, tile.pixels as Uint32Array);
+        tile.pixels = compose(layers, file.channelMixer, tile.pixels as Uint32Array);
         tile.pixelsLoaded = true;
         tile.pixelsLoading = false;
         tile.isValid = true;

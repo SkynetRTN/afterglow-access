@@ -34,7 +34,7 @@ export interface DataFile extends ITransformableImageData {
   hduIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
-  whiteBalance: [number, number, number];
+  channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
 }
 
 export interface Header {

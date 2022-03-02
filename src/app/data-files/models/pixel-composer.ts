@@ -3,7 +3,7 @@ import { BlendMode } from './blend-mode';
 
 export function compose(
   layers: Array<{ pixels: Uint32Array; blendMode: BlendMode; alpha: number; visible: boolean }>,
-  whiteBalance: [number, number, number],
+  channelMixer: [[number, number, number], [number, number, number], [number, number, number]],
   result: Uint32Array
 ) {
   layers = layers.filter((layer) => layer.visible);
@@ -22,7 +22,17 @@ export function compose(
   // let blendHsy: [number, number, number] = [0, 0, 0];
   // let resultRgb: [number, number, number] = [0, 0, 0];
 
-  let [redWB, greenWB, blueWB] = whiteBalance;
+  let [redWB, greenWB, blueWB] = channelMixer;
+
+  let rr = channelMixer[0][0];
+  let rg = channelMixer[0][1];
+  let rb = channelMixer[0][2];
+  let gr = channelMixer[1][0];
+  let gg = channelMixer[1][1];
+  let gb = channelMixer[1][2];
+  let br = channelMixer[2][0];
+  let bg = channelMixer[2][1];
+  let bb = channelMixer[2][2];
 
   //for each pixel in result
   for (let i = 0, j = 0, len = result.length; i != len; i++, j += 4) {
@@ -59,9 +69,13 @@ export function compose(
         result8[j + 3] = 255.0;
       }
     }
-    result8[j] = Math.min(255, result8[j] * redWB);
-    result8[j + 1] = Math.min(255, result8[j + 1] * greenWB);
-    result8[j + 2] = Math.min(255, result8[j + 2] * blueWB);
+    let r = result8[j] * rr + result8[j + 1] * rg + result8[j + 2] * rb;
+    let g = result8[j] * gr + result8[j + 1] * gg + result8[j + 2] * gb;
+    let b = result8[j] * br + result8[j + 1] * bg + result8[j + 2] * bb;
+
+    result8[j] = Math.min(255, r)
+    result8[j + 1] = Math.min(255, g)
+    result8[j + 2] = Math.min(255, b)
 
   }
   return result;

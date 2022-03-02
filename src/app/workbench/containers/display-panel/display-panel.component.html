@@ -53,7 +53,7 @@
 
   <ng-template #multiLayerBlock>
     <ng-container *ngIf="hdus$ | async; let hdus">
-      <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
+      <!-- <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
         <div>
           <h3 i18n>Color Composite Tools</h3>
           <div class="pb-4">
@@ -64,11 +64,60 @@
           </div>
         </div>
         <div fxFlexLayout="row" fxLayoutGap="5px">
+          <button [(colorPicker)]="color" [cpSaveClickOutside]="true" (colorPickerOpen)="onColorPickerOpen()"
+            (colorPickerClose)="onColorPickerClose()" [cpEyeDropper]="true"></button>
           <input [(colorPicker)]="color" [value]="color" [style.background]="color" [cpSaveClickOutside]="true"
             (colorPickerOpen)="onColorPickerOpen()" (colorPickerClose)="onColorPickerClose()" />
           <button mat-icon-button (click)="onResetWhiteBalance()">
             <mat-icon>format_color_reset</mat-icon>
           </button>
+        </div>
+      </div> -->
+      <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
+        <div fxFlexLayout="row" fxLayoutGap="15px">
+          <div style="width: 100px;">Red</div>
+          <mat-form-field style="width: 50px;">
+            <mat-label>R</mat-label><input matInput type="number" [formControl]="channelMixerControls[0][0]"
+              step="0.05" />
+          </mat-form-field>
+          <mat-form-field style="width: 50px;">
+            <mat-label>G</mat-label><input matInput type="number" [formControl]="channelMixerControls[0][1]"
+              step="0.05" />
+          </mat-form-field>
+          <mat-form-field style="width: 50px;">
+            <mat-label>B</mat-label><input matInput type="number" [formControl]="channelMixerControls[0][2]"
+              step="0.05" />
+          </mat-form-field>
+        </div>
+        <div fxFlexLayout="row" fxLayoutGap="15px">
+          <div style="width: 100px;">Green</div>
+          <mat-form-field style="width: 50px;">
+            <mat-label>R</mat-label><input matInput type="number" [formControl]="channelMixerControls[1][0]"
+              step="0.05" />
+          </mat-form-field>
+          <mat-form-field style="width: 50px;">
+            <mat-label>G</mat-label><input matInput type="number" [formControl]="channelMixerControls[1][1]"
+              step="0.05" />
+          </mat-form-field>
+          <mat-form-field style="width: 50px;">
+            <mat-label>B</mat-label><input matInput type="number" [formControl]="channelMixerControls[1][2]"
+              step="0.05" />
+          </mat-form-field>
+        </div>
+        <div fxFlexLayout="row" fxLayoutGap="15px">
+          <div style="width: 100px;">Blue</div>
+          <mat-form-field style="width: 50px;">
+            <mat-label>R</mat-label><input matInput type="number" [formControl]="channelMixerControls[2][0]"
+              step="0.05" />
+          </mat-form-field>
+          <mat-form-field style="width: 50px;">
+            <mat-label>G</mat-label><input matInput type="number" [formControl]="channelMixerControls[2][1]"
+              step="0.05" />
+          </mat-form-field>
+          <mat-form-field style="width: 50px;">
+            <mat-label>B</mat-label><input matInput type="number" [formControl]="channelMixerControls[2][2]"
+              step="0.05" />
+          </mat-form-field>
         </div>
       </div>
     </ng-container>

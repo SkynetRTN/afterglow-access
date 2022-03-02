@@ -33,7 +33,7 @@ import {
   UpdateBlendMode,
   UpdateAlpha,
   ResetViewportTransform,
-  UpdateWhiteBalance,
+  UpdateChannelMixer,
 } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { HduType } from '../../../data-files/models/data-file-type';
@@ -88,6 +88,13 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   whiteBalanceMode = false;
   resetWhiteBalance$ = new Subject<any>();
 
+  channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
+  channelMixerControls = [
+    [new FormControl(''), new FormControl(''), new FormControl('')],
+    [new FormControl(''), new FormControl(''), new FormControl('')],
+    [new FormControl(''), new FormControl(''), new FormControl('')]
+  ]
+
   constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog, private eventService: ImageViewerEventService, private cd: ChangeDetectorRef) {
     this.viewportSize$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
@@ -96,6 +103,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.file$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
+
+    this.channelMixer$ = this.file$.pipe(
+      map(file => file?.channelMixer)
+    )
 
     this.hdus$ = this.file$.pipe(
       switchMap((file) => this.store.select(DataFilesState.getHdusByFileId(file.id)))
@@ -133,7 +144,33 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       withLatestFrom(this.file$)
     ).subscribe(([v, file]) => {
       if (!file) return;
-      this.store.dispatch(new UpdateWhiteBalance(file.id, [1, 1, 1]))
+      // this.store.dispatch(new UpdateChannelMixer(file.id, [1, 1, 1]))
+    })
+
+    this.channelMixerControls.forEach((row, i) => {
+      row.forEach((control, j) => {
+        control.valueChanges.pipe(
+          takeUntil(this.destroy$),
+          withLatestFrom(this.file$),
+        ).subscribe(([value, file]) => {
+          if (file && value !== null) {
+            let channelMixer: [[number, number, number], [number, number, number], [number, number, number]] = JSON.parse(JSON.stringify(file.channelMixer));
+            channelMixer[i][j] = value;
+            this.store.dispatch(new UpdateChannelMixer(file.id, channelMixer))
+          }
+        })
+      })
+    })
+
+    this.channelMixer$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(mixer => {
+      if (!mixer) return;
+      this.channelMixerControls.forEach((row, i) => {
+        row.forEach((control, j) => {
+          control.setValue(mixer[i][j], { emitEvent: false })
+        })
+      })
     })
 
     this.eventService.imageClickEvent$
@@ -173,7 +210,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         let rScale = targetRGB.r / r
         let gScale = targetRGB.g / g
         let bScale = targetRGB.b / b
-        this.store.dispatch(new UpdateWhiteBalance(file.id, [rScale, gScale, bScale]))
+        // this.store.dispatch(new UpdateChannelMixer(file.id, [rScale, gScale, bScale]))
 
 
 
@@ -289,5 +326,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   onResetWhiteBalance() {
     this.resetWhiteBalance$.next(true);
+  }
+
+  onChannelMixerChange($event) {
+    console.log($event);
   }
 }
