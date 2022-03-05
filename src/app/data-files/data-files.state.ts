@@ -577,7 +577,8 @@ export class DataFilesState {
                     colorMapName: grayColorMap.name,
                     stretchMode: StretchMode.Linear,
                     inverted: false,
-                    balance: 1
+                    channelScale: 1,
+                    channelOffset: 0,
                   },
                 };
                 hdu = imageHdu;
@@ -597,6 +598,9 @@ export class DataFilesState {
           });
 
           dataFiles.forEach((file) => {
+            file.hduIds = file.hduIds.sort((a, b) => {
+              return state.hduEntities[a].order - state.hduEntities[b].order
+            })
             if (file.id in state.fileEntities) {
               state.fileEntities[file.id] = {
                 ...state.fileEntities[file.id],
@@ -1334,7 +1338,7 @@ export class DataFilesState {
     normalizer = (getState().hduEntities[hduId] as ImageHdu).normalizer;
 
     normalize(rawPixels, hist, normalizer, redChannel, greenChannel, blueChannel, composite);
-    return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, composite));
+    return this.store.dispatch(new CalculateNormalizedPixelsSuccess(hduId, tileIndex, composite, redChannel, greenChannel, blueChannel));
     // }
   }
 
@@ -1342,24 +1346,57 @@ export class DataFilesState {
   @ImmutableContext()
   public calculateNormalizedPixelsSuccess(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { hduId, tileIndex, normalizedPixels }: CalculateNormalizedPixelsSuccess
+    { hduId, tileIndex, compositePixels, redChannel, greenChannel, blueChannel }: CalculateNormalizedPixelsSuccess
   ) {
     let state = getState();
     let hdu = state.hduEntities[hduId] as ImageHdu;
     let actions: any[] = [];
 
     setState((state: DataFilesStateModel) => {
-      let normalizedImageData = state.imageDataEntities[hdu.compositeId];
-      let tile = normalizedImageData.tiles[tileIndex];
+      let composite = state.imageDataEntities[hdu.compositeId];
+      let tile = composite.tiles[tileIndex];
 
       tile.pixelsLoaded = true;
       tile.pixelLoadingFailed = false;
       tile.pixelsLoading = false;
       tile.isValid = true;
-      tile.pixels = normalizedPixels;
+      tile.pixels = compositePixels;
 
       state.imageDataEntities[hdu.compositeId] = {
-        ...normalizedImageData,
+        ...composite,
+      };
+
+      let redImageData = state.imageDataEntities[hdu.redChannelId];
+      let redTile = redImageData.tiles[tileIndex];
+      redTile.pixelsLoaded = true;
+      redTile.pixelLoadingFailed = false;
+      redTile.pixelsLoading = false;
+      redTile.isValid = true;
+      redTile.pixels = redChannel;
+      state.imageDataEntities[hdu.redChannelId] = {
+        ...redImageData,
+      };
+
+      let greenImageData = state.imageDataEntities[hdu.greenChannelId];
+      let greenTile = greenImageData.tiles[tileIndex];
+      greenTile.pixelsLoaded = true;
+      greenTile.pixelLoadingFailed = false;
+      greenTile.pixelsLoading = false;
+      greenTile.isValid = true;
+      greenTile.pixels = greenChannel;
+      state.imageDataEntities[hdu.greenChannelId] = {
+        ...greenImageData,
+      };
+
+      let blueImageData = state.imageDataEntities[hdu.blueChannelId];
+      let blueTile = blueImageData.tiles[tileIndex];
+      blueTile.pixelsLoaded = true;
+      blueTile.pixelLoadingFailed = false;
+      blueTile.pixelsLoading = false;
+      blueTile.isValid = true;
+      blueTile.pixels = blueChannel;
+      state.imageDataEntities[hdu.blueChannelId] = {
+        ...blueImageData,
       };
 
       actions.push(new UpdateNormalizedImageTileSuccess(hduId, tileIndex, tile.pixels));

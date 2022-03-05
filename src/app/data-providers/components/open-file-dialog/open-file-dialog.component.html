@@ -4,42 +4,21 @@
 
 <!-- See https://js.devexpress.com/Demos/WidgetsGallery/Demo/FileManager/UICustomization/Angular/Light/ for customization -->
 <mat-dialog-content>
-  <app-file-manager
-    #fileManager
-    [path]="lastPath$ | async"
-    [allowCreate]="true"
-    [allowCopy]="true"
-    [allowMove]="true"
-    [allowDelete]="true"
-    [allowRename]="true"
-    [allowUpload]="true"
-    [maxUploadSize]="128000000"
-    [allowedFileExtensions]="allowedFileExtensions"
-    [allowDownload]="true"
-    [selectionMode]="'multiple'"
-    (onSelectionChange)="selectedFileSystemItems$.next($event)"
-    (onSelectedAssetOpened)="openSelectedAssets()"
-    (onPathChange)="onPathChange($event)"
-  >
+  <app-file-manager #fileManager [path]="lastPath$ | async" [allowCreate]="true" [allowCopy]="true" [allowMove]="true"
+    [allowDelete]="true" [allowRename]="true" [allowUpload]="true" [maxUploadSize]="512000000"
+    [allowedFileExtensions]="allowedFileExtensions" [allowDownload]="true" [selectionMode]="'multiple'"
+    (onSelectionChange)="selectedFileSystemItems$.next($event)" (onSelectedAssetOpened)="openSelectedAssets()"
+    (onPathChange)="onPathChange($event)">
   </app-file-manager>
 </mat-dialog-content>
 <mat-dialog-actions style="justify-content: flex-end; flex-wrap: nowrap" class="pb-4">
   <div fxAlign="column" fxFlex="1 1 auto" style="width: 100%; padding: 10px">
-    <mat-progress-bar
-      fxFlex="1 1 auto"
-      *ngIf="loading"
-      mode="determinate"
-      [color]="'accent'"
-      [value]="progress"
-    ></mat-progress-bar>
+    <mat-progress-bar fxFlex="1 1 auto" *ngIf="loading" mode="determinate" [color]="'accent'" [value]="progress">
+    </mat-progress-bar>
   </div>
 
-  <button
-    fxFlex="0 0 auto"
-    mat-raised-button
-    (click)="openSelectedAssets()"
-    [disabled]="!(selectionIsValid$ | async) || loading"
-  >
+  <button fxFlex="0 0 auto" mat-raised-button (click)="openSelectedAssets()"
+    [disabled]="!(selectionIsValid$ | async) || loading">
     Open
   </button>
   <button fxFlex="0 0 auto" mat-raised-button (click)="cancel()">Cancel</button>

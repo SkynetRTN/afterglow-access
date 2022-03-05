@@ -1,4 +1,4 @@
-<div class="row pb-3">
+<div class="row pb-3" *ngIf="showMode">
   <div class="col-6">
     <mat-slide-toggle [checked]="normalizer?.mode == 'percentile'"
       (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
@@ -7,7 +7,7 @@
   </div>
   <div class="col-6"></div>
 </div>
-<div class="row" *ngIf="normalizer?.mode == 'percentile'">
+<div class="row" *ngIf="showMode && normalizer?.mode == 'percentile'">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Background Level Percentile</mat-label>
@@ -24,7 +24,7 @@
     </mat-form-field>
   </div>
 </div>
-<div class="row" *ngIf="normalizer?.mode == 'pixel'">
+<div class="row" *ngIf="!showMode || normalizer?.mode == 'pixel'">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Background Level</mat-label>
@@ -41,7 +41,7 @@
   </div>
 </div>
 <div class="row">
-  <div class="col-6">
+  <div *ngIf="showColorMap" class="col-6">
     <mat-form-field appearance="outline">
       <mat-label i18n>Color Map</mat-label>
       <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
@@ -51,7 +51,7 @@
       </mat-select>
     </mat-form-field>
   </div>
-  <div class="col-6">
+  <div *ngIf="showStretchMode" class="col-6">
     <mat-form-field appearance="outline">
       <mat-label i18n>Stretch Mode</mat-label>
       <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)"
@@ -63,7 +63,7 @@
     </mat-form-field>
   </div>
 </div>
-<div class="row">
+<div class="row" *ngIf="showInverted">
   <div class="col-6">
     <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="'before'"
       (change)="invertedChange.emit($event.checked)" color="primary" i18n>
@@ -72,12 +72,19 @@
   </div>
   <div class="col-6"></div>
 </div>
-<div class="row">
-  <div class="col-6">
+<div class="row mt-4">
+  <div *ngIf="showChannelScale" class="col-6">
     <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Balance Factor</mat-label>
-      <input matInput [ngModel]="normalizer?.balance" (ngModelChange)="balanceChange.emit($event)" type="number"
-        [step]="0.05" min="0" />
+      <mat-label i18n>Channel Scale</mat-label>
+      <input matInput [ngModel]="normalizer?.channelScale" (ngModelChange)="channelScaleChange.emit($event)"
+        type="number" [step]="0.05" min="0" />
+    </mat-form-field>
+  </div>
+  <div *ngIf="showChannelOffset" class="col-6">
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Channel Offset</mat-label>
+      <input matInput [ngModel]="normalizer?.channelOffset" (ngModelChange)="channelOffsetChange.emit($event)"
+        type="number" [step]="0.05" min="0" />
     </mat-form-field>
   </div>
 </div>

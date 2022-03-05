@@ -24,6 +24,7 @@ import {
   PixelType,
   ITransformableImageData,
   TableHdu,
+  isImageHdu,
 } from '../../../data-files/models/data-file';
 import {
   UpdateNormalizer,
@@ -48,6 +49,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
 import { FormControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { getBinCenter, ImageHist } from 'src/app/data-files/models/image-hist';
+import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
 
 @Component({
   selector: 'app-display-panel',
@@ -68,10 +71,13 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
   hdus$: Observable<IHdu[]>;
+  compositeHistData$: Observable<{ hist: ImageHist, normalizer: PixelNormalizer }[]>;
   activeHdu$: Observable<IHdu>;
   activeImageHdu$: Observable<ImageHdu>;
+  activeHistData$: Observable<{ hist: ImageHist, normalizer: PixelNormalizer }>;
   activeTableHdu$: Observable<TableHdu>;
-
+  firstImageHdu$: Observable<ImageHdu>;
+  compositeNormalizer$: Observable<PixelNormalizer>;
   destroy$ = new Subject<boolean>();
 
 
@@ -87,6 +93,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   color = '#FFFFFF';
   whiteBalanceMode = false;
   resetWhiteBalance$ = new Subject<any>();
+  updateChannelFittingEvent$ = new Subject<{ scaleEnabled: boolean, offsetEnabled: boolean }>();
+  resetChannelFittingEvent$ = new Subject<any>();
 
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
   channelMixerControls = [
@@ -109,34 +117,83 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     )
 
     this.hdus$ = this.file$.pipe(
-      switchMap((file) => this.store.select(DataFilesState.getHdusByFileId(file.id)))
+      switchMap((file) => file ? this.store.select(DataFilesState.getHdusByFileId(file.id)) : [])
     )
+
+    this.compositeHistData$ = this.hdus$.pipe(
+      map(hdus => hdus.map(hdu => {
+        if (!isImageHdu(hdu)) return null;
+        return { hist: hdu.hist, normalizer: hdu.normalizer }
+      }).filter(value => value !== null))
+    )
+
+    this.firstImageHdu$ = this.hdus$.pipe(
+      map(hdus => {
+        return hdus.find(hdu => isImageHdu(hdu)) as ImageHdu | null;
+      }))
+
+    this.compositeNormalizer$ = this.firstImageHdu$.pipe(
+      map(imageHdu => {
+        if (!imageHdu.normalizer) return null;
+        return {
+          ...imageHdu.normalizer,
+          backgroundLevel: imageHdu.normalizer.backgroundLevel * imageHdu.normalizer.channelScale + imageHdu.normalizer.channelOffset,
+          peakLevel: imageHdu.normalizer.peakLevel * imageHdu.normalizer.channelScale + imageHdu.normalizer.channelOffset,
+          channelOffset: 0,
+          channelScale: 1
+        }
+      })
+    )
+
+
 
     this.activeHdu$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
     this.activeImageHdu$ = this.activeHdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.activeHistData$ = this.activeImageHdu$.pipe(
+      map(hdu => hdu ? { hist: hdu.hist, normalizer: hdu.normalizer } : { hist: null, normalizer: null })
+    )
+
 
     this.activeTableHdu$ = this.activeHdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.TABLE ? (hdu as TableHdu) : null)));
 
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
 
-    this.backgroundPercentile$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
+    this.backgroundPercentile$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
       this.store.dispatch(new UpdateNormalizer(imageHdu.id, { backgroundPercentile: value }));
     });
 
-    this.peakPercentile$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
+    this.peakPercentile$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
       this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakPercentile: value }));
     });
 
-    this.backgroundLevel$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
-      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { backgroundLevel: value }));
+    this.backgroundLevel$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundLevel: value }));
+      }
+      else {
+        hdus.forEach(hdu => {
+          if (isImageHdu(hdu)) {
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: (value - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale, mode: 'pixel' }));
+          }
+        })
+      }
     });
 
-    this.peakLevel$.pipe(auditTime(25), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
-      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakLevel: value }));
+    this.peakLevel$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakLevel: value }));
+      }
+      else {
+        hdus.forEach(hdu => {
+          if (isImageHdu(hdu)) {
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: (value - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale, mode: 'pixel' }));
+          }
+        })
+      }
     });
 
     this.resetWhiteBalance$.pipe(
@@ -145,6 +202,90 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     ).subscribe(([v, file]) => {
       if (!file) return;
       // this.store.dispatch(new UpdateChannelMixer(file.id, [1, 1, 1]))
+    })
+
+    this.resetChannelFittingEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.file$, this.hdus$)
+    ).subscribe(([event, file, hdus]) => {
+      hdus.forEach(hdu => {
+        this.store.dispatch(new UpdateNormalizer(hdu.id, { channelOffset: 0, channelScale: 1 }))
+      })
+    })
+
+    this.updateChannelFittingEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.file$, this.hdus$)
+    ).subscribe(([event, file, hdus]) => {
+      let getFit = (hdu: ImageHdu) => {
+        let hist = hdu.hist;
+        let histData = hist.data;
+        let N = histData.reduce((result, value) => result += value, 0)
+        let sM = 0;
+        let sM1 = 0;
+        let M: number;
+        for (M = 1; M < histData.length; M++) {
+          sM1 = sM;
+          sM += 0.5 * histData[M - 1] + 0.5 * histData[M]
+          if (sM >= 0.5 * N) break;
+        }
+        let xM = getBinCenter(hist, M)
+        let xM1 = getBinCenter(hist, M - 1)
+        let median = xM1 + (xM - xM1) * (0.5 * N - sM1) / (sM - sM1);
+
+
+        let devData: [number, number][] = []
+        for (let i = 0; i < histData.length; i++) {
+          devData[i] = [Math.abs(getBinCenter(hist, i) - median), histData[i]]
+        }
+        devData = devData.sort((a, b) => a[0] - b[0])
+
+        let sD = 0
+        let sD1 = 0;
+        let D: number;
+        for (D = 1; D < devData.length; D++) {
+          sD1 = sD;
+          sD += 0.317 * devData[D - 1][1] + 0.683 * devData[D][1]
+          if (sD >= 0.683 * N) break;
+        }
+        let xD = devData[D][0]
+        let xD1 = devData[D - 1][0]
+        let deviation = xD1 + (xD - xD1) * (0.683 * N - sD1) / (sD - sD1);
+
+        return {
+          hdu: hdu,
+          median: median,
+          deviation: deviation
+        }
+      }
+
+      let fits: {
+        hdu: ImageHdu
+        median: number,
+        deviation: number
+      }[] = []
+
+      hdus.forEach(hdu => {
+        if (!isImageHdu(hdu)) return;
+        fits.push(getFit(hdu))
+      })
+
+      fits = fits.sort((a, b) => b.median - a.median)
+
+      let actions: any[] = [];
+      let ref = fits[0]
+      console.log(ref.hdu.name, ref.median, ref.deviation)
+      this.store.dispatch(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
+      for (let i = 1; i < fits.length; i++) {
+        let fit = fits[i];
+        let m = ref.deviation / fit.deviation;
+        let b = -fit.median * m + ref.median;
+        actions.push(new UpdateNormalizer(fit.hdu.id, { channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1 }))
+        console.log(fit.hdu.name, fit.median, fit.deviation, m, b)
+      }
+
+      this.store.dispatch(actions)
+
     })
 
     this.channelMixerControls.forEach((row, i) => {
@@ -262,8 +403,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.store.dispatch(new UpdateNormalizer(hdu.id, { inverted: value }));
   }
 
-  onBalanceChange(hdu: ImageHdu, value: number) {
-    this.store.dispatch(new UpdateNormalizer(hdu.id, { balance: value }));
+  onChannelScaleChange(hdu: ImageHdu, value: number) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { channelScale: value }));
+  }
+
+  onChannelOffsetChange(hdu: ImageHdu, value: number) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { channelOffset: value }));
   }
 
   onNormalizerModeChange(hdu: ImageHdu, value: 'percentile' | 'pixel') {
@@ -330,5 +475,17 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   onChannelMixerChange($event) {
     console.log($event);
+  }
+
+  fitChannels() {
+    this.updateChannelFittingEvent$.next({ scaleEnabled: true, offsetEnabled: true });
+  }
+
+  fitChannelScales() {
+    this.updateChannelFittingEvent$.next({ scaleEnabled: true, offsetEnabled: false });
+  }
+
+  resetChannelFitting() {
+    this.resetChannelFittingEvent$.next(true)
   }
 }

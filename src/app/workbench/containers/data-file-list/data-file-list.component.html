@@ -1,66 +1,33 @@
-<mat-selection-list
-  #selectionList
-  [multiple]="false"
-  (selectionChange)="selectFile($event.option.value.fileId, $event.option.value.hduId, false)"
-  cdkDropList
-  (cdkDropListDropped)="onChannelDrop($event)"
-  (mouseleave)="handleMouseLeave($event)"
-  (blur)="handleBlur($event)"
->
+<mat-selection-list #selectionList [multiple]="false"
+  (selectionChange)="selectFile($event.option.value.fileId, $event.option.value.hduId, false)" cdkDropList
+  (cdkDropListDropped)="onLayerDrop($event)" (mouseleave)="handleMouseLeave($event)" (blur)="handleBlur($event)">
   <ng-container *ngFor="let file of files; trackBy: trackById">
-    <mat-list-option
-      #fileOption
-      class="expandable"
-      *ngIf="file.hduIds.length > 1"
+    <mat-list-option #fileOption class="expandable" *ngIf="file.hduIds.length > 1"
       [value]="{ fileId: file?.id, hduId: '' }"
-      [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''"
-      cdkDrag
-      [cdkDragData]="fileOption.value"
-      (dblclick)="handleItemDoubleClick(fileOption.value)"
-      (focus)="handleFocus(fileOption.value)"
-      (mouseenter)="handleMouseEnter(fileOption.value)"
-    >
-      <app-file-list-option
-        style="height: 100%"
-        [fileId]="file.id"
-        [showFileToolbar]="focusedValue?.fileId == file.id"
-        [showExpand]="true"
-        [expanded]="!collapsedFileIds[file.id]"
+      [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''" cdkDrag
+      [cdkDragData]="fileOption.value" (dblclick)="handleItemDoubleClick(fileOption.value)"
+      (focus)="handleFocus(fileOption.value)" (mouseenter)="handleMouseEnter(fileOption.value)">
+      <app-file-list-option style="height: 100%" [fileId]="file.id" [showFileToolbar]="focusedValue?.fileId == file.id"
+        [showExpand]="true" [expanded]="!collapsedFileIds[file.id]"
         [showSelect]="selectedFileIds.length != 0 || focusedValue?.fileId == file.id"
-        [selected]="selectedFileIds.includes(file.id)"
-        (onToggleExpanded)="handleToggleExpanded($event)"
-        (onToggleSelected)="handleToggleSelected($event)"
-        (onSave)="onSaveFile.emit(file.id)"
-        (onClose)="onCloseFile.emit(file.id)"
-      >
+        [selected]="selectedFileIds.includes(file.id)" (onToggleExpanded)="handleToggleExpanded($event)"
+        (onToggleSelected)="handleToggleSelected($event)" (onSave)="onSaveFile.emit(file.id)"
+        (onClose)="onCloseFile.emit(file.id)">
       </app-file-list-option>
     </mat-list-option>
 
     <ng-container *ngIf="file.hduIds.length == 1 || !collapsedFileIds[file.id]">
-      <mat-list-option
-        #hduOption
-        *ngFor="let hduId of file.hduIds; let i = index"
-        [class.nested]="file.hduIds.length > 1"
-        [value]="{ fileId: file?.id, hduId: hduId }"
-        [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === hduId"
-        cdkDrag
-        [cdkDragData]="hduOption.value"
-        (dblclick)="handleItemDoubleClick(hduOption.value)"
-        (focus)="handleFocus(hduOption.value)"
-        (mouseenter)="handleMouseEnter(hduOption.value)"
-      >
-        <app-file-list-option
-          style="height: 100%"
-          [fileId]="file.id"
-          [hduId]="hduId"
+      <mat-list-option #hduOption *ngFor="let hduId of file.hduIds; let i = index"
+        [class.nested]="file.hduIds.length > 1" [value]="{ fileId: file?.id, hduId: hduId }"
+        [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === hduId" cdkDrag
+        [cdkDragData]="hduOption.value" (dblclick)="handleItemDoubleClick(hduOption.value)"
+        (focus)="handleFocus(hduOption.value)" (mouseenter)="handleMouseEnter(hduOption.value)">
+        <app-file-list-option style="height: 100%" [fileId]="file.id" [hduId]="hduId"
           [showFileToolbar]="file.hduIds.length == 1 && focusedValue?.fileId == file.id"
           [showImageHduLayerToolbar]="file.hduIds.length != 1 && focusedViewer?.fileId == file?.id"
           [showSelect]="file.hduIds.length == 1 && (selectedFileIds.length != 0 || focusedValue?.fileId == file.id)"
-          [selected]="selectedFileIds.includes(file.id)"
-          (onToggleSelected)="handleToggleSelected($event)"
-          (onSave)="onSaveFile.emit(file.id)"
-          (onClose)="onCloseFile.emit(file.id)"
-        ></app-file-list-option>
+          [selected]="selectedFileIds.includes(file.id)" (onToggleSelected)="handleToggleSelected($event)"
+          (onSave)="onSaveFile.emit(file.id)" (onClose)="onCloseFile.emit(file.id)"></app-file-list-option>
       </mat-list-option>
     </ng-container>
   </ng-container>

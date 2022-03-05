@@ -12,7 +12,8 @@ export interface PixelNormalizer {
   colorMapName: string;
   stretchMode: StretchMode;
   inverted: boolean;
-  balance: number;
+  channelScale: number;
+  channelOffset: number;
 }
 
 // export function createPixelNormalizer(backgroundLevel: number, peakLevel: number, colorMap: ColorMap, stretchMode: StretchMode) : PixelNormalizer {
@@ -27,8 +28,8 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   let greenLookup = COLOR_MAPS[normalizer.colorMapName].greenLookup;
   let blueLookup = COLOR_MAPS[normalizer.colorMapName].blueLookup;
 
-  let backgroundLevel = normalizer.backgroundLevel;
-  let peakLevel = normalizer.peakLevel;
+  let backgroundLevel = normalizer.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
+  let peakLevel = normalizer.peakLevel * normalizer.channelScale + normalizer.channelOffset;
   // if (normalizer.mode == 'percentile') {
   //   let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
   //   backgroundLevel = levels.backgroundLevel;
@@ -90,7 +91,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   //while(i--) {
   let compositeBitScaler = (255 / 65535)
   for (let i = 0; i < dataLength; i++) {
-    let norm = stretchFn(Math.min(1.0, Math.max(0.0, (pixels[i] - backgroundLevel) / normalizationRange))) * 65535.0;
+    let norm = stretchFn(Math.min(1.0, Math.max(0.0, ((pixels[i] * normalizer.channelScale + normalizer.channelOffset) - backgroundLevel) / normalizationRange))) * 65535.0;
     norm = norm > 65535.0 ? 65535.0 : norm;
     norm = norm < 0 ? 0 : norm;
     let colorIndex = Math.floor(norm * colorIndexScaler);

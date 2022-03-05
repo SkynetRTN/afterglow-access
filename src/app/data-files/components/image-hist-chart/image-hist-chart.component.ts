@@ -7,6 +7,9 @@ import { ImageHist, getBinCenter, calcLevels } from '../../models/image-hist';
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { Normalization } from '../../models/normalization';
+import { PixelNormalizer } from '../../models/pixel-normalizer';
+import { blueColorMap, greenColorMap, redColorMap } from '../../models/color-map';
 
 @Component({
   selector: 'app-image-hist-chart',
@@ -18,19 +21,18 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 export class ImageHistChartComponent implements OnInit, OnChanges {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
 
-  @Input() hist: ImageHist | null = null;
+  @Input() data: { hist: ImageHist, normalizer: PixelNormalizer }[] = [];
+  @Input() showFittedData: boolean = false;
   @Input() width: number = 200;
   @Input() height: number = 200;
-  @Input() backgroundPercentile: number = 10.0;
-  @Input() peakPercentile: number = 99.0;
+  @Input() backgroundLevel: number = 0;
+  @Input() peakLevel: number = 0;
 
-  math = Math;
-  private lastHistData: Uint32Array | null = null;
   private yMax = 0;
   public logarithmicX: boolean = true;
   public logarithmicY: boolean = true;
 
-  public data: Array<any> = [];
+  public chartData: Array<any> = [];
   public layout: Partial<any> = {
     width: null,
     height: null,
@@ -91,22 +93,6 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     ],
   };
 
-  // private backgroundLineData = {
-  //   isBackground: true,
-  //   x1: 0,
-  //   y1: 0,
-  //   x2: 0,
-  //   y2: 0
-  // };
-
-  // private peakLineData = {
-  //   isBackground: false,
-  //   x1: 0,
-  //   y1: 0,
-  //   x2: 0,
-  //   y2: 0
-  // };
-
   constructor(private themeStorage: ThemeStorage, private _changeDetectorRef: ChangeDetectorRef) {
     this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
     themeStorage.onThemeUpdate.subscribe(() => {
@@ -115,77 +101,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     });
   }
 
-  // select($event) {}
-
-  // activate($event) {}
-
-  // deactivate($event) {}
-
-  // updateChartOptions() {
-  //   this.chartOptions = {
-  //     chart: {
-  //       type: "stackedAreaChart",
-  //       focusEnable: false,
-  //       height: this.height,
-  //       width: this.width,
-  //       showLegend: false,
-  //       x: function(d) {
-  //         return d.x;
-  //       },
-  //       y: function(d) {
-  //         return d.y;
-  //       },
-  //       useInteractiveGuideline: true,
-  //       isArea: true,
-  //       // yAxis: {
-  //       //   tickValues: [10, 100, 1000, 10000, 100000],
-  //       //   showMaxMin: false
-  //       //   // tickFormat: function(d) {
-  //       //   //   return d3.format('e')(d);
-  //       //   // }
-  //       // },
-  //       xAxis: {
-  //         showMaxMin: false
-  //       },
-  //       // xScale: d3.scale.log(),
-  //       yScale: d3.scale.log(),
-  //       focusShowAxisX: false,
-  //       noData: "Histogram not available",
-  //       // lines: {
-  //       //   dispatch: {
-  //       //     elementClick: function(e) {
-  //       //       // console.log(this.backgroundLevelFocused);
-  //       //       // console.log(this.peakLevelFocused);
-  //       //       console.log(e[0].point.x, e[0].point.y);
-  //       //     }.bind(this),
-  //       //     elementDblClick: function(e) {console.log("! lines element Double Click !", e)},
-  //       //     elementMouseout: function(e) {console.log("! lines element Mouseout !", e)},
-  //       //     elementMouseover: function(e) {console.log("! lines element Mouseover !", e)}
-  //       //   }
-  //       // },
-  //       callback: this.onChartCreation.bind(this),
-  //       zoom: {
-  //         enabled: true,
-  //         scaleExtent: [1, 10],
-  //         useFixedDomain: false,
-  //         useNiceScale: false,
-  //         horizontalOff: false,
-  //         verticalOff: true,
-  //         unzoomEventType: "dblclick.zoom"
-  //       }
-  //       // interactiveLayer: {
-  //       //   dispatch: {
-  //       //     elementDblclick: function(e){console.log("! interative element Double Click !", e)},
-  //       //     elementMousemove: function(e){console.log("! interative element Mouseover !", e)},
-  //       //     elementMouseout: function(e){console.log("! interative element Mouseout !", e)}
-  //       //   }
-  //       // }
-  //     }
-  //   };
-  // }
-
   ngOnInit() {
-    // this.updateChartOptions();
   }
 
   onXAxisTypeChange($event: MatCheckboxChange) {
@@ -200,39 +116,60 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   }
 
   updateChart() {
-    if (!this.hist || !this.hist.loaded || !this.hist.data) return;
+    let markerColors = {}
+    markerColors[redColorMap.name] = '#dc3912'
+    markerColors[greenColorMap.name] = '#109618'
+    markerColors[blueColorMap.name] = '#3366cc'
 
-    let x = [];
-    let y = [];
-    if (this.hist.data != this.lastHistData) {
-      for (let i = 0; i < this.hist.data.length; i++) {
-        if (this.hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(this.hist, i) <= 0)) continue;
-        x.push(getBinCenter(this.hist, i));
-        y.push(this.hist.data[i]);
-        if (this.yMax < this.hist.data[i]) this.yMax = this.hist.data[i];
+    this.chartData = [];
+    this.data.forEach(({ hist, normalizer }) => {
+      if (!hist || !normalizer || !hist.loaded || !hist.data) return;
+
+      let scale = this.showFittedData ? normalizer.channelScale : 1;
+      let offset = this.showFittedData ? normalizer.channelOffset : 0;
+
+      let x = [];
+      let y = [];
+      for (let i = 0; i < hist.data.length; i++) {
+        if (hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(hist, i) <= 0)) continue;
+        x.push(getBinCenter(hist, i) * scale + offset);
+        y.push(hist.data[i]);
+        if (this.yMax < hist.data[i]) this.yMax = hist.data[i];
       }
 
-      this.data = [
-        {
-          x: x,
-          y: y,
-          // fill: "tozeroy",
-          type: 'scatter',
-          // mode: "none"
-        },
-      ];
+      let d = {
+        x: x,
+        y: y,
+        // fill: "tozeroy",
+        type: 'scatter',
+        marker: {}
+        // mode: "none"
+      }
 
-      this.lastHistData = this.hist.data;
-      //this.chartOptions.chart.xAxis.tickValues=[result[0].x, result[result.length-1].x];
-      //console.log(this.chartOptions);
-    }
+
+      let markerColor = markerColors[normalizer.colorMapName];
+      if (markerColor) {
+        d.marker = {
+          color: markerColor,
+          line: {
+            color: markerColor
+          }
+        }
+      }
+
+      this.chartData.push(d);
+
+    })
 
     if (this.layout.width != this.width) this.layout.width = this.width;
     if (this.layout.height != this.height) this.layout.height = this.height;
 
-    let levels = calcLevels(this.hist, this.backgroundPercentile, this.peakPercentile);
+    // let levels = calcLevels(hist, this.backgroundPercentile, this.peakPercentile);
+    let levels = { backgroundLevel: this.backgroundLevel, peakLevel: this.peakLevel }
+
     this.layout = {
       ...this.layout,
+      showlegend: false,
       xaxis: {
         ...this.layout.xaxis,
         type: this.logarithmicX ? 'log' : 'linear',
@@ -269,6 +206,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         },
       ],
     };
+
   }
 
   ngOnChanges() {

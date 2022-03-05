@@ -279,7 +279,7 @@ export class CalculateNormalizedPixels {
 export class CalculateNormalizedPixelsSuccess {
   public static readonly type = '[Workbench HDU State] Calculate Normalized Pixels Success';
 
-  constructor(public hduId: string, public tileIndex: number, public normalizedPixels: Uint32Array) { }
+  constructor(public hduId: string, public tileIndex: number, public compositePixels: Uint32Array, public redChannel: Uint16Array, public greenChannel: Uint16Array, public blueChannel: Uint16Array,) { }
 }
 
 export class UpdateNormalizedImageTileSuccess {

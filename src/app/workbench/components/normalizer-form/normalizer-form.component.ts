@@ -22,6 +22,12 @@ import { DecimalPipe } from '@angular/common';
 })
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
+  @Input() showMode = true;
+  @Input() showColorMap = true;
+  @Input() showStretchMode = true;
+  @Input() showInverted = true;
+  @Input() showChannelScale = true;
+  @Input() showChannelOffset = true;
 
   @Output() backgroundPercentileChange = new EventEmitter<number>();
   @Output() peakPercentileChange = new EventEmitter<number>();
@@ -30,7 +36,8 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   @Output() colorMapChange = new EventEmitter<string>();
   @Output() stretchModeChange = new EventEmitter<StretchMode>();
   @Output() invertedChange = new EventEmitter<boolean>();
-  @Output() balanceChange = new EventEmitter<number>();
+  @Output() channelScaleChange = new EventEmitter<number>();
+  @Output() channelOffsetChange = new EventEmitter<number>();
   @Output() modeChange = new EventEmitter<'percentile' | 'pixel'>();
 
   backgroundStep = 0.1;
