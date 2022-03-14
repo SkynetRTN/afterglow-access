@@ -49,8 +49,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
 import { FormControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { getBinCenter, ImageHist } from 'src/app/data-files/models/image-hist';
+import { calcLevels, calcPercentiles, getBinCenter, ImageHist } from 'src/app/data-files/models/image-hist';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
+
+import { levenbergMarquardt as LM } from 'ml-levenberg-marquardt';
 
 @Component({
   selector: 'app-display-panel',
@@ -82,10 +84,13 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
 
-  backgroundPercentile$: Subject<number> = new Subject<number>();
-  peakPercentile$: Subject<number> = new Subject<number>();
-  backgroundLevel$: Subject<number> = new Subject<number>();
-  peakLevel$: Subject<number> = new Subject<number>();
+  backgroundPercentile$ = new Subject<number>();
+  peakPercentile$ = new Subject<number>();
+  backgroundLevel$ = new Subject<number>();
+  peakLevel$ = new Subject<number>();
+  normalizerMode$ = new Subject<'pixel' | 'percentile'>();
+  stretchMode$ = new Subject<StretchMode>();
+  presetClick$ = new Subject<{ backgroundPercentile: number, peakPercentile: number }>();
 
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
@@ -133,12 +138,29 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       }))
 
     this.compositeNormalizer$ = this.firstImageHdu$.pipe(
-      map(imageHdu => {
-        if (!imageHdu.normalizer) return null;
+      withLatestFrom(this.hdus$),
+      map(([firstHdu, hdus]) => {
+        if (!firstHdu.normalizer) return null;
+        let refBackgroundLevel = firstHdu.normalizer.backgroundLevel * firstHdu.normalizer.channelScale + firstHdu.normalizer.channelOffset;
+        let refPeakLevel = firstHdu.normalizer.peakLevel * firstHdu.normalizer.channelScale + firstHdu.normalizer.channelOffset;
+
+        let synced = hdus.every(hdu => {
+          if (isImageHdu(hdu)) {
+            if (hdu.id == firstHdu.id) return true;
+            let backgroundLevel = hdu.normalizer.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
+            let peakLevel = hdu.normalizer.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
+            console.log(backgroundLevel, refBackgroundLevel, (backgroundLevel - refBackgroundLevel) / refBackgroundLevel, peakLevel, refPeakLevel, (peakLevel - refPeakLevel) / refPeakLevel)
+            return Math.abs((backgroundLevel - refBackgroundLevel) / refBackgroundLevel) < 0.01 && Math.abs((peakLevel - refPeakLevel) / refPeakLevel) < 0.01
+          }
+          return true;
+        })
+
+        if (!synced) return null;
+
         return {
-          ...imageHdu.normalizer,
-          backgroundLevel: imageHdu.normalizer.backgroundLevel * imageHdu.normalizer.channelScale + imageHdu.normalizer.channelOffset,
-          peakLevel: imageHdu.normalizer.peakLevel * imageHdu.normalizer.channelScale + imageHdu.normalizer.channelOffset,
+          ...firstHdu.normalizer,
+          backgroundLevel: refBackgroundLevel,
+          peakLevel: refPeakLevel,
           channelOffset: 0,
           channelScale: 1
         }
@@ -162,15 +184,86 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
     this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
 
-    this.backgroundPercentile$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
-      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { backgroundPercentile: value }));
+
+
+
+    this.presetClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(
+          new UpdateNormalizer(activeHdu.id, {
+            mode: 'percentile',
+            backgroundPercentile: value.backgroundPercentile,
+            peakPercentile: value.peakPercentile
+          })
+        );
+      }
+      else {
+        let refLevels: { backgroundLevel: number, peakLevel: number };
+        hdus.forEach(hdu => {
+          if (!isImageHdu(hdu)) return
+
+          if (refLevels === undefined) {
+            refLevels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
+            refLevels = { backgroundLevel: refLevels.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset, peakLevel: refLevels.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset }
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value.backgroundPercentile, peakPercentile: value.peakPercentile }));
+            return;
+          }
+          let backgroundLevel = (refLevels.backgroundLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
+          let peakLevel = (refLevels.peakLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
+
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: backgroundLevel, peakLevel: peakLevel }));
+
+        })
+      }
     });
 
-    this.peakPercentile$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$)).subscribe(([value, imageHdu]) => {
-      this.store.dispatch(new UpdateNormalizer(imageHdu.id, { peakPercentile: value }));
+    this.backgroundPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundPercentile: value }));
+      }
+      else {
+        let refBackgroundLevel: number;
+        hdus.forEach(hdu => {
+          if (!isImageHdu(hdu)) return
+
+          if (refBackgroundLevel === undefined) {
+            refBackgroundLevel = calcLevels(hdu.hist, value, hdu.normalizer.peakPercentile)?.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value }));
+            return;
+          }
+          let backgroundLevel = (refBackgroundLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
+          let percentiles = calcPercentiles(hdu.hist, backgroundLevel, hdu.normalizer.peakLevel)
+
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: backgroundLevel }));
+
+        })
+      }
     });
 
-    this.backgroundLevel$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+    this.peakPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakPercentile: value }));
+      }
+      else {
+        let refPeakLevel: number;
+        hdus.forEach(hdu => {
+          if (!isImageHdu(hdu)) return
+
+          if (refPeakLevel === undefined) {
+            refPeakLevel = calcLevels(hdu.hist, hdu.normalizer.backgroundPercentile, value)?.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', peakPercentile: value }));
+            return;
+          }
+          let peakLevel = (refPeakLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
+          let percentiles = calcPercentiles(hdu.hist, hdu.normalizer.backgroundLevel, peakLevel)
+
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', peakLevel: peakLevel }));
+
+        })
+      }
+    });
+
+    this.backgroundLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       if (activeHdu) {
         this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundLevel: value }));
       }
@@ -183,7 +276,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       }
     });
 
-    this.peakLevel$.pipe(auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+    this.peakLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       if (activeHdu) {
         this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakLevel: value }));
       }
@@ -191,6 +284,32 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         hdus.forEach(hdu => {
           if (isImageHdu(hdu)) {
             this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: (value - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale, mode: 'pixel' }));
+          }
+        })
+      }
+    });
+
+    this.normalizerMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { mode: value }));
+      }
+      else {
+        hdus.forEach(hdu => {
+          if (isImageHdu(hdu)) {
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
+          }
+        })
+      }
+    });
+
+    this.stretchMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      if (activeHdu) {
+        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { stretchMode: value }));
+      }
+      else {
+        hdus.forEach(hdu => {
+          if (isImageHdu(hdu)) {
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
           }
         })
       }
@@ -209,7 +328,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       withLatestFrom(this.file$, this.hdus$)
     ).subscribe(([event, file, hdus]) => {
       hdus.forEach(hdu => {
-        this.store.dispatch(new UpdateNormalizer(hdu.id, { channelOffset: 0, channelScale: 1 }))
+        if (isImageHdu(hdu)) {
+          let backgroundLevel = hdu.normalizer.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
+          let peakLevel = hdu.normalizer.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', channelOffset: 0, channelScale: 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
+        }
+
       })
     })
 
@@ -217,6 +341,82 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       takeUntil(this.destroy$),
       withLatestFrom(this.file$, this.hdus$)
     ).subscribe(([event, file, hdus]) => {
+
+
+
+      // let fitLinear = (hdu: ImageHdu, ref: ImageHdu) => {
+
+      //   let linearFn = ([m, b]: [number, number]) => {
+      //     return (x) => {
+      //       let center = x * m + b
+      //       let index = (center - ref.hist.minBin) / (ref.hist.maxBin - ref.hist.minBin);
+      //       index = Math.min(ref.hist.data.length - 1, Math.max(0, index))
+      //       return ref.hist.data[Math.floor(index)]
+      //     }
+      //   }
+
+      //   let xs: number[] = [];
+      //   let ys: number[] = [];
+      //   for (let i = 0; i < hdu.hist.data.length; i++) {
+      //     xs.push(getBinCenter(hdu.hist, i))
+      //     ys.push(hdu.hist.data[i]);
+      //   }
+
+
+      //   let initialValues = [1, 0];
+      //   const options = {
+      //     damping: 1.5,
+      //     initialValues: initialValues,
+      //     gradientDifference: 10e-2,
+      //     maxIterations: 100,
+      //     errorTolerance: 10e-3,
+      //   };
+
+      //   let fit = LM({ x: xs, y: ys }, linearFn, options)
+
+      //   return {
+      //     hdu: hdu,
+      //     m: fit.parameterValues[0],
+      //     b: fit.parameterValues[1]
+      //   }
+
+      // }
+
+      // let imageHdus: ImageHdu[] = hdus.filter(isImageHdu);
+      // if (imageHdus.length <= 1) return;
+
+      // let ref = imageHdus.shift();
+      // let fits = imageHdus.map(hdu => fitLinear(hdu, ref))
+
+
+      // let actions: any[] = [];
+      // let refBackground = ref.normalizer.backgroundLevel;
+      // let refPeakLevel = ref.normalizer.peakLevel;
+
+      // if (refBackground === undefined || refPeakLevel === undefined) {
+      //   let refLevels = calcLevels(ref.hist, ref.normalizer.backgroundPercentile, ref.normalizer.peakPercentile)
+      //   refBackground = refLevels.backgroundLevel;
+      //   refPeakLevel = refLevels.peakLevel;
+      //   actions.push(new UpdateNormalizer(ref.id, { mode: 'pixel', channelOffset: 0, channelScale: 1, backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }))
+      // }
+
+      // fits.forEach(fit => {
+      //   let backgroundLevel = (refBackground - (event.offsetEnabled ? fit.b : 0)) / (event.scaleEnabled ? fit.m : 1);
+      //   let peakLevel = (refPeakLevel - (event.offsetEnabled ? fit.b : 0)) / (event.scaleEnabled ? fit.m : 1)
+      //   actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? fit.b : 0, channelScale: event.scaleEnabled ? fit.m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
+      // })
+
+      // this.store.dispatch(actions)
+
+
+
+
+
+
+
+
+
+
       let getFit = (hdu: ImageHdu) => {
         let hist = hdu.hist;
         let histData = hist.data;
@@ -233,10 +433,20 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         let xM1 = getBinCenter(hist, M - 1)
         let median = xM1 + (xM - xM1) * (0.5 * N - sM1) / (sM - sM1);
 
+        // let modeN = histData[0];
+        // let modeIndex = 0;
+        // for (let i = 0; i < histData.length; i++) {
+        //   if (histData[i] >= modeN) {
+        //     modeN = histData[i];
+        //     modeIndex = i
+        //   }
+        // }
+        // let mode = getBinCenter(hist, modeIndex);
+        let mode = median
 
         let devData: [number, number][] = []
         for (let i = 0; i < histData.length; i++) {
-          devData[i] = [Math.abs(getBinCenter(hist, i) - median), histData[i]]
+          devData[i] = [Math.abs(getBinCenter(hist, i) - mode), histData[i]]
         }
         devData = devData.sort((a, b) => a[0] - b[0])
 
@@ -255,6 +465,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         return {
           hdu: hdu,
           median: median,
+          mode: mode,
           deviation: deviation
         }
       }
@@ -262,6 +473,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let fits: {
         hdu: ImageHdu
         median: number,
+        mode: number,
         deviation: number
       }[] = []
 
@@ -270,18 +482,35 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         fits.push(getFit(hdu))
       })
 
-      fits = fits.sort((a, b) => b.median - a.median)
+      fits = fits.sort((a, b) => b.mode - a.mode)
+
+      fits.forEach(fit => {
+        console.log(fit.hdu.name, fit.median, fit.mode, fit.deviation)
+      })
 
       let actions: any[] = [];
       let ref = fits[0]
-      console.log(ref.hdu.name, ref.median, ref.deviation)
+
+      let refBackground = ref.hdu.normalizer.backgroundLevel;
+      let refPeakLevel = ref.hdu.normalizer.peakLevel;
+
+      if (refBackground === undefined || refPeakLevel === undefined) {
+        let refLevels = calcLevels(ref.hdu.hist, ref.hdu.normalizer.backgroundPercentile, ref.hdu.normalizer.peakPercentile)
+        refBackground = refLevels.backgroundLevel;
+        refPeakLevel = refLevels.peakLevel;
+        actions.push(new UpdateNormalizer(ref.hdu.id, { mode: 'pixel', channelOffset: 0, channelScale: 1, backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }))
+      }
+
+
       this.store.dispatch(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
       for (let i = 1; i < fits.length; i++) {
         let fit = fits[i];
         let m = ref.deviation / fit.deviation;
-        let b = -fit.median * m + ref.median;
-        actions.push(new UpdateNormalizer(fit.hdu.id, { channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1 }))
-        console.log(fit.hdu.name, fit.median, fit.deviation, m, b)
+        let b = -fit.mode * m + ref.mode;
+
+        let backgroundLevel = (refBackground - (event.offsetEnabled ? b : 0)) / (event.scaleEnabled ? m : 1);
+        let peakLevel = (refPeakLevel - (event.offsetEnabled ? b : 0)) / (event.scaleEnabled ? m : 1)
+        actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
       }
 
       this.store.dispatch(actions)
@@ -321,8 +550,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       )
       .subscribe(([$event, file]) => {
 
-        if (!this.whiteBalanceMode || !file || !file.compositeId || !$event.hitImage) return
-        let compositeImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(file.compositeId));
+        if (!this.whiteBalanceMode || !file || !file.rgbaImageDataId || !$event.hitImage) return
+        let compositeImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(file.rgbaImageDataId));
         let color = getPixel(compositeImageData, $event.imageX, $event.imageY);
         if (!color) return;
         let b = (color >> 16) & 0xff;
@@ -391,12 +620,16 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.peakLevel$.next(value);
   }
 
+  onNormalizerModeChange(value: 'percentile' | 'pixel') {
+    this.normalizerMode$.next(value);
+  }
+
   onColorMapChange(hdu: ImageHdu, value: string) {
     this.store.dispatch(new UpdateNormalizer(hdu.id, { colorMapName: value }));
   }
 
-  onStretchModeChange(hdu: ImageHdu, value: StretchMode) {
-    this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
+  onStretchModeChange(value: StretchMode) {
+    this.stretchMode$.next(value)
   }
 
   onInvertedChange(hdu: ImageHdu, value: boolean) {
@@ -411,19 +644,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.store.dispatch(new UpdateNormalizer(hdu.id, { channelOffset: value }));
   }
 
-  onNormalizerModeChange(hdu: ImageHdu, value: 'percentile' | 'pixel') {
-    this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
-  }
-
-  onPresetClick(hdu: ImageHdu, lowerPercentile: number, upperPercentile: number) {
-    this.store.dispatch(
-      new UpdateNormalizer(hdu.id, {
-        backgroundPercentile: lowerPercentile,
-        peakPercentile: upperPercentile,
-        backgroundLevel: undefined,
-        peakLevel: undefined,
-      })
-    );
+  onPresetClick(lowerPercentile: number, upperPercentile: number) {
+    this.presetClick$.next({ backgroundPercentile: lowerPercentile, peakPercentile: upperPercentile })
   }
 
   onInvertClick(hdu: ImageHdu) {

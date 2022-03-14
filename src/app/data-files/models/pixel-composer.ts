@@ -2,7 +2,7 @@ import { PixelType } from './data-file';
 import { BlendMode } from './blend-mode';
 
 export function compose(
-  layers: Array<{ redChannel: Uint16Array; greenChannel: Uint16Array; blueChannel: Uint16Array; composite: Uint32Array, blendMode: BlendMode; alpha: number; visible: boolean }>,
+  layers: Array<{ rgba: Uint32Array, blendMode: BlendMode; alpha: number; visible: boolean }>,
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]],
   result: Uint32Array
 ) {
@@ -14,20 +14,16 @@ export function compose(
     return new Uint32Array();
   }
 
-  let redChannel = new Uint16Array(result.length)
-  redChannel.set(layers[0].redChannel)
-  let greenChannel = new Uint16Array(result.length)
-  greenChannel.set(layers[0].greenChannel)
-  let blueChannel = new Uint16Array(result.length)
-  blueChannel.set(layers[0].blueChannel)
-
-  result.set(layers[0].composite);
+  result.set(layers[0].rgba);
   let result8 = new Uint8ClampedArray(result.buffer);
-  // let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.composite.buffer));
+  let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.rgba.buffer));
 
   // let baseHsy: [number, number, number] = [0, 0, 0];
   // let blendHsy: [number, number, number] = [0, 0, 0];
   // let resultRgb: [number, number, number] = [0, 0, 0];
+
+  let [redWB, greenWB, blueWB] = channelMixer;
+
   let rr = channelMixer[0][0];
   let rg = channelMixer[0][1];
   let rb = channelMixer[0][2];
@@ -37,49 +33,49 @@ export function compose(
   let br = channelMixer[2][0];
   let bg = channelMixer[2][1];
   let bb = channelMixer[2][2];
-  let compositeBitScaler = (255 / 65535)
+
   //for each pixel in result
-  for (let j = 0; j < result.length; j++) {
+  for (let i = 0, j = 0, len = result.length; i != len; i++, j += 4) {
     //for each layer
     for (let k = 1; k < layers.length; k++) {
-      let tr = layers[k].redChannel[j] / 65535.0;
-      let tg = layers[k].greenChannel[j] / 65535.0;
-      let tb = layers[k].blueChannel[j] / 65535.0;
+      let tr = layers8[k][j] / 255.0;
+      let tg = layers8[k][j + 1] / 255.0;
+      let tb = layers8[k][j + 2] / 255.0;
       let ta = layers[k].alpha;
 
       if (layers[k].blendMode == BlendMode.Screen) {
         //screen blend mode
-        redChannel[j] = (1 - (1 - redChannel[j] / 65535.0) * (1 - tr)) * 65535.0;
-        greenChannel[j] = (1 - (1 - greenChannel[j] / 65535.0) * (1 - tg)) * 65535.0;
-        blueChannel[j] = (1 - (1 - blueChannel[j] / 65535.0) * (1 - tb)) * 65535.0;
+        result8[j] = (1 - (1 - result8[j] / 255.0) * (1 - tr)) * 255.0;
+        result8[j + 1] = (1 - (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
+        result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
+        result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
       } else if (layers[k].blendMode == BlendMode.Luminosity) {
         let blendHsy = rgbToHsv(tr, tg, tb);
-        let baseHsy = rgbToHsv(redChannel[j] / 65535.0, greenChannel[j] / 65535.0, blueChannel[j] / 65535.0);
+        let baseHsy = rgbToHsv(result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0);
         let resultRgb = hsvToRgb(baseHsy[0], baseHsy[1], blendHsy[2]);
 
-        redChannel[j] = resultRgb[0] * 65535;
-        greenChannel[j] = resultRgb[1] * 65535;
-        blueChannel[j] = resultRgb[2] * 65535;
+        result8[j] = resultRgb[0] * 255;
+        result8[j + 1] = resultRgb[1] * 255;
+        result8[j + 2] = resultRgb[2] * 255;
+        result8[j + 3] = 255.0;
       } else {
         //normal blend mode
-        let br = redChannel[j] / 65535.0;
-        let bg = greenChannel[j] / 65535.0;
-        let bb = blueChannel[j] / 65535.0;
-        redChannel[j] = (ta * (tr - br) + br) * 65535;
-        greenChannel[j] = (ta * (tg - bg) + bg) * 65535;
-        blueChannel[j] = (ta * (tb - bb) + bb) * 65535;
+        let br = result8[j] / 255.0;
+        let bg = result8[j + 1] / 255.0;
+        let bb = result8[j + 2] / 255.0;
+        result8[j] = (ta * (tr - br) + br) * 255;
+        result8[j + 1] = (ta * (tg - bg) + bg) * 255;
+        result8[j + 2] = (ta * (tb - bb) + bb) * 255;
+        result8[j + 3] = 255.0;
       }
     }
-    let r = Math.min(65535, redChannel[j] * rr + greenChannel[j] * rg + blueChannel[j] * rb);
-    let g = Math.min(65535, redChannel[j] * gr + greenChannel[j] * gg + blueChannel[j] * gb);
-    let b = Math.min(65535, redChannel[j] * br + greenChannel[j] * bg + blueChannel[j] * bb);
+    let r = result8[j] * rr + result8[j + 1] * rg + result8[j + 2] * rb;
+    let g = result8[j] * gr + result8[j + 1] * gg + result8[j + 2] * gb;
+    let b = result8[j] * br + result8[j + 1] * bg + result8[j + 2] * bb;
 
-    let r8 = r * compositeBitScaler;
-    let g8 = g * compositeBitScaler;
-    let b8 = b * compositeBitScaler;
-
-    let rgba = (255 << 24) | (b8 << 16) | (g8 << 8) | r8;
-    result[j] = rgba;
+    result8[j] = Math.min(255, r)
+    result8[j + 1] = Math.min(255, g)
+    result8[j + 2] = Math.min(255, b)
 
   }
   return result;

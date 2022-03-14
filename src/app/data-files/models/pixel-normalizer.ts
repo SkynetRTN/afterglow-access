@@ -22,7 +22,7 @@ export interface PixelNormalizer {
 //   }
 // }
 
-export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer, redChannel: Uint16Array, greenChannel: Uint16Array, blueChannel: Uint16Array, composite: Uint32Array) {
+export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer, rgba: Uint32Array) {
   let stretchMode = normalizer.stretchMode;
   let redLookup = COLOR_MAPS[normalizer.colorMapName].redLookup;
   let greenLookup = COLOR_MAPS[normalizer.colorMapName].greenLookup;
@@ -105,12 +105,12 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
     let g8 = g * compositeBitScaler;
     let b8 = b * compositeBitScaler;
 
-    let rgba = (255 << 24) | (b8 << 16) | (g8 << 8) | r8;
+    let rgbaValue = (255 << 24) | (b8 << 16) | (g8 << 8) | r8;
 
-    composite[i] = rgba;
-    redChannel[i] = r;
-    greenChannel[i] = g;
-    blueChannel[i] = b;
+    rgba[i] = rgbaValue;
+    // redChannel[i] = r;
+    // greenChannel[i] = g;
+    // blueChannel[i] = b;
 
     // let color = colorMapLookup[Math.floor(colorIndex)];
     // let r = (color >> 16) & 0xff;

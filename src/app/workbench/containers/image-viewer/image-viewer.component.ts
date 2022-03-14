@@ -531,16 +531,13 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   }
 
   handleLoadTile($event: LoadTileEvent) {
-    // should only need to load the raw data
-    // the normalized and composite data will be updated automatically
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+    // console.log("LOAD TILE EVENT: ", $event.tileIndex)
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
     let hduIds = [this.viewer.hduId];
     let loadComposite = false;
 
     if (!this.viewer.hduId) {
+      // a specific HDU has not been selected in the viewer
       let file = dataFileEntities[this.viewer.fileId];
       if (!file) return;
       hduIds = file.hduIds;
@@ -548,6 +545,11 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     }
 
     hduIds.forEach((hduId) => {
+      //ensure updated copies of HDU info is retrieved at the start of each loop
+      let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+      let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+      let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
+      // console.log("CHECKING HDU: ", hduId, this.hduLoading[hduId])
       if (this.hduLoading[hduId]) {
         loadComposite = false;
         return;
@@ -599,18 +601,19 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       }
 
 
-      let imageData = imageDataEntities[(hdu as ImageHdu).compositeId];
+      let imageData = imageDataEntities[(hdu as ImageHdu).rgbaImageDataId];
       let tile = imageData.tiles[$event.tileIndex];
       if (!tile.pixelsLoading && (!tile.pixelsLoaded || !tile.isValid)) {
+        // console.log("Need to load normalized tile: ", hdu.fileId, hdu.id, tile.index)
         this.hduLoading[hduId] = true;
         this.actions$
           .pipe(
             ofActionCompleted(UpdateNormalizedImageTile),
-            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id),
+            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id && (a.action as UpdateNormalizedImageTile).tileIndex == tile.index),
             take(1)
           )
           .subscribe((a) => {
-            // console.log("load header complete!", a, $event)
+            // console.log("update normalized tile complete!", hdu.fileId, hdu.id, tile.index)
             this.hduLoading[hduId] = false;
             if (a.result.successful) this.handleLoadTile($event);
           });
@@ -621,8 +624,10 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       }
     });
 
+    // console.log("LOOP COMPLETE")
+
     if (loadComposite) {
-      // console.log("updating composite tile", $event)
+      // console.log("update composite tile event", this.viewer.fileId, $event.tileIndex)
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
   }

@@ -22,7 +22,7 @@ export class ImageOrientationToolbarComponent implements OnInit {
     if (!this.data || !this.viewportSize) return;
     this.store.dispatch(
       new Flip(
-        this.data.compositeId,
+        this.data.rgbaImageDataId,
         this.data.imageTransformId,
         this.data.viewportTransformId,
         'horizontal',
@@ -35,7 +35,7 @@ export class ImageOrientationToolbarComponent implements OnInit {
     if (!this.data || !this.viewportSize) return;
     this.store.dispatch(
       new Flip(
-        this.data.compositeId,
+        this.data.rgbaImageDataId,
         this.data.imageTransformId,
         this.data.viewportTransformId,
         'vertical',
@@ -48,7 +48,7 @@ export class ImageOrientationToolbarComponent implements OnInit {
     if (!this.data || !this.viewportSize) return;
     this.store.dispatch(
       new RotateBy(
-        this.data.compositeId,
+        this.data.rgbaImageDataId,
         this.data.imageTransformId,
         this.data.viewportTransformId,
         this.viewportSize,
@@ -60,10 +60,10 @@ export class ImageOrientationToolbarComponent implements OnInit {
   onResetOrientationClick() {
     if (!this.data || !this.viewportSize) return;
     this.store.dispatch(
-      new ResetImageTransform(this.data.compositeId, this.data.imageTransformId, this.data.viewportTransformId)
+      new ResetImageTransform(this.data.rgbaImageDataId, this.data.imageTransformId, this.data.viewportTransformId)
     );
     this.store.dispatch(
-      new ResetViewportTransform(this.data.compositeId, this.data.imageTransformId, this.data.viewportTransformId)
+      new ResetViewportTransform(this.data.rgbaImageDataId, this.data.imageTransformId, this.data.viewportTransformId)
     );
   }
 

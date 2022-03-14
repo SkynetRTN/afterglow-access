@@ -118,6 +118,7 @@ import { ShortcutInput, ShortcutEventOutput } from 'ng-keyboard-shortcuts';
 // @ts-ignore
 import { saveAs } from 'file-saver/dist/FileSaver';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { getLongestCommonStartingSubstring } from 'src/app/utils/utils';
 
 @Component({
   selector: 'app-workbench',
@@ -568,7 +569,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       let hdu = this.store.selectSnapshot(DataFilesState.getHduById(viewer.hduId));
       if (!hdu || hdu.type != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
-      let imageDataId = imageHdu.compositeId;
+      let imageDataId = imageHdu.rgbaImageDataId;
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));
       let imageTransformId = imageHdu.imageTransformId;
       let viewportTransformId = imageHdu.viewportTransformId;
@@ -1110,16 +1111,6 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       );
   }
 
-  getLongestCommonStartingSubstring(arr1: string[]) {
-    let arr = arr1.concat().sort(),
-      a1 = arr[0],
-      a2 = arr[arr.length - 1],
-      L = a1.length,
-      i = 0;
-    while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
-    return a1.substring(0, i);
-  }
-
   onSplitSelectedFileListItemsBtnClick() {
     this.afterLibrarySync()
       .pipe(
@@ -1186,10 +1177,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                     .filter((viewer) => viewer.hduId == hduId || viewer.fileId == hdu.fileId)
                     .forEach((viewer) => this.store.dispatch(new CloseViewer(viewer.id)));
                   this.store.dispatch(new InvalidateHeader(hduId));
+                  let name = hdu && hdu.name ? hdu.name : `${file.name}_${index}`
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
-                      groupName: uuid,
-                      name: hdu && hdu.name ? hdu.name : `${file.name}_${index}`,
+                      groupName: name,
+                      name: name,
                       dataProvider: null,
                       assetPath: null,
                       modified: true,
@@ -1271,7 +1263,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                 return of(null);
               }
 
-              let newFilename = this.getLongestCommonStartingSubstring(files.map((file) => file.name))
+              let newFilename = getLongestCommonStartingSubstring(files.map((file) => file.name))
                 .replace(/_+$/, '')
                 .trim();
               if (newFilename.length == 0) {
@@ -1291,8 +1283,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                   this.store.dispatch(new SetFileSelection([]));
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
-                      groupName: uuid,
-                      name: newFilename,
+                      groupName: newFilename,
+                      name: hdu.name,
                       dataProvider: null,
                       assetPath: null,
                       modified: true,

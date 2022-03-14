@@ -180,7 +180,7 @@ import { PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult } from '../jobs/models/alignment';
 import { WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from '../jobs/models/wcs_calibration';
-import { StackingJob } from '../jobs/models/stacking';
+import { StackingJob, StackingJobResult } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PosType, Source } from './models/source';
@@ -223,7 +223,7 @@ import { AlertDialogConfig, AlertDialogComponent } from '../utils/alert-dialog/a
 import { wildcardToRegExp } from '../utils/regex';
 import { Normalization } from '../data-files/models/normalization';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
-import { isNotEmpty } from '../utils/utils';
+import { getLongestCommonStartingSubstring, isNotEmpty } from '../utils/utils';
 import { Injectable } from '@angular/core';
 import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
@@ -236,6 +236,8 @@ import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/f
 import { parseDms } from '../utils/skynet-astro';
 import { HeaderEntry } from '../data-files/models/header-entry';
 import { AfterglowHeaderKey } from '../data-files/models/afterglow-header-key';
+import { I } from '@angular/cdk/keycodes';
+import { AfterglowDataFileService } from './services/afterglow-data-files';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: 'b079125e-48ae-4fbe-bdd7-cad5796a8614',
@@ -392,7 +394,8 @@ export class WorkbenchState {
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions,
     private dialog: MatDialog,
-    private config: AfterglowConfigService
+    private config: AfterglowConfigService,
+    private dataFileService: AfterglowDataFileService
   ) { }
 
   /** Root Selectors */
@@ -1028,7 +1031,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getImageDataEntities],
       (imageHdu: ImageHdu, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
-        return (imageDataEntities[imageHdu?.compositeId] as IImageData<Uint32Array>) || null;
+        return (imageDataEntities[imageHdu?.rgbaImageDataId] as IImageData<Uint32Array>) || null;
       }
     );
   }
@@ -1037,7 +1040,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileByViewerId(viewerId), DataFilesState.getImageDataEntities],
       (file: DataFile, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
-        return (imageDataEntities[file?.compositeId] as IImageData<Uint32Array>) || null;
+        return (imageDataEntities[file?.rgbaImageDataId] as IImageData<Uint32Array>) || null;
       }
     );
   }
@@ -2550,9 +2553,9 @@ export class WorkbenchState {
       let imageDataId: string = '';
       if (hdu) {
         headerId = hdu.headerId;
-        imageDataId = (hdu as ImageHdu).compositeId;
+        imageDataId = (hdu as ImageHdu).rgbaImageDataId;
       } else {
-        imageDataId = file.compositeId;
+        imageDataId = file.rgbaImageDataId;
 
         //use header from first image hdu
         let firstImageHduId = file.hduIds.find((hduId) => hduEntities[hduId].type == HduType.IMAGE);
@@ -3066,8 +3069,24 @@ export class WorkbenchState {
     let state = getState();
     let data = state.stackingPanelConfig.stackFormData;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
+
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let existingFileNames = hdus.map(hdu => hdu.name)
+    let stackedName = getLongestCommonStartingSubstring(imageHdus.map(hdu => hdu.name)).replace(/_+$/, '').trim();
+
+    if (stackedName) {
+      stackedName = `${stackedName}_stack`
+      let base = stackedName
+      let iter = 0
+      while (existingFileNames.includes(`${stackedName}.fits`)) {
+        stackedName = `${base}_${iter}`
+        iter += 1;
+      }
+    }
+
+
+
     let job: StackingJob = {
       type: JobType.Stacking,
       id: null,
@@ -3115,16 +3134,27 @@ export class WorkbenchState {
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
-      tap((a) => {
+      flatMap((a) => {
         let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
+        let result = jobEntity.result as StackingJobResult;
         if (result.errors.length != 0) {
           console.error('Errors encountered during stacking: ', result.errors);
         }
         if (result.warnings.length != 0) {
           console.error('Warnings encountered during stacking: ', result.warnings);
         }
-        dispatch(new LoadLibrary());
+        if (result.fileId && stackedName) {
+          return this.dataFileService.updateFile(result.fileId, {
+            groupName: `${stackedName}.fits`,
+            name: `${stackedName}.fits`
+          }).pipe(
+            map(() => dispatch(new LoadLibrary()))
+          )
+        }
+        return dispatch(new LoadLibrary())
+
+
+
       })
     );
 

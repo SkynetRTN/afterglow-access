@@ -36,11 +36,36 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   public layout: Partial<any> = {
     width: null,
     height: null,
+    title: {
+      text: 'Histogram',
+      // font: {
+      //   family: 'Courier New, monospace',
+      //   size: 24
+      // },
+      // xref: 'paper',
+      // x: 0.05,
+    },
     xaxis: {
       autorange: true,
+      title: {
+        text: 'Pixel Value',
+        // font: {
+        //   family: 'Courier New, monospace',
+        //   size: 18,
+        //   color: '#7f7f7f'
+        // }
+      },
     },
     yaxis: {
       autorange: true,
+      title: {
+        text: 'Pixel Count',
+        // font: {
+        //   family: 'Courier New, monospace',
+        //   size: 18,
+        //   color: '#7f7f7f'
+        // }
+      },
     },
     margin: {
       l: 50,
@@ -167,19 +192,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     // let levels = calcLevels(hist, this.backgroundPercentile, this.peakPercentile);
     let levels = { backgroundLevel: this.backgroundLevel, peakLevel: this.peakLevel }
 
-    this.layout = {
-      ...this.layout,
-      showlegend: false,
-      xaxis: {
-        ...this.layout.xaxis,
-        type: this.logarithmicX ? 'log' : 'linear',
-      },
-      yaxis: {
-        ...this.layout.yaxis,
-        type: this.logarithmicY ? 'log' : 'linear',
-      },
-      shapes: [
-        // Line Vertical
+    let shapes: any[] = [];
+    if (levels.backgroundLevel) {
+      shapes.push(
         {
           type: 'line',
           x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
@@ -192,6 +207,10 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
             dash: 'dot',
           },
         },
+      )
+    }
+    if (levels.peakLevel) {
+      shapes.push(
         {
           type: 'line',
           x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
@@ -203,8 +222,23 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
             width: 2,
             dash: 'dot',
           },
-        },
-      ],
+        }
+      )
+    }
+
+    this.layout = {
+      ...this.layout,
+      showlegend: false,
+      xaxis: {
+        ...this.layout.xaxis,
+        type: this.logarithmicX ? 'log' : 'linear',
+
+      },
+      yaxis: {
+        ...this.layout.yaxis,
+        type: this.logarithmicY ? 'log' : 'linear',
+      },
+      shapes: shapes,
     };
 
   }
