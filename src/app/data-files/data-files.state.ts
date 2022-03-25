@@ -556,7 +556,7 @@ export class DataFilesState {
                   visible: true,
                   alpha: 1.0,
                   hist: {
-                    data: new Uint32Array(),
+                    data: new Float32Array(),
                     loaded: false,
                     loading: false,
                     initialized: false,
@@ -1400,8 +1400,8 @@ export class DataFilesState {
             ...hdu,
             normalizer: {
               ...normalizer,
-              backgroundLevel: levels.backgroundLevel,
-              peakLevel: levels.peakLevel
+              backgroundLevel: levels.backgroundLevel * normalizer.channelScale + normalizer.channelOffset,
+              peakLevel: levels.peakLevel * normalizer.channelScale + normalizer.channelOffset
             }
 
           }
@@ -1416,7 +1416,7 @@ export class DataFilesState {
       });
     }
     else {
-      let percentiles = calcPercentiles(hdu.hist, normalizer.backgroundLevel, normalizer.peakLevel)
+      let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.channelOffset) / normalizer.channelScale, (normalizer.peakLevel - normalizer.channelOffset) / normalizer.channelScale)
       setState((state: DataFilesStateModel) => {
         let hdu = state.hduEntities[hduId];
         if (!isImageHdu(hdu)) return state;

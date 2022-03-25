@@ -28,8 +28,8 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   let greenLookup = COLOR_MAPS[normalizer.colorMapName].greenLookup;
   let blueLookup = COLOR_MAPS[normalizer.colorMapName].blueLookup;
 
-  let backgroundLevel = normalizer.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
-  let peakLevel = normalizer.peakLevel * normalizer.channelScale + normalizer.channelOffset;
+  let backgroundLevel = normalizer.backgroundLevel;
+  let peakLevel = normalizer.peakLevel;
   // if (normalizer.mode == 'percentile') {
   //   let levels = calcLevels(hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
   //   backgroundLevel = levels.backgroundLevel;

@@ -2,7 +2,7 @@ export interface ImageHist {
   loaded: boolean;
   loading: boolean;
   initialized: boolean;
-  data: Uint32Array;
+  data: Float32Array;
   minBin: number;
   maxBin: number;
 
@@ -112,8 +112,8 @@ export function getBinCenter(hist: ImageHist, index: number) {
 
 export function calcLevels(
   hist: ImageHist,
-  lowerPercentile: number = 10,
-  upperPercentile: number = 99,
+  backgroundPercentile: number = 10,
+  peakPercentile: number = 99,
   round: boolean = false
 ) {
   let result = {
@@ -129,17 +129,17 @@ export function calcLevels(
   }
 
   let x0 = 0;
-  let backgroundTarget = (lowerPercentile / 100.0) * total;
-  let peakTarget = (upperPercentile / 100.0) * total;
+  let backgroundTarget = (backgroundPercentile / 100.0) * total;
+  let peakTarget = (peakPercentile / 100.0) * total;
 
   let blackComplete = false;
   let whiteComplete = false;
 
-  if (lowerPercentile == 100) {
+  if (backgroundPercentile == 100) {
     blackComplete = true;
     result.backgroundLevel = getBinRight(hist, hist.data.length - 1);
   }
-  if (upperPercentile == 100) {
+  if (peakPercentile == 100) {
     whiteComplete = true;
     result.peakLevel = getBinRight(hist, hist.data.length - 1);
   }

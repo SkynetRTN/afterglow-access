@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, C
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
 
-import { ImageHist, getBinCenter, calcLevels } from '../../models/image-hist';
+import { ImageHist, getBinCenter, calcLevels, getCountsPerBin } from '../../models/image-hist';
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
 import { MatCheckboxChange } from '@angular/material/checkbox';
@@ -22,15 +22,14 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
 
   @Input() data: { hist: ImageHist, normalizer: PixelNormalizer }[] = [];
-  @Input() showFittedData: boolean = false;
   @Input() width: number = 200;
   @Input() height: number = 200;
   @Input() backgroundLevel: number = 0;
   @Input() peakLevel: number = 0;
 
   private yMax = 0;
-  public logarithmicX: boolean = true;
-  public logarithmicY: boolean = true;
+  public logarithmicX: boolean = false;
+  public logarithmicY: boolean = false;
 
   public chartData: Array<any> = [];
   public layout: Partial<any> = {
@@ -59,7 +58,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     yaxis: {
       autorange: true,
       title: {
-        text: 'Pixel Count',
+        text: '# of Pixels In Bin',
         // font: {
         //   family: 'Courier New, monospace',
         //   size: 18,
@@ -150,15 +149,16 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     this.data.forEach(({ hist, normalizer }) => {
       if (!hist || !normalizer || !hist.loaded || !hist.data) return;
 
-      let scale = this.showFittedData ? normalizer.channelScale : 1;
-      let offset = this.showFittedData ? normalizer.channelOffset : 0;
+      let refBinSize = getCountsPerBin(this.data[0].hist)
+      let binSize = getCountsPerBin(hist)
+
 
       let x = [];
       let y = [];
       for (let i = 0; i < hist.data.length; i++) {
-        if (hist.data[i] <= 1 || (this.logarithmicX && getBinCenter(hist, i) <= 0)) continue;
-        x.push(getBinCenter(hist, i) * scale + offset);
-        y.push(hist.data[i]);
+        if (hist.data[i] <= 0 || (this.logarithmicX && getBinCenter(hist, i) <= 0)) continue;
+        x.push(getBinCenter(hist, i) * normalizer.channelScale + normalizer.channelOffset);
+        y.push(hist.data[i] / normalizer.channelScale * (refBinSize / binSize));
         if (this.yMax < hist.data[i]) this.yMax = hist.data[i];
       }
 
@@ -198,7 +198,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         {
           type: 'line',
           x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
-          y0: 1,
+          y0: 0,
           x1: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
           y1: this.yMax,
           line: {
@@ -214,7 +214,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         {
           type: 'line',
           x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
-          y0: 1,
+          y0: 0,
           x1: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
           y1: this.yMax,
           line: {
@@ -224,6 +224,17 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
           },
         }
       )
+    }
+
+    if (!this.layout.xaxis?.range && this.data[0]?.hist?.loaded) {
+      let hist = this.data[0].hist;
+      let norm = this.data[0].normalizer;
+      let levels = calcLevels(hist, 1, 99);
+      this.layout.xaxis = {
+        ...this.layout.xaxis,
+        autorange: false,
+        range: [levels.backgroundLevel * norm.channelScale + norm.channelOffset, levels.peakLevel * norm.channelScale + norm.channelOffset]
+      }
     }
 
     this.layout = {

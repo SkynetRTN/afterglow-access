@@ -81,7 +81,7 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
           initialized: false,
           loaded: false,
           loading: false,
-          data: new Uint32Array(),
+          data: new Float32Array(),
           minBin: 0,
           maxBin: 0,
         },

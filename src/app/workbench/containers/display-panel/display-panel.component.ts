@@ -49,10 +49,22 @@ import { MatDialog } from '@angular/material/dialog';
 import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
 import { FormControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { calcLevels, calcPercentiles, getBinCenter, ImageHist } from 'src/app/data-files/models/image-hist';
+import { calcLevels, calcPercentiles, getBinCenter, getCountsPerBin, ImageHist } from 'src/app/data-files/models/image-hist';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
 
 import { levenbergMarquardt as LM } from 'ml-levenberg-marquardt';
+import { erf } from 'src/app/utils/math';
+
+type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array;
 
 @Component({
   selector: 'app-display-panel',
@@ -98,7 +110,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   color = '#FFFFFF';
   whiteBalanceMode = false;
   resetWhiteBalance$ = new Subject<any>();
-  updateChannelFittingEvent$ = new Subject<{ scaleEnabled: boolean, offsetEnabled: boolean }>();
+  neutralizeBackgroundEvent$ = new Subject<{ scaleEnabled: boolean, offsetEnabled: boolean }>();
   resetChannelFittingEvent$ = new Subject<any>();
 
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
@@ -141,15 +153,14 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       withLatestFrom(this.hdus$),
       map(([firstHdu, hdus]) => {
         if (!firstHdu.normalizer) return null;
-        let refBackgroundLevel = firstHdu.normalizer.backgroundLevel * firstHdu.normalizer.channelScale + firstHdu.normalizer.channelOffset;
-        let refPeakLevel = firstHdu.normalizer.peakLevel * firstHdu.normalizer.channelScale + firstHdu.normalizer.channelOffset;
+        let refBackgroundLevel = firstHdu.normalizer.backgroundLevel;
+        let refPeakLevel = firstHdu.normalizer.peakLevel;
 
         let synced = hdus.every(hdu => {
           if (isImageHdu(hdu)) {
             if (hdu.id == firstHdu.id) return true;
-            let backgroundLevel = hdu.normalizer.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
-            let peakLevel = hdu.normalizer.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
-            console.log(backgroundLevel, refBackgroundLevel, (backgroundLevel - refBackgroundLevel) / refBackgroundLevel, peakLevel, refPeakLevel, (peakLevel - refPeakLevel) / refPeakLevel)
+            let backgroundLevel = hdu.normalizer.backgroundLevel;
+            let peakLevel = hdu.normalizer.peakLevel;
             return Math.abs((backgroundLevel - refBackgroundLevel) / refBackgroundLevel) < 0.01 && Math.abs((peakLevel - refPeakLevel) / refPeakLevel) < 0.01
           }
           return true;
@@ -204,14 +215,11 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
           if (refLevels === undefined) {
             refLevels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
-            refLevels = { backgroundLevel: refLevels.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset, peakLevel: refLevels.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset }
+            refLevels = { backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }
             this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value.backgroundPercentile, peakPercentile: value.peakPercentile }));
             return;
           }
-          let backgroundLevel = (refLevels.backgroundLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
-          let peakLevel = (refLevels.peakLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
-
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: backgroundLevel, peakLevel: peakLevel }));
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }));
 
         })
       }
@@ -227,14 +235,11 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           if (!isImageHdu(hdu)) return
 
           if (refBackgroundLevel === undefined) {
-            refBackgroundLevel = calcLevels(hdu.hist, value, hdu.normalizer.peakPercentile)?.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset
+            refBackgroundLevel = calcLevels(hdu.hist, value, hdu.normalizer.peakPercentile)?.backgroundLevel
             this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value }));
             return;
           }
-          let backgroundLevel = (refBackgroundLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
-          let percentiles = calcPercentiles(hdu.hist, backgroundLevel, hdu.normalizer.peakLevel)
-
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: backgroundLevel }));
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: refBackgroundLevel }));
 
         })
       }
@@ -250,14 +255,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           if (!isImageHdu(hdu)) return
 
           if (refPeakLevel === undefined) {
-            refPeakLevel = calcLevels(hdu.hist, hdu.normalizer.backgroundPercentile, value)?.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset
+            refPeakLevel = calcLevels(hdu.hist, hdu.normalizer.backgroundPercentile, value)?.peakLevel
             this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', peakPercentile: value }));
             return;
           }
-          let peakLevel = (refPeakLevel - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale
-          let percentiles = calcPercentiles(hdu.hist, hdu.normalizer.backgroundLevel, peakLevel)
 
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', peakLevel: peakLevel }));
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', peakLevel: refPeakLevel }));
 
         })
       }
@@ -270,7 +273,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       else {
         hdus.forEach(hdu => {
           if (isImageHdu(hdu)) {
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: (value - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale, mode: 'pixel' }));
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
           }
         })
       }
@@ -283,7 +286,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       else {
         hdus.forEach(hdu => {
           if (isImageHdu(hdu)) {
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: (value - hdu.normalizer.channelOffset) / hdu.normalizer.channelScale, mode: 'pixel' }));
+            this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: value, mode: 'pixel' }));
           }
         })
       }
@@ -337,179 +340,324 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       })
     })
 
-    this.updateChannelFittingEvent$.pipe(
+    this.neutralizeBackgroundEvent$.pipe(
       takeUntil(this.destroy$),
       withLatestFrom(this.file$, this.hdus$)
     ).subscribe(([event, file, hdus]) => {
 
 
 
-      // let fitLinear = (hdu: ImageHdu, ref: ImageHdu) => {
-
-      //   let linearFn = ([m, b]: [number, number]) => {
-      //     return (x) => {
-      //       let center = x * m + b
-      //       let index = (center - ref.hist.minBin) / (ref.hist.maxBin - ref.hist.minBin);
-      //       index = Math.min(ref.hist.data.length - 1, Math.max(0, index))
-      //       return ref.hist.data[Math.floor(index)]
-      //     }
-      //   }
-
-      //   let xs: number[] = [];
-      //   let ys: number[] = [];
-      //   for (let i = 0; i < hdu.hist.data.length; i++) {
-      //     xs.push(getBinCenter(hdu.hist, i))
-      //     ys.push(hdu.hist.data[i]);
-      //   }
-
-
-      //   let initialValues = [1, 0];
-      //   const options = {
-      //     damping: 1.5,
-      //     initialValues: initialValues,
-      //     gradientDifference: 10e-2,
-      //     maxIterations: 100,
-      //     errorTolerance: 10e-3,
-      //   };
-
-      //   let fit = LM({ x: xs, y: ys }, linearFn, options)
-
-      //   return {
-      //     hdu: hdu,
-      //     m: fit.parameterValues[0],
-      //     b: fit.parameterValues[1]
-      //   }
-
-      // }
-
-      // let imageHdus: ImageHdu[] = hdus.filter(isImageHdu);
-      // if (imageHdus.length <= 1) return;
-
-      // let ref = imageHdus.shift();
-      // let fits = imageHdus.map(hdu => fitLinear(hdu, ref))
-
-
-      // let actions: any[] = [];
-      // let refBackground = ref.normalizer.backgroundLevel;
-      // let refPeakLevel = ref.normalizer.peakLevel;
-
-      // if (refBackground === undefined || refPeakLevel === undefined) {
-      //   let refLevels = calcLevels(ref.hist, ref.normalizer.backgroundPercentile, ref.normalizer.peakPercentile)
-      //   refBackground = refLevels.backgroundLevel;
-      //   refPeakLevel = refLevels.peakLevel;
-      //   actions.push(new UpdateNormalizer(ref.id, { mode: 'pixel', channelOffset: 0, channelScale: 1, backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }))
-      // }
-
-      // fits.forEach(fit => {
-      //   let backgroundLevel = (refBackground - (event.offsetEnabled ? fit.b : 0)) / (event.scaleEnabled ? fit.m : 1);
-      //   let peakLevel = (refPeakLevel - (event.offsetEnabled ? fit.b : 0)) / (event.scaleEnabled ? fit.m : 1)
-      //   actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? fit.b : 0, channelScale: event.scaleEnabled ? fit.m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
-      // })
-
-      // this.store.dispatch(actions)
-
-
-
-
-
-
-
-
-
 
       let getFit = (hdu: ImageHdu) => {
         let hist = hdu.hist;
-        let histData = hist.data;
-        let N = histData.reduce((result, value) => result += value, 0)
-        let sM = 0;
-        let sM1 = 0;
-        let M: number;
-        for (M = 1; M < histData.length; M++) {
-          sM1 = sM;
-          sM += 0.5 * histData[M - 1] + 0.5 * histData[M]
-          if (sM >= 0.5 * N) break;
+        let yIndexes = new Uint32Array(hist.data.length)
+        for (let i = 0; i < hist.data.length; i++) {
+          yIndexes[i] = i
         }
-        let xM = getBinCenter(hist, M)
-        let xM1 = getBinCenter(hist, M - 1)
-        let median = xM1 + (xM - xM1) * (0.5 * N - sM1) / (sM - sM1);
 
-        // let modeN = histData[0];
-        // let modeIndex = 0;
-        // for (let i = 0; i < histData.length; i++) {
-        //   if (histData[i] >= modeN) {
-        //     modeN = histData[i];
-        //     modeIndex = i
+        // remove empty bins
+        let y = new Float32Array(hist.data.length)
+        let w = new Uint32Array(hist.data.length);
+        let index = 0;
+        for (let i = 0; i < hist.data.length; i++) {
+          if (hist.data[i] == 0) continue;
+          w[index] = hist.data[i];
+          y[index] = getBinCenter(hist, i);
+          index++;
+        }
+
+        y = y.slice(0, index)
+        w = w.slice(0, index);
+
+        let bkgMedian = this.getWeightedMedian(w.length, w, y);
+
+        index = 0;
+        let yBkg = new Float32Array(y.length)
+        let wBkg = new Uint32Array(w.length);
+        for (let i = 0; i < w.length; i++) {
+          if (y[i] > bkgMedian) break;
+          yBkg[index] = y[i];
+          wBkg[index] = w[i];
+          index++
+        }
+        yBkg = yBkg.slice(0, index)
+        wBkg = wBkg.slice(0, index)
+
+        let yBkgDevs = new Float32Array(yBkg.length)
+        let wBkgDevs = new Uint32Array(wBkg.length);
+        for (let i = 0; i < wBkg.length; i++) {
+          yBkgDevs[i] = Math.abs(yBkg[i] - bkgMedian)
+          wBkgDevs[i] = wBkg[i]
+        }
+        let bkgDeviation = this.getWeighted68th(wBkgDevs, yBkgDevs);
+
+        let bkgPeak0 = Math.max(...wBkg);
+        let fit = this.fitGaussian(yBkg, wBkg, [bkgPeak0, bkgMedian, bkgDeviation]);
+
+        let [bkgPeak, bkgMu, bkgSigma] = fit.parameterValues;
+
+        // index = 0;
+        // let ySrc = new Float32Array(y.length)
+        // let wSrc = new Float32Array(w.length);
+        // for (let i = 0; i < y.length; i++) {
+        //   if (y[i] < bkgMu) continue;
+        //   ySrc[index] = y[i];
+        //   wSrc[index] = w[i];
+        //   index++
+        // }
+        // ySrc = ySrc.slice(0, index)
+        // wSrc = wSrc.slice(0, index)
+
+
+
+        // index = 0;
+        // let yDev = new Float32Array(y.length)
+        // let wDev = new Float32Array(w.length);
+        // for (let i = 0; i < y.length; i++) {
+        //   if (y[i] < bkgMu + 10 * bkgSigma) continue;
+        //   let value = w[i]
+        //   // if (value < 0) continue;
+        //   yDev[index] = (y[i] - bkgMu) / bkgSigma
+        //   wDev[index] = value;
+        //   index++
+        // }
+        // yDev = yDev.slice(0, index)
+        // wDev = wDev.slice(0, index)
+
+        // let srcFit = this.fitGaussian(yDev, wDev, [(wDev[0] + bkgPeak) / 2, 5, bkgDeviation], [wDev[0], 0, 0], [bkgPeak, yDev[0], 200]);
+
+        // let [srcPeak, srcDevMu, srcDevSigma] = srcFit.parameterValues;
+
+        // let csvRows: string[] = [];
+        // wDev.forEach((value, index) => {
+        //   csvRows.push(`${yDev[index]}, ${value}`)
+        // })
+        // console.log(csvRows.join('\n'))
+
+        // let srcMu = this.getWeightedMedian(w.length, wSrc, ySrc);
+        // let srcMuIndex: number;
+        // for (let i = 0; i < ySrc.length - 1; i++) {
+        //   if (ySrc[i] <= srcMu && ySrc[i + 1] > srcMu) {
+        //     srcMuIndex = i;
+        //     break;
         //   }
         // }
-        // let mode = getBinCenter(hist, modeIndex);
-        let mode = median
+        // let srcMuCount = wSrc[srcMuIndex]
 
-        let devData: [number, number][] = []
-        for (let i = 0; i < histData.length; i++) {
-          devData[i] = [Math.abs(getBinCenter(hist, i) - mode), histData[i]]
-        }
-        devData = devData.sort((a, b) => a[0] - b[0])
 
-        let sD = 0
-        let sD1 = 0;
-        let D: number;
-        for (D = 1; D < devData.length; D++) {
-          sD1 = sD;
-          sD += 0.317 * devData[D - 1][1] + 0.683 * devData[D][1]
-          if (sD >= 0.683 * N) break;
-        }
-        let xD = devData[D][0]
-        let xD1 = devData[D - 1][0]
-        let deviation = xD1 + (xD - xD1) * (0.683 * N - sD1) / (sD - sD1);
+        // let ySrcDevs = new Float32Array(ySrc.length)
+        // let wSrcDevs = new Uint32Array(wSrc.length);
+        // for (let i = 0; i < wSrc.length; i++) {
+        //   ySrcDevs[i] = Math.abs(ySrc[i] - srcMu)
+        //   wSrcDevs[i] = wSrc[i]
+        // }
+        // let srcDeviation = this.getWeighted68th(wSrcDevs, ySrcDevs);
+
 
         return {
           hdu: hdu,
-          median: median,
-          mode: mode,
-          deviation: deviation
+          bkgMu: bkgMu,
+          bkgSigma: bkgSigma,
+          // y: yDev,
+          // w: wDev,
+          // srcMu: srcMu,
+          // srcMuCount: srcMuCount,
+          // srcDeviation: srcDeviation
         }
+
+
+
+
+
+        /* Dan's  2.2 algorithm */
+
+
+        // let bkgDeviation: number, bkgMedian: number;
+        // let yBkg = new Float32Array(y)
+        // let wBkg = new Uint32Array(w);
+
+        // while (true) {
+        //   bkgMedian = this.getWeightedMedian(wBkg.length, wBkg, yBkg);
+        //   index = 0;
+        //   let yBkgDevs = new Float32Array(wBkg.length)
+        //   let wBkgDevs = new Uint32Array(wBkg.length);
+        //   let N = 0;
+        //   for (let i = 0; i < wBkg.length; i++) {
+        //     N += wBkg[i]
+        //     if (yBkg[i] < bkgMedian) continue;
+        //     wBkgDevs[index] = wBkg[i]
+        //     yBkgDevs[index] = Math.abs(yBkg[i] - bkgMedian)
+        //     index++
+        //   }
+        //   yBkgDevs = yBkgDevs.slice(0, index)
+        //   wBkgDevs = wBkgDevs.slice(0, index)
+        //   bkgDeviation = this.getWeighted68th(wBkgDevs, yBkgDevs);
+
+        //   index = 0;
+        //   let yNext = new Float32Array(yBkg.length)
+        //   let wNext = new Uint32Array(wBkg.length)
+        //   for (let i = 0; i < wBkg.length; i++) {
+        //     let P = 1 - erf((Math.abs(yBkg[i] - bkgMedian) / bkgDeviation) / Math.sqrt(2))
+        //     let NP = N * P;
+        //     if (NP < 0.5) continue
+        //     yNext[index] = yBkg[i]
+        //     wNext[index] = wBkg[i]
+        //     index++
+        //   }
+        //   yNext = yNext.slice(0, index)
+        //   wNext = wNext.slice(0, index)
+
+        //   if (yNext.length == yBkg.length) break;
+
+        //   yBkg = yNext;
+        //   wBkg = wNext;
+
+        // }
+
+        // let aNumerator = 0, aDenominator = 0, A = 1;
+        // let gaussian = (x: number) => Math.exp(-0.5 * Math.pow((x - bkgMedian) / bkgDeviation, 2))
+        // for (let i = 0; i < w.length; i++) {
+        //   if (y[i] < bkgMedian) continue;
+        //   let g = gaussian(y[i])
+        //   aNumerator += w[i] * g;
+        //   aDenominator += Math.pow(g, 2);
+        // }
+        // A = aNumerator / aDenominator;
+
+        // let wSrc = new Float32Array(w.length)
+        // for (let i = 0; i < w.length; i++) {
+        //   let g = gaussian(y[i]);
+        //   let ag = A * g;
+        //   wSrc[i] = w[i] - ag;
+        // }
+        // let srcMedian = this.getWeightedMedian(y.length, wSrc, y);
+        // let ySrcDevs = new Float32Array(wSrc.length)
+        // let wSrcDevs = new Uint32Array(wSrc.length);
+        // index = 0;
+        // for (let i = 0; i < wSrc.length; i++) {
+        //   if (y[i] < srcMedian) continue;
+        //   wSrcDevs[index] = wSrc[i]
+        //   ySrcDevs[index] = Math.abs(y[i] - srcMedian)
+        //   index++
+        // }
+        // ySrcDevs = ySrcDevs.slice(0, index);
+        // wSrcDevs = wSrcDevs.slice(0, index);
+        // let srcDeviation = this.getWeighted68th(wSrcDevs, ySrcDevs);
+
+
+        // let csvRows: string[] = [];
+        // w.forEach((value, index) => {
+        //   csvRows.push(`${y[index]}, ${value}`)
+        // })
+        // console.log(csvRows.join('\n'))
+
+
+        // return {
+        //   hdu: hdu,
+        //   bkgMedian: bkgMedian,
+        //   bkgDeviation: bkgDeviation,
+        //   srcMedian: srcMedian,
+        //   srcDeviation: srcDeviation
+        // }
       }
 
       let fits: {
         hdu: ImageHdu
-        median: number,
-        mode: number,
-        deviation: number
+        bkgMu: number,
+        bkgSigma: number
+        // y: Float32Array,
+        // w: Float32Array,
+        // srcMu: number,
+        // srcMuCount: number,
+        // srcDeviation: number
       }[] = []
 
+      // fit backgrounds
       hdus.forEach(hdu => {
         if (!isImageHdu(hdu)) return;
         fits.push(getFit(hdu))
       })
 
-      fits = fits.sort((a, b) => b.mode - a.mode)
+      fits = fits.sort((a, b) => a.bkgSigma - b.bkgSigma)
+
+      // fits.forEach(fit => {
+      //   console.log(fit.hdu.name, fit.bkgMedian, fit.bkgDeviation, fit.srcMedian, fit.srcMedianCount)
+      // })
 
       fits.forEach(fit => {
-        console.log(fit.hdu.name, fit.median, fit.mode, fit.deviation)
+        console.log(fit.hdu.name, fit.bkgMu, fit.bkgSigma)
       })
+
 
       let actions: any[] = [];
       let ref = fits[0]
 
-      let refBackground = ref.hdu.normalizer.backgroundLevel;
-      let refPeakLevel = ref.hdu.normalizer.peakLevel;
-
-      if (refBackground === undefined || refPeakLevel === undefined) {
-        let refLevels = calcLevels(ref.hdu.hist, ref.hdu.normalizer.backgroundPercentile, ref.hdu.normalizer.peakPercentile)
-        refBackground = refLevels.backgroundLevel;
-        refPeakLevel = refLevels.peakLevel;
-        actions.push(new UpdateNormalizer(ref.hdu.id, { mode: 'pixel', channelOffset: 0, channelScale: 1, backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }))
+      let backgroundLevel: number;
+      let peakLevel: number;
+      if (ref.hdu.normalizer.mode == 'pixel' && ref.hdu.normalizer.backgroundLevel !== undefined && ref.hdu.normalizer.peakLevel !== undefined) {
+        backgroundLevel = ref.hdu.normalizer.backgroundLevel;
+        peakLevel = ref.hdu.normalizer.peakLevel;
+      }
+      else {
+        let levels = calcLevels(ref.hdu.hist, ref.hdu.normalizer.backgroundPercentile, ref.hdu.normalizer.peakPercentile)
+        backgroundLevel = levels.backgroundLevel;
+        peakLevel = levels.peakLevel;
       }
 
+      actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
 
-      this.store.dispatch(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
       for (let i = 1; i < fits.length; i++) {
         let fit = fits[i];
-        let m = ref.deviation / fit.deviation;
-        let b = -fit.mode * m + ref.mode;
+        let m = ref.bkgSigma / fit.bkgSigma;
+        let b = -fit.bkgMu * (event.scaleEnabled ? m : 1) + ref.bkgMu;
 
-        let backgroundLevel = (refBackground - (event.offsetEnabled ? b : 0)) / (event.scaleEnabled ? m : 1);
-        let peakLevel = (refPeakLevel - (event.offsetEnabled ? b : 0)) / (event.scaleEnabled ? m : 1)
+        // let m = m0;
+        // let b = b0;
+
+        let mCorr = getCountsPerBin(ref.hdu.hist) / getCountsPerBin(fit.hdu.hist)
+
+        // let m = (ref.bkgSigma / fit.bkgSigma) * (ref.srcMuCount / (fit.srcMuCount / (ref.bkgSigma / fit.bkgSigma)))
+        // let b = -fit.bkgMu * m + ref.bkgMu;
+
+
+        // let linearFn = ([m, b]: [number, number]) => {
+        //   return (t) => {
+        //     let v = t * m + b;
+        //     if (ref.y[0] > v) return fit.w[0];
+
+        //     for (let i = 0; i < ref.y.length - 1; i++) {
+        //       if (ref.y[i] <= v && ref.y[i + 1] > v) {
+        //         return ref.w[i] * m
+        //       }
+        //     }
+
+        //     return fit.w[fit.w.length - 1]
+        //   }
+        // }
+
+        // let fitLinear = (xs: number[] | TypedArray, ys: number[] | TypedArray) => {
+
+        //   let initialValues = [m0, b0];
+        //   const options = {
+        //     damping: 1.5,
+        //     initialValues: initialValues,
+        //     // minValues: [undefined, bkgMedian * 0.9, bkgDeviation * 0.9],
+        //     // maxValues: [undefined, bkgMedian * 1.1, bkgDeviation * 1.1],
+        //     gradientDifference: 10e-2,
+        //     maxIterations: 100,
+        //     errorTolerance: 10e-3,
+        //   };
+
+        //   return LM({ x: xs, y: ys }, linearFn, options)
+        // }
+
+        // let result = fitLinear(fit.y, fit.w);
+
+        // let [m, b] = result.parameterValues
+
+
+
+
         actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
       }
 
@@ -602,6 +750,25 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
       });
 
+  }
+
+
+
+  fitGaussian(xs: number[] | TypedArray, ys: number[] | TypedArray, initialValues: [number, number, number], minValues: [number, number, number] = null, maxValues: [number, number, number] = null) {
+    let gaussianFn = ([p1, c1, d1]: [number, number, number]) => {
+      return (t) => p1 * Math.exp(-0.5 * Math.pow((t - c1) / d1, 2))
+    }
+    const options = {
+      damping: 1.5,
+      initialValues: initialValues,
+      minValues: minValues,
+      maxValues: maxValues,
+      gradientDifference: 10e-2,
+      maxIterations: 100,
+      errorTolerance: 10e-3,
+    };
+
+    return LM({ x: xs, y: ys }, gaussianFn, options)
   }
 
   onBackgroundPercentileChange(value: number) {
@@ -699,15 +866,382 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     console.log($event);
   }
 
-  fitChannels() {
-    this.updateChannelFittingEvent$.next({ scaleEnabled: true, offsetEnabled: true });
+  neutralizeBackground() {
+    this.neutralizeBackgroundEvent$.next({ scaleEnabled: false, offsetEnabled: true });
   }
 
-  fitChannelScales() {
-    this.updateChannelFittingEvent$.next({ scaleEnabled: true, offsetEnabled: false });
-  }
 
   resetChannelFitting() {
     this.resetChannelFittingEvent$.next(true)
   }
+
+
+
+
+  isEqual(x: number, y: number, maxRelativeError = .00000001, maxAbsoluteError = 2.2250738585072013830902327173324040642192159804623318306e-308)// .000001; .0000001;.00000001
+  {
+    if (Math.abs(x - y) < maxAbsoluteError) {
+      return true;
+    }
+    let relativeError = (Math.abs(y) > Math.abs(x) ? Math.abs((x - y) / y) : Math.abs((x - y) / x));
+    if (relativeError <= maxRelativeError) {
+      return true;
+    }
+    return false;
+  }
+
+
+  getWeightedMean(trueCount: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+    let top = 0, bottom = 0;
+    for (let i = 0; i < trueCount; i++) {
+      top += w[i] * y[i];
+      bottom += w[i];
+    }
+
+    return top / bottom;
+  }
+
+  getWeightedMedian(trueCount: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+    let sumCounter = 0;
+    let median = 0, totalSum = 0, runningSum = 0;
+    for (let i = 0; i < trueCount; i++) {
+      totalSum += w[i];
+    }
+    if (trueCount > 1) {
+      runningSum = w[sumCounter] * .5;
+      while (runningSum < .5 * totalSum) {
+        sumCounter++;
+        runningSum += w[sumCounter - 1] * .5 + w[sumCounter] * .5;
+      }
+      if (sumCounter == 0) {
+        median = y[0];
+      }
+      else {
+        median = y[sumCounter - 1] + (.5 * totalSum - (runningSum - (w[sumCounter - 1] * .5 + w[sumCounter] * .5))) / (w[sumCounter - 1] * .5 + w[sumCounter] * .5) * (y[sumCounter] - y[sumCounter - 1]);
+      }
+    }
+    else {
+      median = y[0];
+    }
+    return median;
+  }
+
+  getWeightedMode(trueCount: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+    let k, lowerLimit = 0, upperLimit = trueCount - 1, lowerLimitIn = -1, upperLimitIn = -1, finalLower = -1, finalUpper = -1, size: number;
+    let halfWeightSum = 0, sSum, total, minDist = 999999;
+    let sVec: number[];
+
+    while (lowerLimit != lowerLimitIn || upperLimit != upperLimitIn) {
+      //std::cout<< lowerLimit << "\t" << upperLimit << "\n";
+      lowerLimitIn = lowerLimit;
+      upperLimitIn = upperLimit;
+      size = upperLimit - lowerLimit + 1;
+      minDist = 999999;
+      halfWeightSum = 0;
+      for (let i = lowerLimit; i < upperLimit + 1; i++) {
+        halfWeightSum += w[i];
+      }
+      halfWeightSum *= .5;
+
+      sVec = Array(size).fill(0)
+      sSum = .5 * w[lowerLimit];
+      sVec[0] = sSum;
+      for (let i = lowerLimit + 1; i < lowerLimit + size; i++) {
+        sSum += w[i - 1] * .5 + w[i] * .5;
+        sVec[i - lowerLimit] = sSum;
+      }
+
+      for (let i = 0; i < sVec.length; i++) {
+        if ((sVec[i] < halfWeightSum) || this.isEqual(sVec[i], halfWeightSum)) {
+          total = sVec[i] + halfWeightSum;
+          k = i; // was 0
+          while (k < sVec.length && ((sVec[k] < total) || this.isEqual(sVec[k], total))) {
+            k++;
+          }
+          k--;
+          total = Math.abs(y[k + lowerLimit] - y[i + lowerLimit]);
+
+
+          if (this.isEqual(total, minDist)) {
+            finalLower = Math.floor(Math.min(finalLower, i + lowerLimit));
+            finalUpper = Math.floor(Math.max(finalUpper, k + lowerLimit));
+          }
+          else if (total < minDist) {
+            minDist = total;
+            finalLower = Math.floor(i + lowerLimit);
+            finalUpper = k + lowerLimit;
+          }
+        }
+        if ((sVec[i] > halfWeightSum) || this.isEqual(sVec[i], halfWeightSum)) {
+          total = sVec[i] - halfWeightSum;
+          k = i; // was svec.size() - 1
+          while (k > -1 && ((sVec[k] > total) || this.isEqual(sVec[k], total))) {
+            k--;
+          }
+          k++;
+          total = Math.abs(y[i + lowerLimit] - y[k + lowerLimit]);
+
+
+          if (this.isEqual(total, minDist)) {
+            finalLower = Math.floor(Math.min(finalLower, k + lowerLimit));
+            finalUpper = Math.floor(Math.max(finalUpper, i + lowerLimit));
+          }
+          else if (total < minDist) {
+            minDist = total;
+            finalLower = k + lowerLimit;
+            finalUpper = i + lowerLimit;
+          }
+        }
+      }
+
+      lowerLimit = finalLower;
+      upperLimit = finalUpper;
+
+      sVec = [];
+    }
+
+    let newValues = y.slice(lowerLimit, upperLimit + 1);
+    let newWeights = w.slice(lowerLimit, upperLimit + 1);
+    return this.getWeightedMedian(newWeights.length, newWeights, newValues);
+  }
+
+  getWeightedStDev(delta: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+    let size = w.length;
+    let top = 0, wSum = 0, wSumSq = 0, weight;
+    for (let i = 0; i < size; i++) {
+      weight = w[i];
+      top += weight * y[i] * y[i];
+      wSum += weight;
+      wSumSq += weight * weight;
+    }
+    return Math.sqrt(top / (wSum - delta * wSumSq / wSum));
+  }
+
+  swap(a: number, b: number, y: number[] | TypedArray) {
+    let tmp: number;
+    tmp = y[a];
+    y[a] = y[b];
+    y[b] = tmp;
+  }
+
+  QS(left: number, right: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+    let i = left, j = right;
+    let pivot = y[Math.floor((left + right) / 2)];
+
+    while (i <= j) {
+      while (y[i] < pivot) {
+        i++;
+      }
+      while (y[j] > pivot) {
+        j--;
+      }
+      if (i <= j) {
+        this.swap(i, j, y);
+        this.swap(i, j, w);
+        i++;
+        j--;
+      }
+    }
+
+    if (left < j) {
+      this.QS(left, j, w, y);
+    }
+    if (i < right) {
+      this.QS(i, right, w, y);
+    }
+  }
+
+  sort(w: number[] | TypedArray, y: number[] | TypedArray) {
+    this.QS(0, y.length - 1, w, y);
+  }
+
+  getWeighted68th(w: number[] | TypedArray, y: number[] | TypedArray) {
+    let sumCounter = 0;
+    let stDev = 0, totalSum = 0, runningSum: number; //, temp = 0, weightTemp = 0;
+    this.sort(w, y);
+    for (let i = 0; i < y.length; i++) {
+      totalSum += w[i];
+    }
+    if (y.length > 1) {
+      runningSum = w[sumCounter] * .682689;
+      while (runningSum < .682689 * totalSum) {
+        sumCounter++;
+        runningSum += w[sumCounter - 1] * .317311 + w[sumCounter] * .682689;
+      }
+      if (sumCounter == 0) {
+        stDev = y[0];
+      }
+      else {
+        stDev = y[sumCounter - 1] + (.682689 * totalSum - (runningSum - (w[sumCounter - 1] * .317311 + w[sumCounter] * .682689))) / (w[sumCounter - 1] * .317311 + w[sumCounter] * .682689) * (y[sumCounter] - y[sumCounter - 1]);
+      }
+    }
+    else {
+      stDev = y[0];
+    }
+
+    return stDev;
+  }
+
+
+  binarySearch(searchUp: boolean, minimumIndex: number, toFind: number, toSearch: number[]) {
+    let low: number, high: number, midPoint = 0, lowIn = -1, highIn = -1;
+    if (searchUp) {
+      low = minimumIndex;
+      high = toSearch.length;
+    }
+    else {
+      low = 0;
+      high = minimumIndex;
+    }
+    while (low != lowIn || high != highIn) {
+      lowIn = low;
+      highIn = high;
+      midPoint = Math.floor((low + (high - low) / 2.0));
+
+      if (this.isEqual(toFind, toSearch[midPoint])) {
+        low = midPoint;
+        high = midPoint;
+
+      }
+      else if (toFind > toSearch[midPoint]) {
+        low = midPoint;
+      }
+      else if (toFind < toSearch[midPoint]) {
+        high = midPoint;
+      }
+
+    }
+    if (searchUp) {
+      return low;
+    }
+    else {
+      return high;
+    }
+  }
+
+  getMedian(y: number[]) {
+    let high = (Math.floor(y.length / 2));
+    let low = high - 1;
+    let runningSum = 0, median = 0;
+    let totalSum = y.length;
+    if (y.length > 1) {
+      if (y.length % 2 == 0) {
+        runningSum = y.length / 2.0 + .5;
+      }
+      else {
+        runningSum = y.length / 2.0;
+      }
+      median = y[low] + (.5 * totalSum - runningSum + 1.0) * (y[high] - y[low]);
+    }
+
+    else {
+      median = y[0];
+    }
+    return median;
+
+  }
+
+  getMode(trueCount: number, y: number[]) {
+    let k: number, lowerLimit = 0, upperLimit = trueCount - 1, lowerLimitIn = -1, upperLimitIn = -1, finalLower = -1, finalUpper = -1, size: number;
+    let halfWeightSum = 0, sSum: number, total: number, minDist = 999999;
+    let sVec: number[] = [];
+    while (lowerLimit != lowerLimitIn || upperLimit != upperLimitIn) {
+      lowerLimitIn = lowerLimit;
+      upperLimitIn = upperLimit;
+      size = upperLimit - lowerLimit + 1;
+      minDist = 999999;
+      halfWeightSum = 0;
+      halfWeightSum = size;
+
+      halfWeightSum *= 0.5;
+      sVec = new Array(size).fill(0);
+      sSum = .5;
+      sVec[0] = sSum;
+      for (let i = lowerLimit + 1; i < lowerLimit + size; i++) {
+        sSum += 1;
+        sVec[i - lowerLimit] = sSum;
+      }
+      for (let i = 0; i < sVec.length; i++) {
+        if ((sVec[i] < halfWeightSum) || this.isEqual(sVec[i], halfWeightSum)) {
+          total = sVec[i] + halfWeightSum;
+          /*k = 0;
+          while (k < sVec.size() && sVec[k] <= total)
+          {
+          k++;
+          }
+          k--;*/
+          k = this.binarySearch(true, i, total, sVec);
+          total = Math.abs(y[k + lowerLimit] - y[i + lowerLimit]);
+
+
+          if (this.isEqual(total, minDist)) {
+            finalLower = Math.floor(Math.min(finalLower, i + lowerLimit));
+            finalUpper = Math.floor(Math.max(finalUpper, k + lowerLimit));
+          }
+          else if (total < minDist) {
+            minDist = total;
+            finalLower = Math.floor(i + lowerLimit);
+            finalUpper = k + lowerLimit;
+          }
+        }
+        if ((sVec[i] > halfWeightSum) || this.isEqual(sVec[i], halfWeightSum)) {
+          total = sVec[i] - halfWeightSum;
+          /*k = sVec.size() - 1;
+          while (k > -1 && sVec[k] >= total)
+          {
+          k--;
+          }
+          k++;*/
+          k = this.binarySearch(false, i, total, sVec);
+
+          total = Math.abs(y[i + lowerLimit] - y[k + lowerLimit]);
+
+          if (this.isEqual(total, minDist)) {
+            finalLower = Math.floor(Math.min(finalLower, k + lowerLimit));
+            finalUpper = Math.floor(Math.max(finalUpper, i + lowerLimit));
+          }
+          else if (total < minDist) {
+            minDist = total;
+            finalLower = k + lowerLimit;
+            finalUpper = Math.floor(i + lowerLimit);
+          }
+
+        }
+      }
+      lowerLimit = finalLower;
+      upperLimit = finalUpper;
+      sVec = []
+    }
+    let newValues = y.slice(lowerLimit, upperLimit + 1);
+    return this.getMedian(newValues);
+  }
+
+  get68th(y: number[]) {
+    let sumCounter = 0;
+    let stDev = 0, totalSum = 0, runningSum: number; //, temp = 0, weightTemp = 0;
+    y = y.sort();
+    for (let i = 0; i < y.length; i++) {
+      totalSum += 1.0;
+    }
+    if (y.length > 1) {
+      runningSum = 1.0 * .682689;
+      while (runningSum < .682689 * totalSum) {
+        sumCounter++;
+        runningSum += 1.0 * .317311 + 1.0 * .682689;
+      }
+      if (sumCounter == 0) {
+        stDev = y[0];
+      }
+      else {
+        stDev = y[sumCounter - 1] + (.682689 * totalSum - (runningSum - (1.0 * .317311 + 1.0 * .682689))) / (1.0 * .317311 + 1.0 * .682689) * (y[sumCounter] - y[sumCounter - 1]);
+      }
+    }
+    else {
+      stDev = y[0];
+    }
+
+    return stDev;
+
+  }
+
 }

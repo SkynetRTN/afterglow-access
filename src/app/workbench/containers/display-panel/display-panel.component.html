@@ -56,8 +56,9 @@
         <div>
           <h3 i18n>Histogram</h3>
           <div class="pb-1">
-            <button mat-raised-button class="m-1" (click)="fitChannels()" i18n-aria-label aria-label="Fit Channels">
-              <mat-icon>balance</mat-icon><span i18n>Fit Channels</span>
+            <button mat-raised-button class="m-1" (click)="neutralizeBackground()" i18n-aria-label
+              aria-label="Neutralize Background">
+              <mat-icon>balance</mat-icon><span i18n>Neutralize Background</span>
             </button>
             <!-- <button mat-raised-button class="m-1" (click)="fitChannelScales()" i18n-aria-label
               aria-label="Fit Channel Scales">
@@ -73,7 +74,7 @@
         <div class="pr-3 pl-3 pb-0">
           <app-image-hist-chart [width]="600" [height]="400" [data]="compositeHistData$ | async"
             [backgroundLevel]="(compositeNormalizer$ | async)?.backgroundLevel"
-            [peakLevel]="(compositeNormalizer$ | async)?.peakLevel" [showFittedData]="true">
+            [peakLevel]="(compositeNormalizer$ | async)?.peakLevel">
           </app-image-hist-chart>
           <div style="clear: both"></div>
         </div>

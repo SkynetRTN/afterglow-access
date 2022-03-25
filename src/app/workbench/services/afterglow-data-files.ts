@@ -59,10 +59,16 @@ export class AfterglowDataFileService {
     return this.http.put(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`, body);
   }
 
-  getHist(fileId: string): Observable<{ data: Uint32Array; minBin: number; maxBin: number }> {
+  getHist(fileId: string): Observable<{ data: Float32Array; minBin: number; maxBin: number }> {
     return this.http.get<any>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/hist`).pipe(
       map((res) => {
-        return res.data;
+        let h = new Float32Array(res.data.data.length)
+        res.data.data.forEach((v, i) => h[i] = v)
+        return {
+          data: h,
+          minBin: res.data.minBin,
+          maxBin: res.data.maxBin
+        }
       })
     );
   }
