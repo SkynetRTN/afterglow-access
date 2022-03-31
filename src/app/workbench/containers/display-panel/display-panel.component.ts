@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { Subject, BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
+import { Subject, BehaviorSubject, Observable, combineLatest, of, empty } from 'rxjs';
 import {
   auditTime,
   map,
@@ -25,6 +25,7 @@ import {
   ITransformableImageData,
   TableHdu,
   isImageHdu,
+  getFilter,
 } from '../../../data-files/models/data-file';
 import {
   UpdateNormalizer,
@@ -54,6 +55,13 @@ import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
 
 import { levenbergMarquardt as LM } from 'ml-levenberg-marquardt';
 import { erf } from 'src/app/utils/math';
+import * as Spline from 'cubic-spline'
+import { linear, polynomial } from 'everpolate';
+import { M } from '@angular/cdk/keycodes';
+import { GeneticAlgorithm } from '@kometbomb/genetic-algorithm'
+import { GuassianFitter } from 'src/app/utils/guassian-fitter';
+
+import { saveAs } from 'file-saver/dist/FileSaver';
 
 type TypedArray =
   | Int8Array
@@ -110,7 +118,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   color = '#FFFFFF';
   whiteBalanceMode = false;
   resetWhiteBalance$ = new Subject<any>();
-  neutralizeBackgroundEvent$ = new Subject<{ scaleEnabled: boolean, offsetEnabled: boolean }>();
+  fitHistogramsEvent$ = new Subject<{ scaleEnabled: boolean, offsetEnabled: boolean }>();
   resetChannelFittingEvent$ = new Subject<any>();
 
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
@@ -340,7 +348,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       })
     })
 
-    this.neutralizeBackgroundEvent$.pipe(
+    this.fitHistogramsEvent$.pipe(
       takeUntil(this.destroy$),
       withLatestFrom(this.file$, this.hdus$)
     ).subscribe(([event, file, hdus]) => {
@@ -349,319 +357,328 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
       let getFit = (hdu: ImageHdu) => {
+        // console.log(hdu.name);
         let hist = hdu.hist;
-        let yIndexes = new Uint32Array(hist.data.length)
+        let xIndexes = new Uint32Array(hist.data.length)
         for (let i = 0; i < hist.data.length; i++) {
-          yIndexes[i] = i
+          xIndexes[i] = i
         }
 
         // remove empty bins
-        let y = new Float32Array(hist.data.length)
-        let w = new Uint32Array(hist.data.length);
+        let emptyBins = 0;
+        let x = new Float32Array(hist.data.length)
+        let y = new Float32Array(hist.data.length);
         let index = 0;
         for (let i = 0; i < hist.data.length; i++) {
-          if (hist.data[i] == 0) continue;
-          w[index] = hist.data[i];
-          y[index] = getBinCenter(hist, i);
+          if (hist.data[i] == 0) {
+            emptyBins += 1;
+            continue
+          }
+          y[index] = hist.data[i];
+          x[index] = getBinCenter(hist, i);
           index++;
         }
 
-        y = y.slice(0, index)
-        w = w.slice(0, index);
-
-        let bkgMedian = this.getWeightedMedian(w.length, w, y);
-
-        index = 0;
-        let yBkg = new Float32Array(y.length)
-        let wBkg = new Uint32Array(w.length);
-        for (let i = 0; i < w.length; i++) {
-          if (y[i] > bkgMedian) break;
-          yBkg[index] = y[i];
-          wBkg[index] = w[i];
-          index++
-        }
-        yBkg = yBkg.slice(0, index)
-        wBkg = wBkg.slice(0, index)
-
-        let yBkgDevs = new Float32Array(yBkg.length)
-        let wBkgDevs = new Uint32Array(wBkg.length);
-        for (let i = 0; i < wBkg.length; i++) {
-          yBkgDevs[i] = Math.abs(yBkg[i] - bkgMedian)
-          wBkgDevs[i] = wBkg[i]
-        }
-        let bkgDeviation = this.getWeighted68th(wBkgDevs, yBkgDevs);
-
-        let bkgPeak0 = Math.max(...wBkg);
-        let fit = this.fitGaussian(yBkg, wBkg, [bkgPeak0, bkgMedian, bkgDeviation]);
-
-        let [bkgPeak, bkgMu, bkgSigma] = fit.parameterValues;
-
-        // index = 0;
-        // let ySrc = new Float32Array(y.length)
-        // let wSrc = new Float32Array(w.length);
-        // for (let i = 0; i < y.length; i++) {
-        //   if (y[i] < bkgMu) continue;
-        //   ySrc[index] = y[i];
-        //   wSrc[index] = w[i];
-        //   index++
-        // }
-        // ySrc = ySrc.slice(0, index)
-        // wSrc = wSrc.slice(0, index)
-
-
-
-        // index = 0;
-        // let yDev = new Float32Array(y.length)
-        // let wDev = new Float32Array(w.length);
-        // for (let i = 0; i < y.length; i++) {
-        //   if (y[i] < bkgMu + 10 * bkgSigma) continue;
-        //   let value = w[i]
-        //   // if (value < 0) continue;
-        //   yDev[index] = (y[i] - bkgMu) / bkgSigma
-        //   wDev[index] = value;
-        //   index++
-        // }
-        // yDev = yDev.slice(0, index)
-        // wDev = wDev.slice(0, index)
-
-        // let srcFit = this.fitGaussian(yDev, wDev, [(wDev[0] + bkgPeak) / 2, 5, bkgDeviation], [wDev[0], 0, 0], [bkgPeak, yDev[0], 200]);
-
-        // let [srcPeak, srcDevMu, srcDevSigma] = srcFit.parameterValues;
+        x = x.slice(0, index)
+        y = y.slice(0, index);
 
         // let csvRows: string[] = [];
-        // wDev.forEach((value, index) => {
-        //   csvRows.push(`${yDev[index]}, ${value}`)
+        // x.forEach((x, index) => {
+        //   csvRows.push(`${x}, ${y[index]}`)
         // })
-        // console.log(csvRows.join('\n'))
+        // let csv = csvRows.join('\n')
+        // var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+        // saveAs(blob, `${hdu.name}-hist.csv`);
 
-        // let srcMu = this.getWeightedMedian(w.length, wSrc, ySrc);
-        // let srcMuIndex: number;
-        // for (let i = 0; i < ySrc.length - 1; i++) {
-        //   if (ySrc[i] <= srcMu && ySrc[i + 1] > srcMu) {
-        //     srcMuIndex = i;
-        //     break;
-        //   }
-        // }
-        // let srcMuCount = wSrc[srcMuIndex]
+        return this.fitBackground(hdu, x, y).then(
+          (fit) => {
+            let { peak: bkgPeak, mu: bkgMu, sigma: bkgSigma } = fit;
 
 
-        // let ySrcDevs = new Float32Array(ySrc.length)
-        // let wSrcDevs = new Uint32Array(wSrc.length);
-        // for (let i = 0; i < wSrc.length; i++) {
-        //   ySrcDevs[i] = Math.abs(ySrc[i] - srcMu)
-        //   wSrcDevs[i] = wSrc[i]
-        // }
-        // let srcDeviation = this.getWeighted68th(wSrcDevs, ySrcDevs);
+            //subtract background gaussian
+            let gaussian = this.gaussianFn([bkgPeak, bkgMu, bkgSigma])
+            let xSrc = new Float32Array(x.length)
+            let ySrc = new Float32Array(y.length);
+            let startIndex = 0;
+            index = 0;
+            for (let i = 0; i < x.length; i++) {
+              if (x[i] <= bkgMu || x[i] <= 0) continue;
+              let yi = y[i] - gaussian(x[i]);
+              if (yi <= 1) continue;
+
+              xSrc[index] = x[i] - bkgMu
+              ySrc[index] = yi
+
+              if (ySrc[index] > ySrc[startIndex]) {
+                startIndex = index;
+              }
+
+              index++;
+            }
+            xSrc = xSrc.slice(startIndex, index)
+            ySrc = ySrc.slice(startIndex, index);
 
 
-        return {
-          hdu: hdu,
-          bkgMu: bkgMu,
-          bkgSigma: bkgSigma,
-          // y: yDev,
-          // w: wDev,
-          // srcMu: srcMu,
-          // srcMuCount: srcMuCount,
-          // srcDeviation: srcDeviation
-        }
+            // let csvRows: string[] = [];
+            // xSrc.forEach((x, index) => {
+            //   csvRows.push(`${x}, ${ySrc[index]}`)
+            // })
+            // let csv = csvRows.join('\n')
+            // // console.log(csvRows.join('\n'))
+            // var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+            // saveAs(blob, `${hdu.name}-src.csv`);
 
 
 
 
+            // let { peak: srcPeak, mu: srcMu, sigma: srcSigma } = this.fitGaussian(xSrc, ySrc, 'upper');
+            // console.log(`Best Src Fit: ${srcPeak}*EXP(-0.5*POWER((x-${srcMu})/${srcSigma},2))`)
 
-        /* Dan's  2.2 algorithm */
+            return {
+              hdu: hdu,
+              bkgMu: bkgMu,
+              bkgSigma: bkgSigma,
+              bkgPeak: bkgPeak,
+              xSrc: xSrc,
+              ySrc: ySrc,
+              emptyBins: emptyBins
+            }
+          }
+        );
 
-
-        // let bkgDeviation: number, bkgMedian: number;
-        // let yBkg = new Float32Array(y)
-        // let wBkg = new Uint32Array(w);
-
-        // while (true) {
-        //   bkgMedian = this.getWeightedMedian(wBkg.length, wBkg, yBkg);
-        //   index = 0;
-        //   let yBkgDevs = new Float32Array(wBkg.length)
-        //   let wBkgDevs = new Uint32Array(wBkg.length);
-        //   let N = 0;
-        //   for (let i = 0; i < wBkg.length; i++) {
-        //     N += wBkg[i]
-        //     if (yBkg[i] < bkgMedian) continue;
-        //     wBkgDevs[index] = wBkg[i]
-        //     yBkgDevs[index] = Math.abs(yBkg[i] - bkgMedian)
-        //     index++
-        //   }
-        //   yBkgDevs = yBkgDevs.slice(0, index)
-        //   wBkgDevs = wBkgDevs.slice(0, index)
-        //   bkgDeviation = this.getWeighted68th(wBkgDevs, yBkgDevs);
-
-        //   index = 0;
-        //   let yNext = new Float32Array(yBkg.length)
-        //   let wNext = new Uint32Array(wBkg.length)
-        //   for (let i = 0; i < wBkg.length; i++) {
-        //     let P = 1 - erf((Math.abs(yBkg[i] - bkgMedian) / bkgDeviation) / Math.sqrt(2))
-        //     let NP = N * P;
-        //     if (NP < 0.5) continue
-        //     yNext[index] = yBkg[i]
-        //     wNext[index] = wBkg[i]
-        //     index++
-        //   }
-        //   yNext = yNext.slice(0, index)
-        //   wNext = wNext.slice(0, index)
-
-        //   if (yNext.length == yBkg.length) break;
-
-        //   yBkg = yNext;
-        //   wBkg = wNext;
-
-        // }
-
-        // let aNumerator = 0, aDenominator = 0, A = 1;
-        // let gaussian = (x: number) => Math.exp(-0.5 * Math.pow((x - bkgMedian) / bkgDeviation, 2))
-        // for (let i = 0; i < w.length; i++) {
-        //   if (y[i] < bkgMedian) continue;
-        //   let g = gaussian(y[i])
-        //   aNumerator += w[i] * g;
-        //   aDenominator += Math.pow(g, 2);
-        // }
-        // A = aNumerator / aDenominator;
-
-        // let wSrc = new Float32Array(w.length)
-        // for (let i = 0; i < w.length; i++) {
-        //   let g = gaussian(y[i]);
-        //   let ag = A * g;
-        //   wSrc[i] = w[i] - ag;
-        // }
-        // let srcMedian = this.getWeightedMedian(y.length, wSrc, y);
-        // let ySrcDevs = new Float32Array(wSrc.length)
-        // let wSrcDevs = new Uint32Array(wSrc.length);
-        // index = 0;
-        // for (let i = 0; i < wSrc.length; i++) {
-        //   if (y[i] < srcMedian) continue;
-        //   wSrcDevs[index] = wSrc[i]
-        //   ySrcDevs[index] = Math.abs(y[i] - srcMedian)
-        //   index++
-        // }
-        // ySrcDevs = ySrcDevs.slice(0, index);
-        // wSrcDevs = wSrcDevs.slice(0, index);
-        // let srcDeviation = this.getWeighted68th(wSrcDevs, ySrcDevs);
-
-
-        // let csvRows: string[] = [];
-        // w.forEach((value, index) => {
-        //   csvRows.push(`${y[index]}, ${value}`)
-        // })
-        // console.log(csvRows.join('\n'))
-
-
-        // return {
-        //   hdu: hdu,
-        //   bkgMedian: bkgMedian,
-        //   bkgDeviation: bkgDeviation,
-        //   srcMedian: srcMedian,
-        //   srcDeviation: srcDeviation
-        // }
       }
 
-      let fits: {
+      let fits$: Promise<{
         hdu: ImageHdu
         bkgMu: number,
-        bkgSigma: number
-        // y: Float32Array,
-        // w: Float32Array,
-        // srcMu: number,
-        // srcMuCount: number,
-        // srcDeviation: number
-      }[] = []
+        bkgSigma: number,
+        bkgPeak: number,
+        xSrc: Float32Array,
+        ySrc: Float32Array,
+        emptyBins: number
+      }>[] = []
 
       // fit backgrounds
       hdus.forEach(hdu => {
         if (!isImageHdu(hdu)) return;
-        fits.push(getFit(hdu))
-      })
-
-      fits = fits.sort((a, b) => a.bkgSigma - b.bkgSigma)
-
-      // fits.forEach(fit => {
-      //   console.log(fit.hdu.name, fit.bkgMedian, fit.bkgDeviation, fit.srcMedian, fit.srcMedianCount)
-      // })
-
-      fits.forEach(fit => {
-        console.log(fit.hdu.name, fit.bkgMu, fit.bkgSigma)
+        fits$.push(getFit(hdu))
       })
 
 
-      let actions: any[] = [];
-      let ref = fits[0]
+      Promise.all(fits$).then((fits) => {
+        // fits = fits.sort((a, b) => a.bkgSigma - b.bkgSigma)
+        // fits = fits.sort((a, b) => a.xSrc[0] - b.xSrc[0])
 
-      let backgroundLevel: number;
-      let peakLevel: number;
-      if (ref.hdu.normalizer.mode == 'pixel' && ref.hdu.normalizer.backgroundLevel !== undefined && ref.hdu.normalizer.peakLevel !== undefined) {
-        backgroundLevel = ref.hdu.normalizer.backgroundLevel;
-        peakLevel = ref.hdu.normalizer.peakLevel;
-      }
-      else {
-        let levels = calcLevels(ref.hdu.hist, ref.hdu.normalizer.backgroundPercentile, ref.hdu.normalizer.peakPercentile)
-        backgroundLevel = levels.backgroundLevel;
-        peakLevel = levels.peakLevel;
-      }
-
-      actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
-
-      for (let i = 1; i < fits.length; i++) {
-        let fit = fits[i];
-        let m = ref.bkgSigma / fit.bkgSigma;
-        let b = -fit.bkgMu * (event.scaleEnabled ? m : 1) + ref.bkgMu;
-
-        // let m = m0;
-        // let b = b0;
-
-        let mCorr = getCountsPerBin(ref.hdu.hist) / getCountsPerBin(fit.hdu.hist)
-
-        // let m = (ref.bkgSigma / fit.bkgSigma) * (ref.srcMuCount / (fit.srcMuCount / (ref.bkgSigma / fit.bkgSigma)))
-        // let b = -fit.bkgMu * m + ref.bkgMu;
+        fits = fits.sort((a, b) => a.hdu.name.localeCompare(b.hdu.name))
+        fits.forEach(fit => console.log(`${fit.hdu.name} - Best Fit: ${fit.bkgPeak}*EXP(-0.5*POWER((x-${fit.bkgMu})/${fit.bkgSigma},2))`));
 
 
-        // let linearFn = ([m, b]: [number, number]) => {
-        //   return (t) => {
-        //     let v = t * m + b;
-        //     if (ref.y[0] > v) return fit.w[0];
-
-        //     for (let i = 0; i < ref.y.length - 1; i++) {
-        //       if (ref.y[i] <= v && ref.y[i + 1] > v) {
-        //         return ref.w[i] * m
-        //       }
-        //     }
-
-        //     return fit.w[fit.w.length - 1]
-        //   }
-        // }
-
-        // let fitLinear = (xs: number[] | TypedArray, ys: number[] | TypedArray) => {
-
-        //   let initialValues = [m0, b0];
-        //   const options = {
-        //     damping: 1.5,
-        //     initialValues: initialValues,
-        //     // minValues: [undefined, bkgMedian * 0.9, bkgDeviation * 0.9],
-        //     // maxValues: [undefined, bkgMedian * 1.1, bkgDeviation * 1.1],
-        //     gradientDifference: 10e-2,
-        //     maxIterations: 100,
-        //     errorTolerance: 10e-3,
-        //   };
-
-        //   return LM({ x: xs, y: ys }, linearFn, options)
-        // }
-
-        // let result = fitLinear(fit.y, fit.w);
-
-        // let [m, b] = result.parameterValues
+        fits = fits.sort((a, b) => getCountsPerBin(b.hdu.hist) - getCountsPerBin(a.hdu.hist))
 
 
 
+        fits.forEach(fit => {
+          console.log(fit.hdu.name, fit.hdu.hist.minBin, fit.hdu.hist.maxBin, fit.hdu.hist.data.length, getCountsPerBin(fit.hdu.hist), fit.emptyBins, fit.emptyBins / fit.hdu.hist.data.length)
+        })
 
-        actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
-      }
+        // fits.forEach(fit => {
+        //   console.log(fit.hdu.name, fit.bkgMedian, fit.bkgDeviation, fit.srcMedian, fit.srcMedianCount)
+        // })
 
-      this.store.dispatch(actions)
+
+        fits.forEach(fit => {
+          console.log(fit.hdu.name, fit.bkgMu, fit.bkgSigma)
+        })
+
+
+        let actions: any[] = [];
+        let ref = fits[0]
+        let refBinSize = getCountsPerBin(ref.hdu.hist)
+
+        let backgroundLevel: number;
+        let peakLevel: number;
+        if (ref.hdu.normalizer.mode == 'pixel' && ref.hdu.normalizer.backgroundLevel !== undefined && ref.hdu.normalizer.peakLevel !== undefined) {
+          backgroundLevel = ref.hdu.normalizer.backgroundLevel;
+          peakLevel = ref.hdu.normalizer.peakLevel;
+        }
+        else {
+          let levels = calcLevels(ref.hdu.hist, ref.hdu.normalizer.backgroundPercentile, ref.hdu.normalizer.peakPercentile)
+          backgroundLevel = levels.backgroundLevel;
+          peakLevel = levels.peakLevel;
+        }
+
+        //rotate origin 45 degrees
+        // let rot = Math.cos(45 * Math.PI / 180)
+        // let refXs = new Float32Array(ref.xSrc.length);
+        // let refYs = new Float32Array(ref.ySrc.length);
+        // ref.xSrc.forEach((x, index) => {
+        //   refXs[index] = x * rot - ref.ySrc[index] * rot;
+        //   refYs[index] = x * rot + ref.ySrc[index] * rot
+        // })
+
+        actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
+
+        for (let i = 1; i < fits.length; i++) {
+          let fit = fits[i];
+
+          //resample fit to match reference
+
+          let refXArray = Array.from(ref.xSrc)
+          let steps = 200;
+          let m0 = 5;
+          let results: { m: number, k2: number, N: number, f: number }[];
+          let stepSize = 0.05
+          while (stepSize > 0.0001) {
+            results = [];
+            for (let step = 0; step < steps; step++) {
+              let m = m0 + stepSize * (step - steps / 2)
+              if (m <= 0) continue;
+              let binSize = getCountsPerBin(fit.hdu.hist)
+              let xs = new Float32Array(fit.xSrc);
+              xs.forEach((x, index) => xs[index] *= m)
+              let ys = new Float32Array(fit.ySrc);
+              ys.forEach((y, index) => ys[index] = ys[index] / (binSize / refBinSize) / m)
+              // ys.forEach((y, index) => ys[index] = ys[index] / m)
+              let ysInterpolated = new Float32Array(linear(refXArray, Array.from(xs), Array.from(ys)))
+
+              let K2 = 0;
+              let N = 0;
+              ref.xSrc.forEach((x, index) => {
+                if (x < xs[0] || x > xs[xs.length - 1]) return;
+
+                K2 += Math.pow(ref.ySrc[index] - ysInterpolated[index], 2);
+                N++
+              })
+
+              if (N == 0) continue;
+
+              // results.push({ m: m, k2: K2 / (N * N) })
+              results.push({ m: m, k2: K2, N: N, f: K2 / N ** 2 })
+
+              // console.log(m, K2)
+            }
+            let bestFitIndex = 0;
+            results.forEach((value, index) => {
+              if (value.f < results[bestFitIndex].f) bestFitIndex = index;
+            })
+
+            m0 = results[bestFitIndex].m
+
+            if (bestFitIndex == results.length - 1) {
+              stepSize *= 2;
+              m0 *= 2;
+            }
+            else {
+              stepSize *= .5
+            }
+
+          }
+
+
+          // let xs = new Float32Array(ys.length);
+          // ys.forEach((y, index) => {
+          //   xs[index] = ref.xSrc[index] * rot - y * rot;
+          //   ys[index] = ref.xSrc[index] * rot + y * rot
+          // })
+
+          // let srcFittingFn = ([m]: [number]) => {
+          //   return (i) => {
+          //     return ys[i] + m
+          //   }
+          // }
+
+          // const options = {
+          //   damping: 1.5,
+          //   initialValues: [-0.7],
+          //   gradientDifference: 10e-3,
+          //   maxIterations: 1000,
+          //   errorTolerance: 10e-5,
+          // };
+
+          // let xSrcIndexes = new Uint16Array(ref.xSrc.length);
+          // for (let i = 0; i < ref.xSrc.length; i++) {
+          //   xSrcIndexes[i] = i;
+          // }
+
+          // let srcFit = LM({ x: xSrcIndexes, y: refYs }, srcFittingFn, options)
+
+          // let m = srcFit.parameterValues[0]
+
+
+          // let yDiff = new Float32Array(refYs.length)
+          // for (let i = 0; i < refYs.length; i++) {
+          //   yDiff[i] = refYs[i] - ys[i]
+          // }
+
+          // let m = this.getWeightedMedian(yDiff.length, ref.ySrc, yDiff)
+
+          let m = m0;
+          // m = Math.exp(m / rot)
+
+          // let csvRows: string[] = [];
+          // ySrcArray.forEach((value, index) => {
+          //   csvRows.push(`${value}, ${ref.wSrc[index]}, ${wSrc[index]}`)
+          // })
+          // console.log(csvRows.join('\n'))
+
+
+          // let m = 1.0
+          let b = -fit.bkgMu * (event.scaleEnabled ? m : 1) + ref.bkgMu;
+
+          // let m = m0;
+          // let b = b0;
+
+          let mCorr = getCountsPerBin(ref.hdu.hist) / getCountsPerBin(fit.hdu.hist)
+
+          // let m = (ref.bkgSigma / fit.bkgSigma) * (ref.srcMuCount / (fit.srcMuCount / (ref.bkgSigma / fit.bkgSigma)))
+          // let b = -fit.bkgMu * m + ref.bkgMu;
+
+
+          // let linearFn = ([m, b]: [number, number]) => {
+          //   return (t) => {
+          //     let v = t * m + b;
+          //     if (ref.y[0] > v) return fit.w[0];
+
+          //     for (let i = 0; i < ref.y.length - 1; i++) {
+          //       if (ref.y[i] <= v && ref.y[i + 1] > v) {
+          //         return ref.w[i] * m
+          //       }
+          //     }
+
+          //     return fit.w[fit.w.length - 1]
+          //   }
+          // }
+
+          // let fitLinear = (xs: number[] | TypedArray, ys: number[] | TypedArray) => {
+
+          //   let initialValues = [m0, b0];
+          //   const options = {
+          //     damping: 1.5,
+          //     initialValues: initialValues,
+          //     // minValues: [undefined, bkgMedian * 0.9, bkgDeviation * 0.9],
+          //     // maxValues: [undefined, bkgMedian * 1.1, bkgDeviation * 1.1],
+          //     gradientDifference: 10e-2,
+          //     maxIterations: 100,
+          //     errorTolerance: 10e-3,
+          //   };
+
+          //   return LM({ x: xs, y: ys }, linearFn, options)
+          // }
+
+          // let result = fitLinear(fit.y, fit.w);
+
+          // let [m, b] = result.parameterValues
+
+
+
+
+          actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
+        }
+
+        this.store.dispatch(actions)
+      })
+
+
 
     })
 
@@ -752,23 +769,109 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   }
 
+  gaussianFn([p1, c1, d1]: [number, number, number]) {
+    return (t: number) => p1 * Math.exp(-0.5 * Math.pow((t - c1) / d1, 2))
+  }
 
+  fitBackground(hdu: ImageHdu, x: Float32Array, y: Float32Array) {
+    let index: number;
+    let sigma: number, mu: number;
+    let length0 = x.length;
 
-  fitGaussian(xs: number[] | TypedArray, ys: number[] | TypedArray, initialValues: [number, number, number], minValues: [number, number, number] = null, maxValues: [number, number, number] = null) {
-    let gaussianFn = ([p1, c1, d1]: [number, number, number]) => {
-      return (t) => p1 * Math.exp(-0.5 * Math.pow((t - c1) / d1, 2))
+    while (true) {
+      mu = this.getWeightedMedian(y.length, y, x);
+      index = 0;
+      let xBkgDevs = new Float32Array(y.length)
+      let yBkgDevs = new Float32Array(y.length);
+      let N = 0;
+      for (let i = 0; i < y.length; i++) {
+        N += y[i]
+        if (x[i] < mu) continue;
+        yBkgDevs[index] = y[i]
+        xBkgDevs[index] = Math.abs(x[i] - mu)
+        index++
+      }
+      xBkgDevs = xBkgDevs.slice(0, index)
+      yBkgDevs = yBkgDevs.slice(0, index)
+      sigma = this.getWeighted68th(yBkgDevs, xBkgDevs);
+
+      index = 0;
+      let xNext = new Float32Array(x.length)
+      let yNext = new Float32Array(y.length)
+      for (let i = 0; i < y.length; i++) {
+        let P = 1 - erf((Math.abs(x[i] - mu) / sigma) / Math.sqrt(2))
+        let NP = N * P;
+        if (NP < 0.5) continue
+        xNext[index] = x[i]
+        yNext[index] = y[i]
+        index++
+      }
+      xNext = xNext.slice(0, index)
+      yNext = yNext.slice(0, index)
+
+      if (xNext.length == x.length) break;
+
+      x = xNext;
+      y = yNext;
+
     }
-    const options = {
-      damping: 1.5,
-      initialValues: initialValues,
-      minValues: minValues,
-      maxValues: maxValues,
-      gradientDifference: 10e-2,
-      maxIterations: 100,
-      errorTolerance: 10e-3,
-    };
 
-    return LM({ x: xs, y: ys }, gaussianFn, options)
+    let aNumerator = 0, aDenominator = 0, peak = 1;
+    let gaussian = this.gaussianFn([1, mu, sigma])
+
+    //ignore possible pileup in first bin
+    for (let i = 1; i < y.length; i++) {
+      if (x[i] > mu) break;
+      let g = gaussian(x[i])
+      aNumerator += y[i] * g;
+      aDenominator += Math.pow(g, 2);
+    }
+    peak = aNumerator / aDenominator;
+
+    // console.log(hdu.name)
+    // console.log(`rejected ${length0 - x.length} of ${length0}`)
+    // console.log(`last acceptable y[i]: ${x[x.length - 1]}`)
+    // console.log(`RCR: ${peak}*EXP(-0.5*POWER((x-${mu})/${sigma},2))`)
+
+    let xFit = new Float32Array(x.length)
+    let yFit = new Float32Array(y.length);
+    index = 0;
+    for (let i = 1; i < x.length; i++) {
+      if (x[i] > mu) break;
+      yFit[index] = y[i];
+      xFit[index] = x[i]
+      index++;
+    }
+
+    xFit = xFit.slice(0, index)
+    yFit = yFit.slice(0, index);
+
+
+    // let csvRows: string[] = [];
+    // xFit.forEach((x, index) => {
+    //   csvRows.push(`${x}, ${yFit[index]}`)
+    // })
+    // let csv = csvRows.join('\n')
+    // // console.log(csvRows.join('\n'))
+    // var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+    // saveAs(blob, `${hdu.name}-bkg.csv`);
+
+    let fitter = new GuassianFitter({ x: xFit, y: yFit }, { peak: peak, mu: mu, sigma: sigma })
+    return fitter.go()
+
+
+    // const options = {
+    //   damping: 1.5,
+    //   initialValues: [peak, mu, sigma],
+    //   gradientDifference: 10e-2,
+    //   maxIterations: 100,
+    //   errorTolerance: 10e-3,
+    // };
+
+    // let fit = LM({ x: xFit, y: yFit }, this.gaussianFn, options)
+
+
+    // return { peak: fit.parameterValues[0], mu: fit.parameterValues[1], sigma: fit.parameterValues[2] }
   }
 
   onBackgroundPercentileChange(value: number) {
@@ -867,7 +970,11 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   neutralizeBackground() {
-    this.neutralizeBackgroundEvent$.next({ scaleEnabled: false, offsetEnabled: true });
+    this.fitHistogramsEvent$.next({ scaleEnabled: false, offsetEnabled: true });
+  }
+
+  autoWhiteBalance() {
+    this.fitHistogramsEvent$.next({ scaleEnabled: true, offsetEnabled: true });
   }
 
 
@@ -1119,7 +1226,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     }
   }
 
-  getMedian(y: number[]) {
+  getMedian(y: number[] | TypedArray) {
     let high = (Math.floor(y.length / 2));
     let low = high - 1;
     let runningSum = 0, median = 0;

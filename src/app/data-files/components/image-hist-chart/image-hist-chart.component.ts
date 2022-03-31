@@ -146,11 +146,11 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     markerColors[blueColorMap.name] = '#3366cc'
 
     this.chartData = [];
-    this.data.forEach(({ hist, normalizer }) => {
-      if (!hist || !normalizer || !hist.loaded || !hist.data) return;
+    let data = this.data.filter(({ hist, normalizer }) => hist && normalizer && hist.loaded && hist.data)
+    data.forEach(({ hist, normalizer }) => {
 
-      let refBinSize = getCountsPerBin(this.data[0].hist)
-      let binSize = getCountsPerBin(hist)
+      // let refBinSize = Math.max(...data.map(d => getCountsPerBin(d.hist)))
+      // let binSize = getCountsPerBin(hist)
 
 
       let x = [];
@@ -158,7 +158,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       for (let i = 0; i < hist.data.length; i++) {
         if (hist.data[i] <= 0 || (this.logarithmicX && getBinCenter(hist, i) <= 0)) continue;
         x.push(getBinCenter(hist, i) * normalizer.channelScale + normalizer.channelOffset);
-        y.push(hist.data[i] / normalizer.channelScale * (refBinSize / binSize));
+        // y.push(hist.data[i] / normalizer.channelScale * (refBinSize / binSize));
+        y.push(hist.data[i] / normalizer.channelScale);
         if (this.yMax < hist.data[i]) this.yMax = hist.data[i];
       }
 
