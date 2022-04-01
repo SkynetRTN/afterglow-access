@@ -525,9 +525,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
           let refXArray = Array.from(ref.xSrc)
           let steps = 200;
-          let m0 = 5;
+          let m0 = 2.5;
           let results: { m: number, k2: number, N: number, f: number }[];
-          let stepSize = 0.05
+          let stepSize = 0.025
           while (stepSize > 0.0001) {
             results = [];
             for (let step = 0; step < steps; step++) {
@@ -555,7 +555,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
               // results.push({ m: m, k2: K2 / (N * N) })
               results.push({ m: m, k2: K2, N: N, f: K2 / N ** 2 })
 
-              // console.log(m, K2)
+              console.log(m, K2, K2 / N ** 2)
             }
             let bestFitIndex = 0;
             results.forEach((value, index) => {
@@ -563,6 +563,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             })
 
             m0 = results[bestFitIndex].m
+            console.log(results[bestFitIndex])
 
             if (bestFitIndex == results.length - 1) {
               stepSize *= 2;
@@ -573,6 +574,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             }
 
           }
+
+
 
 
           // let xs = new Float32Array(ys.length);
