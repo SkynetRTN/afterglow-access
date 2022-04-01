@@ -11,7 +11,7 @@ export interface Gaussian {
 export class GuassianFitter {
     algorithm: GeneticAlgorithm;
     generations = 100;
-    populationSize = 500;
+    populationSize = 2000;
     mutationRate = 0.3;
     errorTolerance = 1e-4
     errorSmoothing = 5
@@ -40,9 +40,9 @@ export class GuassianFitter {
         const mutation = (genotype: Gaussian): Gaussian => {
             let mutate = this.mutationRate >= Math.random();
             return {
-                peak: mutate && Math.random() < 0.5 ? genotype.peak += genotype.peak * ((Math.random() - 0.5) * 2) * 0.05 : genotype.peak,
-                mu: mutate && Math.random() < 0.5 ? genotype.mu += genotype.mu * ((Math.random() - 0.5) * 2) * 0.05 : genotype.mu,
-                sigma: mutate && Math.random() < 0.5 ? genotype.sigma += genotype.sigma * ((Math.random() - 0.5) * 2) * 0.05 : genotype.sigma
+                peak: mutate && Math.random() < 0.5 ? genotype.peak += genotype.peak * ((Math.random() - 0.5) * 2) * 0.2 : genotype.peak,
+                mu: mutate && Math.random() < 0.5 ? genotype.mu += genotype.mu * ((Math.random() - 0.5) * 2) * 0.2 : genotype.mu,
+                sigma: mutate && Math.random() < 0.5 ? genotype.sigma += genotype.sigma * ((Math.random() - 0.5) * 2) * 0.2 : genotype.sigma
             }
         }
 

@@ -357,24 +357,43 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
       let getFit = (hdu: ImageHdu) => {
-        // console.log(hdu.name);
+        console.log(hdu.name);
         let hist = hdu.hist;
-        let xIndexes = new Uint32Array(hist.data.length)
-        for (let i = 0; i < hist.data.length; i++) {
-          xIndexes[i] = i
+
+        let N0 = 0;
+        hist.data.forEach(v => N0 += v)
+
+        let csvRows: string[]
+        let csv: string;
+
+        // csvRows = [];
+        // hist.data.forEach((value, index) => {
+        //   csvRows.push(`${getBinCenter(hist, index)}, ${value}`)
+        // })
+        // csv = csvRows.join('\n')
+        // var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+        // saveAs(blob, `${hdu.name}-raw.csv`);
+
+        let y = new Float32Array(hist.data.length);
+        for (let i = 1; i < hist.data.length - 1; i++) {
+          let a = hist.data[i - 1];
+          let b = hist.data[i];
+          let c = hist.data[i + 1];
+          y[i] = Math.max(Math.min(a, b), Math.min(Math.max(a, b), c));
         }
 
-        // remove empty bins
-        let emptyBins = 0;
+        let N = 0;
+        y.forEach(v => N += v)
+
+
         let x = new Float32Array(hist.data.length)
-        let y = new Float32Array(hist.data.length);
         let index = 0;
-        for (let i = 0; i < hist.data.length; i++) {
-          if (hist.data[i] == 0) {
-            emptyBins += 1;
+        console.log("NORMALIZATION FACTOR: ", N0 / N)
+        for (let i = 0; i < y.length; i++) {
+          if (y[i] == 0) {
             continue
           }
-          y[index] = hist.data[i];
+          y[index] = y[i] * (N0 / N);
           x[index] = getBinCenter(hist, i);
           index++;
         }
@@ -382,11 +401,14 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         x = x.slice(0, index)
         y = y.slice(0, index);
 
-        // let csvRows: string[] = [];
+
+
+
+        // csvRows = [];
         // x.forEach((x, index) => {
         //   csvRows.push(`${x}, ${y[index]}`)
         // })
-        // let csv = csvRows.join('\n')
+        // csv = csvRows.join('\n')
         // var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
         // saveAs(blob, `${hdu.name}-hist.csv`);
 
@@ -396,7 +418,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
             //subtract background gaussian
-            let gaussian = this.gaussianFn([bkgPeak, bkgMu, bkgSigma])
+            let gaussian = (t: number) => bkgPeak * Math.exp(-0.5 * Math.pow((t - bkgMu) / bkgSigma, 2))
             let xSrc = new Float32Array(x.length)
             let ySrc = new Float32Array(y.length);
             let startIndex = 0;
@@ -441,7 +463,6 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
               bkgPeak: bkgPeak,
               xSrc: xSrc,
               ySrc: ySrc,
-              emptyBins: emptyBins
             }
           }
         );
@@ -454,8 +475,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         bkgSigma: number,
         bkgPeak: number,
         xSrc: Float32Array,
-        ySrc: Float32Array,
-        emptyBins: number
+        ySrc: Float32Array
       }>[] = []
 
       // fit backgrounds
@@ -466,11 +486,14 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
       Promise.all(fits$).then((fits) => {
+
         // fits = fits.sort((a, b) => a.bkgSigma - b.bkgSigma)
         // fits = fits.sort((a, b) => a.xSrc[0] - b.xSrc[0])
 
         fits = fits.sort((a, b) => a.hdu.name.localeCompare(b.hdu.name))
         fits.forEach(fit => console.log(`${fit.hdu.name} - Best Fit: ${fit.bkgPeak}*EXP(-0.5*POWER((x-${fit.bkgMu})/${fit.bkgSigma},2))`));
+
+        // fits.forEach(fit => console.log(`${fit.hdu.name} - Best Fit: ${fit.bkgPeak}, ${fit.bkgMu}, ${fit.bkgSigma}`));
 
 
         fits = fits.sort((a, b) => getCountsPerBin(b.hdu.hist) - getCountsPerBin(a.hdu.hist))
@@ -478,7 +501,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
         fits.forEach(fit => {
-          console.log(fit.hdu.name, fit.hdu.hist.minBin, fit.hdu.hist.maxBin, fit.hdu.hist.data.length, getCountsPerBin(fit.hdu.hist), fit.emptyBins, fit.emptyBins / fit.hdu.hist.data.length)
+          console.log(fit.hdu.name, fit.hdu.hist.minBin, fit.hdu.hist.maxBin, fit.hdu.hist.data.length, getCountsPerBin(fit.hdu.hist))
         })
 
         // fits.forEach(fit => {
@@ -558,7 +581,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
               // results.push({ m: m, k2: K2 / (N * N) })
               results.push({ m: m, k2: K2, N: N, f: K2 / N ** 2 })
 
-              console.log(m, K2, K2 / N ** 2)
+              // console.log(m, K2, K2 / N ** 2)
             }
             let bestFitIndex = 0;
             results.forEach((value, index) => {
@@ -566,7 +589,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             })
 
             m0 = Math.exp(results[bestFitIndex].m)
-            console.log(results[bestFitIndex])
+            // console.log(results[bestFitIndex])
 
             if (bestFitIndex == results.length - 1) {
               stepSize *= 2;
@@ -775,24 +798,21 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   }
 
-  gaussianFn([p1, c1, d1]: [number, number, number]) {
-    return (t: number) => p1 * Math.exp(-0.5 * Math.pow((t - c1) / d1, 2))
-  }
+  // gaussianFn([p1, c1, d1]: [number, number, number]) {
+  //   return (t: number) => p1 * Math.exp(-0.5 * Math.pow((t - c1) / d1, 2))
+  // }
 
   fitBackground(hdu: ImageHdu, x: Float32Array, y: Float32Array) {
     let index: number;
     let sigma: number, mu: number;
-    let length0 = x.length;
 
     while (true) {
-      mu = this.getWeightedMedian(y.length, y, x);
+      mu = this.getWeightedMode(y.length, y, x);
       index = 0;
       let xBkgDevs = new Float32Array(y.length)
       let yBkgDevs = new Float32Array(y.length);
-      let N = 0;
       for (let i = 0; i < y.length; i++) {
-        N += y[i]
-        if (x[i] < mu) continue;
+        if (x[i] > mu) break;
         yBkgDevs[index] = y[i]
         xBkgDevs[index] = Math.abs(x[i] - mu)
         index++
@@ -801,13 +821,15 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       yBkgDevs = yBkgDevs.slice(0, index)
       sigma = this.getWeighted68th(yBkgDevs, xBkgDevs);
 
+      let N = y.length;
       index = 0;
       let xNext = new Float32Array(x.length)
       let yNext = new Float32Array(y.length)
       for (let i = 0; i < y.length; i++) {
+
         let P = 1 - erf((Math.abs(x[i] - mu) / sigma) / Math.sqrt(2))
         let NP = N * P;
-        if (NP < 0.5) continue
+        if (x[i] > mu && NP < 0.5) continue
         xNext[index] = x[i]
         yNext[index] = y[i]
         index++
@@ -822,62 +844,60 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
     }
 
-    let aNumerator = 0, aDenominator = 0, peak = 1;
-    let gaussian = this.gaussianFn([1, mu, sigma])
-
-    //ignore possible pileup in first bin
-    for (let i = 1; i < y.length; i++) {
-      if (x[i] > mu) break;
-      let g = gaussian(x[i])
-      aNumerator += y[i] * g;
-      aDenominator += Math.pow(g, 2);
-    }
-    peak = aNumerator / aDenominator;
-
-    // console.log(hdu.name)
-    // console.log(`rejected ${length0 - x.length} of ${length0}`)
-    // console.log(`last acceptable y[i]: ${x[x.length - 1]}`)
-    // console.log(`RCR: ${peak}*EXP(-0.5*POWER((x-${mu})/${sigma},2))`)
-
-    let xFit = new Float32Array(x.length)
-    let yFit = new Float32Array(y.length);
-    index = 0;
-    for (let i = 1; i < x.length; i++) {
-      // if (x[i] > mu) break;
-      yFit[index] = y[i];
-      xFit[index] = x[i]
-      index++;
-    }
-
-    xFit = xFit.slice(0, index)
-    yFit = yFit.slice(0, index);
-
+    console.log('rejected everything beyond: ', hdu.name, x[x.length - 1])
 
     // let csvRows: string[] = [];
-    // xFit.forEach((x, index) => {
-    //   csvRows.push(`${x}, ${yFit[index]}`)
+    // x.forEach((x, index) => {
+    //   csvRows.push(`${x}, ${y[index]}`)
     // })
     // let csv = csvRows.join('\n')
     // // console.log(csvRows.join('\n'))
     // var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
     // saveAs(blob, `${hdu.name}-bkg.csv`);
 
-    let fitter = new GuassianFitter({ x: xFit, y: yFit }, { peak: peak, mu: mu, sigma: sigma })
-    return fitter.go()
 
 
-    // const options = {
-    //   damping: 1.5,
-    //   initialValues: [peak, mu, sigma],
-    //   gradientDifference: 10e-2,
-    //   maxIterations: 100,
-    //   errorTolerance: 10e-3,
-    // };
+    let aNumerator = 0, aDenominator = 0, peak = 1;
+    let gaussian = (t: number) => Math.exp(-0.5 * Math.pow((t - mu) / sigma, 2))
 
-    // let fit = LM({ x: xFit, y: yFit }, this.gaussianFn, options)
+    //ignore possible pileup in first bin
+    for (let i = 1; i < y.length; i++) {
+      let g = gaussian(x[i])
+      aNumerator += y[i] * g;
+      aDenominator += Math.pow(g, 2);
+    }
+    peak = aNumerator / aDenominator;
+
+    // let xFit = new Float32Array(x.length)
+    // let yFit = new Float32Array(y.length);
+    // index = 0;
+    // for (let i = 1; i < x.length; i++) {
+    //   if (x[i] > mu) break;
+    //   yFit[index] = y[i];
+    //   xFit[index] = x[i]
+    //   index++;
+    // }
+
+    // xFit = xFit.slice(0, index)
+    // yFit = yFit.slice(0, index);
+
+    // peak = Math.max(...yFit)
 
 
-    // return { peak: fit.parameterValues[0], mu: fit.parameterValues[1], sigma: fit.parameterValues[2] }
+
+
+    // console.log(`${hdu.name} - RCR Fit: ${peak}, ${mu}, ${sigma}`)
+    console.log(`${hdu.name} - RCR: ${peak}*EXP(-0.5*POWER((x-${mu})/${sigma},2))`)
+    // peak = 12511;
+    // mu = 131
+    // sigma = 9
+
+    // return Promise.resolve({ peak: peak, mu: mu, sigma: sigma })
+
+    return Promise.resolve({ peak: peak, mu: mu, sigma: sigma })
+
+    // let fitter = new GuassianFitter({ x: xFit, y: yFit }, { peak: peak, mu: mu, sigma: sigma })
+    // return fitter.go()
   }
 
   onBackgroundPercentileChange(value: number) {
