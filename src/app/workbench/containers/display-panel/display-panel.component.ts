@@ -406,8 +406,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
               let yi = y[i] - gaussian(x[i]);
               if (yi <= 1) continue;
 
-              xSrc[index] = x[i] - bkgMu
-              ySrc[index] = yi
+              xSrc[index] = Math.log(x[i] - bkgMu)
+              ySrc[index] = Math.log(yi)
 
               if (ySrc[index] > ySrc[startIndex]) {
                 startIndex = index;
@@ -520,7 +520,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
         for (let i = 1; i < fits.length; i++) {
           let fit = fits[i];
-
+          let binSize = getCountsPerBin(fit.hdu.hist)
+          let binCorr = Math.log((binSize / refBinSize))
           //resample fit to match reference
 
           let refXArray = Array.from(ref.xSrc)
@@ -531,13 +532,15 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           while (stepSize > 0.0001) {
             results = [];
             for (let step = 0; step < steps; step++) {
-              let m = m0 + stepSize * (step - steps / 2)
-              if (m <= 0) continue;
-              let binSize = getCountsPerBin(fit.hdu.hist)
+              let s = stepSize * (step - steps / 2)
+              if (m0 + s <= 0) continue;
+              let m = Math.log(m0 + s)
+
+
               let xs = new Float32Array(fit.xSrc);
-              xs.forEach((x, index) => xs[index] *= m)
+              xs.forEach((x, index) => xs[index] += m)
               let ys = new Float32Array(fit.ySrc);
-              ys.forEach((y, index) => ys[index] = ys[index] / (binSize / refBinSize) / m)
+              ys.forEach((y, index) => ys[index] = ys[index] - binCorr - m)
               // ys.forEach((y, index) => ys[index] = ys[index] / m)
               let ysInterpolated = new Float32Array(linear(refXArray, Array.from(xs), Array.from(ys)))
 
@@ -562,7 +565,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
               if (value.f < results[bestFitIndex].f) bestFitIndex = index;
             })
 
-            m0 = results[bestFitIndex].m
+            m0 = Math.exp(results[bestFitIndex].m)
             console.log(results[bestFitIndex])
 
             if (bestFitIndex == results.length - 1) {
@@ -840,7 +843,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     let yFit = new Float32Array(y.length);
     index = 0;
     for (let i = 1; i < x.length; i++) {
-      if (x[i] > mu) break;
+      // if (x[i] > mu) break;
       yFit[index] = y[i];
       xFit[index] = x[i]
       index++;
