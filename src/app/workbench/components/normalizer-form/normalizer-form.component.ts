@@ -116,14 +116,14 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   getFormattedPeakLevel() {
     let peak = this.normalizer.peakLevel;
-    if (!peak) return '';
+    if (peak === undefined || peak === null) return '';
     let result = this.decimalPipe.transform(peak, '1.0-3').replace(',', '')
     return result;
   }
 
   getFormattedBackgroundLevel() {
     let background = this.normalizer.backgroundLevel;
-    if (!background) return ''
+    if (background === undefined || background === null) return ''
     let result = this.decimalPipe.transform(background, '1.0-3').replace(',', '')
     return result;
   }
