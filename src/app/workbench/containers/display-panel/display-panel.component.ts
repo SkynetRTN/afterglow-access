@@ -62,6 +62,7 @@ import { M } from '@angular/cdk/keycodes';
 import { GeneticAlgorithm } from '@kometbomb/genetic-algorithm'
 
 import { saveAs } from 'file-saver/dist/FileSaver';
+const SAVE_CSV_FILES = false;
 
 type TypedArray =
   | Int8Array
@@ -443,6 +444,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             xSrc[index] = x[i] - bkgMu
             ySrc[index] = yi
 
+            if (ySrc[index] > y[startIndex]) {
+              startIndex = index;
+            }
+
             index++;
           }
           xSrc = xSrc.slice(startIndex, index)
@@ -483,7 +488,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       })
 
 
-      fits = fits.sort((a, b) => a.bkgSigma - b.bkgSigma)
+      fits = fits.sort((a, b) => b.bkgSigma - a.bkgSigma)
       // fits.forEach(fit => console.log(`${fit.hdu.name} - Background Fit: ${fit.bkgPeak}*EXP(-0.5*POWER((x-${fit.bkgMu})/${fit.bkgSigma},2))`));
 
       let actions: any[] = [];
@@ -539,6 +544,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           // let fitCorr = fit.norm;
           // let fitCorr = 1
           let corr = (fitCorr / refCorr)
+          console.log(fit.hdu.name, corr)
 
           let steps = 200;
           let m0 = 2.5;
@@ -697,6 +703,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   saveCsv(name: string, x: Float32Array, y: Float32Array) {
+    if (!SAVE_CSV_FILES) return
+
     let csvRows = [];
     x.forEach((x, index) => {
       csvRows.push(`${x}, ${y[index]}`)
