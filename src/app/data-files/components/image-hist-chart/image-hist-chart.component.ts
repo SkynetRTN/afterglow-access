@@ -160,7 +160,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
         x.push(getBinCenter(hist, i) * normalizer.channelScale + normalizer.channelOffset);
         // y.push(hist.data[i] / normalizer.channelScale * (refBinSize / binSize));
         y.push(hist.data[i] / normalizer.channelScale);
-        if (this.yMax < hist.data[i]) this.yMax = hist.data[i];
+        if (this.yMax < y[y.length - 1]) this.yMax = y[y.length - 1];
       }
 
       let d = {
@@ -227,16 +227,61 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
       )
     }
 
-    if (!this.layout.xaxis?.range && this.data[0]?.hist?.loaded) {
-      let hist = this.data[0].hist;
-      let norm = this.data[0].normalizer;
-      let levels = calcLevels(hist, 1, 99);
+    let xMin: number, xMax: number, yMax: number;
+    this.data.forEach(({ hist, normalizer }) => {
+      if (!hist.loaded) return;
+      let { backgroundLevel, peakLevel } = calcLevels(hist, 1, 99);
+      if (normalizer.backgroundLevel !== undefined) backgroundLevel = Math.min(backgroundLevel, normalizer.backgroundLevel)
+      if (normalizer.peakLevel !== undefined) peakLevel = Math.max(peakLevel, normalizer.peakLevel)
+
+      let x0 = backgroundLevel * normalizer.channelScale + normalizer.channelOffset
+      let x1 = peakLevel * normalizer.channelScale + normalizer.channelOffset
+      let y1 = Math.max(...hist.data) / normalizer.channelScale;
+      if (xMin === undefined || x0 < xMin) xMin = x0
+      if (xMax === undefined || x1 > xMax) xMax = x1
+      if (yMax === undefined || y1 > yMax) yMax = y1
+    })
+
+    if (xMin !== undefined && xMax !== undefined) {
+      let b = (xMax - xMin) * 0.1;
+      let xRange = [xMin - b, xMax + b]
+      // let xRange = this.layout.xaxis?.range;
+      // if (!xRange) {
+      //   xRange = [xMin, xMax]
+      // }
+      // else {
+      //   if (xRange[0] > xMax || xRange[1] < xMin) {
+      //     xRange[0] = xMin;
+      //     xRange[1] = xMax;
+      //   }
+      // }
+
       this.layout.xaxis = {
         ...this.layout.xaxis,
         autorange: false,
-        range: [levels.backgroundLevel * norm.channelScale + norm.channelOffset, levels.peakLevel * norm.channelScale + norm.channelOffset]
+        range: xRange
+      }
+
+    }
+
+    if (yMax !== undefined) {
+      let b = yMax * 0.1;
+      let yRange = [0, yMax + b];
+      // let yRange = this.layout.yaxis?.range;
+      // if (!yRange) {
+      //   yRange = [0, yMax]
+      // }
+      // else {
+      //   if (yRange[0] < yMax) yRange[1] = yMax;
+      // }
+
+      this.layout.yaxis = {
+        ...this.layout.yaxis,
+        autorange: false,
+        range: yRange
       }
     }
+
 
     this.layout = {
       ...this.layout,

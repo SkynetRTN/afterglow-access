@@ -37,6 +37,7 @@ export interface DataFile extends ITransformableImageData {
   hduIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
+  syncLayerNormalizers: boolean;
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
 }
 

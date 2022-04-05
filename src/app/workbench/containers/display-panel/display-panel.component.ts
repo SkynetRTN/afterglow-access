@@ -36,6 +36,7 @@ import {
   UpdateAlpha,
   ResetViewportTransform,
   UpdateChannelMixer,
+  SetFileNormalizerSync,
 } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { HduType } from '../../../data-files/models/data-file-type';
@@ -59,7 +60,6 @@ import * as Spline from 'cubic-spline'
 import { linear, polynomial } from 'everpolate';
 import { M } from '@angular/cdk/keycodes';
 import { GeneticAlgorithm } from '@kometbomb/genetic-algorithm'
-import { GuassianFitter } from 'src/app/utils/guassian-fitter';
 
 import { saveAs } from 'file-saver/dist/FileSaver';
 
@@ -103,7 +103,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   destroy$ = new Subject<boolean>();
 
 
-
+  setFileNormalizerSyncEvent$ = new Subject<boolean>();
   backgroundPercentile$ = new Subject<number>();
   peakPercentile$ = new Subject<number>();
   backgroundLevel$ = new Subject<number>();
@@ -118,8 +118,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   color = '#FFFFFF';
   whiteBalanceMode = false;
   resetWhiteBalance$ = new Subject<any>();
-  fitHistogramsEvent$ = new Subject<{ scaleEnabled: boolean, offsetEnabled: boolean }>();
-  resetChannelFittingEvent$ = new Subject<any>();
+  fitHistogramsEvent$ = new Subject<{ fitBackground: boolean, fitSources: boolean }>();
+  resetColorBalanceEvent$ = new Subject<any>();
 
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
   channelMixerControls = [
@@ -233,6 +233,15 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       }
     });
 
+    this.setFileNormalizerSyncEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.file$)
+    ).subscribe(([value, file]) => {
+      if (file) {
+        this.store.dispatch(new SetFileNormalizerSync(file.id, value))
+      }
+    })
+
     this.backgroundPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       if (activeHdu) {
         this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundPercentile: value }));
@@ -334,7 +343,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       // this.store.dispatch(new UpdateChannelMixer(file.id, [1, 1, 1]))
     })
 
-    this.resetChannelFittingEvent$.pipe(
+    this.resetColorBalanceEvent$.pipe(
       takeUntil(this.destroy$),
       withLatestFrom(this.file$, this.hdus$)
     ).subscribe(([event, file, hdus]) => {
@@ -388,35 +397,71 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           index++;
         }
 
+        console.log(hdu.name, (N0 / N))
+
         x = x.slice(0, index)
         y = y.slice(0, index);
 
         // extract background
-        let { peak: bkgPeak, mu: bkgMu, sigma: bkgSigma } = this.fitBackground(hdu, x, y);
+        let { peak: bkgPeak, mu: bkgMu, sigma: bkgSigma, x: xBkg, y: yBkg } = this.fitBackground(hdu, x, y);
+
+        let xSrc: Float32Array, ySrc: Float32Array;
+
+        if (event.fitSources) {
+          //subtract background
 
 
-        //subtract background
-        let gaussian = (t: number) => bkgPeak * Math.exp(-0.5 * Math.pow((t - bkgMu) / bkgSigma, 2))
-        let xSrc = new Float32Array(x.length)
-        let ySrc = new Float32Array(y.length);
-        let startIndex = 0;
-        index = 0;
-        for (let i = 0; i < x.length; i++) {
-          if (x[i] <= bkgMu || x[i] <= 0) continue;
-          let yi = y[i] - gaussian(x[i]);
-          if (yi <= 1) continue;
+          // bkgPeak /= (N0 / N)
+          // x = new Float32Array(hist.data.length)
+          // y = new Float32Array(hist.data.length)
+          // index = 0;
+          // for (let i = 0; i < hist.data.length; i++) {
+          //   if (hist.data[i] == 0) {
+          //     continue
+          //   }
+          //   y[index] = hist.data[i];
+          //   x[index] = getBinCenter(hist, i);
+          //   index++;
+          // }
+          // x = x.slice(0, index)
+          // y = y.slice(0, index);
 
-          xSrc[index] = Math.log(x[i] - bkgMu)
-          ySrc[index] = Math.log(yi)
 
-          if (ySrc[index] > ySrc[startIndex]) {
-            startIndex = index;
+
+          let gaussian = (t: number) => bkgPeak * Math.exp(-0.5 * Math.pow((t - bkgMu) / bkgSigma, 2))
+          xSrc = new Float32Array(x.length)
+          ySrc = new Float32Array(y.length);
+          let startIndex = 0;
+          index = 0;
+          for (let i = 0; i < x.length - 1; i++) {
+            if (x[i] <= xBkg[xBkg.length - 1] || x[i] <= 0) continue;
+            let yi = y[i] - gaussian(x[i]);
+            if (yi <= 1) continue;
+
+            xSrc[index] = x[i] - bkgMu
+            ySrc[index] = yi
+
+            // if (ySrc[index] > ySrc[startIndex]) {
+            //   startIndex = index;
+            // }
+
+            index++;
           }
-
-          index++;
+          xSrc = xSrc.slice(startIndex, index)
+          ySrc = ySrc.slice(startIndex, index);
         }
-        xSrc = xSrc.slice(startIndex, index)
-        ySrc = ySrc.slice(startIndex, index);
+
+
+        let csvRows: string[] = [];
+        xSrc.forEach((x, index) => {
+          csvRows.push(`${x}, ${ySrc[index]}`)
+        })
+        let csv = csvRows.join('\n')
+        // console.log(csvRows.join('\n'))
+        var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+        saveAs(blob, `${hdu.name}-src.csv`);
+
+
 
 
         return {
@@ -426,6 +471,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           bkgPeak: bkgPeak,
           xSrc: xSrc,
           ySrc: ySrc,
+          norm: (N0 / N)
         }
 
       }
@@ -436,7 +482,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         bkgSigma: number,
         bkgPeak: number,
         xSrc: Float32Array,
-        ySrc: Float32Array
+        ySrc: Float32Array,
+        norm: number
       }[] = []
 
       // fit backgrounds
@@ -451,7 +498,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
       let actions: any[] = [];
       let ref = fits[0]
-      let refBinSize = getCountsPerBin(ref.hdu.hist)
+      // let refCorr = getCountsPerBin(ref.hdu.hist)
+      let refCorr = ref.norm
 
       let backgroundLevel: number;
       let peakLevel: number;
@@ -474,67 +522,95 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       //   refYs[index] = x * rot + ref.ySrc[index] * rot
       // })
 
-      actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: 0, channelScale: 1 }))
+      let refScale = event.fitSources ? 1 : ref.hdu.normalizer.channelScale;
+      let refOffset = event.fitBackground ? 0 : ref.hdu.normalizer.channelOffset;
+      actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: refOffset, channelScale: refScale }))
+
 
       for (let i = 1; i < fits.length; i++) {
+
         let fit = fits[i];
-        let binSize = getCountsPerBin(fit.hdu.hist)
-        let binCorr = Math.log((binSize / refBinSize))
-        //resample fit to match reference
+        console.log(fit.hdu.name)
+        let targetScale = fit.hdu.normalizer.channelScale;
+        let targetOffset = fit.hdu.normalizer.channelOffset;
 
-        let refXArray = Array.from(ref.xSrc)
-        let steps = 200;
-        let m0 = 2.5;
-        let results: { m: number, k2: number, N: number, f: number }[];
-        let stepSize = 0.025
-        while (stepSize > 0.0001) {
-          results = [];
-          for (let step = 0; step < steps; step++) {
-            let s = stepSize * (step - steps / 2)
-            if (m0 + s <= 0) continue;
-            let m = Math.log(m0 + s)
+        let xRef = new Float32Array(ref.xSrc);
+        xRef.forEach((x, index) => { xRef[index] = Math.log(x) })
+        let refXArray = Array.from(xRef)
+
+        let yRef = new Float32Array(ref.ySrc);
+        yRef.forEach((y, index) => { yRef[index] = Math.sqrt(y) })
 
 
-            let xs = new Float32Array(fit.xSrc);
-            xs.forEach((x, index) => xs[index] += m)
-            let ys = new Float32Array(fit.ySrc);
-            ys.forEach((y, index) => ys[index] = ys[index] - binCorr - m)
-            let ysInterpolated = new Float32Array(linear(refXArray, Array.from(xs), Array.from(ys)))
+        if (event.fitSources) {
+          // let fitCorr = getCountsPerBin(fit.hdu.hist)
+          let fitCorr = fit.norm;
+          let corr = (fitCorr / refCorr)
+          //resample fit to match reference
+          console.log((fitCorr / refCorr))
+          // binCorr = 1
 
-            let K2 = 0;
-            let N = 0;
-            ref.xSrc.forEach((x, index) => {
-              if (x < xs[0] || x > xs[xs.length - 1]) return;
+          let steps = 200;
+          let m0 = 2.5;
+          let results: { m: number, k2: number, N: number, f: number }[];
+          let stepSize = 0.025
+          while (stepSize > 0.0001) {
+            results = [];
+            for (let step = 0; step < steps; step++) {
+              let s = stepSize * (step - steps / 2)
+              if (m0 + s <= 0) continue;
+              let m = m0 + s
 
-              K2 += Math.pow(ref.ySrc[index] - ysInterpolated[index], 2);
-              N++
+
+              let xs = new Float32Array(fit.xSrc);
+              xs.forEach((x, index) => xs[index] = Math.log(x * m))
+
+              let ys = new Float32Array(fit.ySrc);
+              ys.forEach((y, index) => ys[index] = Math.sqrt(ys[index] / corr / m))
+
+              let ysInterpolated = new Float32Array(linear(refXArray, Array.from(xs), Array.from(ys)))
+
+              let K2 = 0;
+              let N = 0;
+              // console.log(m, xs[0], xs[xs.length - 1])
+              xRef.forEach((x, index) => {
+                if (x < xs[0] || x > xs[xs.length - 1]) return;
+
+                K2 += Math.pow(yRef[index] - ysInterpolated[index], 2);
+                N++
+              })
+
+              if (N == 0) continue;
+
+              results.push({ m: m, k2: K2, N: N, f: K2 / N })
+            }
+            let bestFitIndex = 0;
+            results.forEach((value, index) => {
+              if (value.f < results[bestFitIndex].f) bestFitIndex = index;
             })
 
-            if (N == 0) continue;
+            m0 = results[bestFitIndex].m
+            console.log(results[bestFitIndex], m0)
 
-            results.push({ m: m, k2: K2, N: N, f: K2 / N ** 2 })
+            if (bestFitIndex == results.length - 1) {
+              stepSize *= 2;
+              m0 *= 2;
+            }
+            else {
+              stepSize *= .5
+            }
+
           }
-          let bestFitIndex = 0;
-          results.forEach((value, index) => {
-            if (value.f < results[bestFitIndex].f) bestFitIndex = index;
-          })
-
-          m0 = Math.exp(results[bestFitIndex].m)
-          // console.log(results[bestFitIndex])
-
-          if (bestFitIndex == results.length - 1) {
-            stepSize *= 2;
-            m0 *= 2;
-          }
-          else {
-            stepSize *= .5
-          }
-
+          targetScale = m0;
         }
-        let m = m0;
-        let b = -fit.bkgMu * (event.scaleEnabled ? m : 1) + ref.bkgMu;
 
-        actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: event.offsetEnabled ? b : 0, channelScale: event.scaleEnabled ? m : 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
+        if (event.fitBackground) {
+          targetOffset = -fit.bkgMu * targetScale + ref.bkgMu;
+        }
+
+
+
+        actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: targetOffset, channelScale: targetScale, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
       }
 
       this.store.dispatch(actions)
@@ -681,8 +757,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     }
     peak = aNumerator / aDenominator;
 
-    return { peak: peak, mu: mu, sigma: sigma }
+    return { peak: peak, mu: mu, sigma: sigma, x: x, y: y }
   }
+
+
 
   onBackgroundPercentileChange(value: number) {
     this.backgroundPercentile$.next(value);
@@ -780,16 +858,16 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   neutralizeBackground() {
-    this.fitHistogramsEvent$.next({ scaleEnabled: false, offsetEnabled: true });
+    this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: false });
   }
 
-  autoWhiteBalance() {
-    this.fitHistogramsEvent$.next({ scaleEnabled: true, offsetEnabled: true });
+  balanceColors() {
+    this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: true });
   }
 
 
-  resetChannelFitting() {
-    this.resetChannelFittingEvent$.next(true)
+  resetColorBalance() {
+    this.resetColorBalanceEvent$.next(true)
   }
 
 

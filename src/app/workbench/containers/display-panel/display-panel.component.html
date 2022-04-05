@@ -55,22 +55,25 @@
       <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
         <div>
           <h3 i18n>Histogram</h3>
+
           <div class="pb-1">
+
             <button mat-raised-button class="m-1" (click)="neutralizeBackground()" i18n-aria-label
               aria-label="Neutralize Background">
-              <mat-icon>balance</mat-icon><span i18n>Neutralize Background</span>
+              <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
             </button>
-            <button mat-raised-button class="m-1" (click)="autoWhiteBalance()" i18n-aria-label
+            <button mat-raised-button class="m-1" (click)="balanceColors()" i18n-aria-label
               aria-label="Auto White Balance">
-              <mat-icon>wb_auto</mat-icon><span i18n>Auto White Balance</span>
+              <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Balance Colors</span>
             </button>
+
             <!-- <button mat-raised-button class="m-1" (click)="fitChannelScales()" i18n-aria-label
               aria-label="Fit Channel Scales">
               <mat-icon>linear_scale</mat-icon><span i18n>Fit Channel Scales</span>
             </button> -->
-            <button mat-raised-button class="m-1" (click)="resetChannelFitting()" i18n-aria-label
-              aria-label="Reset Channel Fitting">
-              <mat-icon>refresh</mat-icon><span i18n>Reset Fit</span>
+            <button mat-raised-button class="m-1" (click)="resetColorBalance()" i18n-aria-label
+              aria-label="Reset Color Balance">
+              <mat-icon>refresh</mat-icon><span i18n>Reset Color Balance</span>
             </button>
           </div>
         </div>
@@ -81,6 +84,13 @@
             [peakLevel]="(compositeNormalizer$ | async)?.peakLevel">
           </app-image-hist-chart>
           <div style="clear: both"></div>
+        </div>
+
+        <div class="p-4">
+          <mat-slide-toggle [checked]="(file$ |async)?.syncLayerNormalizers"
+            (change)="setFileNormalizerSyncEvent$.next($event.checked)" color="primary" i18n>
+            Keep normalization settings synced across all layers
+          </mat-slide-toggle>
         </div>
 
         <div class="pb-4 pt-1" *ngIf="compositeNormalizer$ | async; let compositeNormalizer">
@@ -99,6 +109,7 @@
               <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
             </button>
           </div>
+
           <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="true" [showColorMap]="false"
             [showInverted]="false" [showStretchMode]="true" [showChannelOffset]="false" [showChannelScale]="false"
             (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"

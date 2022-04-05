@@ -252,6 +252,12 @@ export class InvalidateRawImageTile {
  * Normalization Actions
  */
 
+export class SetFileNormalizerSync {
+  public static readonly type = '[Workbench HDU State] SetFileNormalizerSync';
+
+  constructor(public fileId: string, public value: boolean) { }
+}
+
 export class InvalidateNormalizedImageTiles {
   public static readonly type = '[Workbench HDU State] Invalidate Normalized Image Tiles';
 
