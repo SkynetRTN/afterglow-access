@@ -393,14 +393,35 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             continue
           }
           y[index] = y[i] * (N0 / N);
+          // y[index] = y[i]
           x[index] = getBinCenter(hist, i);
           index++;
         }
-
-        console.log(hdu.name, (N0 / N))
-
         x = x.slice(0, index)
         y = y.slice(0, index);
+
+
+
+
+        // let N0 = 1;
+        // let N = 1;
+        // let x = new Float32Array(hist.data.length)
+        // let y = new Float32Array(hist.data.length);
+        // let index = 0;
+        // for (let i = 0; i < hist.data.length; i++) {
+        //   if (hist.data[i] == 0) {
+        //     continue
+        //   }
+        //   y[index] = hist.data[i];
+        //   x[index] = getBinCenter(hist, i);
+        //   index++;
+        // }
+        // x = x.slice(0, index)
+        // y = y.slice(0, index);
+
+
+
+        this.saveCsv(`${hdu.name}-hist.csv`, x, y)
 
         // extract background
         let { peak: bkgPeak, mu: bkgMu, sigma: bkgSigma, x: xBkg, y: yBkg } = this.fitBackground(hdu, x, y);
@@ -409,25 +430,6 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
         if (event.fitSources) {
           //subtract background
-
-
-          // bkgPeak /= (N0 / N)
-          // x = new Float32Array(hist.data.length)
-          // y = new Float32Array(hist.data.length)
-          // index = 0;
-          // for (let i = 0; i < hist.data.length; i++) {
-          //   if (hist.data[i] == 0) {
-          //     continue
-          //   }
-          //   y[index] = hist.data[i];
-          //   x[index] = getBinCenter(hist, i);
-          //   index++;
-          // }
-          // x = x.slice(0, index)
-          // y = y.slice(0, index);
-
-
-
           let gaussian = (t: number) => bkgPeak * Math.exp(-0.5 * Math.pow((t - bkgMu) / bkgSigma, 2))
           xSrc = new Float32Array(x.length)
           ySrc = new Float32Array(y.length);
@@ -441,10 +443,6 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             xSrc[index] = x[i] - bkgMu
             ySrc[index] = yi
 
-            // if (ySrc[index] > ySrc[startIndex]) {
-            //   startIndex = index;
-            // }
-
             index++;
           }
           xSrc = xSrc.slice(startIndex, index)
@@ -452,15 +450,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         }
 
 
-        let csvRows: string[] = [];
-        xSrc.forEach((x, index) => {
-          csvRows.push(`${x}, ${ySrc[index]}`)
-        })
-        let csv = csvRows.join('\n')
-        // console.log(csvRows.join('\n'))
-        var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
-        saveAs(blob, `${hdu.name}-src.csv`);
-
+        this.saveCsv(`${hdu.name}-src.csv`, xSrc, ySrc)
 
 
 
@@ -498,8 +488,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
       let actions: any[] = [];
       let ref = fits[0]
-      // let refCorr = getCountsPerBin(ref.hdu.hist)
-      let refCorr = ref.norm
+      let refCorr = getCountsPerBin(ref.hdu.hist)
+      // let refCorr = ref.norm
+      // let refCorr = 1
 
       let backgroundLevel: number;
       let peakLevel: number;
@@ -526,11 +517,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let refOffset = event.fitBackground ? 0 : ref.hdu.normalizer.channelOffset;
       actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: refOffset, channelScale: refScale }))
 
-
+      fits.forEach(fit => {
+        console.log(fit.hdu.name, fit.hdu.hist.minBin, fit.hdu.hist.maxBin, getCountsPerBin(fit.hdu.hist), fit.bkgPeak, fit.bkgMu, fit.bkgSigma)
+      })
       for (let i = 1; i < fits.length; i++) {
 
         let fit = fits[i];
-        console.log(fit.hdu.name)
         let targetScale = fit.hdu.normalizer.channelScale;
         let targetOffset = fit.hdu.normalizer.channelOffset;
 
@@ -543,12 +535,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
         if (event.fitSources) {
-          // let fitCorr = getCountsPerBin(fit.hdu.hist)
-          let fitCorr = fit.norm;
+          let fitCorr = getCountsPerBin(fit.hdu.hist)
+          // let fitCorr = fit.norm;
+          // let fitCorr = 1
           let corr = (fitCorr / refCorr)
-          //resample fit to match reference
-          console.log((fitCorr / refCorr))
-          // binCorr = 1
 
           let steps = 200;
           let m0 = 2.5;
@@ -590,7 +580,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             })
 
             m0 = results[bestFitIndex].m
-            console.log(results[bestFitIndex], m0)
+            // console.log(results[bestFitIndex], m0)
 
             if (bestFitIndex == results.length - 1) {
               stepSize *= 2;
@@ -607,6 +597,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         if (event.fitBackground) {
           targetOffset = -fit.bkgMu * targetScale + ref.bkgMu;
         }
+
+        console.log(fit.hdu.name, targetScale, targetOffset)
 
 
 
@@ -704,7 +696,15 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   }
 
-  // gau
+  saveCsv(name: string, x: Float32Array, y: Float32Array) {
+    let csvRows = [];
+    x.forEach((x, index) => {
+      csvRows.push(`${x}, ${y[index]}`)
+    })
+    let csv = csvRows.join('\n')
+    var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, name);
+  }
   fitBackground(hdu: ImageHdu, x: Float32Array, y: Float32Array) {
     let index: number;
     let sigma: number, mu: number;
