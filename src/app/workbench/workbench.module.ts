@@ -71,6 +71,7 @@ import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
 import { ColorPickerModule } from 'ngx-color-picker';
+import { ResizeDirective } from './directives/resize.directive';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -117,7 +118,8 @@ export const COMPONENTS = [
   FileListOptionComponent,
   CatalogImportComponent,
   ImageOrientationToolbarComponent,
-  PsfMatchingDialogComponent
+  PsfMatchingDialogComponent,
+  ResizeDirective
 ];
 
 @NgModule({

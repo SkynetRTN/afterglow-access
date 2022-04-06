@@ -29,11 +29,12 @@
       </div>
     </div>
   </div>
-  <div fxFlex="0 0 auto" class="sidebar-panel" [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }" [fxShow]="
+  <div #sidebarPanel fxFlex="0 0 auto" class="sidebar-panel" [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }"
+    [fxShow]="
       (!(inFullScreenMode$ | async) && (showSidebar$ | async)) ||
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'file')
     " role="region" i18n-aria-label aria-label="File Library" [ngSwitch]="sidebarView$ | async">
-    <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100" fxLayout="column">
+    <div *ngSwitchCase="SidebarView.FILES" class="file-list-panel h-100 w-100" fxLayout="column">
       <div fxFlex="1 1 50px">
         <div class="file-list-toolbar">
           <button mat-icon-button (click)="openFiles()" i18n-matTooltip matTooltip="Open files">
@@ -186,186 +187,184 @@
       <app-catalog-import [viewerId]="focusedViewerId$ | async"></app-catalog-import>
     </div>
   </div>
-  <div fxFlex="1 1 auto" class="image-viewer-grid-panel" role="region" i18n-aria-label aria-label="image viewers"
+  <div class="grabber" appResize [leftElement]="sidebarPanel" [rightElement]="viewerGrid"></div>
+  <div #viewerGrid class="image-viewer-grid-panel" role="region" i18n-aria-label aria-label="image viewers"
     [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'" style="overflow: auto">
     <app-viewer-panel-layout [fxLayout]="(layoutContainer$ | async)?.direction" style="height: 100%"
       [id]="(layoutContainer$ | async)?.id" [itemIds]="(layoutContainer$ | async)?.itemIds"
       (onFileClose)="onCloseFileBtnClick($event)" (onFileSave)="onSaveFileBtnClick($event)" cdkDropListGroup>
     </app-viewer-panel-layout>
   </div>
-  <ng-container>
-    <div fxFlex="0 0 auto" class="workbench-tool-panel" *ngIf="activeTool$ | async; let activeTool"
-      [class]="activeTool$ | async" role="region" aria-labelledby="settings-header"
-      [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
+  <div class="grabber" appResize [leftElement]="viewerGrid" [rightElement]="toolPanel" [resizeLeft]="false"></div>
+
+  <div #toolPanel fxFlex="1 1 0%" class="workbench-tool-panel" [class]="activeTool$ | async" role="region"
+    aria-labelledby="settings-header" [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
         ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') ||
         (!(inFullScreenMode$ | async) && (showConfig$ | async))
       ">
-      <div class="card workbench-settings-card" style="height: 100%">
-        <div id="settings-header" class="card-header">
-          <h2 [ngSwitch]="activeTool">
-            <ng-container *ngSwitchCase="WorkbenchTool.VIEWER" i18n>Display Settings</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.INFO" i18n>File Info</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" i18n>Custom Markers</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.PLOTTER" i18n>Plotter</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.PIXEL_OPS" i18n>Pixel Operations</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</ng-container>
-            <ng-container *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</ng-container>
-          </h2>
-        </div>
+    <div class="card workbench-settings-card" style="height: 100%">
+      <div id="settings-header" class="card-header">
+        <h2 [ngSwitch]="activeTool$ | async">
+          <ng-container *ngSwitchCase="WorkbenchTool.VIEWER" i18n>Display Settings</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.INFO" i18n>File Info</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" i18n>Custom Markers</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.PLOTTER" i18n>Plotter</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.PIXEL_OPS" i18n>Pixel Operations</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</ng-container>
+        </h2>
+      </div>
 
-        <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool">
-          <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [viewerId]="focusedViewerId$ | async">
-          </app-display-panel>
+      <div class="card-body" style="overflow-y: auto" [ngSwitch]="activeTool$ | async">
+        <app-display-panel *ngSwitchCase="WorkbenchTool.VIEWER" [viewerId]="focusedViewerId$ | async">
+        </app-display-panel>
 
-          <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewerId]="focusedViewerId$ | async">
-          </app-file-info-panel>
+        <app-file-info-panel *ngSwitchCase="WorkbenchTool.INFO" [viewerId]="focusedViewerId$ | async">
+        </app-file-info-panel>
 
-          <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [viewerId]="focusedViewerId$ | async">
-          </app-custom-marker-panel>
+        <app-custom-marker-panel *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" [viewerId]="focusedViewerId$ | async">
+        </app-custom-marker-panel>
 
-          <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [viewerId]="focusedViewerId$ | async">
-          </app-plotting-panel>
+        <app-plotting-panel *ngSwitchCase="WorkbenchTool.PLOTTER" [viewerId]="focusedViewerId$ | async">
+        </app-plotting-panel>
 
-          <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [viewerId]="focusedViewerId$ | async">
-          </app-sonification-panel>
+        <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [viewerId]="focusedViewerId$ | async">
+        </app-sonification-panel>
 
-          <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [viewerId]="focusedViewerId$ | async"
-            [batchHduIdOptions]="filteredImageHduIds$ | async">
-          </app-photometry-panel>
+        <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [viewerId]="focusedViewerId$ | async"
+          [batchHduIdOptions]="filteredImageHduIds$ | async">
+        </app-photometry-panel>
 
-          <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [viewerId]="focusedViewerId$ | async"
-            [availableHduIds]="filteredImageHduIds$ | async">
-          </app-pixel-ops-panel>
+        <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [viewerId]="focusedViewerId$ | async"
+          [availableHduIds]="filteredImageHduIds$ | async">
+        </app-pixel-ops-panel>
 
-          <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [viewerId]="focusedViewerId$ | async"
-            [hduIds]="filteredHduIds$ | async">
-          </app-wcs-calibration-panel>
+        <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [viewerId]="focusedViewerId$ | async"
+          [hduIds]="filteredHduIds$ | async">
+        </app-wcs-calibration-panel>
 
-          <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [hduIds]="filteredHduIds$ | async">
-          </app-aligning-panel>
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [hduIds]="filteredHduIds$ | async">
+        </app-aligning-panel>
 
-          <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [hduIds]="filteredHduIds$ | async">
-          </app-stacking-panel>
-        </div>
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [hduIds]="filteredHduIds$ | async">
+        </app-stacking-panel>
       </div>
     </div>
-    <div fxFlex="0 0 50px" class="workbench-tool-nav"
-      [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'"
-      [class.collapsed]="!(showConfig$ | async)">
-      <nav role="navigation" i18n-aria-label aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
-        <div class="vertical-icon-nav-item-group">
-          <div class="vertical-icon-nav-item" i18n-matTooltip
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"
-            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
-            <button mat-icon-button>
-              <mat-icon>remove_red_eye</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item" i18n-matTooltip
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')"
-            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.INFO)">
-            <button mat-icon-button>
-              <mat-icon>info</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item" i18n-matTooltip
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
-            [matTooltipPosition]="'left'"
-            [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.CUSTOM_MARKER)">
-            <button mat-icon-button>
-              <mat-icon>place</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')"
-            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)">
-            <button mat-icon-button>
-              <mat-icon>show_chart</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.SONIFIER, 'Sonification')"
-            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.SONIFIER, 'Sonification')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SONIFIER)">
-            <button mat-icon-button>
-              <mat-icon>audiotrack</mat-icon>
-            </button>
-          </div>
-
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PHOTOMETRY, 'Photometry')"
-            [matTooltipPosition]="'left'"
-            [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PHOTOMETRY, 'Photometry')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
-            <button mat-icon-button>
-              <mat-icon>star_border</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
-            [matTooltipPosition]="'left'"
-            [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
-            <button mat-icon-button>
-              <mat-icon>add_to_photos</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
-            [matTooltipPosition]="'left'"
-            [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.WCS_CALIBRATION)">
-            <button mat-icon-button>
-              <mat-icon>gps_fixed</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')"
-            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)">
-            <button mat-icon-button>
-              <mat-icon>photo_size_select_large</mat-icon>
-            </button>
-          </div>
-          <div class="vertical-icon-nav-item"
-            [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')"
-            [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER"
-            [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')"
-            [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)">
-            <button mat-icon-button>
-              <mat-icon>photo_library</mat-icon>
-            </button>
-          </div>
+  </div>
+  <div fxFlex="0 0 50px" class="workbench-tool-nav"
+    [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'tool'"
+    [class.collapsed]="!(showConfig$ | async)">
+    <nav role="navigation" i18n-aria-label aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
+      <div class="vertical-icon-nav-item-group">
+        <div class="vertical-icon-nav-item" i18n-matTooltip
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')" [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
+          <button mat-icon-button>
+            <mat-icon>remove_red_eye</mat-icon>
+          </button>
         </div>
-      </nav>
-    </div>
-  </ng-container>
+        <div class="vertical-icon-nav-item" i18n-matTooltip
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')" [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.INFO)">
+          <button mat-icon-button>
+            <mat-icon>info</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item" i18n-matTooltip
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
+          [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.CUSTOM_MARKER)">
+          <button mat-icon-button>
+            <mat-icon>place</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')" [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)">
+          <button mat-icon-button>
+            <mat-icon>show_chart</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.SONIFIER, 'Sonification')"
+          [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.SONIFIER, 'Sonification')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SONIFIER)">
+          <button mat-icon-button>
+            <mat-icon>audiotrack</mat-icon>
+          </button>
+        </div>
+
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PHOTOMETRY, 'Photometry')"
+          [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PHOTOMETRY, 'Photometry')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
+          <button mat-icon-button>
+            <mat-icon>star_border</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
+          [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
+          <button mat-icon-button>
+            <mat-icon>add_to_photos</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
+          [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.WCS_CALIBRATION)">
+          <button mat-icon-button>
+            <mat-icon>gps_fixed</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')" [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)">
+          <button mat-icon-button>
+            <mat-icon>photo_size_select_large</mat-icon>
+          </button>
+        </div>
+        <div class="vertical-icon-nav-item"
+          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')" [matTooltipPosition]="'left'"
+          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER"
+          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')"
+          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER"
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)">
+          <button mat-icon-button>
+            <mat-icon>photo_library</mat-icon>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </div>
 </div>
 
 <ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>
