@@ -1394,78 +1394,76 @@ export class DataFilesState {
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
     { hduId, changes }: UpdateNormalizer
   ) {
+    let actions = [];
     let state = getState();
     let hdu = state.hduEntities[hduId];
     if (!hdu || !isImageHdu(hdu)) return null;
-
 
     let normalizer = {
       ...hdu.normalizer,
       ...changes
     }
 
-    let hdus = [hdu]
-    let file = state.fileEntities[hdu.fileId]
-
-    if (file.syncLayerNormalizers) {
-      hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(hdu.fileId)).filter(isImageHdu);
+    if (hdu.hist.loaded) {
+      if (normalizer.mode == 'percentile') {
+        let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+        normalizer.backgroundLevel = levels.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
+        normalizer.peakLevel = levels.peakLevel * normalizer.channelScale + normalizer.channelOffset
+      }
+      else if (normalizer.mode == 'pixel') {
+        let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.channelOffset) / normalizer.channelScale, (normalizer.peakLevel - normalizer.channelOffset) / normalizer.channelScale)
+        normalizer.backgroundPercentile = percentiles.lowerPercentile;
+        normalizer.peakPercentile = percentiles.upperPercentile;
+      }
     }
 
-    hdus.forEach(hdu => {
-      let hduId = hdu.id
-      if (normalizer.mode == 'percentile') {
-        let backgroundLevel: number, peakLevel: number;
-        if (hdu.hist.loaded) {
-          let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
-          backgroundLevel = levels.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
-          peakLevel = levels.peakLevel * normalizer.channelScale + normalizer.channelOffset
+    setState((state: DataFilesStateModel) => {
+      let hdu = state.hduEntities[hduId];
+      let hduEntities = {
+        ...state.hduEntities,
+        [hduId]: {
+          ...hdu,
+          normalizer: normalizer
         }
-
-        setState((state: DataFilesStateModel) => {
-          let hdu = state.hduEntities[hduId];
-          if (!isImageHdu(hdu)) return state;
-
-          let hduEntities = {
-            ...state.hduEntities,
-            [hduId]: {
-              ...hdu,
-              normalizer: {
-                ...normalizer,
-                backgroundLevel: backgroundLevel,
-                peakLevel: peakLevel
-              }
-
-            }
-          }
-
-          return {
-            ...state,
-            hduEntities: hduEntities
-          }
-
-
-        });
       }
-      else {
-        let backgroundPercentile: number, peakPercentile: number;
-        if (hdu.hist.loaded) {
-          let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.channelOffset) / normalizer.channelScale, (normalizer.peakLevel - normalizer.channelOffset) / normalizer.channelScale)
-          backgroundPercentile = percentiles.lowerPercentile;
-          peakPercentile = percentiles.upperPercentile;
-        }
+
+      return {
+        ...state,
+        hduEntities: hduEntities
+      }
+    });
+
+    actions.push(new InvalidateNormalizedImageTiles(hduId))
+
+    let file = state.fileEntities[hdu.fileId]
+    if (file.syncLayerNormalizers) {
+      let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(hdu.fileId)).filter(isImageHdu).filter(hdu => hdu.id != hduId);
+      hdus.forEach(hdu => {
+        // if (normalizer.mode == 'percentile') {
+        //   let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+        //   normalizer.backgroundLevel = levels.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
+        //   normalizer.peakLevel = levels.peakLevel * normalizer.channelScale + normalizer.channelOffset
+        // }
+        // else if (normalizer.mode == 'pixel') {
+        //   let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.channelOffset) / normalizer.channelScale, (normalizer.peakLevel - normalizer.channelOffset) / normalizer.channelScale)
+        //   normalizer.backgroundPercentile = percentiles.lowerPercentile;
+        //   normalizer.peakPercentile = percentiles.upperPercentile;
+        // }
+
 
         setState((state: DataFilesStateModel) => {
-          let hdu = state.hduEntities[hduId];
-          if (!isImageHdu(hdu)) return state;
-
           let hduEntities = {
             ...state.hduEntities,
-            [hduId]: {
+            [hdu.id]: {
               ...hdu,
               normalizer: {
-                ...normalizer,
-                backgroundPercentile: backgroundPercentile,
-                peakPercentile: peakPercentile
+                ...hdu.normalizer,
+                mode: normalizer.mode,
+                backgroundLevel: normalizer.backgroundLevel,
+                peakLevel: normalizer.peakLevel,
+                backgroundPercentile: normalizer.backgroundPercentile,
+                peakPercentile: normalizer.peakPercentile,
+                stretchMode: normalizer.stretchMode,
               }
             }
           }
@@ -1475,12 +1473,15 @@ export class DataFilesState {
             hduEntities: hduEntities
           }
         });
-      }
-    })
+        actions.push(new InvalidateNormalizedImageTiles(hdu.id))
+      })
+    }
 
 
+    actions.push(new UpdateNormalizerSuccess(hduId))
 
-    return this.store.dispatch([new UpdateNormalizerSuccess(hduId), ...hdus.map(hdu => new InvalidateNormalizedImageTiles(hdu.id))])
+
+    return this.store.dispatch(actions)
   }
 
   /**

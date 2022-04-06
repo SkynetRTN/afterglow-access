@@ -23,6 +23,8 @@ import { DecimalPipe } from '@angular/common';
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
   @Input() showMode = true;
+  @Input() showLevels = true;
+  @Input() showPercentiles = true;
   @Input() showColorMap = true;
   @Input() showStretchMode = true;
   @Input() showInverted = true;

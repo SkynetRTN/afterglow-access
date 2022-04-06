@@ -19,36 +19,59 @@
       </div>
 
 
-
-      <div class="pb-4 pt-1">
-        <h3 i18n>Brightness and Contrast Settings</h3>
-        <div class="pb-4">
-          <button mat-raised-button class="m-1" (click)="onPresetClick( 10, 95)" i18n-aria-label
-            aria-label="Faint Target Preset">
-            <mat-icon>brightness_3</mat-icon><span i18n>Faint Target Preset</span>
-          </button>
-          <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label
-            aria-label="Default Preset">
-            <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
-          </button>
-          <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
-            aria-label="Bright Target Preset">
-            <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
-          </button>
+      <ng-container *ngIf="(file$ |async)?.syncLayerNormalizers; else notSyncedBlock">
+        <div class="alert alert-warning" style="margin-top: 10px" i18n>
+          Brightness and contrast settings for this layer are controlled by the file. To use unique settings in each
+          layer, you must first disable normalization syncing
+          in the file's display settings.
         </div>
-        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
-          (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-          (peakPercentileChange)="onPeakPercentileChange($event)"
-          (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
-          (colorMapChange)="onColorMapChange(activeImageHdu, $event)" (stretchModeChange)="onStretchModeChange($event)"
-          (invertedChange)="onInvertedChange(activeImageHdu, $event)"
+
+        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showMode]="false" [showPercentiles]="false"
+          [showLevels]="false" [showInverted]="false" (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
           (channelScaleChange)="onChannelScaleChange(activeImageHdu, $event)"
-          (channelOffsetChange)="onChannelOffsetChange(activeImageHdu, $event)"
-          (modeChange)="onNormalizerModeChange($event)">
+          (stretchModeChange)="onStretchModeChange($event)"
+          (channelOffsetChange)="onChannelOffsetChange(activeImageHdu, $event)">
         </app-normalizer-form>
-      </div>
+
+
+      </ng-container>
+      <ng-template #notSyncedBlock>
+        <div class="pb-4 pt-1">
+          <h3 i18n>Brightness and Contrast Settings</h3>
+          <div class="pb-4">
+            <button mat-raised-button class="m-1" (click)="onPresetClick( 10, 95)" i18n-aria-label
+              aria-label="Faint Target Preset">
+              <mat-icon>brightness_3</mat-icon><span i18n>Faint Target Preset</span>
+            </button>
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label
+              aria-label="Default Preset">
+              <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
+            </button>
+            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
+              aria-label="Bright Target Preset">
+              <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
+            </button>
+          </div>
+          <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
+            (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+            (peakPercentileChange)="onPeakPercentileChange($event)"
+            (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
+            (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
+            (stretchModeChange)="onStretchModeChange($event)"
+            (invertedChange)="onInvertedChange(activeImageHdu, $event)"
+            (channelScaleChange)="onChannelScaleChange(activeImageHdu, $event)"
+            (channelOffsetChange)="onChannelOffsetChange(activeImageHdu, $event)"
+            (modeChange)="onNormalizerModeChange($event)">
+          </app-normalizer-form>
+        </div>
+      </ng-template>
+
+
+
+
     </ng-container>
   </ng-container>
+
 
   <ng-template #multiLayerBlock>
     <ng-container *ngIf="hdus$ | async; let hdus">
@@ -93,31 +116,35 @@
           </mat-slide-toggle>
         </div>
 
-        <div class="pb-4 pt-1" *ngIf="compositeNormalizer$ | async; let compositeNormalizer">
-          <h3 i18n>Brightness and Contrast Settings</h3>
-          <div class="pb-4">
-            <button mat-raised-button class="m-1" (click)="onPresetClick( 10, 95)" i18n-aria-label
-              aria-label="Faint Target Preset">
-              <mat-icon>brightness_3</mat-icon><span i18n>Faint Target Preset</span>
-            </button>
-            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label
-              aria-label="Default Preset">
-              <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
-            </button>
-            <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
-              aria-label="Bright Target Preset">
-              <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
-            </button>
+        <ng-container *ngIf="(file$ |async)?.syncLayerNormalizers">
+          <div class="pb-4 pt-1" *ngIf="compositeNormalizer$ | async; let compositeNormalizer">
+            <h3 i18n>Brightness and Contrast Settings</h3>
+            <div class="pb-4">
+              <button mat-raised-button class="m-1" (click)="onPresetClick( 10, 95)" i18n-aria-label
+                aria-label="Faint Target Preset">
+                <mat-icon>brightness_3</mat-icon><span i18n>Faint Target Preset</span>
+              </button>
+              <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label
+                aria-label="Default Preset">
+                <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
+              </button>
+              <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
+                aria-label="Bright Target Preset">
+                <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
+              </button>
+            </div>
+
+            <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="false" [showPercentiles]="false"
+              [showColorMap]="false" [showInverted]="false" [showStretchMode]="true" [showChannelOffset]="false"
+              [showChannelScale]="false" (backgroundLevelChange)="onBackgroundLevelChange($event)"
+              (peakLevelChange)="onPeakLevelChange($event)"
+              (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+              (peakPercentileChange)="onPeakPercentileChange($event)" (modeChange)="onNormalizerModeChange($event)"
+              (stretchModeChange)="onStretchModeChange($event)">
+            </app-normalizer-form>
           </div>
 
-          <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="true" [showColorMap]="false"
-            [showInverted]="false" [showStretchMode]="true" [showChannelOffset]="false" [showChannelScale]="false"
-            (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
-            (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-            (peakPercentileChange)="onPeakPercentileChange($event)" (modeChange)="onNormalizerModeChange($event)"
-            (stretchModeChange)="onStretchModeChange($event)">
-          </app-normalizer-form>
-        </div>
+        </ng-container>
 
         <!-- <div fxFlexLayout="column" fxLayoutGap="10px">
           <div fxFlexLayout="row" fxLayoutGap="15px">

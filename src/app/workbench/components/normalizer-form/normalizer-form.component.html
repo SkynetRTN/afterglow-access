@@ -1,4 +1,4 @@
-<div class="row pb-3" *ngIf="showMode">
+<div class="row pb-3" *ngIf="showMode && showPercentiles && showLevels">
   <div class="col-6">
     <mat-slide-toggle [checked]="normalizer?.mode == 'percentile'"
       (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
@@ -7,7 +7,7 @@
   </div>
   <div class="col-6"></div>
 </div>
-<div class="row" *ngIf="showMode && normalizer?.mode == 'percentile'">
+<div class="row" *ngIf="showMode && normalizer?.mode == 'percentile' && showPercentiles">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Background Level Percentile</mat-label>
@@ -24,7 +24,7 @@
     </mat-form-field>
   </div>
 </div>
-<div class="row" *ngIf="!showMode || normalizer?.mode == 'pixel'">
+<div class="row" *ngIf="showLevels && (!showMode || normalizer?.mode == 'pixel')">
   <div class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Background Level</mat-label>
@@ -63,7 +63,7 @@
     </mat-form-field>
   </div>
 </div>
-<div class="row" *ngIf="showInverted">
+<div class="row mb-4" *ngIf="showInverted">
   <div class="col-6">
     <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="'before'"
       (change)="invertedChange.emit($event.checked)" color="primary" i18n>
@@ -72,7 +72,7 @@
   </div>
   <div class="col-6"></div>
 </div>
-<div class="row mt-4">
+<div class="row">
   <div *ngIf="showChannelScale" class="col-6">
     <mat-form-field class="" appearance="outline">
       <mat-label i18n>Channel Scale</mat-label>

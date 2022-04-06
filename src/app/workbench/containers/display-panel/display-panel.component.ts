@@ -158,34 +158,39 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         return hdus.find(hdu => isImageHdu(hdu)) as ImageHdu | null;
       }))
 
+
     this.compositeNormalizer$ = this.firstImageHdu$.pipe(
-      withLatestFrom(this.hdus$),
-      map(([firstHdu, hdus]) => {
-        if (!firstHdu.normalizer) return null;
-        let refBackgroundLevel = firstHdu.normalizer.backgroundLevel;
-        let refPeakLevel = firstHdu.normalizer.peakLevel;
-
-        let synced = hdus.every(hdu => {
-          if (isImageHdu(hdu)) {
-            if (hdu.id == firstHdu.id) return true;
-            let backgroundLevel = hdu.normalizer.backgroundLevel;
-            let peakLevel = hdu.normalizer.peakLevel;
-            return backgroundLevel == refBackgroundLevel && peakLevel == refPeakLevel
-          }
-          return true;
-        })
-
-        if (!synced) return null;
-
-        return {
-          ...firstHdu.normalizer,
-          backgroundLevel: refBackgroundLevel,
-          peakLevel: refPeakLevel,
-          channelOffset: 0,
-          channelScale: 1
-        }
-      })
+      map(firstImageHdu => firstImageHdu?.normalizer)
     )
+
+    // this.compositeNormalizer$ = this.firstImageHdu$.pipe(
+    //   withLatestFrom(this.hdus$),
+    //   map(([firstHdu, hdus]) => {
+    //     if (!firstHdu.normalizer) return null;
+    //     let refBackgroundLevel = firstHdu.normalizer.backgroundLevel;
+    //     let refPeakLevel = firstHdu.normalizer.peakLevel;
+
+    //     let synced = hdus.every(hdu => {
+    //       if (isImageHdu(hdu)) {
+    //         if (hdu.id == firstHdu.id) return true;
+    //         let backgroundLevel = hdu.normalizer.backgroundLevel;
+    //         let peakLevel = hdu.normalizer.peakLevel;
+    //         return backgroundLevel == refBackgroundLevel && peakLevel == refPeakLevel
+    //       }
+    //       return true;
+    //     })
+
+    //     if (!synced) return null;
+
+    //     return {
+    //       ...firstHdu.normalizer,
+    //       backgroundLevel: refBackgroundLevel,
+    //       peakLevel: refPeakLevel,
+    //       channelOffset: 0,
+    //       channelScale: 1
+    //     }
+    //   })
+    // )
 
 
 
@@ -208,6 +213,16 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
     this.presetClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      // let hdu = activeHdu || hdus.find(isImageHdu);
+      // if (!hdu) return;
+      // this.store.dispatch(
+      //   new UpdateNormalizer(hdu.id, {
+      //     mode: 'percentile',
+      //     backgroundPercentile: value.backgroundPercentile,
+      //     peakPercentile: value.peakPercentile
+      //   })
+      // );
+
       if (activeHdu) {
         this.store.dispatch(
           new UpdateNormalizer(activeHdu.id, {
@@ -218,19 +233,16 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         );
       }
       else {
-        let refLevels: { backgroundLevel: number, peakLevel: number };
-        hdus.forEach(hdu => {
-          if (!isImageHdu(hdu)) return
+        let imageHdus = hdus.filter(isImageHdu);
+        let hdu = imageHdus.find(hdu => hdu.hist.loaded)
+        if (!hdu) return;
 
-          if (refLevels === undefined) {
-            refLevels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
-            refLevels = { backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value.backgroundPercentile, peakPercentile: value.peakPercentile }));
-            return;
-          }
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: refLevels.backgroundLevel, peakLevel: refLevels.peakLevel }));
-
-        })
+        let levels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
+        this.store.dispatch(new UpdateNormalizer(hdu.id, {
+          mode: 'pixel',
+          backgroundLevel: levels.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset,
+          peakLevel: levels.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset
+        }));
       }
     });
 
@@ -239,101 +251,136 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       withLatestFrom(this.file$)
     ).subscribe(([value, file]) => {
       if (file) {
-        this.store.dispatch(new SetFileNormalizerSync(file.id, value))
+        let actions: any[] = [new SetFileNormalizerSync(file.id, value)]
+        if (value) {
+          let hdu = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(file.id));
+          if (hdu) {
+            actions.push(new UpdateNormalizer(hdu.id, { mode: 'pixel' }));
+          }
+        }
+        this.store.dispatch(actions);
       }
     })
 
     this.backgroundPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
-        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundPercentile: value }));
-      }
-      else {
-        let refBackgroundLevel: number;
-        hdus.forEach(hdu => {
-          if (!isImageHdu(hdu)) return
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundPercentile: value }));
 
-          if (refBackgroundLevel === undefined) {
-            refBackgroundLevel = calcLevels(hdu.hist, value, hdu.normalizer.peakPercentile)?.backgroundLevel
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value }));
-            return;
-          }
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: refBackgroundLevel }));
 
-        })
-      }
+
+      // if (activeHdu) {
+      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundPercentile: value }));
+      // }
+      // else {
+      //   let refBackgroundLevel: number;
+      //   hdus.forEach(hdu => {
+      //     if (!isImageHdu(hdu)) return
+
+      //     if (refBackgroundLevel === undefined) {
+      //       refBackgroundLevel = calcLevels(hdu.hist, value, hdu.normalizer.peakPercentile)?.backgroundLevel
+      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value }));
+      //       return;
+      //     }
+      //     this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: refBackgroundLevel }));
+
+      //   })
+      // }
     });
 
     this.peakPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
-        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakPercentile: value }));
-      }
-      else {
-        let refPeakLevel: number;
-        hdus.forEach(hdu => {
-          if (!isImageHdu(hdu)) return
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { peakPercentile: value }));
 
-          if (refPeakLevel === undefined) {
-            refPeakLevel = calcLevels(hdu.hist, hdu.normalizer.backgroundPercentile, value)?.peakLevel
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', peakPercentile: value }));
-            return;
-          }
+      // if (activeHdu) {
+      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakPercentile: value }));
+      // }
+      // else {
+      //   let refPeakLevel: number;
+      //   hdus.forEach(hdu => {
+      //     if (!isImageHdu(hdu)) return
 
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', peakLevel: refPeakLevel }));
+      //     if (refPeakLevel === undefined) {
+      //       refPeakLevel = calcLevels(hdu.hist, hdu.normalizer.backgroundPercentile, value)?.peakLevel
+      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', peakPercentile: value }));
+      //       return;
+      //     }
 
-        })
-      }
+      //     this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', peakLevel: refPeakLevel }));
+
+      //   })
+      // }
     });
 
     this.backgroundLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
-        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundLevel: value }));
-      }
-      else {
-        hdus.forEach(hdu => {
-          if (isImageHdu(hdu)) {
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
-          }
-        })
-      }
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
+
+
+      // if (activeHdu) {
+      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundLevel: value }));
+      // }
+      // else {
+      //   hdus.forEach(hdu => {
+      //     if (isImageHdu(hdu)) {
+      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
+      //     }
+      //   })
+      // }
     });
 
     this.peakLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
-        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakLevel: value }));
-      }
-      else {
-        hdus.forEach(hdu => {
-          if (isImageHdu(hdu)) {
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: value, mode: 'pixel' }));
-          }
-        })
-      }
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: value, mode: 'pixel' }));
+
+      // if (activeHdu) {
+      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakLevel: value }));
+      // }
+      // else {
+      //   hdus.forEach(hdu => {
+      //     if (isImageHdu(hdu)) {
+      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: value, mode: 'pixel' }));
+      //     }
+      //   })
+      // }
     });
 
     this.normalizerMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
-        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { mode: value }));
-      }
-      else {
-        hdus.forEach(hdu => {
-          if (isImageHdu(hdu)) {
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
-          }
-        })
-      }
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
+
+      // if (activeHdu) {
+      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { mode: value }));
+      // }
+      // else {
+      //   hdus.forEach(hdu => {
+      //     if (isImageHdu(hdu)) {
+      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
+      //     }
+      //   })
+      // }
     });
 
     this.stretchMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
-        this.store.dispatch(new UpdateNormalizer(activeHdu.id, { stretchMode: value }));
-      }
-      else {
-        hdus.forEach(hdu => {
-          if (isImageHdu(hdu)) {
-            this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
-          }
-        })
-      }
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
+
+
+      // if (activeHdu) {
+      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { stretchMode: value }));
+      // }
+      // else {
+      //   hdus.forEach(hdu => {
+      //     if (isImageHdu(hdu)) {
+      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
+      //     }
+      //   })
+      // }
     });
 
     this.resetWhiteBalance$.pipe(
