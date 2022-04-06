@@ -13,19 +13,10 @@
         Click once on the image to set the measurement's start point, move your mouse, then click a second time to set
         the end point.
       </p>
-      <div>
-        <app-plotter
-          #plotter
-          [wcs]="(header$ | async)?.wcs"
-          [imageData]="imageData$ | async"
-          [plotMode]="config?.plotMode"
-          [colorMode]="colorMode$ | async"
-          [width]="500"
-          [height]="400"
-          [lineMeasureStart]="lineStart$ | async"
-          [lineMeasureEnd]="lineEnd$ | async"
-          [interpolatePixels]="config?.interpolatePixels"
-        >
+      <div class="w-100" style="height: 400px;">
+        <app-plotter #plotter [wcs]="(header$ | async)?.wcs" [imageData]="imageData$ | async"
+          [plotMode]="config?.plotMode" [colorMode]="colorMode$ | async" [lineMeasureStart]="lineStart$ | async"
+          [lineMeasureEnd]="lineEnd$ | async" [interpolatePixels]="config?.interpolatePixels">
         </app-plotter>
       </div>
 
@@ -40,27 +31,16 @@
       <div class="row">
         <div class="col-6">
           <div class="form-group">
-            <mat-slide-toggle
-              [checked]="config?.centroidClicks"
-              [labelPosition]="'before'"
-              (change)="onCentroidClicksChange($event)"
-              color="primary"
-              i18n
-            >
+            <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"
+              (change)="onCentroidClicksChange($event)" color="primary" i18n>
               Centroid clicks
             </mat-slide-toggle>
           </div>
         </div>
         <div class="col-6">
           <div class="form-group">
-            <mat-slide-toggle
-              [checked]="config?.planetCentroiding"
-              [disabled]="!config?.centroidClicks"
-              color="primary"
-              [labelPosition]="'before'"
-              (change)="onPlanetCentroidingChange($event)"
-              i18n
-            >
+            <mat-slide-toggle [checked]="config?.planetCentroiding" [disabled]="!config?.centroidClicks" color="primary"
+              [labelPosition]="'before'" (change)="onPlanetCentroidingChange($event)" i18n>
               Planet Centroiding
             </mat-slide-toggle>
           </div>
@@ -69,26 +49,16 @@
       <div class="row">
         <div class="col-6">
           <div class="form-group">
-            <mat-slide-toggle
-              [checked]="config?.interpolatePixels"
-              [labelPosition]="'before'"
-              (change)="onInterpolatePixelsChange($event)"
-              color="primary"
-              i18n
-            >
+            <mat-slide-toggle [checked]="config?.interpolatePixels" [labelPosition]="'before'"
+              (change)="onInterpolatePixelsChange($event)" color="primary" i18n>
               Interpolate pixels
             </mat-slide-toggle>
           </div>
         </div>
         <div class="col-6">
           <div class="form-group pt-2">
-            <mat-slide-toggle
-              [checked]="config?.plotterSyncEnabled"
-              [labelPosition]="'after'"
-              (change)="onPlotterSyncEnabledChange($event)"
-              color="primary"
-              i18n
-            >
+            <mat-slide-toggle [checked]="config?.plotterSyncEnabled" [labelPosition]="'after'"
+              (change)="onPlotterSyncEnabledChange($event)" color="primary" i18n>
               Sync Plot Across Files
             </mat-slide-toggle>
           </div>

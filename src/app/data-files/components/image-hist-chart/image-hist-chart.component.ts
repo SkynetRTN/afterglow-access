@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, ChangeDetectorRef, ElementRef, HostListener, OnDestroy } from '@angular/core';
 
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
@@ -18,18 +18,19 @@ import { blueColorMap, greenColorMap, redColorMap } from '../../models/color-map
   templateUrl: './image-hist-chart.html',
   styleUrls: ['./image-hist-chart.component.scss'],
 })
-export class ImageHistChartComponent implements OnInit, OnChanges {
+export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
 
   @Input() data: { hist: ImageHist, normalizer: PixelNormalizer }[] = [];
-  @Input() width: number = 200;
-  @Input() height: number = 200;
+  @Input() width: number;
+  @Input() height: number;
   @Input() backgroundLevel: number = 0;
   @Input() peakLevel: number = 0;
 
   private yMax = 0;
   public logarithmicX: boolean = false;
   public logarithmicY: boolean = false;
+  private observer: ResizeObserver;
 
   public chartData: Array<any> = [];
   public layout: Partial<any> = {
@@ -117,7 +118,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     ],
   };
 
-  constructor(private themeStorage: ThemeStorage, private _changeDetectorRef: ChangeDetectorRef) {
+  constructor(private themeStorage: ThemeStorage, private _changeDetectorRef: ChangeDetectorRef, private element: ElementRef<HTMLElement>) {
     this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
     themeStorage.onThemeUpdate.subscribe(() => {
       this.theme = themeStorage.getCurrentColorTheme().plotlyTheme;
@@ -125,7 +126,17 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
     });
   }
 
+
   ngOnInit() {
+    this.observer = new ResizeObserver(() => {
+      console.log("SIZE CHANGE")
+      this.updateChart()
+    });
+    this.observer.observe(this.element.nativeElement);
+  }
+
+  ngOnDestroy() {
+    this.observer.unobserve(this.element.nativeElement);
   }
 
   onXAxisTypeChange($event: MatCheckboxChange) {
@@ -187,8 +198,11 @@ export class ImageHistChartComponent implements OnInit, OnChanges {
 
     })
 
-    if (this.layout.width != this.width) this.layout.width = this.width;
-    if (this.layout.height != this.height) this.layout.height = this.height;
+    let width = this.width || this.element?.nativeElement?.getBoundingClientRect().width
+    let height = this.height || this.element?.nativeElement?.getBoundingClientRect().height
+
+    if (this.layout.width != width) this.layout.width = width;
+    if (this.layout.height != height) this.layout.height = height;
 
     // let levels = calcLevels(hist, this.backgroundPercentile, this.peakPercentile);
     let levels = { backgroundLevel: this.backgroundLevel, peakLevel: this.peakLevel }

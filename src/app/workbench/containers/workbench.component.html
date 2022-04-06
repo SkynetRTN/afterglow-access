@@ -122,7 +122,7 @@
         </div>
       </ng-template>
     </div>
-    <div *ngSwitchCase="SidebarView.SETTINGS" class="global-settings-panel h-100 p-3">
+    <div *ngSwitchCase="SidebarView.SETTINGS" class="global-settings-panel h-100 p-3  w-100">
       <h3 i18n>Global Settings</h3>
       <hr />
       <div class="pt-2">
@@ -188,8 +188,9 @@
     </div>
   </div>
   <div class="grabber" appResize [leftElement]="sidebarPanel" [rightElement]="viewerGrid"></div>
-  <div #viewerGrid class="image-viewer-grid-panel" role="region" i18n-aria-label aria-label="image viewers"
-    [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'" style="overflow: auto">
+  <div #viewerGrid fxFlex="1 1 auto" class="image-viewer-grid-panel" role="region" i18n-aria-label
+    aria-label="image viewers" [fxShow]="!(inFullScreenMode$ | async) || (fullScreenPanel$ | async) == 'viewer'"
+    style="overflow: auto">
     <app-viewer-panel-layout [fxLayout]="(layoutContainer$ | async)?.direction" style="height: 100%"
       [id]="(layoutContainer$ | async)?.id" [itemIds]="(layoutContainer$ | async)?.itemIds"
       (onFileClose)="onCloseFileBtnClick($event)" (onFileSave)="onSaveFileBtnClick($event)" cdkDropListGroup>
@@ -197,8 +198,8 @@
   </div>
   <div class="grabber" appResize [leftElement]="viewerGrid" [rightElement]="toolPanel" [resizeLeft]="false"></div>
 
-  <div #toolPanel fxFlex="1 1 0%" class="workbench-tool-panel" [class]="activeTool$ | async" role="region"
-    aria-labelledby="settings-header" [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
+  <div #toolPanel fxFlex="0 0 auto" style="width: 550px" class="workbench-tool-panel" [class]="activeTool$ | async"
+    role="region" aria-labelledby="settings-header" [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
         ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') ||
         (!(inFullScreenMode$ | async) && (showConfig$ | async))
       ">

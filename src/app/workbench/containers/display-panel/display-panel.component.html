@@ -10,8 +10,8 @@
   <ng-container *ngIf="activeHdu$ | async as hdu; else multiLayerBlock">
     <ng-container *ngIf="activeImageHdu$ | async as activeImageHdu; else invalidHduTypeBlock">
 
-      <div *ngIf="activeImageHdu.hist?.loaded" class="pr-3 pl-3 pb-0">
-        <app-image-hist-chart [width]="600" [height]="400" [data]="[activeHistData$ | async]"
+      <div *ngIf="activeImageHdu.hist?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
+        <app-image-hist-chart [data]="[activeHistData$ | async]"
           [backgroundLevel]="activeImageHdu?.normalizer?.backgroundLevel"
           [peakLevel]="activeImageHdu?.normalizer?.peakLevel">
         </app-image-hist-chart>
@@ -41,7 +41,7 @@
           <div class="pb-4">
             <button mat-raised-button class="m-1" (click)="onPresetClick( 10, 95)" i18n-aria-label
               aria-label="Faint Target Preset">
-              <mat-icon>brightness_3</mat-icon><span i18n>Faint Target Preset</span>
+              <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
             </button>
             <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label
               aria-label="Default Preset">
@@ -49,7 +49,7 @@
             </button>
             <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
               aria-label="Bright Target Preset">
-              <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
+              <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
             </button>
           </div>
           <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
@@ -77,8 +77,6 @@
     <ng-container *ngIf="hdus$ | async; let hdus">
       <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
         <div>
-          <h3 i18n>Histogram</h3>
-
           <div class="pb-1">
 
             <button mat-raised-button class="m-1" (click)="neutralizeBackground()" i18n-aria-label
@@ -96,18 +94,19 @@
             </button> -->
             <button mat-raised-button class="m-1" (click)="resetColorBalance()" i18n-aria-label
               aria-label="Reset Color Balance">
-              <mat-icon>refresh</mat-icon><span i18n>Reset Color Balance</span>
+              <mat-icon>refresh</mat-icon><span i18n>Reset</span>
             </button>
           </div>
         </div>
 
-        <div class="pr-3 pl-3 pb-0">
-          <app-image-hist-chart [width]="600" [height]="400" [data]="compositeHistData$ | async"
+        <div class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
+          <app-image-hist-chart [data]="compositeHistData$ | async"
             [backgroundLevel]="(compositeNormalizer$ | async)?.backgroundLevel"
             [peakLevel]="(compositeNormalizer$ | async)?.peakLevel">
           </app-image-hist-chart>
-          <div style="clear: both"></div>
+
         </div>
+        <div style="clear: both"></div>
 
         <div class="p-4">
           <mat-slide-toggle [checked]="(file$ |async)?.syncLayerNormalizers"
@@ -122,7 +121,7 @@
             <div class="pb-4">
               <button mat-raised-button class="m-1" (click)="onPresetClick( 10, 95)" i18n-aria-label
                 aria-label="Faint Target Preset">
-                <mat-icon>brightness_3</mat-icon><span i18n>Faint Target Preset</span>
+                <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
               </button>
               <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99)" i18n-aria-label
                 aria-label="Default Preset">
@@ -130,7 +129,7 @@
               </button>
               <button mat-raised-button class="m-1" (click)="onPresetClick(10, 99.999)" i18n-aria-label
                 aria-label="Bright Target Preset">
-                <mat-icon>brightness_5</mat-icon><span i18n>Bright Target Preset</span>
+                <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
               </button>
             </div>
 
