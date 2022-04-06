@@ -89,6 +89,7 @@ import {
   UpdateNormalizerSuccess,
   UpdateChannelMixer,
   SetFileNormalizerSync,
+  InitializeFile,
 } from './data-files.actions';
 import { HduType } from './models/data-file-type';
 import { env } from '../../environments/environment';
@@ -530,6 +531,7 @@ export class DataFilesState {
                 fileId: hdu.fileId,
                 order: hdu.order,
                 modified: hdu.modified,
+                name: hdu.name
               };
             } else {
               //add the new HDU
@@ -613,6 +615,8 @@ export class DataFilesState {
             } else {
               state.fileIds.push(file.id);
               state.fileEntities[file.id] = file;
+              actions.push(new InitializeFile(file.id))
+
             }
           });
 
@@ -680,6 +684,42 @@ export class DataFilesState {
     }
 
     return merge(...pendingActions, dispatch(actions));
+  }
+
+  private initializeImageData(state: DataFilesStateModel, id: string, type: string, ref: {
+    width: number;
+    height: number;
+    tileWidth: number;
+    tileHeight: number;
+    initialized: boolean;
+  }) {
+    if (id && id in state.imageDataEntities) {
+      // HDU already has initialized raw image data
+      let imageData = state.imageDataEntities[id];
+      if (imageData.width != ref.width ||
+        imageData.height != ref.height ||
+        imageData.tileWidth != ref.tileHeight ||
+        imageData.initialized != ref.initialized) {
+        state.imageDataEntities[id] = {
+          ...imageData,
+          ...ref,
+          tiles: createTiles(ref.width, ref.height, this.config.tileSize, this.config.tileSize),
+        };
+      }
+      return id;
+    } else {
+      let nextId = `${type}_${state.nextIdSeed++}`;
+      let imageData: IImageData<PixelType> = {
+        id: nextId,
+        ...ref,
+        tiles: createTiles<PixelType>(ref.width, ref.height, this.config.tileSize, this.config.tileSize),
+      };
+
+      state.imageDataEntities[nextId] = imageData;
+      state.imageDataIds.push(nextId);
+      return nextId;
+    }
+
   }
 
   @Action(LoadHduHeader)
@@ -770,41 +810,7 @@ export class DataFilesState {
             }
 
 
-            let initializeImageData = (id: string, type: string, ref: {
-              width: number;
-              height: number;
-              tileWidth: number;
-              tileHeight: number;
-              initialized: boolean;
-            }) => {
-              if (id && id in state.imageDataEntities) {
-                // HDU already has initialized raw image data
-                let imageData = state.imageDataEntities[id];
-                if (imageData.width != ref.width ||
-                  imageData.height != ref.height ||
-                  imageData.tileWidth != ref.tileHeight ||
-                  imageData.initialized != ref.initialized) {
-                  state.imageDataEntities[id] = {
-                    ...imageData,
-                    ...ref,
-                    tiles: createTiles(width, height, this.config.tileSize, this.config.tileSize),
-                  };
-                }
-                return id;
-              } else {
-                let nextId = `${type}_${state.nextIdSeed++}`;
-                let imageData: IImageData<PixelType> = {
-                  id: nextId,
-                  ...ref,
-                  tiles: createTiles<PixelType>(width, height, this.config.tileSize, this.config.tileSize),
-                };
 
-                state.imageDataEntities[nextId] = imageData;
-                state.imageDataIds.push(nextId);
-                return nextId;
-              }
-
-            }
 
             let hduBase = {
               width: width,
@@ -815,8 +821,8 @@ export class DataFilesState {
             };
 
 
-            hdu.rawImageDataId = initializeImageData(hdu.rawImageDataId, 'RAW_IMAGE_DATA', hduBase)
-            hdu.rgbaImageDataId = initializeImageData(hdu.rgbaImageDataId, 'HDU_COMPOSITE_IMAGE_DATA', hduBase)
+            hdu.rawImageDataId = this.initializeImageData(state, hdu.rawImageDataId, 'RAW_IMAGE_DATA', hduBase)
+            hdu.rgbaImageDataId = this.initializeImageData(state, hdu.rgbaImageDataId, 'HDU_COMPOSITE_IMAGE_DATA', hduBase)
             // hdu.redChannelId = initializeImageData(hdu.redChannelId, 'HDU_RED_IMAGE_DATA', hduBase)
             // hdu.greenChannelId = initializeImageData(hdu.greenChannelId, 'HDU_GREEN_IMAGE_DATA', hduBase)
             // hdu.blueChannelId = initializeImageData(hdu.blueChannelId, 'HDU_BLUE_IMAGE_DATA', hduBase)
@@ -854,57 +860,9 @@ export class DataFilesState {
               hdu.viewportTransformId = viewportTransformId;
             }
 
-            //initialize file file image data
-            let file = state.fileEntities[hdu.fileId];
-            let fileHdus = file.hduIds
-              .map((id) => state.hduEntities[id])
-              .filter(
-                (hdu) => hdu.type == HduType.IMAGE && hdu.headerId && state.headerEntities[hdu.headerId].loaded
-              ) as ImageHdu[];
-            let compositeWidth = Math.min(...fileHdus.map((hdu) => getWidth(state.headerEntities[hdu.headerId])));
-            let compositeHeight = Math.min(...fileHdus.map((hdu) => getHeight(state.headerEntities[hdu.headerId])));
-            let compositeImageDataBase = {
-              width: compositeWidth,
-              height: compositeHeight,
-              tileWidth: this.config.tileSize,
-              tileHeight: this.config.tileSize,
-              initialized: true,
-            };
-
-            file.rgbaImageDataId = initializeImageData(file.rgbaImageDataId, 'FILE_COMPOSITE', compositeImageDataBase)
+            actions.push(new InitializeFile(hdu.fileId));
 
 
-            // initialize file transformation
-            if (!state.transformEntities[file.imageTransformId]) {
-              let imageTransformId = `IMAGE_TRANSFORM_${state.nextIdSeed++}`;
-              let imageTransform: Transform = {
-                id: imageTransformId,
-                a: 1,
-                b: 0,
-                c: 0,
-                d: -1,
-                tx: 0,
-                ty: compositeHeight,
-              };
-              state.transformEntities[imageTransformId] = imageTransform;
-              state.transformIds.push(imageTransformId);
-              file.imageTransformId = imageTransformId;
-            }
-            if (!state.transformEntities[file.viewportTransformId]) {
-              let viewportTransformId = `VIEWPORT_TRANSFORM_${state.nextIdSeed++}`;
-              let viewportTransform: Transform = {
-                id: viewportTransformId,
-                a: 1,
-                b: 0,
-                c: 0,
-                d: 1,
-                tx: 0,
-                ty: 0,
-              };
-              state.transformEntities[viewportTransformId] = viewportTransform;
-              state.transformIds.push(viewportTransformId);
-              file.viewportTransformId = viewportTransformId;
-            }
           }
 
           return state;
@@ -913,6 +871,69 @@ export class DataFilesState {
         dispatch(actions);
       })
     );
+  }
+
+  @Action(InitializeFile)
+  @ImmutableContext()
+  public initializeFileImageData(
+    { setState, getState, dispatch }: StateContext<DataFilesStateModel>,
+    { fileId }: InitializeFile
+  ) {
+
+    setState((state: DataFilesStateModel) => {
+      //initialize file image data
+      let file = state.fileEntities[fileId];
+      let headers = file.hduIds.map(id => state.hduEntities[id]).map(hdu => hdu.headerId).map(id => state.headerEntities[id]).filter(header => header.loaded)
+      if (headers.length != 0) {
+        let compositeWidth = Math.min(...headers.map(header => getWidth(header)));
+        let compositeHeight = Math.min(...headers.map(header => getHeight(header)));
+        let compositeImageDataBase = {
+          width: compositeWidth,
+          height: compositeHeight,
+          tileWidth: this.config.tileSize,
+          tileHeight: this.config.tileSize,
+          initialized: true,
+        };
+
+        file.rgbaImageDataId = this.initializeImageData(state, file.rgbaImageDataId, 'FILE_COMPOSITE', compositeImageDataBase)
+
+
+        // initialize file transformation
+        if (!state.transformEntities[file.imageTransformId]) {
+          let imageTransformId = `IMAGE_TRANSFORM_${state.nextIdSeed++}`;
+          let imageTransform: Transform = {
+            id: imageTransformId,
+            a: 1,
+            b: 0,
+            c: 0,
+            d: -1,
+            tx: 0,
+            ty: compositeHeight,
+          };
+          state.transformEntities[imageTransformId] = imageTransform;
+          state.transformIds.push(imageTransformId);
+          file.imageTransformId = imageTransformId;
+        }
+        if (!state.transformEntities[file.viewportTransformId]) {
+          let viewportTransformId = `VIEWPORT_TRANSFORM_${state.nextIdSeed++}`;
+          let viewportTransform: Transform = {
+            id: viewportTransformId,
+            a: 1,
+            b: 0,
+            c: 0,
+            d: 1,
+            tx: 0,
+            ty: 0,
+          };
+          state.transformEntities[viewportTransformId] = viewportTransform;
+          state.transformIds.push(viewportTransformId);
+          file.viewportTransformId = viewportTransformId;
+        }
+      }
+
+      return state;
+    })
+
   }
 
   @Action(LoadImageHduHistogram)

@@ -6,18 +6,26 @@ import {
   OnDestroy,
   ChangeDetectionStrategy,
   AfterViewInit,
+  ViewChild,
 } from '@angular/core';
-import { DataFile, IHdu, ImageHdu } from '../../../data-files/models/data-file';
-import { Store } from '@ngxs/store';
+import { DataFile, IHdu, ImageHdu, isImageHdu } from '../../../data-files/models/data-file';
+import { Actions, ofActionCompleted, ofActionDispatched, Store } from '@ngxs/store';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { BehaviorSubject, Observable, combineLatest, Subject, concat } from 'rxjs';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ToggleFileSelection, SelectFile } from '../../workbench.actions';
 import { IViewer } from '../../models/viewer';
-import { LoadLibrary } from '../../../data-files/data-files.actions';
+import { LoadLibrary, LoadLibrarySuccess, UpdateBlendMode, UpdateNormalizer } from '../../../data-files/data-files.actions';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { aColorMap, blueColorMap, coolColorMap, grayColorMap, greenColorMap, heatColorMap, rainbowColorMap, redColorMap } from 'src/app/data-files/models/color-map';
+import { BlendMode } from 'src/app/data-files/models/blend-mode';
+import { MatDialog } from '@angular/material/dialog';
+import { RenameHduDialogComponent } from '../../components/rename-hdu-dialog/rename-hdu-dialog.component';
+import { RenameFileDialogComponent } from '../../components/rename-file-dialog/rename-file-dialog.component';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-data-file-list',
@@ -26,6 +34,26 @@ import { AfterglowDataFileService } from '../../services/afterglow-data-files';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataFileListComponent implements OnDestroy, AfterViewInit {
+  isImageHdu = isImageHdu;
+
+  colorMaps = [
+    grayColorMap,
+    rainbowColorMap,
+    coolColorMap,
+    heatColorMap,
+    redColorMap,
+    greenColorMap,
+    blueColorMap,
+    aColorMap,
+  ];
+
+  blendModeOptions = [
+    { label: 'Normal', value: BlendMode.Normal },
+    { label: 'Screen', value: BlendMode.Screen },
+    { label: 'Luminosity', value: BlendMode.Luminosity },
+  ];
+
+
   @Input('files')
   set files(files: DataFile[]) {
     this.files$.next(files);
@@ -56,6 +84,11 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
   @Output() onCloseFile = new EventEmitter<string>();
   @Output() onSaveFile = new EventEmitter<string>();
 
+  @ViewChild(MatMenuTrigger)
+  contextMenu: MatMenuTrigger;
+  contextMenuPosition = { x: '0px', y: '0px' };
+  mouseOverCloseViewerId: string = null;
+
   selectAllChecked$: Observable<boolean>;
   selectAllIndeterminate$: Observable<boolean>;
   destroy$ = new Subject<boolean>();
@@ -63,7 +96,7 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
   collapsedFileIds: { [id: string]: boolean } = {};
   focusedValue: { fileId: string; hduId: string } = null;
 
-  constructor(private store: Store, private fileService: AfterglowDataFileService) { }
+  constructor(private store: Store, private fileService: AfterglowDataFileService, private dialog: MatDialog, private actions$: Actions) { }
 
   ngAfterViewInit() { }
 
@@ -155,5 +188,55 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     }
 
     this.focusedValue = null;
+  }
+
+  onFileContextMenu(event: MouseEvent, fileId: string) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = {
+      file: this.store.selectSnapshot(DataFilesState.getFileById(fileId))
+    };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
+  onHduContextMenu(event: MouseEvent, hduId: string) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = {
+      hdu: this.store.selectSnapshot(DataFilesState.getHduById(hduId))
+    };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
+  renameFile(file: DataFile) {
+    let dialogRef = this.dialog.open(RenameFileDialogComponent, { data: file })
+    dialogRef.afterClosed().subscribe((file: DataFile) => {
+      if (!file) return;
+      this.store.dispatch(new LoadLibrary())
+    })
+  }
+
+  splitFile(file: DataFile) {
+
+  }
+
+
+  renameHdu(hdu: IHdu) {
+    let dialogRef = this.dialog.open(RenameHduDialogComponent, { data: hdu })
+    dialogRef.afterClosed().subscribe((hdu) => {
+      if (!hdu) return;
+      this.store.dispatch(new LoadLibrary())
+    })
+  }
+
+  setColorMap(hdu: ImageHdu, value: string) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { colorMapName: value }))
+  }
+  setBlendMode(hdu: ImageHdu, value: BlendMode) {
+    this.store.dispatch(new UpdateBlendMode(hdu.id, value));
   }
 }

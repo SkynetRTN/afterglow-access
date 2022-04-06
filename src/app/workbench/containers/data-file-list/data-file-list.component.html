@@ -6,7 +6,8 @@
       [value]="{ fileId: file?.id, hduId: '' }"
       [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === ''" cdkDrag
       [cdkDragData]="fileOption.value" (dblclick)="handleItemDoubleClick(fileOption.value)"
-      (focus)="handleFocus(fileOption.value)" (mouseenter)="handleMouseEnter(fileOption.value)">
+      (focus)="handleFocus(fileOption.value)" (mouseenter)="handleMouseEnter(fileOption.value)"
+      (contextmenu)="onFileContextMenu($event, file.id)">
       <app-file-list-option style="height: 100%" [fileId]="file.id" [showFileToolbar]="focusedValue?.fileId == file.id"
         [showExpand]="true" [expanded]="!collapsedFileIds[file.id]"
         [showSelect]="selectedFileIds.length != 0 || focusedValue?.fileId == file.id"
@@ -21,7 +22,8 @@
         [class.nested]="file.hduIds.length > 1" [value]="{ fileId: file?.id, hduId: hduId }"
         [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.hduId === hduId" cdkDrag
         [cdkDragData]="hduOption.value" (dblclick)="handleItemDoubleClick(hduOption.value)"
-        (focus)="handleFocus(hduOption.value)" (mouseenter)="handleMouseEnter(hduOption.value)">
+        (focus)="handleFocus(hduOption.value)" (mouseenter)="handleMouseEnter(hduOption.value)"
+        (contextmenu)="onHduContextMenu($event, hduId)">
         <app-file-list-option style="height: 100%" [fileId]="file.id" [hduId]="hduId"
           [showFileToolbar]="file.hduIds.length == 1 && focusedValue?.fileId == file.id"
           [showImageHduLayerToolbar]="file.hduIds.length != 1 && focusedViewer?.fileId == file?.id"
@@ -32,3 +34,44 @@
     </ng-container>
   </ng-container>
 </mat-selection-list>
+
+<div style="visibility: hidden; position: fixed" [style.left]="contextMenuPosition.x"
+  [style.top]="contextMenuPosition.y" [matMenuTriggerFor]="contextMenu"></div>
+
+<mat-menu class="context-menu" #contextMenu="matMenu">
+  <ng-template matMenuContent let-file="file" let-hdu="hdu">
+    <ng-container *ngIf="file">
+      <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameFile(file)">
+        <div class="context-label" fxFlex="1 1 auto">Rename File</div>
+      </div>
+      <div mat-menu-item fxLayout="row" fxFlexFill (click)="splitFile(file)">
+        <div class="context-label" fxFlex="1 1 auto">Split File</div>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="hdu">
+      <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameHdu(hdu)">
+        <div class="context-label" fxFlex="1 1 auto">Rename HDU</div>
+      </div>
+      <ng-container *ngIf="isImageHdu(hdu)">
+        <button mat-menu-item [matMenuTriggerFor]="colorMapMenu">Color Map</button>
+        <button mat-menu-item [matMenuTriggerFor]="blendModeMenu">Blend Mode</button>
+      </ng-container>
+
+      <mat-menu #colorMapMenu="matMenu">
+        <button *ngFor="let colorMap of colorMaps" mat-menu-item
+          [class.selected]="colorMap.name == hdu?.normalizer?.colorMapName"
+          (click)="setColorMap(hdu, colorMap.name)">{{colorMap.name}}</button>
+      </mat-menu>
+
+      <mat-menu #blendModeMenu="matMenu">
+        <button mat-menu-item *ngFor="let bm of blendModeOptions" [class.selected]="bm.value == hdu?.blendMode"
+          (click)="setBlendMode(hdu, bm.value)">{{ bm.label }}
+        </button>
+      </mat-menu>
+
+
+    </ng-container>
+
+
+  </ng-template>
+</mat-menu>

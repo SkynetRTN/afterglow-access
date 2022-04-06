@@ -73,6 +73,13 @@ export class UpdateHduHeader {
   constructor(public hduId: string, public changes: HeaderEntry[]) { }
 }
 
+export class InitializeFile {
+  public static readonly type = '[File] Initialize File';
+
+  constructor(public fileId: string) { }
+
+}
+
 /**
  * HDU Actions
  */
