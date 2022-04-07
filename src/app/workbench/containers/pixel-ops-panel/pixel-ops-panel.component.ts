@@ -124,7 +124,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
       mode: new FormControl('image', Validators.required),
       selectedHduIds: new FormControl({ value: '', disabled: true }, Validators.required),
       primaryHduIds: new FormControl([]),
-      auxHduId: new FormControl('', Validators.required),
+      auxHduId: new FormControl(''),
       scalarValue: new FormControl('', [Validators.required, isNumber]),
       inPlace: new FormControl(false, Validators.required),
       kernelFilter: new FormControl('', Validators.required),
@@ -253,7 +253,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     );
 
     let primaryHdusVars$ = this.pixelOpsFormData$.pipe(
-      map((formData) => formData.primaryHduIds),
+      map((formData) => [...formData.selectedHduIds, ...formData.primaryHduIds]),
       switchMap((hduIds) => {
         if (hduIds.length == 0) return of([]);
         return combineLatest(hduIds.map((hduId) => this.getHduOptionLabel(hduId)));
