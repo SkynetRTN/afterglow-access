@@ -1706,8 +1706,9 @@ export class DataFilesState {
           return true;
         }) as ImageHdu[];
 
+      //reverse the order since they will be blended from bottom to top
       let layers = hdus
-        .sort((a, b) => (a.order > b.order ? 1 : -1))
+        .sort((a, b) => (a.order < b.order ? 1 : -1))
         .map((hdu) => {
           let rgbaImageData = state.imageDataEntities[hdu.rgbaImageDataId];
           // let redChannel = state.imageDataEntities[hdu.redChannelId];
