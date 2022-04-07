@@ -119,6 +119,7 @@ import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 import { AfterglowHeaderKey } from './models/afterglow-header-key';
 import { calcLevels, calcPercentiles } from './models/image-hist';
+import { view } from 'paper/dist/paper-core';
 
 export interface DataFilesStateModel {
   version: string;
@@ -2025,7 +2026,10 @@ export class DataFilesState {
 
       anchorPoint = transformPoint(anchorPoint, invertTransform(viewportTransform));
 
-      viewportTransform = rotateTransform(viewportTransform, -rotationAngle, anchorPoint);
+      rotationAngle *= viewportTransform.a / Math.abs(viewportTransform.a)
+      rotationAngle *= viewportTransform.d / Math.abs(viewportTransform.d)
+
+      viewportTransform = rotateTransform(viewportTransform, rotationAngle, anchorPoint);
       imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
 
       ts[viewportTransformId] = viewportTransform;
