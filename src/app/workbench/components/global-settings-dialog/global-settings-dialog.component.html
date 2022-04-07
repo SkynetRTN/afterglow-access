@@ -7,13 +7,32 @@
       <mat-tab label="Aperture Photometry">
         <form [formGroup]="photometryForm">
           <div style="padding: 10px">
-            <div>
+            <div fxLayout="row" fxLayoutGap="20px">
               <mat-form-field appearance="outline">
                 <mat-label>Aperture Mode</mat-label>
                 <mat-select formControlName="mode">
                   <mat-option *ngFor="let mode of apertureModes" [value]="mode.value">{{ mode.label }}</mat-option>
                 </mat-select>
               </mat-form-field>
+              <button style="height: 50px;" matButton [(colorPicker)]="settings.photometry.markerColor"
+                [cpOKButton]="true">Set Marker
+                Color...</button>
+              <button style="height: 50px;" matButton [(colorPicker)]="settings.photometry.selectedMarkerColor"
+                [cpOKButton]="true">Set
+                Selected Marker Color...</button>
+              <!-- <mat-form-field>
+                <input matInput [value]="settings.photometry.markerColor"
+                  [(colorPicker)]="settings.photometry.markerColor" [style.background]="settings.photometry.markerColor"
+                  [cpOKButton]="true" />
+                <mat-hint>marker color</mat-hint>
+              </mat-form-field>
+              <mat-form-field>
+                <input matInput [value]="settings.photometry.selectedMarkerColor"
+                  [(colorPicker)]="settings.photometry.selectedMarkerColor"
+                  [style.background]="settings.photometry.selectedMarkerColor" [cpOKButton]="true" />
+                <mat-hint>selected marker color</mat-hint>
+              </mat-form-field> -->
+
             </div>
             <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
               <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">

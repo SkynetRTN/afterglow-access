@@ -26,6 +26,12 @@ interface IMarker {
     message: string;
     class: string;
   };
+  style?: {
+    stroke?: string;
+    strokeWidth?: number;
+    selectedStroke?: string;
+    opacity?: number;
+  }
 }
 
 export interface PhotometryMarker extends IMarker {

@@ -1,25 +1,26 @@
 <svg:g class="svg-photometry-marker" [class.selected]="marker.selected" [attr.transform]="getTranslation()">
     <svg:g *ngIf="marker.showAperture && marker.photometryData" [attr.transform]="getApertureRotation()">
         <svg:g app-svg-outlined-ellipse [cx]="0" [cy]="0" [rx]="marker.photometryData.aperA"
-            [ry]="marker.photometryData.aperB" [strokeWidth]="strokeWidth"
-            [stroke]="marker.selected ? selectedStroke : stroke" [outline]="'#000000'" [outlineWidth]="1"
+            [ry]="marker.photometryData.aperB" [strokeWidth]="getStrokeWidth()"
+            [stroke]="marker.selected ? getSelectedStroke() : getStroke()" [outline]="'#000000'" [outlineWidth]="1"
             [outlineOpacity]="0.5" [secondaryOutline]="'#FFFFFF'" [secondaryOutlineWidth]="0"
             [secondaryOutlineOpacity]="0.5"></svg:g>
         <svg:g app-svg-outlined-ellipse [cx]="0" [cy]="0" [rx]="marker.photometryData.annulusAIn"
-            [ry]="marker.photometryData.annulusBIn" [strokeWidth]="strokeWidth"
-            [stroke]="marker.selected ? selectedStroke : stroke" [outline]="'#000000'" [outlineWidth]="1"
+            [ry]="marker.photometryData.annulusBIn" [strokeWidth]="getStrokeWidth()"
+            [stroke]="marker.selected ? getSelectedStroke() : getStroke()" [outline]="'#000000'" [outlineWidth]="1"
             [outlineOpacity]="0.5" [secondaryOutline]="'#FFFFFF'" [secondaryOutlineWidth]="0"
             [secondaryOutlineOpacity]="0.5"></svg:g>
         <svg:g app-svg-outlined-ellipse [cx]="0" [cy]="0" [rx]="marker.photometryData.annulusAOut"
-            [ry]="marker.photometryData.annulusBOut" [strokeWidth]="strokeWidth"
-            [stroke]="marker.selected ? selectedStroke : stroke" [outline]="'#000000'" [outlineWidth]="2"
+            [ry]="marker.photometryData.annulusBOut" [strokeWidth]="getStrokeWidth()"
+            [stroke]="marker.selected ? getSelectedStroke() : getStroke()" [outline]="'#000000'" [outlineWidth]="2"
             [outlineOpacity]="0.5" [secondaryOutline]="'#FFFFFF'" [secondaryOutlineWidth]="0"
             [secondaryOutlineOpacity]="0.5"></svg:g>
 
 
     </svg:g>
-    <svg:g app-svg-crosshair-marker [x]="0" [y]="0" [radius]="2" [stroke]="marker.selected ? selectedStroke : stroke"
-        [attr.transform]="getCrosshairRotation()" [showArrow]="!!marker?.source?.pm">
+    <svg:g app-svg-crosshair-marker [x]="0" [y]="0" [radius]="2"
+        [stroke]="marker.selected ? getSelectedStroke() : getStroke()" [attr.transform]="getCrosshairRotation()"
+        [showArrow]="!!marker?.source?.pm">
     </svg:g>
 
 

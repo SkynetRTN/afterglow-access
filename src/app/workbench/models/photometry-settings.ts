@@ -28,6 +28,9 @@ export interface PhotometrySettings {
   fixAper: boolean;
   fixEll: boolean;
   fixRot: boolean;
+
+  markerColor: string;
+  selectedMarkerColor: string;
 }
 
 export const defaults: PhotometrySettings = {
@@ -52,5 +55,7 @@ export const defaults: PhotometrySettings = {
   constantAperCorr: false,
   adaptiveAperCorr: true,
   aperCorrTol: 0.0001,
+  markerColor: "#002175",
+  selectedMarkerColor: "#ff8b00"
 };
 

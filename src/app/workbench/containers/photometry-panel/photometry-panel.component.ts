@@ -629,6 +629,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.destroy$.unsubscribe();
   }
 
+  // onColorPickerChange(value: string) {
+  //   this.markerColor$.next(value);
+  // }
+
   private getViewerMarkers(viewerId: string) {
     let config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig)
     let state$ = this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
@@ -656,8 +660,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       })
     );
 
-    let sourceMarkers$ = combineLatest([config$, this.autoPhotData$, this.zeroPointCorrection$, header$, hduId$, sources$]).pipe(
-      map(([config, autoPhotData, zeroPointCorrection, header, hduId, sources]) => {
+    let o1$ = combineLatest([config$, this.autoPhotData$, this.zeroPointCorrection$]);
+    let o2$ = combineLatest([header$, hduId$, sources$, this.photometrySettings$])
+    let sourceMarkers$ = combineLatest([o1$, o2$]).pipe(
+      map(([[config, autoPhotData, zeroPointCorrection], [header, hduId, sources, settings]]) => {
         if (!config?.showSourceMarkers || !header || !autoPhotData) return [];
         let selectedSourceIds = config.selectedSourceIds;
         let coordMode = config.coordMode;
@@ -715,7 +721,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             label: config.showSourceLabels ? source.label : '',
             labelRadius: 10,
             showAperture: config.showSourceApertures,
-            showCrosshair: true
+            showCrosshair: true,
+            style: {
+              stroke: settings.markerColor,
+              selectedStroke: settings.selectedMarkerColor
+            }
           }
 
           markers.push(marker);
