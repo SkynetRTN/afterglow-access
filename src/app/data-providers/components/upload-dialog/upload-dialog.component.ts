@@ -74,7 +74,10 @@ export class UploadDialogComponent implements OnInit, AfterViewInit, OnDestroy {
         catchError((err) => {
           let innerError = (err as HttpErrorResponse).error;
           let message = 'Unexpected error';
-          if (innerError.message) message = innerError.message;
+          if (err.status == 409) {
+            message = "File already exists"
+          }
+          else if (innerError.message) message = innerError.message;
 
           this.dataSource.data.find((item) => item.name == file.name).error = message;
           return of(null);
@@ -85,17 +88,17 @@ export class UploadDialogComponent implements OnInit, AfterViewInit, OnDestroy {
     forkJoin(reqs)
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        (v) => {},
-        (err) => {},
+        (v) => { },
+        (err) => { },
         () => {
           this.completed = true;
         }
       );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);
