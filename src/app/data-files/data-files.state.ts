@@ -579,8 +579,8 @@ export class DataFilesState {
                     colorMapName: grayColorMap.name,
                     stretchMode: StretchMode.Linear,
                     inverted: false,
-                    channelScale: 1,
-                    channelOffset: 0,
+                    layerScale: 1,
+                    layerOffset: 0,
                   },
                 };
                 hdu = imageHdu;
@@ -810,12 +810,12 @@ export class DataFilesState {
 
               let scale = getHeaderEntry(header, AfterglowHeaderKey.AG_SCALE)?.value;
               if (scale !== undefined) {
-                hdu.normalizer.channelScale = scale;
+                hdu.normalizer.layerScale = scale;
               }
 
               let offset = getHeaderEntry(header, AfterglowHeaderKey.AG_OFFSET)?.value;
               if (offset !== undefined) {
-                hdu.normalizer.channelOffset = offset;
+                hdu.normalizer.layerOffset = offset;
               }
 
             }
@@ -1439,11 +1439,11 @@ export class DataFilesState {
     if (hdu.hist.loaded) {
       if (normalizer.mode == 'percentile') {
         let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
-        normalizer.backgroundLevel = levels.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
-        normalizer.peakLevel = levels.peakLevel * normalizer.channelScale + normalizer.channelOffset
+        normalizer.backgroundLevel = levels.backgroundLevel * normalizer.layerScale + normalizer.layerOffset;
+        normalizer.peakLevel = levels.peakLevel * normalizer.layerScale + normalizer.layerOffset
       }
       else if (normalizer.mode == 'pixel') {
-        let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.channelOffset) / normalizer.channelScale, (normalizer.peakLevel - normalizer.channelOffset) / normalizer.channelScale)
+        let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale, (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
         normalizer.backgroundPercentile = percentiles.lowerPercentile;
         normalizer.peakPercentile = percentiles.upperPercentile;
       }
@@ -1471,18 +1471,6 @@ export class DataFilesState {
     if (file.syncLayerNormalizers) {
       let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(hdu.fileId)).filter(isImageHdu).filter(hdu => hdu.id != hduId);
       hdus.forEach(hdu => {
-        // if (normalizer.mode == 'percentile') {
-        //   let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
-        //   normalizer.backgroundLevel = levels.backgroundLevel * normalizer.channelScale + normalizer.channelOffset;
-        //   normalizer.peakLevel = levels.peakLevel * normalizer.channelScale + normalizer.channelOffset
-        // }
-        // else if (normalizer.mode == 'pixel') {
-        //   let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.channelOffset) / normalizer.channelScale, (normalizer.peakLevel - normalizer.channelOffset) / normalizer.channelScale)
-        //   normalizer.backgroundPercentile = percentiles.lowerPercentile;
-        //   normalizer.peakPercentile = percentiles.upperPercentile;
-        // }
-
-
         setState((state: DataFilesStateModel) => {
           let hduEntities = {
             ...state.hduEntities,

@@ -12,8 +12,8 @@ export interface PixelNormalizer {
   colorMapName: string;
   stretchMode: StretchMode;
   inverted: boolean;
-  channelScale: number;
-  channelOffset: number;
+  layerScale: number;
+  layerOffset: number;
 }
 
 // export function createPixelNormalizer(backgroundLevel: number, peakLevel: number, colorMap: ColorMap, stretchMode: StretchMode) : PixelNormalizer {
@@ -91,7 +91,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   //while(i--) {
   let compositeBitScaler = (255 / 65535)
   for (let i = 0; i < dataLength; i++) {
-    let norm = stretchFn(Math.min(1.0, Math.max(0.0, ((pixels[i] * normalizer.channelScale + normalizer.channelOffset) - backgroundLevel) / normalizationRange))) * 65535.0;
+    let norm = stretchFn(Math.min(1.0, Math.max(0.0, ((pixels[i] * normalizer.layerScale + normalizer.layerOffset) - backgroundLevel) / normalizationRange))) * 65535.0;
     norm = norm > 65535.0 ? 65535.0 : norm;
     norm = norm < 0 ? 0 : norm;
     let colorIndex = Math.floor(norm * colorIndexScaler);

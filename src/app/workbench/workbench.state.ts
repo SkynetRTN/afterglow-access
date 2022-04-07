@@ -4864,8 +4864,8 @@ export class WorkbenchState {
         entries.push({ key: AfterglowHeaderKey.AG_CMAP, value: normalizer.colorMapName, comment: 'AgA color map' })
         entries.push({ key: AfterglowHeaderKey.AG_STRCH, value: normalizer.stretchMode, comment: 'AgA stretch mode' })
         entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })
-        entries.push({ key: AfterglowHeaderKey.AG_SCALE, value: normalizer.channelScale, comment: 'AgA layer scale' })
-        entries.push({ key: AfterglowHeaderKey.AG_OFFSET, value: normalizer.channelOffset, comment: 'AgA layer offset' })
+        entries.push({ key: AfterglowHeaderKey.AG_SCALE, value: normalizer.layerScale, comment: 'AgA layer scale' })
+        entries.push({ key: AfterglowHeaderKey.AG_OFFSET, value: normalizer.layerOffset, comment: 'AgA layer offset' })
       }
 
       if (entries.length != 0) {

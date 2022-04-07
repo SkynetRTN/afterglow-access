@@ -73,18 +73,18 @@
   <div class="col-6"></div>
 </div>
 <div class="row">
-  <div *ngIf="showChannelScale" class="col-6">
+  <div *ngIf="showLayerScale" class="col-6">
     <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Channel Scale</mat-label>
-      <input matInput [ngModel]="normalizer?.channelScale" (ngModelChange)="channelScaleChange.emit($event)"
-        type="number" [step]="0.05" min="0" />
+      <mat-label i18n>Layer Scale</mat-label>
+      <input matInput [ngModel]="normalizer?.layerScale" (ngModelChange)="layerScaleChange.emit($event)" type="number"
+        [step]="0.05" min="0" />
     </mat-form-field>
   </div>
-  <div *ngIf="showChannelOffset" class="col-6">
+  <div *ngIf="showLayerOffset" class="col-6">
     <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Channel Offset</mat-label>
-      <input matInput [ngModel]="normalizer?.channelOffset" (ngModelChange)="channelOffsetChange.emit($event)"
-        type="number" [step]="0.05" min="0" />
+      <mat-label i18n>Layer Offset</mat-label>
+      <input matInput [ngModel]="normalizer?.layerOffset" (ngModelChange)="layerOffsetChange.emit($event)" type="number"
+        [step]="0.05" min="0" />
     </mat-form-field>
   </div>
 </div>

@@ -168,9 +168,8 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
       let y = [];
       for (let i = 0; i < hist.data.length; i++) {
         if (hist.data[i] <= 0 || (this.logarithmicX && getBinCenter(hist, i) <= 0)) continue;
-        x.push(getBinCenter(hist, i) * normalizer.channelScale + normalizer.channelOffset);
-        // y.push(hist.data[i] / normalizer.channelScale * (refBinSize / binSize));
-        y.push(hist.data[i] / normalizer.channelScale);
+        x.push(getBinCenter(hist, i) * normalizer.layerScale + normalizer.layerOffset);
+        y.push(hist.data[i] / normalizer.layerScale);
         if (this.yMax < y[y.length - 1]) this.yMax = y[y.length - 1];
       }
 
@@ -248,9 +247,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
       if (normalizer.backgroundLevel !== undefined) backgroundLevel = Math.min(backgroundLevel, normalizer.backgroundLevel)
       if (normalizer.peakLevel !== undefined) peakLevel = Math.max(peakLevel, normalizer.peakLevel)
 
-      let x0 = backgroundLevel * normalizer.channelScale + normalizer.channelOffset
-      let x1 = peakLevel * normalizer.channelScale + normalizer.channelOffset
-      let y1 = Math.max(...hist.data) / normalizer.channelScale;
+      let x0 = backgroundLevel * normalizer.layerScale + normalizer.layerOffset
+      let x1 = peakLevel * normalizer.layerScale + normalizer.layerOffset
+      let y1 = Math.max(...hist.data) / normalizer.layerScale;
       if (xMin === undefined || x0 < xMin) xMin = x0
       if (xMax === undefined || x1 > xMax) xMax = x1
       if (yMax === undefined || y1 > yMax) yMax = y1

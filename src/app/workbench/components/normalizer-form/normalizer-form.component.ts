@@ -28,8 +28,8 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() showColorMap = true;
   @Input() showStretchMode = true;
   @Input() showInverted = true;
-  @Input() showChannelScale = true;
-  @Input() showChannelOffset = true;
+  @Input() showLayerScale = true;
+  @Input() showLayerOffset = true;
 
   @Output() backgroundPercentileChange = new EventEmitter<number>();
   @Output() peakPercentileChange = new EventEmitter<number>();
@@ -38,8 +38,8 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   @Output() colorMapChange = new EventEmitter<string>();
   @Output() stretchModeChange = new EventEmitter<StretchMode>();
   @Output() invertedChange = new EventEmitter<boolean>();
-  @Output() channelScaleChange = new EventEmitter<number>();
-  @Output() channelOffsetChange = new EventEmitter<number>();
+  @Output() layerScaleChange = new EventEmitter<number>();
+  @Output() layerOffsetChange = new EventEmitter<number>();
   @Output() modeChange = new EventEmitter<'percentile' | 'pixel'>();
 
   backgroundStep = 0.1;

@@ -163,37 +163,6 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       map(firstImageHdu => firstImageHdu?.normalizer)
     )
 
-    // this.compositeNormalizer$ = this.firstImageHdu$.pipe(
-    //   withLatestFrom(this.hdus$),
-    //   map(([firstHdu, hdus]) => {
-    //     if (!firstHdu.normalizer) return null;
-    //     let refBackgroundLevel = firstHdu.normalizer.backgroundLevel;
-    //     let refPeakLevel = firstHdu.normalizer.peakLevel;
-
-    //     let synced = hdus.every(hdu => {
-    //       if (isImageHdu(hdu)) {
-    //         if (hdu.id == firstHdu.id) return true;
-    //         let backgroundLevel = hdu.normalizer.backgroundLevel;
-    //         let peakLevel = hdu.normalizer.peakLevel;
-    //         return backgroundLevel == refBackgroundLevel && peakLevel == refPeakLevel
-    //       }
-    //       return true;
-    //     })
-
-    //     if (!synced) return null;
-
-    //     return {
-    //       ...firstHdu.normalizer,
-    //       backgroundLevel: refBackgroundLevel,
-    //       peakLevel: refPeakLevel,
-    //       channelOffset: 0,
-    //       channelScale: 1
-    //     }
-    //   })
-    // )
-
-
-
     this.activeHdu$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
@@ -240,8 +209,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         let levels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
         this.store.dispatch(new UpdateNormalizer(hdu.id, {
           mode: 'pixel',
-          backgroundLevel: levels.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset,
-          peakLevel: levels.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset
+          backgroundLevel: levels.backgroundLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
+          peakLevel: levels.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset
         }));
       }
     });
@@ -397,9 +366,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     ).subscribe(([event, file, hdus]) => {
       hdus.forEach(hdu => {
         if (isImageHdu(hdu)) {
-          let backgroundLevel = hdu.normalizer.backgroundLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
-          let peakLevel = hdu.normalizer.peakLevel * hdu.normalizer.channelScale + hdu.normalizer.channelOffset;
-          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', channelOffset: 0, channelScale: 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
+          let backgroundLevel = hdu.normalizer.backgroundLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset;
+          let peakLevel = hdu.normalizer.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset;
+          this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', layerOffset: 0, layerScale: 1, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
         }
 
       })
@@ -565,9 +534,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       //   refYs[index] = x * rot + ref.ySrc[index] * rot
       // })
 
-      let refScale = event.fitSources ? 1 : ref.hdu.normalizer.channelScale;
-      let refOffset = event.fitBackground ? 0 : ref.hdu.normalizer.channelOffset;
-      actions.push(new UpdateNormalizer(ref.hdu.id, { channelOffset: refOffset, channelScale: refScale }))
+      let refScale = event.fitSources ? 1 : ref.hdu.normalizer.layerScale;
+      let refOffset = event.fitBackground ? 0 : ref.hdu.normalizer.layerOffset;
+      actions.push(new UpdateNormalizer(ref.hdu.id, { layerOffset: refOffset, layerScale: refScale }))
 
       fits.forEach(fit => {
         console.log(fit.hdu.name, fit.hdu.hist.minBin, fit.hdu.hist.maxBin, getCountsPerBin(fit.hdu.hist), fit.bkgPeak, fit.bkgMu, fit.bkgSigma)
@@ -575,8 +544,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       for (let i = 1; i < fits.length; i++) {
 
         let fit = fits[i];
-        let targetScale = fit.hdu.normalizer.channelScale;
-        let targetOffset = fit.hdu.normalizer.channelOffset;
+        let targetScale = fit.hdu.normalizer.layerScale;
+        let targetOffset = fit.hdu.normalizer.layerOffset;
 
         let xRef = new Float32Array(ref.xSrc);
         xRef.forEach((x, index) => { xRef[index] = Math.log(x) })
@@ -655,7 +624,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
 
-        actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', channelOffset: targetOffset, channelScale: targetScale, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
+        actions.push(new UpdateNormalizer(fit.hdu.id, { mode: 'pixel', layerOffset: targetOffset, layerScale: targetScale, backgroundLevel: backgroundLevel, peakLevel: peakLevel }))
       }
 
       this.store.dispatch(actions)
@@ -849,12 +818,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.store.dispatch(new UpdateNormalizer(hdu.id, { inverted: value }));
   }
 
-  onChannelScaleChange(hdu: ImageHdu, value: number) {
-    this.store.dispatch(new UpdateNormalizer(hdu.id, { channelScale: value }));
+  onLayerScaleChange(hdu: ImageHdu, value: number) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { layerScale: value }));
   }
 
-  onChannelOffsetChange(hdu: ImageHdu, value: number) {
-    this.store.dispatch(new UpdateNormalizer(hdu.id, { channelOffset: value }));
+  onLayerOffsetChange(hdu: ImageHdu, value: number) {
+    this.store.dispatch(new UpdateNormalizer(hdu.id, { layerOffset: value }));
   }
 
   onPresetClick(lowerPercentile: number, upperPercentile: number) {

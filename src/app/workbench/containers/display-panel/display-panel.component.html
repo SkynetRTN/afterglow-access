@@ -28,9 +28,9 @@
 
         <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showMode]="false" [showPercentiles]="false"
           [showLevels]="false" [showInverted]="false" (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
-          (channelScaleChange)="onChannelScaleChange(activeImageHdu, $event)"
+          (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
           (stretchModeChange)="onStretchModeChange($event)"
-          (channelOffsetChange)="onChannelOffsetChange(activeImageHdu, $event)">
+          (layerOffsetChange)="onLayerOffsetChange(activeImageHdu, $event)">
         </app-normalizer-form>
 
 
@@ -59,8 +59,8 @@
             (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
             (stretchModeChange)="onStretchModeChange($event)"
             (invertedChange)="onInvertedChange(activeImageHdu, $event)"
-            (channelScaleChange)="onChannelScaleChange(activeImageHdu, $event)"
-            (channelOffsetChange)="onChannelOffsetChange(activeImageHdu, $event)"
+            (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
+            (layerOffsetChange)="onLayerOffsetChange(activeImageHdu, $event)"
             (modeChange)="onNormalizerModeChange($event)">
           </app-normalizer-form>
         </div>
@@ -88,10 +88,6 @@
               <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Balance Colors</span>
             </button>
 
-            <!-- <button mat-raised-button class="m-1" (click)="fitChannelScales()" i18n-aria-label
-              aria-label="Fit Channel Scales">
-              <mat-icon>linear_scale</mat-icon><span i18n>Fit Channel Scales</span>
-            </button> -->
             <button mat-raised-button class="m-1" (click)="resetColorBalance()" i18n-aria-label
               aria-label="Reset Color Balance">
               <mat-icon>refresh</mat-icon><span i18n>Reset</span>
@@ -134,8 +130,8 @@
             </div>
 
             <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="false" [showPercentiles]="false"
-              [showColorMap]="false" [showInverted]="false" [showStretchMode]="true" [showChannelOffset]="false"
-              [showChannelScale]="false" (backgroundLevelChange)="onBackgroundLevelChange($event)"
+              [showColorMap]="false" [showInverted]="false" [showStretchMode]="true" [showLayerOffset]="false"
+              [showLayerScale]="false" (backgroundLevelChange)="onBackgroundLevelChange($event)"
               (peakLevelChange)="onPeakLevelChange($event)"
               (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
               (peakPercentileChange)="onPeakPercentileChange($event)" (modeChange)="onNormalizerModeChange($event)"
