@@ -4853,8 +4853,15 @@ export class WorkbenchState {
       takeUntil(nextSyncRequest$),
     ).subscribe(() => {
       let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId));
-      let entries: HeaderEntry[] = []
-      if (isImageHdu(hdu)) {
+      if (!isImageHdu(hdu)) return;
+
+      let hdus = [hdu];
+
+      let file = this.store.selectSnapshot(DataFilesState.getFileById(hdu.fileId));
+      if (file.syncLayerNormalizers) hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(file.id)).filter(isImageHdu)
+
+      hdus.forEach(hdu => {
+        let entries: HeaderEntry[] = []
         let normalizer = hdu.normalizer;
         entries.push({ key: AfterglowHeaderKey.AG_NMODE, value: normalizer.mode, comment: 'AgA background/peak mode' })
         if (normalizer.backgroundPercentile !== undefined) entries.push({ key: AfterglowHeaderKey.AG_BKGP, value: normalizer.backgroundPercentile, comment: 'AgA background percentile' })
@@ -4866,11 +4873,12 @@ export class WorkbenchState {
         entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })
         entries.push({ key: AfterglowHeaderKey.AG_SCALE, value: normalizer.layerScale, comment: 'AgA layer scale' })
         entries.push({ key: AfterglowHeaderKey.AG_OFFSET, value: normalizer.layerOffset, comment: 'AgA layer offset' })
-      }
 
-      if (entries.length != 0) {
-        this.store.dispatch([new UpdateHduHeader(hduId, entries)]);
-      }
+        if (entries.length != 0) {
+          this.store.dispatch([new UpdateHduHeader(hdu.id, entries)]);
+        }
+      })
+
     })
 
 

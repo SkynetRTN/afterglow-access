@@ -51,6 +51,7 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     { label: 'Normal', value: BlendMode.Normal },
     { label: 'Screen', value: BlendMode.Screen },
     { label: 'Luminosity', value: BlendMode.Luminosity },
+    { label: 'Color', value: BlendMode.Color },
   ];
 
 
