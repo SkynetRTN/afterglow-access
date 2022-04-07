@@ -97,8 +97,8 @@
 
         <div class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
           <app-image-hist-chart [data]="compositeHistData$ | async"
-            [backgroundLevel]="(compositeNormalizer$ | async)?.backgroundLevel"
-            [peakLevel]="(compositeNormalizer$ | async)?.peakLevel">
+            [backgroundLevel]="(file$ |async)?.syncLayerNormalizers ? (compositeNormalizer$ | async)?.backgroundLevel : null"
+            [peakLevel]="(file$ |async)?.syncLayerNormalizers ?  (compositeNormalizer$ | async)?.peakLevel : null">
           </app-image-hist-chart>
 
         </div>
