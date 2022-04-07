@@ -1263,12 +1263,30 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                 return of(null);
               }
 
+              let extensions = files.map((file) => file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2)).filter(v => v.length != 0)
               let newFilename = getLongestCommonStartingSubstring(files.map((file) => file.name))
                 .replace(/_+$/, '')
                 .trim();
               if (newFilename.length == 0) {
                 newFilename = `${files[0].name} - group`;
               }
+
+              newFilename = newFilename.replace(/[ ,\.-]+$/, "");
+
+              if (extensions.length != 0) {
+                newFilename += `.${extensions[0]}`
+              }
+
+              let path = files.map(f => f.assetPath).find(p => p && p.length != 0)
+              if (path) {
+                let pathItems = path.split('/')
+                pathItems[pathItems.length - 1] = newFilename
+                path = pathItems.join('/')
+              }
+              path = path || null;
+
+              let dataProvider = files.map(f => f.dataProviderId).find(dp => dp !== null) || null
+
 
               let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
               let uuid = UUID.UUID();
@@ -1285,8 +1303,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                     this.dataFileService.updateFile(hduId, {
                       groupName: newFilename,
                       name: hdu.name,
-                      dataProvider: null,
-                      assetPath: null,
+                      dataProvider: dataProvider,
+                      assetPath: path,
                       modified: true,
                     })
                   );

@@ -29,8 +29,8 @@
       </div>
     </div>
   </div>
-  <div #sidebarPanel fxFlex="0 0 auto" class="sidebar-panel" [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }"
-    [fxShow]="
+  <div #sidebarPanel fxFlex="0 0 auto" style="width: 300px" class="sidebar-panel"
+    [ngClass]="{ 'full-screen': (inFullScreenMode$ | async) }" [fxShow]="
       (!(inFullScreenMode$ | async) && (showSidebar$ | async)) ||
       ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'file')
     " role="region" i18n-aria-label aria-label="File Library" [ngSwitch]="sidebarView$ | async">
