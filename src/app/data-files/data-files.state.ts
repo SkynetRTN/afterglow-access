@@ -808,6 +808,16 @@ export class DataFilesState {
                 hdu.normalizer.inverted = inverted ? true : false;
               }
 
+              let scale = getHeaderEntry(header, AfterglowHeaderKey.AG_SCALE)?.value;
+              if (scale !== undefined) {
+                hdu.normalizer.channelScale = scale;
+              }
+
+              let offset = getHeaderEntry(header, AfterglowHeaderKey.AG_SHIFT)?.value;
+              if (offset !== undefined) {
+                hdu.normalizer.channelOffset = offset;
+              }
+
             }
 
 
