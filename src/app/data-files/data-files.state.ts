@@ -813,7 +813,7 @@ export class DataFilesState {
                 hdu.normalizer.channelScale = scale;
               }
 
-              let offset = getHeaderEntry(header, AfterglowHeaderKey.AG_SHIFT)?.value;
+              let offset = getHeaderEntry(header, AfterglowHeaderKey.AG_OFFSET)?.value;
               if (offset !== undefined) {
                 hdu.normalizer.channelOffset = offset;
               }

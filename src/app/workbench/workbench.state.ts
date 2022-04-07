@@ -4865,7 +4865,7 @@ export class WorkbenchState {
         entries.push({ key: AfterglowHeaderKey.AG_STRCH, value: normalizer.stretchMode, comment: 'AgA stretch mode' })
         entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })
         entries.push({ key: AfterglowHeaderKey.AG_SCALE, value: normalizer.channelScale, comment: 'AgA layer scale' })
-        entries.push({ key: AfterglowHeaderKey.AG_SHIFT, value: normalizer.channelOffset, comment: 'AgA layer offset' })
+        entries.push({ key: AfterglowHeaderKey.AG_OFFSET, value: normalizer.channelOffset, comment: 'AgA layer offset' })
       }
 
       if (entries.length != 0) {
