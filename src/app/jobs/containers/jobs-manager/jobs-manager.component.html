@@ -1,0 +1,10 @@
+<div fxLayout="row" fxFill class="h-full">
+    <div #jobsTable fxFlex="1 1 auto" class="h-full">
+        <app-jobs-table class="w-full h-full"></app-jobs-table>
+    </div>
+    <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails"></div>
+    <div #jobDetails fxFlex="0 0 auto" style="width: 500px;" class="h-full">
+        <app-job-details class="w-full h-full"></app-job-details>
+    </div>
+
+</div>

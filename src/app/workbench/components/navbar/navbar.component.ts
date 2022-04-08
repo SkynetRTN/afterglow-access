@@ -21,7 +21,6 @@ import { UpdatePhotometrySettings, UpdateSettings } from '../../workbench.action
 export class NavbarComponent implements OnInit, OnChanges {
   avatarName = null;
 
-  @Input() dataProviders: Array<DataProvider>;
   @Input('user') user: CoreUser;
 
   shortcuts: ShortcutInput[] = [];

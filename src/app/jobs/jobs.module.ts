@@ -9,11 +9,20 @@ import { SvgModule } from '../svg/svg.module';
 
 import { PipesModule } from '../pipes/pipes.module';
 import { JobService } from './services/jobs';
+import { JobsTableComponent } from './components/jobs-table/jobs-table.component';
+import { JobDetailsComponent } from './components/job-details/job-details.component';
+import { JobsManagerComponent } from './containers/jobs-manager/jobs-manager.component';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { UtilsModule } from '../utils/utils.module';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, AppMaterialModule, PipesModule, SvgModule],
-  declarations: [],
+  imports: [CommonModule, FormsModule, AppMaterialModule, PipesModule, SvgModule, FlexLayoutModule, UtilsModule.forRoot()],
+  declarations: [
+    JobsTableComponent,
+    JobDetailsComponent,
+    JobsManagerComponent
+  ],
   exports: [],
   providers: [JobService],
 })
-export class JobsModule {}
+export class JobsModule { }
