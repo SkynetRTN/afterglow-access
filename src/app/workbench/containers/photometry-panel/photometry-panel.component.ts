@@ -56,7 +56,7 @@ import { Source, PosType } from '../../models/source';
 import { PhotometryPanelConfig, BatchPhotometryFormData } from '../../models/workbench-state';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CentroidSettings } from '../../models/centroid-settings';
-import { PhotometryJob, PhotometryJobResult, PhotometryData, isPhotometryJob } from '../../../jobs/models/photometry';
+import { PhotometryJob, PhotometryJobResult, PhotometryData, isPhotometryJob, isPhotometryJobResult } from '../../../jobs/models/photometry';
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { WorkbenchState } from '../../workbench.state';
@@ -152,6 +152,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   batchPhotJob$: Observable<PhotometryJob>;
   batchCalJob$: Observable<FieldCalibrationJob>;
   autoPhotJob$: Observable<PhotometryJob>;
+  autoPhotJobResult$: Observable<PhotometryJobResult>;
   autoPhotData$: Observable<{ [sourceId: string]: PhotometryData }>;
   autoCalJob$: Observable<FieldCalibrationJob>;
   mergeError: string;
@@ -252,11 +253,17 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       )
       ))
 
-    this.autoPhotData$ = this.autoPhotJob$.pipe(
-      map(job => {
+    this.autoPhotJobResult$ = autoPhotJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobResultById(id)).pipe(
+        map(job => job && isPhotometryJobResult(job) ? job : null)
+      )
+      ))
+
+    this.autoPhotData$ = this.autoPhotJobResult$.pipe(
+      map(jobResult => {
         let result = {};
-        if (!job || !job.result) return {};
-        job.result.data.forEach(d => {
+        if (!jobResult) return {};
+        jobResult.data.forEach(d => {
           let time: Date = null;
           if (d.time && Date.parse(d.time + ' GMT')) {
             time = new Date(Date.parse(d.time + ' GMT'));
@@ -420,7 +427,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       autoPhotIsValid$
     ]).pipe(
       takeUntil(this.destroy$),
-      withLatestFrom(this.autoPhotJob$)
+      withLatestFrom(this.autoPhotJobResult$)
     ).subscribe(([[headerLoaded, isValid], job]) => {
       if (!headerLoaded || !this.viewerId) return;
       //handle case where job ID is present and valid, but job is not in store

@@ -5,6 +5,7 @@ import { SourceId } from './source-id';
 import { SourceMeta } from './source-meta';
 import { TypeGuard } from 'src/app/utils/guard-type.pipe';
 import { Job } from './job';
+import { JobResult } from './job-result';
 
 export interface Photometry {
   mag: number | null;
@@ -56,3 +57,7 @@ export interface PhotometryJob extends JobBase {
 export const isPhotometryJob: TypeGuard<Job, PhotometryJob> = (
   job: Job
 ): job is PhotometryJob => job.type === JobType.Photometry;
+
+export const isPhotometryJobResult: TypeGuard<JobResult, PhotometryJobResult> = (
+  result: JobResult
+): result is PhotometryJobResult => result.type === JobType.Photometry;

@@ -27,6 +27,7 @@ import {
   UpdateJobResult,
   UpdateJobResultSuccess,
   UpdateJobResultFail,
+  LoadJobs,
 } from './jobs.actions';
 import { JobService } from './services/jobs';
 import { ResetState } from '../auth/auth.actions';
@@ -38,13 +39,17 @@ import { SourceExtractionJobResult } from './models/source-extraction';
 export interface JobsStateModel {
   version: string;
   ids: string[];
-  entities: { [id: string]: Job };
+  jobs: { [id: string]: Job };
+  jobResults: { [id: string]: JobResult };
+  loading: boolean;
 }
 
 const jobsDefaultState: JobsStateModel = {
-  version: 'ab09d088-0def-4429-b834-3c8fc5313fe9',
+  version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
   ids: [],
-  entities: {},
+  jobs: {},
+  jobResults: {},
+  loading: false
 };
 
 @State<JobsStateModel>({
@@ -56,20 +61,29 @@ export class JobsState {
   constructor(private jobService: JobService, private actions$: Actions) { }
 
   @Selector()
-  @ImmutableSelector()
   public static getState(state: JobsStateModel) {
     return state;
   }
 
   @Selector()
+  public static getJobResultEntities(state: JobsStateModel) {
+    return state.jobResults;
+  }
+
+
+  @Selector()
   public static getJobEntities(state: JobsStateModel) {
-    return state.entities;
+    return state.jobs;
   }
 
   @Selector()
-  @ImmutableSelector()
+  public static getLoading(state: JobsStateModel) {
+    return state.loading;
+  }
+
+  @Selector()
   public static getJobs(state: JobsStateModel) {
-    return Object.values(state.entities);
+    return Object.values(state.jobs);
   }
 
   static getJobById(id: string) {
@@ -79,6 +93,17 @@ export class JobsState {
         jobEntities: { [id: string]: Job }
       ) => {
         return jobEntities[id] || null;
+      }
+    );
+  }
+
+  static getJobResultById(id: string) {
+    return createSelector(
+      [JobsState.getJobResultEntities],
+      (
+        jobResultEntities: { [id: string]: JobResult }
+      ) => {
+        return jobResultEntities[id] || null;
       }
     );
   }
@@ -99,7 +124,7 @@ export class JobsState {
         let job = resp.data
         createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
-          state.entities[job.id] = {
+          state.jobs[job.id] = {
             ...job,
             result: null,
           };
@@ -115,7 +140,7 @@ export class JobsState {
         let jobCompleted$ = this.actions$.pipe(
           ofActionSuccessful(UpdateJob),
           filter<UpdateJob>((a) => {
-            return a.job.id == job.id && ['canceled', 'completed'].includes(getState().entities[a.job.id].state.status);
+            return a.job.id == job.id && ['canceled', 'completed'].includes(getState().jobs[a.job.id].state.status);
           })
         );
 
@@ -142,35 +167,54 @@ export class JobsState {
         return jobCompleted$.pipe(
           take(1),
           flatMap((a) => {
-            if (getState().entities[a.job.id].state.status != 'completed') return of();
+            if (getState().jobs[a.job.id].state.status != 'completed') return of();
+            return dispatch(new UpdateJobResult(job, createJobAction.correlationId));
 
-            return this.jobService.getJobResult(job).pipe(
-              tap((value) => {
-                setState((state: JobsStateModel) => {
+            //   return this.jobService.getJobResult(job).pipe(
+            //     tap((value) => {
+            //       setState((state: JobsStateModel) => {
 
-                  // if (state.entities[job.id].type == JobType.FieldCalibration) {
-                  //   let result = value as FieldCalibrationJobResult;
-                  //   result.errors = []
-                  //   result.warnings = []
-                  //   result.zeroPoint = 10.123456789
-                  //   result.zeroPointError = 0.123456789
-                  //   value = result;
-                  // }
-                  // else if (state.entities[job.id].type == JobType.SourceExtraction) {
-                  //   let result = value as SourceExtractionJobResult;
-                  //   result.errors = [{ id: '1', detail: 'Test error for debugging', status: '', meta: {} }]
-                  //   result.warnings = ['This is a test warning']
-                  //   value = result;
-                  // }
-                  state.entities[job.id].result = value;
-                  return state;
-                });
-              })
-            );
+            //         // if (state.entities[job.id].type == JobType.FieldCalibration) {
+            //         //   let result = value as FieldCalibrationJobResult;
+            //         //   result.errors = []
+            //         //   result.warnings = []
+            //         //   result.zeroPoint = 10.123456789
+            //         //   result.zeroPointError = 0.123456789
+            //         //   value = result;
+            //         // }
+            //         // else if (state.entities[job.id].type == JobType.SourceExtraction) {
+            //         //   let result = value as SourceExtractionJobResult;
+            //         //   result.errors = [{ id: '1', detail: 'Test error for debugging', status: '', meta: {} }]
+            //         //   result.warnings = ['This is a test warning']
+            //         //   value = result;
+            //         // }
+            //         state.jobs[job.id].result = value;
+            //         return state;
+            //       });
+            //     })
+            //   );
           })
         );
       }),
       catchError((err) => dispatch(new CreateJobFail(createJobAction.job, err, createJobAction.correlationId)))
+    );
+  }
+
+  @Action(LoadJobs)
+  @ImmutableContext()
+  public loadJobs({ setState, dispatch }: StateContext<JobsStateModel>, { }: LoadJobs) {
+    return this.jobService.getJobs().pipe(
+      tap((resp) => {
+        setState((state: JobsStateModel) => {
+          resp.data.forEach(job => {
+            if (!(job.id in state.jobs)) state.ids.push(job.id);
+            state.jobs[job.id] = {
+              ...job,
+            }
+          })
+          return state;
+        });
+      })
     );
   }
 
@@ -180,7 +224,8 @@ export class JobsState {
     return this.jobService.getJobState(job.id).pipe(
       tap((value) => {
         setState((state: JobsStateModel) => {
-          state.entities[job.id].state = value.data;
+          state.jobs[job.id].state = value.data;
+
           return state;
         });
       })
@@ -194,13 +239,14 @@ export class JobsState {
     { job, correlationId }: UpdateJobResult
   ) {
     return this.jobService.getJobResult(job).pipe(
-      map((value) => {
+      map((resp) => {
         setState((state: JobsStateModel) => {
-          state.entities[job.id].result = value;
+          state.jobs[job.id].result = resp;
+          state.jobResults[job.id] = resp;
           return state;
         });
 
-        return dispatch(new UpdateJobResultSuccess(job, value, correlationId));
+        return dispatch(new UpdateJobResultSuccess(job, resp, correlationId));
       }),
       catchError((err) => {
         return dispatch(new UpdateJobResultFail(job, err, correlationId));

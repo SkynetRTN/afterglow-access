@@ -80,7 +80,7 @@
         </div>
 
         <div class="mb-3" style="max-height: 300px; overflow: auto">
-          <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$" matSort
+          <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$ | async" matSort
             [matSortDisableClear]="true" [trackBy]="trackById" recycleRows>
             <ng-container matColumnDef="select">
               <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell"

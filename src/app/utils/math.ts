@@ -155,3 +155,14 @@ const Q = [[
 * return 1
 */
 const MAX_NUM = Math.pow(2, 53)
+
+
+export function getMax(arr: number[] | Float32Array) {
+  let len = arr.length;
+  let max = -Infinity;
+
+  while (len--) {
+    max = arr[len] > max ? arr[len] : max;
+  }
+  return max;
+}

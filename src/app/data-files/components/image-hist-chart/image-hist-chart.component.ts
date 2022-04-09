@@ -10,6 +10,7 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { Normalization } from '../../models/normalization';
 import { PixelNormalizer } from '../../models/pixel-normalizer';
 import { blueColorMap, greenColorMap, redColorMap } from '../../models/color-map';
+import { getMax } from 'src/app/utils/math';
 
 @Component({
   selector: 'app-image-hist-chart',
@@ -249,7 +250,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
 
       let x0 = backgroundLevel * normalizer.layerScale + normalizer.layerOffset
       let x1 = peakLevel * normalizer.layerScale + normalizer.layerOffset
-      let y1 = Math.max(...hist.data) / normalizer.layerScale;
+      let y1 = getMax(hist.data) / normalizer.layerScale;
       if (xMin === undefined || x0 < xMin) xMin = x0
       if (xMax === undefined || x1 > xMax) xMax = x1
       if (yMax === undefined || y1 > yMax) yMax = y1

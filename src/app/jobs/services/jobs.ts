@@ -13,10 +13,14 @@ import { CoreApiResponse } from '../../utils/core-api-response';
 export class JobService {
   private SOURCE_ID = 0;
 
-  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   createJob(job: Job) {
     return this.http.post<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs`, job);
+  }
+
+  getJobs() {
+    return this.http.get<CoreApiResponse<Job[]>>(`${getCoreApiUrl(this.config)}/jobs`);
   }
 
   getJob(jobId: string) {

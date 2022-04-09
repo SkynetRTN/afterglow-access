@@ -130,7 +130,7 @@ export function jobSanitizer(v: JobsStateModel) {
     ...v,
   } as JobsStateModel;
 
-  state.entities = {};
+  state.jobs = {};
   state.ids = [];
   return state;
 }
