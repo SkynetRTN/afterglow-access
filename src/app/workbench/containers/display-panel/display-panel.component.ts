@@ -507,6 +507,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       fits = fits.sort((a, b) => b.bkgSigma - a.bkgSigma)
       // fits.forEach(fit => console.log(`${fit.hdu.name} - Background Fit: ${fit.bkgPeak}*EXP(-0.5*POWER((x-${fit.bkgMu})/${fit.bkgSigma},2))`));
 
+      fits.forEach(fit => {
+        console.log(`${fit.hdu.name}: ${fit.hdu.hist.minBin}, ${fit.hdu.hist.maxBin}, ${getCountsPerBin(fit.hdu.hist)} | ${fit.bkgMu}, ${fit.bkgSigma}`)
+      })
+
       let actions: any[] = [];
       let ref = fits[0]
       let refCorr = getCountsPerBin(ref.hdu.hist)
@@ -560,6 +564,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           // let fitCorr = fit.norm;
           // let fitCorr = 1
           let corr = (fitCorr / refCorr)
+          // corr = 1
           console.log(fit.hdu.name, corr)
 
           let steps = 200;
@@ -584,17 +589,19 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
               let K2 = 0;
               let N = 0;
+              let W = 0;
+              let WN = 0.5;
               // console.log(m, xs[0], xs[xs.length - 1])
               xRef.forEach((x, index) => {
                 if (x < xs[0] || x > xs[xs.length - 1]) return;
-
-                K2 += Math.pow(yRef[index] - ysInterpolated[index], 2);
+                W += Math.pow(yRef[index], WN)
+                K2 += W * Math.pow(yRef[index] - ysInterpolated[index], 2);
                 N++
               })
 
               if (N == 0) continue;
 
-              results.push({ m: m, k2: K2, N: N, f: K2 / N })
+              results.push({ m: m, k2: K2, N: N, f: K2 / (W * N) })
             }
             let bestFitIndex = 0;
             results.forEach((value, index) => {
