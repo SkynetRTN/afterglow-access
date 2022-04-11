@@ -156,8 +156,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     ).subscribe(v => {
       if (v.result.successful) {
         let a = v.action as CreateJob;
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as SourceExtractionJobResult;
+        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as SourceExtractionJobResult;
         this.jobResult = result;
 
         let sources = result.data.map((d) => {

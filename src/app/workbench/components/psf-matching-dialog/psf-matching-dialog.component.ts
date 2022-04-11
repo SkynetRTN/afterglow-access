@@ -63,8 +63,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
       ).subscribe(v => {
         if (v.result.successful) {
           let a = v.action as CreateJob;
-          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-          let result = jobEntity.result as SourceExtractionJobResult;
+          let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as SourceExtractionJobResult;
 
           if (result.data.length != 0) {
             this.extractionState[hdu.id].message = 'waiting for analysis of other layers...'
@@ -205,8 +204,6 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
     ).subscribe(v => {
       if (v.result.successful) {
         let a = v.action as CreateJob;
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
 
         this.store.dispatch([new InvalidateRawImageTiles(hdu.id), new InvalidateHeader(hdu.id)])
 
@@ -220,8 +217,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
         ).subscribe(v => {
           if (v.result.successful) {
             let a = v.action as CreateJob;
-            let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-            let result = jobEntity.result as SourceExtractionJobResult;
+            let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as SourceExtractionJobResult;
 
             if (result.data.length != 0) {
               this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(result)

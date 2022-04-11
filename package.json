@@ -58,6 +58,7 @@
     "ngx-avatar": "^4.0.0",
     "ngx-color-picker": "^12.0.0",
     "ngx-cookie": "^5.0.2",
+    "ngx-json-viewer": "^3.0.2",
     "ngx-papaparse": "^5.0.0",
     "normalize-wheel": "^1.0.1",
     "paper": "^0.12.11",

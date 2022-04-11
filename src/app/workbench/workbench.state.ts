@@ -2826,8 +2826,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
+        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as PixelOpsJobResult;
         if (result.errors.length != 0) {
           console.error('Errors encountered during pixel ops job: ', result.errors);
         }
@@ -2926,8 +2925,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
+        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as PixelOpsJobResult;
         if (result.errors.length != 0) {
           console.error('Errors encountered during pixel ops: ', result.errors);
         }
@@ -3022,8 +3020,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = job.result as AlignmentJobResult;
+        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as AlignmentJobResult;
         if (result.errors.length != 0) {
           console.error('Errors encountered during aligning: ', result.errors);
         }
@@ -3135,8 +3132,7 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       flatMap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as StackingJobResult;
+        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as StackingJobResult;
         if (result.errors.length != 0) {
           console.error('Errors encountered during stacking: ', result.errors);
         }
@@ -4239,8 +4235,7 @@ export class WorkbenchState {
           let error = 'Unexpected error occurred';
           if (a.result.successful) {
             job = (a.action as CreateJob).job as SonificationJob;
-            let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[job.id];
-            let result = jobEntity.result as SonificationJobResult;
+            let result = this.store.selectSnapshot(JobsState.getJobResultById(job.id)) as SonificationJobResult;
 
             if (result.errors.length == 0) {
               sonificationUrl = getSonificationUrl(job.id);

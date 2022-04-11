@@ -1050,7 +1050,6 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       providerId: dataProviderId,
       paths: assets.map((asset) => asset.assetPath),
       state: null,
-      result: null,
     };
 
     const corrId = this.corrGen.next();

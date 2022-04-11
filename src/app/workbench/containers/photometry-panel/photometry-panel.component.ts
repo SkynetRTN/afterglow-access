@@ -255,7 +255,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     this.autoPhotJobResult$ = autoPhotJobId$.pipe(
       switchMap(id => this.store.select(JobsState.getJobResultById(id)).pipe(
-        map(job => job && isPhotometryJobResult(job) ? job : null)
+        map(job => {
+          return job && isPhotometryJobResult(job) ? job : null
+        })
       )
       ))
 
@@ -329,6 +331,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         });
       })
     );
+
+
+    this.tableData$.subscribe(data => console.log("TABLE DATA: ", data))
 
 
     this.batchInProgress$ = this.config$.pipe(
@@ -427,11 +432,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       autoPhotIsValid$
     ]).pipe(
       takeUntil(this.destroy$),
-      withLatestFrom(this.autoPhotJobResult$)
+      withLatestFrom(this.autoPhotJob$)
     ).subscribe(([[headerLoaded, isValid], job]) => {
       if (!headerLoaded || !this.viewerId) return;
       //handle case where job ID is present and valid, but job is not in store
-      if (!isValid || !job) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
+      if (!isValid) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
     })
 
     combineLatest([

@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { LoadJobs } from '../../jobs.actions';
 import { JobsState } from '../../jobs.state';
 import { Job } from '../../models/job';
 import { JobType } from '../../models/job-types';
+import { isPhotometryJob } from '../../models/photometry';
 
 @Component({
   selector: 'app-jobs-table',
@@ -12,24 +14,18 @@ import { JobType } from '../../models/job-types';
   styleUrls: ['./jobs-table.component.scss']
 })
 export class JobsTableComponent implements OnInit {
-  JobType = JobType;
+  @Input() jobs: Job[];
+  @Input() selectedJob: Job;
 
-  @Select(JobsState.getLoading) loading$: Observable<boolean>;
-  @Select(JobsState.getJobs) jobs$: Observable<Job[]>;
+  @Output() selectionChange = new EventEmitter<Job>();
 
-  displayedColumns = ['id', 'type', 'state']
-  hoveredRow: Job;
-  selectedJobId: string = null;
+  displayedColumns = ['id', 'type', 'state', 'createdOn']
 
   constructor(private store: Store) {
-    this.store.dispatch(new LoadJobs())
+
   }
 
   ngOnInit(): void {
-  }
-
-  onRowClick($event: MouseEvent, row: Job) {
-    this.selectedJobId = row.id;
   }
 
 }

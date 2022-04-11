@@ -508,7 +508,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       // fits.forEach(fit => console.log(`${fit.hdu.name} - Background Fit: ${fit.bkgPeak}*EXP(-0.5*POWER((x-${fit.bkgMu})/${fit.bkgSigma},2))`));
 
       fits.forEach(fit => {
-        console.log(`${fit.hdu.name}: ${fit.hdu.hist.minBin}, ${fit.hdu.hist.maxBin}, ${getCountsPerBin(fit.hdu.hist)} | ${fit.bkgMu}, ${fit.bkgSigma}`)
+        console.log(`${fit.hdu.name}: ${fit.hdu.hist.minBin}, ${fit.hdu.hist.maxBin}, ${fit.hdu.hist.data.length}, ${getCountsPerBin(fit.hdu.hist)} | ${fit.bkgMu}, ${fit.bkgSigma}`)
       })
 
       let actions: any[] = [];
@@ -590,18 +590,20 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
               let K2 = 0;
               let N = 0;
               let W = 0;
+              let WSum = 0
               let WN = 0.5;
               // console.log(m, xs[0], xs[xs.length - 1])
               xRef.forEach((x, index) => {
                 if (x < xs[0] || x > xs[xs.length - 1]) return;
-                W += Math.pow(yRef[index], WN)
+                W += Math.pow(yRef[index], WN);
+                WSum += W;
                 K2 += W * Math.pow(yRef[index] - ysInterpolated[index], 2);
                 N++
               })
 
               if (N == 0) continue;
 
-              results.push({ m: m, k2: K2, N: N, f: K2 / (W * N) })
+              results.push({ m: m, k2: K2, N: N, f: K2 / WSum })
             }
             let bestFitIndex = 0;
             results.forEach((value, index) => {

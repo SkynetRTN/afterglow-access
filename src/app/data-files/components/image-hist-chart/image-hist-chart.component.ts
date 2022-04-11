@@ -159,10 +159,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
 
     this.chartData = [];
     let data = this.data.filter(({ hist, normalizer }) => hist && normalizer && hist.loaded && hist.data)
+    let refBinSize = Math.max(...data.map(d => getCountsPerBin(d.hist)))
     data.forEach(({ hist, normalizer }) => {
-
-      // let refBinSize = Math.max(...data.map(d => getCountsPerBin(d.hist)))
-      // let binSize = getCountsPerBin(hist)
+      let binSize = getCountsPerBin(hist)
 
 
       let x = [];
@@ -170,7 +169,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
       for (let i = 0; i < hist.data.length; i++) {
         if (hist.data[i] <= 0 || (this.logarithmicX && getBinCenter(hist, i) <= 0)) continue;
         x.push(getBinCenter(hist, i) * normalizer.layerScale + normalizer.layerOffset);
-        y.push(hist.data[i] / normalizer.layerScale);
+        y.push((hist.data[i] * refBinSize) / (normalizer.layerScale * binSize));
         if (this.yMax < y[y.length - 1]) this.yMax = y[y.length - 1];
       }
 

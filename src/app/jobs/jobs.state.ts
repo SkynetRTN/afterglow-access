@@ -28,6 +28,7 @@ import {
   UpdateJobResultSuccess,
   UpdateJobResultFail,
   LoadJobs,
+  SelectJob,
 } from './jobs.actions';
 import { JobService } from './services/jobs';
 import { ResetState } from '../auth/auth.actions';
@@ -41,6 +42,7 @@ export interface JobsStateModel {
   ids: string[];
   jobs: { [id: string]: Job };
   jobResults: { [id: string]: JobResult };
+  selectedJobId: string;
   loading: boolean;
 }
 
@@ -49,6 +51,7 @@ const jobsDefaultState: JobsStateModel = {
   ids: [],
   jobs: {},
   jobResults: {},
+  selectedJobId: null,
   loading: false
 };
 
@@ -84,6 +87,21 @@ export class JobsState {
   @Selector()
   public static getJobs(state: JobsStateModel) {
     return Object.values(state.jobs);
+  }
+
+  @Selector()
+  public static getSelectedJobId(state: JobsStateModel) {
+    return state.selectedJobId
+  }
+
+  @Selector()
+  public static getSelectedJob(state: JobsStateModel) {
+    return state.jobs[state.selectedJobId] || null
+  }
+
+  @Selector()
+  public static getSelectedJobResult(state: JobsStateModel) {
+    return state.jobResults[state.selectedJobId] || null
   }
 
   static getJobById(id: string) {
@@ -126,7 +144,6 @@ export class JobsState {
         setState((state: JobsStateModel) => {
           state.jobs[job.id] = {
             ...job,
-            result: null,
           };
           if (!state.ids.includes(job.id)) {
             state.ids.push(job.id);
@@ -200,6 +217,15 @@ export class JobsState {
     );
   }
 
+  @Action(SelectJob)
+  @ImmutableContext()
+  public selectJob({ setState, dispatch }: StateContext<JobsStateModel>, { jobId }: SelectJob) {
+    setState((state: JobsStateModel) => {
+      state.selectedJobId = jobId
+      return state;
+    })
+  }
+
   @Action(LoadJobs)
   @ImmutableContext()
   public loadJobs({ setState, dispatch }: StateContext<JobsStateModel>, { }: LoadJobs) {
@@ -241,7 +267,7 @@ export class JobsState {
     return this.jobService.getJobResult(job).pipe(
       map((resp) => {
         setState((state: JobsStateModel) => {
-          state.jobs[job.id].result = resp;
+          // state.jobs[job.id].result = resp;
           state.jobResults[job.id] = resp;
           return state;
         });

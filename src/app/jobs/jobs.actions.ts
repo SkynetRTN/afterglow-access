@@ -43,6 +43,13 @@ export class CancelJobFail {
   constructor(public job: Job, error: any, correlationId?: string) { }
 }
 
+export class SelectJob {
+  public static readonly type = '[Job] Select Job';
+
+  constructor(public jobId: string) { }
+
+}
+
 export class LoadJobs {
   public static readonly type = '[Job] Load Jobs';
 

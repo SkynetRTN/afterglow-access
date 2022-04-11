@@ -49,7 +49,6 @@ export class ResizeDirective {
         this.leftElement.style.flex = '';
         this.rightElement.style.flex = '1 1 0%';
         this.rightElement.style.width = '';
-        console.log(newLeftWidth)
       }
       else {
         const newRightWidth = ((this.rightWidth - dx) * 100) / (this.el.nativeElement.parentNode as HTMLElement).getBoundingClientRect().width;

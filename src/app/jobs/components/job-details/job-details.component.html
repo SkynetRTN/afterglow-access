@@ -1,1 +1,14 @@
-<p>job-details works!</p>
+<div *ngIf="job || result" class="p-4 h">
+    <mat-tab-group class="">
+        <mat-tab *ngIf="job" label="Job" class="">
+            <div class="m-4" style="background: #e9e9e9;">
+                <ngx-json-viewer class="" [json]="job" [depth]="3"></ngx-json-viewer>
+            </div>
+        </mat-tab>
+        <mat-tab *ngIf="result" label="Results">
+            <div class="m-4" style="background: #e9e9e9;">
+                <ngx-json-viewer [json]="result" [depth]="3"></ngx-json-viewer>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

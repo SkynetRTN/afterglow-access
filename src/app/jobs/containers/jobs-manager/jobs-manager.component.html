@@ -1,10 +1,40 @@
 <div fxLayout="row" fxFill class="h-full">
-    <div #jobsTable fxFlex="1 1 auto" class="h-full">
-        <app-jobs-table class="w-full h-full"></app-jobs-table>
+    <div #jobsTable fxFlex="0 0 auto" class="h-full" style="overflow: auto; width: 800px;">
+        <ng-container *ngIf="!(loading$ | async); else loading">
+            <ng-container *ngIf="(jobsFiltered$ | async) as jobs">
+                <ng-container *ngIf="jobs.length != 0; else noItems">
+                    <app-jobs-table [jobs]="jobsFiltered$ | async" [selectedJob]="selectedJob$ | async"
+                        (selectionChange)="onSelectedJobChange($event)" class="w-full h-full">
+                    </app-jobs-table>
+                </ng-container>
+            </ng-container>
+        </ng-container>
+
+        <!-- Loading template -->
+        <ng-template #loading>
+            <div class="flex flex-auto flex-col items-center justify-center bg-gray-100 dark:bg-transparent">
+                <img class="w-28 m-10" src="assets/images/logo/logo.svg" alt="Skynet logo" />
+                <!-- <mat-icon class="icon-size-24" [svgIcon]="'iconsmind:file_hide'"></mat-icon> -->
+                <mat-progress-bar class="w-96" mode="indeterminate"></mat-progress-bar>
+            </div>
+        </ng-template>
+
+        <!-- No items template -->
+        <ng-template #noItems>
+            <div class="flex flex-auto flex-col items-center justify-center bg-gray-100 dark:bg-transparent">
+                <!-- <mat-icon class="icon-size-24" [svgIcon]="'iconsmind:file_hide'"></mat-icon> -->
+                <div class="mt-4 text-2xl font-semibold tracking-tight text-secondary">No jobs were
+                    found!</div>
+            </div>
+        </ng-template>
     </div>
-    <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails"></div>
-    <div #jobDetails fxFlex="0 0 auto" style="width: 500px;" class="h-full">
-        <app-job-details class="w-full h-full"></app-job-details>
+    <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails" [resizeLeft]="false"></div>
+    <div #jobDetails fxFlex="1 1 auto" class="h-full" style="overflow-x: hidden;">
+        <div class="card workbench-settings-card h-full w-full">
+            <app-job-details [job]="selectedJob$ | async" [result]="selectedJobResult$ | async" class="h-full w-full"
+                style="overflow: auto; overflow-x: hidden;">
+            </app-job-details>
+        </div>
     </div>
 
 </div>

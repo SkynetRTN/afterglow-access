@@ -14,9 +14,10 @@ import { JobDetailsComponent } from './components/job-details/job-details.compon
 import { JobsManagerComponent } from './containers/jobs-manager/jobs-manager.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { UtilsModule } from '../utils/utils.module';
+import { NgxJsonViewerModule } from 'ngx-json-viewer';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, AppMaterialModule, PipesModule, SvgModule, FlexLayoutModule, UtilsModule.forRoot()],
+  imports: [CommonModule, FormsModule, AppMaterialModule, PipesModule, SvgModule, FlexLayoutModule, UtilsModule.forRoot(), NgxJsonViewerModule],
   declarations: [
     JobsTableComponent,
     JobDetailsComponent,

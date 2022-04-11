@@ -86,7 +86,7 @@ export class DataProvidersState {
     private actions$: Actions,
     private store: Store,
     private correlationIdGenerator: CorrelationIdGenerator
-  ) {}
+  ) { }
 
   @Selector()
   public static getState(state: DataProvidersStateModel) {
@@ -147,7 +147,7 @@ export class DataProvidersState {
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<DataProvidersStateModel>, { }: ResetState) {
     setState((state: DataProvidersStateModel) => {
       return dataProvidersDefaultState;
     });
@@ -478,8 +478,8 @@ export class DataProvidersState {
       take(1),
       tap((a) => {
         if (a.result.successful) {
-          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.action.job.id];
-          let result = jobEntity.result as BatchImportJobResult;
+          let job = this.store.selectSnapshot(JobsState.getJobById(a.action.job.id))
+          let result = this.store.selectSnapshot(JobsState.getJobResultById(a.action.job.id)) as BatchImportJobResult
           if (result.errors.length != 0) {
             console.error('Errors encountered during import: ', result.errors);
           }
