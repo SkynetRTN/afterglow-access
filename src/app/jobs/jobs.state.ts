@@ -11,7 +11,7 @@ import {
   createSelector,
 } from '@ngxs/store';
 import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip } from 'rxjs/operators';
+import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip, delay } from 'rxjs/operators';
 import { of, merge, interval, Observable } from 'rxjs';
 
 import { Job } from './models/job';
@@ -229,6 +229,11 @@ export class JobsState {
   @Action(LoadJobs)
   @ImmutableContext()
   public loadJobs({ setState, dispatch }: StateContext<JobsStateModel>, { }: LoadJobs) {
+
+    setState((state: JobsStateModel) => {
+      state.loading = true;
+      return state;
+    })
     return this.jobService.getJobs().pipe(
       tap((resp) => {
         setState((state: JobsStateModel) => {
@@ -240,6 +245,15 @@ export class JobsState {
           })
           return state;
         });
+      }),
+      catchError(e => {
+        return of()
+      }),
+      finalize(() => {
+        setState((state: JobsStateModel) => {
+          state.loading = false;
+          return state;
+        })
       })
     );
   }

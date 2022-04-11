@@ -12,19 +12,19 @@
 
         <!-- Loading template -->
         <ng-template #loading>
-            <div class="flex flex-auto flex-col items-center justify-center bg-gray-100 dark:bg-transparent">
-                <img class="w-28 m-10" src="assets/images/logo/logo.svg" alt="Skynet logo" />
-                <!-- <mat-icon class="icon-size-24" [svgIcon]="'iconsmind:file_hide'"></mat-icon> -->
+            <div fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="center center"
+                class="h-full bg-gray-100 dark:bg-transparent">
+                <img class="w-28 m-10" src="assets/img/core-logo.png" alt="Afterglow logo" />
                 <mat-progress-bar class="w-96" mode="indeterminate"></mat-progress-bar>
             </div>
         </ng-template>
 
         <!-- No items template -->
         <ng-template #noItems>
-            <div class="flex flex-auto flex-col items-center justify-center bg-gray-100 dark:bg-transparent">
-                <!-- <mat-icon class="icon-size-24" [svgIcon]="'iconsmind:file_hide'"></mat-icon> -->
-                <div class="mt-4 text-2xl font-semibold tracking-tight text-secondary">No jobs were
-                    found!</div>
+            <div fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="center center"
+                class="h-full bg-gray-100 dark:bg-transparent">
+                <mat-icon class="icon-size-24">sim_card_alert</mat-icon>
+                <div>No jobs were found!</div>
             </div>
         </ng-template>
     </div>

@@ -1,6 +1,7 @@
 <nav class="navbar-header mat-elevation-z6" role="navigation">
-  <a class="afterglow-button afterglow-logo" routerLink="workbench" i18n-aria-label aria-label="Home"
-    routerLinkActive="active" mat-button>
+  <a class="afterglow-button afterglow-logo" routerLink="workbench"
+    [queryParams]="(activeTool$ | async) ? {tool: (activeTool$ | async)} : {}" i18n-aria-label aria-label="Home"
+    routerLinkActive="active" [routerLinkActiveOptions]="{exact: false, queryParams: 'ignored'}" mat-button>
     <img style="height: 26px;" src="assets/img/core-logo.png" /><span class="pl-2"> Afterglow Workbench</span>
   </a>
   <a routerLink="jobs/" i18n-aria-label aria-label="Jobs" routerLinkActive="active"
