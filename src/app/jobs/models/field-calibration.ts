@@ -6,6 +6,7 @@ import { CatalogSource } from './catalog-query';
 import { Photometry, PhotometryData, PhotometryJobSettings } from './photometry';
 import { TypeGuard } from 'src/app/utils/guard-type.pipe';
 import { Job } from './job';
+import { JobResult } from './job-result';
 
 
 export interface FieldCalibration {
@@ -47,3 +48,7 @@ export interface FieldCalibrationJob extends JobBase {
 export const isFieldCalibrationJob: TypeGuard<Job, FieldCalibrationJob> = (
   job: Job
 ): job is FieldCalibrationJob => job.type === JobType.FieldCalibration;
+
+export const isFieldCalibrationJobResult: TypeGuard<JobResult, FieldCalibrationJobResult> = (
+  result: JobResult
+): result is FieldCalibrationJobResult => result.type === JobType.FieldCalibration;

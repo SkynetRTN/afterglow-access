@@ -175,7 +175,7 @@ import {
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CancelJob, CreateJob, CreateJobFail, CreateJobSuccess, UpdateJob } from '../jobs/jobs.actions';
+import { CancelJob, CreateJob, CreateJobFail, CreateJobSuccess, UpdateJobState } from '../jobs/jobs.actions';
 import { PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult } from '../jobs/models/alignment';
@@ -2847,7 +2847,7 @@ export class WorkbenchState {
     );
 
     let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
+      ofActionSuccessful(UpdateJobState),
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
@@ -2947,7 +2947,7 @@ export class WorkbenchState {
     );
 
     let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
+      ofActionSuccessful(UpdateJobState),
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
@@ -3042,7 +3042,7 @@ export class WorkbenchState {
     );
 
     let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
+      ofActionSuccessful(UpdateJobState),
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
@@ -3155,7 +3155,7 @@ export class WorkbenchState {
     );
 
     let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
+      ofActionSuccessful(UpdateJobState),
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
@@ -4212,8 +4212,8 @@ export class WorkbenchState {
     );
 
     let jobStatusUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<UpdateJob>((a) => a.correlationId == correlationId),
+      ofActionSuccessful(UpdateJobState),
+      filter<UpdateJobState>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
         // setState((state: WorkbenchStateModel) => {

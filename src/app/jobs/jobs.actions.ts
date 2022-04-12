@@ -56,7 +56,13 @@ export class LoadJobs {
   constructor() { }
 }
 
-export class UpdateJob {
+export class LoadJob {
+  public static readonly type = '[Job] Load Job';
+
+  constructor(public id: string) { }
+}
+
+export class UpdateJobState {
   public static readonly type = '[Job] Update Job State';
 
   constructor(public job: Job, public correlationId?: string) { }

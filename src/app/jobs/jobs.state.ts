@@ -20,7 +20,7 @@ import {
   CreateJob,
   CreateJobSuccess,
   CreateJobFail,
-  UpdateJob,
+  UpdateJobState,
   UpdateJobSuccess,
   UpdateJobFail,
   StopAutoJobUpdate,
@@ -29,6 +29,7 @@ import {
   UpdateJobResultFail,
   LoadJobs,
   SelectJob,
+  LoadJob,
 } from './jobs.actions';
 import { JobService } from './services/jobs';
 import { ResetState } from '../auth/auth.actions';
@@ -155,8 +156,8 @@ export class JobsState {
         if (!createJobAction.autoUpdateInterval) createJobAction.autoUpdateInterval = 2500;
 
         let jobCompleted$ = this.actions$.pipe(
-          ofActionSuccessful(UpdateJob),
-          filter<UpdateJob>((a) => {
+          ofActionSuccessful(UpdateJobState),
+          filter<UpdateJobState>((a) => {
             return a.job.id == job.id && ['canceled', 'completed'].includes(getState().jobs[a.job.id].state.status);
           })
         );
@@ -168,7 +169,7 @@ export class JobsState {
             filter<StopAutoJobUpdate>((a) => a.jobId == job.id)
           ),
           this.actions$.pipe(
-            ofActionErrored(UpdateJob),
+            ofActionErrored(UpdateJobState),
             filter<UpdateJobFail>((a) => a.job.id == job.id),
             skip(5)
           )
@@ -177,7 +178,7 @@ export class JobsState {
         interval(createJobAction.autoUpdateInterval)
           .pipe(
             takeUntil(stop$),
-            tap((v) => dispatch(new UpdateJob(job, createJobAction.correlationId)))
+            tap((v) => dispatch(new UpdateJobState(job, createJobAction.correlationId)))
           )
           .subscribe();
 
@@ -226,6 +227,30 @@ export class JobsState {
     })
   }
 
+  @Action(LoadJob)
+  @ImmutableContext()
+  public loadJob({ setState, dispatch }: StateContext<JobsStateModel>, { id }: LoadJob) {
+    return this.jobService.getJob(id).pipe(
+      tap((resp) => {
+        setState((state: JobsStateModel) => {
+          let job = resp.data;
+          if (!(job.id in state.jobs)) state.ids.push(job.id);
+          delete job['result']
+          state.jobs[job.id] = {
+            ...job,
+          }
+          return state;
+        });
+      }),
+      catchError(e => {
+        return of()
+      }),
+      finalize(() => {
+
+      })
+    );
+  }
+
   @Action(LoadJobs)
   @ImmutableContext()
   public loadJobs({ setState, dispatch }: StateContext<JobsStateModel>, { }: LoadJobs) {
@@ -239,6 +264,7 @@ export class JobsState {
         setState((state: JobsStateModel) => {
           resp.data.forEach(job => {
             if (!(job.id in state.jobs)) state.ids.push(job.id);
+            delete job['result']
             state.jobs[job.id] = {
               ...job,
             }
@@ -258,9 +284,9 @@ export class JobsState {
     );
   }
 
-  @Action(UpdateJob)
+  @Action(UpdateJobState)
   @ImmutableContext()
-  public updateJob({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJob) {
+  public updateJobState({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJobState) {
     return this.jobService.getJobState(job.id).pipe(
       tap((value) => {
         setState((state: JobsStateModel) => {

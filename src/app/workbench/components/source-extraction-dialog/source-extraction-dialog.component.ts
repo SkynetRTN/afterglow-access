@@ -7,7 +7,7 @@ import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { getHeight, getWidth, ImageHdu } from 'src/app/data-files/models/data-file';
 import { getImageToViewportTransform, getViewportRegion } from 'src/app/data-files/models/transformation';
-import { CreateJob, UpdateJob } from 'src/app/jobs/jobs.actions';
+import { CreateJob, UpdateJobState } from 'src/app/jobs/jobs.actions';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
@@ -142,7 +142,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     )
 
     let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
+      ofActionSuccessful(UpdateJobState),
       filter<CreateJob>((a) => a.correlationId == correlationId),
       takeUntil(jobFinished$),
       tap((a) => {

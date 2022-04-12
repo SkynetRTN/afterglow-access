@@ -20,8 +20,8 @@
         <mat-cell *matCellDef="let row">
             <ng-container *ngIf="row.state.status == 'in_progress'; else stateBlock">
                 <div style="padding: 5px; width: 100px">
-                    <!-- <mat-progress-bar mode="determinate" mode="determinate" [value]="row.state?.progress"></mat-progress-bar>
-                                </mat-progress-bar> -->
+                    <mat-progress-bar mode="determinate" mode="determinate" [value]="row.state?.progress">
+                    </mat-progress-bar>
                 </div>
             </ng-container>
             <ng-template #stateBlock>

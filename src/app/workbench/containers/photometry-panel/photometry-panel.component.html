@@ -205,16 +205,19 @@
         <div fxLayout="row" style="margin-top: 10px; width: 100%;" fxLayoutGap="10px">
           <div fxFlex="1 1 auto" style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoPhotJob$ | async; let job">
-              <ng-container *ngIf="job.state.status == 'completed' && job.result; else progressBlock">
-                <div *ngIf="job.result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
-                  fxLayout="column" fxFill fxLayoutAlign="center center">
-                  Photometry Updated
-                </div>
-                <ng-template #errorBlock>
-                  <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
-                    Photometry Failed
+              <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
+                <ng-container *ngIf="autoPhotJobResult$ | async; let result; else progressBlock">
+                  <div *ngIf="result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
+                    fxLayout="column" fxFill fxLayoutAlign="center center">
+                    Photometry Updated
                   </div>
-                </ng-template>
+                  <ng-template #errorBlock>
+                    <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
+                      Photometry Failed
+                    </div>
+                  </ng-template>
+                </ng-container>
+
               </ng-container>
 
             </ng-container>
@@ -230,12 +233,15 @@
           <div *ngIf="(calibrationSettings$ | async)?.calibrationEnabled" fxFlex="1 1 auto"
             style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
-              <ng-container *ngIf="job.state.status == 'completed' && job.result; else progressBlock">
-                <div *ngIf="job.result?.data && job.result?.data?.length != 0; else errorBlock" i18n
-                  class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
-                  Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
-                  {{job.result.data[0]?.zeroPointError | number:'1.0-3'}} mag
-                </div>
+              <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
+                <ng-container *ngIf="(autoCalJobResult$ | async); let result; else progressBlock">
+                  <div *ngIf="result?.data && result?.data?.length != 0; else errorBlock" i18n
+                    class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
+                    Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
+                    {{result.data[0]?.zeroPointError | number:'1.0-3'}} mag
+                  </div>
+                </ng-container>
+
                 <ng-template #errorBlock>
                   <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
                     Calibration Failed
@@ -289,69 +295,30 @@
             </form>
           </div>
 
-          <div *ngIf="batchInProgress$ | async; else batchComplete">
-            <div *ngIf="batchPhotJob$ | async; let batchPhotJob">
-              <mat-progress-bar mode="determinate" [value]="batchPhotJob.state?.progress" [color]="'accent'">
-              </mat-progress-bar>
-              <p>Photometering...</p>
-            </div>
-            <div *ngIf="batchCalJob$ | async; let batchCalJob">
-              <mat-progress-bar mode="determinate" [value]="batchCalJob.state?.progress" [color]="'accent'">
-              </mat-progress-bar>
-              <p>Calibrating fields...</p>
-            </div>
-
-          </div>
-          <ng-template #batchComplete>
-            <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
-              <div *ngIf="(batchErrors$ | async) && (batchErrors$ | async).length == 0; else batchErrors">
-                <button class="" mat-raised-button (click)="downloadBatchPhotData()">
-                  <mat-icon>save_alt</mat-icon>
-                  <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
-                    source(s)
-                    in
-                    {{ (batchPhotJob$ | async)?.fileIds.length }}
-                    file(s)</span>
-                </button>
+          <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
+            <ng-container *ngIf="batchCalJob$ | async; let batchCalJob">
+              <div *ngIf="getBatchInProgress(batchPhotJob, batchCalJob); else batchComplete" class="alert alert-info">
+                <div class="pb-2">Your <a [routerLink]="['/jobs']" [queryParams]="{id: batchPhotJob.id}">photometry
+                    job</a> and <a [routerLink]="['/jobs']" [queryParams]="{id: batchCalJob.id}">calibration job</a> are
+                  in progress.</div>
+                <!-- <mat-progress-bar mode="determinate"
+                  [value]="(batchCalJob.state?.progress + batchPhotJob.state?.progress)/2" [color]="'accent'">
+                </mat-progress-bar> -->
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
               </div>
-              <ng-template #batchErrors>
-                <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
-              </ng-template>
-            </ng-container>
-          </ng-template>
-
-
-          <!-- <div *ngIf="batchPhotJob$ | async; let batchPhotJob">
-            <div *ngIf="batchPhotJob.state?.progress != 100"; else batchPhotJobComplete>
-              <mat-progress-bar mode="determinate" [value]="batchPhotJob.state?.progress" [color]="'accent'">
-              </mat-progress-bar>
-            </div>
-            <ng-template #batchPhotJobComplete>
-              <div class="mb-3" *ngIf="batchPhotJob.result; let batchPhotJobResult">
-                <div
-                  *ngIf="batchPhotJobResult.errors.length != 0 && batchPhotJobResult.data.length == 0; else batchPhotJobSuccess">
-                  <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
-                </div>
-                <ng-template #batchPhotJobSuccess>
-                  <ng-container *ngIf="(batchCalEnabled$ | async); else batchPhotJobCalibrated">
-                    <div *ngIf="batchCalJob$ | async; let batchCalJob">
-                      <div *ngIf="batchCalJob.state?.progress != 100;
-                      else batchCalJobComplete
-                    ">
-                        <mat-progress-bar mode="indeterminate" [color]="'accent'">
-                        </mat-progress-bar>
-                      </div>
-                      <ng-template #batchCalJobComplete>
-                        <div class="mb-3" *ngIf="batchCalJob.result; let batchCalJobResult">
-                          <div *ngIf="batchCalJobResult.errors.length != 0; else batchPhotJobCalibrated">
-                            <div class="alert alert-danger">Calibration of batch photometry failed.</div>
-                          </div>
-
-                        </div>
-                      </ng-template>
+              <ng-template #batchComplete>
+                <ng-container *ngIf="batchPhotJobResult$ | async; let batchPhotJobResult; else resultLoading">
+                  <ng-container *ngIf="batchCalJobResult$ | async; let batchCalJobResult; else resultLoading">
+                    <div *ngIf="batchPhotJobResult.errors.length != 0 || batchPhotJobResult.warnings.length"
+                      class="alert alert-warning">
+                      Batch <a [routerLink]="['/jobs']" [queryParams]="{id: batchPhotJob.id}">photometry
+                        job</a> completed with errors/warnings.
                     </div>
-                  </ng-container>
-                  <ng-template #batchPhotJobCalibrated>
+                    <div *ngIf="batchCalJobResult.errors.length != 0 || batchCalJobResult.warnings.length"
+                      class="alert alert-warning">
+                      Batch <a [routerLink]="['/jobs']" [queryParams]="{id: batchCalJob.id}">calibration
+                        job</a> completed with errors/warnings.
+                    </div>
                     <button class="" mat-raised-button (click)="downloadBatchPhotData()">
                       <mat-icon>save_alt</mat-icon>
                       <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
@@ -360,29 +327,35 @@
                         {{ (batchPhotJob$ | async)?.fileIds.length }}
                         file(s)</span>
                     </button>
-                  </ng-template>
-
+                  </ng-container>
+                </ng-container>
+                <ng-template #resultLoading>
+                  <div class="alert alert-info">
+                    Loading results...
+                  </div>
                 </ng-template>
-              </div>
-            </ng-template>
-          </div> -->
-
-
-
-
+                <!-- <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
+                  <div *ngIf="(batchErrors$ | async) && (batchErrors$ | async).length == 0; else batchErrors">
+                    <button class="" mat-raised-button (click)="downloadBatchPhotData()">
+                      <mat-icon>save_alt</mat-icon>
+                      <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
+                        source(s)
+                        in
+                        {{ (batchPhotJob$ | async)?.fileIds.length }}
+                        file(s)</span>
+                    </button>
+                  </div>
+                  <ng-template #batchErrors>
+                    <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
+                  </ng-template>
+                </ng-container> -->
+              </ng-template>
+            </ng-container>
+          </ng-container>
         </div>
       </ng-container>
-
       <hr />
 
-      <!-- 
-    <div>
-      <button class="" mat-raised-button color="warn" (click)="clearPhotDataFromAllFiles()">
-        <mat-icon>wb_incandescent</mat-icon>
-        <span>Clear All Photometry Data</span>
-      </button>
-    </div>
--->
     </ng-container>
   </ng-container>
 </ng-container>

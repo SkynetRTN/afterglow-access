@@ -1,9 +1,9 @@
 <div fxLayout="row" fxFill class="h-full">
     <div #jobsTable fxFlex="0 0 auto" class="h-full" style="overflow: auto; width: 800px;">
         <ng-container *ngIf="!(loading$ | async); else loading">
-            <ng-container *ngIf="(jobsFiltered$ | async) as jobs">
+            <ng-container *ngIf="(jobs$ | async) as jobs">
                 <ng-container *ngIf="jobs.length != 0; else noItems">
-                    <app-jobs-table [jobs]="jobsFiltered$ | async" [selectedJob]="selectedJob$ | async"
+                    <app-jobs-table [jobs]="jobs" [selectedJob]="selectedJob$ | async"
                         (selectionChange)="onSelectedJobChange($event)" class="w-full h-full">
                     </app-jobs-table>
                 </ng-container>
@@ -29,12 +29,10 @@
         </ng-template>
     </div>
     <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails" [resizeLeft]="false"></div>
-    <div #jobDetails fxFlex="1 1 auto" class="h-full" style="overflow-x: hidden;">
-        <div class="card workbench-settings-card h-full w-full">
-            <app-job-details [job]="selectedJob$ | async" [result]="selectedJobResult$ | async" class="h-full w-full"
-                style="overflow: auto; overflow-x: hidden;">
-            </app-job-details>
-        </div>
+    <div #jobDetails fxFlex="1 1 auto" class="h-full" style="overflow: auto;">
+        <app-job-details [job]=" selectedJob$ | async" [result]="selectedJobResult$ | async" class="h-full w-full"
+            style="overflow: auto; overflow-x: hidden;">
+        </app-job-details>
     </div>
 
 </div>

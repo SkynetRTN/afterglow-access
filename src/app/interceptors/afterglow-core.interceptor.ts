@@ -14,51 +14,9 @@ import * as camelCaseKeys from 'camelcase-keys';
 import * as snakeCaseKeys from 'snakecase-keys';
 import { _isNumberValue } from '@angular/cdk/coercion';
 import { isNumber } from '../utils/validators';
+import { idToNumber, idToString } from '../pipes/core-case.pipe';
 
-function isPositiveInteger(str: string) {
-  return /^\+?\d+$/.test(str);
-}
 
-function idToString(o: Object) {
-  if (o && typeof o === 'object') {
-    Object.keys(o).forEach((k) => {
-      if (o[k] !== null) {
-        if (typeof o[k] === 'object') {
-          idToString(o[k]);
-          return;
-        }
-        if ((k == 'id' || k.endsWith('_id')) && typeof o[k] === 'number') {
-          o[k] = (o[k] as number).toString();
-        } else if ((k == 'ids' || k.endsWith('_ids')) && Array.isArray(o[k])) {
-          o[k] = (o[k] as Array<any>).map((value) => (typeof o[k] === 'number' ? (value as number).toString() : o[k]));
-        }
-      }
-    });
-  }
-}
-
-function idToNumber(o: Object) {
-  if (o && typeof o === 'object') {
-    Object.keys(o).forEach((k) => {
-      if (o[k] !== null) {
-        if (typeof o[k] === 'object') {
-          idToNumber(o[k]);
-          return;
-        }
-        if ((k == 'id' || k.endsWith('Id')) && typeof o[k] === 'string' && isPositiveInteger(o[k])) {
-          let parsed = parseInt(o[k]);
-          if (!isNaN(parsed)) {
-            o[k] = parsed;
-          }
-        } else if ((k == 'ids' || k.endsWith('Ids')) && Array.isArray(o[k]) && isPositiveInteger(o[k])) {
-          o[k] = (o[k] as Array<any>).map((value) =>
-            typeof o[k] === 'string' && !isNaN(parseInt(value)) ? parseInt(value) : o[k]
-          );
-        }
-      }
-    });
-  }
-}
 
 @Injectable()
 export class AfterglowCoreInterceptor implements HttpInterceptor {

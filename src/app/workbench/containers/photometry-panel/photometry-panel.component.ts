@@ -95,7 +95,7 @@ import { HduType } from '../../../data-files/models/data-file-type';
 import { IImageData } from '../../../data-files/models/image-data';
 import { MarkerType, PhotometryMarker, RectangleMarker } from '../../models/marker';
 import { round } from '../../../utils/math';
-import { FieldCalibrationJob, FieldCalibrationJobResult, isFieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
+import { FieldCalibrationJob, FieldCalibrationJobResult, isFieldCalibrationJob, isFieldCalibrationJobResult } from 'src/app/jobs/models/field-calibration';
 import { CalibrationSettings } from '../../models/calibration-settings';
 import { GlobalSettings } from '../../models/global-settings';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
@@ -150,11 +150,14 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   batchInProgress$: Observable<boolean>;
   batchErrors$: Observable<string[]>;
   batchPhotJob$: Observable<PhotometryJob>;
+  batchPhotJobResult$: Observable<PhotometryJobResult>;
   batchCalJob$: Observable<FieldCalibrationJob>;
+  batchCalJobResult$: Observable<FieldCalibrationJobResult>;
   autoPhotJob$: Observable<PhotometryJob>;
   autoPhotJobResult$: Observable<PhotometryJobResult>;
   autoPhotData$: Observable<{ [sourceId: string]: PhotometryData }>;
   autoCalJob$: Observable<FieldCalibrationJob>;
+  autoCalJobResult$: Observable<FieldCalibrationJobResult>;
   mergeError: string;
   selectionModel = new SelectionModel<string>(true, []);
   zeroPointCorrection$: Observable<number>;
@@ -296,10 +299,16 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       )
       ))
 
+    this.autoCalJobResult$ = autoCalJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobResultById(id)).pipe(
+        map(result => result && isFieldCalibrationJobResult(result) ? result : null)
+      )
+      ))
+
     let calibrationEnabled$ = this.calibrationSettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
     let fixedZeroPoint$ = this.calibrationSettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
-    this.zeroPointCorrection$ = this.autoCalJob$.pipe(
-      map(job => job?.result?.data[0]?.zeroPointCorr),
+    this.zeroPointCorrection$ = this.autoCalJobResult$.pipe(
+      map(result => result?.data[0]?.zeroPointCorr),
       startWith(null),
       distinctUntilChanged()
     )
@@ -333,7 +342,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     );
 
 
-    this.tableData$.subscribe(data => console.log("TABLE DATA: ", data))
+    // this.tableData$.subscribe(data => console.log("TABLE DATA: ", data))
 
 
     this.batchInProgress$ = this.config$.pipe(
@@ -351,6 +360,12 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       )
       ))
 
+    this.batchCalJobResult$ = batchCalJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobResultById(id)).pipe(
+        map(result => result && isFieldCalibrationJobResult(result) ? result : null)
+      )
+      ))
+
     let batchPhotJobId$ = this.config$.pipe(
       map((s) => s.batchPhotJobId),
       distinctUntilChanged()
@@ -362,12 +377,18 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       )
       ))
 
-    this.batchErrors$ = combineLatest([this.batchInProgress$, this.batchPhotJob$, this.batchCalJob$]).pipe(
-      map(([inProgress, batchPhotJob, batchCalJob]) => {
+    this.batchPhotJobResult$ = batchPhotJobId$.pipe(
+      switchMap(id => this.store.select(JobsState.getJobResultById(id)).pipe(
+        map(result => result && isPhotometryJobResult(result) ? result : null)
+      )
+      ))
+
+    this.batchErrors$ = combineLatest([this.batchInProgress$, this.batchPhotJob$, this.batchPhotJobResult$, this.batchCalJob$, this.batchCalJobResult$]).pipe(
+      map(([inProgress, batchPhotJob, batchPhotJobResult, batchCalJob, batchCalJobResult]) => {
         if (inProgress) return [];
         let result: string[] = [];
-        if (batchPhotJob) result = result.concat(batchPhotJob.result.errors.map(e => e.detail))
-        if (batchCalJob) result = result.concat(batchCalJob.result.errors.map(e => e.detail))
+        if (batchPhotJobResult) result = result.concat(batchPhotJobResult.errors.map(e => e.detail))
+        if (batchCalJobResult) result = result.concat(batchCalJobResult.errors.map(e => e.detail))
 
         return result;
       })
@@ -432,11 +453,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       autoPhotIsValid$
     ]).pipe(
       takeUntil(this.destroy$),
-      withLatestFrom(this.autoPhotJob$)
-    ).subscribe(([[headerLoaded, isValid], job]) => {
+      withLatestFrom(autoPhotJobId$)
+    ).subscribe(([[headerLoaded, isValid], jobId]) => {
       if (!headerLoaded || !this.viewerId) return;
       //handle case where job ID is present and valid, but job is not in store
-      if (!isValid) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
+      if (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId)))) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
     })
 
     combineLatest([
@@ -1178,5 +1199,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   trackById(index: number, row: { source: Source; data: PhotometryData }) {
     return row.source.id
+  }
+
+  getBatchInProgress(photJob: PhotometryJob, calJob: FieldCalibrationJob) {
+    let states = ['in_progress', 'pending'];
+    return states.includes(photJob.state?.status) || states.includes(calJob.state?.status)
   }
 }
