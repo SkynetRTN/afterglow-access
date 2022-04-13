@@ -451,18 +451,26 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           xSrc = new Float32Array(x.length)
           ySrc = new Float32Array(y.length);
           let startIndex = 0;
+          let firstPeakFound = false;
           index = 0;
           for (let i = 0; i < x.length - 1; i++) {
             if (x[i] <= xBkg[xBkg.length - 1] || x[i] <= 0) continue;
+            // if (x[i] <= bkgMu) continue;
             let yi = y[i] - gaussian(x[i]);
             if (yi <= 1) continue;
 
             xSrc[index] = x[i] - bkgMu
             ySrc[index] = yi
 
-            if (ySrc[index] > y[startIndex]) {
-              startIndex = index;
+            if (!firstPeakFound) {
+              if (ySrc[index] >= ySrc[startIndex]) {
+                startIndex = index;
+              }
+              else {
+                firstPeakFound = true;
+              }
             }
+
 
             index++;
           }
