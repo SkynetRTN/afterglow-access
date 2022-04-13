@@ -62,7 +62,7 @@ import { M } from '@angular/cdk/keycodes';
 import { GeneticAlgorithm } from '@kometbomb/genetic-algorithm'
 
 import { saveAs } from 'file-saver/dist/FileSaver';
-const SAVE_CSV_FILES = true;
+const SAVE_CSV_FILES = false;
 
 type TypedArray =
   | Int8Array
@@ -454,7 +454,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           let firstPeakFound = false;
           index = 0;
           for (let i = 0; i < x.length - 1; i++) {
-            if (x[i] <= xBkg[xBkg.length - 1] || x[i] <= 0) continue;
+            if (x[i] <= xBkg[xBkg.length - 1]) continue;
             // if (x[i] <= bkgMu) continue;
             let yi = y[i] - gaussian(x[i]);
             if (yi <= 1) continue;
