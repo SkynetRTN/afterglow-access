@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Job } from '../models/job';
-import { JobStateBase } from '../models/job-base';
+import { JobBase, JobResultBase, JobStateBase } from '../models/job-base';
 import { JobResult } from '../models/job-result';
 import { getCoreApiUrl } from '../../afterglow-config';
 import { AfterglowConfigService } from '../../afterglow-config.service';
@@ -31,10 +31,10 @@ export class JobService {
     return this.http.get<CoreApiResponse<JobStateBase>>(`${getCoreApiUrl(this.config)}/jobs/${jobId}/state`);
   }
 
-  getJobResult(job: Job): Observable<JobResult> {
-    return this.http.get<any>(`${getCoreApiUrl(this.config)}/jobs/${job.id}/result`).pipe(
+  getJobResult(id: string): Observable<JobResultBase> {
+    return this.http.get<any>(`${getCoreApiUrl(this.config)}/jobs/${id}/result`).pipe(
       map((resp) => {
-        return { ...resp.data, type: job.type };
+        return { ...resp.data };
       })
     );
   }

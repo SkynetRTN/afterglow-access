@@ -42,7 +42,7 @@ export interface JobsStateModel {
   version: string;
   ids: string[];
   jobs: { [id: string]: Job };
-  jobResults: { [id: string]: JobResult };
+  // jobResults: { [id: string]: JobResult };
   selectedJobId: string;
   loading: boolean;
 }
@@ -51,7 +51,7 @@ const jobsDefaultState: JobsStateModel = {
   version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
   ids: [],
   jobs: {},
-  jobResults: {},
+  // jobResults: {},
   selectedJobId: null,
   loading: false
 };
@@ -69,10 +69,10 @@ export class JobsState {
     return state;
   }
 
-  @Selector()
-  public static getJobResultEntities(state: JobsStateModel) {
-    return state.jobResults;
-  }
+  // @Selector()
+  // public static getJobResultEntities(state: JobsStateModel) {
+  //   return state.jobResults;
+  // }
 
 
   @Selector()
@@ -100,10 +100,10 @@ export class JobsState {
     return state.jobs[state.selectedJobId] || null
   }
 
-  @Selector()
-  public static getSelectedJobResult(state: JobsStateModel) {
-    return state.jobResults[state.selectedJobId] || null
-  }
+  // @Selector()
+  // public static getSelectedJobResult(state: JobsStateModel) {
+  //   return state.jobResults[state.selectedJobId] || null
+  // }
 
   static getJobById(id: string) {
     return createSelector(
@@ -116,16 +116,16 @@ export class JobsState {
     );
   }
 
-  static getJobResultById(id: string) {
-    return createSelector(
-      [JobsState.getJobResultEntities],
-      (
-        jobResultEntities: { [id: string]: JobResult }
-      ) => {
-        return jobResultEntities[id] || null;
-      }
-    );
-  }
+  // static getJobResultById(id: string) {
+  //   return createSelector(
+  //     [JobsState.getJobResultEntities],
+  //     (
+  //       jobResultEntities: { [id: string]: JobResult }
+  //     ) => {
+  //       return jobResultEntities[id] || null;
+  //     }
+  //   );
+  // }
 
   @Action(ResetState)
   @ImmutableContext()
@@ -143,6 +143,9 @@ export class JobsState {
         let job = resp.data
         createJobAction.job.id = job.id;
         setState((state: JobsStateModel) => {
+          //the core sends an empty result object if the job has not yet been completed
+          if (job.state.status != 'completed') delete job['result']
+
           state.jobs[job.id] = {
             ...job,
           };
@@ -158,7 +161,7 @@ export class JobsState {
         let jobCompleted$ = this.actions$.pipe(
           ofActionSuccessful(UpdateJobState),
           filter<UpdateJobState>((a) => {
-            return a.job.id == job.id && ['canceled', 'completed'].includes(getState().jobs[a.job.id].state.status);
+            return a.id == job.id && ['canceled', 'completed'].includes(getState().jobs[a.id].state.status);
           })
         );
 
@@ -170,7 +173,7 @@ export class JobsState {
           ),
           this.actions$.pipe(
             ofActionErrored(UpdateJobState),
-            filter<UpdateJobFail>((a) => a.job.id == job.id),
+            filter<UpdateJobFail>((a) => a.id == job.id),
             skip(5)
           )
         ).pipe(take(1));
@@ -178,15 +181,15 @@ export class JobsState {
         interval(createJobAction.autoUpdateInterval)
           .pipe(
             takeUntil(stop$),
-            tap((v) => dispatch(new UpdateJobState(job, createJobAction.correlationId)))
+            tap((v) => dispatch(new UpdateJobState(job.id, createJobAction.correlationId)))
           )
           .subscribe();
 
         return jobCompleted$.pipe(
           take(1),
           flatMap((a) => {
-            if (getState().jobs[a.job.id].state.status != 'completed') return of();
-            return dispatch(new UpdateJobResult(job, createJobAction.correlationId));
+            if (getState().jobs[a.id].state.status != 'completed') return of();
+            return dispatch(new UpdateJobResult(job.id, createJobAction.correlationId));
 
             //   return this.jobService.getJobResult(job).pipe(
             //     tap((value) => {
@@ -235,7 +238,6 @@ export class JobsState {
         setState((state: JobsStateModel) => {
           let job = resp.data;
           if (!(job.id in state.jobs)) state.ids.push(job.id);
-          delete job['result']
           state.jobs[job.id] = {
             ...job,
           }
@@ -264,10 +266,19 @@ export class JobsState {
         setState((state: JobsStateModel) => {
           resp.data.forEach(job => {
             if (!(job.id in state.jobs)) state.ids.push(job.id);
+
+            //the core sends an empty result object if the job for this endpoint
+            //prevent the empty result object from overwriting previously obtained results
             delete job['result']
-            state.jobs[job.id] = {
-              ...job,
+
+            if (state.jobs[job.id]) {
+              Object.assign(state.jobs[job.id], job);
             }
+            else {
+              state.jobs[job.id] = job
+            }
+
+
           })
           return state;
         });
@@ -286,11 +297,11 @@ export class JobsState {
 
   @Action(UpdateJobState)
   @ImmutableContext()
-  public updateJobState({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJobState) {
-    return this.jobService.getJobState(job.id).pipe(
+  public updateJobState({ setState, dispatch }: StateContext<JobsStateModel>, { id, correlationId }: UpdateJobState) {
+    return this.jobService.getJobState(id).pipe(
       tap((value) => {
         setState((state: JobsStateModel) => {
-          state.jobs[job.id].state = value.data;
+          state.jobs[id].state = value.data;
 
           return state;
         });
@@ -302,20 +313,19 @@ export class JobsState {
   @ImmutableContext()
   public updateJobResult(
     { setState, dispatch }: StateContext<JobsStateModel>,
-    { job, correlationId }: UpdateJobResult
+    { id, correlationId }: UpdateJobResult
   ) {
-    return this.jobService.getJobResult(job).pipe(
+    return this.jobService.getJobResult(id).pipe(
       map((resp) => {
         setState((state: JobsStateModel) => {
-          // state.jobs[job.id].result = resp;
-          state.jobResults[job.id] = resp;
+          state.jobs[id].result = resp;
           return state;
         });
 
-        return dispatch(new UpdateJobResultSuccess(job, resp, correlationId));
+        return dispatch(new UpdateJobResultSuccess(id, correlationId));
       }),
       catchError((err) => {
-        return dispatch(new UpdateJobResultFail(job, err, correlationId));
+        return dispatch(new UpdateJobResultFail(id, err, correlationId));
       })
     );
   }

@@ -62,7 +62,7 @@ import { M } from '@angular/cdk/keycodes';
 import { GeneticAlgorithm } from '@kometbomb/genetic-algorithm'
 
 import { saveAs } from 'file-saver/dist/FileSaver';
-const SAVE_CSV_FILES = false;
+const SAVE_CSV_FILES = true;
 
 type TypedArray =
   | Int8Array

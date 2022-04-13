@@ -4,6 +4,9 @@ import { SourceMeta } from './source-meta';
 import { Astrometry } from './astrometry';
 import { SourceId } from './source-id';
 import { JobType } from './job-types';
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
+import { JobResult } from './job-result';
 
 export interface SourceExtractionJobSettings {
   x?: number;
@@ -44,5 +47,15 @@ export interface SourceExtractionJob extends JobBase {
   sourceExtractionSettings?: SourceExtractionJobSettings;
   mergeSources: boolean;
   sourceMergeSettings?: SourceMergeSettings;
-  result: SourceExtractionJobResult | null;
+  result?: SourceExtractionJobResult;
 }
+
+
+
+export const isSourceExtractionJob: TypeGuard<Job, SourceExtractionJob> = (
+  job: Job
+): job is SourceExtractionJob => job.type === JobType.SourceExtraction;
+
+export const isSourceExtractionJobResult: TypeGuard<JobResult, SourceExtractionJobResult> = (
+  result: JobResult
+): result is SourceExtractionJobResult => result.type === JobType.SourceExtraction;

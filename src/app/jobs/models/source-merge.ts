@@ -16,5 +16,4 @@ export interface SourceMergeJob extends JobBase {
   readonly type: JobType.SourceMerge;
   sources: Astrometry[];
   settings: SourceMergeSettings;
-  result: SourceMergeJobResult;
 }

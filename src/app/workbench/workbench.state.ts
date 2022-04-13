@@ -176,11 +176,11 @@ import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { CancelJob, CreateJob, CreateJobFail, CreateJobSuccess, UpdateJobState } from '../jobs/jobs.actions';
-import { PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
+import { isPixelOpsJob, PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
-import { AlignmentJob, AlignmentJobResult } from '../jobs/models/alignment';
-import { WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from '../jobs/models/wcs_calibration';
-import { StackingJob, StackingJobResult } from '../jobs/models/stacking';
+import { AlignmentJob, AlignmentJobResult, isAlignmentJob } from '../jobs/models/alignment';
+import { isWcsCalibrationJob, isWcsCalibrationJobResult, WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from '../jobs/models/wcs_calibration';
+import { isStackingJob, StackingJob, StackingJobResult } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PosType, Source } from './models/source';
@@ -216,7 +216,7 @@ import {
   appendTransform,
   matrixToTransform,
 } from '../data-files/models/transformation';
-import { SonificationJob, SonificationJobResult, SonificationJobSettings } from '../jobs/models/sonification';
+import { isSonificationJob, SonificationJob, SonificationJobResult, SonificationJobSettings } from '../jobs/models/sonification';
 import { IImageData } from '../data-files/models/image-data';
 import { MatDialog } from '@angular/material/dialog';
 import { AlertDialogConfig, AlertDialogComponent } from '../utils/alert-dialog/alert-dialog.component';
@@ -2799,7 +2799,6 @@ export class WorkbenchState {
       op: op,
       inplace: data.inPlace,
       state: null,
-      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2826,32 +2825,38 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as PixelOpsJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during pixel ops job: ', result.errors);
-        }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during pixel ops job: ', result.warnings);
-        }
-
         let actions: any[] = [];
-        if ((job as PixelOpsJob).inplace) {
-          let hduIds = result.fileIds.map((id) => id.toString());
-          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+
+        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
+        if (isPixelOpsJob(job)) {
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during pixel ops job: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during pixel ops job: ', result.warnings);
+          }
+
+
+          if ((job as PixelOpsJob).inplace) {
+            let hduIds = result.fileIds.map((id) => id.toString());
+            hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+            hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+          }
+
+          actions.push(new LoadLibrary());
         }
 
-        actions.push(new LoadLibrary());
         return dispatch(actions);
       })
     );
 
     let jobUpdated$ = this.actions$.pipe(
       ofActionSuccessful(UpdateJobState),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
+      filter<UpdateJobState>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
         setState((state: WorkbenchStateModel) => {
           state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
           return state;
@@ -2898,7 +2903,6 @@ export class WorkbenchState {
       op: data.opString,
       inplace: data.inPlace,
       state: null,
-      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -2925,22 +2929,28 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as PixelOpsJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during pixel ops: ', result.errors);
-        }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during pixel ops: ', result.warnings);
-        }
-
         let actions: any[] = [];
-        if ((job as PixelOpsJob).inplace) {
-          let hduIds = result.fileIds.map((id) => id.toString());
-          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+
+        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
+        if (isPixelOpsJob(job)) {
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during pixel ops: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during pixel ops: ', result.warnings);
+          }
+
+
+          if ((job as PixelOpsJob).inplace) {
+            let hduIds = result.fileIds.map((id) => id.toString());
+            hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+            hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+          }
+
+          actions.push(new LoadLibrary());
         }
 
-        actions.push(new LoadLibrary());
 
         return dispatch(actions);
       })
@@ -2948,10 +2958,10 @@ export class WorkbenchState {
 
     let jobUpdated$ = this.actions$.pipe(
       ofActionSuccessful(UpdateJobState),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
+      filter<UpdateJobState>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
         setState((state: WorkbenchStateModel) => {
           state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
           return state;
@@ -3020,22 +3030,27 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       tap((a) => {
-        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as AlignmentJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during aligning: ', result.errors);
-        }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during aligning: ', result.warnings);
-        }
-
-        let hduIds = result.fileIds.map((id) => id.toString());
         let actions: any[] = [];
-        if ((job as AlignmentJob).inplace) {
-          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
+        if (isAlignmentJob(job)) {
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during aligning: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during aligning: ', result.warnings);
+          }
+
+          let hduIds = result.fileIds.map((id) => id.toString());
+
+          if (job.inplace) {
+            hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+            hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+          }
+
+          actions.push(new LoadLibrary());
         }
 
-        actions.push(new LoadLibrary());
 
         return dispatch(actions);
       })
@@ -3043,10 +3058,10 @@ export class WorkbenchState {
 
     let jobUpdated$ = this.actions$.pipe(
       ofActionSuccessful(UpdateJobState),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
+      filter<UpdateJobState>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
         setState((state: WorkbenchStateModel) => {
           state.aligningPanelConfig.currentAlignmentJobId = job.id;
           return state;
@@ -3105,7 +3120,6 @@ export class WorkbenchState {
         hi: data.high,
       },
       state: null,
-      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -3132,34 +3146,35 @@ export class WorkbenchState {
       takeUntil(merge(jobCanceled$, jobErrored$)),
       take(1),
       flatMap((a) => {
-        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as StackingJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during stacking: ', result.errors);
+        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
+        if (isStackingJob(job)) {
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during stacking: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during stacking: ', result.warnings);
+          }
+          if (result.fileId && stackedName) {
+            return this.dataFileService.updateFile(result.fileId, {
+              groupName: `${stackedName}.fits`,
+              name: `${stackedName}.fits`
+            }).pipe(
+              map(() => dispatch(new LoadLibrary()))
+            )
+          }
+          return dispatch(new LoadLibrary())
         }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during stacking: ', result.warnings);
-        }
-        if (result.fileId && stackedName) {
-          return this.dataFileService.updateFile(result.fileId, {
-            groupName: `${stackedName}.fits`,
-            name: `${stackedName}.fits`
-          }).pipe(
-            map(() => dispatch(new LoadLibrary()))
-          )
-        }
-        return dispatch(new LoadLibrary())
-
-
-
+        return of()
       })
     );
 
     let jobUpdated$ = this.actions$.pipe(
       ofActionSuccessful(UpdateJobState),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
+      filter<UpdateJobState>((a) => a.correlationId == correlationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
         setState((state: WorkbenchStateModel) => {
           state.stackingPanelConfig.currentStackingJobId = job.id;
           return state;
@@ -3210,7 +3225,6 @@ export class WorkbenchState {
       settings: wcsCalibrationJobSettings,
       sourceExtractionSettings: sourceExtractionJobSettings,
       state: null,
-      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -3238,15 +3252,13 @@ export class WorkbenchState {
             let actions: any[] = [];
             let state = getState();
             if (value.result.successful) {
-              let jobEntites = this.store.selectSnapshot(JobsState.getJobEntities);
-              let job = jobEntites[state.wcsCalibrationPanelState.activeJobId] as WcsCalibrationJob;
-              let result = job.result;
-              if (result) {
-                result.fileIds.forEach((hduId) => {
+              let job = this.store.selectSnapshot(JobsState.getJobById(state.wcsCalibrationPanelState.activeJobId))
+              if (job && isWcsCalibrationJob(job) && job.result) {
+                job.result.fileIds.forEach((hduId) => {
                   actions.push(new InvalidateHeader(hduId.toString()));
                 });
                 let message: string;
-                let numFailed = hduIds.length - result.fileIds.length;
+                let numFailed = hduIds.length - job.result.fileIds.length;
                 if (numFailed != 0) {
                   message = `Failed to find solution for ${numFailed} image(s).`;
                 } else {
@@ -3439,7 +3451,6 @@ export class WorkbenchState {
           return s;
         }),
         state: null,
-        result: null,
       };
 
       let correlationId = this.correlationIdGenerator.next();
@@ -3515,7 +3526,6 @@ export class WorkbenchState {
         fieldCal: fieldCalibration,
         fileIds: [hduId],
         state: null,
-        result: null,
       };
 
 
@@ -3620,7 +3630,6 @@ export class WorkbenchState {
         return s;
       }),
       state: null,
-      result: null,
     };
 
     let photJobCorrelationId = this.correlationIdGenerator.next();
@@ -3660,7 +3669,6 @@ export class WorkbenchState {
         fieldCal: fieldCalibration,
         fileIds: hduIds,
         state: null,
-        result: null,
       };
 
 
@@ -4167,11 +4175,9 @@ export class WorkbenchState {
 
     //check whether new job should be created or if previous job result can be used
     if (sonificationPanelState.sonificationJobId) {
-      let job = this.store.selectSnapshot(JobsState.getJobEntities)[
-        sonificationPanelState.sonificationJobId
-      ] as SonificationJob;
+      let job = this.store.selectSnapshot(JobsState.getJobById(sonificationPanelState.sonificationJobId))
 
-      if (job && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
+      if (isSonificationJob(job) && job && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
         let jobSettings: SonificationJobSettings = {
           x: job.settings.x,
           y: job.settings.y,
@@ -4192,8 +4198,7 @@ export class WorkbenchState {
       fileId: hduId,
       type: JobType.Sonification,
       settings: settings,
-      state: null,
-      result: null,
+      state: null
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -4206,8 +4211,8 @@ export class WorkbenchState {
     });
 
     let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
+      ofActionSuccessful(CreateJob),
+      filter<CreateJob>((a) => a.correlationId == correlationId),
       take(1)
     );
 
@@ -4226,37 +4231,36 @@ export class WorkbenchState {
       })
     );
 
+
+
+
     return merge(
       jobStatusUpdated$,
       jobCompleted$.pipe(
         flatMap((a) => {
-          let actions: any[] = [];
           let sonificationUrl = '';
-          let error = 'Unexpected error occurred';
-          if (a.result.successful) {
-            job = (a.action as CreateJob).job as SonificationJob;
-            let result = this.store.selectSnapshot(JobsState.getJobResultById(job.id)) as SonificationJobResult;
-
-            if (result.errors.length == 0) {
+          let error = '';
+          let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
+          if (isSonificationJob(job)) {
+            if (job.result.errors.length == 0) {
               sonificationUrl = getSonificationUrl(job.id);
               error = '';
             } else {
-              error = result.errors.map((e) => e.detail).join(', ');
+              error = job.result.errors.map((e) => e.detail).join(', ');
             }
+            setState((state: WorkbenchStateModel) => {
+              let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
+              sonificationPanelState.sonificationLoading = false;
+              sonificationPanelState.sonificationJobId = job.id;
+
+              state.sonificationPanelStateEntities[sonificationPanelStateId] = {
+                ...sonificationPanelState,
+              };
+              return state;
+            });
+            return dispatch(new SonificationCompleted(hduId, sonificationUrl, error));
           }
-
-          setState((state: WorkbenchStateModel) => {
-            let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
-            sonificationPanelState.sonificationLoading = false;
-            sonificationPanelState.sonificationJobId = job.id;
-
-            state.sonificationPanelStateEntities[sonificationPanelStateId] = {
-              ...sonificationPanelState,
-            };
-            return state;
-          });
-
-          return dispatch(new SonificationCompleted(hduId, sonificationUrl, error));
+          return of();
         })
       )
     );

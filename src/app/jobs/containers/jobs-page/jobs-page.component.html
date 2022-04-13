@@ -30,7 +30,7 @@
     </div>
     <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails" [resizeLeft]="false"></div>
     <div #jobDetails fxFlex="1 1 auto" class="h-full" style="overflow: auto;">
-        <app-job-details [job]=" selectedJob$ | async" [result]="selectedJobResult$ | async" class="h-full w-full"
+        <app-job-details [job]=" selectedJob$ | async" class="h-full w-full"
             style="overflow: auto; overflow-x: hidden;">
         </app-job-details>
     </div>

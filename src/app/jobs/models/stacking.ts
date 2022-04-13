@@ -1,4 +1,7 @@
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 import { JobBase, JobResultBase } from './job-base';
+import { JobResult } from './job-result';
 import { JobType } from './job-types';
 import { SourceExtractionData } from './source-extraction';
 
@@ -20,5 +23,13 @@ export interface StackingJob extends JobBase {
   readonly type: JobType.Stacking;
   fileIds: string[];
   stackingSettings?: StackSettings;
-  result: StackingJobResult | null;
+  result?: StackingJobResult;
 }
+
+export const isStackingJob: TypeGuard<Job, StackingJob> = (
+  job: Job
+): job is StackingJob => job.type === JobType.Stacking;
+
+export const isStackingJobResult: TypeGuard<JobResult, StackingJobResult> = (
+  result: JobResult
+): result is StackingJobResult => result.type === JobType.Stacking;

@@ -183,6 +183,8 @@ export function centroidPsf(
     if (isNaN(ox) || isNaN(oy)) return failedResult;
 
     let subframeResult = getSubframe(settings.centeringBoxWidth, imageData, ox, oy);
+    if (!subframeResult) return failedResult;
+
     cxc = subframeResult.cxc;
     cyc = subframeResult.cyc;
     cnx = subframeResult.cnx;
@@ -270,7 +272,7 @@ function getSubframe(size: number, imageData: IImageData<PixelType>, x: number, 
   let xl2 = Math.floor(y + halfCenteringBoxWidth);
 
   if (xc1 >= ncols || xc2 < 0.0 || xl1 >= nlines || xl2 < 0.0) {
-    throw new Error('centering box does not intersect image');
+    return null;
   }
 
   // Get column and line limits, dimensions and center of subraster.

@@ -206,7 +206,7 @@
           <div fxFlex="1 1 auto" style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoPhotJob$ | async; let job">
               <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
-                <ng-container *ngIf="autoPhotJobResult$ | async; let result; else progressBlock">
+                <ng-container *ngIf="job.result; let result; else progressBlock">
                   <div *ngIf="result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
                     fxLayout="column" fxFill fxLayoutAlign="center center">
                     Photometry Updated
@@ -234,7 +234,7 @@
             style="width: 100%; height: 50px;">
             <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
               <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
-                <ng-container *ngIf="(autoCalJobResult$ | async); let result; else progressBlock">
+                <ng-container *ngIf="job.result; let result; else progressBlock">
                   <div *ngIf="result?.data && result?.data?.length != 0; else errorBlock" i18n
                     class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
                     Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
@@ -307,8 +307,8 @@
                 <mat-progress-bar mode="indeterminate"></mat-progress-bar>
               </div>
               <ng-template #batchComplete>
-                <ng-container *ngIf="batchPhotJobResult$ | async; let batchPhotJobResult; else resultLoading">
-                  <ng-container *ngIf="batchCalJobResult$ | async; let batchCalJobResult; else resultLoading">
+                <ng-container *ngIf="batchPhotJob.result; let batchPhotJobResult; else resultLoading">
+                  <ng-container *ngIf="batchCalJob.result; let batchCalJobResult; else resultLoading">
                     <div *ngIf="batchPhotJobResult.errors.length != 0 || batchPhotJobResult.warnings.length"
                       class="alert alert-warning">
                       Batch <a [routerLink]="['/jobs']" [queryParams]="{id: batchPhotJob.id}">photometry

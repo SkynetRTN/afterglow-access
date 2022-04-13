@@ -94,26 +94,26 @@
             </div>
         </mat-tab>
         <mat-tab label="Result">
-            <div *ngIf="result" class="result-tab m-4">
+            <div *ngIf="job?.result" class="result-tab m-4">
                 <div *ngIf="!showJson; else jsonView" fxLayout="column" fxLayoutGap="20px">
-                    <div *ngIf="result.errors.length != 0" class="alert-danger">
+                    <div *ngIf="job.result.errors.length != 0" class="alert-danger">
                         Errors
                         <ul>
-                            <li *ngFor="let error of result.errors" class="p-1">
+                            <li *ngFor="let error of job.result.errors" class="p-1">
                                 {{ error.detail }} <span
                                     *ngIf="error.meta?.fileId; let fileId">[{{getJobFileLabels([fileId])}}]</span>
                             </li>
                         </ul>
                     </div>
-                    <div *ngIf="result.warnings.length != 0" class="alert-warning">
+                    <div *ngIf="job.result.warnings.length != 0" class="alert-warning">
                         Warnings
                         <ul>
-                            <li *ngFor="let warning of result.warnings" class="p-1">
+                            <li *ngFor="let warning of job.result.warnings" class="p-1">
                                 {{ warning }}
                             </li>
                         </ul>
                     </div>
-                    <mat-card *ngIf="isPhotometryJobResult(result)" class="w-full">
+                    <mat-card *ngIf="isPhotometryJob(job)" class="w-full">
                         <h4>Export Photometry Data</h4>
                         <form [formGroup]="exportPhotometryDataForm">
                             <mat-form-field appearance="outline" style="width: 500px;">
@@ -130,11 +130,12 @@
                         </form>
 
                     </mat-card>
-                    <mat-card *ngIf="isFieldCalibrationJobResult(result) && result.data.length != 0" class="w-full">
+                    <mat-card *ngIf="isFieldCalibrationJob(job) && job.result.data.length != 0" class="w-full">
                         <dl class="list">
                             <dt>Zero Point Corrections</dt>
                             <dd>
-                                <span *ngFor="let d of result.data">{{getJobFileLabel(d.fileId)}}: {{d.zeroPointCorr |
+                                <span *ngFor="let d of job.result.data">{{getJobFileLabel(d.fileId)}}: {{d.zeroPointCorr
+                                    |
                                     number:'1.05'}} +/- {{d.zeroPointError | number:'1.05'}}</span>
                             </dd>
                         </dl>
@@ -142,7 +143,7 @@
                 </div>
                 <ng-template #jsonView>
                     <mat-card *ngIf="job" class="m-5">
-                        <pre [lang]="'json'" highlight-js>{{result | coreCase | json}}</pre>
+                        <pre [lang]="'json'" highlight-js>{{job.result | coreCase | json}}</pre>
                     </mat-card>
                 </ng-template>
 

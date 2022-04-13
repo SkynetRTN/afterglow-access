@@ -10,7 +10,7 @@ import { getImageToViewportTransform, getViewportRegion } from 'src/app/data-fil
 import { CreateJob, UpdateJobState } from 'src/app/jobs/jobs.actions';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
-import { SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
+import { isSourceExtractionJob, SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SonifierRegionMode } from '../../models/sonifier-file-state';
@@ -143,10 +143,10 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
 
     let jobUpdated$ = this.actions$.pipe(
       ofActionSuccessful(UpdateJobState),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
+      filter<UpdateJobState>((a) => a.correlationId == correlationId),
       takeUntil(jobFinished$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id)) as SourceExtractionJob;
+        let job = this.store.selectSnapshot(JobsState.getJobById(a.id)) as SourceExtractionJob;
         this.job = job;
       })
     );
@@ -156,10 +156,14 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     ).subscribe(v => {
       if (v.result.successful) {
         let a = v.action as CreateJob;
-        let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as SourceExtractionJobResult;
-        this.jobResult = result;
+        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
+        if (!isSourceExtractionJob(job)) {
+          this.loading = false;
+          return;
+        }
+        this.jobResult = job.result;
 
-        let sources = result.data.map((d) => {
+        let sources = job.result.data.map((d) => {
           let posType = PosType.PIXEL;
           let primaryCoord = d.x;
           let secondaryCoord = d.y;
@@ -197,7 +201,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
         this.store.dispatch(new AddSources(sources));
 
 
-        if (result.errors.length == 0 && result.warnings.length == 0) {
+        if (job.result.errors.length == 0 && job.result.warnings.length == 0) {
           this.dialogRef.close();
         }
         this.loading = false;

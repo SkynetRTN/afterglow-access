@@ -51,7 +51,7 @@ export interface PhotometryJob extends JobBase {
   fileIds: string[];
   sources: Array<Astrometry & SourceId>;
   settings?: PhotometryJobSettings;
-  result: PhotometryJobResult | null;
+  result?: PhotometryJobResult;
 }
 
 export const isPhotometryJob: TypeGuard<Job, PhotometryJob> = (

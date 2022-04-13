@@ -32,7 +32,7 @@ import {
 } from './data-providers.actions';
 import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
 import { CreateJob, UpdateJobState } from '../jobs/jobs.actions';
-import { BatchImportJob, BatchImportSettings, BatchImportJobResult } from '../jobs/models/batch-import';
+import { BatchImportJob, BatchImportSettings, BatchImportJobResult, isBatchImportJob } from '../jobs/models/batch-import';
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
@@ -479,7 +479,8 @@ export class DataProvidersState {
       tap((a) => {
         if (a.result.successful) {
           let job = this.store.selectSnapshot(JobsState.getJobById(a.action.job.id))
-          let result = this.store.selectSnapshot(JobsState.getJobResultById(a.action.job.id)) as BatchImportJobResult
+          if (!isBatchImportJob(job)) return;
+          let result = job.result;
           if (result.errors.length != 0) {
             console.error('Errors encountered during import: ', result.errors);
           }
@@ -524,10 +525,10 @@ export class DataProvidersState {
 
     let jobUpdated$ = this.actions$.pipe(
       ofActionSuccessful(UpdateJobState),
-      filter<CreateJob>((a) => a.correlationId == jobCorrelationId),
+      filter<UpdateJobState>((a) => a.correlationId == jobCorrelationId),
       takeUntil(jobCompleted$),
       tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
+        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
         return dispatch(new ImportAssetsStatusUpdated(job as BatchImportJob, correlationId));
       })
     );

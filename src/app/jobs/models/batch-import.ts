@@ -1,5 +1,7 @@
 import { JobType } from './job-types';
 import { JobBase, JobResultBase } from './job-base';
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 
 export interface BatchImportSettings {
   providerId?: string;
@@ -18,3 +20,7 @@ export interface BatchImportJob extends JobBase {
   settings: Array<BatchImportSettings>;
   result: BatchImportJobResult | null;
 }
+
+export const isBatchImportJob: TypeGuard<Job, BatchImportJob> = (
+  job: Job
+): job is BatchImportJob => job.type === JobType.BatchImport;

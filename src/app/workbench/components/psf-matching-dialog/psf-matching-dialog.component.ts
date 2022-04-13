@@ -13,7 +13,7 @@ import { CreateJob, CreateJobSuccess } from 'src/app/jobs/jobs.actions';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from 'src/app/jobs/models/pixel-ops';
-import { SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
+import { isSourceExtractionJob, SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { WorkbenchState } from '../../workbench.state';
@@ -63,12 +63,13 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
       ).subscribe(v => {
         if (v.result.successful) {
           let a = v.action as CreateJob;
-          let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as SourceExtractionJobResult;
+          let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
+          if (!isSourceExtractionJob(job)) return;
 
-          if (result.data.length != 0) {
+          if (job.result.data.length != 0) {
             this.extractionState[hdu.id].message = 'waiting for analysis of other layers...'
             this.extractionState[hdu.id].status = 'success'
-            this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(result)
+            this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
           }
           else {
             this.extractionState[hdu.id].message = `error analyzing PSF`
@@ -112,7 +113,6 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
       sourceExtractionSettings: jobSettings,
       mergeSources: false,
       state: null,
-      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -178,7 +178,6 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
       inplace: true,
       op: `gaussian_filter(img, ${sigma})`,
       state: null,
-      result: null,
     };
 
     let correlationId = this.correlationIdGenerator.next();
@@ -217,10 +216,11 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
         ).subscribe(v => {
           if (v.result.successful) {
             let a = v.action as CreateJob;
-            let result = this.store.selectSnapshot(JobsState.getJobResultById(a.job.id)) as SourceExtractionJobResult;
+            let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
+            if (!isSourceExtractionJob(job)) return;
 
-            if (result.data.length != 0) {
-              this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(result)
+            if (job.result.data.length != 0) {
+              this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
             }
           }
 

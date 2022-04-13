@@ -22,5 +22,5 @@ export interface JobResultBase {
 export interface JobBase {
   id: string | null;
   state: JobStateBase | null;
-  // result: JobResultBase | null;
+  result?: JobResultBase | null;
 }

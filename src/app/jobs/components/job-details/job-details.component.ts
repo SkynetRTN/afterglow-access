@@ -24,7 +24,6 @@ export class JobDetailsComponent implements OnInit {
   isFieldCalibrationJobResult = isFieldCalibrationJobResult;
 
   @Input() job: Job;
-  @Input() result: JobResult;
 
   showJson = false;
 

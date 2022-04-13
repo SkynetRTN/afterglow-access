@@ -42,7 +42,7 @@ export interface FieldCalibrationJob extends JobBase {
   fieldCal: FieldCalibration;
   sourceExtractionSettings: SourceExtractionJobSettings;
   photometrySettings: PhotometryJobSettings;
-  result: FieldCalibrationJobResult | null;
+  result?: FieldCalibrationJobResult;
 }
 
 export const isFieldCalibrationJob: TypeGuard<Job, FieldCalibrationJob> = (

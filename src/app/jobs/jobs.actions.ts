@@ -65,46 +65,46 @@ export class LoadJob {
 export class UpdateJobState {
   public static readonly type = '[Job] Update Job State';
 
-  constructor(public job: Job, public correlationId?: string) { }
+  constructor(public id: string, public correlationId?: string) { }
 }
 
 export class UpdateJobSuccess {
   public static readonly type = '[Job] Update Job State Success';
 
-  constructor(public job: Job, public correlationId?: string) { }
+  constructor(public id: string, public correlationId?: string) { }
 }
 
 export class UpdateJobFail {
   public static readonly type = '[Job] Update Job State Fail';
 
-  constructor(public job: Job, error: any, public correlationId?: string) { }
+  constructor(public id: string, error: any, public correlationId?: string) { }
 }
 
 export class UpdateJobResult {
   public static readonly type = '[Job] Update Job Result';
-  constructor(public job: Job, public correlationId?: string) { }
+  constructor(public id: string, public correlationId?: string) { }
 }
 
 export class UpdateJobResultSuccess {
   public static readonly type = '[Job] Update Job Result Success';
 
-  constructor(public job: Job, public result: JobResult, public correlationId?: string) { }
+  constructor(public id: string, public correlationId?: string) { }
 }
 
 export class UpdateJobResultFail {
   public static readonly type = '[Job] Update Job Result Fail';
 
-  constructor(public job: Job, error: any, public correlationId?: string) { }
+  constructor(public id: string, error: any, public correlationId?: string) { }
 }
 
 export class JobCompleted {
   public static readonly type = '[Job] Job Completed';
 
-  constructor(public job: Job, public result: JobResult, public correlationId?: string) { }
+  constructor(public id: string, public result: JobResult, public correlationId?: string) { }
 }
 
 export class JobFailed {
   public static readonly type = '[Job] Job Failed';
 
-  constructor(public job: Job, public error: any, public correlationId?: string) { }
+  constructor(public id: string, public error: any, public correlationId?: string) { }
 }
