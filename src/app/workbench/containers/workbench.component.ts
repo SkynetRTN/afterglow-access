@@ -111,7 +111,7 @@ import {
   JobProgressDialogComponent,
 } from '../components/job-progress-dialog/job-progress-dialog.component';
 import { JobsState } from '../../jobs/jobs.state';
-import { JobService } from '../../jobs/services/jobs';
+import { JobApiService } from '../../jobs/services/job-api.service';
 import { AlertDialogConfig, AlertDialogComponent } from '../../utils/alert-dialog/alert-dialog.component';
 import { ShortcutInput, ShortcutEventOutput } from 'ng-keyboard-shortcuts';
 
@@ -185,7 +185,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     private activeRoute: ActivatedRoute,
     private dataProviderService: AfterglowDataProviderService,
     private dataFileService: AfterglowDataFileService,
-    private jobService: JobService
+    private jobService: JobApiService
   ) {
     this.fileFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));

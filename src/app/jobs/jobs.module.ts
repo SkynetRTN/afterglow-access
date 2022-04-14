@@ -8,7 +8,7 @@ import { AppMaterialModule } from '../app-material';
 import { SvgModule } from '../svg/svg.module';
 
 import { PipesModule } from '../pipes/pipes.module';
-import { JobService } from './services/jobs';
+import { JobApiService } from './services/job-api.service';
 import { JobsTableComponent } from './components/jobs-table/jobs-table.component';
 import { JobDetailsComponent } from './components/job-details/job-details.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -25,6 +25,6 @@ import { JobsPageComponent } from './containers/jobs-page/jobs-page.component';
     JobsPageComponent
   ],
   exports: [],
-  providers: [JobService],
+  providers: [JobApiService],
 })
 export class JobsModule { }

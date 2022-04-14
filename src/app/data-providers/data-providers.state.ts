@@ -31,7 +31,7 @@ import {
   UpdateDefaultSort,
 } from './data-providers.actions';
 import { AfterglowDataProviderService } from '../workbench/services/afterglow-data-providers';
-import { CreateJob, UpdateJobState } from '../jobs/jobs.actions';
+import { CreateJob, UpdateJobStateOld } from '../jobs/jobs.actions';
 import { BatchImportJob, BatchImportSettings, BatchImportJobResult, isBatchImportJob } from '../jobs/models/batch-import';
 import { JobType } from '../jobs/models/job-types';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
@@ -524,8 +524,8 @@ export class DataProvidersState {
     );
 
     let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobState),
-      filter<UpdateJobState>((a) => a.correlationId == jobCorrelationId),
+      ofActionSuccessful(UpdateJobStateOld),
+      filter<UpdateJobStateOld>((a) => a.correlationId == jobCorrelationId),
       takeUntil(jobCompleted$),
       tap((a) => {
         let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];

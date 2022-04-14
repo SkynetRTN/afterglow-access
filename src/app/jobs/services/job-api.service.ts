@@ -10,7 +10,7 @@ import { AfterglowConfigService } from '../../afterglow-config.service';
 import { CoreApiResponse } from '../../utils/core-api-response';
 
 @Injectable()
-export class JobService {
+export class JobApiService {
   private SOURCE_ID = 0;
 
   constructor(private http: HttpClient, private config: AfterglowConfigService) { }

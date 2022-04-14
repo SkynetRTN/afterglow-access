@@ -175,7 +175,6 @@ import {
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CancelJob, CreateJob, CreateJobFail, CreateJobSuccess, UpdateJobState } from '../jobs/jobs.actions';
 import { isPixelOpsJob, PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
 import { AlignmentJob, AlignmentJobResult, isAlignmentJob } from '../jobs/models/alignment';
@@ -238,6 +237,8 @@ import { HeaderEntry } from '../data-files/models/header-entry';
 import { AfterglowHeaderKey } from '../data-files/models/afterglow-header-key';
 import { I } from '@angular/cdk/keycodes';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
+import { JobService } from '../jobs/services/job.service';
+import { Job } from '../jobs/models/job';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: 'b079125e-48ae-4fbe-bdd7-cad5796a8614',
@@ -395,7 +396,8 @@ export class WorkbenchState {
     private actions$: Actions,
     private dialog: MatDialog,
     private config: AfterglowConfigService,
-    private dataFileService: AfterglowDataFileService
+    private dataFileService: AfterglowDataFileService,
+    private jobService: JobService
   ) { }
 
   /** Root Selectors */
@@ -2801,34 +2803,19 @@ export class WorkbenchState {
       state: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
 
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let actions: any[] = [];
-
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
-        if (isPixelOpsJob(job)) {
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
+          let actions: any[] = [];
+          if (!isPixelOpsJob(job)) return;
           let result = job.result;
           if (result.errors.length != 0) {
             console.error('Errors encountered during pixel ops job: ', result.errors);
@@ -2838,33 +2825,17 @@ export class WorkbenchState {
           }
 
 
-          if ((job as PixelOpsJob).inplace) {
+          if (job.inplace) {
             let hduIds = result.fileIds.map((id) => id.toString());
             hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
             hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
           }
 
           actions.push(new LoadLibrary());
+          dispatch(actions);
         }
-
-        return dispatch(actions);
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobState),
-      filter<UpdateJobState>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
-        setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateAdvPixelOpsJob)
@@ -2905,34 +2876,18 @@ export class WorkbenchState {
       state: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let actions: any[] = [];
-
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
-        if (isPixelOpsJob(job)) {
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
+          let actions: any[] = [];
+          if (!isPixelOpsJob(job)) return;
           let result = job.result;
           if (result.errors.length != 0) {
             console.error('Errors encountered during pixel ops: ', result.errors);
@@ -2949,27 +2904,10 @@ export class WorkbenchState {
           }
 
           actions.push(new LoadLibrary());
+          dispatch(actions);
         }
-
-
-        return dispatch(actions);
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobState),
-      filter<UpdateJobState>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
-        setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateAlignmentJob)
@@ -3006,33 +2944,18 @@ export class WorkbenchState {
       result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let actions: any[] = [];
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
-        if (isAlignmentJob(job)) {
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.aligningPanelConfig.currentAlignmentJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
+          let actions: any[] = [];
+          if (!isAlignmentJob(job)) return;
           let result = job.result;
           if (result.errors.length != 0) {
             console.error('Errors encountered during aligning: ', result.errors);
@@ -3049,27 +2972,10 @@ export class WorkbenchState {
           }
 
           actions.push(new LoadLibrary());
+          dispatch(actions);
         }
-
-
-        return dispatch(actions);
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobState),
-      filter<UpdateJobState>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
-        setState((state: WorkbenchStateModel) => {
-          state.aligningPanelConfig.currentAlignmentJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateStackingJob)
@@ -3122,32 +3028,18 @@ export class WorkbenchState {
       state: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
 
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      flatMap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
-        if (isStackingJob(job)) {
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.stackingPanelConfig.currentStackingJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
+          if (!isStackingJob(job)) return;
           let result = job.result;
           if (result.errors.length != 0) {
             console.error('Errors encountered during stacking: ', result.errors);
@@ -3163,26 +3055,10 @@ export class WorkbenchState {
               map(() => dispatch(new LoadLibrary()))
             )
           }
-          return dispatch(new LoadLibrary())
+          dispatch(new LoadLibrary())
         }
-        return of()
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobState),
-      filter<UpdateJobState>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.id];
-        setState((state: WorkbenchStateModel) => {
-          state.stackingPanelConfig.currentStackingJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateWcsCalibrationJob)
@@ -3227,68 +3103,50 @@ export class WorkbenchState {
       state: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    let onCreateJobFail$ = this.actions$.pipe(
-      ofActionDispatched(CreateJobFail),
-      filter((action) => (action as CreateJobFail).correlationId == correlationId)
-    );
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.wcsCalibrationPanelState.activeJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
+          let actions: any[] = [];
+          if (!isWcsCalibrationJob(job)) return;
+          job.result.fileIds.forEach((hduId) => {
+            actions.push(new InvalidateHeader(hduId.toString()));
+          });
+          let message: string;
+          let numFailed = hduIds.length - job.result.fileIds.length;
+          if (numFailed != 0) {
+            message = `Failed to find solution for ${numFailed} image(s).`;
+          } else {
+            message = `Successfully found solutions for all ${hduIds.length} files.`;
+          }
 
-    let onCreateJobSuccess$ = this.actions$.pipe(
-      takeUntil(onCreateJobFail$),
-      ofActionDispatched(CreateJobSuccess),
-      filter((action) => (action as CreateJobSuccess).correlationId == correlationId),
-      take(1),
-      flatMap((action) => {
-        setState((state: WorkbenchStateModel) => {
-          state.wcsCalibrationPanelState.activeJobId = (action as CreateJobSuccess).job.id;
-          return state;
-        });
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: 'WCS Calibration Completed',
+            message: message,
+            buttons: [
+              {
+                color: '',
+                value: false,
+                label: 'Close',
+              },
+            ],
+          };
+          this.dialog.open(AlertDialogComponent, {
+            width: '600px',
+            data: dialogConfig,
+          });
 
-        return this.actions$.pipe(
-          ofActionCompleted(CreateJob),
-          filter((value) => (value.action as CreateJob).correlationId == correlationId),
-          take(1),
-          flatMap((value) => {
-            let actions: any[] = [];
-            let state = getState();
-            if (value.result.successful) {
-              let job = this.store.selectSnapshot(JobsState.getJobById(state.wcsCalibrationPanelState.activeJobId))
-              if (job && isWcsCalibrationJob(job) && job.result) {
-                job.result.fileIds.forEach((hduId) => {
-                  actions.push(new InvalidateHeader(hduId.toString()));
-                });
-                let message: string;
-                let numFailed = hduIds.length - job.result.fileIds.length;
-                if (numFailed != 0) {
-                  message = `Failed to find solution for ${numFailed} image(s).`;
-                } else {
-                  message = `Successfully found solutions for all ${hduIds.length} files.`;
-                }
+          dispatch(actions)
 
-                let dialogConfig: Partial<AlertDialogConfig> = {
-                  title: 'WCS Calibration Completed',
-                  message: message,
-                  buttons: [
-                    {
-                      color: '',
-                      value: false,
-                      label: 'Close',
-                    },
-                  ],
-                };
-                let dialogRef = this.dialog.open(AlertDialogComponent, {
-                  width: '600px',
-                  data: dialogConfig,
-                });
-              }
-            }
-
-            return dispatch(actions);
-          })
-        );
+        }
       })
-    );
-    return merge(onCreateJobSuccess$, dispatch(new CreateJob(job, 1000, correlationId)));
+    )
   }
 
   @Action(ImportFromSurvey)
@@ -3453,9 +3311,6 @@ export class WorkbenchState {
         state: null,
       };
 
-      let correlationId = this.correlationIdGenerator.next();
-      dispatch(new CreateJob(job, 1000, correlationId))
-
       setState((state: WorkbenchStateModel) => {
         let photState = state.photometryPanelStateEntities[photPanelStateId];
         photState.autoPhotIsValid = true;
@@ -3463,29 +3318,22 @@ export class WorkbenchState {
         return state;
       });
 
-      let jobFinished$ = this.actions$.pipe(
-        ofActionCompleted(CreateJob),
-        filter((v) => v.action.correlationId == correlationId),
-        take(1)
-      );
+      let job$ = this.jobService.createJob(job);
+      return job$.pipe(
+        tap(job => {
+          if (job.id) {
+            setState((state: WorkbenchStateModel) => {
+              state.photometryPanelStateEntities[photPanelStateId].autoPhotJobId = job.id;
+              return state;
+            });
+          }
+          if (job.state.status == 'completed') {
 
-      this.actions$.pipe(
-        ofActionDispatched(CreateJobSuccess),
-        filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
-        takeUntil(jobFinished$),
-      ).subscribe(a => {
-        console.log("AUTO PHOT JOB CREATED")
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
-        setState((state: WorkbenchStateModel) => {
-          let photState = state.photometryPanelStateEntities[photPanelStateId];
-          photState.autoPhotJobId = job.id
-          return state;
-        });
-      })
 
-      return jobFinished$;
+          }
+        })
+      )
     }
-
   }
 
   @Action(UpdateAutoFieldCalibration)
@@ -3528,10 +3376,6 @@ export class WorkbenchState {
         state: null,
       };
 
-
-      let correlationId = this.correlationIdGenerator.next();
-      dispatch(new CreateJob(job, 1000, correlationId))
-
       setState((state: WorkbenchStateModel) => {
         let photState = state.photometryPanelStateEntities[photPanelStateId];
         photState.autoCalIsValid = true;
@@ -3539,29 +3383,20 @@ export class WorkbenchState {
         return state;
       });
 
-      let jobFinished$ = this.actions$.pipe(
-        ofActionCompleted(CreateJob),
-        filter((v) => v.action.correlationId == correlationId),
-        take(1)
-      );
-
-      this.actions$.pipe(
-        ofActionDispatched(CreateJobSuccess),
-        filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
-        takeUntil(jobFinished$),
-      ).subscribe(a => {
-        console.log("AUTO CAL JOB CREATED")
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
-        setState((state: WorkbenchStateModel) => {
-          let photState = state.photometryPanelStateEntities[photPanelStateId];
-          photState.autoCalJobId = job.id
-          return state;
-        });
-      })
-
-      return jobFinished$
+      let job$ = this.jobService.createJob(job);
+      return job$.pipe(
+        tap(job => {
+          if (job.id) {
+            setState((state: WorkbenchStateModel) => {
+              state.photometryPanelStateEntities[photPanelStateId].autoCalJobId = job.id;
+              return state;
+            });
+          }
+          if (job.state.status == 'completed') {
+          }
+        })
+      )
     }
-
   }
 
   @Action(BatchPhotometerSources)
@@ -3632,29 +3467,21 @@ export class WorkbenchState {
       state: null,
     };
 
-    let photJobCorrelationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(photJob, 1000, photJobCorrelationId))
 
+    let photJob$ = this.jobService.createJob(photJob).pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.photometryPanelConfig.batchPhotJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
+        }
+      })
+    )
 
-    let photJobFinished$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == photJobCorrelationId),
-      take(1)
-    );
-
-    this.actions$.pipe(
-      ofActionDispatched(CreateJobSuccess),
-      filter<CreateJobSuccess>((a) => a.correlationId == photJobCorrelationId),
-      takeUntil(photJobFinished$),
-    ).subscribe(a => {
-      let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as PhotometryJob;
-      setState((state: WorkbenchStateModel) => {
-        state.photometryPanelConfig.batchPhotJobId = job.id;
-        return state;
-      });
-    })
-
-    let calJobFinished$ = of(null);
+    let calJob$: Observable<Job> = of(null);
 
     if (state.settings.calibration.calibrationEnabled) {
 
@@ -3671,32 +3498,21 @@ export class WorkbenchState {
         state: null,
       };
 
-
-      let calJobCorrelationId = this.correlationIdGenerator.next();
-      dispatch(new CreateJob(calJob, 1000, calJobCorrelationId))
-
-      calJobFinished$ = this.actions$.pipe(
-        ofActionCompleted(CreateJob),
-        filter((v) => v.action.correlationId == calJobCorrelationId),
-        take(1)
-      );
-
-      this.actions$.pipe(
-        ofActionDispatched(CreateJobSuccess),
-        filter<CreateJobSuccess>((a) => a.correlationId == calJobCorrelationId),
-        takeUntil(calJobFinished$),
-      ).subscribe(a => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id] as FieldCalibrationJob;
-        setState((state: WorkbenchStateModel) => {
-          state.photometryPanelConfig.batchCalJobId = job.id;
-          return state;
-        });
-      })
+      calJob$ = this.jobService.createJob(calJob).pipe(
+        tap(job => {
+          if (job.id) {
+            setState((state: WorkbenchStateModel) => {
+              state.photometryPanelConfig.batchCalJobId = job.id;
+              return state;
+            });
+          }
+          if (job.state.status == 'completed') {
+          }
+        })
+      )
     }
 
-
-
-    return combineLatest([photJobFinished$, calJobFinished$]).pipe(
+    return combineLatest([photJob$, calJob$]).pipe(
       tap(() => {
         setState((state: WorkbenchStateModel) => {
           state.photometryPanelConfig.batchInProgress = false;
@@ -4201,46 +4017,24 @@ export class WorkbenchState {
       state: null
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-
     setState((state: WorkbenchStateModel) => {
       let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
       sonificationPanelState.sonificationLoading = true;
       return state;
     });
 
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      take(1)
-    );
-
-    let jobStatusUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobState),
-      filter<UpdateJobState>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        // setState((state: WorkbenchStateModel) => {
-        //   let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-        //   if (a.job.state) {
-        //     sonificationPanelState.sonificationLoading = a.job.state.progress;
-        //   }
-        //   return state;
-        // });
-      })
-    );
-
-
-
-
-    return merge(
-      jobStatusUpdated$,
-      jobCompleted$.pipe(
-        flatMap((a) => {
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.aligningPanelConfig.currentAlignmentJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed') {
           let sonificationUrl = '';
           let error = '';
-          let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
           if (isSonificationJob(job)) {
             if (job.result.errors.length == 0) {
               sonificationUrl = getSonificationUrl(job.id);
@@ -4258,12 +4052,11 @@ export class WorkbenchState {
               };
               return state;
             });
-            return dispatch(new SonificationCompleted(hduId, sonificationUrl, error));
+            dispatch(new SonificationCompleted(hduId, sonificationUrl, error));
           }
-          return of();
-        })
-      )
-    );
+        }
+      })
+    )
   }
 
   @Action(ClearSonification)

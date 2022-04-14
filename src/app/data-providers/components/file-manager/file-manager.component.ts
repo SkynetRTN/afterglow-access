@@ -40,7 +40,7 @@ import {
 } from '../../../workbench/components/job-progress-dialog/job-progress-dialog.component';
 import { JobsState } from '../../../jobs/jobs.state';
 import { MatDialog } from '@angular/material/dialog';
-import { JobService } from '../../../jobs/services/jobs';
+import { JobApiService } from '../../../jobs/services/job-api.service';
 import { CreateJobSuccess, CreateJobFail, CreateJob } from '../../../jobs/jobs.actions';
 import { DataProvider } from '../../models/data-provider';
 import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
@@ -401,7 +401,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     private dataProviderService: AfterglowDataProviderService,
     private corrGen: CorrelationIdGenerator,
     public dialog: MatDialog,
-    private jobService: JobService
+    private jobService: JobApiService
   ) {
     const selectionChange$ = this.selection.changed.pipe(startWith(null));
 

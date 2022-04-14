@@ -1,5 +1,23 @@
 import { Job } from './models/job';
+import { JobResultBase, JobStateBase } from './models/job-base';
 import { JobResult } from './models/job-result';
+
+export class AddJob {
+  public static readonly type = '[Job] Add Job';
+  constructor(public job: Job) { }
+}
+
+export class UpdateJobState {
+  public static readonly type = '[Job] Update Job State';
+  constructor(public id: string, public state: JobStateBase) { }
+}
+
+export class UpdateJobResult {
+  public static readonly type = '[Job] Update Job Result';
+  constructor(public id: string, public result: JobResultBase) { }
+}
+
+
 
 export class CreateJob {
   public static readonly type = '[Job] Create Job';
@@ -62,8 +80,8 @@ export class LoadJob {
   constructor(public id: string) { }
 }
 
-export class UpdateJobState {
-  public static readonly type = '[Job] Update Job State';
+export class UpdateJobStateOld {
+  public static readonly type = '[Job] Update Job State Old';
 
   constructor(public id: string, public correlationId?: string) { }
 }
@@ -80,7 +98,7 @@ export class UpdateJobFail {
   constructor(public id: string, error: any, public correlationId?: string) { }
 }
 
-export class UpdateJobResult {
+export class UpdateJobResultOld {
   public static readonly type = '[Job] Update Job Result';
   constructor(public id: string, public correlationId?: string) { }
 }

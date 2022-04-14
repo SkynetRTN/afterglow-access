@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, map, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
-import { LoadJob, LoadJobs, SelectJob, UpdateJobResult, UpdateJobState } from '../../jobs.actions';
+import { LoadJob, LoadJobs, SelectJob, UpdateJobResultOld, UpdateJobStateOld } from '../../jobs.actions';
 import { JobsState } from '../../jobs.state';
 import { Job } from '../../models/job';
 import { JobResult } from '../../models/job-result';
@@ -40,7 +40,7 @@ export class JobsPageComponent implements OnInit, OnDestroy {
       withLatestFrom(this.selectedJob$)
     ).subscribe(([id, selectedJob]) => {
       if (id && (!selectedJob || selectedJob.id != id)) {
-        this.store.dispatch([new LoadJob(id), new UpdateJobResult(id), new SelectJob(id)])
+        this.store.dispatch([new LoadJob(id), new UpdateJobResultOld(id), new SelectJob(id)])
       }
     })
 
