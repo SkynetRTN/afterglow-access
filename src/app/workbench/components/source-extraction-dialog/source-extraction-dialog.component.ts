@@ -7,10 +7,10 @@ import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { getHeight, getWidth, ImageHdu } from 'src/app/data-files/models/data-file';
 import { getImageToViewportTransform, getViewportRegion } from 'src/app/data-files/models/transformation';
-import { CreateJob, UpdateJobStateOld } from 'src/app/jobs/jobs.actions';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { isSourceExtractionJob, SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
+import { JobService } from 'src/app/jobs/services/job.service';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SonifierRegionMode } from '../../models/sonifier-file-state';
@@ -51,6 +51,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     private correlationIdGenerator: CorrelationIdGenerator,
     private store: Store,
     private actions$: Actions,
+    private jobService: JobService,
     @Inject(MAT_DIALOG_DATA) public data: { viewerId: string; region?: SourceExtractionRegion }
   ) {
     this.viewerId = data.viewerId;
@@ -130,37 +131,18 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
       result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    this.store.dispatch(new CreateJob(job, 1000, correlationId));
-    this.loading = true;
-    this.job = undefined;
-
-    let jobFinished$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
-      take(1)
-    )
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJobStateOld),
-      filter<UpdateJobStateOld>((a) => a.correlationId == correlationId),
-      takeUntil(jobFinished$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.id)) as SourceExtractionJob;
+    this.jobService.createJob(job).subscribe(
+      job => {
+        if (!isSourceExtractionJob(job)) return;
         this.job = job;
-      })
-    );
 
-    jobFinished$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(v => {
-      if (v.result.successful) {
-        let a = v.action as CreateJob;
-        let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id))
-        if (!isSourceExtractionJob(job)) {
-          this.loading = false;
-          return;
-        }
+      },
+      error => {
+        this.loading = false;
+      },
+      () => {
+        this.loading = false;
+        let job = this.job;
         this.jobResult = job.result;
 
         let sources = job.result.data.map((d) => {
@@ -204,14 +186,8 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
         if (job.result.errors.length == 0 && job.result.warnings.length == 0) {
           this.dialogRef.close();
         }
-        this.loading = false;
-
-      } else {
-        this.loading = false;
-
       }
-    })
-
+    )
   }
 
 

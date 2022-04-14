@@ -17,26 +17,6 @@ export class UpdateJobResult {
   constructor(public id: string, public result: JobResultBase) { }
 }
 
-
-
-export class CreateJob {
-  public static readonly type = '[Job] Create Job';
-
-  constructor(public job: Job, public autoUpdateInterval?: number, public correlationId?: string) { }
-}
-
-export class CreateJobSuccess {
-  public static readonly type = '[Job] Create Job Success';
-
-  constructor(public job: Job, public correlationId?: string) { }
-}
-
-export class CreateJobFail {
-  public static readonly type = '[Job] Create Job Fail';
-
-  constructor(public job: Job, public error: any, public correlationId?: string) { }
-}
-
 export class StopAutoJobUpdate {
   public static readonly type = '[Job] Stop Auto Job Update';
 
@@ -65,7 +45,6 @@ export class SelectJob {
   public static readonly type = '[Job] Select Job';
 
   constructor(public jobId: string) { }
-
 }
 
 export class LoadJobs {
@@ -80,39 +59,10 @@ export class LoadJob {
   constructor(public id: string) { }
 }
 
-export class UpdateJobStateOld {
-  public static readonly type = '[Job] Update Job State Old';
+export class LoadJobResult {
+  public static readonly type = '[Job] Load Job Result';
 
-  constructor(public id: string, public correlationId?: string) { }
-}
-
-export class UpdateJobSuccess {
-  public static readonly type = '[Job] Update Job State Success';
-
-  constructor(public id: string, public correlationId?: string) { }
-}
-
-export class UpdateJobFail {
-  public static readonly type = '[Job] Update Job State Fail';
-
-  constructor(public id: string, error: any, public correlationId?: string) { }
-}
-
-export class UpdateJobResultOld {
-  public static readonly type = '[Job] Update Job Result';
-  constructor(public id: string, public correlationId?: string) { }
-}
-
-export class UpdateJobResultSuccess {
-  public static readonly type = '[Job] Update Job Result Success';
-
-  constructor(public id: string, public correlationId?: string) { }
-}
-
-export class UpdateJobResultFail {
-  public static readonly type = '[Job] Update Job Result Fail';
-
-  constructor(public id: string, error: any, public correlationId?: string) { }
+  constructor(public id: string) { }
 }
 
 export class JobCompleted {

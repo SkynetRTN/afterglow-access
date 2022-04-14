@@ -17,35 +17,22 @@ import { of, merge, interval, Observable } from 'rxjs';
 import { Job } from './models/job';
 import { JobResult } from './models/job-result';
 import {
-  CreateJob,
-  CreateJobSuccess,
-  CreateJobFail,
-  UpdateJobStateOld,
-  UpdateJobSuccess,
-  UpdateJobFail,
-  StopAutoJobUpdate,
-  UpdateJobResultOld,
-  UpdateJobResultSuccess,
-  UpdateJobResultFail,
   LoadJobs,
   SelectJob,
   LoadJob,
   AddJob,
   UpdateJobState,
   UpdateJobResult,
+  LoadJobResult,
 } from './jobs.actions';
 import { JobApiService } from './services/job-api.service';
 import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
-import { JobType } from './models/job-types';
-import { FieldCalibrationJobResult } from './models/field-calibration';
-import { SourceExtractionJobResult } from './models/source-extraction';
 
 export interface JobsStateModel {
   version: string;
   ids: string[];
   jobs: { [id: string]: Job };
-  // jobResults: { [id: string]: JobResult };
   selectedJobId: string;
   loading: boolean;
 }
@@ -54,7 +41,6 @@ const jobsDefaultState: JobsStateModel = {
   version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
   ids: [],
   jobs: {},
-  // jobResults: {},
   selectedJobId: null,
   loading: false
 };
@@ -140,7 +126,7 @@ export class JobsState {
 
   @Action(AddJob)
   @ImmutableContext()
-  public addJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, { job }: CreateJob) {
+  public addJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, { job }: AddJob) {
     setState((state: JobsStateModel) => {
       state.jobs[job.id] = job;
       return state;
@@ -165,93 +151,6 @@ export class JobsState {
     })
   }
 
-
-  @Action(CreateJob)
-  @ImmutableContext()
-  public createJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, createJobAction: CreateJob) {
-    return this.jobService.createJob(createJobAction.job).pipe(
-      flatMap((resp) => {
-        let job = resp.data
-        createJobAction.job.id = job.id;
-        setState((state: JobsStateModel) => {
-          //the core sends an empty result object if the job has not yet been completed
-          if (job.state.status != 'completed') delete job['result']
-
-          state.jobs[job.id] = {
-            ...job,
-          };
-          if (!state.ids.includes(job.id)) {
-            state.ids.push(job.id);
-          }
-          return state;
-        });
-
-        dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
-        if (!createJobAction.autoUpdateInterval) createJobAction.autoUpdateInterval = 2500;
-
-        let jobCompleted$ = this.actions$.pipe(
-          ofActionSuccessful(UpdateJobStateOld),
-          filter<UpdateJobStateOld>((a) => {
-            return a.id == job.id && ['canceled', 'completed'].includes(getState().jobs[a.id].state.status);
-          })
-        );
-
-        let stop$ = merge(
-          jobCompleted$,
-          this.actions$.pipe(
-            ofActionDispatched(StopAutoJobUpdate),
-            filter<StopAutoJobUpdate>((a) => a.jobId == job.id)
-          ),
-          this.actions$.pipe(
-            ofActionErrored(UpdateJobStateOld),
-            filter<UpdateJobFail>((a) => a.id == job.id),
-            skip(5)
-          )
-        ).pipe(take(1));
-
-        interval(createJobAction.autoUpdateInterval)
-          .pipe(
-            takeUntil(stop$),
-            tap((v) => dispatch(new UpdateJobStateOld(job.id, createJobAction.correlationId)))
-          )
-          .subscribe();
-
-        return jobCompleted$.pipe(
-          take(1),
-          flatMap((a) => {
-            if (getState().jobs[a.id].state.status != 'completed') return of();
-            return dispatch(new UpdateJobResultOld(job.id, createJobAction.correlationId));
-
-            //   return this.jobService.getJobResult(job).pipe(
-            //     tap((value) => {
-            //       setState((state: JobsStateModel) => {
-
-            //         // if (state.entities[job.id].type == JobType.FieldCalibration) {
-            //         //   let result = value as FieldCalibrationJobResult;
-            //         //   result.errors = []
-            //         //   result.warnings = []
-            //         //   result.zeroPoint = 10.123456789
-            //         //   result.zeroPointError = 0.123456789
-            //         //   value = result;
-            //         // }
-            //         // else if (state.entities[job.id].type == JobType.SourceExtraction) {
-            //         //   let result = value as SourceExtractionJobResult;
-            //         //   result.errors = [{ id: '1', detail: 'Test error for debugging', status: '', meta: {} }]
-            //         //   result.warnings = ['This is a test warning']
-            //         //   value = result;
-            //         // }
-            //         state.jobs[job.id].result = value;
-            //         return state;
-            //       });
-            //     })
-            //   );
-          })
-        );
-      }),
-      catchError((err) => dispatch(new CreateJobFail(createJobAction.job, err, createJobAction.correlationId)))
-    );
-  }
-
   @Action(SelectJob)
   @ImmutableContext()
   public selectJob({ setState, dispatch }: StateContext<JobsStateModel>, { jobId }: SelectJob) {
@@ -272,6 +171,26 @@ export class JobsState {
           state.jobs[job.id] = {
             ...job,
           }
+          return state;
+        });
+      }),
+      catchError(e => {
+        return of()
+      }),
+      finalize(() => {
+
+      })
+    );
+  }
+
+  @Action(LoadJobResult)
+  @ImmutableContext()
+  public loadJobResult({ getState, setState, dispatch }: StateContext<JobsStateModel>, { id }: LoadJobResult) {
+    return this.jobService.getJobResult(id).pipe(
+      tap((result) => {
+        if (!(id in getState().jobs)) return;
+        setState((state: JobsStateModel) => {
+          state.jobs[id].result = result
           return state;
         });
       }),
@@ -326,38 +245,4 @@ export class JobsState {
     );
   }
 
-  @Action(UpdateJobStateOld)
-  @ImmutableContext()
-  public updateJobStateOld({ setState, dispatch }: StateContext<JobsStateModel>, { id, correlationId }: UpdateJobStateOld) {
-    return this.jobService.getJobState(id).pipe(
-      tap((value) => {
-        setState((state: JobsStateModel) => {
-          state.jobs[id].state = value.data;
-
-          return state;
-        });
-      })
-    );
-  }
-
-  @Action(UpdateJobResultOld)
-  @ImmutableContext()
-  public updateJobResultOld(
-    { setState, dispatch }: StateContext<JobsStateModel>,
-    { id, correlationId }: UpdateJobResultOld
-  ) {
-    return this.jobService.getJobResult(id).pipe(
-      map((resp) => {
-        setState((state: JobsStateModel) => {
-          state.jobs[id].result = resp;
-          return state;
-        });
-
-        return dispatch(new UpdateJobResultSuccess(id, correlationId));
-      }),
-      catchError((err) => {
-        return dispatch(new UpdateJobResultFail(id, err, correlationId));
-      })
-    );
-  }
 }

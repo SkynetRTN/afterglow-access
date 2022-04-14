@@ -417,6 +417,24 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         x = x.slice(0, index)
         y = y.slice(0, index);
 
+        if (x.length == 0) {
+          //no pixels left, skip median filter
+          x = new Float32Array(hist.data.length);
+          y = new Float32Array(hist.data.length);
+          index = 0;
+          for (let i = 0; i < hist.data.length; i++) {
+            if (hist.data[i] == 0) {
+              continue
+            }
+            y[index] = hist.data[i]
+            x[index] = getBinCenter(hist, i);
+            index++;
+          }
+          x = x.slice(0, index)
+          y = y.slice(0, index)
+
+        }
+
 
 
 
@@ -460,6 +478,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
             if (yi <= 1) continue;
 
             xSrc[index] = x[i] - bkgMu
+            // xSrc[index] = x[i]
             ySrc[index] = yi
 
             if (!firstPeakFound) {

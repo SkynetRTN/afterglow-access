@@ -105,7 +105,6 @@ import { AfterglowDataFileService } from '../services/afterglow-data-files';
 import { UUID } from 'angular2-uuid';
 import { BatchDownloadJob } from '../../jobs/models/batch-download';
 import { JobType } from '../../jobs/models/job-types';
-import { CreateJob, CreateJobSuccess, CreateJobFail } from '../../jobs/jobs.actions';
 import {
   JobProgressDialogConfig,
   JobProgressDialogComponent,
@@ -119,6 +118,7 @@ import { ShortcutInput, ShortcutEventOutput } from 'ng-keyboard-shortcuts';
 import { saveAs } from 'file-saver/dist/FileSaver';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { getLongestCommonStartingSubstring } from 'src/app/utils/utils';
+import { JobService } from 'src/app/jobs/services/job.service';
 
 @Component({
   selector: 'app-workbench',
@@ -185,7 +185,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     private activeRoute: ActivatedRoute,
     private dataProviderService: AfterglowDataProviderService,
     private dataFileService: AfterglowDataFileService,
-    private jobService: JobApiService
+    private jobService: JobService,
+    private jobApiService: JobApiService
   ) {
     this.fileFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));
@@ -1044,70 +1045,74 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onDownloadSelectedFileListItemsBtnClick() {
-    this.afterLibrarySync()
-      .pipe(
-        flatMap(({ dataProviderEntities, fileEntities }) => {
-          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
-          let files = selectedFileIds.map((id) => fileEntities[id]);
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
+        let files = selectedFileIds.map((id) => fileEntities[id]);
+        let filename = files[0].name;
+        if (files.length > 1) {
+          filename = getLongestCommonStartingSubstring(files.map((file) => file.name))
+            .replace(/_+$/, '')
+            .trim();
+          if (filename.length == 0) {
+            filename = 'afterglow-files'
+          }
+          filename += '.zip'
 
-          let job: BatchDownloadJob = {
-            type: JobType.BatchDownload,
-            id: null,
-            groupNames: files.map((file) => file.id),
-            state: null,
-          };
+        }
 
-          let corrId = this.corrGen.next();
-          let onCreateJobSuccess$ = this.actions$.pipe(
-            ofActionDispatched(CreateJobSuccess),
-            filter((action) => (action as CreateJobSuccess).correlationId == corrId),
-            take(1),
-            flatMap((action) => {
-              let jobId = (action as CreateJobSuccess).job.id;
-              let dialogConfig: JobProgressDialogConfig = {
-                title: 'Preparing download',
-                message: `Please wait while we prepare the files for download.`,
-                progressMode: 'indeterminate',
-                job$: this.store.select(JobsState.getJobById(jobId)),
-              };
-              let dialogRef = this.dialog.open(JobProgressDialogComponent, {
-                width: '400px',
-                data: dialogConfig,
-                disableClose: true,
-              });
+        let job: BatchDownloadJob = {
+          type: JobType.BatchDownload,
+          id: null,
+          groupNames: files.map((file) => file.id),
+          state: null,
+        };
 
-              return dialogRef.afterClosed().pipe(
-                flatMap((result) => {
-                  if (!result) {
-                    return of(null);
-                  }
+        let job$ = this.jobService.createJob(job);
+        let jobId: string;
+        return job$.pipe(
+          filter(job => !!job.id),
+          take(1),
+          flatMap(job => {
+            jobId = job.id;
+            let dialogConfig: JobProgressDialogConfig = {
+              title: 'Preparing download',
+              message: `Please wait while we prepare the files for download.`,
+              progressMode: 'indeterminate',
+              job$: job$,
+            };
+            let dialogRef = this.dialog.open(JobProgressDialogComponent, {
+              width: '400px',
+              data: dialogConfig,
+              disableClose: true,
+            });
 
-                  return this.jobService.getJobResultFile(jobId, 'download').pipe(
-                    tap((data) => {
-                      saveAs(data, files.length == 1 ? files[0].name : 'afterglow-files.zip');
-                    })
-                  );
-                })
-              );
-            })
-          );
+            return dialogRef.afterClosed()
+          }),
+          flatMap(result => {
+            if (!result) {
+              //TODO cancel job
+              return of(null);
+            }
 
-          let onCreateJobFail$ = this.actions$.pipe(
-            ofActionDispatched(CreateJobFail),
-            filter((action) => (action as CreateJobFail).correlationId == corrId),
-            take(1)
-          );
+            return combineLatest([of(filename), this.jobApiService.getJobResultFile(jobId, 'download')]);
+          })
+        )
+      })
+    ).subscribe(
+      result => {
+        if (result) {
+          let [filename, data] = result;
+          saveAs(data, filename);
+        }
+      },
+      error => {
 
-          this.store.dispatch(new CreateJob(job, 1000, corrId));
+      },
+      () => {
 
-          return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1));
-        })
-      )
-      .subscribe(
-        () => { },
-        (err) => { },
-        () => { }
-      );
+      }
+    )
   }
 
   onSplitSelectedFileListItemsBtnClick() {

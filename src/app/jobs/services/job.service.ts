@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngxs/store';
 import { BehaviorSubject, interval, merge, Observable, of, ReplaySubject, Subject } from 'rxjs';
-import { delay, filter, flatMap, switchMap, take, takeUntil } from 'rxjs/operators';
+import { delay, filter, flatMap, share, shareReplay, switchMap, take, takeUntil } from 'rxjs/operators';
 import { AddJob, UpdateJobResult, UpdateJobState } from '../jobs.actions';
 import { Job } from '../models/job';
 import { JobApiService } from './job-api.service';
@@ -19,7 +19,7 @@ export class JobService {
   constructor(private jobApi: JobApiService, private store: Store) {
   }
 
-  createJob(job: Job, updateInterval: number = 2500) {
+  createJob(job: Job, updateInterval: number = 1000) {
     return new Observable<Job>(observer => {
       this.jobApi.createJob(job).subscribe(
         resp => {
@@ -84,7 +84,9 @@ export class JobService {
           observer.error(error)
         });
 
-    })
+    }).pipe(
+      shareReplay(1)
+    )
   }
 
   stopUpdater(id: string) {

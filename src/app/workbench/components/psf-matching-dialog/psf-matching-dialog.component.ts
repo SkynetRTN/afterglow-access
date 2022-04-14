@@ -9,7 +9,6 @@ import { InvalidateHeader, InvalidateRawImageTiles } from 'src/app/data-files/da
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { DataFile, IHdu } from 'src/app/data-files/models/data-file';
 import { HduType } from 'src/app/data-files/models/data-file-type';
-import { CreateJob, CreateJobSuccess } from 'src/app/jobs/jobs.actions';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from 'src/app/jobs/models/pixel-ops';
@@ -42,99 +41,99 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
     private decimalPipe: DecimalPipe,
   ) {
 
-    this.file = this.store.selectSnapshot(DataFilesState.getFileById(fileId))
-    this.hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId))
+    // this.file = this.store.selectSnapshot(DataFilesState.getFileById(fileId))
+    // this.hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId))
 
-    this.hdus.forEach(hdu => {
-      if (hdu.type == HduType.TABLE) {
-        this.extractionState[hdu.id] = { status: 'success', message: 'N/A', loading: false }
-      }
-      else {
-        this.extractionState[hdu.id] = { status: 'pending', message: 'Analyzing...', loading: false }
-      }
-    })
-
-
-    this.hdus.filter(hdu => hdu.type == HduType.IMAGE).forEach(hdu => {
-      let jobFinished$ = this.extractSources(hdu);
-
-      jobFinished$.pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(v => {
-        if (v.result.successful) {
-          let a = v.action as CreateJob;
-          let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
-          if (!isSourceExtractionJob(job)) return;
-
-          if (job.result.data.length != 0) {
-            this.extractionState[hdu.id].message = 'waiting for analysis of other layers...'
-            this.extractionState[hdu.id].status = 'success'
-            this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
-          }
-          else {
-            this.extractionState[hdu.id].message = `error analyzing PSF`
-            this.extractionState[hdu.id].status = 'error'
-          }
+    // this.hdus.forEach(hdu => {
+    //   if (hdu.type == HduType.TABLE) {
+    //     this.extractionState[hdu.id] = { status: 'success', message: 'N/A', loading: false }
+    //   }
+    //   else {
+    //     this.extractionState[hdu.id] = { status: 'pending', message: 'Analyzing...', loading: false }
+    //   }
+    // })
 
 
-        } else {
-          this.extractionState[hdu.id].message = `error analyzing PSF`
-          this.extractionState[hdu.id].status = 'error'
-        }
+    // this.hdus.filter(hdu => hdu.type == HduType.IMAGE).forEach(hdu => {
+    //   let jobFinished$ = this.extractSources(hdu);
 
-        this.extractionState[hdu.id].loading = false;
-      })
-    })
+    //   jobFinished$.pipe(
+    //     takeUntil(this.destroy$)
+    //   ).subscribe(v => {
+    //     if (v.result.successful) {
+    //       let a = v.action as CreateJob;
+    //       let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
+    //       if (!isSourceExtractionJob(job)) return;
 
-  }
+    //       if (job.result.data.length != 0) {
+    //         this.extractionState[hdu.id].message = 'waiting for analysis of other layers...'
+    //         this.extractionState[hdu.id].status = 'success'
+    //         this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
+    //       }
+    //       else {
+    //         this.extractionState[hdu.id].message = `error analyzing PSF`
+    //         this.extractionState[hdu.id].status = 'error'
+    //       }
 
-  private fwhmFromExtractionResult(result: SourceExtractionJobResult) {
-    let median = arr => {
-      const mid = Math.floor(arr.length / 2),
-        nums = [...arr].sort((a, b) => a - b);
-      return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
-    };
 
-    let fwhmX = median(result.data.map(s => s.fwhmX))
-    let fwhmY = median(result.data.map(s => s.fwhmY))
-    return { fwhmX: fwhmX, fwhmY: fwhmY, fwhm: Math.min(fwhmX, fwhmY) }
+    //     } else {
+    //       this.extractionState[hdu.id].message = `error analyzing PSF`
+    //       this.extractionState[hdu.id].status = 'error'
+    //     }
+
+    //     this.extractionState[hdu.id].loading = false;
+    //   })
+    // })
 
   }
 
-  private extractSources(hdu: IHdu) {
-    let settings = this.store.selectSnapshot(WorkbenchState.getSettings)
-    let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+  // private fwhmFromExtractionResult(result: SourceExtractionJobResult) {
+  //   let median = arr => {
+  //     const mid = Math.floor(arr.length / 2),
+  //       nums = [...arr].sort((a, b) => a - b);
+  //     return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+  //   };
+
+  //   let fwhmX = median(result.data.map(s => s.fwhmX))
+  //   let fwhmY = median(result.data.map(s => s.fwhmY))
+  //   return { fwhmX: fwhmX, fwhmY: fwhmY, fwhm: Math.min(fwhmX, fwhmY) }
+
+  // }
+
+  // private extractSources(hdu: IHdu) {
+  //   let settings = this.store.selectSnapshot(WorkbenchState.getSettings)
+  //   let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
 
 
-    let job: SourceExtractionJob = {
-      id: null,
-      type: JobType.SourceExtraction,
-      fileIds: [hdu.id],
-      sourceExtractionSettings: jobSettings,
-      mergeSources: false,
-      state: null,
-    };
+  //   let job: SourceExtractionJob = {
+  //     id: null,
+  //     type: JobType.SourceExtraction,
+  //     fileIds: [hdu.id],
+  //     sourceExtractionSettings: jobSettings,
+  //     mergeSources: false,
+  //     state: null,
+  //   };
 
-    let correlationId = this.correlationIdGenerator.next();
-    this.store.dispatch(new CreateJob(job, 1000, correlationId));
-    this.extractionState[hdu.id].loading = true;
+  //   let correlationId = this.correlationIdGenerator.next();
+  //   this.store.dispatch(new CreateJob(job, 1000, correlationId));
+  //   this.extractionState[hdu.id].loading = true;
 
-    let jobFinished$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
-      take(1)
-    )
+  //   let jobFinished$ = this.actions$.pipe(
+  //     ofActionCompleted(CreateJob),
+  //     filter((v) => v.action.correlationId == correlationId),
+  //     take(1)
+  //   )
 
-    this.actions$.pipe(
-      ofActionDispatched(CreateJobSuccess),
-      filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
-      takeUntil(jobFinished$),
-    ).subscribe(a => {
-      this.extractionState[hdu.id].sourceExtractionJobId = a.job.id;
-    })
+  //   this.actions$.pipe(
+  //     ofActionDispatched(CreateJobSuccess),
+  //     filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
+  //     takeUntil(jobFinished$),
+  //   ).subscribe(a => {
+  //     this.extractionState[hdu.id].sourceExtractionJobId = a.job.id;
+  //   })
 
-    return jobFinished$
-  }
+  //   return jobFinished$
+  // }
 
   ngOnInit(): void {
   }
@@ -144,96 +143,96 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
     this.destroy$.unsubscribe();
   }
 
-  extractionIsComplete() {
-    return !this.hdus.map(hdu => this.extractionState[hdu.id].status != 'pending').includes(false)
-  }
+  // extractionIsComplete() {
+  //   return !this.hdus.map(hdu => this.extractionState[hdu.id].status != 'pending').includes(false)
+  // }
 
-  getMaxFwhm() {
-    return Math.max(...Object.values(this.fwhmByHduId).filter(value => value.fwhm).map(value => value.fwhm))
-  }
+  // getMaxFwhm() {
+  //   return Math.max(...Object.values(this.fwhmByHduId).filter(value => value.fwhm).map(value => value.fwhm))
+  // }
 
-  canBlur(hdu: IHdu) {
-    if (hdu.type != HduType.IMAGE) return false;
+  // canBlur(hdu: IHdu) {
+  //   if (hdu.type != HduType.IMAGE) return false;
 
-    let fwhm = this.fwhmByHduId[hdu.id]?.fwhm || null;
-    let maxFwhm = this.getMaxFwhm();
-    return maxFwhm && fwhm && fwhm < maxFwhm
-  }
+  //   let fwhm = this.fwhmByHduId[hdu.id]?.fwhm || null;
+  //   let maxFwhm = this.getMaxFwhm();
+  //   return maxFwhm && fwhm && fwhm < maxFwhm
+  // }
 
-  blurHdu(hdu: IHdu) {
-    if (!this.canBlur(hdu)) return;
+  // blurHdu(hdu: IHdu) {
+  //   if (!this.canBlur(hdu)) return;
 
-    let maxFwhm = this.getMaxFwhm();
-    let fwhm = this.fwhmByHduId[hdu.id]?.fwhm;
+  //   let maxFwhm = this.getMaxFwhm();
+  //   let fwhm = this.fwhmByHduId[hdu.id]?.fwhm;
 
-    if (!maxFwhm || !fwhm) return;
+  //   if (!maxFwhm || !fwhm) return;
 
-    let sigma = Math.sqrt(maxFwhm * maxFwhm - fwhm * fwhm)
+  //   let sigma = Math.sqrt(maxFwhm * maxFwhm - fwhm * fwhm)
 
-    let job: PixelOpsJob = {
-      id: null,
-      type: JobType.PixelOps,
-      fileIds: [hdu.id],
-      auxFileIds: [],
-      inplace: true,
-      op: `gaussian_filter(img, ${sigma})`,
-      state: null,
-    };
+  //   let job: PixelOpsJob = {
+  //     id: null,
+  //     type: JobType.PixelOps,
+  //     fileIds: [hdu.id],
+  //     auxFileIds: [],
+  //     inplace: true,
+  //     op: `gaussian_filter(img, ${sigma})`,
+  //     state: null,
+  //   };
 
-    let correlationId = this.correlationIdGenerator.next();
-    this.store.dispatch(new CreateJob(job, 1000, correlationId));
-    this.blurState[hdu.id] = { message: 'blurring...', loading: true, status: 'pending' };
+  //   let correlationId = this.correlationIdGenerator.next();
+  //   this.store.dispatch(new CreateJob(job, 1000, correlationId));
+  //   this.blurState[hdu.id] = { message: 'blurring...', loading: true, status: 'pending' };
 
-    let jobFinished$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
-      take(1)
-    )
+  //   let jobFinished$ = this.actions$.pipe(
+  //     ofActionCompleted(CreateJob),
+  //     filter((v) => v.action.correlationId == correlationId),
+  //     take(1)
+  //   )
 
-    this.actions$.pipe(
-      ofActionDispatched(CreateJobSuccess),
-      filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
-      takeUntil(jobFinished$),
-    ).subscribe(a => {
-      this.blurState[hdu.id].pixelOpsJobId = a.job.id;
-    })
+  //   this.actions$.pipe(
+  //     ofActionDispatched(CreateJobSuccess),
+  //     filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
+  //     takeUntil(jobFinished$),
+  //   ).subscribe(a => {
+  //     this.blurState[hdu.id].pixelOpsJobId = a.job.id;
+  //   })
 
-    jobFinished$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(v => {
-      if (v.result.successful) {
-        let a = v.action as CreateJob;
+  //   jobFinished$.pipe(
+  //     takeUntil(this.destroy$)
+  //   ).subscribe(v => {
+  //     if (v.result.successful) {
+  //       let a = v.action as CreateJob;
 
-        this.store.dispatch([new InvalidateRawImageTiles(hdu.id), new InvalidateHeader(hdu.id)])
+  //       this.store.dispatch([new InvalidateRawImageTiles(hdu.id), new InvalidateHeader(hdu.id)])
 
-        this.blurState[hdu.id].message = ''
-        this.blurState[hdu.id].status = 'success'
+  //       this.blurState[hdu.id].message = ''
+  //       this.blurState[hdu.id].status = 'success'
 
-        let extractionJobFinished$ = this.extractSources(hdu);
+  //       let extractionJobFinished$ = this.extractSources(hdu);
 
-        extractionJobFinished$.pipe(
-          takeUntil(this.destroy$)
-        ).subscribe(v => {
-          if (v.result.successful) {
-            let a = v.action as CreateJob;
-            let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
-            if (!isSourceExtractionJob(job)) return;
+  //       extractionJobFinished$.pipe(
+  //         takeUntil(this.destroy$)
+  //       ).subscribe(v => {
+  //         if (v.result.successful) {
+  //           let a = v.action as CreateJob;
+  //           let job = this.store.selectSnapshot(JobsState.getJobById(a.job.id));
+  //           if (!isSourceExtractionJob(job)) return;
 
-            if (job.result.data.length != 0) {
-              this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
-            }
-          }
+  //           if (job.result.data.length != 0) {
+  //             this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
+  //           }
+  //         }
 
-          this.extractionState[hdu.id].loading = false;
-        })
+  //         this.extractionState[hdu.id].loading = false;
+  //       })
 
-      } else {
-        this.blurState[hdu.id].message = `error blurring layer`
-        this.blurState[hdu.id].status = 'error'
-      }
+  //     } else {
+  //       this.blurState[hdu.id].message = `error blurring layer`
+  //       this.blurState[hdu.id].status = 'error'
+  //     }
 
-      this.blurState[hdu.id].loading = false;
-    })
-  }
+  //     this.blurState[hdu.id].loading = false;
+  //   })
+  // }
 
 }
