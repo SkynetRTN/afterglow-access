@@ -1,5 +1,5 @@
 <div fxLayout="row" fxFill class="h-full">
-    <div #jobsTable fxFlex="0 0 auto" class="h-full" style="overflow: auto; width: 800px;">
+    <div #jobsTable fxFlex="1 1 auto" class="h-full" style="overflow: auto">
         <ng-container *ngIf="!(loading$ | async); else loading">
             <ng-container *ngIf="(jobs$ | async) as jobs">
                 <ng-container *ngIf="jobs.length != 0; else noItems">
@@ -28,11 +28,13 @@
             </div>
         </ng-template>
     </div>
-    <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails" [resizeLeft]="false"></div>
-    <div #jobDetails fxFlex="1 1 auto" class="h-full" style="overflow: auto;">
-        <app-job-details [job]=" selectedJob$ | async" class="h-full w-full"
-            style="overflow: auto; overflow-x: hidden;">
-        </app-job-details>
-    </div>
+    <ng-container *ngIf="selectedJob$ | async; let selectedJob">
+        <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails" [resizeLeft]="false"></div>
+        <div #jobDetails fxFlex="0 0 auto" class="h-full" style="overflow: auto; width: 800px;">
+            <app-job-details [job]=" selectedJob" class="h-full w-full" style="overflow: auto; overflow-x: hidden;">
+            </app-job-details>
+        </div>
+    </ng-container>
+
 
 </div>

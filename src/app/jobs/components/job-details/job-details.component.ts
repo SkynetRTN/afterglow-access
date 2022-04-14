@@ -36,10 +36,6 @@ export class JobDetailsComponent implements OnInit {
     this.fieldCalibrationJobOptions$ = this.store.select(JobsState.getJobs).pipe(
       map(jobs => jobs.filter(isFieldCalibrationJob))
     )
-
-    this.route.fragment.subscribe(fragment => {
-      console.log()
-    })
   }
 
   ngOnInit(): void {

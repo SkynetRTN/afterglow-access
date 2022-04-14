@@ -23,7 +23,21 @@
                         </dl>
                         <dl>
                             <dt>State</dt>
-                            <dd>{{job.state.status}}</dd>
+                            <dd>
+                                <ng-container *ngIf="job.state.status == 'in_progress'; else stateBlock">
+                                    <div style="padding: 5px; width: 100px">
+                                        <!-- <mat-progress-bar mode="determinate" mode="determinate"
+                                            [value]="job.state?.progress">
+                                        </mat-progress-bar> -->
+                                        {{job.state?.progress}}% completed
+                                    </div>
+                                </ng-container>
+                                <ng-template #stateBlock>
+                                    <span class="notification" [class.is-success]="job.state.status == 'completed'"
+                                        [class.is-warning]="job.state.status == 'canceled'">{{
+                                        job.state?.status?.toLowerCase() }}</span>
+                                </ng-template>
+                            </dd>
                         </dl>
                         <ng-container *ngIf="isPhotometryJob(job)">
                             <dl>

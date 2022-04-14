@@ -34,6 +34,7 @@ import {
   startWith,
   shareReplay,
   skip,
+  take,
 } from 'rxjs/operators';
 
 import * as jStat from 'jstat';
@@ -101,6 +102,7 @@ import { GlobalSettings } from '../../models/global-settings';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
 import { Job } from 'src/app/jobs/models/job';
 import { JobResult } from 'src/app/jobs/models/job-result';
+import { LoadJob, LoadJobResult } from 'src/app/jobs/jobs.actions';
 
 @Component({
   selector: 'app-photometry-panel',
@@ -290,6 +292,22 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       )
       ))
 
+    // determine whether existing jobs have been loaded
+    this.viewerId$.subscribe(viewerId => {
+      let state = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId));
+
+      let loadJob = (id) => {
+        if (id) {
+          let job = this.store.selectSnapshot(JobsState.getJobById(id))
+          if (!job) this.store.dispatch(new LoadJob(id))
+          if (!job || !job.result) this.store.dispatch(new LoadJobResult(id))
+        }
+      }
+
+      if (state.autoCalIsValid) loadJob(state.autoCalJobId);
+      if (state.autoPhotIsValid) loadJob(state.autoPhotJobId);
+    })
+
     let calibrationEnabled$ = this.calibrationSettings$.pipe(map(s => s.calibrationEnabled), distinctUntilChanged());
     let fixedZeroPoint$ = this.calibrationSettings$.pipe(map(s => s.zeroPoint), distinctUntilChanged())
     this.zeroPointCorrection$ = this.autoCalJob$.pipe(
@@ -356,6 +374,21 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       )
       ))
 
+    // determine whether existing jobs have been loaded
+    let config = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
+    if (config.batchPhotJobId) {
+      let batchPhotJob = this.store.selectSnapshot(JobsState.getJobById(config.batchPhotJobId))
+      if (!batchPhotJob) this.store.dispatch(new LoadJob(config.batchPhotJobId))
+      if (!batchPhotJob || !batchPhotJob.result) this.store.dispatch(new LoadJobResult(config.batchPhotJobId))
+    }
+    if (config.batchCalJobId) {
+      let batchCalJob = this.store.selectSnapshot(JobsState.getJobById(config.batchCalJobId))
+      if (!batchCalJob) this.store.dispatch(new LoadJob(config.batchCalJobId))
+      if (!batchCalJob || !batchCalJob.result) this.store.dispatch(new LoadJobResult(config.batchCalJobId))
+    }
+
+
+
     this.batchErrors$ = combineLatest([this.batchInProgress$, this.batchPhotJob$, this.batchCalJob$]).pipe(
       map(([inProgress, batchPhotJob, batchCalJob]) => {
         if (inProgress) return [];
@@ -418,36 +451,45 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     //     );
     //   });
 
-    combineLatest([
-      this.header$.pipe(
-        map(header => header?.loaded),
-        distinctUntilChanged()
-      ),
-      autoPhotIsValid$
-    ]).pipe(
+    autoPhotIsValid$.subscribe(valid => console.log("IS VALID:::: ", valid))
+
+    this.header$.pipe(
+      filter(header => header?.loaded),
+      distinctUntilChanged(),
+      switchMap(() => autoPhotIsValid$),
       takeUntil(this.destroy$),
       withLatestFrom(autoPhotJobId$)
-    ).subscribe(([[headerLoaded, isValid], jobId]) => {
-      if (!headerLoaded || !this.viewerId) return;
+    ).subscribe(([isValid, jobId]) => {
+      if (!this.viewerId) return;
       //handle case where job ID is present and valid, but job is not in store
       if (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId)))) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
     })
 
-    combineLatest([
-      this.header$.pipe(
-        map(header => header?.loaded),
-        distinctUntilChanged()
-      ),
-      autoCalIsValid$,
-      calibrationEnabled$
-    ]).pipe(
+    this.header$.pipe(
+      filter(header => header?.loaded),
+      distinctUntilChanged(),
+      switchMap(() => combineLatest([autoCalIsValid$, calibrationEnabled$])),
       takeUntil(this.destroy$),
-      debounceTime(100),
-      withLatestFrom(this.autoCalJob$)
-    ).subscribe(([[headerLoaded, isValid, calibrationEnabled], job]) => {
-      if (!headerLoaded || !this.viewerId || !calibrationEnabled) return;
-      if (!isValid || !job) this.store.dispatch(new UpdateAutoFieldCalibration(this.viewerId))
+      withLatestFrom(autoCalJobId$)
+    ).subscribe(([[isValid, calibrationEnabled], jobId]) => {
+      if (calibrationEnabled && (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId))))) this.store.dispatch(new UpdateAutoFieldCalibration(this.viewerId))
     })
+
+    // combineLatest([
+    //   this.header$.pipe(
+    //     map(header => header?.loaded),
+    //     distinctUntilChanged()
+    //   ),
+    //   autoCalIsValid$,
+    //   calibrationEnabled$
+    // ]).pipe(
+    //   takeUntil(this.destroy$),
+    //   debounceTime(100),
+    //   withLatestFrom(this.autoCalJob$)
+    // ).subscribe(([[headerLoaded, isValid, calibrationEnabled], job]) => {
+    //   if (!headerLoaded || !this.viewerId || !calibrationEnabled) return;
+    //   if (!isValid || !job) this.store.dispatch(new UpdateAutoFieldCalibration(this.viewerId))
+    // })
 
     // combineLatest([this.calibrationSettings$, this.photometrySettings$, this.sourceExtractionSettings$]).pipe(
     //   takeUntil(this.destroy$),

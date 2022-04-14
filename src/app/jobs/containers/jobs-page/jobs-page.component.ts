@@ -31,7 +31,6 @@ export class JobsPageComponent implements OnInit, OnDestroy {
 
     let selectedId$ = this.route.queryParams.pipe(
       map((params) => params['id']),
-      filter((id) => !isNaN(+id)),
       distinctUntilChanged()
     )
 
@@ -39,14 +38,20 @@ export class JobsPageComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
       withLatestFrom(this.selectedJob$)
     ).subscribe(([id, selectedJob]) => {
-      if (id && (!selectedJob || selectedJob.id != id)) {
-        let actions = [];
-        let job = this.store.selectSnapshot(JobsState.getJobById(id))
-        if (!job) actions.push(new LoadJob(id))
-        if (!job || !job.result) actions.push(new LoadJobResult(id))
-        actions.push(new SelectJob(id))
-        this.store.dispatch(actions);
+      if (!isNaN(+id)) {
+        if (id && (!selectedJob || selectedJob.id != id)) {
+          let actions = [];
+          let job = this.store.selectSnapshot(JobsState.getJobById(id))
+          if (!job) actions.push(new LoadJob(id))
+          if (!job || !job.result) actions.push(new LoadJobResult(id))
+          actions.push(new SelectJob(id))
+          this.store.dispatch(actions);
+        }
       }
+      else {
+        this.store.dispatch(new SelectJob(null))
+      }
+
     })
 
 
