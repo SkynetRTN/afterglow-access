@@ -29,6 +29,12 @@ export const AFTERGLOW_ROUTES: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'jobs/:id',
+    component: JobsPageComponent,
+    data: { title: 'Job' },
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'workbench',
     component: WorkbenchComponent,
     data: { title: 'Workbench' },

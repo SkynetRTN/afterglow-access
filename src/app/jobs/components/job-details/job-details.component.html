@@ -4,7 +4,8 @@
             Show JSON
         </mat-slide-toggle>
     </div>
-    <mat-tab-group class="job-tab">
+    <mat-tab-group class="job-tab" [selectedIndex]="selectedTabIndex"
+        (selectedIndexChange)="onSelectedIndexChange($event)">
         <mat-tab label="Job">
             <div *ngIf="job" class="m-4">
                 <div *ngIf="!showJson; else jsonView" fxLayout="column" fxLayoutGap="20px">

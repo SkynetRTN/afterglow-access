@@ -311,12 +311,12 @@
                   <ng-container *ngIf="batchCalJob.result; let batchCalJobResult; else resultLoading">
                     <div *ngIf="batchPhotJobResult.errors.length != 0 || batchPhotJobResult.warnings.length"
                       class="alert alert-warning">
-                      Batch <a [routerLink]="['/jobs']" [queryParams]="{id: batchPhotJob.id}">photometry
+                      Batch <a [routerLink]="['/jobs', batchPhotJob.id]" [fragment]="'result'">photometry
                         job</a> completed with errors/warnings.
                     </div>
                     <div *ngIf="batchCalJobResult.errors.length != 0 || batchCalJobResult.warnings.length"
                       class="alert alert-warning">
-                      Batch <a [routerLink]="['/jobs']" [queryParams]="{id: batchCalJob.id}">calibration
+                      Batch <a [routerLink]="['/jobs', batchCalJob.id]" [fragment]="'result'">calibration
                         job</a> completed with errors/warnings.
                     </div>
                     <button class="" mat-raised-button (click)="downloadBatchPhotData()">

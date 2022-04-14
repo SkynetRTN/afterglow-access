@@ -29,9 +29,13 @@ export class JobsPageComponent implements OnInit, OnDestroy {
   constructor(private store: Store, private route: ActivatedRoute, private router: Router) {
     this.store.dispatch(new LoadJobs())
 
-    let selectedId$ = this.route.queryParams.pipe(
-      map((params) => params['id']),
-      distinctUntilChanged()
+    // let selectedId$ = this.route.queryParams.pipe(
+    //   map((params) => params['id']),
+    //   distinctUntilChanged()
+    // )
+
+    let selectedId$ = this.route.params.pipe(
+      map(params => params['id'])
     )
 
     selectedId$.pipe(
@@ -55,13 +59,13 @@ export class JobsPageComponent implements OnInit, OnDestroy {
     })
 
 
-    this.route.queryParams.subscribe(params => {
-      let id = +params['id'];
-      if (!isNaN(id) && this.store.selectSnapshot(JobsState.getSelectedJobId) != id.toString()) {
-        this.store.dispatch(new SelectJob(id.toString()))
+    // selectedId$.subscribe(params => {
+    //   let id = +params['id'];
+    //   if (!isNaN(id) && this.store.selectSnapshot(JobsState.getSelectedJobId) != id.toString()) {
+    //     this.store.dispatch(new SelectJob(id.toString()))
+    //   }
+    // })
 
-      }
-    })
     //hide all auto-photometry jobs
     this.jobs$ = this.store.select(JobsState.getJobs).pipe(
       // map(jobs => jobs.filter(job => !isPhotometryJob(job) || job.fileIds.length > 1))
@@ -79,7 +83,7 @@ export class JobsPageComponent implements OnInit, OnDestroy {
   }
 
   onSelectedJobChange(job: Job) {
-    this.router.navigate([], { queryParams: { id: job.id }, replaceUrl: true })
+    this.router.navigate(['jobs', job.id], { replaceUrl: true })
   }
 
   ngOnDestroy(): void {

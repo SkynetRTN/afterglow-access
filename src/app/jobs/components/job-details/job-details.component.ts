@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { MatTabChangeEvent } from '@angular/material/tabs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -23,6 +24,8 @@ export class JobDetailsComponent implements OnInit {
   isFieldCalibrationJob = isFieldCalibrationJob;
   isFieldCalibrationJobResult = isFieldCalibrationJobResult;
 
+  tabs = ['job', 'result']
+
   @Input() job: Job;
 
   showJson = false;
@@ -32,10 +35,20 @@ export class JobDetailsComponent implements OnInit {
   })
   fieldCalibrationJobOptions$: Observable<FieldCalibrationJob[]>;
 
-  constructor(private store: Store, private route: ActivatedRoute) {
+  selectedTabIndex = 0;
+
+
+  constructor(private store: Store, private route: ActivatedRoute, private router: Router) {
     this.fieldCalibrationJobOptions$ = this.store.select(JobsState.getJobs).pipe(
       map(jobs => jobs.filter(isFieldCalibrationJob))
     )
+
+    this.route.fragment.subscribe(fragment => {
+      let index = this.tabs.indexOf(fragment);
+      if (index >= 0) this.selectedTabIndex = index;
+    })
+
+
   }
 
   ngOnInit(): void {
@@ -49,6 +62,10 @@ export class JobDetailsComponent implements OnInit {
   getJobFileLabel(id: string) {
     let hdus = this.store.selectSnapshot(DataFilesState.getHduEntities)
     return `${hdus[id]?.name || id}`
+  }
+
+  onSelectedIndexChange(index: number) {
+    this.router.navigate([], { fragment: this.tabs[index] })
   }
 
 
