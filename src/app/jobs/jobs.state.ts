@@ -35,6 +35,7 @@ export interface JobsStateModel {
   jobs: { [id: string]: Job };
   selectedJobId: string;
   loading: boolean;
+  lastUpdateTime: number;
 }
 
 const jobsDefaultState: JobsStateModel = {
@@ -42,7 +43,8 @@ const jobsDefaultState: JobsStateModel = {
   ids: [],
   jobs: {},
   selectedJobId: null,
-  loading: false
+  loading: false,
+  lastUpdateTime: 0
 };
 
 @State<JobsStateModel>({
@@ -72,6 +74,11 @@ export class JobsState {
   @Selector()
   public static getLoading(state: JobsStateModel) {
     return state.loading;
+  }
+
+  @Selector()
+  public static getLastUpdateTime(state: JobsStateModel) {
+    return state.lastUpdateTime;
   }
 
   @Selector()
@@ -209,6 +216,7 @@ export class JobsState {
 
     setState((state: JobsStateModel) => {
       state.loading = true;
+      state.lastUpdateTime = Date.now();
       return state;
     })
     return this.jobService.getJobs().pipe(

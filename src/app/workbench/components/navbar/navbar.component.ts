@@ -13,6 +13,7 @@ import { WorkbenchState } from '../../workbench.state';
 import { GlobalSettingsDialogComponent } from '../global-settings-dialog/global-settings-dialog.component';
 import { UpdatePhotometrySettings, UpdateSettings } from '../../workbench.actions';
 import { Observable } from 'rxjs';
+import { JobsState } from 'src/app/jobs/jobs.state';
 
 @Component({
   selector: 'app-navbar',
@@ -25,6 +26,7 @@ export class NavbarComponent implements OnInit, OnChanges {
   @Input('user') user: CoreUser;
 
   @Select(WorkbenchState.getActiveTool) activeTool$: Observable<string>;
+  @Select(JobsState.getSelectedJobId) selectedJobId$: Observable<string>;
 
   shortcuts: ShortcutInput[] = [];
 

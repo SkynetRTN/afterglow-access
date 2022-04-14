@@ -298,8 +298,8 @@
           <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
             <ng-container *ngIf="batchCalJob$ | async; let batchCalJob">
               <div *ngIf="getBatchInProgress(batchPhotJob, batchCalJob); else batchComplete" class="alert alert-info">
-                <div class="pb-2">Your <a [routerLink]="['/jobs']" [queryParams]="{id: batchPhotJob.id}">photometry
-                    job</a> and <a [routerLink]="['/jobs']" [queryParams]="{id: batchCalJob.id}">calibration job</a> are
+                <div class="pb-2">Your <a [routerLink]="['/jobs', batchPhotJob.id]">photometry
+                    job</a> and <a [routerLink]="['/jobs', batchCalJob.id]">calibration job</a> are
                   in progress.</div>
                 <!-- <mat-progress-bar mode="determinate"
                   [value]="(batchCalJob.state?.progress + batchPhotJob.state?.progress)/2" [color]="'accent'">

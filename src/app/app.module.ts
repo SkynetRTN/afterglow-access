@@ -132,6 +132,7 @@ export function jobSanitizer(v: JobsStateModel) {
 
   state.jobs = {};
   state.ids = [];
+  state.lastUpdateTime = 0;
   return state;
 }
 

@@ -27,7 +27,13 @@ export class JobsPageComponent implements OnInit, OnDestroy {
   jobs$: Observable<Job[]>;
 
   constructor(private store: Store, private route: ActivatedRoute, private router: Router) {
-    this.store.dispatch(new LoadJobs())
+    let lastUpdateTime = this.store.selectSnapshot(JobsState.getLastUpdateTime);
+
+    if ((Date.now() - lastUpdateTime) > 300000) {
+      this.store.dispatch(new LoadJobs())
+    }
+
+
 
     // let selectedId$ = this.route.queryParams.pipe(
     //   map((params) => params['id']),
