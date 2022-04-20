@@ -212,7 +212,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
         {
           type: 'line',
           x0: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
-          y0: 0,
+          y0: !this.logarithmicY ? 0 : 1,
           x1: !this.logarithmicX ? levels.backgroundLevel : Math.max(levels.backgroundLevel, 0.1),
           y1: this.yMax,
           line: {
@@ -228,7 +228,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
         {
           type: 'line',
           x0: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
-          y0: 0,
+          y0: !this.logarithmicY ? 0 : 1,
           x1: !this.logarithmicX ? levels.peakLevel : Math.max(levels.peakLevel, 0.1),
           y1: this.yMax,
           line: {
@@ -269,9 +269,13 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
       //   }
       // }
 
+      if (this.logarithmicX) {
+        xRange[0] = Math.log10(Math.max(0, xRange[0]));
+        xRange[1] = Math.log10(Math.max(0, xRange[1]))
+      }
       this.layout.xaxis = {
         ...this.layout.xaxis,
-        autorange: false,
+        autorange: this.logarithmicX,
         range: xRange
       }
 
@@ -287,10 +291,14 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
       // else {
       //   if (yRange[0] < yMax) yRange[1] = yMax;
       // }
+      if (this.logarithmicY) {
+        yRange[0] = Math.log10(Math.max(0, yRange[0]));
+        yRange[1] = Math.log10(Math.max(0, yRange[1]))
+      }
 
       this.layout.yaxis = {
         ...this.layout.yaxis,
-        autorange: false,
+        autorange: this.logarithmicY,
         range: yRange
       }
     }

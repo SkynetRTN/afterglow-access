@@ -16,7 +16,6 @@ import {
 } from '@angular/core';
 
 import { Point, Rectangle } from 'paper';
-import * as SVG from 'svgjs';
 // @ts-ignore
 import * as normalizeWheel from 'normalize-wheel';
 
@@ -167,9 +166,9 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   private resizeMonitor: any;
 
-  constructor(private store: Store, protected viewerPlaceholder: ElementRef) {}
+  constructor(private store: Store, protected viewerPlaceholder: ElementRef) { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   initializeResizeMonitor() {
     let self = this;
@@ -598,7 +597,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     }
   }
 
-  ngAfterViewChecked() {}
+  ngAfterViewChecked() { }
 
   getViewportTiles() {
     if (this.imageData.width != this.imageCanvas.width || this.imageData.height != this.imageCanvas.height) {

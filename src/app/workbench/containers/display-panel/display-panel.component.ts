@@ -53,13 +53,8 @@ import { FormControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { calcLevels, calcPercentiles, getBinCenter, getCountsPerBin, ImageHist } from 'src/app/data-files/models/image-hist';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
-
-import { levenbergMarquardt as LM } from 'ml-levenberg-marquardt';
 import { erf } from 'src/app/utils/math';
-import * as Spline from 'cubic-spline'
-import { linear, polynomial } from 'everpolate';
-import { M } from '@angular/cdk/keycodes';
-import { GeneticAlgorithm } from '@kometbomb/genetic-algorithm'
+import { linear } from 'everpolate';
 
 import { saveAs } from 'file-saver/dist/FileSaver';
 const SAVE_CSV_FILES = false;
