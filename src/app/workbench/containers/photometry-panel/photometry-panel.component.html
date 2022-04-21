@@ -235,11 +235,14 @@
             <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
               <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
                 <ng-container *ngIf="job.result; let result; else progressBlock">
-                  <div *ngIf="result?.data && result?.data?.length != 0; else errorBlock" i18n
-                    class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
-                    Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
-                    {{result.data[0]?.zeroPointError | number:'1.0-3'}} mag
-                  </div>
+                  <ng-container *ngIf="result?.data; else progressBlock">
+                    <div
+                      *ngIf="result.data.length != 0 && result.errors.length == 0 && result.warnings.length == 0; else errorBlock"
+                      i18n class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
+                      Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
+                      {{result.data[0]?.zeroPointError | number:'1.0-3'}} mag
+                    </div>
+                  </ng-container>
                 </ng-container>
 
                 <ng-template #errorBlock>
@@ -295,39 +298,45 @@
             </form>
           </div>
 
-          <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
-            <ng-container *ngIf="batchCalJob$ | async; let batchCalJob">
-              <div *ngIf="getBatchInProgress(batchPhotJob, batchCalJob); else batchComplete" class="alert alert-info">
-                <div class="pb-2">Your <a [routerLink]="['/jobs', batchPhotJob.id]">photometry
-                    job</a> and <a [routerLink]="['/jobs', batchCalJob.id]">calibration job</a> are
-                  in progress.</div>
+          <ng-container *ngIf="batchStatus$ | async; let status">
+            <ng-container *ngIf="status.photJob && (!status.calibrationEnabled || status.calJob)">
+              <div *ngIf="status.inProgress; else batchComplete" class="alert alert-info">
+                <div class="pb-2">Your <a [routerLink]="['/jobs', status.photJob.id]">photometry
+                    job</a>
+                  <ng-container *ngIf="status.calibrationEnabled; else calibrationDisabledBlock"> and <a
+                      [routerLink]="['/jobs', status.calJob.id]">calibration job</a> are in progress.</ng-container>
+                  <ng-template #calibrationDisabledBlock>
+                    is in progress.
+                  </ng-template>
+                </div>
+
                 <!-- <mat-progress-bar mode="determinate"
                   [value]="(batchCalJob.state?.progress + batchPhotJob.state?.progress)/2" [color]="'accent'">
                 </mat-progress-bar> -->
                 <mat-progress-bar mode="indeterminate"></mat-progress-bar>
               </div>
               <ng-template #batchComplete>
-                <ng-container *ngIf="batchPhotJob.result; let batchPhotJobResult; else resultLoading">
-                  <ng-container *ngIf="batchCalJob.result; let batchCalJobResult; else resultLoading">
-                    <div *ngIf="batchPhotJobResult.errors.length != 0 || batchPhotJobResult.warnings.length"
-                      class="alert alert-warning">
-                      Batch <a [routerLink]="['/jobs', batchPhotJob.id]" [fragment]="'result'">photometry
-                        job</a> completed with errors/warnings.
-                    </div>
-                    <div *ngIf="batchCalJobResult.errors.length != 0 || batchCalJobResult.warnings.length"
-                      class="alert alert-warning">
-                      Batch <a [routerLink]="['/jobs', batchCalJob.id]" [fragment]="'result'">calibration
-                        job</a> completed with errors/warnings.
-                    </div>
-                    <button class="" mat-raised-button (click)="downloadBatchPhotData()">
-                      <mat-icon>save_alt</mat-icon>
-                      <span i18n>Download Batch Photometry Data - {{ (batchPhotJob$ | async)?.sources.length }}
-                        source(s)
-                        in
-                        {{ (batchPhotJob$ | async)?.fileIds.length }}
-                        file(s)</span>
-                    </button>
-                  </ng-container>
+                <ng-container
+                  *ngIf="status.photJob.result && (!status.calibrationEnabled || status.calJob.result); else resultLoading">
+                  <div *ngIf="status.photJob.result.errors.length != 0 || status.photJob.result.warnings.length"
+                    class="alert alert-warning">
+                    Batch <a [routerLink]="['/jobs', status.photJob.id]" [fragment]="'result'">photometry
+                      job</a> completed with errors/warnings.
+                  </div>
+                  <div
+                    *ngIf="status.calibrationEnabled && (status.calJob.result.errors.length != 0 || status.calJob.result.warnings.length)"
+                    class="alert alert-warning">
+                    Batch <a [routerLink]="['/jobs', status.calJob.id]" [fragment]="'result'">calibration
+                      job</a> completed with errors/warnings.
+                  </div>
+                  <button class="" mat-raised-button (click)="downloadBatchPhotData()">
+                    <mat-icon>save_alt</mat-icon>
+                    <span i18n>Download Batch Photometry Data - {{ status.photJob.sources.length }}
+                      source(s)
+                      in
+                      {{ status.photJob.fileIds.length }}
+                      file(s)</span>
+                  </button>
                 </ng-container>
                 <ng-template #resultLoading>
                   <div class="alert alert-info">
@@ -351,6 +360,7 @@
                 </ng-container> -->
               </ng-template>
             </ng-container>
+
           </ng-container>
         </div>
       </ng-container>

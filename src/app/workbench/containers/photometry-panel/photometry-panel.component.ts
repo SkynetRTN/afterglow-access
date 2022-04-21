@@ -151,13 +151,13 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   SEXAGESIMAL_FORMAT: (v: any) => any = (v: number) => (v ? this.dmsPipe.transform(v) : 'N/A');
   SourcePosType = PosType;
   tableData$: Observable<{ source: Source; data: PhotometryData }[]>;
-  batchInProgress$: Observable<boolean>;
-  batchErrors$: Observable<string[]>;
   batchPhotJob$: Observable<PhotometryJob>;
   batchCalJob$: Observable<FieldCalibrationJob>;
+  batchStatus$: Observable<{ inProgress: boolean, calibrationEnabled: boolean; photJob: PhotometryJob, calJob: FieldCalibrationJob }>;
   autoPhotJob$: Observable<PhotometryJob>;
   autoPhotData$: Observable<{ [sourceId: string]: PhotometryData }>;
   autoCalJob$: Observable<FieldCalibrationJob>;
+  batchCalibrationEnabled$: Observable<boolean>;
   mergeError: string;
   selectionModel = new SelectionModel<string>(true, []);
   zeroPointCorrection$: Observable<number>;
@@ -239,6 +239,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.calibrationSettings$ = this.store.select(WorkbenchState.getCalibrationSettings);
     this.centroidSettings$ = this.store.select(WorkbenchState.getCentroidSettings);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
+
+    this.batchCalibrationEnabled$ = this.config$.pipe(
+      map(c => c.batchCalibrationEnabled)
+    )
 
     let autoPhotIsValid$ = this.state$.pipe(
       map(s => s.autoPhotIsValid),
@@ -346,12 +350,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
 
     // this.tableData$.subscribe(data => console.log("TABLE DATA: ", data))
-
-
-    this.batchInProgress$ = this.config$.pipe(
-      map(config => config.batchInProgress)
-    )
-
     let batchCalJobId$ = this.config$.pipe(
       map((s) => s.batchCalJobId),
       distinctUntilChanged()
@@ -371,8 +369,23 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.batchPhotJob$ = batchPhotJobId$.pipe(
       switchMap(id => this.store.select(JobsState.getJobById(id)).pipe(
         map(job => job && isPhotometryJob(job) ? job : null)
-      )
       ))
+    )
+
+    this.batchStatus$ = combineLatest([this.batchCalibrationEnabled$, this.batchPhotJob$, this.batchCalJob$]).pipe(
+      map(([calibrationEnabled, batchPhotJob, batchCalJob]) => {
+        let inProgressStates = ['in_progress', 'pending'];
+        let status = {
+          calibrationEnabled: calibrationEnabled,
+          photJob: batchPhotJob,
+          calJob: batchCalJob,
+          inProgress: false
+        }
+        if (batchPhotJob) status.inProgress = inProgressStates.includes(batchPhotJob.state.status);
+        if (calibrationEnabled && batchCalJob) status.inProgress = status.inProgress || inProgressStates.includes(batchCalJob.state.status);
+        return status;
+      })
+    )
 
     // determine whether existing jobs have been loaded
     let config = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
@@ -386,19 +399,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       if (!batchCalJob) this.store.dispatch(new LoadJob(config.batchCalJobId))
       if (!batchCalJob || !batchCalJob.result) this.store.dispatch(new LoadJobResult(config.batchCalJobId))
     }
-
-
-
-    this.batchErrors$ = combineLatest([this.batchInProgress$, this.batchPhotJob$, this.batchCalJob$]).pipe(
-      map(([inProgress, batchPhotJob, batchCalJob]) => {
-        if (inProgress) return [];
-        let result: string[] = [];
-        if (batchPhotJob?.result) result = result.concat(batchPhotJob.result.errors.map(e => e.detail))
-        if (batchCalJob?.result) result = result.concat(batchCalJob.result.errors.map(e => e.detail))
-
-        return result;
-      })
-    )
 
 
     this.batchPhotFormData$ = this.config$.pipe(
@@ -451,7 +451,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     //     );
     //   });
 
-    autoPhotIsValid$.subscribe(valid => console.log("IS VALID:::: ", valid))
+    // autoPhotIsValid$.subscribe(valid => console.log("IS VALID:::: ", valid))
 
     this.header$.pipe(
       filter(header => header?.loaded),

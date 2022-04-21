@@ -298,7 +298,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     batchPhotFormData: {
       selectedHduIds: [],
     },
-    batchInProgress: false,
+    batchCalibrationEnabled: false,
     batchPhotJobId: '',
     batchCalJobId: '',
   },
@@ -3407,13 +3407,13 @@ export class WorkbenchState {
   ) {
     let state = getState();
 
+
     setState((state: WorkbenchStateModel) => {
-      state.photometryPanelConfig.batchInProgress = true;
+      state.photometryPanelConfig.batchCalibrationEnabled = state.settings.calibration.calibrationEnabled;
       state.photometryPanelConfig.batchCalJobId = null;
       state.photometryPanelConfig.batchPhotJobId = null;
       return state;
     });
-
 
     let sources = this.store.selectSnapshot(SourcesState.getSources);
     let photometryJobSettings = toPhotometryJobSettings(state.settings);
@@ -3512,14 +3512,7 @@ export class WorkbenchState {
       )
     }
 
-    return combineLatest([photJob$, calJob$]).pipe(
-      tap(() => {
-        setState((state: WorkbenchStateModel) => {
-          state.photometryPanelConfig.batchInProgress = false;
-          return state;
-        });
-      })
-    )
+    return combineLatest([photJob$, calJob$])
 
 
 

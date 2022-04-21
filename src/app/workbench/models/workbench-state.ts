@@ -113,7 +113,7 @@ export interface PhotometryPanelConfig {
   selectedSourceIds: string[];
   coordMode: 'pixel' | 'sky';
   batchPhotFormData: BatchPhotometryFormData;
-  batchInProgress: boolean;
+  batchCalibrationEnabled: boolean;
   batchPhotJobId: string;
   batchCalJobId: string;
 }
