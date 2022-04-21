@@ -28,7 +28,7 @@ export class JobDetailsComponent implements OnInit {
 
   @Input() job: Job;
 
-  showJson = false;
+  showJson = true;
 
   exportPhotometryDataForm = new FormGroup({
     fieldCalibrationJobId: new FormControl('', { validators: [] }),
