@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngxs/store';
-import { BehaviorSubject, interval, merge, Observable, of, ReplaySubject, Subject } from 'rxjs';
-import { delay, filter, flatMap, share, shareReplay, switchMap, take, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, interval, merge, Observable, of, ReplaySubject, Subject, timer } from 'rxjs';
+import { delay, filter, flatMap, share, shareReplay, skipUntil, skipWhile, switchMap, take, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
 import { AddJob, UpdateJobResult, UpdateJobState } from '../jobs.actions';
 import { Job } from '../models/job';
+import { JobStateBase } from '../models/job-base';
 import { JobApiService } from './job-api.service';
 
 @Injectable({
@@ -24,6 +25,7 @@ export class JobService {
       this.jobApi.createJob(job).subscribe(
         resp => {
           job = { ...resp.data };
+          delete job['result'];
           observer.next(job);
           this.store.dispatch(new AddJob(job))
 
@@ -37,47 +39,52 @@ export class JobService {
             take(1)
           )
 
-          interval(updateInterval)
-            .pipe(
-              takeUntil(stop$),
-              switchMap(() => this.jobApi.getJobState(job.id))
-            ).subscribe(
-              resp => {
-                job = {
-                  ...job,
-                  state: resp.data
-                }
-                observer.next(job)
-                this.store.dispatch(new UpdateJobState(job.id, job.state))
-
-                if (job.state.status == 'canceled' || job.state.status == 'completed') {
-                  this.stopUpdater$.next(job.id);
-
-                  if (job.state.status == 'completed') {
-                    this.jobApi.getJobResult(job.id).subscribe(
-                      (resp) => {
-                        job.result = resp
-                        observer.next(job);
-                        this.store.dispatch(new UpdateJobResult(job.id, job.result))
-
-                        observer.complete();
-                      },
-                      (error) => {
-                        observer.error(error)
-                      }
-
-                    )
-                  }
-                  else {
-                    observer.complete();
-                  }
-                }
-              },
-              error => {
-                this.stopUpdater$.next(job.id);
-                observer.error(error)
+          let updating = false;
+          interval(updateInterval).pipe(
+            takeUntil(stop$),
+            filter(() => !updating),
+            tap(() => updating = true),
+            switchMap(() => this.jobApi.getJobState(job.id))
+          ).subscribe(
+            resp => {
+              updating = false;
+              job = {
+                ...job,
+                state: resp.data
               }
-            )
+
+              observer.next(job)
+              this.store.dispatch(new UpdateJobState(job.id, job.state))
+
+              if (job.state.status == 'canceled' || job.state.status == 'completed') {
+                this.stopUpdater$.next(job.id);
+
+                if (job.state.status == 'completed') {
+                  this.jobApi.getJobResult(job.id).subscribe(
+                    (resp) => {
+                      job.result = resp
+                      observer.next(job);
+                      this.store.dispatch(new UpdateJobResult(job.id, job.result))
+
+                      observer.complete();
+                    },
+                    (error) => {
+                      observer.error(error)
+                    }
+
+                  )
+                }
+                else {
+                  observer.complete();
+                }
+              }
+            },
+            error => {
+              updating = false;
+              this.stopUpdater$.next(job.id);
+              observer.error(error)
+            }
+          )
 
         },
         error => {
