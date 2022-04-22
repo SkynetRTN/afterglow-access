@@ -42,7 +42,6 @@
               "src/afterglow.json"
             ],
             "styles": [
-              "node_modules/bootstrap-css-only/css/bootstrap.min.css",
               "node_modules/@highlightjs/cdn-assets/styles/atom-one-dark.min.css",
               "src/styles.scss"
             ],

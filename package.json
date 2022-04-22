@@ -59,6 +59,7 @@
     "ngx-cookie": "^5.0.2",
     "ngx-highlight-js": "^13.0.0",
     "ngx-json-viewer": "^3.0.2",
+    "ngx-log-monitor": "^1.2.0",
     "ngx-papaparse": "^5.0.0",
     "normalize-wheel": "^1.0.1",
     "paper": "^0.12.11",

@@ -30,7 +30,7 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
 
   private yMax = 0;
   public logarithmicX: boolean = false;
-  public logarithmicY: boolean = false;
+  public logarithmicY: boolean = true;
   private observer: ResizeObserver;
 
   public chartData: Array<any> = [];

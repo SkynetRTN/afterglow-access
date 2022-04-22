@@ -78,20 +78,25 @@
       <div *ngIf="hdus.length > 1" fxFlexLayout="column" fxLayoutGap="10px">
         <div>
           <div class="pb-1">
+            <button mat-button [matMenuTriggerFor]="colorBalanceMenu">
+              Color Balance Tools <mat-icon>keyboard_arrow_down</mat-icon>
+            </button>
+            <mat-menu #colorBalanceMenu="matMenu">
+              <button mat-menu-item (click)="neutralizeBackground()" i18n-aria-label aria-label="Neutralize Background">
+                <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
+              </button>
+              <button mat-menu-item (click)="autoWhiteBalance()" i18n-aria-label aria-label="Auto White Balance">
+                <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Auto White Balance</span>
+              </button>
+              <button mat-menu-item (click)="photometricWhiteBalance()" i18n-aria-label
+                aria-label="Photometric White Balance">
+                <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric White Balance...</span>
+              </button>
+              <button mat-menu-item (click)="resetColorBalance()" i18n-aria-label aria-label="Reset Color Balance">
+                <mat-icon>refresh</mat-icon><span i18n>Reset</span>
+              </button>
+            </mat-menu>
 
-            <button mat-raised-button class="m-1" (click)="neutralizeBackground()" i18n-aria-label
-              aria-label="Neutralize Background">
-              <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
-            </button>
-            <button mat-raised-button class="m-1" (click)="balanceColors()" i18n-aria-label
-              aria-label="Auto White Balance">
-              <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Balance Colors</span>
-            </button>
-
-            <button mat-raised-button class="m-1" (click)="resetColorBalance()" i18n-aria-label
-              aria-label="Reset Color Balance">
-              <mat-icon>refresh</mat-icon><span i18n>Reset</span>
-            </button>
           </div>
         </div>
 
@@ -107,7 +112,7 @@
         <div class="p-4">
           <mat-slide-toggle [checked]="(file$ |async)?.syncLayerNormalizers"
             (change)="setFileNormalizerSyncEvent$.next($event.checked)" color="primary" i18n>
-            Keep normalization settings synced across all layers
+            Keep brightness and contrast settings synced across all layers
           </mat-slide-toggle>
         </div>
 

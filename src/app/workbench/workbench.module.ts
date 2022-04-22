@@ -10,6 +10,7 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
+import { LogMonitorModule } from 'ngx-log-monitor';
 import { ImageViewerComponent } from './containers/image-viewer/image-viewer.component';
 import { ViewerPanelComponent } from './containers/viewer-panel/viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
@@ -73,6 +74,7 @@ import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf
 import { ColorPickerModule } from 'ngx-color-picker';
 import { RenameHduDialogComponent } from './components/rename-hdu-dialog/rename-hdu-dialog.component';
 import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
+import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -121,7 +123,8 @@ export const COMPONENTS = [
   ImageOrientationToolbarComponent,
   PsfMatchingDialogComponent,
   RenameHduDialogComponent,
-  RenameFileDialogComponent
+  RenameFileDialogComponent,
+  PhotometricColorBalanceDialogComponent
 ];
 
 @NgModule({
@@ -143,6 +146,7 @@ export const COMPONENTS = [
     AvatarModule,
     ColorPickerModule,
     MatDialogModule,
+    LogMonitorModule
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS

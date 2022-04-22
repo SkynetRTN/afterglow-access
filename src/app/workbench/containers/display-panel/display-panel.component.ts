@@ -57,6 +57,7 @@ import { erf } from 'src/app/utils/math';
 import { linear } from 'everpolate';
 
 import { saveAs } from 'file-saver/dist/FileSaver';
+import { PhotometricColorBalanceDialogComponent } from '../../components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 const SAVE_CSV_FILES = false;
 
 type TypedArray =
@@ -916,8 +917,19 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: false });
   }
 
-  balanceColors() {
+  autoWhiteBalance() {
     this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: true });
+  }
+
+  photometricWhiteBalance() {
+    let ref = this.dialog.open(PhotometricColorBalanceDialogComponent, {
+      width: '100%',
+      height: '100%',
+      maxWidth: '1200px',
+      maxHeight: '800px',
+      data: []
+    })
+    ref.afterClosed().pipe().subscribe();
   }
 
 

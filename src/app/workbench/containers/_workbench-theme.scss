@@ -45,10 +45,6 @@
       background: mat.get-color-from-palette($background, card);
     }
 
-    .file-list-panel {
-      width: 350px;
-    }
-
     .file-list-header {
       border-bottom: 1px solid mat.get-color-from-palette($foreground, divider);
       padding: 0px 16px;
@@ -138,14 +134,13 @@
     }
 
     .workbench-settings-card {
-      border-radius: 0px;
-      border-right: none;
-      border-top: none;
+      // border-radius: 0px;
+      // border-right: none;
+      // border-top: none;
       background: mat.get-color-from-palette($background, card);
     }
 
     .workbench-settings-card .card-header {
-      height: 49px;
       // border-left: 1px solid rgba(0,0,0,.125);
       color: mat.get-color-from-palette($foreground, text);
       background: mat.get-color-from-palette($background, card);
