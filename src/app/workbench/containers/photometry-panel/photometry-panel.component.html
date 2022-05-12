@@ -57,28 +57,24 @@
       <hr />
 
       <ng-container *ngIf="sources$ | async; let sources">
-        <div class="form-row mb-2">
-          <mat-slide-toggle [checked]="config?.showSourcesFromAllFiles" [labelPosition]="'after'"
+        <div fxLayout="row wrap" fxLayoutGap="25px">
+          <mat-slide-toggle class="my-2" [checked]="config?.showSourcesFromAllFiles" [labelPosition]="'after'"
             (change)="onShowSourcesFromAllFilesChange($event)" i18n>
             Include sources from other files
           </mat-slide-toggle>
-        </div>
-        <div class="form-row mb-2">
-          <mat-slide-toggle [checked]="config?.showSourceMarkers" [labelPosition]="'after'"
+          <mat-slide-toggle class="my-2" [checked]="config?.showSourceMarkers" [labelPosition]="'after'"
             (change)="onShowSourceMarkersChange($event)" i18n>
             Source Markers
           </mat-slide-toggle>
-          <mat-slide-toggle [disabled]="!config?.showSourceMarkers" [checked]="config?.showSourceApertures"
+          <mat-slide-toggle class="my-2" [disabled]="!config?.showSourceMarkers" [checked]="config?.showSourceApertures"
             [labelPosition]="'after'" (change)="onShowSourceAperturesChange($event)" i18n>
             Show Apertures
           </mat-slide-toggle>
-          <mat-slide-toggle [disabled]="!config?.showSourceMarkers" [checked]="config?.showSourceLabels"
+          <mat-slide-toggle class="my-2" [disabled]="!config?.showSourceMarkers" [checked]="config?.showSourceLabels"
             [labelPosition]="'after'" (change)="onShowSourceLabelsChange($event)" i18n>
             Marker Labels
           </mat-slide-toggle>
-
         </div>
-
         <div class="mb-3" style="max-height: 300px; overflow: auto">
           <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$ | async" matSort
             [matSortDisableClear]="true" [trackBy]="trackById" recycleRows>
@@ -171,28 +167,37 @@
           </mat-table>
         </div>
 
-        <div class="form-row" *ngIf="tableData$ | async; let tableData">
-          <button mat-raised-button i18n-matTooltip matTooltip="Merge Selected Sources" color="primary"
-            (click)="mergeSelectedSources(sources, config)" [disabled]="selectionModel.selected.length < 2">
-            <mat-icon>merge_type</mat-icon>
-          </button>
-
-          <button mat-raised-button i18n-matTooltip matTooltip="Remove Selected Sources" color="warn"
-            (click)="removeSelectedSources(sources, config)" [disabled]="selectionModel.selected.length == 0">
-            <mat-icon>delete</mat-icon>
-          </button>
-          <button mat-raised-button i18n-matTooltip matTooltip="Remove All Sources" color="warn"
-            (click)="removeSources(sources)" [disabled]="sources?.length == 0">
-            <mat-icon>delete_sweep</mat-icon>
-          </button>
-          <button mat-raised-button i18n-matTooltip matTooltip="Update Photometry" color="primary"
-            (click)="updatePhotometry()" [disabled]="sources?.length == 0">
-            <mat-icon>refresh</mat-icon>
-          </button>
-          <button mat-raised-button i18n-matTooltip matTooltip="Export Data" color="primary"
-            (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
-            <mat-icon>get_app</mat-icon>
-          </button>
+        <div fxLayout="row wrap" fxLayoutGap="5px" *ngIf="tableData$ | async; let tableData">
+          <div class="my-1">
+            <button mat-raised-button i18n-matTooltip matTooltip="Merge Selected Sources" color="primary"
+              (click)="mergeSelectedSources(sources, config)" [disabled]="selectionModel.selected.length < 2">
+              <mat-icon>merge_type</mat-icon>
+            </button>
+          </div>
+          <div class="my-1">
+            <button mat-raised-button i18n-matTooltip matTooltip="Remove Selected Sources" color="warn"
+              (click)="removeSelectedSources(sources, config)" [disabled]="selectionModel.selected.length == 0">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <div class="my-1">
+            <button mat-raised-button i18n-matTooltip matTooltip="Remove All Sources" color="warn"
+              (click)="removeSources(sources)" [disabled]="sources?.length == 0">
+              <mat-icon>delete_sweep</mat-icon>
+            </button>
+          </div>
+          <div class="my-1">
+            <button mat-raised-button i18n-matTooltip matTooltip="Update Photometry" color="primary"
+              (click)="updatePhotometry()" [disabled]="sources?.length == 0">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+          <div class="my-1">
+            <button mat-raised-button i18n-matTooltip matTooltip="Export Data" color="primary"
+              (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
+              <mat-icon>get_app</mat-icon>
+            </button>
+          </div>
         </div>
         <div *ngIf="mergeError" class="mt-2 alert alert-danger">
           {{ mergeError }}

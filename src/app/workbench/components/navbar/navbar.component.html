@@ -2,7 +2,8 @@
   <a class="afterglow-button afterglow-logo" routerLink="workbench"
     [queryParams]="(activeTool$ | async) ? {tool: (activeTool$ | async)} : {}" i18n-aria-label aria-label="Home"
     routerLinkActive="active" [routerLinkActiveOptions]="{exact: false, queryParams: 'ignored'}" mat-button>
-    <img style="height: 26px;" src="assets/img/core-logo.png" /><span class="pl-2">Afterglow Workbench</span>
+    <img style="height: 26px; display: inline;" src="assets/img/core-logo.png" /><span class="pl-2">Afterglow
+      Workbench</span>
   </a>
   <a [routerLink]="['jobs', (selectedJobId$ | async) || '']" i18n-aria-label aria-label="Jobs" routerLinkActive="active"
     [routerLinkActiveOptions]="{exact: false}" mat-button class="ml-2">
@@ -10,10 +11,6 @@
   </a>
 
   <div class="flex-spacer"></div>
-  <!-- <theme-picker></theme-picker> -->
-  <!-- <button mat-icon-button class="afterglow-button" matTooltip="Select a theme!" tabindex="-1">
-    <mat-icon>format_color_fill</mat-icon>
-  </button> -->
 
   <ng-container *ngIf="!user">
     <a class="afterglow-button" (click)="login()" i18n-aria-label aria-label="Login" mat-button i18n> Login </a>

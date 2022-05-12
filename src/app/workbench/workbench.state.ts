@@ -3982,11 +3982,12 @@ export class WorkbenchState {
       indexSounds: true,
     };
 
+
     //check whether new job should be created or if previous job result can be used
     if (sonificationPanelState.sonificationJobId) {
       let job = this.store.selectSnapshot(JobsState.getJobById(sonificationPanelState.sonificationJobId))
 
-      if (isSonificationJob(job) && job && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
+      if (job && isSonificationJob(job) && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
         let jobSettings: SonificationJobSettings = {
           x: job.settings.x,
           y: job.settings.y,
@@ -4025,7 +4026,7 @@ export class WorkbenchState {
             return state;
           });
         }
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           let sonificationUrl = '';
           let error = '';
           if (isSonificationJob(job)) {

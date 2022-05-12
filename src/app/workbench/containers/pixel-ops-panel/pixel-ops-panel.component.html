@@ -29,9 +29,10 @@
               <mat-select multiple formControlName="primaryHduIds">
                 <ng-container *ngFor="let hduId of availableHduIds">
                   <mat-option *ngIf="!selectedHduIds.includes(hduId)" [value]="hduId">
-                  {{ getHduOptionLabel(hduId) | async }}
-                </mat-option></ng-container>
-                
+                    {{ getHduOptionLabel(hduId) | async }}
+                  </mat-option>
+                </ng-container>
+
               </mat-select>
             </mat-form-field>
 
@@ -44,15 +45,12 @@
             </button>
           </div>
 
-          <mat-form-field
-            appearance="outline"
-            [hidden]="imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar'"
-          >
+          <mat-form-field appearance="outline"
+            [hidden]="imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar'">
             <mat-label i18n>Select a operand</mat-label>
             <mat-select formControlName="operand" i18n-aria-label aria-label="operand">
-              <mat-option *ngFor="let operand of operands" [value]="operand.symbol"
-                >{{ operand.label }} ( {{ operand.symbol }} )</mat-option
-              >
+              <mat-option *ngFor="let operand of operands" [value]="operand.symbol">{{ operand.label }} ( {{
+                operand.symbol }} )</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -75,7 +73,7 @@
             <mat-select formControlName="kernelFilter" i18n-aria-label aria-label="kernel filter">
               <mat-option *ngFor="let kernelFilter of kernelFilters" [value]="kernelFilter.value">{{
                 kernelFilter.label
-              }}</mat-option>
+                }}</mat-option>
             </mat-select>
           </mat-form-field>
 
@@ -84,187 +82,144 @@
             <mat-select formControlName="kernelSize" i18n-aria-label aria-label="kernel size">
               <mat-option *ngFor="let kernelSize of kernelSizes" [value]="kernelSize.value">{{
                 kernelSize.label
-              }}</mat-option>
+                }}</mat-option>
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline" [hidden]="!kernelSigmaEnabled">
             <mat-label i18n>Kernel Sigma</mat-label>
             <input matInput i18n-placeholder formControlName="kernelSigma" />
-            
+
             <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.isNumber as e">must be a number</mat-error>
-            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.greaterThan as e">must be greater than {{e.min}}.</mat-error>
-            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.lessThan as e">must be less than {{e.max}}.</mat-error>
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.greaterThan as e">must be greater than {{e.min}}.
+            </mat-error>
+            <mat-error *ngIf="imageCalcForm.get('kernelSigma').errors?.lessThan as e">must be less than {{e.max}}.
+            </mat-error>
           </mat-form-field>
 
           <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>
 
-          <div
-            *ngIf="imageCalcForm.errors?.divideByZero && (imageCalcForm.touched || imageCalcForm.dirty)"
-            class="cross-validation-error-message alert alert-danger"
-            style="margin: 10px"
-            i18n
-          >
+          <div *ngIf="imageCalcForm.errors?.divideByZero && (imageCalcForm.touched || imageCalcForm.dirty)"
+            class="cross-validation-error-message alert alert-danger" style="margin: 10px" i18n>
             Dividing by zero would result in a catastrophic server meltdown
           </div>
 
           <div style="clear: both"></div>
-          <button
-            mat-raised-button
-            (click)="submit(imageCalcForm.value)"
-            [disabled]="!imageCalcForm.valid"
-            class="float-right"
-            i18n
-          >
+          <button mat-raised-button (click)="submit(imageCalcForm.value)" [disabled]="!imageCalcForm.valid"
+            class="float-right" i18n>
             Submit
           </button>
         </form>
       </div>
     </mat-tab>
     <mat-tab i18n-label label="Advanced">
-      <form [formGroup]="imageCalcFormAdv">
-        <div>
-          <mat-form-field appearance="outline" style="width: 300px">
-            <mat-label i18n>Selected Image(s)</mat-label>
-            <mat-select multiple formControlName="selectedHduIds">
-              <mat-option *ngFor="let selectedHduId of selectedHduIds" [value]="selectedHduId">
-                {{ getHduOptionLabel(selectedHduId) | async }}
-              </mat-option>
-            </mat-select>
-            <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
-          </mat-form-field>
+      <div class="tab-contents">
+        <form [formGroup]="imageCalcFormAdv">
+          <div>
+            <mat-form-field appearance="outline" style="width: 300px">
+              <mat-label i18n>Selected Image(s)</mat-label>
+              <mat-select multiple formControlName="selectedHduIds">
+                <mat-option *ngFor="let selectedHduId of selectedHduIds" [value]="selectedHduId">
+                  {{ getHduOptionLabel(selectedHduId) | async }}
+                </mat-option>
+              </mat-select>
+              <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" style="width: 300px">
+              <mat-label i18n>Additional Image(s)</mat-label>
+              <mat-select multiple formControlName="primaryHduIds">
+                <ng-container *ngFor="let hduId of availableHduIds">
+                  <mat-option *ngIf="!selectedHduIds.includes(hduId)" [value]="hduId">
+                    {{ getHduOptionLabel(hduId) | async }}
+                  </mat-option>
+                </ng-container>
+
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-icon-button (click)="onSelectAllPrimaryHdusBtnClick()">
+              <mat-icon>select_all</mat-icon>
+            </button>
+
+            <button mat-icon-button (click)="onClearPrimaryHdusSelectionBtnClick()">
+              <mat-icon>clear</mat-icon>
+            </button>
+          </div>
+
+          <div>
+            <mat-form-field appearance="outline" style="width: 300px">
+              <mat-label i18n>Auxillary image(s)</mat-label>
+              <mat-select multiple formControlName="auxHduIds">
+                <mat-option *ngFor="let hduId of availableHduIds" [value]="hduId">
+                  {{ getHduOptionLabel(hduId) | async }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-icon-button (click)="onSelectAllAuxHdusBtnClick()">
+              <mat-icon>select_all</mat-icon>
+            </button>
+
+            <button mat-icon-button (click)="onClearAuxHdusSelectionBtnClick()">
+              <mat-icon>clear</mat-icon>
+            </button>
+          </div>
 
           <mat-form-field appearance="outline" style="width: 300px">
-            <mat-label i18n>Additional Image(s)</mat-label>
-            <mat-select multiple formControlName="primaryHduIds">
-              <ng-container *ngFor="let hduId of availableHduIds">
-                <mat-option *ngIf="!selectedHduIds.includes(hduId)" [value]="hduId">
-                {{ getHduOptionLabel(hduId) | async }}
-              </mat-option></ng-container>
-              
-            </mat-select>
+            <mat-label i18n>Operation String</mat-label>
+            <input matInput formControlName="opString" i18n-aria-label aria-label="Operation String" />
           </mat-form-field>
 
-          <button mat-icon-button (click)="onSelectAllPrimaryHdusBtnClick()">
-            <mat-icon>select_all</mat-icon>
+          <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>
+
+          <div class="mb-4" style="max-height: 400px; overflow: auto">
+            <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="pixelOpVariables$" matSort
+              [matSortDisableClear]="true">
+              <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
+                  [rowIndex]="0" [columnIndex]="0" [cellInTabOrder]="true" i18n>
+                  Variable Name
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                  [rowIndex]="rowIndex + 1" [columnIndex]="0" [cellInTabOrder]="true">
+                  {{ row.name }}
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="value">
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
+                  [rowIndex]="0" [columnIndex]="1" [cellInTabOrder]="true" i18n>
+                  Value
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                  [rowIndex]="rowIndex + 1" [columnIndex]="1" [cellInTabOrder]="true">
+                  {{ row.value }}
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="['name', 'value']"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: ['name', 'value']"></mat-row>
+            </mat-table>
+          </div>
+
+          <div style="clear: both"></div>
+          <button mat-raised-button (click)="submitAdv(imageCalcFormAdv.value)" [disabled]="!imageCalcFormAdv.valid"
+            class="float-right" i18n>
+            Submit
           </button>
+          <div style="clear: both"></div>
+        </form>
+      </div>
 
-          <button mat-icon-button (click)="onClearPrimaryHdusSelectionBtnClick()">
-            <mat-icon>clear</mat-icon>
-          </button>
-        </div>
 
-        <div>
-          <mat-form-field appearance="outline" style="width: 300px">
-            <mat-label i18n>Auxillary image(s)</mat-label>
-            <mat-select multiple formControlName="auxHduIds">
-              <mat-option *ngFor="let hduId of availableHduIds" [value]="hduId">
-                {{ getHduOptionLabel(hduId) | async }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <button mat-icon-button (click)="onSelectAllAuxHdusBtnClick()">
-            <mat-icon>select_all</mat-icon>
-          </button>
-
-          <button mat-icon-button (click)="onClearAuxHdusSelectionBtnClick()">
-            <mat-icon>clear</mat-icon>
-          </button>
-        </div>
-
-        <mat-form-field appearance="outline" style="width: 300px">
-          <mat-label i18n>Operation String</mat-label>
-          <input matInput formControlName="opString" i18n-aria-label aria-label="Operation String" />
-        </mat-form-field>
-
-        <mat-checkbox formControlName="inPlace" i18n>Overwrite Files</mat-checkbox>
-
-        <div class="mb-4" style="max-height: 400px; overflow: auto">
-          <mat-table
-            app-cell-focuser
-            #cellFocuser="cellFocuser"
-            #table
-            [dataSource]="pixelOpVariables$"
-            matSort
-            [matSortDisableClear]="true"
-          >
-            <ng-container matColumnDef="name">
-              <mat-header-cell
-                *matHeaderCellDef
-                mat-sort-header
-                class="select-header-cell"
-                app-focusable-cell
-                [rowIndex]="0"
-                [columnIndex]="0"
-                [cellInTabOrder]="true"
-                i18n
-              >
-                Variable Name
-              </mat-header-cell>
-              <mat-cell
-                *matCellDef="let row; let rowIndex = index"
-                app-focusable-cell
-                #cell="cell"
-                [rowIndex]="rowIndex + 1"
-                [columnIndex]="0"
-                [cellInTabOrder]="true"
-              >
-                {{ row.name }}
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="value">
-              <mat-header-cell
-                *matHeaderCellDef
-                mat-sort-header
-                class="select-header-cell"
-                app-focusable-cell
-                [rowIndex]="0"
-                [columnIndex]="1"
-                [cellInTabOrder]="true"
-                i18n
-              >
-                Value
-              </mat-header-cell>
-              <mat-cell
-                *matCellDef="let row; let rowIndex = index"
-                app-focusable-cell
-                #cell="cell"
-                [rowIndex]="rowIndex + 1"
-                [columnIndex]="1"
-                [cellInTabOrder]="true"
-              >
-                {{ row.value }}
-              </mat-cell>
-            </ng-container>
-
-            <mat-header-row *matHeaderRowDef="['name', 'value']"></mat-header-row>
-            <mat-row *matRowDef="let row; columns: ['name', 'value']"></mat-row>
-          </mat-table>
-        </div>
-
-        <div style="clear: both"></div>
-        <button
-          mat-raised-button
-          (click)="submitAdv(imageCalcFormAdv.value)"
-          [disabled]="!imageCalcFormAdv.valid"
-          class="float-right"
-          i18n
-        >
-          Submit
-        </button>
-        <div style="clear: both"></div>
-      </form>
     </mat-tab>
   </mat-tab-group>
 
   <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px">
     <div *ngIf="currentPixelOpsJob$ | async; let job">
-      <div
-        class="alert alert-info"
-        *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
-      >
+      <div class="alert alert-info"
+        *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
         <span i18n>Processing job</span> {{ job.id }}
       </div>
       <ng-template #jobComplete>

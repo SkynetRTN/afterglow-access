@@ -300,6 +300,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.viewerId$.subscribe(viewerId => {
       let state = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId));
 
+      if (!state) return;
+
       let loadJob = (id) => {
         if (id) {
           let job = this.store.selectSnapshot(JobsState.getJobById(id))

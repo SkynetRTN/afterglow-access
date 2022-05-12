@@ -122,7 +122,7 @@
         </div>
       </ng-template>
     </div>
-    <div *ngSwitchCase="SidebarView.SETTINGS" class="global-settings-panel h-100 p-3  w-100">
+    <div *ngSwitchCase="SidebarView.SETTINGS" class="global-settings-panel h-100 p-3 w-100">
       <h3 i18n>Global Settings</h3>
       <hr />
       <div class="pt-2">
@@ -135,27 +135,32 @@
           </mat-select>
         </mat-form-field>
       </div>
-      <div class="form-group">
-        <div *ngIf="focusedViewer$ | async; let focusedViewer">
+      <div class="w-100" fxLayout="row wrap" fxLayoutGap="10px" *ngIf="focusedViewer$ | async; let focusedViewer">
+        <div class="my-1">
           <button [disabled]="!focusedViewer || !(canSplit$ | async)" (click)="splitViewerPanel(focusedViewer, 'right')"
-            class="mt-2" mat-raised-button>
+            mat-raised-button>
             Split Viewer Right
           </button>
+        </div>
+        <div class="my-1">
           <button [disabled]="!focusedViewer || !(canSplit$ | async)" (click)="splitViewerPanel(focusedViewer, 'left')"
-            class="mt-2" mat-raised-button>
+            mat-raised-button>
             Split Viewer Left
           </button>
+        </div>
+        <div class="my-1">
           <button [disabled]="!focusedViewer || !(canSplit$ | async)" (click)="splitViewerPanel(focusedViewer, 'down')"
-            class="mt-2" mat-raised-button>
+            mat-raised-button>
             Split Viewer Down
           </button>
+        </div>
+        <div class="my-1">
           <button [disabled]="!focusedViewer || !(canSplit$ | async)" (click)="splitViewerPanel(focusedViewer, 'up')"
-            class="mt-2" mat-raised-button>
+            mat-raised-button>
             Split Viewer Up
           </button>
         </div>
       </div>
-
       <hr />
 
       <div class="form-group pt-2">

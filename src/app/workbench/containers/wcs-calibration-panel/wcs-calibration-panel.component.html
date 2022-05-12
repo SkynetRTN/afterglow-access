@@ -26,32 +26,28 @@
       </button>
     </div>
 
-    <div>
+    <div fxLayout="row wrap" fxLayoutGap="10px">
       <mat-form-field appearance="outline">
         <mat-label i18n>RA (hours)</mat-label>
         <input matInput formControlName="ra" />
       </mat-form-field>
-      <mat-form-field class="ml-2" appearance="outline">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Dec (degs)</mat-label>
         <input matInput formControlName="dec" />
       </mat-form-field>
-    </div>
-    <div>
       <mat-form-field appearance="outline">
         <mat-label i18n>Radius (degs)</mat-label>
         <input matInput type="number" formControlName="radius" />
       </mat-form-field>
-      <mat-form-field class="ml-2" appearance="outline">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Max Sources</mat-label>
         <input matInput type="number" formControlName="maxSources" />
       </mat-form-field>
-    </div>
-    <div>
       <mat-form-field appearance="outline">
         <mat-label i18n>Min Scale (arcsec/pixel)</mat-label>
         <input matInput type="number" formControlName="minScale" />
       </mat-form-field>
-      <mat-form-field class="ml-2" appearance="outline">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Max Scale (arcsec/pixel)</mat-label>
         <input matInput type="number" formControlName="maxScale" />
       </mat-form-field>

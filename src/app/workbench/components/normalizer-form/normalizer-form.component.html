@@ -1,58 +1,45 @@
-<div class="row pb-3" *ngIf="showMode && showPercentiles && showLevels">
-  <div class="col-6">
-    <mat-slide-toggle [checked]="normalizer?.mode == 'percentile'"
-      (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
-      Percentile Mode
-    </mat-slide-toggle>
-  </div>
-  <div class="col-6"></div>
-</div>
-<div class="row" *ngIf="showMode && normalizer?.mode == 'percentile' && showPercentiles">
-  <div class="col-6">
-    <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Background Level Percentile</mat-label>
-      <input matInput [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
-        (ngModelChange)="backgroundPercentileChange.emit($event)" type="number" [step]="backgroundStep" min="0"
-        max="100" />
-    </mat-form-field>
-  </div>
-  <div class="col-6">
-    <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Saturation Level Percentile</mat-label>
-      <input matInput [ngModel]="normalizer?.peakPercentile | number:'1.0-5'"
-        (ngModelChange)="peakPercentileChange.emit($event)" type="number" [step]="peakStep" min="0" max="100" />
-    </mat-form-field>
-  </div>
-</div>
-<div class="row" *ngIf="showLevels && (!showMode || normalizer?.mode == 'pixel')">
-  <div class="col-6">
-    <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Background Level</mat-label>
-      <input matInput [ngModel]="getFormattedBackgroundLevel()" (ngModelChange)="backgroundLevelChange.emit($event)"
-        type="number" />
-    </mat-form-field>
-  </div>
-  <div class="col-6">
-    <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Saturation Level</mat-label>
-      <input matInput [ngModel]="getFormattedPeakLevel()" (ngModelChange)="peakLevelChange.emit($event)"
-        type="number" />
-    </mat-form-field>
-  </div>
-</div>
-<div class="row">
-  <div *ngIf="showColorMap" class="col-6">
-    <mat-form-field appearance="outline">
-      <mat-label i18n>Color Map</mat-label>
-      <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
-        style="width: 100%">
-        <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">{{ colorMap.name }} Color Map
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
-  <div *ngIf="showStretchMode" class="col-6">
-    <mat-form-field appearance="outline">
+<div fxLayout="column" fxLayoutGap="10px">
+  <mat-slide-toggle *ngIf="showMode && showPercentiles && showLevels" [checked]="normalizer?.mode == 'percentile'"
+    (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
+    Percentile Mode
+  </mat-slide-toggle>
+  <div fxLayout="row wrap" fxLayoutGap="10px">
+    <ng-container *ngIf="showMode && normalizer?.mode == 'percentile' && showPercentiles">
+      <mat-form-field class="" appearance="outline">
+        <mat-label i18n>Background Level Percentile</mat-label>
+        <input matInput [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
+          (ngModelChange)="backgroundPercentileChange.emit($event)" type="number" [step]="backgroundStep" min="0"
+          max="100" />
+      </mat-form-field>
+      <mat-form-field class="" appearance="outline">
+        <mat-label i18n>Saturation Level Percentile</mat-label>
+        <input matInput [ngModel]="normalizer?.peakPercentile | number:'1.0-5'"
+          (ngModelChange)="peakPercentileChange.emit($event)" type="number" [step]="peakStep" min="0" max="100" />
+      </mat-form-field>
+    </ng-container>
+    <ng-container *ngIf="showLevels && (!showMode || normalizer?.mode == 'pixel')">
+      <mat-form-field class="" appearance="outline">
+        <mat-label i18n>Background Level</mat-label>
+        <input matInput [ngModel]="getFormattedBackgroundLevel()" (ngModelChange)="backgroundLevelChange.emit($event)"
+          type="number" />
+      </mat-form-field>
+      <mat-form-field class="" appearance="outline">
+        <mat-label i18n>Saturation Level</mat-label>
+        <input matInput [ngModel]="getFormattedPeakLevel()" (ngModelChange)="peakLevelChange.emit($event)"
+          type="number" />
+      </mat-form-field>
+    </ng-container>
+    <ng-container *ngIf="showColorMap">
+      <mat-form-field appearance="outline">
+        <mat-label i18n>Color Map</mat-label>
+        <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
+          style="width: 100%">
+          <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">{{ colorMap.name }} Color Map
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+    <mat-form-field *ngIf="showStretchMode" appearance="outline">
       <mat-label i18n>Stretch Mode</mat-label>
       <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)"
         style="width: 100%">
@@ -61,30 +48,27 @@
           }}</mat-option>
       </mat-select>
     </mat-form-field>
+
   </div>
-</div>
-<div class="row mb-4" *ngIf="showInverted">
-  <div class="col-6">
-    <mat-slide-toggle [checked]="normalizer?.inverted" [labelPosition]="'before'"
-      (change)="invertedChange.emit($event.checked)" color="primary" i18n>
-      Inverted
-    </mat-slide-toggle>
+  <mat-slide-toggle *ngIf="showInverted" [checked]="normalizer?.inverted" [labelPosition]="'before'"
+    (change)="invertedChange.emit($event.checked)" color="primary" i18n>
+    Inverted
+  </mat-slide-toggle>
+  <div fxLayout="row wrap" fxLayoutGap="10px">
+    <div *ngIf="showLayerScale" class="col-6">
+      <mat-form-field class="" appearance="outline">
+        <mat-label i18n>Layer Scale</mat-label>
+        <input matInput [ngModel]="normalizer?.layerScale" (ngModelChange)="layerScaleChange.emit($event)" type="number"
+          [step]="0.05" min="0" />
+      </mat-form-field>
+    </div>
+    <div *ngIf="showLayerOffset" class="col-6">
+      <mat-form-field class="" appearance="outline">
+        <mat-label i18n>Layer Offset</mat-label>
+        <input matInput [ngModel]="normalizer?.layerOffset" (ngModelChange)="layerOffsetChange.emit($event)"
+          type="number" [step]="0.05" min="0" />
+      </mat-form-field>
+    </div>
   </div>
-  <div class="col-6"></div>
-</div>
-<div class="row">
-  <div *ngIf="showLayerScale" class="col-6">
-    <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Layer Scale</mat-label>
-      <input matInput [ngModel]="normalizer?.layerScale" (ngModelChange)="layerScaleChange.emit($event)" type="number"
-        [step]="0.05" min="0" />
-    </mat-form-field>
-  </div>
-  <div *ngIf="showLayerOffset" class="col-6">
-    <mat-form-field class="" appearance="outline">
-      <mat-label i18n>Layer Offset</mat-label>
-      <input matInput [ngModel]="normalizer?.layerOffset" (ngModelChange)="layerOffsetChange.emit($event)" type="number"
-        [step]="0.05" min="0" />
-    </mat-form-field>
-  </div>
+
 </div>

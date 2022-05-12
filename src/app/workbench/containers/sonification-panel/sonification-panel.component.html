@@ -45,20 +45,12 @@
           <tr *ngIf="state?.regionMode == SonifierRegionMode.CUSTOM">
             <th scope="row" i18n>Selection Options:</th>
             <td>
-              <button
-                mat-raised-button
-                [disabled]="state?.regionHistoryIndex <= 0"
-                (click)="undoRegionSelection()"
-                i18n
-              >
+              <button mat-raised-button [disabled]="state?.regionHistoryIndex <= 0" (click)="undoRegionSelection()"
+                i18n>
                 Undo
               </button>
-              <button
-                mat-raised-button
-                [disabled]="state?.regionHistoryIndex >= state?.regionHistory?.length - 1"
-                (click)="redoRegionSelection()"
-                i18n
-              >
+              <button mat-raised-button [disabled]="state?.regionHistoryIndex >= state?.regionHistory?.length - 1"
+                (click)="redoRegionSelection()" i18n>
                 Redo
               </button>
               <button mat-raised-button (click)="resetRegionSelection()" i18n>Reset</button>
@@ -86,46 +78,21 @@
         </tbody>
       </table>
 
-      <div class="row">
-        <div class="col-6">
-          <mat-form-field class="">
-            <input
-              matInput
-              i18n-placeholder
-              placeholder="Duration"
-              [ngModel]="state?.duration"
-              (ngModelChange)="setDuration($event)"
-              type="number"
-              step="1"
-              min="5"
-              max="60"
-            />
-          </mat-form-field>
-        </div>
-        <div class="col-6">
-          <mat-form-field class="">
-            <input
-              matInput
-              i18n-placeholder
-              placeholder="Tones"
-              [ngModel]="state?.toneCount"
-              (ngModelChange)="setToneCount($event)"
-              type="number"
-              step="1"
-              min="1"
-              max="100"
-            />
-          </mat-form-field>
-        </div>
+      <div fxLayout="row wrap" fxLayoutGap="20px">
+        <mat-form-field class="">
+          <input matInput i18n-placeholder placeholder="Duration" [ngModel]="state?.duration"
+            (ngModelChange)="setDuration($event)" type="number" step="1" min="5" max="60" />
+        </mat-form-field>
+        <mat-form-field class="">
+          <input matInput i18n-placeholder placeholder="Tones" [ngModel]="state?.toneCount"
+            (ngModelChange)="setToneCount($event)" type="number" step="1" min="1" max="100" />
+        </mat-form-field>
+        <mat-slide-toggle [checked]="state?.viewportSync" [labelPosition]="'after'" (change)="setViewportSync($event)"
+          i18n>
+          Keep selected region in viewer
+        </mat-slide-toggle>
       </div>
-      <mat-slide-toggle
-        [checked]="state?.viewportSync"
-        [labelPosition]="'before'"
-        (change)="setViewportSync($event)"
-        i18n
-      >
-        Keep selected region in viewer
-      </mat-slide-toggle>
+
 
       <div class="pb-3">
         <button mat-raised-button (click)="sonify()" class="pull-right">
