@@ -1,5 +1,5 @@
 <div fxLayout="column" fxLayoutGap="20px" style="height: 100%">
-    <log-monitor style="height: 200px;" [logStream]="logStream$ | async" theme="light" [animated]="true"
-        [icons]="false">
+    <log-monitor *ngIf="logStream$ | async" style="height: 200px;" [logStream]="logStream$ | async" theme="light"
+        [animated]="false" [icons]="false">
     </log-monitor>
 </div>
