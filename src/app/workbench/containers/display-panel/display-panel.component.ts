@@ -117,6 +117,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   resetWhiteBalance$ = new Subject<any>();
   fitHistogramsEvent$ = new Subject<{ fitBackground: boolean, fitSources: boolean }>();
   resetColorBalanceEvent$ = new Subject<any>();
+  photometricColorBalanceEvent$ = new Subject<any>();
 
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
   channelMixerControls = [
@@ -369,6 +370,22 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
       })
     })
+
+    this.photometricColorBalanceEvent$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.file$, this.hdus$)
+    ).subscribe(
+      ([event, file, hdus]) => {
+        let ref = this.dialog.open(PhotometricColorBalanceDialogComponent, {
+          width: '100%',
+          height: '100%',
+          maxWidth: '1200px',
+          maxHeight: '800px',
+          data: hdus.map(hdu => hdu.id)
+        })
+        ref.afterClosed().pipe().subscribe();
+      }
+    )
 
     this.fitHistogramsEvent$.pipe(
       takeUntil(this.destroy$),
@@ -922,14 +939,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   photometricWhiteBalance() {
-    let ref = this.dialog.open(PhotometricColorBalanceDialogComponent, {
-      width: '100%',
-      height: '100%',
-      maxWidth: '1200px',
-      maxHeight: '800px',
-      data: []
-    })
-    ref.afterClosed().pipe().subscribe();
+    this.photometricColorBalanceEvent$.next(true);
   }
 
 
