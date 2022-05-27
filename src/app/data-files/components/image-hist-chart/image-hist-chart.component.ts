@@ -130,7 +130,6 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit() {
     this.observer = new ResizeObserver(() => {
-      console.log("SIZE CHANGE")
       this.updateChart()
     });
     this.observer.observe(this.element.nativeElement);
