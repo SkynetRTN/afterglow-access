@@ -1,12 +1,6 @@
 <div style="height: 600px" fxLayout="column" class="wrapper">
-  <div
-    *ngIf="showToolbar"
-    class="toolbar"
-    fxLayout="row"
-    fxLayoutAlign="space-between"
-    fxLayoutGap="10px"
-    style="width: 100%"
-  >
+  <div *ngIf="showToolbar" class="toolbar" fxLayout="row" fxLayoutAlign="space-between" fxLayoutGap="10px"
+    style="width: 100%">
     <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
       <button mat-raised-button *ngIf="showCreate$ | async" (click)="onCreateClick()">
         <mat-icon>create_new_folder</mat-icon> New directory
@@ -26,14 +20,8 @@
       <button mat-raised-button *ngIf="showUpload$ | async" (click)="onUploadClick()">
         <mat-icon>publish</mat-icon> Upload
       </button>
-      <input
-        [hidden]="true"
-        type="file"
-        [accept]="allowedFileExtensions?.join(',')"
-        (change)="handleUploadFilesChange($event)"
-        multiple
-        #fileUpload
-      />
+      <input [hidden]="true" type="file" [accept]="allowedFileExtensions?.join(',')"
+        (change)="handleUploadFilesChange($event)" multiple #fileUpload />
       <button mat-raised-button *ngIf="showDownload$ | async" (click)="onDownloadClick()">
         <mat-icon>get_app</mat-icon> Download
       </button>
@@ -46,11 +34,8 @@
   </div>
   <div class="path" fxFlex="0 0 auto" fxLayout="row wrap" fxLayoutAlign="start center" style="width: 100%">
     <ng-container *ngIf="error$ | async; else pathBlock; let error">
-      <div
-        (click)="clearError()"
-        class="alert-danger"
-        style="width: 100%; padding: 10px; vertical-align: center; text-align: center"
-      >
+      <div (click)="clearError()" class="alert-danger"
+        style="width: 100%; padding: 10px; vertical-align: center; text-align: center">
         {{ error }}
       </div>
     </ng-container>
@@ -80,34 +65,21 @@
     </div>
     <div class="table-wrapper" fxLayout="column" style="height: 100%">
       <div fxFlex="1 1 auto" style="overflow: auto">
-        <table
-          mat-table
-          matSort
-          [matSortActive]="(parentDataProvider$ | async)?.defaultSort?.field || 'name'"
+        <table mat-table matSort [matSortActive]="(parentDataProvider$ | async)?.defaultSort?.field || 'name'"
           [matSortDirection]="(parentDataProvider$ | async)?.defaultSort?.direction || 'asc'"
-          (matSortChange)="onSortChange($event)"
-          [class.multi-selection-mode]="selection.selected.length > 1"
-          [dataSource]="dataSource"
-          class="mat-elevation-z8"
-        >
+          (matSortChange)="onSortChange($event)" [class.multi-selection-mode]="selection.selected.length > 1"
+          [dataSource]="dataSource" class="mat-elevation-z8">
           <!-- Checkbox Column -->
           <ng-container matColumnDef="select" sticky>
             <th class="select" mat-header-cell *matHeaderCellDef>
-              <mat-checkbox
-                (change)="masterToggle()"
-                [checked]="isAllSelected$ | async"
+              <mat-checkbox (change)="masterToggle()" [checked]="isAllSelected$ | async"
                 [indeterminate]="isIndeterminate$ | async"
-                [aria-label]="(isAllSelected$ | async) ? 'select all' : 'deselect all'"
-              >
+                [aria-label]="(isAllSelected$ | async) ? 'select all' : 'deselect all'">
               </mat-checkbox>
             </th>
             <td class="select" mat-cell *matCellDef="let row">
-              <mat-checkbox
-                (click)="$event.stopPropagation()"
-                (change)="$event ? selection.toggle(row) : null"
-                [checked]="selection.isSelected(row)"
-                [aria-label]="checkboxLabel(row)"
-              >
+              <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+                [checked]="selection.isSelected(row)" [aria-label]="checkboxLabel(row)">
               </mat-checkbox>
             </td>
           </ng-container>
@@ -127,7 +99,8 @@
           </ng-container>
 
           <ng-container *ngFor="let column of columns$ | async" [matColumnDef]="column.caption">
-            <th mat-header-cell [mat-sort-header]="column.dataField" [disabled]="!column.sortable" class="meta-column" *matHeaderCellDef>
+            <th mat-header-cell [mat-sort-header]="column.dataField" [disabled]="!column.sortable" class="meta-column"
+              *matHeaderCellDef>
               {{ column.caption }}
             </th>
             <td mat-cell class="meta-column" *matCellDef="let item">
@@ -136,13 +109,9 @@
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; let rowIndex = index; columns: displayedColumns$ | async"
-            [class.selected]="selection.isSelected(row)"
-            (click)="onRowClick$.next({ $event: $event, item: row })"
-            (dblclick)="onRowDblClick$.next({ $event: $event, item: row })"
-          ></tr>
+          <tr mat-row *matRowDef="let row; let rowIndex = index; columns: displayedColumns$ | async"
+            [class.selected]="selection.isSelected(row)" (click)="onRowClick$.next({ $event: $event, item: row })"
+            (dblclick)="onRowDblClick$.next({ $event: $event, item: row })"></tr>
         </table>
       </div>
       <div fxFlex="0 0 auto" class="bottom-toolbar">
@@ -150,26 +119,18 @@
           <div *ngIf="showNameFilter" class="name-filter p-2">
             <mat-form-field appearance="outline">
               <mat-label>Filter by name</mat-label>
-              <input
-                #nameFilterInput
-                matInput
-                placeholder="Filter by name"
-                (input)="onNameFilterChange(nameFilterInput.value)"
-                [value]="nameFilter"
-              />
+              <input #nameFilterInput matInput i18n-placeholder placeholder="Filter by name"
+                (input)="onNameFilterChange(nameFilterInput.value)" [value]="nameFilter" />
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
           </div>
           <div class="mat-paginator-container">
             <div class="mat-paginator-page-size">
-              <div class="mat-paginator-page-size-label">Items per page:</div>
+              <div class="mat-paginator-page-size-label" i18n>Items per page:</div>
 
               <mat-form-field class="mat-paginator-page-size-select">
-                <mat-select
-                  [value]="pageSize"
-                  [aria-label]="'Items per page'"
-                  (selectionChange)="_changePageSize($event.value)"
-                >
+                <mat-select [value]="pageSize" i18n-aria-label [aria-label]="'Items per page'"
+                  (selectionChange)="_changePageSize($event.value)">
                   <mat-option *ngFor="let pageSizeOption of pageSizeOptions" [value]="pageSizeOption">
                     {{ pageSizeOption }}
                   </mat-option>
@@ -179,64 +140,36 @@
               <div class="mat-paginator-page-size-value" *ngIf="pageSizeOptions.length <= 1">{{ pageSize }}</div>
             </div>
             <div class="mat-paginator-range-actions">
-              <button
-                mat-icon-button
-                type="button"
-                class="mat-paginator-navigation-first"
-                (click)="dataSource.first(); selection.clear()"
-                [attr.aria-label]="'first page'"
-                [matTooltip]="'first page'"
-                [matTooltipDisabled]="!(dataSource?.firstLink$ | async)"
-                [matTooltipPosition]="'above'"
-                [disabled]="!(dataSource?.firstLink$ | async)"
-                *ngIf="showFirstLastButtons"
-              >
+              <button mat-icon-button type="button" class="mat-paginator-navigation-first"
+                (click)="dataSource.first(); selection.clear()" [attr.aria-label]="'first page'"
+                [matTooltip]="'first page'" [matTooltipDisabled]="!(dataSource?.firstLink$ | async)"
+                [matTooltipPosition]="'above'" [disabled]="!(dataSource?.firstLink$ | async)"
+                *ngIf="showFirstLastButtons">
                 <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
                   <path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z" />
                 </svg>
               </button>
-              <button
-                mat-icon-button
-                type="button"
-                class="mat-paginator-navigation-previous"
-                (click)="dataSource.previous(); selection.clear()"
-                [attr.aria-label]="'previous page'"
-                [matTooltip]="'previous page'"
-                [matTooltipDisabled]="!(dataSource?.prevLink$ | async)"
-                [matTooltipPosition]="'above'"
-                [disabled]="!(dataSource?.prevLink$ | async)"
-              >
+              <button mat-icon-button type="button" class="mat-paginator-navigation-previous"
+                (click)="dataSource.previous(); selection.clear()" [attr.aria-label]="'previous page'"
+                [matTooltip]="'previous page'" [matTooltipDisabled]="!(dataSource?.prevLink$ | async)"
+                [matTooltipPosition]="'above'" [disabled]="!(dataSource?.prevLink$ | async)">
                 <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
                   <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
                 </svg>
               </button>
-              <button
-                mat-icon-button
-                type="button"
-                class="mat-paginator-navigation-next"
-                (click)="dataSource.next(); selection.clear()"
-                [attr.aria-label]="'next page'"
-                [matTooltip]="'next page'"
-                [matTooltipDisabled]="!(dataSource?.nextLink$ | async)"
-                [matTooltipPosition]="'above'"
-                [disabled]="!(dataSource?.nextLink$ | async)"
-              >
+              <button mat-icon-button type="button" class="mat-paginator-navigation-next"
+                (click)="dataSource.next(); selection.clear()" [attr.aria-label]="'next page'"
+                [matTooltip]="'next page'" [matTooltipDisabled]="!(dataSource?.nextLink$ | async)"
+                [matTooltipPosition]="'above'" [disabled]="!(dataSource?.nextLink$ | async)">
                 <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
                   <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
                 </svg>
               </button>
-              <button
-                mat-icon-button
-                type="button"
-                class="mat-paginator-navigation-last"
-                (click)="dataSource.last(); selection.clear()"
-                [attr.aria-label]="'last page'"
-                [matTooltip]="'last page'"
-                [matTooltipDisabled]="!(dataSource?.lastLink$ | async)"
-                [matTooltipPosition]="'above'"
-                [disabled]="!(dataSource?.lastLink$ | async)"
-                *ngIf="showFirstLastButtons"
-              >
+              <button mat-icon-button type="button" class="mat-paginator-navigation-last"
+                (click)="dataSource.last(); selection.clear()" [attr.aria-label]="'last page'"
+                [matTooltip]="'last page'" [matTooltipDisabled]="!(dataSource?.lastLink$ | async)"
+                [matTooltipPosition]="'above'" [disabled]="!(dataSource?.lastLink$ | async)"
+                *ngIf="showFirstLastButtons">
                 <svg class="mat-paginator-icon" viewBox="0 0 24 24" focusable="false">
                   <path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z" />
                 </svg>

@@ -4,7 +4,7 @@
   </div>
   <div fxFlex="1 1 auto" style="overflow: auto;">
     <mat-tab-group>
-      <mat-tab label="Aperture Photometry">
+      <mat-tab i18n-label label="Aperture Photometry">
         <form [formGroup]="photometryForm">
           <div style="padding: 10px">
             <div fxLayout="row" fxLayoutGap="20px">
@@ -15,10 +15,10 @@
                 </mat-select>
               </mat-form-field>
               <button style="height: 50px;" matButton [(colorPicker)]="settings.photometry.markerColor"
-                [cpOKButton]="true">Set Marker
+                [cpOKButton]="true" i18n>Set Marker
                 Color...</button>
               <button style="height: 50px;" matButton [(colorPicker)]="settings.photometry.selectedMarkerColor"
-                [cpOKButton]="true">Set
+                [cpOKButton]="true" i18n>Set
                 Selected Marker Color...</button>
               <!-- <mat-form-field>
                 <input matInput [value]="settings.photometry.markerColor"
@@ -40,7 +40,7 @@
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Centroiding Radius"
                       formControlName="centroidRadius" />
-                    <mat-hint>radius in pixels</mat-hint>
+                    <mat-hint i18n>radius in pixels</mat-hint>
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('centroidRadius')"></app-print-form-error>
                 </div>
@@ -48,7 +48,7 @@
                 <div>
                   <mat-form-field>
                     <input type="number" matInput i18n-placeholder placeholder="Gain" formControlName="gain" />
-                    <mat-hint>CCD gain in e-/ADU</mat-hint>
+                    <mat-hint i18n>CCD gain in e-/ADU</mat-hint>
                   </mat-form-field>
                   <app-print-form-error [control]="photometryForm.get('gain')"></app-print-form-error>
                 </div>
@@ -81,7 +81,7 @@
                 </div>
                 <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
                   <div>
-                    <mat-slide-toggle formControlName="constantAperCorr">Aperture Correction</mat-slide-toggle>
+                    <mat-slide-toggle formControlName="constantAperCorr" i18n>Aperture Correction</mat-slide-toggle>
                   </div>
                 </div>
                 <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px" style="margin-top: 0px; margin-bottom: 0px"
@@ -161,24 +161,24 @@
                 <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
                   <div fxLayout="column">
                     <div>
-                      <mat-slide-toggle formControlName="autoAper">Auto aperture</mat-slide-toggle>
+                      <mat-slide-toggle formControlName="autoAper" i18n>Auto aperture</mat-slide-toggle>
                     </div>
                     <div>
-                      <mat-slide-toggle formControlName="adaptiveAperCorr">Aperture Correction</mat-slide-toggle>
+                      <mat-slide-toggle formControlName="adaptiveAperCorr" i18n>Aperture Correction</mat-slide-toggle>
                     </div>
 
                   </div>
 
                   <div fxLayout="column">
                     <div>
-                      <mat-slide-toggle formControlName="fixAper">Fix Aperture Size</mat-slide-toggle>
+                      <mat-slide-toggle formControlName="fixAper" i18n>Fix Aperture Size</mat-slide-toggle>
                     </div>
                     <div>
-                      <mat-slide-toggle formControlName="fixEll">Fix Ellipticity</mat-slide-toggle>
+                      <mat-slide-toggle formControlName="fixEll" i18n>Fix Ellipticity</mat-slide-toggle>
                     </div>
 
                     <div>
-                      <mat-slide-toggle formControlName="fixRot">Fix Rotation</mat-slide-toggle>
+                      <mat-slide-toggle formControlName="fixRot" i18n>Fix Rotation</mat-slide-toggle>
                     </div>
                   </div>
                 </div>
@@ -189,7 +189,7 @@
         </form>
 
       </mat-tab>
-      <mat-tab label="Photometry Calibration">
+      <mat-tab i18n-label label="Photometry Calibration">
         <form [formGroup]="calibrationForm">
           <div style="padding: 10px">
             <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
@@ -332,7 +332,7 @@
           </div>
         </form>
       </mat-tab>
-      <mat-tab label="Source Extraction">
+      <mat-tab i18n-label label="Source Extraction">
         <form [formGroup]="sourceExtractionForm">
           <div style="padding: 10px">
             <div fxLayout="column" fxLayoutGap="30px">

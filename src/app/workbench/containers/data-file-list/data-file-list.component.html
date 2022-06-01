@@ -42,7 +42,7 @@
   <ng-template matMenuContent let-file="file" let-hdu="hdu">
     <ng-container *ngIf="file">
       <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameFile(file)">
-        <div class="context-label" fxFlex="1 1 auto">Rename File</div>
+        <div class="context-label" fxFlex="1 1 auto" i18n>Rename File</div>
       </div>
       <!-- <div mat-menu-item fxLayout="row" fxFlexFill (click)="splitFile(file)">
         <div class="context-label" fxFlex="1 1 auto">Split File</div>
@@ -50,11 +50,11 @@
     </ng-container>
     <ng-container *ngIf="hdu">
       <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameHdu(hdu)">
-        <div class="context-label" fxFlex="1 1 auto">Rename HDU</div>
+        <div class="context-label" fxFlex="1 1 auto" i18n>Rename HDU</div>
       </div>
       <ng-container *ngIf="isImageHdu(hdu)">
-        <button mat-menu-item [matMenuTriggerFor]="colorMapMenu">Color Map</button>
-        <button mat-menu-item [matMenuTriggerFor]="blendModeMenu">Blend Mode</button>
+        <button mat-menu-item [matMenuTriggerFor]="colorMapMenu" i18n>Color Map</button>
+        <button mat-menu-item [matMenuTriggerFor]="blendModeMenu" i18n>Blend Mode</button>
       </ng-container>
 
       <mat-menu #colorMapMenu="matMenu">
