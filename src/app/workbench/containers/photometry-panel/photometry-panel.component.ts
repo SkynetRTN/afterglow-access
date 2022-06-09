@@ -1092,7 +1092,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     let photJob = job;
 
     let calJob: FieldCalibrationJob;
-    let calJobResult: FieldCalibrationJobResult;
 
     if (config.batchCalJobId) {
       let job = this.store.selectSnapshot(JobsState.getJobById(config.batchCalJobId));
@@ -1126,7 +1125,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             result['calibrated_zero_point'] = null;
             result['calibrated_mag'] = null;
 
-            let calRow = calJobResult?.data?.find(row => row.fileId == photRow.fileId);
+            let calRow = calJob.result?.data?.find(row => row.fileId == photRow.fileId);
             if (calRow) {
               result['zero_point_correction'] = calRow.zeroPointCorr;
               result['zero_point_error'] = calRow.zeroPointError
