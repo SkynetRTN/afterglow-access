@@ -241,7 +241,7 @@ import { JobService } from '../jobs/services/job.service';
 import { Job } from '../jobs/models/job';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'b079125e-48ae-4fbe-bdd7-cad5796a8614',
+  version: 'bbfa2e4a-ffe1-4117-9a3f-6c08b39a5d01',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -301,6 +301,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     batchCalibrationEnabled: false,
     batchPhotJobId: '',
     batchCalJobId: '',
+    creatingBatchJobs: false,
   },
   pixelOpsPanelConfig: {
     currentPixelOpsJobId: '',
@@ -3412,6 +3413,7 @@ export class WorkbenchState {
       state.photometryPanelConfig.batchCalibrationEnabled = state.settings.calibration.calibrationEnabled;
       state.photometryPanelConfig.batchCalJobId = null;
       state.photometryPanelConfig.batchPhotJobId = null;
+      state.photometryPanelConfig.creatingBatchJobs = true;
       return state;
     });
 
@@ -3473,6 +3475,7 @@ export class WorkbenchState {
         if (job.id) {
           setState((state: WorkbenchStateModel) => {
             state.photometryPanelConfig.batchPhotJobId = job.id;
+            state.photometryPanelConfig.creatingBatchJobs = false;
             return state;
           });
         }
@@ -3503,6 +3506,7 @@ export class WorkbenchState {
           if (job.id) {
             setState((state: WorkbenchStateModel) => {
               state.photometryPanelConfig.batchCalJobId = job.id;
+              state.photometryPanelConfig.creatingBatchJobs = false;
               return state;
             });
           }

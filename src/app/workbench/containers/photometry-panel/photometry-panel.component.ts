@@ -154,6 +154,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   batchPhotJob$: Observable<PhotometryJob>;
   batchCalJob$: Observable<FieldCalibrationJob>;
   batchStatus$: Observable<{ inProgress: boolean, calibrationEnabled: boolean; photJob: PhotometryJob, calJob: FieldCalibrationJob }>;
+  creatingBatchJobs$: Observable<boolean>;
   autoPhotJob$: Observable<PhotometryJob>;
   autoPhotData$: Observable<{ [sourceId: string]: PhotometryData }>;
   autoCalJob$: Observable<FieldCalibrationJob>;
@@ -374,17 +375,24 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       ))
     )
 
-    this.batchStatus$ = combineLatest([this.batchCalibrationEnabled$, this.batchPhotJob$, this.batchCalJob$]).pipe(
-      map(([calibrationEnabled, batchPhotJob, batchCalJob]) => {
+    this.creatingBatchJobs$ = this.config$.pipe(
+      map((s) => s.creatingBatchJobs),
+      distinctUntilChanged()
+    )
+
+    this.batchStatus$ = combineLatest([this.creatingBatchJobs$, this.batchCalibrationEnabled$, this.batchPhotJob$, this.batchCalJob$]).pipe(
+      map(([creatingBatchJobs, calibrationEnabled, batchPhotJob, batchCalJob]) => {
         let inProgressStates = ['in_progress', 'pending'];
         let status = {
           calibrationEnabled: calibrationEnabled,
           photJob: batchPhotJob,
           calJob: batchCalJob,
-          inProgress: false
+          inProgress: creatingBatchJobs
         }
+
         if (batchPhotJob) status.inProgress = inProgressStates.includes(batchPhotJob.state.status);
         if (calibrationEnabled && batchCalJob) status.inProgress = status.inProgress || inProgressStates.includes(batchCalJob.state.status);
+
         return status;
       })
     )
@@ -1062,24 +1070,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   batchPhotometer() {
     this.store.dispatch(new BatchPhotometerSources())
-    // let calibrationSettings = this.store.selectSnapshot(WorkbenchState.getCalibrationSettings);
-    // this.store.dispatch(new UpdatePhotometryPanelConfig({ batchPhotJobId: null, batchCalJobId: null, batchCalEnabled: calibrationSettings.calibrationEnabled }));
-    // this.store.dispatch(
-    //   new PhotometerSources(
-    //     sources.map((s) => s.id),
-    //     config.batchPhotFormData.selectedHduIds,
-    //     true
-    //   )
-    // );
-    // if (calibrationSettings.calibrationEnabled) {
-    //   this.store.dispatch(
-    //     new CalibrateField(
-    //       config.batchPhotFormData.selectedHduIds,
-    //       true
-    //     )
-    //   );
-    // }
-
   }
 
   downloadBatchPhotData() {
@@ -1194,7 +1184,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       .pipe(withLatestFrom(this.imageHdu$, this.viewportSize$))
       .subscribe(([result, imageHdu, viewportSize]) => {
         if (result) {
-
+          this.store.dispatch(new InvalidateAutoPhotByHduId());
         }
       });
   }
