@@ -131,6 +131,8 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
       result: null,
     };
 
+    this.loading = true;
+
     this.jobService.createJob(job).subscribe(
       job => {
         if (!isSourceExtractionJob(job)) return;
@@ -184,7 +186,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
 
 
         if (job.result.errors.length == 0 && job.result.warnings.length == 0) {
-          this.dialogRef.close();
+          this.dialogRef.close(sources);
         }
       }
     )
