@@ -2814,7 +2814,7 @@ export class WorkbenchState {
             return state;
           });
         }
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           let actions: any[] = [];
           if (!isPixelOpsJob(job)) return;
           let result = job.result;
@@ -2886,7 +2886,7 @@ export class WorkbenchState {
             return state;
           });
         }
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           let actions: any[] = [];
           if (!isPixelOpsJob(job)) return;
           let result = job.result;
@@ -2954,7 +2954,7 @@ export class WorkbenchState {
             return state;
           });
         }
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           let actions: any[] = [];
           if (!isAlignmentJob(job)) return;
           let result = job.result;
@@ -3039,7 +3039,7 @@ export class WorkbenchState {
             return state;
           });
         }
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           if (!isStackingJob(job)) return;
           let result = job.result;
           if (result.errors.length != 0) {
@@ -3113,7 +3113,7 @@ export class WorkbenchState {
             return state;
           });
         }
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           let actions: any[] = [];
           if (!isWcsCalibrationJob(job)) return;
           job.result.fileIds.forEach((hduId) => {

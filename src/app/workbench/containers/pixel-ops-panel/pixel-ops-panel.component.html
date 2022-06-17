@@ -46,7 +46,7 @@
           </div>
 
           <mat-form-field appearance="outline"
-            [hidden]="imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar'">
+            *ngIf="!(imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar')">
             <mat-label i18n>Select a operand</mat-label>
             <mat-select formControlName="operand" i18n-aria-label aria-label="operand">
               <mat-option *ngFor="let operand of operands" [value]="operand.symbol">{{ operand.label }} ( {{
@@ -54,7 +54,7 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'image'">
+          <mat-form-field appearance="outline" *ngIf="!(imageCalcForm.value?.mode != 'image')">
             <mat-label i18n>Select an image</mat-label>
             <mat-select formControlName="auxHduId">
               <mat-option *ngFor="let hduId of availableHduIds" [value]="hduId">
@@ -63,12 +63,12 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'scalar'">
+          <mat-form-field appearance="outline" *ngIf="!(imageCalcForm.value?.mode != 'scalar')">
             <mat-label i18n>Specify a scalar value</mat-label>
             <input matInput formControlName="scalarValue" />
           </mat-form-field>
 
-          <mat-form-field appearance="outline" [hidden]="imageCalcForm.value?.mode != 'kernel'">
+          <mat-form-field appearance="outline" *ngIf="!(imageCalcForm.value?.mode != 'kernel')">
             <mat-label i18n>Kernel Filter</mat-label>
             <mat-select formControlName="kernelFilter" i18n-aria-label aria-label="kernel filter">
               <mat-option *ngFor="let kernelFilter of kernelFilters" [value]="kernelFilter.value">{{
@@ -77,7 +77,7 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" [hidden]="!kernelSizeEnabled">
+          <mat-form-field appearance="outline" *ngIf="kernelSizeEnabled">
             <mat-label i18n>Kernel Size</mat-label>
             <mat-select formControlName="kernelSize" i18n-aria-label aria-label="kernel size">
               <mat-option *ngFor="let kernelSize of kernelSizes" [value]="kernelSize.value">{{
@@ -86,7 +86,7 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" [hidden]="!kernelSigmaEnabled">
+          <mat-form-field appearance="outline" *ngIf="kernelSizeEnabled">
             <mat-label i18n>Kernel Sigma</mat-label>
             <input matInput i18n-placeholder formControlName="kernelSigma" />
 

@@ -241,7 +241,7 @@ export class DataProvidersState {
       tap(job => {
         if (!isBatchImportJob(job)) return
         dispatch(new ImportAssetsStatusUpdated(job, correlationId));
-        if (job.state.status == 'completed') {
+        if (job.state.status == 'completed' && job.result) {
           if (!isBatchImportJob(job)) return;
           let result = job.result;
           if (result.errors.length != 0) {
