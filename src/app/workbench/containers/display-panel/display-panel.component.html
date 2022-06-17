@@ -26,11 +26,15 @@
           in the file's display settings.
         </div>
 
-        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showLevels]="false" [showInverted]="false"
+        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showLevels]="false" [showInverted]="true"
+          [showLayerScale]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
+          [showLayerOffset]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
+          [showStretchMode]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.MANUAL"
           (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
           (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
           (stretchModeChange)="onStretchModeChange($event)"
-          (layerOffsetChange)="onLayerOffsetChange(activeImageHdu, $event)">
+          (layerOffsetChange)="onLayerOffsetChange(activeImageHdu, $event)"
+          (invertedChange)="onInvertedChange(activeImageHdu, $event)">
         </app-normalizer-form>
 
 
@@ -60,6 +64,8 @@
 
           </div>
           <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
+            [showLayerScale]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
+            [showLayerOffset]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
             (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
             (peakPercentileChange)="onPeakPercentileChange($event)"
             (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"

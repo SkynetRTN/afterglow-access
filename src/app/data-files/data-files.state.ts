@@ -499,7 +499,7 @@ export class DataFilesState {
               viewportTransformId: '',
               imageTransformId: '',
               rgbaImageDataId: '',
-              colorBalanceMode: ColorBalanceMode.PERCENTILE,
+              colorBalanceMode: ColorBalanceMode.MANUAL,
               syncLayerNormalizers: false,
               channelMixer: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
             };

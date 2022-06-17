@@ -3,7 +3,7 @@
     (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
     Percentile Mode
   </mat-slide-toggle>
-  <div fxLayout="row wrap" fxLayoutGap="10px">
+  <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">
     <ng-container *ngIf="showLevels && normalizer?.mode == 'percentile'">
       <mat-form-field class="" appearance="outline">
         <mat-label i18n>Background Level Percentile</mat-label>
@@ -48,27 +48,22 @@
           }}</mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-form-field *ngIf="showLayerScale" class="" appearance="outline">
+      <mat-label i18n>Layer Scale</mat-label>
+      <input matInput [ngModel]="normalizer?.layerScale" (ngModelChange)="layerScaleChange.emit($event)" type="number"
+        [step]="0.05" min="0" />
+    </mat-form-field>
+    <mat-form-field *ngIf="showLayerOffset" class="" appearance="outline">
+      <mat-label i18n>Layer Offset</mat-label>
+      <input matInput [ngModel]="normalizer?.layerOffset" (ngModelChange)="layerOffsetChange.emit($event)" type="number"
+        [step]="0.05" min="0" />
+    </mat-form-field>
+    <mat-slide-toggle class="mb-3 pl-4" *ngIf="showInverted" [checked]="normalizer?.inverted" [labelPosition]="'before'"
+      (change)="invertedChange.emit($event.checked)" color="primary" i18n>
+      Inverted
+    </mat-slide-toggle>
 
   </div>
-  <mat-slide-toggle *ngIf="showInverted" [checked]="normalizer?.inverted" [labelPosition]="'before'"
-    (change)="invertedChange.emit($event.checked)" color="primary" i18n>
-    Inverted
-  </mat-slide-toggle>
-  <div fxLayout="row wrap" fxLayoutGap="10px">
-    <div *ngIf="showLayerScale" class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Layer Scale</mat-label>
-        <input matInput [ngModel]="normalizer?.layerScale" (ngModelChange)="layerScaleChange.emit($event)" type="number"
-          [step]="0.05" min="0" />
-      </mat-form-field>
-    </div>
-    <div *ngIf="showLayerOffset" class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Layer Offset</mat-label>
-        <input matInput [ngModel]="normalizer?.layerOffset" (ngModelChange)="layerOffsetChange.emit($event)"
-          type="number" [step]="0.05" min="0" />
-      </mat-form-field>
-    </div>
-  </div>
+
 
 </div>
