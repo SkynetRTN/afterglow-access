@@ -37,6 +37,7 @@ import { UpdateBlendMode, UpdateVisibility, UpdateColorMap, LoadLibrary } from '
 
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
+import { MatTooltipDefaultOptions, MAT_TOOLTIP_DEFAULT_OPTIONS } from '@angular/material/tooltip';
 
 export interface SelectionChangeEvent {
   value: boolean;
@@ -54,6 +55,15 @@ export interface SelectionChangeEvent {
         color: 'accent',
       } as MatCheckboxDefaultOptions,
     },
+    {
+      provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
+      useValue: {
+        showDelay: 2000,
+        hideDelay: 200,
+        touchendHideDelay: 200,
+        disableTooltipInteractivity: true
+      }
+    }
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
