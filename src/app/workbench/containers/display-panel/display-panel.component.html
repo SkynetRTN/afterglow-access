@@ -26,8 +26,8 @@
           in the file's display settings.
         </div>
 
-        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showMode]="false" [showPercentiles]="false"
-          [showLevels]="false" [showInverted]="false" (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
+        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showLevels]="false" [showInverted]="false"
+          (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
           (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
           (stretchModeChange)="onStretchModeChange($event)"
           (layerOffsetChange)="onLayerOffsetChange(activeImageHdu, $event)">
@@ -82,48 +82,66 @@
 
   <ng-template #multiLayerBlock>
     <ng-container *ngIf="hdus$ | async; let hdus">
-      <div *ngIf="hdus.length > 1" fxLayout="column" fxLayoutGap="10px">
-        <div>
-          <div class="pb-1">
-            <button mat-button [matMenuTriggerFor]="colorBalanceMenu" i18n>
-              Color Balance Tools <mat-icon>keyboard_arrow_down</mat-icon>
-            </button>
-            <mat-menu #colorBalanceMenu="matMenu">
-              <button mat-menu-item (click)="neutralizeBackground()" i18n-aria-label aria-label="Neutralize Background">
-                <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
-              </button>
-              <button mat-menu-item (click)="autoWhiteBalance()" i18n-aria-label aria-label="Auto White Balance">
-                <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Auto White Balance</span>
-              </button>
-              <!-- <button mat-menu-item (click)="photometricWhiteBalance()" i18n-aria-label
-                aria-label="Photometric White Balance">
-                <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric White Balance...</span>
-              </button> -->
-              <button mat-menu-item (click)="resetColorBalance()" i18n-aria-label aria-label="Reset Color Balance">
-                <mat-icon>refresh</mat-icon><span i18n>Reset</span>
-              </button>
-            </mat-menu>
-
-          </div>
+      <div *ngIf="hdus.length > 1" fxLayout="column">
+        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start start" fxLayoutGap="40px">
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Color Balance Mode</mat-label>
+            <mat-select [value]="(file$ |async)?.colorBalanceMode"
+              (selectionChange)="setFileColorBalanceModeEvent$.next($event.value)">
+              <mat-option [value]="ColorBalanceMode.MANUAL" i18n>Manual</mat-option>
+              <mat-option [value]="ColorBalanceMode.PERCENTILE" i18n>Percentile</mat-option>
+              <mat-option [value]="ColorBalanceMode.HISTOGRAM_FITTING" i18n>Histogram Fitting</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button *ngIf="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING" mat-raised-button
+            style="height: 36px" [matMenuTriggerFor]="histogramFittingMenu" i18n>
+            Histogram Fitting Tools <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
         </div>
+        <div *ngIf="(file$ |async)?.colorBalanceMode == ColorBalanceMode.MANUAL" class="alert alert-warning"
+          style="margin-top: 10px" i18n>
+          In manual color balance mode, you can modify the brightness and contrast settings in each of your layers
+          independently to achieve the desired color balance.
+        </div>
+        <mat-menu #histogramFittingMenu="matMenu">
+          <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: true, fitSources: false });"
+            i18n-aria-label aria-label="Fit Background">
+            <mat-icon class="mr-2">balance</mat-icon><span i18n>Fit Background</span>
+          </button>
+          <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: false, fitSources: true });"
+            i18n-aria-label aria-label="Fit Sources">
+            <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Fit Sources</span>
+          </button>
+          <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: true, fitSources: true });"
+            i18n-aria-label aria-label="Fit Background and Sources">
+            <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Fit Background and Sources</span>
+          </button>
+          <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
+            aria-label="Reset Histograms">
+            <mat-icon>refresh</mat-icon><span i18n>Reset Histograms</span>
+          </button>
+        </mat-menu>
+
+
 
         <div class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
           <app-image-hist-chart [data]="compositeHistData$ | async"
-            [backgroundLevel]="(file$ |async)?.syncLayerNormalizers ? (compositeNormalizer$ | async)?.backgroundLevel : null"
-            [peakLevel]="(file$ |async)?.syncLayerNormalizers ?  (compositeNormalizer$ | async)?.peakLevel : null">
+            [backgroundLevel]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ? (compositeNormalizer$ | async)?.backgroundLevel : null"
+            [peakLevel]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ?  (compositeNormalizer$ | async)?.peakLevel : null">
           </app-image-hist-chart>
 
         </div>
         <div style="clear: both"></div>
 
-        <div class="p-4">
+        <!-- <div class="p-4">
           <mat-slide-toggle [checked]="(file$ |async)?.syncLayerNormalizers"
             (change)="setFileNormalizerSyncEvent$.next($event.checked)" color="primary" i18n>
             Keep brightness and contrast settings synced across all layers
           </mat-slide-toggle>
-        </div>
+        </div> -->
 
-        <ng-container *ngIf="(file$ |async)?.syncLayerNormalizers">
+        <!-- <ng-container *ngIf="(file$ |async)?.syncLayerNormalizers"> -->
+        <ng-container *ngIf="(file$ |async)?.colorBalanceMode != ColorBalanceMode.MANUAL">
           <div class="pb-4 pt-1" *ngIf="compositeNormalizer$ | async; let compositeNormalizer">
             <h3 i18n>Brightness and Contrast Settings</h3>
             <div class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
@@ -146,17 +164,17 @@
               </div>
             </div>
 
-            <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="false" [showPercentiles]="false"
-              [showColorMap]="false" [showInverted]="false" [showStretchMode]="true" [showLayerOffset]="false"
-              [showLayerScale]="false" (backgroundLevelChange)="onBackgroundLevelChange($event)"
-              (peakLevelChange)="onPeakLevelChange($event)"
+            <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="false" [showColorMap]="false"
+              [showInverted]="false" [showStretchMode]="true" [showLayerOffset]="false" [showLayerScale]="false"
+              (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
               (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-              (peakPercentileChange)="onPeakPercentileChange($event)" (modeChange)="onNormalizerModeChange($event)"
-              (stretchModeChange)="onStretchModeChange($event)">
+              (peakPercentileChange)="onPeakPercentileChange($event)" (stretchModeChange)="onStretchModeChange($event)">
             </app-normalizer-form>
           </div>
-
         </ng-container>
+
+
+        <!-- </ng-container> -->
 
         <!-- <div fxFlexLayout="column" fxLayoutGap="10px">
           <div fxFlexLayout="row" fxLayoutGap="15px">

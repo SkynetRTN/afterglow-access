@@ -29,6 +29,12 @@ export interface ITransformableImageData {
   // blueChannelId: string;
 }
 
+export enum ColorBalanceMode {
+  MANUAL = 'manual',
+  PERCENTILE = 'percentile',
+  HISTOGRAM_FITTING = 'histogram_fitting'
+}
+
 export interface DataFile extends ITransformableImageData {
   id: string;
   name: string;
@@ -38,6 +44,7 @@ export interface DataFile extends ITransformableImageData {
   imageHduIds: string[];
   tableHduIds: string[];
   syncLayerNormalizers: boolean;
+  colorBalanceMode: ColorBalanceMode;
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
 }
 

@@ -1,10 +1,10 @@
 <div fxLayout="column" fxLayoutGap="10px">
-  <mat-slide-toggle *ngIf="showMode && showPercentiles && showLevels" [checked]="normalizer?.mode == 'percentile'"
+  <mat-slide-toggle *ngIf="showMode && showLevels" [checked]="normalizer?.mode == 'percentile'"
     (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
     Percentile Mode
   </mat-slide-toggle>
   <div fxLayout="row wrap" fxLayoutGap="10px">
-    <ng-container *ngIf="showMode && normalizer?.mode == 'percentile' && showPercentiles">
+    <ng-container *ngIf="showLevels && normalizer?.mode == 'percentile'">
       <mat-form-field class="" appearance="outline">
         <mat-label i18n>Background Level Percentile</mat-label>
         <input matInput [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
@@ -17,7 +17,7 @@
           (ngModelChange)="peakPercentileChange.emit($event)" type="number" [step]="peakStep" min="0" max="100" />
       </mat-form-field>
     </ng-container>
-    <ng-container *ngIf="showLevels && (!showMode || normalizer?.mode == 'pixel')">
+    <ng-container *ngIf="showLevels && normalizer?.mode == 'pixel'">
       <mat-form-field class="" appearance="outline">
         <mat-label i18n>Background Level</mat-label>
         <input matInput [ngModel]="getFormattedBackgroundLevel()" (ngModelChange)="backgroundLevelChange.emit($event)"

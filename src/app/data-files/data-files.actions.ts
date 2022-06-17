@@ -1,4 +1,4 @@
-import { DataFile, Header, PixelType, IHdu } from './models/data-file';
+import { DataFile, Header, PixelType, IHdu, ColorBalanceMode } from './models/data-file';
 import { ImageHist } from './models/image-hist';
 import { PixelNormalizer } from './models/pixel-normalizer';
 import { Region } from './models/region';
@@ -259,6 +259,12 @@ export class InvalidateRawImageTile {
  * Normalization Actions
  */
 
+export class SetFileColorBalanceMode {
+  public static readonly type = '[Workbench HDU State] Set File Color Balance Mode';
+
+  constructor(public fileId: string, public value: ColorBalanceMode) { }
+}
+
 export class SetFileNormalizerSync {
   public static readonly type = '[Workbench HDU State] SetFileNormalizerSync';
 
@@ -310,7 +316,7 @@ export class UpdateNormalizedImageTileFail {
 export class UpdateNormalizer {
   public static readonly type = '[Workbench HDU State] Update Normalizer';
 
-  constructor(public hduId: string, public changes: Partial<PixelNormalizer>) { }
+  constructor(public hduId: string, public changes: Partial<PixelNormalizer>, public skipFileSync = false) { }
 }
 
 export class UpdateNormalizerSuccess {

@@ -26,6 +26,7 @@ import {
   TableHdu,
   isImageHdu,
   getFilter,
+  ColorBalanceMode,
 } from '../../../data-files/models/data-file';
 import {
   UpdateNormalizer,
@@ -37,6 +38,7 @@ import {
   ResetViewportTransform,
   UpdateChannelMixer,
   SetFileNormalizerSync,
+  SetFileColorBalanceMode,
 } from '../../../data-files/data-files.actions';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import { HduType } from '../../../data-files/models/data-file-type';
@@ -87,6 +89,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
+  ColorBalanceMode = ColorBalanceMode;
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
   hdus$: Observable<IHdu[]>;
@@ -100,7 +103,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   destroy$ = new Subject<boolean>();
 
 
-  setFileNormalizerSyncEvent$ = new Subject<boolean>();
+  setFileColorBalanceModeEvent$ = new Subject<ColorBalanceMode>();
   backgroundPercentile$ = new Subject<number>();
   peakPercentile$ = new Subject<number>();
   backgroundLevel$ = new Subject<number>();
@@ -179,16 +182,6 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
     this.presetClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      // let hdu = activeHdu || hdus.find(isImageHdu);
-      // if (!hdu) return;
-      // this.store.dispatch(
-      //   new UpdateNormalizer(hdu.id, {
-      //     mode: 'percentile',
-      //     backgroundPercentile: value.backgroundPercentile,
-      //     peakPercentile: value.peakPercentile
-      //   })
-      // );
-
       if (activeHdu) {
         this.store.dispatch(
           new UpdateNormalizer(activeHdu.id, {
@@ -202,29 +195,35 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         let imageHdus = hdus.filter(isImageHdu);
         let hdu = imageHdus.find(hdu => hdu.hist.loaded)
         if (!hdu) return;
+        let file = this.store.selectSnapshot(DataFilesState.getFileById(hdu.fileId))
+        if (file.colorBalanceMode == ColorBalanceMode.PERCENTILE) {
+          this.store.dispatch(
+            new UpdateNormalizer(hdu.id, {
+              mode: 'percentile',
+              backgroundPercentile: value.backgroundPercentile,
+              peakPercentile: value.peakPercentile
+            })
+          );
+        }
+        else if (file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING) {
+          let levels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
+          this.store.dispatch(new UpdateNormalizer(hdu.id, {
+            mode: 'pixel',
+            backgroundLevel: levels.backgroundLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
+            peakLevel: levels.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset
+          }));
+        }
 
-        let levels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
-        this.store.dispatch(new UpdateNormalizer(hdu.id, {
-          mode: 'pixel',
-          backgroundLevel: levels.backgroundLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
-          peakLevel: levels.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset
-        }));
       }
     });
 
-    this.setFileNormalizerSyncEvent$.pipe(
+
+    this.setFileColorBalanceModeEvent$.pipe(
       takeUntil(this.destroy$),
       withLatestFrom(this.file$)
     ).subscribe(([value, file]) => {
       if (file) {
-        let actions: any[] = [new SetFileNormalizerSync(file.id, value)]
-        if (value) {
-          let hdu = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(file.id));
-          if (hdu) {
-            actions.push(new UpdateNormalizer(hdu.id, { mode: 'pixel' }));
-          }
-        }
-        this.store.dispatch(actions);
+        this.store.dispatch(new SetFileColorBalanceMode(file.id, value))
       }
     })
 
@@ -232,121 +231,36 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundPercentile: value }));
-
-
-
-      // if (activeHdu) {
-      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundPercentile: value }));
-      // }
-      // else {
-      //   let refBackgroundLevel: number;
-      //   hdus.forEach(hdu => {
-      //     if (!isImageHdu(hdu)) return
-
-      //     if (refBackgroundLevel === undefined) {
-      //       refBackgroundLevel = calcLevels(hdu.hist, value, hdu.normalizer.peakPercentile)?.backgroundLevel
-      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', backgroundPercentile: value }));
-      //       return;
-      //     }
-      //     this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', backgroundLevel: refBackgroundLevel }));
-
-      //   })
-      // }
     });
 
     this.peakPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { peakPercentile: value }));
-
-      // if (activeHdu) {
-      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakPercentile: value }));
-      // }
-      // else {
-      //   let refPeakLevel: number;
-      //   hdus.forEach(hdu => {
-      //     if (!isImageHdu(hdu)) return
-
-      //     if (refPeakLevel === undefined) {
-      //       refPeakLevel = calcLevels(hdu.hist, hdu.normalizer.backgroundPercentile, value)?.peakLevel
-      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'percentile', peakPercentile: value }));
-      //       return;
-      //     }
-
-      //     this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: 'pixel', peakLevel: refPeakLevel }));
-
-      //   })
-      // }
     });
 
     this.backgroundLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
-
-
-      // if (activeHdu) {
-      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { backgroundLevel: value }));
-      // }
-      // else {
-      //   hdus.forEach(hdu => {
-      //     if (isImageHdu(hdu)) {
-      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
-      //     }
-      //   })
-      // }
     });
 
     this.peakLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: value, mode: 'pixel' }));
-
-      // if (activeHdu) {
-      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { peakLevel: value }));
-      // }
-      // else {
-      //   hdus.forEach(hdu => {
-      //     if (isImageHdu(hdu)) {
-      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { peakLevel: value, mode: 'pixel' }));
-      //     }
-      //   })
-      // }
     });
 
     this.normalizerMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
-
-      // if (activeHdu) {
-      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { mode: value }));
-      // }
-      // else {
-      //   hdus.forEach(hdu => {
-      //     if (isImageHdu(hdu)) {
-      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { mode: value }));
-      //     }
-      //   })
-      // }
     });
 
     this.stretchMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
-
-
-      // if (activeHdu) {
-      //   this.store.dispatch(new UpdateNormalizer(activeHdu.id, { stretchMode: value }));
-      // }
-      // else {
-      //   hdus.forEach(hdu => {
-      //     if (isImageHdu(hdu)) {
-      //       this.store.dispatch(new UpdateNormalizer(hdu.id, { stretchMode: value }));
-      //     }
-      //   })
-      // }
     });
 
     this.resetWhiteBalance$.pipe(
@@ -767,6 +681,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   }
 
+  onColorBalanceModeChange(value: ColorBalanceMode) {
+
+  }
+
   saveCsv(name: string, x: Float32Array, y: Float32Array) {
     if (!SAVE_CSV_FILES) return
 
@@ -930,23 +848,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     console.log($event);
   }
 
-  neutralizeBackground() {
-    this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: false });
-  }
-
-  autoWhiteBalance() {
-    this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: true });
-  }
 
   photometricWhiteBalance() {
     this.photometricColorBalanceEvent$.next(true);
   }
-
-
-  resetColorBalance() {
-    this.resetColorBalanceEvent$.next(true)
-  }
-
 
 
 
