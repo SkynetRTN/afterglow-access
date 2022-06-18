@@ -297,7 +297,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           maxHeight: '800px',
           data: hdus.map(hdu => hdu.id)
         })
-        ref.afterClosed().pipe().subscribe();
+        ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number }[]) => {
+          if (result) {
+            this.store.dispatch(result.map(r => new UpdateNormalizer(r.layerId, { layerScale: r.scale })))
+            this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: false })
+          }
+        });
       }
     )
 

@@ -1,5 +1,38 @@
 <div fxLayout="column" fxLayoutGap="20px" style="height: 100%">
-    <log-monitor *ngIf="logStream$ | async" style="height: 200px;" [logStream]="logStream$ | async" theme="light"
+    <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
+        <mat-form-field style="width: 100%;">
+            <mat-label i18n>Blue</mat-label>
+            <mat-select [value]="blueId" (selectionChange)="blueId=$event.value" style="width: 100%">
+                <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field style="width: 100%;">
+            <mat-label i18n>Green</mat-label>
+            <mat-select [value]="greenId" (selectionChange)="greenId=$event.value" style="width: 100%">
+                <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field style="width: 100%;">
+            <mat-label i18n>Red</mat-label>
+            <mat-select [value]="redId" (selectionChange)="redId=$event.value" style="width: 100%">
+                <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field style="width: 100%;">
+            <mat-label i18n>White Reference</mat-label>
+            <mat-select [value]="whiteReference" (selectionChange)="whiteReference=$event.value" style="width: 100%">
+                <mat-option *ngFor="let ref of whiteReferences" [value]="ref">{{ ref.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <button mat-button (click)="start()" [disabled]="!ready && !running">Start</button>
+    <log-monitor *ngIf="logStream$ | async" style="height: 100%" [logStream]="logStream$ | async" theme="light"
         [animated]="false" [icons]="false">
     </log-monitor>
 </div>
