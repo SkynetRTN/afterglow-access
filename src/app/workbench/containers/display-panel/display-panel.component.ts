@@ -293,14 +293,13 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         let ref = this.dialog.open(PhotometricColorBalanceDialogComponent, {
           width: '100%',
           height: '100%',
-          maxWidth: '1200px',
+          maxWidth: '599px',
           maxHeight: '800px',
           data: hdus.map(hdu => hdu.id)
         })
         ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number }[]) => {
           if (result) {
             this.store.dispatch(result.map(r => new UpdateNormalizer(r.layerId, { layerScale: r.scale })))
-            this.fitHistogramsEvent$.next({ fitBackground: true, fitSources: false })
           }
         });
       }
@@ -585,7 +584,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         }
 
         if (event.fitBackground) {
-          targetOffset = -fit.bkgMu * targetScale + ref.bkgMu;
+          targetOffset = -fit.bkgMu * targetScale + (ref.bkgMu * refScale);
         }
 
         console.log(fit.hdu.name, targetScale, targetOffset)

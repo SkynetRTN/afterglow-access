@@ -111,20 +111,16 @@
         </div>
         <mat-menu #histogramFittingMenu="matMenu">
           <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: true, fitSources: false });"
-            i18n-aria-label aria-label="Fit Background">
-            <mat-icon class="mr-2">balance</mat-icon><span i18n>Fit Background</span>
+            i18n-aria-label aria-label="Neutralize Background">
+            <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
           </button>
           <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: false, fitSources: true });"
-            i18n-aria-label aria-label="Fit Sources">
-            <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Fit Sources</span>
-          </button>
-          <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: true, fitSources: true });"
-            i18n-aria-label aria-label="Fit Background and Sources">
-            <mat-icon class="mr-2">wb_auto</mat-icon><span i18n>Fit Background and Sources</span>
+            i18n-aria-label aria-label="Neutralize Sources">
+            <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources</span>
           </button>
           <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
-            aria-label="Photometric Calibration...">
-            <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Calibration...</span>
+            aria-label="Photometric Source Calibration...">
+            <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Source Calibration...</span>
           </button>
           <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
             aria-label="Reset Histograms">

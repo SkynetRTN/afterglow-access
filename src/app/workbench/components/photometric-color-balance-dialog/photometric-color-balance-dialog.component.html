@@ -1,38 +1,69 @@
 <div fxLayout="column" fxLayoutGap="20px" style="height: 100%">
-    <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
-        <mat-form-field style="width: 100%;">
-            <mat-label i18n>Blue</mat-label>
-            <mat-select [value]="blueId" (selectionChange)="blueId=$event.value" style="width: 100%">
-                <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field style="width: 100%;">
-            <mat-label i18n>Green</mat-label>
-            <mat-select [value]="greenId" (selectionChange)="greenId=$event.value" style="width: 100%">
-                <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field style="width: 100%;">
-            <mat-label i18n>Red</mat-label>
-            <mat-select [value]="redId" (selectionChange)="redId=$event.value" style="width: 100%">
-                <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
+    <form [formGroup]="form">
+        <div fxLayout="column" fxLayoutGap="20px" style="width: 100%">
 
-        <mat-form-field style="width: 100%;">
-            <mat-label i18n>White Reference</mat-label>
-            <mat-select [value]="whiteReference" (selectionChange)="whiteReference=$event.value" style="width: 100%">
-                <mat-option *ngFor="let ref of whiteReferences" [value]="ref">{{ ref.name }}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
-    </div>
+            <mat-form-field style="width: 100%;">
+                <mat-label i18n>Blue</mat-label>
+                <mat-select formControlName="blueLayer" style="width: 100%">
+                    <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field style="width: 100%;">
+                <mat-label i18n>Green</mat-label>
+                <mat-select formControlName="greenLayer" style="width: 100%">
+                    <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field style="width: 100%;">
+                <mat-label i18n>Red</mat-label>
+                <mat-select formControlName="redLayer" style="width: 100%">
+                    <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
 
-    <button mat-button (click)="start()" [disabled]="!ready && !running">Start</button>
-    <log-monitor *ngIf="logStream$ | async" style="height: 100%" [logStream]="logStream$ | async" theme="light"
+            <mat-form-field style="width: 100%;">
+                <mat-label i18n>White Balance Reference Object</mat-label>
+                <mat-select formControlName="whiteReference" style="width: 100%">
+                    <mat-optgroup *ngFor="let group of WHITE_REFERENCE_GROUPS" [label]="group.name">
+                        <mat-option *ngFor="let option of group.options" [value]="option">
+                            {{option.name}}
+                        </mat-option>
+                    </mat-optgroup>
+
+                </mat-select>
+            </mat-form-field>
+
+            <div>
+                <mat-form-field style="width: 100%;">
+                    <input type="number" matInput i18n-placeholder placeholder="Extinction E(B-V)"
+                        formControlName="extinction" />
+                    <mat-hint i18n></mat-hint>
+                </mat-form-field>
+                <app-print-form-error [control]="form.get('extinction')"></app-print-form-error>
+
+            </div>
+
+
+        </div>
+    </form>
+    <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Start</button>
+
+    <span *ngIf="errorMessage; else statusMessageBlock" class="alert-danger"
+        style="width: 100%; padding: 5px">{{errorMessage}}</span>
+    <ng-template #statusMessageBlock>
+        <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px">
+            <mat-progress-bar *ngIf="running" mode="indeterminate" color="accent"></mat-progress-bar>
+            <span>{{statusMessage$ | async}}</span>
+        </div>
+
+    </ng-template>
+
+
+
+    <!-- <log-monitor *ngIf="logStream$ | async" style="height: 100%" [logStream]="logStream$ | async" theme="light"
         [animated]="false" [icons]="false">
-    </log-monitor>
+    </log-monitor> -->
 </div>
