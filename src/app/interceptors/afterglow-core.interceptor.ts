@@ -25,7 +25,7 @@ export class AfterglowCoreInterceptor implements HttpInterceptor {
     let requiresIntercept = req.responseType == 'json';
     if (requiresIntercept && req.body && !(req.body instanceof FormData)) {
       idToNumber(req.body);
-      let body = snakeCaseKeys(req.body, { deep: true });
+      let body = snakeCaseKeys(req.body, { deep: true, exclude: ['Open', 'U', 'B', 'V', 'R', 'I', 'Open', 'G', 'J', 'H', 'K', 'L', 'M', 'Rc', 'Ic', 'Su', 'Sv', 'Red', 'Green', 'Blue', 'Lum', '2MASS', 'APASS', 'PanSTARRS', 'USNOB1', 'SkyMapper', 'Tycho2', 'VSX', 'StetsonGlobs', 'UCAC5', 'SDSS', 'Landolt'] });
       req = req.clone({
         body: body,
       });
@@ -35,7 +35,7 @@ export class AfterglowCoreInterceptor implements HttpInterceptor {
       map((event) => {
         if (requiresIntercept && event instanceof HttpResponse && event.body) {
           idToString(event.body);
-          let body = camelCaseKeys(event.body, { deep: true, exclude: ['Open', 'U', 'B', 'V', 'R', 'I', 'Open', 'G', 'J', 'H', 'K', 'L', 'M', 'Rc', 'Ic', 'Su', 'Sv'] });
+          let body = camelCaseKeys(event.body, { deep: true, exclude: ['Open', 'U', 'B', 'V', 'R', 'I', 'Open', 'G', 'J', 'H', 'K', 'L', 'M', 'Rc', 'Ic', 'Su', 'Sv', 'Red', 'Green', 'Blue', 'Lum'] });
           event = event.clone({ body: body });
         }
         return event;

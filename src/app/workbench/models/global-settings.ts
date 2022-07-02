@@ -1,3 +1,4 @@
+import { Catalog } from "src/app/jobs/models/catalog-query";
 import { FieldCalibration } from "src/app/jobs/models/field-calibration";
 import { PhotometryJobSettings } from "src/app/jobs/models/photometry";
 import { SourceExtractionJobSettings } from "src/app/jobs/models/source-extraction";
@@ -70,11 +71,16 @@ export function toPhotometryJobSettings(settings: GlobalSettings): PhotometryJob
 }
 
 
-export function toFieldCalibration(settings: GlobalSettings): FieldCalibration {
+export function toFieldCalibration(settings: GlobalSettings, catalogs: Catalog[]): FieldCalibration {
+    let customFilterLookup = {};
+    for (let catalog of catalogs) {
+        customFilterLookup[catalog.name] = catalog.filterLookup;
+    }
     let p = settings.photometry;
     let c = settings.calibration;
     let result: FieldCalibration = {
         catalogs: [c.catalog],
+        customFilterLookup: customFilterLookup,
         sourceInclusionPercentage: c.sourceInclusionPercentageEnabled ? c.sourceInclusionPercentage : null,
         sourceMatchTol: c.sourceMatchTol,
         maxStarRms: c.maxStarRmsEnabled ? c.maxStarRms : 0,

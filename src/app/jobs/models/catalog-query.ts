@@ -12,7 +12,7 @@ export interface Catalog {
   displayName: string;
   numSources: number;
   mags: { [filter: string]: string[] };
-  filterLookup: { [catalogName: string]: { [filter: string]: string } };
+  filterLookup: { [filter: string]: string };
 }
 
 export interface CatalogSource {

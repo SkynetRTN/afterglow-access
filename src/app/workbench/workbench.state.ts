@@ -2654,6 +2654,18 @@ export class WorkbenchState {
   public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadCatalogs) {
     return this.afterglowCatalogService.getCatalogs().pipe(
       tap((catalogs) => {
+        catalogs.forEach(catalog => {
+          if (!catalog.filterLookup) catalog.filterLookup = {};
+          let red = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
+          if (red) catalog.filterLookup['Red'] = red;
+          let green = (catalog.mags['V'] ? 'V' : catalog.filterLookup['V']) || '';
+          if (green) catalog.filterLookup['Green'] = green;
+          let blue = (catalog.mags['B'] ? 'B' : catalog.filterLookup['B']) || '';
+          if (blue) catalog.filterLookup['Blue'] = blue;
+          let lum = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
+          if (lum) catalog.filterLookup['Lum'] = lum;
+        })
+
         setState((state: WorkbenchStateModel) => {
           state.catalogs = catalogs;
           state.selectedCatalogId = catalogs.length != 0 ? catalogs[0].name : '';
@@ -3049,12 +3061,12 @@ export class WorkbenchState {
             console.error('Warnings encountered during stacking: ', result.warnings);
           }
           if (result.fileId && stackedName) {
-            return this.dataFileService.updateFile(result.fileId, {
+            this.dataFileService.updateFile(result.fileId, {
               groupName: `${stackedName}.fits`,
               name: `${stackedName}.fits`
             }).pipe(
-              map(() => dispatch(new LoadLibrary()))
-            )
+              flatMap(() => dispatch(new LoadLibrary()))
+            ).subscribe()
           }
           dispatch(new LoadLibrary())
         }
@@ -3365,7 +3377,8 @@ export class WorkbenchState {
 
       let photometryJobSettings = toPhotometryJobSettings(state.settings);
       let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
-      let fieldCalibration = toFieldCalibration(state.settings);
+      let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
+      let fieldCalibration = toFieldCalibration(state.settings, catalogs);
 
       let job: FieldCalibrationJob = {
         type: JobType.FieldCalibration,
@@ -3489,7 +3502,8 @@ export class WorkbenchState {
     if (state.settings.calibration.calibrationEnabled) {
 
       let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
-      let fieldCalibration = toFieldCalibration(state.settings);
+      let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
+      let fieldCalibration = toFieldCalibration(state.settings, catalogs);
 
       let calJob: FieldCalibrationJob = {
         type: JobType.FieldCalibration,
