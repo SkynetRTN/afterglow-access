@@ -100,8 +100,9 @@
             </mat-select>
           </mat-form-field>
           <button *ngIf="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING" mat-raised-button
-            style="height: 36px" [matMenuTriggerFor]="histogramFittingMenu" i18n>
-            Histogram Fitting Tools <mat-icon>keyboard_arrow_down</mat-icon>
+            style="height: 36px" [matMenuTriggerFor]="histogramFittingMenu">
+            <ng-container i18n>Histogram Fitting Tools</ng-container>
+            <mat-icon>keyboard_arrow_down</mat-icon>
           </button>
         </div>
         <div *ngIf="(file$ |async)?.colorBalanceMode == ColorBalanceMode.MANUAL" class="alert alert-warning"

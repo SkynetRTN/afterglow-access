@@ -26,20 +26,17 @@
   <msg id="4163254967855624491"><source>src/app/auth/containers/logout-page/logout-page.component.html:3</source>You have been successfully logged out.</msg>
   <msg id="457717191269286888"><source>src/app/data-providers/components/file-manager/file-manager.component.html:121</source>Filter by name</msg>
   <msg id="4743002849260529978"><source>src/app/data-providers/components/file-manager/file-manager.component.html:128</source>Items per page:</msg>
-  <msg id="187187500641108332"><source>src/app/data-providers/components/name-dialog/name-dialog.component.html:1</source><ph name="INTERPOLATION"/></msg>
   <msg id="6519653818724683645"><source>src/app/data-providers/components/open-file-dialog/open-file-dialog.component.html:1</source>Open File</msg>
   <msg id="2939714947607368087"><source>src/app/data-providers/components/save-dialog/save-dialog.component.html:1</source>Save As</msg>
+  <msg id="187187500641108332"><source>src/app/data-providers/components/target-dialog/target-dialog.component.html:1</source><ph name="INTERPOLATION"/></msg>
   <msg id="4979012475793743263"><source>src/app/data-providers/components/upload-dialog/upload-dialog.component.html:1</source>Upload Status</msg>
   <msg id="7420416191684565811"><source>src/app/theme-picker/theme-picker.html:2</source>Select your color theme</msg>
-  <msg id="7708270344948043036"><source>src/app/theme-picker/theme-picker.html:4,7</source> <ph name="INTERPOLATION"/> </msg>
   <msg id="782086325279028453"><source>src/app/theme-picker/theme-picker.html:10</source>Select your font weight</msg>
   <msg id="5607669932062416162"><source>src/app/theme-picker/theme-picker.html:12</source>Default</msg>
   <msg id="771664384252640128"><source>src/app/theme-picker/theme-picker.html:13</source>Bold</msg>
   <msg id="4297785826042166237"><source>src/app/theme-picker/theme-picker.html:14</source>Extra Bold</msg>
   <msg id="3905533329051691155"><source>src/app/theme-picker/theme-picker.html:22</source>Large</msg>
   <msg id="1067433641518800382"><source>src/app/theme-picker/theme-picker.html:23</source>Extra Large</msg>
-  <msg id="718664953917016933"><source>src/app/utils/alert-dialog/alert-dialog.component.html:0,3</source> <ph name="INTERPOLATION"/>
-</msg>
   <msg id="3562867368836355598"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:2</source>DSS Catalog Import</msg>
   <msg id="1541217682862985759"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:5</source>DSS Import Image Center</msg>
   <msg id="7245614364638165175"><source>src/app/workbench/components/catalog-import/catalog-import.component.html:10</source>Use intended pointing for image center</msg>
@@ -51,7 +48,11 @@
   <msg id="7554806959602763526"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:15</source>Label Direction (degs)</msg>
   <msg id="2995774437111770399"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:19</source>X</msg>
   <msg id="9076533917901768566"><source>src/app/workbench/components/circle-marker-editor/circle-marker-editor.component.html:23</source>Y</msg>
-  <msg id="7917456777567286248"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:0,3</source> <ph name="INTERPOLATION"/> <ph name="START_TAG_SPAN"/><ph name="CLOSE_TAG_SPAN"/></msg>
+  <msg id="1722299069892592701"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:1</source>Closing Files</msg>
+  <msg id="4899004450366415386"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:2</source>Saving Files</msg>
+  <msg id="6513625631749501829"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:15</source>Do you want to save the changes you made to</msg>
+  <msg id="7307660057172164510"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:24</source>Save As...</msg>
+  <msg id="3768927257183755959"><source>src/app/workbench/components/file-dialog/file-dialog.component.html:25</source>Save</msg>
   <msg id="3813315596480512127"><source>src/app/workbench/components/file-toolbar/file-toolbar.component.html:6</source>Save File</msg>
   <msg id="5398208587620707842"><source>src/app/workbench/components/file-toolbar/file-toolbar.component.html:17</source>Close File</msg>
   <msg id="2450209588977499998"><source>src/app/workbench/components/global-settings-dialog/global-settings-dialog.component.html:6</source>Aperture Photometry</msg>
@@ -126,6 +127,8 @@
   <msg id="1356460275822781324"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:36</source>Zoom Out</msg>
   <msg id="2301657169428810697"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:39</source>Zoom To Fit</msg>
   <msg id="8791824480246623851"><source>src/app/workbench/components/image-viewer-status-bar/image-viewer-status-bar.component.html:42</source>Reset Zoom</msg>
+  <msg id="718664953917016933"><source>src/app/workbench/components/job-progress-dialog/job-progress-dialog.component.html:0,3</source> <ph name="INTERPOLATION"/>
+</msg>
   <msg id="2821179408673282599"><source>src/app/workbench/components/navbar/navbar.component.html:2</source>Home</msg>
   <msg id="3229595422546554334"><source>src/app/workbench/components/navbar/navbar.component.html:7</source>Jobs</msg>
   <msg id="6176747121148396246"><source>src/app/workbench/components/navbar/navbar.component.html:9</source> Jobs</msg>
@@ -144,9 +147,14 @@
   <msg id="8108760345234793610"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:21</source>Background Level</msg>
   <msg id="5027416828744562287"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:33</source>Color Map</msg>
   <msg id="6460959206853371274"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:42</source>Stretch Mode</msg>
-  <msg id="5559619285162433931"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:53,56</source> Inverted </msg>
-  <msg id="7557975755398342310"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:59</source>Layer Scale</msg>
-  <msg id="1333726633643912506"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:66</source>Layer Offset</msg>
+  <msg id="7557975755398342310"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:51</source>Layer Scale</msg>
+  <msg id="1333726633643912506"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:56</source>Layer Offset</msg>
+  <msg id="5559619285162433931"><source>src/app/workbench/components/normalizer-form/normalizer-form.component.html:61,64</source> Inverted </msg>
+  <msg id="4082253113407591781"><source>src/app/workbench/components/photometric-color-balance-dialog/photometric-color-balance-dialog.component.html:5</source>Blue</msg>
+  <msg id="119581980963263815"><source>src/app/workbench/components/photometric-color-balance-dialog/photometric-color-balance-dialog.component.html:12</source>Green</msg>
+  <msg id="4046446611860328467"><source>src/app/workbench/components/photometric-color-balance-dialog/photometric-color-balance-dialog.component.html:19</source>Red</msg>
+  <msg id="462278187378569655"><source>src/app/workbench/components/photometric-color-balance-dialog/photometric-color-balance-dialog.component.html:27</source>White Balance Reference Object</msg>
+  <msg id="737448353188344657"><source>src/app/workbench/components/photometric-color-balance-dialog/photometric-color-balance-dialog.component.html:40</source>Extinction E(B-V)</msg>
   <msg id="1484691810377259440"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:13,16</source> ID </msg>
   <msg id="7396697477024945236"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:37,40</source> State </msg>
   <msg id="5928868080162558607"><source>src/app/workbench/components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component.html:72,75</source> Operation </msg>
@@ -176,19 +184,23 @@
   <msg id="2673243192518037419"><source>src/app/workbench/containers/display-panel/display-panel.component.html:1</source>Select a file or image layer to see the display settings.</msg>
   <msg id="6205896761596395655"><source>src/app/workbench/containers/display-panel/display-panel.component.html:5</source>Select an image layer to adjust brightness and contrast settings.</msg>
   <msg id="4925272556195195464"><source>src/app/workbench/containers/display-panel/display-panel.component.html:22,27</source> Brightness and contrast settings for this layer are controlled by the file. To use unique settings in each layer, you must first disable normalization syncing in the file&apos;s display settings. </msg>
-  <msg id="267834593427005219"><source>src/app/workbench/containers/display-panel/display-panel.component.html:39</source>Brightness and Contrast Settings</msg>
-  <msg id="6184759444958151835"><source>src/app/workbench/containers/display-panel/display-panel.component.html:43</source>Faint Target Preset</msg>
-  <msg id="5650283338413212443"><source>src/app/workbench/containers/display-panel/display-panel.component.html:44</source>Faint Target</msg>
-  <msg id="8100602718516572607"><source>src/app/workbench/containers/display-panel/display-panel.component.html:48</source>Default Preset</msg>
-  <msg id="5731448816717757779"><source>src/app/workbench/containers/display-panel/display-panel.component.html:54</source>Bright Target Preset</msg>
-  <msg id="7807244529097884486"><source>src/app/workbench/containers/display-panel/display-panel.component.html:55</source>Bright Target</msg>
-  <msg id="2727257382140683858"><source>src/app/workbench/containers/display-panel/display-panel.component.html:87,89</source> Color Balance Tools <ph name="START_TAG_MAT_ICON"/>keyboard_arrow_down<ph name="CLOSE_TAG_MAT_ICON"/></msg>
-  <msg id="4273071967531322881"><source>src/app/workbench/containers/display-panel/display-panel.component.html:91</source>Neutralize Background</msg>
-  <msg id="7125520365855002951"><source>src/app/workbench/containers/display-panel/display-panel.component.html:94</source>Auto White Balance</msg>
-  <msg id="4098108369081977708"><source>src/app/workbench/containers/display-panel/display-panel.component.html:101</source>Reset Color Balance</msg>
-  <msg id="7808756054397155068"><source>src/app/workbench/containers/display-panel/display-panel.component.html:102</source>Reset</msg>
-  <msg id="9142376842739455315"><source>src/app/workbench/containers/display-panel/display-panel.component.html:120,123</source> Keep brightness and contrast settings synced across all layers </msg>
-  <msg id="4725943399307728524"><source>src/app/workbench/containers/display-panel/display-panel.component.html:215</source>Image Orientation Options</msg>
+  <msg id="267834593427005219"><source>src/app/workbench/containers/display-panel/display-panel.component.html:43</source>Brightness and Contrast Settings</msg>
+  <msg id="6184759444958151835"><source>src/app/workbench/containers/display-panel/display-panel.component.html:47</source>Faint Target Preset</msg>
+  <msg id="5650283338413212443"><source>src/app/workbench/containers/display-panel/display-panel.component.html:48</source>Faint Target</msg>
+  <msg id="8100602718516572607"><source>src/app/workbench/containers/display-panel/display-panel.component.html:52</source>Default Preset</msg>
+  <msg id="5731448816717757779"><source>src/app/workbench/containers/display-panel/display-panel.component.html:58</source>Bright Target Preset</msg>
+  <msg id="7807244529097884486"><source>src/app/workbench/containers/display-panel/display-panel.component.html:59</source>Bright Target</msg>
+  <msg id="1755356685073812310"><source>src/app/workbench/containers/display-panel/display-panel.component.html:93</source>Color Balance Mode</msg>
+  <msg id="2233560223291461480"><source>src/app/workbench/containers/display-panel/display-panel.component.html:96</source>Manual</msg>
+  <msg id="3535496178166723193"><source>src/app/workbench/containers/display-panel/display-panel.component.html:97</source>Percentile</msg>
+  <msg id="838917021121232701"><source>src/app/workbench/containers/display-panel/display-panel.component.html:98</source>Histogram Fitting</msg>
+  <msg id="1586607601861248091"><source>src/app/workbench/containers/display-panel/display-panel.component.html:103</source>Histogram Fitting Tools</msg>
+  <msg id="5671312705254938191"><source>src/app/workbench/containers/display-panel/display-panel.component.html:108,112</source> In manual color balance mode, you can modify the brightness and contrast settings in each of your layers independently to achieve the desired color balance. </msg>
+  <msg id="4273071967531322881"><source>src/app/workbench/containers/display-panel/display-panel.component.html:114</source>Neutralize Background</msg>
+  <msg id="8245194281974000236"><source>src/app/workbench/containers/display-panel/display-panel.component.html:118</source>Neutralize Sources</msg>
+  <msg id="5350491539664925831"><source>src/app/workbench/containers/display-panel/display-panel.component.html:122</source>Photometric Source Calibration...</msg>
+  <msg id="4845258658987594829"><source>src/app/workbench/containers/display-panel/display-panel.component.html:126</source>Reset Histograms</msg>
+  <msg id="4725943399307728524"><source>src/app/workbench/containers/display-panel/display-panel.component.html:240</source>Image Orientation Options</msg>
   <msg id="4456532179377007819"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:1</source>Please select a layer instead of the file.</msg>
   <msg id="5172438057468052393"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:5</source>Header is not available for selected layer.</msg>
   <msg id="150907831913847828"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:9</source>Header is loading...</msg>
@@ -196,7 +208,7 @@
   <msg id="1027450964836001242"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:34,37</source> Use System Time </msg>
   <msg id="6555318547274416232"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:47</source>Value</msg>
   <msg id="2662644497259948010"><source>src/app/workbench/containers/file-info-panel/file-info-panel.component.html:51</source>Comment</msg>
-  <msg id="8836851211708808337"><source>src/app/workbench/containers/file-list-option/file-list-option.component.html:75</source>modified</msg>
+  <msg id="8836851211708808337"><source>src/app/workbench/containers/file-list-option/file-list-option.component.html:41</source>modified</msg>
   <msg id="5627859738709949469"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:1</source>This layer type is not yet supported by the photometry tool.</msg>
   <msg id="6359655488905730858"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:5</source>Please select an image layer instead of a file.</msg>
   <msg id="3914231111375116518"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:21,24</source> Manually add sources by clicking on them in your image or automatically add them using the options below. </msg>
@@ -214,14 +226,18 @@
   <msg id="5082498650132830811"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:215,218</source> Photometry Updated </msg>
   <msg id="1891770369854987000"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:219,222</source> Photometry Failed </msg>
   <msg id="8641774249491697047"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:230</source><ph name="START_TAG_MAT_PROGRESS_BAR"/><ph name="CLOSE_TAG_MAT_PROGRESS_BAR"/></msg>
-  <msg id="4823563199075068723"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:245,249</source> Zero Point: <ph name="INTERPOLATION"/> ± <ph name="INTERPOLATION_1"/> mag </msg>
-  <msg id="8333196662340140316"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:253,256</source> Calibration Failed </msg>
-  <msg id="2121019595189744185"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:277</source>Use batch photometry to photometer all of your sources in multiple image layers/files.</msg>
-  <msg id="6615770997789476440"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:281</source>Select Image(s) to Photometer</msg>
-  <msg id="1494518490116523821"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:289</source>Select all</msg>
-  <msg id="8144723830352946980"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:293</source>Clear Selection</msg>
-  <msg id="1774120414444554735"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:298</source>Batch Photometer</msg>
-  <msg id="7618675476438883751"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:338,343</source>Download Batch Photometry Data - <ph name="INTERPOLATION"/> source(s) in <ph name="INTERPOLATION_1"/> file(s)</msg>
+  <msg id="2601847504179081621"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:246</source>Zero Point: </msg>
+  <msg id="8333196662340140316"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:254,257</source> Calibration Failed </msg>
+  <msg id="2121019595189744185"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:278</source>Use batch photometry to photometer all of your sources in multiple image layers/files.</msg>
+  <msg id="6615770997789476440"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:282</source>Select Image(s) to Photometer</msg>
+  <msg id="1494518490116523821"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:290</source>Select all</msg>
+  <msg id="8144723830352946980"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:294</source>Clear Selection</msg>
+  <msg id="1774120414444554735"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:299</source>Batch Photometer</msg>
+  <msg id="8461495641119623180"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:341</source>Download Batch Photometry Data</msg>
+  <msg id="4008360934941497053"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:343</source>source(s) in</msg>
+  <msg id="5218981118165172769"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:345</source>file(s)</msg>
+  <msg id="7937054694958225621"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:350,353</source> Loading results... </msg>
+  <msg id="2379074838946413496"><source>src/app/workbench/containers/photometry-panel/photometry-panel.component.html:373,376</source> Creating Jobs... </msg>
   <msg id="5600551485700109859"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:1</source>Select an image file</msg>
   <msg id="8227596913155490392"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:5</source>Simple</msg>
   <msg id="1964396701101189454"><source>src/app/workbench/containers/pixel-ops-panel/pixel-ops-panel.component.html:17</source>Selected Image(s)</msg>
@@ -274,6 +290,7 @@
   <msg id="1929341422689512898"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:45</source>Selection Options:</msg>
   <msg id="7997497639597459089"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:48,51</source> Undo </msg>
   <msg id="5974167658394135492"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:52,55</source> Redo </msg>
+  <msg id="7808756054397155068"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:55</source>Reset</msg>
   <msg id="3149912012181458312"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:60</source>Region Size:</msg>
   <msg id="3268196960086785405"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:67</source>Start Pixel:</msg>
   <msg id="3141657976569742849"><source>src/app/workbench/containers/sonification-panel/sonification-panel.component.html:71</source>End Pixel:</msg>
@@ -285,7 +302,6 @@
   <msg id="610900955010644213"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:25</source>average</msg>
   <msg id="6829183145920360259"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:26</source>percentile</msg>
   <msg id="8365934210024441439"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:28</source>sum</msg>
-  <msg id="3535496178166723193"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:32</source>Percentile</msg>
   <msg id="3121687807621232306"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:39</source>Rejection</msg>
   <msg id="6252070156626006029"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:41</source>None</msg>
   <msg id="8926359181631275536"><source>src/app/workbench/containers/stacking-panel/stacking-panel.component.html:42</source>chauvenet</msg>
@@ -298,7 +314,7 @@
   <msg id="6612019587433987023"><source>src/app/workbench/containers/viewer-panel/viewer-panel.component.html:55</source>Close Viewer</msg>
   <msg id="410147324553538903"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:4</source>Select Image(s) to Calibrate</msg>
   <msg id="8716359834484489616"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:12</source>Select All</msg>
-  <msg id="6505839089131595761"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:23,26</source><ph name="START_TAG_MAT_ICON"/>colorize<ph name="CLOSE_TAG_MAT_ICON"/> Extract values from current viewer </msg>
+  <msg id="8559033040564932110"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:24</source>Extract values from current viewer</msg>
   <msg id="6331012057589374366"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:30</source>RA (hours)</msg>
   <msg id="5762374486100548957"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:34</source>Dec (degs)</msg>
   <msg id="1404573827153155532"><source>src/app/workbench/containers/wcs-calibration-panel/wcs-calibration-panel.component.html:38</source>Radius (degs)</msg>

@@ -243,8 +243,9 @@
                   <ng-container *ngIf="result?.data; else progressBlock">
                     <div
                       *ngIf="result.data.length != 0 && result.errors.length == 0 && result.warnings.length == 0; else errorBlock"
-                      i18n class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
-                      Zero Point: {{(calibratedZeroPoint$ | async) | number:'1.0-3'}} &#177;
+                      class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
+                      <ng-container i18n>Zero Point: </ng-container>{{(calibratedZeroPoint$ | async) | number:'1.0-3'}}
+                      &#177;
                       {{result.data[0]?.zeroPointError | number:'1.0-3'}} mag
                     </div>
                   </ng-container>
@@ -337,15 +338,17 @@
                   </div>
                   <button class="" mat-raised-button (click)="downloadBatchPhotData()">
                     <mat-icon>save_alt</mat-icon>
-                    <span i18n>Download Batch Photometry Data - {{ status.photJob.sources.length }}
-                      source(s)
-                      in
+                    <span>
+                      <ng-container i18n>Download Batch Photometry Data</ng-container> - {{
+                      status.photJob.sources.length }}
+                      <ng-container i18n>source(s) in</ng-container>
                       {{ status.photJob.fileIds.length }}
-                      file(s)</span>
+                      <ng-container i18n>file(s)</ng-container>
+                    </span>
                   </button>
                 </ng-container>
                 <ng-template #resultLoading>
-                  <div class="alert alert-info">
+                  <div class="alert alert-info" i18n>
                     Loading results...
                   </div>
                 </ng-template>
@@ -368,7 +371,7 @@
             </ng-container>
             <ng-template #creatingJobsBlock>
               <ng-container *ngIf="status.inProgress">
-                <div class="alert alert-info">
+                <div class="alert alert-info" i18n>
                   Creating Jobs...
                 </div>
               </ng-container>

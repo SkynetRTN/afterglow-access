@@ -1,4 +1,4 @@
-<div mat-dialog-title class="dialog-title" i18n>
+<div mat-dialog-title class="dialog-title">
   {{ config.title }}
 </div>
 <mat-dialog-content>
@@ -8,12 +8,8 @@
   </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end" class="pb-4">
-  <button
-    *ngFor="let button of config.buttons"
-    mat-raised-button
-    [mat-dialog-close]="button.value"
-    [color]="button.color"
-  >
+  <button *ngFor="let button of config.buttons" mat-raised-button [mat-dialog-close]="button.value"
+    [color]="button.color">
     {{ button.label }}
   </button>
 </mat-dialog-actions>

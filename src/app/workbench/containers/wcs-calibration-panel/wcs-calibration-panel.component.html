@@ -20,9 +20,9 @@
     </div>
 
     <div *ngIf="header$ | async as header" class="mb-3">
-      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)" i18n>
+      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
         <mat-icon>colorize</mat-icon>
-        Extract values from current viewer
+        <ng-container i18n>Extract values from current viewer</ng-container>
       </button>
     </div>
 
