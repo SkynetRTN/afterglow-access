@@ -723,32 +723,31 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
           this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
 
           if (!this.loadingIndicatorIntervals[tile.index]) {
-            let updateLoadingIndicator = () => {
+
+            this.loadingIndicatorIntervals[tile.index] = setInterval(() => {
+              this.setSmoothing(this.targetCtx, false);
+
+              this.loadingCtx.save();
               this.loadingCtx.clearRect(tile.x, tile.y, tile.width, tile.height)
               this.loadingCtx.globalCompositeOperation = 'destination-over';
-              this.loadingCtx.save();
               this.loadingCtx.translate(tile.x - 100 + tile.width / 2, tile.y - 100 + tile.height / 2)
               this.loadingCtx.translate(100, 100);
               let rotation = (((new Date()).getTime() - this.loadingIndicatorStart.getTime()) % 2000) * (360 / 2000);
               this.loadingCtx.rotate(rotation * Math.PI / 180); //rotate in origin
-              // this.loadingCtx.scale(3, 3)
               this.loadingCtx.translate(-100, -100); //put it back
               this.loadingCtx.drawImage(this.loadingIndicator, 0, 0);
               this.loadingCtx.restore();
-            }
 
-
-            updateLoadingIndicator();
-            this.loadingIndicatorIntervals[tile.index] = setInterval(() => {
-              updateLoadingIndicator();
+              this.targetCtx.save();
+              this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
               this.setSmoothing(this.targetCtx, false);
+              this.targetCtx.globalAlpha = 1.0;
               let matrix = transformToMatrix(this.transform);
               matrix.applyToContext(this.targetCtx);
               this.targetCtx.drawImage(this.imageCanvas, 0, 0);
               this.targetCtx.drawImage(this.loadingCanvas, 0, 0);
-              // this.setSmoothing(this.targetCtx, true);
-              // this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
-              // this.targetCtx.globalAlpha = 1.0;
+              this.targetCtx.restore();
+
             }, 10)
           }
 
