@@ -77,6 +77,8 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
     if (hdu.type == HduType.IMAGE) {
       hdu = {
         ...hdu,
+        loaded: false,
+        loading: false,
         hist: {
           initialized: false,
           loaded: false,

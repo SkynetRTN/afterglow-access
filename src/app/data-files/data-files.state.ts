@@ -29,8 +29,8 @@ import {
   ColorBalanceMode,
 } from './models/data-file';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { merge, combineLatest, fromEvent, of } from 'rxjs';
-import { catchError, tap, flatMap, filter, takeUntil, take, skip } from 'rxjs/operators';
+import { merge, combineLatest, fromEvent, of, forkJoin } from 'rxjs';
+import { catchError, tap, flatMap, filter, takeUntil, take, skip, finalize } from 'rxjs/operators';
 import { AfterglowDataFileService } from '../workbench/services/afterglow-data-files';
 import { mergeDelayError } from '../utils/rxjs-extensions';
 import { ResetState } from '../auth/auth.actions';
@@ -141,7 +141,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: '1ef0308d-d560-42b7-a09e-4e524f8e3eb6',
+  version: '7796fad3-caaf-494e-b8bc-90c59e88df30',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -476,6 +476,8 @@ export class DataFilesState {
         coreFiles.forEach((coreFile, index) => {
           let hdu: IHdu = {
             id: coreFile.id,
+            loading: false,
+            loaded: false,
             fileId: coreFile.groupName,
             type: coreFile.type,
             order: coreFile.groupOrder,
@@ -687,7 +689,26 @@ export class DataFilesState {
       return null;
     }
 
-    return merge(...pendingActions, dispatch(actions));
+    if (pendingActions.length != 0 || actions.length != 0) {
+      setState((state: DataFilesStateModel) => {
+        state.hduEntities[hduId].loading = true;
+        return state;
+      });
+    }
+    return forkJoin(...pendingActions, dispatch(actions)).pipe(
+      tap(() => {
+        setState((state: DataFilesStateModel) => {
+          state.hduEntities[hduId].loaded = true;
+          return state;
+        });
+      }),
+      finalize(() => {
+        setState((state: DataFilesStateModel) => {
+          state.hduEntities[hduId].loading = false;
+          return state;
+        });
+      })
+    );
   }
 
   private initializeImageData(state: DataFilesStateModel, id: string, type: string, ref: {

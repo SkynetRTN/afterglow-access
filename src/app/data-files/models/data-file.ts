@@ -60,6 +60,8 @@ export interface Header {
 export interface IHdu {
   readonly type: HduType;
   id: string;
+  loading: boolean;
+  loaded: boolean;
   fileId: string;
   headerId: string;
   order: number;

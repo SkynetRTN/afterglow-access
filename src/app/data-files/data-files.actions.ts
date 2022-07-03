@@ -49,6 +49,13 @@ export class CloseHduFail {
  * Load File Actions
  */
 
+export class InitializeFile {
+  public static readonly type = '[File] Initialize File';
+
+  constructor(public fileId: string) { }
+
+}
+
 export class LoadHdu {
   public static readonly type = '[File] Load HDU';
 
@@ -67,23 +74,6 @@ export class LoadHduHeaderSuccess {
   constructor(public hduId: string) { }
 }
 
-export class UpdateHduHeader {
-  public static readonly type = '[File] Update HDU Header';
-
-  constructor(public hduId: string, public changes: HeaderEntry[]) { }
-}
-
-export class InitializeFile {
-  public static readonly type = '[File] Initialize File';
-
-  constructor(public fileId: string) { }
-
-}
-
-/**
- * HDU Actions
- */
-
 export class LoadImageHduHistogram {
   public static readonly type = '[File] Load Image HDU Histogram';
 
@@ -94,6 +84,19 @@ export class LoadImageHduHistogramSuccess {
   public static readonly type = '[File] Load Image HDU Histogram Success';
 
   constructor(public hduId: string, public hist: ImageHist) { }
+}
+
+
+
+
+/**
+ * HDU Actions
+ */
+
+export class UpdateHduHeader {
+  public static readonly type = '[File] Update HDU Header';
+
+  constructor(public hduId: string, public changes: HeaderEntry[]) { }
 }
 
 export class InitializeFileTiles {
