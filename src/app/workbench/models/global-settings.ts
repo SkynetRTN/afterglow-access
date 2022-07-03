@@ -72,15 +72,15 @@ export function toPhotometryJobSettings(settings: GlobalSettings): PhotometryJob
 
 
 export function toFieldCalibration(settings: GlobalSettings, catalogs: Catalog[]): FieldCalibration {
-    let customFilterLookup = {};
-    for (let catalog of catalogs) {
-        customFilterLookup[catalog.name] = catalog.filterLookup;
-    }
+    // let customFilterLookup = {};
+    // for (let catalog of catalogs) {
+    //     customFilterLookup[catalog.name] = catalog.filterLookup;
+    // }
     let p = settings.photometry;
     let c = settings.calibration;
     let result: FieldCalibration = {
         catalogs: [c.catalog],
-        customFilterLookup: customFilterLookup,
+        // customFilterLookup: customFilterLookup,
         sourceInclusionPercentage: c.sourceInclusionPercentageEnabled ? c.sourceInclusionPercentage : null,
         sourceMatchTol: c.sourceMatchTol,
         maxStarRms: c.maxStarRmsEnabled ? c.maxStarRms : 0,
