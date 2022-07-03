@@ -172,7 +172,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   private resizeMonitor: any;
 
   constructor(private store: Store, protected viewerPlaceholder: ElementRef) {
-    this.loadingIndicator.src = 'assets/img/tile-loading-spinner-dark-blue.png'
+    this.loadingIndicator.src = 'assets/img/tile-loading-spinner-light-blue.png'
   }
 
   ngOnInit() {
