@@ -53,6 +53,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
   private hasFocus$ = new BehaviorSubject<boolean>(null);
 
   @Output() downloadSnapshot = new EventEmitter();
+  @Output() exportImageData = new EventEmitter();
   @Output() onSaveFile = new EventEmitter();
   @Output() onCloseFile = new EventEmitter();
   @Output() onMoveBy = new EventEmitter<MoveByEvent>();

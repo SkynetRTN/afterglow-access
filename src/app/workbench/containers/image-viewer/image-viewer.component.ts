@@ -14,7 +14,7 @@ import {
 
 import { DomSanitizer, SafeValue } from '@angular/platform-browser';
 
-import { Observable, combineLatest, of } from 'rxjs';
+import { Observable, combineLatest, of, forkJoin } from 'rxjs';
 import {
   distinctUntilChanged,
   map,
@@ -81,10 +81,12 @@ import {
   LoadHdu,
   LoadImageHduHistogram,
   LoadHduHeaderSuccess,
+  UpdateCompositeImageTileSuccess,
+  UpdateNormalizedImageTileSuccess,
 } from '../../../data-files/data-files.actions';
 import { HduType } from '../../../data-files/models/data-file-type';
 import { Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
-import { IImageData } from '../../../data-files/models/image-data';
+import { IImageData, ImageTile } from '../../../data-files/models/image-data';
 import { UpdateCurrentViewportSize } from '../../workbench.actions';
 import { IViewer, ImageViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
@@ -609,9 +611,6 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
         }
 
 
-        console.log("HERE")
-
-
 
 
         loadComposite = false;
@@ -627,6 +626,63 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       // console.log("update composite tile event", this.viewer.fileId, $event.tileIndex)
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
+  }
+
+  handleExportImageData() {
+    let imageData = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
+    );
+
+    let invalidTiles = imageData.tiles.filter(tile => !tile.pixelsLoaded || !tile.isValid)
+    if (invalidTiles.length != 0) {
+      invalidTiles.forEach((tile) => this.handleLoadTile({ imageDataId: imageData.id, tileIndex: tile.index }))
+      setTimeout(() => this.handleExportImageData(), 1000);
+      return;
+    }
+
+    let canvas: HTMLCanvasElement = document.createElement('canvas');
+    let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+
+
+
+    let tiles = imageData.tiles;
+    for (let tile of tiles) {
+      let imageData = ctx.createImageData(tile.width, tile.height);
+      let blendedImageDataUint8Clamped = new Uint8ClampedArray(tile.pixels.buffer);
+      imageData.data.set(blendedImageDataUint8Clamped);
+      ctx.putImageData(imageData, tile.x, tile.y);
+    }
+
+
+
+    var lnk = document.createElement('a');
+    if (this.viewer.hduId) {
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer.hduId))
+      lnk.download = `${hdu?.name || 'afterglow-image-export'}.jpg`;
+    }
+    else {
+      let file = this.store.selectSnapshot(DataFilesState.getFileById(this.viewer.fileId))
+      lnk.download = `${file?.name || 'afterglow-image-export'}.jpg`;
+    }
+    let dataUrl = canvas.toDataURL('image/jpeg');
+    lnk.href = dataUrl;
+
+    /// create a "fake" click-event to trigger the download
+    if (document.createEvent) {
+      let e;
+      e = document.createEvent('MouseEvents');
+      e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+
+      lnk.dispatchEvent(e);
+    }
+
+
+
+
+
+
   }
 
   handleDownloadSnapshot() {

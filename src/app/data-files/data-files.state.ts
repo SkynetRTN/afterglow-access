@@ -1852,11 +1852,22 @@ export class DataFilesState {
       setState((state: DataFilesStateModel) => {
         let file = state.fileEntities[fileId];
         let compositeImageData = state.imageDataEntities[file.rgbaImageDataId];
-        let tile = compositeImageData.tiles[tileIndex];
-        tile.pixelsLoading = true;
-        state.imageDataEntities[file.rgbaImageDataId] = {
-          ...compositeImageData,
-        };
+        let tiles = [...compositeImageData.tiles]
+        tiles[tileIndex] = {
+          ...tiles[tileIndex],
+          pixelsLoading: true
+        }
+        state = {
+          ...state,
+          imageDataEntities: {
+            ...state.imageDataEntities,
+            [file.rgbaImageDataId]: {
+              ...compositeImageData,
+              tiles: tiles
+            }
+          }
+        }
+
         return state;
       });
 
