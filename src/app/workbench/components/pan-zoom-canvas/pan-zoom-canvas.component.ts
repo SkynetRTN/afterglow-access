@@ -131,9 +131,14 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   private targetCtx: CanvasRenderingContext2D;
   private imageCanvas: HTMLCanvasElement;
   private imageCtx: CanvasRenderingContext2D;
+  private loadingCanvas: HTMLCanvasElement;
+  private loadingCtx: CanvasRenderingContext2D;
   private backgroundCanvas: HTMLCanvasElement;
   private backgroundCtx: CanvasRenderingContext2D;
   private lastImageData: IImageData<Uint32Array> = null;
+  private loadingIndicator = new Image();
+  private loadingIndicatorStart = new Date();
+  private loadingIndicatorIntervals = {};
 
   private lastViewportChangeEvent: ViewportChangeEvent = null;
   private lastViewportSize: { width: number; height: number } = { width: null, height: null };
@@ -166,9 +171,13 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
   private resizeMonitor: any;
 
-  constructor(private store: Store, protected viewerPlaceholder: ElementRef) { }
+  constructor(private store: Store, protected viewerPlaceholder: ElementRef) {
+    this.loadingIndicator.src = 'assets/img/tile-loading-spinner-dark-blue.png'
+  }
 
-  ngOnInit() { }
+  ngOnInit() {
+
+  }
 
   initializeResizeMonitor() {
     let self = this;
@@ -208,6 +217,11 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     this.imageCanvas = document.createElement('canvas');
     this.imageCtx = <CanvasRenderingContext2D>this.imageCanvas.getContext('2d');
     this.setSmoothing(this.imageCtx, false);
+
+
+    this.loadingCanvas = document.createElement('canvas');
+    this.loadingCtx = <CanvasRenderingContext2D>this.loadingCanvas.getContext('2d');
+    this.setSmoothing(this.loadingCtx, false);
 
     // add different canvas to placeholder.  the target canvas will hold the transformations
     // and the actual canvas will be drawn onto the target canvas
@@ -603,6 +617,8 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     if (this.imageData.width != this.imageCanvas.width || this.imageData.height != this.imageCanvas.height) {
       this.imageCanvas.width = this.imageData.width;
       this.imageCanvas.height = this.imageData.height;
+      this.loadingCanvas.width = this.imageData.width;
+      this.loadingCanvas.height = this.imageData.height;
     }
 
     let c1 = this.viewportCoordToImageCoord(new Point(this.targetCanvas.clientWidth, this.targetCanvas.clientHeight));
@@ -701,10 +717,51 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
 
       tiles.forEach((tile) => {
         if (!tile.pixelsLoaded) {
+
           // fill in tile with solid background when image file pixels have not been loaded
-          this.imageCtx.fillStyle = 'rgb(100, 100, 100)';
+          this.imageCtx.fillStyle = 'rgb(241, 242, 243)';
           this.imageCtx.fillRect(tile.x, tile.y, tile.width, tile.height);
+
+          if (!this.loadingIndicatorIntervals[tile.index]) {
+            let updateLoadingIndicator = () => {
+              this.loadingCtx.clearRect(tile.x, tile.y, tile.width, tile.height)
+              this.loadingCtx.globalCompositeOperation = 'destination-over';
+              this.loadingCtx.save();
+              this.loadingCtx.translate(tile.x - 100 + tile.width / 2, tile.y - 100 + tile.height / 2)
+              this.loadingCtx.translate(100, 100);
+              let rotation = (((new Date()).getTime() - this.loadingIndicatorStart.getTime()) % 2000) * (360 / 2000);
+              this.loadingCtx.rotate(rotation * Math.PI / 180); //rotate in origin
+              // this.loadingCtx.scale(3, 3)
+              this.loadingCtx.translate(-100, -100); //put it back
+              this.loadingCtx.drawImage(this.loadingIndicator, 0, 0);
+              this.loadingCtx.restore();
+            }
+
+
+            updateLoadingIndicator();
+            this.loadingIndicatorIntervals[tile.index] = setInterval(() => {
+              updateLoadingIndicator();
+              let matrix = transformToMatrix(this.transform);
+              matrix.applyToContext(this.targetCtx);
+              this.targetCtx.drawImage(this.imageCanvas, 0, 0);
+              this.targetCtx.drawImage(this.loadingCanvas, 0, 0);
+              this.setSmoothing(this.targetCtx, true);
+              this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
+              this.targetCtx.globalAlpha = 1.0;
+            }, 10)
+          }
+
+
+
+
+
         } else {
+          if (this.loadingIndicatorIntervals[tile.index]) {
+            this.loadingCtx.clearRect(tile.x, tile.y, tile.width, tile.height)
+            clearInterval(this.loadingIndicatorIntervals[tile.index]);
+            delete this.loadingIndicatorIntervals[tile.index];
+          }
+
           if (this.bufferedTiles[tile.index] === tile) {
             //this tile has not changed and is already in the buffered canvas
             return;
@@ -720,9 +777,11 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
           this.bufferedTiles[tile.index] = tile;
         }
       });
+
       let matrix = transformToMatrix(this.transform);
       matrix.applyToContext(this.targetCtx);
       this.targetCtx.drawImage(this.imageCanvas, 0, 0);
+      this.targetCtx.drawImage(this.loadingCanvas, 0, 0);
     }
     this.setSmoothing(this.targetCtx, true);
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);

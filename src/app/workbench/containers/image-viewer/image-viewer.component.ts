@@ -563,10 +563,6 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       let imageHdu = hdu as ImageHdu;
       let header = headerEntities[hdu.headerId];
       if ((!imageHdu.loaded || !header.isValid)) {
-        if (!hdu.loading) {
-          this.store.dispatch(new LoadHdu(hduId));
-        }
-
         this.queuedTileLoadingEvents.push($event);
         this.actions$
           .pipe(
@@ -575,9 +571,15 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
             take(1)
           )
           .subscribe((a) => {
-            this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event));
+            this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event), 1);
             this.handleLoadTile($event)
           })
+
+
+        if (!hdu.loading) {
+          this.store.dispatch(new LoadHdu(hduId));
+        }
+
 
 
         loadComposite = false;
@@ -589,13 +591,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       let imageData = imageDataEntities[(hdu as ImageHdu).rgbaImageDataId];
       let tile = imageData.tiles[$event.tileIndex];
       if (!tile.pixelsLoaded || !tile.isValid) {
-
-        if (!tile.pixelsLoading) {
-          this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
-        }
         this.queuedTileLoadingEvents.push($event);
-
-
         this.actions$
           .pipe(
             ofActionCompleted(UpdateNormalizedImageTile),
@@ -604,9 +600,17 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
           )
           .subscribe((a) => {
             // console.log("update normalized tile complete!", hdu.fileId, hdu.id, tile.index)
-            this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event));
+            this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event), 1);
             if (a.result.successful) this.handleLoadTile($event);
           });
+
+        if (!tile.pixelsLoading) {
+          this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
+        }
+
+
+        console.log("HERE")
+
 
 
 
