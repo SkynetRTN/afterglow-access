@@ -172,7 +172,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
   private resizeMonitor: any;
 
   constructor(private store: Store, protected viewerPlaceholder: ElementRef) {
-    this.loadingIndicator.src = 'assets/img/tile-loading-spinner-light-blue.png'
+    this.loadingIndicator.src = 'assets/img/tile-loading-spinner-light-blue-small.png'
   }
 
   ngOnInit() {
@@ -741,13 +741,14 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
             updateLoadingIndicator();
             this.loadingIndicatorIntervals[tile.index] = setInterval(() => {
               updateLoadingIndicator();
+              this.setSmoothing(this.targetCtx, false);
               let matrix = transformToMatrix(this.transform);
               matrix.applyToContext(this.targetCtx);
               this.targetCtx.drawImage(this.imageCanvas, 0, 0);
               this.targetCtx.drawImage(this.loadingCanvas, 0, 0);
-              this.setSmoothing(this.targetCtx, true);
-              this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
-              this.targetCtx.globalAlpha = 1.0;
+              // this.setSmoothing(this.targetCtx, true);
+              // this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);
+              // this.targetCtx.globalAlpha = 1.0;
             }, 10)
           }
 
