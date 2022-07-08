@@ -198,6 +198,38 @@ export let blueColorMap = createColorMap(
   ]
 );
 
+export let balmerColorMap = createColorMap(
+  'Balmer',
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0.21484375 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0.4609375 },
+  ]
+);
+
+export let oiiColorMap = createColorMap(
+  'OIII',
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0.71875 },
+  ]
+);
+
 export let aColorMap = createColorMap(
   "'A'",
   [
@@ -226,11 +258,14 @@ export let aColorMap = createColorMap(
 export let COLOR_MAPS: { [name: string]: ColorMap } = {};
 [
   grayColorMap,
-  rainbowColorMap,
-  coolColorMap,
-  heatColorMap,
   redColorMap,
   greenColorMap,
   blueColorMap,
+  balmerColorMap,
+  oiiColorMap,
+  rainbowColorMap,
+  coolColorMap,
+  heatColorMap,
+
   aColorMap,
 ].forEach((cm) => (COLOR_MAPS[cm.name] = cm));

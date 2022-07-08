@@ -10,6 +10,8 @@ import {
   greenColorMap,
   blueColorMap,
   aColorMap,
+  balmerColorMap,
+  oiiColorMap,
 } from '../../../data-files/models/color-map';
 import { FormControl } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -53,12 +55,14 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   colorMaps = [
     grayColorMap,
-    rainbowColorMap,
-    coolColorMap,
-    heatColorMap,
     redColorMap,
     greenColorMap,
     blueColorMap,
+    balmerColorMap,
+    oiiColorMap,
+    rainbowColorMap,
+    coolColorMap,
+    heatColorMap,
     aColorMap,
   ];
 

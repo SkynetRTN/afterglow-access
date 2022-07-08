@@ -20,7 +20,7 @@ import { LoadLibrary, LoadLibrarySuccess, UpdateBlendMode, UpdateNormalizer } fr
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { MatMenuTrigger } from '@angular/material/menu';
-import { aColorMap, blueColorMap, coolColorMap, grayColorMap, greenColorMap, heatColorMap, rainbowColorMap, redColorMap } from 'src/app/data-files/models/color-map';
+import { aColorMap, balmerColorMap, blueColorMap, coolColorMap, grayColorMap, greenColorMap, heatColorMap, oiiColorMap, rainbowColorMap, redColorMap } from 'src/app/data-files/models/color-map';
 import { BlendMode } from 'src/app/data-files/models/blend-mode';
 import { MatDialog } from '@angular/material/dialog';
 import { RenameHduDialogComponent } from '../../components/rename-hdu-dialog/rename-hdu-dialog.component';
@@ -38,12 +38,14 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
 
   colorMaps = [
     grayColorMap,
-    rainbowColorMap,
-    coolColorMap,
-    heatColorMap,
     redColorMap,
     greenColorMap,
     blueColorMap,
+    balmerColorMap,
+    oiiColorMap,
+    rainbowColorMap,
+    coolColorMap,
+    heatColorMap,
     aColorMap,
   ];
 

@@ -1217,10 +1217,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           let hduCount = 0;
           files.forEach((file) => (hduCount += file.hduIds.length));
 
-          if (hduCount > 5) {
+          if (hduCount > 10) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: 'Error',
-              message: `The number of layers within a file is currently limited to no more than five.  Please reduce the number of layers and try grouping again.`,
+              message: `The number of layers within a file is currently limited to no more than ten.  Please reduce the number of layers and try grouping again.`,
               buttons: [
                 {
                   color: null,
