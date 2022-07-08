@@ -92,7 +92,8 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
   ready = false;
   running = false;
   statusMessage$ = new Subject<string>();
-  errorMessage: string;
+  errors: string[] = [];
+  warnings: string[] = [];
 
 
   form = new FormGroup({
@@ -120,7 +121,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
     // this.layers = this.layerIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id)));
 
     if (this.layerIds.length < 3) {
-      this.errorMessage = `Photometric color calibration only works with files having at least three layers.`;
+      this.errors = [`Photometric color calibration only works with files having at least three layers.`];
       return;
     }
 
@@ -134,7 +135,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
         take(1),
         map(a => {
           if (!a.result.successful) {
-            this.errorMessage = `Failed to load layer header`;
+            this.statusMessage$.next(`Failed to load layer header`);
             return null;
           }
 
@@ -150,24 +151,29 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
       for (let index = 0; index < headers.length; index++) {
         let header = headers[index];
-        if (header == null) return;
+        if (header == null) continue;
 
         let filterName = getFilter(header);
         let filter = this.FILTERS.find(f => f.name == filterName || f.aliases.includes(filterName))
         if (!filter) {
-          this.errorMessage = `Unknown filter ${filterName}.  Photometric color calibration currently only supports the UBVRI filter set`;
-          return null;
+          this.warnings.push(`Unknown filter '${filterName}'.`);
+          continue;
         }
 
         let expLength = getExpLength(header);
         if (!expLength) {
-          this.errorMessage = `Could not determine exposure length`;
-          return null;
+          this.warnings.push(`Could not determine exposure length for fiter ${filterName}`);
+          continue;
         }
 
         let id = this.layerIds[index];
         let name = this.store.selectSnapshot(DataFilesState.getHduById(id)).name;
         this.layers.push({ id: id, name: name, filter: filter, expLength: expLength })
+      }
+
+      if (this.layers.length < 3) {
+        this.errors.push(`Only ${this.layers.length} compatible layers found.  A minimum of three is required.`);
+        return;
       }
 
       this.layers.sort((a, b) => a.filter.center - b.filter.center)
@@ -233,6 +239,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
   }
 
   start() {
+    this.warnings = [];
     let redLayer = this.form.controls.redLayer.value as Layer;
     let greenLayer = this.form.controls.greenLayer.value as Layer;
     let blueLayer = this.form.controls.blueLayer.value as Layer;
@@ -250,7 +257,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
       photometrySettings: photometryJobSettings,
       sourceExtractionSettings: sourceExtractionJobSettings,
       fieldCal: fieldCalibration,
-      fileIds: this.layerIds,
+      fileIds: this.layers.map(layer => layer.id),
       state: null,
     };
 
@@ -273,11 +280,11 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
           if (job.state.status == 'completed') {
             if (job.result) {
               if (job.result.errors.length != 0) {
-                this.errorMessage = `The field calibration completed with errors.`;
+                this.errors = [`The field calibration completed with errors.`];
                 return;
               }
-              if (job.result.data.length != this.layerIds.length) {
-                this.errorMessage = `The field calibration completed but did not return zero points for all layers`;
+              if (job.result.data.length != this.layers.length) {
+                this.errors = [`The field calibration completed but did not return zero points for all layers`];
                 return;
               }
 

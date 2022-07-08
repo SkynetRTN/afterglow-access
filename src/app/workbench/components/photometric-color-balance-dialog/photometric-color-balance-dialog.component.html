@@ -51,8 +51,14 @@
     </form>
     <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Start</button>
 
-    <span *ngIf="errorMessage; else statusMessageBlock" class="alert-danger"
-        style="width: 100%; padding: 5px">{{errorMessage}}</span>
+    <ng-container *ngIf="warnings.length != 0">
+        <span class="alert-warning" *ngFor="let warning of warnings"
+            style="width: 100%; padding: 5px">{{warning}}</span>
+    </ng-container>
+    <ng-container *ngIf="errors.length != 0; else statusMessageBlock">
+        <span class="alert-danger" *ngFor="let error of errors" style="width: 100%; padding: 5px">{{error}}</span>
+    </ng-container>
+
     <ng-template #statusMessageBlock>
         <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px">
             <mat-progress-bar *ngIf="running" mode="indeterminate" color="accent"></mat-progress-bar>

@@ -27,8 +27,8 @@
         </div>
 
         <app-normalizer-form [normalizer]="activeImageHdu?.normalizer" [showLevels]="false" [showInverted]="true"
-          [showLayerScale]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
-          [showLayerOffset]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
+          [showLayerScale]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
+          [showLayerOffset]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
           [showStretchMode]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.MANUAL"
           (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
           (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
@@ -64,8 +64,8 @@
 
           </div>
           <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
-            [showLayerScale]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
-            [showLayerOffset]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING"
+            [showLayerScale]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
+            [showLayerOffset]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
             (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
             (peakPercentileChange)="onPeakPercentileChange($event)"
             (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
@@ -111,13 +111,13 @@
           independently to achieve the desired color balance.
         </div>
         <mat-menu #histogramFittingMenu="matMenu">
-          <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: true, fitSources: false });"
-            i18n-aria-label aria-label="Neutralize Background">
+          <button mat-menu-item (click)="neutralizeBackgroundsEvent$.next();" i18n-aria-label
+            aria-label="Neutralize Background">
             <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
           </button>
-          <button mat-menu-item (click)="fitHistogramsEvent$.next({ fitBackground: false, fitSources: true });"
-            i18n-aria-label aria-label="Neutralize Sources">
-            <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources</span>
+          <button mat-menu-item (click)="neutralizeSourcesEvent$.next();" i18n-aria-label
+            aria-label="Neutralize Sources">
+            <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources...</span>
           </button>
           <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
             aria-label="Photometric Source Calibration...">
@@ -125,7 +125,7 @@
           </button>
           <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
             aria-label="Reset Histograms">
-            <mat-icon>refresh</mat-icon><span i18n>Reset Histograms</span>
+            <mat-icon>refresh</mat-icon><span i18n>Reset Histogram Fitting</span>
           </button>
         </mat-menu>
 

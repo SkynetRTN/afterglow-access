@@ -1439,7 +1439,7 @@ export class DataFilesState {
 
     let sync = value != ColorBalanceMode.MANUAL;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu);
-    if (value != ColorBalanceMode.HISTOGRAM_FITTING) {
+    if (value != ColorBalanceMode.HISTOGRAM_FITTING && value != ColorBalanceMode.MANUAL) {
       hdus.forEach(hdu => {
         actions.push(new UpdateNormalizer(hdu.id, { layerOffset: 0, layerScale: 1 }))
       })

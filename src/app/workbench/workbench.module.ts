@@ -75,6 +75,7 @@ import { ColorPickerModule } from 'ngx-color-picker';
 import { RenameHduDialogComponent } from './components/rename-hdu-dialog/rename-hdu-dialog.component';
 import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
 import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
+import { SourceNeutralizationDialogComponent } from './components/source-neutralization-dialog/source-neutralization-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -124,7 +125,8 @@ export const COMPONENTS = [
   PsfMatchingDialogComponent,
   RenameHduDialogComponent,
   RenameFileDialogComponent,
-  PhotometricColorBalanceDialogComponent
+  PhotometricColorBalanceDialogComponent,
+  SourceNeutralizationDialogComponent
 ];
 
 @NgModule({

@@ -1,0 +1,61 @@
+<div fxLayout="column" fxLayoutGap="20px" style="height: 100%">
+    <form [formGroup]="form">
+        <div fxLayout="column" fxLayoutGap="20px" style="width: 100%">
+            <mat-form-field appearance="outline">
+                <mat-label i18n>Reference Layer</mat-label>
+                <mat-select formControlName="referenceLayerId">
+                    <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
+                        {{ getHduOptionLabel(layerId) | async }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
+                <mat-form-field fxFlex="1 1 auto" appearance="outline" width="100%">
+                    <mat-label i18n>Select Layers(s) to Neutralize</mat-label>
+                    <mat-select multiple formControlName="selectedLayerIds">
+                        <ng-container *ngFor="let layerId of layerIds">
+                            <mat-option *ngIf="layerId != form.controls.referenceLayerId.value" [value]="layerId">
+                                {{ getHduOptionLabel(layerId) | async }}
+                            </mat-option>
+                        </ng-container>
+
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-icon-button (click)="onSelectAllBtnClick()">
+                    <mat-icon>select_all</mat-icon>
+                </button>
+
+                <button mat-icon-button (click)="onClearSelectionBtnClick()">
+                    <mat-icon>clear</mat-icon>
+                </button>
+            </div>
+
+
+
+        </div>
+    </form>
+    <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Start</button>
+
+    <ng-container *ngIf="warnings.length != 0">
+        <span class="alert-warning" *ngFor="let warning of warnings"
+            style="width: 100%; padding: 5px">{{warning}}</span>
+    </ng-container>
+    <ng-container *ngIf="errors.length != 0; else statusMessageBlock">
+        <span class="alert-danger" *ngFor="let error of errors" style="width: 100%; padding: 5px">{{error}}</span>
+    </ng-container>
+
+    <ng-template #statusMessageBlock>
+        <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px">
+            <mat-progress-bar *ngIf="running" mode="indeterminate" color="accent"></mat-progress-bar>
+            <span>{{statusMessage$ | async}}</span>
+        </div>
+
+    </ng-template>
+
+
+
+    <!-- <log-monitor *ngIf="logStream$ | async" style="height: 100%" [logStream]="logStream$ | async" theme="light"
+        [animated]="false" [icons]="false">
+    </log-monitor> -->
+</div>
