@@ -1812,6 +1812,8 @@ export class DataFilesState {
             blendMode: hdu.blendMode,
             alpha: hdu.alpha,
             visible: hdu.visible,
+            width: rgbaImageData.tiles[tileIndex].width,
+            height: rgbaImageData.tiles[tileIndex].height
           };
         });
 
@@ -1819,7 +1821,7 @@ export class DataFilesState {
         tile.pixels = new Uint32Array(tile.width * tile.height);
       }
 
-      tile.pixels = compose(layers, file.channelMixer, tile.pixels as Uint32Array);
+      tile.pixels = compose(layers, file.channelMixer, { width: tile.width, height: tile.height, pixels: tile.pixels as Uint32Array });
       tile.pixelsLoaded = true;
       tile.pixelsLoading = false;
       tile.isValid = true;

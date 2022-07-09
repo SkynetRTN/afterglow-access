@@ -45,7 +45,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   switch (stretchMode) {
     case StretchMode.ArcSinh: {
       stretchFn = function (x: number) {
-        return Math.asinh(10.0 * x) / 3.0;
+        return Math.asinh(10.0 * x) / Math.asinh(10);
       };
       // console.log('ArcSinh');
       break;
@@ -53,7 +53,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
 
     case StretchMode.Log: {
       stretchFn = function (x: number) {
-        return Math.log10(1000.0 * x + 1) / Math.log10(1000.0);
+        return Math.log10(1000.0 * x + 1) / Math.log10(1001.0);
       };
       // console.log('Log');
       break;
@@ -89,7 +89,7 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   let dataLength = pixels.length;
   let i = dataLength;
   //while(i--) {
-  let compositeBitScaler = (255 / 65535)
+  let compositeBitScaler = (256 / 65536)
   for (let i = 0; i < dataLength; i++) {
     let norm = stretchFn(Math.min(1.0, Math.max(0.0, ((pixels[i] * normalizer.layerScale + normalizer.layerOffset) - backgroundLevel) / normalizationRange))) * 65535.0;
     norm = norm > 65535.0 ? 65535.0 : norm;

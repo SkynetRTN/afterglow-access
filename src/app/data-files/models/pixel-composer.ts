@@ -2,20 +2,31 @@ import { PixelType } from './data-file';
 import { BlendMode } from './blend-mode';
 
 export function compose(
-  layers: Array<{ rgba: Uint32Array, blendMode: BlendMode; alpha: number; visible: boolean }>,
+  layers: Array<{ rgba: Uint32Array, blendMode: BlendMode; alpha: number; visible: boolean, width: number, height: number }>,
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]],
-  result: Uint32Array
+  result: { pixels: Uint32Array, width: number, height: number }
 ) {
   layers = layers.filter((layer) => layer.visible);
   if (layers.length == 0) {
-    for (let i = 0; i < result.length; i++) {
-      result[i] = 0;
+    for (let i = 0; i < result.pixels.length; i++) {
+      result.pixels[i] = 0;
     }
-    return new Uint32Array();
+    return result.pixels;
   }
 
-  result.set(layers[0].rgba);
-  let result8 = new Uint8ClampedArray(result.buffer);
+  // result.pixels.set(layers[0].rgba);
+  for (let i = 0; i < result.pixels.length; i++) {
+    let x = i % result.width;
+    let y = Math.floor(i / result.width);
+    if (x >= layers[0].width || y >= layers[0].height) {
+      result.pixels[i] = 0;
+    }
+    let offset = y * (layers[0].width - result.width)
+    result.pixels[i] = layers[0].rgba[i + offset];
+  }
+
+
+  let result8 = new Uint8ClampedArray(result.pixels.buffer);
   let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.rgba.buffer));
   let blendHsl = new Float32Array(3)
   let baseHsl = new Float32Array(3);
@@ -38,12 +49,17 @@ export function compose(
   let bb = channelMixer[2][2];
 
   //for each pixel in result
-  for (let i = 0, j = 0, len = result.length; i != len; i++, j += 4) {
+  for (let i = 0, j = 0, len = result.pixels.length; i != len; i++, j += 4) {
+    let x = i % result.width;
+    let y = Math.floor(i / result.width);
     //for each layer
     for (let k = 1; k < layers.length; k++) {
-      let tr = layers8[k][j] / 255.0;
-      let tg = layers8[k][j + 1] / 255.0;
-      let tb = layers8[k][j + 2] / 255.0;
+      if (x >= layers[k].width || y >= layers[k].height) continue;
+      let offset = y * (layers[k].width - result.width)
+      let kj = j + offset * 4
+      let tr = layers8[k][kj] / 255.0;
+      let tg = layers8[k][kj + 1] / 255.0;
+      let tb = layers8[k][kj + 2] / 255.0;
       let ta = layers[k].alpha;
 
       if (layers[k].blendMode == BlendMode.Screen) {
@@ -53,9 +69,10 @@ export function compose(
         result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
         result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
       } else if (layers[k].blendMode == BlendMode.Luminosity) {
-        rgbToHsl([tr, tg, tb], blendHsl);
-        rgbToHsl([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
-        hslToRgb([baseHsl[0], baseHsl[1], blendHsl[2]], rgb);
+        // if(result8[j]==255)
+        rgbToHsy([tr, tg, tb], blendHsl);
+        rgbToHsy([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
+        hsyToRgb([baseHsl[0], baseHsl[1], blendHsl[2]], rgb);
 
         result8[j] = rgb[0] * 255;
         result8[j + 1] = rgb[1] * 255;
@@ -91,7 +108,7 @@ export function compose(
     result8[j + 2] = Math.min(255, b)
 
   }
-  return result;
+  return result.pixels;
 }
 
 // function rgbToHsv(var_R: number, var_G: number, var_B: number) {
@@ -197,7 +214,7 @@ let R = 0.3, G = 0.59, B = 0.11;
  * @param rgb The input color RGB normalized components.
  * @param hsy The output color HSY normalized components.
  */
-function rgbToHsy(rgb: number[] | Uint8ClampedArray, hsy: number[] | Uint8ClampedArray) {
+function rgbToHsy(rgb: number[] | Float32Array, hsy: number[] | Float32Array) {
 
   let r = Math.min(Math.max(rgb[0], 0), 1);
   let g = Math.min(Math.max(rgb[1], 0), 1);
@@ -250,7 +267,7 @@ function rgbToHsy(rgb: number[] | Uint8ClampedArray, hsy: number[] | Uint8Clampe
 * @param hsy The input color HSY normalized components.
 * @param rgb The output color RGB normalized components.
 */
-function hsyToRgb(hsy: number[] | Uint8ClampedArray, rgb: number[] | Uint8ClampedArray) {
+function hsyToRgb(hsy: number[] | Float32Array, rgb: number[] | Float32Array) {
 
   let h = hsy[0] % 360;
   let s = Math.min(Math.max(hsy[1], 0), 1);
