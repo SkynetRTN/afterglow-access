@@ -138,6 +138,41 @@ th {
   font-weight: 500;
 }
 
+
+/** User theme/accessibility settings */
+.large {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-size: 1.25em;
+  }
+  .mat-slide-toggle {
+    line-height: normal;
+  }
+}
+
+.largest {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-size: 1.5em;
+  }
+  .mat-slide-toggle {
+    line-height: normal;
+  }
+}
+
+
+.bold {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-weight: bold;
+  }
+}
+
+.boldest {
+  label, .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, th, td, p, span, input, button, a, th, td, .mat-cell {
+    font-weight: bolder;
+  }
+}
+
+
+
 .data-provider-menu {
   max-width: 350px !important;
 }
