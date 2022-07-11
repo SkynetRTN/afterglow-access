@@ -10,13 +10,14 @@ import {
   distinctUntilChanged,
   withLatestFrom,
   concatMap,
+  take,
 } from 'rxjs/operators';
 
 declare let d3: any;
 
 import { Router } from '@angular/router';
 import { CorrelationIdGenerator } from '../../../utils/correlated-action';
-import { Store } from '@ngxs/store';
+import { Actions, ofActionCompleted, Store } from '@ngxs/store';
 import {
   DataFile,
   ImageHdu,
@@ -86,10 +87,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
   hdus$: Observable<IHdu[]>;
-  compositeHistData$: Observable<{ hist: ImageHist, normalizer: PixelNormalizer }[]>;
+  compositeHistData$: Observable<{ id: string, hist: ImageHist, normalizer: PixelNormalizer }[]>;
   activeHdu$: Observable<IHdu>;
   activeImageHdu$: Observable<ImageHdu>;
-  activeHistData$: Observable<{ hist: ImageHist, normalizer: PixelNormalizer }>;
+  activeHistData$: Observable<{ id: string, hist: ImageHist, normalizer: PixelNormalizer }>;
   activeTableHdu$: Observable<TableHdu>;
   firstImageHdu$: Observable<ImageHdu>;
   compositeNormalizer$: Observable<PixelNormalizer>;
@@ -123,7 +124,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     [new FormControl(''), new FormControl(''), new FormControl('')]
   ]
 
-  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog, private eventService: ImageViewerEventService, private cd: ChangeDetectorRef) {
+  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog, private eventService: ImageViewerEventService, private cd: ChangeDetectorRef, private actions$: Actions) {
     this.viewportSize$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
     );
@@ -144,7 +145,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       map(hdus => hdus.map(hdu => {
         if (!isImageHdu(hdu)) return null;
         if (!hdu.visible) return null;
-        return { hist: hdu.hist, normalizer: hdu.normalizer }
+        return { id: hdu.id, hist: hdu.hist, normalizer: hdu.normalizer }
       }).filter(value => value !== null))
     )
 
@@ -164,7 +165,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
     this.activeImageHdu$ = this.activeHdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
     this.activeHistData$ = this.activeImageHdu$.pipe(
-      map(hdu => hdu ? { hist: hdu.hist, normalizer: hdu.normalizer } : { hist: null, normalizer: null })
+      map(hdu => hdu ? { id: hdu.id, hist: hdu.hist, normalizer: hdu.normalizer } : { id: null, hist: null, normalizer: null })
     )
 
 
@@ -188,7 +189,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       }
       else {
         let imageHdus = hdus.filter(isImageHdu);
-        let hdu = imageHdus.find(hdu => hdu.hist.loaded)
+        let hdu = imageHdus.find(hdu => hdu.hist.loaded && hdu.visible)
         if (!hdu) return;
         let file = this.store.selectSnapshot(DataFilesState.getFileById(hdu.fileId))
         if (file.colorBalanceMode == ColorBalanceMode.PERCENTILE) {
@@ -292,9 +293,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           maxHeight: '800px',
           data: hdus.map(hdu => hdu.id)
         })
-        ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number }[]) => {
+        ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number, offset: number }[]) => {
           if (result) {
-            this.store.dispatch(result.map(r => new UpdateNormalizer(r.layerId, { layerScale: r.scale })))
+            this.store.dispatch(result.map(r => new UpdateNormalizer(r.layerId, { layerScale: r.scale, layerOffset: r.offset })))
           }
         });
       }
@@ -309,12 +310,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           width: '100%',
           height: '100%',
           maxWidth: '599px',
-          maxHeight: '500px',
+          maxHeight: '400px',
           data: hdus.map(hdu => hdu.id)
         })
-        ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number }[]) => {
+        ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number, offset: number }[]) => {
           if (result) {
-            this.store.dispatch(result.map(r => new UpdateNormalizer(r.layerId, { layerScale: r.scale })))
+            this.store.dispatch(result.map(r => new UpdateNormalizer(r.layerId, { layerScale: r.scale, layerOffset: r.offset })))
           }
         });
       }
@@ -326,7 +327,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       map(([event, file, hdus]) => hdus)
     ).subscribe((hdus) => {
       let fits: {
-        hdu: ImageHdu
+        hdu: { id: string, hist: ImageHist, normalizer: PixelNormalizer }
         bkgMu: number,
         bkgSigma: number,
         bkgPeak: number,
@@ -341,9 +342,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         fits.push(fitHistogram(hdu, false))
       })
 
-      fits.forEach(fit => {
-        console.log(`${fit.hdu.name}: ${fit.hdu.hist.minBin}, ${fit.hdu.hist.maxBin}, ${fit.hdu.hist.data.length}, ${getCountsPerBin(fit.hdu.hist)} | ${fit.bkgMu}, ${fit.bkgSigma}`)
-      })
+      // fits.forEach(fit => {
+      //   console.log(`${fit.hdu.name}: ${fit.hdu.hist.minBin}, ${fit.hdu.hist.maxBin}, ${fit.hdu.hist.data.length}, ${getCountsPerBin(fit.hdu.hist)} | ${fit.bkgMu}, ${fit.bkgSigma}`)
+      // })
 
       let actions: any[] = [];
       let ref = fits[0]

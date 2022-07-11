@@ -22,7 +22,7 @@ import { getMax } from 'src/app/utils/math';
 export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
 
-  @Input() data: { hist: ImageHist, normalizer: PixelNormalizer }[] = [];
+  @Input() data: { id: string, hist: ImageHist, normalizer: PixelNormalizer }[] = [];
   @Input() width: number;
   @Input() height: number;
   @Input() backgroundLevel: number = 0;
@@ -32,6 +32,13 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
   public logarithmicX: boolean = false;
   public logarithmicY: boolean = true;
   private observer: ResizeObserver;
+  private cachedColors: { [id: string]: string } = {};
+  private colorMapMarkerColorLookup = {
+    [redColorMap.name]: '#dc3912',
+    [greenColorMap.name]: '#109618',
+    [blueColorMap.name]: '#3366cc'
+  }
+  private nextColorIndex = 0;
 
   public chartData: Array<any> = [];
   public layout: Partial<any> = {
@@ -74,7 +81,27 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
       b: 50,
       t: 50,
     },
-  };
+
+    colorway: [
+      '#37b067',
+      '#bbe2ad',
+      '#6296bc',
+      '#b9d2d5',
+      '#eed39d',
+      '#eb6672',
+      '#eea7a7',
+      '#9f8cae',
+      '#d0cadb',
+      '#7fd7c1',
+      '#bbf2d5',
+      '#376c72',
+      '#ee9dcc',
+      '#f1c9dd',
+      '#e3791a',
+      '#ffc097',
+      '#9f765e',
+      '#dac1b1']
+  }
   public theme: PlotlyTheme;
 
   public logXButton = {
@@ -151,16 +178,21 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   updateChart() {
-    let markerColors = {}
-    markerColors[redColorMap.name] = '#dc3912'
-    markerColors[greenColorMap.name] = '#109618'
-    markerColors[blueColorMap.name] = '#3366cc'
 
     this.chartData = [];
     let data = this.data.filter(({ hist, normalizer }) => hist && normalizer && hist.loaded && hist.data)
     let refBinSize = Math.max(...data.map(d => getCountsPerBin(d.hist)))
-    data.forEach(({ hist, normalizer }) => {
+    data.forEach(({ id, hist, normalizer }) => {
       let binSize = getCountsPerBin(hist)
+      let color = this.cachedColors[id];
+      if (!color) {
+        color = this.colorMapMarkerColorLookup[normalizer.colorMapName];
+        if (!color) {
+          this.nextColorIndex = (this.nextColorIndex + 1) % this.layout.colorway.length;
+          color = this.layout.colorway[this.nextColorIndex]
+        }
+        this.cachedColors[id] = color;
+      }
 
 
       let x = [];
@@ -177,17 +209,17 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
         y: y,
         // fill: "tozeroy",
         type: 'scatter',
-        marker: {}
+        marker: {},
+        opacity: 0.75,
         // mode: "none"
       }
 
-
-      let markerColor = markerColors[normalizer.colorMapName];
-      if (markerColor) {
+      if (color) {
         d.marker = {
-          color: markerColor,
+
+          color: color,
           line: {
-            color: markerColor
+            color: color
           }
         }
       }

@@ -12,9 +12,13 @@ import { JobService } from 'src/app/jobs/services/job.service';
 import { toFieldCalibration, toPhotometryJobSettings, toSourceExtractionJobSettings } from '../../models/global-settings';
 import { WorkbenchState } from '../../workbench.state';
 import { LoadHduHeader } from 'src/app/data-files/data-files.actions';
-import { getExpLength, getFilter, IHdu } from 'src/app/data-files/models/data-file';
+import { getExpLength, getFilter, IHdu, ImageHdu, isImageHdu } from 'src/app/data-files/models/data-file';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
+import { neutralizeHistograms } from 'src/app/utils/histogram-fitting';
+import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
+import { ImageHist } from 'src/app/data-files/models/image-hist';
+import { DecimalPipe } from '@angular/common';
 
 interface Filter {
   name: string;
@@ -27,7 +31,8 @@ interface Layer {
   id: string,
   name: string,
   filter: Filter,
-  expLength: number
+  expLength: number;
+  hdu: ImageHdu
 }
 
 @Component({
@@ -98,10 +103,15 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
   form = new FormGroup({
     redLayer: new FormControl('', { validators: [Validators.required] }),
+    redZeroPoint: new FormControl('', { validators: [Validators.required, isNumber] }),
     blueLayer: new FormControl('', { validators: [Validators.required] }),
+    blueZeroPoint: new FormControl('', { validators: [Validators.required, isNumber] }),
     greenLayer: new FormControl('', { validators: [Validators.required] }),
+    greenZeroPoint: new FormControl('', { validators: [Validators.required, isNumber] }),
+    referenceLayer: new FormControl('', { validators: [Validators.required] }),
     whiteReference: new FormControl('', { validators: [Validators.required] }),
     extinction: new FormControl('0', { validators: [Validators.required, isNumber], updateOn: 'blur' }),
+    neutralizeBackground: new FormControl(true, { validators: [Validators.required] }),
   });
 
 
@@ -111,7 +121,8 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
     @Inject(MAT_DIALOG_DATA) public layerIds: string[],
     private store: Store,
     private jobService: JobService,
-    private actions$: Actions) {
+    private actions$: Actions,
+    private decimalPipe: DecimalPipe) {
   }
 
 
@@ -168,7 +179,8 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
         let id = this.layerIds[index];
         let name = this.store.selectSnapshot(DataFilesState.getHduById(id)).name;
-        this.layers.push({ id: id, name: name, filter: filter, expLength: expLength })
+        let hdu = this.store.selectSnapshot(DataFilesState.getHduById(id));
+        this.layers.push({ id: id, name: name, filter: filter, expLength: expLength, hdu: (isImageHdu(hdu) ? hdu : null) })
       }
 
       if (this.layers.length < 3) {
@@ -181,6 +193,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
         blueLayer: this.layers[0],
         greenLayer: this.layers[1],
         redLayer: this.layers[2],
+        referenceLayer: this.layers[0]
       });
 
       if (!this.form.controls.whiteReference.value) this.form.controls.whiteReference.setValue(this.FILTER_REFERENCES.find(ref => ref.peak == this.layers[0].filter.center));
@@ -238,11 +251,12 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
   }
 
-  start() {
+  calculateZeroPoints() {
     this.warnings = [];
     let redLayer = this.form.controls.redLayer.value as Layer;
     let greenLayer = this.form.controls.greenLayer.value as Layer;
     let blueLayer = this.form.controls.blueLayer.value as Layer;
+    let referenceLayer = this.form.controls.referenceLayer.value as Layer;
 
     this.running = true;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
@@ -288,50 +302,19 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
                 return;
               }
 
+              let blueZeroPoint = job.result.data.find(d => d.fileId == blueLayer.id).zeroPointCorr + job.photometrySettings.zeroPoint;
+              let greenZeroPoint = job.result.data.find(d => d.fileId == greenLayer.id).zeroPointCorr + job.photometrySettings.zeroPoint;
+              let redZeroPoint = job.result.data.find(d => d.fileId == redLayer.id).zeroPointCorr + job.photometrySettings.zeroPoint;
 
-              let blueFilter = blueLayer.filter;
-              let greenFilter = greenLayer.filter;
-              let redFilter = redLayer.filter;
-
-              let blueExpLength = blueLayer.expLength;
-              let greenExpLength = greenLayer.expLength;
-              let redExpLength = redLayer.expLength;
-
-              let aV = this.form.controls.extinction.value * 3.1;
-              let blueExtinction = this.calculateExtinction(aV, blueLayer.filter.center);
-              let blueZeroPoint = job.result.data.find(d => d.fileId == blueLayer.id).zeroPointCorr + job.photometrySettings.zeroPoint - blueExtinction;
-              let greenExtinction = this.calculateExtinction(aV, greenLayer.filter.center);
-              let greenZeroPoint = job.result.data.find(d => d.fileId == greenLayer.id).zeroPointCorr + job.photometrySettings.zeroPoint - greenExtinction;
-              let redExtinction = this.calculateExtinction(aV, redLayer.filter.center);
-              let redZeroPoint = job.result.data.find(d => d.fileId == redLayer.id).zeroPointCorr + job.photometrySettings.zeroPoint - redExtinction;
-
-
-              // blueZeroPoint = 20.323;
-              // greenZeroPoint = 20.964;
-              // redZeroPoint = 20.659;
-
-
-              let HCK = 14387.7688;
-              let POWER = 3;
-              let whiteRefPeak = this.form.controls.whiteReference.value.peak;
-              let whiteRefTemp = 2898.0 / whiteRefPeak;
-
-              let blueWBCorr = Math.pow((blueFilter.center / whiteRefPeak), POWER) * (Math.exp(HCK / whiteRefTemp / blueFilter.center) - 1) / (Math.exp(HCK / whiteRefTemp / whiteRefPeak) - 1);
-              let greenWBCorr = Math.pow((greenFilter.center / whiteRefPeak), POWER) * (Math.exp(HCK / whiteRefTemp / greenFilter.center) - 1) / (Math.exp(HCK / whiteRefTemp / whiteRefPeak) - 1);
-              let redWBCorr = Math.pow((redFilter.center / whiteRefPeak), POWER) * (Math.exp(HCK / whiteRefTemp / redFilter.center) - 1) / (Math.exp(HCK / whiteRefTemp / whiteRefPeak) - 1);
-
-              let greenZPCorr = Math.pow(10, (blueZeroPoint - greenZeroPoint) / 2.5) * (blueExpLength / greenExpLength);
-              let redZPCorr = Math.pow(10, (blueZeroPoint - redZeroPoint) / 2.5) * (blueExpLength / redExpLength);;
-
-              this.dialogRef.close([
-                { layerId: blueLayer.id, scale: 1 },
-                { layerId: greenLayer.id, scale: (greenWBCorr * greenZPCorr) / blueWBCorr },
-                { layerId: redLayer.id, scale: (redWBCorr * redZPCorr) / blueWBCorr }
-              ])
-
+              this.form.patchValue({
+                redZeroPoint: this.decimalPipe.transform(redZeroPoint, '1.0-5'),
+                blueZeroPoint: this.decimalPipe.transform(blueZeroPoint, '1.0-5'),
+                greenZeroPoint: this.decimalPipe.transform(greenZeroPoint, '1.0-5')
+              })
+              this.statusMessage$.next(`Zero point measurement successful`);
             }
             else {
-              this.statusMessage$.next(`Field calibration completed. Downloading result.`);
+              this.statusMessage$.next(`Field calibration completed. Downloading result...`);
             }
           }
 
@@ -345,8 +328,81 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
       },
       () => {
-
+        this.running = false;
       })
+  }
+
+  start() {
+    this.warnings = [];
+    let redLayer = this.form.controls.redLayer.value as Layer;
+    let greenLayer = this.form.controls.greenLayer.value as Layer;
+    let blueLayer = this.form.controls.blueLayer.value as Layer;
+    let referenceLayer = this.form.controls.referenceLayer.value as Layer;
+
+    this.running = true;
+    let blueFilter = blueLayer.filter;
+    let greenFilter = greenLayer.filter;
+    let redFilter = redLayer.filter;
+
+    let blueExpLength = blueLayer.expLength;
+    let greenExpLength = greenLayer.expLength;
+    let redExpLength = redLayer.expLength;
+    let referenceExpLength = referenceLayer.expLength;
+
+    let aV = this.form.controls.extinction.value * 3.1;
+    let blueExtinction = this.calculateExtinction(aV, blueLayer.filter.center);
+    let blueZeroPoint = this.form.value.blueZeroPoint - blueExtinction;
+    let greenExtinction = this.calculateExtinction(aV, greenLayer.filter.center);
+    let greenZeroPoint = this.form.value.greenZeroPoint - greenExtinction;
+    let redExtinction = this.calculateExtinction(aV, redLayer.filter.center);
+    let redZeroPoint = this.form.value.redZeroPoint - redExtinction;
+    let referenceZeroPoint = (referenceLayer.id == blueLayer.id ? blueZeroPoint : (referenceLayer.id == greenLayer.id ? greenZeroPoint : redZeroPoint))
+
+    let HCK = 14387.7688;
+    let POWER = 3;
+    let whiteRefPeak = this.form.controls.whiteReference.value.peak;
+    let whiteRefTemp = 2898.0 / whiteRefPeak;
+
+    let blueWBCorr = Math.pow((blueFilter.center / whiteRefPeak), POWER) * (Math.exp(HCK / whiteRefTemp / blueFilter.center) - 1) / (Math.exp(HCK / whiteRefTemp / whiteRefPeak) - 1);
+    let greenWBCorr = Math.pow((greenFilter.center / whiteRefPeak), POWER) * (Math.exp(HCK / whiteRefTemp / greenFilter.center) - 1) / (Math.exp(HCK / whiteRefTemp / whiteRefPeak) - 1);
+    let redWBCorr = Math.pow((redFilter.center / whiteRefPeak), POWER) * (Math.exp(HCK / whiteRefTemp / redFilter.center) - 1) / (Math.exp(HCK / whiteRefTemp / whiteRefPeak) - 1);
+    let referenceWBCorr = (referenceLayer.id == blueLayer.id ? blueWBCorr : (referenceLayer.id == greenLayer.id ? greenWBCorr : redWBCorr))
+
+    let blueZeroPointCorr = Math.pow(10, (referenceZeroPoint - blueZeroPoint) / 2.5) * (referenceExpLength / blueExpLength);
+    let greenZeroPointCorr = Math.pow(10, (referenceZeroPoint - greenZeroPoint) / 2.5) * (referenceExpLength / greenExpLength);
+    let redZeroPointCorr = Math.pow(10, (referenceZeroPoint - redZeroPoint) / 2.5) * (referenceExpLength / redExpLength);
+    let referenceZPCorr = (referenceLayer.id == blueLayer.id ? blueZeroPointCorr : (referenceLayer.id == greenLayer.id ? greenZeroPointCorr : redZeroPointCorr))
+
+    let results = [
+      { layerId: blueLayer.id, scale: referenceLayer.hdu.normalizer.layerScale * (blueWBCorr * blueZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: blueLayer.hdu.normalizer.layerOffset },
+      { layerId: greenLayer.id, scale: referenceLayer.hdu.normalizer.layerScale * (greenWBCorr * greenZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: greenLayer.hdu.normalizer.layerOffset },
+      { layerId: redLayer.id, scale: referenceLayer.hdu.normalizer.layerScale * (redWBCorr * redZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: redLayer.hdu.normalizer.layerOffset }
+    ]
+
+    if (this.form.controls.neutralizeBackground.value) {
+      this.statusMessage$.next(`Neutralizing backgrounds...`);
+
+      let d = results.map(result => {
+        let hdu = this.store.selectSnapshot(DataFilesState.getHduById(result.layerId));
+        if (!isImageHdu(hdu)) return null;
+
+        return {
+          id: hdu.id,
+          name: hdu.name,
+          hist: hdu.hist,
+          normalizer: {
+            ...hdu.normalizer,
+            layerScale: result.scale
+          }
+        }
+      })
+
+      results = neutralizeHistograms(d, referenceLayer.id, false);
+
+    }
+
+    this.dialogRef.close(results)
+
   }
 
 }

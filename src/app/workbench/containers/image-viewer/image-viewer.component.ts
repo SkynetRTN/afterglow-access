@@ -85,7 +85,7 @@ import {
   UpdateNormalizedImageTileSuccess,
 } from '../../../data-files/data-files.actions';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
+import { Transform, getImageToViewportTransform, transformToMatrix } from '../../../data-files/models/transformation';
 import { IImageData, ImageTile } from '../../../data-files/models/image-data';
 import { UpdateCurrentViewportSize } from '../../workbench.actions';
 import { IViewer, ImageViewer } from '../../models/viewer';
@@ -640,20 +640,32 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    let canvas: HTMLCanvasElement = document.createElement('canvas');
-    let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
+    let imageCanvas: HTMLCanvasElement = document.createElement('canvas');
+    let imageCtx: CanvasRenderingContext2D = imageCanvas.getContext('2d');
+    imageCanvas.width = imageData.width;
+    imageCanvas.height = imageData.height;
+
 
 
 
     let tiles = imageData.tiles;
     for (let tile of tiles) {
-      let imageData = ctx.createImageData(tile.width, tile.height);
+      let imageData = imageCtx.createImageData(tile.width, tile.height);
       let blendedImageDataUint8Clamped = new Uint8ClampedArray(tile.pixels.buffer);
       imageData.data.set(blendedImageDataUint8Clamped);
-      ctx.putImageData(imageData, tile.x, tile.y);
+      imageCtx.putImageData(imageData, tile.x, tile.y);
     }
+
+    let canvas: HTMLCanvasElement = document.createElement('canvas');
+    let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    let transform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(this.viewer.id));
+    let matrix = transformToMatrix(transform);
+    matrix.applyToContext(ctx);
+
+    ctx.drawImage(imageCanvas, 0, 0);
+
 
 
 

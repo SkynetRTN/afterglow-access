@@ -1,25 +1,66 @@
 <div fxLayout="column" fxLayoutGap="20px" style="height: 100%">
     <form [formGroup]="form">
         <div fxLayout="column" fxLayoutGap="20px" style="width: 100%">
+            <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
+                <mat-form-field style="width: 100%;">
+                    <mat-label i18n>Blue</mat-label>
+                    <mat-select formControlName="blueLayer" style="width: 100%">
+                        <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <input type="number" matInput i18n-placeholder placeholder="Blue Zero Point"
+                        formControlName="blueZeroPoint" />
+                    <mat-hint i18n></mat-hint>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
+                <mat-form-field style="width: 100%;">
+                    <mat-label i18n>Green</mat-label>
+                    <mat-select formControlName="greenLayer" style="width: 100%">
+                        <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <input type="number" matInput i18n-placeholder placeholder="Green Zero Point"
+                        formControlName="greenZeroPoint" />
+                    <mat-hint i18n></mat-hint>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
+                <mat-form-field style="width: 100%;">
+                    <mat-label i18n>Red</mat-label>
+                    <mat-select formControlName="redLayer" style="width: 100%">
+                        <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <input type="number" matInput i18n-placeholder placeholder="Red Zero Point"
+                        formControlName="redZeroPoint" />
+                    <mat-hint i18n></mat-hint>
+                </mat-form-field>
+            </div>
 
-            <mat-form-field style="width: 100%;">
-                <mat-label i18n>Blue</mat-label>
-                <mat-select formControlName="blueLayer" style="width: 100%">
-                    <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+            <button mat-raised-button (click)="calculateZeroPoints()"
+                [disabled]="!ready || running || !form.controls.blueLayer.valid || !form.controls.greenLayer.valid || !form.controls.redLayer.valid">
+                <mat-icon>colorize</mat-icon> Measure zero points with field calibration
+            </button>
+
+
+            <mat-form-field appearance="outline">
+                <mat-label i18n>Reference Layer</mat-label>
+                <mat-select formControlName="referenceLayer">
+                    <mat-option *ngIf="form.controls.blueLayer.value; let layer" [value]="layer">
+                        {{ layer.name }}
                     </mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field style="width: 100%;">
-                <mat-label i18n>Green</mat-label>
-                <mat-select formControlName="greenLayer" style="width: 100%">
-                    <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    <mat-option *ngIf="form.controls.greenLayer.value; let layer" [value]="layer">
+                        {{ layer.name }}
                     </mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field style="width: 100%;">
-                <mat-label i18n>Red</mat-label>
-                <mat-select formControlName="redLayer" style="width: 100%">
-                    <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    <mat-option *ngIf="form.controls.redLayer.value; let layer" [value]="layer">
+                        {{ layer.name }}
                     </mat-option>
                 </mat-select>
             </mat-form-field>
@@ -45,24 +86,33 @@
                 <app-print-form-error [control]="form.get('extinction')"></app-print-form-error>
 
             </div>
+            <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px" style="margin-bottom: 15px; margin-left: 20px">
+                <mat-checkbox formControlName="neutralizeBackground">Neutralize background</mat-checkbox>
+            </div>
 
 
         </div>
     </form>
-    <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Start</button>
+    <div fxLayout="row" fxLayoutGap="10px" style="width: 100%" fxLayoutAlign="end center">
+        <button mat-button (click)="dialogRef.close()">Cancel</button>
+        <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Calibrate Colors</button>
+    </div>
+
 
     <ng-container *ngIf="warnings.length != 0">
-        <span class="alert-warning" *ngFor="let warning of warnings"
-            style="width: 100%; padding: 5px">{{warning}}</span>
+        <div class="alert-warning" style="width: 100%; padding: 5px">
+            <ng-container>{{warnings.join(', ')}}</ng-container>
+        </div>
     </ng-container>
     <ng-container *ngIf="errors.length != 0; else statusMessageBlock">
         <span class="alert-danger" *ngFor="let error of errors" style="width: 100%; padding: 5px">{{error}}</span>
     </ng-container>
 
     <ng-template #statusMessageBlock>
-        <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px">
+        <div *ngIf="running || (statusMessage$ | async)" fxLayout="column" fxLayoutAlign="center center"
+            fxLayoutGap="15px" class="alert-info p-5">
             <mat-progress-bar *ngIf="running" mode="indeterminate" color="accent"></mat-progress-bar>
-            <span>{{statusMessage$ | async}}</span>
+            <div>{{statusMessage$ | async}}</div>
         </div>
 
     </ng-template>

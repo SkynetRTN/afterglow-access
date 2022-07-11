@@ -30,12 +30,20 @@
                     <mat-icon>clear</mat-icon>
                 </button>
             </div>
+            <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px" style="margin-bottom: 15px; margin-left: 20px">
+                <mat-checkbox formControlName="neutralizeBackground">Neutralize background</mat-checkbox>
+            </div>
 
 
 
         </div>
     </form>
-    <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Start</button>
+    <div fxLayout="row" fxLayoutGap="10px" style="width: 100%" fxLayoutAlign="end center">
+        <button mat-button (click)="dialogRef.close()">Cancel</button>
+        <button mat-button (click)="start()" [disabled]="!ready || running || !form.valid">Neutralize Sources</button>
+    </div>
+
+
 
     <ng-container *ngIf="warnings.length != 0">
         <span class="alert-warning" *ngFor="let warning of warnings"
@@ -46,9 +54,10 @@
     </ng-container>
 
     <ng-template #statusMessageBlock>
-        <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px">
+        <div *ngIf="running || (statusMessage$ | async)" fxLayout="column" fxLayoutAlign="center center"
+            fxLayoutGap="10px" class="alert-info p-5">
             <mat-progress-bar *ngIf="running" mode="indeterminate" color="accent"></mat-progress-bar>
-            <span>{{statusMessage$ | async}}</span>
+            <div>{{statusMessage$ | async}}</div>
         </div>
 
     </ng-template>
