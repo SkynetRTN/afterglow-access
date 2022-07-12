@@ -43,19 +43,19 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
 
   let stretchFn: (x: number) => number;
   switch (stretchMode) {
-    case StretchMode.ArcSinh: {
-      stretchFn = function (x: number) {
-        return Math.asinh(10.0 * x) / Math.asinh(10);
-      };
-      // console.log('ArcSinh');
-      break;
-    }
-
     case StretchMode.Log: {
       stretchFn = function (x: number) {
         return Math.log10(1000.0 * x + 1) / Math.log10(1001.0);
       };
       // console.log('Log');
+      break;
+    }
+
+    case StretchMode.Exponential: {
+      stretchFn = function (x: number) {
+        return (Math.pow(10, 2 * x) - 1) / 99;
+      };
+      // console.log('SquareRoot');
       break;
     }
 
@@ -66,6 +66,33 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
       // console.log('SquareRoot');
       break;
     }
+
+    case StretchMode.Square: {
+      stretchFn = function (x: number) {
+        return Math.pow(x, 2)
+      };
+      // console.log('SquareRoot');
+      break;
+    }
+
+    case StretchMode.HyperbolicArcSinh: {
+      stretchFn = function (x: number) {
+        return Math.asinh(10.0 * x) / Math.asinh(10);
+      };
+      // console.log('ArcSinh');
+      break;
+    }
+
+    case StretchMode.HyperbolicSine: {
+      stretchFn = function (x: number) {
+        return Math.sinh(10.0 * x) / Math.sinh(10)
+      };
+      // console.log('ArcSinh');
+      break;
+    }
+
+
+
 
     default: {
       stretchFn = function (x: number) {

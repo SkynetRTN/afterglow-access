@@ -50,7 +50,10 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     { label: 'Linear', value: StretchMode.Linear },
     { label: 'Logarithmic', value: StretchMode.Log },
     { label: 'Square Root', value: StretchMode.SquareRoot },
-    { label: 'Hyperbolic Arcsine', value: StretchMode.ArcSinh },
+    { label: 'Hyperbolic Arcsine', value: StretchMode.HyperbolicArcSinh },
+    { label: 'Exponential', value: StretchMode.Exponential },
+    { label: 'Square', value: StretchMode.Square },
+    { label: 'Hyperbolic Sine', value: StretchMode.HyperbolicSine },
   ];
 
   colorMaps = [

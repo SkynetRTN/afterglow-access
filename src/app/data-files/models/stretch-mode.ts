@@ -1,6 +1,9 @@
 export enum StretchMode {
   Linear = "Linear",
-  ArcSinh = "Hyberbolic Arcsine",
   Log = "Logarithmic",
   SquareRoot = "Square Root",
+  HyperbolicArcSinh = "Hyberbolic Arcsine",
+  Exponential = "Exponential",
+  Square = "Square",
+  HyperbolicSine = "Hyperbolic Sine"
 }
