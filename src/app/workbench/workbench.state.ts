@@ -992,8 +992,9 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileHdusByViewerId(viewerId), DataFilesState.getHeaderEntities],
       (hdus: IHdu[], headerEntities: { [id: string]: Header }) => {
-        hdus = hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[];
-        return !hdus || hdus.length == 0 ? null : headerEntities[hdus[0]?.headerId];
+        if (!hdus) return null;
+        hdus = hdus.filter(isImageHdu).filter(hdu => hdu.visible);
+        return hdus.length == 0 ? null : headerEntities[hdus[0]?.headerId];
       }
     );
   }
@@ -1013,7 +1014,20 @@ export class WorkbenchState {
       [
         WorkbenchState.getViewerById(viewerId),
         WorkbenchState.getHduHeaderByViewerId(viewerId),
-        WorkbenchState.getFileHeaderByViewerId,
+        WorkbenchState.getFileHeaderByViewerId(viewerId),
+      ],
+      (viewer: Viewer, hduHeader: Header, fileHeader: Header) => {
+        return viewer?.hduId ? hduHeader : fileHeader;
+      }
+    );
+  }
+
+  public static getImageHeaderByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerById(viewerId),
+        WorkbenchState.getHduHeaderByViewerId(viewerId),
+        WorkbenchState.getFileImageHeaderByViewerId(viewerId),
       ],
       (viewer: Viewer, hduHeader: Header, fileHeader: Header) => {
         return viewer?.hduId ? hduHeader : fileHeader;
@@ -1459,8 +1473,8 @@ export class WorkbenchState {
     if (refViewer) {
       refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(refViewer.id));
       refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(refViewer.id));
-      refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(refViewer.id));
-      refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(refViewer.id))?.id;
+      refHeader = this.store.selectSnapshot(WorkbenchState.getImageHeaderByViewerId(refViewer.id));
+      refImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataByViewerId(refViewer.id))?.id;
 
       if (refViewer.hduId) {
         let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
@@ -1887,8 +1901,8 @@ export class WorkbenchState {
 
     let refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(refViewer.id));
     let refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(refViewer.id));
-    let refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(refViewer.id));
-    let refImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(refViewer.id));
+    let refHeader = this.store.selectSnapshot(WorkbenchState.getImageHeaderByViewerId(refViewer.id));
+    let refImageData = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataByViewerId(refViewer.id));
 
     let refNormalization: PixelNormalizer;
     if (refViewer.hduId) {
@@ -4488,7 +4502,7 @@ export class WorkbenchState {
 
     let actions: any[] = [];
     visibleViewers.forEach((viewer) => {
-      let targetHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(viewer.id));
+      let targetHeader = this.store.selectSnapshot(WorkbenchState.getImageHeaderByViewerId(viewer.id));
       let targetImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(viewer.id));
       let targetViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(viewer.id));
 
@@ -4531,7 +4545,7 @@ export class WorkbenchState {
           }
         }
       } else {
-        let targetImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(viewer.id));
+        let targetImageData = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataByViewerId(viewer.id));
         let refImageData = imageDataEntities[refImageDataId];
 
         if (refImageData && targetImageData) {

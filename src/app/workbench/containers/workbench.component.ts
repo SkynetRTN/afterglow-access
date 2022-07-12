@@ -229,10 +229,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
-          let refHeader$ = this.store.select(WorkbenchState.getHeaderByViewerId(focusedViewerId));
+          let refHeader$ = this.store.select(WorkbenchState.getImageHeaderByViewerId(focusedViewerId));
           let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformByViewerId(focusedViewerId));
           let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformByViewerId(focusedViewerId));
-          let refImageData$ = this.store.select(WorkbenchState.getRawImageDataByViewerId(focusedViewerId));
+          let refImageData$ = this.store.select(WorkbenchState.getNormalizedImageDataByViewerId(focusedViewerId));
           let refViewer$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId));
 
           let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$, refViewer$).pipe(
