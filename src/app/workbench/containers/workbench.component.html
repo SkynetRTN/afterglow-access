@@ -274,109 +274,178 @@
     [class.collapsed]="!(showConfig$ | async)">
     <nav role="navigation" i18n-aria-label aria-label="workbench" *ngIf="activeTool$ | async; let activeTool">
       <div class="vertical-icon-nav-item-group">
-        <div class="vertical-icon-nav-item" i18n-matTooltip
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')" [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.VIEWER, 'Display')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER"
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER else viewerButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Display" [matTooltipPosition]="'left'"
+          attr.aria-label="Hide Display" aria-selected (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
           <button mat-icon-button>
             <mat-icon>remove_red_eye</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item" i18n-matTooltip
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')" [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.INFO, 'File Info')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.INFO"
+        <ng-template #viewerButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Display" [matTooltipPosition]="'left'"
+            attr.aria-label="Show Display" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
+            <button mat-icon-button>
+              <mat-icon>remove_red_eye</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.INFO else fileInfoButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide File Info"
+          [matTooltipPosition]="'left'" aria-label="Hide File Info" aria-selected
           (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.INFO)">
           <button mat-icon-button>
             <mat-icon>info</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item" i18n-matTooltip
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
-          [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.CUSTOM_MARKER, 'Custom Markers')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER"
+        <ng-template #fileInfoButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show File Info" [matTooltipPosition]="'left'"
+            aria-label="Show File Info" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.INFO)">
+            <button mat-icon-button>
+              <mat-icon>info</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.CUSTOM_MARKER else customMarkerButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Custom Marker"
+          [matTooltipPosition]="'left'" aria-label="Hide Custom Marker" aria-selected
           (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.CUSTOM_MARKER)">
           <button mat-icon-button>
             <mat-icon>place</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')" [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PLOTTER, 'Plotter')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER"
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)">
+        <ng-template #customMarkerButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Custom Marker"
+            [matTooltipPosition]="'left'" aria-label="Show Custom Marker"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.CUSTOM_MARKER)">
+            <button mat-icon-button>
+              <mat-icon>place</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PLOTTER else plotterButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Plotter" [matTooltipPosition]="'left'"
+          aria-label="Hide Plotter" aria-selected (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)">
           <button mat-icon-button>
             <mat-icon>show_chart</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.SONIFIER, 'Sonification')"
-          [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.SONIFIER, 'Sonification')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER"
+        <ng-template #plotterButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Plotter" [matTooltipPosition]="'left'"
+            aria-label="Show Plotter" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PLOTTER)">
+            <button mat-icon-button>
+              <mat-icon>show_chart</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.SONIFIER else sonificationButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Sonification"
+          [matTooltipPosition]="'left'" aria-label="Hide Sonification" aria-selected
           (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SONIFIER)">
           <button mat-icon-button>
             <mat-icon>audiotrack</mat-icon>
           </button>
         </div>
+        <ng-template #sonificationButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Sonification"
+            [matTooltipPosition]="'left'" aria-label="Show Sonification"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SONIFIER)">
+            <button mat-icon-button>
+              <mat-icon>audiotrack</mat-icon>
+            </button>
+          </div>
+        </ng-template>
 
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PHOTOMETRY, 'Photometry')"
-          [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PHOTOMETRY, 'Photometry')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY"
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY else photometryButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Photometry"
+          [matTooltipPosition]="'left'" aria-label="Hide Photometry" aria-selected
           (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
           <button mat-icon-button>
             <mat-icon>star_border</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
-          [matTooltipPosition]="'left'" [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.PIXEL_OPS, 'Pixel Operations')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS"
+        <ng-template #photometryButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Photometry" [matTooltipPosition]="'left'"
+            aria-label="Show Photometry" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
+            <button mat-icon-button>
+              <mat-icon>star_border</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS else pixelOpsButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Pixel Operations"
+          [matTooltipPosition]="'left'" aria-label="Hide Pixel Operations" aria-selected
           (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
           <button mat-icon-button>
             <mat-icon>add_to_photos</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
-          [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.WCS_CALIBRATION, 'WCS Calibration')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION"
+        <ng-template #pixelOpsButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Pixel Operations"
+            [matTooltipPosition]="'left'" aria-label="Show Pixel Operations"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
+            <button mat-icon-button>
+              <mat-icon>add_to_photos</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION else wcsCalibrationButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide WCS Calibration"
+          [matTooltipPosition]="'left'" aria-label="Hide WCS Calibration" aria-selected
           (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.WCS_CALIBRATION)">
           <button mat-icon-button>
             <mat-icon>gps_fixed</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')" [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.ALIGNER, 'Aligner')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER"
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)">
+        <ng-template #wcsCalibrationButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show WCS Calibration"
+            [matTooltipPosition]="'left'" aria-label="Show WCS Calibration"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.WCS_CALIBRATION)">
+            <button mat-icon-button>
+              <mat-icon>gps_fixed</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER else alignerButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Aligner" [matTooltipPosition]="'left'"
+          aria-label="Hide Aligner" aria-selected (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)">
           <button mat-icon-button>
             <mat-icon>photo_size_select_large</mat-icon>
           </button>
         </div>
-        <div class="vertical-icon-nav-item"
-          [matTooltip]="getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')" [matTooltipPosition]="'left'"
-          [class.active]="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER"
-          [attr.aria-label]="getToolbarTooltip(activeTool == WorkbenchTool.STACKER, 'Stacker')"
-          [attr.aria-selected]="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER"
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)">
+        <ng-template #alignerButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Aligner" [matTooltipPosition]="'left'"
+            aria-label="Show Aligner" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.ALIGNER)">
+            <button mat-icon-button>
+              <mat-icon>photo_size_select_large</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.STACKER else stackerButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Stacker" [matTooltipPosition]="'left'"
+          aria-label="Hide Stacker" aria-selected (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)">
           <button mat-icon-button>
             <mat-icon>photo_library</mat-icon>
           </button>
         </div>
+        <ng-template #stackerButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Stacker" [matTooltipPosition]="'left'"
+            aria-label="Show Stacker" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.STACKER)">
+            <button mat-icon-button>
+              <mat-icon>photo_library</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
       </div>
     </nav>
   </div>
