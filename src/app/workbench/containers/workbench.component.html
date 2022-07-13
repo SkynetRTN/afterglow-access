@@ -1,32 +1,41 @@
 <div fxLayout="row" fxFill>
   <div fxFlex="0 0 50px" class="sidebar-nav h-100" [class.collapsed]="!(showSidebar$ | async)">
     <div class="vertical-icon-nav-item-group">
-      <div id="tab-view-file-library" class="vertical-icon-nav-item" [matTooltip]="
-          ((showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES ? 'Hide' : 'Show') +
-          ' File Library List'
-        " [matTooltipPosition]="'right'"
-        [class.active]="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES" attr.aria-label="{{
-          (showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES ? 'Hide' : 'Show'
-        }} File Library List"
-        [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES"
-        (click)="setSidebarView(SidebarView.FILES)">
+      <div
+        *ngIf="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.FILES else showFileLibraryListButtonBlock"
+        id="tab-view-file-library" class="vertical-icon-nav-item active" i18n-matTooltip
+        matTooltip="Hide File Library List" [matTooltipPosition]="'right'" [class.active]="true" i18n-aria-label
+        aria-label="Hide File Library List" aria-selected (click)="setSidebarView(SidebarView.FILES)">
         <button mat-icon-button>
           <mat-icon>description</mat-icon>
         </button>
       </div>
-      <div id="tab-view-settings" class="vertical-icon-nav-item" [matTooltip]="
-          ((showSidebar$ | async) && (sidebarView$ | async) == SidebarView.SETTINGS ? 'Hide' : 'Show') +
-          ' Workbench Settings'
-        " [matTooltipPosition]="'right'"
-        [class.active]="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.SETTINGS" attr.aria-label="{{
-          (showSidebar$ | async) && (sidebarView$ | async) == SidebarView.SETTINGS ? 'Hide' : 'Show'
-        }} Workbench Settings"
-        [attr.aria-selected]="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.SETTINGS"
-        (click)="setSidebarView(SidebarView.SETTINGS)">
+      <ng-template #showFileLibraryListButtonBlock>
+        <div id="tab-view-file-library" class="vertical-icon-nav-item active" i18n-matTooltip
+          matTooltip="Show File Library List" [matTooltipPosition]="'right'" [class.active]="false" i18n-aria-label
+          aria-label="Show File Library List" (click)="setSidebarView(SidebarView.FILES)">
+          <button mat-icon-button>
+            <mat-icon>description</mat-icon>
+          </button>
+        </div>
+      </ng-template>
+      <div *ngIf="(showSidebar$ | async) && (sidebarView$ | async) == SidebarView.SETTINGS else showSettingsButtonBlock"
+        id="tab-view-settings" class="vertical-icon-nav-item active" i18n-matTooltip
+        matTooltip="Hide Workbench Settings" [matTooltipPosition]="'right'" [class.active]="true" i18n-aria-label
+        aria-label="Hide Workbench Settings" aria-selected (click)="setSidebarView(SidebarView.SETTINGS)">
         <button mat-icon-button>
           <mat-icon>settings_applications</mat-icon>
         </button>
       </div>
+      <ng-template #showSettingsButtonBlock>
+        <div id="tab-view-settings" class="vertical-icon-nav-item active" i18n-matTooltip
+          matTooltip="Show Workbench Settings" [matTooltipPosition]="'right'" [class.active]="false" i18n-aria-label
+          aria-label="Show Workbench Settings" (click)="setSidebarView(SidebarView.SETTINGS)">
+          <button mat-icon-button>
+            <mat-icon>settings_applications</mat-icon>
+          </button>
+        </div>
+      </ng-template>
     </div>
   </div>
   <div #sidebarPanel fxFlex="0 0 auto" style="width: 300px" class="sidebar-panel"
