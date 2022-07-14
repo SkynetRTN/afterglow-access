@@ -141,7 +141,7 @@ export interface DataFilesStateModel {
 }
 
 const dataFilesDefaultState: DataFilesStateModel = {
-  version: '7796fad3-caaf-494e-b8bc-90c59e88df30',
+  version: 'e25126c8-b3fc-4e85-a588-02594cd09ef6',
   nextIdSeed: 0,
   fileIds: [],
   fileEntities: {},
@@ -580,6 +580,7 @@ export class DataFilesState {
                   normalizer: {
                     mode: 'percentile',
                     backgroundPercentile: 10,
+                    midPercentile: 99,
                     peakPercentile: 99,
                     colorMapName: grayColorMap.name,
                     stretchMode: StretchMode.Linear,
@@ -809,17 +810,27 @@ export class DataFilesState {
               if (backgroundPercentile !== undefined) {
                 hdu.normalizer.backgroundPercentile = backgroundPercentile;
               }
+              let midPercentile = getHeaderEntry(header, AfterglowHeaderKey.AG_MIDP)?.value;
+              if (midPercentile !== undefined) {
+                hdu.normalizer.midPercentile = midPercentile;
+              }
               let peakPercentile = getHeaderEntry(header, AfterglowHeaderKey.AG_PEAKP)?.value;
               if (peakPercentile !== undefined) {
                 hdu.normalizer.peakPercentile = peakPercentile;
               }
 
+
+
               let backgroundLevel = getHeaderEntry(header, AfterglowHeaderKey.AG_BKGL)?.value;
-              if (backgroundPercentile !== undefined) {
+              if (backgroundLevel !== undefined) {
                 hdu.normalizer.backgroundLevel = backgroundLevel;
               }
+              let midLevel = getHeaderEntry(header, AfterglowHeaderKey.AG_MIDL)?.value;
+              if (midLevel !== undefined) {
+                hdu.normalizer.midLevel = midLevel;
+              }
               let peakLevel = getHeaderEntry(header, AfterglowHeaderKey.AG_PEAKL)?.value;
-              if (peakPercentile !== undefined) {
+              if (peakLevel !== undefined) {
                 hdu.normalizer.peakLevel = peakLevel;
               }
 
@@ -1021,8 +1032,10 @@ export class DataFilesState {
           new UpdateNormalizer(hduId, {
             mode: hdu.normalizer.mode,
             backgroundPercentile: hdu.normalizer.backgroundPercentile,
+            midPercentile: hdu.normalizer.midPercentile,
             peakPercentile: hdu.normalizer.peakPercentile,
             backgroundLevel: hdu.normalizer.backgroundLevel,
+            midLevel: hdu.normalizer.midLevel,
             peakLevel: hdu.normalizer.peakLevel
           }) //trigger recalculation of background levels and/or percentiles depending on mode
         ]);
@@ -1439,11 +1452,11 @@ export class DataFilesState {
 
     let sync = value != ColorBalanceMode.MANUAL;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu);
-    if (value != ColorBalanceMode.HISTOGRAM_FITTING && value != ColorBalanceMode.MANUAL) {
-      hdus.forEach(hdu => {
-        actions.push(new UpdateNormalizer(hdu.id, { layerOffset: 0, layerScale: 1 }))
-      })
-    }
+    // if (value != ColorBalanceMode.HISTOGRAM_FITTING && value != ColorBalanceMode.MANUAL) {
+    //   hdus.forEach(hdu => {
+    //     actions.push(new UpdateNormalizer(hdu.id, { layerOffset: 0, layerScale: 1 }))
+    //   })
+    // }
     if (sync) {
       let hdu = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
       if (hdu) {
@@ -1501,13 +1514,19 @@ export class DataFilesState {
 
     if (hdu.hist.loaded) {
       if (normalizer.mode == 'percentile') {
-        let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.peakPercentile);
+        let levels = calcLevels(hdu.hist, normalizer.backgroundPercentile, normalizer.midPercentile, normalizer.peakPercentile);
         normalizer.backgroundLevel = levels.backgroundLevel * normalizer.layerScale + normalizer.layerOffset;
+        normalizer.midLevel = levels.midLevel * normalizer.layerScale + normalizer.layerOffset;
         normalizer.peakLevel = levels.peakLevel * normalizer.layerScale + normalizer.layerOffset
       }
       else if (normalizer.mode == 'pixel') {
-        let percentiles = calcPercentiles(hdu.hist, (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale, (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
+        let percentiles = calcPercentiles(
+          hdu.hist,
+          (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale,
+          (normalizer.midLevel - normalizer.layerOffset) / normalizer.layerScale,
+          (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
         normalizer.backgroundPercentile = percentiles.lowerPercentile;
+        normalizer.midPercentile = percentiles.midPercentile;
         normalizer.peakPercentile = percentiles.upperPercentile;
       }
     }
@@ -1542,12 +1561,14 @@ export class DataFilesState {
           result = {
             ...result,
             backgroundLevel: value.backgroundLevel,
+            midLevel: value.midLevel,
             peakLevel: value.peakLevel
           }
         } else {
           result = {
             ...result,
             backgroundPercentile: value.backgroundPercentile,
+            midPercentile: value.midPercentile,
             peakPercentile: value.peakPercentile,
           }
         }

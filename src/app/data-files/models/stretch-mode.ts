@@ -5,5 +5,6 @@ export enum StretchMode {
   HyperbolicArcSinh = "Hyberbolic Arcsine",
   Exponential = "Exponential",
   Square = "Square",
-  HyperbolicSine = "Hyperbolic Sine"
+  HyperbolicSine = "Hyperbolic Sine",
+  MidLevel = "Mid Level"
 }

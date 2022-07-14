@@ -33,8 +33,10 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() showLayerOffset = true;
 
   @Output() backgroundPercentileChange = new EventEmitter<number>();
+  @Output() midPercentileChange = new EventEmitter<number>();
   @Output() peakPercentileChange = new EventEmitter<number>();
   @Output() backgroundLevelChange = new EventEmitter<number>();
+  @Output() midLevelChange = new EventEmitter<number>();
   @Output() peakLevelChange = new EventEmitter<number>();
   @Output() colorMapChange = new EventEmitter<string>();
   @Output() stretchModeChange = new EventEmitter<StretchMode>();
@@ -45,15 +47,18 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
 
   backgroundStep = 0.1;
   peakStep = 0.1;
-
+  midStep = 0.1;
+  StretchMode = StretchMode;
   stretchModeOptions = [
+
     { label: 'Linear', value: StretchMode.Linear },
     { label: 'Logarithmic', value: StretchMode.Log },
     { label: 'Square Root', value: StretchMode.SquareRoot },
     { label: 'Hyperbolic Arcsine', value: StretchMode.HyperbolicArcSinh },
-    { label: 'Exponential', value: StretchMode.Exponential },
-    { label: 'Square', value: StretchMode.Square },
-    { label: 'Hyperbolic Sine', value: StretchMode.HyperbolicSine },
+    { label: 'Mid Level', value: StretchMode.MidLevel },
+    // { label: 'Exponential', value: StretchMode.Exponential },
+    // { label: 'Square', value: StretchMode.Square },
+    // { label: 'Hyperbolic Sine', value: StretchMode.HyperbolicSine },
   ];
 
   colorMaps = [
@@ -91,9 +96,11 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (!this.normalizer || this.normalizer.peakPercentile == null || this.normalizer.backgroundPercentile == null) {
       this.backgroundStep = 0.1;
+      this.midStep = 0.1;
       this.peakStep = 0.1;
     } else {
       this.backgroundStep = this.calcStep(this.normalizer.backgroundPercentile);
+      this.midStep = this.calcStep(this.normalizer.midPercentile);
       this.peakStep = this.calcStep(this.normalizer.peakPercentile);
 
       // console.log(this.peakStep, this.normalizer.peakPercentile);
@@ -133,6 +140,13 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     let background = this.normalizer.backgroundLevel;
     if (background === undefined || background === null) return ''
     let result = this.decimalPipe.transform(background, '1.0-3').replace(',', '')
+    return result;
+  }
+
+  getFormattedMidLevel() {
+    let mid = this.normalizer.midLevel;
+    if (mid === undefined || mid === null) return ''
+    let result = this.decimalPipe.transform(mid, '1.0-3').replace(',', '')
     return result;
   }
 }

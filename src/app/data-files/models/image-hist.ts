@@ -113,11 +113,13 @@ export function getBinCenter(hist: ImageHist, index: number) {
 export function calcLevels(
   hist: ImageHist,
   backgroundPercentile: number = 10,
+  midPercentile: number = 50,
   peakPercentile: number = 99,
   round: boolean = false
 ) {
   let result = {
     peakLevel: 0,
+    midLevel: 0,
     backgroundLevel: 0,
   };
 
@@ -130,36 +132,48 @@ export function calcLevels(
 
   let x0 = 0;
   let backgroundTarget = (backgroundPercentile / 100.0) * total;
+  let midTarget = (midPercentile / 100.0) * total;
   let peakTarget = (peakPercentile / 100.0) * total;
 
-  let blackComplete = false;
-  let whiteComplete = false;
+  let backgroundComplete = false;
+  let midComplete = false;
+  let saturationComplete = false;
 
   if (backgroundPercentile == 100) {
-    blackComplete = true;
+    backgroundComplete = true;
     result.backgroundLevel = getBinRight(hist, hist.data.length - 1);
   }
+  if (midPercentile == 100) {
+    midComplete = true;
+    result.midLevel = getBinRight(hist, hist.data.length - 1);
+  }
   if (peakPercentile == 100) {
-    whiteComplete = true;
+    saturationComplete = true;
     result.peakLevel = getBinRight(hist, hist.data.length - 1);
   }
 
   let sum = 0;
   for (let i = 0; i < hist.data.length; i++) {
     sum += hist.data[i];
-    if (!blackComplete && sum >= backgroundTarget) {
+    if (!backgroundComplete && sum >= backgroundTarget) {
       result.backgroundLevel =
         ((backgroundTarget - (sum - hist.data[i])) / hist.data[i]) * (getBinRight(hist, i) - getBinLeft(hist, i)) +
         getBinLeft(hist, i);
-      blackComplete = true;
+      backgroundComplete = true;
     }
-    if (!whiteComplete && sum >= peakTarget) {
+    if (!midComplete && sum >= midTarget) {
+      result.midLevel =
+        ((midTarget - (sum - hist.data[i])) / hist.data[i]) * (getBinRight(hist, i) - getBinLeft(hist, i)) +
+        getBinLeft(hist, i);
+      midComplete = true;
+    }
+    if (!saturationComplete && sum >= peakTarget) {
       result.peakLevel =
         ((peakTarget - (sum - hist.data[i])) / hist.data[i]) * (getBinRight(hist, i) - getBinLeft(hist, i)) +
         getBinLeft(hist, i);
-      whiteComplete = true;
+      saturationComplete = true;
     }
-    if (whiteComplete && blackComplete) break;
+    if (saturationComplete && backgroundComplete && midComplete) break;
   }
   if (round) {
     let roundFactor = Math.pow(
@@ -167,15 +181,17 @@ export function calcLevels(
       Math.abs(Math.min(-3, Math.floor(Math.log10(result.peakLevel - result.backgroundLevel)) - 3))
     );
     result.peakLevel = Math.round(result.peakLevel * roundFactor) / roundFactor;
+    result.midLevel = Math.round(result.midLevel * roundFactor) / roundFactor;
     result.backgroundLevel = Math.round(result.backgroundLevel * roundFactor) / roundFactor;
   }
 
   return result;
 }
 
-export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLevel: number) {
+export function calcPercentiles(hist: ImageHist, backgroundLevel: number, midLevel: number, peakLevel: number) {
   let result = {
     lowerPercentile: 0,
+    midPercentile: 0,
     upperPercentile: 0,
   };
 
@@ -188,9 +204,11 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
 
   let y1 = 0;
   let lowerComplete = false;
+  let midComplete = false;
   let upperComplete = false;
-  let maxPixCount: number = total,
-    minPixCount: number = 0;
+  let maxPixCount = total,
+    minPixCount = 0,
+    midPixCount = 0
   for (let i = 0; i < hist.data.length; i++) {
     y1 += hist.data[i];
     let x1 = getBinRight(hist, i);
@@ -200,10 +218,21 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
       let x = peakLevel;
       let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
       maxPixCount = y;
-      if (lowerComplete) {
+      if (lowerComplete && midComplete) {
         break;
       }
       upperComplete = true;
+    }
+    if (!midComplete && x1 > midLevel) {
+      let x0 = getBinLeft(hist, i);
+      let y0 = y1 - hist.data[i];
+      let x = midLevel;
+      let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
+      midPixCount = y;
+      if (lowerComplete && upperComplete) {
+        break;
+      }
+      midComplete = true;
     }
     if (!lowerComplete && x1 > backgroundLevel) {
       let x0 = getBinLeft(hist, i);
@@ -211,7 +240,7 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
       let x = backgroundLevel;
       let y = (y0 * (x1 - x) + y1 * (x - x0)) / (x1 - x0);
       minPixCount = y;
-      if (upperComplete) {
+      if (upperComplete && midComplete) {
         break;
       }
       lowerComplete = true;
@@ -219,6 +248,7 @@ export function calcPercentiles(hist: ImageHist, backgroundLevel: number, peakLe
   }
 
   result.lowerPercentile = (minPixCount / total) * 100.0;
+  result.midPercentile = (midPixCount / total) * 100.0;
   result.upperPercentile = (maxPixCount / total) * 100.0;
   return result;
 }

@@ -99,12 +99,14 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
   setFileColorBalanceModeEvent$ = new Subject<ColorBalanceMode>();
   backgroundPercentile$ = new Subject<number>();
+  midPercentile$ = new Subject<number>();
   peakPercentile$ = new Subject<number>();
   backgroundLevel$ = new Subject<number>();
+  midLevel$ = new Subject<number>();
   peakLevel$ = new Subject<number>();
   normalizerMode$ = new Subject<'pixel' | 'percentile'>();
   stretchMode$ = new Subject<StretchMode>();
-  presetClick$ = new Subject<{ backgroundPercentile: number, peakPercentile: number }>();
+  presetClick$ = new Subject<'faint' | 'default' | 'bright'>();
 
   upperPercentileDefault: number;
   lowerPercentileDefault: number;
@@ -178,34 +180,72 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
 
     this.presetClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
-      if (activeHdu) {
+      let hdu = activeHdu;
+      let file: DataFile;
+      if (!hdu) {
+        let imageHdus = hdus.filter(isImageHdu);
+        hdu = imageHdus.find(hdu => hdu.hist.loaded && hdu.visible)
+        if (!hdu) return;
+        file = this.store.selectSnapshot(DataFilesState.getFileById(hdu.fileId))
+      }
+
+      if (!hdu) return;
+      let normalizer = hdu.normalizer;
+
+
+      let backgroundPercentile = 0.01;
+      let midPercentile = 99.5;
+      let peakPercentile = 99.999;
+
+      if (normalizer.stretchMode != StretchMode.MidLevel) {
+        backgroundPercentile = 10;
+        let peakLookup = {
+          'faint': 95,
+          'default': 99,
+          'bright': 99.999
+        }
+
+        peakPercentile = peakLookup[value]
+      }
+      else {
+        let midLookup = {
+          'faint': 10,
+          'default': 99.5,
+          'bright': 99.9
+        }
+
+        midPercentile = midLookup[value];
+      }
+
+
+
+      if (!file) {
         this.store.dispatch(
           new UpdateNormalizer(activeHdu.id, {
             mode: 'percentile',
-            backgroundPercentile: value.backgroundPercentile,
-            peakPercentile: value.peakPercentile
+            backgroundPercentile: backgroundPercentile,
+            midPercentile: midPercentile,
+            peakPercentile: peakPercentile
           })
         );
       }
       else {
-        let imageHdus = hdus.filter(isImageHdu);
-        let hdu = imageHdus.find(hdu => hdu.hist.loaded && hdu.visible)
-        if (!hdu) return;
-        let file = this.store.selectSnapshot(DataFilesState.getFileById(hdu.fileId))
         if (file.colorBalanceMode == ColorBalanceMode.PERCENTILE) {
           this.store.dispatch(
             new UpdateNormalizer(hdu.id, {
               mode: 'percentile',
-              backgroundPercentile: value.backgroundPercentile,
-              peakPercentile: value.peakPercentile
+              backgroundPercentile: backgroundPercentile,
+              midPercentile: midPercentile,
+              peakPercentile: peakPercentile
             })
           );
         }
         else if (file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING) {
-          let levels = calcLevels(hdu.hist, value.backgroundPercentile, value.peakPercentile);
+          let levels = calcLevels(hdu.hist, backgroundPercentile, midPercentile, peakPercentile);
           this.store.dispatch(new UpdateNormalizer(hdu.id, {
             mode: 'pixel',
             backgroundLevel: levels.backgroundLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
+            midLevel: levels.midLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
             peakLevel: levels.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset
           }));
         }
@@ -229,6 +269,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundPercentile: value }));
     });
 
+    this.midPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { midPercentile: value }));
+    });
+
     this.peakPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
@@ -239,6 +285,12 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let hdu = activeHdu || hdus.find(isImageHdu);
       if (!hdu) return;
       this.store.dispatch(new UpdateNormalizer(hdu.id, { backgroundLevel: value, mode: 'pixel' }));
+    });
+
+    this.midLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
+      let hdu = activeHdu || hdus.find(isImageHdu);
+      if (!hdu) return;
+      this.store.dispatch(new UpdateNormalizer(hdu.id, { midLevel: value, mode: 'pixel' }));
     });
 
     this.peakLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageHdu$, this.hdus$)).subscribe(([value, activeHdu, hdus]) => {
@@ -481,12 +533,20 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.backgroundPercentile$.next(value);
   }
 
+  onMidPercentileChange(value: number) {
+    this.midPercentile$.next(value);
+  }
+
   onPeakPercentileChange(value: number) {
     this.peakPercentile$.next(value);
   }
 
   onBackgroundLevelChange(value: number) {
     this.backgroundLevel$.next(value);
+  }
+
+  onMidLevelChange(value: number) {
+    this.midLevel$.next(value);
   }
 
   onPeakLevelChange(value: number) {
@@ -517,8 +577,9 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     this.store.dispatch(new UpdateNormalizer(hdu.id, { layerOffset: value }));
   }
 
-  onPresetClick(lowerPercentile: number, upperPercentile: number) {
-    this.presetClick$.next({ backgroundPercentile: lowerPercentile, peakPercentile: upperPercentile })
+  onPresetClick(option: 'faint' | 'default' | 'bright') {
+
+    this.presetClick$.next(option)
   }
 
   onInvertClick(hdu: ImageHdu) {

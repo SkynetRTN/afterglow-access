@@ -44,18 +44,18 @@
           <h3 i18n>Brightness and Contrast Settings</h3>
           <div class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
             <div class="m-2">
-              <button mat-raised-button (click)="onPresetClick( 10, 95)" i18n-aria-label
+              <button mat-raised-button (click)="onPresetClick( 'faint')" i18n-aria-label
                 aria-label="Faint Target Preset">
                 <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
               </button>
             </div>
             <div class="m-2">
-              <button mat-raised-button (click)="onPresetClick(10, 99)" i18n-aria-label aria-label="Default Preset">
+              <button mat-raised-button (click)="onPresetClick('default')" i18n-aria-label aria-label="Default Preset">
                 <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
               </button>
             </div>
             <div class="m-2">
-              <button mat-raised-button (click)="onPresetClick(10, 99.999)" i18n-aria-label
+              <button mat-raised-button (click)="onPresetClick('bright')" i18n-aria-label
                 aria-label="Bright Target Preset">
                 <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
               </button>
@@ -67,9 +67,10 @@
             [showLayerScale]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
             [showLayerOffset]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
             (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+            (midPercentileChange)="onMidPercentileChange($event)"
             (peakPercentileChange)="onPeakPercentileChange($event)"
-            (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
-            (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
+            (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
+            (peakLevelChange)="onPeakLevelChange($event)" (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
             (stretchModeChange)="onStretchModeChange($event)"
             (invertedChange)="onInvertedChange(activeImageHdu, $event)"
             (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
@@ -153,18 +154,19 @@
             <h3 i18n>Brightness and Contrast Settings</h3>
             <div class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
               <div class="m-2">
-                <button mat-raised-button (click)="onPresetClick( 10, 95)" i18n-aria-label
+                <button mat-raised-button (click)="onPresetClick('faint')" i18n-aria-label
                   aria-label="Faint Target Preset">
                   <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
                 </button>
               </div>
               <div class="m-2">
-                <button mat-raised-button (click)="onPresetClick(10, 99)" i18n-aria-label aria-label="Default Preset">
+                <button mat-raised-button (click)="onPresetClick('default')" i18n-aria-label
+                  aria-label="Default Preset">
                   <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
                 </button>
               </div>
               <div class="m-2">
-                <button mat-raised-button (click)="onPresetClick(10, 99.999)" i18n-aria-label
+                <button mat-raised-button (click)="onPresetClick('bright')" i18n-aria-label
                   aria-label="Bright Target Preset">
                   <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
                 </button>
@@ -173,8 +175,10 @@
 
             <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="false" [showColorMap]="false"
               [showInverted]="false" [showStretchMode]="true" [showLayerOffset]="false" [showLayerScale]="false"
-              (backgroundLevelChange)="onBackgroundLevelChange($event)" (peakLevelChange)="onPeakLevelChange($event)"
+              (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
+              (peakLevelChange)="onPeakLevelChange($event)"
               (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+              (midPercentileChange)="onMidPercentileChange($event)"
               (peakPercentileChange)="onPeakPercentileChange($event)" (stretchModeChange)="onStretchModeChange($event)">
             </app-normalizer-form>
           </div>

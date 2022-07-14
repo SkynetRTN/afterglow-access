@@ -1,8 +1,20 @@
 <div fxLayout="column" fxLayoutGap="10px">
-  <mat-slide-toggle *ngIf="showMode && showLevels" [checked]="normalizer?.mode == 'percentile'"
-    (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
-    Percentile Mode
-  </mat-slide-toggle>
+  <div fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start center">
+    <mat-form-field *ngIf="showStretchMode" appearance="outline">
+      <mat-label i18n>Stretch Mode</mat-label>
+      <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)"
+        style="width: 100%">
+        <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{
+          stretchModeOption.label
+          }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-slide-toggle *ngIf="showMode && showLevels" [checked]="normalizer?.mode == 'percentile'"
+      (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
+      Percentile Mode
+    </mat-slide-toggle>
+
+  </div>
   <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">
     <ng-container *ngIf="showLevels && normalizer?.mode == 'percentile'">
       <mat-form-field class="" appearance="outline">
@@ -10,6 +22,11 @@
         <input matInput [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
           (ngModelChange)="backgroundPercentileChange.emit($event)" type="number" [step]="backgroundStep" min="0"
           max="100" />
+      </mat-form-field>
+      <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidLevel" class="" appearance="outline">
+        <mat-label i18n>Mid Level Percentile</mat-label>
+        <input matInput [ngModel]="normalizer?.midPercentile | number:'1.0-5'"
+          (ngModelChange)="midPercentileChange.emit($event)" type="number" [step]="midStep" min="0" max="100" />
       </mat-form-field>
       <mat-form-field class="" appearance="outline">
         <mat-label i18n>Saturation Level Percentile</mat-label>
@@ -21,6 +38,11 @@
       <mat-form-field class="" appearance="outline">
         <mat-label i18n>Background Level</mat-label>
         <input matInput [ngModel]="getFormattedBackgroundLevel()" (ngModelChange)="backgroundLevelChange.emit($event)"
+          type="number" />
+      </mat-form-field>
+      <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidLevel" class="" appearance="outline">
+        <mat-label i18n>Mid Level</mat-label>
+        <input matInput [ngModel]="getFormattedMidLevel()" (ngModelChange)="midLevelChange.emit($event)"
           type="number" />
       </mat-form-field>
       <mat-form-field class="" appearance="outline">
@@ -39,15 +61,7 @@
         </mat-select>
       </mat-form-field>
     </ng-container>
-    <mat-form-field *ngIf="showStretchMode" appearance="outline">
-      <mat-label i18n>Stretch Mode</mat-label>
-      <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)"
-        style="width: 100%">
-        <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{
-          stretchModeOption.label
-          }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+
     <mat-form-field *ngIf="showLayerScale" class="" appearance="outline">
       <mat-label i18n>Layer Scale</mat-label>
       <input matInput [ngModel]="normalizer?.layerScale" (ngModelChange)="layerScaleChange.emit($event)" type="number"

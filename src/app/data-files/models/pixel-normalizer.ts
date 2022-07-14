@@ -6,8 +6,10 @@ import { PixelType } from '../../data-files/models/data-file';
 export interface PixelNormalizer {
   mode: 'percentile' | 'pixel';
   backgroundPercentile: number;
+  midPercentile?: number,
   peakPercentile: number;
   backgroundLevel?: number;
+  midLevel?: number,
   peakLevel?: number;
   colorMapName: string;
   stretchMode: StretchMode;
@@ -41,67 +43,40 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
     [backgroundLevel, peakLevel] = [peakLevel, backgroundLevel]
   }
 
-  let stretchFn: (x: number) => number;
-  switch (stretchMode) {
-    case StretchMode.Log: {
-      stretchFn = function (x: number) {
-        return Math.log10(1000.0 * x + 1) / Math.log10(1001.0);
-      };
-      // console.log('Log');
-      break;
-    }
 
-    case StretchMode.Exponential: {
-      stretchFn = function (x: number) {
-        return (Math.pow(10, 2 * x) - 1) / 99;
-      };
-      // console.log('SquareRoot');
-      break;
-    }
+  let m = (normalizer.midLevel - backgroundLevel) / (peakLevel - backgroundLevel)
+  let stretchFnLookup = {
+    [StretchMode.MidLevel]: (x: number) => {
+      return x <= 0 ? 0 : (x == m ? 0.5 : (x >= 1 ? 1 : ((m - 1) * x) / ((2 * m - 1) * x - m)))
+    },
+    [StretchMode.Linear]: (x: number) => {
+      return x;
+    },
+    [StretchMode.Log]: (x: number) => {
+      return Math.log10(1000.0 * x + 1) / Math.log10(1001.0);
+    },
+    [StretchMode.Exponential]: (x: number) => {
+      return (Math.pow(10, 2 * x) - 1) / 99;
+    },
+    [StretchMode.SquareRoot]: (x: number) => {
+      return Math.sqrt(x);
+    },
+    [StretchMode.Square]: (x: number) => {
+      return x * x
+    },
+    [StretchMode.HyperbolicArcSinh]: (x: number) => {
+      return Math.asinh(10.0 * x) / Math.asinh(10);
+    },
+    [StretchMode.HyperbolicSine]: (x: number) => {
+      return Math.sinh(10.0 * x) / Math.sinh(10)
+    },
+    [StretchMode.HyperbolicSine]: (x: number) => {
+      return Math.sinh(10.0 * x) / Math.sinh(10)
+    },
 
-    case StretchMode.SquareRoot: {
-      stretchFn = function (x: number) {
-        return Math.sqrt(x);
-      };
-      // console.log('SquareRoot');
-      break;
-    }
-
-    case StretchMode.Square: {
-      stretchFn = function (x: number) {
-        return Math.pow(x, 2)
-      };
-      // console.log('SquareRoot');
-      break;
-    }
-
-    case StretchMode.HyperbolicArcSinh: {
-      stretchFn = function (x: number) {
-        return Math.asinh(10.0 * x) / Math.asinh(10);
-      };
-      // console.log('ArcSinh');
-      break;
-    }
-
-    case StretchMode.HyperbolicSine: {
-      stretchFn = function (x: number) {
-        return Math.sinh(10.0 * x) / Math.sinh(10)
-      };
-      // console.log('ArcSinh');
-      break;
-    }
-
-
-
-
-    default: {
-      stretchFn = function (x: number) {
-        return x;
-      }; //linear
-      // console.log('Linear');
-      break;
-    }
   }
+
+  let stretchFn = stretchFnLookup[normalizer.stretchMode]
 
   // console.log(stretchFn);
 
