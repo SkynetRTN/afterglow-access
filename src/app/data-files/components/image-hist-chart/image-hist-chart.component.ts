@@ -274,9 +274,9 @@ export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
     let xMin: number, xMax: number, yMax: number;
     this.data.forEach(({ hist, normalizer }) => {
       if (!hist.loaded) return;
-      let { backgroundLevel, peakLevel } = calcLevels(hist, 1, 99);
+      let { backgroundLevel, peakLevel } = calcLevels(hist, 1, 99.5, 99);
       if (normalizer.backgroundLevel !== undefined) backgroundLevel = Math.min(backgroundLevel, normalizer.backgroundLevel)
-      if (normalizer.peakLevel !== undefined) peakLevel = Math.max(peakLevel, normalizer.peakLevel)
+      if (normalizer.peakLevel !== undefined) peakLevel = Math.min(peakLevel, normalizer.peakLevel)
 
       let x0 = backgroundLevel * normalizer.layerScale + normalizer.layerOffset
       let x1 = peakLevel * normalizer.layerScale + normalizer.layerOffset
