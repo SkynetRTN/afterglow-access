@@ -193,7 +193,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let normalizer = hdu.normalizer;
 
 
-      let backgroundPercentile = 0.01;
+      let backgroundPercentile = 1;
       let midPercentile = 99.5;
       let peakPercentile = 99.999;
 
@@ -209,8 +209,8 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       }
       else {
         let midLookup = {
-          'faint': 10,
-          'default': 99.5,
+          'faint': 50,
+          'default': 97.5,
           'bright': 99.9
         }
 
