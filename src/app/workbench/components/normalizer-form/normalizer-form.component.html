@@ -24,7 +24,7 @@
           max="100" />
       </mat-form-field>
       <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidTone" class="" appearance="outline">
-        <mat-label i18n>Mid-Tone Level Percentile</mat-label>
+        <mat-label i18n>Midtone Level Percentile</mat-label>
         <input matInput [ngModel]="normalizer?.midPercentile | number:'1.0-5'"
           (ngModelChange)="midPercentileChange.emit($event)" type="number" [step]="midStep" min="0" max="100" />
       </mat-form-field>
@@ -41,7 +41,7 @@
           type="number" />
       </mat-form-field>
       <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidTone" class="" appearance="outline">
-        <mat-label i18n>Mid-Tone Level</mat-label>
+        <mat-label i18n>Midtone Level</mat-label>
         <input matInput [ngModel]="getFormattedMidLevel()" (ngModelChange)="midLevelChange.emit($event)"
           type="number" />
       </mat-form-field>
