@@ -141,10 +141,22 @@ export class UpdateBlendMode {
   constructor(public hduId: string, public blendMode: BlendMode) { }
 }
 
+export class UpdateBlendModeSuccess {
+  public static readonly type = '[File] Update Blend Mode Success';
+
+  constructor(public hduId: string) { }
+}
+
 export class UpdateColorMap {
   public static readonly type = '[File] Update Color map';
 
   constructor(public hduId: string, public colorMap: string) { }
+}
+
+export class UpdateColorMapSuccess {
+  public static readonly type = '[File] Update Color Map Success';
+
+  constructor(public hduId: string) { }
 }
 
 export class UpdateAlpha {
@@ -153,10 +165,22 @@ export class UpdateAlpha {
   constructor(public hduId: string, public alpha: number) { }
 }
 
+export class UpdateAlphaSuccess {
+  public static readonly type = '[File] Update Alpha Success';
+
+  constructor(public hduId: string) { }
+}
+
 export class UpdateVisibility {
   public static readonly type = '[File] Update Visibility';
 
   constructor(public hduId: string, public value: boolean) { }
+}
+
+export class UpdateVisibilitySuccess {
+  public static readonly type = '[File] Update Visibility Success';
+
+  constructor(public hduId: string) { }
 }
 
 /**

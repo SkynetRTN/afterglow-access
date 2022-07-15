@@ -10,5 +10,8 @@ export enum AfterglowHeaderKey {
     AG_STRCH = 'AGSTRCH',
     AG_INVRT = 'AGINVRT',
     AG_SCALE = 'AGSCALE',
-    AG_OFFSET = 'AGOFFSET'
+    AG_OFFSET = 'AGOFFSET',
+    AG_ALPHA = 'AGALPHA',
+    AG_BLEND = 'AGBLEND',
+    AG_VIS = 'AGVIS'
 }

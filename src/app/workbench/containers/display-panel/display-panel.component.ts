@@ -197,7 +197,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let midPercentile = 99.5;
       let peakPercentile = 99.999;
 
-      if (normalizer.stretchMode != StretchMode.MidLevel) {
+      if (normalizer.stretchMode != StretchMode.MidTone) {
         backgroundPercentile = 10;
         let peakLookup = {
           'faint': 95,

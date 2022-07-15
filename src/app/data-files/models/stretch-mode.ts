@@ -6,5 +6,5 @@ export enum StretchMode {
   Exponential = "Exponential",
   Square = "Square",
   HyperbolicSine = "Hyperbolic Sine",
-  MidLevel = "Mid Level"
+  MidTone = "Mid Tone"
 }

@@ -55,7 +55,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     { label: 'Logarithmic', value: StretchMode.Log },
     { label: 'Square Root', value: StretchMode.SquareRoot },
     { label: 'Hyperbolic Arcsine', value: StretchMode.HyperbolicArcSinh },
-    { label: 'Mid Level', value: StretchMode.MidLevel },
+    { label: 'Mid-Tone', value: StretchMode.MidTone },
     // { label: 'Exponential', value: StretchMode.Exponential },
     // { label: 'Square', value: StretchMode.Square },
     // { label: 'Hyperbolic Sine', value: StretchMode.HyperbolicSine },

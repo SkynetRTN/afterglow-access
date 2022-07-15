@@ -47,6 +47,10 @@ import {
   InvalidateNormalizedImageTiles,
   UpdateNormalizerSuccess,
   UpdateColorMap,
+  UpdateColorMapSuccess,
+  UpdateBlendModeSuccess,
+  UpdateAlphaSuccess,
+  UpdateVisibilitySuccess,
 } from '../data-files/data-files.actions';
 import {
   SelectFile,
@@ -4641,7 +4645,7 @@ export class WorkbenchState {
     return dispatch(actions);
   }
 
-  @Action(UpdateNormalizerSuccess)
+  @Action([UpdateNormalizerSuccess, UpdateColorMapSuccess, UpdateBlendModeSuccess, UpdateAlphaSuccess, UpdateVisibilitySuccess])
   @ImmutableContext()
   public updateNormalizerSuccess(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
@@ -4693,6 +4697,9 @@ export class WorkbenchState {
         entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })
         entries.push({ key: AfterglowHeaderKey.AG_SCALE, value: normalizer.layerScale, comment: 'AgA layer scale' })
         entries.push({ key: AfterglowHeaderKey.AG_OFFSET, value: normalizer.layerOffset, comment: 'AgA layer offset' })
+        entries.push({ key: AfterglowHeaderKey.AG_ALPHA, value: hdu.alpha, comment: 'AgA layer alpha' })
+        entries.push({ key: AfterglowHeaderKey.AG_BLEND, value: hdu.blendMode, comment: 'AgA layer blend mode' })
+        entries.push({ key: AfterglowHeaderKey.AG_VIS, value: hdu.visible, comment: 'AgA layer visibility' })
 
         if (entries.length != 0) {
           this.store.dispatch([new UpdateHduHeader(hdu.id, entries)]);

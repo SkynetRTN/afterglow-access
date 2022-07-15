@@ -92,6 +92,10 @@ import {
   SetFileNormalizerSync,
   InitializeFile,
   SetFileColorBalanceMode,
+  UpdateColorMapSuccess,
+  UpdateVisibilitySuccess,
+  UpdateAlphaSuccess,
+  UpdateBlendModeSuccess,
 } from './data-files.actions';
 import { HduType } from './models/data-file-type';
 import { env } from '../../environments/environment';
@@ -852,6 +856,22 @@ export class DataFilesState {
               if (offset !== undefined) {
                 hdu.normalizer.layerOffset = offset;
               }
+
+              let visible = getHeaderEntry(header, AfterglowHeaderKey.AG_VIS)?.value;
+              if (visible !== undefined) {
+                hdu.visible = visible ? true : false;
+              }
+
+              let blendMode = getHeaderEntry(header, AfterglowHeaderKey.AG_BLEND)?.value;
+              if (blendMode !== undefined) {
+                hdu.blendMode = blendMode;
+              }
+
+              let alpha = getHeaderEntry(header, AfterglowHeaderKey.AG_ALPHA)?.value;
+              if (alpha !== undefined) {
+                hdu.alpha = alpha;
+              }
+
 
             }
 
@@ -1658,7 +1678,7 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch(actions);
+    dispatch([actions, new UpdateBlendModeSuccess(hduId)]);
   }
 
   @Action(UpdateAlpha)
@@ -1679,7 +1699,7 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch(actions);
+    dispatch([actions, new UpdateAlphaSuccess(hduId)]);
   }
 
   @Action(UpdateVisibility)
@@ -1700,7 +1720,7 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch(actions);
+    dispatch([actions, new UpdateVisibilitySuccess(hduId)]);
   }
 
   @Action(UpdateColorMap)
@@ -1724,7 +1744,7 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch(actions);
+    dispatch([actions, new UpdateColorMapSuccess(hduId)]);
   }
 
   @Action(InvalidateCompositeImageTiles)
