@@ -47,6 +47,10 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   let m = (normalizer.midLevel - backgroundLevel) / (peakLevel - backgroundLevel)
   let stretchFnLookup = {
     [StretchMode.MidTone]: (x: number) => {
+      /**
+       * https://pixinsight.com/doc/tools/HistogramTransformation/HistogramTransformation.html
+       * Midtones Transfer Function MTF
+       */
       return x <= 0 ? 0 : (x == m ? 0.5 : (x >= 1 ? 1 : ((m - 1) * x) / ((2 * m - 1) * x - m)))
     },
     [StretchMode.Linear]: (x: number) => {

@@ -2,5 +2,7 @@ export enum BlendMode {
   Normal,
   Screen,
   Luminosity,
-  Color
+  Color,
+  Overlay,
+  Multiply
 }

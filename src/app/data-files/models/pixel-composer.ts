@@ -68,7 +68,28 @@ export function compose(
         result8[j + 1] = (1 - (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
         result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
         result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
-      } else if (layers[k].blendMode == BlendMode.Luminosity) {
+      } else if (layers[k].blendMode == BlendMode.Multiply) {
+        result8[j] = (result8[j] / 255) * tr * 255;
+        result8[j + 1] = (result8[j + 1] / 255) * tg * 255;
+        result8[j + 2] = (result8[j + 2] / 255) * tb * 255;
+        result8[j + 3] = (result8[j + 3] / 255) * ta * 255;
+
+      } else if (layers[k].blendMode == BlendMode.Overlay) {
+        rgbToHsy([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
+        if (baseHsl[2] > 0.5) {
+          result8[j] = (1 - 2 * (1 - result8[j] / 255.0) * (1 - tr)) * 255.0;
+          result8[j + 1] = (1 - 2 * (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
+          result8[j + 2] = (1 - 2 * (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
+          result8[j + 3] = (1 - 2 * (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
+        }
+        else {
+          result8[j] = 2 * result8[j] * tr;
+          result8[j + 1] = 2 * result8[j + 1] * tg;
+          result8[j + 2] = 2 * result8[j + 2] * tb;
+          result8[j + 3] = 2 * result8[j + 3] * ta;
+        }
+      }
+      else if (layers[k].blendMode == BlendMode.Luminosity) {
         // if(result8[j]==255)
         rgbToHsy([tr, tg, tb], blendHsl);
         rgbToHsy([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
@@ -79,9 +100,9 @@ export function compose(
         result8[j + 2] = rgb[2] * 255;
         result8[j + 3] = 255.0;
       } else if (layers[k].blendMode == BlendMode.Color) {
-        rgbToHsl([tr, tg, tb], blendHsl);
-        rgbToHsl([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
-        hslToRgb([blendHsl[0], blendHsl[1], baseHsl[2]], rgb);
+        rgbToHsy([tr, tg, tb], blendHsl);
+        rgbToHsy([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
+        hsyToRgb([blendHsl[0], blendHsl[1], baseHsl[2]], rgb);
 
         result8[j] = rgb[0] * 255;
         result8[j + 1] = rgb[1] * 255;

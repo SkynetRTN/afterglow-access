@@ -1678,7 +1678,8 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch([actions, new UpdateBlendModeSuccess(hduId)]);
+    actions.push(new UpdateBlendModeSuccess(hduId))
+    dispatch(actions);
   }
 
   @Action(UpdateAlpha)
@@ -1699,7 +1700,8 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch([actions, new UpdateAlphaSuccess(hduId)]);
+    actions.push(new UpdateAlphaSuccess(hduId))
+    dispatch(actions);
   }
 
   @Action(UpdateVisibility)
@@ -1720,7 +1722,8 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch([actions, new UpdateVisibilitySuccess(hduId)]);
+    actions.push(new UpdateVisibilitySuccess(hduId))
+    dispatch(actions);
   }
 
   @Action(UpdateColorMap)
@@ -1744,7 +1747,8 @@ export class DataFilesState {
       return state;
     });
 
-    dispatch([actions, new UpdateColorMapSuccess(hduId)]);
+    actions.push(new UpdateColorMapSuccess(hduId))
+    dispatch(actions);
   }
 
   @Action(InvalidateCompositeImageTiles)

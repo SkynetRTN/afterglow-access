@@ -4649,17 +4649,17 @@ export class WorkbenchState {
   @ImmutableContext()
   public updateNormalizerSuccess(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId }: UpdateNormalizerSuccess
+    { hduId }: UpdateNormalizerSuccess | UpdateColorMapSuccess | UpdateBlendModeSuccess | UpdateAlphaSuccess | UpdateVisibilitySuccess
   ) {
 
     this.store.dispatch(new SyncAfterglowHeaders(hduId))
   }
 
-  @Action([SyncAfterglowHeaders, UpdateColorMap])
+  @Action([SyncAfterglowHeaders])
   @ImmutableContext()
   public syncAfterglowHeaders(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    action: SyncAfterglowHeaders | UpdateColorMap
+    action: SyncAfterglowHeaders
   ) {
 
     let hduId = action.hduId;
