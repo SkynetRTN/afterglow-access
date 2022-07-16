@@ -12,13 +12,14 @@ import { JobService } from 'src/app/jobs/services/job.service';
 import { toFieldCalibration, toPhotometryJobSettings, toSourceExtractionJobSettings } from '../../models/global-settings';
 import { WorkbenchState } from '../../workbench.state';
 import { LoadHduHeader } from 'src/app/data-files/data-files.actions';
-import { getExpLength, getFilter, IHdu, ImageHdu, isImageHdu } from 'src/app/data-files/models/data-file';
+import { getExpLength, getFilter, getZeroPoint, Header, IHdu, ImageHdu, isImageHdu } from 'src/app/data-files/models/data-file';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
 import { neutralizeHistograms } from 'src/app/utils/histogram-fitting';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
 import { ImageHist } from 'src/app/data-files/models/image-hist';
 import { DecimalPipe } from '@angular/common';
+import { FILTER_REFERENCES, PhotometricColorBalanceDialogService, STELLAR_TYPE_REFERENCES, WHITE_REFERENCE_GROUPS } from './photometric-color-balance-dialog.service';
 
 interface Filter {
   name: string;
@@ -32,7 +33,8 @@ interface Layer {
   name: string,
   filter: Filter,
   expLength: number;
-  hdu: ImageHdu
+  hdu: ImageHdu;
+  header: Header
 }
 
 @Component({
@@ -62,37 +64,9 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
     { name: "Ks", aliases: [], center: 2.159, FNu: 0.6667 }
   ]
 
-  FILTER_REFERENCES = [
-    { name: 'Black Body Peaking in U Filter', peak: 0.366 },
-    { name: 'Black Body Peaking in B Filter', peak: 0.438 },
-    { name: 'Black Body Peaking in V Filter', peak: 0.545 },
-    { name: 'Black Body Peaking in R Filter', peak: 0.641 },
-    { name: 'Black Body Peaking in I Filter', peak: 0.798 },
-    { name: "Black Body Peaking in u' Filter", peak: 0.35 },
-    { name: "Black Body Peaking in g' Filter", peak: 0.475 },
-    { name: "Black Body Peaking in r' Filter", peak: 0.6222 },
-    { name: "Black Body Peaking in i' Filter", peak: 0.7362 },
-    { name: "Black Body Peaking in z' Filter", peak: 0.9049 },
-    { name: 'Black Body Peaking in J Filter', peak: 1.235 },
-    { name: 'Black Body Peaking in H Filter', peak: 1.662 },
-    { name: 'Black Body Peaking in Ks Filter', peak: 2.159 },
-  ]
-
-  STELLAR_TYPE_REFERENCES = [
-    { name: 'O-Type Star - 41,000K', peak: 2898 / 41000 },
-    { name: 'B-Type Star - 31,000K', peak: 2898 / 31000 },
-    { name: 'A-Type Star - 9,500K', peak: 2898 / 9500 },
-    { name: 'F-Type Star - 7,240K', peak: 2898 / 7240 },
-    { name: 'G-Type Star - 5,920K', peak: 2898 / 5920 },
-    { name: "K-Type Star - 5,300K", peak: 2898 / 5300 },
-    { name: "M-Type Star - 3,850K", peak: 2898 / 3850 }
-  ]
-
-  WHITE_REFERENCE_GROUPS = [
-    { name: 'Black Body with Filter-based Peak', options: this.FILTER_REFERENCES },
-    { name: 'Stellar Spectral Types', options: this.STELLAR_TYPE_REFERENCES }
-  ]
-
+  FILTER_REFERENCES = FILTER_REFERENCES;
+  STELLAR_TYPE_REFERENCES = STELLAR_TYPE_REFERENCES;
+  WHITE_REFERENCE_GROUPS = WHITE_REFERENCE_GROUPS;
 
   ready = false;
   running = false;
@@ -102,13 +76,13 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
 
   form = new FormGroup({
-    redLayer: new FormControl('', { validators: [Validators.required] }),
+    redLayerId: new FormControl('', { validators: [Validators.required] }),
     redZeroPoint: new FormControl('', { validators: [Validators.required, isNumber] }),
-    blueLayer: new FormControl('', { validators: [Validators.required] }),
+    blueLayerId: new FormControl('', { validators: [Validators.required] }),
     blueZeroPoint: new FormControl('', { validators: [Validators.required, isNumber] }),
-    greenLayer: new FormControl('', { validators: [Validators.required] }),
+    greenLayerId: new FormControl('', { validators: [Validators.required] }),
     greenZeroPoint: new FormControl('', { validators: [Validators.required, isNumber] }),
-    referenceLayer: new FormControl('', { validators: [Validators.required] }),
+    referenceLayerId: new FormControl('', { validators: [Validators.required] }),
     whiteReference: new FormControl('', { validators: [Validators.required] }),
     extinction: new FormControl('0', { validators: [Validators.required, isNumber], updateOn: 'blur' }),
     neutralizeBackground: new FormControl(true, { validators: [Validators.required] }),
@@ -118,11 +92,12 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
 
   constructor(public dialogRef: MatDialogRef<PhotometricColorBalanceDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public layerIds: string[],
+    @Inject(MAT_DIALOG_DATA) public fileId: string,
     private store: Store,
     private jobService: JobService,
     private actions$: Actions,
-    private decimalPipe: DecimalPipe) {
+    private decimalPipe: DecimalPipe,
+    private service: PhotometricColorBalanceDialogService) {
   }
 
 
@@ -130,13 +105,14 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
   ngOnInit(): void {
 
     // this.layers = this.layerIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id)));
+    let layerIds = this.store.selectSnapshot(DataFilesState.getHdusByFileId(this.fileId)).filter(isImageHdu).map(layer => layer.id)
 
-    if (this.layerIds.length < 3) {
+    if (layerIds.length < 3) {
       this.errors = [`Photometric color calibration only works with files having at least three layers.`];
       return;
     }
 
-    let headers$ = this.layerIds.map(layerId => {
+    let headers$ = layerIds.map(layerId => {
       let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(layerId));
       if (header.loaded) return of(header);
 
@@ -177,10 +153,10 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
           continue;
         }
 
-        let id = this.layerIds[index];
+        let id = layerIds[index];
         let name = this.store.selectSnapshot(DataFilesState.getHduById(id)).name;
         let hdu = this.store.selectSnapshot(DataFilesState.getHduById(id));
-        this.layers.push({ id: id, name: name, filter: filter, expLength: expLength, hdu: (isImageHdu(hdu) ? hdu : null) })
+        this.layers.push({ id: id, name: name, filter: filter, expLength: expLength, hdu: (isImageHdu(hdu) ? hdu : null), header: header })
       }
 
       if (this.layers.length < 3) {
@@ -190,13 +166,37 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
       this.layers.sort((a, b) => a.filter.center - b.filter.center)
       this.form.patchValue({
-        blueLayer: this.layers[0],
-        greenLayer: this.layers[1],
-        redLayer: this.layers[2],
-        referenceLayer: this.layers[0]
+        blueLayerId: this.layers[0].id,
+        greenLayerId: this.layers[1].id,
+        redLayerId: this.layers[2].id,
+        referenceLayerId: this.layers[0].id
       });
 
       if (!this.form.controls.whiteReference.value) this.form.controls.whiteReference.setValue(this.FILTER_REFERENCES.find(ref => ref.peak == this.layers[0].filter.center));
+
+      let blueZeroPoint = getZeroPoint(this.layers[0].header);
+      if (blueZeroPoint !== undefined) {
+        this.form.patchValue({
+          blueZeroPoint: blueZeroPoint
+        })
+      }
+      let greenZeroPoint = getZeroPoint(this.layers[1].header);
+      if (greenZeroPoint !== undefined) {
+        this.form.patchValue({
+          greenZeroPoint: greenZeroPoint
+        })
+      }
+      let redZeroPoint = getZeroPoint(this.layers[2].header);
+      if (redZeroPoint !== undefined) {
+        this.form.patchValue({
+          redZeroPoint: redZeroPoint
+        })
+      }
+
+      let defaults = this.service.getDefault(this.fileId)
+      if (defaults) {
+        this.form.patchValue(defaults)
+      }
 
       this.ready = true;
     })
@@ -251,12 +251,15 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
   }
 
+  referenceLayerOptions() {
+    return this.layers.filter(layer => layer.id == this.form.controls.redLayerId.value || layer.id == this.form.controls.greenLayerId.value || layer.id == this.form.controls.blueLayerId.value)
+  }
+
   calculateZeroPoints() {
     this.warnings = [];
-    let redLayer = this.form.controls.redLayer.value as Layer;
-    let greenLayer = this.form.controls.greenLayer.value as Layer;
-    let blueLayer = this.form.controls.blueLayer.value as Layer;
-    let referenceLayer = this.form.controls.referenceLayer.value as Layer;
+    let redLayer = this.layers.find(layer => layer.id == this.form.controls.redLayerId.value)
+    let greenLayer = this.layers.find(layer => layer.id == this.form.controls.greenLayerId.value)
+    let blueLayer = this.layers.find(layer => layer.id == this.form.controls.blueLayerId.value)
 
     this.running = true;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
@@ -334,10 +337,11 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
   start() {
     this.warnings = [];
-    let redLayer = this.form.controls.redLayer.value as Layer;
-    let greenLayer = this.form.controls.greenLayer.value as Layer;
-    let blueLayer = this.form.controls.blueLayer.value as Layer;
-    let referenceLayer = this.form.controls.referenceLayer.value as Layer;
+
+    let redLayer = this.layers.find(layer => layer.id == this.form.controls.redLayerId.value)
+    let greenLayer = this.layers.find(layer => layer.id == this.form.controls.greenLayerId.value)
+    let blueLayer = this.layers.find(layer => layer.id == this.form.controls.blueLayerId.value)
+    let referenceLayer = this.layers.find(layer => layer.id == this.form.controls.referenceLayerId.value)
 
     this.running = true;
     let blueFilter = blueLayer.filter;
@@ -401,6 +405,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
     }
 
+    this.service.saveDefault(this.fileId, { ...this.form.value })
     this.dialogRef.close(results)
 
   }

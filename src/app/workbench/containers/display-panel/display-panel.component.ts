@@ -198,7 +198,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let peakPercentile = 99.999;
 
       if (normalizer.stretchMode != StretchMode.MidTone) {
-        backgroundPercentile = 10;
+        backgroundPercentile = 1;
         let peakLookup = {
           'faint': 95,
           'default': 99,
@@ -343,7 +343,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           height: '100%',
           maxWidth: '599px',
           maxHeight: '800px',
-          data: hdus.map(hdu => hdu.id)
+          data: file.id
         })
         ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number, offset: number }[]) => {
           if (result) {
@@ -363,7 +363,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           height: '100%',
           maxWidth: '599px',
           maxHeight: '400px',
-          data: hdus.map(hdu => hdu.id)
+          data: file.id
         })
         ref.afterClosed().pipe().subscribe((result: { layerId: string, scale: number, offset: number }[]) => {
           if (result) {

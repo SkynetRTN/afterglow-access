@@ -181,6 +181,14 @@ export function getExpLength(header: Header) {
   return undefined;
 }
 
+export function getZeroPoint(header: Header) {
+  let zeroPoint = getHeaderEntry(header, 'PHOT_M0');
+  if (zeroPoint) {
+    return zeroPoint.value;
+  }
+  return undefined;
+}
+
 export function getCenterTime(header: Header) {
   let expLength = getExpLength(header);
   let startTime = getStartTime(header);

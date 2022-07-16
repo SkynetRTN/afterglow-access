@@ -4,8 +4,8 @@
             <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
                 <mat-form-field style="width: 100%;">
                     <mat-label i18n>Blue</mat-label>
-                    <mat-select formControlName="blueLayer" style="width: 100%">
-                        <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    <mat-select formControlName="blueLayerId" style="width: 100%">
+                        <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
@@ -18,8 +18,8 @@
             <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
                 <mat-form-field style="width: 100%;">
                     <mat-label i18n>Green</mat-label>
-                    <mat-select formControlName="greenLayer" style="width: 100%">
-                        <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    <mat-select formControlName="greenLayerId" style="width: 100%">
+                        <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
@@ -32,8 +32,8 @@
             <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
                 <mat-form-field style="width: 100%;">
                     <mat-label i18n>Red</mat-label>
-                    <mat-select formControlName="redLayer" style="width: 100%">
-                        <mat-option *ngFor="let layer of layers" [value]="layer">{{ layer.name }}
+                    <mat-select formControlName="redLayerId" style="width: 100%">
+                        <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
@@ -45,21 +45,15 @@
             </div>
 
             <button mat-raised-button (click)="calculateZeroPoints()"
-                [disabled]="!ready || running || !form.controls.blueLayer.valid || !form.controls.greenLayer.valid || !form.controls.redLayer.valid">
+                [disabled]="!ready || running || !form.controls.blueLayerId.valid || !form.controls.greenLayerId.valid || !form.controls.redLayerId.valid">
                 <mat-icon>colorize</mat-icon> Measure zero points with field calibration
             </button>
 
 
             <mat-form-field appearance="outline">
                 <mat-label i18n>Reference Layer</mat-label>
-                <mat-select formControlName="referenceLayer">
-                    <mat-option *ngIf="form.controls.blueLayer.value; let layer" [value]="layer">
-                        {{ layer.name }}
-                    </mat-option>
-                    <mat-option *ngIf="form.controls.greenLayer.value; let layer" [value]="layer">
-                        {{ layer.name }}
-                    </mat-option>
-                    <mat-option *ngIf="form.controls.redLayer.value; let layer" [value]="layer">
+                <mat-select formControlName="referenceLayerId">
+                    <mat-option *ngFor="let layer of referenceLayerOptions()" [value]="layer.id">
                         {{ layer.name }}
                     </mat-option>
                 </mat-select>

@@ -10,6 +10,7 @@ import { ImageHdu, isImageHdu } from 'src/app/data-files/models/data-file';
 import { calcLevels, getCountsPerBin } from 'src/app/data-files/models/image-hist';
 import { JobService } from 'src/app/jobs/services/job.service';
 import { fitHistogram, neutralizeHistograms } from 'src/app/utils/histogram-fitting';
+import { SourceNeutralizationDialogService } from './source-neutralization-dialog.service';
 
 
 
@@ -20,6 +21,7 @@ import { fitHistogram, neutralizeHistograms } from 'src/app/utils/histogram-fitt
 })
 export class SourceNeutralizationDialogComponent implements OnInit {
 
+  layerIds = [];
   ready = false;
   running = false;
   statusMessage$ = new Subject<string>();
@@ -33,19 +35,28 @@ export class SourceNeutralizationDialogComponent implements OnInit {
   });
 
   constructor(public dialogRef: MatDialogRef<SourceNeutralizationDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public layerIds: string[],
+    @Inject(MAT_DIALOG_DATA) public fileId: string,
     private store: Store,
     private jobService: JobService,
-    private actions$: Actions) {
+    private actions$: Actions,
+    private service: SourceNeutralizationDialogService) {
 
-    if (layerIds.length < 2) {
+    this.layerIds = this.store.selectSnapshot(DataFilesState.getHdusByFileId(this.fileId)).filter(isImageHdu).map(layer => layer.id)
+
+    if (this.layerIds.length < 2) {
       this.statusMessage$.next("Your file must contain at least two layers");
       return;
     }
     this.form.patchValue({
-      referenceLayerId: layerIds[0],
-      selectedLayerIds: layerIds,
+      referenceLayerId: this.layerIds[0],
+      selectedLayerIds: this.layerIds,
     })
+
+    let defaults = this.service.getDefault(this.fileId);
+    if (defaults) {
+      this.form.patchValue(defaults)
+    }
+
     this.ready = true;
 
   }
@@ -78,6 +89,7 @@ export class SourceNeutralizationDialogComponent implements OnInit {
     let selectedLayerIds: string[] = this.form.controls.selectedLayerIds.value;
     selectedLayerIds.push(this.form.controls.referenceLayerId.value);
     let layers = selectedLayerIds.map((hduId: string) => this.store.selectSnapshot(DataFilesState.getHduById(hduId))).filter(isImageHdu);
+    this.service.saveDefault(this.fileId, this.form.value);
     setTimeout(() => {
       let result = neutralizeHistograms(layers, this.form.controls.referenceLayerId.value, true, this.form.controls.neutralizeBackground.value);
       this.dialogRef.close(result);
