@@ -60,7 +60,7 @@ export function compose(
       let tr = layers8[k][kj] / 255.0;
       let tg = layers8[k][kj + 1] / 255.0;
       let tb = layers8[k][kj + 2] / 255.0;
-      let ta = layers[k].alpha;
+      let ta = layers[k].alpha * layers8[k][kj + 3] / 255.0;
 
       if (layers[k].blendMode == BlendMode.Screen) {
         //screen blend mode

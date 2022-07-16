@@ -97,30 +97,23 @@ export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelN
   //while(i--) {
   let compositeBitScaler = (256 / 65536)
   for (let i = 0; i < dataLength; i++) {
-    let norm = stretchFn(Math.min(1.0, Math.max(0.0, ((pixels[i] * normalizer.layerScale + normalizer.layerOffset) - backgroundLevel) / normalizationRange))) * 65535.0;
-    norm = norm > 65535.0 ? 65535.0 : norm;
-    norm = norm < 0 ? 0 : norm;
-    let colorIndex = Math.floor(norm * colorIndexScaler);
-    if (invert) colorIndex = maxColorIndex - colorIndex;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let a = 0;
+    if (!isNaN(pixels[i])) {
+      let norm = stretchFn(Math.min(1.0, Math.max(0.0, ((pixels[i] * normalizer.layerScale + normalizer.layerOffset) - backgroundLevel) / normalizationRange))) * 65535.0;
+      norm = norm > 65535.0 ? 65535.0 : norm;
+      norm = norm < 0 ? 0 : norm;
+      let colorIndex = Math.floor(norm * colorIndexScaler);
+      if (invert) colorIndex = maxColorIndex - colorIndex;
 
-    let r = redLookup[colorIndex]
-    let g = greenLookup[colorIndex]
-    let b = blueLookup[colorIndex]
-
-    let r8 = r * compositeBitScaler;
-    let g8 = g * compositeBitScaler;
-    let b8 = b * compositeBitScaler;
-
-    let rgbaValue = (255 << 24) | (b8 << 16) | (g8 << 8) | r8;
-
+      r = redLookup[colorIndex] * compositeBitScaler;
+      g = greenLookup[colorIndex] * compositeBitScaler;
+      b = blueLookup[colorIndex] * compositeBitScaler;
+      a = 255;
+    }
+    let rgbaValue = (a << 24) | (b << 16) | (g << 8) | r;
     rgba[i] = rgbaValue;
-    // redChannel[i] = r;
-    // greenChannel[i] = g;
-    // blueChannel[i] = b;
-
-    // let color = colorMapLookup[Math.floor(colorIndex)];
-    // let r = (color >> 16) & 0xff;
-    // let g = (color >> 8) & 0xff;
-    // let b = (color >> 0) & 0xff;
   }
 }
