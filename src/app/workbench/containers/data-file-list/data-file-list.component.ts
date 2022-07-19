@@ -16,7 +16,7 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ToggleFileSelection, SelectFile } from '../../workbench.actions';
 import { IViewer } from '../../models/viewer';
-import { LoadLibrary, LoadLibrarySuccess, UpdateBlendMode, UpdateNormalizer } from '../../../data-files/data-files.actions';
+import { InvalidateCompositeImageTile, InvalidateCompositeImageTiles, LoadLibrary, LoadLibrarySuccess, UpdateBlendMode, UpdateNormalizer } from '../../../data-files/data-files.actions';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -25,7 +25,7 @@ import { BlendMode } from 'src/app/data-files/models/blend-mode';
 import { MatDialog } from '@angular/material/dialog';
 import { RenameHduDialogComponent } from '../../components/rename-hdu-dialog/rename-hdu-dialog.component';
 import { RenameFileDialogComponent } from '../../components/rename-file-dialog/rename-file-dialog.component';
-import { take } from 'rxjs/operators';
+import { take, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-data-file-list',
@@ -165,6 +165,14 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
       (err) => { },
       () => {
         this.store.dispatch(new LoadLibrary());
+
+        this.actions$.pipe(
+          takeUntil(this.destroy$),
+          ofActionCompleted(LoadLibrary),
+          take(1)
+        ).subscribe(() => {
+          this.store.dispatch(new InvalidateCompositeImageTiles(item.fileId))
+        })
       }
     );
   }
