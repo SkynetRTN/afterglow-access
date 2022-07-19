@@ -1,9 +1,7 @@
 import { SidebarView } from './sidebar-view';
 import { ViewMode } from './view-mode';
-import { IViewer } from './viewer';
+import { IViewer, Viewer } from './viewer';
 import { CentroidSettings } from './centroid-settings';
-import { Catalog } from './catalog';
-import { FieldCal } from './field-cal';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
 import { FileInfoPanelConfig } from './file-info-panel';
@@ -12,11 +10,14 @@ import { CustomMarkerPanelState } from './marker-file-state';
 import { SonificationPanelState } from './sonifier-file-state';
 import { PhotometryPanelState } from './photometry-file-state';
 import { IWorkbenchState } from './workbench-file-state';
+import { Catalog } from 'src/app/jobs/models/catalog-query';
+import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
+import { GlobalSettings } from './global-settings';
 
 export enum KernelFilter {
   MEDIAN_FILTER = 'median_filter',
   MAXIMUM_FILTER = 'maximum_filter',
-  MINIMUM_FILTER ='minimum_filter',
+  MINIMUM_FILTER = 'minimum_filter',
   UNIFORM_FILTER = 'uniform_filter',
   GREY_CLOSING = 'grey_closing',
   GREY_DILATION = 'grey_dilation',
@@ -35,10 +36,10 @@ export enum KernelFilter {
 }
 
 export const NO_ARG_KERNELS = [KernelFilter.LAPLACE, KernelFilter.PREWITT, KernelFilter.SOBEL]
-export const SIZE_KERNELS = [KernelFilter.MEDIAN_FILTER,KernelFilter.MAXIMUM_FILTER,KernelFilter.MINIMUM_FILTER, KernelFilter.UNIFORM_FILTER,
-  KernelFilter.GREY_CLOSING,KernelFilter.GREY_DILATION,KernelFilter.GREY_EROSION,KernelFilter.GREY_OPENING,KernelFilter.MORPHOLOGICAL_GRADIENT,KernelFilter.MORPHOLOGICAL_LAPLACE,
+export const SIZE_KERNELS = [KernelFilter.MEDIAN_FILTER, KernelFilter.MAXIMUM_FILTER, KernelFilter.MINIMUM_FILTER, KernelFilter.UNIFORM_FILTER,
+KernelFilter.GREY_CLOSING, KernelFilter.GREY_DILATION, KernelFilter.GREY_EROSION, KernelFilter.GREY_OPENING, KernelFilter.MORPHOLOGICAL_GRADIENT, KernelFilter.MORPHOLOGICAL_LAPLACE,
 KernelFilter.BLACK_TOPHAT, KernelFilter.WHITE_TOPHAT]
-export const SIGMA_KERNELS = [KernelFilter.GAUSSIAN_FILTER,KernelFilter.GAUSSIAN_GRADIENT_MAGNITUDE,KernelFilter.GAUSSIAN_LAPLACE]
+export const SIGMA_KERNELS = [KernelFilter.GAUSSIAN_FILTER, KernelFilter.GAUSSIAN_GRADIENT_MAGNITUDE, KernelFilter.GAUSSIAN_LAPLACE]
 
 export enum WorkbenchTool {
   VIEWER = 'display',
@@ -112,9 +113,10 @@ export interface PhotometryPanelConfig {
   selectedSourceIds: string[];
   coordMode: 'pixel' | 'sky';
   batchPhotFormData: BatchPhotometryFormData;
-  autoPhot: boolean;
-  batchPhotProgress: number | null;
+  batchCalibrationEnabled: boolean;
   batchPhotJobId: string;
+  batchCalJobId: string;
+  creatingBatchJobs: boolean;
 }
 
 export interface PixelOpsPanelConfig {
@@ -139,8 +141,8 @@ export interface WcsCalibrationPanelState {
 }
 
 export interface WcsCalibrationSettings {
-  ra?: number;
-  dec?: number;
+  ra?: number | string;
+  dec?: number | string;
   radius?: number;
   minScale?: number;
   maxScale?: number;
@@ -165,6 +167,7 @@ export type ViewerLayoutItem = ViewerPanelContainer | ViewerPanel;
 
 export interface WorkbenchStateModel {
   version: string;
+  settings: GlobalSettings;
   showSideNav: boolean;
   inFullScreenMode: boolean;
   sidebarView: SidebarView;
@@ -178,7 +181,7 @@ export interface WorkbenchStateModel {
   nextViewerPanelIdSeed: number;
   nextViewerPanelContainerIdSeed: number;
   viewerIds: string[];
-  viewers: { [id: string]: IViewer };
+  viewers: { [id: string]: Viewer };
   viewerLayoutItems: { [id: string]: ViewerLayoutItem };
   viewerLayoutItemIds: string[];
   focusedViewerPanelId: string;
@@ -187,13 +190,9 @@ export interface WorkbenchStateModel {
   viewerSyncEnabled: boolean;
   viewerSyncMode: 'sky' | 'pixel';
   normalizationSyncEnabled: boolean;
-  centroidSettings: CentroidSettings;
-  sourceExtractionSettings: SourceExtractionSettings;
-  photometrySettings: PhotometrySettings;
-
   catalogs: Array<Catalog>;
   selectedCatalogId: string;
-  fieldCals: Array<FieldCal>;
+  fieldCals: Array<FieldCalibration>;
   selectedFieldCalId: string;
   creatingAddFieldCalSourcesFromCatalogJob: boolean;
   addFieldCalSourcesFromCatalogJobId: string;

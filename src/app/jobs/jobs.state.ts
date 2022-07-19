@@ -8,39 +8,43 @@ import {
   ofActionCompleted,
   ofActionSuccessful,
   ofActionErrored,
+  createSelector,
 } from '@ngxs/store';
 import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip } from 'rxjs/operators';
+import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip, delay } from 'rxjs/operators';
 import { of, merge, interval, Observable } from 'rxjs';
 
 import { Job } from './models/job';
 import { JobResult } from './models/job-result';
 import {
-  CreateJob,
-  CreateJobSuccess,
-  CreateJobFail,
-  UpdateJob,
-  UpdateJobSuccess,
-  UpdateJobFail,
-  StopAutoJobUpdate,
+  LoadJobs,
+  SelectJob,
+  LoadJob,
+  AddJob,
+  UpdateJobState,
   UpdateJobResult,
-  UpdateJobResultSuccess,
-  UpdateJobResultFail,
+  LoadJobResult,
 } from './jobs.actions';
-import { JobService } from './services/jobs';
+import { JobApiService } from './services/job-api.service';
 import { ResetState } from '../auth/auth.actions';
 import { Injectable } from '@angular/core';
 
 export interface JobsStateModel {
   version: string;
   ids: string[];
-  entities: { [id: string]: Job };
+  jobs: { [id: string]: Job };
+  selectedJobId: string;
+  loading: boolean;
+  lastUpdateTime: number;
 }
 
 const jobsDefaultState: JobsStateModel = {
-  version: 'ab09d088-0def-4429-b834-3c8fc5313fe9',
+  version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
   ids: [],
-  entities: {},
+  jobs: {},
+  selectedJobId: null,
+  loading: false,
+  lastUpdateTime: 0
 };
 
 @State<JobsStateModel>({
@@ -49,140 +53,204 @@ const jobsDefaultState: JobsStateModel = {
 })
 @Injectable()
 export class JobsState {
-  constructor(private jobService: JobService, private actions$: Actions) {}
+  constructor(private jobService: JobApiService, private actions$: Actions) { }
 
   @Selector()
-  @ImmutableSelector()
   public static getState(state: JobsStateModel) {
     return state;
   }
 
+  // @Selector()
+  // public static getJobResultEntities(state: JobsStateModel) {
+  //   return state.jobResults;
+  // }
+
+
   @Selector()
   public static getJobEntities(state: JobsStateModel) {
-    return state.entities;
+    return state.jobs;
   }
 
   @Selector()
-  @ImmutableSelector()
+  public static getLoading(state: JobsStateModel) {
+    return state.loading;
+  }
+
+  @Selector()
+  public static getLastUpdateTime(state: JobsStateModel) {
+    return state.lastUpdateTime;
+  }
+
+  @Selector()
   public static getJobs(state: JobsStateModel) {
-    return Object.values(state.entities);
+    return Object.values(state.jobs);
   }
 
   @Selector()
-  @ImmutableSelector()
-  public static getJobById(state: JobsStateModel) {
-    return (jobId) => {
-      return jobId in state.entities ? state.entities[jobId] : null;
-    };
+  public static getSelectedJobId(state: JobsStateModel) {
+    return state.selectedJobId
   }
+
+  @Selector()
+  public static getSelectedJob(state: JobsStateModel) {
+    return state.jobs[state.selectedJobId] || null
+  }
+
+  // @Selector()
+  // public static getSelectedJobResult(state: JobsStateModel) {
+  //   return state.jobResults[state.selectedJobId] || null
+  // }
+
+  static getJobById(id: string) {
+    return createSelector(
+      [JobsState.getJobEntities],
+      (
+        jobEntities: { [id: string]: Job }
+      ) => {
+        return jobEntities[id] || null;
+      }
+    );
+  }
+
+  // static getJobResultById(id: string) {
+  //   return createSelector(
+  //     [JobsState.getJobResultEntities],
+  //     (
+  //       jobResultEntities: { [id: string]: JobResult }
+  //     ) => {
+  //       return jobResultEntities[id] || null;
+  //     }
+  //   );
+  // }
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<JobsStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<JobsStateModel>, { }: ResetState) {
     setState((state: JobsStateModel) => {
       return jobsDefaultState;
     });
   }
 
-  @Action(CreateJob)
+  @Action(AddJob)
   @ImmutableContext()
-  public createJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, createJobAction: CreateJob) {
-    return this.jobService.createJob(createJobAction.job).pipe(
-      flatMap((resp) => {
-        let job = resp.data
-        createJobAction.job.id = job.id;
-        setState((state: JobsStateModel) => {
-          state.entities[job.id] = {
-            ...job,
-            result: null,
-          };
-          if (!state.ids.includes(job.id)) {
-            state.ids.push(job.id);
-          }
-          return state;
-        });
-
-        dispatch(new CreateJobSuccess(job, createJobAction.correlationId));
-        if (!createJobAction.autoUpdateInterval) createJobAction.autoUpdateInterval = 2500;
-
-        let jobCompleted$ = this.actions$.pipe(
-          ofActionSuccessful(UpdateJob),
-          filter<UpdateJob>((a) => {
-            return a.job.id == job.id && ['canceled', 'completed'].includes(getState().entities[a.job.id].state.status);
-          })
-        );
-
-        let stop$ = merge(
-          jobCompleted$,
-          this.actions$.pipe(
-            ofActionDispatched(StopAutoJobUpdate),
-            filter<StopAutoJobUpdate>((a) => a.jobId == job.id)
-          ),
-          this.actions$.pipe(
-            ofActionErrored(UpdateJob),
-            filter<UpdateJobFail>((a) => a.job.id == job.id),
-            skip(5)
-          )
-        ).pipe(take(1));
-
-        interval(createJobAction.autoUpdateInterval)
-          .pipe(
-            takeUntil(stop$),
-            tap((v) => dispatch(new UpdateJob(job, createJobAction.correlationId)))
-          )
-          .subscribe();
-
-        return jobCompleted$.pipe(
-          take(1),
-          flatMap((a) => {
-            if (getState().entities[a.job.id].state.status != 'completed') return of();
-
-            return this.jobService.getJobResult(job).pipe(
-              tap((value) => {
-                setState((state: JobsStateModel) => {
-                  state.entities[job.id].result = value;
-                  return state;
-                });
-              })
-            );
-          })
-        );
-      }),
-      catchError((err) => dispatch(new CreateJobFail(createJobAction.job, err, createJobAction.correlationId)))
-    );
+  public addJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, { job }: AddJob) {
+    setState((state: JobsStateModel) => {
+      state.jobs[job.id] = job;
+      return state;
+    })
   }
 
-  @Action(UpdateJob)
+  @Action(UpdateJobState)
   @ImmutableContext()
-  public updateJob({ setState, dispatch }: StateContext<JobsStateModel>, { job, correlationId }: UpdateJob) {
-    return this.jobService.getJobState(job.id).pipe(
-      tap((value) => {
-        setState((state: JobsStateModel) => {
-          state.entities[job.id].state = value.data;
-          return state;
-        });
-      })
-    );
+  public updateJobState({ setState, getState, dispatch }: StateContext<JobsStateModel>, { id, state: jobState }: UpdateJobState) {
+    setState((state: JobsStateModel) => {
+      state.jobs[id].state = jobState;
+      return state;
+    })
   }
 
   @Action(UpdateJobResult)
   @ImmutableContext()
-  public updateJobResult(
-    { setState, dispatch }: StateContext<JobsStateModel>,
-    { job, correlationId }: UpdateJobResult
-  ) {
-    return this.jobService.getJobResult(job).pipe(
-      map((value) => {
+  public updateJobResult({ setState, getState, dispatch }: StateContext<JobsStateModel>, { id, result }: UpdateJobResult) {
+    setState((state: JobsStateModel) => {
+      state.jobs[id].result = result;
+      return state;
+    })
+  }
+
+  @Action(SelectJob)
+  @ImmutableContext()
+  public selectJob({ setState, dispatch }: StateContext<JobsStateModel>, { jobId }: SelectJob) {
+    setState((state: JobsStateModel) => {
+      state.selectedJobId = jobId
+      return state;
+    })
+  }
+
+  @Action(LoadJob)
+  @ImmutableContext()
+  public loadJob({ setState, dispatch }: StateContext<JobsStateModel>, { id }: LoadJob) {
+    return this.jobService.getJob(id).pipe(
+      tap((resp) => {
         setState((state: JobsStateModel) => {
-          state.entities[job.id].result = value;
+          let job = resp.data;
+          if (!(job.id in state.jobs)) state.ids.push(job.id);
+          state.jobs[job.id] = {
+            ...job,
+          }
           return state;
         });
-
-        return dispatch(new UpdateJobResultSuccess(job, value, correlationId));
       }),
-      catchError((err) => {
-        return dispatch(new UpdateJobResultFail(job, err, correlationId));
+      catchError(e => {
+        return of()
+      }),
+      finalize(() => {
+
       })
     );
   }
+
+  @Action(LoadJobResult)
+  @ImmutableContext()
+  public loadJobResult({ getState, setState, dispatch }: StateContext<JobsStateModel>, { id }: LoadJobResult) {
+    return this.jobService.getJobResult(id).pipe(
+      tap((result) => {
+        if (!(id in getState().jobs)) return;
+        setState((state: JobsStateModel) => {
+          state.jobs[id].result = result
+          return state;
+        });
+      }),
+      catchError(e => {
+        return of()
+      }),
+      finalize(() => {
+
+      })
+    );
+  }
+
+  @Action(LoadJobs)
+  @ImmutableContext()
+  public loadJobs({ setState, dispatch }: StateContext<JobsStateModel>, { }: LoadJobs) {
+
+    setState((state: JobsStateModel) => {
+      state.loading = true;
+      state.lastUpdateTime = Date.now();
+      return state;
+    })
+    return this.jobService.getJobs().pipe(
+      tap((resp) => {
+        setState((state: JobsStateModel) => {
+          resp.data.forEach(job => {
+            if (!(job.id in state.jobs)) state.ids.push(job.id);
+
+            //the core sends an empty result object if the job for this endpoint
+            //prevent the empty result object from overwriting previously obtained results
+            delete job['result']
+
+            if (state.jobs[job.id]) {
+              Object.assign(state.jobs[job.id], job);
+            }
+            else {
+              state.jobs[job.id] = job
+            }
+
+
+          })
+          return state;
+        });
+      }),
+      catchError(e => {
+        return of()
+      }),
+      finalize(() => {
+        setState((state: JobsStateModel) => {
+          state.loading = false;
+          return state;
+        })
+      })
+    );
+  }
+
 }

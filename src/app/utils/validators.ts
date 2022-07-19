@@ -28,7 +28,7 @@ export function isNumber(control: AbstractControl): ValidationErrors | null {
   return { isNumber: 'Not a valid number' };
 }
 
-export function lessThan(max: number): ValidatorFn {
+export function lessThan(max: number, inclusive=false): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (isEmptyInputValue(control.value) || isEmptyInputValue(max)) {
       return null; // don't validate empty values to allow optional controls
@@ -36,11 +36,11 @@ export function lessThan(max: number): ValidatorFn {
     const value = parseFloat(control.value);
     // Controls with NaN values after parsing should be treated as not having a
     // maximum, per the HTML forms spec: https://www.w3.org/TR/html5/forms.html#attr-input-max
-    return !isNaN(value) && value >= max ? { lessThan: { max: max, actual: control.value } } : null;
+    return !isNaN(value) && (inclusive ? value > max : value >= max) ? { lessThan: { max: max, actual: control.value } } : null;
   };
 }
 
-export function greaterThan(min: number): ValidatorFn {
+export function greaterThan(min: number, inclusive=false): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (isEmptyInputValue(control.value) || isEmptyInputValue(min)) {
       return null; // don't validate empty values to allow optional controls
@@ -48,7 +48,7 @@ export function greaterThan(min: number): ValidatorFn {
     const value = parseFloat(control.value);
     // Controls with NaN values after parsing should be treated as not having a
     // maximum, per the HTML forms spec: https://www.w3.org/TR/html5/forms.html#attr-input-max
-    return !isNaN(value) && value <= min ? { greaterThan: { min: min, actual: control.value } } : null;
+    return !isNaN(value) && (inclusive ? value < min : value <= min) ? { greaterThan: { min: min, actual: control.value } } : null;
   };
 }
 

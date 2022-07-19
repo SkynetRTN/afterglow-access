@@ -1,5 +1,6 @@
-<div mat-dialog-title class="dialog-title" i18n>
-  {{ config.mode == 'close' ? 'Closing Files' : 'Saving Files' }}
+<div mat-dialog-title class="dialog-title">
+  <ng-container *ngIf="config.mode == 'close' else savingFilesBlock" i18n>Closing Files</ng-container>
+  <ng-template #savingFilesBlock i18n>Saving Files</ng-template>
   <span *ngIf="config.files && config.files.length > 1"></span>
 </div>
 <mat-dialog-content *ngIf="currentFile">
@@ -12,7 +13,7 @@
 
   <!-- <div *ngIf="config.action" class="pb-4 dialog-action" ><p>{{ config.action }}</p></div> -->
   <div *ngIf="waitingForUserInput" class="pb-2 dialog-message">
-    Do you want to save the changes you made to {{ currentFile.name }}?
+    <ng-container i18n>Do you want to save the changes you made to</ng-container> {{ currentFile.name }}?
   </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end" class="pb-4">
@@ -21,7 +22,8 @@
   </span>
 
   <button *ngIf="currentFile" mat-raised-button (click)="onSaveBtnClick()" [hidden]="!waitingForUserInput">
-    {{ isReadOnly ? 'Save As...' : 'Save' }}
+    <ng-container *ngIf="isReadOnly else saveBtnBlock" i18n>Save As...</ng-container>
+    <ng-template #saveBtnBlock i18n>Save</ng-template>
   </button>
   <button *ngIf="currentFile" mat-raised-button (click)="onDiscardBtnClick()" [hidden]="!waitingForUserInput">
     Discard changes

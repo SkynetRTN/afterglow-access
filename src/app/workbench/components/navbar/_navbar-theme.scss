@@ -1,3 +1,4 @@
+@use '@angular/material' as mat;
 @mixin nav-bar-theme($theme) {
   $primary: map-get($theme, primary);
   $accent: map-get($theme, accent);
@@ -20,19 +21,20 @@
 
     .navbar,
     .navbar-header {
-      background: mat-color($primary);
+      background: mat.get-color-from-palette($primary);
     }
 
     a.mat-button,
     a.mat-icon-button,
     .mat-button,
     .mat-icon-button {
-      color: mat-color($primary, default-contrast);
+      color: mat.get-color-from-palette($primary, default-contrast);
       opacity: 0.8;
     }
 
     a.active {
       opacity: 1;
+      background: rgba(255,255,255,.15);
     }
   }
 }

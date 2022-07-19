@@ -1,0 +1,48 @@
+<mat-table matSort #table [dataSource]="jobs">
+
+
+    <!-- ID Column -->
+    <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{ row.id }}</mat-cell>
+    </ng-container>
+
+    <!-- Type Column -->
+    <ng-container matColumnDef="type">
+        <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+            {{row.type}}
+        </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="state">
+        <mat-header-cell *matHeaderCellDef>State</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+            <ng-container *ngIf="row.state.status == 'in_progress'; else stateBlock">
+                <div style="padding: 5px; width: 100px">
+
+                    {{row.state?.progress}}% completed
+                </div>
+            </ng-container>
+            <ng-template #stateBlock>
+                <span class="notification" [class.is-success]="row.state.status == 'completed'"
+                    [class.is-warning]="row.state.status == 'canceled'">{{
+                    row.state?.status?.toLowerCase() }}</span>
+            </ng-template>
+        </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="createdOn">
+        <mat-header-cell *matHeaderCellDef>Created On</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+            {{row.state?.createdOn}}
+        </mat-cell>
+    </ng-container>
+
+
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row [class.selected]="row.id == selectedJob?.id" *matRowDef="let row; columns: displayedColumns"
+        (click)="selectionChange.emit(row)">
+    </mat-row>
+</mat-table>

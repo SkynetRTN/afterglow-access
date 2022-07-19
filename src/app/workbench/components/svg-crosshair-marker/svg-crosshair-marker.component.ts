@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit } from '@angular/core';
-import { CrosshairMarker } from '../../models/marker';
 
 @Component({
   selector: '[app-svg-crosshair-marker]',
@@ -8,22 +7,20 @@ import { CrosshairMarker } from '../../models/marker';
   styleUrls: ['./svg-crosshair-marker.component.scss']
 })
 export class SvgCrosshairMarkerComponent implements OnInit, OnChanges {
-  @Input() marker: CrosshairMarker;
+  @Input() x: number;
+  @Input() y: number;
+  @Input() radius: number;
+  @Input() showArrow: boolean = false;
   @Input() showOutline: boolean = true;
   @Input() showShadow: boolean = true;
   @Input() stroke: string = 'rgb(0,33,117,0.9)';
   @Input() strokeWidth: number = 3;
-  @Input() selectedStroke: string = '#ff8b00';
   @Input() strokeOpacity: number = 1;
 
-  constructor() {}
+  constructor() { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  ngOnChanges() {}
-
-  hitRegionRadius() {
-    return Math.max(3, this.marker?.radius)
-  }
+  ngOnChanges() { }
 
 }

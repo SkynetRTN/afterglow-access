@@ -4,6 +4,7 @@ import { AuthorizedPageComponent as AuthorizedPageComponent } from './auth/conta
 import { WorkbenchComponent } from './workbench/containers/workbench.component';
 import { LogoutPageComponent } from './auth/containers/logout-page/logout-page.component';
 import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
+import { JobsPageComponent } from './jobs/containers/jobs-page/jobs-page.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
   {
@@ -22,9 +23,26 @@ export const AFTERGLOW_ROUTES: Routes = [
     data: { title: 'Authorizing Please Wait' },
   },
   {
-    path: '',
+    path: 'jobs',
+    component: JobsPageComponent,
+    data: { title: 'Jobs' },
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'jobs/:id',
+    component: JobsPageComponent,
+    data: { title: 'Job' },
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'workbench',
     component: WorkbenchComponent,
     data: { title: 'Workbench' },
     canActivate: [AuthGuard],
+  },
+  {
+    path: '',
+    redirectTo: 'workbench',
+    pathMatch: 'full'
   },
 ];

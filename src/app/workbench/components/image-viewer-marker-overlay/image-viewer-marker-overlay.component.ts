@@ -18,17 +18,11 @@ import {
   Marker,
   MarkerType,
   CircleMarker,
-  TeardropMarker,
-  RectangleMarker,
-  LineMarker,
-  ApertureMarker,
   isCircleMarker,
   isRectangleMarker,
   isLineMarker,
-  isTeardropMarker,
-  isApertureMarker,
-  isCrosshairMarker,
-  CrosshairMarker,
+  isPhotometryMarker,
+  PhotometryMarker,
 } from '../../models/marker';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Transform, transformToMatrix } from '../../../data-files/models/transformation';
@@ -118,10 +112,10 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
         if (!markers || !transform) return [];
         let radialMarkers = markers.filter(
           (marker) =>
-            [MarkerType.CIRCLE, MarkerType.TEARDROP, MarkerType.APERTURE, MarkerType.CROSSHAIR].includes(marker.type) &&
+            [MarkerType.CIRCLE, MarkerType.PHOTOMETRY].includes(marker.type) &&
             marker.label &&
             marker.label != ''
-        ) as (CircleMarker | TeardropMarker | ApertureMarker | CrosshairMarker)[];
+        ) as (CircleMarker | PhotometryMarker)[];
         return radialMarkers.map((m) => {
           let matrix = transformToMatrix(transform);
           let p = matrix.transform(new Point(m.x, m.y));
@@ -129,7 +123,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
           let flipped = matrix.scaling.y >= 0;
           let rotation = Math.round((-Math.atan2(-transform.b, transform.a) * 180.0) / Math.PI);
 
-          let labelTheta = m.labelTheta;
+          let labelTheta = m.labelTheta || 0;
           // console.log(labelTheta, mirrored, flipped, rotation);
 
           if (mirrored) {
@@ -150,7 +144,7 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
           while (labelTheta < 0) labelTheta += 360;
           labelTheta = labelTheta % 360;
 
-          let radius = m.labelRadius;
+          let radius = m.labelRadius || 0;
           if (radius < 0) {
             radius *= -1;
             labelTheta += 180;
@@ -191,9 +185,9 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
     return m.id;
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  ngOnChanges(changes: SimpleChanges) {}
+  ngOnChanges(changes: SimpleChanges) { }
 
   ngAfterViewInit() {
     //this.cdr.detach();
@@ -208,8 +202,6 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
 
   isCircleMarker = isCircleMarker;
   isRectangleMarker = isRectangleMarker;
-  isApertureMarker = isApertureMarker;
   isLineMarker = isLineMarker;
-  isTeardropMarker = isTeardropMarker;
-  isCrosshairMarker = isCrosshairMarker;
+  isPhotometryMarker = isPhotometryMarker;
 }

@@ -20,47 +20,40 @@
     </div>
 
     <div *ngIf="header$ | async as header" class="mb-3">
-      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)" i18n>
+      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
         <mat-icon>colorize</mat-icon>
-        Extract values from current viewer
+        <ng-container i18n>Extract values from current viewer</ng-container>
       </button>
     </div>
 
-    <div>
+    <div fxLayout="row wrap" fxLayoutGap="10px">
       <mat-form-field appearance="outline">
         <mat-label i18n>RA (hours)</mat-label>
         <input matInput formControlName="ra" />
       </mat-form-field>
-      <mat-form-field class="ml-2" appearance="outline">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Dec (degs)</mat-label>
         <input matInput formControlName="dec" />
       </mat-form-field>
-    </div>
-    <div>
       <mat-form-field appearance="outline">
         <mat-label i18n>Radius (degs)</mat-label>
         <input matInput type="number" formControlName="radius" />
       </mat-form-field>
-      <mat-form-field class="ml-2" appearance="outline">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Max Sources</mat-label>
         <input matInput type="number" formControlName="maxSources" />
       </mat-form-field>
-    </div>
-    <div>
       <mat-form-field appearance="outline">
         <mat-label i18n>Min Scale (arcsec/pixel)</mat-label>
         <input matInput type="number" formControlName="minScale" />
       </mat-form-field>
-      <mat-form-field class="ml-2" appearance="outline">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Max Scale (arcsec/pixel)</mat-label>
         <input matInput type="number" formControlName="maxScale" />
       </mat-form-field>
     </div>
 
     <div style="text-align: right; width: 100%">
-      <button class="mr-2 mt-3" mat-raised-button (click)="onOpenSourceExtractionSettingsClick()" i18n>
-        Open Source Extraction Settings...
-      </button>
       <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>
         Submit
       </button>
@@ -69,10 +62,8 @@
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
   <div *ngIf="activeJob$ | async; let job" style="margin-top: 10px">
-    <div
-      class="alert alert-info"
-      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
-    >
+    <div class="alert alert-info"
+      *ngIf="!(activeJobResult$ | async) || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
       <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">

@@ -17,33 +17,26 @@ import { TargetDialogComponent } from './components/target-dialog/target-dialog.
 import { UploadDialogComponent } from './components/upload-dialog/upload-dialog.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    FormsModule,
-    AppMaterialModule,
-    RouterModule,
-    PipesModule,
-    ReactiveFormsModule,
-    FlexLayoutModule,
-    UtilsModule,
-  ],
-  declarations: [
-    OpenFileDialogComponent,
-    SaveDialogComponent,
-    FileManagerComponent,
-    SaveDialogComponent,
-    NameDialogComponent,
-    TargetDialogComponent,
-    UploadDialogComponent,
-  ],
-  exports: [],
-  providers: [],
-  entryComponents: [
-    OpenFileDialogComponent,
-    SaveDialogComponent,
-    NameDialogComponent,
-    TargetDialogComponent,
-    UploadDialogComponent,
-  ],
+    imports: [
+        CommonModule,
+        FormsModule,
+        AppMaterialModule,
+        RouterModule,
+        PipesModule,
+        ReactiveFormsModule,
+        FlexLayoutModule,
+        UtilsModule,
+    ],
+    declarations: [
+        OpenFileDialogComponent,
+        SaveDialogComponent,
+        FileManagerComponent,
+        SaveDialogComponent,
+        NameDialogComponent,
+        TargetDialogComponent,
+        UploadDialogComponent,
+    ],
+    exports: [],
+    providers: []
 })
 export class DataProvidersModule {}

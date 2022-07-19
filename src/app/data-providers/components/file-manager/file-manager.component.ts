@@ -10,12 +10,11 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { DataProvidersState, DataProviderPath } from '../../data-providers.state';
-import { Store, Actions, ofActionDispatched } from '@ngxs/store';
-import { Observable, of, merge, Subject, combineLatest, BehaviorSubject, forkJoin } from 'rxjs';
+import { Store, Actions } from '@ngxs/store';
+import { Observable, of, Subject, combineLatest, BehaviorSubject, forkJoin } from 'rxjs';
 import {
   map,
   distinctUntilChanged,
-  tap,
   take,
   filter,
   flatMap,
@@ -25,7 +24,6 @@ import {
   debounceTime,
   startWith,
   catchError,
-  share,
   finalize,
 } from 'rxjs/operators';
 import { DataProviderAsset } from '../../models/data-provider-asset';
@@ -38,22 +36,19 @@ import {
   JobProgressDialogConfig,
   JobProgressDialogComponent,
 } from '../../../workbench/components/job-progress-dialog/job-progress-dialog.component';
-import { JobsState } from '../../../jobs/jobs.state';
 import { MatDialog } from '@angular/material/dialog';
-import { JobService } from '../../../jobs/services/jobs';
-import { CreateJobSuccess, CreateJobFail, CreateJob } from '../../../jobs/jobs.actions';
+import { JobApiService } from '../../../jobs/services/job-api.service';
 import { DataProvider } from '../../models/data-provider';
 import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
-import { MatSort, Sort, SortDirection } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, Sort } from '@angular/material/sort';
 import { NameDialogComponent } from '../name-dialog/name-dialog.component';
 import { AlertDialogConfig, AlertDialogComponent } from '../../../utils/alert-dialog/alert-dialog.component';
 import { TargetDialogComponent } from '../target-dialog/target-dialog.component';
 import { UploadDialogComponent } from '../upload-dialog/upload-dialog.component';
 import { saveAs } from 'file-saver/dist/FileSaver';
 import { UpdateDefaultSort } from '../../data-providers.actions';
-import { MatPaginator } from '@angular/material/paginator';
 import { PaginationLinks } from '../../../utils/core-api-response';
+import { JobService } from 'src/app/jobs/services/job.service';
 
 export interface FileSystemItem {
   id: string;
@@ -94,7 +89,7 @@ export class FileSystemItemsDataSource implements DataSource<FileSystemItem> {
   public nextLink$ = this.nextLinkSubject.asObservable();
   public lastLink$ = this.lastLinkSubject.asObservable();
 
-  constructor(private dataProviderService: AfterglowDataProviderService, private store: Store) {}
+  constructor(private dataProviderService: AfterglowDataProviderService, private store: Store) { }
 
   connect(collectionViewer: CollectionViewer): Observable<FileSystemItem[]> {
     return this.items$;
@@ -401,7 +396,9 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     private dataProviderService: AfterglowDataProviderService,
     private corrGen: CorrelationIdGenerator,
     public dialog: MatDialog,
+    private jobApiService: JobApiService,
     private jobService: JobService
+
   ) {
     const selectionChange$ = this.selection.changed.pipe(startWith(null));
 
@@ -496,7 +493,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngAfterViewInit() {
     setTimeout(() => {
@@ -811,7 +808,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
               () => {
                 this.refresh$.next(true);
               },
-              (err) => {},
+              (err) => { },
               () => {
                 this.isLoading = false;
               }
@@ -858,9 +855,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             if (errors.length !== 0) {
               const dialogConfig: Partial<AlertDialogConfig> = {
                 title: 'Error',
-                message: `Unable to ${actionName.toLowerCase()} ${
-                  errors.length
-                } of the selected files/folders. ${errors.map((error) => error.asset.name).join(', ')}`,
+                message: `Unable to ${actionName.toLowerCase()} ${errors.length
+                  } of the selected files/folders. ${errors.map((error) => error.asset.name).join(', ')}`,
                 buttons: [
                   {
                     color: null,
@@ -877,7 +873,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
               this.navigateTo(path.dataProviderId, path.assets);
             }
           },
-          (err) => {},
+          (err) => { },
           () => {
             this.isLoading = false;
           }
@@ -954,7 +950,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
 
             this.refresh$.next(true);
           },
-          (err) => {},
+          (err) => { },
           () => {
             this.isLoading = false;
           }
@@ -984,7 +980,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
             () => {
               this.refresh$.next(true);
             },
-            (err) => {},
+            (err) => { },
             () => {
               this.isLoading = false;
             }
@@ -1003,9 +999,8 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     if (this.maxUploadSize !== null && maxSize > this.maxUploadSize) {
       const dialogConfig: Partial<AlertDialogConfig> = {
         title: 'Exceeds Maximum Allowed Size',
-        message: `The maximum allowed size for each file is ${
-          Math.round((100 * this.maxUploadSize) / 1000000) / 100
-        } Mb.`,
+        message: `The maximum allowed size for each file is ${Math.round((100 * this.maxUploadSize) / 1000000) / 100
+          } Mb.`,
         buttons: [
           {
             color: null,
@@ -1052,21 +1047,20 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
       providerId: dataProviderId,
       paths: assets.map((asset) => asset.assetPath),
       state: null,
-      result: null,
     };
 
-    const corrId = this.corrGen.next();
-    const onCreateJobSuccess$ = this.actions$.pipe(
-      ofActionDispatched(CreateJobSuccess),
-      filter((action) => (action as CreateJobSuccess).correlationId === corrId),
+    let jobId: string;
+    let job$ = this.jobService.createJob(job);
+    job$.pipe(
+      filter(job => !!job.id),
       take(1),
-      flatMap((action) => {
-        const jobId = (action as CreateJobSuccess).job.id;
+      flatMap(job => {
+        jobId = job.id;
         const dialogConfig: JobProgressDialogConfig = {
           title: 'Preparing download',
           message: 'Please wait while we prepare the files for download.',
           progressMode: 'indeterminate',
-          job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
+          job$: job$,
         };
         const dialogRef = this.dialog.open(JobProgressDialogComponent, {
           width: '400px',
@@ -1074,33 +1068,29 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
           disableClose: true,
         });
 
-        return dialogRef.afterClosed().pipe(
-          flatMap((result) => {
-            if (!result) {
-              return of(null);
-            }
+        return dialogRef.afterClosed()
+      }),
+      flatMap(result => {
+        if (!result) {
+          //TODO cancel job
+          return of(null);
+        }
 
-            return this.jobService.getJobResultFile(jobId, 'download').pipe(
-              tap((data) => {
-                saveAs(data, assets.length === 1 ? assets[0].name : 'afterglow-files.zip');
-              })
-            );
-          })
-        );
+        return this.jobApiService.getJobResultFile(jobId, 'download')
       })
-    );
+    ).subscribe(
+      data => {
+        if (data) {
+          saveAs(data, assets.length === 1 ? assets[0].name : 'afterglow-files.zip');
+        }
+      },
+      error => {
+        console.error("Encountered error when preparing download: ", error)
+      },
+      () => {
 
-    const onCreateJobFail$ = this.actions$.pipe(
-      ofActionDispatched(CreateJobFail),
-      filter((action) => (action as CreateJobFail).correlationId === corrId),
-      take(1)
-    );
-
-    this.store.dispatch(new CreateJob(job, 1000, corrId));
-
-    merge(onCreateJobSuccess$, onCreateJobFail$)
-      .pipe(take(1))
-      .subscribe(() => {});
+      }
+    )
   }
 
   masterToggle() {
@@ -1115,7 +1105,7 @@ export class FileManagerComponent implements OnInit, AfterViewInit {
     this.onUploadChange(($event.target as HTMLInputElement).files);
   }
 
-  onPaginationLinkClick() {}
+  onPaginationLinkClick() { }
 
   _changePageSize(pageSize: number) {
     // Current page needs to be updated to reflect the new page size. Navigate to the page

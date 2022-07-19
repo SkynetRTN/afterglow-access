@@ -11,10 +11,11 @@ import {
   ofActionCompleted,
   ofActionCanceled,
   createSelector,
+  ofAction,
 } from '@ngxs/store';
-import { tap, catchError, filter, take, takeUntil, flatMap } from 'rxjs/operators';
+import { tap, catchError, filter, take, takeUntil, flatMap, map, startWith, debounceTime, delay } from 'rxjs/operators';
 import { Point, Matrix, Rectangle } from 'paper';
-import { merge, of } from 'rxjs';
+import { combineLatest, merge, Observable, of } from 'rxjs';
 import {
   WorkbenchStateModel,
   WorkbenchTool,
@@ -28,7 +29,6 @@ import {
 } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
-import { createPsfCentroiderSettings, createDiskCentroiderSettings } from './models/centroider';
 import {
   LoadLibrarySuccess,
   LoadLibrary,
@@ -43,6 +43,14 @@ import {
   InvalidateRawImageTiles,
   LoadHduHeader,
   InvalidateHeader,
+  UpdateHduHeader,
+  InvalidateNormalizedImageTiles,
+  UpdateNormalizerSuccess,
+  UpdateColorMap,
+  UpdateColorMapSuccess,
+  UpdateBlendModeSuccess,
+  UpdateAlphaSuccess,
+  UpdateVisibilitySuccess,
 } from '../data-files/data-files.actions';
 import {
   SelectFile,
@@ -93,7 +101,6 @@ import {
   UpdatePhotometryPanelConfig,
   ExtractSources,
   ExtractSourcesFail,
-  PhotometerSources,
   SetViewerMarkers,
   UpdatePixelOpsPageSettings as UpdatePixelOpsPanelConfig,
   UpdateStackingPanelConfig,
@@ -126,8 +133,8 @@ import {
   DeselectCustomMarkers,
   SetCustomMarkerSelection,
   AddPhotDatas,
-  RemoveAllPhotDatas,
-  RemovePhotDatas,
+  RemovePhotDatasByHduId,
+  RemovePhotDatasBySourceId,
   Sonify,
   ClearSonification,
   SyncViewerTransformations,
@@ -146,6 +153,14 @@ import {
   SonificationCompleted,
   UpdateCustomMarkerSelectionRegion,
   EndCustomMarkerSelectionRegion,
+  UpdateSettings,
+  UpdateCalibrationSettings,
+  InvalidateAutoCalByHduId,
+  InvalidateAutoPhotByHduId,
+  UpdateAutoPhotometry,
+  UpdateAutoFieldCalibration,
+  BatchPhotometerSources,
+  SyncAfterglowHeaders,
 } from './workbench.actions';
 import {
   getWidth,
@@ -158,24 +173,23 @@ import {
   PixelType,
   hasOverlap,
   TableHdu,
+  isImageHdu,
 } from '../data-files/models/data-file';
 
 import { AfterglowCatalogService } from './services/afterglow-catalogs';
 import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
-import { CreateJob, CreateJobFail, CreateJobSuccess, UpdateJob } from '../jobs/jobs.actions';
-import { PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
+import { isPixelOpsJob, PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
-import { AlignmentJob, AlignmentJobResult } from '../jobs/models/alignment';
-import { WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from '../jobs/models/wcs_calibration';
-import { StackingJob } from '../jobs/models/stacking';
+import { AlignmentJob, AlignmentJobResult, isAlignmentJob } from '../jobs/models/alignment';
+import { isWcsCalibrationJob, isWcsCalibrationJobResult, WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from '../jobs/models/wcs_calibration';
+import { isStackingJob, StackingJob, StackingJobResult } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PosType, Source } from './models/source';
-import { MarkerType, LineMarker, RectangleMarker, CircleMarker, TeardropMarker, Marker } from './models/marker';
+import { MarkerType, LineMarker, RectangleMarker, CircleMarker } from './models/marker';
 import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
-import { SourceExtractionRegionOption } from './models/source-extraction-settings';
 import {
   SourceExtractionJobSettings,
   SourceExtractionJob,
@@ -205,25 +219,33 @@ import {
   appendTransform,
   matrixToTransform,
 } from '../data-files/models/transformation';
-import { SonificationJob, SonificationJobResult, SonificationJobSettings } from '../jobs/models/sonification';
+import { isSonificationJob, SonificationJob, SonificationJobResult, SonificationJobSettings } from '../jobs/models/sonification';
 import { IImageData } from '../data-files/models/image-data';
 import { MatDialog } from '@angular/material/dialog';
 import { AlertDialogConfig, AlertDialogComponent } from '../utils/alert-dialog/alert-dialog.component';
 import { wildcardToRegExp } from '../utils/regex';
 import { Normalization } from '../data-files/models/normalization';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
-import { isNotEmpty } from '../utils/utils';
+import { getLongestCommonStartingSubstring, isNotEmpty } from '../utils/utils';
 import { Injectable } from '@angular/core';
 import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PhotometryPanelState } from './models/photometry-file-state';
-import { PhotometrySettings, defaults as defaultPhotometrySettings } from './models/photometry-settings';
+import { GlobalSettings, defaults as defaultGlobalSettings, toPhotometryJobSettings, toSourceExtractionJobSettings, toFieldCalibration } from './models/global-settings';
 import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
+import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
+import { parseDms } from '../utils/skynet-astro';
+import { HeaderEntry } from '../data-files/models/header-entry';
+import { AfterglowHeaderKey } from '../data-files/models/afterglow-header-key';
+import { I } from '@angular/cdk/keycodes';
+import { AfterglowDataFileService } from './services/afterglow-data-files';
+import { JobService } from '../jobs/services/job.service';
+import { Job } from '../jobs/models/job';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'c45e3fd5-284f-4e93-950c-2cc669e559d3',
+  version: 'bbfa2e4a-ffe1-4117-9a3f-6c08b39a5d01',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -253,20 +275,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   sidebarView: SidebarView.FILES,
   showSidebar: true,
   showConfig: true,
-  centroidSettings: {
-    useDiskCentroiding: false,
-    psfCentroiderSettings: createPsfCentroiderSettings(),
-    diskCentroiderSettings: createDiskCentroiderSettings(),
-  },
-  photometrySettings: {
-    ...defaultPhotometrySettings,
-  },
-  sourceExtractionSettings: {
-    threshold: 3,
-    fwhm: 0,
-    deblend: false,
-    region: SourceExtractionRegionOption.ENTIRE_IMAGE,
-  },
+  settings: { ...defaultGlobalSettings },
   fileInfoPanelConfig: {
     showRawHeader: false,
     useSystemTime: false,
@@ -285,17 +294,18 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   photometryPanelConfig: {
     showSourceLabels: false,
     showSourceMarkers: true,
-    showSourceApertures: false,
+    showSourceApertures: true,
     centroidClicks: true,
     showSourcesFromAllFiles: true,
     selectedSourceIds: [],
     coordMode: 'sky',
-    autoPhot: true,
     batchPhotFormData: {
       selectedHduIds: [],
     },
-    batchPhotProgress: null,
+    batchCalibrationEnabled: false,
     batchPhotJobId: '',
+    batchCalJobId: '',
+    creatingBatchJobs: false,
   },
   pixelOpsPanelConfig: {
     currentPixelOpsJobId: '',
@@ -390,8 +400,10 @@ export class WorkbenchState {
     private correlationIdGenerator: CorrelationIdGenerator,
     private actions$: Actions,
     private dialog: MatDialog,
-    private config: AfterglowConfigService
-  ) {}
+    private config: AfterglowConfigService,
+    private dataFileService: AfterglowDataFileService,
+    private jobService: JobService
+  ) { }
 
   /** Root Selectors */
   @Selector()
@@ -455,6 +467,11 @@ export class WorkbenchState {
   }
 
   @Selector()
+  public static getCatalogs(state: WorkbenchStateModel) {
+    return state.catalogs;
+  }
+
+  @Selector()
   public static getViewMode(state: WorkbenchStateModel) {
     return state.viewMode;
   }
@@ -475,18 +492,28 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getPhotometrySettings(state: WorkbenchStateModel) {
-    return state.photometrySettings;
+  public static getSettings(state: WorkbenchStateModel) {
+    return state.settings;
+  }
+
+  @Selector([WorkbenchState.getSettings])
+  public static getPhotometrySettings(settings: GlobalSettings) {
+    return settings.photometry;
+  }
+
+  @Selector()
+  public static getCalibrationSettings(state: WorkbenchStateModel) {
+    return state.settings.calibration;
   }
 
   @Selector()
   public static getSourceExtractionSettings(state: WorkbenchStateModel) {
-    return state.sourceExtractionSettings;
+    return state.settings.sourceExtraction;
   }
 
   @Selector()
   public static getCentroidSettings(state: WorkbenchStateModel) {
-    return state.centroidSettings;
+    return state.settings.centroid;
   }
 
   @Selector()
@@ -579,7 +606,7 @@ export class WorkbenchState {
   }
 
   public static getViewerById(id: string) {
-    return createSelector([WorkbenchState.getViewerEntities], (viewerEntities: { [id: string]: IViewer }) => {
+    return createSelector([WorkbenchState.getViewerEntities], (viewerEntities: { [id: string]: Viewer }) => {
       return viewerEntities[id] || null;
     });
   }
@@ -688,6 +715,30 @@ export class WorkbenchState {
   @Selector()
   public static getSonificationPanelStates(state: WorkbenchStateModel) {
     return Object.values(state.sonificationPanelStateEntities);
+  }
+
+  static getSonificationPanelStateIdByHduId(hduId: string) {
+    return createSelector(
+      [WorkbenchState.getHduIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
+      (
+        hduIdToWorkbenchStateId: { [id: string]: string },
+        workbenchStateEntities: { [id: string]: IWorkbenchState }
+      ) => {
+        return (workbenchStateEntities[hduIdToWorkbenchStateId[hduId]] as WorkbenchImageHduState)?.sonificationPanelStateId || null;
+      }
+    );
+  }
+
+  static getSonificationPanelStateByHduId(hduId: string) {
+    return createSelector(
+      [WorkbenchState.getSonificationPanelStateIdByHduId(hduId), WorkbenchState.getSonificationPanelStateEntities],
+      (
+        stateId: string,
+        sonificationStateEntities: { [id: string]: SonificationPanelState }
+      ) => {
+        return sonificationStateEntities[stateId] || null;
+      }
+    );
   }
 
   @Selector([WorkbenchState.getSonificationPanelStateEntities])
@@ -840,7 +891,7 @@ export class WorkbenchState {
 
   /** Workbench State */
 
-  static getWorkbenchStateIdByHduId(hduId: string) {
+  static getWorkbenchStateByHduId(hduId: string) {
     return createSelector(
       [WorkbenchState.getHduIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
       (
@@ -852,7 +903,7 @@ export class WorkbenchState {
     );
   }
 
-  static getWorkbenchStateIdByFileId(fileId: string) {
+  static getWorkbenchStateByFileId(fileId: string) {
     return createSelector(
       [WorkbenchState.getFileIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
       (
@@ -945,8 +996,9 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileHdusByViewerId(viewerId), DataFilesState.getHeaderEntities],
       (hdus: IHdu[], headerEntities: { [id: string]: Header }) => {
-        hdus = hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[];
-        return !hdus || hdus.length == 0 ? null : headerEntities[hdus[0]?.headerId];
+        if (!hdus) return null;
+        hdus = hdus.filter(isImageHdu).filter(hdu => hdu.visible);
+        return hdus.length == 0 ? null : headerEntities[hdus[0]?.headerId];
       }
     );
   }
@@ -966,7 +1018,20 @@ export class WorkbenchState {
       [
         WorkbenchState.getViewerById(viewerId),
         WorkbenchState.getHduHeaderByViewerId(viewerId),
-        WorkbenchState.getFileHeaderByViewerId,
+        WorkbenchState.getFileHeaderByViewerId(viewerId),
+      ],
+      (viewer: Viewer, hduHeader: Header, fileHeader: Header) => {
+        return viewer?.hduId ? hduHeader : fileHeader;
+      }
+    );
+  }
+
+  public static getImageHeaderByViewerId(viewerId: string) {
+    return createSelector(
+      [
+        WorkbenchState.getViewerById(viewerId),
+        WorkbenchState.getHduHeaderByViewerId(viewerId),
+        WorkbenchState.getFileImageHeaderByViewerId(viewerId),
       ],
       (viewer: Viewer, hduHeader: Header, fileHeader: Header) => {
         return viewer?.hduId ? hduHeader : fileHeader;
@@ -987,7 +1052,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getImageHduByViewerId(viewerId), DataFilesState.getImageDataEntities],
       (imageHdu: ImageHdu, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
-        return (imageDataEntities[imageHdu?.imageDataId] as IImageData<Uint32Array>) || null;
+        return (imageDataEntities[imageHdu?.rgbaImageDataId] as IImageData<Uint32Array>) || null;
       }
     );
   }
@@ -996,7 +1061,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getFileByViewerId(viewerId), DataFilesState.getImageDataEntities],
       (file: DataFile, imageDataEntities: { [id: string]: IImageData<PixelType> }) => {
-        return (imageDataEntities[file?.imageDataId] as IImageData<Uint32Array>) || null;
+        return (imageDataEntities[file?.rgbaImageDataId] as IImageData<Uint32Array>) || null;
       }
     );
   }
@@ -1274,7 +1339,7 @@ export class WorkbenchState {
 
   @Action(Initialize)
   @ImmutableContext()
-  public initialize({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: Initialize) {
+  public initialize({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: Initialize) {
     let state = getState();
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
@@ -1301,7 +1366,7 @@ export class WorkbenchState {
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     hdus.forEach((hdu) => {
       let header = headerEntities[hdu.headerId];
-      if (!header || header.loaded || header.loading) return;
+      if (!header || (header.loaded && header.isValid) || header.loading) return;
 
       actions.push(new LoadHdu(hdu.id));
     });
@@ -1311,7 +1376,7 @@ export class WorkbenchState {
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ResetState) {
     setState((state: WorkbenchStateModel) => {
       return workbenchStateDefaults;
     });
@@ -1319,7 +1384,7 @@ export class WorkbenchState {
 
   @Action(ToggleFullScreen)
   @ImmutableContext()
-  public toggleFullScreen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ToggleFullScreen) {
+  public toggleFullScreen({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ToggleFullScreen) {
     setState((state: WorkbenchStateModel) => {
       state.inFullScreenMode = !state.inFullScreenMode;
       return state;
@@ -1366,7 +1431,7 @@ export class WorkbenchState {
 
   @Action(ShowSidebar)
   @ImmutableContext()
-  public showSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ShowSidebar) {
+  public showSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ShowSidebar) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = true;
       return state;
@@ -1375,7 +1440,7 @@ export class WorkbenchState {
 
   @Action(HideSidebar)
   @ImmutableContext()
-  public hideSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: HideSidebar) {
+  public hideSidebar({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: HideSidebar) {
     setState((state: WorkbenchStateModel) => {
       state.showSidebar = false;
       return state;
@@ -1412,8 +1477,8 @@ export class WorkbenchState {
     if (refViewer) {
       refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(refViewer.id));
       refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(refViewer.id));
-      refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(refViewer.id));
-      refImageDataId = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(refViewer.id))?.id;
+      refHeader = this.store.selectSnapshot(WorkbenchState.getImageHeaderByViewerId(refViewer.id));
+      refImageDataId = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataByViewerId(refViewer.id))?.id;
 
       if (refViewer.hduId) {
         let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
@@ -1435,7 +1500,7 @@ export class WorkbenchState {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(
-            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageDataId)
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageDataId, refViewer)
           );
         }
       }
@@ -1636,6 +1701,8 @@ export class WorkbenchState {
     { viewerId, direction }: SplitViewerPanel
   ) {
     setState((state: WorkbenchStateModel) => {
+      let viewer = state.viewers[viewerId];
+      if (viewer) viewer.keepOpen = true;
       //find panel
       let panels = state.viewerLayoutItemIds
         .filter((itemId) => state.viewerLayoutItems[itemId].type == 'panel')
@@ -1829,21 +1896,21 @@ export class WorkbenchState {
     { viewerId, fileId, hduId }: SetViewerFile
   ) {
     let state = getState();
-    let viewer = state.viewers[viewerId];
+    let refViewer = state.viewers[viewerId];
     let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
-    if (!viewer) return null;
+    if (!refViewer) return null;
 
-    let refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(viewer.id));
-    let refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(viewer.id));
-    let refHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(viewer.id));
-    let refImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(viewer.id));
+    let refViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(refViewer.id));
+    let refImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(refViewer.id));
+    let refHeader = this.store.selectSnapshot(WorkbenchState.getImageHeaderByViewerId(refViewer.id));
+    let refImageData = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataByViewerId(refViewer.id));
 
     let refNormalization: PixelNormalizer;
-    if (viewer.hduId) {
-      let refHdu = hduEntities[viewer.hduId] as ImageHdu;
+    if (refViewer.hduId) {
+      let refHdu = hduEntities[refViewer.hduId] as ImageHdu;
       if (refHdu.type == HduType.IMAGE) {
         refNormalization = refHdu.normalizer;
       }
@@ -1874,7 +1941,7 @@ export class WorkbenchState {
         // ensure that the new file/hdu is synced to what was previously in the viewer
         if (state.viewerSyncEnabled) {
           store.dispatch(
-            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id)
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id, refViewer)
           );
         }
 
@@ -1959,7 +2026,7 @@ export class WorkbenchState {
 
   @Action(ToggleShowConfig)
   @ImmutableContext()
-  public toggleShowConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: ToggleShowConfig) {
+  public toggleShowConfig({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: ToggleShowConfig) {
     setState((state: WorkbenchStateModel) => {
       state.showConfig = !state.showConfig;
       return state;
@@ -1975,6 +2042,28 @@ export class WorkbenchState {
     });
   }
 
+  @Action(UpdateSettings)
+  @ImmutableContext()
+  public updateSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.settings = {
+        ...state.settings,
+        ...changes,
+      }
+      return state;
+    });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoPhotByHduId())
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
+  }
+
   @Action(UpdateCentroidSettings)
   @ImmutableContext()
   public updateCentroidSettings(
@@ -1982,8 +2071,8 @@ export class WorkbenchState {
     { changes }: UpdateCentroidSettings
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.centroidSettings = {
-        ...state.centroidSettings,
+      state.settings.centroid = {
+        ...state.settings.centroid,
         ...changes,
       };
       return state;
@@ -1997,12 +2086,19 @@ export class WorkbenchState {
     { changes }: UpdatePhotometrySettings
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.photometrySettings = {
-        ...state.photometrySettings,
+      state.settings.photometry = {
+        ...state.settings.photometry,
         ...changes,
-      };
+      }
       return state;
     });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoPhotByHduId())
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
   }
 
   @Action(UpdateSourceExtractionSettings)
@@ -2012,12 +2108,40 @@ export class WorkbenchState {
     { changes }: UpdateSourceExtractionSettings
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.sourceExtractionSettings = {
-        ...state.sourceExtractionSettings,
+      state.settings.sourceExtraction = {
+        ...state.settings.sourceExtraction,
         ...changes,
       };
       return state;
     });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
+  }
+
+  @Action(UpdateCalibrationSettings)
+  @ImmutableContext()
+  public updateCalibrationSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateCalibrationSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.settings.calibration = {
+        ...state.settings.calibration,
+        ...changes,
+      }
+      return state;
+    });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoCalByHduId())
+    return dispatch(actions);
+
   }
 
   @Action(UpdateCustomMarkerPanelConfig)
@@ -2215,7 +2339,7 @@ export class WorkbenchState {
 
   @Action(CloseSidenav)
   @ImmutableContext()
-  public closeSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CloseSidenav) {
+  public closeSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CloseSidenav) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = false;
       return state;
@@ -2224,7 +2348,7 @@ export class WorkbenchState {
 
   @Action(OpenSidenav)
   @ImmutableContext()
-  public openSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: OpenSidenav) {
+  public openSideNav({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: OpenSidenav) {
     setState((state: WorkbenchStateModel) => {
       state.showSideNav = true;
       return state;
@@ -2450,9 +2574,9 @@ export class WorkbenchState {
       let imageDataId: string = '';
       if (hdu) {
         headerId = hdu.headerId;
-        imageDataId = (hdu as ImageHdu).imageDataId;
+        imageDataId = (hdu as ImageHdu).rgbaImageDataId;
       } else {
-        imageDataId = file.imageDataId;
+        imageDataId = file.rgbaImageDataId;
 
         //use header from first image hdu
         let firstImageHduId = file.hduIds.find((hduId) => hduEntities[hduId].type == HduType.IMAGE);
@@ -2528,7 +2652,7 @@ export class WorkbenchState {
     if (sonifierState.regionMode == SonifierRegionMode.CUSTOM && sonifierState.viewportSync) {
       //find viewer which contains file
       let viewer = this.store.selectSnapshot(WorkbenchState.getViewers).find((viewer) => viewer.hduId == hduId);
-      if (viewer && viewer.viewportSize && sonifierState.regionHistoryIndex !== null) {
+      if (viewer && viewer.viewportSize && viewer.viewportSize.width != 0 && viewer.viewportSize.height != 0 && sonifierState.regionHistoryIndex !== null) {
         let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
         dispatch(
           new CenterRegionInViewport(
@@ -2545,9 +2669,21 @@ export class WorkbenchState {
 
   @Action(LoadCatalogs)
   @ImmutableContext()
-  public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: LoadCatalogs) {
+  public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadCatalogs) {
     return this.afterglowCatalogService.getCatalogs().pipe(
       tap((catalogs) => {
+        catalogs.forEach(catalog => {
+          if (!catalog.filterLookup) catalog.filterLookup = {};
+          let red = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
+          if (red) catalog.filterLookup['Red'] = red;
+          let green = (catalog.mags['V'] ? 'V' : catalog.filterLookup['V']) || '';
+          if (green) catalog.filterLookup['Green'] = green;
+          let blue = (catalog.mags['B'] ? 'B' : catalog.filterLookup['B']) || '';
+          if (blue) catalog.filterLookup['Blue'] = blue;
+          let lum = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
+          if (lum) catalog.filterLookup['Lum'] = lum;
+        })
+
         setState((state: WorkbenchStateModel) => {
           state.catalogs = catalogs;
           state.selectedCatalogId = catalogs.length != 0 ? catalogs[0].name : '';
@@ -2565,7 +2701,7 @@ export class WorkbenchState {
 
   @Action(LoadFieldCals)
   @ImmutableContext()
-  public loadFieldCals({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: LoadFieldCals) {
+  public loadFieldCals({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadFieldCals) {
     return this.afterglowFieldCalService.getFieldCals().pipe(
       tap((fieldCals) => {
         setState((state: WorkbenchStateModel) => {
@@ -2616,7 +2752,7 @@ export class WorkbenchState {
     { fieldCal }: UpdateFieldCal
   ) {
     return this.afterglowFieldCalService.updateFieldCal(fieldCal).pipe(
-      tap((fieldCal) => {}),
+      tap((fieldCal) => { }),
       flatMap((fieldCal) => {
         return dispatch([new UpdateFieldCalSuccess(fieldCal), new LoadFieldCals()]);
       }),
@@ -2654,7 +2790,7 @@ export class WorkbenchState {
 
   @Action(CreatePixelOpsJob)
   @ImmutableContext()
-  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, {}: CreatePixelOpsJob) {
+  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreatePixelOpsJob) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
@@ -2669,10 +2805,10 @@ export class WorkbenchState {
       auxFileIds.push(data.auxHduId);
     } else if (data.mode == 'kernel') {
       op = `${data.kernelFilter}(img`;
-      if(SIZE_KERNELS.includes(data.kernelFilter)) {
+      if (SIZE_KERNELS.includes(data.kernelFilter)) {
         op += `, ${data.kernelSize}`
       }
-      if(SIGMA_KERNELS.includes(data.kernelFilter)) {
+      if (SIGMA_KERNELS.includes(data.kernelFilter)) {
         op += `, ${data.kernelSigma}`
       }
       op += ')'
@@ -2688,83 +2824,56 @@ export class WorkbenchState {
           return dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0;
+              ? 1
+              : 0;
         })
         .map((f) => f.id),
       auxFileIds: auxFileIds,
       op: op,
       inplace: data.inPlace,
       state: null,
-      result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
 
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during pixel ops job: ', result.errors);
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
+            return state;
+          });
         }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during pixel ops job: ', result.warnings);
-        }
+        if (job.state.status == 'completed' && job.result) {
+          let actions: any[] = [];
+          if (!isPixelOpsJob(job)) return;
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during pixel ops job: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during pixel ops job: ', result.warnings);
+          }
 
-        let actions: any[] = [];
-        if ((job as PixelOpsJob).inplace) {
-          let hduIds = result.fileIds.map((id) => id.toString());
-          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
-        }
 
-        actions.push(new LoadLibrary());
-        return dispatch(actions);
+          if (job.inplace) {
+            let hduIds = result.fileIds.map((id) => id.toString());
+            hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+            hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+          }
+
+          actions.push(new LoadLibrary());
+          dispatch(actions);
+        }
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateAdvPixelOpsJob)
   @ImmutableContext()
   public createAdvPixelOpsJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: CreateAdvPixelOpsJob
+    { }: CreateAdvPixelOpsJob
   ) {
     let state = getState();
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
@@ -2780,8 +2889,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       auxFileIds: auxImageFiles
@@ -2789,76 +2898,47 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       op: data.opString,
       inplace: data.inPlace,
       state: null,
-      result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during pixel ops: ', result.errors);
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
+            return state;
+          });
         }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during pixel ops: ', result.warnings);
+        if (job.state.status == 'completed' && job.result) {
+          let actions: any[] = [];
+          if (!isPixelOpsJob(job)) return;
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during pixel ops: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during pixel ops: ', result.warnings);
+          }
+
+
+          if ((job as PixelOpsJob).inplace) {
+            let hduIds = result.fileIds.map((id) => id.toString());
+            hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+            hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+          }
+
+          actions.push(new LoadLibrary());
+          dispatch(actions);
         }
-
-        let actions: any[] = [];
-        if ((job as PixelOpsJob).inplace) {
-          let hduIds = result.fileIds.map((id) => id.toString());
-          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
-        }
-
-        actions.push(new LoadLibrary());
-
-        return dispatch(actions);
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        setState((state: WorkbenchStateModel) => {
-          state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateAlignmentJob)
@@ -2880,8 +2960,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       inplace: true,
@@ -2895,66 +2975,38 @@ export class WorkbenchState {
       result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = job.result as AlignmentJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during aligning: ', result.errors);
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.aligningPanelConfig.currentAlignmentJobId = job.id;
+            return state;
+          });
         }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during aligning: ', result.warnings);
+        if (job.state.status == 'completed' && job.result) {
+          let actions: any[] = [];
+          if (!isAlignmentJob(job)) return;
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during aligning: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during aligning: ', result.warnings);
+          }
+
+          let hduIds = result.fileIds.map((id) => id.toString());
+
+          if (job.inplace) {
+            hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
+            hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
+          }
+
+          actions.push(new LoadLibrary());
+          dispatch(actions);
         }
-
-        let hduIds = result.fileIds.map((id) => id.toString());
-        let actions: any[] = [];
-        if ((job as AlignmentJob).inplace) {
-          hduIds.forEach((hduId) => actions.push(new InvalidateRawImageTiles(hduId)));
-          hduIds.forEach((hduId) => actions.push(new InvalidateHeader(hduId)));
-        }
-
-        actions.push(new LoadLibrary());
-
-        return dispatch(actions);
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        setState((state: WorkbenchStateModel) => {
-          state.aligningPanelConfig.currentAlignmentJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateStackingJob)
@@ -2966,8 +3018,24 @@ export class WorkbenchState {
     let state = getState();
     let data = state.stackingPanelConfig.stackFormData;
     let hdus = this.store.selectSnapshot(DataFilesState.getHdus);
+
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let imageHdus = hduIds.map((id) => hdus.find((f) => f.id == id)).filter(isNotEmpty);
+    let existingFileNames = hdus.map(hdu => hdu.name)
+    let stackedName = getLongestCommonStartingSubstring(imageHdus.map(hdu => hdu.name)).replace(/_+$/, '').trim();
+
+    if (stackedName) {
+      stackedName = `${stackedName}_stack`
+      let base = stackedName
+      let iter = 0
+      while (existingFileNames.includes(`${stackedName}.fits`)) {
+        stackedName = `${base}_${iter}`
+        iter += 1;
+      }
+    }
+
+
+
     let job: StackingJob = {
       type: JobType.Stacking,
       id: null,
@@ -2976,8 +3044,8 @@ export class WorkbenchState {
           dataFiles[a.fileId].name < dataFiles[b.fileId].name
             ? -1
             : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-            ? 1
-            : 0
+              ? 1
+              : 0
         )
         .map((f) => f.id),
       stackingSettings: {
@@ -2989,59 +3057,39 @@ export class WorkbenchState {
         hi: data.high,
       },
       state: null,
-      result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
 
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobCanceled$ = this.actions$.pipe(
-      ofActionCanceled(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobErrored$ = this.actions$.pipe(
-      ofActionErrored(CreateJob),
-      filter((a) => a.action.correlationId == correlationId)
-    );
-
-    let jobSuccessful$ = this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(merge(jobCanceled$, jobErrored$)),
-      take(1),
-      tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as PixelOpsJobResult;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during stacking: ', result.errors);
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.stackingPanelConfig.currentStackingJobId = job.id;
+            return state;
+          });
         }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during stacking: ', result.warnings);
+        if (job.state.status == 'completed' && job.result) {
+          if (!isStackingJob(job)) return;
+          let result = job.result;
+          if (result.errors.length != 0) {
+            console.error('Errors encountered during stacking: ', result.errors);
+          }
+          if (result.warnings.length != 0) {
+            console.error('Warnings encountered during stacking: ', result.warnings);
+          }
+          if (result.fileId && stackedName) {
+            this.dataFileService.updateFile(result.fileId, {
+              groupName: `${stackedName}.fits`,
+              name: `${stackedName}.fits`
+            }).pipe(
+              flatMap(() => dispatch(new LoadLibrary()))
+            ).subscribe()
+          }
+          dispatch(new LoadLibrary())
         }
-        dispatch(new LoadLibrary());
       })
-    );
-
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        setState((state: WorkbenchStateModel) => {
-          state.stackingPanelConfig.currentStackingJobId = job.id;
-          return state;
-        });
-      })
-    );
-
-    return merge(jobSuccessful$, jobUpdated$);
+    )
   }
 
   @Action(CreateWcsCalibrationJob)
@@ -3057,16 +3105,18 @@ export class WorkbenchState {
 
     let state = getState();
     let wcsSettings = state.wcsCalibrationSettings;
+    let raHours = typeof (wcsSettings.ra) == 'string' ? parseDms(wcsSettings.ra) : wcsSettings.ra;
+    let decDegs = typeof (wcsSettings.dec) == 'string' ? parseDms(wcsSettings.dec) : wcsSettings.dec;
     let wcsCalibrationJobSettings: WcsCalibrationJobSettings = {
-      raHours: wcsSettings.ra,
-      decDegs: wcsSettings.dec,
+      raHours: raHours,
+      decDegs: decDegs,
       radius: wcsSettings.radius,
       minScale: wcsSettings.minScale,
       maxScale: wcsSettings.maxScale,
       maxSources: wcsSettings.maxSources,
     };
 
-    let sourceExtractionSettings = state.sourceExtractionSettings;
+    let sourceExtractionSettings = state.settings.sourceExtraction;
     let sourceExtractionJobSettings: SourceExtractionJobSettings = {
       threshold: sourceExtractionSettings.threshold,
       fwhm: sourceExtractionSettings.fwhm,
@@ -3082,73 +3132,52 @@ export class WorkbenchState {
       settings: wcsCalibrationJobSettings,
       sourceExtractionSettings: sourceExtractionJobSettings,
       state: null,
-      result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    let onCreateJobFail$ = this.actions$.pipe(
-      ofActionDispatched(CreateJobFail),
-      filter((action) => (action as CreateJobFail).correlationId == correlationId)
-    );
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.wcsCalibrationPanelState.activeJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed' && job.result) {
+          let actions: any[] = [];
+          if (!isWcsCalibrationJob(job)) return;
+          job.result.fileIds.forEach((hduId) => {
+            actions.push(new InvalidateHeader(hduId.toString()));
+          });
+          let message: string;
+          let numFailed = hduIds.length - job.result.fileIds.length;
+          if (numFailed != 0) {
+            message = `Failed to find solution for ${numFailed} image(s).`;
+          } else {
+            message = `Successfully found solutions for all ${hduIds.length} files.`;
+          }
 
-    let onCreateJobSuccess$ = this.actions$.pipe(
-      takeUntil(onCreateJobFail$),
-      ofActionDispatched(CreateJobSuccess),
-      filter((action) => (action as CreateJobSuccess).correlationId == correlationId),
-      take(1),
-      flatMap((action) => {
-        setState((state: WorkbenchStateModel) => {
-          state.wcsCalibrationPanelState.activeJobId = (action as CreateJobSuccess).job.id;
-          return state;
-        });
+          let dialogConfig: Partial<AlertDialogConfig> = {
+            title: 'WCS Calibration Completed',
+            message: message,
+            buttons: [
+              {
+                color: '',
+                value: false,
+                label: 'Close',
+              },
+            ],
+          };
+          this.dialog.open(AlertDialogComponent, {
+            width: '600px',
+            data: dialogConfig,
+          });
 
-        return this.actions$.pipe(
-          ofActionCompleted(CreateJob),
-          filter((value) => (value.action as CreateJob).correlationId == correlationId),
-          take(1),
-          flatMap((value) => {
-            let actions: any[] = [];
-            let state = getState();
-            if (value.result.successful) {
-              let jobEntites = this.store.selectSnapshot(JobsState.getJobEntities);
-              let job = jobEntites[state.wcsCalibrationPanelState.activeJobId] as WcsCalibrationJob;
-              let result = job.result;
-              if (result) {
-                result.fileIds.forEach((hduId) => {
-                  actions.push(new InvalidateHeader(hduId.toString()));
-                });
-                let message: string;
-                let numFailed = hduIds.length - result.fileIds.length;
-                if (numFailed != 0) {
-                  message = `Failed to find solution for ${numFailed} image(s).`;
-                } else {
-                  message = `Successfully found solutions for all ${hduIds.length} files.`;
-                }
+          dispatch(actions)
 
-                let dialogConfig: Partial<AlertDialogConfig> = {
-                  title: 'WCS Calibration Completed',
-                  message: message,
-                  buttons: [
-                    {
-                      color: '',
-                      value: false,
-                      label: 'Close',
-                    },
-                  ],
-                };
-                let dialogRef = this.dialog.open(AlertDialogComponent, {
-                  width: '600px',
-                  data: dialogConfig,
-                });
-              }
-            }
-
-            return dispatch(actions);
-          })
-        );
+        }
       })
-    );
-    return merge(onCreateJobSuccess$, dispatch(new CreateJob(job, 1000, correlationId)));
+    )
   }
 
   @Action(ImportFromSurvey)
@@ -3207,124 +3236,7 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { hduId, viewportSize, settings }: ExtractSources
   ) {
-    let state = getState();
-    let photometryPageSettings = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-    let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
-    let hdu = hduEntities[hduId] as ImageHdu;
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[hdu.headerId];
-    let rawImageData = imageDataEntities[hdu.rawImageDataId];
-    let viewportTransform = transformEntities[hdu.viewportTransformId];
-    let imageTransform = transformEntities[hdu.imageTransformId];
-    let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
-    let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
-    if (workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
-    let hduState = workbenchState as WorkbenchImageHduState;
-    let sonificationState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
 
-    let jobSettings: SourceExtractionJobSettings = {
-      threshold: settings.threshold,
-      fwhm: settings.fwhm,
-      deblend: settings.deblend,
-      limit: settings.limit,
-    };
-    if (
-      settings.region == SourceExtractionRegionOption.VIEWPORT ||
-      (settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-        sonificationState.regionMode == SonifierRegionMode.VIEWPORT)
-    ) {
-      let region = getViewportRegion(
-        imageToViewportTransform,
-        rawImageData.width,
-        rawImageData.height,
-        viewportSize.width,
-        viewportSize.height
-      );
-
-      jobSettings = {
-        ...jobSettings,
-        x: Math.min(getWidth(header), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(header), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(header), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(header), Math.max(0, region.height + 1)),
-      };
-    } else if (
-      settings.region == SourceExtractionRegionOption.SONIFIER_REGION &&
-      sonificationState.regionMode == SonifierRegionMode.CUSTOM &&
-      sonificationState.regionHistoryIndex !== null
-    ) {
-      let region = sonificationState.regionHistory[sonificationState.regionHistoryIndex];
-      jobSettings = {
-        ...jobSettings,
-        x: Math.min(getWidth(header), Math.max(0, region.x + 1)),
-        y: Math.min(getHeight(header), Math.max(0, region.y + 1)),
-        width: Math.min(getWidth(header), Math.max(0, region.width + 1)),
-        height: Math.min(getHeight(header), Math.max(0, region.height + 1)),
-      };
-    }
-    let job: SourceExtractionJob = {
-      id: null,
-      type: JobType.SourceExtraction,
-      fileIds: [hduId],
-      sourceExtractionSettings: jobSettings,
-      mergeSources: false,
-      state: null,
-      result: null,
-    };
-
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
-    return this.actions$.pipe(
-      ofActionSuccessful(CreateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      tap((a) => {
-        let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        let result = jobEntity.result as SourceExtractionJobResult;
-        if (result.errors.length != 0) {
-          dispatch(new ExtractSourcesFail(result.errors.map((e) => e.detail).join(',')));
-          return;
-        }
-        let sources = result.data.map((d) => {
-          let posType = PosType.PIXEL;
-          let primaryCoord = d.x;
-          let secondaryCoord = d.y;
-
-          if (
-            photometryPageSettings.coordMode == 'sky' &&
-            header.wcs &&
-            header.wcs.isValid() &&
-            'raHours' in d &&
-            d.raHours !== null &&
-            'decDegs' in d &&
-            d.decDegs !== null
-          ) {
-            posType = PosType.SKY;
-            primaryCoord = d.raHours;
-            secondaryCoord = d.decDegs;
-          }
-
-          let pmEpoch = null;
-          if (d.time && Date.parse(d.time + ' GMT')) {
-            pmEpoch = new Date(Date.parse(d.time + ' GMT')).toISOString();
-          }
-          return {
-            id: null,
-            label: '',
-            objectId: '',
-            hduId: d.fileId.toString(),
-            posType: posType,
-            primaryCoord: primaryCoord,
-            secondaryCoord: secondaryCoord,
-            pm: 0,
-            pmPosAngle: 0,
-            pmEpoch: pmEpoch,
-          } as Source;
-        });
-
-        dispatch(new AddSources(sources));
-      })
-    );
   }
 
   @Action(RemoveSources)
@@ -3343,62 +3255,209 @@ export class WorkbenchState {
     });
   }
 
-  @Action(PhotometerSources)
+  @Action(UpdateAutoPhotometry)
   @ImmutableContext()
-  public photometerSources(
+  public updateAutoPhotometry(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceIds, hduIds: fileIds, settings, isBatch }: PhotometerSources
+    { viewerId }: UpdateAutoPhotometry
   ) {
     let state = getState();
-    let sourcesState = this.store.selectSnapshot(SourcesState.getState);
 
-    sourceIds = sourceIds.filter((id) => sourcesState.ids.includes(id));
+    let imageHdu = this.store.selectSnapshot(WorkbenchState.getImageHduByViewerId(viewerId))
+    if (!imageHdu) return;
+    let hduId = imageHdu.id;
 
-    let s: PhotometryJobSettings;
+    let coordMode = state.photometryPanelConfig.coordMode;
+    let showSourcesFromAllFiles = state.photometryPanelConfig.showSourcesFromAllFiles;
+    let sources = this.store.selectSnapshot(SourcesState.getSources);
 
-    if (settings.mode == 'adaptive') {
-      s = {
-        mode: 'auto',
-        a: settings.autoAper ? 0 : settings.aKrFactor,
-        aIn: settings.aInKrFactor,
-        aOut: settings.aOutKrFactor,
-        b: null,
-        bOut: null,
-        centroidRadius: null,
-        gain: null,
-        theta: null,
-        thetaOut: null,
-        zeroPoint: null,
-        apcorrTol: settings.adaptiveAperCorr ? settings.aperCorrTol : 0,
+
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId))
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId))
+
+    if (!hdu || !header) return;
+    if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
+    sources = sources.filter((source) => {
+      if (coordMode != source.posType) return false;
+      if (source.hduId == hduId) return true;
+      if (!showSourcesFromAllFiles) return false;
+      let coord = getSourceCoordinates(header, source);
+      if (coord == null) return false;
+      return true;
+    });
+
+    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByHduId(hduId))
+    if (!workbenchState) return;
+    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+      let hduState = workbenchState as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+
+      let photometryJobSettings = toPhotometryJobSettings(state.settings);
+
+      let job: PhotometryJob = {
+        type: JobType.Photometry,
+        settings: photometryJobSettings,
+        id: null,
+        fileIds: [hduId],
+        sources: sources.map((source, index) => {
+          let x = null;
+          let y = null;
+          let pmPixel = null;
+          let pmPosAnglePixel = null;
+          let raHours = null;
+          let decDegs = null;
+          let pmSky = null;
+          let pmPosAngleSky = null;
+
+          if (source.posType == PosType.PIXEL) {
+            x = source.primaryCoord;
+            y = source.secondaryCoord;
+            pmPixel = source.pm;
+            pmPosAnglePixel = source.pmPosAngle;
+          } else {
+            raHours = source.primaryCoord;
+            decDegs = source.secondaryCoord;
+            pmSky = source.pm;
+            if (pmSky) pmSky /= 3600.0;
+            pmPosAngleSky = source.pmPosAngle;
+          }
+
+          let s: Astrometry & SourceId = {
+            id: source.id,
+            pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
+            x: x,
+            y: y,
+            pmPixel: pmPixel,
+            pmPosAnglePixel: pmPosAnglePixel,
+            raHours: raHours,
+            decDegs: decDegs,
+            pmSky: pmSky,
+            pmPosAngleSky: pmPosAngleSky,
+            fwhmX: null,
+            fwhmY: null,
+            theta: null,
+          };
+          return s;
+        }),
+        state: null,
       };
-    } else {
-      s = {
-        mode: 'aperture',
-        a: settings.a,
-        b: settings.b,
-        aIn: settings.aIn,
-        aOut: settings.aOut,
-        bOut: settings.bOut,
-        theta: settings.theta,
-        thetaOut: settings.thetaOut,
-        centroidRadius: null,
-        gain: null,
-        zeroPoint: null,
-        apcorrTol: settings.constantAperCorr ? settings.aperCorrTol : 0,
-      };
+
+      setState((state: WorkbenchStateModel) => {
+        let photState = state.photometryPanelStateEntities[photPanelStateId];
+        photState.autoPhotIsValid = true;
+        photState.autoPhotJobId = null;
+        return state;
+      });
+
+      let job$ = this.jobService.createJob(job);
+      return job$.pipe(
+        tap(job => {
+          if (job.id) {
+            setState((state: WorkbenchStateModel) => {
+              state.photometryPanelStateEntities[photPanelStateId].autoPhotJobId = job.id;
+              return state;
+            });
+          }
+          if (job.state.status == 'completed') {
+
+
+          }
+        })
+      )
     }
+  }
 
-    s.gain = settings.gain;
-    s.centroidRadius = settings.centroidRadius;
-    s.zeroPoint = settings.zeroPoint;
+  @Action(UpdateAutoFieldCalibration)
+  @ImmutableContext()
+  public updateAutoFieldCalibration(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { viewerId }: UpdateAutoFieldCalibration
+  ) {
+    let state = getState();
 
-    let job: PhotometryJob = {
+    let imageHdu = this.store.selectSnapshot(WorkbenchState.getImageHduByViewerId(viewerId))
+    if (!imageHdu) return;
+    let hduId = imageHdu.id;
+
+    let coordMode = state.photometryPanelConfig.coordMode;
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId))
+    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId))
+
+    if (!hdu || !header) return;
+    if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
+
+
+    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByHduId(hduId))
+    if (!workbenchState) return;
+    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+      let hduState = workbenchState as WorkbenchImageHduState;
+      let photPanelStateId = hduState.photometryPanelStateId;
+
+      let photometryJobSettings = toPhotometryJobSettings(state.settings);
+      let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
+      let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
+      let fieldCalibration = toFieldCalibration(state.settings, catalogs);
+
+      let job: FieldCalibrationJob = {
+        type: JobType.FieldCalibration,
+        id: null,
+        photometrySettings: photometryJobSettings,
+        sourceExtractionSettings: sourceExtractionJobSettings,
+        fieldCal: fieldCalibration,
+        fileIds: [hduId],
+        state: null,
+      };
+
+      setState((state: WorkbenchStateModel) => {
+        let photState = state.photometryPanelStateEntities[photPanelStateId];
+        photState.autoCalIsValid = true;
+        photState.autoCalJobId = null;
+        return state;
+      });
+
+      let job$ = this.jobService.createJob(job);
+      return job$.pipe(
+        tap(job => {
+          if (job.id) {
+            setState((state: WorkbenchStateModel) => {
+              state.photometryPanelStateEntities[photPanelStateId].autoCalJobId = job.id;
+              return state;
+            });
+          }
+          if (job.state.status == 'completed') {
+          }
+        })
+      )
+    }
+  }
+
+  @Action(BatchPhotometerSources)
+  @ImmutableContext()
+  public batchPhotometerSources(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { }: BatchPhotometerSources
+  ) {
+    let state = getState();
+
+
+    setState((state: WorkbenchStateModel) => {
+      state.photometryPanelConfig.batchCalibrationEnabled = state.settings.calibration.calibrationEnabled;
+      state.photometryPanelConfig.batchCalJobId = null;
+      state.photometryPanelConfig.batchPhotJobId = null;
+      state.photometryPanelConfig.creatingBatchJobs = true;
+      return state;
+    });
+
+    let sources = this.store.selectSnapshot(SourcesState.getSources);
+    let photometryJobSettings = toPhotometryJobSettings(state.settings);
+    let hduIds = state.photometryPanelConfig.batchPhotFormData.selectedHduIds;
+
+    let photJob: PhotometryJob = {
       type: JobType.Photometry,
-      settings: s,
+      settings: photometryJobSettings,
       id: null,
-      fileIds: fileIds,
-      sources: sourceIds.map((id, index) => {
-        let source = sourcesState.entities[id];
+      fileIds: hduIds,
+      sources: sources.map((source, index) => {
         let x = null;
         let y = null;
         let pmPixel = null;
@@ -3439,111 +3498,63 @@ export class WorkbenchState {
         return s;
       }),
       state: null,
-      result: null,
     };
 
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
 
-    setState((state: WorkbenchStateModel) => {
-      if (isBatch) state.photometryPanelConfig.batchPhotProgress = null;
-      return state;
-    });
-
-    let jobFinished$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
-      take(1),
-      tap((v) => {
-        if (v.result.successful) {
-          let a = v.action as CreateJob;
-          let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-          let result = jobEntity.result as PhotometryJobResult;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered while photometering sources: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered while photometering sources: ', result.warnings);
-          }
-
+    let photJob$ = this.jobService.createJob(photJob).pipe(
+      tap(job => {
+        if (job.id) {
           setState((state: WorkbenchStateModel) => {
-            if (isBatch) state.photometryPanelConfig.batchPhotProgress = null;
+            state.photometryPanelConfig.batchPhotJobId = job.id;
+            state.photometryPanelConfig.creatingBatchJobs = false;
             return state;
           });
-
-          let photDatas: PhotometryData[] = [];
-          fileIds.forEach((fileId) => {
-            sourceIds.forEach((sourceId) => {
-              let d = result.data.find((d) => d.id == sourceId && d.fileId == fileId);
-              if (!d) {
-                photDatas.push({
-                  id: sourceId,
-                  fileId: fileId,
-                  annulusAIn: null,
-                  annulusAOut: null,
-                  annulusBIn: null,
-                  annulusBOut: null,
-                  aperA: null,
-                  aperB: null,
-                  aperTheta: null,
-                  decDegs: null,
-                  expLength: null,
-                  filter: null,
-                  flux: null,
-                  fluxError: null,
-                  fwhmX: null,
-                  fwhmY: null,
-                  mag: null,
-                  magError: null,
-                  pmPixel: null,
-                  pmPosAnglePixel: null,
-                  pmPosAngleSky: null,
-                  pmSky: null,
-                  raHours: null,
-                  telescope: null,
-                  theta: null,
-                  time: null,
-                  x: null,
-                  y: null,
-                  pmEpoch: null,
-                });
-              } else {
-                let time = null;
-                if (d.time && Date.parse(d.time + ' GMT')) {
-                  time = new Date(Date.parse(d.time + ' GMT'));
-                }
-                photDatas.push({
-                  ...d,
-                  time: time,
-                });
-              }
-            });
-          });
-          dispatch(new AddPhotDatas(photDatas));
-        } else {
-          console.error('Photometry job error');
+        }
+        if (job.state.status == 'completed') {
         }
       })
-    );
+    )
 
-    let jobUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<CreateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobFinished$),
-      tap((a) => {
-        let job = this.store.selectSnapshot(JobsState.getJobEntities)[a.job.id];
-        setState((state: WorkbenchStateModel) => {
-          if (isBatch) {
-            state.photometryPanelConfig.batchPhotJobId = a.job.id;
-            state.photometryPanelConfig.batchPhotProgress = job.state ? job.state.progress : null;
+    let calJob$: Observable<Job> = of(null);
+
+    if (state.settings.calibration.calibrationEnabled) {
+
+      let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
+      let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
+      let fieldCalibration = toFieldCalibration(state.settings, catalogs);
+
+      let calJob: FieldCalibrationJob = {
+        type: JobType.FieldCalibration,
+        id: null,
+        photometrySettings: photometryJobSettings,
+        sourceExtractionSettings: sourceExtractionJobSettings,
+        fieldCal: fieldCalibration,
+        fileIds: hduIds,
+        state: null,
+      };
+
+      calJob$ = this.jobService.createJob(calJob).pipe(
+        tap(job => {
+          if (job.id) {
+            setState((state: WorkbenchStateModel) => {
+              state.photometryPanelConfig.batchCalJobId = job.id;
+              state.photometryPanelConfig.creatingBatchJobs = false;
+              return state;
+            });
           }
-          return state;
-        });
-      })
-    );
+          if (job.state.status == 'completed') {
+          }
+        })
+      )
+    }
 
-    return merge(jobFinished$, jobUpdated$);
+    return combineLatest([photJob$, calJob$])
+
+
+
+
   }
+
 
   @Action(InitializeWorkbenchHduState)
   @ImmutableContext()
@@ -3586,7 +3597,7 @@ export class WorkbenchState {
           regionHistory: [],
           regionHistoryIndex: null,
           regionHistoryInitialized: false,
-          regionMode: SonifierRegionMode.VIEWPORT,
+          regionMode: SonifierRegionMode.CUSTOM,
           viewportSync: true,
           duration: 10,
           toneCount: 22,
@@ -3602,6 +3613,10 @@ export class WorkbenchState {
           sourceExtractionJobId: '',
           sourcePhotometryData: {},
           markerSelectionRegion: null,
+          autoPhotIsValid: false,
+          autoPhotJobId: '',
+          autoCalIsValid: false,
+          autoCalJobId: '',
         };
         state.photometryPanelStateIds.push(photometryPanelStateId);
 
@@ -3727,6 +3742,29 @@ export class WorkbenchState {
       state.stackingPanelConfig.stackFormData.selectedHduIds = state.stackingPanelConfig.stackFormData.selectedHduIds.filter(
         (id) => id != hduId
       );
+
+      state.photometryPanelConfig.batchPhotFormData.selectedHduIds = state.photometryPanelConfig.batchPhotFormData.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+
+      state.pixelOpsPanelConfig.pixelOpsFormData.selectedHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+
+      state.pixelOpsPanelConfig.pixelOpsFormData.auxHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.auxHduIds.filter(
+        (id) => id != hduId
+      );
+
+      state.pixelOpsPanelConfig.pixelOpsFormData.primaryHduIds = state.pixelOpsPanelConfig.pixelOpsFormData.primaryHduIds.filter(
+        (id) => id != hduId
+      );
+
+      if (state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId == hduId) state.pixelOpsPanelConfig.pixelOpsFormData.auxHduId = null;
+
+      state.wcsCalibrationPanelState.selectedHduIds = state.wcsCalibrationPanelState.selectedHduIds.filter(
+        (id) => id != hduId
+      );
+
 
       return state;
     });
@@ -3980,13 +4018,12 @@ export class WorkbenchState {
       indexSounds: true,
     };
 
+
     //check whether new job should be created or if previous job result can be used
     if (sonificationPanelState.sonificationJobId) {
-      let job = this.store.selectSnapshot(JobsState.getJobEntities)[
-        sonificationPanelState.sonificationJobId
-      ] as SonificationJob;
+      let job = this.store.selectSnapshot(JobsState.getJobById(sonificationPanelState.sonificationJobId))
 
-      if (job && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
+      if (job && isSonificationJob(job) && job.result && job.result.errors.length == 0 && job.fileId === hduId) {
         let jobSettings: SonificationJobSettings = {
           x: job.settings.x,
           y: job.settings.y,
@@ -4007,12 +4044,8 @@ export class WorkbenchState {
       fileId: hduId,
       type: JobType.Sonification,
       settings: settings,
-      state: null,
-      result: null,
+      state: null
     };
-
-    let correlationId = this.correlationIdGenerator.next();
-    dispatch(new CreateJob(job, 1000, correlationId));
 
     setState((state: WorkbenchStateModel) => {
       let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
@@ -4020,62 +4053,40 @@ export class WorkbenchState {
       return state;
     });
 
-    let jobCompleted$ = this.actions$.pipe(
-      ofActionCompleted(CreateJob),
-      filter((v) => v.action.correlationId == correlationId),
-      take(1)
-    );
-
-    let jobStatusUpdated$ = this.actions$.pipe(
-      ofActionSuccessful(UpdateJob),
-      filter<UpdateJob>((a) => a.correlationId == correlationId),
-      takeUntil(jobCompleted$),
-      tap((a) => {
-        // setState((state: WorkbenchStateModel) => {
-        //   let sonificationPanelState = state.sonificationPanelStateEntities[hduState.sonificationPanelStateId];
-        //   if (a.job.state) {
-        //     sonificationPanelState.sonificationLoading = a.job.state.progress;
-        //   }
-        //   return state;
-        // });
-      })
-    );
-
-    return merge(
-      jobStatusUpdated$,
-      jobCompleted$.pipe(
-        flatMap((a) => {
-          let actions: any[] = [];
+    let job$ = this.jobService.createJob(job);
+    return job$.pipe(
+      tap(job => {
+        if (job.id) {
+          setState((state: WorkbenchStateModel) => {
+            state.aligningPanelConfig.currentAlignmentJobId = job.id;
+            return state;
+          });
+        }
+        if (job.state.status == 'completed' && job.result) {
           let sonificationUrl = '';
-          let error = 'Unexpected error occurred';
-          if (a.result.successful) {
-            job = (a.action as CreateJob).job as SonificationJob;
-            let jobEntity = this.store.selectSnapshot(JobsState.getJobEntities)[job.id];
-            let result = jobEntity.result as SonificationJobResult;
-
-            if (result.errors.length == 0) {
+          let error = '';
+          if (isSonificationJob(job)) {
+            if (job.result.errors.length == 0) {
               sonificationUrl = getSonificationUrl(job.id);
               error = '';
             } else {
-              error = result.errors.map((e) => e.detail).join(', ');
+              error = job.result.errors.map((e) => e.detail).join(', ');
             }
+            setState((state: WorkbenchStateModel) => {
+              let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
+              sonificationPanelState.sonificationLoading = false;
+              sonificationPanelState.sonificationJobId = job.id;
+
+              state.sonificationPanelStateEntities[sonificationPanelStateId] = {
+                ...sonificationPanelState,
+              };
+              return state;
+            });
+            dispatch(new SonificationCompleted(hduId, sonificationUrl, error));
           }
-
-          setState((state: WorkbenchStateModel) => {
-            let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
-            sonificationPanelState.sonificationLoading = false;
-            sonificationPanelState.sonificationJobId = job.id;
-
-            state.sonificationPanelStateEntities[sonificationPanelStateId] = {
-              ...sonificationPanelState,
-            };
-            return state;
-          });
-
-          return dispatch(new SonificationCompleted(hduId, sonificationUrl, error));
-        })
-      )
-    );
+        }
+      })
+    )
   }
 
   @Action(ClearSonification)
@@ -4392,29 +4403,32 @@ export class WorkbenchState {
     });
   }
 
-  @Action(RemoveAllPhotDatas)
+  @Action(RemovePhotDatasByHduId)
   @ImmutableContext()
-  public removeAllPhotDatas(
+  public removePhotDatasByHduId(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    {}: RemoveAllPhotDatas
+    { hduId }: RemovePhotDatasByHduId
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
-          return;
+        if (hduId === null || hduId === stateId) {
+          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+            return;
+          }
+          let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
+          state.photometryPanelStateEntities[hduState.photometryPanelStateId].sourcePhotometryData = {};
         }
-        let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
-        state.photometryPanelStateEntities[hduState.photometryPanelStateId].sourcePhotometryData = {};
+
       });
       return state;
     });
   }
 
-  @Action(RemovePhotDatas)
+  @Action(RemovePhotDatasBySourceId)
   @ImmutableContext()
-  public removePhotDatas(
+  public removePhotDatasBySourceId(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceId }: RemovePhotDatas
+    { sourceId }: RemovePhotDatasBySourceId
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
@@ -4431,11 +4445,51 @@ export class WorkbenchState {
     });
   }
 
+  @Action(InvalidateAutoCalByHduId)
+  @ImmutableContext()
+  public resetAutoCalJobsByHduId(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: RemovePhotDatasByHduId
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let workbenchStateIds = state.workbenchStateIds;
+      if (hduId) workbenchStateIds = [state.hduIdToWorkbenchStateIdMap[hduId]]
+      workbenchStateIds.forEach((stateId) => {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+          return;
+        }
+        let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
+        state.photometryPanelStateEntities[hduState.photometryPanelStateId].autoCalIsValid = false;
+      });
+      return state;
+    });
+  }
+
+  @Action(InvalidateAutoPhotByHduId)
+  @ImmutableContext()
+  public resetAutoPhotJobsByHduId(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: InvalidateAutoPhotByHduId
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let workbenchStateIds = state.workbenchStateIds;
+      if (hduId) workbenchStateIds = [state.hduIdToWorkbenchStateIdMap[hduId]]
+      workbenchStateIds.forEach((stateId) => {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+          return;
+        }
+        let hduState = state.workbenchStateEntities[stateId] as WorkbenchImageHduState;
+        state.photometryPanelStateEntities[hduState.photometryPanelStateId].autoPhotIsValid = false;
+      });
+      return state;
+    });
+  }
+
   @Action(SyncViewerTransformations)
   @ImmutableContext()
   public syncFileTransformations(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId }: SyncViewerTransformations
+    { refHeaderId, refImageTransformId, refViewportTransformId, refImageDataId, refViewer }: SyncViewerTransformations
   ) {
     let state = getState();
     let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
@@ -4446,12 +4500,13 @@ export class WorkbenchState {
     let refViewportTransform = transformEntities[refViewportTransformId];
     let refImageToViewportTransform = getImageToViewportTransform(refViewportTransform, refImageTransform);
     let refHduHasWcs = refHeader.wcs && refHeader.wcs.isValid();
+    let refViewportSize = refViewer.viewportSize;
 
     let visibleViewers = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds).map((id) => state.viewers[id]);
 
     let actions: any[] = [];
     visibleViewers.forEach((viewer) => {
-      let targetHeader = this.store.selectSnapshot(WorkbenchState.getHeaderByViewerId(viewer.id));
+      let targetHeader = this.store.selectSnapshot(WorkbenchState.getImageHeaderByViewerId(viewer.id));
       let targetImageTransform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(viewer.id));
       let targetViewportTransform = this.store.selectSnapshot(WorkbenchState.getViewportTransformByViewerId(viewer.id));
 
@@ -4488,11 +4543,13 @@ export class WorkbenchState {
             targetViewportTransform = {
               ...refViewportTransform,
               id: targetViewportTransform.id,
+              tx: refViewportTransform.tx + (viewer.viewportSize.width - refViewportSize.width) / 2,
+              ty: refViewportTransform.ty + (viewer.viewportSize.height - refViewportSize.height) / 2,
             };
           }
         }
       } else {
-        let targetImageData = this.store.selectSnapshot(WorkbenchState.getRawImageDataByViewerId(viewer.id));
+        let targetImageData = this.store.selectSnapshot(WorkbenchState.getNormalizedImageDataByViewerId(viewer.id));
         let refImageData = imageDataEntities[refImageDataId];
 
         if (refImageData && targetImageData) {
@@ -4559,4 +4616,101 @@ export class WorkbenchState {
 
     return dispatch(actions);
   }
+
+
+  @Action(InvalidateRawImageTiles)
+  @ImmutableContext()
+  public invalidateRawImageTiles(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: InvalidateRawImageTiles
+  ) {
+
+    let actions: any[] = [];
+    actions.push(new InvalidateAutoPhotByHduId(hduId))
+    actions.push(new InvalidateAutoCalByHduId(hduId))
+    return dispatch(actions);
+  }
+
+
+
+  @Action(AddSources)
+  @ImmutableContext()
+  public addSources(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { }: AddSources
+  ) {
+
+    let actions: any[] = [];
+    actions.push(new RemovePhotDatasByHduId())
+    return dispatch(actions);
+  }
+
+  @Action([UpdateNormalizerSuccess, UpdateColorMapSuccess, UpdateBlendModeSuccess, UpdateAlphaSuccess, UpdateVisibilitySuccess])
+  @ImmutableContext()
+  public updateNormalizerSuccess(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { hduId }: UpdateNormalizerSuccess | UpdateColorMapSuccess | UpdateBlendModeSuccess | UpdateAlphaSuccess | UpdateVisibilitySuccess
+  ) {
+
+    this.store.dispatch(new SyncAfterglowHeaders(hduId))
+  }
+
+  @Action([SyncAfterglowHeaders])
+  @ImmutableContext()
+  public syncAfterglowHeaders(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    action: SyncAfterglowHeaders
+  ) {
+
+    let hduId = action.hduId;
+
+    let nextSyncRequest$ = this.actions$.pipe(
+      ofActionDispatched(SyncAfterglowHeaders),
+      filter<SyncAfterglowHeaders>((a) => a.hduId == hduId)
+    )
+
+    of(action).pipe(
+      delay(1000),
+      take(1),
+      takeUntil(nextSyncRequest$),
+    ).subscribe(() => {
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId));
+      if (!isImageHdu(hdu)) return;
+
+      let hdus = [hdu];
+
+      let file = this.store.selectSnapshot(DataFilesState.getFileById(hdu.fileId));
+      if (file.syncLayerNormalizers) hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(file.id)).filter(isImageHdu)
+
+      hdus.forEach(hdu => {
+        let entries: HeaderEntry[] = []
+        let normalizer = hdu.normalizer;
+        entries.push({ key: AfterglowHeaderKey.AG_NMODE, value: normalizer.mode, comment: 'AgA background/peak mode' })
+        if (normalizer.backgroundPercentile !== undefined) entries.push({ key: AfterglowHeaderKey.AG_BKGP, value: normalizer.backgroundPercentile, comment: 'AgA background percentile' })
+        if (normalizer.midPercentile !== undefined) entries.push({ key: AfterglowHeaderKey.AG_MIDP, value: normalizer.midPercentile, comment: 'AgA mid percentile' })
+        if (normalizer.peakPercentile !== undefined) entries.push({ key: AfterglowHeaderKey.AG_PEAKP, value: normalizer.peakPercentile, comment: 'AgA peak percentile' })
+        if (normalizer.backgroundLevel !== undefined) entries.push({ key: AfterglowHeaderKey.AG_BKGL, value: normalizer.backgroundLevel, comment: 'AgA background level' })
+        if (normalizer.midLevel !== undefined) entries.push({ key: AfterglowHeaderKey.AG_MIDL, value: normalizer.midLevel, comment: 'AgA mid level' })
+        if (normalizer.peakLevel !== undefined) entries.push({ key: AfterglowHeaderKey.AG_PEAKL, value: normalizer.peakLevel, comment: 'AgA peak level' })
+        entries.push({ key: AfterglowHeaderKey.AG_CMAP, value: normalizer.colorMapName, comment: 'AgA color map' })
+        entries.push({ key: AfterglowHeaderKey.AG_STRCH, value: normalizer.stretchMode, comment: 'AgA stretch mode' })
+        entries.push({ key: AfterglowHeaderKey.AG_INVRT, value: normalizer.inverted, comment: 'AgA inverted' })
+        entries.push({ key: AfterglowHeaderKey.AG_SCALE, value: normalizer.layerScale, comment: 'AgA layer scale' })
+        entries.push({ key: AfterglowHeaderKey.AG_OFFSET, value: normalizer.layerOffset, comment: 'AgA layer offset' })
+        entries.push({ key: AfterglowHeaderKey.AG_ALPHA, value: hdu.alpha, comment: 'AgA layer alpha' })
+        entries.push({ key: AfterglowHeaderKey.AG_BLEND, value: hdu.blendMode, comment: 'AgA layer blend mode' })
+        entries.push({ key: AfterglowHeaderKey.AG_VIS, value: hdu.visible, comment: 'AgA layer visibility' })
+
+        if (entries.length != 0) {
+          this.store.dispatch([new UpdateHduHeader(hdu.id, entries)]);
+        }
+      })
+
+    })
+
+
+
+
+  }
 }
+

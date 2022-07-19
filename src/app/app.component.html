@@ -1,7 +1,7 @@
 <div *ngIf="ready$ | async; else loadingBlock" style="height: 100%; width: 100%">
   <div fxLayout="column" fxFill>
     <header fxFlex="0 0 auto" class="main-header">
-      <app-navbar [dataProviders]="dataProviders$ | async" class="mat-elevation-z6" [user]="user$ | async"></app-navbar>
+      <app-navbar class="mat-elevation-z6" [user]="user$ | async"></app-navbar>
       <!-- <navbar [routes]=currentRoutes></navbar> -->
       <!-- <div *ngIf="loggedIn$ | async" class="float-right bg-inverse text-white"><p>Currently signed in as {{(user$ | async)?.username}}</p></div> -->
     </header>
@@ -23,9 +23,8 @@
         <mat-progress-bar mode="indeterminate" color="accent"></mat-progress-bar>
         <div *ngIf="!(wasmReady$ | async)" class="loading-ellipsis">loading WCSLib</div>
         <div *ngIf="!(configReady$ | async)">
-          <span *ngIf="!(configError$ | async); else configErrorBlock" class="loading-ellipsis"
-            >loading Afterglow Access configuration</span
-          >
+          <span *ngIf="!(configError$ | async); else configErrorBlock" class="loading-ellipsis">loading Afterglow Access
+            configuration</span>
           <ng-template #configErrorBlock>
             <span class="alert-danger" style="padding: 5px">Error: unable to load afterglow configuration file</span>
           </ng-template>

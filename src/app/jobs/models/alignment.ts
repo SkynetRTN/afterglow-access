@@ -1,4 +1,7 @@
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 import { JobBase, JobResultBase } from './job-base';
+import { JobResult } from './job-result';
 import { JobType } from './job-types';
 import { SourceExtractionData } from './source-extraction';
 
@@ -20,5 +23,14 @@ export interface AlignmentJob extends JobBase {
   sources?: SourceExtractionData[];
   inplace: boolean;
   crop: boolean;
-  result: AlignmentJobResult | null;
+  result?: AlignmentJobResult;
 }
+
+
+export const isAlignmentJob: TypeGuard<Job, AlignmentJob> = (
+  job: Job
+): job is AlignmentJob => job.type === JobType.Alignment;
+
+export const isAlignmentJobResult: TypeGuard<JobResult, AlignmentJobResult> = (
+  result: JobResult
+): result is AlignmentJobResult => result.type === JobType.Alignment;

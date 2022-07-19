@@ -57,17 +57,20 @@ export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestro
   blendModeOptions = [
     { label: 'Normal', value: BlendMode.Normal },
     { label: 'Screen', value: BlendMode.Screen },
+    { label: 'Multiply', value: BlendMode.Multiply },
+    { label: 'Overlay', value: BlendMode.Overlay },
     { label: 'Luminosity', value: BlendMode.Luminosity },
+    { label: 'Color', value: BlendMode.Color },
   ];
 
   @ViewChild('colorMapMenuTrigger') colorMapMenuTrigger: MatMenuTrigger;
   destroy$ = new Subject<boolean>();
 
-  constructor() {}
+  constructor() { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   ngOnDestroy() {
     this.destroy$.next(true);

@@ -1,6 +1,27 @@
 import { JobBase, JobResultBase } from './job-base';
 import { JobType } from './job-types';
-import { CatalogSource } from '../../workbench/models/source';
+
+export interface Mag {
+  value: number;
+  error: number;
+}
+
+export interface Catalog {
+  name: string;
+  t: CatalogSource
+  displayName: string;
+  numSources: number;
+  mags: { [filter: string]: string[] };
+  filterLookup: { [filter: string]: string };
+}
+
+export interface CatalogSource {
+  id: string;
+  fileId: string;
+  label: string;
+  catalogName: string;
+  mags: { [filter: string]: Mag }
+}
 
 export interface CatalogQueryJobResult extends JobResultBase {
   readonly type: JobType.CatalogQuery;

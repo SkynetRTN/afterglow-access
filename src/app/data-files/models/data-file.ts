@@ -8,6 +8,7 @@ import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
 import { PixelNormalizer } from './pixel-normalizer';
 import { BlendMode } from './blend-mode';
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
 
 export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
 
@@ -22,7 +23,16 @@ export enum PixelPrecision {
 export interface ITransformableImageData {
   viewportTransformId: string;
   imageTransformId: string;
-  imageDataId: string;
+  rgbaImageDataId: string;
+  // redChannelId: string;
+  // greenChannelId: string;
+  // blueChannelId: string;
+}
+
+export enum ColorBalanceMode {
+  MANUAL = 'manual',
+  PERCENTILE = 'percentile',
+  HISTOGRAM_FITTING = 'histogram_fitting'
 }
 
 export interface DataFile extends ITransformableImageData {
@@ -33,6 +43,9 @@ export interface DataFile extends ITransformableImageData {
   hduIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
+  syncLayerNormalizers: boolean;
+  colorBalanceMode: ColorBalanceMode;
+  channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
 }
 
 export interface Header {
@@ -40,12 +53,15 @@ export interface Header {
   entries: HeaderEntry[];
   loaded: boolean;
   loading: boolean;
+  isValid: boolean;
   wcs: Wcs | null;
 }
 
 export interface IHdu {
   readonly type: HduType;
   id: string;
+  loading: boolean;
+  loaded: boolean;
   fileId: string;
   headerId: string;
   order: number;
@@ -64,9 +80,19 @@ export interface ImageHdu extends IHdu, ITransformableImageData {
   visible: boolean;
 }
 
+export const isImageHdu: TypeGuard<IHdu, ImageHdu> = (
+  hdu: IHdu
+): hdu is ImageHdu => hdu.type === HduType.IMAGE;
+
 export interface TableHdu extends IHdu {
   readonly type: HduType.TABLE;
 }
+
+export const isTableHdu: TypeGuard<IHdu, TableHdu> = (
+  hdu: IHdu
+): hdu is TableHdu => hdu.type === HduType.TABLE;
+
+
 
 export function getHeaderEntry(header: Header, key: string) {
   for (let i = 0; i < header.entries.length; i++) {
@@ -151,6 +177,14 @@ export function getExpLength(header: Header) {
   let expLength = getHeaderEntry(header, 'EXPTIME');
   if (expLength) {
     return expLength.value;
+  }
+  return undefined;
+}
+
+export function getZeroPoint(header: Header) {
+  let zeroPoint = getHeaderEntry(header, 'PHOT_M0');
+  if (zeroPoint) {
+    return zeroPoint.value;
   }
   return undefined;
 }

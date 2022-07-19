@@ -2,7 +2,7 @@
   <mat-form-field>
     <mat-label i18n>Select your color theme</mat-label>
     <mat-select (selectionChange)="setColorTheme($event.value)" [value]="currentTheme?.colorThemeName">
-      <mat-option i18n *ngFor="let colorTheme of availableColorThemes" [value]="colorTheme.name">
+      <mat-option *ngFor="let colorTheme of availableColorThemes" [value]="colorTheme.name">
         {{ colorTheme.displayName }}
       </mat-option>
     </mat-select>

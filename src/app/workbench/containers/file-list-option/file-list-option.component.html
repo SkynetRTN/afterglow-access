@@ -1,17 +1,8 @@
-<div
-  *ngIf="file$ | async; let file"
-  class="item-wrapper"
-  fxLayout="row"
-  fxLayoutAlign="start center"
-  style="height: 100%"
->
+<div *ngIf="file$ | async; let file" class="item-wrapper" fxLayout="row" fxLayoutAlign="start center"
+  style="height: 100%">
   <div *ngIf="showExpand" fxFlex="0 0 auto" style="padding-right: 5px">
-    <button
-      mat-icon-button
-      [attr.aria-label]="'Toggle ' + file.name"
-      (click)="handleToggleExpanded($event)"
-      class="small toggle-button"
-    >
+    <button mat-icon-button [attr.aria-label]="'Toggle ' + file.name" (click)="handleToggleExpanded($event)"
+      class="small toggle-button">
       <mat-icon class="mat-icon-rtl-mirror">
         {{ expanded ? 'expand_more' : 'chevron_right' }}
       </mat-icon>
@@ -30,49 +21,24 @@
     </span>
   </div>
 
-  <span
-    *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect || (fileModified$ | async)"
-    class="node-toolbar"
-  >
-    <app-file-toolbar
-      *ngIf="showFileToolbar"
-      style="height: 100%"
-      fxFlex="0 0 auto"
-      fxLayout="row"
-      fxLayoutAlign="center center"
-      [showSave]="true"
-      [showClose]="true"
-      (onSave)="handleSave($event)"
-      (onClose)="handleClose($event)"
-    >
+  <span *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect || (fileModified$ | async)"
+    class="node-toolbar">
+    <app-file-toolbar *ngIf="showFileToolbar" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
+      fxLayoutAlign="center center" [showSave]="true" [showClose]="true" (onSave)="handleSave($event)"
+      (onClose)="handleClose($event)">
     </app-file-toolbar>
 
     <ng-container *ngIf="imageHdu$ | async; let hdu">
-      <app-image-hdu-toolbar
-        *ngIf="showImageHduLayerToolbar"
-        style="height: 100%"
-        fxFlex="0 0 auto"
-        fxLayout="row"
-        fxLayoutAlign="center center"
-        [showVisibility]="true"
-        [visible]="hdu.visible"
-        [showColorMap]="true"
-        [colorMapName]="hdu?.normalizer?.colorMapName"
-        [showBlendMode]="true"
-        [blendMode]="hdu.blendMode"
+      <app-image-hdu-toolbar *ngIf="showImageHduLayerToolbar" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
+        fxLayoutAlign="center center" [showVisibility]="true" [visible]="hdu.visible" [showColorMap]="true"
+        [colorMapName]="hdu?.normalizer?.colorMapName" [showBlendMode]="true" [blendMode]="hdu.blendMode"
         (onVisibilityChange)="handleVisibilityChange(hdu.id, $event)"
         (onColorMapChange)="handleColorMapChange(hdu.id, $event)"
-        (onBlendModeChange)="handleBlendModeChange(hdu.id, $event)"
-      >
+        (onBlendModeChange)="handleBlendModeChange(hdu.id, $event)">
       </app-image-hdu-toolbar>
     </ng-container>
-    <div
-      *ngIf="!showFileToolbar && (fileModified$ | async)"
-      style="height: 100%"
-      fxFlex="0 0 auto"
-      fxLayout="row"
-      fxLayoutAlign="center center"
-    >
+    <div *ngIf="!showFileToolbar && (fileModified$ | async)" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
+      fxLayoutAlign="center center">
       <mat-icon fxFlex="0 0 auto" class="small m-1" i18n-aria-label aria-label="modified">fiber_manual_record</mat-icon>
     </div>
     <div *ngIf="showSelect" style="height: 100%" fxFlex="0 0 auto" fxLayout="row" fxLayoutAlign="center center">

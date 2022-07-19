@@ -1,0 +1,40 @@
+<div fxLayout="row" fxFill class="h-full">
+    <div #jobsTable fxFlex="1 1 auto" class="h-full" style="overflow: auto">
+        <ng-container *ngIf="!(loading$ | async); else loading">
+            <ng-container *ngIf="(jobs$ | async) as jobs">
+                <ng-container *ngIf="jobs.length != 0; else noItems">
+                    <app-jobs-table [jobs]="jobs" [selectedJob]="selectedJob$ | async"
+                        (selectionChange)="onSelectedJobChange($event)" class="w-full h-full">
+                    </app-jobs-table>
+                </ng-container>
+            </ng-container>
+        </ng-container>
+
+        <!-- Loading template -->
+        <ng-template #loading>
+            <div fxLayout="column" fxLayoutGap="30px" fxLayoutAlign="center center"
+                class="h-full bg-gray-100 dark:bg-transparent">
+                <img style="width: 50px;" src="assets/img/core-logo.png" alt="Afterglow logo" />
+                <mat-progress-bar style="width: 100px;" mode="indeterminate"></mat-progress-bar>
+            </div>
+        </ng-template>
+
+        <!-- No items template -->
+        <ng-template #noItems>
+            <div fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="center center"
+                class="h-full bg-gray-100 dark:bg-transparent">
+                <mat-icon class="icon-size-24">sim_card_alert</mat-icon>
+                <div>No jobs were found!</div>
+            </div>
+        </ng-template>
+    </div>
+    <ng-container *ngIf="selectedJob$ | async; let selectedJob">
+        <div class="grabber" appResize [leftElement]="jobsTable" [rightElement]="jobDetails" [resizeLeft]="false"></div>
+        <div #jobDetails fxFlex="0 0 auto" class="h-full" style="overflow: auto; width: 800px;">
+            <app-job-details [job]=" selectedJob" class="h-full w-full" style="overflow: auto; overflow-x: hidden;">
+            </app-job-details>
+        </div>
+    </ng-container>
+
+
+</div>

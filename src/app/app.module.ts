@@ -40,6 +40,9 @@ import { AfterglowConfigService } from './afterglow-config.service';
 import { AppState } from './app.state';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import localeEs from '@angular/common/locales/es';
+import { ColorPickerModule } from 'ngx-color-picker';
+
+
 registerLocaleData(localeEs, 'es');
 
 export function dataFileSanitizer(v: DataFilesStateModel) {
@@ -74,11 +77,13 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
     if (hdu.type == HduType.IMAGE) {
       hdu = {
         ...hdu,
+        loaded: false,
+        loading: false,
         hist: {
           initialized: false,
           loaded: false,
           loading: false,
-          data: new Uint32Array(),
+          data: new Float32Array(),
           minBin: 0,
           maxBin: 0,
         },
@@ -127,8 +132,9 @@ export function jobSanitizer(v: JobsStateModel) {
     ...v,
   } as JobsStateModel;
 
-  state.entities = {};
+  state.jobs = {};
   state.ids = [];
+  state.lastUpdateTime = 0;
   return state;
 }
 
@@ -145,6 +151,7 @@ export function jobSanitizer(v: JobsStateModel) {
     CookieModule.forRoot(),
     AvatarModule,
     ThemePickerModule,
+    ColorPickerModule,
     WorkbenchModule.forRoot(),
     AuthModule.forRoot(),
     KeyboardShortcutsModule.forRoot(),
@@ -194,4 +201,4 @@ export function jobSanitizer(v: JobsStateModel) {
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

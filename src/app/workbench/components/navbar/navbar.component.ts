@@ -5,10 +5,15 @@ import { DataProvider } from '../../../data-providers/models/data-provider';
 import { ThemeDialogComponent } from '../theme-dialog/theme-dialog.component';
 import { Router } from '@angular/router';
 import { CoreUser } from '../../../auth/models/user';
-import { Store } from '@ngxs/store';
+import { Select, Store } from '@ngxs/store';
 import { Logout, Login } from '../../../auth/auth.actions';
 import { Navigate } from '@ngxs/router-plugin';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
+import { WorkbenchState } from '../../workbench.state';
+import { GlobalSettingsDialogComponent } from '../global-settings-dialog/global-settings-dialog.component';
+import { UpdatePhotometrySettings, UpdateSettings } from '../../workbench.actions';
+import { Observable } from 'rxjs';
+import { JobsState } from 'src/app/jobs/jobs.state';
 
 @Component({
   selector: 'app-navbar',
@@ -18,14 +23,16 @@ import { ShortcutInput } from 'ng-keyboard-shortcuts';
 export class NavbarComponent implements OnInit, OnChanges {
   avatarName = null;
 
-  @Input() dataProviders: Array<DataProvider>;
   @Input('user') user: CoreUser;
+
+  @Select(WorkbenchState.getActiveTool) activeTool$: Observable<string>;
+  @Select(JobsState.getSelectedJobId) selectedJobId$: Observable<string>;
 
   shortcuts: ShortcutInput[] = [];
 
-  constructor(public dialog: MatDialog, private router: Router, private store: Store) {}
+  constructor(public dialog: MatDialog, private router: Router, private store: Store) { }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnChanges() {
     if (!this.user) {
@@ -75,5 +82,23 @@ export class NavbarComponent implements OnInit, OnChanges {
 
   logout() {
     this.store.dispatch(new Navigate(['/logout']));
+  }
+
+  openCoreSettingsDialog() {
+    let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
+    let dialogRef = this.dialog.open(GlobalSettingsDialogComponent, {
+      width: '100%',
+      height: '100%',
+      maxWidth: '1200px',
+      maxHeight: '800px',
+      data: { ...settings },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.store.dispatch(new UpdateSettings(result));
+      }
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy, SimpleChanges } from '@angular/core';
 import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
 import { StretchMode } from '../../../data-files/models/stretch-mode';
 import {
@@ -10,7 +10,11 @@ import {
   greenColorMap,
   blueColorMap,
   aColorMap,
+  balmerColorMap,
+  oiiColorMap,
 } from '../../../data-files/models/color-map';
+import { FormControl } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-normalizer-form',
@@ -20,37 +24,60 @@ import {
 })
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
+  @Input() showMode = true;
+  @Input() showLevels = true;
+  @Input() showColorMap = true;
+  @Input() showStretchMode = true;
+  @Input() showInverted = true;
+  @Input() showLayerScale = true;
+  @Input() showLayerOffset = true;
 
   @Output() backgroundPercentileChange = new EventEmitter<number>();
+  @Output() midPercentileChange = new EventEmitter<number>();
   @Output() peakPercentileChange = new EventEmitter<number>();
+  @Output() backgroundLevelChange = new EventEmitter<number>();
+  @Output() midLevelChange = new EventEmitter<number>();
+  @Output() peakLevelChange = new EventEmitter<number>();
   @Output() colorMapChange = new EventEmitter<string>();
   @Output() stretchModeChange = new EventEmitter<StretchMode>();
   @Output() invertedChange = new EventEmitter<boolean>();
+  @Output() layerScaleChange = new EventEmitter<number>();
+  @Output() layerOffsetChange = new EventEmitter<number>();
+  @Output() modeChange = new EventEmitter<'percentile' | 'pixel'>();
 
   backgroundStep = 0.1;
   peakStep = 0.1;
-
+  midStep = 0.1;
+  StretchMode = StretchMode;
   stretchModeOptions = [
+
     { label: 'Linear', value: StretchMode.Linear },
     { label: 'Logarithmic', value: StretchMode.Log },
     { label: 'Square Root', value: StretchMode.SquareRoot },
-    { label: 'Hyperbolic Arcsine', value: StretchMode.ArcSinh },
+    { label: 'Hyperbolic Arcsine', value: StretchMode.HyperbolicArcSinh },
+    { label: 'Midtone', value: StretchMode.MidTone },
+    // { label: 'Exponential', value: StretchMode.Exponential },
+    // { label: 'Square', value: StretchMode.Square },
+    // { label: 'Hyperbolic Sine', value: StretchMode.HyperbolicSine },
   ];
 
   colorMaps = [
     grayColorMap,
-    rainbowColorMap,
-    coolColorMap,
-    heatColorMap,
     redColorMap,
     greenColorMap,
     blueColorMap,
+    balmerColorMap,
+    oiiColorMap,
+    rainbowColorMap,
+    coolColorMap,
+    heatColorMap,
     aColorMap,
   ];
 
-  constructor() {}
+  constructor(private decimalPipe: DecimalPipe) {
+  }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   calcStep(percentile: number) {
     if (percentile > 50) {
@@ -66,12 +93,14 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     }
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
     if (!this.normalizer || this.normalizer.peakPercentile == null || this.normalizer.backgroundPercentile == null) {
       this.backgroundStep = 0.1;
+      this.midStep = 0.1;
       this.peakStep = 0.1;
     } else {
       this.backgroundStep = this.calcStep(this.normalizer.backgroundPercentile);
+      this.midStep = this.calcStep(this.normalizer.midPercentile);
       this.peakStep = this.calcStep(this.normalizer.peakPercentile);
 
       // console.log(this.peakStep, this.normalizer.peakPercentile);
@@ -98,5 +127,26 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     // }
 
     // console.log(this.normalizer.peakLevel, this.normalizer.backgroundLevel);
+  }
+
+  getFormattedPeakLevel() {
+    let peak = this.normalizer.peakLevel;
+    if (peak === undefined || peak === null) return '';
+    let result = this.decimalPipe.transform(peak, '1.0-3').replace(',', '')
+    return result;
+  }
+
+  getFormattedBackgroundLevel() {
+    let background = this.normalizer.backgroundLevel;
+    if (background === undefined || background === null) return ''
+    let result = this.decimalPipe.transform(background, '1.0-3').replace(',', '')
+    return result;
+  }
+
+  getFormattedMidLevel() {
+    let mid = this.normalizer.midLevel;
+    if (mid === undefined || mid === null) return ''
+    let result = this.decimalPipe.transform(mid, '1.0-3').replace(',', '')
+    return result;
   }
 }

@@ -1,0 +1,66 @@
+@use "@angular/material" as mat;
+@mixin job-details-theme($theme) {
+    $primary: map-get($theme, primary);
+    $accent: map-get($theme, accent);
+    $warn: map-get($theme, warn);
+    $background: map-get($theme, background);
+    $foreground: map-get($theme, foreground);
+
+    app-job-details {
+        dl {
+            display: flex;
+            flex-flow: row;
+            flex-wrap: wrap;
+            width: 100%;
+            overflow: visible;
+            margin: 0;
+            padding: 5px;
+        }
+        dl dt {
+            flex: 0 0 50%;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            font-weight: inherit;
+        }
+        dl dd {
+            flex: 0 0 50%;
+            margin-left: auto;
+            text-align: left;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        dl:nth-child(even) {
+            background-color: mat.get-color-from-palette($background, hover);
+        }
+
+        dl.list .mat-list {
+            max-height: 200px;
+            overflow: auto;
+
+            .mat-list-item {
+                height: 25px;
+            }
+
+            .mat-list-item-content {
+                padding: 0px
+            }
+
+            .mat-list-item-content::after {
+                content: ",";
+            }
+        }
+
+        // .job-tab {
+        //     dl dt {
+        //         padding: 0px 10px;
+        //         flex: 0 0 auto;
+        //     }
+
+        //     dl dd {
+        //         padding: 0px 10px;
+        //         flex: 1 1 auto;
+        //     }
+        // }
+    }
+}

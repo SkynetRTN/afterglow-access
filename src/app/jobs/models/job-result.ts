@@ -8,6 +8,7 @@ import { StackingJobResult } from './stacking';
 import { BatchImportJobResult } from './batch-import';
 import { SonificationJobResult } from './sonification';
 import { WcsCalibrationJobResult } from './wcs_calibration';
+import { FieldCalibrationJobResult } from './field-calibration';
 
 export type JobResult =
   | SourceExtractionJobResult
@@ -19,4 +20,5 @@ export type JobResult =
   | StackingJobResult
   | BatchImportJobResult
   | SonificationJobResult
-  | WcsCalibrationJobResult;
+  | WcsCalibrationJobResult
+  | FieldCalibrationJobResult;

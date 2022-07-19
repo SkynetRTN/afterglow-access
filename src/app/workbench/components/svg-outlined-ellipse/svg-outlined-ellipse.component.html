@@ -1,42 +1,15 @@
 <svg:g class="outlined-ellipse">
-  <svg:ellipse
-    *ngIf="secondaryOutline"
-    class="secondary-outline"
-    [attr.cx]="cx"
-    [attr.cy]="cy"
-    [attr.rx]="rx"
-    [attr.ry]="ry"
-    [attr.vector-effect]="'non-scaling-stroke'"
-    style="fill-opacity: 0"
-    [style.stroke-width]="strokeWidth + outlineWidth + secondaryOutlineWidth"
-    [style.stroke]="secondaryOutline"
-    [style.stroke-opacity]="secondaryOutlineOpacity"
-  />
+  <svg:ellipse *ngIf="secondaryOutline" class="secondary-outline" [attr.cx]="cx" [attr.cy]="cy" [attr.rx]="rx"
+    [attr.ry]="ry" [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0"
+    [style.stroke-width]="strokeWidth + outlineWidth + secondaryOutlineWidth" [style.stroke]="secondaryOutline"
+    [style.stroke-opacity]="secondaryOutlineOpacity" />
 
-  <svg:ellipse
-    *ngIf="outline"
-    class="outline"
-    [attr.cx]="cx"
-    [attr.cy]="cy"
-    [attr.rx]="rx"
-    [attr.ry]="ry"
-    [attr.vector-effect]="'non-scaling-stroke'"
-    style="fill-opacity: 0"
-    [style.stroke-width]="strokeWidth + outlineWidth"
-    [style.stroke]="outline"
-    [style.stroke-opacity]="outlineOpacity"
-  />
+  <svg:ellipse *ngIf="outline" class="primary-outline" [attr.cx]="cx" [attr.cy]="cy" [attr.rx]="rx" [attr.ry]="ry"
+    [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0"
+    [style.stroke-width]="strokeWidth + outlineWidth" [style.stroke]="outline"
+    [style.stroke-opacity]="outlineOpacity" />
 
-  <svg:ellipse
-    class="stroke"
-    [attr.cx]="cx"
-    [attr.cy]="cy"
-    [attr.rx]="rx"
-    [attr.ry]="ry"
-    [attr.vector-effect]="'non-scaling-stroke'"
-    style="fill-opacity: 0"
-    [style.stroke-width]="strokeWidth"
-    [style.stroke]="stroke"
-    [style.stroke-opacity]="strokeOpacity"
-  />
+  <svg:ellipse class="stroke" [attr.cx]="cx" [attr.cy]="cy" [attr.rx]="rx" [attr.ry]="ry"
+    [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0" [style.stroke-width]="strokeWidth"
+    [style.stroke]="stroke" [style.stroke-opacity]="strokeOpacity" />
 </svg:g>

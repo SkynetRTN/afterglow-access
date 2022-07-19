@@ -131,7 +131,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
             }
           }
         },
-        (err) => {},
+        (err) => { },
         () => {
           this.dialogRef.close();
         }
@@ -363,7 +363,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
                 {
                   color: null,
                   value: false,
-                  label: 'Let me choose the location for each file',
+                  label: 'Change the filename and/or location for each file',
                 },
               ],
             };

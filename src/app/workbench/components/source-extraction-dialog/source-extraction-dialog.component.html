@@ -1,66 +1,41 @@
-<h2 mat-dialog-title>Source Extraction Settings</h2>
+<h2 mat-dialog-title>Source Extraction</h2>
 <div mat-dialog-content>
-  <div class="container"></div>
-  <div class="row mb-3">
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="Threshold"
-          [ngModel]="settings?.threshold"
-          (ngModelChange)="setThreshold($event)"
-          type="number"
-          step="0.1"
-          min="2"
-          max="20"
-        />
-      </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="">
-        <input
-          matInput
-          i18n-placeholder
-          placeholder="FWHM"
-          [ngModel]="settings?.fwhm"
-          (ngModelChange)="setFwhm($event)"
-          type="number"
-          step=".1"
-          min="1"
-          max="25"
-        />
-      </mat-form-field>
-    </div>
-  </div>
-  <div class="row mb-3">
-    <div class="col-6">
-      <div>
-        <mat-slide-toggle
-          [checked]="settings?.deblend"
-          [labelPosition]="'before'"
-          (change)="onDeblendChange($event)"
-          i18n
-        >
-          Deblend
-        </mat-slide-toggle>
+  <p>Select the region from which you would like sources to be automatically extracted.</p>
+  <form [formGroup]="sourceExtractionRegionForm">
+    <div style="padding: 10px">
+      <div class="form-field-wrapper">
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>Region</mat-label>
+          <mat-select formControlName="region">
+            <mat-option *ngFor="let option of regionOptions" [value]="option.value">{{ option.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
     </div>
-    <div class="col-6">
-      <mat-select
-        i18n-placeholder
-        placeholder="Search Region"
-        [ngModel]="settings?.region"
-        (ngModelChange)="setRegion($event)"
-      >
-        <mat-option *ngFor="let regionOption of regionOptions" [value]="regionOption.value">{{
-          regionOption.label
-        }}</mat-option>
-      </mat-select>
+  </form>
+  <div fxLayout="column" fxLayoutAlign="center center" style="width: 100%;">
+    <mat-progress-bar *ngIf="loading" mode="indeterminate" [color]="'accent'">
+    </mat-progress-bar>
+    <div style="width: 100%;" *ngIf="jobResult?.errors && jobResult.errors.length != 0" class="alert alert-danger">
+      The following errors occurred during source extraction:
+      <ul>
+        <li *ngFor="let e of jobResult.errors">
+          {{e.detail}}
+        </li>
+      </ul>
+    </div>
+    <div style="width: 100%;" *ngIf="jobResult?.warnings && jobResult.warnings.length != 0" class="alert alert-warning">
+      The following warnings occurred during source extraction:
+      <ul>
+        <li *ngFor="let w of jobResult.warnings">
+          {{w}}
+        </li>
+      </ul>
     </div>
   </div>
 </div>
+
 <div mat-dialog-actions class="mt-2" align="end">
   <button mat-button mat-dialog-close i18n>Cancel</button>
-  <button mat-button [mat-dialog-close]="settings" i18n>Extract Sources</button>
+  <button mat-button (click)="extractSources()" [disabled]="loading" i18n>Extract Sources</button>
 </div>

@@ -49,7 +49,7 @@ export class SourcesState {
 
   @Action(ResetState)
   @ImmutableContext()
-  public resetState({ getState, setState, dispatch }: StateContext<SourcesStateModel>, {}: ResetState) {
+  public resetState({ getState, setState, dispatch }: StateContext<SourcesStateModel>, { }: ResetState) {
     setState((state: SourcesStateModel) => {
       return sourcesDefaultState;
     });
@@ -77,12 +77,12 @@ export class SourcesState {
       sources.forEach((source) => {
         let nextSeed = state.nextIdSeed++;
         let id = this.prefix + nextSeed;
-        state.ids.push(id);
+        state.ids = [...state.ids, id]
         state.entities[id] = {
           ...source,
           id: id,
         };
-        if (state.entities[id].label == null) {
+        if (!state.entities[id].label) {
           state.entities[id].label = '' + nextSeed;
         }
       });

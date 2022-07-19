@@ -11,15 +11,14 @@ import { CorrelationIdGenerator } from './correlated-action';
 import { PrintFormErrorComponent } from './print-form-error/print-form-error.component';
 import { AlertDialogComponent } from './alert-dialog/alert-dialog.component';
 import { GuardTypePipe } from './guard-type.pipe';
+import { ResizeDirective } from './directives/resize.directive';
 
-export const COMPONENTS = [FocusableCell, CellFocuser, PrintFormErrorComponent, AlertDialogComponent, GuardTypePipe];
+export const COMPONENTS = [FocusableCell, CellFocuser, PrintFormErrorComponent, AlertDialogComponent, GuardTypePipe, ResizeDirective];
 
 @NgModule({
   imports: [RouterModule, CommonModule, FormsModule, AppMaterialModule],
-
   declarations: COMPONENTS,
-  exports: COMPONENTS,
-  entryComponents: [AlertDialogComponent],
+  exports: COMPONENTS
 })
 export class UtilsModule {
   static forRoot(): ModuleWithProviders<UtilsModule> {

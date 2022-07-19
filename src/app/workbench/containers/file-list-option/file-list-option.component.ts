@@ -37,6 +37,7 @@ import { UpdateBlendMode, UpdateVisibility, UpdateColorMap, LoadLibrary } from '
 
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
+import { MatTooltipDefaultOptions, MAT_TOOLTIP_DEFAULT_OPTIONS } from '@angular/material/tooltip';
 
 export interface SelectionChangeEvent {
   value: boolean;
@@ -54,6 +55,15 @@ export interface SelectionChangeEvent {
         color: 'accent',
       } as MatCheckboxDefaultOptions,
     },
+    {
+      provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
+      useValue: {
+        showDelay: 2000,
+        hideDelay: 200,
+        touchendHideDelay: 200,
+        disableTooltipInteractivity: true
+      }
+    }
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -149,8 +159,8 @@ export class FileListOptionComponent implements OnInit {
           return '';
         }
 
-        if (!hdu || file.hduIds.length == 1) {
-          return file.name;
+        if (!hdu || file?.hduIds?.length == 1) {
+          return file?.name;
         } else {
           return hdu.name || file.name;
         }
@@ -159,7 +169,7 @@ export class FileListOptionComponent implements OnInit {
 
     this.tooltip$ = combineLatest(this.file$, this.hdu$, this.dataProvider$).pipe(
       switchMap(([file, hdu, dataProvider]) => {
-        if (!hdu || file.hduIds.length == 1) {
+        if (!hdu || file?.hduIds.length == 1) {
           if (!dataProvider || !file?.assetPath) return of(file?.name);
           return of(`${dataProvider.displayName}${file.assetPath}`);
         }
@@ -168,7 +178,7 @@ export class FileListOptionComponent implements OnInit {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   getHduLabel(file: DataFile, hdu: IHdu) {
     return hdu.name ? hdu.name : `Layer ${file.hduIds.indexOf(hdu.id)}`;

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDetectorRef, ElementRef } from '@angular/core';
 
 import { Subject } from 'rxjs';
 import { debounceTime, throttleTime } from 'rxjs/operators';
@@ -12,7 +12,7 @@ import { Wcs } from '../../../image-tools/wcs';
 @Component({
   selector: 'app-plotter',
   templateUrl: './plotter.component.html',
-  styleUrls: ['./plotter.component.css'],
+  styleUrls: ['./plotter.component.scss'],
 })
 export class PlotterComponent implements OnInit, OnChanges {
   @Input()
@@ -24,9 +24,9 @@ export class PlotterComponent implements OnInit, OnChanges {
   @Input()
   colorMode: 'grayscale' | 'rgba';
   @Input()
-  width: number = 200;
+  width: number;
   @Input()
-  height: number = 200;
+  height: number;
   @Input()
   lineMeasureStart: { x: number; y: number };
   @Input()
@@ -42,6 +42,8 @@ export class PlotterComponent implements OnInit, OnChanges {
   private currentSeparationScaledUnits = null;
   private crosshairX: number = null;
   private crosshairY: number = null;
+
+  private observer: ResizeObserver;
 
   public data: Array<any> = [];
   public layout: Partial<any> = {
@@ -89,7 +91,7 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   private chartDebouncer$: Subject<null> = new Subject();
 
-  constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef) {
+  constructor(private themeStorage: ThemeStorage, private cd: ChangeDetectorRef, private element: ElementRef<HTMLElement>) {
     this.baseTheme = themeStorage.getCurrentColorTheme().plotlyTheme;
     this.updateTheme();
     themeStorage.onThemeUpdate.subscribe((theme) => {
@@ -101,6 +103,11 @@ export class PlotterComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     let self = this;
+
+    this.observer = new ResizeObserver(() => {
+      this.updateChart()
+    });
+    this.observer.observe(this.element.nativeElement);
 
     this.chartDebouncer$.pipe(throttleTime(50)).subscribe((value) => {
       this.updateChart();
@@ -114,8 +121,8 @@ export class PlotterComponent implements OnInit, OnChanges {
   ngOnChanges() {
     this.updateLineView();
     this.chartDebouncer$.next();
-    if (this.layout.width != this.width) this.layout.width = this.width;
-    if (this.layout.height != this.height) this.layout.height = this.height;
+
+
     // this.updateChartOptions();
   }
 
@@ -174,6 +181,16 @@ export class PlotterComponent implements OnInit, OnChanges {
   }
 
   private updateChart() {
+
+    let width = this.width || this.element?.nativeElement?.getBoundingClientRect().width
+    let height = this.height || this.element?.nativeElement?.getBoundingClientRect().height
+
+    if (this.layout.width != width) this.layout.width = width;
+    if (this.layout.height != height) this.layout.height = height;
+
+
+
+
     if (!this.imageData || !this.lineMeasureStart || !this.lineMeasureEnd) {
       this.data = [];
       return;
@@ -282,6 +299,10 @@ export class PlotterComponent implements OnInit, OnChanges {
       }
     }
 
+    this.layout = {
+      ...this.layout,
+    }
+
     // this.data = [
     //   {
     //     values: result,
@@ -301,7 +322,7 @@ export class PlotterComponent implements OnInit, OnChanges {
 
     this.currentSeparation = Math.sqrt(
       Math.pow(this.lineMeasureStart.x - this.lineMeasureEnd.x, 2) +
-        Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
+      Math.pow(this.lineMeasureStart.y - this.lineMeasureEnd.y, 2)
     );
 
     if (this.wcs && this.wcs.isValid()) {
@@ -317,7 +338,7 @@ export class PlotterComponent implements OnInit, OnChanges {
         Math.asin(
           Math.sqrt(
             Math.pow(Math.sin(deltaPhi / 2), 2) +
-              Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2), 2)
+            Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2), 2)
           )
         );
       separationScaled *= 180.0 / Math.PI;

@@ -14,7 +14,7 @@ import {
 
 import { DomSanitizer, SafeValue } from '@angular/platform-browser';
 
-import { Observable, combineLatest, of } from 'rxjs';
+import { Observable, combineLatest, of, forkJoin } from 'rxjs';
 import {
   distinctUntilChanged,
   map,
@@ -43,15 +43,10 @@ import {
   getStartTime,
   getExpLength,
   toKeyValueHash,
+  isImageHdu,
 } from '../../../data-files/models/data-file';
 import {
   Marker,
-  LineMarker,
-  MarkerType,
-  TeardropMarker,
-  CircleMarker,
-  RectangleMarker,
-  ApertureMarker,
 } from '../../models/marker';
 import { BehaviorSubject, Subject } from 'rxjs';
 import {
@@ -71,7 +66,6 @@ import {
 } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { Source, PosType } from '../../models/source';
 import { CustomMarker } from '../../models/custom-marker';
-import { FieldCal } from '../../models/field-cal';
 import { Actions, ofActionCompleted, ofActionDispatched, Store } from '@ngxs/store';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { SourcesState } from '../../sources.state';
@@ -87,10 +81,12 @@ import {
   LoadHdu,
   LoadImageHduHistogram,
   LoadHduHeaderSuccess,
+  UpdateCompositeImageTileSuccess,
+  UpdateNormalizedImageTileSuccess,
 } from '../../../data-files/data-files.actions';
 import { HduType } from '../../../data-files/models/data-file-type';
-import { Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
-import { IImageData } from '../../../data-files/models/image-data';
+import { Transform, getImageToViewportTransform, transformToMatrix } from '../../../data-files/models/transformation';
+import { IImageData, ImageTile } from '../../../data-files/models/image-data';
 import { UpdateCurrentViewportSize } from '../../workbench.actions';
 import { IViewer, ImageViewer } from '../../models/viewer';
 import { WorkbenchState } from '../../workbench.state';
@@ -112,16 +108,19 @@ import { ImageViewerMarkerService } from '../../services/image-viewer-marker.ser
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
   viewer: IViewer;
+  isActiveViewer: boolean;
 }
 
 export interface ViewerCanvasMouseDragEvent extends CanvasMouseDragEvent {
   viewerId: string;
   viewer: IViewer;
+  isActiveViewer: boolean;
 }
 
 export interface ViewerMarkerMouseEvent extends MarkerMouseEvent {
   viewerId: string;
   viewer: IViewer;
+  isActiveViewer: boolean;
 }
 
 @Component({
@@ -177,9 +176,10 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   currentCanvasSize: { width: number; height: number } = null;
   imageMouseX: number = null;
   imageMouseY: number = null;
+  mouseDownIsActiveViewer: boolean = false;
 
   private lastImageData: IImageData<Uint32Array>;
-  private hduLoading: {[key: string]: boolean} = {}
+  private queuedTileLoadingEvents: { imageDataId: string, tileIndex: number }[] = [];
 
   constructor(
     private store: Store,
@@ -207,7 +207,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       switchMap(([hduIds, selectedHduId]) => {
         if (selectedHduId) hduIds = [selectedHduId];
         return combineLatest(hduIds.map((hduId) => this.store.select(DataFilesState.getHduById(hduId)))).pipe(
-          map((hdus) => hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[])
+          map((hdus) => hdus.filter((hdu) => hdu?.type == HduType.IMAGE) as ImageHdu[])
         );
       })
     );
@@ -305,7 +305,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     this.activeTool$ = this.store.select(WorkbenchState.getActiveTool);
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -325,6 +325,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.active
     });
   }
 
@@ -337,10 +338,13 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       this.imageMouseY = null;
     }
 
+    this.mouseDownIsActiveViewer = this.active;
+
     this.eventService.mouseDownEvent$.next({
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -357,6 +361,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -365,6 +370,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -373,6 +379,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.mouseDownIsActiveViewer
     });
   }
 
@@ -381,6 +388,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.active
     });
   }
 
@@ -389,6 +397,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       viewerId: this.viewer.id,
       viewer: this.viewer,
       ...$event,
+      isActiveViewer: this.active
     });
   }
 
@@ -474,6 +483,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     if (!this.viewer) {
       return;
     }
+
     let normalizedImageData = this.store.selectSnapshot(
       WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
     );
@@ -525,100 +535,166 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   }
 
   handleLoadTile($event: LoadTileEvent) {
-    // should only need to load the raw data
-    // the normalized and composite data will be updated automatically
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-    let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+
+    if (this.queuedTileLoadingEvents.find(e => e.imageDataId == $event.imageDataId && e.tileIndex == $event.tileIndex)) return;
+
+    // console.log("LOAD TILE EVENT: ", $event.tileIndex)
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
     let hduIds = [this.viewer.hduId];
     let loadComposite = false;
 
+
     if (!this.viewer.hduId) {
+      // a specific HDU has not been selected in the viewer
       let file = dataFileEntities[this.viewer.fileId];
       if (!file) return;
       hduIds = file.hduIds;
       loadComposite = true;
     }
 
-    hduIds.forEach((hduId) => {
-      if(this.hduLoading[hduId]) {
-        loadComposite= false;
-        return;
-      }
-      let hdu = hduEntities[hduId];
-      if (!hdu || hdu.type != HduType.IMAGE) return;
+    let hdus = hduIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id))).filter(isImageHdu).filter(hdu => !!hdu)
+
+    hdus.forEach((hdu) => {
+      let hduId = hdu.id;
+
+      //ensure updated copies of HDU info is retrieved at the start of each loop
+      let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
+      let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
+      // console.log("CHECKING HDU: ", hduId, this.hduLoading[hduId])
 
       let imageHdu = hdu as ImageHdu;
-      if (!imageHdu.hist.loaded) {
-        // console.log("waiting for hist...", $event)
-        this.hduLoading[hduId] = true;
-
-        this.actions$
-          .pipe(
-            ofActionCompleted(LoadImageHduHistogram),
-            filter((a) => (a.action as LoadImageHduHistogram).hduId == hdu.id),
-            take(1)
-          )
-          .subscribe((a) => {
-            // console.log("load hist complete!", a, $event)
-            this.hduLoading[hduId] = false;
-            if (a.result.successful) this.handleLoadTile($event);
-          });
-
-        if(!imageHdu.hist.loading) this.store.dispatch(new LoadImageHduHistogram(hdu.id));
-        loadComposite = false;
-        return;
-      }
-
       let header = headerEntities[hdu.headerId];
-      if (!header.loaded) {
-        // console.log("waiting for header...", $event)
-        this.hduLoading[hduId] = true;
+      if ((!imageHdu.loaded || !header.isValid)) {
+        this.queuedTileLoadingEvents.push($event);
         this.actions$
           .pipe(
-            ofActionCompleted(LoadHduHeader),
-            filter((a) => (a.action as LoadHduHeader).hduId == hdu.id),
+            ofActionCompleted(LoadHdu),
+            filter((a) => (a.action as LoadHdu).hduId == hdu.id),
             take(1)
           )
           .subscribe((a) => {
-            // console.log("load header complete!", a, $event)
-            this.hduLoading[hduId] = false;
-            if (a.result.successful) this.handleLoadTile($event);
-          });
+            this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event), 1);
+            this.handleLoadTile($event)
+          })
 
-        if(!header.loading) this.store.dispatch(new LoadHduHeader(hdu.id));
+
+        if (!hdu.loading) {
+          this.store.dispatch(new LoadHdu(hduId));
+        }
+
+
+
         loadComposite = false;
         return;
       }
 
 
-      let imageData = imageDataEntities[(hdu as ImageHdu).imageDataId];
+
+      let imageData = imageDataEntities[(hdu as ImageHdu).rgbaImageDataId];
       let tile = imageData.tiles[$event.tileIndex];
-      if (!tile.pixelsLoading && (!tile.pixelsLoaded || !tile.isValid)) {
-        this.hduLoading[hduId] = true;
+      if (!tile.pixelsLoaded || !tile.isValid) {
+        this.queuedTileLoadingEvents.push($event);
         this.actions$
           .pipe(
             ofActionCompleted(UpdateNormalizedImageTile),
-            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id),
+            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id && (a.action as UpdateNormalizedImageTile).tileIndex == tile.index),
             take(1)
           )
           .subscribe((a) => {
-            // console.log("load header complete!", a, $event)
-            this.hduLoading[hduId] = false;
+            // console.log("update normalized tile complete!", hdu.fileId, hdu.id, tile.index)
+            this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event), 1);
             if (a.result.successful) this.handleLoadTile($event);
           });
 
+        if (!tile.pixelsLoading) {
+          this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
+        }
+
+
+
+
         loadComposite = false;
+        return;
 
-        this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
+
       }
-    });
+    })
 
-    if (loadComposite) {
-      // console.log("updating composite tile", $event)
+    // console.log("LOOP COMPLETE")
+
+    if (loadComposite && hdus.length != 0) {
+      // console.log("update composite tile event", this.viewer.fileId, $event.tileIndex)
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
+  }
+
+  handleExportImageData() {
+    let imageData = this.store.selectSnapshot(
+      WorkbenchState.getNormalizedImageDataByViewerId(this.viewer.id)
+    );
+
+    let invalidTiles = imageData.tiles.filter(tile => !tile.pixelsLoaded || !tile.isValid)
+    if (invalidTiles.length != 0) {
+      invalidTiles.forEach((tile) => this.handleLoadTile({ imageDataId: imageData.id, tileIndex: tile.index }))
+      setTimeout(() => this.handleExportImageData(), 1000);
+      return;
+    }
+
+    let imageCanvas: HTMLCanvasElement = document.createElement('canvas');
+    let imageCtx: CanvasRenderingContext2D = imageCanvas.getContext('2d');
+    imageCanvas.width = imageData.width;
+    imageCanvas.height = imageData.height;
+
+
+
+
+    let tiles = imageData.tiles;
+    for (let tile of tiles) {
+      let imageData = imageCtx.createImageData(tile.width, tile.height);
+      let blendedImageDataUint8Clamped = new Uint8ClampedArray(tile.pixels.buffer);
+      imageData.data.set(blendedImageDataUint8Clamped);
+      imageCtx.putImageData(imageData, tile.x, tile.y);
+    }
+
+    let canvas: HTMLCanvasElement = document.createElement('canvas');
+    let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    let transform = this.store.selectSnapshot(WorkbenchState.getImageTransformByViewerId(this.viewer.id));
+    let matrix = transformToMatrix(transform);
+    matrix.applyToContext(ctx);
+
+    ctx.drawImage(imageCanvas, 0, 0);
+
+
+
+
+    var lnk = document.createElement('a');
+    if (this.viewer.hduId) {
+      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer.hduId))
+      lnk.download = `${hdu?.name || 'afterglow-image-export'}.jpg`;
+    }
+    else {
+      let file = this.store.selectSnapshot(DataFilesState.getFileById(this.viewer.fileId))
+      lnk.download = `${file?.name || 'afterglow-image-export'}.jpg`;
+    }
+    let dataUrl = canvas.toDataURL('image/jpeg');
+    lnk.href = dataUrl;
+
+    /// create a "fake" click-event to trigger the download
+    if (document.createEvent) {
+      let e;
+      e = document.createEvent('MouseEvents');
+      e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+
+      lnk.dispatchEvent(e);
+    }
+
+
+
+
+
+
   }
 
   handleDownloadSnapshot() {

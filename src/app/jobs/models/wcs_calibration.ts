@@ -1,4 +1,7 @@
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 import { JobBase, JobResultBase } from './job-base';
+import { JobResult } from './job-result';
 import { JobType } from './job-types';
 import { SourceExtractionJobSettings } from './source-extraction';
 
@@ -22,5 +25,13 @@ export interface WcsCalibrationJob extends JobBase {
   settings?: WcsCalibrationJobSettings;
   sourceExtractionSettings: SourceExtractionJobSettings;
   inplace: boolean;
-  result: WcsCalibrationJobResult | null;
+  result?: WcsCalibrationJobResult;
 }
+
+export const isWcsCalibrationJob: TypeGuard<Job, WcsCalibrationJob> = (
+  job: Job
+): job is WcsCalibrationJob => job.type === JobType.WcsCalibration;
+
+export const isWcsCalibrationJobResult: TypeGuard<JobResult, WcsCalibrationJobResult> = (
+  result: JobResult
+): result is WcsCalibrationJobResult => result.type === JobType.WcsCalibration;

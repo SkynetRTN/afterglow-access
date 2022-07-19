@@ -7,70 +7,43 @@
 </ng-template>
 
 <ng-container *ngIf="file$ | async; else fileNotSelectedBlock">
-  <ng-container *ngIf="!(hdu$ | async) || (hdu$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
-    <div *ngIf="config$ | async; let config" class="row pb-1">
-      <div class="col-6">
-        <div class="form-group">
-          <mat-slide-toggle
-            [checked]="config?.centroidClicks"
-            [labelPosition]="'before'"
-            (change)="onCentroidClicksChange($event)"
-            color="primary"
-            i18n
-          >
-            Centroid clicks
-          </mat-slide-toggle>
-        </div>
+  <div fxLayout="column" fxLayoutGap="10px"
+    *ngIf="!(hdu$ | async) || (hdu$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
+    <ng-container *ngIf="config$ | async; let config">
+      <div fxLayout="row" fxLayoutGap="15px">
+        <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"
+          (change)="onCentroidClicksChange($event)" color="primary" i18n>
+          Centroid clicks
+        </mat-slide-toggle>
+        <mat-slide-toggle [checked]="config?.usePlanetCentroiding" [disabled]="!config?.centroidClicks" color="primary"
+          [labelPosition]="'before'" (change)="onPlanetCentroidingChange($event)" i18n>
+          Planet Centroiding
+        </mat-slide-toggle>
       </div>
-      <div class="col-6">
-        <div class="form-group">
-          <mat-slide-toggle
-            [checked]="config?.usePlanetCentroiding"
-            [disabled]="!config?.centroidClicks"
-            color="primary"
-            [labelPosition]="'before'"
-            (change)="onPlanetCentroidingChange($event)"
-            i18n
-          >
-            Planet Centroiding
-          </mat-slide-toggle>
-        </div>
-      </div>
-    </div>
+    </ng-container>
 
     <p i18n>Add custom markers by clicking on your image.</p>
-    <p i18n class="pb-2" i18n>Tip: Hold <span class="kbd">Alt</span> to click beneath existing markers</p>
+    <p class="pb-2">
+      <ng-container i18n>Tip: To click beneath existing markers hold</ng-container><span class="kbd">Alt</span>
+    </p>
 
     <ng-container *ngIf="selectedMarkers$ | async; let selectedMarkers">
       <ng-container *ngIf="selectedMarkers.length == 1">
         <hr />
         <h3 i18n>Marker Customization</h3>
-        <app-circle-marker-editor
-          *ngIf="selectedMarkers[0] | guardType: isCircleMarker as circleMarker"
-          [marker]="circleMarker"
-          (onChange)="onMarkerChange($event, selectedMarkers[0])"
-        >
+        <app-circle-marker-editor *ngIf="selectedMarkers[0] | guardType: isCircleMarker as circleMarker"
+          [marker]="circleMarker" (onChange)="onMarkerChange($event, selectedMarkers[0])">
         </app-circle-marker-editor>
-        <app-rectangle-marker-editor
-          *ngIf="selectedMarkers[0] | guardType: isRectangleMarker as rectangleMarker"
-          [marker]="rectangleMarker"
-          (onChange)="onMarkerChange($event, selectedMarkers[0])"
-        >
+        <app-rectangle-marker-editor *ngIf="selectedMarkers[0] | guardType: isRectangleMarker as rectangleMarker"
+          [marker]="rectangleMarker" (onChange)="onMarkerChange($event, selectedMarkers[0])">
         </app-rectangle-marker-editor>
       </ng-container>
-      <button
-        mat-raised-button
-        i18n-aria-label
-        aria-label="Delete Selected Markers"
-        i18n-matTooltip
-        matTooltip="Delete Selected Markers"
-        color="warn"
-        (click)="deleteSelectedMarkers(selectedMarkers)"
-        [disabled]="selectedMarkers.length == 0"
-      >
+      <button mat-raised-button i18n-aria-label aria-label="Delete Selected Markers" i18n-matTooltip
+        matTooltip="Delete Selected Markers" color="warn" (click)="deleteSelectedMarkers(selectedMarkers)"
+        [disabled]="selectedMarkers.length == 0">
         <mat-icon>delete</mat-icon> <span i18n>Delete Selected Markers</span>
       </button>
     </ng-container>
-  </ng-container>
+  </div>
 </ng-container>
 <ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>

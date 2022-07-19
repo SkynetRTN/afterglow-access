@@ -1,0 +1,169 @@
+<div class="m-3" fxLayout="column" fxLayoutGap="10px">
+    <!-- <div fxFlexAlign="end">
+        <mat-slide-toggle [(ngModel)]="showJson">
+            Show JSON
+        </mat-slide-toggle>
+    </div> -->
+    <mat-tab-group class="job-tab" [selectedIndex]="selectedTabIndex"
+        (selectedIndexChange)="onSelectedIndexChange($event)">
+        <mat-tab label="Job">
+            <div *ngIf="job" class="m-4">
+                <div *ngIf="!showJson; else jsonView" fxLayout="column" fxLayoutGap="20px">
+                    <mat-card class="w-full">
+                        <dl>
+                            <dt>ID</dt>
+                            <dd>{{job.id}}</dd>
+                        </dl>
+                        <dl>
+                            <dt>Type</dt>
+                            <dd>{{job.type}}</dd>
+                        </dl>
+                        <dl>
+                            <dt>Created On</dt>
+                            <dd>{{job.state.createdOn}}</dd>
+                        </dl>
+                        <dl>
+                            <dt>State</dt>
+                            <dd>
+                                <ng-container *ngIf="job.state.status == 'in_progress'; else stateBlock">
+                                    <div style="padding: 5px; width: 100px">
+                                        <!-- <mat-progress-bar mode="determinate" mode="determinate"
+                                            [value]="job.state?.progress">
+                                        </mat-progress-bar> -->
+                                        {{job.state?.progress}}% completed
+                                    </div>
+                                </ng-container>
+                                <ng-template #stateBlock>
+                                    <span class="notification" [class.is-success]="job.state.status == 'completed'"
+                                        [class.is-warning]="job.state.status == 'canceled'">{{
+                                        job.state?.status?.toLowerCase() }}</span>
+                                </ng-template>
+                            </dd>
+                        </dl>
+                        <ng-container *ngIf="isPhotometryJob(job)">
+                            <dl>
+                                <dt>Settings</dt>
+                                <dd>
+                                    <pre [lang]="'json'" highlight-js>{{job.settings | coreCase | json}}</pre>
+                                </dd>
+                            </dl>
+                            <dl class="list">
+                                <dt>Files</dt>
+                                <dd>
+                                    <mat-list dense>
+                                        <mat-list-item *ngFor="let fileId of job.fileIds"> {{getJobFileLabel(fileId)}}
+                                        </mat-list-item>
+                                    </mat-list>
+                                </dd>
+                            </dl>
+                            <dl class="list">
+                                <dt>Sources</dt>
+                                <dd>
+                                    <mat-list dense>
+                                        <mat-list-item *ngFor="let source of job.sources">
+                                            {{source.id}}
+                                            <ng-container
+                                                *ngIf="source.raHours !== null && source.decDegs !== null; else xyBlock">
+                                                {{source.raHours | dms}}, {{source.decDegs | dms}}
+                                                <ng-container *ngIf="source.pmSky">({{source.pmSky | number:'1.03'}}
+                                                    "/s)
+                                                </ng-container>
+                                            </ng-container>
+                                            <ng-template #xyBlock>
+                                                {{source.x | number:'1.03'}}, {{source.y | number:'1.03'}}
+                                            </ng-template>
+
+                                        </mat-list-item>
+                                    </mat-list>
+                                </dd>
+                            </dl>
+                        </ng-container>
+                        <ng-container *ngIf="isFieldCalibrationJob(job)">
+                            <dl>
+                                <dt>Field Calibration</dt>
+                                <dd>
+                                    <pre [lang]="'json'" highlight-js>{{job.fieldCal | coreCase | json}}</pre>
+                                </dd>
+                            </dl>
+                            <dl>
+                                <dt>Photometry Settings</dt>
+                                <dd>
+                                    <pre [lang]="'json'" highlight-js>{{job.photometrySettings | coreCase | json}}</pre>
+                                </dd>
+                            </dl>
+                            <dl>
+                                <dt>Source Extraction Settings</dt>
+                                <dd>
+                                    <pre [lang]="'json'"
+                                        highlight-js>{{job.sourceExtractionSettings | coreCase | json}}</pre>
+                                </dd>
+                            </dl>
+                        </ng-container>
+                    </mat-card>
+                </div>
+                <ng-template #jsonView>
+                    <mat-card *ngIf="job" class="m-5">
+                        <pre [lang]="'json'" highlight-js>{{job | coreCase | json}}</pre>
+                    </mat-card>
+                </ng-template>
+            </div>
+        </mat-tab>
+        <mat-tab label="Result">
+            <div *ngIf="job?.result" class="result-tab m-4">
+                <div *ngIf="!showJson; else jsonView" fxLayout="column" fxLayoutGap="20px">
+                    <div *ngIf="job.result.errors.length != 0" class="alert-danger">
+                        Errors
+                        <ul>
+                            <li *ngFor="let error of job.result.errors" class="p-1">
+                                {{ error.detail }} <span
+                                    *ngIf="error.meta?.fileId; let fileId">[{{getJobFileLabels([fileId])}}]</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div *ngIf="job.result.warnings.length != 0" class="alert-warning">
+                        Warnings
+                        <ul>
+                            <li *ngFor="let warning of job.result.warnings" class="p-1">
+                                {{ warning }}
+                            </li>
+                        </ul>
+                    </div>
+                    <mat-card *ngIf="isPhotometryJob(job)" class="w-full">
+                        <h4>Export Photometry Data</h4>
+                        <form [formGroup]="exportPhotometryDataForm">
+                            <mat-form-field appearance="outline" style="width: 500px;">
+                                <mat-label>Field Calibration Job</mat-label>
+                                <mat-select formControlName="fieldCalibrationJobId">
+                                    <mat-option [value]="''">No Calibration</mat-option>
+                                    <mat-option
+                                        *ngFor="let fieldCalibrationJob of (fieldCalibrationJobOptions$ | async)"
+                                        [value]="fieldCalibrationJob.id">
+                                        {{fieldCalibrationJob.id}} - {{fieldCalibrationJob.state.createdOn}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </form>
+
+                    </mat-card>
+                    <mat-card *ngIf="isFieldCalibrationJob(job) && job.result.data.length != 0" class="w-full">
+                        <dl class="list">
+                            <dt>Zero Point Corrections</dt>
+                            <dd>
+                                <span *ngFor="let d of job.result.data">{{getJobFileLabel(d.fileId)}}: {{d.zeroPointCorr
+                                    |
+                                    number:'1.05'}} +/- {{d.zeroPointError | number:'1.05'}}</span>
+                            </dd>
+                        </dl>
+                    </mat-card>
+                </div>
+                <ng-template #jsonView>
+                    <mat-card *ngIf="job" class="m-5">
+                        <pre [lang]="'json'" highlight-js>{{job.result | coreCase | json}}</pre>
+                    </mat-card>
+                </ng-template>
+
+
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

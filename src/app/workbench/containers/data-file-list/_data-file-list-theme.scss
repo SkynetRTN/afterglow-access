@@ -1,3 +1,4 @@
+@use '@angular/material' as mat;
 @mixin data-file-list-theme($theme) {
   $primary: map-get($theme, primary);
   $accent: map-get($theme, accent);
@@ -7,7 +8,7 @@
 
   app-data-file-list {
     .mat-selection-list {
-      border-bottom: solid 2px mat-color($foreground, divider);
+      border-bottom: solid 2px mat.get-color-from-palette($foreground, divider);
     }
 
     .mat-list-option {
@@ -24,8 +25,8 @@
     }
 
     .mat-list-option.mat-list-single-selected-option {
-      background: mat-color($primary);
-      color: mat-color($primary, default-contrast);
+      background: mat.get-color-from-palette($primary);
+      color: mat.get-color-from-palette($primary, default-contrast);
     }
 
     .mat-list-option.nested {
@@ -37,7 +38,7 @@
     }
 
     .mat-list-option.nested .mat-list-item-content {
-      border-left: 1px solid mat-color($foreground, divider);
+      border-left: 1px solid mat.get-color-from-palette($foreground, divider);
     }
 
     .node-text .mat-icon {
@@ -47,16 +48,16 @@
     .node-toolbar {
       height: 100%;
       padding: 0px 15px;
-      background: mat-color($background, background);
+      background: mat.get-color-from-palette($background, background);
       // box-shadow: 0px 0px 5px 5px mat-color($foreground, divider);
     }
 
     .node-toolbar .mat-icon-button {
-      color: mat-color($foreground, icon);
+      color: mat.get-color-from-palette($foreground, icon);
     }
 
     .node-toolbar .mat-icon-button:hover {
-      color: mat-color($accent);
+      color: mat.get-color-from-palette($accent);
     }
 
     // tree-root:focus {
@@ -121,8 +122,8 @@
     // }
 
     .item-row.selected {
-      background: mat-color($primary);
-      color: mat-color($primary, default-contrast);
+      background: mat.get-color-from-palette($primary);
+      color: mat.get-color-from-palette($primary, default-contrast);
     }
 
     .item-row.hdu .filename {

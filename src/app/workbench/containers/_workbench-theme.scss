@@ -1,3 +1,4 @@
+@use '@angular/material' as mat;
 @mixin workbench-theme($theme) {
   $primary: map-get($theme, primary);
   $accent: map-get($theme, accent);
@@ -30,42 +31,38 @@
     }
 
     .sidebar-nav {
-      background: mat-color($background, background);
-      color: mat-color($foreground, text);
+      background: mat.get-color-from-palette($background, background);
+      color: mat.get-color-from-palette($foreground, text);
       z-index: 999;
-      box-shadow: 0px 0px 5px 5px mat-color($foreground, divider);
+      box-shadow: 0px 0px 5px 5px mat.get-color-from-palette($foreground, divider);
     }
 
     .sidebar-panel {
-      background: mat-color($background, card);
+      background: mat.get-color-from-palette($background, card);
     }
 
     .file-list-panel {
-      background: mat-color($background, card);
-    }
-
-    .file-list-panel {
-      width: 350px;
+      background: mat.get-color-from-palette($background, card);
     }
 
     .file-list-header {
-      border-bottom: 1px solid mat-color($foreground, divider);
+      border-bottom: 1px solid mat.get-color-from-palette($foreground, divider);
       padding: 0px 16px;
       position: sticky;
       top: 0px;
-      background: mat-color($background, card);
+      background: mat.get-color-from-palette($background, card);
       z-index: 998;
       box-shadow: -10px -10px 20px 0px #000000;
     }
 
     .file-list-header input {
-      background: mat-color($background, app-bar);
-      color: mat-color($foreground, text);
+      background: mat.get-color-from-palette($background, app-bar);
+      color: mat.get-color-from-palette($foreground, text);
       padding: 5px;
     }
 
     .global-settings-panel {
-      width: 300px;
+      min-width: 300px;
     }
 
     // .mat-icon {
@@ -73,15 +70,15 @@
     // }
 
     .sidebar-nav .mat-raised-button {
-      background: mat-color($background, card);
+      background: mat.get-color-from-palette($background, card);
     }
 
     .file-list-toolbar {
       margin: 5px;
       text-align: center;
-      background: mat-color($background, card);
-      border: 1px solid mat-color($foreground, divider);
-      color: mat-color($foreground, text);
+      background: mat.get-color-from-palette($background, card);
+      border: 1px solid mat.get-color-from-palette($foreground, divider);
+      color: mat.get-color-from-palette($foreground, text);
     }
 
     .rotate-90 {
@@ -92,62 +89,61 @@
       transform: rotate(90deg);
     }
 
-    .workbench-tool-panel.display {
-      width: 550px;
-    }
+    // .workbench-tool-panel.display {
+    //   width: 675px;
+    // }
 
-    .workbench-tool-panel.info {
-      width: 550px;
-    }
+    // .workbench-tool-panel.info {
+    //   width: 550px;
+    // }
 
-    .workbench-tool-panel.marker {
-      width: 550px;
-    }
+    // .workbench-tool-panel.marker {
+    //   width: 550px;
+    // }
 
-    .workbench-tool-panel.plotter {
-      width: 575px;
-    }
+    // .workbench-tool-panel.plotter {
+    //   width: 575px;
+    // }
 
-    .workbench-tool-panel.sonifier {
-      width: 500px;
-    }
+    // .workbench-tool-panel.sonifier {
+    //   width: 500px;
+    // }
 
-    .workbench-tool-panel.photometry {
-      width: 650px;
-    }
+    // .workbench-tool-panel.photometry {
+    //   width: 650px;
+    // }
 
-    .workbench-tool-panel.pixel-operations {
-      width: 450px;
-    }
+    // .workbench-tool-panel.pixel-operations {
+    //   width: 450px;
+    // }
 
-    .workbench-tool-panel.aligner {
-      width: 450px;
-    }
+    // .workbench-tool-panel.aligner {
+    //   width: 450px;
+    // }
 
-    .workbench-tool-panel.stacker {
-      width: 450px;
-    }
+    // .workbench-tool-panel.stacker {
+    //   width: 450px;
+    // }
 
-    .workbench-tool-panel.wcs-calibration {
-      width: 475px;
-    }
+    // .workbench-tool-panel.wcs-calibration {
+    //   width: 475px;
+    // }
 
     .full-screen.workbench-tool-panel {
       width: 100%;
     }
 
     .workbench-settings-card {
-      border-radius: 0px;
-      border-right: none;
-      border-top: none;
-      background: mat-color($background, card);
+      // border-radius: 0px;
+      // border-right: none;
+      // border-top: none;
+      background: mat.get-color-from-palette($background, card);
     }
 
     .workbench-settings-card .card-header {
-      height: 49px;
       // border-left: 1px solid rgba(0,0,0,.125);
-      color: mat-color($foreground, text);
-      background: mat-color($background, card);
+      color: mat.get-color-from-palette($foreground, text);
+      background: mat.get-color-from-palette($background, card);
     }
 
     .workbench-settings-card .card-header:first-child {
@@ -162,8 +158,8 @@
       border: none;
       opacity: 0.9;
       padding: 5px;
-      background: mat-color($background, card);
-      border-bottom: 2px solid mat-color($foreground, divider);
+      background: mat.get-color-from-palette($background, card);
+      border-bottom: 2px solid mat.get-color-from-palette($foreground, divider);
       // @if ($is-dark-theme) {
       //   background: rgba(white, 0.2);
       //   border-bottom: 2px solid rgba(white, 0.1);
@@ -173,7 +169,7 @@
       // }
 
       .mat-icon {
-        color: mat-color($foreground, hint-text);
+        color: mat.get-color-from-palette($foreground, hint-text);
       }
     }
 
@@ -186,17 +182,17 @@
       opacity: 1;
 
       .mat-icon-button {
-        outline: 3px auto mat-color($primary);
+        outline: 3px auto mat.get-color-from-palette($primary);
       }
 
       .mat-icon {
-        color: mat-color($primary);
+        color: mat.get-color-from-palette($primary);
       }
     }
 
     .workbench-tool-nav {
-      background: mat-color($background, background);
-      box-shadow: 0px 0px 5px 5px mat-color($foreground, divider);
+      background: mat.get-color-from-palette($background, background);
+      box-shadow: 0px 0px 5px 5px mat.get-color-from-palette($foreground, divider);
       z-index: 999;
     }
 

@@ -1,4 +1,7 @@
+import { TypeGuard } from 'src/app/utils/guard-type.pipe';
+import { Job } from './job';
 import { JobBase, JobResultBase } from './job-base';
+import { JobResult } from './job-result';
 import { JobType } from './job-types';
 
 export interface SonificationJobSettings {
@@ -32,5 +35,13 @@ export interface SonificationJob extends JobBase {
   readonly type: JobType.Sonification;
   fileId: string;
   settings?: SonificationJobSettings;
-  result: SonificationJobResult | null;
+  result?: SonificationJobResult;
 }
+
+export const isSonificationJob: TypeGuard<Job, SonificationJob> = (
+  job: Job
+): job is SonificationJob => job.type === JobType.Sonification;
+
+export const isSonificationJobResult: TypeGuard<JobResult, SonificationJobResult> = (
+  result: JobResult
+): result is SonificationJobResult => result.type === JobType.Sonification;

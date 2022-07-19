@@ -27,7 +27,7 @@ export interface CoreDataFile {
 export class AfterglowDataFileService {
   private SOURCE_ID = 0;
 
-  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   removeFile(fileId: string): Observable<null> {
     return this.http.delete(`${getCoreApiUrl(this.config)}/data-files/${fileId}`).pipe(map((res) => null));
@@ -51,10 +51,24 @@ export class AfterglowDataFileService {
     return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
   }
 
-  getHist(fileId: string): Observable<{ data: Uint32Array; minBin: number; maxBin: number }> {
+  updateHeader(fileId: string, changes: HeaderEntry[]) {
+    let body: { [key: string]: [number | string, string] } = {};
+    changes.forEach(change => {
+      body[change.key] = [change.value, change.comment]
+    })
+    return this.http.put(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`, body);
+  }
+
+  getHist(fileId: string): Observable<{ data: Float32Array; minBin: number; maxBin: number }> {
     return this.http.get<any>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/hist`).pipe(
       map((res) => {
-        return res.data;
+        let h = new Float32Array(res.data.data.length)
+        res.data.data.forEach((v, i) => h[i] = v)
+        return {
+          data: h,
+          minBin: res.data.minBin,
+          maxBin: res.data.maxBin
+        }
       })
     );
   }
@@ -100,11 +114,10 @@ export class AfterglowDataFileService {
   }
 
   getSonificationUri(fileId: string, region: Region, duration: number, toneCount: number) {
-    return `${getCoreApiUrl(this.config)}/data-files/${fileId}/sonification?x=${Math.floor(region.x) + 1}&y=${
-      Math.floor(region.y) + 1
-    }&width=${Math.floor(region.width)}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
-      region.height / duration
-    )}&num_tones=${Math.floor(toneCount)}&index_sounds=1`;
+    return `${getCoreApiUrl(this.config)}/data-files/${fileId}/sonification?x=${Math.floor(region.x) + 1}&y=${Math.floor(region.y) + 1
+      }&width=${Math.floor(region.width)}&height=${Math.floor(region.height)}&tempo=${Math.ceil(
+        region.height / duration
+      )}&num_tones=${Math.floor(toneCount)}&index_sounds=1`;
   }
 
   private parseSource(s: any): Source {

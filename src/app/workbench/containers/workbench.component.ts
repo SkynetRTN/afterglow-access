@@ -105,19 +105,20 @@ import { AfterglowDataFileService } from '../services/afterglow-data-files';
 import { UUID } from 'angular2-uuid';
 import { BatchDownloadJob } from '../../jobs/models/batch-download';
 import { JobType } from '../../jobs/models/job-types';
-import { CreateJob, CreateJobSuccess, CreateJobFail } from '../../jobs/jobs.actions';
 import {
   JobProgressDialogConfig,
   JobProgressDialogComponent,
 } from '../components/job-progress-dialog/job-progress-dialog.component';
 import { JobsState } from '../../jobs/jobs.state';
-import { JobService } from '../../jobs/services/jobs';
+import { JobApiService } from '../../jobs/services/job-api.service';
 import { AlertDialogConfig, AlertDialogComponent } from '../../utils/alert-dialog/alert-dialog.component';
 import { ShortcutInput, ShortcutEventOutput } from 'ng-keyboard-shortcuts';
 
 // @ts-ignore
 import { saveAs } from 'file-saver/dist/FileSaver';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { getLongestCommonStartingSubstring } from 'src/app/utils/utils';
+import { JobService } from 'src/app/jobs/services/job.service';
 
 @Component({
   selector: 'app-workbench',
@@ -184,7 +185,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     private activeRoute: ActivatedRoute,
     private dataProviderService: AfterglowDataProviderService,
     private dataFileService: AfterglowDataFileService,
-    private jobService: JobService
+    private jobService: JobService,
+    private jobApiService: JobApiService
   ) {
     this.fileFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));
@@ -227,12 +229,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
-          let refHeader$ = this.store.select(WorkbenchState.getHeaderByViewerId(focusedViewerId));
+          let refHeader$ = this.store.select(WorkbenchState.getImageHeaderByViewerId(focusedViewerId));
           let refImageTransform$ = this.store.select(WorkbenchState.getImageTransformByViewerId(focusedViewerId));
           let refViewportTransform$ = this.store.select(WorkbenchState.getViewportTransformByViewerId(focusedViewerId));
-          let refImageData$ = this.store.select(WorkbenchState.getRawImageDataByViewerId(focusedViewerId));
+          let refImageData$ = this.store.select(WorkbenchState.getNormalizedImageDataByViewerId(focusedViewerId));
+          let refViewer$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId));
 
-          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$).pipe(
+          let ref$ = combineLatest(refImageTransform$, refViewportTransform$, refImageData$, refViewer$).pipe(
             withLatestFrom(refHeader$),
             skip(1)
           );
@@ -245,7 +248,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           viewerSyncEnabled,
           viewerSyncMode,
           visibleViewerIds,
-          [[refImageTransform, refViewportTransform, refImageData], refHeader],
+          [[refImageTransform, refViewportTransform, refImageData, refViewer], refHeader],
         ]) => {
           if (
             !viewerSyncEnabled ||
@@ -258,7 +261,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
             return;
           }
           this.store.dispatch(
-            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id)
+            new SyncViewerTransformations(refHeader.id, refImageTransform.id, refViewportTransform.id, refImageData.id, refViewer)
           );
         }
       );
@@ -567,7 +570,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       let hdu = this.store.selectSnapshot(DataFilesState.getHduById(viewer.hduId));
       if (!hdu || hdu.type != HduType.IMAGE) return;
       let imageHdu = hdu as ImageHdu;
-      let imageDataId = imageHdu.imageDataId;
+      let imageDataId = imageHdu.rgbaImageDataId;
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));
       let imageTransformId = imageHdu.imageTransformId;
       let viewportTransformId = imageHdu.viewportTransformId;
@@ -824,8 +827,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -870,8 +873,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -915,8 +918,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -944,8 +947,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -990,8 +993,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
@@ -1035,88 +1038,81 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
-        (err) => {},
+        () => { },
+        (err) => { },
         () => this.store.dispatch(new LoadLibrary())
       );
   }
 
   onDownloadSelectedFileListItemsBtnClick() {
-    this.afterLibrarySync()
-      .pipe(
-        flatMap(({ dataProviderEntities, fileEntities }) => {
-          let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
-          let files = selectedFileIds.map((id) => fileEntities[id]);
+    this.afterLibrarySync().pipe(
+      flatMap(({ dataProviderEntities, fileEntities }) => {
+        let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
+        let files = selectedFileIds.map((id) => fileEntities[id]);
+        let filename = files[0].name;
+        if (files.length > 1) {
+          filename = getLongestCommonStartingSubstring(files.map((file) => file.name))
+            .replace(/_+$/, '')
+            .trim();
+          if (filename.length == 0) {
+            filename = 'afterglow-files'
+          }
+          filename += '.zip'
 
-          let job: BatchDownloadJob = {
-            type: JobType.BatchDownload,
-            id: null,
-            groupNames: files.map((file) => file.id),
-            state: null,
-            result: null,
-          };
+        }
 
-          let corrId = this.corrGen.next();
-          let onCreateJobSuccess$ = this.actions$.pipe(
-            ofActionDispatched(CreateJobSuccess),
-            filter((action) => (action as CreateJobSuccess).correlationId == corrId),
-            take(1),
-            flatMap((action) => {
-              let jobId = (action as CreateJobSuccess).job.id;
-              let dialogConfig: JobProgressDialogConfig = {
-                title: 'Preparing download',
-                message: `Please wait while we prepare the files for download.`,
-                progressMode: 'indeterminate',
-                job$: this.store.select(JobsState.getJobById).pipe(map((fn) => fn(jobId))),
-              };
-              let dialogRef = this.dialog.open(JobProgressDialogComponent, {
-                width: '400px',
-                data: dialogConfig,
-                disableClose: true,
-              });
+        let job: BatchDownloadJob = {
+          type: JobType.BatchDownload,
+          id: null,
+          groupNames: files.map((file) => file.id),
+          state: null,
+        };
 
-              return dialogRef.afterClosed().pipe(
-                flatMap((result) => {
-                  if (!result) {
-                    return of(null);
-                  }
+        let job$ = this.jobService.createJob(job);
+        let jobId: string;
+        return job$.pipe(
+          filter(job => !!job.id),
+          take(1),
+          flatMap(job => {
+            jobId = job.id;
+            let dialogConfig: JobProgressDialogConfig = {
+              title: 'Preparing download',
+              message: `Please wait while we prepare the files for download.`,
+              progressMode: 'indeterminate',
+              job$: job$,
+            };
+            let dialogRef = this.dialog.open(JobProgressDialogComponent, {
+              width: '400px',
+              data: dialogConfig,
+              disableClose: true,
+            });
 
-                  return this.jobService.getJobResultFile(jobId, 'download').pipe(
-                    tap((data) => {
-                      saveAs(data, files.length == 1 ? files[0].name : 'afterglow-files.zip');
-                    })
-                  );
-                })
-              );
-            })
-          );
+            return dialogRef.afterClosed()
+          }),
+          flatMap(result => {
+            if (!result) {
+              //TODO cancel job
+              return of(null);
+            }
 
-          let onCreateJobFail$ = this.actions$.pipe(
-            ofActionDispatched(CreateJobFail),
-            filter((action) => (action as CreateJobFail).correlationId == corrId),
-            take(1)
-          );
+            return combineLatest([of(filename), this.jobApiService.getJobResultFile(jobId, 'download')]);
+          })
+        )
+      })
+    ).subscribe(
+      result => {
+        if (result) {
+          let [filename, data] = result;
+          saveAs(data, filename);
+        }
+      },
+      error => {
 
-          this.store.dispatch(new CreateJob(job, 1000, corrId));
+      },
+      () => {
 
-          return merge(onCreateJobSuccess$, onCreateJobFail$).pipe(take(1));
-        })
-      )
-      .subscribe(
-        () => {},
-        (err) => {},
-        () => {}
-      );
-  }
-
-  getLongestCommonStartingSubstring(arr1: string[]) {
-    let arr = arr1.concat().sort(),
-      a1 = arr[0],
-      a2 = arr[arr.length - 1],
-      L = a1.length,
-      i = 0;
-    while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
-    return a1.substring(0, i);
+      }
+    )
   }
 
   onSplitSelectedFileListItemsBtnClick() {
@@ -1185,10 +1181,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                     .filter((viewer) => viewer.hduId == hduId || viewer.fileId == hdu.fileId)
                     .forEach((viewer) => this.store.dispatch(new CloseViewer(viewer.id)));
                   this.store.dispatch(new InvalidateHeader(hduId));
+                  let name = hdu && hdu.name ? hdu.name : `${file.name}_${index}`
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
-                      groupName: uuid,
-                      name: hdu && hdu.name ? hdu.name : `${file.name}_${index}`,
+                      groupName: name,
+                      name: name,
                       dataProvider: null,
                       assetPath: null,
                       modified: true,
@@ -1203,7 +1200,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
+        () => { },
         (err) => {
           throw err;
         },
@@ -1220,10 +1217,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           let hduCount = 0;
           files.forEach((file) => (hduCount += file.hduIds.length));
 
-          if (hduCount > 5) {
+          if (hduCount > 10) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: 'Error',
-              message: `The number of layers within a file is currently limited to no more than five.  Please reduce the number of layers and try grouping again.`,
+              message: `The number of layers within a file is currently limited to no more than ten.  Please reduce the number of layers and try grouping again.`,
               buttons: [
                 {
                   color: null,
@@ -1270,12 +1267,30 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                 return of(null);
               }
 
-              let newFilename = this.getLongestCommonStartingSubstring(files.map((file) => file.name))
+              let extensions = files.map((file) => file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2)).filter(v => v.length != 0)
+              let newFilename = getLongestCommonStartingSubstring(files.map((file) => file.name))
                 .replace(/_+$/, '')
                 .trim();
               if (newFilename.length == 0) {
                 newFilename = `${files[0].name} - group`;
               }
+
+              newFilename = newFilename.replace(/[ ,\.-]+$/, "");
+
+              if (extensions.length != 0) {
+                newFilename += `.${extensions[0]}`
+              }
+
+              let path = files.map(f => f.assetPath).find(p => p && p.length != 0)
+              if (path) {
+                let pathItems = path.split('/')
+                pathItems[pathItems.length - 1] = newFilename
+                path = pathItems.join('/')
+              }
+              path = path || null;
+
+              let dataProvider = files.map(f => f.dataProviderId).find(dp => dp !== null) || null
+
 
               let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
               let uuid = UUID.UUID();
@@ -1290,10 +1305,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                   this.store.dispatch(new SetFileSelection([]));
                   reqs.push(
                     this.dataFileService.updateFile(hduId, {
-                      groupName: uuid,
-                      name: newFilename,
-                      dataProvider: null,
-                      assetPath: null,
+                      groupName: newFilename,
+                      name: hdu.name,
+                      dataProvider: dataProvider,
+                      assetPath: path,
                       modified: true,
                     })
                   );
@@ -1306,7 +1321,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         })
       )
       .subscribe(
-        () => {},
+        () => { },
         (err) => {
           throw err;
         },
@@ -1325,7 +1340,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       maxWidth: '1200px',
     });
 
-    dialogRef.afterClosed().subscribe((assets) => {});
+    dialogRef.afterClosed().subscribe((assets) => { });
   }
 
   refresh() {

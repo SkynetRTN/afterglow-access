@@ -10,6 +10,7 @@ import { PipesModule } from '../pipes/pipes.module';
 import { DataFilesModule } from '../data-files/data-files.module';
 import { DataProvidersModule } from '../data-providers/data-providers.module';
 
+import { LogMonitorModule } from 'ngx-log-monitor';
 import { ImageViewerComponent } from './containers/image-viewer/image-viewer.component';
 import { ViewerPanelComponent } from './containers/viewer-panel/viewer-panel.component';
 import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-canvas.component';
@@ -17,8 +18,8 @@ import { DataFileListComponent } from './containers/data-file-list/data-file-lis
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
-import { PhotSettingsDialogComponent } from './components/phot-settings-dialog/phot-settings-dialog.component';
-import { SourceExtractionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
+import { GlobalSettingsDialogComponent } from './components/global-settings-dialog/global-settings-dialog.component';
+import { SourceExtractionRegionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
@@ -57,7 +58,6 @@ import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/vie
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
 import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
 import { WcsCalibrationPanelComponent } from './containers/wcs-calibration-panel/wcs-calibration-panel.component';
-import { SvgApertureMarkerComponent } from './components/svg-aperture-marker/svg-aperture-marker.component';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FileListOptionComponent } from './containers/file-list-option/file-list-option.component';
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
@@ -68,7 +68,14 @@ import { ImageViewerEventService } from './services/image-viewer-event.service';
 import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
 import { ImageViewerMarkerService } from './services/image-viewer-marker.service';
 import { ImageOrientationToolbarComponent } from './components/image-orientation-toolbar/image-orientation-toolbar.component';
+import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker/svg-photometry-marker.component';
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
+import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
+import { ColorPickerModule } from 'ngx-color-picker';
+import { RenameHduDialogComponent } from './components/rename-hdu-dialog/rename-hdu-dialog.component';
+import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
+import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
+import { SourceNeutralizationDialogComponent } from './components/source-neutralization-dialog/source-neutralization-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -82,10 +89,10 @@ export const COMPONENTS = [
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
   SvgTextMarkerComponent,
-  SvgCrosshairMarkerComponent,
   SvgTeardropMarkerComponent,
+  SvgPhotometryMarkerComponent,
   SvgLineMarkerComponent,
-  SvgApertureMarkerComponent,
+  SvgCrosshairMarkerComponent,
   SvgOutlinedEllipseComponent,
   WorkbenchComponent,
   DisplayToolPanelComponent,
@@ -95,8 +102,8 @@ export const COMPONENTS = [
   ImageCalculatorPageComponent,
   StackerPanelComponent,
   AlignerPageComponent,
-  PhotSettingsDialogComponent,
-  SourceExtractionDialogComponent,
+  GlobalSettingsDialogComponent,
+  SourceExtractionRegionDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
   CircleMarkerEditorComponent,
@@ -115,6 +122,11 @@ export const COMPONENTS = [
   FileListOptionComponent,
   CatalogImportComponent,
   ImageOrientationToolbarComponent,
+  PsfMatchingDialogComponent,
+  RenameHduDialogComponent,
+  RenameFileDialogComponent,
+  PhotometricColorBalanceDialogComponent,
+  SourceNeutralizationDialogComponent
 ];
 
 @NgModule({
@@ -134,19 +146,12 @@ export const COMPONENTS = [
     ThemePickerModule,
     AfterglowPlotlyModule,
     AvatarModule,
+    ColorPickerModule,
+    MatDialogModule,
+    LogMonitorModule
   ],
-
   declarations: COMPONENTS,
-  exports: COMPONENTS,
-  entryComponents: [
-    PhotSettingsDialogComponent,
-    SourceExtractionDialogComponent,
-    PixelOpsJobsDialogComponent,
-    HelpDialogComponent,
-    ThemeDialogComponent,
-    SaveChangesDialogComponent,
-    JobProgressDialogComponent,
-  ],
+  exports: COMPONENTS
 })
 export class WorkbenchModule {
   static forRoot(): ModuleWithProviders<WorkbenchModule> {

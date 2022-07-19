@@ -1,44 +1,28 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <div class="row">
-    <div class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Label</mat-label>
-        <input #labelField matInput formControlName="label" />
-      </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Radius</mat-label>
-        <input matInput formControlName="radius" type="number" [min]="1" [step]="1" />
-      </mat-form-field>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Label Radius</mat-label>
-        <input matInput formControlName="labelRadius" type="number" [step]="1" />
-      </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Label Direction (degs)</mat-label>
-        <input matInput formControlName="labelTheta" type="number" [min]="0" [max]="360" [step]="15" />
-      </mat-form-field>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>X</mat-label>
-        <input matInput formControlName="x" type="number" />
-      </mat-form-field>
-    </div>
-    <div class="col-6">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Y</mat-label>
-        <input matInput formControlName="y" type="number" />
-      </mat-form-field>
-    </div>
+  <div fxLayout="row wrap" fxLayoutGap="20px">
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Label</mat-label>
+      <input #labelField matInput formControlName="label" />
+    </mat-form-field>
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Radius</mat-label>
+      <input matInput formControlName="radius" type="number" [min]="1" [step]="1" />
+    </mat-form-field>
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Label Radius</mat-label>
+      <input matInput formControlName="labelRadius" type="number" [step]="1" />
+    </mat-form-field>
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Label Direction (degs)</mat-label>
+      <input matInput formControlName="labelTheta" type="number" [min]="0" [max]="360" [step]="15" />
+    </mat-form-field>
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>X</mat-label>
+      <input matInput formControlName="x" type="number" />
+    </mat-form-field>
+    <mat-form-field class="" appearance="outline">
+      <mat-label i18n>Y</mat-label>
+      <input matInput formControlName="y" type="number" />
+    </mat-form-field>
   </div>
 </form>
