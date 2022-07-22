@@ -108,6 +108,17 @@ export function compose(
         result8[j + 1] = rgb[1] * 255;
         result8[j + 2] = rgb[2] * 255;
         result8[j + 3] = 255.0;
+      } else if (layers[k].blendMode == BlendMode.Lighten) {
+        result8[j] = tr > (result8[j] / 255) ? tr * 255 : result8[j];
+        result8[j + 1] = tg > (result8[j + 1] / 255) ? tg * 255 : result8[j + 1];
+        result8[j + 2] = tb > (result8[j + 2] / 255) ? tb * 255 : result8[j + 2];
+        result8[j + 3] = ta > (result8[j + 3] / 255) ? ta * 255 : result8[j + 3];
+      } else if (layers[k].blendMode == BlendMode.Darken) {
+
+        result8[j] = tr < (result8[j] / 255) ? tr * 255 : result8[j];
+        result8[j + 1] = tg < (result8[j + 1] / 255) ? tg * 255 : result8[j + 1];
+        result8[j + 2] = tb < (result8[j + 2] / 255) ? tb * 255 : result8[j + 2];
+        result8[j + 3] = ta < (result8[j + 3] / 255) ? ta * 255 : result8[j + 3];
       }
       else {
         //normal blend mode
