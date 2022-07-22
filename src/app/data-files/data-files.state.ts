@@ -772,7 +772,11 @@ export class DataFilesState {
       let hdu = state.hduEntities[hduId];
       let header = state.headerEntities[hdu.headerId];
       header.loading = true;
-      header.loaded = false;
+      /** Once a header has been loaded,  its loaded flag should remain true so that the data is accessible to other actions
+       *  Only the isValid flag should be set to false to trigger reloading.  Some actions filter hdus by whether the headers have been loaded.
+       *  Changing the loaded flag while getting the  header causes the actions to see different headers and recalculate values such as the composite image size
+       */
+      // header.loaded = false;   
       return state;
     });
 
@@ -949,6 +953,7 @@ export class DataFilesState {
     setState((state: DataFilesStateModel) => {
       //initialize file image data
       let file = state.fileEntities[fileId];
+
       let headers = file.hduIds.map(id => state.hduEntities[id]).map(hdu => hdu.headerId).map(id => state.headerEntities[id]).filter(header => header.loaded)
       if (headers.length != 0) {
         let compositeWidth = Math.min(...headers.map(header => getWidth(header)));
