@@ -117,6 +117,7 @@ export interface PhotometryPanelConfig {
   batchPhotJobId: string;
   batchCalJobId: string;
   creatingBatchJobs: boolean;
+  autoPhot: boolean;
 }
 
 export interface PixelOpsPanelConfig {

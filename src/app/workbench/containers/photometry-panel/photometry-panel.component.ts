@@ -245,8 +245,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       map(c => c.batchCalibrationEnabled)
     )
 
-    let autoPhotIsValid$ = this.state$.pipe(
-      map(s => s.autoPhotIsValid),
+    let autoPhotIsValid$ = combineLatest([this.state$, this.config$]).pipe(
+      map(([s, config]) => !config.autoPhot || s.autoPhotIsValid),
       distinctUntilChanged()
     );
 
@@ -281,8 +281,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     )
 
 
-    let autoCalIsValid$ = this.state$.pipe(
-      map(s => s.autoCalIsValid),
+    let autoCalIsValid$ = combineLatest([this.state$, this.config$]).pipe(
+      map(([s, config]) => !config.autoPhot || s.autoCalIsValid),
       distinctUntilChanged()
     );
 
@@ -1203,6 +1203,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   onShowSourceLabelsChange($event: MatSlideToggleChange) {
     this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceLabels: $event.checked }));
+  }
+
+  onAutoPhotometryChange($event: MatSlideToggleChange) {
+    this.store.dispatch(new UpdatePhotometryPanelConfig({ autoPhot: $event.checked }));
   }
 
   onShowSourceMarkersChange($event: MatSlideToggleChange) {
