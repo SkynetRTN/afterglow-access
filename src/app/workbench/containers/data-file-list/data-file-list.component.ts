@@ -16,7 +16,7 @@ import { DataFilesState } from '../../../data-files/data-files.state';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ToggleFileSelection, SelectFile } from '../../workbench.actions';
 import { IViewer } from '../../models/viewer';
-import { InvalidateCompositeImageTile, InvalidateCompositeImageTiles, LoadLibrary, LoadLibrarySuccess, UpdateBlendMode, UpdateNormalizer } from '../../../data-files/data-files.actions';
+import { InvalidateCompositeImageTile, InvalidateCompositeImageTiles, LoadLibrary, LoadLibrarySuccess, UpdateAlpha, UpdateBlendMode, UpdateNormalizer } from '../../../data-files/data-files.actions';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { MatMenuTrigger } from '@angular/material/menu';
@@ -59,6 +59,8 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     { label: 'Luminosity', value: BlendMode.Luminosity },
     { label: 'Color', value: BlendMode.Color },
   ];
+
+  alphaOptions = [...Array(21).keys()].map(v => v * 5 / 100)
 
 
   @Input('files')
@@ -253,5 +255,8 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
   }
   setBlendMode(hdu: ImageHdu, value: BlendMode) {
     this.store.dispatch(new UpdateBlendMode(hdu.id, value));
+  }
+  setAlpha(hdu: ImageHdu, value: number) {
+    this.store.dispatch(new UpdateAlpha(hdu.id, value));
   }
 }
