@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsRouterPluginModule } from '@ngxs/router-plugin';
+import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -196,8 +197,13 @@ export function jobSanitizer(v: JobsStateModel) {
     AfterglowConfigService,
     [
       { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
-      { provide: HTTP_INTERCEPTORS, useClass: AfterglowCoreInterceptor, multi: true },
+      { provide: HTTP_INTERCEPTORS, useClass: AfterglowCoreInterceptor, multi: true }
     ],
+    {
+      provide: APP_BASE_HREF,
+      useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
+      deps: [PlatformLocation]
+    }
   ],
   bootstrap: [AppComponent],
 })
