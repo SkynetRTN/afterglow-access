@@ -177,7 +177,8 @@ export class AuthState {
   public logout(ctx: StateContext<AuthStateModel>, { }: Logout) {
     console.log("LOGGING OUT: ", this.config.authMethod, this.config.authCookieName)
     if (this.config.authMethod == 'cookie') {
-      this.cookieService.remove(this.config.authCookieName);
+      console.log("removing all cookies")
+      this.cookieService.removeAll();
     } else if (this.config.authMethod == 'oauth2') {
     }
     localStorage.removeItem('user');
