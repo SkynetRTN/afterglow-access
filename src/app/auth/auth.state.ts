@@ -5,6 +5,7 @@ import { of, config } from 'rxjs';
 
 import { InitAuth, Login, LoginSuccess, Logout, CheckSession, ResetState } from './auth.actions';
 import { OAuthClient } from './models/oauth-client';
+
 import { CoreUser } from './models/user';
 import { AuthService } from './services/auth.service';
 import { env } from '../../environments/environment';
@@ -14,13 +15,14 @@ import { AuthGuard } from './services/auth-guard.service';
 
 import jwt_decode from 'jwt-decode';
 
-import { HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { LocationStrategy } from '@angular/common';
 import { AppState } from '../app.state';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 import { Initialize } from '../workbench/workbench.actions';
 import { CookieService } from 'ngx-cookie-service';
+import { getCoreApiUrl } from '../afterglow-config';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -52,7 +54,8 @@ export class AuthState {
     private router: Router,
     private cookieService: CookieService,
     private authGuard: AuthGuard,
-    private config: AfterglowConfigService
+    private config: AfterglowConfigService,
+    private http: HttpClient
   ) { }
 
   @Selector()
@@ -179,6 +182,9 @@ export class AuthState {
     if (this.config.authMethod == 'cookie') {
       console.log("removing all cookies")
       this.cookieService.deleteAll()
+
+      //TODO:  clean up this when we remove the separate ajax application
+      this.http.delete(`${getCoreApiUrl(this.config)}/ajax/sessions`).subscribe(() => { })
     } else if (this.config.authMethod == 'oauth2') {
     }
     localStorage.removeItem('user');
