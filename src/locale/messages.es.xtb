@@ -88,8 +88,8 @@
   <translation id="2987988166937790834">Recuento mínimo de píxeles</translation>
   <translation id="2450054669720018581">Elipticidad máxima</translation>
   <translation id="6352596107300820129">Limpieza</translation>
-  <translation id="292805710578390949">Niveles de disgregación</translation>
-  <translation id="3473327363628868961">Contraste de disgregación</translation>
+  <translation id="292805710578390949">Niveles de aislación</translation>
+  <translation id="3473327363628868961">Contraste de aislación</translation>
   <translation id="6837876744716599394">Nivel de saturación</translation>
   <translation id="4096754179553815836">Restaurar los valores predeterminados</translation>
   <translation id="2159130950882492111">Cancelar</translation>
@@ -170,7 +170,8 @@
   <translation id="4678319359934274626">Este tipo de capa aún no es compatible con la herramienta de marcador personalizado.</translation>
   <translation id="1744282300258104662">Seleccione un archivo o una capa de imagen para ver la herramienta de marcador personalizado.</translation>
   <translation id="8000818334581120210"> Centrado automático </translation>
-  <translation id="2177038335914574716"> Planet Centroiding </translation>
+  <translation id="2177038335914574716"> Centroide planetario 
+</translation>
   <translation id="3077060055977470635">Agrega marcadores personalizados haciendo clic en tu imagen.</translation>
   <translation id="7751179932990586298">Personalización de marcadores</translation>
   <translation id="3423526206544022786">Eliminar marcadores seleccionados</translation>
@@ -240,7 +241,7 @@
   <translation id="1964396701101189454">Imágen(es) seleccionada(s)</translation>
   <translation id="5121373792416361209">Imágen(es) adicional(es)</translation>
   <translation id="2334748438301421985">Seleccione un operador</translation>
-  <translation id="961403339653487157">operando</translation>
+  <translation id="961403339653487157">operador</translation>
   <translation id="3859670093006861095">Seleccionar una imagen</translation>
   <translation id="1647545964982522530">Especifique un valor escalar</translation>
   <translation id="3474621975641600129">Filtro de núcleo</translation>
@@ -369,11 +370,11 @@
   <translation id="2933313136670869418">píxeles mínimos requeridos por objeto</translation>
   <translation id="7742722790920722306">elipticidad máxima permitida</translation>
   <translation id="7984896694861201704">parámetro de limpieza</translation>
-  <translation id="4954929639275859909">Disgregación</translation>
+  <translation id="4954929639275859909">Aislación de fuentes</translation>
   <translation id="8963637545325073961">Centroide</translation>
   <translation id="6757812593423409192">Descartar Saturado</translation>
-  <translation id="527344694069341109">número de niveles de disgregación</translation>
-  <translation id="5429512862692123489">Contraste de disgregación</translation>
+  <translation id="527344694069341109">número de niveles de aislación</translation>
+  <translation id="5429512862692123489">Contraste de aislación</translation>
   <translation id="4096502750078725447">nivel de saturación</translation>
   <translation id="7659043058444464496">Exportar datos de imagen del visor</translation>
   <translation id="6566954969000145466">punto cero azul</translation>
@@ -409,4 +410,11 @@
   <translation id="1901804781642167715">Mostrar alineador</translation>
   <translation id="9026756379088537844">Ocultar apilador</translation>
   <translation id="623721170973720725">Mostrar apilador</translation>
+  <translation id="4729027113445464411">Percentil del nivel de medio tono</translation>
+  <translation id="7916243301809406619">Nivel de medio tono</translation>
+  <translation id="4254549001401455244">Modo de coordenadas en pixeles</translation>
+  <translation id="6680410325109223021">Modo de coordenadas celestiales</translation>
+  <translation id="3947917419004604466"/>
+  <translation id="774259062112812503">Seleccione un operador</translation>
+  <translation id="1824912444360090771">operador</translation>
 </translationbundle>

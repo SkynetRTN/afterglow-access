@@ -13,8 +13,8 @@
         <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
           [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
           [disabled]="!(header$ | async)?.wcs?.isValid()" (change)="onCoordModeChange($event)">
-          <mat-button-toggle value="pixel">Pixel Coordinate Mode</mat-button-toggle>
-          <mat-button-toggle value="sky">Sky Coordinate Mode</mat-button-toggle>
+          <mat-button-toggle value="pixel" i18n>Pixel Coordinate Mode</mat-button-toggle>
+          <mat-button-toggle value="sky" i18n>Sky Coordinate Mode</mat-button-toggle>
         </mat-button-toggle-group>
       </div>
 
