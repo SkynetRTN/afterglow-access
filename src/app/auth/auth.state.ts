@@ -22,7 +22,7 @@ import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 import { Initialize } from '../workbench/workbench.actions';
 import { CookieService } from 'ngx-cookie-service';
-import { getCoreApiUrl } from '../afterglow-config';
+import { getCoreAjaxUrl, getCoreApiUrl } from '../afterglow-config';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -184,7 +184,7 @@ export class AuthState {
       this.cookieService.deleteAll()
 
       //TODO:  clean up this when we remove the separate ajax application
-      this.http.delete(`${getCoreApiUrl(this.config)}/ajax/sessions`).subscribe(() => { })
+      this.http.delete(`${getCoreAjaxUrl(this.config)}/sessions`).subscribe(() => { })
     } else if (this.config.authMethod == 'oauth2') {
     }
     localStorage.removeItem('user');
