@@ -53,7 +53,7 @@ export class AuthState {
     private cookieService: CookieService,
     private authGuard: AuthGuard,
     private config: AfterglowConfigService
-  ) {}
+  ) { }
 
   @Selector()
   public static state(state: AuthStateModel) {
@@ -139,10 +139,10 @@ export class AuthState {
   }
 
   @Action(CheckSession)
-  public checkSession(ctx: StateContext<AuthStateModel>, action: CheckSession) {}
+  public checkSession(ctx: StateContext<AuthStateModel>, action: CheckSession) { }
 
   @Action(Login)
-  public login(ctx: StateContext<AuthStateModel>, action: Login) {}
+  public login(ctx: StateContext<AuthStateModel>, action: Login) { }
 
   @Action(LoginSuccess)
   public loginSuccess(ctx: StateContext<AuthStateModel>, action: LoginSuccess) {
@@ -174,7 +174,8 @@ export class AuthState {
   }
 
   @Action(Logout)
-  public logout(ctx: StateContext<AuthStateModel>, {}: Logout) {
+  public logout(ctx: StateContext<AuthStateModel>, { }: Logout) {
+    console.log("LOGGING OUT: ", this.config.authMethod, this.config.authCookieName)
     if (this.config.authMethod == 'cookie') {
       this.cookieService.remove(this.config.authCookieName);
     } else if (this.config.authMethod == 'oauth2') {
