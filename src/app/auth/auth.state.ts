@@ -1,6 +1,5 @@
 import { State, Action, Selector, StateContext, Store } from '@ngxs/store';
 import { Router, UrlSerializer } from '@angular/router';
-import { CookieService } from 'ngx-cookie';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { of, config } from 'rxjs';
 
@@ -21,6 +20,7 @@ import { AppState } from '../app.state';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 import { Initialize } from '../workbench/workbench.actions';
+import { CookieService } from 'ngx-cookie-service';
 
 export interface AuthStateModel {
   loginPending: boolean;
@@ -178,7 +178,7 @@ export class AuthState {
     console.log("LOGGING OUT: ", this.config.authMethod, this.config.authCookieName)
     if (this.config.authMethod == 'cookie') {
       console.log("removing all cookies")
-      this.cookieService.removeAll();
+      this.cookieService.deleteAll()
     } else if (this.config.authMethod == 'oauth2') {
     }
     localStorage.removeItem('user');

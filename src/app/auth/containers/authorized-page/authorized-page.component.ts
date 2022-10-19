@@ -11,7 +11,7 @@ import * as qs from 'query-string';
 import { HttpParams } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { env } from '../../../../environments/environment';
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 import { AppState } from '../../../app.state';
 import { AfterglowConfigService } from '../../../afterglow-config.service';
 
@@ -30,7 +30,7 @@ export class AuthorizedPageComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private cookieService: CookieService,
     private config: AfterglowConfigService
-  ) {}
+  ) { }
 
   ngOnInit() {
     if (this.config.authMethod == 'cookie') {

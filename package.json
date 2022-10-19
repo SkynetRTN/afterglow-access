@@ -56,7 +56,7 @@
     "ng-keyboard-shortcuts": "^10.1.17",
     "ngx-avatar": "^4.0.0",
     "ngx-color-picker": "^12.0.1",
-    "ngx-cookie": "^5.0.2",
+    "ngx-cookie-service": "^14.0.1",
     "ngx-highlight-js": "^13.0.0",
     "ngx-json-viewer": "^3.0.2",
     "ngx-log-monitor": "^1.2.0",

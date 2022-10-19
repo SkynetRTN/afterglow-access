@@ -6,7 +6,6 @@ import { APP_BASE_HREF } from '@angular/common';
 
 import { AuthService } from '../../services/auth.service';
 import { env } from '../../../../environments/environment';
-import { CookieService } from 'ngx-cookie';
 import { LoginSuccess, CheckSession } from '../../auth.actions';
 
 import * as uuid from 'uuid';

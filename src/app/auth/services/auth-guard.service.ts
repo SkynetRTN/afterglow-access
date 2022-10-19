@@ -8,7 +8,7 @@ import {
   CanActivateChild,
   UrlSerializer,
 } from '@angular/router';
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 import { env } from '../../../environments/environment';
 
 import * as moment from 'moment';
@@ -23,7 +23,7 @@ import { AfterglowConfigService } from '../../afterglow-config.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate, CanActivateChild {
-  constructor(private store: Store, private cookieService: CookieService, private config: AfterglowConfigService) {}
+  constructor(private store: Store, private cookieService: CookieService, private config: AfterglowConfigService) { }
 
   get user() {
     if (!localStorage.getItem('user')) return null;

@@ -8,7 +8,6 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { CookieModule } from 'ngx-cookie';
 import { TokenInterceptor } from './interceptors/token.interceptor';
 import { AfterglowCoreInterceptor } from './interceptors/afterglow-core.interceptor';
 import { AppMaterialModule } from './app-material';
@@ -149,7 +148,6 @@ export function jobSanitizer(v: JobsStateModel) {
     AppMaterialModule,
     ReactiveFormsModule,
     FlexLayoutModule,
-    CookieModule.forRoot(),
     AvatarModule,
     ThemePickerModule,
     ColorPickerModule,
