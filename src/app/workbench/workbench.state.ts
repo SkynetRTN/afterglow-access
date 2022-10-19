@@ -245,7 +245,7 @@ import { JobService } from '../jobs/services/job.service';
 import { Job } from '../jobs/models/job';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: 'bbfa2e4a-ffe1-4117-9a3f-6c08b39a5d01',
+  version: '29a99430-6a77-4171-843f-fea137fdeb2c',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -306,6 +306,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     batchPhotJobId: '',
     batchCalJobId: '',
     creatingBatchJobs: false,
+    autoPhot: true
   },
   pixelOpsPanelConfig: {
     currentPixelOpsJobId: '',

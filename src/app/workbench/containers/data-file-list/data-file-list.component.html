@@ -55,6 +55,7 @@
       <ng-container *ngIf="isImageHdu(hdu)">
         <button mat-menu-item [matMenuTriggerFor]="colorMapMenu" i18n>Color Map</button>
         <button mat-menu-item [matMenuTriggerFor]="blendModeMenu" i18n>Blend Mode</button>
+        <!-- <button mat-menu-item [matMenuTriggerFor]="alphaMenu" i18n>Transparency</button> -->
       </ng-container>
 
       <mat-menu #colorMapMenu="matMenu">
@@ -68,6 +69,12 @@
           (click)="setBlendMode(hdu, bm.value)">{{ bm.label }}
         </button>
       </mat-menu>
+      <!-- 
+      <mat-menu #alphaMenu="matMenu">
+        <button mat-menu-item *ngFor="let a of alphaOptions" [class.selected]="a == hdu?.alpha"
+          (click)="setAlpha(hdu, a)">{{ a*100 | number:'1.0-0' }}
+        </button>
+      </mat-menu> -->
 
 
     </ng-container>

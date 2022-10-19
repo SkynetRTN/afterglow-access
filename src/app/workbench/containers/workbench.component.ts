@@ -119,6 +119,7 @@ import { saveAs } from 'file-saver/dist/FileSaver';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { getLongestCommonStartingSubstring } from 'src/app/utils/utils';
 import { JobService } from 'src/app/jobs/services/job.service';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-workbench',
@@ -186,7 +187,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     private dataProviderService: AfterglowDataProviderService,
     private dataFileService: AfterglowDataFileService,
     private jobService: JobService,
-    private jobApiService: JobApiService
+    private jobApiService: JobApiService,
+    private decimalPipe: DecimalPipe
   ) {
     this.fileFilterInput$.pipe(takeUntil(this.destroy$), debounceTime(100)).subscribe((value) => {
       this.store.dispatch(new SetFileListFilter(value));
@@ -1268,18 +1270,25 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               }
 
               let extensions = files.map((file) => file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2)).filter(v => v.length != 0)
-              let newFilename = getLongestCommonStartingSubstring(files.map((file) => file.name))
+              let newFilenameBase = getLongestCommonStartingSubstring(files.map((file) => file.name))
                 .replace(/_+$/, '')
                 .trim();
-              if (newFilename.length == 0) {
-                newFilename = `${files[0].name} - group`;
+              if (newFilenameBase.length == 0) {
+                newFilenameBase = `${files[0].name} - group`;
               }
 
-              newFilename = newFilename.replace(/[ ,\.-]+$/, "");
-
+              newFilenameBase = newFilenameBase.replace(/[ ,\.-]+$/, "");
+              let newFilenameExtension = '';
               if (extensions.length != 0) {
-                newFilename += `.${extensions[0]}`
+                newFilenameExtension = `.${extensions[0]}`
               }
+
+              let newFilename = `${newFilenameBase}${newFilenameExtension}`
+              let index = 1;
+              while (this.store.selectSnapshot(DataFilesState.getFiles).find(file => file.name == newFilename)) {
+                newFilename = `${newFilenameBase}-${this.decimalPipe.transform(index++, '3.0-0')}${newFilenameExtension}`
+              }
+
 
               let path = files.map(f => f.assetPath).find(p => p && p.length != 0)
               if (path) {

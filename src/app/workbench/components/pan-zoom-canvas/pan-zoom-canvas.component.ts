@@ -781,7 +781,7 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
       let matrix = transformToMatrix(this.transform);
       matrix.applyToContext(this.targetCtx);
       this.targetCtx.drawImage(this.imageCanvas, 0, 0);
-      this.targetCtx.drawImage(this.loadingCanvas, 0, 0);
+      // this.targetCtx.drawImage(this.loadingCanvas, 0, 0);
     }
     this.setSmoothing(this.targetCtx, true);
     this.targetCtx.setTransform(1, 0, 0, 1, 0, 0);

@@ -47,8 +47,8 @@
 
           <mat-form-field appearance="outline"
             *ngIf="!(imageCalcForm.value?.mode != 'image' && imageCalcForm.value?.mode != 'scalar')">
-            <mat-label i18n>Select a operand</mat-label>
-            <mat-select formControlName="operand" i18n-aria-label aria-label="operand">
+            <mat-label i18n>Select an operator</mat-label>
+            <mat-select formControlName="operand" i18n-aria-label aria-label="operator">
               <mat-option *ngFor="let operand of operands" [value]="operand.symbol">{{ operand.label }} ( {{
                 operand.symbol }} )</mat-option>
             </mat-select>

@@ -4,5 +4,7 @@ export enum BlendMode {
   Luminosity,
   Color,
   Overlay,
-  Multiply
+  Multiply,
+  Lighten,
+  Darken
 }
