@@ -186,9 +186,9 @@ export class AuthState {
       this.cookieService.deleteAll()
 
       //TODO:  clean up this when we remove the separate ajax application
-      this.http.delete(`${getCoreAjaxUrl(this.config)}/sessions`).subscribe(() => { }, (error) => {
+      // this.http.delete(`${getCoreAjaxUrl(this.config)}/sessions`).subscribe(() => { }, (error) => {
 
-      })
+      // })
     } else if (this.config.authMethod == 'oauth2') {
     }
     localStorage.removeItem('user');
