@@ -128,7 +128,6 @@
   }
 
   .mat-tooltip {
-    font-size: 16px !important;
     background-color: mat.get-color-from-palette($foreground, text, 1);
     color: mat.get-color-from-palette($background, card);
     max-width: 600px !important;
