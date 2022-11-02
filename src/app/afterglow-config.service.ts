@@ -10,6 +10,7 @@ import { tap } from 'rxjs/operators';
 })
 export class AfterglowConfigService implements AfterglowConfig {
   usingDefaults: boolean = true;
+  authUrl: string;
   coreUrl: string;
   authMethod: 'cookie' | 'oauth2';
   authCookieName: string;
@@ -19,7 +20,7 @@ export class AfterglowConfigService implements AfterglowConfig {
   backgroundDefault: number;
   enableDebug: boolean;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   loadConfig(): Observable<AfterglowConfig> {
     return this.http.get<AfterglowConfig>(env.configUrl).pipe(
