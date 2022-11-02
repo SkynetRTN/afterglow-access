@@ -12,6 +12,8 @@ import {
   aColorMap,
   balmerColorMap,
   oiiColorMap,
+  COLOR_MAPS_BY_NAME,
+  COLOR_MAPS,
 } from '../../../data-files/models/color-map';
 import { FormControl } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -61,18 +63,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     // { label: 'Hyperbolic Sine', value: StretchMode.HyperbolicSine },
   ];
 
-  colorMaps = [
-    grayColorMap,
-    redColorMap,
-    greenColorMap,
-    blueColorMap,
-    balmerColorMap,
-    oiiColorMap,
-    rainbowColorMap,
-    coolColorMap,
-    heatColorMap,
-    aColorMap,
-  ];
+  colorMaps = COLOR_MAPS;
 
   constructor(private decimalPipe: DecimalPipe) {
   }

@@ -102,7 +102,7 @@ import { env } from '../../environments/environment';
 import { Wcs } from '../image-tools/wcs';
 import { Initialize } from '../workbench/workbench.actions';
 import { IImageData, createTiles } from './models/image-data';
-import { grayColorMap, COLOR_MAPS } from './models/color-map';
+import { grayColorMap, COLOR_MAPS_BY_NAME } from './models/color-map';
 import { PixelNormalizer, normalize } from './models/pixel-normalizer';
 import {
   transformToMatrix,
@@ -806,7 +806,7 @@ export class DataFilesState {
 
             if (firstLoad) {
               let colorMapName = getHeaderEntry(header, AfterglowHeaderKey.AG_CMAP)?.value;
-              if (colorMapName !== undefined && COLOR_MAPS[colorMapName]) {
+              if (colorMapName !== undefined && COLOR_MAPS_BY_NAME[colorMapName]) {
                 hdu.normalizer.colorMapName = colorMapName;
               }
               let mode = getHeaderEntry(header, AfterglowHeaderKey.AG_NMODE)?.value;

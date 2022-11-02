@@ -255,17 +255,52 @@ export let aColorMap = createColorMap(
   ]
 );
 
-export let COLOR_MAPS: { [name: string]: ColorMap } = {};
-[
+export let harmonyColorMap = createColorMap(
+  'Harmony',
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0.19215 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0.105882 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
+  ]
+);
+
+export let blueGreenColorMap = createColorMap(
+  'Blue-Green',
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
+  ],
+  [
+    { x: 0, y: 0 },
+    { x: 1, y: 1 },
+  ]
+);
+
+export let COLOR_MAPS = [
   grayColorMap,
   redColorMap,
   greenColorMap,
   blueColorMap,
   balmerColorMap,
   oiiColorMap,
+  harmonyColorMap,
+  blueGreenColorMap,
   rainbowColorMap,
   coolColorMap,
   heatColorMap,
-
   aColorMap,
-].forEach((cm) => (COLOR_MAPS[cm.name] = cm));
+];
+
+export let COLOR_MAPS_BY_NAME: { [name: string]: ColorMap } = {};
+COLOR_MAPS.forEach((cm) => (COLOR_MAPS_BY_NAME[cm.name] = cm));

@@ -11,6 +11,8 @@ import {
   blueColorMap,
   aColorMap,
   ColorMap,
+  COLOR_MAPS_BY_NAME,
+  COLOR_MAPS,
 } from '../../../data-files/models/color-map';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { Subject } from 'rxjs';
@@ -44,16 +46,7 @@ export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestro
   @Output() onColorMapChange = new EventEmitter<string>();
   @Output() onVisibilityChange = new EventEmitter<boolean>();
 
-  colorMaps = [
-    grayColorMap,
-    rainbowColorMap,
-    coolColorMap,
-    heatColorMap,
-    redColorMap,
-    greenColorMap,
-    blueColorMap,
-    aColorMap,
-  ];
+  colorMaps = COLOR_MAPS;
   blendModeOptions = [
     { label: 'Normal', value: BlendMode.Normal },
     { label: 'Screen', value: BlendMode.Screen },
