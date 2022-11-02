@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsRouterPluginModule } from '@ngxs/router-plugin';
+import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { CookieModule } from 'ngx-cookie';
 import { TokenInterceptor } from './interceptors/token.interceptor';
 import { AfterglowCoreInterceptor } from './interceptors/afterglow-core.interceptor';
 import { AppMaterialModule } from './app-material';
@@ -148,7 +148,6 @@ export function jobSanitizer(v: JobsStateModel) {
     AppMaterialModule,
     ReactiveFormsModule,
     FlexLayoutModule,
-    CookieModule.forRoot(),
     AvatarModule,
     ThemePickerModule,
     ColorPickerModule,
@@ -196,8 +195,13 @@ export function jobSanitizer(v: JobsStateModel) {
     AfterglowConfigService,
     [
       { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
-      { provide: HTTP_INTERCEPTORS, useClass: AfterglowCoreInterceptor, multi: true },
+      { provide: HTTP_INTERCEPTORS, useClass: AfterglowCoreInterceptor, multi: true }
     ],
+    {
+      provide: APP_BASE_HREF,
+      useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
+      deps: [PlatformLocation]
+    }
   ],
   bootstrap: [AppComponent],
 })
