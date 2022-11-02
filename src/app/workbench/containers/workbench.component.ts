@@ -1304,7 +1304,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
               let uuid = UUID.UUID();
               let reqs: Observable<any>[] = [];
-              files.forEach((file) => {
+              files.forEach((file, order) => {
                 file.hduIds.forEach((hduId) => {
                   let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
                   viewers
@@ -1319,6 +1319,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
                       dataProvider: dataProvider,
                       assetPath: path,
                       modified: true,
+                      groupOrder: order
                     })
                   );
                 });
