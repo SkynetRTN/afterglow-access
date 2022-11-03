@@ -1482,10 +1482,10 @@ export class DataFilesState {
     //     actions.push(new UpdateNormalizer(hdu.id, { layerOffset: 0, layerScale: 1 }))
     //   })
     // }
-    if (sync) {
+    if (sync && value == ColorBalanceMode.PERCENTILE) {
       let hdu = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
       if (hdu) {
-        actions.push(new UpdateNormalizer(hdu.id, { mode: value == ColorBalanceMode.PERCENTILE ? 'percentile' : 'pixel' }));
+        actions.push(new UpdateNormalizer(hdu.id, { mode: 'percentile' }));
       }
     }
     actions.push(new SetFileNormalizerSync(fileId, sync))
@@ -1514,11 +1514,11 @@ export class DataFilesState {
 
     if (value) {
       //trigger sync
-      let state = getState()
-      let ref = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
-      if (ref && ref.normalizer) {
-        dispatch(new UpdateNormalizer(ref.id, ref.normalizer))
-      }
+      // let state = getState()
+      // let ref = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
+      // if (ref && ref.normalizer) {
+      //   dispatch(new UpdateNormalizer(ref.id, ref.normalizer))
+      // }
     }
   }
 
@@ -1579,10 +1579,10 @@ export class DataFilesState {
 
       let getSyncedNormalizerFields = (value: PixelNormalizer): Partial<PixelNormalizer> => {
         let result: Partial<PixelNormalizer> = {
-          mode: value.mode,
+          mode: file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ? 'pixel' : 'percentile',
           stretchMode: value.stretchMode
         };
-        if (value.mode == 'pixel') {
+        if (result.mode == 'pixel') {
           result = {
             ...result,
             backgroundLevel: value.backgroundLevel,

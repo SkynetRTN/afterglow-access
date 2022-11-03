@@ -193,12 +193,11 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let normalizer = hdu.normalizer;
 
 
-      let backgroundPercentile = 1;
+      let backgroundPercentile = 10;
       let midPercentile = 99.5;
       let peakPercentile = 99.999;
 
       if (normalizer.stretchMode != StretchMode.MidTone) {
-        backgroundPercentile = 1;
         let peakLookup = {
           'faint': 95,
           'default': 99,
@@ -208,6 +207,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         peakPercentile = peakLookup[value]
       }
       else {
+        backgroundPercentile = 1;
         let midLookup = {
           'faint': 50,
           'default': 97.5,
@@ -243,10 +243,13 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
         else if (file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING) {
           let levels = calcLevels(hdu.hist, backgroundPercentile, midPercentile, peakPercentile);
           this.store.dispatch(new UpdateNormalizer(hdu.id, {
-            mode: 'pixel',
+            // mode: 'pixel',
             backgroundLevel: levels.backgroundLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
             midLevel: levels.midLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
-            peakLevel: levels.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset
+            peakLevel: levels.peakLevel * hdu.normalizer.layerScale + hdu.normalizer.layerOffset,
+            backgroundPercentile: backgroundPercentile,
+            midPercentile: midPercentile,
+            peakPercentile: peakPercentile
           }));
         }
 

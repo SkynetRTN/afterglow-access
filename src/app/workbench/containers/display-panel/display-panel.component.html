@@ -173,13 +173,14 @@
               </div>
             </div>
 
-            <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="false" [showColorMap]="false"
+            <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="true" [showColorMap]="false"
               [showInverted]="false" [showStretchMode]="true" [showLayerOffset]="false" [showLayerScale]="false"
               (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
               (peakLevelChange)="onPeakLevelChange($event)"
               (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
               (midPercentileChange)="onMidPercentileChange($event)"
-              (peakPercentileChange)="onPeakPercentileChange($event)" (stretchModeChange)="onStretchModeChange($event)">
+              (peakPercentileChange)="onPeakPercentileChange($event)" (stretchModeChange)="onStretchModeChange($event)"
+              (modeChange)="onNormalizerModeChange($event)">
             </app-normalizer-form>
           </div>
         </ng-container>
