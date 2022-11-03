@@ -119,6 +119,8 @@ export function workbenchSanitizer(v: WorkbenchStateModel) {
   Object.keys(state.photometryPanelStateEntities).forEach((key) => {
     let photPanelState: PhotometryPanelState = {
       ...state.photometryPanelStateEntities[key],
+      autoPhotIsValid: false,
+      autoCalIsValid: false,
       sourcePhotometryData: {},
     };
 

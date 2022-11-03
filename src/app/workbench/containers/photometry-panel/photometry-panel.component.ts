@@ -463,11 +463,21 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     // autoPhotIsValid$.subscribe(valid => console.log("IS VALID:::: ", valid))
 
-    this.header$.pipe(
-      filter(header => header?.loaded),
-      distinctUntilChanged(),
-      switchMap(() => autoPhotIsValid$),
+    autoPhotIsValid$.pipe(
       takeUntil(this.destroy$),
+      withLatestFrom(this.header$),
+      switchMap(([isValid, header]) => {
+        if (header?.loaded) return of(isValid);
+
+        //wait for header to be loaded
+        return this.store.select(DataFilesState.getHeaderById(header.id)).pipe(
+          filter(header => header.loaded),
+          take(1),
+          map(header => {
+            return isValid
+          })
+        )
+      }),
       withLatestFrom(autoPhotJobId$)
     ).subscribe(([isValid, jobId]) => {
       if (!this.viewerId) return;
@@ -475,11 +485,22 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       if (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId)))) this.store.dispatch(new UpdateAutoPhotometry(this.viewerId))
     })
 
-    this.header$.pipe(
-      filter(header => header?.loaded),
-      distinctUntilChanged(),
-      switchMap(() => combineLatest([autoCalIsValid$, calibrationEnabled$])),
+
+    combineLatest([autoCalIsValid$, calibrationEnabled$]).pipe(
       takeUntil(this.destroy$),
+      withLatestFrom(this.header$),
+      switchMap(([[isValid, calibrationEnabled], header]) => {
+        if (header?.loaded) return of([isValid, calibrationEnabled]);
+
+        //wait for header to be loaded
+        return this.store.select(DataFilesState.getHeaderById(header.id)).pipe(
+          filter(header => header.loaded),
+          take(1),
+          map(header => {
+            return [isValid, calibrationEnabled]
+          })
+        )
+      }),
       withLatestFrom(autoCalJobId$)
     ).subscribe(([[isValid, calibrationEnabled], jobId]) => {
       if (calibrationEnabled && (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId))))) this.store.dispatch(new UpdateAutoFieldCalibration(this.viewerId))
