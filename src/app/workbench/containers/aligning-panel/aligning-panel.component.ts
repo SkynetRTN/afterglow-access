@@ -68,15 +68,20 @@ export class AlignerPageComponent implements OnInit {
       distinctUntilChanged()
     );
 
-    this.alignFormData$.subscribe((data) => {
-      if (!data) return;
-      this.alignForm.patchValue(data, { emitEvent: false });
-    });
+
 
     this.refHduId$ = this.alignFormData$.pipe(
-      map((data) => data && data.refHduId),
+      map((data) => (data && data.refHduId && data.selectedHduIds.includes(data.refHduId)) ? data.refHduId : null),
       distinctUntilChanged()
     );
+
+
+    combineLatest(this.alignFormData$, this.refHduId$).subscribe(([data, refHduId]) => {
+      if (!data) return;
+      this.alignForm.patchValue({ ...data, refHduId: refHduId }, { emitEvent: false });
+    });
+
+
 
     this.refHdu$ = this.refHduId$.pipe(
       switchMap((hduId) => {
@@ -143,7 +148,7 @@ export class AlignerPageComponent implements OnInit {
     );
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   getHduOptionLabel(hduId: string) {
     return this.store.select(DataFilesState.getHduById(hduId)).pipe(
