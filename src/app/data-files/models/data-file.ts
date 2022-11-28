@@ -30,7 +30,6 @@ export interface ITransformableImageData {
 }
 
 export enum ColorBalanceMode {
-  MANUAL = 'manual',
   PERCENTILE = 'percentile',
   HISTOGRAM_FITTING = 'histogram_fitting'
 }
@@ -295,14 +294,17 @@ export function getSourceCoordinates(header: Header, source: Source) {
     if (!fileEpoch) return null;
 
     let deltaT = (fileEpoch.getTime() - new Date(epoch).getTime()) / 1000.0;
-    let mu = (source.pm * deltaT) / 3600.0;
+    let mu = (source.pm * deltaT) / ((source.posType == PosType.PIXEL) ? 1 : 3600.0);
     let theta = source.pmPosAngle * (Math.PI / 180.0);
-    let cd = Math.cos((secondaryCoord * Math.PI) / 180);
-
-    primaryCoord += (mu * Math.sin(theta)) / cd / 15;
-    primaryCoord = primaryCoord % 360;
+    let cd = ((source.posType == PosType.PIXEL) ? 1 : Math.cos((secondaryCoord * Math.PI) / 180));
+    primaryCoord += (mu * Math.sin(theta)) / cd / ((source.posType == PosType.PIXEL) ? 1 : 15);
     secondaryCoord += mu * Math.cos(theta);
-    secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
+
+    if (source.posType == PosType.SKY) {
+      primaryCoord = primaryCoord % 360;
+      secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
+    }
+
 
     // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
   }

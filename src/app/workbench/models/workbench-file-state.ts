@@ -26,6 +26,7 @@ export interface WorkbenchImageHduState extends IWorkbenchState {
   customMarkerPanelStateId: string;
   sonificationPanelStateId: string;
   photometryPanelStateId: string;
+  sourcePanelStateId: string;
 }
 
 export interface WorkbenchTableHduState extends IWorkbenchState {

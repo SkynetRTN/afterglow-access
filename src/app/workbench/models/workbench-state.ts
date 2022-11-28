@@ -13,6 +13,7 @@ import { IWorkbenchState } from './workbench-file-state';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 import { GlobalSettings } from './global-settings';
+import { SourcePanelState } from './source-file-state';
 
 export enum KernelFilter {
   MEDIAN_FILTER = 'median_filter',
@@ -45,6 +46,7 @@ export enum WorkbenchTool {
   VIEWER = 'display',
   PLOTTER = 'plotter',
   SONIFIER = 'sonifier',
+  SOURCE = 'source',
   PHOTOMETRY = 'photometry',
   CUSTOM_MARKER = 'marker',
   INFO = 'info',
@@ -105,19 +107,23 @@ export interface PlottingPanelConfig {
 }
 
 export interface PhotometryPanelConfig {
-  centroidClicks: boolean;
-  showSourceLabels: boolean;
-  showSourceMarkers: boolean;
   showSourceApertures: boolean;
-  showSourcesFromAllFiles: boolean;
-  selectedSourceIds: string[];
-  coordMode: 'pixel' | 'sky';
   batchPhotFormData: BatchPhotometryFormData;
   batchCalibrationEnabled: boolean;
   batchPhotJobId: string;
   batchCalJobId: string;
   creatingBatchJobs: boolean;
   autoPhot: boolean;
+}
+
+export interface SourcePanelConfig {
+  centroidClicks: boolean;
+  planetCentroiding: boolean;
+  showSourceLabels: boolean;
+  showSourceMarkers: boolean;
+  showSourcesFromAllFiles: boolean;
+  selectedSourceIds: string[];
+  coordMode: 'pixel' | 'sky';
 }
 
 export interface PixelOpsPanelConfig {
@@ -204,6 +210,7 @@ export interface WorkbenchStateModel {
   customMarkerPanelConfig: CustomMarkerPanelConfig;
   plottingPanelConfig: PlottingPanelConfig;
   photometryPanelConfig: PhotometryPanelConfig;
+  sourcePanelConfig: SourcePanelConfig;
   pixelOpsPanelConfig: PixelOpsPanelConfig;
   aligningPanelConfig: AligningPanelConfig;
   stackingPanelConfig: StackingPanelConfig;
@@ -227,4 +234,7 @@ export interface WorkbenchStateModel {
   nextPhotometryPanelStateId: number;
   photometryPanelStateIds: string[];
   photometryPanelStateEntities: { [id: string]: PhotometryPanelState };
+  nextSourcePanelStateId: number;
+  sourcePanelStateIds: string[];
+  sourcePanelStateEntities: { [id: string]: SourcePanelState };
 }

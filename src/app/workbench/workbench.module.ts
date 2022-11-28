@@ -76,6 +76,9 @@ import { RenameHduDialogComponent } from './components/rename-hdu-dialog/rename-
 import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
 import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 import { SourceNeutralizationDialogComponent } from './components/source-neutralization-dialog/source-neutralization-dialog.component';
+import { SourcePanelComponent } from './containers/source-panel/source-panel.component';
+import { SvgSourceMarkerComponent } from './components/svg-source-marker/svg-source-marker.component';
+import { MergeSourcesDialogComponent } from './components/merge-sources-dialog/merge-sources-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -126,7 +129,10 @@ export const COMPONENTS = [
   RenameHduDialogComponent,
   RenameFileDialogComponent,
   PhotometricColorBalanceDialogComponent,
-  SourceNeutralizationDialogComponent
+  SourceNeutralizationDialogComponent,
+  SourcePanelComponent,
+  SvgSourceMarkerComponent,
+  MergeSourcesDialogComponent
 ];
 
 @NgModule({

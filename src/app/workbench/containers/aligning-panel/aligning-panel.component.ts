@@ -14,6 +14,15 @@ import { JobsState } from '../../../jobs/jobs.state';
 import { ImageHdu, DataFile, Header } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { LoadHduHeader } from '../../../data-files/data-files.actions';
+import { Source } from '../../models/source';
+import { SourcesState } from '../../sources.state';
+
+enum AlignMode {
+  ASTROMETRIC = 'astrometric',
+  SOURCE_MANUAL = 'source: manual',
+  SOURCE_PROPER_MOTION = 'source: proper motion',
+  SOURCE_REFINE = 'source: refine'
+}
 
 @Component({
   selector: 'app-aligning-panel',
@@ -31,6 +40,7 @@ export class AlignerPageComponent implements OnInit {
   }
   private hduIds$ = new BehaviorSubject<string[]>(null);
 
+  AlignMode = AlignMode;
   config$: Observable<AligningPanelConfig>;
 
   destroy$ = new Subject<boolean>();
@@ -42,12 +52,14 @@ export class AlignerPageComponent implements OnInit {
   refHduHasWcs$: Observable<boolean>;
   alignFormData$: Observable<AlignFormData>;
   alignmentJob$: Observable<AlignmentJob>;
+  manualSourceOptions$: Observable<Source[]>;
 
   alignForm = new FormGroup({
     selectedHduIds: new FormControl([], Validators.required),
     refHduId: new FormControl('', Validators.required),
-    mode: new FormControl('', Validators.required),
     crop: new FormControl('', Validators.required),
+    mode: new FormControl('', Validators.required),
+    manualSources: new FormControl('', Validators.required),
   });
 
   constructor(private store: Store, private router: Router) {
@@ -74,6 +86,12 @@ export class AlignerPageComponent implements OnInit {
       map((data) => (data && data.refHduId && data.selectedHduIds.includes(data.refHduId)) ? data.refHduId : null),
       distinctUntilChanged()
     );
+
+    this.manualSourceOptions$ = combineLatest(this.store.select(SourcesState.getEntities), this.refHduId$).pipe(
+      map(([sourcesById, refHduId]) => {
+        return Object.values(sourcesById).filter(source => !refHduId || source.hduId == refHduId)
+      })
+    )
 
 
     combineLatest(this.alignFormData$, this.refHduId$).subscribe(([data, refHduId]) => {

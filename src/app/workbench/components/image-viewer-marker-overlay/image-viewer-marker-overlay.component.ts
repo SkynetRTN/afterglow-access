@@ -23,6 +23,7 @@ import {
   isLineMarker,
   isPhotometryMarker,
   PhotometryMarker,
+  isSourceMarker,
 } from '../../models/marker';
 import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
 import { Transform, transformToMatrix } from '../../../data-files/models/transformation';
@@ -204,4 +205,5 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   isRectangleMarker = isRectangleMarker;
   isLineMarker = isLineMarker;
   isPhotometryMarker = isPhotometryMarker;
+  isSourceMarker = isSourceMarker;
 }

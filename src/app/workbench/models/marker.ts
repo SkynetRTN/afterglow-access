@@ -7,7 +7,8 @@ export enum MarkerType {
   RECTANGLE,
   CIRCLE,
   TEXT,
-  PHOTOMETRY
+  PHOTOMETRY,
+  SOURCE
 }
 
 interface IMarker {
@@ -34,14 +35,21 @@ interface IMarker {
   }
 }
 
-export interface PhotometryMarker extends IMarker {
-  type: MarkerType.PHOTOMETRY;
+interface SourceMarkerMixin extends IMarker {
   x: number;
   y: number;
   theta: number;
   raHours: number;
   decDegs: number;
   source: Source;
+}
+
+export interface SourceMarker extends SourceMarkerMixin {
+  type: MarkerType.SOURCE;
+}
+
+export interface PhotometryMarker extends SourceMarkerMixin {
+  type: MarkerType.PHOTOMETRY;
   photometryData: PhotometryData;
   showAperture: boolean;
   showCrosshair: boolean;
@@ -96,7 +104,7 @@ export interface TextMarker extends IMarker {
 }
 
 
-export type Marker = LineMarker | RectangleMarker | CircleMarker | TextMarker | PhotometryMarker;
+export type Marker = LineMarker | RectangleMarker | CircleMarker | TextMarker | PhotometryMarker | SourceMarker;
 
 export const isLineMarker: TypeGuard<Marker, LineMarker> = (marker: Marker): marker is LineMarker =>
   marker.type === MarkerType.LINE;
@@ -109,3 +117,6 @@ export const isRectangleMarker: TypeGuard<Marker, RectangleMarker> = (marker: Ma
 
 export const isPhotometryMarker: TypeGuard<Marker, PhotometryMarker> = (marker: Marker): marker is PhotometryMarker =>
   marker.type === MarkerType.PHOTOMETRY;
+
+export const isSourceMarker: TypeGuard<Marker, SourceMarker> = (marker: Marker): marker is SourceMarker =>
+  marker.type === MarkerType.SOURCE;

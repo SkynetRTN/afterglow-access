@@ -35,6 +35,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
   loading = false;
   job: SourceExtractionJob;
   jobResult: SourceExtractionJobResult;
+  coordinateMode: 'pixel' | 'sky';
 
   regionOptions = [
     { label: 'Entire Image', value: SourceExtractionRegion.ENTIRE_IMAGE },
@@ -52,16 +53,20 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     private store: Store,
     private actions$: Actions,
     private jobService: JobService,
-    @Inject(MAT_DIALOG_DATA) public data: { viewerId: string; region?: SourceExtractionRegion }
+    @Inject(MAT_DIALOG_DATA) public data: { viewerId: string; region?: SourceExtractionRegion, coordinateMode?: 'pixel' | 'sky' }
   ) {
     this.viewerId = data.viewerId;
+    this.coordinateMode = data.coordinateMode || 'pixel';
 
     this.sourceExtractionRegionForm.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.onSourceExtractionRegionFormChange();
       });
 
-    this.sourceExtractionRegionForm.patchValue(data)
+    this.sourceExtractionRegionForm.patchValue({
+      viewerId: data.viewerId,
+      region: data.region
+    })
 
   }
 
@@ -153,6 +158,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
           let secondaryCoord = d.y;
 
           if (
+            this.coordinateMode == 'sky' &&
             header.wcs &&
             header.wcs.isValid() &&
             'raHours' in d &&

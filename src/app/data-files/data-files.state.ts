@@ -89,13 +89,13 @@ import {
   UpdateHduHeader,
   UpdateNormalizerSuccess,
   UpdateChannelMixer,
-  SetFileNormalizerSync,
   InitializeFile,
   SetFileColorBalanceMode,
   UpdateColorMapSuccess,
   UpdateVisibilitySuccess,
   UpdateAlphaSuccess,
   UpdateBlendModeSuccess,
+  SyncFileNormalizers,
 } from './data-files.actions';
 import { HduType } from './models/data-file-type';
 import { env } from '../../environments/environment';
@@ -505,7 +505,7 @@ export class DataFilesState {
               viewportTransformId: '',
               imageTransformId: '',
               rgbaImageDataId: '',
-              colorBalanceMode: ColorBalanceMode.MANUAL,
+              colorBalanceMode: ColorBalanceMode.PERCENTILE,
               syncLayerNormalizers: false,
               channelMixer: [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
             };
@@ -1473,54 +1473,104 @@ export class DataFilesState {
       return state;
     })
 
-    let actions: any[] = []
+    // let actions: any[] = []
 
-    let sync = value != ColorBalanceMode.MANUAL;
-    let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu);
+    // let sync = value != ColorBalanceMode.MANUAL;
+    // let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu);
     // if (value != ColorBalanceMode.HISTOGRAM_FITTING && value != ColorBalanceMode.MANUAL) {
     //   hdus.forEach(hdu => {
     //     actions.push(new UpdateNormalizer(hdu.id, { layerOffset: 0, layerScale: 1 }))
     //   })
     // }
-    if (sync && value == ColorBalanceMode.PERCENTILE) {
-      let hdu = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
-      if (hdu) {
-        actions.push(new UpdateNormalizer(hdu.id, { mode: 'percentile' }));
-      }
-    }
-    actions.push(new SetFileNormalizerSync(fileId, sync))
+    // if (sync && value == ColorBalanceMode.PERCENTILE) {
+    //   let hdu = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
+    //   if (hdu) {
+    //     actions.push(new UpdateNormalizer(hdu.id, { mode: 'percentile' }));
+    //   }
+    // }
+    // actions.push(new SetFileNormalizerSync(fileId, sync))
 
-    if (actions.length != 0) dispatch(actions);
+    // if (actions.length != 0) dispatch(actions);
 
 
 
 
   }
 
-
-  @Action(SetFileNormalizerSync)
+  @Action(SyncFileNormalizers)
   @ImmutableContext()
-  public setFileNormalizerSync(
+  public syncFileNormalizers(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { fileId, value }: SetFileNormalizerSync
+    { fileId, refHduId }: SyncFileNormalizers
   ) {
-    setState((state: DataFilesStateModel) => {
-      let file = state.fileEntities[fileId];
-      if (file) {
-        file.syncLayerNormalizers = value;
+    let state = getState();
+
+    let file = state.fileEntities[fileId];
+    let refHdu = state.hduEntities[refHduId];
+
+    if (!isImageHdu(refHdu)) return;
+
+    let getSyncedNormalizerFields = (value: PixelNormalizer): Partial<PixelNormalizer> => {
+      let result: Partial<PixelNormalizer> = {
+        mode: file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ? 'pixel' : 'percentile',
+        stretchMode: value.stretchMode
+      };
+      if (result.mode == 'pixel') {
+        result = {
+          ...result,
+          backgroundLevel: value.backgroundLevel,
+          midLevel: value.midLevel,
+          peakLevel: value.peakLevel
+        }
+      } else {
+        result = {
+          ...result,
+          backgroundPercentile: value.backgroundPercentile,
+          midPercentile: value.midPercentile,
+          peakPercentile: value.peakPercentile,
+        }
       }
-      return state;
+      return result;
+    }
+    let actions = [];
+    let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu).filter(hdu => hdu.id != refHduId && hdu.visible);
+    let syncedNormalizerFields = getSyncedNormalizerFields(refHdu.normalizer)
+    let syncNormalizerFieldsStr = JSON.stringify(syncedNormalizerFields)
+    hdus.forEach(hdu => {
+
+      if (syncNormalizerFieldsStr === JSON.stringify(getSyncedNormalizerFields(hdu.normalizer))) return;
+
+      actions.push(new UpdateNormalizer(hdu.id, syncedNormalizerFields, true))
     })
 
-    if (value) {
-      //trigger sync
-      // let state = getState()
-      // let ref = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
-      // if (ref && ref.normalizer) {
-      //   dispatch(new UpdateNormalizer(ref.id, ref.normalizer))
-      // }
-    }
+
+    return this.store.dispatch(actions)
   }
+
+
+  // @Action(SetFileNormalizerSync)
+  // @ImmutableContext()
+  // public setFileNormalizerSync(
+  //   { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
+  //   { fileId, value }: SetFileNormalizerSync
+  // ) {
+  //   setState((state: DataFilesStateModel) => {
+  //     let file = state.fileEntities[fileId];
+  //     if (file) {
+  //       file.syncLayerNormalizers = value;
+  //     }
+  //     return state;
+  //   })
+
+  //   if (value) {
+  //     //trigger sync
+  //     // let state = getState()
+  //     // let ref = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
+  //     // if (ref && ref.normalizer) {
+  //     //   dispatch(new UpdateNormalizer(ref.id, ref.normalizer))
+  //     // }
+  //   }
+  // }
 
   @Action(UpdateNormalizer)
   public updateNormalizer(
@@ -1573,67 +1623,6 @@ export class DataFilesState {
     });
 
     actions.push(new InvalidateNormalizedImageTiles(hduId))
-
-    let file = state.fileEntities[hdu.fileId]
-    if (!skipFileSync && file.syncLayerNormalizers) {
-
-      let getSyncedNormalizerFields = (value: PixelNormalizer): Partial<PixelNormalizer> => {
-        let result: Partial<PixelNormalizer> = {
-          mode: file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ? 'pixel' : 'percentile',
-          stretchMode: value.stretchMode
-        };
-        if (result.mode == 'pixel') {
-          result = {
-            ...result,
-            backgroundLevel: value.backgroundLevel,
-            midLevel: value.midLevel,
-            peakLevel: value.peakLevel
-          }
-        } else {
-          result = {
-            ...result,
-            backgroundPercentile: value.backgroundPercentile,
-            midPercentile: value.midPercentile,
-            peakPercentile: value.peakPercentile,
-          }
-        }
-        return result;
-      }
-      let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(hdu.fileId)).filter(isImageHdu).filter(hdu => hdu.id != hduId);
-      let syncedNormalizerFields = getSyncedNormalizerFields(normalizer)
-      let syncNormalizerFieldsStr = JSON.stringify(syncedNormalizerFields)
-      hdus.forEach(hdu => {
-
-        if (syncNormalizerFieldsStr === JSON.stringify(getSyncedNormalizerFields(hdu.normalizer))) return;
-
-        actions.push(new UpdateNormalizer(hdu.id, syncedNormalizerFields, true))
-        // setState((state: DataFilesStateModel) => {
-        //   let hduEntities = {
-        //     ...state.hduEntities,
-        //     [hdu.id]: {
-        //       ...hdu,
-        //       normalizer: {
-        //         ...hdu.normalizer,
-        //         mode: normalizer.mode,
-        //         backgroundLevel: normalizer.backgroundLevel,
-        //         peakLevel: normalizer.peakLevel,
-        //         backgroundPercentile: normalizer.backgroundPercentile,
-        //         peakPercentile: normalizer.peakPercentile,
-        //         stretchMode: normalizer.stretchMode,
-        //       }
-        //     }
-        //   }
-
-        //   return {
-        //     ...state,
-        //     hduEntities: hduEntities
-        //   }
-        // });
-        // actions.push(new InvalidateNormalizedImageTiles(hdu.id))
-      })
-    }
-
-
     actions.push(new UpdateNormalizerSuccess(hduId))
 
 

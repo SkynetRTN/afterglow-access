@@ -30,41 +30,39 @@
       </mat-form-field>
     </div>
     <div>
+      <mat-slide-toggle [labelPosition]="'after'" [checked]="(alignFormData$ | async).crop" color="primary"
+        formControlName="crop" i18n>Crop to largest overlapping region</mat-slide-toggle>
+    </div>
+    <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Mode</mat-label>
-        <mat-select formControlName="mode">
-          <mat-option [value]="'astrometric'">astrometric</mat-option>
-          <!-- <mat-option  [value]="'manual_source'">manual</mat-option> -->
+        <mat-select #modeSelect formControlName="mode">
+          <mat-option [value]="AlignMode.ASTROMETRIC">astrometric</mat-option>
+          <mat-option [value]="AlignMode.SOURCE_MANUAL">manual</mat-option>
+          <mat-option [value]="AlignMode.SOURCE_PROPER_MOTION">proper motion</mat-option>
+          <mat-option [value]="AlignMode.SOURCE_REFINE">refine</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
-    <div>
-      <mat-slide-toggle
-        [labelPosition]="'after'"
-        [checked]="(alignFormData$ | async).crop"
-        color="primary"
-        formControlName="crop"
-        i18n
-        >Crop to largest overlapping region</mat-slide-toggle
-      >
+    <div *ngIf="modeSelect.value == AlignMode.SOURCE_MANUAL">
+      <mat-form-field appearance="outline" style="width: 300px">
+        <mat-label i18n>Manual Align Sources</mat-label>
+        <mat-select formControlName="manualSources">
+          <mat-option *ngFor="let source of manualSourceOptions$ | async" [value]="source.id">{{source.label}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
 
+
     <div *ngIf="refHeader$ | async">
-      <div
-        *ngIf="(refHeader$ | async).loading; else hasWcsBlock"
-        class="alert alert-info"
-        style="margin-top: 10px"
-        i18n
-      >
+      <div *ngIf="(refHeader$ | async).loading; else hasWcsBlock" class="alert alert-info" style="margin-top: 10px"
+        i18n>
         Reference header loading...
       </div>
       <ng-template #hasWcsBlock>
-        <div
-          *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)"
-          class="alert alert-warning"
-          style="margin-top: 10px"
-          i18n
-        >
+        <div *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)" class="alert alert-warning"
+          style="margin-top: 10px" i18n>
           This image does not have astrometric data in its header and cannot be aligned using the selected mode.
         </div>
       </ng-template>
@@ -78,10 +76,8 @@
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
   <div *ngIf="alignmentJob$ | async; let job" style="margin-top: 10px">
-    <div
-      class="alert alert-info"
-      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete"
-    >
+    <div class="alert alert-info"
+      *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
       <span i18n>Processing job</span> {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
 
       <ng-container *ngIf="job.state.status == 'in_progress'">

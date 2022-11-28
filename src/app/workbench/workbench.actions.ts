@@ -13,6 +13,7 @@ import {
   ViewerPanel,
   WcsCalibrationSettings,
   WcsCalibrationPanelState,
+  SourcePanelConfig,
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
@@ -271,6 +272,12 @@ export class UpdatePhotometryPanelConfig {
   public static readonly type = '[Workbench] Update Photometry Panel Config';
 
   constructor(public changes: Partial<PhotometryPanelConfig>) { }
+}
+
+export class UpdateSourcePanelConfig {
+  public static readonly type = '[Workbench] Update Source Panel Config';
+
+  constructor(public changes: Partial<SourcePanelConfig>) { }
 }
 
 export class UpdatePixelOpsPageSettings {
@@ -578,19 +585,40 @@ export class UpdateLine {
   ) { }
 }
 
-/*Photometry*/
+/* Sources */
 
-export class UpdatePhotometrySourceSelectionRegion {
-  public static readonly type = '[Photometry] Update Photometry Source Selection Region';
+export class UpdateSourceSelectionRegion {
+  public static readonly type = '[Sources] Update Source Selection Region';
 
   constructor(public hduId: string, public region: Region) { }
 }
 
-export class EndPhotometrySourceSelectionRegion {
-  public static readonly type = '[Photometry] End Photometry Source Selection Region';
+export class EndSourceSelectionRegion {
+  public static readonly type = '[Sources] End Source Selection Region';
 
   constructor(public hduId: string, public mode: 'append' | 'remove') { }
 }
+
+export class RemoveSelectedSources {
+  public static readonly type = '[Sources] Remove Selected Sources';
+
+  constructor(public hduId: string) { }
+}
+
+export class RemoveAllSources {
+  public static readonly type = '[Sources] Remove All Sources';
+
+  constructor(public hduId: string) { }
+}
+
+export class SetSourceLabel {
+  public static readonly type = '[Sources] Set Source Label';
+
+  constructor(public hduId: string, public source: Source, public label: string) { }
+}
+
+
+/*Photometry */
 
 export class UpdateFilteredSources {
   public static readonly type = '[Photometry] Update Filtered Sources';
@@ -604,23 +632,7 @@ export class UpdatePhotometryFileState {
   constructor(public hduId: string, public changes: Partial<PhotometryPanelState>) { }
 }
 
-export class RemoveSelectedSources {
-  public static readonly type = '[Photometry] Remove Selected Sources';
 
-  constructor(public hduId: string) { }
-}
-
-export class RemoveAllSources {
-  public static readonly type = '[Photometry] Remove All Sources';
-
-  constructor(public hduId: string) { }
-}
-
-export class SetSourceLabel {
-  public static readonly type = '[Photometry] Set Source Label';
-
-  constructor(public hduId: string, public source: Source, public label: string) { }
-}
 
 export class BatchPhotometerSources {
   public static readonly type = '[Phot Data] Batch Photometer Sources';

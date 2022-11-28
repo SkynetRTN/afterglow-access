@@ -7,355 +7,292 @@
 </ng-template>
 
 <ng-container *ngIf="config$ | async; let config">
-  <ng-container *ngIf="hdu$ | async as hdu; else hduNotSelectedBlock">
-    <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
-      <div class="mb-3">
-        <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
-          [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
-          [disabled]="!(header$ | async)?.wcs?.isValid()" (change)="onCoordModeChange($event)">
-          <mat-button-toggle value="pixel" i18n>Pixel Coordinate Mode</mat-button-toggle>
-          <mat-button-toggle value="sky" i18n>Sky Coordinate Mode</mat-button-toggle>
-        </mat-button-toggle-group>
-      </div>
+  <ng-container *ngIf="sourcePanelConfig$ | async; let sourcePanelConfig">
 
-      <div>
-        <p i18n>
-          Manually add sources by clicking on them in your image or automatically add them using the options below.
-        </p>
-        <p class="pb-2">
-          <ng-container i18n>Tip: To click beneath existing markers hold</ng-container><span class="kbd">Alt</span>
-        </p>
+    <ng-container *ngIf="hdu$ | async as hdu; else hduNotSelectedBlock">
+      <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
 
-        <div class="form-row mt-3">
-          <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"
-            (change)="onCentroidClicksChange($event)" i18n>
-            Centroid clicks
-          </mat-slide-toggle>
-
-          <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
-            <mat-icon>add</mat-icon>
-            <span i18n>Add Sources...</span>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="openSourceExtractionDialog()">
-              <mat-icon>location_searching</mat-icon>
-              <span i18n>Extract Sources...</span>
-            </button>
-            <!-- <button mat-menu-item>
-                <mat-icon>import_export</mat-icon>
-                <span>Import from File...</span>
-              </button>
-              <button mat-menu-item>
-                <mat-icon>input</mat-icon>
-                <span>Manual Entry... </span>
-              </button> -->
-          </mat-menu>
+        <div>
+          <p i18n>
+            Manually add sources by clicking on them in your image or automatically add them using the options on the
+            source catalog panel.
+          </p>
+          <p class="pb-2">
+            <ng-container i18n>Tip: To click beneath existing markers hold</ng-container><span class="kbd">Alt</span>
+          </p>
         </div>
-      </div>
-
-      <hr />
-
-      <ng-container *ngIf="sources$ | async; let sources">
-        <div fxLayout="row wrap" fxLayoutGap="25px">
-          <mat-slide-toggle class="my-2" [checked]="config?.showSourcesFromAllFiles" [labelPosition]="'after'"
-            (change)="onShowSourcesFromAllFilesChange($event)" i18n>
-            Include sources from other files
-          </mat-slide-toggle>
-          <mat-slide-toggle class="my-2" [checked]="config?.showSourceMarkers" [labelPosition]="'after'"
-            (change)="onShowSourceMarkersChange($event)" i18n>
-            Source Markers
-          </mat-slide-toggle>
-          <mat-slide-toggle class="my-2" [disabled]="!config?.showSourceMarkers" [checked]="config?.showSourceApertures"
-            [labelPosition]="'after'" (change)="onShowSourceAperturesChange($event)" i18n>
-            Show Apertures
-          </mat-slide-toggle>
-          <mat-slide-toggle class="my-2" [disabled]="!config?.showSourceMarkers" [checked]="config?.showSourceLabels"
-            [labelPosition]="'after'" (change)="onShowSourceLabelsChange($event)" i18n>
-            Marker Labels
-          </mat-slide-toggle>
-          <mat-slide-toggle class="my-2" [checked]="config?.autoPhot" [labelPosition]="'after'"
-            (change)="onAutoPhotometryChange($event)" i18n>
-            Auto Photometry
-          </mat-slide-toggle>
-        </div>
-        <div class="mb-3" style="max-height: 300px; overflow: auto">
-          <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$ | async" matSort
-            [matSortDisableClear]="true" [trackBy]="trackById" recycleRows>
-            <ng-container matColumnDef="select">
-              <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell"
-                [rowIndex]="0" [columnIndex]="0" (focus)="cb?.focus()" [cellInTabOrder]="false">
-                <mat-checkbox #cb [disabled]="!showSelectAll(sources)" (change)="$event ? masterToggle(sources) : null"
-                  [checked]="selectionModel.hasValue() && isAllSelected(sources)"
-                  [indeterminate]="selectionModel.hasValue() && !isAllSelected(sources)"
-                  [tabIndex]="cell.isActiveCell ? 0 : -1">
-                </mat-checkbox>
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
-                [rowIndex]="rowIndex + 1" [columnIndex]="0" (focus)="cb?.focus()"
-                [cellInTabOrder]="selectionModel.isSelected(row.source.id)">
-                <mat-checkbox #cb (click)="$event.stopPropagation()" (change)="$event ? toggleSource(row.source) : null"
-                  [checked]="selectionModel.isSelected(row.source.id)" [tabIndex]="cell.isActiveCell ? 0 : -1">
-                </mat-checkbox>
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="primaryCoord">
-              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
-                [rowIndex]="0" [columnIndex]="1" [cellInTabOrder]="true">
-                X | RA
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
-                [rowIndex]="rowIndex + 1" [columnIndex]="1" [cellInTabOrder]="true">
-                {{
-                row.source.posType == SourcePosType.PIXEL
-                ? (row.source.primaryCoord | number: '0.0-5')
-                : (row.source.primaryCoord | dms: '0.0-3')
-                }}
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="secondaryCoord">
-              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
-                [rowIndex]="0" [columnIndex]="2" [cellInTabOrder]="true">
-                Y | DEC
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
-                [rowIndex]="rowIndex + 1" [columnIndex]="2" [cellInTabOrder]="true">
-                {{
-                row.source.posType == SourcePosType.PIXEL
-                ? (row.source.secondaryCoord | number: '0.0-5')
-                : (row.source.secondaryCoord | dms: '0.0-3')
-                }}
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="label">
-              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
-                [rowIndex]="0" [columnIndex]="3" [cellInTabOrder]="true">
-                Label
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
-                [rowIndex]="rowIndex + 1" [columnIndex]="3" [cellInTabOrder]="true">
-                {{ row.source.label }}
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="mag">
-              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
-                [rowIndex]="0" [columnIndex]="4" [cellInTabOrder]="true">
-                Mag
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
-                [rowIndex]="rowIndex + 1" [columnIndex]="4" [cellInTabOrder]="true">
-                {{ row.data?.mag | number: '1.0-3' }}
-              </mat-cell>
-            </ng-container>
-
-            <ng-container matColumnDef="magError">
-              <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
-                [rowIndex]="0" [columnIndex]="5" [cellInTabOrder]="true">
-                Mag Err
-              </mat-header-cell>
-              <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
-                [rowIndex]="rowIndex + 1" [columnIndex]="5" [cellInTabOrder]="true">
-                {{ row.data?.magError | number: '1.0-3' }}
-              </mat-cell>
-            </ng-container>
-
-            <mat-header-row *matHeaderRowDef="['select', 'label', 'primaryCoord', 'secondaryCoord', 'mag', 'magError']">
-            </mat-header-row>
-            <mat-row
-              *matRowDef="let row; columns: ['select', 'label', 'primaryCoord', 'secondaryCoord', 'mag', 'magError']">
-            </mat-row>
-          </mat-table>
-        </div>
-
-        <div fxLayout="row wrap" fxLayoutGap="5px" *ngIf="tableData$ | async; let tableData">
-          <div class="my-1">
-            <button mat-raised-button i18n-matTooltip matTooltip="Merge Selected Sources" color="primary"
-              (click)="mergeSelectedSources(sources, config)" [disabled]="selectionModel.selected.length < 2">
-              <mat-icon>merge_type</mat-icon>
-            </button>
-          </div>
-          <div class="my-1">
-            <button mat-raised-button i18n-matTooltip matTooltip="Remove Selected Sources" color="warn"
-              (click)="removeSelectedSources(sources, config)" [disabled]="selectionModel.selected.length == 0">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-          <div class="my-1">
-            <button mat-raised-button i18n-matTooltip matTooltip="Remove All Sources" color="warn"
-              (click)="removeSources(sources)" [disabled]="sources?.length == 0">
-              <mat-icon>delete_sweep</mat-icon>
-            </button>
-          </div>
-          <div class="my-1">
-            <button mat-raised-button i18n-matTooltip matTooltip="Update Photometry" color="primary"
-              (click)="updatePhotometry()" [disabled]="sources?.length == 0">
-              <mat-icon>refresh</mat-icon>
-            </button>
-          </div>
-          <div class="my-1">
-            <button mat-raised-button i18n-matTooltip matTooltip="Export Data" color="primary"
-              (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
-              <mat-icon>get_app</mat-icon>
-            </button>
-          </div>
-        </div>
-        <div *ngIf="mergeError" class="mt-2 alert alert-danger">
-          {{ mergeError }}
-        </div>
-
-        <div *ngIf="mergeError" class="mt-2 alert alert-danger">
-          {{ mergeError }}
-        </div>
-
-        <div fxLayout="row" style="margin-top: 10px; width: 100%;" fxLayoutGap="10px">
-          <div fxFlex="1 1 auto" style="width: 100%; height: 50px;">
-            <ng-container *ngIf="autoPhotJob$ | async; let job">
-              <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
-                <ng-container *ngIf="job.result; let result; else progressBlock">
-                  <div *ngIf="result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
-                    fxLayout="column" fxFill fxLayoutAlign="center center">
-                    Photometry Updated
-                  </div>
-                  <ng-template #errorBlock>
-                    <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
-                      Photometry Failed
-                    </div>
-                  </ng-template>
-                </ng-container>
-
-              </ng-container>
-
-            </ng-container>
-            <ng-template #progressBlock>
-              <div *ngIf="(sources$ | async)?.length != 0" i18n fxFill fxLayoutAlign="center center">
-                <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
-              </div>
-              <!-- <mat-progress-bar *ngIf="job.state?.progress && job.state?.progress != 100" mode="indeterminate"
-              [color]="'accent'"></mat-progress-bar> -->
-            </ng-template>
-
-          </div>
-          <div *ngIf="(calibrationSettings$ | async)?.calibrationEnabled" fxFlex="1 1 auto"
-            style="width: 100%; height: 50px;">
-            <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
-              <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
-                <ng-container *ngIf="job.result; let result; else progressBlock">
-                  <ng-container *ngIf="result?.data; else progressBlock">
-                    <div
-                      *ngIf="result.data.length != 0 && result.errors.length == 0 && result.warnings.length == 0; else errorBlock"
-                      class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
-                      <ng-container i18n>Zero Point: </ng-container>{{(calibratedZeroPoint$ | async) | number:'1.0-3'}}
-                      &#177;
-                      {{result.data[0]?.zeroPointError | number:'1.0-3'}} mag
-                    </div>
-                  </ng-container>
-                </ng-container>
-
-                <ng-template #errorBlock>
-                  <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
-                    Calibration Failed
-                  </div>
-                </ng-template>
-              </ng-container>
-
-            </ng-container>
-            <ng-template #progressBlock>
-              <div i18n fxFill fxLayoutAlign="center center">
-                <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
-              </div>
-              <!-- <mat-progress-bar *ngIf="job.state?.progress && job.state?.progress != 100" mode="indeterminate"
-              [color]="'accent'"></mat-progress-bar> -->
-            </ng-template>
-
-          </div>
-
-        </div>
-
-
 
         <hr />
-        <div>
-          <div *ngIf="batchHduIdOptions">
-            <p i18n>Use batch photometry to photometer all of your sources in multiple image layers/files.</p>
-            <form [formGroup]="batchPhotForm">
-              <div>
-                <mat-form-field appearance="outline" style="width: 300px">
-                  <mat-label i18n>Select Image(s) to Photometer</mat-label>
-                  <mat-select multiple formControlName="selectedHduIds">
-                    <mat-option *ngFor="let hduId of batchHduIdOptions" [value]="hduId">
-                      {{ getHduOptionLabel(hduId) | async }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
 
-                <button mat-icon-button (click)="selectHdus(batchHduIdOptions)" i18n-matTooltip matTooltip="Select all">
-                  <mat-icon>select_all</mat-icon>
-                </button>
+        <ng-container *ngIf="sources$ | async; let sources">
+          <div fxLayout="row wrap" fxLayoutGap="25px">
+            <mat-slide-toggle class="my-2" [checked]="sourcePanelConfig?.showSourceMarkers" [labelPosition]="'after'"
+              (change)="onShowSourceMarkersChange($event)" i18n>
+              Source Markers
+            </mat-slide-toggle>
+            <mat-slide-toggle class="my-2" [disabled]="!sourcePanelConfig?.showSourceMarkers"
+              [checked]="config?.showSourceApertures" [labelPosition]="'after'"
+              (change)="onShowSourceAperturesChange($event)" i18n>
+              Show Apertures
+            </mat-slide-toggle>
+            <mat-slide-toggle class="my-2" [disabled]="!sourcePanelConfig?.showSourceMarkers"
+              [checked]="sourcePanelConfig?.showSourceLabels" [labelPosition]="'after'"
+              (change)="onShowSourceLabelsChange($event)" i18n>
+              Marker Labels
+            </mat-slide-toggle>
+            <mat-slide-toggle class="my-2" [checked]="config?.autoPhot" [labelPosition]="'after'"
+              (change)="onAutoPhotometryChange($event)" i18n>
+              Auto Photometry
+            </mat-slide-toggle>
+          </div>
+          <div class="mb-3" style="max-height: 300px; overflow: auto">
+            <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$ | async" matSort
+              [matSortDisableClear]="true" [trackBy]="trackById" recycleRows>
+              <ng-container matColumnDef="select">
+                <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell #cell="cell"
+                  [rowIndex]="0" [columnIndex]="0" (focus)="cb?.focus()" [cellInTabOrder]="false">
+                  <mat-checkbox #cb [disabled]="!showSelectAll(sources)"
+                    (change)="$event ? masterToggle(sources) : null"
+                    [checked]="selectionModel.hasValue() && isAllSelected(sources)"
+                    [indeterminate]="selectionModel.hasValue() && !isAllSelected(sources)"
+                    [tabIndex]="cell.isActiveCell ? 0 : -1">
+                  </mat-checkbox>
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                  [rowIndex]="rowIndex + 1" [columnIndex]="0" (focus)="cb?.focus()"
+                  [cellInTabOrder]="selectionModel.isSelected(row.source.id)">
+                  <mat-checkbox #cb (click)="$event.stopPropagation()"
+                    (change)="$event ? toggleSource(row.source) : null"
+                    [checked]="selectionModel.isSelected(row.source.id)" [tabIndex]="cell.isActiveCell ? 0 : -1">
+                  </mat-checkbox>
+                </mat-cell>
+              </ng-container>
 
-                <button mat-icon-button (click)="selectHdus([])" i18n-matTooltip matTooltip="Clear Selection">
-                  <mat-icon>clear</mat-icon>
-                </button>
-                <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()"
-                  [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0 || (creatingBatchJobs$ | async)"
-                  i18n-matTooltip matTooltip="Batch Photometer">
-                  <mat-icon>wb_incandescent</mat-icon>
-                </button>
-              </div>
-            </form>
+
+              <ng-container matColumnDef="label">
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
+                  [rowIndex]="0" [columnIndex]="3" [cellInTabOrder]="true">
+                  Label
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                  [rowIndex]="rowIndex + 1" [columnIndex]="3" [cellInTabOrder]="true">
+                  {{ row.source.label }}
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="flux">
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
+                  [rowIndex]="0" [columnIndex]="4" [cellInTabOrder]="true">
+                  Flux
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                  [rowIndex]="rowIndex + 1" [columnIndex]="4" [cellInTabOrder]="true">
+                  {{ row.data?.flux | number: '1.0-3' }} &plusmn; {{ row.data?.fluxError | number: '1.0-3' }}
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="mag">
+                <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell" app-focusable-cell
+                  [rowIndex]="0" [columnIndex]="4" [cellInTabOrder]="true">
+                  Mag
+                </mat-header-cell>
+                <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                  [rowIndex]="rowIndex + 1" [columnIndex]="4" [cellInTabOrder]="true">
+                  {{ row.data?.mag | number: '1.0-3' }} &plusmn; {{ row.data?.magError | number: '1.0-3' }}
+                </mat-cell>
+              </ng-container>
+
+
+
+              <mat-header-row *matHeaderRowDef="['select', 'label', 'flux', 'mag']">
+              </mat-header-row>
+              <mat-row *matRowDef="let row; columns: ['select', 'label', 'flux', 'mag']">
+              </mat-row>
+            </mat-table>
           </div>
 
-          <ng-container *ngIf="batchStatus$ | async; let status">
-            <ng-container
-              *ngIf="status.photJob && (!status.calibrationEnabled || status.calJob); else creatingJobsBlock">
-              <div *ngIf="status.inProgress; else batchComplete" class="alert alert-info">
-                <div class="pb-2">Your <a [routerLink]="['/jobs', status.photJob.id]">photometry
-                    job</a>
-                  <ng-container *ngIf="status.calibrationEnabled; else calibrationDisabledBlock"> and <a
-                      [routerLink]="['/jobs', status.calJob.id]">calibration job</a> are in progress.</ng-container>
-                  <ng-template #calibrationDisabledBlock>
-                    is in progress.
-                  </ng-template>
-                </div>
+          <div fxLayout="row wrap" fxLayoutGap="5px" *ngIf="tableData$ | async; let tableData">
+            <div class="my-1">
+              <button mat-raised-button i18n-matTooltip matTooltip="Remove Selected Sources" color="warn"
+                (click)="removeSelectedSources()" [disabled]="selectionModel.selected.length == 0">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+            <div class="my-1">
+              <button mat-raised-button i18n-matTooltip matTooltip="Remove All Sources" color="warn"
+                (click)="removeSources()" [disabled]="sources?.length == 0">
+                <mat-icon>delete_sweep</mat-icon>
+              </button>
+            </div>
+            <div class="my-1">
+              <button mat-raised-button i18n-matTooltip matTooltip="Update Photometry" color="primary"
+                (click)="updatePhotometry()" [disabled]="sources?.length == 0">
+                <mat-icon>refresh</mat-icon>
+              </button>
+            </div>
+            <div class="my-1">
+              <button mat-raised-button i18n-matTooltip matTooltip="Export Data" color="primary"
+                (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
+                <mat-icon>get_app</mat-icon>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+            {{ mergeError }}
+          </div>
 
-                <!-- <mat-progress-bar mode="determinate"
+          <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+            {{ mergeError }}
+          </div>
+
+          <div fxLayout="row" style="margin-top: 10px; width: 100%;" fxLayoutGap="10px">
+            <div fxFlex="1 1 auto" style="width: 100%; height: 50px;">
+              <ng-container *ngIf="autoPhotJob$ | async; let job">
+                <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
+                  <ng-container *ngIf="job.result; let result; else progressBlock">
+                    <div *ngIf="result?.errors?.length == 0; else errorBlock" i18n class="alert alert-success"
+                      fxLayout="column" fxFill fxLayoutAlign="center center">
+                      Photometry Updated
+                    </div>
+                    <ng-template #errorBlock>
+                      <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
+                        Photometry Failed
+                      </div>
+                    </ng-template>
+                  </ng-container>
+
+                </ng-container>
+
+              </ng-container>
+              <ng-template #progressBlock>
+                <div *ngIf="(sources$ | async)?.length != 0" i18n fxFill fxLayoutAlign="center center">
+                  <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
+                </div>
+                <!-- <mat-progress-bar *ngIf="job.state?.progress && job.state?.progress != 100" mode="indeterminate"
+              [color]="'accent'"></mat-progress-bar> -->
+              </ng-template>
+
+            </div>
+            <div *ngIf="(calibrationSettings$ | async)?.calibrationEnabled" fxFlex="1 1 auto"
+              style="width: 100%; height: 50px;">
+              <ng-container *ngIf="autoCalJob$ | async; let job; else progressBlock">
+                <ng-container *ngIf="job.state.status == 'completed'; else progressBlock">
+                  <ng-container *ngIf="job.result; let result; else progressBlock">
+                    <ng-container *ngIf="result?.data; else progressBlock">
+                      <div
+                        *ngIf="result.data.length != 0 && result.errors.length == 0 && result.warnings.length == 0; else errorBlock"
+                        class="alert alert-success" fxLayout="column" fxFill fxLayoutAlign="center center">
+                        <ng-container i18n>Zero Point: </ng-container>{{(calibratedZeroPoint$ | async) |
+                        number:'1.0-3'}}
+                        &#177;
+                        {{result.data[0]?.zeroPointError | number:'1.0-3'}} mag
+                      </div>
+                    </ng-container>
+                  </ng-container>
+
+                  <ng-template #errorBlock>
+                    <div i18n class="alert alert-danger" fxFill fxLayoutAlign="center center">
+                      Calibration Failed
+                    </div>
+                  </ng-template>
+                </ng-container>
+
+              </ng-container>
+              <ng-template #progressBlock>
+                <div i18n fxFill fxLayoutAlign="center center">
+                  <mat-progress-bar mode="indeterminate" [color]="'accent'"></mat-progress-bar>
+                </div>
+                <!-- <mat-progress-bar *ngIf="job.state?.progress && job.state?.progress != 100" mode="indeterminate"
+              [color]="'accent'"></mat-progress-bar> -->
+              </ng-template>
+
+            </div>
+
+          </div>
+
+
+
+          <hr />
+          <div>
+            <div *ngIf="batchHduIdOptions">
+              <p i18n>Use batch photometry to photometer all of your sources in multiple image layers/files.</p>
+              <form [formGroup]="batchPhotForm">
+                <div>
+                  <mat-form-field appearance="outline" style="width: 300px">
+                    <mat-label i18n>Select Image(s) to Photometer</mat-label>
+                    <mat-select multiple formControlName="selectedHduIds">
+                      <mat-option *ngFor="let hduId of batchHduIdOptions" [value]="hduId">
+                        {{ getHduOptionLabel(hduId) | async }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <button mat-icon-button (click)="selectHdus(batchHduIdOptions)" i18n-matTooltip
+                    matTooltip="Select all">
+                    <mat-icon>select_all</mat-icon>
+                  </button>
+
+                  <button mat-icon-button (click)="selectHdus([])" i18n-matTooltip matTooltip="Clear Selection">
+                    <mat-icon>clear</mat-icon>
+                  </button>
+                  <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()"
+                    [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0 || (creatingBatchJobs$ | async)"
+                    i18n-matTooltip matTooltip="Batch Photometer">
+                    <mat-icon>wb_incandescent</mat-icon>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <ng-container *ngIf="batchStatus$ | async; let status">
+              <ng-container
+                *ngIf="status.photJob && (!status.calibrationEnabled || status.calJob); else creatingJobsBlock">
+                <div *ngIf="status.inProgress; else batchComplete" class="alert alert-info">
+                  <div class="pb-2">Your <a [routerLink]="['/jobs', status.photJob.id]">photometry
+                      job</a>
+                    <ng-container *ngIf="status.calibrationEnabled; else calibrationDisabledBlock"> and <a
+                        [routerLink]="['/jobs', status.calJob.id]">calibration job</a> are in progress.</ng-container>
+                    <ng-template #calibrationDisabledBlock>
+                      is in progress.
+                    </ng-template>
+                  </div>
+
+                  <!-- <mat-progress-bar mode="determinate"
                   [value]="(batchCalJob.state?.progress + batchPhotJob.state?.progress)/2" [color]="'accent'">
                 </mat-progress-bar> -->
-                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-              </div>
-              <ng-template #batchComplete>
-                <ng-container
-                  *ngIf="status.photJob.result && (!status.calibrationEnabled || status.calJob.result); else resultLoading">
-                  <div *ngIf="status.photJob.result.errors.length != 0 || status.photJob.result.warnings.length"
-                    class="alert alert-warning">
-                    Batch <a [routerLink]="['/jobs', status.photJob.id]" [fragment]="'result'">photometry
-                      job</a> completed with errors/warnings.
-                  </div>
-                  <div
-                    *ngIf="status.calibrationEnabled && (status.calJob.result.errors.length != 0 || status.calJob.result.warnings.length)"
-                    class="alert alert-warning">
-                    Batch <a [routerLink]="['/jobs', status.calJob.id]" [fragment]="'result'">calibration
-                      job</a> completed with errors/warnings.
-                  </div>
-                  <button class="" mat-raised-button (click)="downloadBatchPhotData()">
-                    <mat-icon>save_alt</mat-icon>
-                    <span>
-                      <ng-container i18n>Download Batch Photometry Data</ng-container> - {{
-                      status.photJob.sources.length }}
-                      <ng-container i18n>source(s) in</ng-container>
-                      {{ status.photJob.fileIds.length }}
-                      <ng-container i18n>file(s)</ng-container>
-                    </span>
-                  </button>
-                </ng-container>
-                <ng-template #resultLoading>
-                  <div class="alert alert-info" i18n>
-                    Loading results...
-                  </div>
-                </ng-template>
-                <!-- <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
+                  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                </div>
+                <ng-template #batchComplete>
+                  <ng-container
+                    *ngIf="status.photJob.result && (!status.calibrationEnabled || status.calJob.result); else resultLoading">
+                    <div *ngIf="status.photJob.result.errors.length != 0 || status.photJob.result.warnings.length"
+                      class="alert alert-warning">
+                      Batch <a [routerLink]="['/jobs', status.photJob.id]" [fragment]="'result'">photometry
+                        job</a> completed with errors/warnings.
+                    </div>
+                    <div
+                      *ngIf="status.calibrationEnabled && (status.calJob.result.errors.length != 0 || status.calJob.result.warnings.length)"
+                      class="alert alert-warning">
+                      Batch <a [routerLink]="['/jobs', status.calJob.id]" [fragment]="'result'">calibration
+                        job</a> completed with errors/warnings.
+                    </div>
+                    <button class="" mat-raised-button (click)="downloadBatchPhotData()">
+                      <mat-icon>save_alt</mat-icon>
+                      <span>
+                        <ng-container i18n>Download Batch Photometry Data</ng-container> - {{
+                        status.photJob.sources.length }}
+                        <ng-container i18n>source(s) in</ng-container>
+                        {{ status.photJob.fileIds.length }}
+                        <ng-container i18n>file(s)</ng-container>
+                      </span>
+                    </button>
+                  </ng-container>
+                  <ng-template #resultLoading>
+                    <div class="alert alert-info" i18n>
+                      Loading results...
+                    </div>
+                  </ng-template>
+                  <!-- <ng-container *ngIf="batchPhotJob$ | async; let batchPhotJob">
                   <div *ngIf="(batchErrors$ | async) && (batchErrors$ | async).length == 0; else batchErrors">
                     <button class="" mat-raised-button (click)="downloadBatchPhotData()">
                       <mat-icon>save_alt</mat-icon>
@@ -370,21 +307,21 @@
                     <div class="alert alert-danger">An unexpected error occurred during batch photometry.</div>
                   </ng-template>
                 </ng-container> -->
-              </ng-template>
-            </ng-container>
-            <ng-template #creatingJobsBlock>
-              <ng-container *ngIf="status.inProgress">
-                <div class="alert alert-info" i18n>
-                  Creating Jobs...
-                </div>
+                </ng-template>
               </ng-container>
-            </ng-template>
+              <ng-template #creatingJobsBlock>
+                <ng-container *ngIf="status.inProgress">
+                  <div class="alert alert-info" i18n>
+                    Creating Jobs...
+                  </div>
+                </ng-container>
+              </ng-template>
 
-          </ng-container>
-        </div>
+            </ng-container>
+          </div>
+        </ng-container>
+        <hr />
       </ng-container>
-      <hr />
-
     </ng-container>
   </ng-container>
 </ng-container>

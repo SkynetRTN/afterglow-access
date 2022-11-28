@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>Merge Sources</h2>
+<div mat-dialog-content>
+    <p>Select the reason for source position discrepencies across files.</p>
+    <form [formGroup]="mergeForm" class="flex flex-col">
+        <mat-form-field appearance="outline">
+            <mat-label>Reason for position discrepencies</mat-label>
+            <mat-select formControlName="mergeType">
+                <mat-option *ngFor="let option of mergeOptions" [value]="option.value">{{ option.label }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+            <mat-label>Label</mat-label>
+            <input matInput formControlName="label">
+        </mat-form-field>
+    </form>
+    <div fxLayout="column" fxLayoutAlign="center center" style="width: 100%;">
+        <mat-progress-bar *ngIf="loading" mode="indeterminate" [color]="'accent'">
+        </mat-progress-bar>
+        <div style="width: 100%;" *ngIf="mergeError" class="alert alert-danger">
+            {{mergeError}}
+        </div>
+    </div>
+</div>
+
+<div mat-dialog-actions class="mt-2" align="end">
+    <button mat-button mat-dialog-close i18n>Cancel</button>
+    <button mat-button (click)="mergeSources()" [disabled]="loading" i18n>Merge Sources</button>
+</div>

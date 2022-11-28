@@ -148,8 +148,6 @@ import {
   UpdateWcsCalibrationSettings,
   CreateWcsCalibrationJob,
   ImportFromSurveyFail,
-  UpdatePhotometrySourceSelectionRegion,
-  EndPhotometrySourceSelectionRegion,
   SonificationCompleted,
   UpdateCustomMarkerSelectionRegion,
   EndCustomMarkerSelectionRegion,
@@ -161,6 +159,9 @@ import {
   UpdateAutoFieldCalibration,
   BatchPhotometerSources,
   SyncAfterglowHeaders,
+  UpdateSourcePanelConfig,
+  EndSourceSelectionRegion,
+  UpdateSourceSelectionRegion,
 } from './workbench.actions';
 import {
   getWidth,
@@ -243,9 +244,10 @@ import { I } from '@angular/cdk/keycodes';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { JobService } from '../jobs/services/job.service';
 import { Job } from '../jobs/models/job';
+import { SourcePanelState } from './models/source-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '29a99430-6a77-4171-843f-fea137fdeb2c',
+  version: '2a70de54-74d2-485a-ad7a-0038847809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -284,6 +286,15 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     centroidClicks: false,
     usePlanetCentroiding: false,
   },
+  sourcePanelConfig: {
+    showSourceLabels: false,
+    showSourceMarkers: true,
+    centroidClicks: true,
+    planetCentroiding: false,
+    showSourcesFromAllFiles: true,
+    selectedSourceIds: [],
+    coordMode: 'sky',
+  },
   plottingPanelConfig: {
     interpolatePixels: false,
     centroidClicks: false,
@@ -292,13 +303,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     plotMode: '1D',
   },
   photometryPanelConfig: {
-    showSourceLabels: false,
-    showSourceMarkers: true,
     showSourceApertures: true,
-    centroidClicks: true,
-    showSourcesFromAllFiles: true,
-    selectedSourceIds: [],
-    coordMode: 'sky',
     batchPhotFormData: {
       selectedHduIds: [],
     },
@@ -383,6 +388,9 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   nextPhotometryPanelStateId: 0,
   photometryPanelStateEntities: {},
   photometryPanelStateIds: [],
+  nextSourcePanelStateId: 0,
+  sourcePanelStateEntities: {},
+  sourcePanelStateIds: [],
   nextMarkerId: 0,
 };
 
@@ -444,7 +452,7 @@ export class WorkbenchState {
 
   @Selector()
   public static getShowSourceLabels(state: WorkbenchStateModel) {
-    return state.photometryPanelConfig.showSourceLabels;
+    return state.sourcePanelConfig.showSourceLabels;
   }
 
   @Selector()
@@ -538,6 +546,11 @@ export class WorkbenchState {
   }
 
   @Selector()
+  public static getSourcePanelConfig(state: WorkbenchStateModel) {
+    return state.sourcePanelConfig;
+  }
+
+  @Selector()
   public static getAligningPanelConfig(state: WorkbenchStateModel) {
     return state.aligningPanelConfig;
   }
@@ -553,23 +566,13 @@ export class WorkbenchState {
   }
 
   @Selector()
-  public static getPhotometrySelectedSourceIds(state: WorkbenchStateModel) {
-    return state.photometryPanelConfig.selectedSourceIds;
+  public static getSourceCoordMode(state: WorkbenchStateModel) {
+    return state.sourcePanelConfig.coordMode;
   }
 
   @Selector()
-  public static getPhotometryCoordMode(state: WorkbenchStateModel) {
-    return state.photometryPanelConfig.coordMode;
-  }
-
-  @Selector()
-  public static getPhotometryShowSourcesFromAllFiles(state: WorkbenchStateModel) {
-    return state.photometryPanelConfig.showSourcesFromAllFiles;
-  }
-
-  @Selector()
-  public static getPhotometryShowSourceLabels(state: WorkbenchStateModel) {
-    return state.photometryPanelConfig.showSourceLabels;
+  public static getShowSourcesFromAllFiles(state: WorkbenchStateModel) {
+    return state.sourcePanelConfig.showSourcesFromAllFiles;
   }
 
   @Selector()
@@ -769,6 +772,16 @@ export class WorkbenchState {
     return (photometryPanelStateId: string) => {
       return entities[photometryPanelStateId];
     };
+  }
+
+
+  /**
+   * Sources
+   */
+
+  @Selector()
+  public static getSourcePanelStateEntities(state: WorkbenchStateModel) {
+    return state.sourcePanelStateEntities;
   }
 
   /** File Filtering and Selection
@@ -1261,6 +1274,20 @@ export class WorkbenchState {
         if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageHduState;
           return photometryPanelStateEntities[s.photometryPanelStateId] || null;
+        } else {
+          return null;
+        }
+      }
+    );
+  }
+
+  static getSourcePanelStateByViewerId(viewerId: string) {
+    return createSelector(
+      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSourcePanelStateEntities],
+      (workbenchState: IWorkbenchState, sourcePanelStateEntities: { [id: string]: SourcePanelState }) => {
+        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+          let s = workbenchState as WorkbenchImageHduState;
+          return sourcePanelStateEntities[s.sourcePanelStateId] || null;
         } else {
           return null;
         }
@@ -2205,6 +2232,21 @@ export class WorkbenchState {
       }
       state.photometryPanelConfig = {
         ...state.photometryPanelConfig,
+        ...changes,
+      };
+      return state;
+    });
+  }
+
+  @Action(UpdateSourcePanelConfig)
+  @ImmutableContext()
+  public updateSourcePanelConfig(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateSourcePanelConfig
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.sourcePanelConfig = {
+        ...state.sourcePanelConfig,
         ...changes,
       };
       return state;
@@ -3249,7 +3291,7 @@ export class WorkbenchState {
     let state = getState();
 
     setState((state: WorkbenchStateModel) => {
-      state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.filter(
+      state.sourcePanelConfig.selectedSourceIds = state.sourcePanelConfig.selectedSourceIds.filter(
         (id) => !sourceIds.includes(id)
       );
       return state;
@@ -3268,8 +3310,8 @@ export class WorkbenchState {
     if (!imageHdu) return;
     let hduId = imageHdu.id;
 
-    let coordMode = state.photometryPanelConfig.coordMode;
-    let showSourcesFromAllFiles = state.photometryPanelConfig.showSourcesFromAllFiles;
+    let coordMode = state.sourcePanelConfig.coordMode;
+    let showSourcesFromAllFiles = state.sourcePanelConfig.showSourcesFromAllFiles;
     let sources = this.store.selectSnapshot(SourcesState.getSources);
 
 
@@ -3380,7 +3422,7 @@ export class WorkbenchState {
     if (!imageHdu) return;
     let hduId = imageHdu.id;
 
-    let coordMode = state.photometryPanelConfig.coordMode;
+    let coordMode = state.sourcePanelConfig.coordMode;
     let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId))
     let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId))
 
@@ -3613,13 +3655,19 @@ export class WorkbenchState {
           id: photometryPanelStateId,
           sourceExtractionJobId: '',
           sourcePhotometryData: {},
-          markerSelectionRegion: null,
           autoPhotIsValid: false,
           autoPhotJobId: '',
           autoCalIsValid: false,
           autoCalJobId: '',
         };
         state.photometryPanelStateIds.push(photometryPanelStateId);
+
+        let sourcePanelStateId = `SOURCE_PANEL_${state.nextSourcePanelStateId++}`;
+        state.sourcePanelStateEntities[sourcePanelStateId] = {
+          id: sourcePanelStateId,
+          markerSelectionRegion: null,
+        };
+        state.sourcePanelStateIds.push(sourcePanelStateId);
 
         let imageHduState: WorkbenchImageHduState = {
           id: workbenchStateId,
@@ -3628,6 +3676,7 @@ export class WorkbenchState {
           customMarkerPanelStateId: customMarkerPanelStateId,
           sonificationPanelStateId: sonificationPanelStateId,
           photometryPanelStateId: photometryPanelStateId,
+          sourcePanelStateId: sourcePanelStateId
         };
 
         workbenchState = imageHduState;
@@ -4109,39 +4158,39 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdatePhotometrySourceSelectionRegion)
+  @Action(UpdateSourceSelectionRegion)
   @ImmutableContext()
-  public updatePhotometryMarkerRegionSelection(
+  public updateSourceRegionSelection(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, region }: UpdatePhotometrySourceSelectionRegion
+    { hduId, region }: UpdateSourceSelectionRegion
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
       if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
       let hduState = workbenchState as WorkbenchImageHduState;
-      let photPanelStateId = hduState.photometryPanelStateId;
-      let photState = state.photometryPanelStateEntities[photPanelStateId];
-      photState.markerSelectionRegion = {
+      let sourcePanelStateId = hduState.sourcePanelStateId;
+      let sourceState = state.sourcePanelStateEntities[sourcePanelStateId];
+      sourceState.markerSelectionRegion = {
         ...region,
       };
       return state;
     });
   }
 
-  @Action(EndPhotometrySourceSelectionRegion)
+  @Action(EndSourceSelectionRegion)
   @ImmutableContext()
-  public endPhotometryMarkerRegionSelection(
+  public endSourceRegionSelection(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { hduId, mode }: EndPhotometrySourceSelectionRegion
+    { hduId, mode }: EndSourceSelectionRegion
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.hduIdToWorkbenchStateIdMap[hduId]];
       if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
       let hduState = workbenchState as WorkbenchImageHduState;
-      let photPanelStateId = hduState.photometryPanelStateId;
-      let photState = state.photometryPanelStateEntities[photPanelStateId];
+      let sourcePanelStateId = hduState.sourcePanelStateId;
+      let sourcesState = state.sourcePanelStateEntities[sourcePanelStateId];
 
-      let region = photState.markerSelectionRegion;
+      let region = sourcesState.markerSelectionRegion;
       let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(hduId));
       if (!header || !region) return state;
 
@@ -4159,16 +4208,16 @@ export class WorkbenchState {
         .map((source) => source.id);
 
       if (mode == 'remove') {
-        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.filter(
+        state.sourcePanelConfig.selectedSourceIds = state.sourcePanelConfig.selectedSourceIds.filter(
           (id) => !sourceIds.includes(id)
         );
       } else {
-        let filteredSourceIds = sourceIds.filter((id) => !state.photometryPanelConfig.selectedSourceIds.includes(id));
-        state.photometryPanelConfig.selectedSourceIds = state.photometryPanelConfig.selectedSourceIds.concat(
+        let filteredSourceIds = sourceIds.filter((id) => !state.sourcePanelConfig.selectedSourceIds.includes(id));
+        state.sourcePanelConfig.selectedSourceIds = state.sourcePanelConfig.selectedSourceIds.concat(
           filteredSourceIds
         );
       }
-      photState.markerSelectionRegion = null;
+      sourcesState.markerSelectionRegion = null;
 
       return state;
     });
@@ -4601,16 +4650,28 @@ export class WorkbenchState {
       // prevent infinite loop by checking values
       // TODO: refactor normalizations to separate entities with IDs
       if (
+        normalization.mode == hdu.normalizer.mode &&
+        normalization.stretchMode == hdu.normalizer.stretchMode &&
+        normalization.peakLevel == hdu.normalizer.peakLevel &&
         normalization.peakPercentile == hdu.normalizer.peakPercentile &&
-        normalization.backgroundPercentile == hdu.normalizer.backgroundPercentile
+        normalization.backgroundPercentile == hdu.normalizer.backgroundPercentile &&
+        normalization.backgroundLevel == hdu.normalizer.backgroundLevel &&
+        normalization.midPercentile == hdu.normalizer.midPercentile &&
+        normalization.midLevel == hdu.normalizer.midLevel
       ) {
         return;
       }
 
       actions.push(
         new UpdateNormalizer(hdu.id, {
-          peakPercentile: normalization.peakPercentile,
+          mode: normalization.mode,
+          stretchMode: normalization.stretchMode,
+          backgroundLevel: normalization.backgroundLevel,
           backgroundPercentile: normalization.backgroundPercentile,
+          midLevel: normalization.midLevel,
+          midPercentile: normalization.midPercentile,
+          peakLevel: normalization.peakLevel,
+          peakPercentile: normalization.peakPercentile,
         })
       );
     });

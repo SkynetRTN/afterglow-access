@@ -1,4 +1,12 @@
 <div *ngIf="hduIds">
+  <p i18n>
+    WCS calibration extracts sources from your images and attempts to match them to catalogs. If a successful
+    match is found, WCS header entries are added to the file and can be used to map between pixel
+    and sky coordinates.
+  </p>
+  <p i18n>
+    Turn on the source extraction overlay to preview which sources will be used in the WCS calibration.
+  </p>
   <form [formGroup]="wcsCalibrationForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px">

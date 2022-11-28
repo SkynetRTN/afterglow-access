@@ -292,10 +292,16 @@ export class SetFileColorBalanceMode {
   constructor(public fileId: string, public value: ColorBalanceMode) { }
 }
 
-export class SetFileNormalizerSync {
-  public static readonly type = '[Workbench HDU State] SetFileNormalizerSync';
+// export class SetFileNormalizerSync {
+//   public static readonly type = '[Workbench HDU State] SetFileNormalizerSync';
 
-  constructor(public fileId: string, public value: boolean) { }
+//   constructor(public fileId: string, public value: boolean) { }
+// }
+
+export class SyncFileNormalizers {
+  public static readonly type = '[Workbench HDU State] Sync File Normalizers';
+
+  constructor(public fileId: string, public refHduId: string) { }
 }
 
 export class InvalidateNormalizedImageTiles {
