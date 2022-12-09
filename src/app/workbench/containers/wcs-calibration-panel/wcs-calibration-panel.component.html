@@ -9,6 +9,13 @@
   </p>
   <form [formGroup]="wcsCalibrationForm">
     <div>
+      <div class="flex flex-row" fxLayoutGap="20px">
+        <mat-slide-toggle formControlName="showOverlay" [labelPosition]="'before'" i18n>
+          Show extraction overlay
+        </mat-slide-toggle>
+        <button mat-raised-button>Open Source Extraction Settings</button>
+      </div>
+
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Calibrate</mat-label>
         <mat-select multiple formControlName="selectedHduIds">

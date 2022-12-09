@@ -154,6 +154,7 @@ export interface WcsCalibrationSettings {
   minScale?: number;
   maxScale?: number;
   maxSources?: number;
+  showOverlay: boolean;
 }
 
 export interface ViewerPanelContainer {

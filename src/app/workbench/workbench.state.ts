@@ -247,7 +247,7 @@ import { Job } from '../jobs/models/job';
 import { SourcePanelState } from './models/source-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '2a70de54-74d2-485a-ad7a-0038847809cc',
+  version: '2a70de54-74d2-485a-ad7a-00347809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -361,6 +361,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     maxScale: 10,
     radius: 1,
     maxSources: 100,
+    showOverlay: false
   },
   catalogs: [],
   selectedCatalogId: '',

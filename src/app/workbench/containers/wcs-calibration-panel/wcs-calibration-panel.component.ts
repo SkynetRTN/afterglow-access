@@ -30,6 +30,7 @@ import {
 } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
 import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-wcs-calibration-panel',
@@ -76,6 +77,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     minScale: new FormControl('', this.minZero),
     maxScale: new FormControl('', this.minZero),
     maxSources: new FormControl('', this.minZero),
+    showOverlay: new FormControl('')
   });
 
   constructor(private store: Store, private dialog: MatDialog) {
@@ -125,6 +127,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
               minScale: settings.minScale,
               maxScale: settings.maxScale,
               maxSources: settings.maxSources,
+              showOverlay: settings.showOverlay
             },
             { emitEvent: false }
           );
@@ -132,22 +135,15 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       });
 
     this.wcsCalibrationForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+
+      this.store.dispatch(
+        new UpdateWcsCalibrationSettings({
+          showOverlay: value.showOverlay
+        })
+      );
+
       if (this.wcsCalibrationForm.valid) {
         this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: value.selectedHduIds }));
-
-        // let raString: string = value.ra;
-        // let ra: number = null;
-        // if (raString && raString.trim() != '') {
-        //   ra = Number(raString);
-        //   if (isNaN(ra)) ra = parseDms(raString);
-        // }
-
-        // let decString: string = value.dec;
-        // let dec: number = null;
-        // if (decString && decString.trim() != '') {
-        //   dec = Number(decString);
-        //   if (isNaN(dec)) dec = parseDms(decString);
-        // }
         this.store.dispatch(
           new UpdateWcsCalibrationSettings({
             ra: value.ra,
@@ -155,7 +151,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
             radius: value.radius,
             maxScale: value.maxScale,
             minScale: value.minScale,
-            maxSources: value.maxSources,
+            maxSources: value.maxSources
           })
         );
       }
@@ -186,6 +182,10 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
   onClearSelectionBtnClick() {
     this.setSelectedHduIds([]);
+  }
+
+  onShowOverlayChange($event: MatCheckboxChange) {
+    this.store.dispatch(new UpdateWcsCalibrationSettings({ showOverlay: $event.checked }))
   }
 
   onSubmitClick() {
