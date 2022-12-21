@@ -213,7 +213,7 @@ export class DataFilesState {
     });
   }
 
-  /** HDU Selectors */
+  /** Layer Selectors */
 
   @Selector()
   public static getLayerEntities(state: DataFilesStateModel) {
@@ -255,7 +255,7 @@ export class DataFilesState {
     });
   }
 
-  /** File/HDU/Header Join Selectors */
+  /** File/Layer/Header Join Selectors */
 
   public static getFileByLayerId(id: string) {
     return createSelector(
@@ -520,7 +520,7 @@ export class DataFilesState {
           state.layerIds = state.layerIds.filter((id) => !deletedLayerIds.includes(id));
           deletedLayerIds.forEach((id) => delete state.layerEntities[id]);
 
-          // remove data files which are no longer found in the HDUs
+          // remove data files which are no longer found in the Layers
           let fileIds = dataFiles.map((file) => file.id);
           let deletedFileIds = state.fileIds.filter((id) => !fileIds.includes(id));
           state.fileIds = state.fileIds.filter((id) => !deletedFileIds.includes(id));
@@ -537,7 +537,7 @@ export class DataFilesState {
                 name: layer.name
               };
             } else {
-              //add the new HDU
+              //add the new Layer
               let header: Header = {
                 id: `HEADER_${state.nextIdSeed++}`,
                 entries: [],
@@ -715,7 +715,7 @@ export class DataFilesState {
     initialized: boolean;
   }) {
     if (id && id in state.imageDataEntities) {
-      // HDU already has initialized raw image data
+      // Layer already has initialized raw image data
       let imageData = state.imageDataEntities[id];
       if (imageData.width != ref.width ||
         imageData.height != ref.height ||
@@ -883,10 +883,10 @@ export class DataFilesState {
 
 
             layer.rawImageDataId = this.initializeImageData(state, layer.rawImageDataId, 'RAW_IMAGE_DATA', layerBase)
-            layer.rgbaImageDataId = this.initializeImageData(state, layer.rgbaImageDataId, 'HDU_COMPOSITE_IMAGE_DATA', layerBase)
-            // layer.redChannelId = initializeImageData(layer.redChannelId, 'HDU_RED_IMAGE_DATA', layerBase)
-            // layer.greenChannelId = initializeImageData(layer.greenChannelId, 'HDU_GREEN_IMAGE_DATA', layerBase)
-            // layer.blueChannelId = initializeImageData(layer.blueChannelId, 'HDU_BLUE_IMAGE_DATA', layerBase)
+            layer.rgbaImageDataId = this.initializeImageData(state, layer.rgbaImageDataId, 'Layer_COMPOSITE_IMAGE_DATA', layerBase)
+            // layer.redChannelId = initializeImageData(layer.redChannelId, 'Layer_RED_IMAGE_DATA', layerBase)
+            // layer.greenChannelId = initializeImageData(layer.greenChannelId, 'Layer_GREEN_IMAGE_DATA', layerBase)
+            // layer.blueChannelId = initializeImageData(layer.blueChannelId, 'Layer_BLUE_IMAGE_DATA', layerBase)
 
             //initialize transforms
             if (!state.transformEntities[layer.imageTransformId]) {

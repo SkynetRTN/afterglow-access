@@ -545,7 +545,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
 
     if (!this.viewer.layerId) {
-      // a specific HDU has not been selected in the viewer
+      // a specific Layer has not been selected in the viewer
       let file = dataFileEntities[this.viewer.fileId];
       if (!file) return;
       layerIds = file.layerIds;
@@ -557,10 +557,10 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     layers.forEach((layer) => {
       let layerId = layer.id;
 
-      //ensure updated copies of HDU info is retrieved at the start of each loop
+      //ensure updated copies of Layer info is retrieved at the start of each loop
       let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
       let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-      // console.log("CHECKING HDU: ", layerId, this.layerLoading[layerId])
+      // console.log("CHECKING Layer: ", layerId, this.layerLoading[layerId])
 
       let imageLayer = layer as ImageLayer;
       let header = headerEntities[layer.headerId];

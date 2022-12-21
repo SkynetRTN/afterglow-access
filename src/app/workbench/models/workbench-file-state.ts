@@ -6,8 +6,8 @@ import { LayerType } from '../../data-files/models/data-file-type';
 
 export enum WorkbenchStateType {
   FILE = 'file',
-  IMAGE_HDU = 'image',
-  TABLE_HDU = 'table',
+  IMAGE_Layer = 'image',
+  TABLE_Layer = 'table',
 }
 export interface IWorkbenchState {
   id: string;
@@ -21,7 +21,7 @@ export interface WorkbenchFileState extends IWorkbenchState {
 }
 
 export interface WorkbenchImageLayerState extends IWorkbenchState {
-  type: WorkbenchStateType.IMAGE_HDU;
+  type: WorkbenchStateType.IMAGE_Layer;
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
   sonificationPanelStateId: string;
@@ -31,5 +31,5 @@ export interface WorkbenchImageLayerState extends IWorkbenchState {
 }
 
 export interface WorkbenchTableLayerState extends IWorkbenchState {
-  type: WorkbenchStateType.TABLE_HDU;
+  type: WorkbenchStateType.TABLE_Layer;
 }

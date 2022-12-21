@@ -210,7 +210,7 @@
   <msg id="1043691197702375787"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:26</source>Tip: To click beneath existing markers hold</msg>
   <msg id="7751179932990586298"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:32</source>Marker Customization</msg>
   <msg id="3423526206544022786"><source>src/app/workbench/containers/custom-marker-panel/custom-marker-panel.component.html:40</source>Delete Selected Markers</msg>
-  <msg id="6960783712844311385"><source>src/app/workbench/containers/data-file-list/data-file-list.component.html:52</source>Rename HDU</msg>
+  <msg id="6960783712844311385"><source>src/app/workbench/containers/data-file-list/data-file-list.component.html:52</source>Rename Layer</msg>
   <msg id="218381479949272165"><source>src/app/workbench/containers/data-file-list/data-file-list.component.html:56</source>Blend Mode</msg>
   <msg id="2673243192518037419"><source>src/app/workbench/containers/display-panel/display-panel.component.html:1</source>Select a file or image layer to see the display settings.</msg>
   <msg id="6205896761596395655"><source>src/app/workbench/containers/display-panel/display-panel.component.html:5</source>Select an image layer to adjust brightness and contrast settings.</msg>

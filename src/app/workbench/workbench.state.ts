@@ -1249,7 +1249,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getCustomMarkerPanelStateEntities],
       (workbenchState: IWorkbenchState, customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchFileState | WorkbenchImageLayerState;
           return customMarkerPanelStateEntities[s.customMarkerPanelStateId] || null;
         } else {
@@ -1263,7 +1263,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPlottingPanelStateEntities],
       (workbenchState: IWorkbenchState, plottingPanelStateEntities: { [id: string]: PlottingPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchFileState | WorkbenchImageLayerState;
           return plottingPanelStateEntities[s.plottingPanelStateId] || null;
         } else {
@@ -1277,7 +1277,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSonificationPanelStateEntities],
       (workbenchState: IWorkbenchState, sonificationPanelStateEntities: { [id: string]: SonificationPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           let result = sonificationPanelStateEntities[s.sonificationPanelStateId];
           return sonificationPanelStateEntities[s.sonificationPanelStateId] || null;
@@ -1292,7 +1292,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPhotometryPanelStateEntities],
       (workbenchState: IWorkbenchState, photometryPanelStateEntities: { [id: string]: PhotometryPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           return photometryPanelStateEntities[s.photometryPanelStateId] || null;
         } else {
@@ -1306,7 +1306,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getWcsCalibrationPanelStateEntities],
       (workbenchState: IWorkbenchState, wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           return wcsCalibrationPanelStateEntities[s.wcsCalibrationPanelStateId] || null;
         } else {
@@ -1320,7 +1320,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSourcePanelStateEntities],
       (workbenchState: IWorkbenchState, sourcePanelStateEntities: { [id: string]: SourcePanelState }) => {
-        if ([WorkbenchStateType.IMAGE_HDU].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           return sourcePanelStateEntities[s.sourcePanelStateId] || null;
         } else {
@@ -1407,7 +1407,7 @@ export class WorkbenchState {
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
 
-    //load visible HDUs which were pulled from local storage
+    //load visible Layers which were pulled from local storage
     let viewerEntities = state.viewers;
     let viewers = Object.values(this.store.selectSnapshot(WorkbenchState.getViewerPanelEntities))
       .map((panel) => panel.selectedViewerId)
@@ -2393,7 +2393,7 @@ export class WorkbenchState {
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+    if (workbenchState.type == WorkbenchStateType.IMAGE_Layer) {
       let layerState = workbenchState as WorkbenchImageLayerState;
       let wcsCalibrationPanelStateId = layerState.wcsCalibrationPanelStateId;
 
@@ -2676,7 +2676,7 @@ export class WorkbenchState {
     }
 
     //check if existing viewer is available
-    // if no HDU is specified,  use an image viewer for composite image data
+    // if no Layer is specified,  use an image viewer for composite image data
     let focusedPanel: ViewerPanel = state.viewerLayoutItems[state.focusedViewerPanelId] as ViewerPanel;
     let targetViewerType = !layer || layer.type == LayerType.IMAGE ? ViewerType.IMAGE : ViewerType.TABLE;
     targetViewer = viewers.find(
@@ -2780,7 +2780,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
     let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId] as ImageLayer;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let sonifierState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
@@ -3424,7 +3424,7 @@ export class WorkbenchState {
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+    if (workbenchState.type == WorkbenchStateType.IMAGE_Layer) {
       let layerState = workbenchState as WorkbenchImageLayerState;
       let photPanelStateId = layerState.photometryPanelStateId;
 
@@ -3525,7 +3525,7 @@ export class WorkbenchState {
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_HDU) {
+    if (workbenchState.type == WorkbenchStateType.IMAGE_Layer) {
       let layerState = workbenchState as WorkbenchImageLayerState;
       let photPanelStateId = layerState.photometryPanelStateId;
 
@@ -3707,7 +3707,7 @@ export class WorkbenchState {
       let workbenchStateId = `WORKBENCH_STATE_${state.nextWorkbenchStateId++}`;
       state.layerIdToWorkbenchStateIdMap[layerId] = workbenchStateId;
 
-      //initialize HDU states
+      //initialize Layer states
       if (layer.type == LayerType.IMAGE) {
         let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`;
         state.plottingPanelStateEntities[plottingPanelStateId] = {
@@ -3772,7 +3772,7 @@ export class WorkbenchState {
 
         let imageLayerState: WorkbenchImageLayerState = {
           id: workbenchStateId,
-          type: WorkbenchStateType.IMAGE_HDU,
+          type: WorkbenchStateType.IMAGE_Layer,
           plottingPanelStateId: plottingPanelStateId,
           customMarkerPanelStateId: customMarkerPanelStateId,
           sonificationPanelStateId: sonificationPanelStateId,
@@ -3789,7 +3789,7 @@ export class WorkbenchState {
       } else if (layer.type == LayerType.TABLE) {
         let tableLayerState: WorkbenchTableLayerState = {
           id: workbenchStateId,
-          type: WorkbenchStateType.TABLE_HDU,
+          type: WorkbenchStateType.TABLE_Layer,
         };
 
         workbenchState = tableLayerState;
@@ -3930,7 +3930,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId] as ImageLayer;
     let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[layer.headerId];
@@ -4006,7 +4006,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
 
@@ -4023,7 +4023,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       state.sonificationPanelStateEntities[layerState.sonificationPanelStateId] = {
@@ -4045,7 +4045,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (!sonificationPanelState.regionHistoryInitialized) {
@@ -4071,7 +4071,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (
@@ -4093,7 +4093,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (
@@ -4116,7 +4116,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (
@@ -4139,7 +4139,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       sonificationPanelState.progressLine = line;
@@ -4155,7 +4155,7 @@ export class WorkbenchState {
     let state = getState();
     let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let sonificationPanelStateId = layerState.sonificationPanelStateId;
 
@@ -4249,7 +4249,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
 
     setState((state: WorkbenchStateModel) => {
@@ -4268,7 +4268,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sourcePanelStateId = layerState.sourcePanelStateId;
       let sourceState = state.sourcePanelStateEntities[sourcePanelStateId];
@@ -4287,7 +4287,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sourcePanelStateId = layerState.sourcePanelStateId;
       let sourcesState = state.sourcePanelStateEntities[sourcePanelStateId];
@@ -4333,7 +4333,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let photometryPanelState = state.photometryPanelStateEntities[layerState.photometryPanelStateId];
       state.photometryPanelStateEntities[layerState.photometryPanelStateId] = {
@@ -4542,7 +4542,7 @@ export class WorkbenchState {
       //Photometry data from the Core refers to layer ids as file ids.
       photDatas.forEach((d) => {
         let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[d.fileId]];
-        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_HDU) return;
+        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
         let layerState = workbenchState as WorkbenchImageLayerState;
         if (!d.id) {
           return;
@@ -4564,7 +4564,7 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
         if (layerId === null || layerId === stateId) {
-          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
             return;
           }
           let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4584,7 +4584,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
           return;
         }
         let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4607,7 +4607,7 @@ export class WorkbenchState {
       let workbenchStateIds = state.workbenchStateIds;
       if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
       workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
           return;
         }
         let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4627,7 +4627,7 @@ export class WorkbenchState {
       let workbenchStateIds = state.workbenchStateIds;
       if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
       workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_HDU) {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
           return;
         }
         let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;

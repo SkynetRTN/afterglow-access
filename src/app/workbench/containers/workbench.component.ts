@@ -330,7 +330,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByViewerId(viewerId));
           if (
             !workbenchState ||
-            ![WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_HDU].includes(workbenchState.type)
+            ![WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_Layer].includes(workbenchState.type)
           ) {
             return;
           }

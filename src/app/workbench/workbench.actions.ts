@@ -488,7 +488,7 @@ export class CloseSidenav {
 }
 
 export class InitializeWorkbenchLayerState {
-  public static readonly type = '[Workbench HDU State] Initialize Workbench HDU State';
+  public static readonly type = '[Workbench Layer State] Initialize Workbench Layer State';
 
   constructor(public layerId: string) { }
 }
@@ -569,7 +569,7 @@ export class SonificationCompleted {
 /* Plotting */
 
 export class UpdatePlottingPanelState {
-  public static readonly type = '[Plotter] Update HDU Plotting Panel State';
+  public static readonly type = '[Plotter] Update Layer Plotting Panel State';
 
   constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) { }
 }
@@ -733,7 +733,7 @@ export class AddPhotDatas {
 }
 
 export class RemovePhotDatasByLayerId {
-  public static readonly type = '[Phot Data] Remove Phot Datas By HDU Id';
+  public static readonly type = '[Phot Data] Remove Phot Datas By Layer Id';
 
   constructor(public layerId: string = null) { }
 }

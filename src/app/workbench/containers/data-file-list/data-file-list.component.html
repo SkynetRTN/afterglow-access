@@ -50,7 +50,7 @@
     </ng-container>
     <ng-container *ngIf="layer">
       <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameLayer(layer)">
-        <div class="context-label" fxFlex="1 1 auto" i18n>Rename HDU</div>
+        <div class="context-label" fxFlex="1 1 auto" i18n>Rename Layer</div>
       </div>
       <ng-container *ngIf="isImageLayer(layer)">
         <button mat-menu-item [matMenuTriggerFor]="colorMapMenu" i18n>Color Map</button>
