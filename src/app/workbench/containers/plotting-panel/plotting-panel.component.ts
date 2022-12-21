@@ -17,12 +17,12 @@ import { map, withLatestFrom, switchMap, distinctUntilChanged, takeUntil, tap, s
 import {
   getDegsPerPixel,
   DataFile,
-  ImageHdu,
+  ImageLayer,
   PixelType,
   Header,
   getWidth,
   getHeight,
-  IHdu,
+  ILayer,
 } from '../../../data-files/models/data-file';
 import { PlottingPanelState } from '../../models/plotter-file-state';
 import { PlotterComponent } from '../../components/plotter/plotter.component';
@@ -35,8 +35,8 @@ import { IImageData } from '../../../data-files/models/image-data';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { WorkbenchState } from '../../workbench.state';
-import { HduType } from '../../../data-files/models/data-file-type';
-import { WorkbenchFileState, WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
+import { LayerType } from '../../../data-files/models/data-file-type';
+import { WorkbenchFileState, WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { centroidDisk, centroidPsf } from '../../models/centroider';
 import { StartLine, UpdateLine, UpdatePlottingPanelConfig } from '../../workbench.actions';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -62,7 +62,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
 
   destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
-  layer$: Observable<IHdu>;
+  layer$: Observable<ILayer>;
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
@@ -73,7 +73,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   colorMode$: Observable<'grayscale' | 'rgba'>;
   @ViewChild('plotter') plotter: PlotterComponent;
   PosType = PosType;
-  HduType = HduType;
+  LayerType = LayerType;
   lineStart$: Observable<{
     x: number;
     y: number;
@@ -103,7 +103,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
     );
 
     this.layer$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerByViewerId(viewerId)))
     );
 
     this.header$ = this.viewerId$.pipe(
@@ -262,7 +262,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
           return;
         }
         if ($event.viewer.layerId) {
-          header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId($event.viewer.layerId));
+          header = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId($event.viewer.layerId));
         }
 
         let measuring = state.measuring;
@@ -343,7 +343,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   private getViewerMarkers(viewerId: string) {
     let state$ = this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId));
     let config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
-    let layerHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId));
+    let layerHeader$ = this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId));
     let fileImageHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(viewerId));
     let header$ = combineLatest(layerHeader$, fileImageHeader$).pipe(
       map(([layerHeader, fileHeader]) => layerHeader || fileHeader)

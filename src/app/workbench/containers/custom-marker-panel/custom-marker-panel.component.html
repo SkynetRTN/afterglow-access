@@ -1,4 +1,4 @@
-<ng-template #invalidHduTypeBlock>
+<ng-template #invalidLayerTypeBlock>
   <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the custom marker tool.</div>
 </ng-template>
 
@@ -8,7 +8,7 @@
 
 <ng-container *ngIf="file$ | async; else fileNotSelectedBlock">
   <div fxLayout="column" fxLayoutGap="10px"
-    *ngIf="!(layer$ | async) || (layer$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
+    *ngIf="!(layer$ | async) || (layer$ | async).type == LayerType.IMAGE; else invalidLayerTypeBlock">
     <ng-container *ngIf="config$ | async; let config">
       <div fxLayout="row" fxLayoutGap="15px">
         <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"

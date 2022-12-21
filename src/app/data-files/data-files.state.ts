@@ -13,17 +13,17 @@ import {
 import { Point, Matrix, Rectangle } from 'paper';
 import {
   DataFile,
-  ImageHdu,
-  IHdu,
+  ImageLayer,
+  ILayer,
   PixelType,
   getWidth,
   getHeight,
   PixelPrecision,
-  TableHdu,
+  TableLayer,
   hasOverlap,
   Header,
   getFilter,
-  isImageHdu,
+  isImageLayer,
   hasKey,
   getHeaderEntry,
   ColorBalanceMode,
@@ -49,8 +49,8 @@ import {
   LoadImageLayerHistogramSuccess,
   LoadRawImageTile,
   LoadRawImageTileSuccess,
-  CloseHduSuccess,
-  CloseHduFail,
+  CloseLayerSuccess,
+  CloseLayerFail,
   LoadLayer,
   CloseDataFileSuccess,
   CloseDataFileFail,
@@ -97,7 +97,7 @@ import {
   UpdateBlendModeSuccess,
   SyncFileNormalizers,
 } from './data-files.actions';
-import { HduType } from './models/data-file-type';
+import { LayerType } from './models/data-file-type';
 import { env } from '../../environments/environment';
 import { Wcs } from '../image-tools/wcs';
 import { Initialize } from '../workbench/workbench.actions';
@@ -133,7 +133,7 @@ export interface DataFilesStateModel {
   fileIds: string[];
   fileEntities: { [id: string]: DataFile };
   layerIds: string[];
-  layerEntities: { [id: string]: IHdu };
+  layerEntities: { [id: string]: ILayer };
   headerIds: string[];
   headerEntities: { [id: string]: Header };
   imageDataEntities: { [id: string]: IImageData<PixelType> };
@@ -216,23 +216,23 @@ export class DataFilesState {
   /** HDU Selectors */
 
   @Selector()
-  public static getHduEntities(state: DataFilesStateModel) {
+  public static getLayerEntities(state: DataFilesStateModel) {
     return state.layerEntities;
   }
 
   @Selector()
-  static getHdus(state: DataFilesStateModel) {
+  static getLayers(state: DataFilesStateModel) {
     return Object.values(state.layerEntities);
   }
 
-  public static getHduById(id: string) {
-    return createSelector([DataFilesState.getHduEntities], (layerEntities: { [id: string]: IHdu }) => {
+  public static getLayerById(id: string) {
+    return createSelector([DataFilesState.getLayerEntities], (layerEntities: { [id: string]: ILayer }) => {
       return layerEntities[id] || null;
     });
   }
 
-  public static getHdusByIds(ids: string[]) {
-    return createSelector([DataFilesState.getHduEntities], (layerEntities: { [id: string]: IHdu }) => {
+  public static getLayersByIds(ids: string[]) {
+    return createSelector([DataFilesState.getLayerEntities], (layerEntities: { [id: string]: ILayer }) => {
       return ids.map((id) => layerEntities[id]);
     });
   }
@@ -257,52 +257,52 @@ export class DataFilesState {
 
   /** File/HDU/Header Join Selectors */
 
-  public static getFileByHduId(id: string) {
+  public static getFileByLayerId(id: string) {
     return createSelector(
-      [DataFilesState.getHduById(id), DataFilesState.getFileEntities],
-      (layer: IHdu, fileEntities: { [id: string]: DataFile }) => {
+      [DataFilesState.getLayerById(id), DataFilesState.getFileEntities],
+      (layer: ILayer, fileEntities: { [id: string]: DataFile }) => {
         return fileEntities[layer?.fileId] || null;
       }
     );
   }
 
-  public static getHdusByFileId(id: string) {
+  public static getLayersByFileId(id: string) {
     return createSelector(
-      [DataFilesState.getFileById(id), DataFilesState.getHduEntities],
-      (file: DataFile, layerEntities: { [id: string]: IHdu }) => {
+      [DataFilesState.getFileById(id), DataFilesState.getLayerEntities],
+      (file: DataFile, layerEntities: { [id: string]: ILayer }) => {
         if (!file) return [];
         return file.layerIds.map((layerId) => layerEntities[layerId]).sort((a, b) => (a?.order > b?.order ? 1 : -1));
       }
     );
   }
 
-  public static getFirstHduByFileId(id: string) {
-    return createSelector([DataFilesState.getHdusByFileId(id)], (layers: IHdu[]) => {
+  public static getFirstLayerByFileId(id: string) {
+    return createSelector([DataFilesState.getLayersByFileId(id)], (layers: ILayer[]) => {
       if (!layers) return null;
       return layers.length == 0 ? null : layers[0];
     });
   }
 
-  public static getFirstImageHduByFileId(id: string) {
-    return createSelector([DataFilesState.getHdusByFileId(id)], (layers: IHdu[]) => {
+  public static getFirstImageLayerByFileId(id: string) {
+    return createSelector([DataFilesState.getLayersByFileId(id)], (layers: ILayer[]) => {
       if (!layers) return null;
-      layers = layers.filter((layer) => layer.type == HduType.IMAGE);
-      return layers.length == 0 ? null : (layers[0] as ImageHdu);
+      layers = layers.filter((layer) => layer.type == LayerType.IMAGE);
+      return layers.length == 0 ? null : (layers[0] as ImageLayer);
     });
   }
 
-  public static getFirstTableHduByFileId(id: string) {
-    return createSelector([DataFilesState.getHdusByFileId(id)], (layers: IHdu[]) => {
+  public static getFirstTableLayerByFileId(id: string) {
+    return createSelector([DataFilesState.getLayersByFileId(id)], (layers: ILayer[]) => {
       if (!layers) return null;
-      layers = layers.filter((layer) => layer.type == HduType.TABLE);
-      return layers.length == 0 ? null : (layers[0] as ImageHdu);
+      layers = layers.filter((layer) => layer.type == LayerType.TABLE);
+      return layers.length == 0 ? null : (layers[0] as ImageLayer);
     });
   }
 
-  public static getHeaderByHduId(id: string) {
+  public static getHeaderByLayerId(id: string) {
     return createSelector(
-      [DataFilesState.getHduById(id), DataFilesState.getHeaderEntities],
-      (layer: IHdu, headerEntities: { [id: string]: Header }) => {
+      [DataFilesState.getLayerById(id), DataFilesState.getHeaderEntities],
+      (layer: ILayer, headerEntities: { [id: string]: Header }) => {
         return headerEntities[layer?.headerId] || null;
       }
     );
@@ -390,7 +390,7 @@ export class DataFilesState {
         return this.dataFileService.removeFile(layerId).pipe(
           flatMap((result) => {
             //allow other modules to react to closing of file prior to removing it from the application state
-            return dispatch(new CloseHduSuccess(layerId)).pipe(
+            return dispatch(new CloseLayerSuccess(layerId)).pipe(
               take(1),
               tap((v) => {
                 setState((state: DataFilesStateModel) => {
@@ -406,7 +406,7 @@ export class DataFilesState {
               })
             );
           }),
-          catchError((err) => dispatch(new CloseHduFail(layerId, err)))
+          catchError((err) => dispatch(new CloseLayerFail(layerId, err)))
         );
       })
     ).pipe(
@@ -448,13 +448,13 @@ export class DataFilesState {
     let dataFile = state.fileEntities[fileId] as DataFile;
     let actions: any[] = [];
 
-    let layers = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId));
+    let layers = this.store.selectSnapshot(DataFilesState.getLayersByFileId(fileId));
     layers.forEach((layer) => {
       let header = state.headerEntities[layer.headerId];
       if (
         !header ||
         ((!header.loaded || !header.isValid) && !header.loading) ||
-        (layer.type == HduType.IMAGE && !(layer as ImageHdu).hist.loaded && !(layer as ImageHdu).hist.loading)
+        (layer.type == LayerType.IMAGE && !(layer as ImageLayer).hist.loaded && !(layer as ImageLayer).hist.loading)
       ) {
         actions.push(new LoadLayer(layer.id));
       }
@@ -474,11 +474,11 @@ export class DataFilesState {
       tap((resp) => {
         let coreFiles = resp.data;
         let actions: any[] = [];
-        let layers: IHdu[] = [];
+        let layers: ILayer[] = [];
         let dataFiles: DataFile[] = [];
 
         coreFiles.forEach((coreFile, index) => {
-          let layer: IHdu = {
+          let layer: ILayer = {
             id: coreFile.id,
             loading: false,
             loaded: false,
@@ -500,8 +500,8 @@ export class DataFilesState {
               dataProviderId: coreFile.dataProvider,
               name: coreFile.groupName,
               layerIds: [layer.id],
-              imageHduIds: layer.type == HduType.IMAGE ? [layer.id] : [],
-              tableHduIds: layer.type == HduType.TABLE ? [layer.id] : [],
+              imageLayerIds: layer.type == LayerType.IMAGE ? [layer.id] : [],
+              tableLayerIds: layer.type == LayerType.TABLE ? [layer.id] : [],
               viewportTransformId: '',
               imageTransformId: '',
               rgbaImageDataId: '',
@@ -512,10 +512,10 @@ export class DataFilesState {
             dataFiles.push(dataFile);
           } else {
             dataFile.layerIds.push(layer.id);
-            if (layer.type == HduType.IMAGE) {
-              dataFile.imageHduIds.push(layer.id);
-            } else if (layer.type == HduType.TABLE) {
-              dataFile.tableHduIds.push(layer.id);
+            if (layer.type == LayerType.IMAGE) {
+              dataFile.imageLayerIds.push(layer.id);
+            } else if (layer.type == LayerType.TABLE) {
+              dataFile.tableLayerIds.push(layer.id);
             }
           }
         });
@@ -523,9 +523,9 @@ export class DataFilesState {
         setState((state: DataFilesStateModel) => {
           //remove layers which are no longer present
           let layerIds = layers.map((layer) => layer.id);
-          let deletedHduIds = state.layerIds.filter((id) => !layerIds.includes(id));
-          state.layerIds = state.layerIds.filter((id) => !deletedHduIds.includes(id));
-          deletedHduIds.forEach((id) => delete state.layerEntities[id]);
+          let deletedLayerIds = state.layerIds.filter((id) => !layerIds.includes(id));
+          state.layerIds = state.layerIds.filter((id) => !deletedLayerIds.includes(id));
+          deletedLayerIds.forEach((id) => delete state.layerEntities[id]);
 
           // remove data files which are no longer found in the HDUs
           let fileIds = dataFiles.map((file) => file.id);
@@ -557,11 +557,11 @@ export class DataFilesState {
               state.headerIds.push(header.id);
               state.headerEntities[header.id] = header;
 
-              if (layer.type == HduType.IMAGE) {
-                let imageHdu: ImageHdu = {
+              if (layer.type == LayerType.IMAGE) {
+                let imageLayer: ImageLayer = {
                   ...layer,
                   headerId: header.id,
-                  type: HduType.IMAGE,
+                  type: LayerType.IMAGE,
                   precision: PixelPrecision.float32,
                   blendMode: BlendMode.Screen,
                   visible: true,
@@ -593,14 +593,14 @@ export class DataFilesState {
                     layerOffset: 0,
                   },
                 };
-                layer = imageHdu;
-              } else if (layer.type == HduType.TABLE) {
-                let tableHdu: TableHdu = {
+                layer = imageLayer;
+              } else if (layer.type == LayerType.TABLE) {
+                let tableLayer: TableLayer = {
                   ...layer,
                   headerId: header.id,
-                  type: HduType.TABLE,
+                  type: LayerType.TABLE,
                 };
-                layer = tableHdu;
+                layer = tableLayer;
               } else {
                 return;
               }
@@ -620,8 +620,8 @@ export class DataFilesState {
                 dataProviderId: file.dataProviderId,
                 name: file.name,
                 layerIds: file.layerIds,
-                imageHduIds: file.imageHduIds,
-                tableHduIds: file.tableHduIds,
+                imageLayerIds: file.imageLayerIds,
+                tableLayerIds: file.tableLayerIds,
               };
             } else {
               state.fileIds.push(file.id);
@@ -651,7 +651,7 @@ export class DataFilesState {
 
   @Action(LoadLayer)
   @ImmutableContext()
-  public loadHdu({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { layerId }: LoadLayer) {
+  public loadLayer({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { layerId }: LoadLayer) {
     let actions: any[] = [];
     let pendingActions = [];
     let state = getState();
@@ -673,9 +673,9 @@ export class DataFilesState {
       actions.push(new LoadLayerHeader(layer.id));
     }
 
-    if (layer.type == HduType.IMAGE) {
-      let imageHdu = layer as ImageHdu;
-      if (imageHdu.hist.loading) {
+    if (layer.type == LayerType.IMAGE) {
+      let imageLayer = layer as ImageLayer;
+      if (imageLayer.hist.loading) {
         pendingActions.push(
           this.actions$.pipe(
             ofActionCompleted(LoadImageLayerHistogram),
@@ -686,8 +686,8 @@ export class DataFilesState {
             take(1)
           )
         );
-      } else if (!imageHdu.hist.loaded) {
-        actions.push(new LoadImageLayerHistogram(imageHdu.id));
+      } else if (!imageLayer.hist.loaded) {
+        actions.push(new LoadImageLayerHistogram(imageLayer.id));
       }
     }
     if (pendingActions.length == 0 && actions.length == 0) {
@@ -754,7 +754,7 @@ export class DataFilesState {
 
   @Action(LoadLayerHeader)
   @ImmutableContext()
-  public loadHduHeader({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { layerId }: LoadLayerHeader) {
+  public loadLayerHeader({ setState, getState, dispatch }: StateContext<DataFilesStateModel>, { layerId }: LoadLayerHeader) {
     let layer = getState().layerEntities[layerId];
     let header = getState().headerEntities[layer?.headerId];
     if (header && header.loading) return;
@@ -799,7 +799,7 @@ export class DataFilesState {
           });
           header.wcs = new Wcs(wcsHeader);
 
-          if (isImageHdu(layer)) {
+          if (isImageLayer(layer)) {
             //extract width and height from the header using FITS standards
             let width = getWidth(header);
             let height = getHeight(header);
@@ -1009,11 +1009,11 @@ export class DataFilesState {
 
   @Action(LoadImageLayerHistogram)
   @ImmutableContext()
-  public loadImageHduHistogram(
+  public loadImageLayerHistogram(
     { setState, getState, dispatch }: StateContext<DataFilesStateModel>,
     { layerId }: LoadImageLayerHistogram
   ) {
-    if (getState().layerEntities[layerId].type != HduType.IMAGE) return null;
+    if (getState().layerEntities[layerId].type != LayerType.IMAGE) return null;
 
     let fileId = getState().layerEntities[layerId].fileId;
     const cancel$ = merge(
@@ -1024,7 +1024,7 @@ export class DataFilesState {
     );
 
     setState((state: DataFilesStateModel) => {
-      let layer = state.layerEntities[layerId] as ImageHdu;
+      let layer = state.layerEntities[layerId] as ImageLayer;
       layer.hist = {
         ...layer.hist,
         loading: true,
@@ -1037,7 +1037,7 @@ export class DataFilesState {
       takeUntil(cancel$),
       tap((hist) => {
         setState((state: DataFilesStateModel) => {
-          let layer = state.layerEntities[layerId] as ImageHdu;
+          let layer = state.layerEntities[layerId] as ImageLayer;
           layer.hist = {
             ...hist,
             initialized: true,
@@ -1050,7 +1050,7 @@ export class DataFilesState {
       flatMap((hist) => {
         let state = getState();
         let layer = state.layerEntities[layerId];
-        if (!isImageHdu(layer)) return of()
+        if (!isImageLayer(layer)) return of()
 
         return dispatch([
           new LoadImageLayerHistogramSuccess(layerId, layer.hist),
@@ -1067,7 +1067,7 @@ export class DataFilesState {
       }),
       catchError((err) => {
         setState((state: DataFilesStateModel) => {
-          let layer = state.layerEntities[layerId] as ImageHdu;
+          let layer = state.layerEntities[layerId] as ImageLayer;
           layer.hist = {
             ...layer.hist,
             loaded: false,
@@ -1087,7 +1087,7 @@ export class DataFilesState {
     { layerId, tileIndex }: LoadRawImageTile
   ) {
     let state = getState();
-    if (state.layerEntities[layerId].type != HduType.IMAGE) return null;
+    if (state.layerEntities[layerId].type != LayerType.IMAGE) return null;
 
     let fileId = getState().layerEntities[layerId].fileId;
     const cancel$ = merge(
@@ -1098,7 +1098,7 @@ export class DataFilesState {
     );
 
     setState((state: DataFilesStateModel) => {
-      let layer = state.layerEntities[layerId] as ImageHdu;
+      let layer = state.layerEntities[layerId] as ImageLayer;
       let imageData = state.imageDataEntities[layer.rawImageDataId];
       let tile = imageData.tiles[tileIndex];
 
@@ -1107,14 +1107,14 @@ export class DataFilesState {
       return state;
     });
 
-    let layer = state.layerEntities[layerId] as ImageHdu;
+    let layer = state.layerEntities[layerId] as ImageLayer;
     let imageData = state.imageDataEntities[layer.rawImageDataId];
     let tile = imageData.tiles[tileIndex];
     return this.dataFileService.getPixels(layerId, layer.precision, tile).pipe(
       takeUntil(cancel$),
       tap((pixels) => {
         setState((state: DataFilesStateModel) => {
-          let layer = state.layerEntities[layerId] as ImageHdu;
+          let layer = state.layerEntities[layerId] as ImageLayer;
           let imageData = state.imageDataEntities[layer.rawImageDataId];
           let tile = imageData.tiles[tileIndex];
           tile.isValid = true;
@@ -1134,7 +1134,7 @@ export class DataFilesState {
       }),
       catchError((err) => {
         setState((state: DataFilesStateModel) => {
-          let layer = state.layerEntities[layerId] as ImageHdu;
+          let layer = state.layerEntities[layerId] as ImageLayer;
           let imageData = state.imageDataEntities[layer.rawImageDataId];
           let tile = imageData.tiles[tileIndex];
           tile.pixelsLoading = false;
@@ -1148,7 +1148,7 @@ export class DataFilesState {
 
   @Action(UpdateLayerHeader)
   @ImmutableContext()
-  public addHduEntries(
+  public addLayerEntries(
     { setState, getState, dispatch }: StateContext<DataFilesStateModel>,
     { layerId, changes }: UpdateLayerHeader) {
     return this.dataFileService.updateHeader(layerId, changes).pipe(
@@ -1156,7 +1156,7 @@ export class DataFilesState {
         //instead of forcing the library to refresh,  set this datafile as modified
 
         setState((state: DataFilesStateModel) => {
-          let layer = state.layerEntities[layerId] as ImageHdu;
+          let layer = state.layerEntities[layerId] as ImageLayer;
           layer.modified = true;
           return state;
         })
@@ -1198,12 +1198,12 @@ export class DataFilesState {
     let state = getState();
     if (
       !(layerId in state.layerEntities) ||
-      state.layerEntities[layerId].type != HduType.IMAGE ||
-      !(state.layerEntities[layerId] as ImageHdu).rawImageDataId
+      state.layerEntities[layerId].type != LayerType.IMAGE ||
+      !(state.layerEntities[layerId] as ImageLayer).rawImageDataId
     )
       return null;
 
-    let rawImageData = state.imageDataEntities[(state.layerEntities[layerId] as ImageHdu).rawImageDataId];
+    let rawImageData = state.imageDataEntities[(state.layerEntities[layerId] as ImageLayer).rawImageDataId];
 
     return dispatch(rawImageData.tiles.map((tile) => new InvalidateRawImageTile(layerId, tile.index)));
   }
@@ -1217,13 +1217,13 @@ export class DataFilesState {
     let state = getState();
     if (
       !(layerId in state.layerEntities) ||
-      state.layerEntities[layerId].type != HduType.IMAGE ||
-      !(state.layerEntities[layerId] as ImageHdu).rawImageDataId
+      state.layerEntities[layerId].type != LayerType.IMAGE ||
+      !(state.layerEntities[layerId] as ImageLayer).rawImageDataId
     )
       return null;
 
     setState((state: DataFilesStateModel) => {
-      let rawImageData = state.imageDataEntities[(state.layerEntities[layerId] as ImageHdu).rawImageDataId];
+      let rawImageData = state.imageDataEntities[(state.layerEntities[layerId] as ImageLayer).rawImageDataId];
       let tile = rawImageData.tiles[tileIndex];
       tile.isValid = false;
 
@@ -1244,12 +1244,12 @@ export class DataFilesState {
     let state = getState();
     if (
       !(layerId in state.layerEntities) ||
-      state.layerEntities[layerId].type != HduType.IMAGE ||
-      !(state.layerEntities[layerId] as ImageHdu).rgbaImageDataId
+      state.layerEntities[layerId].type != LayerType.IMAGE ||
+      !(state.layerEntities[layerId] as ImageLayer).rgbaImageDataId
     )
       return null;
 
-    let normalizedImageData = state.imageDataEntities[(state.layerEntities[layerId] as ImageHdu).rgbaImageDataId];
+    let normalizedImageData = state.imageDataEntities[(state.layerEntities[layerId] as ImageLayer).rgbaImageDataId];
 
     return dispatch(normalizedImageData.tiles.map((tile) => new InvalidateNormalizedImageTile(layerId, tile.index)));
   }
@@ -1263,13 +1263,13 @@ export class DataFilesState {
     let state = getState();
     if (
       !(layerId in state.layerEntities) ||
-      state.layerEntities[layerId].type != HduType.IMAGE ||
-      !(state.layerEntities[layerId] as ImageHdu).rgbaImageDataId
+      state.layerEntities[layerId].type != LayerType.IMAGE ||
+      !(state.layerEntities[layerId] as ImageLayer).rgbaImageDataId
     )
       return null;
 
     setState((state: DataFilesStateModel) => {
-      let imageDataId = (state.layerEntities[layerId] as ImageHdu).rgbaImageDataId;
+      let imageDataId = (state.layerEntities[layerId] as ImageLayer).rgbaImageDataId;
       let normalizedImageData = state.imageDataEntities[imageDataId];
       let tile = normalizedImageData.tiles[tileIndex];
       tile.isValid = false;
@@ -1295,13 +1295,13 @@ export class DataFilesState {
     let state = getState();
     if (
       !(layerId in state.layerEntities) ||
-      state.layerEntities[layerId].type != HduType.IMAGE ||
-      !(state.layerEntities[layerId] as ImageHdu).rgbaImageDataId
+      state.layerEntities[layerId].type != LayerType.IMAGE ||
+      !(state.layerEntities[layerId] as ImageLayer).rgbaImageDataId
     ) {
       return null;
     }
 
-    let layer = state.layerEntities[layerId] as ImageHdu;
+    let layer = state.layerEntities[layerId] as ImageLayer;
     let imageData = state.imageDataEntities[layer.rawImageDataId];
     if (!imageData.initialized) return null;
     let rawTile = imageData.tiles[tileIndex];
@@ -1371,12 +1371,12 @@ export class DataFilesState {
     // Cannot use  @ImmutableContext() because it significantly slows down the normalization computations
 
     let state = getState();
-    let layer = state.layerEntities[layerId] as ImageHdu;
+    let layer = state.layerEntities[layerId] as ImageLayer;
     let rawImageData = state.imageDataEntities[layer.rawImageDataId].tiles[tileIndex].pixels;
     if (!rawImageData) return null;
 
-    let hist = (state.layerEntities[layerId] as ImageHdu).hist;
-    let normalizer = (state.layerEntities[layerId] as ImageHdu).normalizer;
+    let hist = (state.layerEntities[layerId] as ImageLayer).hist;
+    let normalizer = (state.layerEntities[layerId] as ImageLayer).normalizer;
 
     let rgba = state.imageDataEntities[layer.rgbaImageDataId].tiles[tileIndex].pixels as Uint32Array;
     if (!rgba || rgba.length != rawImageData.length) {
@@ -1384,7 +1384,7 @@ export class DataFilesState {
     }
 
 
-    normalizer = (getState().layerEntities[layerId] as ImageHdu).normalizer;
+    normalizer = (getState().layerEntities[layerId] as ImageLayer).normalizer;
 
     normalize(rawImageData, hist, normalizer, rgba);
     return this.store.dispatch(new CalculateNormalizedPixelsSuccess(layerId, tileIndex, rgba));
@@ -1397,7 +1397,7 @@ export class DataFilesState {
     { layerId, tileIndex, rgba }: CalculateNormalizedPixelsSuccess
   ) {
     let state = getState();
-    let layer = state.layerEntities[layerId] as ImageHdu;
+    let layer = state.layerEntities[layerId] as ImageLayer;
     let actions: any[] = [];
 
     setState((state: DataFilesStateModel) => {
@@ -1475,14 +1475,14 @@ export class DataFilesState {
     // let actions: any[] = []
 
     // let sync = value != ColorBalanceMode.MANUAL;
-    // let layers = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu);
+    // let layers = this.store.selectSnapshot(DataFilesState.getLayersByFileId(fileId)).filter(isImageLayer);
     // if (value != ColorBalanceMode.HISTOGRAM_FITTING && value != ColorBalanceMode.MANUAL) {
     //   layers.forEach(layer => {
     //     actions.push(new UpdateNormalizer(layer.id, { layerOffset: 0, layerScale: 1 }))
     //   })
     // }
     // if (sync && value == ColorBalanceMode.PERCENTILE) {
-    //   let layer = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
+    //   let layer = this.store.selectSnapshot(DataFilesState.getFirstImageLayerByFileId(fileId));
     //   if (layer) {
     //     actions.push(new UpdateNormalizer(layer.id, { mode: 'percentile' }));
     //   }
@@ -1500,14 +1500,14 @@ export class DataFilesState {
   @ImmutableContext()
   public syncFileNormalizers(
     { getState, setState, dispatch }: StateContext<DataFilesStateModel>,
-    { fileId, refHduId }: SyncFileNormalizers
+    { fileId, refLayerId }: SyncFileNormalizers
   ) {
     let state = getState();
 
     let file = state.fileEntities[fileId];
-    let refHdu = state.layerEntities[refHduId];
+    let refLayer = state.layerEntities[refLayerId];
 
-    if (!isImageHdu(refHdu)) return;
+    if (!isImageLayer(refLayer)) return;
 
     let getSyncedNormalizerFields = (value: PixelNormalizer): Partial<PixelNormalizer> => {
       let result: Partial<PixelNormalizer> = {
@@ -1532,8 +1532,8 @@ export class DataFilesState {
       return result;
     }
     let actions = [];
-    let layers = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId)).filter(isImageHdu).filter(layer => layer.id != refHduId && layer.visible);
-    let syncedNormalizerFields = getSyncedNormalizerFields(refHdu.normalizer)
+    let layers = this.store.selectSnapshot(DataFilesState.getLayersByFileId(fileId)).filter(isImageLayer).filter(layer => layer.id != refLayerId && layer.visible);
+    let syncedNormalizerFields = getSyncedNormalizerFields(refLayer.normalizer)
     let syncNormalizerFieldsStr = JSON.stringify(syncedNormalizerFields)
     layers.forEach(layer => {
 
@@ -1564,7 +1564,7 @@ export class DataFilesState {
   //   if (value) {
   //     //trigger sync
   //     // let state = getState()
-  //     // let ref = this.store.selectSnapshot(DataFilesState.getFirstImageHduByFileId(fileId));
+  //     // let ref = this.store.selectSnapshot(DataFilesState.getFirstImageLayerByFileId(fileId));
   //     // if (ref && ref.normalizer) {
   //     //   dispatch(new UpdateNormalizer(ref.id, ref.normalizer))
   //     // }
@@ -1579,7 +1579,7 @@ export class DataFilesState {
     let actions = [];
     let state = getState();
     let layer = state.layerEntities[layerId];
-    if (!layer || !isImageHdu(layer)) return null;
+    if (!layer || !isImageLayer(layer)) return null;
 
     let normalizer = {
       ...layer.normalizer,
@@ -1664,7 +1664,7 @@ export class DataFilesState {
 
     let actions: any[] = [];
     setState((state: DataFilesStateModel) => {
-      let layer = state.layerEntities[layerId] as ImageHdu;
+      let layer = state.layerEntities[layerId] as ImageLayer;
       layer.blendMode = blendMode;
 
       actions.push(new InvalidateCompositeImageTiles(layer.fileId));
@@ -1686,7 +1686,7 @@ export class DataFilesState {
 
     let actions: any[] = [];
     setState((state: DataFilesStateModel) => {
-      let layer = state.layerEntities[layerId] as ImageHdu;
+      let layer = state.layerEntities[layerId] as ImageLayer;
       layer.alpha = alpha;
 
       actions.push(new InvalidateCompositeImageTiles(layer.fileId));
@@ -1708,7 +1708,7 @@ export class DataFilesState {
 
     let actions: any[] = [];
     setState((state: DataFilesStateModel) => {
-      let layer = state.layerEntities[layerId] as ImageHdu;
+      let layer = state.layerEntities[layerId] as ImageLayer;
       layer.visible = value;
 
       actions.push(new InvalidateCompositeImageTiles(layer.fileId));
@@ -1730,7 +1730,7 @@ export class DataFilesState {
 
     let actions: any[] = [];
     setState((state: DataFilesStateModel) => {
-      let layer = state.layerEntities[layerId] as ImageHdu;
+      let layer = state.layerEntities[layerId] as ImageLayer;
       layer.normalizer = {
         ...layer.normalizer,
         colorMapName: colorMap,
@@ -1798,7 +1798,7 @@ export class DataFilesState {
       if (!imageData.initialized) return [];
       let layers = file.layerIds
         .map((layerId) => state.layerEntities[layerId])
-        .filter((layer) => layer.type == HduType.IMAGE) as ImageHdu[];
+        .filter((layer) => layer.type == LayerType.IMAGE) as ImageLayer[];
 
       return layers
         .filter((layer) => {
@@ -1820,19 +1820,19 @@ export class DataFilesState {
       let layers = file.layerIds
         .map((layerId) => state.layerEntities[layerId])
         .filter((layer) => {
-          if (layer.type != HduType.IMAGE) {
+          if (layer.type != LayerType.IMAGE) {
             return false;
           }
-          let imageHdu = layer as ImageHdu;
-          if (!imageHdu.rgbaImageDataId || !(imageHdu.rgbaImageDataId in state.imageDataEntities)) {
+          let imageLayer = layer as ImageLayer;
+          if (!imageLayer.rgbaImageDataId || !(imageLayer.rgbaImageDataId in state.imageDataEntities)) {
             return false;
           }
-          let normalizedImageData = state.imageDataEntities[imageHdu.rgbaImageDataId];
+          let normalizedImageData = state.imageDataEntities[imageLayer.rgbaImageDataId];
           if (!normalizedImageData.initialized || !normalizedImageData.tiles[tileIndex].pixelsLoaded) {
             return false;
           }
           return true;
-        }) as ImageHdu[];
+        }) as ImageLayer[];
 
       //reverse the order since they will be blended from bottom to top
       let layerDatas = layers

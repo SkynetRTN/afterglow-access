@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 
-import { HduType } from './data-file-type';
+import { LayerType } from './data-file-type';
 import { HeaderEntry } from './header-entry';
 import { ImageHist } from './image-hist';
 import { Wcs } from '../../image-tools/wcs';
@@ -40,8 +40,8 @@ export interface DataFile extends ITransformableImageData {
   dataProviderId: string;
   assetPath: string;
   layerIds: string[];
-  imageHduIds: string[];
-  tableHduIds: string[];
+  imageLayerIds: string[];
+  tableLayerIds: string[];
   syncLayerNormalizers: boolean;
   colorBalanceMode: ColorBalanceMode;
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
@@ -56,8 +56,8 @@ export interface Header {
   wcs: Wcs | null;
 }
 
-export interface IHdu {
-  readonly type: HduType;
+export interface ILayer {
+  readonly type: LayerType;
   id: string;
   loading: boolean;
   loaded: boolean;
@@ -68,8 +68,8 @@ export interface IHdu {
   name: string;
 }
 
-export interface ImageHdu extends IHdu, ITransformableImageData {
-  readonly type: HduType.IMAGE;
+export interface ImageLayer extends ILayer, ITransformableImageData {
+  readonly type: LayerType.IMAGE;
   precision: PixelPrecision;
   hist: ImageHist;
   rawImageDataId: string;
@@ -79,17 +79,17 @@ export interface ImageHdu extends IHdu, ITransformableImageData {
   visible: boolean;
 }
 
-export const isImageHdu: TypeGuard<IHdu, ImageHdu> = (
-  layer: IHdu
-): layer is ImageHdu => layer.type === HduType.IMAGE;
+export const isImageLayer: TypeGuard<ILayer, ImageLayer> = (
+  layer: ILayer
+): layer is ImageLayer => layer.type === LayerType.IMAGE;
 
-export interface TableHdu extends IHdu {
-  readonly type: HduType.TABLE;
+export interface TableLayer extends ILayer {
+  readonly type: LayerType.TABLE;
 }
 
-export const isTableHdu: TypeGuard<IHdu, TableHdu> = (
-  layer: IHdu
-): layer is TableHdu => layer.type === HduType.TABLE;
+export const isTableLayer: TypeGuard<ILayer, TableLayer> = (
+  layer: ILayer
+): layer is TableLayer => layer.type === LayerType.TABLE;
 
 
 

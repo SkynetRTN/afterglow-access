@@ -105,7 +105,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
 
         this.store.dispatch(new LoadLibrary()).subscribe(() => {
           if (action.fileIds.length != 0) {
-            let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]];
+            let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[action.fileIds[0]];
             this.store.dispatch(new SelectFile(layer.fileId, layer.id));
           }
         });

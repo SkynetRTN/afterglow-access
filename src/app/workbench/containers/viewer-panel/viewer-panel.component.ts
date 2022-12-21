@@ -12,7 +12,7 @@ import {
 import { Observable, BehaviorSubject } from 'rxjs';
 import { isImageViewer, isTableViewer, IViewer } from '../../models/viewer';
 
-import { DataFile, IHdu } from '../../../data-files/models/data-file';
+import { DataFile, ILayer } from '../../../data-files/models/data-file';
 import { Subscription } from 'rxjs';
 import { ViewMode } from '../../models/view-mode';
 import { Store } from '@ngxs/store';
@@ -68,7 +68,7 @@ export class ViewerPanelComponent implements OnInit, OnChanges {
   @Output() onFileSave = new EventEmitter<string>();
 
   selectedViewerIndex = 0;
-  layerEntities$: Observable<{ [id: string]: IHdu }>;
+  layerEntities$: Observable<{ [id: string]: ILayer }>;
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
@@ -80,14 +80,14 @@ export class ViewerPanelComponent implements OnInit, OnChanges {
     public viewContainerRef: ViewContainerRef,
     private viewerEventService: ImageViewerEventService
   ) {
-    this.layerEntities$ = this.store.select(DataFilesState.getHduEntities);
+    this.layerEntities$ = this.store.select(DataFilesState.getLayerEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.dropListConnections$ = this.store.select(WorkbenchState.getViewerPanelIds);
   }
 
   public getTabLabel(viewer: IViewer) {
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
     let file = fileEntities[viewer.fileId];
     if (!file) return '';
 

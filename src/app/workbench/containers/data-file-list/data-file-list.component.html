@@ -23,10 +23,10 @@
         [selected]="focusedViewer?.fileId == file?.id && focusedViewer?.layerId === layerId" cdkDrag
         [cdkDragData]="layerOption.value" (dblclick)="handleItemDoubleClick(layerOption.value)"
         (focus)="handleFocus(layerOption.value)" (mouseenter)="handleMouseEnter(layerOption.value)"
-        (contextmenu)="onHduContextMenu($event, layerId)">
+        (contextmenu)="onLayerContextMenu($event, layerId)">
         <app-file-list-option style="height: 100%" [fileId]="file.id" [layerId]="layerId"
           [showFileToolbar]="file.layerIds.length == 1 && focusedValue?.fileId == file.id"
-          [showImageHduLayerToolbar]="file.layerIds.length != 1 && focusedViewer?.fileId == file?.id"
+          [showImageLayerLayerToolbar]="file.layerIds.length != 1 && focusedViewer?.fileId == file?.id"
           [showSelect]="file.layerIds.length == 1 && (selectedFileIds.length != 0 || focusedValue?.fileId == file.id)"
           [selected]="selectedFileIds.includes(file.id)" (onToggleSelected)="handleToggleSelected($event)"
           (onSave)="onSaveFile.emit(file.id)" (onClose)="onCloseFile.emit(file.id)"></app-file-list-option>
@@ -49,10 +49,10 @@
       </div> -->
     </ng-container>
     <ng-container *ngIf="layer">
-      <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameHdu(layer)">
+      <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameLayer(layer)">
         <div class="context-label" fxFlex="1 1 auto" i18n>Rename HDU</div>
       </div>
-      <ng-container *ngIf="isImageHdu(layer)">
+      <ng-container *ngIf="isImageLayer(layer)">
         <button mat-menu-item [matMenuTriggerFor]="colorMapMenu" i18n>Color Map</button>
         <button mat-menu-item [matMenuTriggerFor]="blendModeMenu" i18n>Blend Mode</button>
         <!-- <button mat-menu-item [matMenuTriggerFor]="alphaMenu" i18n>Transparency</button> -->

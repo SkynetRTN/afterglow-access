@@ -13,14 +13,14 @@ import {
   getSourceCoordinates,
   getWidth,
   Header,
-  IHdu,
+  ILayer,
 } from '../../../data-files/models/data-file';
 import { JobsState } from '../../../jobs/jobs.state';
 import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../jobs/models/wcs_calibration';
 import { formatDms, parseDms } from '../../../utils/skynet-astro';
 import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../utils/validators';
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
-import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { WorkbenchImageLayerState } from '../../models/workbench-file-state';
 import { WcsCalibrationPanelConfig } from '../../models/workbench-state';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import {
@@ -68,7 +68,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   header$: Observable<Header>;
   config$: Observable<WcsCalibrationPanelConfig>;
   state$: Observable<WcsCalibrationPanelState>;
-  selectedHduIds$: Observable<string[]>;
+  selectedLayerIds$: Observable<string[]>;
   activeJob$: Observable<WcsCalibrationJob>;
   activeJobResult$: Observable<WcsCalibrationJobResult>;
   wcsCalibrationSettings$: Observable<WcsCalibrationPanelConfig>;
@@ -78,7 +78,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   greaterThanZero = [Validators.required, isNumber, greaterThan(0)];
   minZero = [Validators.required, isNumber, Validators.min(0)];
   wcsCalibrationForm = new FormGroup({
-    selectedHduIds: new FormControl([], Validators.required),
+    selectedLayerIds: new FormControl([], Validators.required),
     ra: new FormControl('', { updateOn: 'blur', validators: [isNumberOrSexagesimalValidator] }),
     dec: new FormControl('', { updateOn: 'blur', validators: [isNumberOrSexagesimalValidator] }),
     radius: new FormControl('', this.minZero),
@@ -90,11 +90,11 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
   constructor(private store: Store, private dialog: MatDialog, private markerService: ImageViewerMarkerService) {
     this.header$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId)))
     );
 
     this.config$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
-    this.selectedHduIds$ = this.config$.pipe(map((state) => state.selectedHduIds));
+    this.selectedLayerIds$ = this.config$.pipe(map((state) => state.selectedLayerIds));
 
     this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
@@ -114,13 +114,13 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
     this.activeJobResult$ = this.activeJob$.pipe(map((job) => job.result));
 
-    combineLatest([this.selectedHduIds$, this.wcsCalibrationSettings$])
+    combineLatest([this.selectedLayerIds$, this.wcsCalibrationSettings$])
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([selectedHduIds, settings]) => {
-        if (selectedHduIds) {
+      .subscribe(([selectedLayerIds, settings]) => {
+        if (selectedLayerIds) {
           this.wcsCalibrationForm.patchValue(
             {
-              selectedHduIds: selectedHduIds,
+              selectedLayerIds: selectedLayerIds,
             },
             { emitEvent: false }
           );
@@ -151,7 +151,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       );
 
       if (this.wcsCalibrationForm.valid) {
-        this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: value.selectedHduIds }));
+        this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedLayerIds: value.selectedLayerIds }));
         this.store.dispatch(
           new UpdateWcsCalibrationPanelConfig({
             ra: value.ra,
@@ -248,8 +248,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   private getViewerMarkers(viewerId: string) {
     let config$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig)
     let state$ = this.store.select(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
-    let layerId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
-    // let layerId$ = this.imageHdu$.pipe(
+    let layerId$ = this.store.select(WorkbenchState.getImageLayerByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
+    // let layerId$ = this.imageLayer$.pipe(
     //   map((layer) => layer?.id),
     //   distinctUntilChanged()
     // );
@@ -311,23 +311,23 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     this.destroy$.unsubscribe();
   }
 
-  getHduOptionLabel(layerId: string) {
-    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+  getLayerOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
       map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(layerIds: string[]) {
-    this.wcsCalibrationForm.controls.selectedHduIds.setValue(layerIds);
+  setSelectedLayerIds(layerIds: string[]) {
+    this.wcsCalibrationForm.controls.selectedLayerIds.setValue(layerIds);
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.layerIds);
+    this.setSelectedLayerIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {
-    this.setSelectedHduIds([]);
+    this.setSelectedLayerIds([]);
   }
 
   onShowOverlayChange($event: MatCheckboxChange) {
@@ -335,7 +335,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onSubmitClick() {
-    this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedHduIds.value));
+    this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedLayerIds.value));
   }
 
   onAutofillFromFocusedViewerClick(header: Header) {

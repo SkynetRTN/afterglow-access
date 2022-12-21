@@ -5,7 +5,7 @@ import { Actions, ofActionCompleted, ofActionSuccessful, Store } from '@ngxs/sto
 import { merge, Subject } from 'rxjs';
 import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
-import { getHeight, getWidth, ImageHdu } from 'src/app/data-files/models/data-file';
+import { getHeight, getWidth, ImageLayer } from 'src/app/data-files/models/data-file';
 import { getImageToViewportTransform, getViewportRegion } from 'src/app/data-files/models/transformation';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
@@ -16,7 +16,7 @@ import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SonifierRegionMode } from '../../models/sonifier-file-state';
 import { PosType, Source } from '../../models/source';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
-import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
+import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { AddSources } from '../../sources.actions';
 import { ExtractSources } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
@@ -79,10 +79,10 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     if (!viewer) return;
     let layerId = viewer.layerId;
     if (!layerId) return;
-    let layer = this.store.selectSnapshot(DataFilesState.getHduById(layerId)) as ImageHdu;
+    let layer = this.store.selectSnapshot(DataFilesState.getLayerById(layerId)) as ImageLayer;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
     let region: SourceExtractionRegion = this.sourceExtractionRegionForm.controls.region.value;
-    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByHduId(layerId));
+    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByLayerId(layerId));
     let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
     let viewportTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.viewportTransformId))
     let imageTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.imageTransformId))

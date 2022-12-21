@@ -24,10 +24,10 @@ import { Store, Actions } from '@ngxs/store';
 import { CustomMarkerPanelConfig } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { BehaviorSubject, Observable, combineLatest, merge, Subject } from 'rxjs';
-import { DataFile, ImageHdu, IHdu, PixelType } from '../../../data-files/models/data-file';
+import { DataFile, ImageLayer, ILayer, PixelType } from '../../../data-files/models/data-file';
 import { MatSelectChange } from '@angular/material/select';
-import { HduType } from '../../../data-files/models/data-file-type';
-import { WorkbenchImageHduState } from '../../models/workbench-file-state';
+import { LayerType } from '../../../data-files/models/data-file-type';
+import { WorkbenchImageLayerState } from '../../models/workbench-file-state';
 import { WorkbenchState } from '../../workbench.state';
 import { KeyboardShortcutsComponent, ShortcutInput } from 'ng-keyboard-shortcuts';
 import {
@@ -64,7 +64,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
 
   destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
-  layer$: Observable<IHdu>;
+  layer$: Observable<ILayer>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
   state$: Observable<CustomMarkerPanelState>;
@@ -72,7 +72,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   config$: Observable<CustomMarkerPanelConfig>;
   selectedMarkers$: Observable<Marker[]>;
 
-  HduType = HduType;
+  LayerType = LayerType;
   MarkerType = MarkerType;
   isCircleMarker = isCircleMarker;
   isRectangleMarker = isRectangleMarker;
@@ -101,7 +101,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
     );
 
     this.layer$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerByViewerId(viewerId)))
     );
 
     this.rawImageData$ = this.viewerId$.pipe(

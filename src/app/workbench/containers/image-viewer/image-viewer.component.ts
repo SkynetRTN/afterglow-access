@@ -34,16 +34,16 @@ import {
   getObserver,
   getDegsPerPixel,
   getCenterTime,
-  IHdu,
-  ImageHdu,
-  TableHdu,
+  ILayer,
+  ImageLayer,
+  TableLayer,
   PixelType,
   Header,
   getSourceCoordinates,
   getStartTime,
   getExpLength,
   toKeyValueHash,
-  isImageHdu,
+  isImageLayer,
 } from '../../../data-files/models/data-file';
 import {
   Marker,
@@ -84,7 +84,7 @@ import {
   UpdateCompositeImageTileSuccess,
   UpdateNormalizedImageTileSuccess,
 } from '../../../data-files/data-files.actions';
-import { HduType } from '../../../data-files/models/data-file-type';
+import { LayerType } from '../../../data-files/models/data-file-type';
 import { Transform, getImageToViewportTransform, transformToMatrix } from '../../../data-files/models/transformation';
 import { IImageData, ImageTile } from '../../../data-files/models/image-data';
 import { UpdateCurrentViewportSize } from '../../workbench.actions';
@@ -139,7 +139,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   }
   private viewer$ = new BehaviorSubject<ImageViewer>(null);
 
-  HduType = HduType;
+  LayerType = LayerType;
 
   @Input()
   showInfoBar: boolean = true;
@@ -171,7 +171,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
-  layerEntities$: Observable<{ [id: string]: IHdu }>;
+  layerEntities$: Observable<{ [id: string]: ILayer }>;
   viewportSize: { width: number; height: number };
   currentCanvasSize: { width: number; height: number } = null;
   imageMouseX: number = null;
@@ -189,7 +189,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     private markerService: ImageViewerMarkerService,
     private actions$: Actions
   ) {
-    this.layerEntities$ = this.store.select(DataFilesState.getHduEntities);
+    this.layerEntities$ = this.store.select(DataFilesState.getLayerEntities);
 
     let viewerId$ = this.viewer$.pipe(map((viewer) => (viewer ? viewer.id : null)));
 
@@ -202,12 +202,12 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       map((file) => (file ? file.layerIds : [])),
       distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
-    let selectedHduId$ = this.viewer$.pipe(map((viewer) => viewer?.layerId));
-    let layers$ = combineLatest(layerIds$, selectedHduId$).pipe(
-      switchMap(([layerIds, selectedHduId]) => {
-        if (selectedHduId) layerIds = [selectedHduId];
-        return combineLatest(layerIds.map((layerId) => this.store.select(DataFilesState.getHduById(layerId)))).pipe(
-          map((layers) => layers.filter((layer) => layer?.type == HduType.IMAGE) as ImageHdu[])
+    let selectedLayerId$ = this.viewer$.pipe(map((viewer) => viewer?.layerId));
+    let layers$ = combineLatest(layerIds$, selectedLayerId$).pipe(
+      switchMap(([layerIds, selectedLayerId]) => {
+        if (selectedLayerId) layerIds = [selectedLayerId];
+        return combineLatest(layerIds.map((layerId) => this.store.select(DataFilesState.getLayerById(layerId)))).pipe(
+          map((layers) => layers.filter((layer) => layer?.type == LayerType.IMAGE) as ImageLayer[])
         );
       })
     );
@@ -231,7 +231,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     //     if (layer) {
     //       if (layer.hist && !layer.hist.loaded && !layer.hist.loading) {
     //         setTimeout(() => {
-    //           this.store.dispatch(new LoadImageHduHistogram(layer.id));
+    //           this.store.dispatch(new LoadImageLayerHistogram(layer.id));
     //         });
     //       }
     //     }
@@ -242,7 +242,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     //   headers.forEach((header, index) => {
     //     if (header && !header.loaded && !header.loading) {
     //       setTimeout(() => {
-    //         this.store.dispatch(new LoadHduHeader(layerIds[index]));
+    //         this.store.dispatch(new LoadLayerHeader(layerIds[index]));
     //       });
     //     }
     //   });
@@ -256,7 +256,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       switchMap((viewer) => {
         if (!viewer) return of(null);
         return viewer.layerId
-          ? this.store.select(WorkbenchState.getHduNormalizedImageDataByViewerId(viewer?.id))
+          ? this.store.select(WorkbenchState.getLayerNormalizedImageDataByViewerId(viewer?.id))
           : this.store.select(WorkbenchState.getFileNormalizedImageDataByViewerId(viewer?.id));
       })
     );
@@ -265,7 +265,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       switchMap((viewer) => {
         if (!viewer) return of(null);
         return viewer.layerId
-          ? this.store.select(WorkbenchState.getHduImageToViewportTransformByViewerId(viewer?.id))
+          ? this.store.select(WorkbenchState.getLayerImageToViewportTransformByViewerId(viewer?.id))
           : this.store.select(WorkbenchState.getFileImageToViewportTransformByViewerId(viewer?.id));
       })
     );
@@ -552,7 +552,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       loadComposite = true;
     }
 
-    let layers = layerIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id))).filter(isImageHdu).filter(layer => !!layer)
+    let layers = layerIds.map(id => this.store.selectSnapshot(DataFilesState.getLayerById(id))).filter(isImageLayer).filter(layer => !!layer)
 
     layers.forEach((layer) => {
       let layerId = layer.id;
@@ -562,9 +562,9 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
       // console.log("CHECKING HDU: ", layerId, this.layerLoading[layerId])
 
-      let imageHdu = layer as ImageHdu;
+      let imageLayer = layer as ImageLayer;
       let header = headerEntities[layer.headerId];
-      if ((!imageHdu.loaded || !header.isValid)) {
+      if ((!imageLayer.loaded || !header.isValid)) {
         this.queuedTileLoadingEvents.push($event);
         this.actions$
           .pipe(
@@ -590,7 +590,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
 
 
-      let imageData = imageDataEntities[(layer as ImageHdu).rgbaImageDataId];
+      let imageData = imageDataEntities[(layer as ImageLayer).rgbaImageDataId];
       let tile = imageData.tiles[$event.tileIndex];
       if (!tile.pixelsLoaded || !tile.isValid) {
         this.queuedTileLoadingEvents.push($event);
@@ -671,7 +671,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
     var lnk = document.createElement('a');
     if (this.viewer.layerId) {
-      let layer = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer.layerId))
+      let layer = this.store.selectSnapshot(DataFilesState.getLayerById(this.viewer.layerId))
       lnk.download = `${layer?.name || 'afterglow-image-export'}.jpg`;
     }
     else {
@@ -726,7 +726,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       let dataUrl = canvas.toDataURL('image/jpeg');
 
       if (this.viewer.layerId) {
-        let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
         let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
         let user = this.store.selectSnapshot(AuthState.user);
         let header = headerEntities[layerEntities[this.viewer.layerId].headerId];

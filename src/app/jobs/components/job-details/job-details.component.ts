@@ -55,12 +55,12 @@ export class JobDetailsComponent implements OnInit {
   }
 
   getJobFileLabels(ids: string[]) {
-    let layers = this.store.selectSnapshot(DataFilesState.getHduEntities)
+    let layers = this.store.selectSnapshot(DataFilesState.getLayerEntities)
     return ids.map(id => this.getJobFileLabel(id))
   }
 
   getJobFileLabel(id: string) {
-    let layers = this.store.selectSnapshot(DataFilesState.getHduEntities)
+    let layers = this.store.selectSnapshot(DataFilesState.getLayerEntities)
     return `${layers[id]?.name || id}`
   }
 

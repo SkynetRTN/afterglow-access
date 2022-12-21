@@ -2,18 +2,18 @@
   <div i18n class="alert alert-info" i18n>Select a file or image layer to see the display settings.</div>
 </ng-template>
 
-<ng-template #invalidHduTypeBlock>
+<ng-template #invalidLayerTypeBlock>
   <div i18n class="alert alert-info" i18n>Select an image layer to adjust brightness and contrast settings.</div>
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
-  <ng-container *ngIf="activeHdu$ | async as layer; else multiLayerBlock">
-    <ng-container *ngIf="activeImageHdu$ | async as activeImageHdu; else invalidHduTypeBlock">
+  <ng-container *ngIf="activeLayer$ | async as layer; else multiLayerBlock">
+    <ng-container *ngIf="activeImageLayer$ | async as activeImageLayer; else invalidLayerTypeBlock">
 
-      <div *ngIf="activeImageHdu.hist?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
+      <div *ngIf="activeImageLayer.hist?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
         <app-image-hist-chart [data]="[activeHistData$ | async]"
-          [backgroundLevel]="activeImageHdu?.normalizer?.backgroundLevel"
-          [peakLevel]="activeImageHdu?.normalizer?.peakLevel">
+          [backgroundLevel]="activeImageLayer?.normalizer?.backgroundLevel"
+          [peakLevel]="activeImageLayer?.normalizer?.peakLevel">
         </app-image-hist-chart>
         <div style="clear: both"></div>
       </div>
@@ -43,16 +43,17 @@
 
 
         </div>
-        <app-normalizer-form [normalizer]="activeImageHdu?.normalizer"
+        <app-normalizer-form [normalizer]="activeImageLayer?.normalizer"
           [showLayerScale]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
           [showLayerOffset]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
           (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
           (midPercentileChange)="onMidPercentileChange($event)" (peakPercentileChange)="onPeakPercentileChange($event)"
           (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
-          (peakLevelChange)="onPeakLevelChange($event)" (colorMapChange)="onColorMapChange(activeImageHdu, $event)"
-          (stretchModeChange)="onStretchModeChange($event)" (invertedChange)="onInvertedChange(activeImageHdu, $event)"
-          (layerScaleChange)="onLayerScaleChange(activeImageHdu, $event)"
-          (layerOffsetChange)="onLayerOffsetChange(activeImageHdu, $event)"
+          (peakLevelChange)="onPeakLevelChange($event)" (colorMapChange)="onColorMapChange(activeImageLayer, $event)"
+          (stretchModeChange)="onStretchModeChange($event)"
+          (invertedChange)="onInvertedChange(activeImageLayer, $event)"
+          (layerScaleChange)="onLayerScaleChange(activeImageLayer, $event)"
+          (layerOffsetChange)="onLayerOffsetChange(activeImageLayer, $event)"
           (modeChange)="onNormalizerModeChange($event)">
         </app-normalizer-form>
       </div>
@@ -242,7 +243,7 @@
   <div>
     <h3 i18n>Image Orientation Options</h3>
     <div class="pb-4">
-      <app-image-orientation-toolbar [data]="(activeImageHdu$ | async) || (file$ | async)"
+      <app-image-orientation-toolbar [data]="(activeImageLayer$ | async) || (file$ | async)"
         [viewportSize]="viewportSize$ | async"></app-image-orientation-toolbar>
     </div>
   </div>

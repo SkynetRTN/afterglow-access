@@ -1,4 +1,4 @@
-import { DataFile, Header, PixelType, IHdu, ColorBalanceMode } from './models/data-file';
+import { DataFile, Header, PixelType, ILayer, ColorBalanceMode } from './models/data-file';
 import { ImageHist } from './models/image-hist';
 import { PixelNormalizer } from './models/pixel-normalizer';
 import { Region } from './models/region';
@@ -20,7 +20,7 @@ export class LoadLibrary {
 export class LoadLibrarySuccess {
   public static readonly type = '[File] Load Library Success';
 
-  constructor(public layers: IHdu[], public correlationId?: string) { }
+  constructor(public layers: ILayer[], public correlationId?: string) { }
 }
 
 export class LoadLibraryFail {
@@ -33,13 +33,13 @@ export class LoadLibraryFail {
  * Close HDU Events
  */
 
-export class CloseHduSuccess {
+export class CloseLayerSuccess {
   public static readonly type = '[File] Close HDU Success';
 
   constructor(public layerId: string) { }
 }
 
-export class CloseHduFail {
+export class CloseLayerFail {
   public static readonly type = '[File] Close HDU Fail';
 
   constructor(public layerId: string, public error: any) { }
@@ -301,7 +301,7 @@ export class SetFileColorBalanceMode {
 export class SyncFileNormalizers {
   public static readonly type = '[Workbench HDU State] Sync File Normalizers';
 
-  constructor(public fileId: string, public refHduId: string) { }
+  constructor(public fileId: string, public refLayerId: string) { }
 }
 
 export class InvalidateNormalizedImageTiles {

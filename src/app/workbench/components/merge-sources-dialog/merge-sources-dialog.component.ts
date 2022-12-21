@@ -5,7 +5,7 @@ import { Actions, ofActionCompleted, ofActionSuccessful, Store } from '@ngxs/sto
 import { merge, Subject } from 'rxjs';
 import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
-import { getHeight, getWidth, ImageHdu } from 'src/app/data-files/models/data-file';
+import { getHeight, getWidth, ImageLayer } from 'src/app/data-files/models/data-file';
 import { getImageToViewportTransform, getViewportRegion } from 'src/app/data-files/models/transformation';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
@@ -14,7 +14,7 @@ import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SonifierRegionMode } from '../../models/sonifier-file-state';
 import { PosType, Source } from '../../models/source';
-import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
+import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
 import { SourcesState } from '../../sources.state';
 import { ExtractSources, RemovePhotDatasBySourceId } from '../../workbench.actions';
@@ -82,7 +82,7 @@ export class MergeSourcesDialogComponent implements OnInit, OnDestroy {
     if (!viewer) return;
     let layerId = viewer.layerId;
     if (!layerId) return;
-    let layer = this.store.selectSnapshot(DataFilesState.getHduById(layerId)) as ImageHdu;
+    let layer = this.store.selectSnapshot(DataFilesState.getLayerById(layerId)) as ImageLayer;
     let sourceById = this.store.selectSnapshot(SourcesState.getEntities)
     let sources = this.data.sourceIds.map(id => sourceById[id])
 

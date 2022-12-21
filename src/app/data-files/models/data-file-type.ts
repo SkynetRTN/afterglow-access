@@ -1,4 +1,4 @@
-export enum HduType {
+export enum LayerType {
   IMAGE = 'image',
   TABLE = 'table',
 }

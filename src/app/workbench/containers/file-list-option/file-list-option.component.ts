@@ -14,9 +14,9 @@ import {
   ViewChildren,
   AfterViewInit,
 } from '@angular/core';
-import { DataFile, IHdu, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFile, ILayer, ImageLayer } from '../../../data-files/models/data-file';
 import { Store } from '@ngxs/store';
-import { HduType } from '../../../data-files/models/data-file-type';
+import { LayerType } from '../../../data-files/models/data-file-type';
 import { BehaviorSubject, Observable, combineLatest, Subject, concat, of } from 'rxjs';
 import { map, switchMap, filter, distinctUntilChanged } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
@@ -88,7 +88,7 @@ export class FileListOptionComponent implements OnInit {
 
   @Input() active: boolean = false;
   @Input() showFileToolbar: boolean = false;
-  @Input() showImageHduLayerToolbar: boolean = false;
+  @Input() showImageLayerLayerToolbar: boolean = false;
   @Input() showExpand: boolean = false;
   @Input() expanded: boolean = false;
   @Input() showSelect: boolean = false;
@@ -106,14 +106,14 @@ export class FileListOptionComponent implements OnInit {
 
   @ViewChild(MatCheckbox) checkbox: MatCheckbox;
 
-  HduType = HduType;
+  LayerType = LayerType;
 
   mouseOver: boolean = false;
   hasFocus: boolean = false;
   file$: Observable<DataFile>;
-  layers$: Observable<IHdu[]>;
-  layer$: Observable<IHdu>;
-  imageHdu$: Observable<ImageHdu>;
+  layers$: Observable<ILayer[]>;
+  layer$: Observable<ILayer>;
+  imageLayer$: Observable<ImageLayer>;
   label$: Observable<string>;
   dataProvider$: Observable<DataProvider>;
   tooltip$: Observable<string>;
@@ -125,10 +125,10 @@ export class FileListOptionComponent implements OnInit {
     );
 
     this.layer$ = this.layerId$.pipe(
-      switchMap((layerId) => (!layerId ? of(null) : this.store.select(DataFilesState.getHduById(layerId))))
+      switchMap((layerId) => (!layerId ? of(null) : this.store.select(DataFilesState.getLayerById(layerId))))
     );
 
-    this.imageHdu$ = this.layer$.pipe(map((layer) => (layer?.type == HduType.IMAGE ? (layer as ImageHdu) : null)));
+    this.imageLayer$ = this.layer$.pipe(map((layer) => (layer?.type == LayerType.IMAGE ? (layer as ImageLayer) : null)));
 
     this.layers$ = this.file$.pipe(
       map((file) => file?.layerIds),
@@ -137,7 +137,7 @@ export class FileListOptionComponent implements OnInit {
         if (!layerIds) return of([]);
         return combineLatest(
           layerIds.map((layerId) => {
-            return this.store.select(DataFilesState.getHduById(layerId)).pipe(filter((layer) => layer != null));
+            return this.store.select(DataFilesState.getLayerById(layerId)).pipe(filter((layer) => layer != null));
           })
         ).pipe(map((layers) => layers.sort((a, b) => (a.order > b.order ? 1 : -1))));
       })
@@ -180,7 +180,7 @@ export class FileListOptionComponent implements OnInit {
 
   ngOnInit(): void { }
 
-  getHduLabel(file: DataFile, layer: IHdu) {
+  getLayerLabel(file: DataFile, layer: ILayer) {
     return layer.name ? layer.name : `Layer ${file.layerIds.indexOf(layer.id)}`;
   }
 

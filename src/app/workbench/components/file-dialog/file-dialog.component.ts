@@ -107,7 +107,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
       .subscribe(
         (index) => {
           this.waitingForUserInput = false;
-          let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+          let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
           let file = this.config.files[index];
           let modified = file.layerIds.map((layerId) => layerEntities[layerId].modified).some((v) => v);
           if (this.config.mode == 'save') {
@@ -175,7 +175,7 @@ export class SaveChangesDialogComponent implements OnDestroy {
 
   discard() {
     let file = this.currentFile;
-    let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
     let modifiedFiles = this.config.files.slice(this.index$.getValue() + 1).filter((file) => {
       return file.layerIds.map((layerId) => layerEntities[layerId].modified).some((v) => v);
     });

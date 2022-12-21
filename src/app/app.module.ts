@@ -29,8 +29,8 @@ import { SourcesState } from './workbench/sources.state';
 import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { WasmService } from './wasm.service';
-import { HduType } from './data-files/models/data-file-type';
-import { ImageHdu, IHdu, PixelType, Header } from './data-files/models/data-file';
+import { LayerType } from './data-files/models/data-file-type';
+import { ImageLayer, ILayer, PixelType, Header } from './data-files/models/data-file';
 import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
 import { IImageData } from './data-files/models/image-data';
 import { ngxsConfig } from './ngxs.config';
@@ -70,11 +70,11 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
   };
 
   Object.keys(state.layerEntities).forEach((key) => {
-    let layer: IHdu = {
+    let layer: ILayer = {
       ...state.layerEntities[key],
     };
 
-    if (layer.type == HduType.IMAGE) {
+    if (layer.type == LayerType.IMAGE) {
       layer = {
         ...layer,
         loaded: false,
@@ -87,7 +87,7 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
           minBin: 0,
           maxBin: 0,
         },
-      } as ImageHdu;
+      } as ImageLayer;
     }
 
     state.layerEntities[key] = layer;

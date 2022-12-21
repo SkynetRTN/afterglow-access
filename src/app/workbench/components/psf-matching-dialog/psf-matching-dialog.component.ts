@@ -7,8 +7,8 @@ import { Observable, Subject } from 'rxjs';
 import { filter, switchMap, take, takeUntil } from 'rxjs/operators';
 import { InvalidateHeader, InvalidateRawImageTiles } from 'src/app/data-files/data-files.actions';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
-import { DataFile, IHdu } from 'src/app/data-files/models/data-file';
-import { HduType } from 'src/app/data-files/models/data-file-type';
+import { DataFile, ILayer } from 'src/app/data-files/models/data-file';
+import { LayerType } from 'src/app/data-files/models/data-file-type';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from 'src/app/jobs/models/pixel-ops';
@@ -27,8 +27,8 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   destroy$ = new Subject<boolean>();
   displayedColumns: string[] = ['order', 'name', 'type', 'fwhmX', 'fwhmY', 'status'];
   file: DataFile;
-  layers: IHdu[];
-  fwhmByHduId: { [layerId: string]: { fwhmX: number, fwhmY: number, fwhm: number } } = {};
+  layers: ILayer[];
+  fwhmByLayerId: { [layerId: string]: { fwhmX: number, fwhmY: number, fwhm: number } } = {};
   extractionState: { [layerId: string]: { status: 'pending' | 'success' | 'error'; message: string, loading: boolean, sourceExtractionJobId?: string } } = {}
   blurState: { [layerId: string]: { status: 'pending' | 'success' | 'error'; message: string, loading: boolean, pixelOpsJobId?: string } } = {}
 
@@ -42,10 +42,10 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   ) {
 
     // this.file = this.store.selectSnapshot(DataFilesState.getFileById(fileId))
-    // this.layers = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId))
+    // this.layers = this.store.selectSnapshot(DataFilesState.getLayersByFileId(fileId))
 
     // this.layers.forEach(layer => {
-    //   if (layer.type == HduType.TABLE) {
+    //   if (layer.type == LayerType.TABLE) {
     //     this.extractionState[layer.id] = { status: 'success', message: 'N/A', loading: false }
     //   }
     //   else {
@@ -54,7 +54,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
     // })
 
 
-    // this.layers.filter(layer => layer.type == HduType.IMAGE).forEach(layer => {
+    // this.layers.filter(layer => layer.type == LayerType.IMAGE).forEach(layer => {
     //   let jobFinished$ = this.extractSources(layer);
 
     //   jobFinished$.pipe(
@@ -68,7 +68,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
     //       if (job.result.data.length != 0) {
     //         this.extractionState[layer.id].message = 'waiting for analysis of other layers...'
     //         this.extractionState[layer.id].status = 'success'
-    //         this.fwhmByHduId[layer.id] = this.fwhmFromExtractionResult(job.result)
+    //         this.fwhmByLayerId[layer.id] = this.fwhmFromExtractionResult(job.result)
     //       }
     //       else {
     //         this.extractionState[layer.id].message = `error analyzing PSF`
@@ -100,7 +100,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
 
   // }
 
-  // private extractSources(layer: IHdu) {
+  // private extractSources(layer: ILayer) {
   //   let settings = this.store.selectSnapshot(WorkbenchState.getSettings)
   //   let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
 
@@ -148,22 +148,22 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   // }
 
   // getMaxFwhm() {
-  //   return Math.max(...Object.values(this.fwhmByHduId).filter(value => value.fwhm).map(value => value.fwhm))
+  //   return Math.max(...Object.values(this.fwhmByLayerId).filter(value => value.fwhm).map(value => value.fwhm))
   // }
 
-  // canBlur(layer: IHdu) {
-  //   if (layer.type != HduType.IMAGE) return false;
+  // canBlur(layer: ILayer) {
+  //   if (layer.type != LayerType.IMAGE) return false;
 
-  //   let fwhm = this.fwhmByHduId[layer.id]?.fwhm || null;
+  //   let fwhm = this.fwhmByLayerId[layer.id]?.fwhm || null;
   //   let maxFwhm = this.getMaxFwhm();
   //   return maxFwhm && fwhm && fwhm < maxFwhm
   // }
 
-  // blurHdu(layer: IHdu) {
+  // blurLayer(layer: ILayer) {
   //   if (!this.canBlur(layer)) return;
 
   //   let maxFwhm = this.getMaxFwhm();
-  //   let fwhm = this.fwhmByHduId[layer.id]?.fwhm;
+  //   let fwhm = this.fwhmByLayerId[layer.id]?.fwhm;
 
   //   if (!maxFwhm || !fwhm) return;
 
@@ -219,7 +219,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //           if (!isSourceExtractionJob(job)) return;
 
   //           if (job.result.data.length != 0) {
-  //             this.fwhmByHduId[layer.id] = this.fwhmFromExtractionResult(job.result)
+  //             this.fwhmByLayerId[layer.id] = this.fwhmFromExtractionResult(job.result)
   //           }
   //         }
 

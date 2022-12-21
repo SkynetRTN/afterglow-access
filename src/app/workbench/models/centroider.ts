@@ -1,4 +1,4 @@
-import { getWidth, getHeight, ImageHdu, PixelType } from '../../data-files/models/data-file';
+import { getWidth, getHeight, ImageLayer, PixelType } from '../../data-files/models/data-file';
 import { getPixel, IImageData } from '../../data-files/models/image-data';
 import { CentroidSettings, defaults as defaultCentroidSettings } from './centroid-settings';
 

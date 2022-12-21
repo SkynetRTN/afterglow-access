@@ -11,7 +11,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
 import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
-import { ImageHdu, DataFile, Header } from '../../../data-files/models/data-file';
+import { ImageLayer, DataFile, Header } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { LoadLayerHeader } from '../../../data-files/data-files.actions';
 import { Source } from '../../models/source';
@@ -45,18 +45,18 @@ export class AlignerPageComponent implements OnInit {
 
   destroy$ = new Subject<boolean>();
 
-  selectedHduIds$: Observable<string[]>;
-  refHduId$: Observable<string>;
-  refHdu$: Observable<ImageHdu>;
+  selectedLayerIds$: Observable<string[]>;
+  refLayerId$: Observable<string>;
+  refLayer$: Observable<ImageLayer>;
   refHeader$: Observable<Header>;
-  refHduHasWcs$: Observable<boolean>;
+  refLayerHasWcs$: Observable<boolean>;
   alignFormData$: Observable<AlignFormData>;
   alignmentJob$: Observable<AlignmentJob>;
   manualSourceOptions$: Observable<Source[]>;
 
   alignForm = new FormGroup({
-    selectedHduIds: new FormControl([], Validators.required),
-    refHduId: new FormControl('', Validators.required),
+    selectedLayerIds: new FormControl([], Validators.required),
+    refLayerId: new FormControl('', Validators.required),
     crop: new FormControl('', Validators.required),
     mode: new FormControl('', Validators.required),
     manualSources: new FormControl('', Validators.required),
@@ -67,10 +67,10 @@ export class AlignerPageComponent implements OnInit {
 
     this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
       if (!layerIds || !config) return;
-      let selectedHduIds = config.alignFormData.selectedHduIds.filter((layerId) => layerIds.includes(layerId));
-      if (selectedHduIds.length != config.alignFormData.selectedHduIds.length) {
+      let selectedLayerIds = config.alignFormData.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
+      if (selectedLayerIds.length != config.alignFormData.selectedLayerIds.length) {
         setTimeout(() => {
-          this.setSelectedHduIds(selectedHduIds);
+          this.setSelectedLayerIds(selectedLayerIds);
         });
       }
     });
@@ -82,35 +82,35 @@ export class AlignerPageComponent implements OnInit {
 
 
 
-    this.refHduId$ = this.alignFormData$.pipe(
-      map((data) => (data && data.refHduId && data.selectedHduIds.includes(data.refHduId)) ? data.refHduId : null),
+    this.refLayerId$ = this.alignFormData$.pipe(
+      map((data) => (data && data.refLayerId && data.selectedLayerIds.includes(data.refLayerId)) ? data.refLayerId : null),
       distinctUntilChanged()
     );
 
-    this.manualSourceOptions$ = combineLatest(this.store.select(SourcesState.getEntities), this.refHduId$).pipe(
-      map(([sourcesById, refHduId]) => {
-        return Object.values(sourcesById).filter(source => !refHduId || source.layerId == refHduId)
+    this.manualSourceOptions$ = combineLatest(this.store.select(SourcesState.getEntities), this.refLayerId$).pipe(
+      map(([sourcesById, refLayerId]) => {
+        return Object.values(sourcesById).filter(source => !refLayerId || source.layerId == refLayerId)
       })
     )
 
 
-    combineLatest(this.alignFormData$, this.refHduId$).subscribe(([data, refHduId]) => {
+    combineLatest(this.alignFormData$, this.refLayerId$).subscribe(([data, refLayerId]) => {
       if (!data) return;
-      this.alignForm.patchValue({ ...data, refHduId: refHduId }, { emitEvent: false });
+      this.alignForm.patchValue({ ...data, refLayerId: refLayerId }, { emitEvent: false });
     });
 
 
 
-    this.refHdu$ = this.refHduId$.pipe(
+    this.refLayer$ = this.refLayerId$.pipe(
       switchMap((layerId) => {
-        return this.store.select(DataFilesState.getHduById(layerId)).pipe(
-          map((layer) => layer as ImageHdu),
+        return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
+          map((layer) => layer as ImageLayer),
           distinctUntilChanged()
         );
       })
     );
 
-    this.refHeader$ = this.refHdu$.pipe(
+    this.refHeader$ = this.refLayer$.pipe(
       map((layer) => layer && layer.headerId),
       distinctUntilChanged(),
       switchMap((headerId) => {
@@ -128,17 +128,17 @@ export class AlignerPageComponent implements OnInit {
       distinctUntilChanged()
     );
 
-    combineLatest(this.refHduId$, refHeaderLoaded$, refHeaderLoading$)
+    combineLatest(this.refLayerId$, refHeaderLoaded$, refHeaderLoading$)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(([refHduId, headerLoaded, headerLoading]) => {
-        if (refHduId && headerLoaded != null && !headerLoaded && headerLoading != null && !headerLoading) {
+      .subscribe(([refLayerId, headerLoaded, headerLoading]) => {
+        if (refLayerId && headerLoaded != null && !headerLoaded && headerLoading != null && !headerLoading) {
           setTimeout(() => {
-            this.store.dispatch(new LoadLayerHeader(refHduId));
+            this.store.dispatch(new LoadLayerHeader(refLayerId));
           });
         }
       });
 
-    this.refHduHasWcs$ = this.refHeader$.pipe(
+    this.refLayerHasWcs$ = this.refHeader$.pipe(
       map((header) => header && header.wcs && header.wcs.isValid()),
       distinctUntilChanged()
     );
@@ -168,34 +168,34 @@ export class AlignerPageComponent implements OnInit {
 
   ngOnInit() { }
 
-  getHduOptionLabel(layerId: string) {
-    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+  getLayerOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
       map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(layerIds: string[]) {
+  setSelectedLayerIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdateAligningPanelConfig({
         alignFormData: {
           ...this.alignForm.value,
-          selectedHduIds: layerIds,
+          selectedLayerIds: layerIds,
         },
       })
     );
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.layerIds);
+    this.setSelectedLayerIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {
-    this.setSelectedHduIds([]);
+    this.setSelectedLayerIds([]);
   }
 
   submit(data: AlignFormData) {
-    let selectedHduIds: string[] = this.alignForm.controls.selectedHduIds.value;
-    this.store.dispatch(new CreateAlignmentJob(selectedHduIds));
+    let selectedLayerIds: string[] = this.alignForm.controls.selectedLayerIds.value;
+    this.store.dispatch(new CreateAlignmentJob(selectedLayerIds));
   }
 }

@@ -61,10 +61,10 @@ export enum WorkbenchTool {
 export interface PixelOpsFormData {
   operand: '+' | '-' | '/' | '*';
   mode: 'scalar' | 'image' | 'kernel';
-  selectedHduIds: string[];
-  primaryHduIds: string[];
-  auxHduId: string;
-  auxHduIds: string[];
+  selectedLayerIds: string[];
+  primaryLayerIds: string[];
+  auxLayerId: string;
+  auxLayerIds: string[];
   scalarValue: number;
   kernelFilter: KernelFilter;
   kernelSize: number;
@@ -74,18 +74,18 @@ export interface PixelOpsFormData {
 }
 
 export interface AlignFormData {
-  selectedHduIds: string[];
-  refHduId: string;
+  selectedLayerIds: string[];
+  refLayerId: string;
   mode: 'astrometric' | 'manual_source';
   crop: boolean;
 }
 
 export interface BatchPhotometryFormData {
-  selectedHduIds: string[];
+  selectedLayerIds: string[];
 }
 
 export interface StackFormData {
-  selectedHduIds: string[];
+  selectedLayerIds: string[];
   mode: 'average' | 'percentile' | 'mode' | 'sum';
   scaling: 'none' | 'average' | 'median' | 'mode';
   rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';
@@ -144,7 +144,7 @@ export interface StackingPanelConfig {
 }
 
 export interface WcsCalibrationPanelConfig {
-  selectedHduIds: string[];
+  selectedLayerIds: string[];
   activeJobId: string;
   ra?: number | string;
   dec?: number | string;

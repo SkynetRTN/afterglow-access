@@ -1,7 +1,7 @@
 <ng-template #nullSelection>
   <div class="alert alert-info" i18n>Select an image file</div>
 </ng-template>
-<ng-container *ngIf="selectedHduIds$ | async as selectedHduIds; else nullSelection">
+<ng-container *ngIf="selectedLayerIds$ | async as selectedLayerIds; else nullSelection">
   <mat-tab-group (selectedTabChange)="onTabChange($event)">
     <mat-tab i18n-label label="Simple">
       <div class="tab-contents">
@@ -16,31 +16,31 @@
           <div>
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Selected Image(s)</mat-label>
-              <mat-select multiple formControlName="selectedHduIds">
-                <mat-option *ngFor="let selectedHduId of selectedHduIds" [value]="selectedHduId">
-                  {{ getHduOptionLabel(selectedHduId) | async }}
+              <mat-select multiple formControlName="selectedLayerIds">
+                <mat-option *ngFor="let selectedLayerId of selectedLayerIds" [value]="selectedLayerId">
+                  {{ getLayerOptionLabel(selectedLayerId) | async }}
                 </mat-option>
               </mat-select>
-              <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
+              <!-- <input readonly disabled matInput i18n-placeholder [value]="getLayerOptionLabel(selectedLayerId) | async" /> -->
             </mat-form-field>
 
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Additional Image(s)</mat-label>
-              <mat-select multiple formControlName="primaryHduIds">
-                <ng-container *ngFor="let layerId of availableHduIds">
-                  <mat-option *ngIf="!selectedHduIds.includes(layerId)" [value]="layerId">
-                    {{ getHduOptionLabel(layerId) | async }}
+              <mat-select multiple formControlName="primaryLayerIds">
+                <ng-container *ngFor="let layerId of availableLayerIds">
+                  <mat-option *ngIf="!selectedLayerIds.includes(layerId)" [value]="layerId">
+                    {{ getLayerOptionLabel(layerId) | async }}
                   </mat-option>
                 </ng-container>
 
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="onSelectAllPrimaryHdusBtnClick()">
+            <button mat-icon-button (click)="onSelectAllPrimaryLayersBtnClick()">
               <mat-icon>select_all</mat-icon>
             </button>
 
-            <button mat-icon-button (click)="onClearPrimaryHdusSelectionBtnClick()">
+            <button mat-icon-button (click)="onClearPrimaryLayersSelectionBtnClick()">
               <mat-icon>clear</mat-icon>
             </button>
           </div>
@@ -56,9 +56,9 @@
 
           <mat-form-field appearance="outline" *ngIf="!(imageCalcForm.value?.mode != 'image')">
             <mat-label i18n>Select an image</mat-label>
-            <mat-select formControlName="auxHduId">
-              <mat-option *ngFor="let layerId of availableHduIds" [value]="layerId">
-                {{ getHduOptionLabel(layerId) | async }}
+            <mat-select formControlName="auxLayerId">
+              <mat-option *ngFor="let layerId of availableLayerIds" [value]="layerId">
+                {{ getLayerOptionLabel(layerId) | async }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -118,31 +118,31 @@
           <div>
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Selected Image(s)</mat-label>
-              <mat-select multiple formControlName="selectedHduIds">
-                <mat-option *ngFor="let selectedHduId of selectedHduIds" [value]="selectedHduId">
-                  {{ getHduOptionLabel(selectedHduId) | async }}
+              <mat-select multiple formControlName="selectedLayerIds">
+                <mat-option *ngFor="let selectedLayerId of selectedLayerIds" [value]="selectedLayerId">
+                  {{ getLayerOptionLabel(selectedLayerId) | async }}
                 </mat-option>
               </mat-select>
-              <!-- <input readonly disabled matInput i18n-placeholder [value]="getHduOptionLabel(selectedHduId) | async" /> -->
+              <!-- <input readonly disabled matInput i18n-placeholder [value]="getLayerOptionLabel(selectedLayerId) | async" /> -->
             </mat-form-field>
 
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Additional Image(s)</mat-label>
-              <mat-select multiple formControlName="primaryHduIds">
-                <ng-container *ngFor="let layerId of availableHduIds">
-                  <mat-option *ngIf="!selectedHduIds.includes(layerId)" [value]="layerId">
-                    {{ getHduOptionLabel(layerId) | async }}
+              <mat-select multiple formControlName="primaryLayerIds">
+                <ng-container *ngFor="let layerId of availableLayerIds">
+                  <mat-option *ngIf="!selectedLayerIds.includes(layerId)" [value]="layerId">
+                    {{ getLayerOptionLabel(layerId) | async }}
                   </mat-option>
                 </ng-container>
 
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="onSelectAllPrimaryHdusBtnClick()">
+            <button mat-icon-button (click)="onSelectAllPrimaryLayersBtnClick()">
               <mat-icon>select_all</mat-icon>
             </button>
 
-            <button mat-icon-button (click)="onClearPrimaryHdusSelectionBtnClick()">
+            <button mat-icon-button (click)="onClearPrimaryLayersSelectionBtnClick()">
               <mat-icon>clear</mat-icon>
             </button>
           </div>
@@ -150,18 +150,18 @@
           <div>
             <mat-form-field appearance="outline" style="width: 300px">
               <mat-label i18n>Auxillary image(s)</mat-label>
-              <mat-select multiple formControlName="auxHduIds">
-                <mat-option *ngFor="let layerId of availableHduIds" [value]="layerId">
-                  {{ getHduOptionLabel(layerId) | async }}
+              <mat-select multiple formControlName="auxLayerIds">
+                <mat-option *ngFor="let layerId of availableLayerIds" [value]="layerId">
+                  {{ getLayerOptionLabel(layerId) | async }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
 
-            <button mat-icon-button (click)="onSelectAllAuxHdusBtnClick()">
+            <button mat-icon-button (click)="onSelectAllAuxLayersBtnClick()">
               <mat-icon>select_all</mat-icon>
             </button>
 
-            <button mat-icon-button (click)="onClearAuxHdusSelectionBtnClick()">
+            <button mat-icon-button (click)="onClearAuxLayersSelectionBtnClick()">
               <mat-icon>clear</mat-icon>
             </button>
           </div>

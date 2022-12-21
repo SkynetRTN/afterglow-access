@@ -1,4 +1,4 @@
-<ng-template #invalidHduTypeBlock>
+<ng-template #invalidLayerTypeBlock>
   <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the plotting tool.</div>
 </ng-template>
 
@@ -8,7 +8,7 @@
 
 <ng-container *ngIf="config$ | async; let config">
   <ng-container *ngIf="file$ | async; else fileNotSelectedBlock">
-    <ng-container *ngIf="!(layer$ | async) || (layer$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
+    <ng-container *ngIf="!(layer$ | async) || (layer$ | async).type == LayerType.IMAGE; else invalidLayerTypeBlock">
       <p i18n>
         Click once on the image to set the measurement's start point, move your mouse, then click a second time to set
         the end point.

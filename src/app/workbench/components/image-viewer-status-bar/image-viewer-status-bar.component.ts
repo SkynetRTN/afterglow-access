@@ -8,7 +8,7 @@ import {
   ChangeDetectionStrategy,
   OnDestroy,
 } from '@angular/core';
-import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageLayer, PixelType } from '../../../data-files/models/data-file';
 import { Subject, timer, BehaviorSubject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { takeUntil } from 'rxjs/operators';

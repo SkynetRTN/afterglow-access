@@ -251,7 +251,7 @@
         </app-sonification-panel>
 
         <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [viewerId]="focusedViewerId$ | async"
-          [layerIds]="filteredHduIds$ | async">
+          [layerIds]="filteredLayerIds$ | async">
         </app-wcs-calibration-panel>
 
         <app-source-panel *ngSwitchCase="WorkbenchTool.SOURCE" [viewerId]="focusedViewerId$ | async">
@@ -259,19 +259,19 @@
 
 
         <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [viewerId]="focusedViewerId$ | async"
-          [batchHduIdOptions]="filteredImageHduIds$ | async">
+          [batchLayerIdOptions]="filteredImageLayerIds$ | async">
         </app-photometry-panel>
 
         <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [viewerId]="focusedViewerId$ | async"
-          [availableHduIds]="filteredImageHduIds$ | async">
+          [availableLayerIds]="filteredImageLayerIds$ | async">
         </app-pixel-ops-panel>
 
 
 
-        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [layerIds]="filteredHduIds$ | async">
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [layerIds]="filteredLayerIds$ | async">
         </app-aligning-panel>
 
-        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [layerIds]="filteredHduIds$ | async">
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [layerIds]="filteredLayerIds$ | async">
         </app-stacking-panel>
       </div>
     </div>

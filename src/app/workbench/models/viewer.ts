@@ -1,5 +1,5 @@
 import { Marker } from './marker';
-import { DataFile, IHdu } from '../../data-files/models/data-file';
+import { DataFile, ILayer } from '../../data-files/models/data-file';
 import { TypeGuard } from '../../utils/guard-type.pipe';
 
 export enum ViewerType {

@@ -23,7 +23,7 @@ import { takeUntil } from 'rxjs/operators';
   templateUrl: './image-layer-toolbar.component.html',
   styleUrls: ['./image-layer-toolbar.component.scss'],
 })
-export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ImageLayerToolbarComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input()
   showBlendMode: boolean = false;
 

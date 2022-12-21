@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageHduToolbarComponent } from './image-layer-toolbar.component';
+import { ImageLayerToolbarComponent } from './image-layer-toolbar.component';
 
-describe('HduToolbarComponent', () => {
-  let component: ImageHduToolbarComponent;
-  let fixture: ComponentFixture<ImageHduToolbarComponent>;
+describe('LayerToolbarComponent', () => {
+  let component: ImageLayerToolbarComponent;
+  let fixture: ComponentFixture<ImageLayerToolbarComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ImageHduToolbarComponent],
+      declarations: [ImageLayerToolbarComponent],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ImageHduToolbarComponent);
+    fixture = TestBed.createComponent(ImageLayerToolbarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

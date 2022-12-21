@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, ViewChild, AfterViewInit, ElementRef } from 
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { isValidFilename } from '../../../utils/validators';
-import { DataFile, IHdu } from 'src/app/data-files/models/data-file';
+import { DataFile, ILayer } from 'src/app/data-files/models/data-file';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { forkJoin } from 'rxjs';
 

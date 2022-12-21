@@ -4,9 +4,9 @@ import { Observable, BehaviorSubject, Subject, throwError, merge } from 'rxjs';
 import {
   Header,
   DataFile,
-  IHdu,
-  ImageHdu,
-  TableHdu,
+  ILayer,
+  ImageLayer,
+  TableLayer,
   getWidth,
   getHeight,
   getRaHours,
@@ -17,7 +17,7 @@ import { DataProvider } from '../../../data-providers/models/data-provider';
 import { WorkbenchState } from '../../workbench.state';
 import { IViewer } from '../../models/viewer';
 import { switchMap, map, takeUntil, withLatestFrom, filter, take, flatMap, tap } from 'rxjs/operators';
-import { HduType } from '../../../data-files/models/data-file-type';
+import { LayerType } from '../../../data-files/models/data-file-type';
 import { DataProvidersState } from '../../../data-providers/data-providers.state';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import {
@@ -51,10 +51,10 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
 
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
-  layer$: Observable<IHdu>;
+  layer$: Observable<ILayer>;
   header$: Observable<Header>;
-  imageHdu$: Observable<ImageHdu>;
-  tableHdu$: Observable<TableHdu>;
+  imageLayer$: Observable<ImageLayer>;
+  tableLayer$: Observable<TableLayer>;
 
   destroy$ = new Subject<boolean>();
   importFromSurveyEvent$ = new Subject<boolean>();
@@ -80,16 +80,16 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
     );
 
     this.header$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId)))
     );
 
     this.layer$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.IMAGE ? (layer as ImageHdu) : null)));
+    this.imageLayer$ = this.layer$.pipe(map((layer) => (layer && layer.type == LayerType.IMAGE ? (layer as ImageLayer) : null)));
 
-    this.tableHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.TABLE ? (layer as TableHdu) : null)));
+    this.tableLayer$ = this.layer$.pipe(map((layer) => (layer && layer.type == LayerType.TABLE ? (layer as TableLayer) : null)));
 
     this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
     this.surveyDataProvider$ = this.store
@@ -165,7 +165,7 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
   onImportFromSurvey() {
     this.surveyFileId$.pipe(take(1)).subscribe(
       (surveyFileId) => {
-        let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
         if (surveyFileId && surveyFileId in layerEntities) {
           let layer = layerEntities[surveyFileId];
           this.store.dispatch(new SelectFile(layer.fileId, layer.id, true));

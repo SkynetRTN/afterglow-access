@@ -3,9 +3,9 @@
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Align</mat-label>
-        <mat-select multiple formControlName="selectedHduIds">
+        <mat-select multiple formControlName="selectedLayerIds">
           <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
-            {{ getHduOptionLabel(layerId) | async }}
+            {{ getLayerOptionLabel(layerId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -22,9 +22,9 @@
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Reference Image File</mat-label>
-        <mat-select formControlName="refHduId" [value]="(refHdu$ | async)?.id">
-          <mat-option *ngFor="let layerId of (config$ | async)?.alignFormData?.selectedHduIds" [value]="layerId">
-            {{ getHduOptionLabel(layerId) | async }}
+        <mat-select formControlName="refLayerId" [value]="(refLayer$ | async)?.id">
+          <mat-option *ngFor="let layerId of (config$ | async)?.alignFormData?.selectedLayerIds" [value]="layerId">
+            {{ getLayerOptionLabel(layerId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -61,7 +61,7 @@
         Reference header loading...
       </div>
       <ng-template #hasWcsBlock>
-        <div *ngIf="!(refHeader$ | async).loading && !(refHduHasWcs$ | async)" class="alert alert-warning"
+        <div *ngIf="!(refHeader$ | async).loading && !(refLayerHasWcs$ | async)" class="alert alert-warning"
           style="margin-top: 10px" i18n>
           This image does not have astrometric data in its header and cannot be aligned using the selected mode.
         </div>

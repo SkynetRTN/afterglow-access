@@ -1,4 +1,4 @@
-<ng-template #invalidHduTypeBlock>
+<ng-template #invalidLayerTypeBlock>
   <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the photometry tool.</div>
 </ng-template>
 
@@ -10,7 +10,7 @@
   <ng-container *ngIf="sourcePanelConfig$ | async; let sourcePanelConfig">
 
     <ng-container *ngIf="layer$ | async as layer; else layerNotSelectedBlock">
-      <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
+      <ng-container *ngIf="imageLayer$ | async as imageLayer; else invalidLayerTypeBlock">
 
         <div>
           <p i18n>
@@ -214,29 +214,29 @@
 
           <hr />
           <div>
-            <div *ngIf="batchHduIdOptions">
+            <div *ngIf="batchLayerIdOptions">
               <p i18n>Use batch photometry to photometer all of your sources in multiple image layers/files.</p>
               <form [formGroup]="batchPhotForm">
                 <div>
                   <mat-form-field appearance="outline" style="width: 300px">
                     <mat-label i18n>Select Image(s) to Photometer</mat-label>
-                    <mat-select multiple formControlName="selectedHduIds">
-                      <mat-option *ngFor="let layerId of batchHduIdOptions" [value]="layerId">
-                        {{ getHduOptionLabel(layerId) | async }}
+                    <mat-select multiple formControlName="selectedLayerIds">
+                      <mat-option *ngFor="let layerId of batchLayerIdOptions" [value]="layerId">
+                        {{ getLayerOptionLabel(layerId) | async }}
                       </mat-option>
                     </mat-select>
                   </mat-form-field>
 
-                  <button mat-icon-button (click)="selectHdus(batchHduIdOptions)" i18n-matTooltip
+                  <button mat-icon-button (click)="selectLayers(batchLayerIdOptions)" i18n-matTooltip
                     matTooltip="Select all">
                     <mat-icon>select_all</mat-icon>
                   </button>
 
-                  <button mat-icon-button (click)="selectHdus([])" i18n-matTooltip matTooltip="Clear Selection">
+                  <button mat-icon-button (click)="selectLayers([])" i18n-matTooltip matTooltip="Clear Selection">
                     <mat-icon>clear</mat-icon>
                   </button>
                   <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()"
-                    [disabled]="config?.batchPhotFormData?.selectedHduIds?.length == 0 || sources?.length == 0 || (creatingBatchJobs$ | async)"
+                    [disabled]="config?.batchPhotFormData?.selectedLayerIds?.length == 0 || sources?.length == 0 || (creatingBatchJobs$ | async)"
                     i18n-matTooltip matTooltip="Batch Photometer">
                     <mat-icon>wb_incandescent</mat-icon>
                   </button>

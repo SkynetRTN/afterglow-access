@@ -9,7 +9,7 @@ import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
 import { JobsState } from '../../../jobs/jobs.state';
 import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../../workbench.actions';
-import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 
 @Component({
@@ -31,13 +31,13 @@ export class StackerPanelComponent implements OnInit {
   config$: Observable<StackingPanelConfig>;
 
   destroy$ = new Subject<boolean>();
-  selectedHdus$: Observable<Array<ImageHdu>>;
+  selectedLayers$: Observable<Array<ImageLayer>>;
   stackFormData$: Observable<StackFormData>;
   stackingJob$: Observable<StackingJob>;
   dataFileEntities$: Observable<{ [id: string]: DataFile }>;
 
   stackForm = new FormGroup({
-    selectedHduIds: new FormControl([], Validators.required),
+    selectedLayerIds: new FormControl([], Validators.required),
     mode: new FormControl('average', Validators.required),
     scaling: new FormControl('none', Validators.required),
     rejection: new FormControl('none', Validators.required),
@@ -52,10 +52,10 @@ export class StackerPanelComponent implements OnInit {
 
     this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
       if (!layerIds || !config) return;
-      let selectedHduIds = config.stackFormData.selectedHduIds.filter((layerId) => layerIds.includes(layerId));
-      if (selectedHduIds.length != config.stackFormData.selectedHduIds.length) {
+      let selectedLayerIds = config.stackFormData.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
+      if (selectedLayerIds.length != config.stackFormData.selectedLayerIds.length) {
         setTimeout(() => {
-          this.setSelectedHduIds(selectedHduIds);
+          this.setSelectedLayerIds(selectedLayerIds);
         });
       }
     });
@@ -116,35 +116,35 @@ export class StackerPanelComponent implements OnInit {
     });
   }
 
-  getHduOptionLabel(layerId: string) {
-    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+  getLayerOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
       map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(layerIds: string[]) {
+  setSelectedLayerIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdateStackingPanelConfig({
         stackFormData: {
           ...this.stackForm.value,
-          selectedHduIds: layerIds,
+          selectedLayerIds: layerIds,
         },
       })
     );
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.layerIds);
+    this.setSelectedLayerIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {
-    this.setSelectedHduIds([]);
+    this.setSelectedLayerIds([]);
   }
 
   submit(data: StackFormData) {
-    let selectedHduIds: string[] = this.stackForm.controls.selectedHduIds.value;
-    this.store.dispatch(new CreateStackingJob(selectedHduIds));
+    let selectedLayerIds: string[] = this.stackForm.controls.selectedLayerIds.value;
+    this.store.dispatch(new CreateStackingJob(selectedLayerIds));
   }
 
   ngOnInit() { }

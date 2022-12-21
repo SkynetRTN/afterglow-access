@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PixelPrecision, PixelType } from '../../data-files/models/data-file';
 import { Source, PosType } from '../models/source';
-import { HduType } from '../../data-files/models/data-file-type';
+import { LayerType } from '../../data-files/models/data-file-type';
 import { Region } from '../../data-files/models/region';
 import { HeaderEntry } from '../../data-files/models/header-entry';
 import { AfterglowConfigService } from '../../afterglow-config.service';
@@ -14,7 +14,7 @@ import { CoreApiResponse } from '../../utils/core-api-response';
 
 export interface CoreDataFile {
   id: string;
-  type: HduType;
+  type: LayerType;
   name: string;
   dataProvider: string;
   assetPath: string;

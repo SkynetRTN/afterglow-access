@@ -18,9 +18,9 @@
       <div class="flex flex-row gap-2 items-center">
         <mat-form-field appearance="outline" style="width: 300px">
           <mat-label i18n>Select Image(s) to Calibrate</mat-label>
-          <mat-select multiple formControlName="selectedHduIds">
+          <mat-select multiple formControlName="selectedLayerIds">
             <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
-              {{ getHduOptionLabel(layerId) | async }}
+              {{ getLayerOptionLabel(layerId) | async }}
             </mat-option>
           </mat-select>
         </mat-form-field>

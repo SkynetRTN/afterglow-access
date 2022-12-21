@@ -1,4 +1,4 @@
-import { ImageHdu } from "../data-files/models/data-file";
+import { ImageLayer } from "../data-files/models/data-file";
 import { calcLevels, getBinCenter, getCountsPerBin, ImageHist } from "../data-files/models/image-hist";
 import { erf } from "./math";
 

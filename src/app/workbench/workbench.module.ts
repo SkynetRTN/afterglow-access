@@ -61,7 +61,7 @@ import { WcsCalibrationPanelComponent } from './containers/wcs-calibration-panel
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FileListOptionComponent } from './containers/file-list-option/file-list-option.component';
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
-import { ImageHduToolbarComponent } from './components/image-layer-toolbar/image-layer-toolbar.component';
+import { ImageLayerToolbarComponent } from './components/image-layer-toolbar/image-layer-toolbar.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/svg-outlined-ellipse.component';
 import { ImageViewerEventService } from './services/image-viewer-event.service';
@@ -72,7 +72,7 @@ import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
 import { ColorPickerModule } from 'ngx-color-picker';
-import { RenameHduDialogComponent } from './components/rename-layer-dialog/rename-layer-dialog.component';
+import { RenameLayerDialogComponent } from './components/rename-layer-dialog/rename-layer-dialog.component';
 import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
 import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 import { SourceNeutralizationDialogComponent } from './components/source-neutralization-dialog/source-neutralization-dialog.component';
@@ -121,12 +121,12 @@ export const COMPONENTS = [
   JobProgressDialogComponent,
   WcsCalibrationPanelComponent,
   FileToolbarComponent,
-  ImageHduToolbarComponent,
+  ImageLayerToolbarComponent,
   FileListOptionComponent,
   CatalogImportComponent,
   ImageOrientationToolbarComponent,
   PsfMatchingDialogComponent,
-  RenameHduDialogComponent,
+  RenameLayerDialogComponent,
   RenameFileDialogComponent,
   PhotometricColorBalanceDialogComponent,
   SourceNeutralizationDialogComponent,

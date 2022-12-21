@@ -29,8 +29,8 @@ import {
   Header,
   getSourceCoordinates,
   getCenterTime,
-  ImageHdu,
-  IHdu,
+  ImageLayer,
+  ILayer,
   PixelType,
 } from '../../data-files/models/data-file';
 import { SidebarView } from '../models/sidebar-view';
@@ -84,9 +84,9 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../utils/correlated-action';
 import { DataProvidersState } from '../../data-providers/data-providers.state';
 import { Navigate } from '@ngxs/router-plugin';
-import { WorkbenchFileState, WorkbenchImageHduState, WorkbenchStateType } from '../models/workbench-file-state';
+import { WorkbenchFileState, WorkbenchImageLayerState, WorkbenchStateType } from '../models/workbench-file-state';
 import { WorkbenchTool, ViewerPanelContainer } from '../models/workbench-state';
-import { HduType } from '../../data-files/models/data-file-type';
+import { LayerType } from '../../data-files/models/data-file-type';
 import {
   LoadLibrary,
   LoadLibrarySuccess,
@@ -129,7 +129,7 @@ import { DecimalPipe } from '@angular/common';
 export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   WorkbenchTool = WorkbenchTool;
   ViewMode = ViewMode;
-  HduType = HduType;
+  LayerType = LayerType;
   shortcuts: ShortcutInput[] = [];
 
   @ViewChild(DataFileListComponent)
@@ -152,10 +152,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   @Select(WorkbenchState.getFileListFilter) fileFilter$: Observable<string>;
 
   @Select(WorkbenchState.getFilteredFiles) filteredFiles$: Observable<DataFile[]>;
-  filteredHduIds$: Observable<string[]>;
-  filteredHdus$: Observable<IHdu[]>;
-  filteredImageHdus$: Observable<ImageHdu[]>;
-  filteredImageHduIds$: Observable<string[]>;
+  filteredLayerIds$: Observable<string[]>;
+  filteredLayers$: Observable<ILayer[]>;
+  filteredImageLayers$: Observable<ImageLayer[]>;
+  filteredImageLayerIds$: Observable<string[]>;
   fileFilterInput$ = new Subject<string>();
 
   @Select(WorkbenchState.getSelectedFilteredFileIds) selectedFileIds$: Observable<string[]>;
@@ -166,7 +166,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   @Select(WorkbenchState.getRootViewerPanelContainer) layoutContainer$: Observable<ViewerPanelContainer>;
   @Select(WorkbenchState.getViewers) viewers$: Observable<IViewer[]>;
   @Select(WorkbenchState.getFocusedViewer) focusedViewer$: Observable<IViewer>;
-  @Select(WorkbenchState.getFocusedViewerHdu) focusedViewerHdu$: Observable<IHdu>;
+  @Select(WorkbenchState.getFocusedViewerLayer) focusedViewerLayer$: Observable<ILayer>;
   @Select(WorkbenchState.getFocusedViewerId) focusedViewerId$: Observable<string>;
   @Select(WorkbenchState.getFocusedImageViewer) focusedImageViewer$: Observable<ImageViewer>;
   @Select(WorkbenchState.getFocusedImageViewerId) focusedImageViewerId$: Observable<string>;
@@ -194,21 +194,21 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       this.store.dispatch(new SetFileListFilter(value));
     });
 
-    this.filteredHduIds$ = this.store
-      .select(WorkbenchState.getFilteredHduIds)
+    this.filteredLayerIds$ = this.store
+      .select(WorkbenchState.getFilteredLayerIds)
       .pipe(
         distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
       );
 
-    this.filteredHdus$ = this.filteredHduIds$.pipe(
-      switchMap((layerIds) => this.store.select(DataFilesState.getHdusByIds(layerIds)))
+    this.filteredLayers$ = this.filteredLayerIds$.pipe(
+      switchMap((layerIds) => this.store.select(DataFilesState.getLayersByIds(layerIds)))
     );
 
-    this.filteredImageHdus$ = this.filteredHdus$.pipe(
-      map((layers) => (!layers ? null : (layers.filter((layer) => layer.type == HduType.IMAGE) as ImageHdu[])))
+    this.filteredImageLayers$ = this.filteredLayers$.pipe(
+      map((layers) => (!layers ? null : (layers.filter((layer) => layer.type == LayerType.IMAGE) as ImageLayer[])))
     );
 
-    this.filteredImageHduIds$ = this.filteredImageHdus$.pipe(map((layers) => layers.map((layer) => layer.id)));
+    this.filteredImageLayerIds$ = this.filteredImageLayers$.pipe(map((layers) => layers.map((layer) => layer.id)));
 
     this.activeRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe((p) => {
       let tool = WorkbenchTool.VIEWER;
@@ -274,18 +274,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
-          let refImageHdu$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId)).pipe(
+          let refImageLayer$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId)).pipe(
             map((viewer) => (viewer ? viewer.layerId : null)),
             distinctUntilChanged(),
             switchMap((layerId) =>
               this.store
-                .select(DataFilesState.getHduById(layerId))
-                .pipe(map((layer) => (layer && layer.type != HduType.IMAGE ? null : (layer as ImageHdu))))
+                .select(DataFilesState.getLayerById(layerId))
+                .pipe(map((layer) => (layer && layer.type != LayerType.IMAGE ? null : (layer as ImageLayer))))
             ),
             distinctUntilChanged()
           );
 
-          let refNormalizer$ = refImageHdu$.pipe(
+          let refNormalizer$ = refImageLayer$.pipe(
             map((layer) => (layer ? layer.normalizer : null)),
             distinctUntilChanged(),
             skip(1)
@@ -335,7 +335,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
             return;
           }
           targetPlottingPanelStateIds.push(
-            (workbenchState as WorkbenchFileState | WorkbenchImageHduState).plottingPanelStateId
+            (workbenchState as WorkbenchFileState | WorkbenchImageLayerState).plottingPanelStateId
           );
         });
 
@@ -569,13 +569,13 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
     let handleZoomKey = (cmd: 'in' | 'out' | 'reset' | 'fit') => {
       let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
       if (!viewer || !viewer.viewportSize || !viewer.layerId) return;
-      let layer = this.store.selectSnapshot(DataFilesState.getHduById(viewer.layerId));
-      if (!layer || layer.type != HduType.IMAGE) return;
-      let imageHdu = layer as ImageHdu;
-      let imageDataId = imageHdu.rgbaImageDataId;
+      let layer = this.store.selectSnapshot(DataFilesState.getLayerById(viewer.layerId));
+      if (!layer || layer.type != LayerType.IMAGE) return;
+      let imageLayer = layer as ImageLayer;
+      let imageDataId = imageLayer.rgbaImageDataId;
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));
-      let imageTransformId = imageHdu.imageTransformId;
-      let viewportTransformId = imageHdu.viewportTransformId;
+      let imageTransformId = imageLayer.imageTransformId;
+      let viewportTransformId = imageLayer.viewportTransformId;
       switch (cmd) {
         case 'in': {
           this.store.dispatch(
@@ -677,7 +677,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getViewerLabel(viewer: IViewer, index: number) {
-    let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
     let file = fileEntities[viewer.fileId];
@@ -753,7 +753,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   //   this.afterLibrarySync()
   //     .pipe(
   //       flatMap(({ dataProviderEntities, fileEntities }) => {
-  //         let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+  //         let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
 
   //         //remove files which have not been modified
   //         let files = Object.values(fileEntities).filter((file) => {
@@ -1176,7 +1176,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               let reqs: Observable<any>[] = [];
               files.forEach((file) => {
                 file.layerIds.forEach((layerId, index) => {
-                  let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[layerId];
+                  let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId];
                   let uuid = UUID.UUID();
                   let newFilename = file.name + '_' + index;
                   viewers
@@ -1306,7 +1306,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               let reqs: Observable<any>[] = [];
               files.forEach((file, order) => {
                 file.layerIds.forEach((layerId) => {
-                  let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[layerId];
+                  let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId];
                   viewers
                     .filter((viewer) => viewer.layerId == layerId || viewer.fileId == layer.fileId)
                     .forEach((viewer) => this.store.dispatch(new CloseViewer(viewer.id)));

@@ -23,7 +23,7 @@ import { Source, PosType } from './models/source';
 import { Marker } from './models/marker';
 import { IViewer, Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
-import { DataFile, IHdu, Header } from '../data-files/models/data-file';
+import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
 import { SonificationPanelState } from './models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
@@ -487,7 +487,7 @@ export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
 
-export class InitializeWorkbenchHduState {
+export class InitializeWorkbenchLayerState {
   public static readonly type = '[Workbench HDU State] Initialize Workbench HDU State';
 
   constructor(public layerId: string) { }
@@ -663,14 +663,14 @@ export class UpdateAutoFieldCalibration {
   ) { }
 }
 
-export class InvalidateAutoCalByHduId {
-  public static readonly type = '[Phot Data] Invalidate Auto Cal By Hdu ID';
+export class InvalidateAutoCalByLayerId {
+  public static readonly type = '[Phot Data] Invalidate Auto Cal By Layer ID';
 
   constructor(public layerId: string = null) { }
 }
 
-export class InvalidateAutoPhotByHduId {
-  public static readonly type = '[Phot Data] Invalidate Auto Phot By Hdu ID';
+export class InvalidateAutoPhotByLayerId {
+  public static readonly type = '[Phot Data] Invalidate Auto Phot By Layer ID';
 
   constructor(public layerId: string = null) { }
 }
@@ -732,7 +732,7 @@ export class AddPhotDatas {
   constructor(public photDatas: PhotometryData[]) { }
 }
 
-export class RemovePhotDatasByHduId {
+export class RemovePhotDatasByLayerId {
   public static readonly type = '[Phot Data] Remove Phot Datas By HDU Id';
 
   constructor(public layerId: string = null) { }

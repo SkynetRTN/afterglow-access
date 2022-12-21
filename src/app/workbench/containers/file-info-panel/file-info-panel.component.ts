@@ -11,7 +11,7 @@ import {
   getObject,
   getTelescope,
   getFilter,
-  IHdu,
+  ILayer,
   getObservatory,
 } from '../../../data-files/models/data-file';
 import { DecimalPipe, DatePipe } from '@angular/common';
@@ -44,7 +44,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
   protected viewerId$ = new BehaviorSubject<string>(null);
 
   destroy$ = new Subject<boolean>();
-  layer$: Observable<IHdu>;
+  layer$: Observable<ILayer>;
   header$: Observable<Header>;
   config$: Observable<FileInfoPanelConfig>;
 
@@ -53,11 +53,11 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
 
   constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, private store: Store) {
     this.layer$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerByViewerId(viewerId)))
     );
 
     this.header$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId)))
     );
 
     this.config$ = this.store.select(WorkbenchState.getFileInfoPanelConfig);

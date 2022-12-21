@@ -2,7 +2,7 @@ import { PhotometryPanelState } from './photometry-file-state';
 import { PlottingPanelState } from './plotter-file-state';
 import { SonificationPanelState } from './sonifier-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
-import { HduType } from '../../data-files/models/data-file-type';
+import { LayerType } from '../../data-files/models/data-file-type';
 
 export enum WorkbenchStateType {
   FILE = 'file',
@@ -20,7 +20,7 @@ export interface WorkbenchFileState extends IWorkbenchState {
   customMarkerPanelStateId: string;
 }
 
-export interface WorkbenchImageHduState extends IWorkbenchState {
+export interface WorkbenchImageLayerState extends IWorkbenchState {
   type: WorkbenchStateType.IMAGE_HDU;
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
@@ -30,6 +30,6 @@ export interface WorkbenchImageHduState extends IWorkbenchState {
   wcsCalibrationPanelStateId: string;
 }
 
-export interface WorkbenchTableHduState extends IWorkbenchState {
+export interface WorkbenchTableLayerState extends IWorkbenchState {
   type: WorkbenchStateType.TABLE_HDU;
 }
