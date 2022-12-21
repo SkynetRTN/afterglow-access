@@ -1,4 +1,4 @@
-export interface ImageHist {
+export interface ImageHistogram {
   loaded: boolean;
   loading: boolean;
   initialized: boolean;
@@ -90,28 +90,28 @@ export interface ImageHist {
   // }
 }
 
-export function getNumBins(hist: ImageHist) {
+export function getNumBins(hist: ImageHistogram) {
   return hist.data ? hist.data.length : 0;
 }
 
-export function getCountsPerBin(hist: ImageHist) {
+export function getCountsPerBin(hist: ImageHistogram) {
   return getNumBins(hist) == 0 ? 0 : (hist.maxBin - hist.minBin) / getNumBins(hist);
 }
 
-export function getBinLeft(hist: ImageHist, index: number) {
+export function getBinLeft(hist: ImageHistogram, index: number) {
   return hist.minBin + index * getCountsPerBin(hist);
 }
 
-export function getBinRight(hist: ImageHist, index: number) {
+export function getBinRight(hist: ImageHistogram, index: number) {
   return getBinLeft(hist, index + 1);
 }
 
-export function getBinCenter(hist: ImageHist, index: number) {
+export function getBinCenter(hist: ImageHistogram, index: number) {
   return (getBinLeft(hist, index) + getBinRight(hist, index)) / 2.0;
 }
 
 export function calcLevels(
-  hist: ImageHist,
+  hist: ImageHistogram,
   backgroundPercentile: number = 10,
   midPercentile: number = 50,
   peakPercentile: number = 99,
@@ -188,7 +188,7 @@ export function calcLevels(
   return result;
 }
 
-export function calcPercentiles(hist: ImageHist, backgroundLevel: number, midLevel: number, peakLevel: number) {
+export function calcPercentiles(hist: ImageHistogram, backgroundLevel: number, midLevel: number, peakLevel: number) {
   let result = {
     lowerPercentile: 0,
     midPercentile: 0,

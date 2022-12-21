@@ -1,19 +1,19 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageHistChartComponent } from './image-hist-chart.component';
+import { ImageHistogramChartComponent } from './image-histogram-chart.component';
 
 describe('ImageHistChartComponent', () => {
-  let component: ImageHistChartComponent;
-  let fixture: ComponentFixture<ImageHistChartComponent>;
+  let component: ImageHistogramChartComponent;
+  let fixture: ComponentFixture<ImageHistogramChartComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ImageHistChartComponent],
+      declarations: [ImageHistogramChartComponent],
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ImageHistChartComponent);
+    fixture = TestBed.createComponent(ImageHistogramChartComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

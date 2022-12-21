@@ -7,7 +7,7 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
 import { UpdateNormalizer } from 'src/app/data-files/data-files.actions';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { ImageLayer, isImageLayer } from 'src/app/data-files/models/data-file';
-import { calcLevels, getCountsPerBin } from 'src/app/data-files/models/image-hist';
+import { calcLevels, getCountsPerBin } from 'src/app/data-files/models/image-histogram';
 import { JobService } from 'src/app/jobs/services/job.service';
 import { fitHistogram, neutralizeHistograms } from 'src/app/utils/histogram-fitting';
 import { SourceNeutralizationDialogService } from './source-neutralization-dialog.service';

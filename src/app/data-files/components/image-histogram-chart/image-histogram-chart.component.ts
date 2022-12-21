@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild, OnChanges, Input, Output, EventEmitter, C
 // declare let d3, nv: any;
 // import { NvD3Component } from "ng2-nvd3";
 
-import { ImageHist, getBinCenter, calcLevels, getCountsPerBin } from '../../models/image-hist';
+import { ImageHistogram, getBinCenter, calcLevels, getCountsPerBin } from '../../models/image-histogram';
 import { ThemePicker } from '../../../theme-picker';
 import { ThemeStorage, PlotlyTheme } from '../../../theme-picker/theme-storage/theme-storage';
 import { MatCheckboxChange } from '@angular/material/checkbox';
@@ -13,16 +13,16 @@ import { blueColorMap, greenColorMap, redColorMap } from '../../models/color-map
 import { getMax } from 'src/app/utils/math';
 
 @Component({
-  selector: 'app-image-hist-chart',
+  selector: 'app-image-histogram-chart',
   // template:
   //   '<nvd3 id="hist-chart" class="" [options]="chartOptions" [data]="chartData"></nvd3>',
-  templateUrl: './image-hist-chart.html',
-  styleUrls: ['./image-hist-chart.component.scss'],
+  templateUrl: './image-histogram-chart.html',
+  styleUrls: ['./image-histogram-chart.component.scss'],
 })
-export class ImageHistChartComponent implements OnInit, OnChanges, OnDestroy {
+export class ImageHistogramChartComponent implements OnInit, OnChanges, OnDestroy {
   // @ViewChild(NvD3Component) nvD3: NvD3Component;
 
-  @Input() data: { id: string, hist: ImageHist, normalizer: PixelNormalizer }[] = [];
+  @Input() data: { id: string, hist: ImageHistogram, normalizer: PixelNormalizer }[] = [];
   @Input() width: number;
   @Input() height: number;
   @Input() backgroundLevel: number = 0;

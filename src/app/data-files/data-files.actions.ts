@@ -1,5 +1,5 @@
 import { DataFile, Header, PixelType, ILayer, ColorBalanceMode } from './models/data-file';
-import { ImageHist } from './models/image-hist';
+import { ImageHistogram } from './models/image-histogram';
 import { PixelNormalizer } from './models/pixel-normalizer';
 import { Region } from './models/region';
 import { Transform } from './models/transformation';
@@ -83,7 +83,7 @@ export class LoadImageLayerHistogram {
 export class LoadImageLayerHistogramSuccess {
   public static readonly type = '[File] Load Image HDU Histogram Success';
 
-  constructor(public layerId: string, public hist: ImageHist) { }
+  constructor(public layerId: string, public hist: ImageHistogram) { }
 }
 
 

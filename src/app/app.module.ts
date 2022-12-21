@@ -79,7 +79,7 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
         ...layer,
         loaded: false,
         loading: false,
-        hist: {
+        histogram: {
           initialized: false,
           loaded: false,
           loading: false,

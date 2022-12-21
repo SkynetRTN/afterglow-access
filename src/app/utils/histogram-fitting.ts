@@ -1,5 +1,5 @@
 import { ImageLayer } from "../data-files/models/data-file";
-import { calcLevels, getBinCenter, getCountsPerBin, ImageHist } from "../data-files/models/image-hist";
+import { calcLevels, getBinCenter, getCountsPerBin, ImageHistogram } from "../data-files/models/image-histogram";
 import { erf } from "./math";
 
 import { linear } from 'everpolate';
@@ -16,11 +16,11 @@ export type TypedArray =
     | Float32Array
     | Float64Array;
 
-export function neutralizeHistograms(layers: { id: string, hist: ImageHist, normalizer: PixelNormalizer }[], referenceLayerId: string, neutralizeSources = true, neutralizeBackground = true) {
+export function neutralizeHistograms(layers: { id: string, histogram: ImageHistogram, normalizer: PixelNormalizer }[], referenceLayerId: string, neutralizeSources = true, neutralizeBackground = true) {
     let result: { layerId: string, scale: number, offset: number }[] = [];
 
     let fits: {
-        layer: { id: string, hist: ImageHist, normalizer: PixelNormalizer }
+        layer: { id: string, histogram: ImageHistogram, normalizer: PixelNormalizer }
         bkgMu: number,
         bkgSigma: number,
         bkgPeak: number,
@@ -35,7 +35,7 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
     })
 
     let ref = fits.find(fit => fit.layer.id == referenceLayerId) || fits[0];
-    let refCorr = getCountsPerBin(ref.layer.hist)
+    let refCorr = getCountsPerBin(ref.layer.histogram)
 
     let backgroundLevel: number;
     let peakLevel: number;
@@ -44,7 +44,7 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
         peakLevel = ref.layer.normalizer.peakLevel;
     }
     else {
-        let levels = calcLevels(ref.layer.hist, ref.layer.normalizer.backgroundPercentile, ref.layer.normalizer.peakPercentile)
+        let levels = calcLevels(ref.layer.histogram, ref.layer.normalizer.backgroundPercentile, ref.layer.normalizer.peakPercentile)
         backgroundLevel = levels.backgroundLevel;
         peakLevel = levels.peakLevel;
     }
@@ -66,7 +66,7 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
             let yRef = new Float32Array(ref.ySrc);
             yRef.forEach((y, index) => { yRef[index] = Math.sqrt(y) })
 
-            let fitCorr = getCountsPerBin(fit.layer.hist)
+            let fitCorr = getCountsPerBin(fit.layer.histogram)
             let corr = (fitCorr / refCorr)
 
             let steps = 200;
@@ -139,8 +139,8 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
     return result;
 }
 
-export function fitHistogram(layer: { id: string, hist: ImageHist, normalizer: PixelNormalizer }, fitSources = true) {
-    let hist = layer.hist;
+export function fitHistogram(layer: { id: string, histogram: ImageHistogram, normalizer: PixelNormalizer }, fitSources = true) {
+    let hist = layer.histogram;
 
     let N0 = 0;
     hist.data.forEach(v => N0 += v)
@@ -272,7 +272,7 @@ export function fitHistogram(layer: { id: string, hist: ImageHist, normalizer: P
 }
 
 
-export function fitBackground(layer: { hist: ImageHist, normalizer: PixelNormalizer }, x: Float32Array, y: Float32Array) {
+export function fitBackground(layer: { histogram: ImageHistogram, normalizer: PixelNormalizer }, x: Float32Array, y: Float32Array) {
     let index: number;
     let sigma: number, mu: number;
 

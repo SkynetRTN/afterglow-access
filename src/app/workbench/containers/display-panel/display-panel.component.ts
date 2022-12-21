@@ -54,7 +54,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
 import { FormControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { calcLevels, calcPercentiles, getBinCenter, getCountsPerBin, ImageHist } from 'src/app/data-files/models/image-hist';
+import { calcLevels, calcPercentiles, getBinCenter, getCountsPerBin, ImageHistogram } from 'src/app/data-files/models/image-histogram';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
 import { erf } from 'src/app/utils/math';
 import { linear } from 'everpolate';
@@ -87,10 +87,10 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
   layers$: Observable<ILayer[]>;
-  compositeHistData$: Observable<{ id: string, hist: ImageHist, normalizer: PixelNormalizer }[]>;
+  compositeHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }[]>;
   activeLayer$: Observable<ILayer>;
   activeImageLayer$: Observable<ImageLayer>;
-  activeHistData$: Observable<{ id: string, hist: ImageHist, normalizer: PixelNormalizer }>;
+  activeHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }>;
   activeTableLayer$: Observable<TableLayer>;
   firstImageLayer$: Observable<ImageLayer>;
   compositeNormalizer$: Observable<PixelNormalizer>;
@@ -150,7 +150,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       map(layers => layers.map(layer => {
         if (!isImageLayer(layer)) return null;
         if (!layer.visible) return null;
-        return { id: layer.id, hist: layer.hist, normalizer: layer.normalizer }
+        return { id: layer.id, hist: layer.histogram, normalizer: layer.normalizer }
       }).filter(value => value !== null))
     )
 
@@ -211,7 +211,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
     this.activeImageLayer$ = this.activeLayer$.pipe(map((layer) => (layer && layer.type == LayerType.IMAGE ? (layer as ImageLayer) : null)));
     this.activeHistData$ = this.activeImageLayer$.pipe(
-      map(layer => layer ? { id: layer.id, hist: layer.hist, normalizer: layer.normalizer } : { id: null, hist: null, normalizer: null })
+      map(layer => layer ? { id: layer.id, hist: layer.histogram, normalizer: layer.normalizer } : { id: null, hist: null, normalizer: null })
     )
 
 
@@ -228,7 +228,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       let file: DataFile;
       if (!layer) {
         let imageLayers = layers.filter(isImageLayer);
-        layer = imageLayers.find(layer => layer.hist.loaded && layer.visible)
+        layer = imageLayers.find(layer => layer.histogram.loaded && layer.visible)
         if (!layer) return;
         file = this.store.selectSnapshot(DataFilesState.getFileById(layer.fileId))
       }
@@ -285,7 +285,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
           );
         }
         else if (file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING) {
-          let levels = calcLevels(layer.hist, backgroundPercentile, midPercentile, peakPercentile);
+          let levels = calcLevels(layer.histogram, backgroundPercentile, midPercentile, peakPercentile);
           this.store.dispatch([new UpdateNormalizer(layer.id, {
             // mode: 'pixel',
             backgroundLevel: levels.backgroundLevel * layer.normalizer.layerScale + layer.normalizer.layerOffset,
@@ -306,7 +306,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
     ).subscribe(([value, file, layers]) => {
       if (file) {
         let imageLayers = layers.filter(isImageLayer);
-        let layer = imageLayers.find(layer => layer.hist.loaded && layer.visible)
+        let layer = imageLayers.find(layer => layer.histogram.loaded && layer.visible)
         if (layer) {
           this.store.dispatch(new SyncFileNormalizers(file.id, layer.id))
         }
@@ -474,7 +474,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
       map(([event, file, layers]) => layers)
     ).subscribe((layers) => {
       let fits: {
-        layer: { id: string, hist: ImageHist, normalizer: PixelNormalizer }
+        layer: { id: string, histogram: ImageHistogram, normalizer: PixelNormalizer }
         bkgMu: number,
         bkgSigma: number,
         bkgPeak: number,

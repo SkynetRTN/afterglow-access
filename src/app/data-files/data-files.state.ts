@@ -124,7 +124,7 @@ import { compose } from './models/pixel-composer';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { Injectable } from '@angular/core';
 import { AfterglowHeaderKey } from './models/afterglow-header-key';
-import { calcLevels, calcPercentiles } from './models/image-hist';
+import { calcLevels, calcPercentiles } from './models/image-histogram';
 import { view } from 'paper/dist/paper-core';
 
 export interface DataFilesStateModel {
@@ -454,7 +454,7 @@ export class DataFilesState {
       if (
         !header ||
         ((!header.loaded || !header.isValid) && !header.loading) ||
-        (layer.type == LayerType.IMAGE && !(layer as ImageLayer).hist.loaded && !(layer as ImageLayer).hist.loading)
+        (layer.type == LayerType.IMAGE && !(layer as ImageLayer).histogram.loaded && !(layer as ImageLayer).histogram.loading)
       ) {
         actions.push(new LoadLayer(layer.id));
       }
@@ -500,8 +500,6 @@ export class DataFilesState {
               dataProviderId: coreFile.dataProvider,
               name: coreFile.groupName,
               layerIds: [layer.id],
-              imageLayerIds: layer.type == LayerType.IMAGE ? [layer.id] : [],
-              tableLayerIds: layer.type == LayerType.TABLE ? [layer.id] : [],
               viewportTransformId: '',
               imageTransformId: '',
               rgbaImageDataId: '',
@@ -512,11 +510,6 @@ export class DataFilesState {
             dataFiles.push(dataFile);
           } else {
             dataFile.layerIds.push(layer.id);
-            if (layer.type == LayerType.IMAGE) {
-              dataFile.imageLayerIds.push(layer.id);
-            } else if (layer.type == LayerType.TABLE) {
-              dataFile.tableLayerIds.push(layer.id);
-            }
           }
         });
 
@@ -566,7 +559,7 @@ export class DataFilesState {
                   blendMode: BlendMode.Screen,
                   visible: true,
                   alpha: 1.0,
-                  hist: {
+                  histogram: {
                     data: new Float32Array(),
                     loaded: false,
                     loading: false,
@@ -620,8 +613,6 @@ export class DataFilesState {
                 dataProviderId: file.dataProviderId,
                 name: file.name,
                 layerIds: file.layerIds,
-                imageLayerIds: file.imageLayerIds,
-                tableLayerIds: file.tableLayerIds,
               };
             } else {
               state.fileIds.push(file.id);
@@ -675,7 +666,7 @@ export class DataFilesState {
 
     if (layer.type == LayerType.IMAGE) {
       let imageLayer = layer as ImageLayer;
-      if (imageLayer.hist.loading) {
+      if (imageLayer.histogram.loading) {
         pendingActions.push(
           this.actions$.pipe(
             ofActionCompleted(LoadImageLayerHistogram),
@@ -686,7 +677,7 @@ export class DataFilesState {
             take(1)
           )
         );
-      } else if (!imageLayer.hist.loaded) {
+      } else if (!imageLayer.histogram.loaded) {
         actions.push(new LoadImageLayerHistogram(imageLayer.id));
       }
     }
@@ -1025,8 +1016,8 @@ export class DataFilesState {
 
     setState((state: DataFilesStateModel) => {
       let layer = state.layerEntities[layerId] as ImageLayer;
-      layer.hist = {
-        ...layer.hist,
+      layer.histogram = {
+        ...layer.histogram,
         loading: true,
         loaded: false,
       };
@@ -1038,7 +1029,7 @@ export class DataFilesState {
       tap((hist) => {
         setState((state: DataFilesStateModel) => {
           let layer = state.layerEntities[layerId] as ImageLayer;
-          layer.hist = {
+          layer.histogram = {
             ...hist,
             initialized: true,
             loading: false,
@@ -1053,7 +1044,7 @@ export class DataFilesState {
         if (!isImageLayer(layer)) return of()
 
         return dispatch([
-          new LoadImageLayerHistogramSuccess(layerId, layer.hist),
+          new LoadImageLayerHistogramSuccess(layerId, layer.histogram),
           new UpdateNormalizer(layerId, {
             mode: layer.normalizer.mode,
             backgroundPercentile: layer.normalizer.backgroundPercentile,
@@ -1068,8 +1059,8 @@ export class DataFilesState {
       catchError((err) => {
         setState((state: DataFilesStateModel) => {
           let layer = state.layerEntities[layerId] as ImageLayer;
-          layer.hist = {
-            ...layer.hist,
+          layer.histogram = {
+            ...layer.histogram,
             loaded: false,
             loading: false,
           };
@@ -1375,7 +1366,7 @@ export class DataFilesState {
     let rawImageData = state.imageDataEntities[layer.rawImageDataId].tiles[tileIndex].pixels;
     if (!rawImageData) return null;
 
-    let hist = (state.layerEntities[layerId] as ImageLayer).hist;
+    let hist = (state.layerEntities[layerId] as ImageLayer).histogram;
     let normalizer = (state.layerEntities[layerId] as ImageLayer).normalizer;
 
     let rgba = state.imageDataEntities[layer.rgbaImageDataId].tiles[tileIndex].pixels as Uint32Array;
@@ -1586,16 +1577,16 @@ export class DataFilesState {
       ...changes
     }
 
-    if (layer.hist.loaded) {
+    if (layer.histogram.loaded) {
       if (normalizer.mode == 'percentile') {
-        let levels = calcLevels(layer.hist, normalizer.backgroundPercentile, normalizer.midPercentile, normalizer.peakPercentile);
+        let levels = calcLevels(layer.histogram, normalizer.backgroundPercentile, normalizer.midPercentile, normalizer.peakPercentile);
         normalizer.backgroundLevel = levels.backgroundLevel * normalizer.layerScale + normalizer.layerOffset;
         normalizer.midLevel = levels.midLevel * normalizer.layerScale + normalizer.layerOffset;
         normalizer.peakLevel = levels.peakLevel * normalizer.layerScale + normalizer.layerOffset
       }
       else if (normalizer.mode == 'pixel') {
         let percentiles = calcPercentiles(
-          layer.hist,
+          layer.histogram,
           (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale,
           (normalizer.midLevel - normalizer.layerOffset) / normalizer.layerScale,
           (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)

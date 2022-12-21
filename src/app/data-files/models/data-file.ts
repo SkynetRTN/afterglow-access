@@ -2,7 +2,7 @@ import * as moment from 'moment';
 
 import { LayerType } from './data-file-type';
 import { HeaderEntry } from './header-entry';
-import { ImageHist } from './image-hist';
+import { ImageHistogram } from './image-histogram';
 import { Wcs } from '../../image-tools/wcs';
 import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
@@ -24,9 +24,6 @@ export interface ITransformableImageData {
   viewportTransformId: string;
   imageTransformId: string;
   rgbaImageDataId: string;
-  // redChannelId: string;
-  // greenChannelId: string;
-  // blueChannelId: string;
 }
 
 export enum ColorBalanceMode {
@@ -40,8 +37,6 @@ export interface DataFile extends ITransformableImageData {
   dataProviderId: string;
   assetPath: string;
   layerIds: string[];
-  imageLayerIds: string[];
-  tableLayerIds: string[];
   syncLayerNormalizers: boolean;
   colorBalanceMode: ColorBalanceMode;
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
@@ -71,7 +66,7 @@ export interface ILayer {
 export interface ImageLayer extends ILayer, ITransformableImageData {
   readonly type: LayerType.IMAGE;
   precision: PixelPrecision;
-  hist: ImageHist;
+  histogram: ImageHistogram;
   rawImageDataId: string;
   normalizer: PixelNormalizer;
   blendMode: BlendMode;

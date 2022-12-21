@@ -17,7 +17,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
 import { neutralizeHistograms } from 'src/app/utils/histogram-fitting';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
-import { ImageHist } from 'src/app/data-files/models/image-hist';
+import { ImageHistogram } from 'src/app/data-files/models/image-histogram';
 import { DecimalPipe } from '@angular/common';
 import { FILTER_REFERENCES, PhotometricColorBalanceDialogService, STELLAR_TYPE_REFERENCES, WHITE_REFERENCE_GROUPS } from './photometric-color-balance-dialog.service';
 
@@ -393,7 +393,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
         return {
           id: layer.id,
           name: layer.name,
-          hist: layer.hist,
+          histogram: layer.histogram,
           normalizer: {
             ...layer.normalizer,
             layerScale: result.scale

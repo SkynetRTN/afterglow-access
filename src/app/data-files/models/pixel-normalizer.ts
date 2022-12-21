@@ -1,6 +1,6 @@
 import { StretchMode } from './stretch-mode';
 import { ColorMap, COLOR_MAPS_BY_NAME, coolColorMap, redColorMap } from './color-map';
-import { ImageHist, calcLevels } from '../../data-files/models/image-hist';
+import { ImageHistogram, calcLevels } from '../../data-files/models/image-histogram';
 import { PixelType } from '../../data-files/models/data-file';
 
 export interface PixelNormalizer {
@@ -24,7 +24,7 @@ export interface PixelNormalizer {
 //   }
 // }
 
-export function normalize(pixels: PixelType, hist: ImageHist, normalizer: PixelNormalizer, rgba: Uint32Array) {
+export function normalize(pixels: PixelType, hist: ImageHistogram, normalizer: PixelNormalizer, rgba: Uint32Array) {
   let stretchMode = normalizer.stretchMode;
   let redLookup = COLOR_MAPS_BY_NAME[normalizer.colorMapName].redLookup;
   let greenLookup = COLOR_MAPS_BY_NAME[normalizer.colorMapName].greenLookup;

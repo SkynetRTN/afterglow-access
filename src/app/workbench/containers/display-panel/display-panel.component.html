@@ -10,11 +10,11 @@
   <ng-container *ngIf="activeLayer$ | async as layer; else multiLayerBlock">
     <ng-container *ngIf="activeImageLayer$ | async as activeImageLayer; else invalidLayerTypeBlock">
 
-      <div *ngIf="activeImageLayer.hist?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
-        <app-image-hist-chart [data]="[activeHistData$ | async]"
+      <div *ngIf="activeImageLayer.histogram?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
+        <app-image-histogram-chart [data]="[activeHistData$ | async]"
           [backgroundLevel]="activeImageLayer?.normalizer?.backgroundLevel"
           [peakLevel]="activeImageLayer?.normalizer?.peakLevel">
-        </app-image-hist-chart>
+        </app-image-histogram-chart>
         <div style="clear: both"></div>
       </div>
 
@@ -106,10 +106,10 @@
 
 
         <div class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
-          <app-image-hist-chart [data]="compositeHistData$ | async"
+          <app-image-histogram-chart [data]="compositeHistData$ | async"
             [backgroundLevel]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ? (compositeNormalizer$ | async)?.backgroundLevel : null"
             [peakLevel]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ?  (compositeNormalizer$ | async)?.peakLevel : null">
-          </app-image-hist-chart>
+          </app-image-histogram-chart>
 
         </div>
         <div style="clear: both"></div>

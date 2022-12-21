@@ -94,7 +94,7 @@ import { WorkbenchTool } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { PlottingPanelState } from '../../models/plotter-file-state';
 import { SonificationPanelState, SonifierRegionMode } from '../../models/sonifier-file-state';
-import { ImageHist } from '../../../data-files/models/image-hist';
+import { ImageHistogram } from '../../../data-files/models/image-histogram';
 import * as moment from 'moment';
 import { Papa } from 'ngx-papaparse';
 import { AuthState } from '../../../auth/auth.state';

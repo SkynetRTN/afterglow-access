@@ -12,8 +12,8 @@ import { AppMaterialModule } from '../app-material';
 import { SvgModule } from '../svg/svg.module';
 
 import { PipesModule } from '../pipes/pipes.module';
-import { ImageHistChartComponent } from './components/image-hist-chart/image-hist-chart.component';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
+import { ImageHistogramChartComponent } from './components/image-histogram-chart/image-histogram-chart.component';
 
 @NgModule({
   imports: [
@@ -25,8 +25,8 @@ import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.modu
     SvgModule,
     AfterglowPlotlyModule,
   ],
-  declarations: [ImageHistChartComponent],
-  exports: [ImageHistChartComponent],
+  declarations: [ImageHistogramChartComponent],
+  exports: [ImageHistogramChartComponent],
   providers: [],
 })
-export class DataFilesModule {}
+export class DataFilesModule { }
