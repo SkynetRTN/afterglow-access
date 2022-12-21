@@ -2,14 +2,14 @@
   <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the photometry tool.</div>
 </ng-template>
 
-<ng-template #hduNotSelectedBlock>
+<ng-template #layerNotSelectedBlock>
   <div i18n class="alert alert-info" i18n>Please select an image layer instead of a file.</div>
 </ng-template>
 
 <ng-container *ngIf="config$ | async; let config">
   <ng-container *ngIf="sourcePanelConfig$ | async; let sourcePanelConfig">
 
-    <ng-container *ngIf="hdu$ | async as hdu; else hduNotSelectedBlock">
+    <ng-container *ngIf="layer$ | async as layer; else layerNotSelectedBlock">
       <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
 
         <div>
@@ -221,8 +221,8 @@
                   <mat-form-field appearance="outline" style="width: 300px">
                     <mat-label i18n>Select Image(s) to Photometer</mat-label>
                     <mat-select multiple formControlName="selectedHduIds">
-                      <mat-option *ngFor="let hduId of batchHduIdOptions" [value]="hduId">
-                        {{ getHduOptionLabel(hduId) | async }}
+                      <mat-option *ngFor="let layerId of batchHduIdOptions" [value]="layerId">
+                        {{ getHduOptionLabel(layerId) | async }}
                       </mat-option>
                     </mat-select>
                   </mat-form-field>

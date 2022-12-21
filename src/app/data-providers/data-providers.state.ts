@@ -255,9 +255,9 @@ export class DataProvidersState {
           result.errors
             .filter((e) => e.id == 'DuplicateDataFileNameError')
             .forEach((e, index) => {
-              let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[e.meta.fileId];
-              if (hdu) {
-                fileIds.push(hdu.id);
+              let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[e.meta.fileId];
+              if (layer) {
+                fileIds.push(layer.id);
               }
             });
 

@@ -1,11 +1,11 @@
-<div *ngIf="hduIds">
+<div *ngIf="layerIds">
   <form [formGroup]="alignForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Align</mat-label>
         <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-            {{ getHduOptionLabel(hduId) | async }}
+          <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
+            {{ getHduOptionLabel(layerId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -23,8 +23,8 @@
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Reference Image File</mat-label>
         <mat-select formControlName="refHduId" [value]="(refHdu$ | async)?.id">
-          <mat-option *ngFor="let hduId of (config$ | async)?.alignFormData?.selectedHduIds" [value]="hduId">
-            {{ getHduOptionLabel(hduId) | async }}
+          <mat-option *ngFor="let layerId of (config$ | async)?.alignFormData?.selectedHduIds" [value]="layerId">
+            {{ getHduOptionLabel(layerId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>

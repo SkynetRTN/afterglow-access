@@ -8,7 +8,7 @@
 
 <ng-container *ngIf="config$ | async; let config">
   <ng-container *ngIf="file$ | async; else fileNotSelectedBlock">
-    <ng-container *ngIf="!(hdu$ | async) || (hdu$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
+    <ng-container *ngIf="!(layer$ | async) || (layer$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
       <p i18n>
         Click once on the image to set the measurement's start point, move your mouse, then click a second time to set
         the end point.

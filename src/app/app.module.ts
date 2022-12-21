@@ -65,18 +65,18 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
     state.headerEntities[key] = header;
   });
 
-  state.hduEntities = {
-    ...state.hduEntities,
+  state.layerEntities = {
+    ...state.layerEntities,
   };
 
-  Object.keys(state.hduEntities).forEach((key) => {
-    let hdu: IHdu = {
-      ...state.hduEntities[key],
+  Object.keys(state.layerEntities).forEach((key) => {
+    let layer: IHdu = {
+      ...state.layerEntities[key],
     };
 
-    if (hdu.type == HduType.IMAGE) {
-      hdu = {
-        ...hdu,
+    if (layer.type == HduType.IMAGE) {
+      layer = {
+        ...layer,
         loaded: false,
         loading: false,
         hist: {
@@ -90,7 +90,7 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
       } as ImageHdu;
     }
 
-    state.hduEntities[key] = hdu;
+    state.layerEntities[key] = layer;
   });
 
   state.imageDataEntities = {

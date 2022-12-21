@@ -2,14 +2,15 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ChangeDetect
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
-import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
-import { distinctUntilChanged, filter, flatMap, map, switchMap, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, Observable, Subject, merge, of } from 'rxjs';
+import { distinctUntilChanged, filter, flatMap, map, switchMap, takeUntil, withLatestFrom, take } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import {
   getDecDegs,
   getDegsPerPixel,
   getHeight,
   getRaHours,
+  getSourceCoordinates,
   getWidth,
   Header,
   IHdu,
@@ -20,17 +21,23 @@ import { formatDms, parseDms } from '../../../utils/skynet-astro';
 import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../utils/validators';
 import { SourceExtractionSettings } from '../../models/source-extraction-settings';
 import { WorkbenchImageHduState } from '../../models/workbench-file-state';
-import { WcsCalibrationPanelState, WcsCalibrationSettings } from '../../models/workbench-state';
+import { WcsCalibrationPanelConfig } from '../../models/workbench-state';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import {
   CreateWcsCalibrationJob,
   UpdateSourceExtractionSettings,
+  UpdateWcsCalibrationExtractionOverlay,
   UpdateWcsCalibrationPanelState,
-  UpdateWcsCalibrationSettings,
+  UpdateWcsCalibrationPanelConfig,
 } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
 import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 import { MatCheckboxChange } from '@angular/material/checkbox';
+import { LoadJob, LoadJobResult } from 'src/app/jobs/jobs.actions';
+import { WcsCalibrationPanelState } from '../../models/wcs-calibration-panel-state';
+import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { MarkerType, SourceMarker } from '../../models/marker';
+import { isSourceExtractionJob } from 'src/app/jobs/models/source-extraction';
 
 @Component({
   selector: 'app-wcs-calibration-panel',
@@ -48,22 +55,23 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
-  @Input('hduIds')
-  set hduIds(hduIds: string[]) {
-    this.hduIds$.next(hduIds);
+  @Input('layerIds')
+  set layerIds(layerIds: string[]) {
+    this.layerIds$.next(layerIds);
   }
-  get hduIds() {
-    return this.hduIds$.getValue();
+  get layerIds() {
+    return this.layerIds$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<string[]>(null);
+  private layerIds$ = new BehaviorSubject<string[]>(null);
 
   destroy$ = new Subject<boolean>();
   header$: Observable<Header>;
+  config$: Observable<WcsCalibrationPanelConfig>;
   state$: Observable<WcsCalibrationPanelState>;
   selectedHduIds$: Observable<string[]>;
   activeJob$: Observable<WcsCalibrationJob>;
   activeJobResult$: Observable<WcsCalibrationJobResult>;
-  wcsCalibrationSettings$: Observable<WcsCalibrationSettings>;
+  wcsCalibrationSettings$: Observable<WcsCalibrationPanelConfig>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
   isNumber = [Validators.required, isNumber];
@@ -80,20 +88,20 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     showOverlay: new FormControl('')
   });
 
-  constructor(private store: Store, private dialog: MatDialog) {
+  constructor(private store: Store, private dialog: MatDialog, private markerService: ImageViewerMarkerService) {
     this.header$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
     );
 
-    this.state$ = this.store.select(WorkbenchState.getWcsCalibrationPanelState);
-    this.selectedHduIds$ = this.state$.pipe(map((state) => state.selectedHduIds));
+    this.config$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
+    this.selectedHduIds$ = this.config$.pipe(map((state) => state.selectedHduIds));
 
-    this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationSettings);
+    this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
     this.activeJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
-      this.state$.pipe(
+      this.config$.pipe(
         map((state) => (state ? state.activeJobId : null)),
         distinctUntilChanged()
       ),
@@ -137,7 +145,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     this.wcsCalibrationForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
 
       this.store.dispatch(
-        new UpdateWcsCalibrationSettings({
+        new UpdateWcsCalibrationPanelConfig({
           showOverlay: value.showOverlay
         })
       );
@@ -145,7 +153,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       if (this.wcsCalibrationForm.valid) {
         this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedHduIds: value.selectedHduIds }));
         this.store.dispatch(
-          new UpdateWcsCalibrationSettings({
+          new UpdateWcsCalibrationPanelConfig({
             ra: value.ra,
             dec: value.dec,
             radius: value.radius,
@@ -156,28 +164,166 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
         );
       }
     });
+
+
+    // determine whether existing jobs have been loaded
+    this.viewerId$.subscribe(viewerId => {
+      let state = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId));
+
+      if (!state) return;
+
+      let loadJob = (id) => {
+        if (id) {
+          let job = this.store.selectSnapshot(JobsState.getJobById(id))
+          if (!job) this.store.dispatch(new LoadJob(id))
+          if (!job || !job.result) this.store.dispatch(new LoadJobResult(id))
+        }
+      }
+
+      if (state.sourceExtractionOverlayIsValid) loadJob(state.sourceExtractionJobId);
+    })
+
+
+
+    this.state$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId))),
+      filter(state => !!state)
+    );
+
+    let sourceExtractionOverlayIsValid$ = combineLatest([this.state$, this.config$]).pipe(
+      map(([s, config]) => !config.showOverlay || s.sourceExtractionOverlayIsValid),
+      distinctUntilChanged()
+    );
+
+    let sourceExtractionJobId$ = this.state$.pipe(
+      map((s) => s.sourceExtractionJobId),
+      distinctUntilChanged()
+    )
+
+    sourceExtractionOverlayIsValid$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.header$),
+      switchMap(([isValid, header]) => {
+        if (header?.loaded) return of(isValid);
+
+        //wait for header to be loaded
+        return this.store.select(DataFilesState.getHeaderById(header.id)).pipe(
+          filter(header => header.loaded),
+          take(1),
+          map(header => {
+            return isValid
+          })
+        )
+      }),
+      withLatestFrom(sourceExtractionJobId$)
+    ).subscribe(([isValid, jobId]) => {
+      if (!this.viewerId) return;
+      //handle case where job ID is present and valid, but job is not in store
+      if (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId)))) this.store.dispatch(new UpdateWcsCalibrationExtractionOverlay(this.viewerId))
+    })
   }
 
-  ngOnInit(): void { }
+  ngOnInit() {
+    /** markers */
+    let visibleViewerIds$: Observable<string[]> = this.store.select(WorkbenchState.getVisibleViewerIds).pipe(
+      distinctUntilChanged((x, y) => {
+        return x.length == y.length && x.every((value, index) => value == y[index]);
+      })
+    );
+
+    visibleViewerIds$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((viewerIds) => {
+          return merge(...viewerIds.map((viewerId) => this.getViewerMarkers(viewerId))).pipe(
+            takeUntil(this.destroy$),
+          );
+        })
+      )
+      .subscribe((v) => {
+        this.markerService.updateMarkers(v.viewerId, v.markers);
+      });
+  }
+
+  private getViewerMarkers(viewerId: string) {
+    let config$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig)
+    let state$ = this.store.select(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
+    let layerId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
+    // let layerId$ = this.imageHdu$.pipe(
+    //   map((layer) => layer?.id),
+    //   distinctUntilChanged()
+    // );
+    let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId))
+    let overlayJob$ = this.state$.pipe(
+      switchMap(state => this.store.select(JobsState.getJobById(state.sourceExtractionJobId)))
+    )
+
+    let sourceMarkers$ = combineLatest([config$, header$, layerId$, overlayJob$]).pipe(
+      map(([config, header, layerId, overlayJob]) => {
+        if (!config?.showOverlay || !header || !header.loaded) return [];
+        if (!overlayJob || !isSourceExtractionJob(overlayJob)) return [];
+
+        let markers: Array<SourceMarker> = [];
+
+        overlayJob.result?.data.forEach((source, index) => {
+
+          let marker: SourceMarker = {
+            id: `WCS_CAL_OVERLAY_${layerId}_${index}`,
+            type: MarkerType.SOURCE,
+            x: source.x,
+            y: source.y,
+            theta: 0,
+            raHours: source.raHours,
+            decDegs: source.decDegs,
+            source: null,
+            selected: false,
+            data: { source: source },
+            tooltip: {
+              class: 'source-data-tooltip',
+              message: '',
+              showDelay: 500,
+              hideDelay: null,
+            },
+            label: '',
+            labelRadius: 10,
+          }
+
+          markers.push(marker);
+        });
+
+        return markers;
+      })
+    );
+
+    return sourceMarkers$.pipe(
+      map((sourceMarkers) => {
+        return {
+          viewerId: viewerId,
+          markers: sourceMarkers,
+        };
+      })
+    );
+  }
+
 
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  getHduOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(hduIds: string[]) {
-    this.wcsCalibrationForm.controls.selectedHduIds.setValue(hduIds);
+  setSelectedHduIds(layerIds: string[]) {
+    this.wcsCalibrationForm.controls.selectedHduIds.setValue(layerIds);
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.hduIds);
+    this.setSelectedHduIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {
@@ -185,7 +331,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onShowOverlayChange($event: MatCheckboxChange) {
-    this.store.dispatch(new UpdateWcsCalibrationSettings({ showOverlay: $event.checked }))
+    this.store.dispatch(new UpdateWcsCalibrationPanelConfig({ showOverlay: $event.checked }))
   }
 
   onSubmitClick() {
@@ -211,7 +357,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
     let degsPerPixel = getDegsPerPixel(header);
 
-    let changes: Partial<WcsCalibrationSettings> = {
+    let changes: Partial<WcsCalibrationPanelConfig> = {
       ra: null,
       dec: null,
       minScale: null,
@@ -230,9 +376,9 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       changes.maxScale = Math.round(degsPerPixel * 1.1 * 3600 * 100000) / 100000;
     }
 
-    let wcsCalibrationSettings = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationSettings);
+    let wcsCalibrationSettings = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationPanelConfig);
     this.store.dispatch(
-      new UpdateWcsCalibrationSettings({
+      new UpdateWcsCalibrationPanelConfig({
         ...wcsCalibrationSettings,
         ...changes,
       })

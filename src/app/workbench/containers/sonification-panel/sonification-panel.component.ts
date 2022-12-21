@@ -80,7 +80,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
 
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   imageHdu$: Observable<ImageHdu>;
   imageHdu: ImageHdu;
   state$: Observable<SonificationPanelState>;
@@ -105,11 +105,11 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.IMAGE ? (layer as ImageHdu) : null)));
     this.imageHdu$.pipe(takeUntil(this.destroy$)).subscribe((imageHdu) => (this.imageHdu = imageHdu));
 
     this.state$ = this.viewerId$.pipe(
@@ -125,14 +125,14 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     );
 
     this.region$ = combineLatest(this.imageHdu$, this.imageToViewportTransform$, this.viewportSize$, this.state$).pipe(
-      filter(([hdu, transform, viewportSize, state]) => isNotEmpty(state) && isNotEmpty(hdu)),
-      map(([hdu, transform, viewportSize, state]) => {
+      filter(([layer, transform, viewportSize, state]) => isNotEmpty(state) && isNotEmpty(layer)),
+      map(([layer, transform, viewportSize, state]) => {
         if (state.regionMode == SonifierRegionMode.CUSTOM) {
           this.region = state.regionHistory[state.regionHistoryIndex];
-        } else if (!hdu || !transform || !viewportSize) {
+        } else if (!layer || !transform || !viewportSize) {
           this.region = null;
         } else {
-          let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[hdu.rawImageDataId];
+          let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataEntities)[layer.rawImageDataId];
           this.region = getViewportRegion(
             transform,
             rawImageData.width,
@@ -147,19 +147,19 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
       distinctUntilChanged((a, b) => a && b && a.x == b.x && a.y == b.y && a.width == b.width && a.height == b.height)
     );
 
-    this.region$.pipe(takeUntil(this.destroy$), withLatestFrom(this.imageHdu$)).subscribe(([region, hdu]) => {
-      if (!hdu) return;
+    this.region$.pipe(takeUntil(this.destroy$), withLatestFrom(this.imageHdu$)).subscribe(([region, layer]) => {
+      if (!layer) return;
 
       this.stop();
-      this.store.dispatch(new SetProgressLine(hdu.id, null));
+      this.store.dispatch(new SetProgressLine(layer.id, null));
     });
 
     this.actions$
       .pipe(ofActionDispatched(SonificationCompleted), takeUntil(this.destroy$), withLatestFrom(this.imageHdu$))
-      .subscribe(([action, hdu]) => {
+      .subscribe(([action, layer]) => {
         let a = action as SonificationCompleted;
         if (!a.error && a.url) {
-          this.store.dispatch(new SetProgressLine(hdu.id, null));
+          this.store.dispatch(new SetProgressLine(layer.id, null));
           this.stop();
           this.playStream(a.url);
         }
@@ -475,8 +475,8 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     ).pipe(
       take(1),
       withLatestFrom(this.imageHdu$),
-      tap(([value, hdu]) => {
-        this.store.dispatch(new SetProgressLine(hdu.id, null));
+      tap(([value, layer]) => {
+        this.store.dispatch(new SetProgressLine(layer.id, null));
       })
     );
 
@@ -514,8 +514,8 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
 
         withLatestFrom(this.imageHdu$)
       )
-      .subscribe(([line, hdu]) => {
-        this.store.dispatch(new SetProgressLine(hdu.id, line));
+      .subscribe(([line, layer]) => {
+        this.store.dispatch(new SetProgressLine(layer.id, line));
       });
   }
 
@@ -630,7 +630,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
   setDuration(value: number) {
     if (!this.imageHdu) return;
 
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.imageHdu.id));
+    let layer = this.store.selectSnapshot(DataFilesState.getHduById(this.imageHdu.id));
     this.store.dispatch(new UpdateSonifierFileState(this.imageHdu.id, { duration: value }));
   }
 

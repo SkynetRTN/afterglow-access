@@ -64,9 +64,9 @@ export class SourceNeutralizationDialogComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  getHduOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
@@ -88,7 +88,7 @@ export class SourceNeutralizationDialogComponent implements OnInit {
     this.statusMessage$.next('Fitting histograms...')
     let selectedLayerIds: string[] = this.form.controls.selectedLayerIds.value;
     selectedLayerIds.push(this.form.controls.referenceLayerId.value);
-    let layers = selectedLayerIds.map((hduId: string) => this.store.selectSnapshot(DataFilesState.getHduById(hduId))).filter(isImageHdu);
+    let layers = selectedLayerIds.map((layerId: string) => this.store.selectSnapshot(DataFilesState.getHduById(layerId))).filter(isImageHdu);
     this.service.saveDefault(this.fileId, this.form.value);
     setTimeout(() => {
       let result = neutralizeHistograms(layers, this.form.controls.referenceLayerId.value, true, this.form.controls.neutralizeBackground.value);

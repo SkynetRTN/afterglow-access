@@ -68,7 +68,7 @@ export class ViewerPanelComponent implements OnInit, OnChanges {
   @Output() onFileSave = new EventEmitter<string>();
 
   selectedViewerIndex = 0;
-  hduEntities$: Observable<{ [id: string]: IHdu }>;
+  layerEntities$: Observable<{ [id: string]: IHdu }>;
   fileEntities$: Observable<{ [id: string]: DataFile }>;
   dropListConnections$: Observable<string[]>;
   subs: Subscription[] = [];
@@ -80,32 +80,32 @@ export class ViewerPanelComponent implements OnInit, OnChanges {
     public viewContainerRef: ViewContainerRef,
     private viewerEventService: ImageViewerEventService
   ) {
-    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
+    this.layerEntities$ = this.store.select(DataFilesState.getHduEntities);
     this.fileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.dropListConnections$ = this.store.select(WorkbenchState.getViewerPanelIds);
   }
 
   public getTabLabel(viewer: IViewer) {
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let file = fileEntities[viewer.fileId];
     if (!file) return '';
 
     let filename = file.name;
-    if (viewer.hduId) {
-      let hdu = hduEntities[viewer.hduId];
-      if (!hdu) return '';
+    if (viewer.layerId) {
+      let layer = layerEntities[viewer.layerId];
+      if (!layer) return '';
 
-      if (file.hduIds.length > 1) {
-        return hdu.name ? hdu.name : `${file.name} - Layer ${file.hduIds.indexOf(hdu.id)}`;
+      if (file.layerIds.length > 1) {
+        return layer.name ? layer.name : `${file.name} - Layer ${file.layerIds.indexOf(layer.id)}`;
       }
-    } else if (file.hduIds.length > 1) {
+    } else if (file.layerIds.length > 1) {
       filename += ` [Composite]`;
     }
     return filename;
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.selectedViewerId || changes.viewers) {
@@ -121,7 +121,7 @@ export class ViewerPanelComponent implements OnInit, OnChanges {
     }
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() { }
 
   viewerTrackByFn(index, item: IViewer) {
     // using the viewer's unique ID causes problems when the viewers are reordered.

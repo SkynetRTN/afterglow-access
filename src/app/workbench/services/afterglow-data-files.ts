@@ -73,7 +73,7 @@ export class AfterglowDataFileService {
     );
   }
 
-  getPixels(hduId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
+  getPixels(layerId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
     let params: HttpParams = new HttpParams();
     if (region) {
       params = params
@@ -85,7 +85,7 @@ export class AfterglowDataFileService {
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
-      .get(`${getCoreApiUrl(this.config)}/data-files/${hduId}/pixels`, {
+      .get(`${getCoreApiUrl(this.config)}/data-files/${layerId}/pixels`, {
         headers: headers,
         responseType: 'arraybuffer',
         params: params,
@@ -132,7 +132,7 @@ export class AfterglowDataFileService {
     }
     let source: Source = {
       id: sourceId.toString(),
-      hduId: null,
+      layerId: null,
       label: sourceId.toString(),
       objectId: null,
       pmEpoch: null,

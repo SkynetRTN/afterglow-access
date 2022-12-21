@@ -77,10 +77,10 @@ import {
   UpdateNormalizedImageTile,
   CenterRegionInViewport,
   UpdateCompositeImageTile,
-  LoadHduHeader,
-  LoadHdu,
-  LoadImageHduHistogram,
-  LoadHduHeaderSuccess,
+  LoadLayerHeader,
+  LoadLayer,
+  LoadImageLayerHistogram,
+  LoadLayerHeaderSuccess,
   UpdateCompositeImageTileSuccess,
   UpdateNormalizedImageTileSuccess,
 } from '../../../data-files/data-files.actions';
@@ -171,7 +171,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   @ViewChild(ImageViewerMarkerOverlayComponent, { static: false })
   imageViewerMarkerOverlayComponent: ImageViewerMarkerOverlayComponent;
 
-  hduEntities$: Observable<{ [id: string]: IHdu }>;
+  layerEntities$: Observable<{ [id: string]: IHdu }>;
   viewportSize: { width: number; height: number };
   currentCanvasSize: { width: number; height: number } = null;
   imageMouseX: number = null;
@@ -189,7 +189,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     private markerService: ImageViewerMarkerService,
     private actions$: Actions
   ) {
-    this.hduEntities$ = this.store.select(DataFilesState.getHduEntities);
+    this.layerEntities$ = this.store.select(DataFilesState.getHduEntities);
 
     let viewerId$ = this.viewer$.pipe(map((viewer) => (viewer ? viewer.id : null)));
 
@@ -198,22 +198,22 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     let file$ = this.viewer$.pipe(
       switchMap((viewer) => (viewer?.fileId ? this.store.select(DataFilesState.getFileById(viewer.fileId)) : of(null)))
     );
-    let hduIds$: Observable<string[]> = file$.pipe(
-      map((file) => (file ? file.hduIds : [])),
+    let layerIds$: Observable<string[]> = file$.pipe(
+      map((file) => (file ? file.layerIds : [])),
       distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
-    let selectedHduId$ = this.viewer$.pipe(map((viewer) => viewer?.hduId));
-    let hdus$ = combineLatest(hduIds$, selectedHduId$).pipe(
-      switchMap(([hduIds, selectedHduId]) => {
-        if (selectedHduId) hduIds = [selectedHduId];
-        return combineLatest(hduIds.map((hduId) => this.store.select(DataFilesState.getHduById(hduId)))).pipe(
-          map((hdus) => hdus.filter((hdu) => hdu?.type == HduType.IMAGE) as ImageHdu[])
+    let selectedHduId$ = this.viewer$.pipe(map((viewer) => viewer?.layerId));
+    let layers$ = combineLatest(layerIds$, selectedHduId$).pipe(
+      switchMap(([layerIds, selectedHduId]) => {
+        if (selectedHduId) layerIds = [selectedHduId];
+        return combineLatest(layerIds.map((layerId) => this.store.select(DataFilesState.getHduById(layerId)))).pipe(
+          map((layers) => layers.filter((layer) => layer?.type == HduType.IMAGE) as ImageHdu[])
         );
       })
     );
 
-    let headerIds$ = hdus$.pipe(
-      map((hdus) => hdus.map((hdu) => hdu.headerId)),
+    let headerIds$ = layers$.pipe(
+      map((layers) => layers.map((layer) => layer.headerId)),
       distinctUntilChanged((a, b) => a && b && a.length == b.length && a.every((value, index) => b[index] == value))
     );
 
@@ -226,23 +226,23 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     this.firstHeader$ = headers$.pipe(map((headers) => (headers.length > 0 ? headers[0] : null)));
 
     // // watch for changes to header and reload when necessary
-    // hdus$.pipe(takeUntil(this.destroy$)).subscribe((hdus) => {
-    //   hdus.forEach((hdu) => {
-    //     if (hdu) {
-    //       if (hdu.hist && !hdu.hist.loaded && !hdu.hist.loading) {
+    // layers$.pipe(takeUntil(this.destroy$)).subscribe((layers) => {
+    //   layers.forEach((layer) => {
+    //     if (layer) {
+    //       if (layer.hist && !layer.hist.loaded && !layer.hist.loading) {
     //         setTimeout(() => {
-    //           this.store.dispatch(new LoadImageHduHistogram(hdu.id));
+    //           this.store.dispatch(new LoadImageHduHistogram(layer.id));
     //         });
     //       }
     //     }
     //   });
     // });
 
-    // headers$.pipe(takeUntil(this.destroy$), withLatestFrom(hduIds$)).subscribe(([headers, hduIds]) => {
+    // headers$.pipe(takeUntil(this.destroy$), withLatestFrom(layerIds$)).subscribe(([headers, layerIds]) => {
     //   headers.forEach((header, index) => {
     //     if (header && !header.loaded && !header.loading) {
     //       setTimeout(() => {
-    //         this.store.dispatch(new LoadHduHeader(hduIds[index]));
+    //         this.store.dispatch(new LoadHduHeader(layerIds[index]));
     //       });
     //     }
     //   });
@@ -255,7 +255,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     this.normalizedImageData$ = this.viewer$.pipe(
       switchMap((viewer) => {
         if (!viewer) return of(null);
-        return viewer.hduId
+        return viewer.layerId
           ? this.store.select(WorkbenchState.getHduNormalizedImageDataByViewerId(viewer?.id))
           : this.store.select(WorkbenchState.getFileNormalizedImageDataByViewerId(viewer?.id));
       })
@@ -264,7 +264,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     this.imageToViewportTransform$ = this.viewer$.pipe(
       switchMap((viewer) => {
         if (!viewer) return of(null);
-        return viewer.hduId
+        return viewer.layerId
           ? this.store.select(WorkbenchState.getHduImageToViewportTransformByViewerId(viewer?.id))
           : this.store.select(WorkbenchState.getFileImageToViewportTransformByViewerId(viewer?.id));
       })
@@ -540,36 +540,36 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
     // console.log("LOAD TILE EVENT: ", $event.tileIndex)
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let hduIds = [this.viewer.hduId];
+    let layerIds = [this.viewer.layerId];
     let loadComposite = false;
 
 
-    if (!this.viewer.hduId) {
+    if (!this.viewer.layerId) {
       // a specific HDU has not been selected in the viewer
       let file = dataFileEntities[this.viewer.fileId];
       if (!file) return;
-      hduIds = file.hduIds;
+      layerIds = file.layerIds;
       loadComposite = true;
     }
 
-    let hdus = hduIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id))).filter(isImageHdu).filter(hdu => !!hdu)
+    let layers = layerIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id))).filter(isImageHdu).filter(layer => !!layer)
 
-    hdus.forEach((hdu) => {
-      let hduId = hdu.id;
+    layers.forEach((layer) => {
+      let layerId = layer.id;
 
       //ensure updated copies of HDU info is retrieved at the start of each loop
       let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
       let imageDataEntities = this.store.selectSnapshot(DataFilesState.getImageDataEntities);
-      // console.log("CHECKING HDU: ", hduId, this.hduLoading[hduId])
+      // console.log("CHECKING HDU: ", layerId, this.layerLoading[layerId])
 
-      let imageHdu = hdu as ImageHdu;
-      let header = headerEntities[hdu.headerId];
+      let imageHdu = layer as ImageHdu;
+      let header = headerEntities[layer.headerId];
       if ((!imageHdu.loaded || !header.isValid)) {
         this.queuedTileLoadingEvents.push($event);
         this.actions$
           .pipe(
-            ofActionCompleted(LoadHdu),
-            filter((a) => (a.action as LoadHdu).hduId == hdu.id),
+            ofActionCompleted(LoadLayer),
+            filter((a) => (a.action as LoadLayer).layerId == layer.id),
             take(1)
           )
           .subscribe((a) => {
@@ -578,8 +578,8 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
           })
 
 
-        if (!hdu.loading) {
-          this.store.dispatch(new LoadHdu(hduId));
+        if (!layer.loading) {
+          this.store.dispatch(new LoadLayer(layerId));
         }
 
 
@@ -590,24 +590,24 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
 
 
-      let imageData = imageDataEntities[(hdu as ImageHdu).rgbaImageDataId];
+      let imageData = imageDataEntities[(layer as ImageHdu).rgbaImageDataId];
       let tile = imageData.tiles[$event.tileIndex];
       if (!tile.pixelsLoaded || !tile.isValid) {
         this.queuedTileLoadingEvents.push($event);
         this.actions$
           .pipe(
             ofActionCompleted(UpdateNormalizedImageTile),
-            filter((a) => (a.action as UpdateNormalizedImageTile).hduId == hdu.id && (a.action as UpdateNormalizedImageTile).tileIndex == tile.index),
+            filter((a) => (a.action as UpdateNormalizedImageTile).layerId == layer.id && (a.action as UpdateNormalizedImageTile).tileIndex == tile.index),
             take(1)
           )
           .subscribe((a) => {
-            // console.log("update normalized tile complete!", hdu.fileId, hdu.id, tile.index)
+            // console.log("update normalized tile complete!", layer.fileId, layer.id, tile.index)
             this.queuedTileLoadingEvents.splice(this.queuedTileLoadingEvents.indexOf($event), 1);
             if (a.result.successful) this.handleLoadTile($event);
           });
 
         if (!tile.pixelsLoading) {
-          this.store.dispatch(new UpdateNormalizedImageTile(hdu.id, tile.index));
+          this.store.dispatch(new UpdateNormalizedImageTile(layer.id, tile.index));
         }
 
 
@@ -622,7 +622,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
     // console.log("LOOP COMPLETE")
 
-    if (loadComposite && hdus.length != 0) {
+    if (loadComposite && layers.length != 0) {
       // console.log("update composite tile event", this.viewer.fileId, $event.tileIndex)
       this.store.dispatch(new UpdateCompositeImageTile(this.viewer.fileId, $event.tileIndex));
     }
@@ -670,9 +670,9 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
 
 
     var lnk = document.createElement('a');
-    if (this.viewer.hduId) {
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer.hduId))
-      lnk.download = `${hdu?.name || 'afterglow-image-export'}.jpg`;
+    if (this.viewer.layerId) {
+      let layer = this.store.selectSnapshot(DataFilesState.getHduById(this.viewer.layerId))
+      lnk.download = `${layer?.name || 'afterglow-image-export'}.jpg`;
     }
     else {
       let file = this.store.selectSnapshot(DataFilesState.getFileById(this.viewer.fileId))
@@ -725,11 +725,11 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
       /// pushed as "download" in HTML5 capable browsers
       let dataUrl = canvas.toDataURL('image/jpeg');
 
-      if (this.viewer.hduId) {
-        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+      if (this.viewer.layerId) {
+        let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
         let headerEntities = this.store.selectSnapshot(DataFilesState.getHeaderEntities);
         let user = this.store.selectSnapshot(AuthState.user);
-        let header = headerEntities[hduEntities[this.viewer.hduId].headerId];
+        let header = headerEntities[layerEntities[this.viewer.layerId].headerId];
         if (header) {
           let zeroth = {};
           let exif = {};

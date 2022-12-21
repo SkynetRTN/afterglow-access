@@ -39,7 +39,7 @@ export interface DataFile extends ITransformableImageData {
   name: string;
   dataProviderId: string;
   assetPath: string;
-  hduIds: string[];
+  layerIds: string[];
   imageHduIds: string[];
   tableHduIds: string[];
   syncLayerNormalizers: boolean;
@@ -80,16 +80,16 @@ export interface ImageHdu extends IHdu, ITransformableImageData {
 }
 
 export const isImageHdu: TypeGuard<IHdu, ImageHdu> = (
-  hdu: IHdu
-): hdu is ImageHdu => hdu.type === HduType.IMAGE;
+  layer: IHdu
+): layer is ImageHdu => layer.type === HduType.IMAGE;
 
 export interface TableHdu extends IHdu {
   readonly type: HduType.TABLE;
 }
 
 export const isTableHdu: TypeGuard<IHdu, TableHdu> = (
-  hdu: IHdu
-): hdu is TableHdu => hdu.type === HduType.TABLE;
+  layer: IHdu
+): layer is TableHdu => layer.type === HduType.TABLE;
 
 
 

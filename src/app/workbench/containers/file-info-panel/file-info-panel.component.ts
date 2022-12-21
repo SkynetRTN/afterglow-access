@@ -44,7 +44,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
   protected viewerId$ = new BehaviorSubject<string>(null);
 
   destroy$ = new Subject<boolean>();
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   header$: Observable<Header>;
   config$: Observable<FileInfoPanelConfig>;
 
@@ -52,7 +52,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
   headerSummary$: Observable<HeaderEntry[]>;
 
   constructor(private decimalPipe: DecimalPipe, private datePipe: DatePipe, private store: Store) {
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
@@ -82,7 +82,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
 
         // result.push({
         //   key: "ID",
-        //   value: `${this.hdu.id}`,
+        //   value: `${this.layer.id}`,
         //   comment: "",
         // });
 
@@ -189,9 +189,9 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
       })
     );
   }
-  ngOnInit() {}
+  ngOnInit() { }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy() {
     this.destroy$.next(true);

@@ -11,7 +11,7 @@ export interface IViewer {
   id: string;
   type: ViewerType;
   fileId: string;
-  hduId: string;
+  layerId: string;
   keepOpen: boolean;
   viewportSize: { width: number; height: number };
 }

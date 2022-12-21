@@ -1,4 +1,4 @@
-<ng-template #hduNotSelectedBlock>
+<ng-template #layerNotSelectedBlock>
   <div i18n class="alert alert-info" i18n>Please select a layer instead of the file.</div>
 </ng-template>
 
@@ -10,29 +10,21 @@
   <div i18n class="alert alert-info" i18n>Header is loading...</div>
 </ng-template>
 
-<ng-container *ngIf="hdu$ | async; else hduNotSelectedBlock">
-  <ng-container *ngIf="header$ | async as header; else hduNotSelectedBlock">
+<ng-container *ngIf="layer$ | async; else layerNotSelectedBlock">
+  <ng-container *ngIf="header$ | async as header; else layerNotSelectedBlock">
     <ng-container *ngIf="header?.loaded; else headerLoading">
       <ng-container *ngIf="config$ | async; let config">
         <div class="p-2">
-          <mat-slide-toggle
-            [color]="'primary'"
-            [checked]="(config$ | async)?.showRawHeader"
-            (change)="onShowRawHeaderChange($event)"
-            i18n
-          >
+          <mat-slide-toggle [color]="'primary'" [checked]="(config$ | async)?.showRawHeader"
+            (change)="onShowRawHeaderChange($event)" i18n>
             Show Raw Header Data
           </mat-slide-toggle>
         </div>
 
         <div *ngIf="!(config$ | async)?.showRawHeader">
           <div class="p-2">
-            <mat-slide-toggle
-              [color]="'primary'"
-              [checked]="(config$ | async)?.useSystemTime"
-              (change)="onUseSystemTimeChange($event)"
-              i18n
-            >
+            <mat-slide-toggle [color]="'primary'" [checked]="(config$ | async)?.useSystemTime"
+              (change)="onUseSystemTimeChange($event)" i18n>
               Use System Time
             </mat-slide-toggle>
           </div>

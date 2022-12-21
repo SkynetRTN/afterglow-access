@@ -33,7 +33,7 @@ export class RenameFileDialogComponent implements OnInit, AfterViewInit {
     if (!this.nameForm.valid) return;
 
     let name = this.nameForm.get('name').value;
-    forkJoin(this.file.hduIds.map(hduId => this.dataFileService.updateFile(hduId, { groupName: name })))
+    forkJoin(this.file.layerIds.map(layerId => this.dataFileService.updateFile(layerId, { groupName: name })))
       .subscribe(() => {
         this.dialogRef.close({
           ...this.file,

@@ -13,7 +13,7 @@ import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile } from '../..
 import { JobsState } from '../../../jobs/jobs.state';
 import { ImageHdu, DataFile, Header } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import { LoadHduHeader } from '../../../data-files/data-files.actions';
+import { LoadLayerHeader } from '../../../data-files/data-files.actions';
 import { Source } from '../../models/source';
 import { SourcesState } from '../../sources.state';
 
@@ -31,14 +31,14 @@ enum AlignMode {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlignerPageComponent implements OnInit {
-  @Input('hduIds')
-  set hduIds(hduIds: string[]) {
-    this.hduIds$.next(hduIds);
+  @Input('layerIds')
+  set layerIds(layerIds: string[]) {
+    this.layerIds$.next(layerIds);
   }
-  get hduIds() {
-    return this.hduIds$.getValue();
+  get layerIds() {
+    return this.layerIds$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<string[]>(null);
+  private layerIds$ = new BehaviorSubject<string[]>(null);
 
   AlignMode = AlignMode;
   config$: Observable<AligningPanelConfig>;
@@ -65,9 +65,9 @@ export class AlignerPageComponent implements OnInit {
   constructor(private store: Store, private router: Router) {
     this.config$ = this.store.select(WorkbenchState.getAligningPanelConfig);
 
-    this.hduIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([hduIds, config]) => {
-      if (!hduIds || !config) return;
-      let selectedHduIds = config.alignFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
+      if (!layerIds || !config) return;
+      let selectedHduIds = config.alignFormData.selectedHduIds.filter((layerId) => layerIds.includes(layerId));
       if (selectedHduIds.length != config.alignFormData.selectedHduIds.length) {
         setTimeout(() => {
           this.setSelectedHduIds(selectedHduIds);
@@ -89,7 +89,7 @@ export class AlignerPageComponent implements OnInit {
 
     this.manualSourceOptions$ = combineLatest(this.store.select(SourcesState.getEntities), this.refHduId$).pipe(
       map(([sourcesById, refHduId]) => {
-        return Object.values(sourcesById).filter(source => !refHduId || source.hduId == refHduId)
+        return Object.values(sourcesById).filter(source => !refHduId || source.layerId == refHduId)
       })
     )
 
@@ -102,16 +102,16 @@ export class AlignerPageComponent implements OnInit {
 
 
     this.refHdu$ = this.refHduId$.pipe(
-      switchMap((hduId) => {
-        return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-          map((hdu) => hdu as ImageHdu),
+      switchMap((layerId) => {
+        return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+          map((layer) => layer as ImageHdu),
           distinctUntilChanged()
         );
       })
     );
 
     this.refHeader$ = this.refHdu$.pipe(
-      map((hdu) => hdu && hdu.headerId),
+      map((layer) => layer && layer.headerId),
       distinctUntilChanged(),
       switchMap((headerId) => {
         return this.store.select(DataFilesState.getHeaderById(headerId));
@@ -133,7 +133,7 @@ export class AlignerPageComponent implements OnInit {
       .subscribe(([refHduId, headerLoaded, headerLoading]) => {
         if (refHduId && headerLoaded != null && !headerLoaded && headerLoading != null && !headerLoading) {
           setTimeout(() => {
-            this.store.dispatch(new LoadHduHeader(refHduId));
+            this.store.dispatch(new LoadLayerHeader(refHduId));
           });
         }
       });
@@ -168,26 +168,26 @@ export class AlignerPageComponent implements OnInit {
 
   ngOnInit() { }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  getHduOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(hduIds: string[]) {
+  setSelectedHduIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdateAligningPanelConfig({
         alignFormData: {
           ...this.alignForm.value,
-          selectedHduIds: hduIds,
+          selectedHduIds: layerIds,
         },
       })
     );
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.hduIds);
+    this.setSelectedHduIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {

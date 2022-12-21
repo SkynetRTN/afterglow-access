@@ -1,4 +1,4 @@
-<div *ngIf="hduIds">
+<div *ngIf="layerIds">
   <p i18n>
     WCS calibration extracts sources from your images and attempts to match them to catalogs. If a successful
     match is found, WCS header entries are added to the file and can be used to map between pixel
@@ -8,30 +8,31 @@
     Turn on the source extraction overlay to preview which sources will be used in the WCS calibration.
   </p>
   <form [formGroup]="wcsCalibrationForm">
-    <div>
-      <div class="flex flex-row" fxLayoutGap="20px">
+    <div class="flex flex-col gap-5">
+      <div class="flex flex-row gap-5 items-center">
         <mat-slide-toggle formControlName="showOverlay" [labelPosition]="'before'" i18n>
           Show extraction overlay
         </mat-slide-toggle>
         <button mat-raised-button>Open Source Extraction Settings</button>
       </div>
+      <div class="flex flex-row gap-2 items-center">
+        <mat-form-field appearance="outline" style="width: 300px">
+          <mat-label i18n>Select Image(s) to Calibrate</mat-label>
+          <mat-select multiple formControlName="selectedHduIds">
+            <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
+              {{ getHduOptionLabel(layerId) | async }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" style="width: 300px">
-        <mat-label i18n>Select Image(s) to Calibrate</mat-label>
-        <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-            {{ getHduOptionLabel(hduId) | async }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+        <button mat-icon-button (click)="onSelectAllBtnClick()" i18n-matTooltip matTooltip="Select All">
+          <mat-icon>select_all</mat-icon>
+        </button>
 
-      <button mat-icon-button (click)="onSelectAllBtnClick()" i18n-matTooltip matTooltip="Select All">
-        <mat-icon>select_all</mat-icon>
-      </button>
-
-      <button mat-icon-button (click)="onClearSelectionBtnClick()" i18n-matTooltip matTooltip="Clear Selection">
-        <mat-icon>clear</mat-icon>
-      </button>
+        <button mat-icon-button (click)="onClearSelectionBtnClick()" i18n-matTooltip matTooltip="Clear Selection">
+          <mat-icon>clear</mat-icon>
+        </button>
+      </div>
     </div>
 
     <div *ngIf="header$ | async as header" class="mb-3">

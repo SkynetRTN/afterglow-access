@@ -20,7 +20,7 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
     let result: { layerId: string, scale: number, offset: number }[] = [];
 
     let fits: {
-        hdu: { id: string, hist: ImageHist, normalizer: PixelNormalizer }
+        layer: { id: string, hist: ImageHist, normalizer: PixelNormalizer }
         bkgMu: number,
         bkgSigma: number,
         bkgPeak: number,
@@ -30,33 +30,33 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
     }[] = []
 
     // fit backgrounds
-    layers.forEach(hdu => {
-        fits.push(fitHistogram(hdu))
+    layers.forEach(layer => {
+        fits.push(fitHistogram(layer))
     })
 
-    let ref = fits.find(fit => fit.hdu.id == referenceLayerId) || fits[0];
-    let refCorr = getCountsPerBin(ref.hdu.hist)
+    let ref = fits.find(fit => fit.layer.id == referenceLayerId) || fits[0];
+    let refCorr = getCountsPerBin(ref.layer.hist)
 
     let backgroundLevel: number;
     let peakLevel: number;
-    if (ref.hdu.normalizer.mode == 'pixel' && ref.hdu.normalizer.backgroundLevel !== undefined && ref.hdu.normalizer.peakLevel !== undefined) {
-        backgroundLevel = ref.hdu.normalizer.backgroundLevel;
-        peakLevel = ref.hdu.normalizer.peakLevel;
+    if (ref.layer.normalizer.mode == 'pixel' && ref.layer.normalizer.backgroundLevel !== undefined && ref.layer.normalizer.peakLevel !== undefined) {
+        backgroundLevel = ref.layer.normalizer.backgroundLevel;
+        peakLevel = ref.layer.normalizer.peakLevel;
     }
     else {
-        let levels = calcLevels(ref.hdu.hist, ref.hdu.normalizer.backgroundPercentile, ref.hdu.normalizer.peakPercentile)
+        let levels = calcLevels(ref.layer.hist, ref.layer.normalizer.backgroundPercentile, ref.layer.normalizer.peakPercentile)
         backgroundLevel = levels.backgroundLevel;
         peakLevel = levels.peakLevel;
     }
 
-    let refScale = ref.hdu.normalizer.layerScale;
-    let refOffset = ref.hdu.normalizer.layerOffset;
+    let refScale = ref.layer.normalizer.layerScale;
+    let refOffset = ref.layer.normalizer.layerOffset;
     for (let i = 0; i < fits.length; i++) {
         let fit = fits[i];
         if (fit == ref) continue;
 
-        let targetScale = fit.hdu.normalizer.layerScale;
-        let targetOffset = fit.hdu.normalizer.layerOffset;
+        let targetScale = fit.layer.normalizer.layerScale;
+        let targetOffset = fit.layer.normalizer.layerOffset;
 
         if (neutralizeSources) {
             let xRef = new Float32Array(ref.xSrc);
@@ -66,7 +66,7 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
             let yRef = new Float32Array(ref.ySrc);
             yRef.forEach((y, index) => { yRef[index] = Math.sqrt(y) })
 
-            let fitCorr = getCountsPerBin(fit.hdu.hist)
+            let fitCorr = getCountsPerBin(fit.layer.hist)
             let corr = (fitCorr / refCorr)
 
             let steps = 200;
@@ -133,14 +133,14 @@ export function neutralizeHistograms(layers: { id: string, hist: ImageHist, norm
         }
 
 
-        result.push({ layerId: fit.hdu.id, scale: targetScale, offset: targetOffset })
+        result.push({ layerId: fit.layer.id, scale: targetScale, offset: targetOffset })
     }
 
     return result;
 }
 
-export function fitHistogram(hdu: { id: string, hist: ImageHist, normalizer: PixelNormalizer }, fitSources = true) {
-    let hist = hdu.hist;
+export function fitHistogram(layer: { id: string, hist: ImageHist, normalizer: PixelNormalizer }, fitSources = true) {
+    let hist = layer.hist;
 
     let N0 = 0;
     hist.data.forEach(v => N0 += v)
@@ -213,10 +213,10 @@ export function fitHistogram(hdu: { id: string, hist: ImageHist, normalizer: Pix
 
 
 
-    // saveCsv(`${hdu.name}-hist.csv`, x, y)
+    // saveCsv(`${layer.name}-hist.csv`, x, y)
 
     // extract background
-    let { peak: bkgPeak, mu: bkgMu, sigma: bkgSigma, x: xBkg, y: yBkg } = fitBackground(hdu, x, y);
+    let { peak: bkgPeak, mu: bkgMu, sigma: bkgSigma, x: xBkg, y: yBkg } = fitBackground(layer, x, y);
 
     let xSrc: Float32Array, ySrc: Float32Array;
 
@@ -255,12 +255,12 @@ export function fitHistogram(hdu: { id: string, hist: ImageHist, normalizer: Pix
     }
 
 
-    // saveCsv(`${hdu.name}-src.csv`, xSrc, ySrc)
+    // saveCsv(`${layer.name}-src.csv`, xSrc, ySrc)
 
 
 
     return {
-        hdu: hdu,
+        layer: layer,
         bkgMu: bkgMu,
         bkgSigma: bkgSigma,
         bkgPeak: bkgPeak,
@@ -272,7 +272,7 @@ export function fitHistogram(hdu: { id: string, hist: ImageHist, normalizer: Pix
 }
 
 
-export function fitBackground(hdu: { hist: ImageHist, normalizer: PixelNormalizer }, x: Float32Array, y: Float32Array) {
+export function fitBackground(layer: { hist: ImageHist, normalizer: PixelNormalizer }, x: Float32Array, y: Float32Array) {
     let index: number;
     let sigma: number, mu: number;
 

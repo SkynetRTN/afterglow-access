@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ImageHduToolbarComponent } from './image-hdu-toolbar.component';
+import { ImageHduToolbarComponent } from './image-layer-toolbar.component';
 
 describe('HduToolbarComponent', () => {
   let component: ImageHduToolbarComponent;

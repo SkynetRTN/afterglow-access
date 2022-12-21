@@ -62,7 +62,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
 
   destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
@@ -102,7 +102,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
@@ -261,8 +261,8 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
         if (!state) {
           return;
         }
-        if ($event.viewer.hduId) {
-          header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId($event.viewer.hduId));
+        if ($event.viewer.layerId) {
+          header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId($event.viewer.layerId));
         }
 
         let measuring = state.measuring;
@@ -307,7 +307,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
       });
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy() {
     this.markerService.clearMarkers();
@@ -343,10 +343,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   private getViewerMarkers(viewerId: string) {
     let state$ = this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId));
     let config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
-    let hduHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId));
+    let layerHeader$ = this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId));
     let fileImageHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(viewerId));
-    let header$ = combineLatest(hduHeader$, fileImageHeader$).pipe(
-      map(([hduHeader, fileHeader]) => hduHeader || fileHeader)
+    let header$ = combineLatest(layerHeader$, fileImageHeader$).pipe(
+      map(([layerHeader, fileHeader]) => layerHeader || fileHeader)
     );
 
     let markers$ = combineLatest(config$, state$, header$).pipe(

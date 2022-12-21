@@ -8,9 +8,9 @@ import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { Store } from '@ngxs/store';
 
 @Component({
-  selector: 'app-rename-hdu-dialog',
-  templateUrl: './rename-hdu-dialog.component.html',
-  styleUrls: ['./rename-hdu-dialog.component.scss'],
+  selector: 'app-rename-layer-dialog',
+  templateUrl: './rename-layer-dialog.component.html',
+  styleUrls: ['./rename-layer-dialog.component.scss'],
 })
 export class RenameHduDialogComponent implements OnInit, AfterViewInit {
   @ViewChild('nameInput')
@@ -19,9 +19,9 @@ export class RenameHduDialogComponent implements OnInit, AfterViewInit {
     name: new FormControl('', [Validators.required, isValidFilename()]),
   });
 
-  constructor(private dialogRef: MatDialogRef<RenameHduDialogComponent>, @Inject(MAT_DIALOG_DATA) private hdu: IHdu, private dataFileService: AfterglowDataFileService, private store: Store) {
+  constructor(private dialogRef: MatDialogRef<RenameHduDialogComponent>, @Inject(MAT_DIALOG_DATA) private layer: IHdu, private dataFileService: AfterglowDataFileService, private store: Store) {
 
-    this.nameForm.get('name').setValue(hdu.name);
+    this.nameForm.get('name').setValue(layer.name);
     this.nameForm.updateValueAndValidity();
   }
 
@@ -34,13 +34,13 @@ export class RenameHduDialogComponent implements OnInit, AfterViewInit {
   save() {
     if (!this.nameForm.valid) return;
 
-    let file = this.store.selectSnapshot(DataFilesState.getFileByHduId(this.hdu.id));
+    let file = this.store.selectSnapshot(DataFilesState.getFileByHduId(this.layer.id));
 
 
     let name = this.nameForm.get('name').value;
-    this.dataFileService.updateFile(this.hdu.id, { name: name, groupName: file.hduIds.length == 1 ? name : file.name }).subscribe(() => {
+    this.dataFileService.updateFile(this.layer.id, { name: name, groupName: file.layerIds.length == 1 ? name : file.name }).subscribe(() => {
       this.dialogRef.close({
-        ...this.hdu,
+        ...this.layer,
         name: name
       })
     },

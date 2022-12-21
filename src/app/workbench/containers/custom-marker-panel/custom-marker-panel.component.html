@@ -8,7 +8,7 @@
 
 <ng-container *ngIf="file$ | async; else fileNotSelectedBlock">
   <div fxLayout="column" fxLayoutGap="10px"
-    *ngIf="!(hdu$ | async) || (hdu$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
+    *ngIf="!(layer$ | async) || (layer$ | async).type == HduType.IMAGE; else invalidHduTypeBlock">
     <ng-container *ngIf="config$ | async; let config">
       <div fxLayout="row" fxLayoutGap="15px">
         <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"

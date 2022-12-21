@@ -251,7 +251,7 @@
         </app-sonification-panel>
 
         <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [viewerId]="focusedViewerId$ | async"
-          [hduIds]="filteredHduIds$ | async">
+          [layerIds]="filteredHduIds$ | async">
         </app-wcs-calibration-panel>
 
         <app-source-panel *ngSwitchCase="WorkbenchTool.SOURCE" [viewerId]="focusedViewerId$ | async">
@@ -268,10 +268,10 @@
 
 
 
-        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [hduIds]="filteredHduIds$ | async">
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [layerIds]="filteredHduIds$ | async">
         </app-aligning-panel>
 
-        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [hduIds]="filteredHduIds$ | async">
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [layerIds]="filteredHduIds$ | async">
         </app-stacking-panel>
       </div>
     </div>

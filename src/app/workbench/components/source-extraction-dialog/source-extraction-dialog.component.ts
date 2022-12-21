@@ -77,18 +77,18 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
   extractSources() {
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(this.viewerId))
     if (!viewer) return;
-    let hduId = viewer.hduId;
-    if (!hduId) return;
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId)) as ImageHdu;
+    let layerId = viewer.layerId;
+    if (!layerId) return;
+    let layer = this.store.selectSnapshot(DataFilesState.getHduById(layerId)) as ImageHdu;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
     let region: SourceExtractionRegion = this.sourceExtractionRegionForm.controls.region.value;
-    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByHduId(hduId));
+    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByHduId(layerId));
     let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
-    let viewportTransform = this.store.selectSnapshot(DataFilesState.getTransformById(hdu.viewportTransformId))
-    let imageTransform = this.store.selectSnapshot(DataFilesState.getTransformById(hdu.imageTransformId))
+    let viewportTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.viewportTransformId))
+    let imageTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.imageTransformId))
     let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
-    let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(hdu.rawImageDataId))
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(hdu.headerId))
+    let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(layer.rawImageDataId))
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(layer.headerId))
 
     let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
 
@@ -129,7 +129,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     let job: SourceExtractionJob = {
       id: null,
       type: JobType.SourceExtraction,
-      fileIds: [hduId],
+      fileIds: [layerId],
       sourceExtractionSettings: jobSettings,
       mergeSources: false,
       state: null,
@@ -178,7 +178,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
           return {
             id: null,
             objectId: '',
-            hduId: d.fileId.toString(),
+            layerId: d.fileId.toString(),
             posType: posType,
             primaryCoord: primaryCoord,
             secondaryCoord: secondaryCoord,

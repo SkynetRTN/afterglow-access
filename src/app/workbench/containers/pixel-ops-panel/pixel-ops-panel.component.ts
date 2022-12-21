@@ -54,8 +54,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
   private viewerId$ = new BehaviorSubject<string>(null);
 
   @Input('availableHduIds')
-  set availableHduIds(hduIds: string[]) {
-    this.availableHduIds$.next(hduIds);
+  set availableHduIds(layerIds: string[]) {
+    this.availableHduIds$.next(layerIds);
   }
   get availableHduIds() {
     return this.availableHduIds$.getValue();
@@ -152,9 +152,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     this.selectedHduIds$ = viewer$.pipe(
       switchMap(viewer => {
         if (!viewer) return of([]);
-        if (viewer.hduId) return of([viewer.hduId])
+        if (viewer.layerId) return of([viewer.layerId])
         return this.store.select(DataFilesState.getFileById(viewer.fileId)).pipe(
-          map(file => file.hduIds),
+          map(file => file.layerIds),
           distinctUntilChanged()
         )
       })
@@ -169,8 +169,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
         return a.length != b.length || a.some(value => !b.includes(value))
       }
       let formData = config.pixelOpsFormData;
-      let primaryHduIds = formData.primaryHduIds.filter((hduId) => availableHduIds.includes(hduId) && !selectedHduIds.includes(hduId));
-      let auxHduIds = formData.auxHduIds.filter((hduId) => availableHduIds.includes(hduId) && !selectedHduIds.includes(hduId));
+      let primaryHduIds = formData.primaryHduIds.filter((layerId) => availableHduIds.includes(layerId) && !selectedHduIds.includes(layerId));
+      let auxHduIds = formData.auxHduIds.filter((layerId) => availableHduIds.includes(layerId) && !selectedHduIds.includes(layerId));
       let auxHduId = formData.auxHduId;
       if (!availableHduIds.includes(auxHduId)) {
         auxHduId = null;
@@ -246,17 +246,17 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
     let auxHdusVars$ = this.pixelOpsFormData$.pipe(
       map((formData) => formData.auxHduIds),
-      switchMap((hduIds) => {
-        if (hduIds.length == 0) return of([]);
-        return combineLatest(hduIds.map((hduId) => this.getHduOptionLabel(hduId)));
+      switchMap((layerIds) => {
+        if (layerIds.length == 0) return of([]);
+        return combineLatest(layerIds.map((layerId) => this.getHduOptionLabel(layerId)));
       })
     );
 
     let primaryHdusVars$ = this.pixelOpsFormData$.pipe(
       map((formData) => [...formData.selectedHduIds, ...formData.primaryHduIds]),
-      switchMap((hduIds) => {
-        if (hduIds.length == 0) return of([]);
-        return combineLatest(hduIds.map((hduId) => this.getHduOptionLabel(hduId)));
+      switchMap((layerIds) => {
+        if (layerIds.length == 0) return of([]);
+        return combineLatest(layerIds.map((layerId) => this.getHduOptionLabel(layerId)));
       })
     );
 
@@ -424,20 +424,20 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     this.store.dispatch(new HideCurrentPixelOpsJobState());
   }
 
-  setAuxHduIds(hduIds: string[]) {
+  setAuxHduIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdatePixelOpsPageSettings({
         pixelOpsFormData: {
           ...this.imageCalcFormAdv.value,
-          auxHduIds: hduIds,
+          auxHduIds: layerIds,
         },
       })
     );
   }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  getHduOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
@@ -450,12 +450,12 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     this.setSelectedPrimaryHduIds([]);
   }
 
-  setSelectedPrimaryHduIds(hduIds: string[]) {
+  setSelectedPrimaryHduIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdatePixelOpsPageSettings({
         pixelOpsFormData: {
           ...this.imageCalcFormAdv.value,
-          primaryHduIds: hduIds,
+          primaryHduIds: layerIds,
         },
       })
     );
@@ -470,12 +470,12 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     this.setSelectedAuxHduIds([]);
   }
 
-  setSelectedAuxHduIds(hduIds: string[]) {
+  setSelectedAuxHduIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdatePixelOpsPageSettings({
         pixelOpsFormData: {
           ...this.imageCalcFormAdv.value,
-          auxHduIds: hduIds,
+          auxHduIds: layerIds,
         },
       })
     );

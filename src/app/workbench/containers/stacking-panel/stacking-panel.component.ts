@@ -19,14 +19,14 @@ import { DataFilesState } from '../../../data-files/data-files.state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StackerPanelComponent implements OnInit {
-  @Input('hduIds')
-  set hduIds(hduIds: string[]) {
-    this.hduIds$.next(hduIds);
+  @Input('layerIds')
+  set layerIds(layerIds: string[]) {
+    this.layerIds$.next(layerIds);
   }
-  get hduIds() {
-    return this.hduIds$.getValue();
+  get layerIds() {
+    return this.layerIds$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<string[]>(null);
+  private layerIds$ = new BehaviorSubject<string[]>(null);
 
   config$: Observable<StackingPanelConfig>;
 
@@ -50,9 +50,9 @@ export class StackerPanelComponent implements OnInit {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.config$ = this.store.select(WorkbenchState.getStackingPanelConfig);
 
-    this.hduIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([hduIds, config]) => {
-      if (!hduIds || !config) return;
-      let selectedHduIds = config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
+    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
+      if (!layerIds || !config) return;
+      let selectedHduIds = config.stackFormData.selectedHduIds.filter((layerId) => layerIds.includes(layerId));
       if (selectedHduIds.length != config.stackFormData.selectedHduIds.length) {
         setTimeout(() => {
           this.setSelectedHduIds(selectedHduIds);
@@ -116,26 +116,26 @@ export class StackerPanelComponent implements OnInit {
     });
   }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  getHduOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(hduIds: string[]) {
+  setSelectedHduIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdateStackingPanelConfig({
         stackFormData: {
           ...this.stackForm.value,
-          selectedHduIds: hduIds,
+          selectedHduIds: layerIds,
         },
       })
     );
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.hduIds);
+    this.setSelectedHduIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {
@@ -147,7 +147,7 @@ export class StackerPanelComponent implements OnInit {
     this.store.dispatch(new CreateStackingJob(selectedHduIds));
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

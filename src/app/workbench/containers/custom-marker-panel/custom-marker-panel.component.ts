@@ -64,7 +64,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
 
   destroy$ = new Subject<boolean>();
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
   state$: Observable<CustomMarkerPanelState>;
@@ -100,7 +100,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 

@@ -9,7 +9,7 @@ export interface Source {
   id: string;
   label: string;
   objectId: string;
-  hduId: string;
+  layerId: string;
   posType: PosType;
   primaryCoord: number;
   secondaryCoord: number;

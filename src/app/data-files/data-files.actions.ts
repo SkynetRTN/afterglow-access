@@ -20,7 +20,7 @@ export class LoadLibrary {
 export class LoadLibrarySuccess {
   public static readonly type = '[File] Load Library Success';
 
-  constructor(public hdus: IHdu[], public correlationId?: string) { }
+  constructor(public layers: IHdu[], public correlationId?: string) { }
 }
 
 export class LoadLibraryFail {
@@ -36,13 +36,13 @@ export class LoadLibraryFail {
 export class CloseHduSuccess {
   public static readonly type = '[File] Close HDU Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class CloseHduFail {
   public static readonly type = '[File] Close HDU Fail';
 
-  constructor(public hduId: string, public error: any) { }
+  constructor(public layerId: string, public error: any) { }
 }
 
 /**
@@ -56,34 +56,34 @@ export class InitializeFile {
 
 }
 
-export class LoadHdu {
-  public static readonly type = '[File] Load HDU';
+export class LoadLayer {
+  public static readonly type = '[File] Load Layer';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
-export class LoadHduHeader {
+export class LoadLayerHeader {
   public static readonly type = '[File] Load HDU Header';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
-export class LoadHduHeaderSuccess {
+export class LoadLayerHeaderSuccess {
   public static readonly type = '[File] Load HDU Header Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
-export class LoadImageHduHistogram {
+export class LoadImageLayerHistogram {
   public static readonly type = '[File] Load Image HDU Histogram';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
-export class LoadImageHduHistogramSuccess {
+export class LoadImageLayerHistogramSuccess {
   public static readonly type = '[File] Load Image HDU Histogram Success';
 
-  constructor(public hduId: string, public hist: ImageHist) { }
+  constructor(public layerId: string, public hist: ImageHist) { }
 }
 
 
@@ -93,10 +93,10 @@ export class LoadImageHduHistogramSuccess {
  * HDU Actions
  */
 
-export class UpdateHduHeader {
+export class UpdateLayerHeader {
   public static readonly type = '[File] Update HDU Header';
 
-  constructor(public hduId: string, public changes: HeaderEntry[]) { }
+  constructor(public layerId: string, public changes: HeaderEntry[]) { }
 }
 
 export class InitializeFileTiles {
@@ -108,25 +108,25 @@ export class InitializeFileTiles {
 export class LoadRawImageTile {
   public static readonly type = '[File] Load Raw Image Tile';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 export class LoadRawImageTileSuccess {
   public static readonly type = '[File] Load Raw Image Tile Success';
 
-  constructor(public hduId: string, public tileIndex: number, public pixels: PixelType) { }
+  constructor(public layerId: string, public tileIndex: number, public pixels: PixelType) { }
 }
 
 export class LoadRawImageTileFail {
   public static readonly type = '[File] Load Raw Image Tile Fail';
 
-  constructor(public hduId: string, public tileIndex: number, public error: any) { }
+  constructor(public layerId: string, public tileIndex: number, public error: any) { }
 }
 
 export class LoadRawImageTileCancel {
   public static readonly type = '[File] Load Raw Image Tile Cancel';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 export class UpdateChannelMixer {
@@ -138,49 +138,49 @@ export class UpdateChannelMixer {
 export class UpdateBlendMode {
   public static readonly type = '[File] Update Blend Mode';
 
-  constructor(public hduId: string, public blendMode: BlendMode) { }
+  constructor(public layerId: string, public blendMode: BlendMode) { }
 }
 
 export class UpdateBlendModeSuccess {
   public static readonly type = '[File] Update Blend Mode Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class UpdateColorMap {
   public static readonly type = '[File] Update Color map';
 
-  constructor(public hduId: string, public colorMap: string) { }
+  constructor(public layerId: string, public colorMap: string) { }
 }
 
 export class UpdateColorMapSuccess {
   public static readonly type = '[File] Update Color Map Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class UpdateAlpha {
   public static readonly type = '[File] Update Alpha';
 
-  constructor(public hduId: string, public alpha: number) { }
+  constructor(public layerId: string, public alpha: number) { }
 }
 
 export class UpdateAlphaSuccess {
   public static readonly type = '[File] Update Alpha Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class UpdateVisibility {
   public static readonly type = '[File] Update Visibility';
 
-  constructor(public hduId: string, public value: boolean) { }
+  constructor(public layerId: string, public value: boolean) { }
 }
 
 export class UpdateVisibilitySuccess {
   public static readonly type = '[File] Update Visibility Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 /**
@@ -267,19 +267,19 @@ export class SaveAllDataFilesFail {
 export class InvalidateHeader {
   public static readonly type = '[Workbench HDU State] Invalidate Header';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class InvalidateRawImageTiles {
   public static readonly type = '[Workbench HDU State] Invalidate Raw Image Tiles';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class InvalidateRawImageTile {
   public static readonly type = '[Workbench HDU State] Invalidate Raw Image Tile';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 /**
@@ -307,55 +307,55 @@ export class SyncFileNormalizers {
 export class InvalidateNormalizedImageTiles {
   public static readonly type = '[Workbench HDU State] Invalidate Normalized Image Tiles';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class InvalidateNormalizedImageTile {
   public static readonly type = '[Workbench HDU State] Invalidate Normalized Image Tile';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 export class UpdateNormalizedImageTile {
   public static readonly type = '[Workbench HDU State] Update Normalized Image Tile';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 export class CalculateNormalizedPixels {
   public static readonly type = '[Workbench HDU State] Calculate Normalized Pixels';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 export class CalculateNormalizedPixelsSuccess {
   public static readonly type = '[Workbench HDU State] Calculate Normalized Pixels Success';
 
-  constructor(public hduId: string, public tileIndex: number, public rgba: Uint32Array) { }
+  constructor(public layerId: string, public tileIndex: number, public rgba: Uint32Array) { }
 }
 
 export class UpdateNormalizedImageTileSuccess {
   public static readonly type = '[Workbench HDU State] Update Normalized Image Tile Success';
 
-  constructor(public hduId: string, public tileIndex: number, pixels: Uint32Array) { }
+  constructor(public layerId: string, public tileIndex: number, pixels: Uint32Array) { }
 }
 
 export class UpdateNormalizedImageTileFail {
   public static readonly type = '[Workbench HDU State] Update Normalized Image Tile Fail';
 
-  constructor(public hduId: string, public tileIndex: number) { }
+  constructor(public layerId: string, public tileIndex: number) { }
 }
 
 export class UpdateNormalizer {
   public static readonly type = '[Workbench HDU State] Update Normalizer';
 
-  constructor(public hduId: string, public changes: Partial<PixelNormalizer>, public skipFileSync = false) { }
+  constructor(public layerId: string, public changes: Partial<PixelNormalizer>, public skipFileSync = false) { }
 }
 
 export class UpdateNormalizerSuccess {
   public static readonly type = '[Workbench HDU State] Update Normalizer Success';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 /**

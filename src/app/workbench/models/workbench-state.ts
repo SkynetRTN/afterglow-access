@@ -14,6 +14,7 @@ import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 import { GlobalSettings } from './global-settings';
 import { SourcePanelState } from './source-file-state';
+import { WcsCalibrationPanelState } from './wcs-calibration-panel-state';
 
 export enum KernelFilter {
   MEDIAN_FILTER = 'median_filter',
@@ -142,12 +143,9 @@ export interface StackingPanelConfig {
   currentStackingJobId: string;
 }
 
-export interface WcsCalibrationPanelState {
+export interface WcsCalibrationPanelConfig {
   selectedHduIds: string[];
   activeJobId: string;
-}
-
-export interface WcsCalibrationSettings {
   ra?: number | string;
   dec?: number | string;
   radius?: number;
@@ -215,10 +213,9 @@ export interface WorkbenchStateModel {
   pixelOpsPanelConfig: PixelOpsPanelConfig;
   aligningPanelConfig: AligningPanelConfig;
   stackingPanelConfig: StackingPanelConfig;
-  wcsCalibrationPanelState: WcsCalibrationPanelState;
-  wcsCalibrationSettings: WcsCalibrationSettings;
+  wcsCalibrationPanelConfig: WcsCalibrationPanelConfig;
   fileIdToWorkbenchStateIdMap: { [id: string]: string };
-  hduIdToWorkbenchStateIdMap: { [id: string]: string };
+  layerIdToWorkbenchStateIdMap: { [id: string]: string };
   nextWorkbenchStateId: number;
   workbenchStateIds: string[];
   workbenchStateEntities: { [id: string]: IWorkbenchState };
@@ -238,4 +235,7 @@ export interface WorkbenchStateModel {
   nextSourcePanelStateId: number;
   sourcePanelStateIds: string[];
   sourcePanelStateEntities: { [id: string]: SourcePanelState };
+  nextWcsCalibrationPanelStateId: number;
+  wcsCalibrationPanelStateIds: string[];
+  wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationPanelState };
 }

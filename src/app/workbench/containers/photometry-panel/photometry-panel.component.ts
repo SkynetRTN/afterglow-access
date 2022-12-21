@@ -134,7 +134,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   destroy$ = new Subject<boolean>();
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   imageHdu$: Observable<ImageHdu>;
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
@@ -199,11 +199,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.IMAGE ? (layer as ImageHdu) : null)));
 
     this.header$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
@@ -223,17 +223,17 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         map((config) => config.showSourcesFromAllFiles),
         distinctUntilChanged()
       ),
-      this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged()),
+      this.imageHdu$.pipe(map(layer => layer?.id), distinctUntilChanged()),
       this.header$
     ).pipe(
       map(([sourceEntities, coordMode, showSourcesFromAllFiles, imageHduId, header]) => {
         if (!header) return [];
         if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
-        let localSourceLabels = Object.values(sourceEntities).filter(source => source.hduId == imageHduId).map(source => source.label)
+        let localSourceLabels = Object.values(sourceEntities).filter(source => source.layerId == imageHduId).map(source => source.label)
 
         return Object.values(sourceEntities).filter((source) => {
           if (coordMode != source.posType) return false;
-          if (source.hduId == imageHduId) return true;
+          if (source.layerId == imageHduId) return true;
           if (!showSourcesFromAllFiles) return false;
           if (localSourceLabels.includes(source.label)) return false;
           // let coord = getSourceCoordinates(header, source);
@@ -579,7 +579,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
               id: null,
               label: null,
               objectId: null,
-              hduId: imageHdu.id,
+              layerId: imageHdu.id,
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -733,19 +733,19 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   private getViewerMarkers(viewerId: string) {
     let config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig)
     let state$ = this.store.select(WorkbenchState.getSourcePanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
-    let hduId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(hdu => hdu?.id), distinctUntilChanged())
-    // let hduId$ = this.imageHdu$.pipe(
-    //   map((hdu) => hdu?.id),
+    let layerId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
+    // let layerId$ = this.imageHdu$.pipe(
+    //   map((layer) => layer?.id),
     //   distinctUntilChanged()
     // );
     let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId))
 
-    let sourceSelectionRegionMarkers$ = combineLatest([hduId$, state$]).pipe(
-      map(([hduId, state]) => {
+    let sourceSelectionRegionMarkers$ = combineLatest([layerId$, state$]).pipe(
+      map(([layerId, state]) => {
         if (!state || !state.markerSelectionRegion) return [];
         let region = state.markerSelectionRegion;
         let sourceSelectionMarker: RectangleMarker = {
-          id: `PHOTOMETRY_SOURCE_SELECTION_${hduId}`,
+          id: `PHOTOMETRY_SOURCE_SELECTION_${layerId}`,
           x: Math.min(region.x, region.x + region.width),
           y: Math.min(region.y, region.y + region.height),
           width: Math.abs(region.width),
@@ -757,9 +757,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     );
 
     let o1$ = combineLatest([this.sourcePanelConfig$, this.config$, this.autoPhotData$, this.zeroPointCorrection$]);
-    let o2$ = combineLatest([header$, hduId$, this.sources$, this.photometrySettings$])
+    let o2$ = combineLatest([header$, layerId$, this.sources$, this.photometrySettings$])
     let sourceMarkers$ = combineLatest([o1$, o2$]).pipe(
-      map(([[sourcePanelConfig, config, autoPhotData, zeroPointCorrection], [header, hduId, sources, settings]]) => {
+      map(([[sourcePanelConfig, config, autoPhotData, zeroPointCorrection], [header, layerId, sources, settings]]) => {
         if (!sourcePanelConfig?.showSourceMarkers || !header || !header.loaded || !autoPhotData) return [];
         let selectedSourceIds = sourcePanelConfig.selectedSourceIds;
         let coordMode = sourcePanelConfig.coordMode;
@@ -772,7 +772,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
         if (!header.wcs || !header.wcs.isValid()) mode = 'pixel';
 
         sources.forEach((source) => {
-          if (source.hduId != hduId && !showSourcesFromAllFiles) return;
+          if (source.layerId != layerId && !showSourcesFromAllFiles) return;
           if (source.posType != mode) return;
           let selected = selectedSourceIds.includes(source.id);
           let coord = getSourceCoordinates(header, source);
@@ -801,7 +801,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           }
 
           let marker: PhotometryMarker = {
-            id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
+            id: `PHOTOMETRY_SOURCE_${layerId}_${source.id}`,
             type: MarkerType.PHOTOMETRY,
             ...coord,
             source: source,
@@ -825,52 +825,6 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           }
 
           markers.push(marker);
-
-
-
-          // // else {
-          // if (source.pm) {
-          //   markers.push({
-          //     id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-          //     type: MarkerType.TEARDROP,
-          //     x: coord.x,
-          //     y: coord.y,
-          //     radius: 15,
-          //     labelRadius: 30,
-          //     labelTheta: 0,
-          //     label: !config.showSourceApertures && showSourceLabels ? source.label : '',
-          //     theta: coord.theta,
-          //     selected: selected,
-          //     data: { source: source },
-          //   } as TeardropMarker);
-          // } else {
-          //   // markers.push({
-          //   //   id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-          //   //   type: MarkerType.CIRCLE,
-          //   //   x: coord.x,
-          //   //   y: coord.y,
-          //   //   radius: 15,
-          //   //   labelRadius: 30,
-          //   //   labelTheta: 0,
-          //   //   label: showSourceLabels ? source.label : '',
-          //   //   selected: selected,
-          //   //   data: { source: source },
-          //   // } as CircleMarker);
-
-          //   markers.push({
-          //     id: `PHOTOMETRY_SOURCE_${hduId}_${source.id}`,
-          //     type: MarkerType.CROSSHAIR,
-          //     x: coord.x,
-          //     y: coord.y,
-          //     radius: 1,
-          //     labelRadius: 4,
-          //     labelTheta: 0,
-          //     label: !config.showSourceApertures && showSourceLabels ? source.label : '',
-          //     selected: selected,
-          //     data: { source: source },
-          //   } as CrosshairMarker)
-          //   // }
-          // }
         });
 
         return markers;
@@ -887,9 +841,9 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     );
   }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  getHduOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getHduById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
@@ -1046,12 +1000,12 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.store.dispatch(new RemovePhotDatasByHduId());
   }
 
-  selectHdus(hduIds: string[]) {
+  selectHdus(layerIds: string[]) {
     this.store.dispatch(
       new UpdatePhotometryPanelConfig({
         batchPhotFormData: {
           ...this.batchPhotForm.value,
-          selectedHduIds: hduIds,
+          selectedHduIds: layerIds,
         },
       })
     );

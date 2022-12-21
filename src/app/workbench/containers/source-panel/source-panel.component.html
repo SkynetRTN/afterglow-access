@@ -2,12 +2,12 @@
     <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the source catalog tool.</div>
 </ng-template>
 
-<ng-template #hduNotSelectedBlock>
+<ng-template #layerNotSelectedBlock>
     <div i18n class="alert alert-info" i18n>Please select an image layer instead of a file.</div>
 </ng-template>
 
 <ng-container *ngIf="config$ | async; let config">
-    <ng-container *ngIf="hdu$ | async as hdu; else hduNotSelectedBlock">
+    <ng-container *ngIf="layer$ | async as layer; else layerNotSelectedBlock">
         <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
             <div class="mb-3">
                 <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
@@ -145,7 +145,7 @@
                             </mat-cell>
                         </ng-container>
 
-                        <ng-container matColumnDef="hdu">
+                        <ng-container matColumnDef="layer">
                             <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell"
                                 app-focusable-cell [rowIndex]="0" [columnIndex]="3" [cellInTabOrder]="true">
                                 Layer
@@ -158,10 +158,11 @@
 
 
 
-                        <mat-header-row *matHeaderRowDef="['select', 'label', 'hdu', 'primaryCoord', 'secondaryCoord']">
+                        <mat-header-row
+                            *matHeaderRowDef="['select', 'label', 'layer', 'primaryCoord', 'secondaryCoord']">
                         </mat-header-row>
                         <mat-row
-                            *matRowDef="let row; columns: ['select', 'label', 'hdu', 'primaryCoord', 'secondaryCoord']">
+                            *matRowDef="let row; columns: ['select', 'label', 'layer', 'primaryCoord', 'secondaryCoord']">
                         </mat-row>
                     </mat-table>
                 </div>

@@ -103,7 +103,7 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
   destroy$ = new Subject<boolean>();
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   imageHdu$: Observable<ImageHdu>;
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
@@ -150,11 +150,11 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.IMAGE ? (layer as ImageHdu) : null)));
 
     this.header$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
@@ -174,17 +174,17 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
         map((config) => config.showSourcesFromAllFiles),
         distinctUntilChanged()
       ),
-      this.imageHdu$.pipe(map(hdu => hdu?.id), distinctUntilChanged()),
+      this.imageHdu$.pipe(map(layer => layer?.id), distinctUntilChanged()),
       this.header$
     ).pipe(
       map(([sourceEntities, coordMode, showSourcesFromAllFiles, imageHduId, header]) => {
         if (!header) return [];
         if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
-        let localSourceLabels = Object.values(sourceEntities).filter(source => source.hduId == imageHduId).map(source => source.label)
+        let localSourceLabels = Object.values(sourceEntities).filter(source => source.layerId == imageHduId).map(source => source.label)
 
         return Object.values(sourceEntities).filter((source) => {
           if (coordMode != source.posType) return false;
-          if (source.hduId == imageHduId) return true;
+          if (source.layerId == imageHduId) return true;
           if (!showSourcesFromAllFiles) return false;
           if (localSourceLabels.includes(source.label)) return false;
           // let coord = getSourceCoordinates(header, source);
@@ -267,7 +267,7 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
               id: null,
               label: null,
               objectId: null,
-              hduId: imageHdu.id,
+              layerId: imageHdu.id,
               primaryCoord: primaryCoord,
               secondaryCoord: secondaryCoord,
               posType: posType,
@@ -421,20 +421,20 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
   private getViewerMarkers(viewerId: string) {
     let config$ = this.store.select(WorkbenchState.getSourcePanelConfig)
     let state$ = this.store.select(WorkbenchState.getSourcePanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
-    let hduId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(hdu => hdu?.id), distinctUntilChanged())
-    // let hduId$ = this.imageHdu$.pipe(
-    //   map((hdu) => hdu?.id),
+    let layerId$ = this.store.select(WorkbenchState.getImageHduByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
+    // let layerId$ = this.imageHdu$.pipe(
+    //   map((layer) => layer?.id),
     //   distinctUntilChanged()
     // );
     let header$ = this.store.select(WorkbenchState.getHeaderByViewerId(viewerId))
     let sources$ = this.sources$;
 
-    let sourceSelectionRegionMarkers$ = combineLatest([hduId$, state$]).pipe(
-      map(([hduId, state]) => {
+    let sourceSelectionRegionMarkers$ = combineLatest([layerId$, state$]).pipe(
+      map(([layerId, state]) => {
         if (!state || !state.markerSelectionRegion) return [];
         let region = state.markerSelectionRegion;
         let sourceSelectionMarker: RectangleMarker = {
-          id: `SOURCE_SELECTION_${hduId}`,
+          id: `SOURCE_SELECTION_${layerId}`,
           x: Math.min(region.x, region.x + region.width),
           y: Math.min(region.y, region.y + region.height),
           width: Math.abs(region.width),
@@ -445,8 +445,8 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
       })
     );
 
-    let sourceMarkers$ = combineLatest([config$, header$, hduId$, sources$]).pipe(
-      map(([config, header, hduId, sources]) => {
+    let sourceMarkers$ = combineLatest([config$, header$, layerId$, sources$]).pipe(
+      map(([config, header, layerId, sources]) => {
         if (!config?.showSourceMarkers || !header || !header.loaded) return [];
         let selectedSourceIds = config.selectedSourceIds;
         let coordMode = config.coordMode;
@@ -470,7 +470,7 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
           if (source.label) tooltipMessage.push(source.label)
 
           let marker: SourceMarker = {
-            id: `SOURCE_${hduId}_${source.id}`,
+            id: `SOURCE_${layerId}_${source.id}`,
             type: MarkerType.SOURCE,
             ...coord,
             source: source,
@@ -509,10 +509,10 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
 
   getSourceLayerLabel(sourceId: string) {
     return this.store.select(SourcesState.getSourceById(sourceId)).pipe(
-      map(source => source?.hduId),
+      map(source => source?.layerId),
       distinctUntilChanged(),
-      switchMap(hduId => this.store.select(DataFilesState.getHduById(hduId))),
-      map(hdu => hdu?.name)
+      switchMap(layerId => this.store.select(DataFilesState.getHduById(layerId))),
+      map(layer => layer?.name)
     )
   }
 
@@ -557,8 +557,8 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
 
   mergeSelectedSourcesDisabled() {
     let sourcesById = this.store.selectSnapshot(SourcesState.getEntities);
-    let hduIds = this.selectionModel.selected.map(id => sourcesById[id]?.hduId);
-    return hduIds.length < 2 || hduIds.some(v => hduIds.indexOf(v) !== hduIds.lastIndexOf(v));
+    let layerIds = this.selectionModel.selected.map(id => sourcesById[id]?.layerId);
+    return layerIds.length < 2 || layerIds.some(v => layerIds.indexOf(v) !== layerIds.lastIndexOf(v));
   }
 
   mergeSelectedSources() {

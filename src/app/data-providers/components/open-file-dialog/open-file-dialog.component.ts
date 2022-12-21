@@ -52,7 +52,7 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
     this.lastPath$ = this.store.select(DataProvidersState.getLastPath);
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);
@@ -105,8 +105,8 @@ export class OpenFileDialogComponent implements OnInit, OnDestroy {
 
         this.store.dispatch(new LoadLibrary()).subscribe(() => {
           if (action.fileIds.length != 0) {
-            let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]];
-            this.store.dispatch(new SelectFile(hdu.fileId, hdu.id));
+            let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[action.fileIds[0]];
+            this.store.dispatch(new SelectFile(layer.fileId, layer.id));
           }
         });
         this.dialogRef.close();

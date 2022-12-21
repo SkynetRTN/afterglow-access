@@ -7,7 +7,7 @@
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
-  <ng-container *ngIf="activeHdu$ | async as hdu; else multiLayerBlock">
+  <ng-container *ngIf="activeHdu$ | async as layer; else multiLayerBlock">
     <ng-container *ngIf="activeImageHdu$ | async as activeImageHdu; else invalidHduTypeBlock">
 
       <div *ngIf="activeImageHdu.hist?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
@@ -66,8 +66,8 @@
 
   <ng-template #multiLayerBlock>
 
-    <ng-container *ngIf="hdus$ | async; let hdus">
-      <div *ngIf="hdus.length > 1" fxLayout="column">
+    <ng-container *ngIf="layers$ | async; let layers">
+      <div *ngIf="layers.length > 1" fxLayout="column">
         <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start start" fxLayoutGap="40px">
           <mat-form-field appearance="outline">
             <mat-label i18n>Color Balance Mode</mat-label>
@@ -175,7 +175,7 @@
             </mat-form-field>
             <button mat-raised-button (click)="onSyncClick(referenceLayerSelect.value)" i18n-aria-label
               aria-label="Sync brighness and contrast"
-              [disabled]="!referenceLayerSelect.value || !file?.hduIds.includes(referenceLayerSelect.value)">
+              [disabled]="!referenceLayerSelect.value || !file?.layerIds.includes(referenceLayerSelect.value)">
               Sync Brightness & Contrast in all Layers
             </button>
           </div>

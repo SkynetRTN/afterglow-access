@@ -7,7 +7,7 @@
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
-  <ng-container *ngIf="hdu$ | async as hdu; else fileNotSelectedBlock">
+  <ng-container *ngIf="layer$ | async as layer; else fileNotSelectedBlock">
     <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
       <table class="table header-value-table">
         <tbody>

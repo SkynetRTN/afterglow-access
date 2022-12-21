@@ -51,7 +51,7 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
 
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
-  hdu$: Observable<IHdu>;
+  layer$: Observable<IHdu>;
   header$: Observable<Header>;
   imageHdu$: Observable<ImageHdu>;
   tableHdu$: Observable<TableHdu>;
@@ -83,13 +83,13 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduHeaderByViewerId(viewerId)))
     );
 
-    this.hdu$ = this.viewerId$.pipe(
+    this.layer$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getHduByViewerId(viewerId)))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.IMAGE ? (layer as ImageHdu) : null)));
 
-    this.tableHdu$ = this.hdu$.pipe(map((hdu) => (hdu && hdu.type == HduType.TABLE ? (hdu as TableHdu) : null)));
+    this.tableHdu$ = this.layer$.pipe(map((layer) => (layer && layer.type == HduType.TABLE ? (layer as TableHdu) : null)));
 
     this.dssImportLoading$ = store.select(WorkbenchState.getDssImportLoading);
     this.surveyDataProvider$ = this.store
@@ -155,7 +155,7 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngOnDestroy() {
     this.destroy$.next(true);
@@ -165,10 +165,10 @@ export class CatalogImportComponent implements OnInit, OnDestroy {
   onImportFromSurvey() {
     this.surveyFileId$.pipe(take(1)).subscribe(
       (surveyFileId) => {
-        let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
-        if (surveyFileId && surveyFileId in hduEntities) {
-          let hdu = hduEntities[surveyFileId];
-          this.store.dispatch(new SelectFile(hdu.fileId, hdu.id, true));
+        let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+        if (surveyFileId && surveyFileId in layerEntities) {
+          let layer = layerEntities[surveyFileId];
+          this.store.dispatch(new SelectFile(layer.fileId, layer.id, true));
         }
       },
       (error) => {

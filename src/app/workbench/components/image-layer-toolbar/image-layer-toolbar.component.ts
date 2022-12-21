@@ -19,9 +19,9 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-image-hdu-toolbar',
-  templateUrl: './image-hdu-toolbar.component.html',
-  styleUrls: ['./image-hdu-toolbar.component.scss'],
+  selector: 'app-image-layer-toolbar',
+  templateUrl: './image-layer-toolbar.component.html',
+  styleUrls: ['./image-layer-toolbar.component.scss'],
 })
 export class ImageHduToolbarComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input()

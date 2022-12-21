@@ -201,14 +201,14 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       );
 
     this.filteredHdus$ = this.filteredHduIds$.pipe(
-      switchMap((hduIds) => this.store.select(DataFilesState.getHdusByIds(hduIds)))
+      switchMap((layerIds) => this.store.select(DataFilesState.getHdusByIds(layerIds)))
     );
 
     this.filteredImageHdus$ = this.filteredHdus$.pipe(
-      map((hdus) => (!hdus ? null : (hdus.filter((hdu) => hdu.type == HduType.IMAGE) as ImageHdu[])))
+      map((layers) => (!layers ? null : (layers.filter((layer) => layer.type == HduType.IMAGE) as ImageHdu[])))
     );
 
-    this.filteredImageHduIds$ = this.filteredImageHdus$.pipe(map((hdus) => hdus.map((hdu) => hdu.id)));
+    this.filteredImageHduIds$ = this.filteredImageHdus$.pipe(map((layers) => layers.map((layer) => layer.id)));
 
     this.activeRoute.queryParams.pipe(takeUntil(this.destroy$)).subscribe((p) => {
       let tool = WorkbenchTool.VIEWER;
@@ -275,18 +275,18 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         switchMap((focusedViewerId) => {
           // let targetViewerIds = visibleViewerIds.filter((id) => id != focusedViewerId);
           let refImageHdu$ = this.store.select(WorkbenchState.getViewerById(focusedViewerId)).pipe(
-            map((viewer) => (viewer ? viewer.hduId : null)),
+            map((viewer) => (viewer ? viewer.layerId : null)),
             distinctUntilChanged(),
-            switchMap((hduId) =>
+            switchMap((layerId) =>
               this.store
-                .select(DataFilesState.getHduById(hduId))
-                .pipe(map((hdu) => (hdu && hdu.type != HduType.IMAGE ? null : (hdu as ImageHdu))))
+                .select(DataFilesState.getHduById(layerId))
+                .pipe(map((layer) => (layer && layer.type != HduType.IMAGE ? null : (layer as ImageHdu))))
             ),
             distinctUntilChanged()
           );
 
           let refNormalizer$ = refImageHdu$.pipe(
-            map((hdu) => (hdu ? hdu.normalizer : null)),
+            map((layer) => (layer ? layer.normalizer : null)),
             distinctUntilChanged(),
             skip(1)
           );
@@ -568,10 +568,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
     let handleZoomKey = (cmd: 'in' | 'out' | 'reset' | 'fit') => {
       let viewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-      if (!viewer || !viewer.viewportSize || !viewer.hduId) return;
-      let hdu = this.store.selectSnapshot(DataFilesState.getHduById(viewer.hduId));
-      if (!hdu || hdu.type != HduType.IMAGE) return;
-      let imageHdu = hdu as ImageHdu;
+      if (!viewer || !viewer.viewportSize || !viewer.layerId) return;
+      let layer = this.store.selectSnapshot(DataFilesState.getHduById(viewer.layerId));
+      if (!layer || layer.type != HduType.IMAGE) return;
+      let imageHdu = layer as ImageHdu;
       let imageDataId = imageHdu.rgbaImageDataId;
       let imageData = this.store.selectSnapshot(DataFilesState.getImageDataById(imageDataId));
       let imageTransformId = imageHdu.imageTransformId;
@@ -677,7 +677,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getViewerLabel(viewer: IViewer, index: number) {
-    let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
 
     let file = fileEntities[viewer.fileId];
@@ -753,15 +753,15 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
   //   this.afterLibrarySync()
   //     .pipe(
   //       flatMap(({ dataProviderEntities, fileEntities }) => {
-  //         let hduEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
+  //         let layerEntities = this.store.selectSnapshot(DataFilesState.getHduEntities);
 
   //         //remove files which have not been modified
   //         let files = Object.values(fileEntities).filter((file) => {
-  //           let hdus = file.hduIds.map((hduId) => hduEntities[hduId]);
-  //           let hduModified = hdus.map((hdu) => hdu && hdu.modified).some((v) => v);
+  //           let layers = file.layerIds.map((layerId) => layerEntities[layerId]);
+  //           let layerModified = layers.map((layer) => layer && layer.modified).some((v) => v);
 
   //           let dataProvider = dataProviderEntities[file.dataProviderId];
-  //           return hduModified || !dataProvider || dataProvider.readonly;
+  //           return layerModified || !dataProvider || dataProvider.readonly;
   //         });
   //         if (files.length == 0) {
   //           return of(null);
@@ -1122,7 +1122,7 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       .pipe(
         flatMap(({ dataProviderEntities, fileEntities }) => {
           let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
-          let files = selectedFileIds.map((id) => fileEntities[id]).filter((file) => file.hduIds.length > 1);
+          let files = selectedFileIds.map((id) => fileEntities[id]).filter((file) => file.layerIds.length > 1);
           if (files.length == 0) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: 'Error',
@@ -1175,17 +1175,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               let viewers = this.store.selectSnapshot(WorkbenchState.getViewers);
               let reqs: Observable<any>[] = [];
               files.forEach((file) => {
-                file.hduIds.forEach((hduId, index) => {
-                  let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
+                file.layerIds.forEach((layerId, index) => {
+                  let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[layerId];
                   let uuid = UUID.UUID();
                   let newFilename = file.name + '_' + index;
                   viewers
-                    .filter((viewer) => viewer.hduId == hduId || viewer.fileId == hdu.fileId)
+                    .filter((viewer) => viewer.layerId == layerId || viewer.fileId == layer.fileId)
                     .forEach((viewer) => this.store.dispatch(new CloseViewer(viewer.id)));
-                  this.store.dispatch(new InvalidateHeader(hduId));
-                  let name = hdu && hdu.name ? hdu.name : `${file.name}_${index}`
+                  this.store.dispatch(new InvalidateHeader(layerId));
+                  let name = layer && layer.name ? layer.name : `${file.name}_${index}`
                   reqs.push(
-                    this.dataFileService.updateFile(hduId, {
+                    this.dataFileService.updateFile(layerId, {
                       groupName: name,
                       name: name,
                       dataProvider: null,
@@ -1216,10 +1216,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         flatMap(({ dataProviderEntities, fileEntities }) => {
           let selectedFileIds = this.store.selectSnapshot(WorkbenchState.getSelectedFilteredFileIds);
           let files = selectedFileIds.map((id) => fileEntities[id]);
-          let hduCount = 0;
-          files.forEach((file) => (hduCount += file.hduIds.length));
+          let layerCount = 0;
+          files.forEach((file) => (layerCount += file.layerIds.length));
 
-          if (hduCount > 10) {
+          if (layerCount > 10) {
             let dialogConfig: Partial<AlertDialogConfig> = {
               title: 'Error',
               message: `The number of layers within a file is currently limited to no more than ten.  Please reduce the number of layers and try grouping again.`,
@@ -1305,17 +1305,17 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
               let uuid = UUID.UUID();
               let reqs: Observable<any>[] = [];
               files.forEach((file, order) => {
-                file.hduIds.forEach((hduId) => {
-                  let hdu = this.store.selectSnapshot(DataFilesState.getHduEntities)[hduId];
+                file.layerIds.forEach((layerId) => {
+                  let layer = this.store.selectSnapshot(DataFilesState.getHduEntities)[layerId];
                   viewers
-                    .filter((viewer) => viewer.hduId == hduId || viewer.fileId == hdu.fileId)
+                    .filter((viewer) => viewer.layerId == layerId || viewer.fileId == layer.fileId)
                     .forEach((viewer) => this.store.dispatch(new CloseViewer(viewer.id)));
-                  this.store.dispatch(new InvalidateHeader(hduId));
+                  this.store.dispatch(new InvalidateHeader(layerId));
                   this.store.dispatch(new SetFileSelection([]));
                   reqs.push(
-                    this.dataFileService.updateFile(hduId, {
+                    this.dataFileService.updateFile(layerId, {
                       groupName: newFilename,
-                      name: hdu.name,
+                      name: layer.name,
                       dataProvider: dataProvider,
                       assetPath: path,
                       modified: true,

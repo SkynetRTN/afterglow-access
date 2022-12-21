@@ -3,44 +3,44 @@
         <h2 mat-dialog-title>PSF Matching Tool</h2>
     </div>
     <div fxLayout="column" fxLayoutGap="20px" style="width: 100%; height: 100%">
-        <table style="width: 100%;" mat-table [dataSource]="hdus" class="mat-elevation-z8">
+        <table style="width: 100%;" mat-table [dataSource]="layers" class="mat-elevation-z8">
             <ng-container matColumnDef="order">
                 <th mat-header-cell *matHeaderCellDef> Order </th>
-                <td mat-cell *matCellDef="let hdu"> {{hdu.order}} </td>
+                <td mat-cell *matCellDef="let layer"> {{layer.order}} </td>
             </ng-container>
 
             <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef> Name </th>
-                <td mat-cell *matCellDef="let hdu"> {{hdu.name}} </td>
+                <td mat-cell *matCellDef="let layer"> {{layer.name}} </td>
             </ng-container>
 
             <ng-container matColumnDef="type">
                 <th mat-header-cell *matHeaderCellDef> Type </th>
-                <td mat-cell *matCellDef="let hdu"> {{hdu.type}} </td>
+                <td mat-cell *matCellDef="let layer"> {{layer.type}} </td>
             </ng-container>
 
             <ng-container matColumnDef="fwhmX">
                 <th mat-header-cell *matHeaderCellDef> FWHM X </th>
-                <td mat-cell *matCellDef="let hdu"> {{fwhmByHduId[hdu.id]?.fwhmX | number:'1.1-3' || ''}} </td>
+                <td mat-cell *matCellDef="let layer"> {{fwhmByHduId[layer.id]?.fwhmX | number:'1.1-3' || ''}} </td>
             </ng-container>
 
             <ng-container matColumnDef="fwhmY">
                 <th mat-header-cell *matHeaderCellDef> FWHM Y </th>
-                <td mat-cell *matCellDef="let hdu"> {{fwhmByHduId[hdu.id]?.fwhmY | number:'1.1-3' || ''}} </td>
+                <td mat-cell *matCellDef="let layer"> {{fwhmByHduId[layer.id]?.fwhmY | number:'1.1-3' || ''}} </td>
             </ng-container>
 
             <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef> Status </th>
-                <td mat-cell *matCellDef="let hdu">
+                <td mat-cell *matCellDef="let layer">
                     <div *ngIf="!extractionIsComplete(); else extractionCompletedBlock" fxLayout="row"
                         fxLayoutGap="10px">
-                        <div>{{extractionState[hdu.id]?.message || ''}}</div>
-                        <mat-progress-spinner *ngIf="extractionState[hdu.id]?.loading" [mode]="'indeterminate'"
+                        <div>{{extractionState[layer.id]?.message || ''}}</div>
+                        <mat-progress-spinner *ngIf="extractionState[layer.id]?.loading" [mode]="'indeterminate'"
                             [diameter]="15">
                         </mat-progress-spinner>
                     </div>
                     <ng-template #extractionCompletedBlock>
-                        <ng-container *ngIf="blurState[hdu.id]; let blurState; else blurButtonBlock">
+                        <ng-container *ngIf="blurState[layer.id]; let blurState; else blurButtonBlock">
                             <div fxLayout="row" fxLayoutGap="10px">
                                 <div>{{blurState.message || ''}}</div>
                                 <mat-progress-spinner *ngIf="blurState.loading" [mode]="'indeterminate'"
@@ -50,7 +50,7 @@
                         </ng-container>
                         <ng-template #blurButtonBlock>
                             <div fxLayout="row" fxLayoutGap="10px">
-                                <button *ngIf="canBlur(hdu)" (click)="blurHdu(hdu)" mat-raised-button i18n>
+                                <button *ngIf="canBlur(layer)" (click)="blurHdu(layer)" mat-raised-button i18n>
                                     <mat-icon class="mr-1">blur_on</mat-icon>Blur Layer
                                 </button>
                             </div>

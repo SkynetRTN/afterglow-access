@@ -80,9 +80,9 @@ export class MergeSourcesDialogComponent implements OnInit, OnDestroy {
     let label: string = this.mergeForm.controls.label.value;
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(this.viewerId))
     if (!viewer) return;
-    let hduId = viewer.hduId;
-    if (!hduId) return;
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId)) as ImageHdu;
+    let layerId = viewer.layerId;
+    if (!layerId) return;
+    let layer = this.store.selectSnapshot(DataFilesState.getHduById(layerId)) as ImageHdu;
     let sourceById = this.store.selectSnapshot(SourcesState.getEntities)
     let sources = this.data.sourceIds.map(id => sourceById[id])
 
