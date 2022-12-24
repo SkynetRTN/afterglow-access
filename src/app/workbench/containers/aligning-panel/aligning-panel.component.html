@@ -325,27 +325,30 @@
 
 
     </div>
-    <div *ngIf="refHeader$ | async">
-      <div *ngIf="(refHeader$ | async).loading; else hasWcsBlock" class="alert alert-info" style="margin-top: 10px"
-        i18n>
+    <ng-container *ngIf="modeSelect.value==AlignmentMode.wcs; else submitBlock">
+      <div *ngIf="!(refHeader$ | async) || (refHeader$ | async).loading; else wcsLoadedBlock" class="alert alert-info"
+        style="margin-top: 10px" i18n>
         Reference header loading...
       </div>
-      <ng-template #hasWcsBlock>
-        <div *ngIf="!(refHeader$ | async).loading && !(refLayerHasWcs$ | async)" class="alert alert-warning"
-          style="margin-top: 10px" i18n>
-          This image does not have astrometric data in its header and cannot be aligned using the selected mode.
+      <ng-template #wcsLoadedBlock>
+        <div *ngIf="!(refLayerHasWcs$ | async); else submitBlock" class="alert alert-warning" style="margin-top: 10px"
+          i18n>
+          Your reference layer does not have WCS data in its header. Choose a different reference layer.
         </div>
       </ng-template>
-    </div>
-    <div class="flex flex-row w-full gap-4 justify-between">
-      <button mat-raised-button i18n (click)="restoreDefaults()">Restore Default Alignment Settings</button>
+    </ng-container>
+    <ng-template #submitBlock>
+      <div class="flex flex-row w-full gap-4 justify-between">
+        <button mat-raised-button i18n (click)="restoreDefaults()">Restore Default Alignment Settings</button>
 
-      <div class="">
-        <button mat-raised-button (click)="submit()" [disabled]="!alignForm.valid" i18n>
-          Submit
-        </button>
+        <div class="">
+          <button mat-raised-button (click)="submit()" [disabled]="!alignForm.valid" i18n>
+            Submit
+          </button>
+        </div>
       </div>
-    </div>
+    </ng-template>
+
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
@@ -363,7 +366,11 @@
     <ng-template #jobComplete>
       <div *ngIf="job.result.errors.length != 0; else noErrors"
         class="alert alert-danger flex flex-col max-h-72 overflow-auto">
-        <span *ngFor="let error of job.result.errors">{{ error.detail }}</span>
+        <span *ngFor="let error of job.result.errors">
+          <span class="font-semibold pr-3" *ngIf="error.meta?.fileId">{{getLayerOptionLabel(error.meta?.fileId) |
+            async}}</span>
+          {{ error.detail}}
+        </span>
       </div>
       <ng-template #noErrors>
         <div class="alert alert-success" i18n>Processing is complete.</div>
