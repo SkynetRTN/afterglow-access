@@ -1,7 +1,8 @@
 export interface CalibrationSettings {
     calibrationEnabled: boolean;
     zeroPoint: number;
-    catalog: string;
+    selectedCatalogs: string[],
+    catalogOrder: string[],
     sourceInclusionPercentageEnabled: boolean;
     sourceInclusionPercentage: number;
     minSnrEnabled: boolean;
@@ -20,7 +21,8 @@ export interface CalibrationSettings {
 export const defaults: CalibrationSettings = {
     calibrationEnabled: false,
     zeroPoint: 20,
-    catalog: 'APASS',
+    selectedCatalogs: [],
+    catalogOrder: [],
     sourceInclusionPercentageEnabled: true,
     sourceInclusionPercentage: 100,
     minSnrEnabled: true,

@@ -41,6 +41,7 @@ import { AppState } from './app.state';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import localeEs from '@angular/common/locales/es';
 import { ColorPickerModule } from 'ngx-color-picker';
+import { SettingsModule } from './settings/settings.module';
 
 
 registerLocaleData(localeEs, 'es');
@@ -154,6 +155,7 @@ export function jobSanitizer(v: JobsStateModel) {
     ThemePickerModule,
     ColorPickerModule,
     WorkbenchModule.forRoot(),
+    SettingsModule,
     AuthModule.forRoot(),
     KeyboardShortcutsModule.forRoot(),
     NgxsModule.forRoot(

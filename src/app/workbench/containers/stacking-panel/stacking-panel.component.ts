@@ -41,6 +41,7 @@ export class StackerPanelComponent implements OnInit {
     mode: new FormControl('average', Validators.required),
     scaling: new FormControl('none', Validators.required),
     rejection: new FormControl('none', Validators.required),
+    smartStacking: new FormControl('none', Validators.required),
     percentile: new FormControl(50),
     low: new FormControl(''),
     high: new FormControl(''),
@@ -75,7 +76,7 @@ export class StackerPanelComponent implements OnInit {
       .get('rejection')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (['iraf', 'minmax', 'sigclip'].includes(value)) {
+        if (['iraf', 'minmax', 'sigclip', 'rcr', 'chauvenet'].includes(value)) {
           this.stackForm.get('high').enable();
           this.stackForm.get('low').enable();
         } else {

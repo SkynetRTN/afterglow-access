@@ -14,7 +14,7 @@ import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 import { GlobalSettings } from './global-settings';
 import { SourcePanelState } from './source-file-state';
-import { WcsCalibrationPanelState } from './wcs-calibration-panel-state';
+import { WcsCalibrationFileState } from './wcs-calibration-file-state';
 
 export enum KernelFilter {
   MEDIAN_FILTER = 'median_filter',
@@ -72,14 +72,6 @@ export interface PixelOpsFormData {
   inPlace: boolean;
   opString: string;
 }
-
-export interface AlignFormData {
-  selectedLayerIds: string[];
-  refLayerId: string;
-  mode: 'astrometric' | 'manual_source';
-  crop: boolean;
-}
-
 export interface BatchPhotometryFormData {
   selectedLayerIds: string[];
 }
@@ -87,8 +79,9 @@ export interface BatchPhotometryFormData {
 export interface StackFormData {
   selectedLayerIds: string[];
   mode: 'average' | 'percentile' | 'mode' | 'sum';
-  scaling: 'none' | 'average' | 'median' | 'mode';
-  rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';
+  scaling: 'none' | 'average' | 'median' | 'mode' | 'equalize';
+  rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
+  smartStacking: 'none' | 'SNR';
   percentile?: number;
   low?: number;
   high?: number;
@@ -134,7 +127,8 @@ export interface PixelOpsPanelConfig {
 }
 
 export interface AligningPanelConfig {
-  alignFormData: AlignFormData;
+  selectedLayerIds: string[];
+  refLayerId: string;
   currentAlignmentJobId: string;
 }
 
@@ -146,6 +140,8 @@ export interface StackingPanelConfig {
 export interface WcsCalibrationPanelConfig {
   selectedLayerIds: string[];
   activeJobId: string;
+  mode: 'platesolve' | 'copy';
+  refLayerId: string,
   ra?: number | string;
   dec?: number | string;
   radius?: number;
@@ -237,5 +233,5 @@ export interface WorkbenchStateModel {
   sourcePanelStateEntities: { [id: string]: SourcePanelState };
   nextWcsCalibrationPanelStateId: number;
   wcsCalibrationPanelStateIds: string[];
-  wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationPanelState };
+  wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationFileState };
 }

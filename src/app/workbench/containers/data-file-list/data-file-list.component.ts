@@ -26,6 +26,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { RenameLayerDialogComponent } from '../../components/rename-layer-dialog/rename-layer-dialog.component';
 import { RenameFileDialogComponent } from '../../components/rename-file-dialog/rename-file-dialog.component';
 import { take, takeUntil } from 'rxjs/operators';
+import { Guid } from 'guid-typescript';
 
 @Component({
   selector: 'app-data-file-list',
@@ -105,7 +106,7 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
   collapsedFileIds: { [id: string]: boolean } = {};
   focusedValue: { fileId: string; layerId: string } = null;
 
-  constructor(private store: Store, private fileService: AfterglowDataFileService, private dialog: MatDialog, private actions$: Actions) { }
+  constructor(private store: Store, private fileService: AfterglowDataFileService, private dialog: MatDialog, private actions$: Actions, private dataFileService: AfterglowDataFileService) { }
 
   ngAfterViewInit() { }
 
@@ -248,6 +249,28 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
       if (!layer) return;
       this.store.dispatch(new LoadLibrary())
     })
+  }
+
+  duplicateLayer(layer: ILayer) {
+    this.dataFileService.createFromFileId(`Copy of ${layer.name}`, layer.id).subscribe(
+      () => {
+        this.store.dispatch(new LoadLibrary())
+      },
+      () => {
+
+      })
+
+  }
+
+  removeLayer(layer: ILayer) {
+    this.dataFileService.updateFile(layer.id, { groupName: layer.name }).subscribe(
+      () => {
+        this.store.dispatch(new LoadLibrary())
+      },
+      () => {
+
+      })
+
   }
 
   setColorMap(layer: ImageLayer, value: string) {

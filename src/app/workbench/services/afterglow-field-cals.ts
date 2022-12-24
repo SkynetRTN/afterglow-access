@@ -13,7 +13,7 @@ export class AfterglowFieldCalService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   getFieldCals(): Observable<FieldCalibration[]> {
-    return this.http.get<FieldCalibration[]>(`${getCoreApiUrl(this.config)}/field-cals`);
+    return this.http.get<FieldCalibration[]>(`${getCoreApiUrl(this.config)}/field-cals/`);
   }
 
   createFieldCal(c: FieldCalibration): Observable<FieldCalibration> {

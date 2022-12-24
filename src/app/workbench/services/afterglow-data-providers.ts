@@ -22,14 +22,14 @@ type AssetResponseData = Array<{ name: string; path: string; collection: boolean
 
 @Injectable()
 export class AfterglowDataProviderService {
-  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   getDataProvidersByLink(link: string) {
     return this.http.get<CoreApiResponse<DataProvider[]>>(link);
   }
 
   getDataProviders() {
-    return this.getDataProvidersByLink(`${getCoreApiUrl(this.config)}/data-providers`);
+    return this.getDataProvidersByLink(`${getCoreApiUrl(this.config)}/data-providers/`);
   }
 
   getAssetsByLink(dataProviderId: string, link: string) {

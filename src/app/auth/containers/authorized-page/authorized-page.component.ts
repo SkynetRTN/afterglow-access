@@ -47,7 +47,7 @@ export class AuthorizedPageComponent implements OnInit, OnDestroy {
 
       if (this.cookieService.get(this.config.authCookieName)) {
         // need to bypass the interceptor for this so we can detect authentication issues
-        this.httpClient.get<CoreApiResponse<CoreUser>>(`${getCoreApiUrl(this.config)}/user`).pipe(
+        this.httpClient.get<CoreApiResponse<CoreUser>>(`${getCoreApiUrl(this.config)}/user/`).pipe(
           catchError((error) => {
 
 

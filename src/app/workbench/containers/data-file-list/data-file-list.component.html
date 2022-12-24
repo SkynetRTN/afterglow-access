@@ -52,6 +52,12 @@
       <div mat-menu-item fxLayout="row" fxFlexFill (click)="renameLayer(layer)">
         <div class="context-label" fxFlex="1 1 auto" i18n>Rename Layer</div>
       </div>
+      <div mat-menu-item fxLayout="row" fxFlexFill (click)="duplicateLayer(layer)">
+        <div class="context-label" fxFlex="1 1 auto" i18n>Duplicate Layer</div>
+      </div>
+      <div mat-menu-item fxLayout="row" fxFlexFill (click)="removeLayer(layer)">
+        <div class="context-label" fxFlex="1 1 auto" i18n>Remove Layer From File</div>
+      </div>
       <ng-container *ngIf="isImageLayer(layer)">
         <button mat-menu-item [matMenuTriggerFor]="colorMapMenu" i18n>Color Map</button>
         <button mat-menu-item [matMenuTriggerFor]="blendModeMenu" i18n>Blend Mode</button>

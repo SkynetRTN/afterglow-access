@@ -16,11 +16,11 @@ export class JobApiService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   createJob(job: Job) {
-    return this.http.post<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs`, job);
+    return this.http.post<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs/`, job);
   }
 
   getJobs() {
-    return this.http.get<CoreApiResponse<Job[]>>(`${getCoreApiUrl(this.config)}/jobs`);
+    return this.http.get<CoreApiResponse<Job[]>>(`${getCoreApiUrl(this.config)}/jobs/`);
   }
 
   getJob(jobId: string) {

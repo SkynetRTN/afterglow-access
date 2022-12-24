@@ -18,7 +18,6 @@ import { DataFileListComponent } from './containers/data-file-list/data-file-lis
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
-import { GlobalSettingsDialogComponent } from './components/global-settings-dialog/global-settings-dialog.component';
 import { SourceExtractionRegionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
@@ -52,7 +51,6 @@ import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
-import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { AvatarModule } from 'ngx-avatar';
 import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/viewer-panel-layout.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
@@ -105,7 +103,6 @@ export const COMPONENTS = [
   ImageCalculatorPageComponent,
   StackerPanelComponent,
   AlignerPageComponent,
-  GlobalSettingsDialogComponent,
   SourceExtractionRegionDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
@@ -114,7 +111,6 @@ export const COMPONENTS = [
   FileInfoToolsetComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
-  ThemeDialogComponent,
   ViewerPanelComponent,
   ViewerPanelLayoutComponent,
   SaveChangesDialogComponent,

@@ -12,7 +12,6 @@ import { ThemeStorage, AfterglowTheme } from './theme-picker/theme-storage/theme
 import { DataProvider } from './data-providers/models/data-provider';
 import { HelpDialogComponent } from './workbench/components/help-dialog/help-dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { ThemeDialogComponent } from './workbench/components/theme-dialog/theme-dialog.component';
 import { DataProvidersState } from './data-providers/data-providers.state';
 import { Initialize } from './workbench/workbench.actions';
 import { map, filter, take } from 'rxjs/operators';
@@ -35,9 +34,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fontSize: 'default' | 'large' | 'largest';
   fontWeight: 'default' | 'bold' | 'boldest';
   dataProviders$: Observable<Array<DataProvider>>;
-
-  private themeDialog: MatDialogRef<ThemeDialogComponent> | null = null;
-  private helpDialog: MatDialogRef<HelpDialogComponent> | null = null;
 
   wasmReady$: Observable<boolean>;
   configReady$: Observable<boolean>;
@@ -96,7 +92,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe(() => {
         this.store.dispatch(new InitAuth());
-        
+
       });
   }
 
@@ -140,7 +136,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnDestroy() {
     // this.hotKeys.forEach((hotKey) => this._hotkeysService.remove(hotKey));

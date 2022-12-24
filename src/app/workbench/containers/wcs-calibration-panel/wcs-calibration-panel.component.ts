@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { BehaviorSubject, combineLatest, Observable, Subject, merge, of } from 'rxjs';
-import { distinctUntilChanged, filter, flatMap, map, switchMap, takeUntil, withLatestFrom, take } from 'rxjs/operators';
+import { distinctUntilChanged, filter, flatMap, map, switchMap, catchError, takeUntil, withLatestFrom, take } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import {
   getDecDegs,
@@ -14,6 +14,7 @@ import {
   getWidth,
   Header,
   ILayer,
+  ImageLayer,
 } from '../../../data-files/models/data-file';
 import { JobsState } from '../../../jobs/jobs.state';
 import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../jobs/models/wcs_calibration';
@@ -27,17 +28,19 @@ import {
   CreateWcsCalibrationJob,
   UpdateSourceExtractionSettings,
   UpdateWcsCalibrationExtractionOverlay,
-  UpdateWcsCalibrationPanelState,
+  UpdateWcsCalibrationFileState,
   UpdateWcsCalibrationPanelConfig,
 } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
 import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { LoadJob, LoadJobResult } from 'src/app/jobs/jobs.actions';
-import { WcsCalibrationPanelState } from '../../models/wcs-calibration-panel-state';
+import { WcsCalibrationFileState } from '../../models/wcs-calibration-file-state';
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 import { MarkerType, SourceMarker } from '../../models/marker';
 import { isSourceExtractionJob } from 'src/app/jobs/models/source-extraction';
+import { InvalidateHeader, LoadLayerHeader } from 'src/app/data-files/data-files.actions';
+import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 
 @Component({
   selector: 'app-wcs-calibration-panel',
@@ -67,18 +70,25 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   destroy$ = new Subject<boolean>();
   header$: Observable<Header>;
   config$: Observable<WcsCalibrationPanelConfig>;
-  state$: Observable<WcsCalibrationPanelState>;
+  state$: Observable<WcsCalibrationFileState>;
   selectedLayerIds$: Observable<string[]>;
+  refLayerId$: Observable<string>;
+  refLayer$: Observable<ImageLayer>;
+  refHeader$: Observable<Header>;
+  refLayerHasWcs$: Observable<boolean>;
   activeJob$: Observable<WcsCalibrationJob>;
   activeJobResult$: Observable<WcsCalibrationJobResult>;
   wcsCalibrationSettings$: Observable<WcsCalibrationPanelConfig>;
   sourceExtractionSettings$: Observable<SourceExtractionSettings>;
 
+  copyStatus: { level: 'warning' | 'info' | 'danger' | 'success', message: string } = null;
   isNumber = [Validators.required, isNumber];
   greaterThanZero = [Validators.required, isNumber, greaterThan(0)];
   minZero = [Validators.required, isNumber, Validators.min(0)];
   wcsCalibrationForm = new FormGroup({
     selectedLayerIds: new FormControl([], Validators.required),
+    mode: new FormControl(''),
+    refLayerId: new FormControl(''),
     ra: new FormControl('', { updateOn: 'blur', validators: [isNumberOrSexagesimalValidator] }),
     dec: new FormControl('', { updateOn: 'blur', validators: [isNumberOrSexagesimalValidator] }),
     radius: new FormControl('', this.minZero),
@@ -88,7 +98,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     showOverlay: new FormControl('')
   });
 
-  constructor(private store: Store, private dialog: MatDialog, private markerService: ImageViewerMarkerService) {
+  constructor(private store: Store, private dialog: MatDialog, private markerService: ImageViewerMarkerService, private dataFileService: AfterglowDataFileService, private cdRef: ChangeDetectorRef) {
     this.header$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId)))
     );
@@ -98,6 +108,53 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
     this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
+
+    this.refLayerId$ = this.config$.pipe(
+      map((data) => (data && data.refLayerId && data.selectedLayerIds.includes(data.refLayerId)) ? data.refLayerId : null),
+      distinctUntilChanged()
+    );
+
+    this.refLayer$ = this.refLayerId$.pipe(
+      switchMap((layerId) => {
+        return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
+          map((layer) => layer as ImageLayer),
+          distinctUntilChanged()
+        );
+      })
+    );
+
+    this.refHeader$ = this.refLayer$.pipe(
+      map((layer) => layer && layer.headerId),
+      distinctUntilChanged(),
+      switchMap((headerId) => {
+        return this.store.select(DataFilesState.getHeaderById(headerId));
+      })
+    );
+
+    let refHeaderLoaded$ = this.refHeader$.pipe(
+      map((header) => header && header.loaded),
+      distinctUntilChanged()
+    );
+
+    let refHeaderLoading$ = this.refHeader$.pipe(
+      map((header) => header && header.loading),
+      distinctUntilChanged()
+    );
+
+    combineLatest(this.refLayerId$, refHeaderLoaded$, refHeaderLoading$)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([refLayerId, headerLoaded, headerLoading]) => {
+        if (refLayerId && headerLoaded != null && !headerLoaded && headerLoading != null && !headerLoading) {
+          setTimeout(() => {
+            this.store.dispatch(new LoadLayerHeader(refLayerId));
+          });
+        }
+      });
+
+    this.refLayerHasWcs$ = this.refHeader$.pipe(
+      map((header) => header && header.wcs && header.wcs.isValid()),
+      distinctUntilChanged()
+    );
 
     this.activeJob$ = combineLatest([
       this.store.select(JobsState.getJobEntities),
@@ -129,6 +186,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
         if (settings) {
           this.wcsCalibrationForm.patchValue(
             {
+              mode: settings.mode,
+              refLayerId: settings.refLayerId,
               ra: settings.ra,
               dec: settings.dec,
               radius: settings.radius,
@@ -140,18 +199,24 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
             { emitEvent: false }
           );
         }
+
+        this.copyStatus = null;
+
+
       });
 
     this.wcsCalibrationForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
 
       this.store.dispatch(
         new UpdateWcsCalibrationPanelConfig({
-          showOverlay: value.showOverlay
+          showOverlay: value.showOverlay,
+          selectedLayerIds: value.selectedLayerIds,
+          mode: value.mode,
+          refLayerId: value.refLayerId
         })
       );
 
       if (this.wcsCalibrationForm.valid) {
-        this.store.dispatch(new UpdateWcsCalibrationPanelState({ selectedLayerIds: value.selectedLayerIds }));
         this.store.dispatch(
           new UpdateWcsCalibrationPanelConfig({
             ra: value.ra,
@@ -163,6 +228,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
           })
         );
       }
+
+      this.copyStatus = null;
     });
 
 
@@ -335,7 +402,50 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onSubmitClick() {
-    this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedLayerIds.value));
+    let config = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationPanelConfig);
+    if (config.mode == 'platesolve') {
+      this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedLayerIds.value));
+    }
+    else {
+      // copy wcs from 
+      this.copyStatus = { level: 'info', message: 'Downloading WCS from reference...' }
+      this.dataFileService.getWcs(config.refLayerId).pipe(takeUntil(this.destroy$)).subscribe(
+        (resp) => {
+          this.copyStatus = { level: 'info', message: 'Copying WCS to selected image layers...' }
+          let errors: string[] = [];
+          let wcsObj = {};
+          resp.data.forEach(row => wcsObj[row.key] = row.value)
+          let reqs$ = config.selectedLayerIds.filter(id => id != config.refLayerId).map(id => this.dataFileService.setWcs(id, wcsObj).pipe(
+            catchError(e => {
+              let layer = this.store.selectSnapshot(DataFilesState.getLayerById(id));
+              errors.push(`${layer.name}: Failed to write WCS to header`)
+              throw e;
+            })
+          ))
+          combineLatest(reqs$).subscribe(
+            (resps) => {
+              if (errors.length == 0) {
+                this.copyStatus = { level: 'success', message: `The reference WCS header was successfully copied to all selected layers` }
+              }
+              else {
+                this.copyStatus = { level: 'danger', message: `Task completed but with errors:  ${errors.join(', ')}` }
+              }
+              this.store.dispatch(config.selectedLayerIds.map(layerId => new InvalidateHeader(layerId)));
+              this.cdRef.markForCheck();
+            },
+            (err) => {
+              this.copyStatus = { level: 'danger', message: `An unexpected error occurred:  ${errors.join(', ')}` }
+              this.cdRef.markForCheck();
+            }
+          )
+        },
+        (error) => {
+          this.copyStatus = { level: 'danger', message: 'An unexpected error occurred when downloading the reference WCS' }
+          this.cdRef.markForCheck();
+        }
+      )
+    }
+
   }
 
   onAutofillFromFocusedViewerClick(header: Header) {

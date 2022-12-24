@@ -1,9 +1,6 @@
 import { ViewMode } from './models/view-mode';
 import {
   WorkbenchTool,
-  PixelOpsFormData,
-  AlignFormData,
-  StackFormData,
   PlottingPanelConfig,
   PhotometryPanelConfig,
   AligningPanelConfig as AligningPanelConfig,
@@ -34,6 +31,9 @@ import { PhotometryData } from '../jobs/models/photometry';
 import { FieldCalibration } from '../jobs/models/field-calibration';
 import { GlobalSettings } from './models/global-settings';
 import { CalibrationSettings } from './models/calibration-settings';
+import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
+import { AlignmentSettings } from './models/alignment-settings';
+import { AlignmentJobSettings } from '../jobs/models/alignment';
 
 /* Core */
 
@@ -237,6 +237,12 @@ export class UpdatePhotometrySettings {
   constructor(public changes: Partial<PhotometrySettings>) { }
 }
 
+export class UpdateAlignmentSettings {
+  public static readonly type = '[Workbench] Update Alignment Settings';
+
+  constructor(public changes: Partial<AlignmentSettings>) { }
+}
+
 export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
@@ -297,10 +303,10 @@ export class UpdateStackingPanelConfig {
   constructor(public changes: Partial<StackingPanelConfig>) { }
 }
 
-export class UpdateWcsCalibrationPanelState {
-  public static readonly type = '[Workbench] Update Wcs Calibration Panel';
+export class UpdateWcsCalibrationFileState {
+  public static readonly type = '[Workbench] Update Wcs Calibration File State';
 
-  constructor(public changes: Partial<WcsCalibrationPanelConfig>) { }
+  constructor(public layerId: string, public changes: Partial<WcsCalibrationFileState>) { }
 }
 
 export class UpdateWcsCalibrationPanelConfig {
@@ -315,6 +321,12 @@ export class UpdateWcsCalibrationExtractionOverlay {
   constructor(
     public viewerId: string
   ) { }
+}
+
+export class InvalidateWcsCalibrationExtractionOverlayByLayerId {
+  public static readonly type = '[Phot Data] Invalidate Wcs Calibration Extraction Overlay By Layer Id';
+
+  constructor(public layerId: string = null) { }
 }
 
 export class LoadCatalogs {
@@ -417,7 +429,7 @@ export class HideCurrentPixelOpsJobState {
 
 export class CreateAlignmentJob {
   public static readonly type = '[Workbench] Create Alignment Job';
-  constructor(public layerIds: string[]) { }
+  constructor(public layerIds: string[], public crop: boolean, public settings: AlignmentJobSettings) { }
 }
 
 export class CreateStackingJob {

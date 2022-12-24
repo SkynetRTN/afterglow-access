@@ -2,6 +2,7 @@ import { Catalog } from "src/app/jobs/models/catalog-query";
 import { FieldCalibration } from "src/app/jobs/models/field-calibration";
 import { PhotometryJobSettings } from "src/app/jobs/models/photometry";
 import { SourceExtractionJobSettings } from "src/app/jobs/models/source-extraction";
+import { AlignmentSettings, defaults as defaultAlignmentSettings } from "./alignment-settings";
 import { CalibrationSettings, defaults as defaultCalibrationSettings } from "./calibration-settings";
 import { CentroidSettings, defaults as defaultCentroidSettings } from "./centroid-settings";
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from "./photometry-settings";
@@ -12,13 +13,15 @@ export interface GlobalSettings {
     calibration: CalibrationSettings;
     sourceExtraction: SourceExtractionSettings;
     centroid: CentroidSettings;
+    alignment: AlignmentSettings;
 }
 
 export let defaults: GlobalSettings = {
     photometry: { ...defaultPhotometrySettings },
     calibration: { ...defaultCalibrationSettings },
     sourceExtraction: { ...defaultSourceExtractionSettings },
-    centroid: { ...defaultCentroidSettings }
+    centroid: { ...defaultCentroidSettings },
+    alignment: { ...defaultAlignmentSettings }
 }
 
 
@@ -79,7 +82,7 @@ export function toFieldCalibration(settings: GlobalSettings, catalogs: Catalog[]
     let p = settings.photometry;
     let c = settings.calibration;
     let result: FieldCalibration = {
-        catalogs: [c.catalog],
+        catalogs: c.selectedCatalogs,
         // customFilterLookup: customFilterLookup,
         sourceInclusionPercentage: c.sourceInclusionPercentageEnabled ? c.sourceInclusionPercentage : null,
         sourceMatchTol: c.sourceMatchTol,

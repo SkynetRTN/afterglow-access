@@ -16,9 +16,9 @@ import { CoreApiResponse } from '../../utils/core-api-response';
 
 @Injectable()
 export class AuthService {
-  constructor(private http: HttpClient, private config: AfterglowConfigService) {}
+  constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   getUser() {
-    return this.http.get<CoreApiResponse<CoreUser>>(`${getCoreApiUrl(this.config)}/user`);
+    return this.http.get<CoreApiResponse<CoreUser>>(`${getCoreApiUrl(this.config)}/user/`);
   }
 }

@@ -51,7 +51,6 @@ import {
 } from '../../../data-files/models/data-file';
 import { DmsPipe } from '../../../pipes/dms.pipe';
 import { PhotometryPanelState } from '../../models/photometry-file-state';
-import { GlobalSettingsDialogComponent } from '../../components/global-settings-dialog/global-settings-dialog.component';
 import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
 import { Source, PosType } from '../../models/source';
 import { PhotometryPanelConfig, BatchPhotometryFormData, SourcePanelConfig } from '../../models/workbench-state';

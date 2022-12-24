@@ -2,14 +2,14 @@ import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from '
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
 import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom } from 'rxjs/operators';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { AlignFormData, AligningPanelConfig } from '../../models/workbench-state';
+import { FormGroup, FormControl, Validators, FormBuilder, AbstractControl } from '@angular/forms';
+import { AligningPanelConfig } from '../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
-import { AlignmentJob, AlignmentJobResult } from '../../../jobs/models/alignment';
+import { AKAZEFeatureAlignmentSettings, AlignmentJob, AlignmentJobResult, AlignmentJobSettings, AlignmentJobSettingsBase, AlignmentMode, AutoSourceAlignmentSettings, BRISKFeatureAlignmentSettings, FeatureAlignmentAlgorithm, FeatureAlignmentSettings, KAZEFeatureAlignmentSettings, ORBFeatureAlignmentSettings, PixelAlignmentSettings, SIFTFeatureAlignmentSettings, SourceAlignmentSettings, SURFFeatureAlignmentSettings, WcsAlignmentSettings } from '../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
-import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile } from '../../workbench.actions';
+import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile, UpdatePhotometrySettings, UpdateAlignmentSettings } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
 import { ImageLayer, DataFile, Header } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
@@ -17,12 +17,11 @@ import { LoadLayerHeader } from '../../../data-files/data-files.actions';
 import { Source } from '../../models/source';
 import { SourcesState } from '../../sources.state';
 
-enum AlignMode {
-  ASTROMETRIC = 'astrometric',
-  SOURCE_MANUAL = 'source: manual',
-  SOURCE_PROPER_MOTION = 'source: proper motion',
-  SOURCE_REFINE = 'source: refine'
-}
+import * as objectPath from 'object-path';
+import { AlignmentSettings, defaults } from '../../models/alignment-settings';
+import { greaterThan, isNumber } from 'src/app/utils/validators';
+import { toSourceExtractionJobSettings } from '../../models/global-settings';
+
 
 @Component({
   selector: 'app-aligning-panel',
@@ -40,7 +39,9 @@ export class AlignerPageComponent implements OnInit {
   }
   private layerIds$ = new BehaviorSubject<string[]>(null);
 
-  AlignMode = AlignMode;
+  AlignmentMode = AlignmentMode;
+  FeatureAlignmentAlgorithm = FeatureAlignmentAlgorithm;
+
   config$: Observable<AligningPanelConfig>;
 
   destroy$ = new Subject<boolean>();
@@ -50,39 +51,137 @@ export class AlignerPageComponent implements OnInit {
   refLayer$: Observable<ImageLayer>;
   refHeader$: Observable<Header>;
   refLayerHasWcs$: Observable<boolean>;
-  alignFormData$: Observable<AlignFormData>;
   alignmentJob$: Observable<AlignmentJob>;
   manualSourceOptions$: Observable<Source[]>;
 
-  alignForm = new FormGroup({
-    selectedLayerIds: new FormControl([], Validators.required),
-    refLayerId: new FormControl('', Validators.required),
-    crop: new FormControl('', Validators.required),
-    mode: new FormControl('', Validators.required),
-    manualSources: new FormControl('', Validators.required),
-  });
+  alignmentSettingsForm = this.fb.group({
+    crop: this.fb.control('', { updateOn: 'change' }),
+    enableRot: this.fb.control('', { updateOn: 'change' }),
+    enableScale: this.fb.control('', { updateOn: 'change' }),
+    enableSkew: this.fb.control('', { updateOn: 'change' }),
+    mode: this.fb.control('', { updateOn: 'change' }),
+    wcsModeSettings: this.fb.group({
+      wcsGridPoints: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(1, true)], updateOn: 'blur' }),
+    }),
+    sourceModeSettings: this.fb.group({
+      scaleInvariant: this.fb.control('', { updateOn: 'change' }),
+      matchTol: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
+      minEdge: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      ratioLimit: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      confidence: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      manualModeSettings: this.fb.group({
+        maxSources: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        sourceIds: this.fb.control('', Validators.required),
+      }),
+    }),
+    featureModeSettings: this.fb.group({
+      algorithm: this.fb.control('', { updateOn: 'change' }),
+      ratioThreshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      detectEdges: this.fb.control('', { updateOn: 'change' }),
+      akazeAlgorithmSettings: this.fb.group({
+        descriptorType: this.fb.control('', { validators: [Validators.required], updateOn: 'blur' }),
+        descriptorSize: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
+        descriptorChannels: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        threshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        octaves: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        octaveLayers: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        diffusivity: this.fb.control('', { validators: [Validators.required], updateOn: 'blur' }),
+      }),
+      briskAlgorithmSettings: this.fb.group({
+        threshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        octaves: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        patternScale: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      }),
+      kazeAlgorithmSettings: this.fb.group({
+        extended: this.fb.control('', { updateOn: 'change' }),
+        upright: this.fb.control('', { updateOn: 'change' }),
+        threshold: this.fb.control('', { updateOn: 'change' }),
+        octaves: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        octaveLayers: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        diffusivity: this.fb.control('', { validators: [Validators.required], updateOn: 'blur' }),
+      }),
+      orbAlgorithmSettings: this.fb.group({
+        nfeatures: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        scaleFactor: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        nlevels: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        edgeThreshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        firstLevel: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
+        wtaK: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        scoreType: this.fb.control('', { validators: [Validators.required], updateOn: 'blur' }),
+        patchSize: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        fastThreshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      }),
+      siftAlgorithmSettings: this.fb.group({
+        nfeatures: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
+        octaveLayers: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        contrastThreshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        edgeThreshold: this.fb.control('', Validators.required),
+        sigma: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        descriptorType: this.fb.control('', { validators: [Validators.required], updateOn: 'blur' })
+      }),
+      surfAlgorithmSettings: this.fb.group({
+        hessianThreshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        octaves: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        octaveLayers: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+        extended: this.fb.control('', { updateOn: 'change' }),
+        upright: this.fb.control('', { updateOn: 'change' })
+      })
+    }),
+    pixelModeSettings: this.fb.group({
+      detectEdges: this.fb.control('', { updateOn: 'change' }),
+    }),
+  })
 
-  constructor(private store: Store, private router: Router) {
+  layerSelectionForm = this.fb.group({
+    selectedLayerIds: this.fb.control([], Validators.required),
+    refLayerId: this.fb.control('', Validators.required),
+  })
+
+  alignForm = this.fb.group({
+    layerSelectionForm: this.layerSelectionForm,
+    alignmentSettingsForm: this.alignmentSettingsForm
+
+  });
+  alignmentSettings$ = this.store.select(WorkbenchState.getAlignmentSettings)
+
+  constructor(private store: Store, private router: Router, private fb: FormBuilder) {
     this.config$ = this.store.select(WorkbenchState.getAligningPanelConfig);
+
+    this.layerSelectionForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.onLayerSelectionFormChange());
+
+    this.config$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(config => this.onLayerSelectionSettingsChange(config))
+
+    this.onLayerSelectionSettingsChange(this.store.selectSnapshot(WorkbenchState.getAligningPanelConfig));
+    this.onLayerSelectionFormChange();
+
+    this.alignmentSettingsForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.onAlignmentSettingsFormChange());
+
+    this.alignmentSettings$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(settings => this.onAlignmentSettingsChange(settings))
+
+    //init
+    this.onAlignmentSettingsChange(this.store.selectSnapshot(WorkbenchState.getAlignmentSettings));
+    this.onAlignmentSettingsFormChange();
 
     this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
       if (!layerIds || !config) return;
-      let selectedLayerIds = config.alignFormData.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
-      if (selectedLayerIds.length != config.alignFormData.selectedLayerIds.length) {
+      let selectedLayerIds = config.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
+      if (selectedLayerIds.length != config.selectedLayerIds.length) {
         setTimeout(() => {
           this.setSelectedLayerIds(selectedLayerIds);
         });
       }
     });
 
-    this.alignFormData$ = this.config$.pipe(
-      map((config) => config && config.alignFormData),
-      distinctUntilChanged()
-    );
 
-
-
-    this.refLayerId$ = this.alignFormData$.pipe(
+    this.refLayerId$ = this.config$.pipe(
       map((data) => (data && data.refLayerId && data.selectedLayerIds.includes(data.refLayerId)) ? data.refLayerId : null),
       distinctUntilChanged()
     );
@@ -94,10 +193,6 @@ export class AlignerPageComponent implements OnInit {
     )
 
 
-    combineLatest(this.alignFormData$, this.refLayerId$).subscribe(([data, refLayerId]) => {
-      if (!data) return;
-      this.alignForm.patchValue({ ...data, refLayerId: refLayerId }, { emitEvent: false });
-    });
 
 
 
@@ -143,11 +238,11 @@ export class AlignerPageComponent implements OnInit {
       distinctUntilChanged()
     );
 
-    this.alignForm.valueChanges.subscribe((value) => {
-      // if(this.imageCalcForm.valid) {
-      this.store.dispatch(new UpdateAligningPanelConfig({ alignFormData: this.alignForm.value }));
-      // }
-    });
+    // this.alignForm.valueChanges.subscribe((value) => {
+    //   // if(this.imageCalcForm.valid) {
+    //   this.store.dispatch(new UpdateAligningPanelConfig({ alignFormData: this.alignForm.value }));
+    //   // }
+    // });
 
     this.alignmentJob$ = combineLatest(
       store.select(WorkbenchState.getState),
@@ -168,6 +263,101 @@ export class AlignerPageComponent implements OnInit {
 
   ngOnInit() { }
 
+  getValidFormFields(group: FormGroup) {
+    let result: string[] = [];
+    let controls = group.controls
+    Object.keys(controls).forEach(key => {
+      if (controls[key] instanceof FormGroup) {
+        result = result.concat(this.getValidFormFields(controls[key] as FormGroup).map(field => `${key}.${field}`))
+      }
+      else if (controls[key].enabled && (controls[key].untouched || controls[key].valid)) {
+        result.push(key)
+      }
+    })
+    // let result = Object.keys(controls).filter(key => controls[key] instanceof FormGroup || (controls[key].enabled && (controls[key].untouched || controls[key].valid)));
+    return result;
+  }
+
+  onLayerSelectionSettingsChange(settings: { selectedLayerIds: string[], refLayerId: string }) {
+    this.layerSelectionForm.patchValue(settings, { emitEvent: false })
+  }
+
+  onLayerSelectionFormChange() {
+    this.store.dispatch(new UpdateAligningPanelConfig(this.layerSelectionForm.value))
+  }
+
+  onAlignmentSettingsChange(settings: AlignmentSettings) {
+    let value = {};
+    this.getValidFormFields(this.alignmentSettingsForm).forEach(key => objectPath.set(value, key, objectPath.get(settings, key)))
+    this.alignmentSettingsForm.patchValue(value, { emitEvent: false })
+  }
+
+  onAlignmentSettingsFormChange() {
+    let controls = this.alignmentSettingsForm.controls;
+    let mode: AlignmentMode = controls.mode.value;
+
+    this.alignmentSettingsForm.controls['wcsModeSettings'].disable({ emitEvent: false });
+    this.alignmentSettingsForm.controls['sourceModeSettings'].disable({ emitEvent: false });
+    this.alignmentSettingsForm.controls['featureModeSettings'].disable({ emitEvent: false });
+    this.alignmentSettingsForm.controls['pixelModeSettings'].disable({ emitEvent: false });
+
+
+    if (mode == AlignmentMode.wcs) {
+      this.alignmentSettingsForm.controls['wcsModeSettings'].enable({ emitEvent: false });
+    }
+    else if (mode == AlignmentMode.sources_manual) {
+      this.alignmentSettingsForm.controls['sourceModeSettings'].enable({ emitEvent: false });
+      this.alignmentSettingsForm.get('sourceModeSettings.manualModeSettings').enable({ emitEvent: false });
+      // this.alignmentSettingsForm.get('sourceModeSettings.autoModeSettings').disable({ emitEvent: false });
+    }
+    else if (mode == AlignmentMode.sources_auto) {
+      this.alignmentSettingsForm.controls['sourceModeSettings'].enable({ emitEvent: false });
+      this.alignmentSettingsForm.get('sourceModeSettings.manualModeSettings').disable({ emitEvent: false });
+      // this.alignmentSettingsForm.get('sourceModeSettings.autoModeSettings').enable({ emitEvent: false });
+    }
+    else if (mode == AlignmentMode.features) {
+      this.alignmentSettingsForm.controls['featureModeSettings'].enable({ emitEvent: false });
+
+      let algorithm: FeatureAlignmentAlgorithm = this.alignmentSettingsForm.get('featureModeSettings.algorithm').value;
+
+      this.alignmentSettingsForm.get('featureModeSettings.akazeAlgorithmSettings').disable({ emitEvent: false });
+      this.alignmentSettingsForm.get('featureModeSettings.briskAlgorithmSettings').disable({ emitEvent: false });
+      this.alignmentSettingsForm.get('featureModeSettings.kazeAlgorithmSettings').disable({ emitEvent: false });
+      this.alignmentSettingsForm.get('featureModeSettings.orbAlgorithmSettings').disable({ emitEvent: false });
+      this.alignmentSettingsForm.get('featureModeSettings.siftAlgorithmSettings').disable({ emitEvent: false });
+      this.alignmentSettingsForm.get('featureModeSettings.surfAlgorithmSettings').disable({ emitEvent: false });
+
+      if (algorithm == FeatureAlignmentAlgorithm.AKAZE) {
+        this.alignmentSettingsForm.get('featureModeSettings.akazeAlgorithmSettings').enable({ emitEvent: false });
+      }
+      else if (algorithm == FeatureAlignmentAlgorithm.BRISK) {
+        this.alignmentSettingsForm.get('featureModeSettings.briskAlgorithmSettings').enable({ emitEvent: false });
+      }
+      else if (algorithm == FeatureAlignmentAlgorithm.KAZE) {
+        this.alignmentSettingsForm.get('featureModeSettings.kazeAlgorithmSettings').enable({ emitEvent: false });
+      }
+      else if (algorithm == FeatureAlignmentAlgorithm.ORB) {
+        this.alignmentSettingsForm.get('featureModeSettings.orbAlgorithmSettings').enable({ emitEvent: false });
+      }
+      else if (algorithm == FeatureAlignmentAlgorithm.SIFT) {
+        this.alignmentSettingsForm.get('featureModeSettings.siftAlgorithmSettings').enable({ emitEvent: false });
+      }
+      else if (algorithm == FeatureAlignmentAlgorithm.SURF) {
+        this.alignmentSettingsForm.get('featureModeSettings.surfAlgorithmSettings').enable({ emitEvent: false });
+      }
+    }
+    else if (mode == AlignmentMode.pixels) {
+      this.alignmentSettingsForm.controls['pixelModeSettings'].enable({ emitEvent: false });
+    }
+
+    let value = {};
+    this.getValidFormFields(this.alignmentSettingsForm).forEach(key => {
+      objectPath.set(value, key, this.alignmentSettingsForm.get(key).value)
+    })
+
+    this.store.dispatch(new UpdateAlignmentSettings(value))
+  }
+
   getLayerOptionLabel(layerId: string) {
     return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
       map((layer) => layer?.name),
@@ -178,10 +368,8 @@ export class AlignerPageComponent implements OnInit {
   setSelectedLayerIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdateAligningPanelConfig({
-        alignFormData: {
-          ...this.alignForm.value,
-          selectedLayerIds: layerIds,
-        },
+        ...this.layerSelectionForm.value,
+        selectedLayerIds: layerIds
       })
     );
   }
@@ -194,8 +382,110 @@ export class AlignerPageComponent implements OnInit {
     this.setSelectedLayerIds([]);
   }
 
-  submit(data: AlignFormData) {
-    let selectedLayerIds: string[] = this.alignForm.controls.selectedLayerIds.value;
-    this.store.dispatch(new CreateAlignmentJob(selectedLayerIds));
+  submit() {
+    let config = this.store.selectSnapshot(WorkbenchState.getAligningPanelConfig);
+    let settings = this.store.selectSnapshot(WorkbenchState.getAlignmentSettings);
+    let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getSettings));
+    let jobSettingsBase: AlignmentJobSettingsBase = {
+      refImage: parseInt(config.refLayerId),
+      enableRot: settings.enableRot,
+      enableScale: settings.enableScale,
+      enableSkew: settings.enableSkew
+    }
+    let jobSettings: AlignmentJobSettings;
+    if (settings.mode == AlignmentMode.wcs) {
+      let s: WcsAlignmentSettings = {
+        ...jobSettingsBase,
+        mode: AlignmentMode.wcs,
+        ...settings.wcsModeSettings
+      }
+      jobSettings = s;
+    }
+    else if (settings.mode == AlignmentMode.sources_auto) {
+      let s: AutoSourceAlignmentSettings = {
+        ...jobSettingsBase,
+        mode: AlignmentMode.sources_auto,
+        scaleInvariant: settings.sourceModeSettings.scaleInvariant,
+        matchTol: settings.sourceModeSettings.matchTol,
+        minEdge: settings.sourceModeSettings.minEdge,
+        ratioLimit: settings.sourceModeSettings.ratioLimit,
+        confidence: settings.sourceModeSettings.confidence,
+        ...settings.sourceModeSettings.autoModeSettings,
+        sourceExtractionSettings: sourceExtractionSettings
+      }
+      jobSettings = s;
+    }
+    else if (settings.mode == AlignmentMode.features) {
+      let sf: FeatureAlignmentSettings = {
+        ...jobSettingsBase,
+        mode: AlignmentMode.features,
+        detectEdges: settings.featureModeSettings.detectEdges,
+        ratioThreshold: settings.featureModeSettings.ratioThreshold
+      }
+      if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.AKAZE) {
+        let alg: AKAZEFeatureAlignmentSettings = {
+          algorithm: FeatureAlignmentAlgorithm.AKAZE,
+          ...sf,
+          ...settings.featureModeSettings.akazeAlgorithmSettings
+        }
+        jobSettings = alg;
+      }
+      else if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.BRISK) {
+        let alg: BRISKFeatureAlignmentSettings = {
+          algorithm: FeatureAlignmentAlgorithm.BRISK,
+          ...sf,
+          ...settings.featureModeSettings.briskAlgorithmSettings
+        }
+        jobSettings = alg;
+      }
+      else if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.KAZE) {
+        let alg: KAZEFeatureAlignmentSettings = {
+          algorithm: FeatureAlignmentAlgorithm.KAZE,
+          ...sf,
+          ...settings.featureModeSettings.kazeAlgorithmSettings
+        }
+        jobSettings = alg;
+      }
+      else if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.ORB) {
+        let alg: ORBFeatureAlignmentSettings = {
+          algorithm: FeatureAlignmentAlgorithm.ORB,
+          ...sf,
+          ...settings.featureModeSettings.orbAlgorithmSettings
+        }
+        jobSettings = alg;
+      }
+      else if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.SIFT) {
+        let alg: SIFTFeatureAlignmentSettings = {
+          algorithm: FeatureAlignmentAlgorithm.SIFT,
+          ...sf,
+          ...settings.featureModeSettings.siftAlgorithmSettings
+        }
+        jobSettings = alg;
+      }
+      else if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.SURF) {
+        let alg: SURFFeatureAlignmentSettings = {
+          algorithm: FeatureAlignmentAlgorithm.SURF,
+          ...sf,
+          ...settings.featureModeSettings.surfAlgorithmSettings
+        }
+        jobSettings = alg;
+      }
+    }
+    else if (settings.mode == AlignmentMode.pixels) {
+      let s: PixelAlignmentSettings = {
+        ...jobSettingsBase,
+        mode: AlignmentMode.pixels,
+        ...settings.pixelModeSettings
+      }
+      jobSettings = s;
+    }
+    if (jobSettings) this.store.dispatch(new CreateAlignmentJob(config.selectedLayerIds, settings.crop, jobSettings));
+  }
+
+  restoreDefaults() {
+    this.alignmentSettingsForm.markAsUntouched({ onlySelf: false });
+    this.store.dispatch(new UpdateAlignmentSettings({
+      ...defaults
+    }))
   }
 }

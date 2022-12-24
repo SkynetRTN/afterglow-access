@@ -144,7 +144,7 @@ import {
   SetFileSelection,
   SetFileListFilter,
   InitializeWorkbenchFileState,
-  UpdateWcsCalibrationPanelState,
+  UpdateWcsCalibrationFileState,
   UpdateWcsCalibrationPanelConfig,
   CreateWcsCalibrationJob,
   ImportFromSurveyFail,
@@ -163,6 +163,8 @@ import {
   EndSourceSelectionRegion,
   UpdateSourceSelectionRegion,
   UpdateWcsCalibrationExtractionOverlay,
+  InvalidateWcsCalibrationExtractionOverlayByLayerId,
+  UpdateAlignmentSettings,
 } from './workbench.actions';
 import {
   getWidth,
@@ -183,7 +185,7 @@ import { AfterglowFieldCalService } from './services/afterglow-field-cals';
 import { CorrelationIdGenerator } from '../utils/correlated-action';
 import { isPixelOpsJob, PixelOpsJob, PixelOpsJobResult } from '../jobs/models/pixel-ops';
 import { JobType } from '../jobs/models/job-types';
-import { AlignmentJob, AlignmentJobResult, isAlignmentJob } from '../jobs/models/alignment';
+import { AlignmentJob, AlignmentJobResult, AlignmentMode, isAlignmentJob } from '../jobs/models/alignment';
 import { isWcsCalibrationJob, isWcsCalibrationJobResult, WcsCalibrationJob, WcsCalibrationJobResult, WcsCalibrationJobSettings } from '../jobs/models/wcs_calibration';
 import { isStackingJob, StackingJob, StackingJobResult } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
@@ -246,10 +248,10 @@ import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { JobService } from '../jobs/services/job.service';
 import { Job } from '../jobs/models/job';
 import { SourcePanelState } from './models/source-file-state';
-import { WcsCalibrationPanelState } from './models/wcs-calibration-panel-state';
+import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '2a70de54-74d2-485a-ad7a-00347809cc',
+  version: '3a71ef54-94d2-485a-ad7b-00347809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -334,12 +336,8 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     },
   },
   aligningPanelConfig: {
-    alignFormData: {
-      selectedLayerIds: [],
-      refLayerId: '',
-      mode: 'astrometric',
-      crop: true,
-    },
+    selectedLayerIds: [],
+    refLayerId: '',
     currentAlignmentJobId: '',
   },
   stackingPanelConfig: {
@@ -348,6 +346,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       mode: 'average',
       scaling: 'none',
       rejection: 'none',
+      smartStacking: 'none',
       percentile: 50,
       low: 0,
       high: 0,
@@ -357,11 +356,13 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   wcsCalibrationPanelConfig: {
     selectedLayerIds: [],
     activeJobId: '',
+    mode: 'platesolve',
+    refLayerId: null,
     minScale: 0.1,
     maxScale: 10,
     radius: 1,
     maxSources: 100,
-    showOverlay: true,
+    showOverlay: false,
   },
   catalogs: [],
   selectedCatalogId: '',
@@ -512,6 +513,12 @@ export class WorkbenchState {
   @Selector([WorkbenchState.getSettings])
   public static getPhotometrySettings(settings: GlobalSettings) {
     return settings.photometry;
+  }
+
+
+  @Selector([WorkbenchState.getSettings])
+  public static getAlignmentSettings(settings: GlobalSettings) {
+    return settings.alignment;
   }
 
   @Selector()
@@ -1249,7 +1256,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getCustomMarkerPanelStateEntities],
       (workbenchState: IWorkbenchState, customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchFileState | WorkbenchImageLayerState;
           return customMarkerPanelStateEntities[s.customMarkerPanelStateId] || null;
         } else {
@@ -1263,7 +1270,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPlottingPanelStateEntities],
       (workbenchState: IWorkbenchState, plottingPanelStateEntities: { [id: string]: PlottingPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchFileState | WorkbenchImageLayerState;
           return plottingPanelStateEntities[s.plottingPanelStateId] || null;
         } else {
@@ -1277,7 +1284,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSonificationPanelStateEntities],
       (workbenchState: IWorkbenchState, sonificationPanelStateEntities: { [id: string]: SonificationPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           let result = sonificationPanelStateEntities[s.sonificationPanelStateId];
           return sonificationPanelStateEntities[s.sonificationPanelStateId] || null;
@@ -1292,7 +1299,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPhotometryPanelStateEntities],
       (workbenchState: IWorkbenchState, photometryPanelStateEntities: { [id: string]: PhotometryPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           return photometryPanelStateEntities[s.photometryPanelStateId] || null;
         } else {
@@ -1305,8 +1312,8 @@ export class WorkbenchState {
   static getWcsCalibrationPanelStateByViewerId(viewerId: string) {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getWcsCalibrationPanelStateEntities],
-      (workbenchState: IWorkbenchState, wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
+      (workbenchState: IWorkbenchState, wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationFileState }) => {
+        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           return wcsCalibrationPanelStateEntities[s.wcsCalibrationPanelStateId] || null;
         } else {
@@ -1320,7 +1327,7 @@ export class WorkbenchState {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSourcePanelStateEntities],
       (workbenchState: IWorkbenchState, sourcePanelStateEntities: { [id: string]: SourcePanelState }) => {
-        if ([WorkbenchStateType.IMAGE_Layer].includes(workbenchState?.type)) {
+        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
           let s = workbenchState as WorkbenchImageLayerState;
           return sourcePanelStateEntities[s.sourcePanelStateId] || null;
         } else {
@@ -2124,6 +2131,7 @@ export class WorkbenchState {
     // clear all auto-cal jobs to trigger recalibration of photometry
     actions.push(new InvalidateAutoPhotByLayerId())
     actions.push(new InvalidateAutoCalByLayerId())
+    actions.push(new InvalidateWcsCalibrationExtractionOverlayByLayerId())
     return dispatch(actions);
   }
 
@@ -2164,6 +2172,53 @@ export class WorkbenchState {
     return dispatch(actions);
   }
 
+  @Action(UpdateAlignmentSettings)
+  @ImmutableContext()
+  public updateAlignmentSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateAlignmentSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let o = state.settings.alignment;
+      state.settings.alignment = {
+        ...o,
+        ...changes,
+        wcsModeSettings: {
+          ...o.wcsModeSettings,
+          ...changes?.wcsModeSettings
+        },
+        sourceModeSettings: {
+          ...o.sourceModeSettings,
+          ...changes?.sourceModeSettings,
+          autoModeSettings: {
+            ...o.sourceModeSettings.autoModeSettings,
+            ...changes?.sourceModeSettings?.autoModeSettings,
+          },
+          manualModeSettings: {
+            ...o.sourceModeSettings.manualModeSettings,
+            ...changes?.sourceModeSettings?.manualModeSettings,
+          }
+        },
+        featureModeSettings: {
+          ...state.settings.alignment.featureModeSettings,
+          ...changes?.featureModeSettings,
+        },
+        pixelModeSettings: {
+          ...o.pixelModeSettings,
+          ...changes?.pixelModeSettings,
+        },
+      }
+      return state;
+    });
+
+    // //side-effects
+    // let actions: any[] = [];
+    // // clear all auto-cal jobs to trigger recalibration of photometry
+    // actions.push(new InvalidateAutoPhotByLayerId())
+    // actions.push(new InvalidateAutoCalByLayerId())
+    // return dispatch(actions);
+  }
+
   @Action(UpdateSourceExtractionSettings)
   @ImmutableContext()
   public updateSourceExtractionSettings(
@@ -2181,7 +2236,8 @@ export class WorkbenchState {
     //side-effects
     let actions: any[] = [];
     // clear all auto-cal jobs to trigger recalibration of photometry
-    actions.push(new InvalidateAutoCalByLayerId())
+    actions.push(new InvalidateAutoCalByLayerId());
+    actions.push(new InvalidateWcsCalibrationExtractionOverlayByLayerId())
     return dispatch(actions);
   }
 
@@ -2316,13 +2372,6 @@ export class WorkbenchState {
     { changes }: UpdateAligningPanelConfig
   ) {
     setState((state: WorkbenchStateModel) => {
-      if (changes.alignFormData) {
-        changes.alignFormData = {
-          ...state.aligningPanelConfig.alignFormData,
-          ...changes.alignFormData,
-        };
-      }
-
       state.aligningPanelConfig = {
         ...state.aligningPanelConfig,
         ...changes,
@@ -2359,11 +2408,30 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdateWcsCalibrationPanelState)
+  @Action(UpdateWcsCalibrationFileState)
   @ImmutableContext()
   public updateWcsCalibrationPanelState(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateWcsCalibrationPanelState
+    { layerId, changes }: UpdateWcsCalibrationFileState
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
+      let layerState = workbenchState as WorkbenchImageLayerState;
+      let wcsFileState = state.wcsCalibrationPanelStateEntities[layerState.wcsCalibrationPanelStateId];
+      state.wcsCalibrationPanelStateEntities[layerState.wcsCalibrationPanelStateId] = {
+        ...wcsFileState,
+        ...changes,
+      };
+      return state;
+    });
+  }
+
+  @Action(UpdateWcsCalibrationPanelConfig)
+  @ImmutableContext()
+  public updateWcsCalibrationSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateWcsCalibrationPanelConfig
   ) {
     setState((state: WorkbenchStateModel) => {
       state.wcsCalibrationPanelConfig = {
@@ -2393,7 +2461,7 @@ export class WorkbenchState {
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_Layer) {
+    if (workbenchState.type == WorkbenchStateType.IMAGE_LAYER) {
       let layerState = workbenchState as WorkbenchImageLayerState;
       let wcsCalibrationPanelStateId = layerState.wcsCalibrationPanelStateId;
 
@@ -2433,21 +2501,27 @@ export class WorkbenchState {
     }
   }
 
-  @Action(UpdateWcsCalibrationPanelConfig)
+  @Action(InvalidateWcsCalibrationExtractionOverlayByLayerId)
   @ImmutableContext()
-  public updateWcsCalibrationSettings(
+  public invalidateWcsCalibrationExtractionOverlayByLayerId(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateWcsCalibrationPanelConfig
+    { layerId: layerId }: InvalidateWcsCalibrationExtractionOverlayByLayerId
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.wcsCalibrationPanelConfig = {
-        ...state.wcsCalibrationPanelConfig,
-        ...changes,
-      };
-
+      let workbenchStateIds = state.workbenchStateIds;
+      if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
+      workbenchStateIds.forEach((stateId) => {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
+          return;
+        }
+        let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
+        state.wcsCalibrationPanelStateEntities[layerState.wcsCalibrationPanelStateId].sourceExtractionOverlayIsValid = false;
+      });
       return state;
     });
   }
+
+
 
   @Action(SetSelectedCatalog)
   @ImmutableContext()
@@ -2593,7 +2667,7 @@ export class WorkbenchState {
     { layerId: layerId }: CloseLayerSuccess
   ) {
     setState((state: WorkbenchStateModel) => {
-      state.aligningPanelConfig.alignFormData.selectedLayerIds = state.aligningPanelConfig.alignFormData.selectedLayerIds.filter(
+      state.aligningPanelConfig.selectedLayerIds = state.aligningPanelConfig.selectedLayerIds.filter(
         (id) => id != layerId
       );
       state.pixelOpsPanelConfig.pixelOpsFormData.primaryLayerIds = state.pixelOpsPanelConfig.pixelOpsFormData.primaryLayerIds.filter(
@@ -2780,7 +2854,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
     let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId] as ImageLayer;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let sonifierState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
@@ -2822,7 +2896,15 @@ export class WorkbenchState {
 
         setState((state: WorkbenchStateModel) => {
           state.catalogs = catalogs;
+          let catalogNames = catalogs.map(catalog => catalog.name);
           state.selectedCatalogId = catalogs.length != 0 ? catalogs[0].name : '';
+
+          //remove catalogs no longer available
+          state.settings.calibration.selectedCatalogs = state.settings.calibration.selectedCatalogs.filter(name => catalogNames.includes(name));
+          //remove catalogs no longer available
+          state.settings.calibration.catalogOrder = state.settings.calibration.catalogOrder.filter(name => state.catalogs.find(c => c.name == name))
+          //add new catalogs
+          state.settings.calibration.catalogOrder = [...state.settings.calibration.catalogOrder, ...catalogNames.filter(name => !state.settings.calibration.catalogOrder.includes(name))]
           return state;
         });
       }),
@@ -3081,10 +3163,9 @@ export class WorkbenchState {
   @ImmutableContext()
   public createAlignmentJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerIds: layerIds }: CreateAlignmentJob
+    { layerIds, crop, settings }: CreateAlignmentJob
   ) {
     let state = getState();
-    let data = state.aligningPanelConfig.alignFormData;
     let layers = this.store.selectSnapshot(DataFilesState.getLayers);
     let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
     let imageLayers = layerIds.map((id) => layers.find((f) => f.id == id)).filter(isNotEmpty);
@@ -3101,12 +3182,8 @@ export class WorkbenchState {
         )
         .map((f) => f.id),
       inplace: true,
-      crop: data.crop,
-      settings: {
-        refImage: parseInt(data.refLayerId),
-        wcsGridPoints: 100,
-        prefilter: false,
-      },
+      crop: crop,
+      settings: settings,
       state: null,
       result: null,
     };
@@ -3189,6 +3266,7 @@ export class WorkbenchState {
         scaling: data.scaling == 'none' ? null : data.scaling,
         rejection: data.rejection == 'none' ? null : data.rejection,
         percentile: data.percentile,
+        smartStack: data.smartStacking,
         lo: data.low,
         hi: data.high,
       },
@@ -3424,7 +3502,7 @@ export class WorkbenchState {
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_Layer) {
+    if (workbenchState.type == WorkbenchStateType.IMAGE_LAYER) {
       let layerState = workbenchState as WorkbenchImageLayerState;
       let photPanelStateId = layerState.photometryPanelStateId;
 
@@ -3525,7 +3603,7 @@ export class WorkbenchState {
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_Layer) {
+    if (workbenchState.type == WorkbenchStateType.IMAGE_LAYER) {
       let layerState = workbenchState as WorkbenchImageLayerState;
       let photPanelStateId = layerState.photometryPanelStateId;
 
@@ -3772,7 +3850,7 @@ export class WorkbenchState {
 
         let imageLayerState: WorkbenchImageLayerState = {
           id: workbenchStateId,
-          type: WorkbenchStateType.IMAGE_Layer,
+          type: WorkbenchStateType.IMAGE_LAYER,
           plottingPanelStateId: plottingPanelStateId,
           customMarkerPanelStateId: customMarkerPanelStateId,
           sonificationPanelStateId: sonificationPanelStateId,
@@ -3789,7 +3867,7 @@ export class WorkbenchState {
       } else if (layer.type == LayerType.TABLE) {
         let tableLayerState: WorkbenchTableLayerState = {
           id: workbenchStateId,
-          type: WorkbenchStateType.TABLE_Layer,
+          type: WorkbenchStateType.TABLE_LAYER,
         };
 
         workbenchState = tableLayerState;
@@ -3888,7 +3966,7 @@ export class WorkbenchState {
         delete state.workbenchStateEntities[workbenchStateId];
       }
 
-      state.aligningPanelConfig.alignFormData.selectedLayerIds = state.aligningPanelConfig.alignFormData.selectedLayerIds.filter(
+      state.aligningPanelConfig.selectedLayerIds = state.aligningPanelConfig.selectedLayerIds.filter(
         (id) => id != layerId
       );
       state.stackingPanelConfig.stackFormData.selectedLayerIds = state.stackingPanelConfig.stackFormData.selectedLayerIds.filter(
@@ -3930,7 +4008,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId] as ImageLayer;
     let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[layer.headerId];
@@ -4006,7 +4084,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
 
@@ -4023,7 +4101,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       state.sonificationPanelStateEntities[layerState.sonificationPanelStateId] = {
@@ -4045,7 +4123,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (!sonificationPanelState.regionHistoryInitialized) {
@@ -4071,7 +4149,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (
@@ -4093,7 +4171,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (
@@ -4116,7 +4194,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       if (
@@ -4139,7 +4217,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
       sonificationPanelState.progressLine = line;
@@ -4155,7 +4233,7 @@ export class WorkbenchState {
     let state = getState();
     let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
     let sonificationPanelStateId = layerState.sonificationPanelStateId;
 
@@ -4249,7 +4327,7 @@ export class WorkbenchState {
   ) {
     let state = getState();
     let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
+    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
     let layerState = workbenchState as WorkbenchImageLayerState;
 
     setState((state: WorkbenchStateModel) => {
@@ -4268,7 +4346,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sourcePanelStateId = layerState.sourcePanelStateId;
       let sourceState = state.sourcePanelStateEntities[sourcePanelStateId];
@@ -4287,7 +4365,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let sourcePanelStateId = layerState.sourcePanelStateId;
       let sourcesState = state.sourcePanelStateEntities[sourcePanelStateId];
@@ -4333,7 +4411,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return state;
+      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
       let layerState = workbenchState as WorkbenchImageLayerState;
       let photometryPanelState = state.photometryPanelStateEntities[layerState.photometryPanelStateId];
       state.photometryPanelStateEntities[layerState.photometryPanelStateId] = {
@@ -4542,7 +4620,7 @@ export class WorkbenchState {
       //Photometry data from the Core refers to layer ids as file ids.
       photDatas.forEach((d) => {
         let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[d.fileId]];
-        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_Layer) return;
+        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
         let layerState = workbenchState as WorkbenchImageLayerState;
         if (!d.id) {
           return;
@@ -4564,7 +4642,7 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
         if (layerId === null || layerId === stateId) {
-          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
+          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
             return;
           }
           let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4584,7 +4662,7 @@ export class WorkbenchState {
   ) {
     setState((state: WorkbenchStateModel) => {
       state.workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
           return;
         }
         let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4607,7 +4685,7 @@ export class WorkbenchState {
       let workbenchStateIds = state.workbenchStateIds;
       if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
       workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
           return;
         }
         let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4627,7 +4705,7 @@ export class WorkbenchState {
       let workbenchStateIds = state.workbenchStateIds;
       if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
       workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_Layer) {
+        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
           return;
         }
         let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
@@ -4792,6 +4870,8 @@ export class WorkbenchState {
     let actions: any[] = [];
     actions.push(new InvalidateAutoPhotByLayerId(layerId))
     actions.push(new InvalidateAutoCalByLayerId(layerId))
+    actions.push(new InvalidateWcsCalibrationExtractionOverlayByLayerId(layerId));
+
     return dispatch(actions);
   }
 

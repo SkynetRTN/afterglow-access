@@ -38,17 +38,30 @@ export class AfterglowDataFileService {
   }
 
   getFiles() {
-    return this.http.get<CoreApiResponse<CoreDataFile[]>>(`${getCoreApiUrl(this.config)}/data-files`);
+    return this.http.get<CoreApiResponse<CoreDataFile[]>>(`${getCoreApiUrl(this.config)}/data-files/`);
   }
 
   createFromDataProviderAsset(providerId: string, assetPath: string) {
     // assetPath = assetPath.replace("\\", "/");
     let body = { provider_id: providerId, path: assetPath };
-    return this.http.post(`${getCoreApiUrl(this.config)}/data-files`, body);
+    return this.http.post(`${getCoreApiUrl(this.config)}/data-files/`, body);
+  }
+
+  createFromFileId(name: string, fileId: string) {
+    let body = { name: name, file_id: fileId };
+    return this.http.post(`${getCoreApiUrl(this.config)}/data-files/`, body);
   }
 
   getHeader(fileId: string) {
     return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
+  }
+
+  getWcs(fileId: string) {
+    return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/wcs`);
+  }
+
+  setWcs(fileId: string, wcs: { [key: string]: any }) {
+    return this.http.put<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/wcs`, wcs);
   }
 
   updateHeader(fileId: string, changes: HeaderEntry[]) {

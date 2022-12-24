@@ -7,9 +7,10 @@ import { SourceExtractionData } from './source-extraction';
 
 export interface StackSettings {
   mode: 'average' | 'percentile' | 'mode' | 'sum';
-  scaling: null | 'average' | 'median' | 'mode';
-  rejection: null | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';
+  scaling: null | 'average' | 'median' | 'mode' | 'equalize';
+  rejection: null | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
   percentile?: number;
+  smartStack: 'none' | 'SNR' | 'sharpness'
   lo?: number;
   hi?: number;
 }
