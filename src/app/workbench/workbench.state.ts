@@ -3209,6 +3209,7 @@ export class WorkbenchState {
           }
 
           let layerIds = result.fileIds.map((id) => id.toString());
+          layerIds.push(settings.refImage.toString())
 
           if (job.inplace) {
             layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
