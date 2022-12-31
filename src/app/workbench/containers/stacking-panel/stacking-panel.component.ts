@@ -45,6 +45,7 @@ export class StackerPanelComponent implements OnInit {
     percentile: new FormControl(50),
     low: new FormControl(''),
     high: new FormControl(''),
+    propagateMask: new FormControl('')
   });
 
   constructor(private store: Store, private router: Router) {
@@ -77,11 +78,11 @@ export class StackerPanelComponent implements OnInit {
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
         if (['iraf', 'minmax', 'sigclip', 'rcr', 'chauvenet'].includes(value)) {
-          this.stackForm.get('high').enable();
-          this.stackForm.get('low').enable();
+          this.stackForm.get('high').enable({ emitEvent: false });
+          this.stackForm.get('low').enable({ emitEvent: false });
         } else {
-          this.stackForm.get('high').disable();
-          this.stackForm.get('low').disable();
+          this.stackForm.get('high').disable({ emitEvent: false });
+          this.stackForm.get('low').disable({ emitEvent: false });
         }
       });
 

@@ -21,14 +21,19 @@
           </button>
         </div>
 
-        <mat-form-field>
+        <div class="pb-4">
+          <mat-slide-toggle #mosaicToggle formControlName="mosaicMode"> Mosaic Mode</mat-slide-toggle>
+        </div>
+
+        <mat-form-field *ngIf="mosaicToggle.checked">
           <mat-label i18n>Reference Image File</mat-label>
-          <mat-select formControlName="refLayerId" [value]="(refLayer$ | async)?.id">
+          <mat-select #refLayerIdSelect formControlName="refLayerId" [value]="(refLayer$ | async)?.id">
             <mat-option *ngFor="let layerId of (config$ | async)?.selectedLayerIds" [value]="layerId">
               {{ getLayerOptionLabel(layerId) | async }}
             </mat-option>
           </mat-select>
         </mat-form-field>
+
       </ng-container>
 
       <!-- <div class="mb-4">
@@ -325,7 +330,7 @@
 
 
     </div>
-    <ng-container *ngIf="modeSelect.value==AlignmentMode.wcs; else submitBlock">
+    <ng-container *ngIf="modeSelect.value==AlignmentMode.wcs && !mosaicToggle.checked; else submitBlock">
       <div *ngIf="!(refHeader$ | async) || (refHeader$ | async).loading; else wcsLoadedBlock" class="alert alert-info"
         style="margin-top: 10px" i18n>
         Reference header loading...

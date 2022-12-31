@@ -46,6 +46,7 @@ export class AlignerPageComponent implements OnInit {
 
   destroy$ = new Subject<boolean>();
 
+
   selectedLayerIds$: Observable<string[]>;
   refLayerId$: Observable<string>;
   refLayer$: Observable<ImageLayer>;
@@ -134,6 +135,7 @@ export class AlignerPageComponent implements OnInit {
 
   layerSelectionForm = this.fb.group({
     selectedLayerIds: this.fb.control([], Validators.required),
+    mosaicMode: this.fb.control('', { validators: Validators.required, updateOn: 'change' }),
     refLayerId: this.fb.control('', Validators.required),
   })
 
@@ -278,11 +280,21 @@ export class AlignerPageComponent implements OnInit {
     return result;
   }
 
-  onLayerSelectionSettingsChange(settings: { selectedLayerIds: string[], refLayerId: string }) {
+  onLayerSelectionSettingsChange(settings: { selectedLayerIds: string[], refLayerId: string, mosaicMode: boolean }) {
     this.layerSelectionForm.patchValue(settings, { emitEvent: false })
   }
 
   onLayerSelectionFormChange() {
+    let controls = this.layerSelectionForm.controls;
+    let mosaicMode: boolean = controls.mosaicMode.value;
+
+    if (mosaicMode) {
+      this.layerSelectionForm.controls['refLayerId'].disable({ emitEvent: false });
+    }
+    else {
+      this.layerSelectionForm.controls['refLayerId'].enable({ emitEvent: false });
+    }
+
     this.store.dispatch(new UpdateAligningPanelConfig(this.layerSelectionForm.value))
   }
 
@@ -387,7 +399,7 @@ export class AlignerPageComponent implements OnInit {
     let settings = this.store.selectSnapshot(WorkbenchState.getAlignmentSettings);
     let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getSettings));
     let jobSettingsBase: AlignmentJobSettingsBase = {
-      refImage: parseInt(config.refLayerId),
+      refImage: config.mosaicMode ? null : parseInt(config.refLayerId),
       enableRot: settings.enableRot,
       enableScale: settings.enableScale,
       enableSkew: settings.enableSkew
@@ -397,7 +409,7 @@ export class AlignerPageComponent implements OnInit {
       let s: WcsAlignmentSettings = {
         ...jobSettingsBase,
         mode: AlignmentMode.wcs,
-        ...settings.wcsModeSettings
+        ...settings.wcsModeSettings,
       }
       jobSettings = s;
     }

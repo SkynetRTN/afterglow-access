@@ -78,6 +78,7 @@ export interface BatchPhotometryFormData {
 
 export interface StackFormData {
   selectedLayerIds: string[];
+  propagateMask: boolean;
   mode: 'average' | 'percentile' | 'mode' | 'sum';
   scaling: 'none' | 'average' | 'median' | 'mode' | 'equalize';
   rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
@@ -128,6 +129,7 @@ export interface PixelOpsPanelConfig {
 
 export interface AligningPanelConfig {
   selectedLayerIds: string[];
+  mosaicMode: boolean;
   refLayerId: string;
   currentAlignmentJobId: string;
 }

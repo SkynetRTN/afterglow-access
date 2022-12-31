@@ -251,7 +251,7 @@ import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3a71ef54-94d2-485a-ad7b-00347809cc',
+  version: '3a72cf54-94d2-485a-ad7b-ab347809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -337,12 +337,14 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   },
   aligningPanelConfig: {
     selectedLayerIds: [],
+    mosaicMode: false,
     refLayerId: '',
     currentAlignmentJobId: '',
   },
   stackingPanelConfig: {
     stackFormData: {
       selectedLayerIds: [],
+      propagateMask: false,
       mode: 'average',
       scaling: 'none',
       rejection: 'none',
@@ -3270,6 +3272,7 @@ export class WorkbenchState {
         smartStack: data.smartStacking,
         lo: data.low,
         hi: data.high,
+        propagateMask: data.propagateMask
       },
       state: null,
     };

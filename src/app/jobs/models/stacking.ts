@@ -13,6 +13,7 @@ export interface StackSettings {
   smartStack: 'none' | 'SNR' | 'sharpness'
   lo?: number;
   hi?: number;
+  propagateMask: boolean;
 }
 
 export interface StackingJobResult extends JobResultBase {
