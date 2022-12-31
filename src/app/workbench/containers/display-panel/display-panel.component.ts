@@ -178,7 +178,7 @@ export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestr
 
         if (!normalizers.every(n => n.stretchMode == normalizers[0].stretchMode)) return false;
 
-        let isEqual = (a: number, b: number, p: number) => Math.abs((a - b) / a) <= p
+        let isEqual = (a: number, b: number, p: number) => a == b || Math.abs((a - b) / (a != 0 ? a : 1)) <= p
         if (colorBalanceMode == ColorBalanceMode.PERCENTILE) {
           if (!normalizers.every(n => isEqual(n.peakPercentile, normalizers[0].peakPercentile, 1e-6))) return false;
           if (!normalizers.every(n => isEqual(n.backgroundPercentile, normalizers[0].backgroundPercentile, 1e-6))) return false;
