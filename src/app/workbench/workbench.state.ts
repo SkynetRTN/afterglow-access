@@ -2907,6 +2907,11 @@ export class WorkbenchState {
           state.settings.calibration.catalogOrder = state.settings.calibration.catalogOrder.filter(name => state.catalogs.find(c => c.name == name))
           //add new catalogs
           state.settings.calibration.catalogOrder = [...state.settings.calibration.catalogOrder, ...catalogNames.filter(name => !state.settings.calibration.catalogOrder.includes(name))]
+
+          if (catalogs.length != 0 && state.settings.calibration.selectedCatalogs.length == 0) {
+            let defaultCatalog = catalogs.find(c => c.name.includes('APASS')) || catalogs[0];
+            state.settings.calibration.selectedCatalogs = [defaultCatalog.name];
+          }
           return state;
         });
       }),
