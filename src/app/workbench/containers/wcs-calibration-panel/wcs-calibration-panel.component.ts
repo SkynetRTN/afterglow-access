@@ -374,6 +374,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
 
   ngOnDestroy() {
+    this.markerService.clearMarkers();
     this.destroy$.next(true);
     this.destroy$.unsubscribe();
   }
