@@ -212,7 +212,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
           showOverlay: value.showOverlay,
           selectedLayerIds: value.selectedLayerIds,
           mode: value.mode,
-          refLayerId: value.refLayerId
+          refLayerId: value.refLayerId,
+          activeJobId: null
         })
       );
 
