@@ -3,8 +3,8 @@ import { getPixel, IImageData } from '../../data-files/models/image-data';
 import { CentroidSettings, defaults as defaultCentroidSettings } from './centroid-settings';
 
 
-function getMedian(data: Array<number>) {
-  data.sort((a, b) => a - b);
+function getMedian(data: Array<number>, sort = true) {
+  if (sort) data.sort((a, b) => a - b);
   let lowMiddle = Math.floor((data.length - 1) / 2);
   let highMiddle = Math.ceil((data.length - 1) / 2);
   return (data[lowMiddle] + data[highMiddle]) / 2;
@@ -30,9 +30,10 @@ export function centroidDisk(
 
     let sub = getSubframe(subWidth, imageData, x0, y0);
     let pixels = sub.pixels;
-    let pixelsSorted = pixels.slice();
-    let median = getMedian(pixelsSorted);
-    let diffsSorted = pixelsSorted.map((value) => value - median);
+    let pixelsSorted = pixels.slice().sort((a, b) => a - b);
+    let median = getMedian(pixelsSorted, false);
+    let diffsSorted = pixelsSorted.map((value) => Math.abs(value - median));
+    diffsSorted.sort((a, b) => a - b);
     let minDiff = diffsSorted[0];
     let maxDiff = diffsSorted[diffsSorted.length - 1];
     if (maxDiff == minDiff) return { x: x0, y: y0, xErr: 0, yErr: 0 };
@@ -61,7 +62,7 @@ export function centroidDisk(
     // console.log('old stdev:', Math.sqrt(sqrDiffs.reduce( (sum, value) => sum + value, 0)/sqrDiffs.length));
     // console.log('new stdev:', stdev);
 
-    let thresh = median + 3.0 * stdev;
+    let thresh = median + 3 * stdev;
     let ocxc = sub.cxc;
     let ocyc = sub.cyc;
     let cxc = ocxc;
