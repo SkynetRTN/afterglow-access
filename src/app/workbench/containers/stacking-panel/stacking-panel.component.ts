@@ -11,6 +11,7 @@ import { JobsState } from '../../../jobs/jobs.state';
 import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../../workbench.actions';
 import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
+import { greaterThan, isNumber } from 'src/app/utils/validators';
 
 @Component({
   selector: 'app-stacking-panel',
@@ -40,11 +41,12 @@ export class StackerPanelComponent implements OnInit {
     selectedLayerIds: new FormControl([], Validators.required),
     mode: new FormControl('average', Validators.required),
     scaling: new FormControl('none', Validators.required),
+    equalizeOrder: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
     rejection: new FormControl('none', Validators.required),
     smartStacking: new FormControl('none', Validators.required),
-    percentile: new FormControl(50),
-    low: new FormControl(''),
-    high: new FormControl(''),
+    percentile: new FormControl(50, { validators: [Validators.required, isNumber, greaterThan(0)] }),
+    low: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
+    high: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
     propagateMask: new FormControl('')
   });
 
@@ -70,6 +72,17 @@ export class StackerPanelComponent implements OnInit {
           this.stackForm.get('percentile').enable();
         } else {
           this.stackForm.get('percentile').disable();
+        }
+      });
+
+    this.stackForm
+      .get('scaling')
+      .valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        if (value == 'equalize') {
+          this.stackForm.get('equalizeOrder').enable({ emitEvent: false });
+        } else {
+          this.stackForm.get('equalizeOrder').disable({ emitEvent: false });
         }
       });
 
