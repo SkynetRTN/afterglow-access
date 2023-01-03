@@ -8,6 +8,7 @@ import { SourceExtractionData } from './source-extraction';
 export interface StackSettings {
   mode: 'average' | 'percentile' | 'mode' | 'sum';
   scaling: null | 'average' | 'median' | 'mode' | 'equalize';
+  equalizeOrder: number,
   rejection: null | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
   percentile?: number;
   smartStack: 'none' | 'SNR' | 'sharpness'
