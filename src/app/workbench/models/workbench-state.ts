@@ -81,6 +81,7 @@ export interface StackFormData {
   propagateMask: boolean;
   mode: 'average' | 'percentile' | 'mode' | 'sum';
   scaling: 'none' | 'average' | 'median' | 'mode' | 'equalize';
+  equalizeOrder: number;
   rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
   smartStacking: 'none' | 'SNR';
   percentile?: number;
