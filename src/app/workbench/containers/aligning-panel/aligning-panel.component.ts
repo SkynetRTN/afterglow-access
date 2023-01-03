@@ -5,22 +5,23 @@ import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, 
 import { FormGroup, FormControl, Validators, FormBuilder, AbstractControl } from '@angular/forms';
 import { AligningPanelConfig } from '../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
-import { AKAZEFeatureAlignmentSettings, AlignmentJob, AlignmentJobResult, AlignmentJobSettings, AlignmentJobSettingsBase, AlignmentMode, AutoSourceAlignmentSettings, BRISKFeatureAlignmentSettings, FeatureAlignmentAlgorithm, FeatureAlignmentSettings, KAZEFeatureAlignmentSettings, ORBFeatureAlignmentSettings, PixelAlignmentSettings, SIFTFeatureAlignmentSettings, SourceAlignmentSettings, SURFFeatureAlignmentSettings, WcsAlignmentSettings } from '../../../jobs/models/alignment';
+import { AKAZEFeatureAlignmentSettings, AlignmentJob, AlignmentJobResult, AlignmentJobSettings, AlignmentJobSettingsBase, AlignmentMode, AutoSourceAlignmentSettings, BRISKFeatureAlignmentSettings, FeatureAlignmentAlgorithm, FeatureAlignmentSettings, KAZEFeatureAlignmentSettings, ManualSourceAlignmentSettings, ORBFeatureAlignmentSettings, PixelAlignmentSettings, SIFTFeatureAlignmentSettings, SourceAlignmentSettings, SURFFeatureAlignmentSettings, WcsAlignmentSettings } from '../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
 import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile, UpdatePhotometrySettings, UpdateAlignmentSettings } from '../../workbench.actions';
 import { JobsState } from '../../../jobs/jobs.state';
-import { ImageLayer, DataFile, Header } from '../../../data-files/models/data-file';
+import { ImageLayer, DataFile, Header, getCenterTime } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { LoadLayerHeader } from '../../../data-files/data-files.actions';
-import { Source } from '../../models/source';
+import { Source, sourceToAstrometryData } from '../../models/source';
 import { SourcesState } from '../../sources.state';
 
 import * as objectPath from 'object-path';
 import { AlignmentSettings, defaults } from '../../models/alignment-settings';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
+import { SourceExtractionData } from 'src/app/jobs/models/source-extraction';
 
 
 @Component({
@@ -54,6 +55,7 @@ export class AlignerPageComponent implements OnInit {
   refLayerHasWcs$: Observable<boolean>;
   alignmentJob$: Observable<AlignmentJob>;
   manualSourceOptions$: Observable<Source[]>;
+  manualSourceWarnings$: Observable<string[]>;
 
   alignmentSettingsForm = this.fb.group({
     crop: this.fb.control('', { updateOn: 'change' }),
@@ -190,12 +192,42 @@ export class AlignerPageComponent implements OnInit {
 
     this.manualSourceOptions$ = combineLatest(this.store.select(SourcesState.getEntities), this.refLayerId$).pipe(
       map(([sourcesById, refLayerId]) => {
-        return Object.values(sourcesById).filter(source => !refLayerId || source.layerId == refLayerId)
+        if (!refLayerId) return [];
+        let sources = Object.values(sourcesById).filter(source => source.layerId == refLayerId);
+        return sources;
       })
     )
 
+    let selectedSourceIds$ = this.alignmentSettings$.pipe(
+      map(settings => settings.sourceModeSettings.manualModeSettings.sourceIds),
+      distinctUntilChanged()
+    )
+
+    this.selectedLayerIds$ = this.config$.pipe(
+      map(config => config.selectedLayerIds),
+      distinctUntilChanged()
+    )
 
 
+    this.manualSourceWarnings$ = combineLatest(this.refLayerId$, selectedSourceIds$, this.selectedLayerIds$).pipe(
+      map(([refLayerId, selectedSourceIds, selectedLayerIds]) => {
+        let warnings: string[] = [];
+        let sourceById = this.store.selectSnapshot(SourcesState.getEntities);
+        let sources = Object.values(sourceById);
+        selectedSourceIds.forEach(selectedSourceId => {
+          let selectedSource = sourceById[selectedSourceId];
+          warnings = warnings.concat(selectedLayerIds.filter(layerId => {
+            if (layerId == refLayerId) return false;
+            return !sources.find(s => s.layerId == layerId && s.label == selectedSource.label)
+          }).map(layerId => {
+            let layerName = this.store.selectSnapshot(DataFilesState.getLayerById(layerId))?.name
+            return `Source '${selectedSource.label}' is missing from layer ${layerName}`
+          }))
+        })
+
+        return warnings;
+      })
+    )
 
 
     this.refLayer$ = this.refLayerId$.pipe(
@@ -402,7 +434,7 @@ export class AlignerPageComponent implements OnInit {
       refImage: config.mosaicMode ? null : parseInt(config.refLayerId),
       enableRot: settings.enableRot,
       enableScale: settings.enableScale,
-      enableSkew: settings.enableSkew
+      enableSkew: settings.enableSkew,
     }
     let jobSettings: AlignmentJobSettings;
     if (settings.mode == AlignmentMode.wcs) {
@@ -410,6 +442,49 @@ export class AlignerPageComponent implements OnInit {
         ...jobSettingsBase,
         mode: AlignmentMode.wcs,
         ...settings.wcsModeSettings,
+      }
+      jobSettings = s;
+    }
+    else if (settings.mode == AlignmentMode.sources_manual) {
+
+      //reconstruct source extraction data from sources
+      let sourcesById = this.store.selectSnapshot(SourcesState.getEntities);
+      let sources = Object.values(sourcesById);
+      let selectedSources: Source[] = [];
+      settings.sourceModeSettings.manualModeSettings.sourceIds.forEach(refSourceId => {
+        let refSource = sourcesById[refSourceId];
+        selectedSources.push({ ...refSource, id: refSource.label })
+        let matchingSources = sources.filter(s => s.id != refSource.id && s.label == refSource.label).map(s => {
+          return { ...s, id: refSource.label }
+        })
+        selectedSources = selectedSources.concat(matchingSources)
+      })
+
+
+      let selectedSourceExtractionData: SourceExtractionData[] = selectedSources.map(source => {
+        return {
+          ...sourceToAstrometryData(source),
+          fileId: source.layerId,
+          time: null,
+          filter: null,
+          telescope: null,
+          expLength: null
+        }
+      })
+
+
+
+
+      let s: ManualSourceAlignmentSettings = {
+        ...jobSettingsBase,
+        mode: AlignmentMode.sources_manual,
+        scaleInvariant: settings.sourceModeSettings.scaleInvariant,
+        matchTol: settings.sourceModeSettings.matchTol,
+        minEdge: settings.sourceModeSettings.minEdge,
+        ratioLimit: settings.sourceModeSettings.ratioLimit,
+        confidence: settings.sourceModeSettings.confidence,
+        sources: selectedSourceExtractionData,
+        maxSources: settings.sourceModeSettings.manualModeSettings.maxSources
       }
       jobSettings = s;
     }
@@ -491,7 +566,7 @@ export class AlignerPageComponent implements OnInit {
       }
       jobSettings = s;
     }
-    if (jobSettings) this.store.dispatch(new CreateAlignmentJob(config.selectedLayerIds, settings.crop, jobSettings));
+    if (jobSettings) this.store.dispatch(new CreateAlignmentJob(config.selectedLayerIds, config.mosaicMode ? false : settings.crop, jobSettings));
   }
 
   restoreDefaults() {

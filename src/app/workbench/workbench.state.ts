@@ -190,7 +190,7 @@ import { isWcsCalibrationJob, isWcsCalibrationJobResult, WcsCalibrationJob, WcsC
 import { isStackingJob, StackingJob, StackingJobResult } from '../jobs/models/stacking';
 import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-providers.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { PosType, Source } from './models/source';
+import { PosType, Source, sourceToAstrometryData } from './models/source';
 import { MarkerType, LineMarker, RectangleMarker, CircleMarker } from './models/marker';
 import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
@@ -251,7 +251,7 @@ import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3a72cf54-94d2-485a-ad7b-ab347809cc',
+  version: '3b21cf64-94d2-435a-ad7b-ab347809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -295,7 +295,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     showSourceMarkers: true,
     centroidClicks: true,
     planetCentroiding: false,
-    showSourcesFromAllFiles: true,
+    showSourcesFromAllFiles: false,
     selectedSourceIds: [],
     coordMode: 'sky',
   },
@@ -347,6 +347,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       propagateMask: false,
       mode: 'average',
       scaling: 'none',
+      equalizeOrder: 1,
       rejection: 'none',
       smartStacking: 'none',
       percentile: 50,
@@ -3216,11 +3217,28 @@ export class WorkbenchState {
           }
 
           let layerIds = result.fileIds.map((id) => id.toString());
-          layerIds.push(settings.refImage.toString())
+          if (settings.refImage) {
+            layerIds.push(settings.refImage.toString())
+          }
+
 
           if (job.inplace) {
             layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
             layerIds.forEach((layerId) => actions.push(new InvalidateHeader(layerId)));
+
+            // if (job.settings.mode == AlignmentMode.sources_manual) {
+            //   let originalHeader = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(refLayerId));
+            //   this.store.dispatch(new LoadLayerHeader(refLayerId)).subscribe(
+            //     (action) => {
+            //       let newHeader = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(refLayerId));
+            //       if (originalHeader && newHeader) {
+            //         let deltaX = getWidth(originalHeader) - getWidth(newHeader);
+            //         let deltaY = getHeight(originalHeader) - getHeight(newHeader);
+            //         console.log(deltaX, deltaY)
+            //       }
+            //     }
+            //   )
+            // }
           }
 
           actions.push(new LoadLibrary());
@@ -3272,6 +3290,7 @@ export class WorkbenchState {
       stackingSettings: {
         mode: data.mode,
         scaling: data.scaling == 'none' ? null : data.scaling,
+        equalizeOrder: data.equalizeOrder,
         rejection: data.rejection == 'none' ? null : data.rejection,
         percentile: data.percentile,
         smartStack: data.smartStacking,
@@ -3522,46 +3541,7 @@ export class WorkbenchState {
         settings: photometryJobSettings,
         id: null,
         fileIds: [layerId],
-        sources: sources.map((source, index) => {
-          let x = null;
-          let y = null;
-          let pmPixel = null;
-          let pmPosAnglePixel = null;
-          let raHours = null;
-          let decDegs = null;
-          let pmSky = null;
-          let pmPosAngleSky = null;
-
-          if (source.posType == PosType.PIXEL) {
-            x = source.primaryCoord;
-            y = source.secondaryCoord;
-            pmPixel = source.pm;
-            pmPosAnglePixel = source.pmPosAngle;
-          } else {
-            raHours = source.primaryCoord;
-            decDegs = source.secondaryCoord;
-            pmSky = source.pm;
-            if (pmSky) pmSky /= 3600.0;
-            pmPosAngleSky = source.pmPosAngle;
-          }
-
-          let s: Astrometry & SourceId = {
-            id: source.id,
-            pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
-            x: x,
-            y: y,
-            pmPixel: pmPixel,
-            pmPosAnglePixel: pmPosAnglePixel,
-            raHours: raHours,
-            decDegs: decDegs,
-            pmSky: pmSky,
-            pmPosAngleSky: pmPosAngleSky,
-            fwhmX: null,
-            fwhmY: null,
-            theta: null,
-          };
-          return s;
-        }),
+        sources: sources.map((source, index) => sourceToAstrometryData(source)),
         state: null,
       };
 

@@ -180,17 +180,20 @@ export class SourcePanelComponent implements AfterViewInit, OnDestroy, OnInit {
       map(([sourceEntities, coordMode, showSourcesFromAllFiles, imageLayerId, header]) => {
         if (!header) return [];
         if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
-        let localSourceLabels = Object.values(sourceEntities).filter(source => source.layerId == imageLayerId).map(source => source.label)
 
-        return Object.values(sourceEntities).filter((source) => {
-          if (coordMode != source.posType) return false;
-          if (source.layerId == imageLayerId) return true;
-          if (!showSourcesFromAllFiles) return false;
-          if (localSourceLabels.includes(source.label)) return false;
-          // let coord = getSourceCoordinates(header, source);
-          // if (coord == null) return false;
-          return true;
+        let result: Source[] = [];
+        Object.values(sourceEntities).forEach((source) => {
+          if (coordMode != source.posType) return;
+          if (source.layerId != imageLayerId) {
+            if (!showSourcesFromAllFiles) return;
+          }
+
+          // if (result.find(s => s.label == source.label)) return;
+
+          result.push(source)
         });
+
+        return result;
       }),
       shareReplay(1)
     );

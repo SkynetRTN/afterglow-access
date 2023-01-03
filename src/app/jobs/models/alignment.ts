@@ -1,10 +1,12 @@
 import { TypeGuard } from 'src/app/utils/guard-type.pipe';
 import { SourceExtractionSettings } from 'src/app/workbench/models/source-extraction-settings';
+import { Astrometry } from './astrometry';
 import { Job } from './job';
 import { JobBase, JobResultBase } from './job-base';
 import { JobResult } from './job-result';
 import { JobType } from './job-types';
 import { SourceExtractionData, SourceExtractionJobSettings } from './source-extraction';
+import { SourceId } from './source-id';
 
 export enum AlignmentMode {
   wcs = 'WCS',
@@ -47,7 +49,7 @@ export interface SourceAlignmentSettings extends AlignmentJobSettingsBase {
 export interface ManualSourceAlignmentSettings extends SourceAlignmentSettings {
   readonly mode: AlignmentMode.sources_manual;
   maxSources: number;
-  sources: SourceExtractionData[]
+  sources: Array<SourceExtractionData>
 }
 
 export interface AutoSourceAlignmentSettings extends SourceAlignmentSettings {

@@ -42,7 +42,7 @@
       </div> -->
       <ng-container formGroupName="alignmentSettingsForm">
         <div class="flex flex-row gap-3 pb-6">
-          <mat-slide-toggle formControlName="crop"> Crop </mat-slide-toggle>
+          <mat-slide-toggle formControlName="crop" *ngIf="!mosaicToggle.checked"> Crop </mat-slide-toggle>
           <mat-slide-toggle formControlName="enableRot"> Enable Rotation</mat-slide-toggle>
           <mat-slide-toggle formControlName="enableScale"> Enable Scale</mat-slide-toggle>
           <mat-slide-toggle formControlName="enableSkew"> Enable Skew</mat-slide-toggle>
@@ -51,7 +51,7 @@
           <mat-label i18n>Mode</mat-label>
           <mat-select #modeSelect formControlName="mode">
             <mat-option [value]="AlignmentMode.wcs">WCS</mat-option>
-            <!-- <mat-option [value]="AlignmentMode.sources_manual">Sources - manual</mat-option> -->
+            <mat-option [value]="AlignmentMode.sources_manual">Sources - manual</mat-option>
             <mat-option [value]="AlignmentMode.sources_auto">Sources - Auto</mat-option>
             <mat-option [value]="AlignmentMode.features">Features</mat-option>
             <mat-option [value]="AlignmentMode.pixels">Pixels</mat-option>
@@ -93,11 +93,29 @@
             </mat-form-field>
           </div>
 
-          <div *ngIf="modeSelect.value==AlignmentMode.sources_manual">
+          <div *ngIf="modeSelect.value==AlignmentMode.sources_manual" formGroupName="manualModeSettings">
             <p>Use the source catalog tool to mark the same source in all of your selected images then merge the sources
               into a single source with the same name. These sources will appear in the list below and can be used to
               manually align your images.</p>
-            <p>insert here selection here</p>
+            <mat-form-field appearance="outline">
+              <mat-label i18n>Manual Align Sources</mat-label>
+              <mat-select formControlName="sourceIds" multiple>
+                <mat-option *ngFor="let source of manualSourceOptions$ | async" [value]="source.id">{{source.label}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <ng-container *ngIf="manualSourceWarnings$ | async; let manualSourceWarnings">
+              <div *ngIf="manualSourceWarnings.length != 0"
+                class="alert alert-warning flex flex-col max-h-72 overflow-auto">
+                <span *ngFor="let warning of manualSourceWarnings">
+                  {{ warning}}
+                </span>
+              </div>
+            </ng-container>
+
+
+
           </div>
           <div *ngIf="modeSelect.value==AlignmentMode.sources_auto">
             <p>Source extractions settings will be used to automatically locate sources in the selected images and match
@@ -331,16 +349,23 @@
 
     </div>
     <ng-container *ngIf="modeSelect.value==AlignmentMode.wcs && !mosaicToggle.checked; else submitBlock">
-      <div *ngIf="!(refHeader$ | async) || (refHeader$ | async).loading; else wcsLoadedBlock" class="alert alert-info"
-        style="margin-top: 10px" i18n>
-        Reference header loading...
-      </div>
-      <ng-template #wcsLoadedBlock>
-        <div *ngIf="!(refLayerHasWcs$ | async); else submitBlock" class="alert alert-warning" style="margin-top: 10px"
-          i18n>
-          Your reference layer does not have WCS data in its header. Choose a different reference layer.
+      <ng-container *ngIf="(refHeader$ | async); let refHeader; else noRefHeaderBlock">
+        <div *ngIf="refHeader.loading; else wcsLoadedBlock" class="alert alert-info" style="margin-top: 10px" i18n>
+          Reference header loading...
+        </div>
+        <ng-template #wcsLoadedBlock>
+          <div *ngIf="!(refLayerHasWcs$ | async); else submitBlock" class="alert alert-warning" style="margin-top: 10px"
+            i18n>
+            Your reference layer does not have WCS data in its header. Choose a different reference layer.
+          </div>
+        </ng-template>
+      </ng-container>
+      <ng-template #noRefHeaderBlock>
+        <div class="alert alert-warning" style="margin-top: 10px" i18n>
+          Please select a reference image file.
         </div>
       </ng-template>
+
     </ng-container>
     <ng-template #submitBlock>
       <div class="flex flex-row w-full gap-4 justify-between">

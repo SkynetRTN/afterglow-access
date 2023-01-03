@@ -16,10 +16,10 @@ export interface AlignmentSettings {
         ratioLimit: number;
         confidence: number;
         manualModeSettings: {
-            maxSources: number
+            maxSources: number,
+            sourceIds: string[],
         };
         autoModeSettings: {
-            maxSources: number
         };
     };
     featureModeSettings: {
@@ -97,10 +97,10 @@ export const defaults: AlignmentSettings = {
         ratioLimit: 10,
         confidence: .15,
         manualModeSettings: {
-            maxSources: 100
+            maxSources: 100,
+            sourceIds: [],
         },
         autoModeSettings: {
-            maxSources: 100
         }
     },
     featureModeSettings: {
