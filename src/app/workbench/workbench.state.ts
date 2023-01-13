@@ -251,7 +251,7 @@ import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b21cf64-94d2-435a-ad7b-ab347809cc',
+  version: '3b21cf64-93d2-435a-ff7b-ab357809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -338,6 +338,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   aligningPanelConfig: {
     selectedLayerIds: [],
     mosaicMode: false,
+    mosaicSearchRadius: 1,
     refLayerId: '',
     currentAlignmentJobId: '',
   },

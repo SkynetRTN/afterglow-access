@@ -131,6 +131,7 @@ export interface PixelOpsPanelConfig {
 export interface AligningPanelConfig {
   selectedLayerIds: string[];
   mosaicMode: boolean;
+  mosaicSearchRadius: number;
   refLayerId: string;
   currentAlignmentJobId: string;
 }

@@ -26,6 +26,8 @@ export interface AlignmentSettings {
         algorithm: FeatureAlignmentAlgorithm;
         ratioThreshold: number;
         detectEdges: boolean;
+        percentileMin: number;
+        percentileMax: number;
         akazeAlgorithmSettings: {
             descriptorType: string;
             descriptorSize: number;
@@ -107,6 +109,8 @@ export const defaults: AlignmentSettings = {
         algorithm: FeatureAlignmentAlgorithm.AKAZE,
         ratioThreshold: 0.5,
         detectEdges: false,
+        percentileMax: 99,
+        percentileMin: 10,
         akazeAlgorithmSettings: {
             descriptorType: 'MLDB',
             descriptorSize: 0,

@@ -31,6 +31,7 @@ export interface AlignmentJobSettingsBase {
   enableRot: boolean;
   enableScale: boolean;
   enableSkew: boolean;
+  mosaicSearchRadius: number;
 }
 
 export interface WcsAlignmentSettings extends AlignmentJobSettingsBase {
@@ -61,6 +62,8 @@ export interface FeatureAlignmentSettings extends AlignmentJobSettingsBase {
   readonly mode: AlignmentMode.features;
   ratioThreshold: number;
   detectEdges: boolean;
+  percentileMin: number;
+  percentileMax: number;
 }
 
 export interface AKAZEFeatureAlignmentSettings extends FeatureAlignmentSettings {

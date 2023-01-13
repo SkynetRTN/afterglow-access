@@ -81,6 +81,8 @@ export class AlignerPageComponent implements OnInit {
       algorithm: this.fb.control('', { updateOn: 'change' }),
       ratioThreshold: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
       detectEdges: this.fb.control('', { updateOn: 'change' }),
+      percentileMin: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      percentileMax: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
       akazeAlgorithmSettings: this.fb.group({
         descriptorType: this.fb.control('', { validators: [Validators.required], updateOn: 'blur' }),
         descriptorSize: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
@@ -138,6 +140,7 @@ export class AlignerPageComponent implements OnInit {
   layerSelectionForm = this.fb.group({
     selectedLayerIds: this.fb.control([], Validators.required),
     mosaicMode: this.fb.control('', { validators: Validators.required, updateOn: 'change' }),
+    mosaicSearchRadius: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     refLayerId: this.fb.control('', Validators.required),
   })
 
@@ -322,9 +325,11 @@ export class AlignerPageComponent implements OnInit {
 
     if (mosaicMode) {
       this.layerSelectionForm.controls['refLayerId'].disable({ emitEvent: false });
+      this.layerSelectionForm.controls['mosaicSearchRadius'].enable({ emitEvent: false });
     }
     else {
       this.layerSelectionForm.controls['refLayerId'].enable({ emitEvent: false });
+      this.layerSelectionForm.controls['mosaicSearchRadius'].disable({ emitEvent: false });
     }
 
     this.store.dispatch(new UpdateAligningPanelConfig(this.layerSelectionForm.value))
@@ -432,6 +437,7 @@ export class AlignerPageComponent implements OnInit {
     let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getSettings));
     let jobSettingsBase: AlignmentJobSettingsBase = {
       refImage: config.mosaicMode ? null : parseInt(config.refLayerId),
+      mosaicSearchRadius: config.mosaicSearchRadius,
       enableRot: settings.enableRot,
       enableScale: settings.enableScale,
       enableSkew: settings.enableSkew,
@@ -507,7 +513,9 @@ export class AlignerPageComponent implements OnInit {
         ...jobSettingsBase,
         mode: AlignmentMode.features,
         detectEdges: settings.featureModeSettings.detectEdges,
-        ratioThreshold: settings.featureModeSettings.ratioThreshold
+        ratioThreshold: settings.featureModeSettings.ratioThreshold,
+        percentileMax: settings.featureModeSettings.percentileMax,
+        percentileMin: settings.featureModeSettings.percentileMin
       }
       if (settings.featureModeSettings.algorithm == FeatureAlignmentAlgorithm.AKAZE) {
         let alg: AKAZEFeatureAlignmentSettings = {
