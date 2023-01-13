@@ -3197,55 +3197,49 @@ export class WorkbenchState {
     };
 
     let job$ = this.jobService.createJob(job);
-    return job$.pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.aligningPanelConfig.currentAlignmentJobId = job.id;
-            return state;
-          });
+
+    job$.pipe(
+      takeUntil(this.actions$.pipe(ofActionDispatched(CreateAlignmentJob))),
+      take(1)
+    ).subscribe(job => {
+      if (job.id) {
+        setState((state: WorkbenchStateModel) => {
+          state.aligningPanelConfig.currentAlignmentJobId = job.id;
+          return state;
+        });
+      }
+    })
+
+    job$.subscribe(job => {
+      if (job.state.status == 'completed' && job.result) {
+        let actions: any[] = [];
+        if (!isAlignmentJob(job)) return;
+        let result = job.result;
+        if (result.errors.length != 0) {
+          console.error('Errors encountered during aligning: ', result.errors);
         }
-        if (job.state.status == 'completed' && job.result) {
-          let actions: any[] = [];
-          if (!isAlignmentJob(job)) return;
-          let result = job.result;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered during aligning: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered during aligning: ', result.warnings);
-          }
-
-          let layerIds = result.fileIds.map((id) => id.toString());
-          if (settings.refImage) {
-            layerIds.push(settings.refImage.toString())
-          }
-
-
-          if (job.inplace) {
-            layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
-            layerIds.forEach((layerId) => actions.push(new InvalidateHeader(layerId)));
-
-            // if (job.settings.mode == AlignmentMode.sources_manual) {
-            //   let originalHeader = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(refLayerId));
-            //   this.store.dispatch(new LoadLayerHeader(refLayerId)).subscribe(
-            //     (action) => {
-            //       let newHeader = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(refLayerId));
-            //       if (originalHeader && newHeader) {
-            //         let deltaX = getWidth(originalHeader) - getWidth(newHeader);
-            //         let deltaY = getHeight(originalHeader) - getHeight(newHeader);
-            //         console.log(deltaX, deltaY)
-            //       }
-            //     }
-            //   )
-            // }
-          }
-
-          actions.push(new LoadLibrary());
-          dispatch(actions);
+        if (result.warnings.length != 0) {
+          console.error('Warnings encountered during aligning: ', result.warnings);
         }
-      })
-    )
+
+        let layerIds = result.fileIds.map((id) => id.toString());
+        if (settings.refImage) {
+          layerIds.push(settings.refImage.toString())
+        }
+
+
+        if (job.inplace) {
+          layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
+          layerIds.forEach((layerId) => actions.push(new InvalidateHeader(layerId)));
+        }
+
+        actions.push(new LoadLibrary());
+        dispatch(actions);
+      }
+    })
+
+
+    return job$
   }
 
   @Action(CreateStackingJob)
