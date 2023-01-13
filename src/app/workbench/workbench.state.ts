@@ -3252,86 +3252,69 @@ export class WorkbenchState {
   @ImmutableContext()
   public createStackingJob(
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerIds: layerIds }: CreateStackingJob
+    { layerIds, settings, outFilename }: CreateStackingJob
   ) {
-    let state = getState();
-    let data = state.stackingPanelConfig.stackFormData;
-    let layers = this.store.selectSnapshot(DataFilesState.getLayers);
-
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageLayers = layerIds.map((id) => layers.find((f) => f.id == id)).filter(isNotEmpty);
-    let existingFileNames = layers.map(layer => layer.name)
-    let stackedName = getLongestCommonStartingSubstring(imageLayers.map(layer => layer.name)).replace(/_+$/, '').trim();
-
-    if (stackedName) {
-      stackedName = `${stackedName}_stack`
-      let base = stackedName
-      let iter = 0
-      while (existingFileNames.includes(`${stackedName}.fits`)) {
-        stackedName = `${base}_${iter}`
-        iter += 1;
-      }
-    }
-
-
-
     let job: StackingJob = {
       type: JobType.Stacking,
       id: null,
-      fileIds: imageLayers
-        .sort((a, b) =>
-          dataFiles[a.fileId].name < dataFiles[b.fileId].name
-            ? -1
-            : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0
-        )
-        .map((f) => f.id),
-      stackingSettings: {
-        mode: data.mode,
-        scaling: data.scaling == 'none' ? null : data.scaling,
-        equalizeOrder: data.equalizeOrder,
-        rejection: data.rejection == 'none' ? null : data.rejection,
-        percentile: data.percentile,
-        smartStack: data.smartStacking,
-        lo: data.low,
-        hi: data.high,
-        propagateMask: data.propagateMask
-      },
+      fileIds: layerIds,
+      stackingSettings: settings,
       state: null,
     };
 
-
     let job$ = this.jobService.createJob(job);
-    return job$.pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.stackingPanelConfig.currentStackingJobId = job.id;
-            return state;
-          });
+
+    job$.pipe(
+      takeUntil(this.actions$.pipe(ofActionDispatched(CreateStackingJob))),
+      take(1)
+    ).subscribe(job => {
+      if (job.id) {
+        setState((state: WorkbenchStateModel) => {
+          state.stackingPanelConfig.currentStackingJobId = job.id;
+          return state;
+        });
+      }
+    })
+
+    job$.subscribe(job => {
+      if (job.state.status == 'completed' && job.result) {
+        if (!isStackingJob(job)) return;
+        let result = job.result;
+        if (result.errors.length != 0) {
+          console.error('Errors encountered during stacking: ', result.errors);
         }
-        if (job.state.status == 'completed' && job.result) {
-          if (!isStackingJob(job)) return;
-          let result = job.result;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered during stacking: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered during stacking: ', result.warnings);
-          }
-          if (result.fileId && stackedName) {
+        if (result.warnings.length != 0) {
+          console.error('Warnings encountered during stacking: ', result.warnings);
+        }
+        if (result.fileId) {
+          dispatch(new LoadLibrary()).subscribe(() => {
+            let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities)
+            let existingFileNames = Object.values(layerEntities).map(layer => layer.name)
+            let selectedFilenames = job.fileIds.map(id => layerEntities[id].name)
+            let outFilename = getLongestCommonStartingSubstring(selectedFilenames).replace(/_+$/, '').trim();
+
+            if (outFilename) {
+              outFilename = `${outFilename}_stack`
+              let base = outFilename
+              let iter = 0
+              while (existingFileNames.includes(`${outFilename}.fits`)) {
+                outFilename = `${base}_${iter}`
+                iter += 1;
+              }
+            }
             this.dataFileService.updateFile(result.fileId, {
-              groupName: `${stackedName}.fits`,
-              name: `${stackedName}.fits`
+              groupName: `${outFilename}.fits`,
+              name: `${outFilename}.fits`
             }).pipe(
               flatMap(() => dispatch(new LoadLibrary()))
             ).subscribe()
-          }
-          dispatch(new LoadLibrary())
+          })
+
         }
-      })
-    )
+      }
+    })
+
+    return job$
   }
 
   @Action(CreateWcsCalibrationJob)

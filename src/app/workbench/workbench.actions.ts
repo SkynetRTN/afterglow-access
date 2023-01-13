@@ -34,6 +34,7 @@ import { CalibrationSettings } from './models/calibration-settings';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 import { AlignmentSettings } from './models/alignment-settings';
 import { AlignmentJobSettings } from '../jobs/models/alignment';
+import { StackSettings } from '../jobs/models/stacking';
 
 /* Core */
 
@@ -434,7 +435,7 @@ export class CreateAlignmentJob {
 
 export class CreateStackingJob {
   public static readonly type = '[Workbench] Create Stacking Job';
-  constructor(public layerIds: string[]) { }
+  constructor(public layerIds: string[], public settings: StackSettings, public outFilename: string) { }
 }
 
 export class CreateWcsCalibrationJob {

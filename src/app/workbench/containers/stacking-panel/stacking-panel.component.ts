@@ -3,7 +3,7 @@ import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from 'rxjs/operators';
 import { StackFormData, WorkbenchTool, StackingPanelConfig } from '../../models/workbench-state';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { StackingJob, StackingJobResult } from '../../../jobs/models/stacking';
+import { StackingJob, StackingJobResult, StackSettings } from '../../../jobs/models/stacking';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
@@ -12,6 +12,7 @@ import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../
 import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
+import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 
 @Component({
   selector: 'app-stacking-panel',
@@ -36,6 +37,7 @@ export class StackerPanelComponent implements OnInit {
   stackFormData$: Observable<StackFormData>;
   stackingJob$: Observable<StackingJob>;
   dataFileEntities$: Observable<{ [id: string]: DataFile }>;
+  showPropagateMask$ = new BehaviorSubject<boolean>(false);
 
   stackForm = new FormGroup({
     selectedLayerIds: new FormControl([], Validators.required),
@@ -63,6 +65,11 @@ export class StackerPanelComponent implements OnInit {
         });
       }
     });
+
+    this.store.select(WorkbenchState.getAligningPanelConfig).pipe(
+      takeUntil(this.destroy$),
+      map(config => !config?.mosaicMode)
+    ).subscribe(value => this.showPropagateMask$.next(value))
 
     this.stackForm
       .get('mode')
@@ -157,9 +164,45 @@ export class StackerPanelComponent implements OnInit {
     this.setSelectedLayerIds([]);
   }
 
-  submit(data: StackFormData) {
+  submit() {
+    let showPropagateMask = this.showPropagateMask$.value;
     let selectedLayerIds: string[] = this.stackForm.controls.selectedLayerIds.value;
-    this.store.dispatch(new CreateStackingJob(selectedLayerIds));
+    let state = this.store.selectSnapshot(WorkbenchState.getState)
+    let data = state.stackingPanelConfig.stackFormData;
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
+
+    let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    selectedLayerIds = selectedLayerIds.filter((id) => isNotEmpty(layerEntities[id]));
+    selectedLayerIds = selectedLayerIds.sort((a, b) => {
+      let aFile = dataFileEntities[layerEntities[a].fileId];
+      let bFile = dataFileEntities[layerEntities[b].fileId];
+      return aFile.name < bFile.name
+        ? -1
+        : aFile.name > bFile.name
+          ? 1
+          : 0
+    })
+
+
+
+
+
+    let settings: StackSettings = {
+      mode: data.mode,
+      scaling: data.scaling == 'none' ? null : data.scaling,
+      equalizeOrder: data.equalizeOrder,
+      rejection: data.rejection == 'none' ? null : data.rejection,
+      percentile: data.percentile,
+      smartStack: data.smartStacking,
+      lo: data.low,
+      hi: data.high,
+      propagateMask: showPropagateMask ? data.propagateMask : false
+    }
+
+
+
+
+    this.store.dispatch(new CreateStackingJob(selectedLayerIds, settings, null));
   }
 
   ngOnInit() { }

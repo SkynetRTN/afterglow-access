@@ -87,12 +87,12 @@
         </mat-select>
       </mat-form-field>
     </div>
-    <div class="pb-4">
+    <div class="pb-4" *ngIf="showPropagateMask$ | async">
       <mat-slide-toggle formControlName="propagateMask"> Propagate Mask</mat-slide-toggle>
     </div>
 
     <div style="clear: both"></div>
-    <button mat-raised-button (click)="submit(stackForm.value)" [disabled]="!stackForm.valid" class="float-right" i18n>
+    <button mat-raised-button (click)="submit()" [disabled]="!stackForm.valid" class="float-right" i18n>
       Submit
     </button>
     <div style="clear: both"></div>
