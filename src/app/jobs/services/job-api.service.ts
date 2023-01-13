@@ -27,6 +27,10 @@ export class JobApiService {
     return this.http.get<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs/${jobId}`);
   }
 
+  cancelJob(jobId: string) {
+    return this.http.put<CoreApiResponse<Job>>(`${getCoreApiUrl(this.config)}/jobs/${jobId}/state`, { status: 'canceled' });
+  }
+
   getJobState(jobId: string) {
     return this.http.get<CoreApiResponse<JobStateBase>>(`${getCoreApiUrl(this.config)}/jobs/${jobId}/state`);
   }

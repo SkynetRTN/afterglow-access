@@ -4,7 +4,8 @@
             <ng-container *ngIf="(jobs$ | async) as jobs">
                 <ng-container *ngIf="jobs.length != 0; else noItems">
                     <app-jobs-table [jobs]="jobs" [selectedJob]="selectedJob$ | async"
-                        (selectionChange)="onSelectedJobChange($event)" class="w-full h-full">
+                        (selectionChange)="onSelectedJobChange($event)" (cancelJob)="onCancelJob($event)"
+                        class="w-full h-full">
                     </app-jobs-table>
                 </ng-container>
             </ng-container>

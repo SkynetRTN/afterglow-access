@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Select, Store } from '@ngxs/store';
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, map, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
-import { LoadJob, LoadJobResult, LoadJobs, SelectJob } from '../../jobs.actions';
+import { CancelJob, LoadJob, LoadJobResult, LoadJobs, SelectJob } from '../../jobs.actions';
 import { JobsState } from '../../jobs.state';
 import { Job } from '../../models/job';
 import { JobResult } from '../../models/job-result';
@@ -90,6 +90,10 @@ export class JobsPageComponent implements OnInit, OnDestroy {
 
   onSelectedJobChange(job: Job) {
     this.router.navigate(['jobs', job.id], { replaceUrl: true })
+  }
+
+  onCancelJob(job: Job) {
+    this.store.dispatch(new CancelJob(job))
   }
 
   ngOnDestroy(): void {

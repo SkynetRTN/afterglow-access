@@ -24,6 +24,7 @@ import {
   UpdateJobState,
   UpdateJobResult,
   LoadJobResult,
+  CancelJob,
 } from './jobs.actions';
 import { JobApiService } from './services/job-api.service';
 import { ResetState } from '../auth/auth.actions';
@@ -138,6 +139,16 @@ export class JobsState {
       state.jobs[job.id] = job;
       return state;
     })
+  }
+
+  @Action(CancelJob)
+  @ImmutableContext()
+  public cancelJob({ setState, getState, dispatch }: StateContext<JobsStateModel>, { job }: CancelJob) {
+    this.jobService.cancelJob(job.id).subscribe(
+      () => {
+
+      }
+    )
   }
 
   @Action(UpdateJobState)
