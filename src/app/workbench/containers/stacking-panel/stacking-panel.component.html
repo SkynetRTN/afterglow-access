@@ -68,13 +68,9 @@
           <mat-option value="average" i18n>average</mat-option>
           <mat-option value="median" i18n>median</mat-option>
           <mat-option value="mode" i18n>mode</mat-option>
-          <mat-option value="equalize" i18n>equalize</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field *ngIf="scalingSelect.value == 'equalize'" appearance="outline">
-        <mat-label i18n>Equalization Order</mat-label>
-        <input matInput formControlName="equalizeOrder" type="number" />
-      </mat-form-field>
+
     </div>
 
     <div>
@@ -86,6 +82,20 @@
           <mat-option value="sharpness" i18n>sharpness</mat-option>
         </mat-select>
       </mat-form-field>
+    </div>
+    <div class="flex flex-wrap gap-8 items-center mb-4">
+      <mat-slide-toggle formControlName="equalizeAdditive"> Additive
+        Equalization</mat-slide-toggle>
+      <mat-form-field appearance="outline">
+        <mat-label i18n>Equalization Order</mat-label>
+        <input matInput formControlName="equalizeOrder" type="number" />
+      </mat-form-field>
+    </div>
+    <div class="flex flex-wrap gap-8 mb-4">
+      <mat-slide-toggle formControlName="equalizeMultiplicative"> Multiplicative
+        Equalization</mat-slide-toggle>
+      <mat-slide-toggle formControlName="equalizeGlobal"> Global Equalization</mat-slide-toggle>
+
     </div>
     <div class="pb-4" *ngIf="showPropagateMask$ | async">
       <mat-slide-toggle formControlName="propagateMask"> Propagate Mask</mat-slide-toggle>

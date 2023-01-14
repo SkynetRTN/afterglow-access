@@ -251,7 +251,7 @@ import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b21cf64-93d2-435a-ff7b-ab357809cc',
+  version: '3b21cf65-93d2-435a-ff7b-ab357809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -348,12 +348,16 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       propagateMask: false,
       mode: 'average',
       scaling: 'none',
-      equalizeOrder: 1,
       rejection: 'none',
       smartStacking: 'none',
       percentile: 50,
       low: 0,
       high: 0,
+      equalizeAdditive: false,
+      equalizeOrder: 0,
+      equalizeMultiplicative: false,
+      equalizeGlobal: false,
+
     },
     currentStackingJobId: '',
   },

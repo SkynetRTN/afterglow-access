@@ -7,14 +7,17 @@ import { SourceExtractionData } from './source-extraction';
 
 export interface StackSettings {
   mode: 'average' | 'percentile' | 'mode' | 'sum';
-  scaling: null | 'average' | 'median' | 'mode' | 'equalize';
-  equalizeOrder: number,
+  scaling: null | 'average' | 'median' | 'mode';
   rejection: null | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
   percentile?: number;
-  smartStack: 'none' | 'SNR' | 'sharpness'
+  smartStacking: 'none' | 'SNR' | 'sharpness'
   lo?: number;
   hi?: number;
   propagateMask: boolean;
+  equalizeAdditive: boolean;
+  equalizeOrder: number;
+  equalizeMultiplicative: boolean;
+  equalizeGlobal: boolean;
 }
 
 export interface StackingJobResult extends JobResultBase {

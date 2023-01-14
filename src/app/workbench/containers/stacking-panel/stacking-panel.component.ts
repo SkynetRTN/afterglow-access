@@ -43,13 +43,16 @@ export class StackerPanelComponent implements OnInit {
     selectedLayerIds: new FormControl([], Validators.required),
     mode: new FormControl('average', Validators.required),
     scaling: new FormControl('none', Validators.required),
-    equalizeOrder: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
     rejection: new FormControl('none', Validators.required),
     smartStacking: new FormControl('none', Validators.required),
     percentile: new FormControl(50, { validators: [Validators.required, isNumber, greaterThan(0)] }),
     low: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
     high: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
-    propagateMask: new FormControl('')
+    propagateMask: new FormControl(''),
+    equalizeAdditive: new FormControl(''),
+    equalizeOrder: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
+    equalizeMultiplicative: new FormControl(''),
+    equalizeGlobal: new FormControl(''),
   });
 
   constructor(private store: Store, private router: Router) {
@@ -71,40 +74,20 @@ export class StackerPanelComponent implements OnInit {
       map(config => !config?.mosaicMode)
     ).subscribe(value => this.showPropagateMask$.next(value))
 
+    this.stackForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.onStackSettingsFormChange());
+
     this.stackForm
-      .get('mode')
+      .get('equalizeAdditive')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (value == 'percentile') {
-          this.stackForm.get('percentile').enable();
-        } else {
-          this.stackForm.get('percentile').disable();
+        if (value) {
+          this.stackForm.get('equalizeGlobal').setValue(true);
         }
       });
 
-    this.stackForm
-      .get('scaling')
-      .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (value == 'equalize') {
-          this.stackForm.get('equalizeOrder').enable({ emitEvent: false });
-        } else {
-          this.stackForm.get('equalizeOrder').disable({ emitEvent: false });
-        }
-      });
 
-    this.stackForm
-      .get('rejection')
-      .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (['iraf', 'minmax', 'sigclip', 'rcr', 'chauvenet'].includes(value)) {
-          this.stackForm.get('high').enable({ emitEvent: false });
-          this.stackForm.get('low').enable({ emitEvent: false });
-        } else {
-          this.stackForm.get('high').disable({ emitEvent: false });
-          this.stackForm.get('low').disable({ emitEvent: false });
-        }
-      });
 
     this.stackFormData$ = store.select(WorkbenchState.getState).pipe(
       takeUntil(this.destroy$),
@@ -136,6 +119,37 @@ export class StackerPanelComponent implements OnInit {
       this.store.dispatch(new UpdateStackingPanelConfig({ stackFormData: this.stackForm.value }));
       // }
     });
+
+
+    this.onStackSettingsFormChange();
+  }
+
+  onStackSettingsFormChange() {
+
+    let rejection = this.stackForm.get('rejection').value
+
+    if (['iraf', 'minmax', 'sigclip', 'rcr', 'chauvenet'].includes(rejection)) {
+      this.stackForm.get('high').enable({ emitEvent: false });
+      this.stackForm.get('low').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('high').disable({ emitEvent: false });
+      this.stackForm.get('low').disable({ emitEvent: false });
+    }
+
+    let equalizeAdditive = this.stackForm.get('equalizeAdditive').value;
+    if (equalizeAdditive) {
+      this.stackForm.get('equalizeOrder').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('equalizeOrder').disable({ emitEvent: false });
+    }
+
+    let mode = this.stackForm.get('mode').value;
+    if (mode == 'percentile') {
+      this.stackForm.get('percentile').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('percentile').disable({ emitEvent: false });
+    }
+
   }
 
   getLayerOptionLabel(layerId: string) {
@@ -190,13 +204,16 @@ export class StackerPanelComponent implements OnInit {
     let settings: StackSettings = {
       mode: data.mode,
       scaling: data.scaling == 'none' ? null : data.scaling,
-      equalizeOrder: data.equalizeOrder,
       rejection: data.rejection == 'none' ? null : data.rejection,
       percentile: data.percentile,
-      smartStack: data.smartStacking,
+      smartStacking: data.smartStacking,
       lo: data.low,
       hi: data.high,
-      propagateMask: showPropagateMask ? data.propagateMask : false
+      propagateMask: showPropagateMask ? data.propagateMask : false,
+      equalizeAdditive: data.equalizeAdditive,
+      equalizeOrder: data.equalizeOrder,
+      equalizeMultiplicative: data.equalizeMultiplicative,
+      equalizeGlobal: data.equalizeGlobal
     }
 
 
