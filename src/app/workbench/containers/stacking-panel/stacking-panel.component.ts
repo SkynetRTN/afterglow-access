@@ -179,6 +179,8 @@ export class StackerPanelComponent implements OnInit {
   }
 
   submit() {
+    this.store.dispatch(new UpdateStackingPanelConfig({ currentStackingJobId: null }));
+
     let showPropagateMask = this.showPropagateMask$.value;
     let selectedLayerIds: string[] = this.stackForm.controls.selectedLayerIds.value;
     let state = this.store.selectSnapshot(WorkbenchState.getState)

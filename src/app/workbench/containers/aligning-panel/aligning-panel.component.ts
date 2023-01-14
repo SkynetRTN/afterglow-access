@@ -432,6 +432,8 @@ export class AlignerPageComponent implements OnInit {
   }
 
   submit() {
+    this.store.dispatch(new UpdateAligningPanelConfig({ currentAlignmentJobId: null }));
+
     let config = this.store.selectSnapshot(WorkbenchState.getAligningPanelConfig);
     let settings = this.store.selectSnapshot(WorkbenchState.getAlignmentSettings);
     let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getSettings));

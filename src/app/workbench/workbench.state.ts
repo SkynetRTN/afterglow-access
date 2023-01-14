@@ -2385,8 +2385,6 @@ export class WorkbenchState {
         ...changes,
       };
 
-      state.aligningPanelConfig.currentAlignmentJobId = '';
-
       return state;
     });
   }
@@ -2410,7 +2408,6 @@ export class WorkbenchState {
         ...changes,
       };
 
-      state.stackingPanelConfig.currentStackingJobId = '';
 
       return state;
     });
