@@ -50,10 +50,10 @@ export function toPhotometryJobSettings(settings: GlobalSettings): PhotometryJob
         result = {
             mode: 'aperture',
             a: p.a,
-            b: p.b,
+            b: p.elliptical ? p.b : p.a,
             aIn: p.aIn,
             aOut: p.aOut,
-            bOut: p.bOut,
+            bOut: p.elliptical ? p.bOut : p.aOut,
             theta: p.theta,
             thetaOut: p.thetaOut,
             centroidRadius: null,
