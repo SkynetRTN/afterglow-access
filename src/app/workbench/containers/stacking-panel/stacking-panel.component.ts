@@ -11,7 +11,7 @@ import { JobsState } from '../../../jobs/jobs.state';
 import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../../workbench.actions';
 import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
-import { greaterThan, isNumber } from 'src/app/utils/validators';
+import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 
 @Component({
@@ -52,6 +52,7 @@ export class StackerPanelComponent implements OnInit {
     equalizeAdditive: new FormControl(''),
     equalizeOrder: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
     equalizeMultiplicative: new FormControl(''),
+    multiplicativePercentile: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true), lessThan(100, true)] }),
     equalizeGlobal: new FormControl(''),
   });
 
@@ -136,6 +137,13 @@ export class StackerPanelComponent implements OnInit {
       this.stackForm.get('low').disable({ emitEvent: false });
     }
 
+    let equalizeMultiplicative = this.stackForm.get('equalizeMultiplicative').value;
+    if (equalizeMultiplicative) {
+      this.stackForm.get('multiplicativePercentile').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('multiplicativePercentile').disable({ emitEvent: false });
+    }
+
     let equalizeAdditive = this.stackForm.get('equalizeAdditive').value;
     if (equalizeAdditive) {
       this.stackForm.get('equalizeOrder').enable({ emitEvent: false });
@@ -215,6 +223,7 @@ export class StackerPanelComponent implements OnInit {
       equalizeAdditive: data.equalizeAdditive,
       equalizeOrder: data.equalizeOrder,
       equalizeMultiplicative: data.equalizeMultiplicative,
+      multiplicativePercentile: data.multiplicativePercentile,
       equalizeGlobal: data.equalizeGlobal
     }
 

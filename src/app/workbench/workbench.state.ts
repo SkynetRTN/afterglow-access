@@ -251,7 +251,7 @@ import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b21cf65-93d2-435a-ff7b-ab357809cc',
+  version: '3b21cf65-93d3-435a-ff7b-ab357809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -356,6 +356,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
       equalizeAdditive: false,
       equalizeOrder: 0,
       equalizeMultiplicative: false,
+      multiplicativePercentile: 99.9,
       equalizeGlobal: false,
 
     },

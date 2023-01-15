@@ -17,6 +17,7 @@ export interface StackSettings {
   equalizeAdditive: boolean;
   equalizeOrder: number;
   equalizeMultiplicative: boolean;
+  multiplicativePercentile: number;
   equalizeGlobal: boolean;
 }
 

@@ -89,6 +89,7 @@ export interface StackFormData {
   equalizeAdditive: boolean;
   equalizeOrder: number;
   equalizeMultiplicative: boolean;
+  multiplicativePercentile: number;
   equalizeGlobal: boolean;
 }
 
