@@ -1,4 +1,4 @@
-<nav class="navbar-header mat-elevation-z6" role="navigation">
+<nav class="navbar-header mat-elevation-z6 gap-6" role="navigation">
   <a class="afterglow-button afterglow-logo" routerLink="workbench"
     [queryParams]="(activeTool$ | async) ? {tool: (activeTool$ | async)} : {}" i18n-aria-label aria-label="Home"
     routerLinkActive="active" [routerLinkActiveOptions]="{exact: false, queryParams: 'ignored'}" mat-button>
@@ -7,7 +7,13 @@
   </a>
   <a [routerLink]="['jobs', (selectedJobId$ | async) || '']" i18n-aria-label aria-label="Jobs" routerLinkActive="active"
     [routerLinkActiveOptions]="{exact: false}" mat-button class="ml-2">
+    <mat-icon>task</mat-icon>
     <span i18n> Jobs</span>
+  </a>
+  <a [routerLink]="['settings']" i18n-aria-label aria-label="Settings" routerLinkActive="active"
+    [routerLinkActiveOptions]="{exact: false}" mat-button class="ml-2">
+    <mat-icon>settings</mat-icon>
+    <span i18n> Settings</span>
   </a>
 
   <div class="flex-spacer"></div>
@@ -17,18 +23,12 @@
   </ng-container>
   <div>
     <ng-container *ngIf="user">
-      <button class="mr-2" mat-button aria-label="Core Settings" (click)="openCoreSettingsDialog()" i18n-aria-label>
-        <mat-icon>settings</mat-icon>
-      </button>
+
 
       <button class="mr-2" mat-button [matMenuTriggerFor]="actionMenu" aria-label="Option Menu" i18n-aria-label>
         <ngx-avatar [name]="avatarName" [size]="50" [round]="false"> </ngx-avatar>
       </button>
       <mat-menu #actionMenu="matMenu" class="action-menu">
-        <button mat-menu-item (click)="openThemeDialog()" aria-label="Open Theme Editor" i18n-aria-label>
-          <mat-icon>format_color_fill</mat-icon>
-          <span i18n>Theme Editor...</span>
-        </button>
         <button mat-menu-item (click)="openQuickStartGuide()" aria-label="Open Help Dialog" i18n-aria-label>
           <mat-icon>help</mat-icon>
           <span i18n>Help...</span>

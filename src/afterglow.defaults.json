@@ -1,5 +1,6 @@
 {
-  "coreUrl": "http://127.0.0.1:4200/core",
+  "authUrl": "http://127.0.0.1:4201",
+  "coreUrl": "http://127.0.0.1:5000",
   "authMethod": "cookie",
   "authCookieName": "afterglow_core_access_token",
   "oauth2ClientId": null,

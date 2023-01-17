@@ -3,14 +3,16 @@ import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from 'rxjs/operators';
 import { StackFormData, WorkbenchTool, StackingPanelConfig } from '../../models/workbench-state';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { StackingJob, StackingJobResult } from '../../../jobs/models/stacking';
+import { StackingJob, StackingJobResult, StackSettings } from '../../../jobs/models/stacking';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { WorkbenchState } from '../../workbench.state';
 import { JobsState } from '../../../jobs/jobs.state';
 import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../../workbench.actions';
-import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
 import { DataFilesState } from '../../../data-files/data-files.state';
+import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
+import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 
 @Component({
   selector: 'app-stacking-panel',
@@ -19,70 +21,74 @@ import { DataFilesState } from '../../../data-files/data-files.state';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StackerPanelComponent implements OnInit {
-  @Input('hduIds')
-  set hduIds(hduIds: string[]) {
-    this.hduIds$.next(hduIds);
+  @Input('layerIds')
+  set layerIds(layerIds: string[]) {
+    this.layerIds$.next(layerIds);
   }
-  get hduIds() {
-    return this.hduIds$.getValue();
+  get layerIds() {
+    return this.layerIds$.getValue();
   }
-  private hduIds$ = new BehaviorSubject<string[]>(null);
+  private layerIds$ = new BehaviorSubject<string[]>(null);
 
   config$: Observable<StackingPanelConfig>;
 
   destroy$ = new Subject<boolean>();
-  selectedHdus$: Observable<Array<ImageHdu>>;
+  selectedLayers$: Observable<Array<ImageLayer>>;
   stackFormData$: Observable<StackFormData>;
   stackingJob$: Observable<StackingJob>;
   dataFileEntities$: Observable<{ [id: string]: DataFile }>;
+  showPropagateMask$ = new BehaviorSubject<boolean>(false);
 
   stackForm = new FormGroup({
-    selectedHduIds: new FormControl([], Validators.required),
+    selectedLayerIds: new FormControl([], Validators.required),
     mode: new FormControl('average', Validators.required),
     scaling: new FormControl('none', Validators.required),
     rejection: new FormControl('none', Validators.required),
-    percentile: new FormControl(50),
-    low: new FormControl(''),
-    high: new FormControl(''),
+    smartStacking: new FormControl('none', Validators.required),
+    percentile: new FormControl(50, { validators: [Validators.required, isNumber, greaterThan(0)] }),
+    low: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
+    high: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
+    propagateMask: new FormControl(''),
+    equalizeAdditive: new FormControl(''),
+    equalizeOrder: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true)] }),
+    equalizeMultiplicative: new FormControl(''),
+    multiplicativePercentile: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true), lessThan(100, true)] }),
+    equalizeGlobal: new FormControl(''),
   });
 
   constructor(private store: Store, private router: Router) {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.config$ = this.store.select(WorkbenchState.getStackingPanelConfig);
 
-    this.hduIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([hduIds, config]) => {
-      if (!hduIds || !config) return;
-      let selectedHduIds = config.stackFormData.selectedHduIds.filter((hduId) => hduIds.includes(hduId));
-      if (selectedHduIds.length != config.stackFormData.selectedHduIds.length) {
+    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
+      if (!layerIds || !config) return;
+      let selectedLayerIds = config.stackFormData.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
+      if (selectedLayerIds.length != config.stackFormData.selectedLayerIds.length) {
         setTimeout(() => {
-          this.setSelectedHduIds(selectedHduIds);
+          this.setSelectedLayerIds(selectedLayerIds);
         });
       }
     });
 
+    this.store.select(WorkbenchState.getAligningPanelConfig).pipe(
+      takeUntil(this.destroy$),
+      map(config => !config?.mosaicMode)
+    ).subscribe(value => this.showPropagateMask$.next(value))
+
+    this.stackForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.onStackSettingsFormChange());
+
     this.stackForm
-      .get('mode')
+      .get('equalizeAdditive')
       .valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
-        if (value == 'percentile') {
-          this.stackForm.get('percentile').enable();
-        } else {
-          this.stackForm.get('percentile').disable();
+        if (value) {
+          this.stackForm.get('equalizeGlobal').setValue(true);
         }
       });
 
-    this.stackForm
-      .get('rejection')
-      .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        if (['iraf', 'minmax', 'sigclip'].includes(value)) {
-          this.stackForm.get('high').enable();
-          this.stackForm.get('low').enable();
-        } else {
-          this.stackForm.get('high').disable();
-          this.stackForm.get('low').disable();
-        }
-      });
+
 
     this.stackFormData$ = store.select(WorkbenchState.getState).pipe(
       takeUntil(this.destroy$),
@@ -114,40 +120,120 @@ export class StackerPanelComponent implements OnInit {
       this.store.dispatch(new UpdateStackingPanelConfig({ stackFormData: this.stackForm.value }));
       // }
     });
+
+
+    this.onStackSettingsFormChange();
   }
 
-  getHduOptionLabel(hduId: string) {
-    return this.store.select(DataFilesState.getHduById(hduId)).pipe(
-      map((hdu) => hdu?.name),
+  onStackSettingsFormChange() {
+
+    let rejection = this.stackForm.get('rejection').value
+
+    if (['iraf', 'minmax', 'sigclip', 'rcr', 'chauvenet'].includes(rejection)) {
+      this.stackForm.get('high').enable({ emitEvent: false });
+      this.stackForm.get('low').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('high').disable({ emitEvent: false });
+      this.stackForm.get('low').disable({ emitEvent: false });
+    }
+
+    let equalizeMultiplicative = this.stackForm.get('equalizeMultiplicative').value;
+    if (equalizeMultiplicative) {
+      this.stackForm.get('multiplicativePercentile').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('multiplicativePercentile').disable({ emitEvent: false });
+    }
+
+    let equalizeAdditive = this.stackForm.get('equalizeAdditive').value;
+    if (equalizeAdditive) {
+      this.stackForm.get('equalizeOrder').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('equalizeOrder').disable({ emitEvent: false });
+    }
+
+    let mode = this.stackForm.get('mode').value;
+    if (mode == 'percentile') {
+      this.stackForm.get('percentile').enable({ emitEvent: false });
+    } else {
+      this.stackForm.get('percentile').disable({ emitEvent: false });
+    }
+
+  }
+
+  getLayerOptionLabel(layerId: string) {
+    return this.store.select(DataFilesState.getLayerById(layerId)).pipe(
+      map((layer) => layer?.name),
       distinctUntilChanged()
     );
   }
 
-  setSelectedHduIds(hduIds: string[]) {
+  setSelectedLayerIds(layerIds: string[]) {
     this.store.dispatch(
       new UpdateStackingPanelConfig({
         stackFormData: {
           ...this.stackForm.value,
-          selectedHduIds: hduIds,
+          selectedLayerIds: layerIds,
         },
       })
     );
   }
 
   onSelectAllBtnClick() {
-    this.setSelectedHduIds(this.hduIds);
+    this.setSelectedLayerIds(this.layerIds);
   }
 
   onClearSelectionBtnClick() {
-    this.setSelectedHduIds([]);
+    this.setSelectedLayerIds([]);
   }
 
-  submit(data: StackFormData) {
-    let selectedHduIds: string[] = this.stackForm.controls.selectedHduIds.value;
-    this.store.dispatch(new CreateStackingJob(selectedHduIds));
+  submit() {
+    this.store.dispatch(new UpdateStackingPanelConfig({ currentStackingJobId: null }));
+
+    let showPropagateMask = this.showPropagateMask$.value;
+    let selectedLayerIds: string[] = this.stackForm.controls.selectedLayerIds.value;
+    let state = this.store.selectSnapshot(WorkbenchState.getState)
+    let data = state.stackingPanelConfig.stackFormData;
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
+
+    let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
+    selectedLayerIds = selectedLayerIds.filter((id) => isNotEmpty(layerEntities[id]));
+    selectedLayerIds = selectedLayerIds.sort((a, b) => {
+      let aFile = dataFileEntities[layerEntities[a].fileId];
+      let bFile = dataFileEntities[layerEntities[b].fileId];
+      return aFile.name < bFile.name
+        ? -1
+        : aFile.name > bFile.name
+          ? 1
+          : 0
+    })
+
+
+
+
+
+    let settings: StackSettings = {
+      mode: data.mode,
+      scaling: data.scaling == 'none' ? null : data.scaling,
+      rejection: data.rejection == 'none' ? null : data.rejection,
+      percentile: data.percentile,
+      smartStacking: data.smartStacking,
+      lo: data.low,
+      hi: data.high,
+      propagateMask: showPropagateMask ? data.propagateMask : false,
+      equalizeAdditive: data.equalizeAdditive,
+      equalizeOrder: data.equalizeOrder,
+      equalizeMultiplicative: data.equalizeMultiplicative,
+      multiplicativePercentile: data.multiplicativePercentile,
+      equalizeGlobal: data.equalizeGlobal
+    }
+
+
+
+
+    this.store.dispatch(new CreateStackingJob(selectedLayerIds, settings, null));
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy(): void {
     this.destroy$.next(true);

@@ -8,7 +8,7 @@ import {
   ChangeDetectionStrategy,
   OnDestroy,
 } from '@angular/core';
-import { getWidth, getHeight, DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
+import { getWidth, getHeight, DataFile, ImageLayer, PixelType } from '../../../data-files/models/data-file';
 import { Subject, timer, BehaviorSubject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { takeUntil } from 'rxjs/operators';
@@ -299,8 +299,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
   public zoomTo(value: number) {
     this.onZoomTo.emit({ factor: value, anchor: null });
     // this.store.dispatch(new ZoomTo(
-    //   this.hdu.transformation,
-    //   this.hdu.rawImageDataId,
+    //   this.layer.transformation,
+    //   this.layer.rawImageDataId,
     //   value,
     //   null
     // ));
@@ -309,7 +309,7 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
   public zoomBy(factor: number, imageAnchor: { x: number; y: number } = null) {
     this.onZoomBy.emit({ factor: factor, anchor: imageAnchor });
     // this.store.dispatch(new ZoomBy(
-    //   this.hdu.id,
+    //   this.layer.id,
     //   factor,
     //   imageAnchor
     // ));
@@ -318,8 +318,8 @@ export class ImageViewerStatusBarComponent implements OnInit, OnChanges, OnDestr
   public zoomToFit(padding: number = 0) {
     this.onZoomToFit.emit({});
     // this.store.dispatch(new CenterRegionInViewport(
-    //   this.hdu.id,
-    //   { x: 1, y: 1, width: getWidth(this.hdu), height: getHeight(this.hdu) }
+    //   this.layer.id,
+    //   { x: 1, y: 1, width: getWidth(this.layer), height: getHeight(this.layer) }
     // ))
   }
 }

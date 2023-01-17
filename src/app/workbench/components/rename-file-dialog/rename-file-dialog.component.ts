@@ -2,7 +2,7 @@ import { Component, OnInit, Inject, ViewChild, AfterViewInit, ElementRef } from 
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { isValidFilename } from '../../../utils/validators';
-import { DataFile, IHdu } from 'src/app/data-files/models/data-file';
+import { DataFile, ILayer } from 'src/app/data-files/models/data-file';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { forkJoin } from 'rxjs';
 
@@ -33,7 +33,7 @@ export class RenameFileDialogComponent implements OnInit, AfterViewInit {
     if (!this.nameForm.valid) return;
 
     let name = this.nameForm.get('name').value;
-    forkJoin(this.file.hduIds.map(hduId => this.dataFileService.updateFile(hduId, { groupName: name })))
+    forkJoin(this.file.layerIds.map(layerId => this.dataFileService.updateFile(layerId, { groupName: name })))
       .subscribe(() => {
         this.dialogRef.close({
           ...this.file,

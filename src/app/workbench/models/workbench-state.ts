@@ -13,6 +13,8 @@ import { IWorkbenchState } from './workbench-file-state';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 import { GlobalSettings } from './global-settings';
+import { SourcePanelState } from './source-file-state';
+import { WcsCalibrationFileState } from './wcs-calibration-file-state';
 
 export enum KernelFilter {
   MEDIAN_FILTER = 'median_filter',
@@ -45,6 +47,7 @@ export enum WorkbenchTool {
   VIEWER = 'display',
   PLOTTER = 'plotter',
   SONIFIER = 'sonifier',
+  SOURCE = 'source',
   PHOTOMETRY = 'photometry',
   CUSTOM_MARKER = 'marker',
   INFO = 'info',
@@ -58,10 +61,10 @@ export enum WorkbenchTool {
 export interface PixelOpsFormData {
   operand: '+' | '-' | '/' | '*';
   mode: 'scalar' | 'image' | 'kernel';
-  selectedHduIds: string[];
-  primaryHduIds: string[];
-  auxHduId: string;
-  auxHduIds: string[];
+  selectedLayerIds: string[];
+  primaryLayerIds: string[];
+  auxLayerId: string;
+  auxLayerIds: string[];
   scalarValue: number;
   kernelFilter: KernelFilter;
   kernelSize: number;
@@ -69,26 +72,25 @@ export interface PixelOpsFormData {
   inPlace: boolean;
   opString: string;
 }
-
-export interface AlignFormData {
-  selectedHduIds: string[];
-  refHduId: string;
-  mode: 'astrometric' | 'manual_source';
-  crop: boolean;
-}
-
 export interface BatchPhotometryFormData {
-  selectedHduIds: string[];
+  selectedLayerIds: string[];
 }
 
 export interface StackFormData {
-  selectedHduIds: string[];
+  selectedLayerIds: string[];
+  propagateMask: boolean;
   mode: 'average' | 'percentile' | 'mode' | 'sum';
   scaling: 'none' | 'average' | 'median' | 'mode';
-  rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip';
+  rejection: 'none' | 'chauvenet' | 'iraf' | 'minmax' | 'sigclip' | 'rcr';
+  smartStacking: 'none' | 'SNR';
   percentile?: number;
   low?: number;
   high?: number;
+  equalizeAdditive: boolean;
+  equalizeOrder: number;
+  equalizeMultiplicative: boolean;
+  multiplicativePercentile: number;
+  equalizeGlobal: boolean;
 }
 
 export interface CustomMarkerPanelConfig {
@@ -105,19 +107,23 @@ export interface PlottingPanelConfig {
 }
 
 export interface PhotometryPanelConfig {
-  centroidClicks: boolean;
-  showSourceLabels: boolean;
-  showSourceMarkers: boolean;
   showSourceApertures: boolean;
-  showSourcesFromAllFiles: boolean;
-  selectedSourceIds: string[];
-  coordMode: 'pixel' | 'sky';
   batchPhotFormData: BatchPhotometryFormData;
   batchCalibrationEnabled: boolean;
   batchPhotJobId: string;
   batchCalJobId: string;
   creatingBatchJobs: boolean;
   autoPhot: boolean;
+}
+
+export interface SourcePanelConfig {
+  centroidClicks: boolean;
+  planetCentroiding: boolean;
+  showSourceLabels: boolean;
+  showSourceMarkers: boolean;
+  showSourcesFromAllFiles: boolean;
+  selectedSourceIds: string[];
+  coordMode: 'pixel' | 'sky';
 }
 
 export interface PixelOpsPanelConfig {
@@ -127,7 +133,10 @@ export interface PixelOpsPanelConfig {
 }
 
 export interface AligningPanelConfig {
-  alignFormData: AlignFormData;
+  selectedLayerIds: string[];
+  mosaicMode: boolean;
+  mosaicSearchRadius: number;
+  refLayerId: string;
   currentAlignmentJobId: string;
 }
 
@@ -136,18 +145,18 @@ export interface StackingPanelConfig {
   currentStackingJobId: string;
 }
 
-export interface WcsCalibrationPanelState {
-  selectedHduIds: string[];
+export interface WcsCalibrationPanelConfig {
+  selectedLayerIds: string[];
   activeJobId: string;
-}
-
-export interface WcsCalibrationSettings {
+  mode: 'platesolve' | 'copy';
+  refLayerId: string,
   ra?: number | string;
   dec?: number | string;
   radius?: number;
   minScale?: number;
   maxScale?: number;
   maxSources?: number;
+  showOverlay: boolean;
 }
 
 export interface ViewerPanelContainer {
@@ -204,13 +213,13 @@ export interface WorkbenchStateModel {
   customMarkerPanelConfig: CustomMarkerPanelConfig;
   plottingPanelConfig: PlottingPanelConfig;
   photometryPanelConfig: PhotometryPanelConfig;
+  sourcePanelConfig: SourcePanelConfig;
   pixelOpsPanelConfig: PixelOpsPanelConfig;
   aligningPanelConfig: AligningPanelConfig;
   stackingPanelConfig: StackingPanelConfig;
-  wcsCalibrationPanelState: WcsCalibrationPanelState;
-  wcsCalibrationSettings: WcsCalibrationSettings;
+  wcsCalibrationPanelConfig: WcsCalibrationPanelConfig;
   fileIdToWorkbenchStateIdMap: { [id: string]: string };
-  hduIdToWorkbenchStateIdMap: { [id: string]: string };
+  layerIdToWorkbenchStateIdMap: { [id: string]: string };
   nextWorkbenchStateId: number;
   workbenchStateIds: string[];
   workbenchStateEntities: { [id: string]: IWorkbenchState };
@@ -227,4 +236,10 @@ export interface WorkbenchStateModel {
   nextPhotometryPanelStateId: number;
   photometryPanelStateIds: string[];
   photometryPanelStateEntities: { [id: string]: PhotometryPanelState };
+  nextSourcePanelStateId: number;
+  sourcePanelStateIds: string[];
+  sourcePanelStateEntities: { [id: string]: SourcePanelState };
+  nextWcsCalibrationPanelStateId: number;
+  wcsCalibrationPanelStateIds: string[];
+  wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationFileState };
 }

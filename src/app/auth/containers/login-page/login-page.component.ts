@@ -27,13 +27,13 @@ export class LoginPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     let redirectUri = location.origin + `${this.baseHref}authorized`;
+    let params: HttpParams = new HttpParams();
+    params = params.set('client_id', this.config.oauth2ClientId);
+    params = params.set('redirect_uri', redirectUri);
+
     if (this.config.authMethod == 'oauth2') {
       let nonce = uuid.v4();
       localStorage.setItem('oauth_nonce', nonce);
-
-      let params: HttpParams = new HttpParams();
-      params = params.set('client_id', this.config.oauth2ClientId);
-      params = params.set('redirect_uri', redirectUri);
       params = params.set('response_type', 'token');
       params = params.set(
         'state',
@@ -43,13 +43,11 @@ export class LoginPageComponent implements OnInit, OnDestroy, AfterViewInit {
       );
       params = params.set('scope', 'email');
 
-      window.location.href = this.config.coreUrl + '/oauth2/authorize?' + params.toString();
+      window.location.href = this.config.authUrl + '/oauth2/authorize?' + params.toString();
     } else {
       // cookie-based login
-      let params: HttpParams = new HttpParams();
-      params = params.set('next', redirectUri);
 
-      window.location.href = this.config.coreUrl + '/login?' + params.toString();
+      window.location.href = this.config.authUrl + '/sign-in?' + params.toString();
     }
   }
 }

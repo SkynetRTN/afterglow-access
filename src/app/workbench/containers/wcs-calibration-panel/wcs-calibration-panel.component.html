@@ -1,63 +1,142 @@
-<div *ngIf="hduIds">
+<div *ngIf="layerIds">
+
   <form [formGroup]="wcsCalibrationForm">
-    <div>
+    <div class="flex flex-col gap-1">
+
+      <div class="flex flex-row gap-2 items-center">
+        <mat-form-field appearance="outline" style="width: 300px">
+          <mat-label i18n>Select Image(s) to Calibrate</mat-label>
+          <mat-select multiple formControlName="selectedLayerIds">
+            <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
+              {{ getLayerOptionLabel(layerId) | async }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-icon-button (click)="onSelectAllBtnClick()" i18n-matTooltip matTooltip="Select All">
+          <mat-icon>select_all</mat-icon>
+        </button>
+
+        <button mat-icon-button (click)="onClearSelectionBtnClick()" i18n-matTooltip matTooltip="Clear Selection">
+          <mat-icon>clear</mat-icon>
+        </button>
+      </div>
+
+
       <mat-form-field appearance="outline" style="width: 300px">
-        <mat-label i18n>Select Image(s) to Calibrate</mat-label>
-        <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-            {{ getHduOptionLabel(hduId) | async }}
-          </mat-option>
+        <mat-label i18n>Mode</mat-label>
+        <mat-select #modeSelect formControlName="mode">
+          <mat-option value="platesolve" i18n>Platesolve</mat-option>
+          <mat-option value="copy" i18n>Copy</mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-icon-button (click)="onSelectAllBtnClick()" i18n-matTooltip matTooltip="Select All">
-        <mat-icon>select_all</mat-icon>
-      </button>
+      <ng-container *ngIf="modeSelect.value == 'copy'">
+        <mat-form-field appearance="outline" style="width: 300px">
+          <mat-label i18n>Reference Image File</mat-label>
+          <mat-select formControlName="refLayerId" [value]="(refLayer$ | async)?.id">
+            <mat-option *ngFor="let layerId of (config$ | async)?.selectedLayerIds" [value]="layerId">
+              {{ getLayerOptionLabel(layerId) | async }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
 
-      <button mat-icon-button (click)="onClearSelectionBtnClick()" i18n-matTooltip matTooltip="Clear Selection">
-        <mat-icon>clear</mat-icon>
-      </button>
+        <div *ngIf="refHeader$ | async">
+          <div *ngIf="(refHeader$ | async).loading; else refHeaderLoaded" class="alert alert-info"
+            style="margin-top: 10px" i18n>
+            Reference header loading...
+          </div>
+          <ng-template #refHeaderLoaded>
+            <div *ngIf="!(refLayerHasWcs$ | async); else hasWcsBlock" class="alert alert-warning"
+              style="margin-top: 10px" i18n>
+              This image does not have WCS data in its header and cannot be used as the reference.
+            </div>
+            <ng-template #hasWcsBlock>
+              <div style="text-align: right; width: 100%">
+                <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()"
+                  [disabled]="!wcsCalibrationForm.valid" i18n>
+                  Submit
+                </button>
+              </div>
+            </ng-template>
+          </ng-template>
+        </div>
+        <div *ngIf="copyStatus" [class]="{
+            'alert-warning': copyStatus.level == 'warning',
+            'alert-info': copyStatus.level == 'info',
+            'alert-danger': copyStatus.level == 'danger',
+            'alert-success': copyStatus.level == 'success'
+          }" class="alert" style="margin-top: 10px" i18n>
+          {{copyStatus.message}}
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="modeSelect.value == 'platesolve'">
+        <p i18n>
+          WCS calibration extracts sources from your images and attempts to match them to catalogs. If a successful
+          match is found, WCS header entries are added to the file and can be used to map between pixel
+          and sky coordinates.
+        </p>
+        <p i18n>
+          Turn on the source extraction overlay to preview which sources will be used in the WCS calibration.
+        </p>
+        <div class="flex flex-row gap-5 items-center pb-8">
+          <mat-slide-toggle formControlName="showOverlay" [labelPosition]="'before'" i18n>
+            Show extraction overlay
+          </mat-slide-toggle>
+          <button [routerLink]="['/settings/source-extraction']" mat-raised-button>Source Extraction
+            Settings</button>
+        </div>
+
+        <p i18n>
+          Providing estimates for the center coordinates as well as search radius and pixel scale can increase chances
+          of
+          finding a solution.
+        </p>
+        <div *ngIf="header$ | async as header" class="mb-3">
+          <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
+            <mat-icon>colorize</mat-icon>
+            <ng-container i18n>Extract values from current viewer</ng-container>
+          </button>
+        </div>
+
+        <div fxLayout="row wrap" fxLayoutGap="10px">
+          <mat-form-field appearance="outline">
+            <mat-label i18n>RA (hours)</mat-label>
+            <input matInput formControlName="ra" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Dec (degs)</mat-label>
+            <input matInput formControlName="dec" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Radius (degs)</mat-label>
+            <input matInput type="number" formControlName="radius" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Max Sources</mat-label>
+            <input matInput type="number" formControlName="maxSources" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Min Scale (arcsec/pixel)</mat-label>
+            <input matInput type="number" formControlName="minScale" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Max Scale (arcsec/pixel)</mat-label>
+            <input matInput type="number" formControlName="maxScale" />
+          </mat-form-field>
+        </div>
+        <div style="text-align: right; width: 100%">
+          <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid"
+            i18n>
+            Submit
+          </button>
+        </div>
+      </ng-container>
     </div>
 
-    <div *ngIf="header$ | async as header" class="mb-3">
-      <button mat-raised-button (click)="onAutofillFromFocusedViewerClick(header)">
-        <mat-icon>colorize</mat-icon>
-        <ng-container i18n>Extract values from current viewer</ng-container>
-      </button>
-    </div>
 
-    <div fxLayout="row wrap" fxLayoutGap="10px">
-      <mat-form-field appearance="outline">
-        <mat-label i18n>RA (hours)</mat-label>
-        <input matInput formControlName="ra" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label i18n>Dec (degs)</mat-label>
-        <input matInput formControlName="dec" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label i18n>Radius (degs)</mat-label>
-        <input matInput type="number" formControlName="radius" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label i18n>Max Sources</mat-label>
-        <input matInput type="number" formControlName="maxSources" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label i18n>Min Scale (arcsec/pixel)</mat-label>
-        <input matInput type="number" formControlName="minScale" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label i18n>Max Scale (arcsec/pixel)</mat-label>
-        <input matInput type="number" formControlName="maxScale" />
-      </mat-form-field>
-    </div>
 
-    <div style="text-align: right; width: 100%">
-      <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid" i18n>
-        Submit
-      </button>
-    </div>
   </form>
 
   <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->

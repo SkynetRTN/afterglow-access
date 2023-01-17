@@ -11,13 +11,13 @@ import { isFieldCalibrationJob } from 'src/app/jobs/models/field-calibration';
 import { JobService } from 'src/app/jobs/services/job.service';
 import { toFieldCalibration, toPhotometryJobSettings, toSourceExtractionJobSettings } from '../../models/global-settings';
 import { WorkbenchState } from '../../workbench.state';
-import { LoadHduHeader } from 'src/app/data-files/data-files.actions';
-import { getExpLength, getFilter, getZeroPoint, Header, IHdu, ImageHdu, isImageHdu } from 'src/app/data-files/models/data-file';
+import { LoadLayerHeader } from 'src/app/data-files/data-files.actions';
+import { getExpLength, getFilter, getZeroPoint, Header, ILayer, ImageLayer, isImageLayer } from 'src/app/data-files/models/data-file';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
 import { neutralizeHistograms } from 'src/app/utils/histogram-fitting';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
-import { ImageHist } from 'src/app/data-files/models/image-hist';
+import { ImageHistogram } from 'src/app/data-files/models/image-histogram';
 import { DecimalPipe } from '@angular/common';
 import { FILTER_REFERENCES, PhotometricColorBalanceDialogService, STELLAR_TYPE_REFERENCES, WHITE_REFERENCE_GROUPS } from './photometric-color-balance-dialog.service';
 
@@ -33,7 +33,7 @@ interface Layer {
   name: string,
   filter: Filter,
   expLength: number;
-  hdu: ImageHdu;
+  layer: ImageLayer;
   header: Header
 }
 
@@ -104,8 +104,8 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
 
   ngOnInit(): void {
 
-    // this.layers = this.layerIds.map(id => this.store.selectSnapshot(DataFilesState.getHduById(id)));
-    let layerIds = this.store.selectSnapshot(DataFilesState.getHdusByFileId(this.fileId)).filter(isImageHdu).map(layer => layer.id)
+    // this.layers = this.layerIds.map(id => this.store.selectSnapshot(DataFilesState.getLayerById(id)));
+    let layerIds = this.store.selectSnapshot(DataFilesState.getLayersByFileId(this.fileId)).filter(isImageLayer).map(layer => layer.id)
 
     if (layerIds.length < 3) {
       this.errors = [`Photometric color calibration only works with files having at least three layers.`];
@@ -113,12 +113,12 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
     }
 
     let headers$ = layerIds.map(layerId => {
-      let header = this.store.selectSnapshot(DataFilesState.getHeaderByHduId(layerId));
+      let header = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(layerId));
       if (header.loaded) return of(header);
 
       return this.actions$.pipe(
-        ofActionCompleted(LoadHduHeader),
-        filter(a => a.action.hduId == layerId),
+        ofActionCompleted(LoadLayerHeader),
+        filter(a => a.action.layerId == layerId),
         take(1),
         map(a => {
           if (!a.result.successful) {
@@ -127,7 +127,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
           }
 
           this.statusMessage$.next(`Header successfully loaded`);
-          return this.store.selectSnapshot(DataFilesState.getHeaderByHduId(layerId));
+          return this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(layerId));
         })
       )
 
@@ -154,9 +154,9 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
         }
 
         let id = layerIds[index];
-        let name = this.store.selectSnapshot(DataFilesState.getHduById(id)).name;
-        let hdu = this.store.selectSnapshot(DataFilesState.getHduById(id));
-        this.layers.push({ id: id, name: name, filter: filter, expLength: expLength, hdu: (isImageHdu(hdu) ? hdu : null), header: header })
+        let name = this.store.selectSnapshot(DataFilesState.getLayerById(id)).name;
+        let layer = this.store.selectSnapshot(DataFilesState.getLayerById(id));
+        this.layers.push({ id: id, name: name, filter: filter, expLength: expLength, layer: (isImageLayer(layer) ? layer : null), header: header })
       }
 
       if (this.layers.length < 3) {
@@ -378,24 +378,24 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
     let referenceZPCorr = (referenceLayer.id == blueLayer.id ? blueZeroPointCorr : (referenceLayer.id == greenLayer.id ? greenZeroPointCorr : redZeroPointCorr))
 
     let results = [
-      { layerId: blueLayer.id, scale: referenceLayer.hdu.normalizer.layerScale * (blueWBCorr * blueZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: blueLayer.hdu.normalizer.layerOffset },
-      { layerId: greenLayer.id, scale: referenceLayer.hdu.normalizer.layerScale * (greenWBCorr * greenZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: greenLayer.hdu.normalizer.layerOffset },
-      { layerId: redLayer.id, scale: referenceLayer.hdu.normalizer.layerScale * (redWBCorr * redZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: redLayer.hdu.normalizer.layerOffset }
+      { layerId: blueLayer.id, scale: referenceLayer.layer.normalizer.layerScale * (blueWBCorr * blueZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: blueLayer.layer.normalizer.layerOffset },
+      { layerId: greenLayer.id, scale: referenceLayer.layer.normalizer.layerScale * (greenWBCorr * greenZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: greenLayer.layer.normalizer.layerOffset },
+      { layerId: redLayer.id, scale: referenceLayer.layer.normalizer.layerScale * (redWBCorr * redZeroPointCorr) / (referenceWBCorr * referenceZPCorr), offset: redLayer.layer.normalizer.layerOffset }
     ]
 
     if (this.form.controls.neutralizeBackground.value) {
       this.statusMessage$.next(`Neutralizing backgrounds...`);
 
       let d = results.map(result => {
-        let hdu = this.store.selectSnapshot(DataFilesState.getHduById(result.layerId));
-        if (!isImageHdu(hdu)) return null;
+        let layer = this.store.selectSnapshot(DataFilesState.getLayerById(result.layerId));
+        if (!isImageLayer(layer)) return null;
 
         return {
-          id: hdu.id,
-          name: hdu.name,
-          hist: hdu.hist,
+          id: layer.id,
+          name: layer.name,
+          histogram: layer.histogram,
           normalizer: {
-            ...hdu.normalizer,
+            ...layer.normalizer,
             layerScale: result.scale
           }
         }

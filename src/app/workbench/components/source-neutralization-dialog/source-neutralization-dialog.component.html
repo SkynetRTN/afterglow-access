@@ -5,7 +5,7 @@
                 <mat-label i18n>Reference Layer</mat-label>
                 <mat-select formControlName="referenceLayerId">
                     <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
-                        {{ getHduOptionLabel(layerId) | async }}
+                        {{ getLayerOptionLabel(layerId) | async }}
                     </mat-option>
                 </mat-select>
             </mat-form-field>
@@ -15,7 +15,7 @@
                     <mat-select multiple formControlName="selectedLayerIds">
                         <ng-container *ngFor="let layerId of layerIds">
                             <mat-option *ngIf="layerId != form.controls.referenceLayerId.value" [value]="layerId">
-                                {{ getHduOptionLabel(layerId) | async }}
+                                {{ getLayerOptionLabel(layerId) | async }}
                             </mat-option>
                         </ng-container>
 

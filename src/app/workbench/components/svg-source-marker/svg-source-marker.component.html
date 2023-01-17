@@ -1,0 +1,8 @@
+<svg:g class="svg-source-marker" [class.selected]="marker.selected" [attr.transform]="getTranslation()">
+    <svg:g app-svg-crosshair-marker [x]="0" [y]="0" [radius]="2"
+        [stroke]="marker.selected ? getSelectedStroke() : getStroke()" [attr.transform]="getCrosshairRotation()"
+        [showArrow]="!!marker?.source?.pm">
+    </svg:g>
+    <svg:ellipse class="hit-region" [attr.cx]="0" [attr.cy]="0" [attr.rx]="5" [attr.ry]="5"
+        [attr.vector-effect]="'non-scaling-stroke'" style="fill-opacity: 0; opacity: 0" />
+</svg:g>

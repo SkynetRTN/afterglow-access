@@ -14,9 +14,9 @@ import {
   ViewChildren,
   AfterViewInit,
 } from '@angular/core';
-import { DataFile, IHdu, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFile, ILayer, ImageLayer } from '../../../data-files/models/data-file';
 import { Store } from '@ngxs/store';
-import { HduType } from '../../../data-files/models/data-file-type';
+import { LayerType } from '../../../data-files/models/data-file-type';
 import { BehaviorSubject, Observable, combineLatest, Subject, concat, of } from 'rxjs';
 import { map, switchMap, filter, distinctUntilChanged } from 'rxjs/operators';
 import { DataFilesState } from '../../../data-files/data-files.state';
@@ -77,43 +77,43 @@ export class FileListOptionComponent implements OnInit {
   }
   private fileId$ = new BehaviorSubject<string>('');
 
-  @Input('hduId')
-  set hduId(hduId: string) {
-    this.hduId$.next(hduId);
+  @Input('layerId')
+  set layerId(layerId: string) {
+    this.layerId$.next(layerId);
   }
-  get hduId() {
-    return this.hduId$.getValue();
+  get layerId() {
+    return this.layerId$.getValue();
   }
-  private hduId$ = new BehaviorSubject<string>('');
+  private layerId$ = new BehaviorSubject<string>('');
 
   @Input() active: boolean = false;
   @Input() showFileToolbar: boolean = false;
-  @Input() showImageHduLayerToolbar: boolean = false;
+  @Input() showImageLayerLayerToolbar: boolean = false;
   @Input() showExpand: boolean = false;
   @Input() expanded: boolean = false;
   @Input() showSelect: boolean = false;
   @Input() selected: boolean = false;
 
-  @Output() onItemDoubleClick = new EventEmitter<{ fileId: string; hduId: string }>();
-  @Output() onToggleExpanded = new EventEmitter<{ fileId: string; hduId: string }>();
+  @Output() onItemDoubleClick = new EventEmitter<{ fileId: string; layerId: string }>();
+  @Output() onToggleExpanded = new EventEmitter<{ fileId: string; layerId: string }>();
   @Output() onToggleSelected = new EventEmitter<{
     fileId: string;
-    hduId: string;
+    layerId: string;
     $event: MouseEvent;
   }>();
-  @Output() onClose = new EventEmitter<{ fileId: string; hduId: string }>();
-  @Output() onSave = new EventEmitter<{ fileId: string; hduId: string }>();
+  @Output() onClose = new EventEmitter<{ fileId: string; layerId: string }>();
+  @Output() onSave = new EventEmitter<{ fileId: string; layerId: string }>();
 
   @ViewChild(MatCheckbox) checkbox: MatCheckbox;
 
-  HduType = HduType;
+  LayerType = LayerType;
 
   mouseOver: boolean = false;
   hasFocus: boolean = false;
   file$: Observable<DataFile>;
-  hdus$: Observable<IHdu[]>;
-  hdu$: Observable<IHdu>;
-  imageHdu$: Observable<ImageHdu>;
+  layers$: Observable<ILayer[]>;
+  layer$: Observable<ILayer>;
+  imageLayer$: Observable<ImageLayer>;
   label$: Observable<string>;
   dataProvider$: Observable<DataProvider>;
   tooltip$: Observable<string>;
@@ -124,22 +124,22 @@ export class FileListOptionComponent implements OnInit {
       switchMap((fileId) => (!fileId ? of(null) : this.store.select(DataFilesState.getFileById(fileId))))
     );
 
-    this.hdu$ = this.hduId$.pipe(
-      switchMap((hduId) => (!hduId ? of(null) : this.store.select(DataFilesState.getHduById(hduId))))
+    this.layer$ = this.layerId$.pipe(
+      switchMap((layerId) => (!layerId ? of(null) : this.store.select(DataFilesState.getLayerById(layerId))))
     );
 
-    this.imageHdu$ = this.hdu$.pipe(map((hdu) => (hdu?.type == HduType.IMAGE ? (hdu as ImageHdu) : null)));
+    this.imageLayer$ = this.layer$.pipe(map((layer) => (layer?.type == LayerType.IMAGE ? (layer as ImageLayer) : null)));
 
-    this.hdus$ = this.file$.pipe(
-      map((file) => file?.hduIds),
+    this.layers$ = this.file$.pipe(
+      map((file) => file?.layerIds),
       distinctUntilChanged((a, b) => a?.length === b?.length && a?.every((value, index) => b[index] === value)),
-      switchMap((hduIds) => {
-        if (!hduIds) return of([]);
+      switchMap((layerIds) => {
+        if (!layerIds) return of([]);
         return combineLatest(
-          hduIds.map((hduId) => {
-            return this.store.select(DataFilesState.getHduById(hduId)).pipe(filter((hdu) => hdu != null));
+          layerIds.map((layerId) => {
+            return this.store.select(DataFilesState.getLayerById(layerId)).pipe(filter((layer) => layer != null));
           })
-        ).pipe(map((hdus) => hdus.sort((a, b) => (a.order > b.order ? 1 : -1))));
+        ).pipe(map((layers) => layers.sort((a, b) => (a.order > b.order ? 1 : -1))));
       })
     );
 
@@ -151,25 +151,25 @@ export class FileListOptionComponent implements OnInit {
       })
     );
 
-    this.fileModified$ = this.hdus$.pipe(map((hdus) => hdus.some((hdu) => hdu.modified)));
+    this.fileModified$ = this.layers$.pipe(map((layers) => layers.some((layer) => layer.modified)));
 
-    this.label$ = combineLatest(this.file$, this.hdu$).pipe(
-      map(([file, hdu]) => {
-        if (!hdu && !file) {
+    this.label$ = combineLatest(this.file$, this.layer$).pipe(
+      map(([file, layer]) => {
+        if (!layer && !file) {
           return '';
         }
 
-        if (!hdu || file?.hduIds?.length == 1) {
+        if (!layer || file?.layerIds?.length == 1) {
           return file?.name;
         } else {
-          return hdu.name || file.name;
+          return layer.name || file.name;
         }
       })
     );
 
-    this.tooltip$ = combineLatest(this.file$, this.hdu$, this.dataProvider$).pipe(
-      switchMap(([file, hdu, dataProvider]) => {
-        if (!hdu || file?.hduIds.length == 1) {
+    this.tooltip$ = combineLatest(this.file$, this.layer$, this.dataProvider$).pipe(
+      switchMap(([file, layer, dataProvider]) => {
+        if (!layer || file?.layerIds.length == 1) {
           if (!dataProvider || !file?.assetPath) return of(file?.name);
           return of(`${dataProvider.displayName}${file.assetPath}`);
         }
@@ -180,39 +180,39 @@ export class FileListOptionComponent implements OnInit {
 
   ngOnInit(): void { }
 
-  getHduLabel(file: DataFile, hdu: IHdu) {
-    return hdu.name ? hdu.name : `Layer ${file.hduIds.indexOf(hdu.id)}`;
+  getLayerLabel(file: DataFile, layer: ILayer) {
+    return layer.name ? layer.name : `Layer ${file.layerIds.indexOf(layer.id)}`;
   }
 
   handleToggleExpanded($event: MouseEvent) {
     $event.stopPropagation();
-    this.onToggleExpanded.emit({ fileId: this.fileId, hduId: this.hduId });
+    this.onToggleExpanded.emit({ fileId: this.fileId, layerId: this.layerId });
   }
 
   handleToggleSelection($event: MouseEvent) {
     $event.stopPropagation();
-    this.onToggleSelected.emit({ fileId: this.fileId, hduId: this.hduId, $event: $event });
+    this.onToggleSelected.emit({ fileId: this.fileId, layerId: this.layerId, $event: $event });
   }
 
   handleSave($event: MouseEvent) {
     $event.stopPropagation();
-    this.onSave.emit({ fileId: this.fileId, hduId: this.hduId });
+    this.onSave.emit({ fileId: this.fileId, layerId: this.layerId });
   }
 
   handleClose($event: MouseEvent) {
     $event.stopPropagation();
-    this.onClose.emit({ fileId: this.fileId, hduId: this.hduId });
+    this.onClose.emit({ fileId: this.fileId, layerId: this.layerId });
   }
 
-  handleBlendModeChange(hduId: string, value: BlendMode) {
-    this.store.dispatch(new UpdateBlendMode(hduId, value));
+  handleBlendModeChange(layerId: string, value: BlendMode) {
+    this.store.dispatch(new UpdateBlendMode(layerId, value));
   }
 
-  handleVisibilityChange(hduId: string, value: boolean) {
-    this.store.dispatch(new UpdateVisibility(hduId, value));
+  handleVisibilityChange(layerId: string, value: boolean) {
+    this.store.dispatch(new UpdateVisibility(layerId, value));
   }
 
-  handleColorMapChange(hduId: string, colorMapName: string) {
-    this.store.dispatch(new UpdateColorMap(hduId, colorMapName));
+  handleColorMapChange(layerId: string, colorMapName: string) {
+    this.store.dispatch(new UpdateColorMap(layerId, colorMapName));
   }
 }

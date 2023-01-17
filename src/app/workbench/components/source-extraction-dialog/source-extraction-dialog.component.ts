@@ -5,7 +5,7 @@ import { Actions, ofActionCompleted, ofActionSuccessful, Store } from '@ngxs/sto
 import { merge, Subject } from 'rxjs';
 import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
-import { getHeight, getWidth, ImageHdu } from 'src/app/data-files/models/data-file';
+import { getHeight, getWidth, ImageLayer } from 'src/app/data-files/models/data-file';
 import { getImageToViewportTransform, getViewportRegion } from 'src/app/data-files/models/transformation';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
@@ -16,7 +16,7 @@ import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SonifierRegionMode } from '../../models/sonifier-file-state';
 import { PosType, Source } from '../../models/source';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
-import { WorkbenchImageHduState, WorkbenchStateType } from '../../models/workbench-file-state';
+import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { AddSources } from '../../sources.actions';
 import { ExtractSources } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
@@ -35,6 +35,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
   loading = false;
   job: SourceExtractionJob;
   jobResult: SourceExtractionJobResult;
+  coordinateMode: 'pixel' | 'sky';
 
   regionOptions = [
     { label: 'Entire Image', value: SourceExtractionRegion.ENTIRE_IMAGE },
@@ -52,16 +53,20 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     private store: Store,
     private actions$: Actions,
     private jobService: JobService,
-    @Inject(MAT_DIALOG_DATA) public data: { viewerId: string; region?: SourceExtractionRegion }
+    @Inject(MAT_DIALOG_DATA) public data: { viewerId: string; region?: SourceExtractionRegion, coordinateMode?: 'pixel' | 'sky' }
   ) {
     this.viewerId = data.viewerId;
+    this.coordinateMode = data.coordinateMode || 'pixel';
 
     this.sourceExtractionRegionForm.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.onSourceExtractionRegionFormChange();
       });
 
-    this.sourceExtractionRegionForm.patchValue(data)
+    this.sourceExtractionRegionForm.patchValue({
+      viewerId: data.viewerId,
+      region: data.region
+    })
 
   }
 
@@ -72,18 +77,18 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
   extractSources() {
     let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(this.viewerId))
     if (!viewer) return;
-    let hduId = viewer.hduId;
-    if (!hduId) return;
-    let hdu = this.store.selectSnapshot(DataFilesState.getHduById(hduId)) as ImageHdu;
+    let layerId = viewer.layerId;
+    if (!layerId) return;
+    let layer = this.store.selectSnapshot(DataFilesState.getLayerById(layerId)) as ImageLayer;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
     let region: SourceExtractionRegion = this.sourceExtractionRegionForm.controls.region.value;
-    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByHduId(hduId));
+    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByLayerId(layerId));
     let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
-    let viewportTransform = this.store.selectSnapshot(DataFilesState.getTransformById(hdu.viewportTransformId))
-    let imageTransform = this.store.selectSnapshot(DataFilesState.getTransformById(hdu.imageTransformId))
+    let viewportTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.viewportTransformId))
+    let imageTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.imageTransformId))
     let imageToViewportTransform = getImageToViewportTransform(viewportTransform, imageTransform);
-    let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(hdu.rawImageDataId))
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(hdu.headerId))
+    let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(layer.rawImageDataId))
+    let header = this.store.selectSnapshot(DataFilesState.getHeaderById(layer.headerId))
 
     let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
 
@@ -124,7 +129,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     let job: SourceExtractionJob = {
       id: null,
       type: JobType.SourceExtraction,
-      fileIds: [hduId],
+      fileIds: [layerId],
       sourceExtractionSettings: jobSettings,
       mergeSources: false,
       state: null,
@@ -153,6 +158,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
           let secondaryCoord = d.y;
 
           if (
+            this.coordinateMode == 'sky' &&
             header.wcs &&
             header.wcs.isValid() &&
             'raHours' in d &&
@@ -172,7 +178,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
           return {
             id: null,
             objectId: '',
-            hduId: d.fileId.toString(),
+            layerId: d.fileId.toString(),
             posType: posType,
             primaryCoord: primaryCoord,
             secondaryCoord: secondaryCoord,

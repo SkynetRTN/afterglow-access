@@ -1,9 +1,6 @@
 import { ViewMode } from './models/view-mode';
 import {
   WorkbenchTool,
-  PixelOpsFormData,
-  AlignFormData,
-  StackFormData,
   PlottingPanelConfig,
   PhotometryPanelConfig,
   AligningPanelConfig as AligningPanelConfig,
@@ -11,8 +8,8 @@ import {
   StackingPanelConfig as StackingPanelConfig,
   CustomMarkerPanelConfig,
   ViewerPanel,
-  WcsCalibrationSettings,
-  WcsCalibrationPanelState,
+  WcsCalibrationPanelConfig,
+  SourcePanelConfig,
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
@@ -23,7 +20,7 @@ import { Source, PosType } from './models/source';
 import { Marker } from './models/marker';
 import { IViewer, Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
-import { DataFile, IHdu, Header } from '../data-files/models/data-file';
+import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
 import { SonificationPanelState } from './models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
@@ -34,6 +31,10 @@ import { PhotometryData } from '../jobs/models/photometry';
 import { FieldCalibration } from '../jobs/models/field-calibration';
 import { GlobalSettings } from './models/global-settings';
 import { CalibrationSettings } from './models/calibration-settings';
+import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
+import { AlignmentSettings } from './models/alignment-settings';
+import { AlignmentJobSettings } from '../jobs/models/alignment';
+import { StackSettings } from '../jobs/models/stacking';
 
 /* Core */
 
@@ -61,7 +62,7 @@ export class SetFullScreenPanel {
 export class SelectFile {
   public static readonly type = '[Workbench] Select File';
 
-  constructor(public fileId: string, public hduId: string = '', public keepOpen: boolean = false) { }
+  constructor(public fileId: string, public layerId: string = '', public keepOpen: boolean = false) { }
 }
 
 export class ToggleFileSelection {
@@ -132,7 +133,7 @@ export class MoveViewer {
 export class SetViewerData {
   public static readonly type = '[Workbench] Set Viewer File';
 
-  constructor(public viewerId: string, public fileId: string, public hduId: string = null) { }
+  constructor(public viewerId: string, public fileId: string, public layerId: string = null) { }
 }
 
 export class UpdateCurrentViewportSize {
@@ -237,6 +238,12 @@ export class UpdatePhotometrySettings {
   constructor(public changes: Partial<PhotometrySettings>) { }
 }
 
+export class UpdateAlignmentSettings {
+  public static readonly type = '[Workbench] Update Alignment Settings';
+
+  constructor(public changes: Partial<AlignmentSettings>) { }
+}
+
 export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
@@ -273,6 +280,12 @@ export class UpdatePhotometryPanelConfig {
   constructor(public changes: Partial<PhotometryPanelConfig>) { }
 }
 
+export class UpdateSourcePanelConfig {
+  public static readonly type = '[Workbench] Update Source Panel Config';
+
+  constructor(public changes: Partial<SourcePanelConfig>) { }
+}
+
 export class UpdatePixelOpsPageSettings {
   public static readonly type = '[Workbench] Update Pixel Ops Panel Config';
 
@@ -291,16 +304,30 @@ export class UpdateStackingPanelConfig {
   constructor(public changes: Partial<StackingPanelConfig>) { }
 }
 
-export class UpdateWcsCalibrationPanelState {
-  public static readonly type = '[Workbench] Update Wcs Calibration Panel';
+export class UpdateWcsCalibrationFileState {
+  public static readonly type = '[Workbench] Update Wcs Calibration File State';
 
-  constructor(public changes: Partial<WcsCalibrationPanelState>) { }
+  constructor(public layerId: string, public changes: Partial<WcsCalibrationFileState>) { }
 }
 
-export class UpdateWcsCalibrationSettings {
-  public static readonly type = '[Workbench] Update Wcs Calibration Settings';
+export class UpdateWcsCalibrationPanelConfig {
+  public static readonly type = '[Workbench] Update Wcs Calibration Panel Config';
 
-  constructor(public changes: Partial<WcsCalibrationSettings>) { }
+  constructor(public changes: Partial<WcsCalibrationPanelConfig>) { }
+}
+
+export class UpdateWcsCalibrationExtractionOverlay {
+  public static readonly type = '[Workbench] Update WCS Calibration Extraction Overlay';
+
+  constructor(
+    public viewerId: string
+  ) { }
+}
+
+export class InvalidateWcsCalibrationExtractionOverlayByLayerId {
+  public static readonly type = '[Phot Data] Invalidate Wcs Calibration Extraction Overlay By Layer Id';
+
+  constructor(public layerId: string = null) { }
 }
 
 export class LoadCatalogs {
@@ -403,24 +430,24 @@ export class HideCurrentPixelOpsJobState {
 
 export class CreateAlignmentJob {
   public static readonly type = '[Workbench] Create Alignment Job';
-  constructor(public hduIds: string[]) { }
+  constructor(public layerIds: string[], public crop: boolean, public settings: AlignmentJobSettings) { }
 }
 
 export class CreateStackingJob {
   public static readonly type = '[Workbench] Create Stacking Job';
-  constructor(public hduIds: string[]) { }
+  constructor(public layerIds: string[], public settings: StackSettings, public outFilename: string) { }
 }
 
 export class CreateWcsCalibrationJob {
   public static readonly type = '[Workbench] Create Wcs Calibration Job';
-  constructor(public hduIds: string[]) { }
+  constructor(public layerIds: string[]) { }
 }
 
 export class ExtractSources {
   public static readonly type = '[Workbench] Extract Sources';
 
   constructor(
-    public hduId: string,
+    public layerId: string,
     public viewportSize: { width: number; height: number },
     public settings: SourceExtractionSettings
   ) { }
@@ -429,7 +456,7 @@ export class ExtractSources {
 export class ExtractSourcesSuccess {
   public static readonly type = '[Workbench] Extract Sources Success';
 
-  constructor(public hduId: string, public sources: Source[]) { }
+  constructor(public layerId: string, public sources: Source[]) { }
 }
 
 export class ExtractSourcesFail {
@@ -473,10 +500,10 @@ export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
 
-export class InitializeWorkbenchHduState {
-  public static readonly type = '[Workbench HDU State] Initialize Workbench HDU State';
+export class InitializeWorkbenchLayerState {
+  public static readonly type = '[Workbench Layer State] Initialize Workbench Layer State';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class InitializeWorkbenchFileState {
@@ -489,73 +516,73 @@ export class InitializeWorkbenchFileState {
 export class SonificationViewportSync {
   public static readonly type = '[Sonifier] Sonification Viewport Sync';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class SonificationRegionChanged {
   public static readonly type = '[Sonifier] Region Changed';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class AddRegionToHistory {
   public static readonly type = '[Sonifier] Add Region to History';
 
-  constructor(public hduId: string, public region: Region) { }
+  constructor(public layerId: string, public region: Region) { }
 }
 
 export class ClearRegionHistory {
   public static readonly type = '[Sonifier] Clear Region History';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class UndoRegionSelection {
   public static readonly type = '[Sonifier] Undo Region Selection';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class RedoRegionSelection {
   public static readonly type = '[Sonifier] Redo Region Selection';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class UpdateSonifierFileState {
   public static readonly type = '[Sonifier] Update File State';
 
-  constructor(public hduId: string, public changes: Partial<SonificationPanelState>) { }
+  constructor(public layerId: string, public changes: Partial<SonificationPanelState>) { }
 }
 
 export class SetProgressLine {
   public static readonly type = '[Sonifier] Set Progress Line';
 
-  constructor(public hduId: string, public line: { x1: number; y1: number; x2: number; y2: number }) { }
+  constructor(public layerId: string, public line: { x1: number; y1: number; x2: number; y2: number }) { }
 }
 
 export class Sonify {
   public static readonly type = '[Sonifier] Sonify';
 
-  constructor(public hduId: string, public region: Region) { }
+  constructor(public layerId: string, public region: Region) { }
 }
 
 export class ClearSonification {
   public static readonly type = '[Sonifier] Clear Sonification';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class SonificationCompleted {
   public static readonly type = '[Sonifier] Sonification Completed';
 
-  constructor(public hduId: string, public url: string, public error: string) { }
+  constructor(public layerId: string, public url: string, public error: string) { }
 }
 
 /* Plotting */
 
 export class UpdatePlottingPanelState {
-  public static readonly type = '[Plotter] Update HDU Plotting Panel State';
+  public static readonly type = '[Plotter] Update Layer Plotting Panel State';
 
   constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) { }
 }
@@ -578,49 +605,54 @@ export class UpdateLine {
   ) { }
 }
 
-/*Photometry*/
+/* Sources */
 
-export class UpdatePhotometrySourceSelectionRegion {
-  public static readonly type = '[Photometry] Update Photometry Source Selection Region';
+export class UpdateSourceSelectionRegion {
+  public static readonly type = '[Sources] Update Source Selection Region';
 
-  constructor(public hduId: string, public region: Region) { }
+  constructor(public layerId: string, public region: Region) { }
 }
 
-export class EndPhotometrySourceSelectionRegion {
-  public static readonly type = '[Photometry] End Photometry Source Selection Region';
+export class EndSourceSelectionRegion {
+  public static readonly type = '[Sources] End Source Selection Region';
 
-  constructor(public hduId: string, public mode: 'append' | 'remove') { }
+  constructor(public layerId: string, public mode: 'append' | 'remove') { }
 }
+
+export class RemoveSelectedSources {
+  public static readonly type = '[Sources] Remove Selected Sources';
+
+  constructor(public layerId: string) { }
+}
+
+export class RemoveAllSources {
+  public static readonly type = '[Sources] Remove All Sources';
+
+  constructor(public layerId: string) { }
+}
+
+export class SetSourceLabel {
+  public static readonly type = '[Sources] Set Source Label';
+
+  constructor(public layerId: string, public source: Source, public label: string) { }
+}
+
+
+/*Photometry */
 
 export class UpdateFilteredSources {
   public static readonly type = '[Photometry] Update Filtered Sources';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }
 
 export class UpdatePhotometryFileState {
   public static readonly type = '[Photometry] Update File State';
 
-  constructor(public hduId: string, public changes: Partial<PhotometryPanelState>) { }
+  constructor(public layerId: string, public changes: Partial<PhotometryPanelState>) { }
 }
 
-export class RemoveSelectedSources {
-  public static readonly type = '[Photometry] Remove Selected Sources';
 
-  constructor(public hduId: string) { }
-}
-
-export class RemoveAllSources {
-  public static readonly type = '[Photometry] Remove All Sources';
-
-  constructor(public hduId: string) { }
-}
-
-export class SetSourceLabel {
-  public static readonly type = '[Photometry] Set Source Label';
-
-  constructor(public hduId: string, public source: Source, public label: string) { }
-}
 
 export class BatchPhotometerSources {
   public static readonly type = '[Phot Data] Batch Photometer Sources';
@@ -644,16 +676,16 @@ export class UpdateAutoFieldCalibration {
   ) { }
 }
 
-export class InvalidateAutoCalByHduId {
-  public static readonly type = '[Phot Data] Invalidate Auto Cal By Hdu ID';
+export class InvalidateAutoCalByLayerId {
+  public static readonly type = '[Phot Data] Invalidate Auto Cal By Layer ID';
 
-  constructor(public hduId: string = null) { }
+  constructor(public layerId: string = null) { }
 }
 
-export class InvalidateAutoPhotByHduId {
-  public static readonly type = '[Phot Data] Invalidate Auto Phot By Hdu ID';
+export class InvalidateAutoPhotByLayerId {
+  public static readonly type = '[Phot Data] Invalidate Auto Phot By Layer ID';
 
-  constructor(public hduId: string = null) { }
+  constructor(public layerId: string = null) { }
 }
 
 
@@ -713,10 +745,10 @@ export class AddPhotDatas {
   constructor(public photDatas: PhotometryData[]) { }
 }
 
-export class RemovePhotDatasByHduId {
-  public static readonly type = '[Phot Data] Remove Phot Datas By HDU Id';
+export class RemovePhotDatasByLayerId {
+  public static readonly type = '[Phot Data] Remove Phot Datas By Layer Id';
 
-  constructor(public hduId: string = null) { }
+  constructor(public layerId: string = null) { }
 }
 
 export class RemovePhotDatasBySourceId {
@@ -748,5 +780,5 @@ export class SyncViewerNormalizations {
 export class SyncAfterglowHeaders {
   public static readonly type = '[Workbench] Sync Afterglow Headers';
 
-  constructor(public hduId: string) { }
+  constructor(public layerId: string) { }
 }

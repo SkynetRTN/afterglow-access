@@ -1,4 +1,4 @@
-import { State, Action, Selector, StateContext } from '@ngxs/store';
+import { State, Action, Selector, StateContext, createSelector } from '@ngxs/store';
 import { UpdateSource, AddSources, RemoveSources } from './sources.actions';
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { Source } from './models/source';
@@ -46,6 +46,13 @@ export class SourcesState {
   public static getSources(state: SourcesStateModel) {
     return Object.values(state.entities);
   }
+
+  public static getSourceById(id: string) {
+    return createSelector([SourcesState.getEntities], (sourceEntities: { [id: string]: Source }) => {
+      return sourceEntities[id] || null;
+    });
+  }
+
 
   @Action(ResetState)
   @ImmutableContext()
@@ -99,6 +106,13 @@ export class SourcesState {
   ) {
     let state = getState();
 
+    //add sources from other files with same label
+    let additionalSourceIds = []
+    sourceIds.forEach(id => {
+      let label = state.entities[id].label
+      additionalSourceIds = additionalSourceIds.concat(Object.values(state.entities).filter(source => source.label == label && !sourceIds.includes(source.id)).map(source => source.id))
+    })
+
     setState((state: SourcesStateModel) => {
       state.ids = state.ids.filter((id) => !sourceIds.includes(id));
       sourceIds.forEach((id) => {
@@ -107,5 +121,9 @@ export class SourcesState {
 
       return state;
     });
+
+    if (additionalSourceIds.length != 0) {
+      dispatch(new RemoveSources(additionalSourceIds))
+    }
   }
 }

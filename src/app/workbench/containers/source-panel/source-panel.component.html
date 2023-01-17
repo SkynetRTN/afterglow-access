@@ -1,0 +1,206 @@
+<ng-template #invalidLayerTypeBlock>
+    <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the source catalog tool.</div>
+</ng-template>
+
+<ng-template #layerNotSelectedBlock>
+    <div i18n class="alert alert-info" i18n>Please select an image layer instead of a file.</div>
+</ng-template>
+
+<ng-container *ngIf="config$ | async; let config">
+    <ng-container *ngIf="layer$ | async as layer; else layerNotSelectedBlock">
+        <ng-container *ngIf="imageLayer$ | async as imageLayer; else invalidLayerTypeBlock">
+            <div class="mb-3">
+                <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
+                    [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
+                    [disabled]="!(header$ | async)?.wcs?.isValid()" (change)="onCoordModeChange($event)">
+                    <mat-button-toggle value="pixel" i18n>Pixel Coordinate Mode</mat-button-toggle>
+                    <mat-button-toggle value="sky" i18n>Sky Coordinate Mode</mat-button-toggle>
+                </mat-button-toggle-group>
+            </div>
+
+            <div>
+                <p i18n>
+                    Manually add sources by clicking on them in your image or automatically add them using the options
+                    below.
+                </p>
+                <p class="pb-2">
+                    <ng-container i18n>Tip: To click beneath existing markers hold</ng-container><span
+                        class="kbd">Alt</span>
+                </p>
+
+                <div class="flex flex-row gap-6 mt-3 items-center">
+                    <mat-slide-toggle [checked]="config?.centroidClicks" [labelPosition]="'before'"
+                        (change)="onCentroidClicksChange($event)" i18n>
+                        Centroid clicks
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle class="m-2" [checked]="config?.planetCentroiding"
+                        [disabled]="!config?.centroidClicks" [labelPosition]="'after'"
+                        (change)="onPlanetCentroidingChange($event)" i18n>
+                        Planet Centroiding
+                    </mat-slide-toggle>
+
+                    <button mat-raised-button [matMenuTriggerFor]="menu" aria-label="Add sources menu">
+                        <mat-icon>add</mat-icon>
+                        <span i18n>Add Sources...</span>
+                    </button>
+                    <mat-menu #menu="matMenu">
+                        <button mat-menu-item (click)="openSourceExtractionDialog()">
+                            <mat-icon>location_searching</mat-icon>
+                            <span i18n>Source Extraction...</span>
+                        </button>
+                        <!-- <button mat-menu-item>
+                  <mat-icon>import_export</mat-icon>
+                  <span>Import from File...</span>
+                </button>
+                <button mat-menu-item>
+                  <mat-icon>input</mat-icon>
+                  <span>Manual Entry... </span>
+                </button> -->
+                    </mat-menu>
+                </div>
+            </div>
+
+            <hr />
+
+            <ng-container *ngIf="sources$ | async; let sources">
+                <div fxLayout="row wrap" fxLayoutGap="25px">
+                    <mat-slide-toggle class="my-2" [checked]="config?.showSourcesFromAllFiles" [labelPosition]="'after'"
+                        (change)="onShowSourcesFromAllFilesChange($event)" i18n>
+                        Include sources from other files
+                    </mat-slide-toggle>
+                    <mat-slide-toggle class="my-2" [checked]="config?.showSourceMarkers" [labelPosition]="'after'"
+                        (change)="onShowSourceMarkersChange($event)" i18n>
+                        Source Markers
+                    </mat-slide-toggle>
+                    <mat-slide-toggle class="my-2" [disabled]="!config?.showSourceMarkers"
+                        [checked]="config?.showSourceLabels" [labelPosition]="'after'"
+                        (change)="onShowSourceLabelsChange($event)" i18n>
+                        Marker Labels
+                    </mat-slide-toggle>
+                </div>
+                <div class="mb-3" style="max-height: 300px; overflow: auto">
+                    <mat-table app-cell-focuser #cellFocuser="cellFocuser" #table [dataSource]="tableData$ | async"
+                        matSort [matSortDisableClear]="true" [trackBy]="trackById" recycleRows>
+                        <ng-container matColumnDef="select">
+                            <mat-header-cell *matHeaderCellDef class="select-header-cell" app-focusable-cell
+                                #cell="cell" [rowIndex]="0" [columnIndex]="0" (focus)="cb?.focus()"
+                                [cellInTabOrder]="false">
+                                <mat-checkbox #cb [disabled]="!showSelectAll(sources)"
+                                    (change)="$event ? masterToggle(sources) : null"
+                                    [checked]="selectionModel.hasValue() && isAllSelected(sources)"
+                                    [indeterminate]="selectionModel.hasValue() && !isAllSelected(sources)"
+                                    [tabIndex]="cell.isActiveCell ? 0 : -1">
+                                </mat-checkbox>
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                                [rowIndex]="rowIndex + 1" [columnIndex]="0" (focus)="cb?.focus()"
+                                [cellInTabOrder]="selectionModel.isSelected(row.id)">
+                                <mat-checkbox #cb (click)="$event.stopPropagation()"
+                                    (change)="$event ? toggleSource(row) : null"
+                                    [checked]="selectionModel.isSelected(row.id)"
+                                    [tabIndex]="cell.isActiveCell ? 0 : -1">
+                                </mat-checkbox>
+                            </mat-cell>
+                        </ng-container>
+
+                        <ng-container matColumnDef="primaryCoord">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell"
+                                app-focusable-cell [rowIndex]="0" [columnIndex]="1" [cellInTabOrder]="true">
+                                X | RA
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                                [rowIndex]="rowIndex + 1" [columnIndex]="1" [cellInTabOrder]="true">
+                                {{
+                                row.posType == SourcePosType.PIXEL
+                                ? (row.primaryCoord | number: '0.0-5')
+                                : (row.primaryCoord | dms: '0.0-3')
+                                }}
+                            </mat-cell>
+                        </ng-container>
+
+                        <ng-container matColumnDef="secondaryCoord">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell"
+                                app-focusable-cell [rowIndex]="0" [columnIndex]="2" [cellInTabOrder]="true">
+                                Y | DEC
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                                [rowIndex]="rowIndex + 1" [columnIndex]="2" [cellInTabOrder]="true">
+                                {{
+                                row.posType == SourcePosType.PIXEL
+                                ? (row.secondaryCoord | number: '0.0-5')
+                                : (row.secondaryCoord | dms: '0.0-3')
+                                }}
+                            </mat-cell>
+                        </ng-container>
+
+                        <ng-container matColumnDef="label">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell"
+                                app-focusable-cell [rowIndex]="0" [columnIndex]="3" [cellInTabOrder]="true">
+                                ID
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                                [rowIndex]="rowIndex + 1" [columnIndex]="3" [cellInTabOrder]="true">
+                                {{ row.label }}
+                            </mat-cell>
+                        </ng-container>
+
+                        <ng-container matColumnDef="layer">
+                            <mat-header-cell *matHeaderCellDef mat-sort-header class="select-header-cell"
+                                app-focusable-cell [rowIndex]="0" [columnIndex]="3" [cellInTabOrder]="true">
+                                Layer
+                            </mat-header-cell>
+                            <mat-cell *matCellDef="let row; let rowIndex = index" app-focusable-cell #cell="cell"
+                                [rowIndex]="rowIndex + 1" [columnIndex]="3" [cellInTabOrder]="true">
+                                {{ getSourceLayerLabel(row.id) | async }}
+                            </mat-cell>
+                        </ng-container>
+
+
+
+                        <mat-header-row
+                            *matHeaderRowDef="['select', 'label', 'layer', 'primaryCoord', 'secondaryCoord']">
+                        </mat-header-row>
+                        <mat-row
+                            *matRowDef="let row; columns: ['select', 'label', 'layer', 'primaryCoord', 'secondaryCoord']">
+                        </mat-row>
+                    </mat-table>
+                </div>
+
+                <div fxLayout="row wrap" fxLayoutGap="5px" *ngIf="tableData$ | async; let tableData">
+                    <div class="my-1">
+                        <button mat-raised-button i18n-matTooltip matTooltip="Merge Selected Sources" color="primary"
+                            (click)="mergeSelectedSources()" [disabled]="mergeSelectedSourcesDisabled()">
+                            <mat-icon>merge_type</mat-icon>
+                        </button>
+                    </div>
+                    <div class="my-1">
+                        <button mat-raised-button i18n-matTooltip matTooltip="Remove Selected Sources" color="warn"
+                            (click)="removeSelectedSources()" [disabled]="selectionModel.selected.length == 0">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                    <div class="my-1">
+                        <button mat-raised-button i18n-matTooltip matTooltip="Remove All Sources" color="warn"
+                            (click)="this.onRemoveAllSources$.next()" [disabled]="sources?.length == 0">
+                            <mat-icon>delete_sweep</mat-icon>
+                        </button>
+                    </div>
+                    <div class="my-1">
+                        <button mat-raised-button i18n-matTooltip matTooltip="Export Data" color="primary"
+                            (click)="exportSourceData(tableData)" [disabled]="sources?.length == 0">
+                            <mat-icon>get_app</mat-icon>
+                        </button>
+                    </div>
+                </div>
+                <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+                    {{ mergeError }}
+                </div>
+
+                <div *ngIf="mergeError" class="mt-2 alert alert-danger">
+                    {{ mergeError }}
+                </div>
+
+            </ng-container>
+        </ng-container>
+    </ng-container>

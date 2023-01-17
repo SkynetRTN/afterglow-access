@@ -13,7 +13,7 @@ export class AfterglowCatalogService {
   constructor(private http: HttpClient, private config: AfterglowConfigService) { }
 
   getCatalogs(): Observable<Catalog[]> {
-    return this.http.get<any>(`${getCoreApiUrl(this.config)}/catalogs`).pipe(
+    return this.http.get<any>(`${getCoreApiUrl(this.config)}/catalogs/`).pipe(
       map((res) => {
         return res.data;
       })

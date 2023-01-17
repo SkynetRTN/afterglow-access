@@ -23,8 +23,9 @@ import {
   isLineMarker,
   isPhotometryMarker,
   PhotometryMarker,
+  isSourceMarker,
 } from '../../models/marker';
-import { DataFile, ImageHdu } from '../../../data-files/models/data-file';
+import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
 import { Transform, transformToMatrix } from '../../../data-files/models/transformation';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -204,4 +205,5 @@ export class ImageViewerMarkerOverlayComponent implements OnInit, OnChanges, Aft
   isRectangleMarker = isRectangleMarker;
   isLineMarker = isLineMarker;
   isPhotometryMarker = isPhotometryMarker;
+  isSourceMarker = isSourceMarker;
 }

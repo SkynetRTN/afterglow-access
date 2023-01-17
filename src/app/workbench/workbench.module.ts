@@ -18,7 +18,6 @@ import { DataFileListComponent } from './containers/data-file-list/data-file-lis
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
 import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
-import { GlobalSettingsDialogComponent } from './components/global-settings-dialog/global-settings-dialog.component';
 import { SourceExtractionRegionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
@@ -52,7 +51,6 @@ import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
-import { ThemeDialogComponent } from './components/theme-dialog/theme-dialog.component';
 import { AvatarModule } from 'ngx-avatar';
 import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/viewer-panel-layout.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
@@ -61,7 +59,7 @@ import { WcsCalibrationPanelComponent } from './containers/wcs-calibration-panel
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FileListOptionComponent } from './containers/file-list-option/file-list-option.component';
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
-import { ImageHduToolbarComponent } from './components/image-hdu-toolbar/image-hdu-toolbar.component';
+import { ImageLayerToolbarComponent } from './components/image-layer-toolbar/image-layer-toolbar.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/svg-outlined-ellipse.component';
 import { ImageViewerEventService } from './services/image-viewer-event.service';
@@ -72,10 +70,13 @@ import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
 import { ColorPickerModule } from 'ngx-color-picker';
-import { RenameHduDialogComponent } from './components/rename-hdu-dialog/rename-hdu-dialog.component';
+import { RenameLayerDialogComponent } from './components/rename-layer-dialog/rename-layer-dialog.component';
 import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
 import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 import { SourceNeutralizationDialogComponent } from './components/source-neutralization-dialog/source-neutralization-dialog.component';
+import { SourcePanelComponent } from './containers/source-panel/source-panel.component';
+import { SvgSourceMarkerComponent } from './components/svg-source-marker/svg-source-marker.component';
+import { MergeSourcesDialogComponent } from './components/merge-sources-dialog/merge-sources-dialog.component';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -102,7 +103,6 @@ export const COMPONENTS = [
   ImageCalculatorPageComponent,
   StackerPanelComponent,
   AlignerPageComponent,
-  GlobalSettingsDialogComponent,
   SourceExtractionRegionDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
@@ -111,22 +111,24 @@ export const COMPONENTS = [
   FileInfoToolsetComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
-  ThemeDialogComponent,
   ViewerPanelComponent,
   ViewerPanelLayoutComponent,
   SaveChangesDialogComponent,
   JobProgressDialogComponent,
   WcsCalibrationPanelComponent,
   FileToolbarComponent,
-  ImageHduToolbarComponent,
+  ImageLayerToolbarComponent,
   FileListOptionComponent,
   CatalogImportComponent,
   ImageOrientationToolbarComponent,
   PsfMatchingDialogComponent,
-  RenameHduDialogComponent,
+  RenameLayerDialogComponent,
   RenameFileDialogComponent,
   PhotometricColorBalanceDialogComponent,
-  SourceNeutralizationDialogComponent
+  SourceNeutralizationDialogComponent,
+  SourcePanelComponent,
+  SvgSourceMarkerComponent,
+  MergeSourcesDialogComponent
 ];
 
 @NgModule({

@@ -18,14 +18,19 @@ export class JobsTableComponent implements OnInit {
   @Input() selectedJob: Job;
 
   @Output() selectionChange = new EventEmitter<Job>();
+  @Output() cancelJob = new EventEmitter<Job>();
 
-  displayedColumns = ['id', 'type', 'state', 'createdOn']
+  displayedColumns = ['id', 'type', 'state', 'createdOn', 'actions']
 
   constructor(private store: Store) {
 
   }
 
   ngOnInit(): void {
+  }
+
+  onCancelJobBtnClick(job: Job) {
+    this.cancelJob.emit(job)
   }
 
 }

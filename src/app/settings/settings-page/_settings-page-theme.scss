@@ -1,0 +1,33 @@
+@use '@angular/material' as mat;
+@mixin settings-page-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+  $is-dark-theme: map-get($theme, is-dark);
+
+  app-settings-page {
+    
+    .sidebar-nav {
+      background: mat.get-color-from-palette($background, background);
+      color: mat.get-color-from-palette($foreground, text);
+      box-shadow: 0px 0px 5px 5px mat.get-color-from-palette($foreground, divider);
+    }
+
+    .sidebar-panel {
+      background: mat.get-color-from-palette($background, card);
+    }
+
+    .mat-list-item.active, .mat-list-item.active:focus, , .mat-list-item.active:hover {
+      color: mat.get-color-from-palette($primary);
+      background: mat.get-color-from-palette($background, selected-button);
+    }
+
+    .mat-selection-list {
+      background: mat.get-color-from-palette($background, tooltip);
+    }
+
+    
+  }
+}

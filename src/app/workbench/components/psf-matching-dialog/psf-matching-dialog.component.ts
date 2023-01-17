@@ -7,8 +7,8 @@ import { Observable, Subject } from 'rxjs';
 import { filter, switchMap, take, takeUntil } from 'rxjs/operators';
 import { InvalidateHeader, InvalidateRawImageTiles } from 'src/app/data-files/data-files.actions';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
-import { DataFile, IHdu } from 'src/app/data-files/models/data-file';
-import { HduType } from 'src/app/data-files/models/data-file-type';
+import { DataFile, ILayer } from 'src/app/data-files/models/data-file';
+import { LayerType } from 'src/app/data-files/models/data-file-type';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from 'src/app/jobs/models/pixel-ops';
@@ -27,10 +27,10 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   destroy$ = new Subject<boolean>();
   displayedColumns: string[] = ['order', 'name', 'type', 'fwhmX', 'fwhmY', 'status'];
   file: DataFile;
-  hdus: IHdu[];
-  fwhmByHduId: { [hduId: string]: { fwhmX: number, fwhmY: number, fwhm: number } } = {};
-  extractionState: { [hduId: string]: { status: 'pending' | 'success' | 'error'; message: string, loading: boolean, sourceExtractionJobId?: string } } = {}
-  blurState: { [hduId: string]: { status: 'pending' | 'success' | 'error'; message: string, loading: boolean, pixelOpsJobId?: string } } = {}
+  layers: ILayer[];
+  fwhmByLayerId: { [layerId: string]: { fwhmX: number, fwhmY: number, fwhm: number } } = {};
+  extractionState: { [layerId: string]: { status: 'pending' | 'success' | 'error'; message: string, loading: boolean, sourceExtractionJobId?: string } } = {}
+  blurState: { [layerId: string]: { status: 'pending' | 'success' | 'error'; message: string, loading: boolean, pixelOpsJobId?: string } } = {}
 
   constructor(
     public dialogRef: MatDialogRef<PsfMatchingDialogComponent>,
@@ -42,20 +42,20 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   ) {
 
     // this.file = this.store.selectSnapshot(DataFilesState.getFileById(fileId))
-    // this.hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(fileId))
+    // this.layers = this.store.selectSnapshot(DataFilesState.getLayersByFileId(fileId))
 
-    // this.hdus.forEach(hdu => {
-    //   if (hdu.type == HduType.TABLE) {
-    //     this.extractionState[hdu.id] = { status: 'success', message: 'N/A', loading: false }
+    // this.layers.forEach(layer => {
+    //   if (layer.type == LayerType.TABLE) {
+    //     this.extractionState[layer.id] = { status: 'success', message: 'N/A', loading: false }
     //   }
     //   else {
-    //     this.extractionState[hdu.id] = { status: 'pending', message: 'Analyzing...', loading: false }
+    //     this.extractionState[layer.id] = { status: 'pending', message: 'Analyzing...', loading: false }
     //   }
     // })
 
 
-    // this.hdus.filter(hdu => hdu.type == HduType.IMAGE).forEach(hdu => {
-    //   let jobFinished$ = this.extractSources(hdu);
+    // this.layers.filter(layer => layer.type == LayerType.IMAGE).forEach(layer => {
+    //   let jobFinished$ = this.extractSources(layer);
 
     //   jobFinished$.pipe(
     //     takeUntil(this.destroy$)
@@ -66,22 +66,22 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
     //       if (!isSourceExtractionJob(job)) return;
 
     //       if (job.result.data.length != 0) {
-    //         this.extractionState[hdu.id].message = 'waiting for analysis of other layers...'
-    //         this.extractionState[hdu.id].status = 'success'
-    //         this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
+    //         this.extractionState[layer.id].message = 'waiting for analysis of other layers...'
+    //         this.extractionState[layer.id].status = 'success'
+    //         this.fwhmByLayerId[layer.id] = this.fwhmFromExtractionResult(job.result)
     //       }
     //       else {
-    //         this.extractionState[hdu.id].message = `error analyzing PSF`
-    //         this.extractionState[hdu.id].status = 'error'
+    //         this.extractionState[layer.id].message = `error analyzing PSF`
+    //         this.extractionState[layer.id].status = 'error'
     //       }
 
 
     //     } else {
-    //       this.extractionState[hdu.id].message = `error analyzing PSF`
-    //       this.extractionState[hdu.id].status = 'error'
+    //       this.extractionState[layer.id].message = `error analyzing PSF`
+    //       this.extractionState[layer.id].status = 'error'
     //     }
 
-    //     this.extractionState[hdu.id].loading = false;
+    //     this.extractionState[layer.id].loading = false;
     //   })
     // })
 
@@ -100,7 +100,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
 
   // }
 
-  // private extractSources(hdu: IHdu) {
+  // private extractSources(layer: ILayer) {
   //   let settings = this.store.selectSnapshot(WorkbenchState.getSettings)
   //   let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
 
@@ -108,7 +108,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //   let job: SourceExtractionJob = {
   //     id: null,
   //     type: JobType.SourceExtraction,
-  //     fileIds: [hdu.id],
+  //     fileIds: [layer.id],
   //     sourceExtractionSettings: jobSettings,
   //     mergeSources: false,
   //     state: null,
@@ -116,7 +116,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
 
   //   let correlationId = this.correlationIdGenerator.next();
   //   this.store.dispatch(new CreateJob(job, 1000, correlationId));
-  //   this.extractionState[hdu.id].loading = true;
+  //   this.extractionState[layer.id].loading = true;
 
   //   let jobFinished$ = this.actions$.pipe(
   //     ofActionCompleted(CreateJob),
@@ -129,7 +129,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //     filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
   //     takeUntil(jobFinished$),
   //   ).subscribe(a => {
-  //     this.extractionState[hdu.id].sourceExtractionJobId = a.job.id;
+  //     this.extractionState[layer.id].sourceExtractionJobId = a.job.id;
   //   })
 
   //   return jobFinished$
@@ -144,26 +144,26 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   }
 
   // extractionIsComplete() {
-  //   return !this.hdus.map(hdu => this.extractionState[hdu.id].status != 'pending').includes(false)
+  //   return !this.layers.map(layer => this.extractionState[layer.id].status != 'pending').includes(false)
   // }
 
   // getMaxFwhm() {
-  //   return Math.max(...Object.values(this.fwhmByHduId).filter(value => value.fwhm).map(value => value.fwhm))
+  //   return Math.max(...Object.values(this.fwhmByLayerId).filter(value => value.fwhm).map(value => value.fwhm))
   // }
 
-  // canBlur(hdu: IHdu) {
-  //   if (hdu.type != HduType.IMAGE) return false;
+  // canBlur(layer: ILayer) {
+  //   if (layer.type != LayerType.IMAGE) return false;
 
-  //   let fwhm = this.fwhmByHduId[hdu.id]?.fwhm || null;
+  //   let fwhm = this.fwhmByLayerId[layer.id]?.fwhm || null;
   //   let maxFwhm = this.getMaxFwhm();
   //   return maxFwhm && fwhm && fwhm < maxFwhm
   // }
 
-  // blurHdu(hdu: IHdu) {
-  //   if (!this.canBlur(hdu)) return;
+  // blurLayer(layer: ILayer) {
+  //   if (!this.canBlur(layer)) return;
 
   //   let maxFwhm = this.getMaxFwhm();
-  //   let fwhm = this.fwhmByHduId[hdu.id]?.fwhm;
+  //   let fwhm = this.fwhmByLayerId[layer.id]?.fwhm;
 
   //   if (!maxFwhm || !fwhm) return;
 
@@ -172,7 +172,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //   let job: PixelOpsJob = {
   //     id: null,
   //     type: JobType.PixelOps,
-  //     fileIds: [hdu.id],
+  //     fileIds: [layer.id],
   //     auxFileIds: [],
   //     inplace: true,
   //     op: `gaussian_filter(img, ${sigma})`,
@@ -181,7 +181,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
 
   //   let correlationId = this.correlationIdGenerator.next();
   //   this.store.dispatch(new CreateJob(job, 1000, correlationId));
-  //   this.blurState[hdu.id] = { message: 'blurring...', loading: true, status: 'pending' };
+  //   this.blurState[layer.id] = { message: 'blurring...', loading: true, status: 'pending' };
 
   //   let jobFinished$ = this.actions$.pipe(
   //     ofActionCompleted(CreateJob),
@@ -194,7 +194,7 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //     filter<CreateJobSuccess>((a) => a.correlationId == correlationId),
   //     takeUntil(jobFinished$),
   //   ).subscribe(a => {
-  //     this.blurState[hdu.id].pixelOpsJobId = a.job.id;
+  //     this.blurState[layer.id].pixelOpsJobId = a.job.id;
   //   })
 
   //   jobFinished$.pipe(
@@ -203,12 +203,12 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //     if (v.result.successful) {
   //       let a = v.action as CreateJob;
 
-  //       this.store.dispatch([new InvalidateRawImageTiles(hdu.id), new InvalidateHeader(hdu.id)])
+  //       this.store.dispatch([new InvalidateRawImageTiles(layer.id), new InvalidateHeader(layer.id)])
 
-  //       this.blurState[hdu.id].message = ''
-  //       this.blurState[hdu.id].status = 'success'
+  //       this.blurState[layer.id].message = ''
+  //       this.blurState[layer.id].status = 'success'
 
-  //       let extractionJobFinished$ = this.extractSources(hdu);
+  //       let extractionJobFinished$ = this.extractSources(layer);
 
   //       extractionJobFinished$.pipe(
   //         takeUntil(this.destroy$)
@@ -219,19 +219,19 @@ export class PsfMatchingDialogComponent implements OnInit, OnDestroy {
   //           if (!isSourceExtractionJob(job)) return;
 
   //           if (job.result.data.length != 0) {
-  //             this.fwhmByHduId[hdu.id] = this.fwhmFromExtractionResult(job.result)
+  //             this.fwhmByLayerId[layer.id] = this.fwhmFromExtractionResult(job.result)
   //           }
   //         }
 
-  //         this.extractionState[hdu.id].loading = false;
+  //         this.extractionState[layer.id].loading = false;
   //       })
 
   //     } else {
-  //       this.blurState[hdu.id].message = `error blurring layer`
-  //       this.blurState[hdu.id].status = 'error'
+  //       this.blurState[layer.id].message = `error blurring layer`
+  //       this.blurState[layer.id].status = 'error'
   //     }
 
-  //     this.blurState[hdu.id].loading = false;
+  //     this.blurState[layer.id].loading = false;
   //   })
   // }
 

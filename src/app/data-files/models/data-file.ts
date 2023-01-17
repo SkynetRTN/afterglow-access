@@ -1,8 +1,8 @@
 import * as moment from 'moment';
 
-import { HduType } from './data-file-type';
+import { LayerType } from './data-file-type';
 import { HeaderEntry } from './header-entry';
-import { ImageHist } from './image-hist';
+import { ImageHistogram } from './image-histogram';
 import { Wcs } from '../../image-tools/wcs';
 import { Source, PosType } from '../../workbench/models/source';
 import { parseDms } from '../../utils/skynet-astro';
@@ -24,13 +24,9 @@ export interface ITransformableImageData {
   viewportTransformId: string;
   imageTransformId: string;
   rgbaImageDataId: string;
-  // redChannelId: string;
-  // greenChannelId: string;
-  // blueChannelId: string;
 }
 
 export enum ColorBalanceMode {
-  MANUAL = 'manual',
   PERCENTILE = 'percentile',
   HISTOGRAM_FITTING = 'histogram_fitting'
 }
@@ -40,9 +36,7 @@ export interface DataFile extends ITransformableImageData {
   name: string;
   dataProviderId: string;
   assetPath: string;
-  hduIds: string[];
-  imageHduIds: string[];
-  tableHduIds: string[];
+  layerIds: string[];
   syncLayerNormalizers: boolean;
   colorBalanceMode: ColorBalanceMode;
   channelMixer: [[number, number, number], [number, number, number], [number, number, number]];
@@ -57,8 +51,8 @@ export interface Header {
   wcs: Wcs | null;
 }
 
-export interface IHdu {
-  readonly type: HduType;
+export interface ILayer {
+  readonly type: LayerType;
   id: string;
   loading: boolean;
   loaded: boolean;
@@ -69,10 +63,10 @@ export interface IHdu {
   name: string;
 }
 
-export interface ImageHdu extends IHdu, ITransformableImageData {
-  readonly type: HduType.IMAGE;
+export interface ImageLayer extends ILayer, ITransformableImageData {
+  readonly type: LayerType.IMAGE;
   precision: PixelPrecision;
-  hist: ImageHist;
+  histogram: ImageHistogram;
   rawImageDataId: string;
   normalizer: PixelNormalizer;
   blendMode: BlendMode;
@@ -80,17 +74,17 @@ export interface ImageHdu extends IHdu, ITransformableImageData {
   visible: boolean;
 }
 
-export const isImageHdu: TypeGuard<IHdu, ImageHdu> = (
-  hdu: IHdu
-): hdu is ImageHdu => hdu.type === HduType.IMAGE;
+export const isImageLayer: TypeGuard<ILayer, ImageLayer> = (
+  layer: ILayer
+): layer is ImageLayer => layer.type === LayerType.IMAGE;
 
-export interface TableHdu extends IHdu {
-  readonly type: HduType.TABLE;
+export interface TableLayer extends ILayer {
+  readonly type: LayerType.TABLE;
 }
 
-export const isTableHdu: TypeGuard<IHdu, TableHdu> = (
-  hdu: IHdu
-): hdu is TableHdu => hdu.type === HduType.TABLE;
+export const isTableLayer: TypeGuard<ILayer, TableLayer> = (
+  layer: ILayer
+): layer is TableLayer => layer.type === LayerType.TABLE;
 
 
 
@@ -295,14 +289,17 @@ export function getSourceCoordinates(header: Header, source: Source) {
     if (!fileEpoch) return null;
 
     let deltaT = (fileEpoch.getTime() - new Date(epoch).getTime()) / 1000.0;
-    let mu = (source.pm * deltaT) / 3600.0;
+    let mu = (source.pm * deltaT) / ((source.posType == PosType.PIXEL) ? 1 : 3600.0);
     let theta = source.pmPosAngle * (Math.PI / 180.0);
-    let cd = Math.cos((secondaryCoord * Math.PI) / 180);
-
-    primaryCoord += (mu * Math.sin(theta)) / cd / 15;
-    primaryCoord = primaryCoord % 360;
+    let cd = ((source.posType == PosType.PIXEL) ? 1 : Math.cos((secondaryCoord * Math.PI) / 180));
+    primaryCoord += (mu * Math.sin(theta)) / cd / ((source.posType == PosType.PIXEL) ? 1 : 15);
     secondaryCoord += mu * Math.cos(theta);
-    secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
+
+    if (source.posType == PosType.SKY) {
+      primaryCoord = primaryCoord % 360;
+      secondaryCoord = Math.max(-90, Math.min(90, secondaryCoord));
+    }
+
 
     // primaryCoord += (primaryRate * deltaT)/3600/15 * (source.posType == PosType.PIXEL ? 1 : Math.cos(secondaryCoord*Math.PI/180));
   }

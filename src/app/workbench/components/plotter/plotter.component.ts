@@ -3,7 +3,7 @@ import { Component, OnInit, OnChanges, ViewChild, AfterViewInit, Input, ChangeDe
 import { Subject } from 'rxjs';
 import { debounceTime, throttleTime } from 'rxjs/operators';
 
-import { DataFile, ImageHdu, PixelType } from '../../../data-files/models/data-file';
+import { DataFile, ImageLayer, PixelType } from '../../../data-files/models/data-file';
 import { PlotlyTheme, ThemeStorage } from '../../../theme-picker/theme-storage/theme-storage';
 import { getPixel, getPixels, IImageData } from '../../../data-files/models/image-data';
 import { Wcs } from '../../../image-tools/wcs';

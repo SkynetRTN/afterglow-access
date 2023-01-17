@@ -8,9 +8,9 @@ import {
   AfterViewInit,
   ViewChild,
 } from '@angular/core';
-import { DataFile, IHdu, ImageHdu, isImageHdu } from '../../../data-files/models/data-file';
+import { DataFile, ILayer, ImageLayer, isImageLayer } from '../../../data-files/models/data-file';
 import { Actions, ofActionCompleted, ofActionDispatched, Store } from '@ngxs/store';
-import { HduType } from '../../../data-files/models/data-file-type';
+import { LayerType } from '../../../data-files/models/data-file-type';
 import { BehaviorSubject, Observable, combineLatest, Subject, concat } from 'rxjs';
 import { DataFilesState } from '../../../data-files/data-files.state';
 import { MatSelectionListChange } from '@angular/material/list';
@@ -23,9 +23,10 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { aColorMap, balmerColorMap, blueColorMap, coolColorMap, grayColorMap, greenColorMap, heatColorMap, oiiColorMap, rainbowColorMap, redColorMap } from 'src/app/data-files/models/color-map';
 import { BlendMode } from 'src/app/data-files/models/blend-mode';
 import { MatDialog } from '@angular/material/dialog';
-import { RenameHduDialogComponent } from '../../components/rename-hdu-dialog/rename-hdu-dialog.component';
+import { RenameLayerDialogComponent } from '../../components/rename-layer-dialog/rename-layer-dialog.component';
 import { RenameFileDialogComponent } from '../../components/rename-file-dialog/rename-file-dialog.component';
 import { take, takeUntil } from 'rxjs/operators';
+import { Guid } from 'guid-typescript';
 
 @Component({
   selector: 'app-data-file-list',
@@ -34,7 +35,7 @@ import { take, takeUntil } from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataFileListComponent implements OnDestroy, AfterViewInit {
-  isImageHdu = isImageHdu;
+  isImageLayer = isImageLayer;
 
   colorMaps = [
     grayColorMap,
@@ -101,11 +102,11 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
   selectAllChecked$: Observable<boolean>;
   selectAllIndeterminate$: Observable<boolean>;
   destroy$ = new Subject<boolean>();
-  HduType = HduType;
+  LayerType = LayerType;
   collapsedFileIds: { [id: string]: boolean } = {};
-  focusedValue: { fileId: string; hduId: string } = null;
+  focusedValue: { fileId: string; layerId: string } = null;
 
-  constructor(private store: Store, private fileService: AfterglowDataFileService, private dialog: MatDialog, private actions$: Actions) { }
+  constructor(private store: Store, private fileService: AfterglowDataFileService, private dialog: MatDialog, private actions$: Actions, private dataFileService: AfterglowDataFileService) { }
 
   ngAfterViewInit() { }
 
@@ -114,22 +115,22 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     this.destroy$.unsubscribe();
   }
 
-  handleItemDoubleClick(value: { fileId: string; hduId: string }) {
-    this.selectFile(value.fileId, value.hduId, true);
+  handleItemDoubleClick(value: { fileId: string; layerId: string }) {
+    this.selectFile(value.fileId, value.layerId, true);
   }
 
-  selectFile(fileId: string, hduId: string, keepOpen: boolean) {
-    if (!hduId) {
+  selectFile(fileId: string, layerId: string, keepOpen: boolean) {
+    if (!layerId) {
       let file = this.store.selectSnapshot(DataFilesState.getFileById(fileId));
-      if (file && file.hduIds.length == 1) {
-        //if a single-hdu file is selected,  automatically select the hdu
-        hduId = file.hduIds[0];
+      if (file && file.layerIds.length == 1) {
+        //if a single-layer file is selected,  automatically select the layer
+        layerId = file.layerIds[0];
       }
     }
-    this.store.dispatch(new SelectFile(fileId, hduId, keepOpen));
+    this.store.dispatch(new SelectFile(fileId, layerId, keepOpen));
   }
 
-  handleToggleExpanded($event: { fileId: string; hduId: string }) {
+  handleToggleExpanded($event: { fileId: string; layerId: string }) {
     if ($event.fileId in this.collapsedFileIds) {
       delete this.collapsedFileIds[$event.fileId];
     } else {
@@ -137,7 +138,7 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  handleToggleSelected($event: { fileId: string; hduId: string; $event: MouseEvent }) {
+  handleToggleSelected($event: { fileId: string; layerId: string; $event: MouseEvent }) {
     //TODO handle multi-selection based on modifier keys
     this.store.dispatch(new ToggleFileSelection($event.fileId));
   }
@@ -146,19 +147,19 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     return file?.id;
   }
 
-  onLayerDrop($event: CdkDragDrop<IHdu[]>) {
-    let item: { fileId: string, hduId: string } = $event.item.data;
-    let hdus = this.store.selectSnapshot(DataFilesState.getHdusByFileId(item.fileId)).sort((a, b) => a.order - b.order)
+  onLayerDrop($event: CdkDragDrop<ILayer[]>) {
+    let item: { fileId: string, layerId: string } = $event.item.data;
+    let layers = this.store.selectSnapshot(DataFilesState.getLayersByFileId(item.fileId)).sort((a, b) => a.order - b.order)
 
     let shift = $event.currentIndex - $event.previousIndex;
-    let previousIndex = hdus.findIndex(hdu => hdu.id == item.hduId);
-    let currentIndex = Math.min(hdus.length - 1, Math.max(0, previousIndex + shift))
+    let previousIndex = layers.findIndex(layer => layer.id == item.layerId);
+    let currentIndex = Math.min(layers.length - 1, Math.max(0, previousIndex + shift))
 
-    moveItemInArray(hdus, previousIndex, currentIndex)
-    let reqs = hdus
-      .map((hdu, index) => {
-        if (hdu.order == index) return null;
-        return this.fileService.updateFile(hdu.id, {
+    moveItemInArray(layers, previousIndex, currentIndex)
+    let reqs = layers
+      .map((layer, index) => {
+        if (layer.order == index) return null;
+        return this.fileService.updateFile(layer.id, {
           groupOrder: index,
         });
       })
@@ -181,11 +182,11 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     );
   }
 
-  handleFocus(value: { fileId: string; hduId: string }) {
+  handleFocus(value: { fileId: string; layerId: string }) {
     this.focusedValue = value;
   }
 
-  handleMouseEnter(value: { fileId: string; hduId: string }) {
+  handleMouseEnter(value: { fileId: string; layerId: string }) {
     this.focusedValue = value;
   }
 
@@ -218,12 +219,12 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
     this.contextMenu.openMenu();
   }
 
-  onHduContextMenu(event: MouseEvent, hduId: string) {
+  onLayerContextMenu(event: MouseEvent, layerId: string) {
     event.preventDefault();
     this.contextMenuPosition.x = event.clientX + 'px';
     this.contextMenuPosition.y = event.clientY + 'px';
     this.contextMenu.menuData = {
-      hdu: this.store.selectSnapshot(DataFilesState.getHduById(hduId))
+      layer: this.store.selectSnapshot(DataFilesState.getLayerById(layerId))
     };
     this.contextMenu.menu.focusFirstItem('mouse');
     this.contextMenu.openMenu();
@@ -242,21 +243,43 @@ export class DataFileListComponent implements OnDestroy, AfterViewInit {
   }
 
 
-  renameHdu(hdu: IHdu) {
-    let dialogRef = this.dialog.open(RenameHduDialogComponent, { data: hdu })
-    dialogRef.afterClosed().subscribe((hdu) => {
-      if (!hdu) return;
+  renameLayer(layer: ILayer) {
+    let dialogRef = this.dialog.open(RenameLayerDialogComponent, { data: layer })
+    dialogRef.afterClosed().subscribe((layer) => {
+      if (!layer) return;
       this.store.dispatch(new LoadLibrary())
     })
   }
 
-  setColorMap(hdu: ImageHdu, value: string) {
-    this.store.dispatch(new UpdateNormalizer(hdu.id, { colorMapName: value }))
+  duplicateLayer(layer: ILayer) {
+    this.dataFileService.createFromFileId(`Copy of ${layer.name}`, layer.id).subscribe(
+      () => {
+        this.store.dispatch(new LoadLibrary())
+      },
+      () => {
+
+      })
+
   }
-  setBlendMode(hdu: ImageHdu, value: BlendMode) {
-    this.store.dispatch(new UpdateBlendMode(hdu.id, value));
+
+  removeLayer(layer: ILayer) {
+    this.dataFileService.updateFile(layer.id, { groupName: layer.name }).subscribe(
+      () => {
+        this.store.dispatch(new LoadLibrary())
+      },
+      () => {
+
+      })
+
   }
-  setAlpha(hdu: ImageHdu, value: number) {
-    this.store.dispatch(new UpdateAlpha(hdu.id, value));
+
+  setColorMap(layer: ImageLayer, value: string) {
+    this.store.dispatch(new UpdateNormalizer(layer.id, { colorMapName: value }))
+  }
+  setBlendMode(layer: ImageLayer, value: BlendMode) {
+    this.store.dispatch(new UpdateBlendMode(layer.id, value));
+  }
+  setAlpha(layer: ImageLayer, value: number) {
+    this.store.dispatch(new UpdateAlpha(layer.id, value));
   }
 }

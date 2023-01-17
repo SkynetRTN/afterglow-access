@@ -7,6 +7,11 @@
           [matTooltip]="marker.tooltip?.message" [matTooltipHideDelay]="marker.tooltip?.hideDelay"
           [matTooltipShowDelay]="marker.tooltip?.showDelay" [matTooltipClass]="marker.tooltip?.class"></g>
 
+        <g *ngIf="marker | guardType: isSourceMarker as sourceMarker" app-svg-source-marker class="source-marker"
+          [marker]="sourceMarker" (click)="handleMarkerClick($event, marker)" style="pointer-events: fill"
+          [matTooltip]="marker.tooltip?.message" [matTooltipHideDelay]="marker.tooltip?.hideDelay"
+          [matTooltipShowDelay]="marker.tooltip?.showDelay" [matTooltipClass]="marker.tooltip?.class"></g>
+
         <g *ngIf="marker | guardType: isPhotometryMarker as photometryMarker" app-svg-photometry-marker
           class="photometry-marker" [marker]="photometryMarker" (click)="handleMarkerClick($event, marker)"
           style="pointer-events: fill" [matTooltip]="marker.tooltip?.message"

@@ -212,7 +212,7 @@
   </div>
   <div class="grabber" appResize [leftElement]="viewerGrid" [rightElement]="toolPanel" [resizeLeft]="false"></div>
 
-  <div #toolPanel fxFlex="0 0 auto" style="width: 550px" class="workbench-tool-panel" [class]="activeTool$ | async"
+  <div #toolPanel fxFlex="0 0 auto" style="width: 600px" class="workbench-tool-panel" [class]="activeTool$ | async"
     role="region" aria-labelledby="settings-header" [ngClass]="{ 'full-screen': inFullScreenMode$ | async }" [fxShow]="
         ((inFullScreenMode$ | async) && (fullScreenPanel$ | async) == 'tool') ||
         (!(inFullScreenMode$ | async) && (showConfig$ | async))
@@ -225,9 +225,10 @@
           <ng-container *ngSwitchCase="WorkbenchTool.CUSTOM_MARKER" i18n>Custom Markers</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.PLOTTER" i18n>Plotter</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.SONIFIER" i18n>Sonifier</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.SOURCE" i18n>Source Catalog</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.PHOTOMETRY" i18n>Photometry</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.PIXEL_OPS" i18n>Pixel Operations</ng-container>
-          <ng-container *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" i18n>WCS Calibration</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</ng-container>
         </h2>
@@ -249,22 +250,28 @@
         <app-sonification-panel *ngSwitchCase="WorkbenchTool.SONIFIER" [viewerId]="focusedViewerId$ | async">
         </app-sonification-panel>
 
+        <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [viewerId]="focusedViewerId$ | async"
+          [layerIds]="filteredLayerIds$ | async">
+        </app-wcs-calibration-panel>
+
+        <app-source-panel *ngSwitchCase="WorkbenchTool.SOURCE" [viewerId]="focusedViewerId$ | async">
+        </app-source-panel>
+
+
         <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [viewerId]="focusedViewerId$ | async"
-          [batchHduIdOptions]="filteredImageHduIds$ | async">
+          [batchLayerIdOptions]="filteredImageLayerIds$ | async">
         </app-photometry-panel>
 
         <app-pixel-ops-panel *ngSwitchCase="WorkbenchTool.PIXEL_OPS" [viewerId]="focusedViewerId$ | async"
-          [availableHduIds]="filteredImageHduIds$ | async">
+          [availableLayerIds]="filteredImageLayerIds$ | async">
         </app-pixel-ops-panel>
 
-        <app-wcs-calibration-panel *ngSwitchCase="WorkbenchTool.WCS_CALIBRATION" [viewerId]="focusedViewerId$ | async"
-          [hduIds]="filteredHduIds$ | async">
-        </app-wcs-calibration-panel>
 
-        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [hduIds]="filteredHduIds$ | async">
+
+        <app-aligning-panel *ngSwitchCase="WorkbenchTool.ALIGNER" [layerIds]="filteredLayerIds$ | async">
         </app-aligning-panel>
 
-        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [hduIds]="filteredHduIds$ | async">
+        <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [layerIds]="filteredLayerIds$ | async">
         </app-stacking-panel>
       </div>
     </div>
@@ -359,43 +366,6 @@
           </div>
         </ng-template>
 
-
-        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY else photometryButtonBlock"
-          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Photometry"
-          [matTooltipPosition]="'left'" aria-label="Hide Photometry" aria-selected
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
-          <button mat-icon-button>
-            <mat-icon>star_border</mat-icon>
-          </button>
-        </div>
-        <ng-template #photometryButtonBlock>
-          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Photometry" [matTooltipPosition]="'left'"
-            aria-label="Show Photometry" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
-            <button mat-icon-button>
-              <mat-icon>star_border</mat-icon>
-            </button>
-          </div>
-        </ng-template>
-
-        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS else pixelOpsButtonBlock"
-          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Pixel Operations"
-          [matTooltipPosition]="'left'" aria-label="Hide Pixel Operations" aria-selected
-          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
-          <button mat-icon-button>
-            <mat-icon>add_to_photos</mat-icon>
-          </button>
-        </div>
-        <ng-template #pixelOpsButtonBlock>
-          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Pixel Operations"
-            [matTooltipPosition]="'left'" aria-label="Show Pixel Operations"
-            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
-            <button mat-icon-button>
-              <mat-icon>add_to_photos</mat-icon>
-            </button>
-          </div>
-        </ng-template>
-
-
         <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.WCS_CALIBRATION else wcsCalibrationButtonBlock"
           class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide WCS Calibration"
           [matTooltipPosition]="'left'" aria-label="Hide WCS Calibration" aria-selected
@@ -413,6 +383,45 @@
             </button>
           </div>
         </ng-template>
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.SOURCE else sourceButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Source Catalog"
+          [matTooltipPosition]="'left'" aria-label="Hide Source Catalog" aria-selected
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SOURCE)">
+          <button mat-icon-button>
+            <mat-icon>star_border</mat-icon>
+          </button>
+        </div>
+        <ng-template #sourceButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Source Catalog"
+            [matTooltipPosition]="'left'" aria-label="Show Source Catalog"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.SOURCE)">
+            <button mat-icon-button>
+              <mat-icon>star_border</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PHOTOMETRY else photometryButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Photometry"
+          [matTooltipPosition]="'left'" aria-label="Hide Photometry" aria-selected
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
+          <button mat-icon-button>
+            <mat-icon>lightbulb_outline</mat-icon>
+          </button>
+        </div>
+        <ng-template #photometryButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Photometry" [matTooltipPosition]="'left'"
+            aria-label="Show Photometry" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PHOTOMETRY)">
+            <button mat-icon-button>
+              <mat-icon>lightbulb_outline</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+
+
 
         <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.ALIGNER else alignerButtonBlock"
           class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Aligner" [matTooltipPosition]="'left'"
@@ -445,6 +454,26 @@
             </button>
           </div>
         </ng-template>
+
+
+        <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.PIXEL_OPS else pixelOpsButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Pixel Operations"
+          [matTooltipPosition]="'left'" aria-label="Hide Pixel Operations" aria-selected
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
+          <button mat-icon-button>
+            <mat-icon>add_to_photos</mat-icon>
+          </button>
+        </div>
+        <ng-template #pixelOpsButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Pixel Operations"
+            [matTooltipPosition]="'left'" aria-label="Show Pixel Operations"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
+            <button mat-icon-button>
+              <mat-icon>add_to_photos</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
 
       </div>
     </nav>

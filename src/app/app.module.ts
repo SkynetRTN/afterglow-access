@@ -29,8 +29,8 @@ import { SourcesState } from './workbench/sources.state';
 import { PhotDataState } from './workbench/phot-data.state.';
 import { AfterglowStoragePluginModule, StorageOption } from './storage-plugin/public_api';
 import { WasmService } from './wasm.service';
-import { HduType } from './data-files/models/data-file-type';
-import { ImageHdu, IHdu, PixelType, Header } from './data-files/models/data-file';
+import { LayerType } from './data-files/models/data-file-type';
+import { ImageLayer, ILayer, PixelType, Header } from './data-files/models/data-file';
 import { DataFilesStateModel, DataFilesState } from './data-files/data-files.state';
 import { IImageData } from './data-files/models/image-data';
 import { ngxsConfig } from './ngxs.config';
@@ -41,6 +41,7 @@ import { AppState } from './app.state';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import localeEs from '@angular/common/locales/es';
 import { ColorPickerModule } from 'ngx-color-picker';
+import { SettingsModule } from './settings/settings.module';
 
 
 registerLocaleData(localeEs, 'es');
@@ -65,21 +66,21 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
     state.headerEntities[key] = header;
   });
 
-  state.hduEntities = {
-    ...state.hduEntities,
+  state.layerEntities = {
+    ...state.layerEntities,
   };
 
-  Object.keys(state.hduEntities).forEach((key) => {
-    let hdu: IHdu = {
-      ...state.hduEntities[key],
+  Object.keys(state.layerEntities).forEach((key) => {
+    let layer: ILayer = {
+      ...state.layerEntities[key],
     };
 
-    if (hdu.type == HduType.IMAGE) {
-      hdu = {
-        ...hdu,
+    if (layer.type == LayerType.IMAGE) {
+      layer = {
+        ...layer,
         loaded: false,
         loading: false,
-        hist: {
+        histogram: {
           initialized: false,
           loaded: false,
           loading: false,
@@ -87,10 +88,10 @@ export function dataFileSanitizer(v: DataFilesStateModel) {
           minBin: 0,
           maxBin: 0,
         },
-      } as ImageHdu;
+      } as ImageLayer;
     }
 
-    state.hduEntities[key] = hdu;
+    state.layerEntities[key] = layer;
   });
 
   state.imageDataEntities = {
@@ -119,6 +120,8 @@ export function workbenchSanitizer(v: WorkbenchStateModel) {
   Object.keys(state.photometryPanelStateEntities).forEach((key) => {
     let photPanelState: PhotometryPanelState = {
       ...state.photometryPanelStateEntities[key],
+      autoPhotIsValid: false,
+      autoCalIsValid: false,
       sourcePhotometryData: {},
     };
 
@@ -152,6 +155,7 @@ export function jobSanitizer(v: JobsStateModel) {
     ThemePickerModule,
     ColorPickerModule,
     WorkbenchModule.forRoot(),
+    SettingsModule,
     AuthModule.forRoot(),
     KeyboardShortcutsModule.forRoot(),
     NgxsModule.forRoot(

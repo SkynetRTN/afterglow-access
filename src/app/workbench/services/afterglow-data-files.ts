@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PixelPrecision, PixelType } from '../../data-files/models/data-file';
 import { Source, PosType } from '../models/source';
-import { HduType } from '../../data-files/models/data-file-type';
+import { LayerType } from '../../data-files/models/data-file-type';
 import { Region } from '../../data-files/models/region';
 import { HeaderEntry } from '../../data-files/models/header-entry';
 import { AfterglowConfigService } from '../../afterglow-config.service';
@@ -14,7 +14,7 @@ import { CoreApiResponse } from '../../utils/core-api-response';
 
 export interface CoreDataFile {
   id: string;
-  type: HduType;
+  type: LayerType;
   name: string;
   dataProvider: string;
   assetPath: string;
@@ -38,17 +38,30 @@ export class AfterglowDataFileService {
   }
 
   getFiles() {
-    return this.http.get<CoreApiResponse<CoreDataFile[]>>(`${getCoreApiUrl(this.config)}/data-files`);
+    return this.http.get<CoreApiResponse<CoreDataFile[]>>(`${getCoreApiUrl(this.config)}/data-files/`);
   }
 
   createFromDataProviderAsset(providerId: string, assetPath: string) {
     // assetPath = assetPath.replace("\\", "/");
     let body = { provider_id: providerId, path: assetPath };
-    return this.http.post(`${getCoreApiUrl(this.config)}/data-files`, body);
+    return this.http.post(`${getCoreApiUrl(this.config)}/data-files/`, body);
+  }
+
+  createFromFileId(name: string, fileId: string) {
+    let body = { name: name, file_id: fileId };
+    return this.http.post(`${getCoreApiUrl(this.config)}/data-files/`, body);
   }
 
   getHeader(fileId: string) {
     return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/header`);
+  }
+
+  getWcs(fileId: string) {
+    return this.http.get<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/wcs`);
+  }
+
+  setWcs(fileId: string, wcs: { [key: string]: any }) {
+    return this.http.put<CoreApiResponse<HeaderEntry[]>>(`${getCoreApiUrl(this.config)}/data-files/${fileId}/wcs`, wcs);
   }
 
   updateHeader(fileId: string, changes: HeaderEntry[]) {
@@ -73,7 +86,7 @@ export class AfterglowDataFileService {
     );
   }
 
-  getPixels(hduId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
+  getPixels(layerId: string, precision: PixelPrecision, region: Region = null): Observable<PixelType> {
     let params: HttpParams = new HttpParams();
     if (region) {
       params = params
@@ -85,7 +98,7 @@ export class AfterglowDataFileService {
     let headers: HttpHeaders = new HttpHeaders({});
 
     return this.http
-      .get(`${getCoreApiUrl(this.config)}/data-files/${hduId}/pixels`, {
+      .get(`${getCoreApiUrl(this.config)}/data-files/${layerId}/pixels`, {
         headers: headers,
         responseType: 'arraybuffer',
         params: params,
@@ -132,7 +145,7 @@ export class AfterglowDataFileService {
     }
     let source: Source = {
       id: sourceId.toString(),
-      hduId: null,
+      layerId: null,
       label: sourceId.toString(),
       objectId: null,
       pmEpoch: null,

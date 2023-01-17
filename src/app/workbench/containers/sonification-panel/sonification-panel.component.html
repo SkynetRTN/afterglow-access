@@ -2,13 +2,13 @@
   <div i18n class="alert alert-info" i18n>Select an image layer to see the sonification tool.</div>
 </ng-template>
 
-<ng-template #invalidHduTypeBlock>
+<ng-template #invalidLayerTypeBlock>
   <div i18n class="alert alert-info" i18n>This layer type is not yet supported by the sonification tool.</div>
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
-  <ng-container *ngIf="hdu$ | async as hdu; else fileNotSelectedBlock">
-    <ng-container *ngIf="imageHdu$ | async as imageHdu; else invalidHduTypeBlock">
+  <ng-container *ngIf="layer$ | async as layer; else fileNotSelectedBlock">
+    <ng-container *ngIf="imageLayer$ | async as imageLayer; else invalidLayerTypeBlock">
       <table class="table header-value-table">
         <tbody>
           <tr>

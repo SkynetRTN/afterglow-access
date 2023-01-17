@@ -1,0 +1,185 @@
+<div class="flex flex-col gap-6">
+
+    <form [formGroup]="photometryForm">
+        <div style="padding: 10px">
+            <div fxLayout="row" fxLayoutGap="20px">
+                <mat-form-field appearance="outline">
+                    <mat-label>Aperture Mode</mat-label>
+                    <mat-select formControlName="mode">
+                        <mat-option *ngFor="let mode of apertureModes" [value]="mode.value">{{ mode.label
+                            }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <button style="height: 50px;" matButton [colorPicker]="(settings$ | async).markerColor"
+                    [cpOKButton]="true" i18n>Set Marker
+                    Color...</button>
+                <button style="height: 50px;" matButton [colorPicker]="(settings$ | async).selectedMarkerColor"
+                    [cpOKButton]="true" i18n>Set
+                    Selected Marker Color...</button>
+
+            </div>
+            <div fxLayout="column" fxLayoutGap="20px" style="width: 100%" class="form-wrapper">
+                <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                    <div>
+                        <mat-form-field>
+                            <mat-label i18n>Centroiding Radius</mat-label>
+                            <input type="number" matInput formControlName="centroidRadius" />
+                            <mat-hint i18n>radius in pixels</mat-hint>
+                        </mat-form-field>
+                        <app-print-form-error [control]="photometryForm.get('centroidRadius')"></app-print-form-error>
+                    </div>
+
+                    <div>
+                        <mat-form-field>
+                            <mat-label i18n>Gain</mat-label>
+                            <input type="number" matInput formControlName="gain" />
+                            <mat-hint i18n>CCD gain in e-/ADU</mat-hint>
+                        </mat-form-field>
+                        <app-print-form-error [control]="photometryForm.get('gain')"></app-print-form-error>
+                    </div>
+                </div>
+                <ng-container *ngIf="(settings$ | async).mode == 'constant'">
+                    <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                        <div>
+                            <mat-form-field>
+                                <mat-label i18n>Aperture</mat-label>
+                                <input type="number" matInput formControlName="a" />
+                                <mat-hint i18n>radius in pixels</mat-hint>
+                            </mat-form-field>
+                            <app-print-form-error [control]="photometryForm.get('a')"></app-print-form-error>
+                        </div>
+                        <div>
+                            <mat-form-field>
+                                <mat-label i18n>Annulus Inner</mat-label>
+                                <input type="number" matInput formControlName="aIn" />
+                                <mat-hint i18n>radius in pixels</mat-hint>
+                            </mat-form-field>
+                            <app-print-form-error [control]="photometryForm.get('aIn')"></app-print-form-error>
+                        </div>
+                        <div>
+                            <mat-form-field>
+                                <mat-label i18n>Annulus Outer</mat-label>
+                                <input type="number" matInput formControlName="aOut" />
+                                <mat-hint i18n>radius in pixels</mat-hint>
+                            </mat-form-field>
+                            <app-print-form-error [control]="photometryForm.get('aOut')"></app-print-form-error>
+                        </div>
+                    </div>
+                    <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                        <div>
+                            <mat-slide-toggle formControlName="constantAperCorr" i18n>Aperture
+                                Correction</mat-slide-toggle>
+                        </div>
+                    </div>
+                    <div fxFlex="1 1 auto" fxLayout="column" fxLayoutGap="20px"
+                        style="margin-top: 0px; margin-bottom: 0px" class="form-wrapper">
+
+                        <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px"
+                            style="margin-bottom: 15px; margin-left: 20px">
+                            <mat-checkbox formControlName="elliptical" i18n>Use elliptical aperture</mat-checkbox>
+                        </div>
+                        <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                            <div>
+                                <mat-form-field>
+                                    <mat-label i18n>Aperture Minor Axis</mat-label>
+                                    <input type="number" matInput formControlName="b" />
+                                    <mat-hint i18n>radius in pixels</mat-hint>
+                                </mat-form-field>
+                                <app-print-form-error [control]="photometryForm.get('b')"></app-print-form-error>
+                            </div>
+                            <div>
+                                <mat-form-field>
+                                    <mat-label i18n>Annulus Outer Minor Axis</mat-label>
+                                    <input type="number" matInput formControlName="bOut" />
+                                    <mat-hint i18n>radius in pixels</mat-hint>
+                                </mat-form-field>
+                                <app-print-form-error [control]="photometryForm.get('bOut')"></app-print-form-error>
+                            </div>
+                        </div>
+                        <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                            <div>
+                                <mat-form-field>
+                                    <mat-label i18n>Aperture Position Angle</mat-label>
+                                    <input type="number" matInput formControlName="theta" />
+                                    <mat-hint i18n>angle in degrees</mat-hint>
+                                </mat-form-field>
+                                <app-print-form-error [control]="photometryForm.get('theta')"></app-print-form-error>
+                            </div>
+
+                            <div>
+                                <mat-form-field>
+                                    <mat-label i18n>Annulus Position Angle</mat-label>
+                                    <input type="number" matInput formControlName="thetaOut" />
+                                    <mat-hint i18n>angle in degrees</mat-hint>
+                                </mat-form-field>
+                                <app-print-form-error [control]="photometryForm.get('thetaOut')"></app-print-form-error>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+                <ng-container *ngIf="(settings$ | async).mode == 'adaptive'">
+                    <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                        <div>
+                            <mat-form-field>
+                                <mat-label i18n>Aperture</mat-label>
+                                <input type="number" matInput formControlName="aKrFactor" />
+                                <mat-hint i18n>isophotal radii</mat-hint>
+                            </mat-form-field>
+                            <app-print-form-error [control]="photometryForm.get('aKrFactor')"></app-print-form-error>
+                        </div>
+                        <div>
+                            <mat-form-field>
+                                <mat-label i18n>Annulus Inner</mat-label>
+                                <input type="number" matInput formControlName="aInKrFactor" />
+                                <mat-hint i18n>isophotal radii</mat-hint>
+                            </mat-form-field>
+                            <app-print-form-error [control]="photometryForm.get('aInKrFactor')"></app-print-form-error>
+                        </div>
+
+                        <div>
+                            <mat-form-field>
+                                <mat-label i18n>Annulus Outer</mat-label>
+                                <input type="number" matInput formControlName="aOutKrFactor" />
+                                <mat-hint i18n>isophotal radii</mat-hint>
+                            </mat-form-field>
+                            <app-print-form-error [control]="photometryForm.get('aOutKrFactor')"></app-print-form-error>
+                        </div>
+                    </div>
+                    <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px">
+                        <div fxLayout="column">
+                            <div>
+                                <mat-slide-toggle formControlName="autoAper" i18n>Auto aperture</mat-slide-toggle>
+                            </div>
+                            <div>
+                                <mat-slide-toggle formControlName="adaptiveAperCorr" i18n>Aperture
+                                    Correction</mat-slide-toggle>
+                            </div>
+
+                        </div>
+
+                        <div fxLayout="column">
+                            <div>
+                                <mat-slide-toggle formControlName="fixAper" i18n>Fix Aperture Size</mat-slide-toggle>
+                            </div>
+                            <div>
+                                <mat-slide-toggle formControlName="fixEll" i18n>Fix Ellipticity</mat-slide-toggle>
+                            </div>
+
+                            <div>
+                                <mat-slide-toggle formControlName="fixRot" i18n>Fix Rotation</mat-slide-toggle>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+
+    </form>
+
+    <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%" style="justify-content: flex-end">
+        <div fxFlex="1 1 auto" fxLayout="row" style="width: 100%">
+            <button mat-raised-button i18n (click)="restoreDefaults()">Restore Aperture Photometry Defaults</button>
+        </div>
+    </div>
+
+</div>

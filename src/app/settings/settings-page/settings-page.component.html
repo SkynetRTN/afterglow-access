@@ -1,0 +1,16 @@
+<div class="flex flex-row h-full">
+    <div class="sidebar-nav h-full basis-48">
+        <mat-nav-list>
+            <a mat-list-item [routerLink]="['theme']" i18n-aria-label aria-label="Theme" routerLinkActive="active">Theme
+                / Styling
+            </a>
+            <a mat-list-item [routerLink]="['aperture-photometry']" i18n-aria-label aria-label="Aperture Photometry"
+                routerLinkActive="active">Aperture Photometry </a>
+            <a mat-list-item [routerLink]="['photometry-calibration']" i18n-aria-label
+                aria-label="Photometry Calibration" routerLinkActive="active">Photometry Calibration </a>
+            <a mat-list-item [routerLink]="['source-extraction']" i18n-aria-label aria-label="Source Extraction"
+                routerLinkActive="active">Source Extraction </a>
+        </mat-nav-list>
+    </div>
+    <div class="w-full h-full p-10 overflow-auto"><router-outlet></router-outlet></div>
+</div>

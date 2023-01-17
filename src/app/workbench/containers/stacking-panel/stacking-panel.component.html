@@ -1,11 +1,11 @@
-<div *ngIf="hduIds">
+<div *ngIf="layerIds">
   <form [formGroup]="stackForm">
     <div>
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Select Image(s) to Stack</mat-label>
-        <mat-select multiple formControlName="selectedHduIds">
-          <mat-option *ngFor="let hduId of hduIds" [value]="hduId">
-            {{ getHduOptionLabel(hduId) | async }}
+        <mat-select multiple formControlName="selectedLayerIds">
+          <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
+            {{ getLayerOptionLabel(layerId) | async }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -25,7 +25,7 @@
         <mat-select formControlName="mode">
           <mat-option value="average" i18n>average</mat-option>
           <mat-option value="percentile" i18n>percentile</mat-option>
-          <!-- <mat-option value="mode" i18n>mode</mat-option> -->
+          <mat-option value="mode" i18n>mode</mat-option>
           <mat-option value="sum" i18n>sum</mat-option>
         </mat-select>
       </mat-form-field>
@@ -44,37 +44,70 @@
           <mat-option value="iraf" i18n>iraf</mat-option>
           <mat-option value="minmax" i18n>minmax</mat-option>
           <mat-option value="sigclip" i18n>sigclip</mat-option>
+          <mat-option value="rcr" i18n>rcr</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
 
     <div>
-      <mat-form-field appearance="outline"
-        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)">
+      <mat-form-field appearance="outline">
         <mat-label i18n>Low</mat-label>
         <input matInput formControlName="low" type="number" />
       </mat-form-field>
-      <mat-form-field appearance="outline"
-        [hidden]="!['iraf', 'minmax', 'sigclip'].includes(stackForm.value?.rejection)" style="margin-left: 10px">
+      <mat-form-field appearance="outline" style="margin-left: 10px">
         <mat-label i18n>High</mat-label>
         <input matInput formControlName="high" type="number" />
       </mat-form-field>
     </div>
 
-    <div>
+    <div class="flex flex-row gap-5">
       <mat-form-field appearance="outline" style="width: 300px">
         <mat-label i18n>Scaling</mat-label>
-        <mat-select formControlName="scaling">
+        <mat-select #scalingSelect formControlName="scaling">
           <mat-option value="none" i18n>None</mat-option>
           <mat-option value="average" i18n>average</mat-option>
           <mat-option value="median" i18n>median</mat-option>
           <mat-option value="mode" i18n>mode</mat-option>
         </mat-select>
       </mat-form-field>
+
+    </div>
+
+    <div>
+      <mat-form-field appearance="outline" style="width: 300px">
+        <mat-label i18n>Smart Stacking</mat-label>
+        <mat-select formControlName="smartStacking">
+          <mat-option value="none" i18n>None</mat-option>
+          <mat-option value="SNR" i18n>SNR</mat-option>
+          <mat-option value="sharpness" i18n>sharpness</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex flex-col gap-4">
+        <mat-slide-toggle formControlName="equalizeMultiplicative">Multiplicative Equalization</mat-slide-toggle>
+        <mat-form-field appearance="outline">
+          <mat-label i18n>Multiplicative Percentile</mat-label>
+          <input matInput formControlName="multiplicativePercentile" type="number" />
+        </mat-form-field>
+      </div>
+      <div class="flex flex-col gap-4">
+        <mat-slide-toggle formControlName="equalizeAdditive"> Additive
+          Equalization</mat-slide-toggle>
+        <mat-form-field appearance="outline">
+          <mat-label i18n>Equalization Order</mat-label>
+          <input matInput formControlName="equalizeOrder" type="number" />
+        </mat-form-field>
+      </div>
+    </div>
+    <mat-slide-toggle formControlName="equalizeGlobal"> Global Equalization</mat-slide-toggle>
+
+    <div class="pb-4" *ngIf="showPropagateMask$ | async">
+      <mat-slide-toggle formControlName="propagateMask"> Propagate Mask</mat-slide-toggle>
     </div>
 
     <div style="clear: both"></div>
-    <button mat-raised-button (click)="submit(stackForm.value)" [disabled]="!stackForm.valid" class="float-right" i18n>
+    <button mat-raised-button (click)="submit()" [disabled]="!stackForm.valid" class="float-right" i18n>
       Submit
     </button>
     <div style="clear: both"></div>
@@ -93,8 +126,13 @@
       </ng-container>
     </div>
     <ng-template #jobComplete>
-      <div *ngIf="job.result.errors.length != 0; else noErrors" class="alert alert-danger">
-        <span *ngFor="let error of job.result.errors">{{ error.detail }}</span>
+      <div *ngIf="job.result.errors.length != 0; else noErrors"
+        class="alert alert-danger flex flex-col max-h-72 overflow-auto">
+        <span *ngFor="let error of job.result.errors">
+          <span class="font-semibold pr-3" *ngIf="error.meta?.fileId">{{getLayerOptionLabel(error.meta?.fileId) |
+            async}}</span>
+          {{ error.detail}}
+        </span>
       </div>
       <ng-template #noErrors>
         <div class="alert alert-success" i18n>Processing is complete.</div>

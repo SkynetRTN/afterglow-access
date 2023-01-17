@@ -9,9 +9,9 @@
     </button>
   </div>
 
-  <div *ngIf="hdu$ | async; let hdu" fxFlex="0 0 auto" style="padding-right: 5px">
+  <div *ngIf="layer$ | async; let layer" fxFlex="0 0 auto" style="padding-right: 5px">
     <mat-icon class="mat-icon small">
-      {{ hdu?.type == HduType.IMAGE ? 'insert_photo' : 'toc' }}
+      {{ layer?.type == LayerType.IMAGE ? 'insert_photo' : 'toc' }}
     </mat-icon>
   </div>
 
@@ -21,21 +21,21 @@
     </span>
   </div>
 
-  <span *ngIf="showFileToolbar || showImageHduLayerToolbar || showSelect || (fileModified$ | async)"
+  <span *ngIf="showFileToolbar || showImageLayerLayerToolbar || showSelect || (fileModified$ | async)"
     class="node-toolbar">
     <app-file-toolbar *ngIf="showFileToolbar" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
       fxLayoutAlign="center center" [showSave]="true" [showClose]="true" (onSave)="handleSave($event)"
       (onClose)="handleClose($event)">
     </app-file-toolbar>
 
-    <ng-container *ngIf="imageHdu$ | async; let hdu">
-      <app-image-hdu-toolbar *ngIf="showImageHduLayerToolbar" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
-        fxLayoutAlign="center center" [showVisibility]="true" [visible]="hdu.visible" [showColorMap]="true"
-        [colorMapName]="hdu?.normalizer?.colorMapName" [showBlendMode]="true" [blendMode]="hdu.blendMode"
-        (onVisibilityChange)="handleVisibilityChange(hdu.id, $event)"
-        (onColorMapChange)="handleColorMapChange(hdu.id, $event)"
-        (onBlendModeChange)="handleBlendModeChange(hdu.id, $event)">
-      </app-image-hdu-toolbar>
+    <ng-container *ngIf="imageLayer$ | async; let layer">
+      <app-image-layer-toolbar *ngIf="showImageLayerLayerToolbar" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
+        fxLayoutAlign="center center" [showVisibility]="true" [visible]="layer.visible" [showColorMap]="true"
+        [colorMapName]="layer?.normalizer?.colorMapName" [showBlendMode]="true" [blendMode]="layer.blendMode"
+        (onVisibilityChange)="handleVisibilityChange(layer.id, $event)"
+        (onColorMapChange)="handleColorMapChange(layer.id, $event)"
+        (onBlendModeChange)="handleBlendModeChange(layer.id, $event)">
+      </app-image-layer-toolbar>
     </ng-container>
     <div *ngIf="!showFileToolbar && (fileModified$ | async)" style="height: 100%" fxFlex="0 0 auto" fxLayout="row"
       fxLayoutAlign="center center">
