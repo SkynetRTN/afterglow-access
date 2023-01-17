@@ -42,9 +42,9 @@
     <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
         <mat-cell *matCellDef="let row">
-            <button *ngIf="row.state.status == 'in_progress'" mat-icon-button (click)="onCancelJobBtnClick(row)">
+            <!-- <button *ngIf="row.state.status == 'in_progress'" mat-icon-button (click)="onCancelJobBtnClick(row)">
                 <mat-icon>clear</mat-icon>
-            </button>
+            </button> -->
         </mat-cell>
     </ng-container>
 
