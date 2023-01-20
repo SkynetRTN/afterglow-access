@@ -108,7 +108,7 @@ function nullspace(G: number[][]) {
 }
 
 export class Ellipse {
-    constructor(public a: number = 0, public b: number = 0, public c: number = 0, public d: number = 0, public e: number = 0, public f: number = 0, public angle: number = 0) {
+    constructor(public A: number = 0, public B: number = 0, public C: number = 0, public D: number = 0, public E: number = 0, public F: number = 0, public angle: number = 0) {
 
     }
 
@@ -172,18 +172,18 @@ export class Ellipse {
             let c = ev[2];
             let d = U[0][0] * ev[0] + U[0][1] * ev[1] + U[0][2] * ev[2];
             let e = U[1][0] * ev[0] + U[1][1] * ev[1] + U[1][2] * ev[2];
-            this.f = U[2][0] * ev[0] + U[2][1] * ev[1] + U[2][2] * ev[2];
+            this.F = U[2][0] * ev[0] + U[2][1] * ev[1] + U[2][2] * ev[2];
 
 
             let t = Math.atan(b / (c - a)) / 2;
             let st = Math.sin(t);
             let ct = Math.cos(t);
-            this.a = a * ct * ct - b * ct * st + c * st * st;
-            this.c = a * st * st + b * ct * st + c * ct * ct;
-            this.d = d * ct - e * st;
-            this.e = d * st + e * ct;
+            this.A = a * ct * ct - b * ct * st + c * st * st;
+            this.C = a * st * st + b * ct * st + c * ct * ct;
+            this.D = d * ct - e * st;
+            this.E = d * st + e * ct;
             this.angle = t;
-            this.b = 0;
+            this.B = 0;
 
 
         } else {
@@ -194,7 +194,7 @@ export class Ellipse {
 
 
     get semi() {
-        let [a, b, c, d, e, f] = [this.a, this.b, this.c, this.d, this.e, this.f];
+        let [a, b, c, d, e, f] = [this.A, this.B, this.C, this.D, this.E, this.F];
         let num = -4 * f * a * c + c * d * d + a * e * e;
         return [Math.sqrt(num / (4 * a * c * c)),
         Math.sqrt(num / (4 * a * a * c))];
@@ -205,6 +205,28 @@ export class Ellipse {
         // let A = Math.sqrt((2 * (a * f * f + c * d * d + g * b * b - 22 * b * d * f - a * c * g)) / denominator)
         // let B = Math.sqrt((2 * (a * f * f + c * d * d + g * b * b - 2 * b * d * f - a * c * g)) / denominator)
         // return { A: A, B: B }
+    }
+
+    get x0() {
+        return (2 * this.C * this.D - this.B * this.E) / (this.B * this.B - 4 * this.A * this.C)
+    }
+
+    get y0() {
+        return (2 * this.A * this.E - this.B * this.D) / (this.B * this.B - 4 * this.A * this.C)
+    }
+
+    get theta() {
+        if (this.B != 0) return Math.atan((1 / this.B) * (this.C - this.A - Math.sqrt(Math.pow(this.A - this.C, 2) + this.B * this.B)))
+        if (this.A < this.C) return 0
+        return Math.PI / 2;
+    }
+
+    get a() {
+        return -Math.sqrt(2 * (this.A * this.E * this.E + this.C * this.D * this.D - this.B * this.D * this.E + (this.B * this.B - 4 * this.A * this.C) * this.F) * ((this.A + this.C) + Math.sqrt(Math.pow(this.A - this.C, 2) + this.B * this.B))) / (this.B * this.B - 4 * this.A * this.C)
+    }
+
+    get b() {
+        return -Math.sqrt(2 * (this.A * this.E * this.E + this.C * this.D * this.D - this.B * this.D * this.E + (this.B * this.B - 4 * this.A * this.C) * this.F) * ((this.A + this.C) - Math.sqrt(Math.pow(this.A - this.C, 2) + this.B * this.B))) / (this.B * this.B - 4 * this.A * this.C)
     }
 
 

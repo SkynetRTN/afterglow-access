@@ -1,7 +1,9 @@
+import { Ellipse } from 'src/app/utils/ellipse-fitter';
 import { getWidth, getHeight, ImageLayer, PixelType } from '../../data-files/models/data-file';
 import { getPixel, IImageData } from '../../data-files/models/image-data';
 import { CentroidSettings, defaults as defaultCentroidSettings } from './centroid-settings';
-
+import { getMedian as getRcrMedian, get68th as getRcr68th, getWeighted68th, getWeightedMedian } from 'src/app/utils/histogram-fitting';
+import { saveAs } from 'file-saver/dist/FileSaver';
 
 function getMedian(data: Array<number>, sort = true) {
   if (sort) data.sort((a, b) => a - b);
@@ -23,6 +25,8 @@ export function centroidDisk(
   let y0 = y;
   let failedResult = { x: x0, y: y0, xErr: null, yErr: null };
 
+  let points: { x: number, y: number, value: number }[];
+
   while (true) {
     if (isNaN(x0) || isNaN(y0)) return failedResult;
     let recenterSub = false;
@@ -31,95 +35,198 @@ export function centroidDisk(
     let sub = getSubframe(subWidth, imageData, x0, y0);
     let pixels = sub.pixels;
     let pixelsSorted = pixels.slice().sort((a, b) => a - b);
-    let median = getMedian(pixelsSorted, false);
-    let diffsSorted = pixelsSorted.map((value) => Math.abs(value - median));
-    diffsSorted.sort((a, b) => a - b);
-    let minDiff = diffsSorted[0];
-    let maxDiff = diffsSorted[diffsSorted.length - 1];
-    if (maxDiff == minDiff) return { x: x0, y: y0, xErr: 0, yErr: 0 };
 
-    let diffsHist = [];
-    for (let i = 0; i < 1024; i++) diffsHist[i] = 0;
-    var indexFactor = (diffsHist.length - 1) / (maxDiff - minDiff);
-    for (let i = 0; i < diffsSorted.length; i++) {
-      let index = Math.floor((diffsSorted[i] - minDiff) * indexFactor);
-      diffsHist[index]++;
+    let pixelsD: number[] = [];
+    let clipCount = sub.cnx;
+    for (let i = clipCount; i < pixels.length - clipCount; i++) {
+      pixelsD.push(pixelsSorted[i + 1] - pixelsSorted[i])
     }
-    let lowerPercentile = 0.683 * diffsSorted.length;
-    let count = 0,
-      index = 0;
-    while (true) {
-      if (isNaN(count)) return failedResult;
-      count += diffsHist[index];
-      if (count >= lowerPercentile) break;
-      index += 1;
+    let pixelsDFiltered = [];
+    for (let i = 1; i < pixelsD.length - 1; i++) {
+      pixelsDFiltered.push(getMedian([pixelsD[i - 1], pixelsD[i], pixelsD[i + 1]]))
     }
-    let stdev = (index + 1) / indexFactor;
 
-    // let avg = pixels.reduce( (sum, value) => sum + value, 0)/pixels.length;
-    // let diffs = pixels.map(value => value-avg)
-    // let sqrDiffs = pixels.map(value => Math.pow(value-avg, 2))
-    // console.log('old stdev:', Math.sqrt(sqrDiffs.reduce( (sum, value) => sum + value, 0)/sqrDiffs.length));
-    // console.log('new stdev:', stdev);
+    let maxIndex = pixelsDFiltered.indexOf(Math.max.apply(null, pixelsDFiltered))
+    let thresh = pixelsSorted[maxIndex + 1 + clipCount];
 
-    let thresh = median + 3 * stdev;
+    // let median = getMedian(pixelsSorted, false);
+    // let diffsSorted = pixelsSorted.map((value) => Math.abs(value - median));
+    // diffsSorted.sort((a, b) => a - b);
+    // let minDiff = diffsSorted[0];
+    // let maxDiff = diffsSorted[diffsSorted.length - 1];
+    // if (maxDiff == minDiff) return { x: x0, y: y0, xErr: 0, yErr: 0 };
+
+    // let diffsHist = [];
+    // for (let i = 0; i < 1024; i++) diffsHist[i] = 0;
+    // var indexFactor = (diffsHist.length - 1) / (maxDiff - minDiff);
+    // for (let i = 0; i < diffsSorted.length; i++) {
+    //   let index = Math.floor((diffsSorted[i] - minDiff) * indexFactor);
+    //   diffsHist[index]++;
+    // }
+    // let lowerPercentile = 0.683 * diffsSorted.length;
+    // let count = 0,
+    //   index = 0;
+    // while (true) {
+    //   if (isNaN(count)) return failedResult;
+    //   count += diffsHist[index];
+    //   if (count >= lowerPercentile) break;
+    //   index += 1;
+    // }
+    // let stdev = (index + 1) / indexFactor;
+
+    // let thresh = median + 10 * stdev;
+
+
     let ocxc = sub.cxc;
     let ocyc = sub.cyc;
     let cxc = ocxc;
     let cyc = ocyc;
     let xShift = 0;
     let yShift = 0;
+
     while (true) {
-      let xSlice = [];
-      for (let i = 0; i < sub.cnx; i++) {
-        if (i == 0 || i == sub.cnx - 1) {
-          xSlice[i] = null;
-        } else {
-          let index = Math.floor(cyc) * sub.cnx + i;
-          let value = getMedian([pixels[index - 1], pixels[index], pixels[index + 1]]);
-          xSlice[i] = value < thresh ? 0 : 1;
+      let L = Math.sqrt(sub.cnx * sub.cnx + sub.cny * sub.cny) / 2;
+      let numSlices = 128;
+      points = [];
+      for (let sliceIter = 0; sliceIter < numSlices; sliceIter++) {
+        let theta = sliceIter / (numSlices - 1) * Math.PI
+        let samples: { x: number; y: number; value: number }[] = [];
+        for (let r = -L; r < L; r++) {
+          let x = r * Math.cos(theta);
+          let y = r * Math.sin(theta);
+          samples.push({ x: x, y: y, value: getPixel(imageData, x + x0 + cxc - ocxc, y + y0 + cyc - ocyc, true) })
+        }
+        let samplesFiltered: { x: number; y: number; value: number }[] = [];
+
+        for (let i = 1; i < samples.length - 1; i++) {
+          let m = getMedian([samples[i - 1].value, samples[i].value, samples[i + 1].value]);
+          samplesFiltered.push({ ...samples[i], value: m < thresh ? 0 : 1 });
+        }
+
+        let left = samplesFiltered.splice(0, Math.ceil(samplesFiltered.length / 2));
+        let right = samplesFiltered;
+        let leftEdge = left.reverse().find(s => s.value == 0)
+        let rightEdge = right.find(s => s.value == 0);
+
+        if (!leftEdge || !rightEdge) recenterSub = true;
+        if (leftEdge && !rightEdge) expandSub = true;
+
+        if (leftEdge) {
+          points.push(leftEdge)
+        }
+
+        if (rightEdge) {
+          points.push(rightEdge)
+
         }
       }
 
-      let ySlice = [];
-      for (let j = 0; j < sub.cny; j++) {
-        if (j == 0 || j == sub.cny - 1) {
-          ySlice[j] = null;
-        } else {
-          let index = j * sub.cnx + Math.floor(cxc);
-          let value = getMedian([pixels[index - sub.cnx], pixels[index], pixels[index + sub.cnx]]);
-          ySlice[j] = value < thresh ? 0 : 1;
-        }
+      let xShift = 0;
+      let yShift = 0;
+
+      let el = new Ellipse();
+
+      while (true) {
+        //outlier rejection
+        el.setFromPoints(points);
+
+        let a = el.a;
+        let b = el.b;
+        let xe0 = el.x0;
+        let ye0 = el.y0;
+        let theta = el.theta;
+
+        points.forEach(p => {
+          let x = (p.x - xe0) * Math.cos(theta) + (p.y - ye0) * Math.sin(theta);
+          let y = -(p.x - xe0) * Math.sin(theta) + (p.y - ye0) * Math.cos(theta);
+          p.value = Math.sqrt(Math.pow(x / a, 2) + Math.pow(y / b, 2))
+        })
+
+        let values = points.map(p => p.value).sort((a, b) => (a - b));
+
+        values.forEach(v => {
+          console.log(v);
+        })
+        let mu = getRcrMedian(values);
+        let sigma = getRcr68th(values.map(v => Math.abs(v - mu)));
+        let cf = 1 + 2.2212 * Math.pow(values.length, -1.137)
+        cf = 2.4;
+
+        let nextPoints = points.filter(p => Math.abs(p.value - mu) < cf * sigma);
+        if (nextPoints.length == points.length) break;
+
+        points = nextPoints;
       }
 
-      let left = xSlice.splice(0, Math.ceil(xSlice.length / 2));
-      let right = xSlice;
-      let leftEdge = left.lastIndexOf(0);
-      if (leftEdge == -1) leftEdge = 0;
-      let rightEdge = right.indexOf(0);
-      if (rightEdge == -1) rightEdge = right.length - 1;
-      rightEdge += left.length;
+      xShift = el.x0;
+      yShift = el.y0;
 
-      let upper = ySlice.splice(0, Math.ceil(ySlice.length / 2));
-      let lower = ySlice;
-      let upperEdge = upper.lastIndexOf(0);
-      if (upperEdge == -1) upperEdge = 0;
-      let lowerEdge = lower.indexOf(0);
-      if (lowerEdge == -1) lowerEdge = lower.length - 1;
-      lowerEdge += upper.length;
 
-      xShift = (leftEdge + rightEdge) / 2 - cxc;
-      yShift = (upperEdge + lowerEdge) / 2 - cyc;
+
+      // let xSlice = [];
+      // for (let i = 0; i < sub.cnx; i++) {
+      //   if (i == 0 || i == sub.cnx - 1) {
+      //     xSlice[i] = null;
+      //   } else {
+      //     let index = Math.floor(cyc) * sub.cnx + i;
+      //     let value = getMedian([pixels[index - 1], pixels[index], pixels[index + 1]]);
+      //     xSlice[i] = value < thresh ? 0 : 1;
+      //   }
+      // }
+
+      // let ySlice = [];
+      // for (let j = 0; j < sub.cny; j++) {
+      //   if (j == 0 || j == sub.cny - 1) {
+      //     ySlice[j] = null;
+      //   } else {
+      //     let index = j * sub.cnx + Math.floor(cxc);
+      //     let value = getMedian([pixels[index - sub.cnx], pixels[index], pixels[index + sub.cnx]]);
+      //     ySlice[j] = value < thresh ? 0 : 1;
+      //   }
+      // }
+
+      // let left = xSlice.splice(0, Math.ceil(xSlice.length / 2));
+      // let right = xSlice;
+      // let leftEdge = left.lastIndexOf(0);
+      // if (leftEdge == -1) leftEdge = 0;
+      // let rightEdge = right.indexOf(0);
+      // if (rightEdge == -1) rightEdge = right.length - 1;
+      // rightEdge += left.length;
+
+      // let upper = ySlice.splice(0, Math.ceil(ySlice.length / 2));
+      // let lower = ySlice;
+      // let upperEdge = upper.lastIndexOf(0);
+      // if (upperEdge == -1) upperEdge = 0;
+      // let lowerEdge = lower.indexOf(0);
+      // if (lowerEdge == -1) lowerEdge = lower.length - 1;
+      // lowerEdge += upper.length;
+
+      // let xSum = 0;
+      // let ySum = 0;
+      // let count = 0;
+      // for (let y = upperEdge; y < lowerEdge; y++) {
+      //   for (let x = leftEdge; x < rightEdge; x++) {
+      //     let v = pixels[y * sub.cnx + Math.floor(cxc)];
+      //     if (isNaN(v) || v < thresh) continue;
+      //     xSum += x;
+      //     ySum += y;
+      //     count++;
+      //   }
+      // }
+      // xShift = xSum / count - cxc;
+      // yShift = ySum / count - cyc;
+
+      // xShift = (leftEdge + rightEdge) / 2 - cxc;
+      // yShift = (upperEdge + lowerEdge) / 2 - cyc;
       if (isNaN(xShift) || isNaN(yShift)) return failedResult;
 
       cxc += xShift;
       cyc += yShift;
       nIter++;
 
-      if (leftEdge == 0 || rightEdge == subWidth - 1) recenterSub = true;
-      if (leftEdge == 0 && rightEdge == subWidth - 1) expandSub = true;
-      if (upperEdge == 0 || lowerEdge == subWidth - 1) recenterSub = true;
-      if (upperEdge == 0 && lowerEdge == subWidth - 1) expandSub = true;
+
+      // if (upperEdge == 0 || lowerEdge == subWidth - 1) recenterSub = true;
+      // if (upperEdge == 0 && lowerEdge == subWidth - 1) expandSub = true;
 
       if (
         recenterSub ||
@@ -130,6 +237,8 @@ export function centroidDisk(
       }
     }
 
+
+
     x0 += cxc - ocxc;
     y0 += cyc - ocyc;
 
@@ -138,7 +247,13 @@ export function centroidDisk(
     if (nIter >= settings.maxIterations || !recenterSub) break;
   }
 
-  return { x: x0, y: y0, xErr: null, yErr: null };
+  console.log("ITERATIONS: ", nIter);
+
+  // const rows = points.map(p => [p.x, p.y, p.value]);
+  // var blob = new Blob([rows.map(e => e.join(",")).join("\n")], { type: 'data:text/csv;charset=utf-8,' });
+  // saveAs(blob, `download.csv`);
+
+  return { x: x0 + .5, y: y0 + .5, xErr: null, yErr: null };
 }
 
 
