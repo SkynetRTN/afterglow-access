@@ -144,9 +144,6 @@ export function centroidDisk(
 
         let values = points.map(p => p.value).sort((a, b) => (a - b));
 
-        values.forEach(v => {
-          console.log(v);
-        })
         let mu = getRcrMedian(values);
         let sigma = getRcr68th(values.map(v => Math.abs(v - mu)));
         let cf = 1 + 2.2212 * Math.pow(values.length, -1.137)
