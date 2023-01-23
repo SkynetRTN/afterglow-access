@@ -569,6 +569,7 @@ function binarySearch(searchUp: boolean, minimumIndex: number, toFind: number, t
 }
 
 export function getMedian(y: number[] | TypedArray) {
+    throw Error("THIS METHOD DOES NOT WORK.  DO NOT USE");
     let high = (Math.floor(y.length / 2));
     let low = high - 1;
     let runningSum = 0, median = 0;

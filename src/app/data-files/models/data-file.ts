@@ -10,7 +10,7 @@ import { PixelNormalizer } from './pixel-normalizer';
 import { BlendMode } from './blend-mode';
 import { TypeGuard } from 'src/app/utils/guard-type.pipe';
 
-export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array;
+export type PixelType = Uint8Array | Uint16Array | Uint32Array | Float32Array | Float64Array | number[];
 
 export enum PixelPrecision {
   uint8 = 'uint8',
