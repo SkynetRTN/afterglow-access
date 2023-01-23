@@ -6,10 +6,10 @@ import { getMedian as getRcrMedian, get68th as getRcr68th, getWeighted68th, getW
 import { saveAs } from 'file-saver/dist/FileSaver';
 // import * as glur from 'glur/mono16';
 // import cannyEdgeDetector from 'canny-edge-detector';
-import { Image } from 'image-js';
-import { normalize, PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
+// import { Image } from 'image-js';
+// import { normalize, PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
 import { erf, erfinv } from 'src/app/utils/math';
-import { glur } from 'src/app/utils/glur';
+// import { glur } from 'src/app/utils/glur';
 
 enum ColorModel {
   GREY = 'GREY',
