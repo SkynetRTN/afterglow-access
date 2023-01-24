@@ -350,7 +350,7 @@ function getWeightedMean(trueCount: number, w: number[] | TypedArray, y: number[
     return top / bottom;
 }
 
-function getWeightedMedian(trueCount: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+export function getWeightedMedian(trueCount: number, w: number[] | TypedArray, y: number[] | TypedArray) {
     let sumCounter = 0;
     let median = 0, totalSum = 0, runningSum = 0;
     for (let i = 0; i < trueCount; i++) {
@@ -423,7 +423,7 @@ function getWeightedMode(trueCount: number, w: number[] | TypedArray, y: number[
             }
             if ((sVec[i] > halfWeightSum) || isEqual(sVec[i], halfWeightSum)) {
                 total = sVec[i] - halfWeightSum;
-                k = i; // was svec.size() - 1
+                k = i; // was svec.length - 1
                 while (k > -1 && ((sVec[k] > total) || isEqual(sVec[k], total))) {
                     k--;
                 }
@@ -454,7 +454,7 @@ function getWeightedMode(trueCount: number, w: number[] | TypedArray, y: number[
     return getWeightedMedian(newWeights.length, newWeights, newValues);
 }
 
-function getWeightedStDev(delta: number, w: number[] | TypedArray, y: number[] | TypedArray) {
+export function getWeightedStDev(delta: number, w: number[] | TypedArray, y: number[] | TypedArray) {
     let size = w.length;
     let top = 0, wSum = 0, wSumSq = 0, weight;
     for (let i = 0; i < size; i++) {
@@ -504,7 +504,7 @@ function sort(w: number[] | TypedArray, y: number[] | TypedArray) {
     QS(0, y.length - 1, w, y);
 }
 
-function getWeighted68th(w: number[] | TypedArray, y: number[] | TypedArray) {
+export function getWeighted68th(w: number[] | TypedArray, y: number[] | TypedArray) {
     let sumCounter = 0;
     let stDev = 0, totalSum = 0, runningSum: number; //, temp = 0, weightTemp = 0;
     sort(w, y);
@@ -568,7 +568,8 @@ function binarySearch(searchUp: boolean, minimumIndex: number, toFind: number, t
     }
 }
 
-function getMedian(y: number[] | TypedArray) {
+export function getMedian(y: number[] | TypedArray) {
+    throw Error("THIS METHOD DOES NOT WORK.  DO NOT USE");
     let high = (Math.floor(y.length / 2));
     let low = high - 1;
     let runningSum = 0, median = 0;
@@ -587,6 +588,7 @@ function getMedian(y: number[] | TypedArray) {
         median = y[0];
     }
     return median;
+
 
 }
 
@@ -614,7 +616,7 @@ function getMode(trueCount: number, y: number[]) {
             if ((sVec[i] < halfWeightSum) || isEqual(sVec[i], halfWeightSum)) {
                 total = sVec[i] + halfWeightSum;
                 /*k = 0;
-                while (k < sVec.size() && sVec[k] <= total)
+                while (k < sVec.length && sVec[k] <= total)
                 {
                 k++;
                 }
@@ -635,7 +637,7 @@ function getMode(trueCount: number, y: number[]) {
             }
             if ((sVec[i] > halfWeightSum) || isEqual(sVec[i], halfWeightSum)) {
                 total = sVec[i] - halfWeightSum;
-                /*k = sVec.size() - 1;
+                /*k = sVec.length - 1;
                 while (k > -1 && sVec[k] >= total)
                 {
                 k--;
@@ -665,10 +667,10 @@ function getMode(trueCount: number, y: number[]) {
     return getMedian(newValues);
 }
 
-function get68th(y: number[]) {
+export function get68th(y: number[]) {
     let sumCounter = 0;
-    let stDev = 0, totalSum = 0, runningSum: number; //, temp = 0, weightTemp = 0;
-    y = y.sort();
+    let stDev = 0, totalSum = 0, runningSum; //, temp = 0, weightTemp = 0;
+    y = y.sort((a, b) => (a - b))
     for (let i = 0; i < y.length; i++) {
         totalSum += 1.0;
     }
@@ -690,5 +692,6 @@ function get68th(y: number[]) {
     }
 
     return stDev;
+
 
 }

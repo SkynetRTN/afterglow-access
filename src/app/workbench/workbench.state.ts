@@ -251,7 +251,7 @@ import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b21cf65-93d3-435a-ff7b-ab357809cc',
+  version: '3b25de65-93d3-435a-ff7b-ab357809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -3371,6 +3371,15 @@ export class WorkbenchState {
           job.result.fileIds.forEach((layerId) => {
             actions.push(new InvalidateHeader(layerId.toString()));
           });
+          let viewerIds = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds);
+          let layerIds = job.result.fileIds.map(id => id.toString())
+          viewerIds.forEach(viewerId => {
+            let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(viewerId));
+
+            if (viewer.layerId && layerIds.includes(viewer.layerId)) {
+              actions.push(new LoadLayerHeader(viewer.layerId));
+            }
+          })
           let message: string;
           let numFailed = layerIds.length - job.result.fileIds.length;
           if (numFailed != 0) {

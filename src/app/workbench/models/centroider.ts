@@ -1,7 +1,25 @@
+import { Ellipse } from 'src/app/utils/ellipse-fitter';
 import { getWidth, getHeight, ImageLayer, PixelType } from '../../data-files/models/data-file';
 import { getPixel, IImageData } from '../../data-files/models/image-data';
 import { CentroidSettings, defaults as defaultCentroidSettings } from './centroid-settings';
+import { getMedian as getRcrMedian, get68th as getRcr68th, getWeighted68th, getWeightedMedian } from 'src/app/utils/histogram-fitting';
+import { saveAs } from 'file-saver/dist/FileSaver';
+// import * as glur from 'glur/mono16';
+// import cannyEdgeDetector from 'canny-edge-detector';
+// import { Image } from 'image-js';
+// import { normalize, PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
+import { erf, erfinv } from 'src/app/utils/math';
+// import { glur } from 'src/app/utils/glur';
 
+enum ColorModel {
+  GREY = 'GREY',
+  RGB = 'RGB'
+}
+
+enum ImageKind {
+  GREY = 'GREY',
+  RGBA = 'RGBA'
+}
 
 function getMedian(data: Array<number>, sort = true) {
   if (sort) data.sort((a, b) => a - b);
@@ -16,12 +34,36 @@ export function centroidDisk(
   y: number,
   settings: CentroidSettings = null
 ) {
+  // function download(dataurl, filename) {
+  //   const link = document.createElement("a");
+  //   link.href = dataurl;
+  //   link.download = filename;
+  //   link.click();
+  // }
+
+
   if (settings == null) settings = { ...defaultCentroidSettings }
   let subWidth = settings.diskSearchBoxWidth;
   let nIter = 0;
   let x0 = x;
   let y0 = y;
   let failedResult = { x: x0, y: y0, xErr: null, yErr: null };
+
+  let points: { x: number, y: number, value: number, slice: number }[];
+
+  // let allPixels: number[] = []
+  // for (let i = 0; i < imageData.width; i++) {
+  //   for (let j = 0; j < imageData.height; j++) {
+  //     allPixels.push(getPixel(imageData, i + 0.5, j + 0.5, false))
+  //   }
+  // }
+  // let image = new Image(imageData.width, imageData.height, allPixels, { kind: ImageKind.GREY, bitDepth: 32 });
+  // download(image.toDataURL(), 'full.jpg');
+  // glur(allPixels, imageData.width, imageData.height, 3)
+  // image = new Image(imageData.width, imageData.height, allPixels, { kind: ImageKind.GREY, bitDepth: 32 });
+  // download(image.toDataURL(), 'full_blur.jpg');
+
+
 
   while (true) {
     if (isNaN(x0) || isNaN(y0)) return failedResult;
@@ -30,96 +72,248 @@ export function centroidDisk(
 
     let sub = getSubframe(subWidth, imageData, x0, y0);
     let pixels = sub.pixels;
-    let pixelsSorted = pixels.slice().sort((a, b) => a - b);
-    let median = getMedian(pixelsSorted, false);
-    let diffsSorted = pixelsSorted.map((value) => Math.abs(value - median));
-    diffsSorted.sort((a, b) => a - b);
-    let minDiff = diffsSorted[0];
-    let maxDiff = diffsSorted[diffsSorted.length - 1];
-    if (maxDiff == minDiff) return { x: x0, y: y0, xErr: 0, yErr: 0 };
 
-    let diffsHist = [];
-    for (let i = 0; i < 1024; i++) diffsHist[i] = 0;
-    var indexFactor = (diffsHist.length - 1) / (maxDiff - minDiff);
-    for (let i = 0; i < diffsSorted.length; i++) {
-      let index = Math.floor((diffsSorted[i] - minDiff) * indexFactor);
-      diffsHist[index]++;
+    //gaussian blur to remove small scale structure within planetary disks and minimize interior edge detection
+    // NOTE: strong features on the surface of a plan can be blurred into the surrounding background sky.  This can affect centroiding and result
+    // in differences across filters (eg. mars ice caps)
+    // glur(pixels, sub.cnx, sub.cny, 5)
+
+    //construct tiled image data so that pixel interpolation can be utilized
+    let subImageData: IImageData<number[]> = {
+      width: sub.cnx,
+      height: sub.cny,
+      id: null,
+      initialized: true,
+      tileWidth: sub.cnx,
+      tileHeight: sub.cny,
+      tiles: [{
+        x: 0,
+        y: 0,
+        width: sub.cnx,
+        height: sub.cny,
+        index: 0,
+        isValid: true,
+        pixelLoadingFailed: false,
+        pixels: pixels,
+        pixelsLoaded: true,
+        pixelsLoading: false
+      }]
     }
-    let lowerPercentile = 0.683 * diffsSorted.length;
-    let count = 0,
-      index = 0;
-    while (true) {
-      if (isNaN(count)) return failedResult;
-      count += diffsHist[index];
-      if (count >= lowerPercentile) break;
-      index += 1;
-    }
-    let stdev = (index + 1) / indexFactor;
 
-    // let avg = pixels.reduce( (sum, value) => sum + value, 0)/pixels.length;
-    // let diffs = pixels.map(value => value-avg)
-    // let sqrDiffs = pixels.map(value => Math.pow(value-avg, 2))
-    // console.log('old stdev:', Math.sqrt(sqrDiffs.reduce( (sum, value) => sum + value, 0)/sqrDiffs.length));
-    // console.log('new stdev:', stdev);
+    //TODO: Utilize canny edge detection algorithm to better detect edge pixels and threshold
+    // image = new Image(sub.cnx, sub.cny, pixels, { kind: ImageKind.GREY, bitDepth: 32 });
+    // let imageBlurred = image.blurFilter({ radius: 3 })
+    // let imageGrey = imageBlurred.grey();
+    // let imageCanny: Image = cannyEdgeDetector(image.grey(), { lowThreshold: 20, highThreshold: 40, guassianBlur: 2 })
+    // download(image.toDataURL(), 'subframe_test.jpg');
 
-    let thresh = median + 3 * stdev;
+
+
+
+    // Derivitive-based edge detection on all pixels in sub-frame used to determine threshold
+    // Note:  this method often finds an undesirable edge such as hot pixels or interior banding of jupiter
+    // and will select an incorrect threshold
+
+    // let pixelsSorted = pixels.slice().sort((a, b) => a - b);
+    // let pixelDiffs: number[] = [];
+    // let clipCount = 0;
+    // for (let i = clipCount; i < pixels.length - clipCount; i++) {
+    //   pixelDiffs.push(pixelsSorted[i + 1] - pixelsSorted[i])
+    // }
+    // let pixelDiffsFiltered: number[] = [];
+    // for (let i = 1; i < pixelDiffs.length - 1; i++) {
+    //   pixelDiffsFiltered.push(getMedian([pixelDiffs[i - 1], pixelDiffs[i], pixelDiffs[i + 1]]))
+    // }
+
+    // let maxIndex = pixelDiffsFiltered.indexOf(Math.max.apply(null, pixelDiffsFiltered))
+    // let thresh = pixelsSorted[maxIndex + 1 + clipCount];
+
+
+
+    // Background estimation used to determine threshold
+    // Note:  this method works well the majority of times but planets often create large sky glows and internal reflections off filters
+    // By 3-sigma above the background as the threshold,  centroiding is often done on the sky glow and internal reflections.
+    // This works within a single filter but the centroid can be different as the filter changes (mars).
+
+    // let pixelsSorted = pixels.slice().sort((a, b) => a - b);
+    // let median = getMedian(pixelsSorted, false);
+    // let diffsSorted = pixelsSorted.map((value) => Math.abs(value - median));
+    // diffsSorted.sort((a, b) => a - b);
+    // let minDiff = diffsSorted[0];
+    // let maxDiff = diffsSorted[diffsSorted.length - 1];
+    // if (maxDiff == minDiff) return { x: x0, y: y0, xErr: 0, yErr: 0 };
+
+    // let diffsHist = [];
+    // for (let i = 0; i < 1024; i++) diffsHist[i] = 0;
+    // var indexFactor = (diffsHist.length - 1) / (maxDiff - minDiff);
+    // for (let i = 0; i < diffsSorted.length; i++) {
+    //   let index = Math.floor((diffsSorted[i] - minDiff) * indexFactor);
+    //   diffsHist[index]++;
+    // }
+    // let lowerPercentile = 0.683 * diffsSorted.length;
+    // let count = 0,
+    //   index = 0;
+    // while (true) {
+    //   if (isNaN(count)) return failedResult;
+    //   count += diffsHist[index];
+    //   if (count >= lowerPercentile) break;
+    //   index += 1;
+    // }
+    // let stdev = (index + 1) / indexFactor;
+
+    // let thresh = median + 3 * stdev;
+
+
     let ocxc = sub.cxc;
     let ocyc = sub.cyc;
     let cxc = ocxc;
     let cyc = ocyc;
-    let xShift = 0;
-    let yShift = 0;
+    let thresh = 0;
     while (true) {
-      let xSlice = [];
-      for (let i = 0; i < sub.cnx; i++) {
-        if (i == 0 || i == sub.cnx - 1) {
-          xSlice[i] = null;
-        } else {
-          let index = Math.floor(cyc) * sub.cnx + i;
-          let value = getMedian([pixels[index - 1], pixels[index], pixels[index + 1]]);
-          xSlice[i] = value < thresh ? 0 : 1;
+      let L = Math.sqrt(sub.cnx * sub.cnx + sub.cny * sub.cny) / 2;
+      let numSlices = 128;
+      points = [];
+      for (let sliceIter = 0; sliceIter < numSlices; sliceIter++) {
+        let theta = sliceIter / numSlices * Math.PI
+        let slice: { x: number; y: number; value: number, slice: number }[] = [];
+        for (let r = -L; r < L; r = r + 0.25) {
+          let x = r * Math.cos(theta);
+          let y = r * Math.sin(theta);
+          let value = getPixel(subImageData, x + cxc, y + cyc, true);
+          if (isNaN(value) || value === undefined) continue;
+
+          slice.push({ x: x, y: y, value: value, slice: sliceIter })
+        }
+
+        let sliceDiffs: { x: number; y: number; value: number, slice: number }[] = [];
+        for (let i = 0; i < slice.length - 1; i++) {
+          sliceDiffs.push({ ...slice[i], value: Math.abs((slice[i + 1].value - slice[i].value)) });
+        }
+
+        let left = sliceDiffs.splice(0, Math.ceil(sliceDiffs.length / 2));
+        let leftValues = left.map(p => p.value);
+        let leftEdge = left[leftValues.indexOf(Math.max.apply(null, leftValues))];
+
+        let right = sliceDiffs;
+        let rightValues = right.map(p => p.value);
+        let rightEdge = right[rightValues.indexOf(Math.max.apply(null, rightValues))];
+
+        points.push(leftEdge);
+        points.push(rightEdge);
+
+        if (!leftEdge || !rightEdge) recenterSub = true;
+        if (leftEdge && !rightEdge) expandSub = true;
+
+        // if (leftEdge) {
+        //   points.push(leftEdge)
+        // }
+
+        // if (rightEdge) {
+        //   points.push(rightEdge)
+        // }
+
+      }
+
+      let xShift = 0;
+      let yShift = 0;
+
+
+      // Ellipse fitting code which is used to find the best-fit ellipse through the detected edges
+      // NOTE:  This works extremely well in most situations,  but limits us to elliptical objects.  With outlier rejection,  even saturn can be aligned well with this algorithm.
+      // However,  as the viewing angle of saturn changes with time,  it may result in unexpected centroiding failures.
+      // let el = new Ellipse();
+      // while (true) {
+      //   // outlier rejection
+      //   el.setFromPoints(points);
+
+      //   let a = el.a;
+      //   let b = el.b;
+      //   let xe0 = el.x0;
+      //   let ye0 = el.y0;
+      //   let theta = el.theta;
+
+      //   points.forEach(p => {
+      //     let x = (p.x - xe0) * Math.cos(theta) + (p.y - ye0) * Math.sin(theta);
+      //     let y = -(p.x - xe0) * Math.sin(theta) + (p.y - ye0) * Math.cos(theta);
+      //     p.value = Math.sqrt(Math.pow(x / a, 2) + Math.pow(y / b, 2))
+      //   })
+
+      //   let values = points.map(p => p.value).sort((a, b) => (a - b));
+
+      //   let mu = getMedian(values);
+      //   let sigma = getRcr68th(values.map(v => Math.abs(v - mu)));
+      //   let cf = 1 + 2.2212 * Math.pow(values.length, -1.137);
+      //   let e = erfinv(1 - 0.5 / values.length);
+
+      //   let nextPoints = points.filter(p => Math.abs(p.value - mu) < cf * sigma * Math.sqrt(2) * e);
+      //   if (nextPoints.length == points.length) break;
+
+      //   points = nextPoints;
+      // }
+
+      // xShift = el.x0;
+      // yShift = el.y0;
+
+
+
+      // Edges are used to determine a good threshold for the object
+      // Positions of the pixels above the threshold are averaged with equal weights
+      // TODO:  add connected component labeling to exclude pixels unless they are part of the same 'object' which was clicked by the user
+      // https://en.wikipedia.org/wiki/Connected-component_labeling
+
+      let threshes: number[] = [];
+      let xs: number[] = [], ys: number[] = [];
+      points.forEach(p => {
+        threshes.push(getPixel(subImageData, p.x + cxc, p.y + cyc, true));
+        xs.push(p.x);
+        ys.push(p.y);
+      })
+
+
+      while (true) {
+        //outlier rejection
+        let mu = getMedian(threshes);
+        let sigma = getRcr68th(threshes.map(v => Math.abs(v - mu)));
+        let cf = 1 + 2.2212 * Math.pow(threshes.length, -1.137)
+        let e = erfinv(1 - 0.5 / threshes.length);
+
+        let threshesNext = threshes.filter(v => Math.abs(v - mu) < (sigma * cf * Math.sqrt(2) * e))
+
+        if (threshesNext.length == threshes.length) break;
+        threshes = threshesNext;
+      }
+      thresh = getMedian(threshes);
+
+
+      let xMin = Math.min.apply(null, xs);
+      let xMax = Math.max.apply(null, xs);
+      let yMin = Math.min.apply(null, ys);
+      let yMax = Math.max.apply(null, ys);
+
+      let xCenterCom = 0, yCenterCom = 0, objectCount = 0;
+      for (let y = yMin; y < yMax; y++) {
+        for (let x = xMin; x < xMax; x++) {
+          let v = getPixel(subImageData, x + cxc, y + cyc, true);
+          if (isNaN(v) || v < thresh) continue;
+          xCenterCom += x;
+          yCenterCom += y;
+          objectCount++;
         }
       }
 
-      let ySlice = [];
-      for (let j = 0; j < sub.cny; j++) {
-        if (j == 0 || j == sub.cny - 1) {
-          ySlice[j] = null;
-        } else {
-          let index = j * sub.cnx + Math.floor(cxc);
-          let value = getMedian([pixels[index - sub.cnx], pixels[index], pixels[index + sub.cnx]]);
-          ySlice[j] = value < thresh ? 0 : 1;
-        }
-      }
+      xShift = xCenterCom / objectCount;
+      yShift = yCenterCom / objectCount;
 
-      let left = xSlice.splice(0, Math.ceil(xSlice.length / 2));
-      let right = xSlice;
-      let leftEdge = left.lastIndexOf(0);
-      if (leftEdge == -1) leftEdge = 0;
-      let rightEdge = right.indexOf(0);
-      if (rightEdge == -1) rightEdge = right.length - 1;
-      rightEdge += left.length;
 
-      let upper = ySlice.splice(0, Math.ceil(ySlice.length / 2));
-      let lower = ySlice;
-      let upperEdge = upper.lastIndexOf(0);
-      if (upperEdge == -1) upperEdge = 0;
-      let lowerEdge = lower.indexOf(0);
-      if (lowerEdge == -1) lowerEdge = lower.length - 1;
-      lowerEdge += upper.length;
-
-      xShift = (leftEdge + rightEdge) / 2 - cxc;
-      yShift = (upperEdge + lowerEdge) / 2 - cyc;
       if (isNaN(xShift) || isNaN(yShift)) return failedResult;
 
       cxc += xShift;
       cyc += yShift;
       nIter++;
 
-      if (leftEdge == 0 || rightEdge == subWidth - 1) recenterSub = true;
-      if (leftEdge == 0 && rightEdge == subWidth - 1) expandSub = true;
-      if (upperEdge == 0 || lowerEdge == subWidth - 1) recenterSub = true;
-      if (upperEdge == 0 && lowerEdge == subWidth - 1) expandSub = true;
+
+      // if (upperEdge == 0 || lowerEdge == subWidth - 1) recenterSub = true;
+      // if (upperEdge == 0 && lowerEdge == subWidth - 1) expandSub = true;
 
       if (
         recenterSub ||
@@ -130,15 +324,26 @@ export function centroidDisk(
       }
     }
 
+
+
     x0 += cxc - ocxc;
     y0 += cyc - ocyc;
 
+    // image = new Image(imageData.width, imageData.height, allPixels.map(p => p < thresh ? 0 : 255), { kind: ImageKind.GREY });
+    // download(image.toDataURL(), 'full_blur_thresh.jpg');
+
+    // let rows = points.map(p => [p.x + x0, p.y + y0, p.value, p.slice]);
+    // let blob = new Blob([rows.map(e => e.join(",")).join("\n")], { type: 'data:text/csv;charset=utf-8,' });
+    // saveAs(blob, `edges.csv`);
+
     if (expandSub) subWidth *= 1.5;
 
-    if (nIter >= settings.maxIterations || !recenterSub) break;
+    if (nIter >= settings.maxIterations) return failedResult;
+
+    if (!recenterSub) break;
   }
 
-  return { x: x0, y: y0, xErr: null, yErr: null };
+  return { x: x0 - 0.5, y: y0 - 0.5, xErr: null, yErr: null };
 }
 
 
@@ -287,7 +492,7 @@ function getSubframe(size: number, imageData: IImageData<PixelType>, x: number, 
   let cxc = x - c1;
   let cyc = y - l1;
 
-  let result = Array(cnx * cny);
+  let result: number[] = Array(cnx * cny);
 
   for (let j = l1; j <= l2; j++) {
     for (let i = c1; i <= c2; i++) {

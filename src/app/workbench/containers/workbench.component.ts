@@ -368,6 +368,52 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
       preventDefault: true,
     });
 
+    let handleFileNav = (direction: 'fwd' | 'rev') => {
+      let filteredFiles = this.store.selectSnapshot(WorkbenchState.getFilteredFiles);
+      let activeViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
+      if (!activeViewer || !activeViewer.fileId) return;
+      let fileIndex = filteredFiles.findIndex(f => f.id == activeViewer.fileId);
+      if (fileIndex == -1) return;
+      let file = filteredFiles[fileIndex];
+
+      if (activeViewer.layerId) {
+        let layerIndex = file.layerIds.indexOf(activeViewer.layerId);
+        if (layerIndex == -1) return;
+        layerIndex = layerIndex + (direction == 'fwd' ? 1 : -1);
+        if (layerIndex >= 0 && layerIndex < file.layerIds.length) {
+          this.store.dispatch(new SelectFile(file.id, file.layerIds[layerIndex], false));
+          return;
+        }
+        else if (layerIndex == -1 && file.layerIds.length > 1) {
+          this.store.dispatch(new SelectFile(file.id, null, false));
+        }
+      }
+
+      fileIndex = fileIndex + (direction == 'fwd' ? 1 : -1);
+      if (fileIndex >= 0 && fileIndex < filteredFiles.length) {
+        this.store.dispatch(new SelectFile(filteredFiles[fileIndex].id, filteredFiles[fileIndex].layerIds.length == 1 ? filteredFiles[fileIndex].layerIds[0] : null, false));
+        return;
+      }
+    }
+
+    this.shortcuts.push({
+      key: 'shift + right',
+      label: 'Next file',
+      command: (e) => {
+        handleFileNav('fwd')
+      },
+      preventDefault: true,
+    });
+
+    this.shortcuts.push({
+      key: 'shift + left',
+      label: 'Next file',
+      command: (e) => {
+        handleFileNav('rev')
+      },
+      preventDefault: true,
+    });
+
     this.shortcuts.push({
       key: 'd',
       label: 'Show Display Tool',

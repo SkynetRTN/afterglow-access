@@ -1,29 +1,29 @@
 <svg:g class="svg-crosshair-marker">
   <svg:line *ngIf="showShadow" class="shadow" [attr.x1]="x-radius" [attr.y1]="y" [attr.x2]="x+radius" [attr.y2]="y"
-    [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'" [style.stroke-width]="strokeWidth+2"
+    [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'" [style.stroke-width]="strokeWidth+3"
     [style.stroke-opacity]="strokeOpacity" />
   <svg:line *ngIf="showShadow" class="shadow" [attr.x1]="x" [attr.y1]="y-radius" [attr.x2]="x" [attr.y2]="y+radius"
-    [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'" [style.stroke-width]="strokeWidth+2"
+    [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'" [style.stroke-width]="strokeWidth+3"
     [style.stroke-opacity]="strokeOpacity" />
   <svg:line *ngIf="showArrow && showShadow" class="shadow" [attr.x1]="x+radius" [attr.y1]="y" [attr.x2]="x"
     [attr.y2]="y-radius" [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'"
-    [style.stroke-width]="strokeWidth+2" [style.stroke-opacity]="strokeOpacity" />
+    [style.stroke-width]="strokeWidth+3" [style.stroke-opacity]="strokeOpacity" />
   <svg:line *ngIf="showArrow && showShadow" class="shadow" [attr.x1]="x+radius" [attr.y1]="y" [attr.x2]="x"
     [attr.y2]="y+radius" [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'"
-    [style.stroke-width]="strokeWidth+2" [style.stroke-opacity]="strokeOpacity" />
+    [style.stroke-width]="strokeWidth+3" [style.stroke-opacity]="strokeOpacity" />
 
   <svg:line *ngIf="showOutline" class="primary-outline" [attr.x1]="x-radius" [attr.y1]="y" [attr.x2]="x+radius"
     [attr.y2]="y" [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'"
-    [style.stroke-width]="strokeWidth+2" [style.stroke-opacity]="strokeOpacity" />
+    [style.stroke-width]="strokeWidth+4" [style.stroke-opacity]="strokeOpacity" />
   <svg:line *ngIf="showOutline" class="primary-outline" [attr.x1]="x" [attr.y1]="y-radius" [attr.x2]="x"
     [attr.y2]="y+radius" [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'"
-    [style.stroke-width]="strokeWidth+2" [style.stroke-opacity]="strokeOpacity" />
+    [style.stroke-width]="strokeWidth+4" [style.stroke-opacity]="strokeOpacity" />
   <svg:line *ngIf="showArrow && showOutline" class="primary-outline" [attr.x1]="x+radius" [attr.y1]="y" [attr.x2]="x"
     [attr.y2]="y-radius" [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'"
-    [style.stroke-width]="strokeWidth+2" [style.stroke-opacity]="strokeOpacity" />
+    [style.stroke-width]="strokeWidth+4" [style.stroke-opacity]="strokeOpacity" />
   <svg:line *ngIf="showArrow && showOutline" class="primary-outline" [attr.x1]="x+radius" [attr.y1]="y" [attr.x2]="x"
     [attr.y2]="y+radius" [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'"
-    [style.stroke-width]="strokeWidth+2" [style.stroke-opacity]="strokeOpacity" />
+    [style.stroke-width]="strokeWidth+4" [style.stroke-opacity]="strokeOpacity" />
 
   <svg:line class="stroke" [attr.x1]="x-radius" [attr.y1]="y" [attr.x2]="x+radius" [attr.y2]="y"
     [attr.vector-effect]="'non-scaling-stroke'" [attr.stroke-linecap]="'butt'" [style.stroke-width]="strokeWidth"

@@ -73,8 +73,9 @@
 
             <div>
                 <mat-form-field style="width: 100%;">
-                    <input type="number" matInput i18n-placeholder placeholder="Extinction E(B-V)"
-                        formControlName="extinction" />
+                    <mat-label i18n>Extinction E (B-V)</mat-label>
+                    <input type="number" matInput formControlName="extinction" />
+
                     <mat-hint i18n></mat-hint>
                 </mat-form-field>
                 <app-print-form-error [control]="form.get('extinction')"></app-print-form-error>
