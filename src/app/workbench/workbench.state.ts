@@ -3372,9 +3372,11 @@ export class WorkbenchState {
             actions.push(new InvalidateHeader(layerId.toString()));
           });
           let viewerIds = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds);
+          let layerIds = job.result.fileIds.map(id => id.toString())
           viewerIds.forEach(viewerId => {
             let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(viewerId));
-            if (viewer.layerId && job.result.fileIds.includes(viewer.layerId)) {
+
+            if (viewer.layerId && layerIds.includes(viewer.layerId)) {
               actions.push(new LoadLayerHeader(viewer.layerId));
             }
           })
