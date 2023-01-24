@@ -57,11 +57,11 @@ export class SvgPhotometryMarkerComponent implements OnInit, OnChanges {
     return `translate(${this.marker.x}, ${this.marker.y})`;
   }
 
-  getApertureRotation() {
-    return `rotate(${(this.marker?.photometryData?.aperTheta || 0) * (180.0 / Math.PI)})`
+  getApertureTransform() {
+    return `translate(${this.marker.photometryData.x - this.marker.x}, ${this.marker.photometryData.y - this.marker.y}) rotate(${(this.marker?.photometryData?.aperTheta || 0) * (180.0 / Math.PI)})`
   }
 
-  getCrosshairRotation() {
+  getCrosshairTransform() {
     return `rotate(${-(this.marker.theta || -180) + 90})`
   }
 
