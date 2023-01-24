@@ -3369,8 +3369,15 @@ export class WorkbenchState {
           let actions: any[] = [];
           if (!isWcsCalibrationJob(job)) return;
           job.result.fileIds.forEach((layerId) => {
-            actions.push(new InvalidateHeader(layerId.toString()));
+            actions.push([new InvalidateHeader(layerId.toString())]);
           });
+          let viewerIds = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds);
+          viewerIds.forEach(viewerId => {
+            let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(viewerId));
+            if (viewer.layerId && job.result.fileIds.includes(viewer.layerId)) {
+              actions.push([new LoadLayerHeader(viewer.layerId)]);
+            }
+          })
           let message: string;
           let numFailed = layerIds.length - job.result.fileIds.length;
           if (numFailed != 0) {
