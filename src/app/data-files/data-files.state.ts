@@ -1587,9 +1587,9 @@ export class DataFilesState {
       else if (normalizer.mode == 'pixel') {
         let percentiles = calcPercentiles(
           layer.histogram,
-          (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale,
-          (normalizer.midLevel - normalizer.layerOffset) / normalizer.layerScale,
-          (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
+          !normalizer.layerScale ? 0 : (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale,
+          !normalizer.layerScale ? 0 : (normalizer.midLevel - normalizer.layerOffset) / normalizer.layerScale,
+          !normalizer.layerScale ? 0 : (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
         normalizer.backgroundPercentile = percentiles.lowerPercentile;
         normalizer.midPercentile = percentiles.midPercentile;
         normalizer.peakPercentile = percentiles.upperPercentile;
