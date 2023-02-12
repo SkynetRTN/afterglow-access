@@ -32,6 +32,7 @@ export interface SourceExtractionJobSettings {
   satLevel?: number;
   discardSaturated?: boolean;
   limit?: number;
+  maxSources?: number;
 }
 
 export interface SourceExtractionData extends SourceMeta, Astrometry, SourceId { }

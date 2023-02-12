@@ -15,8 +15,8 @@ export interface AlignmentSettings {
         minEdge: number;
         ratioLimit: number;
         confidence: number;
+        maxSources: number,
         manualModeSettings: {
-            maxSources: number,
             sourceIds: string[],
         };
         autoModeSettings: {
@@ -98,8 +98,8 @@ export const defaults: AlignmentSettings = {
         minEdge: .003,
         ratioLimit: 10,
         confidence: .15,
+        maxSources: 100,
         manualModeSettings: {
-            maxSources: 100,
             sourceIds: [],
         },
         autoModeSettings: {

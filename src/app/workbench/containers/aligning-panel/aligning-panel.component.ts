@@ -72,8 +72,8 @@ export class AlignerPageComponent implements OnInit {
       minEdge: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
       ratioLimit: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
       confidence: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
+      maxSources: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
       manualModeSettings: this.fb.group({
-        maxSources: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
         sourceIds: this.fb.control('', Validators.required),
       }),
     }),
@@ -492,7 +492,7 @@ export class AlignerPageComponent implements OnInit {
         ratioLimit: settings.sourceModeSettings.ratioLimit,
         confidence: settings.sourceModeSettings.confidence,
         sources: selectedSourceExtractionData,
-        maxSources: settings.sourceModeSettings.manualModeSettings.maxSources
+        maxSources: settings.sourceModeSettings.maxSources
       }
       jobSettings = s;
     }
@@ -506,7 +506,10 @@ export class AlignerPageComponent implements OnInit {
         ratioLimit: settings.sourceModeSettings.ratioLimit,
         confidence: settings.sourceModeSettings.confidence,
         ...settings.sourceModeSettings.autoModeSettings,
-        sourceExtractionSettings: sourceExtractionSettings
+        sourceExtractionSettings: {
+          ...sourceExtractionSettings,
+          maxSources: settings.sourceModeSettings.maxSources
+        }
       }
       jobSettings = s;
     }
