@@ -4,7 +4,6 @@ import { IViewer, Viewer } from './viewer';
 import { CentroidSettings } from './centroid-settings';
 import { PhotometrySettings } from './photometry-settings';
 import { SourceExtractionSettings } from './source-extraction-settings';
-import { FileInfoPanelConfig } from './file-info-panel';
 import { PlottingPanelState } from './plotter-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
 import { IWorkbenchState } from './workbench-file-state';
@@ -100,8 +99,6 @@ export interface WorkbenchStateModel {
   addFieldCalSourcesFromCatalogJobId: string;
   addFieldCalSourcesFromCatalogFieldCalId: string;
   dssImportLoading: boolean;
-
-  fileInfoPanelConfig: FileInfoPanelConfig;
   fileIdToWorkbenchStateIdMap: { [id: string]: string };
   layerIdToWorkbenchStateIdMap: { [id: string]: string };
   nextWorkbenchStateId: number;

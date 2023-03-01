@@ -27,7 +27,6 @@ import { AppFooterComponent } from './components/app-footer/app-footer.component
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { WorkbenchComponent } from './containers/workbench.component';
 import { DisplayToolPanelComponent } from './containers/display-panel/display-panel.component';
-import { FileInfoToolsetComponent } from './containers/file-info-panel/file-info-panel.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
@@ -75,6 +74,7 @@ import { WcsCalibrationModule } from './tools/wcs-calibration/wcs-calibration.mo
 import { SonificationModule } from './tools/sonification/sonification.module';
 import { CustomMarkerModule } from './tools/custom-marker/custom-marker.module';
 import { PlottingModule } from './tools/plotting/plotting.module';
+import { FileInfoModule } from './tools/file-info/file-info.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -96,7 +96,6 @@ export const COMPONENTS = [
   WorkbenchComponent,
   DisplayToolPanelComponent,
   SourceExtractionRegionDialogComponent,
-  FileInfoToolsetComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
   ViewerPanelComponent,
@@ -147,7 +146,8 @@ export const COMPONENTS = [
     WcsCalibrationModule,
     SonificationModule,
     CustomMarkerModule,
-    PlottingModule
+    PlottingModule,
+    FileInfoModule
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS

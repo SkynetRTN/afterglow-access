@@ -51,6 +51,7 @@ import { WcsCalibrationState } from './workbench/tools/wcs-calibration/wcs-calib
 import { SonificationState } from './workbench/tools/sonification/sonification.state';
 import { CustomMarkerState } from './workbench/tools/custom-marker/custom-marker.state';
 import { PlottingState } from './workbench/tools/plotting/plotting.state';
+import { FileInfoState } from './workbench/tools/file-info/file-info.state';
 
 
 registerLocaleData(localeEs, 'es');
@@ -194,7 +195,8 @@ export function jobSanitizer(v: JobsStateModel) {
         WcsCalibrationState,
         SonificationState,
         CustomMarkerState,
-        PlottingState],
+        PlottingState,
+        FileInfoState],
       ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -216,7 +218,8 @@ export function jobSanitizer(v: JobsStateModel) {
         WcsCalibrationState,
         SonificationState,
         CustomMarkerState,
-        PlottingState
+        PlottingState,
+        FileInfoState
       ],
       sanitizations: [
         {

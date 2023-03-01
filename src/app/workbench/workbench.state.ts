@@ -226,10 +226,6 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   showSidebar: true,
   showConfig: true,
   settings: { ...defaultGlobalSettings },
-  fileInfoPanelConfig: {
-    showRawHeader: false,
-    useSystemTime: false,
-  },
   catalogs: [],
   selectedCatalogId: '',
   fieldCals: [],
@@ -383,11 +379,6 @@ export class WorkbenchState {
     return settings.cosmeticCorrection;
   }
 
-
-  @Selector()
-  public static getFileInfoPanelConfig(state: WorkbenchStateModel) {
-    return state.fileInfoPanelConfig;
-  }
 
 
   @Selector([WorkbenchState.getViewers])
@@ -1850,21 +1841,6 @@ export class WorkbenchState {
     actions.push(new InvalidateAutoCalByLayerId())
     return dispatch(actions);
 
-  }
-
-  @Action(UpdateFileInfoPanelConfig)
-  @ImmutableContext()
-  public updateFileInfoPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateFileInfoPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.fileInfoPanelConfig = {
-        ...state.fileInfoPanelConfig,
-        ...changes,
-      };
-      return state;
-    });
   }
 
 

@@ -13,19 +13,20 @@ import {
   getFilter,
   ILayer,
   getObservatory,
-} from '../../../data-files/models/data-file';
+} from '../../../../data-files/models/data-file';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { datetimeToJd } from '../../../utils/skynet-astro';
-import { FileInfoPanelConfig } from '../../models/file-info-panel';
+import { datetimeToJd } from '../../../../utils/skynet-astro';
 import { Observable, combineLatest, Subject, BehaviorSubject } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { HeaderEntry } from '../../../data-files/models/header-entry';
-import { WorkbenchState } from '../../workbench.state';
-import { UpdateFileInfoPanelConfig } from '../../workbench.actions';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+import { HeaderEntry } from '../../../../data-files/models/header-entry';
+import { WorkbenchState } from '../../../workbench.state';
+import { UpdateFileInfoPanelConfig } from '../../../workbench.actions';
+import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
+import { FileInfoPanelConfig } from '../models/file-info-panel-config';
+import { FileInfoState } from '../file-info.state';
 
 @Component({
   selector: 'app-file-info-panel',
@@ -33,7 +34,7 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
   styleUrls: ['./file-info-panel.component.css'],
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestroy {
+export class FileInfoPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input('viewerId')
   set viewerId(viewer: string) {
     this.viewerId$.next(viewer);
@@ -60,7 +61,7 @@ export class FileInfoToolsetComponent implements OnInit, AfterViewInit, OnDestro
       switchMap((viewerId) => this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId)))
     );
 
-    this.config$ = this.store.select(WorkbenchState.getFileInfoPanelConfig);
+    this.config$ = this.store.select(FileInfoState.getConfig);
 
     this.headerSummary$ = combineLatest(this.header$, this.config$).pipe(
       map(([header, config]) => {
