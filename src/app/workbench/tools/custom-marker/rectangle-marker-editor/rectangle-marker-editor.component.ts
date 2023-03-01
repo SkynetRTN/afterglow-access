@@ -11,8 +11,8 @@ import {
 } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { FormBuilder } from '@angular/forms';
-import { RectangleMarker } from '../../models/marker';
-import { CustomValidators } from '../../../utils/custom_form_validator';
+import { RectangleMarker } from '../../../models/marker';
+import { CustomValidators } from '../../../../utils/custom_form_validator';
 
 import { debounceTime } from 'rxjs/operators';
 
@@ -37,7 +37,7 @@ export class RectangleMarkerEditorComponent implements OnInit, OnChanges, AfterV
     y: [null, [Validators.required, CustomValidators.validateNumber, Validators.min(0)]],
   });
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder) { }
 
   ngOnInit() {
     this.form.valueChanges.pipe(debounceTime(250)).subscribe((data) => {
@@ -54,7 +54,7 @@ export class RectangleMarkerEditorComponent implements OnInit, OnChanges, AfterV
     this.form.patchValue(this.marker, { emitEvent: false });
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   onSubmit() {
     // TODO: Use EventEmitter with form value

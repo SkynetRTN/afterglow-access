@@ -7,7 +7,6 @@ import { SourceExtractionSettings } from './source-extraction-settings';
 import { FileInfoPanelConfig } from './file-info-panel';
 import { PlottingPanelState } from './plotter-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
-import { SonificationPanelState } from '../tools/sonification/models/sonifier-file-state';
 import { IWorkbenchState } from './workbench-file-state';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
@@ -46,21 +45,6 @@ export interface StackFormData {
   multiplicativePercentile: number;
   equalizeGlobal: boolean;
 }
-
-export interface CustomMarkerPanelConfig {
-  centroidClicks: boolean;
-  usePlanetCentroiding: boolean;
-}
-
-export interface PlottingPanelConfig {
-  interpolatePixels: boolean;
-  centroidClicks: boolean;
-  planetCentroiding: boolean;
-  plotterSyncEnabled: boolean;
-  plotMode: '1D' | '2D' | '3D';
-}
-
-
 
 
 
@@ -118,18 +102,9 @@ export interface WorkbenchStateModel {
   dssImportLoading: boolean;
 
   fileInfoPanelConfig: FileInfoPanelConfig;
-  customMarkerPanelConfig: CustomMarkerPanelConfig;
-  plottingPanelConfig: PlottingPanelConfig;
   fileIdToWorkbenchStateIdMap: { [id: string]: string };
   layerIdToWorkbenchStateIdMap: { [id: string]: string };
   nextWorkbenchStateId: number;
   workbenchStateIds: string[];
   workbenchStateEntities: { [id: string]: IWorkbenchState };
-  nextMarkerId: number;
-  nextCustomMarkerPanelStateId: number;
-  customMarkerPanelStateIds: string[];
-  customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState };
-  nextPlottingPanelStateId: number;
-  plottingPanelStateIds: string[];
-  plottingPanelStateEntities: { [id: string]: PlottingPanelState };
 }

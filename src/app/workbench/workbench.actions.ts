@@ -1,8 +1,6 @@
 import { ViewMode } from './models/view-mode';
 import {
   WorkbenchTool,
-  PlottingPanelConfig,
-  CustomMarkerPanelConfig,
   ViewerPanel,
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
@@ -16,7 +14,6 @@ import { IViewer, Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
 import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
-import { SonificationPanelState } from './tools/sonification/models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { PhotometryData } from '../jobs/models/photometry';
@@ -174,11 +171,7 @@ export class SetNormalizationSyncEnabled {
   constructor(public value: boolean) { }
 }
 
-export class SyncPlottingPanelStates {
-  public static readonly type = '[Workbench] Sync Plotting Panel States';
 
-  constructor(public referenceId: string, public ids: string[]) { }
-}
 
 export class SetActiveTool {
   public static readonly type = '[Workbench] Set Active Tool';
@@ -246,22 +239,10 @@ export class UpdateCalibrationSettings {
   constructor(public changes: Partial<CalibrationSettings>) { }
 }
 
-export class UpdateCustomMarkerPanelConfig {
-  public static readonly type = '[Workbench] Update Custom Marker Panel Config';
-
-  constructor(public changes: Partial<CustomMarkerPanelConfig>) { }
-}
-
 export class UpdateFileInfoPanelConfig {
   public static readonly type = '[Workbench] Update File Info Panel Config';
 
   constructor(public changes: Partial<FileInfoPanelConfig>) { }
-}
-
-export class UpdatePlottingPanelConfig {
-  public static readonly type = '[Workbench] Update Plotter Panel Config';
-
-  constructor(public changes: Partial<PlottingPanelConfig>) { }
 }
 
 export class UpdateCosmeticCorrectionSettings {
@@ -430,29 +411,6 @@ export class InitializeWorkbenchFileState {
 
 /* Plotting */
 
-export class UpdatePlottingPanelState {
-  public static readonly type = '[Plotter] Update Layer Plotting Panel State';
-
-  constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) { }
-}
-
-export class StartLine {
-  public static readonly type = '[Plotter] Start Line';
-
-  constructor(
-    public plottingPanelStateId: string,
-    public point: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) { }
-}
-
-export class UpdateLine {
-  public static readonly type = '[Plotter] Update Line';
-
-  constructor(
-    public plottingPanelStateId: string,
-    public point: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) { }
-}
 
 /* Sources */
 
@@ -480,55 +438,6 @@ export class SetSourceLabel {
 
 
 /* Markers */
-export class UpdateCustomMarkerSelectionRegion {
-  public static readonly type = '[Markers] Update Custom Marker Selection Region';
-
-  constructor(public customMarkerPanelStateId: string, public region: Region) { }
-}
-
-export class EndCustomMarkerSelectionRegion {
-  public static readonly type = '[Markers] End Custom Marker Selection Region';
-
-  constructor(public customMarkerPanelStateId: string, public mode: 'append' | 'remove') { }
-}
-
-export class UpdateCustomMarker {
-  public static readonly type = '[Markers] Update Custom Marker';
-
-  /* TODO:  Figure out why error TS2322 is thrown by compiler when changes type is set to Partial<Marker> */
-  constructor(public customMarkerPanelStateId: string, public markerId: string, public changes: any) { }
-}
-
-export class AddCustomMarkers {
-  public static readonly type = '[Markers] Add Custom Marker';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class RemoveCustomMarkers {
-  public static readonly type = '[Markers] Remove Custom Marker';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class SelectCustomMarkers {
-  public static readonly type = '[Markers] Select Custom Markers';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class DeselectCustomMarkers {
-  public static readonly type = '[Markers] Deselect Custom Markers';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class SetCustomMarkerSelection {
-  public static readonly type = '[Markers] Set Custom Marker Selection';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
 
 
 

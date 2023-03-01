@@ -49,6 +49,8 @@ import { SourceCatalogState } from './workbench/tools/source-catalog/source-cata
 import { PhotometryState, PhotometryStateModel, PhotometryViewerStateModel } from './workbench/tools/photometry/photometry.state';
 import { WcsCalibrationState } from './workbench/tools/wcs-calibration/wcs-calibration.state';
 import { SonificationState } from './workbench/tools/sonification/sonification.state';
+import { CustomMarkerState } from './workbench/tools/custom-marker/custom-marker.state';
+import { PlottingState } from './workbench/tools/plotting/plotting.state';
 
 
 registerLocaleData(localeEs, 'es');
@@ -190,7 +192,9 @@ export function jobSanitizer(v: JobsStateModel) {
         SourceCatalogState,
         PhotometryState,
         WcsCalibrationState,
-        SonificationState],
+        SonificationState,
+        CustomMarkerState,
+        PlottingState],
       ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -210,7 +214,9 @@ export function jobSanitizer(v: JobsStateModel) {
         SourceCatalogState,
         PhotometryState,
         WcsCalibrationState,
-        SonificationState
+        SonificationState,
+        CustomMarkerState,
+        PlottingState
       ],
       sanitizations: [
         {

@@ -53,7 +53,6 @@ import {
   RemoveViewerLayoutItem,
   SetFocusedViewer,
   SetViewerData as SetViewerFile,
-  SyncPlottingPanelStates,
   SetViewerSyncEnabled,
   LoadCatalogs,
   LoadCatalogsSuccess,
@@ -82,14 +81,12 @@ import {
   ToggleShowConfig,
   SetActiveTool,
   UpdateCentroidSettings,
-  UpdatePlottingPanelConfig,
   UpdatePhotometrySettings,
   UpdateSourceExtractionSettings,
   SetSelectedCatalog,
   SetSelectedFieldCal,
   CloseSidenav,
   OpenSidenav,
-  UpdateCustomMarkerPanelConfig,
   ExtractSources,
   ClearViewerMarkers,
   CreateViewer,
@@ -101,15 +98,6 @@ import {
   Initialize,
   UpdateCurrentViewportSize,
   InitializeWorkbenchLayerState,
-  StartLine,
-  UpdateLine,
-  UpdatePlottingPanelState,
-  UpdateCustomMarker,
-  AddCustomMarkers,
-  RemoveCustomMarkers,
-  SelectCustomMarkers,
-  DeselectCustomMarkers,
-  SetCustomMarkerSelection,
   SyncViewerTransformations,
   SetViewerSyncMode,
   SyncViewerNormalizations,
@@ -118,8 +106,6 @@ import {
   SetFileListFilter,
   InitializeWorkbenchFileState,
   ImportFromSurveyFail,
-  UpdateCustomMarkerSelectionRegion,
-  EndCustomMarkerSelectionRegion,
   UpdateSettings,
   UpdateCalibrationSettings,
   SyncAfterglowHeaders,
@@ -152,7 +138,6 @@ import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-prov
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PosType, Source, sourceToAstrometryData } from './models/source';
 import { MarkerType, LineMarker, RectangleMarker, CircleMarker } from './models/marker';
-import { SonificationPanelState, SonifierRegionMode } from './tools/sonification/models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
 import {
   SourceExtractionJobSettings,
@@ -245,17 +230,6 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     showRawHeader: false,
     useSystemTime: false,
   },
-  customMarkerPanelConfig: {
-    centroidClicks: false,
-    usePlanetCentroiding: false,
-  },
-  plottingPanelConfig: {
-    interpolatePixels: false,
-    centroidClicks: false,
-    planetCentroiding: false,
-    plotterSyncEnabled: false,
-    plotMode: '1D',
-  },
   catalogs: [],
   selectedCatalogId: '',
   fieldCals: [],
@@ -269,14 +243,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   layerIdToWorkbenchStateIdMap: {},
   nextWorkbenchStateId: 0,
   workbenchStateIds: [],
-  workbenchStateEntities: {},
-  nextCustomMarkerPanelStateId: 0,
-  customMarkerPanelStateIds: [],
-  customMarkerPanelStateEntities: {},
-  nextPlottingPanelStateId: 0,
-  plottingPanelStateEntities: {},
-  plottingPanelStateIds: [],
-  nextMarkerId: 0,
+  workbenchStateEntities: {}
 };
 
 @State<WorkbenchStateModel>({
@@ -416,19 +383,10 @@ export class WorkbenchState {
     return settings.cosmeticCorrection;
   }
 
-  @Selector()
-  public static getCustomMarkerPanelConfig(state: WorkbenchStateModel) {
-    return state.customMarkerPanelConfig;
-  }
 
   @Selector()
   public static getFileInfoPanelConfig(state: WorkbenchStateModel) {
     return state.fileInfoPanelConfig;
-  }
-
-  @Selector()
-  public static getPlottingPanelConfig(state: WorkbenchStateModel) {
-    return state.plottingPanelConfig;
   }
 
 
@@ -508,51 +466,6 @@ export class WorkbenchState {
       return state.workbenchStateEntities[stateId] || null;
     };
   }
-
-  @Selector()
-  public static getCustomMarkerPanelStateEntities(state: WorkbenchStateModel) {
-    return state.customMarkerPanelStateEntities;
-  }
-
-  @Selector()
-  public static getCustomMarkerPanelStateIds(state: WorkbenchStateModel) {
-    return state.customMarkerPanelStateIds;
-  }
-
-  @Selector()
-  public static getCustomMarkerPanelStates(state: WorkbenchStateModel) {
-    return Object.values(state.customMarkerPanelStateEntities);
-  }
-
-  @Selector([WorkbenchState.getCustomMarkerPanelStateEntities])
-  public static getCustomMarkerPanelStateById(entities: { [id: string]: CustomMarkerPanelState }) {
-    return (customMarkerPanelStateId: string) => {
-      return entities[customMarkerPanelStateId];
-    };
-  }
-
-  @Selector()
-  public static getPlottingPanelStateEntities(state: WorkbenchStateModel) {
-    return state.plottingPanelStateEntities;
-  }
-
-  @Selector()
-  public static getPlottingPanelStateIds(state: WorkbenchStateModel) {
-    return state.plottingPanelStateIds;
-  }
-
-  @Selector()
-  public static getPlottingPanelStates(state: WorkbenchStateModel) {
-    return Object.values(state.plottingPanelStateEntities);
-  }
-
-  @Selector([WorkbenchState.getPlottingPanelStateEntities])
-  public static getPlottingPanelStateById(entities: { [id: string]: PlottingPanelState }) {
-    return (plottingPanelStateId: string) => {
-      return entities[plottingPanelStateId];
-    };
-  }
-
 
   /** File Filtering and Selection
    *
@@ -990,34 +903,6 @@ export class WorkbenchState {
       [WorkbenchState.getWorkbenchStateIdByViewerId(viewerId), WorkbenchState.getWorkbenchStateEntities],
       (workbenchStateId: string, workbenchStateEntities: { [id: string]: IWorkbenchState }) => {
         return workbenchStateEntities[workbenchStateId] || null;
-      }
-    );
-  }
-
-  static getCustomMarkerPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getCustomMarkerPanelStateEntities],
-      (workbenchState: IWorkbenchState, customMarkerPanelStateEntities: { [id: string]: CustomMarkerPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchFileState | WorkbenchImageLayerState;
-          return customMarkerPanelStateEntities[s.customMarkerPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-  static getPlottingPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPlottingPanelStateEntities],
-      (workbenchState: IWorkbenchState, plottingPanelStateEntities: { [id: string]: PlottingPanelState }) => {
-        if ([WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchFileState | WorkbenchImageLayerState;
-          return plottingPanelStateEntities[s.plottingPanelStateId] || null;
-        } else {
-          return null;
-        }
       }
     );
   }
@@ -1967,21 +1852,6 @@ export class WorkbenchState {
 
   }
 
-  @Action(UpdateCustomMarkerPanelConfig)
-  @ImmutableContext()
-  public updateCustomMarkerPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateCustomMarkerPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.customMarkerPanelConfig = {
-        ...state.customMarkerPanelConfig,
-        ...changes,
-      };
-      return state;
-    });
-  }
-
   @Action(UpdateFileInfoPanelConfig)
   @ImmutableContext()
   public updateFileInfoPanelConfig(
@@ -1996,23 +1866,6 @@ export class WorkbenchState {
       return state;
     });
   }
-
-  @Action(UpdatePlottingPanelConfig)
-  @ImmutableContext()
-  public updatePlottingPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdatePlottingPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.plottingPanelConfig = {
-        ...state.plottingPanelConfig,
-        ...changes,
-      };
-      return state;
-    });
-  }
-
-
 
 
 
@@ -2293,38 +2146,7 @@ export class WorkbenchState {
     }
   }
 
-  @Action([StartLine, UpdateLine, UpdatePlottingPanelState])
-  @ImmutableContext()
-  public onPlotterChange(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { plottingPanelStateId }: StartLine | UpdateLine | UpdatePlottingPanelState
-  ) {
-    let state = getState();
-    let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getLayerEntities);
-    return;
-  }
 
-  @Action(SyncPlottingPanelStates)
-  @ImmutableContext()
-  public syncFilePlotters(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { referenceId, ids }: SyncPlottingPanelStates
-  ) {
-    let state = getState();
-
-    let referenceState = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateEntities)[referenceId];
-    if (!referenceState) return;
-
-    ids.forEach((id) => {
-      if (referenceId == id) return;
-      dispatch(
-        new UpdatePlottingPanelState(id, {
-          ...referenceState,
-        })
-      );
-    });
-  }
 
 
 
@@ -2543,31 +2365,13 @@ export class WorkbenchState {
 
       //initialize Layer states
       if (layer.type == LayerType.IMAGE) {
-        let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`;
-        state.plottingPanelStateEntities[plottingPanelStateId] = {
-          id: plottingPanelStateId,
-          measuring: false,
-          lineMeasureStart: null,
-          lineMeasureEnd: null,
-        };
-        state.plottingPanelStateIds.push(plottingPanelStateId);
 
-        let customMarkerPanelStateId = `CUSTOM_MARKER_PANEL_${state.nextCustomMarkerPanelStateId++}`;
-        state.customMarkerPanelStateEntities[customMarkerPanelStateId] = {
-          id: customMarkerPanelStateId,
-          markerEntities: {},
-          markerIds: [],
-          markerSelectionRegion: null,
-        };
-        state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
 
 
 
         let imageLayerState: WorkbenchImageLayerState = {
           id: workbenchStateId,
           type: WorkbenchStateType.IMAGE_LAYER,
-          plottingPanelStateId: plottingPanelStateId,
-          customMarkerPanelStateId: customMarkerPanelStateId,
         };
 
         workbenchState = imageLayerState;
@@ -2610,29 +2414,9 @@ export class WorkbenchState {
       workbenchStateId = `WORKBENCH_STATE_${state.nextWorkbenchStateId++}`;
       state.fileIdToWorkbenchStateIdMap[fileId] = workbenchStateId;
 
-      let plottingPanelStateId = `PLOTTING_PANEL_${state.nextPlottingPanelStateId++}`;
-      state.plottingPanelStateEntities[plottingPanelStateId] = {
-        id: plottingPanelStateId,
-        measuring: false,
-        lineMeasureStart: null,
-        lineMeasureEnd: null,
-      };
-      state.plottingPanelStateIds.push(plottingPanelStateId);
-
-      let customMarkerPanelStateId = `CUSTOM_MARKER_PANEL_${state.nextCustomMarkerPanelStateId++}`;
-      state.customMarkerPanelStateEntities[customMarkerPanelStateId] = {
-        id: customMarkerPanelStateId,
-        markerEntities: {},
-        markerIds: [],
-        markerSelectionRegion: null,
-      };
-      state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
-
       let fileState: WorkbenchFileState = {
         id: workbenchStateId,
         type: WorkbenchStateType.FILE,
-        plottingPanelStateId: plottingPanelStateId,
-        customMarkerPanelStateId: customMarkerPanelStateId,
       };
 
       state.workbenchStateEntities[workbenchStateId] = fileState;
@@ -2683,244 +2467,8 @@ export class WorkbenchState {
   }
 
 
-  @Action(UpdateCustomMarkerSelectionRegion)
-  @ImmutableContext()
-  public updateCustomMarkerSelectionRegion(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, region }: UpdateCustomMarkerSelectionRegion
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-      if (!markerState) return state;
-
-      markerState.markerSelectionRegion = {
-        ...region,
-      };
-      return state;
-    });
-  }
-
-  @Action(EndCustomMarkerSelectionRegion)
-  @ImmutableContext()
-  public endCustomMarkerSelectionRegion(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, mode }: EndCustomMarkerSelectionRegion
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-      if (!markerState) return state;
-
-      let region = markerState.markerSelectionRegion;
-      if (!region) return state;
-
-      markerState.markerIds.forEach((id) => {
-        let marker = markerState.markerEntities[id];
-        if (marker.type != MarkerType.CIRCLE) return;
-        let circleMarker = marker as CircleMarker;
-        let x1 = Math.min(region!.x, region!.x + region!.width);
-        let y1 = Math.min(region!.y, region!.y + region!.height);
-        let x2 = x1 + Math.abs(region!.width);
-        let y2 = y1 + Math.abs(region!.height);
-
-        if (circleMarker.x >= x1 && circleMarker.x < x2 && circleMarker.y >= y1 && circleMarker.y < y2) {
-          marker.selected = mode != 'remove';
-        }
-      });
-      markerState.markerSelectionRegion = null;
-
-      return state;
-    });
-  }
-
-
-
-  @Action(StartLine)
-  @ImmutableContext()
-  public startLine(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { plottingPanelStateId, point }: StartLine
-  ) {
-    let state = getState();
-    if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
-      return;
-    }
-
-    setState((state: WorkbenchStateModel) => {
-      let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
-
-      if (!plottingPanelState.measuring) {
-        plottingPanelState.lineMeasureStart = { ...point };
-        plottingPanelState.lineMeasureEnd = { ...point };
-      } else {
-        plottingPanelState.lineMeasureEnd = { ...point };
-      }
-      plottingPanelState.measuring = !plottingPanelState.measuring;
-
-      return state;
-    });
-  }
-
-  @Action(UpdateLine)
-  @ImmutableContext()
-  public updateLine(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { plottingPanelStateId, point }: UpdateLine
-  ) {
-    let state = getState();
-    if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
-      return;
-    }
-
-    setState((state: WorkbenchStateModel) => {
-      let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
-      if (!plottingPanelState.measuring) return state;
-
-      plottingPanelState.lineMeasureEnd = point;
-
-      return state;
-    });
-  }
-
-  @Action(UpdatePlottingPanelState)
-  @ImmutableContext()
-  public updatePlotterFileState(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { plottingPanelStateId, changes }: UpdatePlottingPanelState
-  ) {
-    let state = getState();
-    if (!(plottingPanelStateId in state.plottingPanelStateEntities)) {
-      return;
-    }
-
-    setState((state: WorkbenchStateModel) => {
-      let plottingPanelState = state.plottingPanelStateEntities[plottingPanelStateId];
-
-      state.plottingPanelStateEntities[plottingPanelStateId] = {
-        ...plottingPanelState,
-        ...changes,
-        id: plottingPanelStateId,
-      };
-      return state;
-    });
-  }
-
   /*  Custom Markers */
-  @Action(UpdateCustomMarker)
-  @ImmutableContext()
-  public updateCustomMarker(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, markerId, changes }: UpdateCustomMarker
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-      if (markerState.markerIds.includes(markerId)) {
-        markerState.markerEntities[markerId] = {
-          ...markerState.markerEntities[markerId],
-          ...changes,
-        };
-      }
-      return state;
-    });
-  }
 
-  @Action(AddCustomMarkers)
-  @ImmutableContext()
-  public addCustomMarkers(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, markers }: AddCustomMarkers
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-
-      markers.forEach((marker) => {
-        let nextSeed = state.nextMarkerId++;
-        if (marker.label == null || marker.label == undefined) {
-          // marker.marker.label = `M${nextSeed}`;
-          marker.label = '';
-        }
-        let id = `CUSTOM_MARKER_${customMarkerPanelStateId}_${nextSeed.toString()}`;
-        markerState.markerIds.push(id);
-        markerState.markerEntities[id] = {
-          ...marker,
-          id: id,
-        };
-      });
-
-      return state;
-    });
-  }
-
-  @Action(RemoveCustomMarkers)
-  @ImmutableContext()
-  public removeCustomMarkers(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, markers }: RemoveCustomMarkers
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-
-      let idsToRemove = markers.map((m) => m.id);
-      markerState.markerIds = markerState.markerIds.filter((id) => !idsToRemove.includes(id));
-      markers.forEach((marker) => {
-        if (marker.id && marker.id in markerState.markerEntities) delete markerState.markerEntities[marker.id];
-      });
-
-      return state;
-    });
-  }
-
-  @Action(SelectCustomMarkers)
-  @ImmutableContext()
-  public selectCustomMarkers(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, markers }: SelectCustomMarkers
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-
-      markers.forEach((marker) => {
-        if (marker.id && markerState.markerIds.includes(marker.id)) {
-          markerState.markerEntities[marker.id].selected = true;
-        }
-      });
-      return state;
-    });
-  }
-
-  @Action(DeselectCustomMarkers)
-  @ImmutableContext()
-  public deselectCustomMarkers(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, markers }: DeselectCustomMarkers
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-
-      markers.forEach((marker) => {
-        if (marker.id && markerState.markerIds.includes(marker.id)) {
-          markerState.markerEntities[marker.id].selected = false;
-        }
-      });
-      return state;
-    });
-  }
-
-  @Action(SetCustomMarkerSelection)
-  @ImmutableContext()
-  public setCustomMarkerSelection(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { customMarkerPanelStateId, markers }: SetCustomMarkerSelection
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let markerState = state.customMarkerPanelStateEntities[customMarkerPanelStateId];
-
-      let selectedMarkerIds = markers.map((m) => m.id);
-      markerState.markerIds.forEach((markerId) => {
-        markerState.markerEntities[markerId].selected = selectedMarkerIds.includes(markerId);
-      });
-      return state;
-    });
-  }
 
 
   @Action(SyncViewerTransformations)

@@ -106,6 +106,7 @@ import { ImageViewerEventService } from '../../services/image-viewer-event.servi
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 import { PhotometryState } from '../../tools/photometry/photometry.state';
 import { SonificationState, SonificationViewerStateModel } from '../../tools/sonification/sonification.state';
+import { PlottingState } from '../../tools/plotting/plotting.state';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -288,7 +289,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     // );
 
     this.plottingPanelState$ = viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(PlottingState.getViewerStateByViewerId(viewerId)))
     );
 
     this.sonificationPanelState$ = viewerId$.pipe(

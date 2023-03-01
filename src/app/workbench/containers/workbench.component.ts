@@ -61,7 +61,6 @@ import {
   SyncViewerTransformations,
   SetViewerSyncMode,
   SyncViewerNormalizations,
-  SyncPlottingPanelStates,
   SetFileSelection,
   SetFileListFilter,
   ImportFromSurveyFail,
@@ -119,6 +118,8 @@ import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { getLongestCommonStartingSubstring } from 'src/app/utils/utils';
 import { JobService } from 'src/app/jobs/services/job.service';
 import { DecimalPipe } from '@angular/common';
+import { PlottingState } from '../tools/plotting/plotting.state';
+import { SyncPlottingPanelStates } from '../tools/plotting/plotting.actions';
 
 @Component({
   selector: 'app-workbench',
@@ -308,11 +309,11 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
         filter((focusedViewerId) => focusedViewerId != null),
         switchMap((focusedViewerId) => {
           let refPlottingPanelState$ = this.store.select(
-            WorkbenchState.getPlottingPanelStateByViewerId(focusedViewerId)
+            PlottingState.getViewerStateByViewerId(focusedViewerId)
           );
 
           return combineLatest(
-            this.store.select(WorkbenchState.getPlottingPanelConfig).pipe(map((config) => config.plotterSyncEnabled)),
+            this.store.select(PlottingState.getConfig).pipe(map((config) => config.plotterSyncEnabled)),
             visibleViewerIds$,
             refPlottingPanelState$
           ).pipe();
@@ -326,16 +327,8 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
 
         let targetPlottingPanelStateIds: string[] = [];
         visibleViewerIds.forEach((viewerId) => {
-          let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByViewerId(viewerId));
-          if (
-            !workbenchState ||
-            ![WorkbenchStateType.FILE, WorkbenchStateType.IMAGE_LAYER].includes(workbenchState.type)
-          ) {
-            return;
-          }
-          targetPlottingPanelStateIds.push(
-            (workbenchState as WorkbenchFileState | WorkbenchImageLayerState).plottingPanelStateId
-          );
+          let viewerStateId = this.store.selectSnapshot(PlottingState.getViewerStateIdByViewerId(viewerId));
+          targetPlottingPanelStateIds.push(viewerStateId);
         });
 
         if (targetPlottingPanelStateIds.length == 0) {

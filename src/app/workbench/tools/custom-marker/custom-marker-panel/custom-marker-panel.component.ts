@@ -17,34 +17,23 @@ import {
   RectangleMarker,
   isCircleMarker,
   isRectangleMarker,
-} from '../../models/marker';
+} from '../../../models/marker';
 import { DELETE, ESCAPE } from '@angular/cdk/keycodes';
 import { Router } from '@angular/router';
 import { Store, Actions } from '@ngxs/store';
-import { CustomMarkerPanelConfig } from '../../models/workbench-state';
-import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { BehaviorSubject, Observable, combineLatest, merge, Subject } from 'rxjs';
-import { DataFile, ImageLayer, ILayer, PixelType } from '../../../data-files/models/data-file';
+import { DataFile, ImageLayer, ILayer, PixelType } from '../../../../data-files/models/data-file';
 import { MatSelectChange } from '@angular/material/select';
-import { LayerType } from '../../../data-files/models/data-file-type';
-import { WorkbenchImageLayerState } from '../../models/workbench-file-state';
-import { WorkbenchState } from '../../workbench.state';
+import { LayerType } from '../../../../data-files/models/data-file-type';
+import { WorkbenchState } from '../../../workbench.state';
 import { KeyboardShortcutsComponent, ShortcutInput } from 'ng-keyboard-shortcuts';
-import {
-  AddCustomMarkers,
-  DeselectCustomMarkers,
-  EndCustomMarkerSelectionRegion,
-  RemoveCustomMarkers,
-  SelectCustomMarkers,
-  SetCustomMarkerSelection,
-  UpdateCustomMarker,
-  UpdateCustomMarkerPanelConfig,
-  UpdateCustomMarkerSelectionRegion,
-} from '../../workbench.actions';
-import { centroidDisk, centroidPsf } from '../../models/centroider';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
-import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
-import { IImageData } from '../../../data-files/models/image-data';
+import { centroidDisk, centroidPsf } from '../../../models/centroider';
+import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../../services/image-viewer-marker.service';
+import { IImageData } from '../../../../data-files/models/image-data';
+import { CustomMarkerState, CustomMarkerViewerStateModel } from '../custom-marker.state';
+import { CustomMarkerPanelConfig } from '../models/custom-marker-panel-config';
+import { AddCustomMarkers, DeselectCustomMarkers, EndCustomMarkerSelectionRegion, RemoveCustomMarkers, SelectCustomMarkers, SetCustomMarkerSelection, UpdateConfig, UpdateCustomMarker, UpdateCustomMarkerSelectionRegion } from '../custom-marker.actions';
 
 @Component({
   selector: 'app-custom-marker-panel',
@@ -67,8 +56,8 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   layer$: Observable<ILayer>;
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
-  state$: Observable<CustomMarkerPanelState>;
-  state: CustomMarkerPanelState;
+  state$: Observable<CustomMarkerViewerStateModel>;
+  state: CustomMarkerViewerStateModel;
   config$: Observable<CustomMarkerPanelConfig>;
   selectedMarkers$: Observable<Marker[]>;
 
@@ -85,11 +74,11 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
     private markerService: ImageViewerMarkerService
   ) {
     this.state$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(CustomMarkerState.getViewerStateByViewerId(viewerId)))
     );
     this.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => (this.state = state));
 
-    this.config$ = store.select(WorkbenchState.getCustomMarkerPanelConfig);
+    this.config$ = store.select(CustomMarkerState.getConfig);
 
     this.selectedMarkers$ = this.state$.pipe(
       map((state) => (state?.markerEntities ? Object.values(state.markerEntities) : [])),
@@ -256,7 +245,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
   }
 
   private getViewerMarkers(viewerId: string) {
-    let state$ = this.store.select(WorkbenchState.getCustomMarkerPanelStateByViewerId(viewerId));
+    let state$ = this.store.select(CustomMarkerState.getViewerStateByViewerId(viewerId));
 
     let regionSelectionMarkers$: Observable<Marker[]> = state$.pipe(
       map((state) => state?.markerSelectionRegion),
@@ -318,7 +307,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
 
   onCentroidClicksChange($event) {
     this.store.dispatch(
-      new UpdateCustomMarkerPanelConfig({
+      new UpdateConfig({
         centroidClicks: $event.checked,
       })
     );
@@ -326,7 +315,7 @@ export class CustomMarkerPanelComponent implements OnInit, OnDestroy {
 
   onPlanetCentroidingChange($event) {
     this.store.dispatch(
-      new UpdateCustomMarkerPanelConfig({
+      new UpdateConfig({
         usePlanetCentroiding: $event.checked,
       })
     );

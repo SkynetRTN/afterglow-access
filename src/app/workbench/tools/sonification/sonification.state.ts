@@ -35,9 +35,9 @@ import { SourceExtractionJob, SourceExtractionJobSettings } from 'src/app/jobs/m
 import { parseDms } from 'src/app/utils/skynet-astro';
 import { AlertDialogComponent, AlertDialogConfig } from 'src/app/utils/alert-dialog/alert-dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { SonifierRegionMode } from './models/sonifier-file-state';
 import { AddRegionToHistory, ClearRegionHistory, ClearSonification, RedoRegionSelection, SetProgressLine, SonificationCompleted, SonificationRegionChanged, Sonify, UndoRegionSelection, UpdateSonifierFileState } from './sonification.actions';
 import { getCoreApiUrl } from 'src/app/afterglow-config';
+import { SonifierRegionMode } from './models/sonifier-file-state';
 import { AfterglowConfigService } from 'src/app/afterglow-config.service';
 import { isSonificationJob, SonificationJob, SonificationJobSettings } from 'src/app/jobs/models/sonification';
 

@@ -22,15 +22,11 @@ import { SourceExtractionRegionDialogComponent } from './components/source-extra
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
 import { SvgCircleMarkerComponent } from './components/svg-circle-marker/svg-circle-marker.component';
-import { CircleMarkerEditorComponent } from './components/circle-marker-editor/circle-marker-editor.component';
 import { SvgTeardropMarkerComponent } from './components/svg-teardrop-marker/svg-teardrop-marker.component';
-import { PlotterComponent } from './components/plotter/plotter.component';
 import { AppFooterComponent } from './components/app-footer/app-footer.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { WorkbenchComponent } from './containers/workbench.component';
 import { DisplayToolPanelComponent } from './containers/display-panel/display-panel.component';
-import { PlottingPanelComponent } from './containers/plotting-panel/plotting-panel.component';
-import { CustomMarkerPanelComponent } from './containers/custom-marker-panel/custom-marker-panel.component';
 import { FileInfoToolsetComponent } from './containers/file-info-panel/file-info-panel.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
@@ -45,7 +41,6 @@ import { ThemePickerModule } from '../theme-picker';
 import { PixelOpsJobsDialogComponent } from './components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { AfterglowPlotlyModule } from '../afterglow-plotly/afterglow-plotly.module';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
-import { RectangleMarkerEditorComponent } from './components/rectangle-marker-editor/rectangle-marker-editor.component';
 import { AvatarModule } from 'ngx-avatar';
 import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/viewer-panel-layout.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
@@ -78,6 +73,8 @@ import { SourceCatalogModule } from './tools/source-catalog/source-catalog.modul
 import { PhotometryModule } from './tools/photometry/photometry.module';
 import { WcsCalibrationModule } from './tools/wcs-calibration/wcs-calibration.module';
 import { SonificationModule } from './tools/sonification/sonification.module';
+import { CustomMarkerModule } from './tools/custom-marker/custom-marker.module';
+import { PlottingModule } from './tools/plotting/plotting.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -98,12 +95,7 @@ export const COMPONENTS = [
   SvgOutlinedEllipseComponent,
   WorkbenchComponent,
   DisplayToolPanelComponent,
-  PlottingPanelComponent,
   SourceExtractionRegionDialogComponent,
-  PlotterComponent,
-  CustomMarkerPanelComponent,
-  CircleMarkerEditorComponent,
-  RectangleMarkerEditorComponent,
   FileInfoToolsetComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
@@ -153,7 +145,9 @@ export const COMPONENTS = [
     PhotometryModule,
     MatDialogModule,
     WcsCalibrationModule,
-    SonificationModule
+    SonificationModule,
+    CustomMarkerModule,
+    PlottingModule
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS

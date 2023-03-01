@@ -27,7 +27,6 @@ import {
   switchMap,
 } from 'rxjs/operators';
 
-import { SonifierRegionMode, SonificationPanelState } from '../models/sonifier-file-state';
 import { getWidth, getHeight, DataFile, ImageLayer, ILayer } from '../../../../data-files/models/data-file';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { Store, Actions, ofActionDispatched } from '@ngxs/store';
@@ -44,6 +43,7 @@ import { ImageViewerMarkerService } from '../../../services/image-viewer-marker.
 import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../../models/marker';
 import { SonificationState, SonificationViewerStateModel } from '../sonification.state';
 import { AddRegionToHistory, RedoRegionSelection, SetProgressLine, SonificationCompleted, Sonify, UndoRegionSelection, UpdateSonifierFileState } from '../sonification.actions';
+import { SonifierRegionMode } from '../models/sonifier-file-state';
 
 @Component({
   selector: 'app-sonification-panel',

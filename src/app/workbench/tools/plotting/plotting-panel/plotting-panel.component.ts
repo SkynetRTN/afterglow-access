@@ -23,26 +23,22 @@ import {
   getWidth,
   getHeight,
   ILayer,
-} from '../../../data-files/models/data-file';
-import { PlottingPanelState } from '../../models/plotter-file-state';
-import { PlotterComponent } from '../../components/plotter/plotter.component';
-import { PlottingPanelConfig } from '../../models/workbench-state';
-import { PosType } from '../../models/source';
-import { Router } from '@angular/router';
-import { MarkerMouseEvent } from '../../components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
-import { Store, Actions } from '@ngxs/store';
-import { IImageData } from '../../../data-files/models/image-data';
-import { MatCheckboxChange } from '@angular/material/checkbox';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { WorkbenchState } from '../../workbench.state';
-import { LayerType } from '../../../data-files/models/data-file-type';
-import { WorkbenchFileState, WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
-import { centroidDisk, centroidPsf } from '../../models/centroider';
-import { StartLine, UpdateLine, UpdatePlottingPanelConfig } from '../../workbench.actions';
+} from '../../../../data-files/models/data-file';
+import { PlotterComponent } from '../plotter/plotter.component';
+import { PosType } from '../../../models/source';
+import { Store } from '@ngxs/store';
+import { IImageData } from '../../../../data-files/models/image-data';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { WorkbenchState } from '../../../workbench.state';
+import { LayerType } from '../../../../data-files/models/data-file-type';
+import { centroidDisk, centroidPsf } from '../../../models/centroider';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
-import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
-import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../models/marker';
+import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../../services/image-viewer-marker.service';
+import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../../models/marker';
+import { PlottingState, PlottingViewerStateModel } from '../plotting.state';
+import { PlottingPanelConfig } from '../models/plotting-panel-config';
+import { StartLine, UpdateConfig, UpdateLine } from '../plotting.actions';
 
 @Component({
   selector: 'app-plotting-panel',
@@ -67,7 +63,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   rawImageData$: Observable<IImageData<PixelType>>;
   normalizedImageData$: Observable<IImageData<Uint32Array>>;
   imageData$: Observable<IImageData<PixelType>>;
-  state$: Observable<PlottingPanelState>;
+  state$: Observable<PlottingViewerStateModel>;
   config$: Observable<PlottingPanelConfig>;
   dataSource$: Observable<'raw' | 'normalized'>;
   colorMode$: Observable<'grayscale' | 'rgba'>;
@@ -124,10 +120,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
       })
     );
 
-    this.config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
+    this.config$ = this.store.select(PlottingState.getConfig);
 
     this.state$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(PlottingState.getViewerStateByViewerId(viewerId)))
     );
 
     this.dataSource$ = combineLatest(this.rawImageData$, this.normalizedImageData$, this.config$).pipe(
@@ -210,7 +206,10 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
         if (!$event || !imageData) {
           return;
         }
+        console.log("CLICK: ", $event);
         if ($event.viewerId != this.viewerId) return;
+
+        state = this.store.selectSnapshot(PlottingState.getViewerStateByViewerId($event.viewerId));
 
         if ($event.hitImage) {
           let x = $event.imageX;
@@ -257,7 +256,7 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
 
         //allow events from different viewers
         let header = null;
-        let state = this.store.selectSnapshot(WorkbenchState.getPlottingPanelStateByViewerId($event.viewerId));
+        let state = this.store.selectSnapshot(PlottingState.getViewerStateByViewerId($event.viewerId));
         if (!state) {
           return;
         }
@@ -341,8 +340,8 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private getViewerMarkers(viewerId: string) {
-    let state$ = this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId));
-    let config$ = this.store.select(WorkbenchState.getPlottingPanelConfig);
+    let state$ = this.store.select(PlottingState.getViewerStateByViewerId(viewerId));
+    let config$ = this.store.select(PlottingState.getConfig);
     let layerHeader$ = this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId));
     let fileImageHeader$ = this.store.select(WorkbenchState.getFileImageHeaderByViewerId(viewerId));
     let header$ = combineLatest(layerHeader$, fileImageHeader$).pipe(
@@ -428,22 +427,22 @@ export class PlottingPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onModeChange(mode: '1D' | '2D' | '3D') {
-    this.store.dispatch(new UpdatePlottingPanelConfig({ plotMode: mode }));
+    this.store.dispatch(new UpdateConfig({ plotMode: mode }));
   }
 
   onPlotterSyncEnabledChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdatePlottingPanelConfig({ plotterSyncEnabled: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ plotterSyncEnabled: $event.checked }));
   }
 
   onCentroidClicksChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdatePlottingPanelConfig({ centroidClicks: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ centroidClicks: $event.checked }));
   }
 
   onPlanetCentroidingChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdatePlottingPanelConfig({ planetCentroiding: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ planetCentroiding: $event.checked }));
   }
 
   onInterpolatePixelsChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdatePlottingPanelConfig({ interpolatePixels: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ interpolatePixels: $event.checked }));
   }
 }
