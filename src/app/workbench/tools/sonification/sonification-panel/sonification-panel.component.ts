@@ -27,38 +27,23 @@ import {
   switchMap,
 } from 'rxjs/operators';
 
-import { SonifierRegionMode, SonificationPanelState } from '../../models/sonifier-file-state';
-import { AfterglowDataFileService } from '../../services/afterglow-data-files';
-import { getWidth, getHeight, DataFile, ImageLayer, ILayer } from '../../../data-files/models/data-file';
-import { ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { SonifierRegionMode, SonificationPanelState } from '../models/sonifier-file-state';
+import { getWidth, getHeight, DataFile, ImageLayer, ILayer } from '../../../../data-files/models/data-file';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { Store, Actions, ofActionDispatched } from '@ngxs/store';
-import {
-  AddRegionToHistory,
-  UndoRegionSelection,
-  RedoRegionSelection,
-  UpdateSonifierFileState,
-  SetProgressLine,
-  Sonify,
-  ClearSonification,
-  SonificationCompleted,
-} from '../../workbench.actions';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { Region } from '../../../data-files/models/region';
-import { getViewportRegion, Transform, getImageToViewportTransform } from '../../../data-files/models/transformation';
-import { MatCheckboxChange } from '@angular/material/checkbox';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { Region } from '../../../../data-files/models/region';
+import { getViewportRegion, Transform, getImageToViewportTransform } from '../../../../data-files/models/transformation';
 import * as moment from 'moment';
 import { ShortcutInput } from 'ng-keyboard-shortcuts';
-import { LayerType } from '../../../data-files/models/data-file-type';
-import { IViewer } from '../../models/viewer';
-import { WorkbenchState } from '../../workbench.state';
-import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
-import { isNotEmpty } from '../../../utils/utils';
+import { LayerType } from '../../../../data-files/models/data-file-type';
+import { WorkbenchState } from '../../../workbench.state';
+import { isNotEmpty } from '../../../../utils/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
-import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
-import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../models/marker';
+import { ImageViewerMarkerService } from '../../../services/image-viewer-marker.service';
+import { LineMarker, Marker, MarkerType, RectangleMarker } from '../../../models/marker';
+import { SonificationState, SonificationViewerStateModel } from '../sonification.state';
+import { AddRegionToHistory, RedoRegionSelection, SetProgressLine, SonificationCompleted, Sonify, UndoRegionSelection, UpdateSonifierFileState } from '../sonification.actions';
 
 @Component({
   selector: 'app-sonification-panel',
@@ -83,8 +68,8 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
   layer$: Observable<ILayer>;
   imageLayer$: Observable<ImageLayer>;
   imageLayer: ImageLayer;
-  state$: Observable<SonificationPanelState>;
-  state: SonificationPanelState;
+  state$: Observable<SonificationViewerStateModel>;
+  state: SonificationViewerStateModel;
   imageToViewportTransform$: Observable<Transform>;
   region$: Observable<Region>;
   region: Region;
@@ -113,7 +98,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
     this.imageLayer$.pipe(takeUntil(this.destroy$)).subscribe((imageLayer) => (this.imageLayer = imageLayer));
 
     this.state$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(SonificationState.getSonificationViewerStateByViewerId(viewerId)))
     );
 
     this.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
@@ -412,7 +397,7 @@ export class SonificationPanelComponent implements AfterViewInit, OnDestroy, OnI
   }
 
   private getViewerMarkers(viewerId: string) {
-    let state$ = this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId));
+    let state$ = this.store.select(SonificationState.getSonificationViewerStateByViewerId(viewerId));
     return state$.pipe(
       map((state) => {
         if (!state) return { viewerId: viewerId, markers: [] as Marker[] };

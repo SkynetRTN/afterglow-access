@@ -93,7 +93,7 @@ import { WorkbenchState } from '../../workbench.state';
 import { WorkbenchTool } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { PlottingPanelState } from '../../models/plotter-file-state';
-import { SonificationPanelState, SonifierRegionMode } from '../../models/sonifier-file-state';
+import { SonificationPanelState, SonifierRegionMode } from '../../tools/sonification/models/sonifier-file-state';
 import { ImageHistogram } from '../../../data-files/models/image-histogram';
 import * as moment from 'moment';
 import { Papa } from 'ngx-papaparse';
@@ -105,6 +105,7 @@ import * as piexif from 'piexifjs';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
 import { PhotometryState } from '../../tools/photometry/photometry.state';
+import { SonificationState, SonificationViewerStateModel } from '../../tools/sonification/sonification.state';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -162,7 +163,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   imageToViewportTransform$: Observable<Transform>;
   customMarkerPanelState$: Observable<CustomMarkerPanelState>;
   plottingPanelState$: Observable<PlottingPanelState>;
-  sonificationPanelState$: Observable<SonificationPanelState>;
+  sonificationPanelState$: Observable<SonificationViewerStateModel>;
   activeTool$: Observable<WorkbenchTool>;
   markers$: Observable<Marker[]>;
 
@@ -291,7 +292,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     );
 
     this.sonificationPanelState$ = viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(SonificationState.getSonificationViewerStateByViewerId(viewerId)))
     );
 
     let photometryPanelState$ = viewerId$.pipe(

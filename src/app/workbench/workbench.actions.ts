@@ -4,7 +4,6 @@ import {
   PlottingPanelConfig,
   CustomMarkerPanelConfig,
   ViewerPanel,
-  WcsCalibrationPanelConfig,
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
@@ -17,14 +16,13 @@ import { IViewer, Viewer } from './models/viewer';
 import { FileInfoPanelConfig } from './models/file-info-panel';
 import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
-import { SonificationPanelState } from './models/sonifier-file-state';
+import { SonificationPanelState } from './tools/sonification/models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { PhotometryData } from '../jobs/models/photometry';
 import { FieldCalibration } from '../jobs/models/field-calibration';
 import { GlobalSettings } from './models/global-settings';
 import { CalibrationSettings } from './models/calibration-settings';
-import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 import { CosmeticCorrectionSettings } from './models/cosmetic-correction-settings';
 import { AlignmentSettings } from './models/alignment-settings';
 
@@ -272,31 +270,6 @@ export class UpdateCosmeticCorrectionSettings {
   constructor(public changes: Partial<CosmeticCorrectionSettings>) { }
 }
 
-export class UpdateWcsCalibrationFileState {
-  public static readonly type = '[Workbench] Update Wcs Calibration File State';
-
-  constructor(public layerId: string, public changes: Partial<WcsCalibrationFileState>) { }
-}
-
-export class UpdateWcsCalibrationPanelConfig {
-  public static readonly type = '[Workbench] Update Wcs Calibration Panel Config';
-
-  constructor(public changes: Partial<WcsCalibrationPanelConfig>) { }
-}
-
-export class UpdateWcsCalibrationExtractionOverlay {
-  public static readonly type = '[Workbench] Update WCS Calibration Extraction Overlay';
-
-  constructor(
-    public viewerId: string
-  ) { }
-}
-
-export class InvalidateWcsCalibrationExtractionOverlayByLayerId {
-  public static readonly type = '[Phot Data] Invalidate Wcs Calibration Extraction Overlay By Layer Id';
-
-  constructor(public layerId: string = null) { }
-}
 
 export class LoadCatalogs {
   public static readonly type = '[Workbench] Load Catalogs';
@@ -384,11 +357,6 @@ export class AddFieldCalSourcesFromCatalog {
   constructor(public fieldCalId: string, public catalogQueryJob: CatalogQueryJob) { }
 }
 
-export class CreateWcsCalibrationJob {
-  public static readonly type = '[Workbench] Create Wcs Calibration Job';
-  constructor(public layerIds: string[]) { }
-}
-
 export class ExtractSources {
   public static readonly type = '[Workbench] Extract Sources';
 
@@ -459,71 +427,6 @@ export class InitializeWorkbenchFileState {
 }
 
 /* Sonification */
-export class SonificationViewportSync {
-  public static readonly type = '[Sonifier] Sonification Viewport Sync';
-
-  constructor(public layerId: string) { }
-}
-
-export class SonificationRegionChanged {
-  public static readonly type = '[Sonifier] Region Changed';
-
-  constructor(public layerId: string) { }
-}
-
-export class AddRegionToHistory {
-  public static readonly type = '[Sonifier] Add Region to History';
-
-  constructor(public layerId: string, public region: Region) { }
-}
-
-export class ClearRegionHistory {
-  public static readonly type = '[Sonifier] Clear Region History';
-
-  constructor(public layerId: string) { }
-}
-
-export class UndoRegionSelection {
-  public static readonly type = '[Sonifier] Undo Region Selection';
-
-  constructor(public layerId: string) { }
-}
-
-export class RedoRegionSelection {
-  public static readonly type = '[Sonifier] Redo Region Selection';
-
-  constructor(public layerId: string) { }
-}
-
-export class UpdateSonifierFileState {
-  public static readonly type = '[Sonifier] Update File State';
-
-  constructor(public layerId: string, public changes: Partial<SonificationPanelState>) { }
-}
-
-export class SetProgressLine {
-  public static readonly type = '[Sonifier] Set Progress Line';
-
-  constructor(public layerId: string, public line: { x1: number; y1: number; x2: number; y2: number }) { }
-}
-
-export class Sonify {
-  public static readonly type = '[Sonifier] Sonify';
-
-  constructor(public layerId: string, public region: Region) { }
-}
-
-export class ClearSonification {
-  public static readonly type = '[Sonifier] Clear Sonification';
-
-  constructor(public layerId: string) { }
-}
-
-export class SonificationCompleted {
-  public static readonly type = '[Sonifier] Sonification Completed';
-
-  constructor(public layerId: string, public url: string, public error: string) { }
-}
 
 /* Plotting */
 

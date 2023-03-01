@@ -47,6 +47,8 @@ import { StackingState } from './workbench/tools/stacking/stacking.state';
 import { AligningState } from './workbench/tools/aligning/aligning.state';
 import { SourceCatalogState } from './workbench/tools/source-catalog/source-catalog.state';
 import { PhotometryState, PhotometryStateModel, PhotometryViewerStateModel } from './workbench/tools/photometry/photometry.state';
+import { WcsCalibrationState } from './workbench/tools/wcs-calibration/wcs-calibration.state';
+import { SonificationState } from './workbench/tools/sonification/sonification.state';
 
 
 registerLocaleData(localeEs, 'es');
@@ -186,7 +188,9 @@ export function jobSanitizer(v: JobsStateModel) {
         StackingState,
         AligningState,
         SourceCatalogState,
-        PhotometryState],
+        PhotometryState,
+        WcsCalibrationState,
+        SonificationState],
       ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -204,7 +208,9 @@ export function jobSanitizer(v: JobsStateModel) {
         StackingState,
         AligningState,
         SourceCatalogState,
-        PhotometryState
+        PhotometryState,
+        WcsCalibrationState,
+        SonificationState
       ],
       sanitizations: [
         {

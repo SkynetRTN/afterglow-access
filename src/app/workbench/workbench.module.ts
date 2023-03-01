@@ -31,7 +31,6 @@ import { WorkbenchComponent } from './containers/workbench.component';
 import { DisplayToolPanelComponent } from './containers/display-panel/display-panel.component';
 import { PlottingPanelComponent } from './containers/plotting-panel/plotting-panel.component';
 import { CustomMarkerPanelComponent } from './containers/custom-marker-panel/custom-marker-panel.component';
-import { SonificationPanelComponent } from './containers/sonification-panel/sonification-panel.component';
 import { FileInfoToolsetComponent } from './containers/file-info-panel/file-info-panel.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
@@ -51,7 +50,6 @@ import { AvatarModule } from 'ngx-avatar';
 import { ViewerPanelLayoutComponent } from './containers/viewer-panel-layout/viewer-panel-layout.component';
 import { SaveChangesDialogComponent } from './components/file-dialog/file-dialog.component';
 import { JobProgressDialogComponent } from './components/job-progress-dialog/job-progress-dialog.component';
-import { WcsCalibrationPanelComponent } from './containers/wcs-calibration-panel/wcs-calibration-panel.component';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FileListOptionComponent } from './containers/file-list-option/file-list-option.component';
 import { FileToolbarComponent } from './components/file-toolbar/file-toolbar.component';
@@ -78,6 +76,8 @@ import { StackingModule } from './tools/stacking/stacking.module';
 import { AligningModule } from './tools/aligning/aligning.module';
 import { SourceCatalogModule } from './tools/source-catalog/source-catalog.module';
 import { PhotometryModule } from './tools/photometry/photometry.module';
+import { WcsCalibrationModule } from './tools/wcs-calibration/wcs-calibration.module';
+import { SonificationModule } from './tools/sonification/sonification.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -99,7 +99,6 @@ export const COMPONENTS = [
   WorkbenchComponent,
   DisplayToolPanelComponent,
   PlottingPanelComponent,
-  SonificationPanelComponent,
   SourceExtractionRegionDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
@@ -112,7 +111,6 @@ export const COMPONENTS = [
   ViewerPanelLayoutComponent,
   SaveChangesDialogComponent,
   JobProgressDialogComponent,
-  WcsCalibrationPanelComponent,
   FileToolbarComponent,
   ImageLayerToolbarComponent,
   FileListOptionComponent,
@@ -152,7 +150,10 @@ export const COMPONENTS = [
     StackingModule,
     AligningModule,
     SourceCatalogModule,
-    PhotometryModule
+    PhotometryModule,
+    MatDialogModule,
+    WcsCalibrationModule,
+    SonificationModule
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS

@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { BehaviorSubject, combineLatest, Observable, Subject, merge, of } from 'rxjs';
 import { distinctUntilChanged, filter, flatMap, map, switchMap, catchError, takeUntil, withLatestFrom, take } from 'rxjs/operators';
-import { DataFilesState } from '../../../data-files/data-files.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
 import {
   getDecDegs,
   getDegsPerPixel,
@@ -15,32 +15,22 @@ import {
   Header,
   ILayer,
   ImageLayer,
-} from '../../../data-files/models/data-file';
-import { JobsState } from '../../../jobs/jobs.state';
-import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../jobs/models/wcs_calibration';
-import { formatDms, parseDms } from '../../../utils/skynet-astro';
-import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../utils/validators';
-import { SourceExtractionSettings } from '../../models/source-extraction-settings';
-import { WorkbenchImageLayerState } from '../../models/workbench-file-state';
-import { WcsCalibrationPanelConfig } from '../../models/workbench-state';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
-import {
-  CreateWcsCalibrationJob,
-  UpdateSourceExtractionSettings,
-  UpdateWcsCalibrationExtractionOverlay,
-  UpdateWcsCalibrationFileState,
-  UpdateWcsCalibrationPanelConfig,
-} from '../../workbench.actions';
-import { WorkbenchState } from '../../workbench.state';
-import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
+} from '../../../../data-files/models/data-file';
+import { JobsState } from '../../../../jobs/jobs.state';
+import { WcsCalibrationJob, WcsCalibrationJobResult } from '../../../../jobs/models/wcs_calibration';
+import { isNumberOrSexagesimalValidator, greaterThan, isNumber } from '../../../../utils/validators';
+import { SourceExtractionSettings } from '../../../models/source-extraction-settings';
+import { WorkbenchState } from '../../../workbench.state';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { LoadJob, LoadJobResult } from 'src/app/jobs/jobs.actions';
-import { WcsCalibrationFileState } from '../../models/wcs-calibration-file-state';
-import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
-import { MarkerType, SourceMarker } from '../../models/marker';
+import { ImageViewerMarkerService } from '../../../services/image-viewer-marker.service';
+import { MarkerType, SourceMarker } from '../../../models/marker';
 import { isSourceExtractionJob } from 'src/app/jobs/models/source-extraction';
 import { InvalidateHeader, LoadLayerHeader } from 'src/app/data-files/data-files.actions';
-import { AfterglowDataFileService } from '../../services/afterglow-data-files';
+import { AfterglowDataFileService } from '../../../services/afterglow-data-files';
+import { WcsCalibrationPanelConfig } from '../models/wcs-calibration-panel-config';
+import { WcsCalibrationState, WcsCalibrationViewerStateModel } from '../wcs-calibration.state';
+import { CreateWcsCalibrationJob, UpdateConfig, UpdateWcsCalibrationExtractionOverlay } from '../wcs-calibration.actions';
 
 @Component({
   selector: 'app-wcs-calibration-panel',
@@ -70,7 +60,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   destroy$ = new Subject<boolean>();
   header$: Observable<Header>;
   config$: Observable<WcsCalibrationPanelConfig>;
-  state$: Observable<WcsCalibrationFileState>;
+  state$: Observable<WcsCalibrationViewerStateModel>;
   selectedLayerIds$: Observable<string[]>;
   refLayerId$: Observable<string>;
   refLayer$: Observable<ImageLayer>;
@@ -103,10 +93,10 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       switchMap((viewerId) => this.store.select(WorkbenchState.getLayerHeaderByViewerId(viewerId)))
     );
 
-    this.config$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
+    this.config$ = this.store.select(WcsCalibrationState.getConfig);
     this.selectedLayerIds$ = this.config$.pipe(map((state) => state.selectedLayerIds));
 
-    this.wcsCalibrationSettings$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig);
+    this.wcsCalibrationSettings$ = this.store.select(WcsCalibrationState.getConfig);
     this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
 
     this.refLayerId$ = this.config$.pipe(
@@ -208,7 +198,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     this.wcsCalibrationForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
 
       this.store.dispatch(
-        new UpdateWcsCalibrationPanelConfig({
+        new UpdateConfig({
           showOverlay: value.showOverlay,
           selectedLayerIds: value.selectedLayerIds,
           mode: value.mode,
@@ -219,7 +209,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
       if (this.wcsCalibrationForm.valid) {
         this.store.dispatch(
-          new UpdateWcsCalibrationPanelConfig({
+          new UpdateConfig({
             ra: value.ra,
             dec: value.dec,
             radius: value.radius,
@@ -236,7 +226,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
     // determine whether existing jobs have been loaded
     this.viewerId$.subscribe(viewerId => {
-      let state = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId));
+      let state = this.store.selectSnapshot(WcsCalibrationState.getWcsCalibrationViewerStateByViewerId(viewerId));
 
       if (!state) return;
 
@@ -254,7 +244,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
 
 
     this.state$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId))),
+      switchMap((viewerId) => this.store.select(WcsCalibrationState.getWcsCalibrationViewerStateByViewerId(viewerId))),
       filter(state => !!state)
     );
 
@@ -314,8 +304,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   private getViewerMarkers(viewerId: string) {
-    let config$ = this.store.select(WorkbenchState.getWcsCalibrationPanelConfig)
-    let state$ = this.store.select(WorkbenchState.getWcsCalibrationPanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
+    let config$ = this.store.select(WcsCalibrationState.getConfig)
+    let state$ = this.store.select(WcsCalibrationState.getWcsCalibrationViewerStateByViewerId(viewerId)).pipe(distinctUntilChanged());
     let layerId$ = this.store.select(WorkbenchState.getImageLayerByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
     // let layerId$ = this.imageLayer$.pipe(
     //   map((layer) => layer?.id),
@@ -400,11 +390,11 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
   }
 
   onShowOverlayChange($event: MatCheckboxChange) {
-    this.store.dispatch(new UpdateWcsCalibrationPanelConfig({ showOverlay: $event.checked }))
+    this.store.dispatch(new UpdateConfig({ showOverlay: $event.checked }))
   }
 
   onSubmitClick() {
-    let config = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationPanelConfig);
+    let config = this.store.selectSnapshot(WcsCalibrationState.getConfig);
     if (config.mode == 'platesolve') {
       this.store.dispatch(new CreateWcsCalibrationJob(this.wcsCalibrationForm.controls.selectedLayerIds.value));
     }
@@ -488,9 +478,9 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       changes.maxScale = Math.round(degsPerPixel * 1.1 * 3600 * 100000) / 100000;
     }
 
-    let wcsCalibrationSettings = this.store.selectSnapshot(WorkbenchState.getWcsCalibrationPanelConfig);
+    let wcsCalibrationSettings = this.store.selectSnapshot(WcsCalibrationState.getConfig);
     this.store.dispatch(
-      new UpdateWcsCalibrationPanelConfig({
+      new UpdateConfig({
         ...wcsCalibrationSettings,
         ...changes,
       })

@@ -7,12 +7,11 @@ import { SourceExtractionSettings } from './source-extraction-settings';
 import { FileInfoPanelConfig } from './file-info-panel';
 import { PlottingPanelState } from './plotter-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
-import { SonificationPanelState } from './sonifier-file-state';
+import { SonificationPanelState } from '../tools/sonification/models/sonifier-file-state';
 import { IWorkbenchState } from './workbench-file-state';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 import { GlobalSettings } from './global-settings';
-import { WcsCalibrationFileState } from './wcs-calibration-file-state';
 
 export enum WorkbenchTool {
   VIEWER = 'display',
@@ -66,19 +65,7 @@ export interface PlottingPanelConfig {
 
 
 
-export interface WcsCalibrationPanelConfig {
-  selectedLayerIds: string[];
-  activeJobId: string;
-  mode: 'platesolve' | 'copy';
-  refLayerId: string,
-  ra?: number | string;
-  dec?: number | string;
-  radius?: number;
-  minScale?: number;
-  maxScale?: number;
-  maxSources?: number;
-  showOverlay: boolean;
-}
+
 
 export interface ViewerPanelContainer {
   id: string;
@@ -133,7 +120,6 @@ export interface WorkbenchStateModel {
   fileInfoPanelConfig: FileInfoPanelConfig;
   customMarkerPanelConfig: CustomMarkerPanelConfig;
   plottingPanelConfig: PlottingPanelConfig;
-  wcsCalibrationPanelConfig: WcsCalibrationPanelConfig;
   fileIdToWorkbenchStateIdMap: { [id: string]: string };
   layerIdToWorkbenchStateIdMap: { [id: string]: string };
   nextWorkbenchStateId: number;
@@ -146,10 +132,4 @@ export interface WorkbenchStateModel {
   nextPlottingPanelStateId: number;
   plottingPanelStateIds: string[];
   plottingPanelStateEntities: { [id: string]: PlottingPanelState };
-  nextSonificationPanelStateId: number;
-  sonificationPanelStateIds: string[];
-  sonificationPanelStateEntities: { [id: string]: SonificationPanelState };
-  nextWcsCalibrationPanelStateId: number;
-  wcsCalibrationPanelStateIds: string[];
-  wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationFileState };
 }

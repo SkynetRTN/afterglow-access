@@ -21,7 +21,6 @@ import {
   WorkbenchTool,
   ViewerPanel,
   ViewerPanelContainer,
-  WcsCalibrationPanelConfig,
   ViewerLayoutItem
 } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
@@ -101,25 +100,16 @@ import {
   MoveViewer,
   Initialize,
   UpdateCurrentViewportSize,
-  AddRegionToHistory,
-  UndoRegionSelection,
-  RedoRegionSelection,
   InitializeWorkbenchLayerState,
   StartLine,
   UpdateLine,
   UpdatePlottingPanelState,
-  UpdateSonifierFileState,
-  ClearRegionHistory,
-  SetProgressLine,
-  SonificationRegionChanged,
   UpdateCustomMarker,
   AddCustomMarkers,
   RemoveCustomMarkers,
   SelectCustomMarkers,
   DeselectCustomMarkers,
   SetCustomMarkerSelection,
-  Sonify,
-  ClearSonification,
   SyncViewerTransformations,
   SetViewerSyncMode,
   SyncViewerNormalizations,
@@ -127,18 +117,12 @@ import {
   SetFileSelection,
   SetFileListFilter,
   InitializeWorkbenchFileState,
-  UpdateWcsCalibrationFileState,
-  UpdateWcsCalibrationPanelConfig,
-  CreateWcsCalibrationJob,
   ImportFromSurveyFail,
-  SonificationCompleted,
   UpdateCustomMarkerSelectionRegion,
   EndCustomMarkerSelectionRegion,
   UpdateSettings,
   UpdateCalibrationSettings,
   SyncAfterglowHeaders,
-  UpdateWcsCalibrationExtractionOverlay,
-  InvalidateWcsCalibrationExtractionOverlayByLayerId,
   UpdateCosmeticCorrectionSettings,
   UpdateAlignmentSettings,
 } from './workbench.actions';
@@ -168,7 +152,7 @@ import { ImportAssetsCompleted, ImportAssets } from '../data-providers/data-prov
 import { ImmutableContext } from '@ngxs-labs/immer-adapter';
 import { PosType, Source, sourceToAstrometryData } from './models/source';
 import { MarkerType, LineMarker, RectangleMarker, CircleMarker } from './models/marker';
-import { SonificationPanelState, SonifierRegionMode } from './models/sonifier-file-state';
+import { SonificationPanelState, SonifierRegionMode } from './tools/sonification/models/sonifier-file-state';
 import { SourcesState, SourcesStateModel } from './sources.state';
 import {
   SourceExtractionJobSettings,
@@ -208,7 +192,6 @@ import { Normalization } from '../data-files/models/normalization';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { getLongestCommonStartingSubstring, isNotEmpty } from '../utils/utils';
 import { Injectable } from '@angular/core';
-import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
 import { GlobalSettings, defaults as defaultGlobalSettings, toPhotometryJobSettings, toSourceExtractionJobSettings, toFieldCalibration } from './models/global-settings';
@@ -222,9 +205,9 @@ import { I } from '@angular/cdk/keycodes';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { JobService } from '../jobs/services/job.service';
 import { Job } from '../jobs/models/job';
-import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
 import { SourceCatalogState, SourceCatalogViewerStateModel } from './tools/source-catalog/source-catalog.state';
 import { InvalidateAutoCalByLayerId, InvalidateAutoPhotByLayerId, RemovePhotDatasByLayerId } from './tools/photometry/photometry.actions';
+import { InvalidateWcsCalibrationExtractionOverlayByLayerId } from './tools/wcs-calibration/wcs-calibration.actions';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
   version: '3b65de65-929223-435a-fgb-ab32809cc',
@@ -273,17 +256,6 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     plotterSyncEnabled: false,
     plotMode: '1D',
   },
-  wcsCalibrationPanelConfig: {
-    selectedLayerIds: [],
-    activeJobId: '',
-    mode: 'platesolve',
-    refLayerId: null,
-    minScale: 0.1,
-    maxScale: 10,
-    radius: 1,
-    maxSources: 100,
-    showOverlay: false,
-  },
   catalogs: [],
   selectedCatalogId: '',
   fieldCals: [],
@@ -304,12 +276,6 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   nextPlottingPanelStateId: 0,
   plottingPanelStateEntities: {},
   plottingPanelStateIds: [],
-  nextSonificationPanelStateId: 0,
-  sonificationPanelStateEntities: {},
-  sonificationPanelStateIds: [],
-  nextWcsCalibrationPanelStateId: 0,
-  wcsCalibrationPanelStateEntities: {},
-  wcsCalibrationPanelStateIds: [],
   nextMarkerId: 0,
 };
 
@@ -368,8 +334,6 @@ export class WorkbenchState {
   public static getShowConfig(state: WorkbenchStateModel) {
     return state.showConfig;
   }
-
-
 
   @Selector()
   public static getViewerSyncEnabled(state: WorkbenchStateModel) {
@@ -467,33 +431,6 @@ export class WorkbenchState {
     return state.plottingPanelConfig;
   }
 
-
-  @Selector()
-  public static getWcsCalibrationPanelConfig(state: WorkbenchStateModel) {
-    return state.wcsCalibrationPanelConfig;
-  }
-
-  @Selector()
-  public static getWcsCalibrationPanelStateEntities(state: WorkbenchStateModel) {
-    return state.wcsCalibrationPanelStateEntities;
-  }
-
-  @Selector()
-  public static getWcsCalibrationPanelStateIds(state: WorkbenchStateModel) {
-    return state.wcsCalibrationPanelStateIds;
-  }
-
-  @Selector()
-  public static getWcsCalibrationPanelStates(state: WorkbenchStateModel) {
-    return Object.values(state.wcsCalibrationPanelStateEntities);
-  }
-
-  @Selector([WorkbenchState.getWcsCalibrationPanelStateEntities])
-  public static getWcsCalibrationPanelStateById(entities: { [id: string]: WcsCalibrationFileState }) {
-    return (wcsCalibrationPanelStateId: string) => {
-      return entities[wcsCalibrationPanelStateId];
-    };
-  }
 
   @Selector([WorkbenchState.getViewers])
   public static canSplit(viewers: Viewer[]) {
@@ -615,53 +552,6 @@ export class WorkbenchState {
       return entities[plottingPanelStateId];
     };
   }
-
-  @Selector()
-  public static getSonificationPanelStateEntities(state: WorkbenchStateModel) {
-    return state.sonificationPanelStateEntities;
-  }
-
-  @Selector()
-  public static getSonificationPanelStateIds(state: WorkbenchStateModel) {
-    return state.sonificationPanelStateIds;
-  }
-
-  @Selector()
-  public static getSonificationPanelStates(state: WorkbenchStateModel) {
-    return Object.values(state.sonificationPanelStateEntities);
-  }
-
-  static getSonificationPanelStateIdByLayerId(layerId: string) {
-    return createSelector(
-      [WorkbenchState.getLayerIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
-      (
-        layerIdToWorkbenchStateId: { [id: string]: string },
-        workbenchStateEntities: { [id: string]: IWorkbenchState }
-      ) => {
-        return (workbenchStateEntities[layerIdToWorkbenchStateId[layerId]] as WorkbenchImageLayerState)?.sonificationPanelStateId || null;
-      }
-    );
-  }
-
-  static getSonificationPanelStateByLayerId(layerId: string) {
-    return createSelector(
-      [WorkbenchState.getSonificationPanelStateIdByLayerId(layerId), WorkbenchState.getSonificationPanelStateEntities],
-      (
-        stateId: string,
-        sonificationStateEntities: { [id: string]: SonificationPanelState }
-      ) => {
-        return sonificationStateEntities[stateId] || null;
-      }
-    );
-  }
-
-  @Selector([WorkbenchState.getSonificationPanelStateEntities])
-  public static getSonificationPanelStateById(entities: { [id: string]: SonificationPanelState }) {
-    return (sonificationPanelStateId: string) => {
-      return entities[sonificationPanelStateId];
-    };
-  }
-
 
 
   /** File Filtering and Selection
@@ -1131,37 +1021,6 @@ export class WorkbenchState {
       }
     );
   }
-
-  static getSonificationPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSonificationPanelStateEntities],
-      (workbenchState: IWorkbenchState, sonificationPanelStateEntities: { [id: string]: SonificationPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchImageLayerState;
-          let result = sonificationPanelStateEntities[s.sonificationPanelStateId];
-          return sonificationPanelStateEntities[s.sonificationPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-  static getWcsCalibrationPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getWcsCalibrationPanelStateEntities],
-      (workbenchState: IWorkbenchState, wcsCalibrationPanelStateEntities: { [id: string]: WcsCalibrationFileState }) => {
-        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchImageLayerState;
-          return wcsCalibrationPanelStateEntities[s.wcsCalibrationPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
-
 
   /** Focused Viewer */
 
@@ -2153,115 +2012,9 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdateWcsCalibrationFileState)
-  @ImmutableContext()
-  public updateWcsCalibrationPanelState(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId, changes }: UpdateWcsCalibrationFileState
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let wcsFileState = state.wcsCalibrationPanelStateEntities[layerState.wcsCalibrationPanelStateId];
-      state.wcsCalibrationPanelStateEntities[layerState.wcsCalibrationPanelStateId] = {
-        ...wcsFileState,
-        ...changes,
-      };
-      return state;
-    });
-  }
-
-  @Action(UpdateWcsCalibrationPanelConfig)
-  @ImmutableContext()
-  public updateWcsCalibrationSettings(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateWcsCalibrationPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.wcsCalibrationPanelConfig = {
-        ...state.wcsCalibrationPanelConfig,
-        ...changes,
-      };
-
-      return state;
-    });
-  }
 
 
-  @Action(UpdateWcsCalibrationExtractionOverlay)
-  @ImmutableContext()
-  public updateWcsCalibrationExtractionOverlay(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { viewerId }: UpdateWcsCalibrationExtractionOverlay
-  ) {
-    let state = getState();
 
-    let imageLayer = this.store.selectSnapshot(WorkbenchState.getImageLayerByViewerId(viewerId))
-    if (!imageLayer) return;
-    let layerId = imageLayer.id;
-
-    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
-    if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_LAYER) {
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let wcsCalibrationPanelStateId = layerState.wcsCalibrationPanelStateId;
-
-      let sourceExtractionSettings = toSourceExtractionJobSettings(state.settings);
-
-      let job: SourceExtractionJob = {
-        type: JobType.SourceExtraction,
-        sourceExtractionSettings: sourceExtractionSettings,
-        id: null,
-        fileIds: [layerId],
-        mergeSources: true,
-        state: null,
-      };
-
-      setState((state: WorkbenchStateModel) => {
-        let photState = state.wcsCalibrationPanelStateEntities[wcsCalibrationPanelStateId];
-        photState.sourceExtractionOverlayIsValid = true;
-        photState.sourceExtractionJobId = null;
-        return state;
-      });
-
-      let job$ = this.jobService.createJob(job);
-      return job$.pipe(
-        tap(job => {
-          if (job.id) {
-            setState((state: WorkbenchStateModel) => {
-              state.wcsCalibrationPanelStateEntities[wcsCalibrationPanelStateId].sourceExtractionJobId = job.id;
-              return state;
-            });
-          }
-          if (job.state.status == 'completed') {
-
-
-          }
-        })
-      )
-    }
-  }
-
-  @Action(InvalidateWcsCalibrationExtractionOverlayByLayerId)
-  @ImmutableContext()
-  public invalidateWcsCalibrationExtractionOverlayByLayerId(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: InvalidateWcsCalibrationExtractionOverlayByLayerId
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchStateIds = state.workbenchStateIds;
-      if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
-      workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
-          return;
-        }
-        let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
-        state.wcsCalibrationPanelStateEntities[layerState.wcsCalibrationPanelStateId].sourceExtractionOverlayIsValid = false;
-      });
-      return state;
-    });
-  }
 
 
 
@@ -2573,36 +2326,7 @@ export class WorkbenchState {
     });
   }
 
-  @Action(SonificationRegionChanged)
-  @ImmutableContext()
-  public sonificationRegionChanged(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: SonificationRegionChanged
-  ) {
-    let state = getState();
-    let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
-    let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId] as ImageLayer;
-    let layerState = workbenchState as WorkbenchImageLayerState;
-    let sonifierState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
 
-    if (sonifierState.regionMode == SonifierRegionMode.CUSTOM && sonifierState.viewportSync) {
-      //find viewer which contains file
-      let viewer = this.store.selectSnapshot(WorkbenchState.getViewers).find((viewer) => viewer.layerId == layerId);
-      if (viewer && viewer.viewportSize && viewer.viewportSize.width != 0 && viewer.viewportSize.height != 0 && sonifierState.regionHistoryIndex !== null) {
-        let region = sonifierState.regionHistory[sonifierState.regionHistoryIndex];
-        dispatch(
-          new CenterRegionInViewport(
-            layer.rawImageDataId,
-            layer.imageTransformId,
-            layer.viewportTransformId,
-            viewer.viewportSize,
-            region
-          )
-        );
-      }
-    }
-  }
 
   @Action(LoadCatalogs)
   @ImmutableContext()
@@ -2740,104 +2464,6 @@ export class WorkbenchState {
 
 
 
-
-  @Action(CreateWcsCalibrationJob)
-  @ImmutableContext()
-  public createWcsCalibrationJob(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerIds: layerIds }: CreateWcsCalibrationJob
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.wcsCalibrationPanelConfig.activeJobId = '';
-      return state;
-    });
-
-    let state = getState();
-    let wcsSettings = state.wcsCalibrationPanelConfig;
-    let raHours = typeof (wcsSettings.ra) == 'string' ? parseDms(wcsSettings.ra) : wcsSettings.ra;
-    let decDegs = typeof (wcsSettings.dec) == 'string' ? parseDms(wcsSettings.dec) : wcsSettings.dec;
-    let wcsCalibrationJobSettings: WcsCalibrationJobSettings = {
-      raHours: raHours,
-      decDegs: decDegs,
-      radius: wcsSettings.radius,
-      minScale: wcsSettings.minScale,
-      maxScale: wcsSettings.maxScale,
-      maxSources: wcsSettings.maxSources,
-    };
-
-    let sourceExtractionSettings = state.settings.sourceExtraction;
-    let sourceExtractionJobSettings: SourceExtractionJobSettings = {
-      threshold: sourceExtractionSettings.threshold,
-      fwhm: sourceExtractionSettings.fwhm,
-      deblend: sourceExtractionSettings.deblend,
-      limit: sourceExtractionSettings.limit,
-    };
-
-    let job: WcsCalibrationJob = {
-      id: null,
-      type: JobType.WcsCalibration,
-      fileIds: layerIds,
-      inplace: true,
-      settings: wcsCalibrationJobSettings,
-      sourceExtractionSettings: sourceExtractionJobSettings,
-      state: null,
-    };
-
-    let job$ = this.jobService.createJob(job);
-    return job$.pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.wcsCalibrationPanelConfig.activeJobId = job.id;
-            return state;
-          });
-        }
-        if (job.state.status == 'completed' && job.result) {
-          let actions: any[] = [];
-          if (!isWcsCalibrationJob(job)) return;
-          job.result.fileIds.forEach((layerId) => {
-            actions.push(new InvalidateHeader(layerId.toString()));
-          });
-          let viewerIds = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds);
-          let layerIds = job.result.fileIds.map(id => id.toString())
-          viewerIds.forEach(viewerId => {
-            let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(viewerId));
-
-            if (viewer.layerId && layerIds.includes(viewer.layerId)) {
-              actions.push(new LoadLayerHeader(viewer.layerId));
-            }
-          })
-          let message: string;
-          let numFailed = layerIds.length - job.result.fileIds.length;
-          if (numFailed != 0) {
-            message = `Failed to find solution for ${numFailed} image(s).`;
-          } else {
-            message = `Successfully found solutions for all ${layerIds.length} files.`;
-          }
-
-          let dialogConfig: Partial<AlertDialogConfig> = {
-            title: 'WCS Calibration Completed',
-            message: message,
-            buttons: [
-              {
-                color: '',
-                value: false,
-                label: 'Close',
-              },
-            ],
-          };
-          this.dialog.open(AlertDialogComponent, {
-            width: '600px',
-            data: dialogConfig,
-          });
-
-          dispatch(actions)
-
-        }
-      })
-    )
-  }
-
   @Action(ImportFromSurvey)
   @ImmutableContext()
   public importFromSurvey(
@@ -2935,37 +2561,13 @@ export class WorkbenchState {
         };
         state.customMarkerPanelStateIds.push(customMarkerPanelStateId);
 
-        let sonificationPanelStateId = `SONIFICATION_PANEL_${state.nextSonificationPanelStateId++}`;
-        state.sonificationPanelStateEntities[sonificationPanelStateId] = {
-          id: sonificationPanelStateId,
-          regionHistory: [],
-          regionHistoryIndex: null,
-          regionHistoryInitialized: false,
-          regionMode: SonifierRegionMode.CUSTOM,
-          viewportSync: true,
-          duration: 10,
-          toneCount: 22,
-          progressLine: null,
-          sonificationLoading: null,
-          sonificationJobId: '',
-        };
-        state.sonificationPanelStateIds.push(sonificationPanelStateId);
 
-        let wcsCalibrationPanelStateId = `WCS_CALIBRATION_${state.nextWcsCalibrationPanelStateId++}`;
-        state.wcsCalibrationPanelStateEntities[wcsCalibrationPanelStateId] = {
-          id: wcsCalibrationPanelStateId,
-          sourceExtractionJobId: null,
-          sourceExtractionOverlayIsValid: false
-        };
-        state.wcsCalibrationPanelStateIds.push(wcsCalibrationPanelStateId);
 
         let imageLayerState: WorkbenchImageLayerState = {
           id: workbenchStateId,
           type: WorkbenchStateType.IMAGE_LAYER,
           plottingPanelStateId: plottingPanelStateId,
           customMarkerPanelStateId: customMarkerPanelStateId,
-          sonificationPanelStateId: sonificationPanelStateId,
-          wcsCalibrationPanelStateId: wcsCalibrationPanelStateId
         };
 
         workbenchState = imageLayerState;
@@ -3076,42 +2678,10 @@ export class WorkbenchState {
       }
 
 
-
-      state.wcsCalibrationPanelConfig.selectedLayerIds = state.wcsCalibrationPanelConfig.selectedLayerIds.filter(
-        (id) => id != layerId
-      );
-
-
       return state;
     });
   }
 
-  @Action(LoadLayerHeaderSuccess)
-  @ImmutableContext()
-  public loadDataFileHdrSuccess(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: LoadLayerHeaderSuccess
-  ) {
-    let state = getState();
-    let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
-    let layerState = workbenchState as WorkbenchImageLayerState;
-    let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId] as ImageLayer;
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[layer.headerId];
-
-    let sonifierState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-
-    if (!sonifierState.regionHistoryInitialized) {
-      dispatch(
-        new AddRegionToHistory(layerId, {
-          x: 0,
-          y: 0,
-          width: getWidth(header),
-          height: getHeight(header),
-        })
-      );
-    }
-  }
 
   @Action(UpdateCustomMarkerSelectionRegion)
   @ImmutableContext()
@@ -3162,267 +2732,6 @@ export class WorkbenchState {
     });
   }
 
-  @Action([AddRegionToHistory, UndoRegionSelection, RedoRegionSelection])
-  @ImmutableContext()
-  public regionHistoryChanged(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: AddRegionToHistory | UndoRegionSelection | RedoRegionSelection
-  ) {
-    let state = getState();
-    let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
-    let layerState = workbenchState as WorkbenchImageLayerState;
-    let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-
-    if (sonificationPanelState.regionMode == SonifierRegionMode.CUSTOM) {
-      dispatch(new SonificationRegionChanged(layerId));
-    }
-  }
-
-  @Action(UpdateSonifierFileState)
-  @ImmutableContext()
-  public updateSonifierFileState(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId, changes }: UpdateSonifierFileState
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      state.sonificationPanelStateEntities[layerState.sonificationPanelStateId] = {
-        ...sonificationPanelState,
-        ...changes,
-      };
-
-      dispatch(new SonificationRegionChanged(layerId));
-
-      return state;
-    });
-  }
-
-  @Action(AddRegionToHistory)
-  @ImmutableContext()
-  public addRegionToHistory(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId, region }: AddRegionToHistory
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      if (!sonificationPanelState.regionHistoryInitialized) {
-        sonificationPanelState.regionHistoryIndex = 0;
-        sonificationPanelState.regionHistory = [region];
-        sonificationPanelState.regionHistoryInitialized = true;
-      } else if (sonificationPanelState.regionHistoryIndex != null) {
-        sonificationPanelState.regionHistory = [
-          ...sonificationPanelState.regionHistory.slice(0, sonificationPanelState.regionHistoryIndex + 1),
-          region,
-        ];
-        sonificationPanelState.regionHistoryIndex++;
-      }
-      return state;
-    });
-  }
-
-  @Action(UndoRegionSelection)
-  @ImmutableContext()
-  public undoRegionSelection(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: UndoRegionSelection
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      if (
-        !sonificationPanelState.regionHistoryInitialized ||
-        sonificationPanelState.regionHistoryIndex == null ||
-        sonificationPanelState.regionHistoryIndex == 0
-      )
-        return state;
-      sonificationPanelState.regionHistoryIndex--;
-      return state;
-    });
-  }
-
-  @Action(RedoRegionSelection)
-  @ImmutableContext()
-  public redoRegionSelection(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: RedoRegionSelection
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      if (
-        !sonificationPanelState.regionHistoryInitialized ||
-        sonificationPanelState.regionHistoryIndex == null ||
-        sonificationPanelState.regionHistoryIndex == sonificationPanelState.regionHistory.length - 1
-      ) {
-        return state;
-      }
-      sonificationPanelState.regionHistoryIndex++;
-      return state;
-    });
-  }
-
-  @Action(ClearRegionHistory)
-  @ImmutableContext()
-  public clearRegionHistory(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: ClearRegionHistory
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      if (
-        !sonificationPanelState.regionHistoryInitialized ||
-        sonificationPanelState.regionHistoryIndex == sonificationPanelState.regionHistory.length - 1
-      )
-        return state;
-      sonificationPanelState.regionHistoryIndex = null;
-      sonificationPanelState.regionHistory = [];
-      sonificationPanelState.regionHistoryInitialized = false;
-      return state;
-    });
-  }
-
-  @Action(SetProgressLine)
-  @ImmutableContext()
-  public setProgressLine(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId, line }: SetProgressLine
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      sonificationPanelState.progressLine = line;
-      return state;
-    });
-  }
-
-  @Action(Sonify)
-  @ImmutableContext()
-  public sonify({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { layerId: layerId, region }: Sonify) {
-    let getSonificationUrl = (jobId) => `${getCoreApiUrl(this.config)}/jobs/${jobId}/result/files/sonification`;
-
-    let state = getState();
-    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
-    let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
-    let layerState = workbenchState as WorkbenchImageLayerState;
-    let sonificationPanelStateId = layerState.sonificationPanelStateId;
-
-    let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
-    let settings = {
-      x: Math.floor(region.x) + 1,
-      y: Math.floor(region.y) + 1,
-      width: Math.floor(region.width),
-      height: Math.floor(region.height),
-      numTones: Math.floor(sonificationPanelState.toneCount),
-      tempo: Math.ceil(region.height / sonificationPanelState.duration),
-      indexSounds: true,
-    };
-
-
-    //check whether new job should be created or if previous job result can be used
-    if (sonificationPanelState.sonificationJobId) {
-      let job = this.store.selectSnapshot(JobsState.getJobById(sonificationPanelState.sonificationJobId))
-
-      if (job && isSonificationJob(job) && job.result && job.result.errors.length == 0 && job.fileId === layerId) {
-        let jobSettings: SonificationJobSettings = {
-          x: job.settings.x,
-          y: job.settings.y,
-          width: job.settings.width,
-          height: job.settings.height,
-          numTones: job.settings.numTones,
-          tempo: job.settings.tempo,
-          indexSounds: job.settings.indexSounds,
-        };
-        if (deepEqual(jobSettings, settings)) {
-          return dispatch(new SonificationCompleted(layerId, getSonificationUrl(job.id), ''));
-        }
-      }
-    }
-
-    let job: SonificationJob = {
-      id: null,
-      fileId: layerId,
-      type: JobType.Sonification,
-      settings: settings,
-      state: null
-    };
-
-    setState((state: WorkbenchStateModel) => {
-      let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
-      sonificationPanelState.sonificationLoading = true;
-      return state;
-    });
-
-    let job$ = this.jobService.createJob(job);
-    return job$.pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.sonificationPanelStateEntities[sonificationPanelStateId].sonificationJobId = job.id;
-            return state;
-          });
-        }
-        if (job.state.status == 'completed' && job.result) {
-          let sonificationUrl = '';
-          let error = '';
-          if (isSonificationJob(job)) {
-            if (job.result.errors.length == 0) {
-              sonificationUrl = getSonificationUrl(job.id);
-              error = '';
-            } else {
-              error = job.result.errors.map((e) => e.detail).join(', ');
-            }
-            setState((state: WorkbenchStateModel) => {
-              let sonificationPanelState = state.sonificationPanelStateEntities[sonificationPanelStateId];
-              sonificationPanelState.sonificationLoading = false;
-              sonificationPanelState.sonificationJobId = job.id;
-
-              state.sonificationPanelStateEntities[sonificationPanelStateId] = {
-                ...sonificationPanelState,
-              };
-              return state;
-            });
-            dispatch(new SonificationCompleted(layerId, sonificationUrl, error));
-          }
-        }
-      })
-    )
-  }
-
-  @Action(ClearSonification)
-  @ImmutableContext()
-  public clearSonification(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: ClearSonification
-  ) {
-    let state = getState();
-    let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-    if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
-    let layerState = workbenchState as WorkbenchImageLayerState;
-
-    setState((state: WorkbenchStateModel) => {
-      let sonificationPanelState = state.sonificationPanelStateEntities[layerState.sonificationPanelStateId];
-      sonificationPanelState.sonificationLoading = null;
-      sonificationPanelState.sonificationJobId = '';
-      return state;
-    });
-  }
 
 
   @Action(StartLine)

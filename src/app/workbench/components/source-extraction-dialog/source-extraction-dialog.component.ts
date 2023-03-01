@@ -13,13 +13,14 @@ import { isSourceExtractionJob, SourceExtractionJob, SourceExtractionJobResult, 
 import { JobService } from 'src/app/jobs/services/job.service';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
-import { SonifierRegionMode } from '../../models/sonifier-file-state';
+import { SonifierRegionMode } from '../../tools/sonification/models/sonifier-file-state';
 import { PosType, Source } from '../../models/source';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
 import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { AddSources } from '../../sources.actions';
 import { ExtractSources } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
+import { SonificationState } from '../../tools/sonification/sonification.state';
 // import { SourceExtractionRegion, SourceExtractionSettings } from '../../models/source-extraction-settings';
 
 @Component({
@@ -82,7 +83,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     let layer = this.store.selectSnapshot(DataFilesState.getLayerById(layerId)) as ImageLayer;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
     let region: SourceExtractionRegion = this.sourceExtractionRegionForm.controls.region.value;
-    let sonificationState = this.store.selectSnapshot(WorkbenchState.getSonificationPanelStateByLayerId(layerId));
+    let sonificationState = this.store.selectSnapshot(SonificationState.getLayerStateById(layerId));
     let transformEntities = this.store.selectSnapshot(DataFilesState.getTransformEntities);
     let viewportTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.viewportTransformId))
     let imageTransform = this.store.selectSnapshot(DataFilesState.getTransformById(layer.imageTransformId))
