@@ -1,18 +1,19 @@
 import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from 'rxjs/operators';
-import { StackFormData, WorkbenchTool, StackingPanelConfig } from '../../models/workbench-state';
+import { StackFormData } from '../../../models/workbench-state';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { StackingJob, StackingJobResult, StackSettings } from '../../../jobs/models/stacking';
+import { StackingJob, StackingJobResult, StackSettings } from '../../../../jobs/models/stacking';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../workbench.state';
-import { JobsState } from '../../../jobs/jobs.state';
-import { SetActiveTool, CreateStackingJob, UpdateStackingPanelConfig } from '../../workbench.actions';
-import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
-import { DataFilesState } from '../../../data-files/data-files.state';
+import { DataFile, ImageLayer } from '../../../../data-files/models/data-file';
+import { DataFilesState } from '../../../../data-files/data-files.state';
 import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
+import { StackingState, StackingStateModel } from '../stacking.state';
+import { WorkbenchState } from 'src/app/workbench/workbench.state';
+import { CreateStackingJob, SetCurrentJobId, UpdateFormData } from '../stacking.actions';
+import { AligningState } from '../../aligning/aligning.state';
 
 @Component({
   selector: 'app-stacking-panel',
@@ -20,7 +21,7 @@ import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/uti
   styleUrls: ['./stacking-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StackerPanelComponent implements OnInit {
+export class StackingPanelComponent implements OnInit {
   @Input('layerIds')
   set layerIds(layerIds: string[]) {
     this.layerIds$.next(layerIds);
@@ -30,11 +31,11 @@ export class StackerPanelComponent implements OnInit {
   }
   private layerIds$ = new BehaviorSubject<string[]>(null);
 
-  config$: Observable<StackingPanelConfig>;
+  config$: Observable<StackingStateModel>;
+  formData$: Observable<StackFormData>;
 
   destroy$ = new Subject<boolean>();
   selectedLayers$: Observable<Array<ImageLayer>>;
-  stackFormData$: Observable<StackFormData>;
   stackingJob$: Observable<StackingJob>;
   dataFileEntities$: Observable<{ [id: string]: DataFile }>;
   showPropagateMask$ = new BehaviorSubject<boolean>(false);
@@ -58,19 +59,20 @@ export class StackerPanelComponent implements OnInit {
 
   constructor(private store: Store, private router: Router) {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
-    this.config$ = this.store.select(WorkbenchState.getStackingPanelConfig);
+    this.config$ = this.store.select(StackingState.getState);
+    this.formData$ = this.store.select(StackingState.getFormData)
 
-    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
-      if (!layerIds || !config) return;
-      let selectedLayerIds = config.stackFormData.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
-      if (selectedLayerIds.length != config.stackFormData.selectedLayerIds.length) {
+    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.formData$)).subscribe(([layerIds, formData]) => {
+      if (!layerIds || !formData) return;
+      let selectedLayerIds = formData.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
+      if (selectedLayerIds.length != formData.selectedLayerIds.length) {
         setTimeout(() => {
           this.setSelectedLayerIds(selectedLayerIds);
         });
       }
     });
 
-    this.store.select(WorkbenchState.getAligningPanelConfig).pipe(
+    this.store.select(AligningState.getFormData).pipe(
       takeUntil(this.destroy$),
       map(config => !config?.mosaicMode)
     ).subscribe(value => this.showPropagateMask$.next(value))
@@ -89,35 +91,17 @@ export class StackerPanelComponent implements OnInit {
       });
 
 
-
-    this.stackFormData$ = store.select(WorkbenchState.getState).pipe(
-      takeUntil(this.destroy$),
-      map((state) => state.stackingPanelConfig.stackFormData),
+    this.formData$.pipe(
       takeUntil(this.destroy$)
-    );
-
-    this.stackFormData$.subscribe((data) => {
+    ).subscribe((data) => {
       this.stackForm.patchValue(data, { emitEvent: false });
     });
 
-    this.stackingJob$ = combineLatest([
-      store.select(WorkbenchState.getState),
-      store.select(JobsState.getJobEntities),
-    ]).pipe(
-      map(([state, jobEntities]) => {
-        if (
-          !state.stackingPanelConfig.currentStackingJobId ||
-          !jobEntities[state.stackingPanelConfig.currentStackingJobId]
-        ) {
-          return null;
-        }
-        return jobEntities[state.stackingPanelConfig.currentStackingJobId] as StackingJob;
-      })
-    );
+    this.stackingJob$ = this.store.select(StackingState.getCurrentJob)
 
     this.stackForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcForm.valid) {
-      this.store.dispatch(new UpdateStackingPanelConfig({ stackFormData: this.stackForm.value }));
+      this.store.dispatch(new UpdateFormData({ ...this.stackForm.value }));
       // }
     });
 
@@ -169,11 +153,9 @@ export class StackerPanelComponent implements OnInit {
 
   setSelectedLayerIds(layerIds: string[]) {
     this.store.dispatch(
-      new UpdateStackingPanelConfig({
-        stackFormData: {
-          ...this.stackForm.value,
-          selectedLayerIds: layerIds,
-        },
+      new UpdateFormData({
+        ...this.stackForm.value,
+        selectedLayerIds: layerIds,
       })
     );
   }
@@ -187,12 +169,12 @@ export class StackerPanelComponent implements OnInit {
   }
 
   submit() {
-    this.store.dispatch(new UpdateStackingPanelConfig({ currentStackingJobId: null }));
+    this.store.dispatch(new SetCurrentJobId(null));
 
     let showPropagateMask = this.showPropagateMask$.value;
     let selectedLayerIds: string[] = this.stackForm.controls.selectedLayerIds.value;
-    let state = this.store.selectSnapshot(WorkbenchState.getState)
-    let data = state.stackingPanelConfig.stackFormData;
+    let state = this.store.selectSnapshot(StackingState.getState)
+    let data = state.formData;
     let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
 
     let dataFileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);

@@ -36,7 +36,7 @@
         <mat-form-field *ngIf="!mosaicToggle.checked">
           <mat-label i18n>Reference Image File</mat-label>
           <mat-select #refLayerIdSelect formControlName="refLayerId" [value]="(refLayer$ | async)?.id">
-            <mat-option *ngFor="let layerId of (config$ | async)?.selectedLayerIds" [value]="layerId">
+            <mat-option *ngFor="let layerId of (formData$ | async)?.selectedLayerIds" [value]="layerId">
               {{ getLayerOptionLabel(layerId) | async }}
             </mat-option>
           </mat-select>

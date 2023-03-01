@@ -11,6 +11,7 @@ import { BatchDownloadJob } from './batch-download';
 import { BatchAssetDownloadJob } from './batch-asset-download';
 import { WcsCalibrationJob } from './wcs_calibration';
 import { FieldCalibrationJob } from './field-calibration';
+import { CosmeticCorrectionJob } from './cosmetic-correction';
 
 export type Job =
   | SourceExtractionJob
@@ -25,4 +26,5 @@ export type Job =
   | BatchDownloadJob
   | BatchAssetDownloadJob
   | WcsCalibrationJob
-  | FieldCalibrationJob;
+  | FieldCalibrationJob
+  | CosmeticCorrectionJob;

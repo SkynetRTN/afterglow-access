@@ -1,0 +1,101 @@
+<div *ngIf="layerIds">
+    <form [formGroup]="form">
+        <div>
+            <mat-form-field appearance="outline" style="width: 300px">
+                <mat-label i18n>Select Image(s) to Correct</mat-label>
+                <mat-select multiple formControlName="selectedLayerIds">
+                    <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
+                        {{ getLayerOptionLabel(layerId) | async }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <button mat-icon-button (click)="onSelectAllBtnClick()">
+                <mat-icon>select_all</mat-icon>
+            </button>
+
+            <button mat-icon-button (click)="onClearSelectionBtnClick()">
+                <mat-icon>clear</mat-icon>
+            </button>
+        </div>
+
+        <div class="flex flex-wrap gap-4">
+
+            <mat-form-field appearance="outline">
+                <mat-label i18n>mCol</mat-label>
+                <input matInput formControlName="mCol" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>nuCol</mat-label>
+                <input matInput formControlName="nuCol" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>mPixel</mat-label>
+                <input matInput formControlName="mPixel" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>mCorrCol</mat-label>
+                <input matInput formControlName="mCorrCol" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>mCorrPixel</mat-label>
+                <input matInput formControlName="mCorrPixel" type="number" />
+            </mat-form-field>
+
+        </div>
+
+        <div class="flex flex-wrap gap-4">
+            <mat-slide-toggle formControlName="groupByInstrument"> Group by instrument</mat-slide-toggle>
+            <mat-slide-toggle formControlName="groupByFilter"> Group by filter</mat-slide-toggle>
+            <mat-slide-toggle formControlName="groupByExpLength"> Group by exposure length</mat-slide-toggle>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>maxGroupLen</mat-label>
+                <input matInput formControlName="maxGroupLen" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>maxGroupSpanHours</mat-label>
+                <input matInput formControlName="maxGroupSpanHours" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>minGroupSepHours</mat-label>
+                <input matInput formControlName="minGroupSepHours" type="number" />
+            </mat-form-field>
+        </div>
+
+        <div style="clear: both"></div>
+        <button mat-raised-button (click)="submit()" [disabled]="!form.valid" class="float-right" i18n>
+            Submit
+        </button>
+        <div style="clear: both"></div>
+    </form>
+
+    <!-- <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px;"> -->
+    <div *ngIf="job$ | async; let job" style="margin-top: 10px">
+        <div class="alert alert-info"
+            *ngIf="!job.result || ['pending', 'in_progress'].includes(job.state.status); else jobComplete">
+            Processing job {{ job.id }} ... ({{ job.state.progress | number: '1.0-0' }}%)
+
+            <ng-container *ngIf="job.state.status == 'in_progress'">
+                <div style="margin-top: 5px">
+                    <mat-progress-bar mode="determinate" [value]="job.state.progress" [color]="'primary'">
+                    </mat-progress-bar>
+                </div>
+            </ng-container>
+        </div>
+        <ng-template #jobComplete>
+            <div *ngIf="job.result.errors.length != 0; else noErrors"
+                class="alert alert-danger flex flex-col max-h-72 overflow-auto">
+                <span *ngFor="let error of job.result.errors">
+                    <span class="font-semibold pr-3"
+                        *ngIf="error.meta?.fileId">{{getLayerOptionLabel(error.meta?.fileId) |
+                        async}}</span>
+                    {{ error.detail}}
+                </span>
+            </div>
+            <ng-template #noErrors>
+                <div class="alert alert-success" i18n>Processing is complete.</div>
+            </ng-template>
+        </ng-template>
+    </div>
+    <!-- </div> -->
+</div>

@@ -33,10 +33,6 @@ import { PlottingPanelComponent } from './containers/plotting-panel/plotting-pan
 import { CustomMarkerPanelComponent } from './containers/custom-marker-panel/custom-marker-panel.component';
 import { SonificationPanelComponent } from './containers/sonification-panel/sonification-panel.component';
 import { FileInfoToolsetComponent } from './containers/file-info-panel/file-info-panel.component';
-import { PhotometryPageComponent } from './containers/photometry-panel/photometry-panel.component';
-import { ImageCalculatorPageComponent } from './containers/pixel-ops-panel/pixel-ops-panel.component';
-import { StackerPanelComponent } from './containers/stacking-panel/stacking-panel.component';
-import { AlignerPageComponent } from './containers/aligning-panel/aligning-panel.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
@@ -74,9 +70,14 @@ import { RenameLayerDialogComponent } from './components/rename-layer-dialog/ren
 import { RenameFileDialogComponent } from './components/rename-file-dialog/rename-file-dialog.component';
 import { PhotometricColorBalanceDialogComponent } from './components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 import { SourceNeutralizationDialogComponent } from './components/source-neutralization-dialog/source-neutralization-dialog.component';
-import { SourcePanelComponent } from './containers/source-panel/source-panel.component';
 import { SvgSourceMarkerComponent } from './components/svg-source-marker/svg-source-marker.component';
-import { MergeSourcesDialogComponent } from './components/merge-sources-dialog/merge-sources-dialog.component';
+import { MergeSourcesDialogComponent } from './tools/source-catalog/merge-sources-dialog/merge-sources-dialog.component';
+import { CosmeticCorrectionModule } from './tools/cosmetic-correction/cosmetic-correction.module';
+import { PixelOpsModule } from './tools/pixel-ops/pixel-ops.module';
+import { StackingModule } from './tools/stacking/stacking.module';
+import { AligningModule } from './tools/aligning/aligning.module';
+import { SourceCatalogModule } from './tools/source-catalog/source-catalog.module';
+import { PhotometryModule } from './tools/photometry/photometry.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -99,10 +100,6 @@ export const COMPONENTS = [
   DisplayToolPanelComponent,
   PlottingPanelComponent,
   SonificationPanelComponent,
-  PhotometryPageComponent,
-  ImageCalculatorPageComponent,
-  StackerPanelComponent,
-  AlignerPageComponent,
   SourceExtractionRegionDialogComponent,
   PlotterComponent,
   CustomMarkerPanelComponent,
@@ -126,7 +123,6 @@ export const COMPONENTS = [
   RenameFileDialogComponent,
   PhotometricColorBalanceDialogComponent,
   SourceNeutralizationDialogComponent,
-  SourcePanelComponent,
   SvgSourceMarkerComponent,
   MergeSourcesDialogComponent
 ];
@@ -150,7 +146,13 @@ export const COMPONENTS = [
     AvatarModule,
     ColorPickerModule,
     MatDialogModule,
-    LogMonitorModule
+    LogMonitorModule,
+    CosmeticCorrectionModule,
+    PixelOpsModule,
+    StackingModule,
+    AligningModule,
+    SourceCatalogModule,
+    PhotometryModule
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS

@@ -55,7 +55,6 @@ import {
   SetViewerSyncEnabled,
   SetNormalizationSyncEnabled,
   ImportFromSurvey,
-  UpdatePhotometryPanelConfig,
   SplitViewerPanel,
   KeepViewerOpen,
   SetActiveTool,

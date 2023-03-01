@@ -48,61 +48,45 @@ import {
   Header,
   ILayer,
   PixelType,
-} from '../../../data-files/models/data-file';
-import { DmsPipe } from '../../../pipes/dms.pipe';
-import { PhotometryPanelState } from '../../models/photometry-file-state';
-import { SourceExtractionRegionDialogComponent } from '../../components/source-extraction-dialog/source-extraction-dialog.component';
-import { Source, PosType } from '../../models/source';
-import { PhotometryPanelConfig, BatchPhotometryFormData, SourcePanelConfig } from '../../models/workbench-state';
+} from '../../../../data-files/models/data-file';
+import { DmsPipe } from '../../../../pipes/dms.pipe';
+import { Source, PosType } from '../../../models/source';
 import { SelectionModel } from '@angular/cdk/collections';
-import { CentroidSettings } from '../../models/centroid-settings';
-import { PhotometryJob, PhotometryJobResult, PhotometryData, isPhotometryJob, isPhotometryJobResult } from '../../../jobs/models/photometry';
+import { CentroidSettings } from '../../../models/centroid-settings';
+import { PhotometryJob, PhotometryData, isPhotometryJob } from '../../../../jobs/models/photometry';
 import { Router } from '@angular/router';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
-import { WorkbenchState } from '../../workbench.state';
-import {
-  UpdatePhotometryPanelConfig,
-  ExtractSources,
-  RemovePhotDatasBySourceId,
-  RemovePhotDatasByLayerId,
-  UpdatePhotometrySettings,
-  UpdateSourceExtractionSettings,
-  UpdateAutoPhotometry,
-  UpdateAutoFieldCalibration,
-  InvalidateAutoPhotByLayerId,
-  BatchPhotometerSources,
-  UpdateSourcePanelConfig,
-  UpdateSourceSelectionRegion,
-  EndSourceSelectionRegion,
-} from '../../workbench.actions';
-import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
-import { PhotData } from '../../models/source-phot-data';
-import { PhotometrySettings } from '../../models/photometry-settings';
+import { WorkbenchState } from '../../../workbench.state';
+import { AddSources, RemoveSources } from '../../../sources.actions';
+import { PhotometrySettings } from '../../../models/photometry-settings';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Papa } from 'ngx-papaparse';
-import { datetimeToJd, formatDms, jdToMjd } from '../../../utils/skynet-astro';
+import { datetimeToJd, formatDms, jdToMjd } from '../../../../utils/skynet-astro';
 import { DatePipe } from '@angular/common';
-import { SourceExtractionSettings } from '../../models/source-extraction-settings';
-import { JobsState } from '../../../jobs/jobs.state';
-import { DataFilesState } from '../../../data-files/data-files.state';
+import { SourceExtractionSettings } from '../../../models/source-extraction-settings';
+import { JobsState } from '../../../../jobs/jobs.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
 import * as snakeCaseKeys from 'snakecase-keys';
-import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
-import { SourcesState } from '../../sources.state';
-import { centroidPsf } from '../../models/centroider';
+import { SourcesState } from '../../../sources.state';
+import { centroidPsf } from '../../../models/centroider';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
-import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
-import { LayerType } from '../../../data-files/models/data-file-type';
-import { IImageData } from '../../../data-files/models/image-data';
-import { MarkerType, PhotometryMarker, RectangleMarker } from '../../models/marker';
-import { round } from '../../../utils/math';
+import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
+import { ImageViewerMarkerService } from '../../../services/image-viewer-marker.service';
+import { LayerType } from '../../../../data-files/models/data-file-type';
+import { IImageData } from '../../../../data-files/models/image-data';
+import { MarkerType, PhotometryMarker, RectangleMarker } from '../../../models/marker';
+import { round } from '../../../../utils/math';
 import { FieldCalibrationJob, FieldCalibrationJobResult, isFieldCalibrationJob, isFieldCalibrationJobResult } from 'src/app/jobs/models/field-calibration';
-import { CalibrationSettings } from '../../models/calibration-settings';
-import { GlobalSettings } from '../../models/global-settings';
-import { SourceExtractionRegion } from '../../models/source-extraction-region';
+import { CalibrationSettings } from '../../../models/calibration-settings';
+import { GlobalSettings } from '../../../models/global-settings';
 import { Job } from 'src/app/jobs/models/job';
-import { JobResult } from 'src/app/jobs/models/job-result';
 import { LoadJob, LoadJobResult } from 'src/app/jobs/jobs.actions';
+import { SourcePanelConfig } from '../../../tools/source-catalog/models/source-panel-config';
+import { SourceCatalogState } from '../../../tools/source-catalog/source-catalog.state';
+import { EndSourceSelectionRegion, UpdateConfig as UpdateSourceCatalogConfig, UpdateSourceSelectionRegion } from '../../../tools/source-catalog/source-catalog.actions';
+import { PhotometryState, PhotometryViewerStateModel } from '../photometry.state';
+import { BatchPhotometryFormData, PhotometryPanelConfig } from '../models/photometry-panel-config';
+import { BatchPhotometerSources, InvalidateAutoPhotByLayerId, RemovePhotDatasByLayerId, UpdateAutoFieldCalibration, UpdateAutoPhotometry, UpdateConfig } from '../photometry.actions';
 
 @Component({
   selector: 'app-photometry-panel',
@@ -110,7 +94,7 @@ import { LoadJob, LoadJobResult } from 'src/app/jobs/jobs.actions';
   styleUrls: ['./photometry-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit {
+export class PhotometryPanelComponent implements AfterViewInit, OnDestroy, OnInit {
   @Input('viewerId')
   set viewerId(viewer: string) {
     this.viewerIdSubject$.next(viewer);
@@ -138,7 +122,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   header$: Observable<Header>;
   rawImageData$: Observable<IImageData<PixelType>>;
   sources$: Observable<Source[]>;
-  state$: Observable<PhotometryPanelState>;
+  state$: Observable<PhotometryViewerStateModel>;
   config$: Observable<PhotometryPanelConfig>;
   sourcePanelConfig$: Observable<SourcePanelConfig>;
   globalSettings$: Observable<GlobalSettings>;
@@ -186,11 +170,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
     );
 
-    this.config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig);
-    this.sourcePanelConfig$ = this.store.select(WorkbenchState.getSourcePanelConfig);
+    this.config$ = this.store.select(PhotometryState.getConfig);
+    this.sourcePanelConfig$ = this.store.select(SourceCatalogState.getConfig);
 
     this.state$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId))),
+      switchMap((viewerId) => this.store.select(PhotometryState.getPhotometryViewerStateByViewerId(viewerId))),
       filter(state => !!state)
     );
 
@@ -307,7 +291,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
     // determine whether existing jobs have been loaded
     this.viewerId$.subscribe(viewerId => {
-      let state = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId));
+      let state = this.store.selectSnapshot(PhotometryState.getPhotometryViewerStateByViewerId(viewerId));
 
       if (!state) return;
 
@@ -406,7 +390,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     )
 
     // determine whether existing jobs have been loaded
-    let config = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
+    let config = this.store.selectSnapshot(PhotometryState.getConfig);
     if (config.batchPhotJobId) {
       let batchPhotJob = this.store.selectSnapshot(JobsState.getJobById(config.batchPhotJobId))
       if (!batchPhotJob) this.store.dispatch(new LoadJob(config.batchPhotJobId))
@@ -433,7 +417,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
     this.batchPhotForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcForm.valid) {
       this.store.dispatch(
-        new UpdatePhotometryPanelConfig({
+        new UpdateConfig({
           batchPhotFormData: this.batchPhotForm.value,
         })
       );
@@ -589,7 +573,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
             this.store.dispatch([new AddSources([source]), new InvalidateAutoPhotByLayerId()]);
           } else if (!$event.mouseEvent.ctrlKey) {
             this.store.dispatch(
-              new UpdateSourcePanelConfig({
+              new UpdateSourceCatalogConfig({
                 selectedSourceIds: [],
               })
             );
@@ -652,13 +636,13 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
       if (!source) return;
       if (!$event.isActiveViewer) return;
 
-      let sourcePanelConfig = this.store.selectSnapshot(WorkbenchState.getSourcePanelConfig);
+      let sourcePanelConfig = this.store.selectSnapshot(SourceCatalogState.getConfig);
       let sourceSelected = sourcePanelConfig.selectedSourceIds.includes(source.id);
       if ($event.mouseEvent.ctrlKey) {
         if (!sourceSelected) {
           // select the source
           this.store.dispatch(
-            new UpdateSourcePanelConfig({
+            new UpdateSourceCatalogConfig({
               selectedSourceIds: [...sourcePanelConfig.selectedSourceIds, source.id],
             })
           );
@@ -666,14 +650,14 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
           // deselect the source
           let selectedSourceIds = sourcePanelConfig.selectedSourceIds.filter((id) => id != source.id);
           this.store.dispatch(
-            new UpdateSourcePanelConfig({
+            new UpdateSourceCatalogConfig({
               selectedSourceIds: selectedSourceIds,
             })
           );
         }
       } else {
         this.store.dispatch(
-          new UpdateSourcePanelConfig({
+          new UpdateSourceCatalogConfig({
             selectedSourceIds: [source.id],
           })
         );
@@ -730,8 +714,8 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   // }
 
   private getViewerMarkers(viewerId: string) {
-    let config$ = this.store.select(WorkbenchState.getPhotometryPanelConfig)
-    let state$ = this.store.select(WorkbenchState.getSourcePanelStateByViewerId(viewerId)).pipe(distinctUntilChanged());
+    let config$ = this.store.select(PhotometryState.getConfig)
+    let state$ = this.store.select(SourceCatalogState.getSourceCatalogViewerStateByViewerId(viewerId)).pipe(distinctUntilChanged());
     let layerId$ = this.store.select(WorkbenchState.getImageLayerByViewerId(viewerId)).pipe(map(layer => layer?.id), distinctUntilChanged())
     // let layerId$ = this.imageLayer$.pipe(
     //   map((layer) => layer?.id),
@@ -848,10 +832,10 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   }
 
   selectSources(sources: Source[]) {
-    let selectedSourceIds = this.store.selectSnapshot(WorkbenchState.getSourcePanelConfig).selectedSourceIds;
+    let selectedSourceIds = this.store.selectSnapshot(SourceCatalogState.getConfig).selectedSourceIds;
 
     this.store.dispatch(
-      new UpdateSourcePanelConfig({
+      new UpdateSourceCatalogConfig({
         selectedSourceIds: [
           ...selectedSourceIds,
           ...sources.filter((s) => !selectedSourceIds.includes(s.id)).map((s) => s.id),
@@ -863,11 +847,11 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   deselectSources(sources: Source[]) {
     let idsToRemove = sources.map((s) => s.id);
     let selectedSourceIds = this.store
-      .selectSnapshot(WorkbenchState.getSourcePanelConfig)
+      .selectSnapshot(SourceCatalogState.getConfig)
       .selectedSourceIds.filter((id) => !idsToRemove.includes(id));
 
     this.store.dispatch(
-      new UpdateSourcePanelConfig({
+      new UpdateSourceCatalogConfig({
         selectedSourceIds: selectedSourceIds,
       })
     );
@@ -883,7 +867,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   removeSelectedSources() {
     let selectedSourceIds = this.store
-      .selectSnapshot(WorkbenchState.getSourcePanelConfig).selectedSourceIds
+      .selectSnapshot(SourceCatalogState.getConfig).selectedSourceIds
 
     this.store.dispatch(new RemoveSources(selectedSourceIds));
   }
@@ -977,13 +961,13 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   masterToggle(sources: Source[]) {
     if (this.isAllSelected(sources)) {
       this.store.dispatch(
-        new UpdateSourcePanelConfig({
+        new UpdateSourceCatalogConfig({
           selectedSourceIds: [],
         })
       );
     } else {
       this.store.dispatch(
-        new UpdateSourcePanelConfig({
+        new UpdateSourceCatalogConfig({
           selectedSourceIds: sources.map((s) => s.id),
         })
       );
@@ -1001,7 +985,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
 
   selectLayers(layerIds: string[]) {
     this.store.dispatch(
-      new UpdatePhotometryPanelConfig({
+      new UpdateConfig({
         batchPhotFormData: {
           ...this.batchPhotForm.value,
           selectedLayerIds: layerIds,
@@ -1015,7 +999,7 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   }
 
   downloadBatchPhotData() {
-    let config = this.store.selectSnapshot(WorkbenchState.getPhotometryPanelConfig);
+    let config = this.store.selectSnapshot(PhotometryState.getConfig);
 
     let job: Job;
 
@@ -1115,19 +1099,19 @@ export class PhotometryPageComponent implements AfterViewInit, OnDestroy, OnInit
   }
 
   onShowSourceLabelsChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdateSourcePanelConfig({ showSourceLabels: $event.checked }));
+    this.store.dispatch(new UpdateSourceCatalogConfig({ showSourceLabels: $event.checked }));
   }
 
   onAutoPhotometryChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdatePhotometryPanelConfig({ autoPhot: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ autoPhot: $event.checked }));
   }
 
   onShowSourceMarkersChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdateSourcePanelConfig({ showSourceMarkers: $event.checked }));
+    this.store.dispatch(new UpdateSourceCatalogConfig({ showSourceMarkers: $event.checked }));
   }
 
   onShowSourceAperturesChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdatePhotometryPanelConfig({ showSourceApertures: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ showSourceApertures: $event.checked }));
   }
 
   trackById(index: number, row: { source: Source; data: PhotometryData }) {

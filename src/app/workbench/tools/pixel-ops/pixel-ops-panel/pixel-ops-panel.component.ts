@@ -2,35 +2,20 @@ import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrate
 import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from 'rxjs';
 import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap, withLatestFrom } from 'rxjs/operators';
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors, AbstractControl } from '@angular/forms';
-import { JobType } from '../../../jobs/models/job-types';
-import { PixelOpsJob, PixelOpsJobResult } from '../../../jobs/models/pixel-ops';
-import {
-  PixelOpsFormData,
-  WorkbenchStateModel,
-  WorkbenchTool,
-  PixelOpsPanelConfig,
-  KernelFilter,
-  SIGMA_KERNELS,
-  SIZE_KERNELS,
-} from '../../models/workbench-state';
+
 import { MatDialog } from '@angular/material/dialog';
 import { MatTabChangeEvent } from '@angular/material/tabs';
-import { PixelOpsJobsDialogComponent } from '../../components/pixel-ops-jobs-dialog/pixel-ops-jobs-dialog.component';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../workbench.state';
-import {
-  HideCurrentPixelOpsJobState,
-  SetActiveTool,
-  CreatePixelOpsJob,
-  CreateAdvPixelOpsJob,
-  UpdatePixelOpsPageSettings,
-} from '../../workbench.actions';
-import { JobsState } from '../../../jobs/jobs.state';
-import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { isNumber, lessThan, greaterThan } from '../../../utils/validators';
-import { Viewer } from '../../models/viewer';
+import { KernelFilter, PixelOpsFormData, SIGMA_KERNELS, SIZE_KERNELS } from '../models/pixel-ops-form-data';
+import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
+import { PixelOpsState, PixelOpsStateModel } from '../pixel-ops.state';
+import { WorkbenchState } from 'src/app/workbench/workbench.state';
+import { DataFilesState } from 'src/app/data-files/data-files.state';
+import { CreateAdvPixelOpsJob, CreatePixelOpsJob, HideCurrentPixelOpsJobState, UpdateFormData } from '../pixel-ops.actions';
+import { PixelOpsJob } from 'src/app/jobs/models/pixel-ops';
+import { JobsState } from 'src/app/jobs/jobs.state';
+import { JobType } from 'src/app/jobs/models/job-types';
 
 interface PixelOpVariable {
   name: string;
@@ -43,7 +28,7 @@ interface PixelOpVariable {
   styleUrls: ['./pixel-ops-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterViewInit {
+export class PixelOpsPanelComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input('viewerId')
   set viewerId(viewerId: string) {
     this.viewerId$.next(viewerId);
@@ -63,7 +48,8 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
   private availableLayerIds$ = new BehaviorSubject<string[]>(null);
 
   destroy$ = new Subject<boolean>();
-  config$: Observable<PixelOpsPanelConfig>;
+  config$: Observable<PixelOpsStateModel>;
+  formData$ = this.store.select(PixelOpsState.getFormData);
   selectedLayerIds$: Observable<string[]>;
   pixelOpsJobs$: Observable<PixelOpsJob[]>;
   currentPixelOpsJob$: Observable<PixelOpsJob>;
@@ -143,7 +129,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
   });
 
   constructor(public dialog: MatDialog, private store: Store, private router: Router) {
-    this.config$ = this.store.select(WorkbenchState.getPixelOpsPanelConfig);
+    this.config$ = this.store.select(PixelOpsState.getState);
 
     let viewer$ = this.viewerId$.pipe(
       switchMap(viewerId => this.store.select(WorkbenchState.getViewerById(viewerId))
@@ -162,13 +148,12 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
 
 
-    combineLatest([this.selectedLayerIds$, this.availableLayerIds$]).pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([[selectedLayerIds, availableLayerIds], config]) => {
-      if (!availableLayerIds || !config || !selectedLayerIds) return;
+    combineLatest([this.selectedLayerIds$, this.availableLayerIds$]).pipe(takeUntil(this.destroy$), withLatestFrom(this.formData$)).subscribe(([[selectedLayerIds, availableLayerIds], formData]) => {
+      if (!availableLayerIds || !formData || !selectedLayerIds) return;
 
       let updateRequired = (a: any[], b: any[]) => {
         return a.length != b.length || a.some(value => !b.includes(value))
       }
-      let formData = config.pixelOpsFormData;
       let primaryLayerIds = formData.primaryLayerIds.filter((layerId) => availableLayerIds.includes(layerId) && !selectedLayerIds.includes(layerId));
       let auxLayerIds = formData.auxLayerIds.filter((layerId) => availableLayerIds.includes(layerId) && !selectedLayerIds.includes(layerId));
       let auxLayerId = formData.auxLayerId;
@@ -183,25 +168,18 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
       ) {
         setTimeout(() => {
           this.store.dispatch(
-            new UpdatePixelOpsPageSettings({
-              pixelOpsFormData: {
-                ...formData,
-                selectedLayerIds: selectedLayerIds,
-                primaryLayerIds: primaryLayerIds,
-                auxLayerIds: auxLayerIds,
-                auxLayerId: auxLayerId,
-              },
+            new UpdateFormData({
+              selectedLayerIds: selectedLayerIds,
+              primaryLayerIds: primaryLayerIds,
+              auxLayerIds: auxLayerIds,
+              auxLayerId: auxLayerId,
             })
           );
         });
       }
     });
 
-    this.pixelOpsFormData$ = this.config$.pipe(
-      filter((config) => config !== null),
-      map((config) => config.pixelOpsFormData),
-      takeUntil(this.destroy$)
-    );
+    this.pixelOpsFormData$ = this.store.select(PixelOpsState.getFormData)
 
     this.pixelOpsFormData$.subscribe((data) => {
       this.imageCalcForm.patchValue(data, { emitEvent: false });
@@ -225,9 +203,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     this.imageCalcForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcForm.valid) {
       this.store.dispatch(
-        new UpdatePixelOpsPageSettings({
-          pixelOpsFormData: this.imageCalcForm.value,
-        })
+        new UpdateFormData(this.imageCalcForm.value)
       );
       this.store.dispatch(new HideCurrentPixelOpsJobState());
       // }
@@ -236,9 +212,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
     this.imageCalcFormAdv.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
       // if(this.imageCalcFormAdv.valid) {
       this.store.dispatch(
-        new UpdatePixelOpsPageSettings({
-          pixelOpsFormData: this.imageCalcFormAdv.value,
-        })
+        new UpdateFormData(this.imageCalcFormAdv.value)
       );
       this.store.dispatch(new HideCurrentPixelOpsJobState());
       // }
@@ -289,18 +263,11 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
       .select(JobsState.getJobs)
       .pipe(map((allJobRows) => allJobRows.filter((row) => row.type == JobType.PixelOps) as PixelOpsJob[]));
 
-    this.currentPixelOpsJob$ = combineLatest([store.select(WorkbenchState.getState), this.pixelOpsJobs$]).pipe(
-      filter(
-        ([state, jobs]: [WorkbenchStateModel, PixelOpsJob[]]) =>
-          state.pixelOpsPanelConfig.currentPixelOpsJobId != null &&
-          jobs.find((job) => job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId) != undefined
-      ),
-      map(([state, rows]) => rows.find((job) => job.id == state.pixelOpsPanelConfig.currentPixelOpsJobId))
-    );
+    this.currentPixelOpsJob$ = this.store.select(PixelOpsState.getCurrentJob)
 
     this.showCurrentPixelOpsJobState$ = store
-      .select(WorkbenchState.getState)
-      .pipe(map((state) => state.pixelOpsPanelConfig.showCurrentPixelOpsJobState));
+      .select(PixelOpsState.getState)
+      .pipe(map((state) => state.showCurrentPixelOpsJobState));
 
     // this.extractionJobRows$ = combineLatest(
     //   store.select(JobsState.getAllJobs).pipe(
@@ -426,12 +393,7 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
   setAuxLayerIds(layerIds: string[]) {
     this.store.dispatch(
-      new UpdatePixelOpsPageSettings({
-        pixelOpsFormData: {
-          ...this.imageCalcFormAdv.value,
-          auxLayerIds: layerIds,
-        },
-      })
+      new UpdateFormData({ auxLayerIds: layerIds })
     );
   }
 
@@ -452,12 +414,11 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
   setSelectedPrimaryLayerIds(layerIds: string[]) {
     this.store.dispatch(
-      new UpdatePixelOpsPageSettings({
-        pixelOpsFormData: {
-          ...this.imageCalcFormAdv.value,
-          primaryLayerIds: layerIds,
-        },
-      })
+      new UpdateFormData({
+        ...this.imageCalcFormAdv.value,
+        primaryLayerIds: layerIds,
+      },
+      )
     );
     this.store.dispatch(new HideCurrentPixelOpsJobState());
   }
@@ -472,11 +433,9 @@ export class ImageCalculatorPageComponent implements OnInit, OnDestroy, AfterVie
 
   setSelectedAuxLayerIds(layerIds: string[]) {
     this.store.dispatch(
-      new UpdatePixelOpsPageSettings({
-        pixelOpsFormData: {
-          ...this.imageCalcFormAdv.value,
-          auxLayerIds: layerIds,
-        },
+      new UpdateFormData({
+        ...this.imageCalcFormAdv.value,
+        auxLayerIds: layerIds,
       })
     );
     this.store.dispatch(new HideCurrentPixelOpsJobState());

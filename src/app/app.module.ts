@@ -35,13 +35,18 @@ import { DataFilesStateModel, DataFilesState } from './data-files/data-files.sta
 import { IImageData } from './data-files/models/image-data';
 import { ngxsConfig } from './ngxs.config';
 import { WorkbenchStateModel } from './workbench/models/workbench-state';
-import { PhotometryPanelState } from './workbench/models/photometry-file-state';
 import { AfterglowConfigService } from './afterglow-config.service';
 import { AppState } from './app.state';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import localeEs from '@angular/common/locales/es';
 import { ColorPickerModule } from 'ngx-color-picker';
 import { SettingsModule } from './settings/settings.module';
+import { CosmeticCorrectionState } from './workbench/tools/cosmetic-correction/cosmetic-correction.state';
+import { PixelOpsState } from './workbench/tools/pixel-ops/pixel-ops.state';
+import { StackingState } from './workbench/tools/stacking/stacking.state';
+import { AligningState } from './workbench/tools/aligning/aligning.state';
+import { SourceCatalogState } from './workbench/tools/source-catalog/source-catalog.state';
+import { PhotometryState, PhotometryStateModel, PhotometryViewerStateModel } from './workbench/tools/photometry/photometry.state';
 
 
 registerLocaleData(localeEs, 'es');
@@ -114,18 +119,27 @@ export function workbenchSanitizer(v: WorkbenchStateModel) {
     ...v,
   } as WorkbenchStateModel;
 
-  state.photometryPanelStateEntities = {
-    ...state.photometryPanelStateEntities,
+
+  return state;
+}
+
+export function photometrySanitizer(v: PhotometryStateModel) {
+  let state = {
+    ...v,
+  } as PhotometryStateModel;
+
+  state.layerIdToState = {
+    ...state.layerIdToState,
   };
-  Object.keys(state.photometryPanelStateEntities).forEach((key) => {
-    let photPanelState: PhotometryPanelState = {
-      ...state.photometryPanelStateEntities[key],
+  Object.keys(state.layerIdToState).forEach((key) => {
+    let photPanelState: PhotometryViewerStateModel = {
+      ...state.layerIdToState[key],
       autoPhotIsValid: false,
       autoCalIsValid: false,
       sourcePhotometryData: {},
     };
 
-    state.photometryPanelStateEntities[key] = photPanelState;
+    state.layerIdToState[key] = photPanelState;
   });
   return state;
 }
@@ -159,7 +173,20 @@ export function jobSanitizer(v: JobsStateModel) {
     AuthModule.forRoot(),
     KeyboardShortcutsModule.forRoot(),
     NgxsModule.forRoot(
-      [AppState, AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
+      [AppState,
+        AuthState,
+        JobsState,
+        DataProvidersState,
+        DataFilesState,
+        WorkbenchState,
+        SourcesState,
+        PhotDataState,
+        CosmeticCorrectionState,
+        PixelOpsState,
+        StackingState,
+        AligningState,
+        SourceCatalogState,
+        PhotometryState],
       ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -172,6 +199,12 @@ export function jobSanitizer(v: JobsStateModel) {
         WorkbenchState,
         SourcesState,
         PhotDataState,
+        CosmeticCorrectionState,
+        PixelOpsState,
+        StackingState,
+        AligningState,
+        SourceCatalogState,
+        PhotometryState
       ],
       sanitizations: [
         {
@@ -186,6 +219,10 @@ export function jobSanitizer(v: JobsStateModel) {
           key: JobsState,
           sanitize: jobSanitizer,
         },
+        {
+          key: PhotometryState,
+          sanitize: photometrySanitizer
+        }
       ],
       storage: StorageOption.SessionStorage,
     }),

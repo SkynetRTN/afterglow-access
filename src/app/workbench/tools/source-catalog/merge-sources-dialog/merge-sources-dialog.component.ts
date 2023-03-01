@@ -11,16 +11,17 @@ import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
-import { toSourceExtractionJobSettings } from '../../models/global-settings';
-import { SonifierRegionMode } from '../../models/sonifier-file-state';
-import { PosType, Source } from '../../models/source';
-import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
-import { AddSources, RemoveSources, UpdateSource } from '../../sources.actions';
-import { SourcesState } from '../../sources.state';
-import { ExtractSources, RemovePhotDatasBySourceId } from '../../workbench.actions';
-import { WorkbenchState } from '../../workbench.state';
+import { toSourceExtractionJobSettings } from '../../../models/global-settings';
+import { SonifierRegionMode } from '../../../models/sonifier-file-state';
+import { PosType, Source } from '../../../models/source';
+import { WorkbenchImageLayerState, WorkbenchStateType } from '../../../models/workbench-file-state';
+import { AddSources, RemoveSources, UpdateSource } from '../../../sources.actions';
+import { SourcesState } from '../../../sources.state';
+import { WorkbenchState } from '../../../workbench.state';
 
 import * as jStat from 'jstat';
+import { SourceCatalogState } from '../source-catalog.state';
+import { RemovePhotDatasBySourceId } from '../../photometry/photometry.actions';
 
 export enum MergeType {
   PROPER_MOTION,
@@ -95,7 +96,7 @@ export class MergeSourcesDialogComponent implements OnInit, OnDestroy {
     // this.dialogRef.close(sources);
     if (mergeType == MergeType.PROPER_MOTION) {
       let selectedSourceIds = this.store
-        .selectSnapshot(WorkbenchState.getSourcePanelConfig).selectedSourceIds;
+        .selectSnapshot(SourceCatalogState.getConfig).selectedSourceIds;
 
 
 

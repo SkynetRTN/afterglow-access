@@ -3,25 +3,33 @@ import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
 import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom } from 'rxjs/operators';
 import { FormGroup, FormControl, Validators, FormBuilder, AbstractControl } from '@angular/forms';
-import { AligningPanelConfig } from '../../models/workbench-state';
 import { MatSelectChange } from '@angular/material/select';
-import { AKAZEFeatureAlignmentSettings, AlignmentJob, AlignmentJobResult, AlignmentJobSettings, AlignmentJobSettingsBase, AlignmentMode, AutoSourceAlignmentSettings, BRISKFeatureAlignmentSettings, FeatureAlignmentAlgorithm, FeatureAlignmentSettings, KAZEFeatureAlignmentSettings, ManualSourceAlignmentSettings, ORBFeatureAlignmentSettings, PixelAlignmentSettings, SIFTFeatureAlignmentSettings, SourceAlignmentSettings, SURFFeatureAlignmentSettings, WcsAlignmentSettings } from '../../../jobs/models/alignment';
+import {
+  AKAZEFeatureAlignmentSettings, AlignmentJob, AlignmentJobResult, AlignmentJobSettings,
+  AlignmentJobSettingsBase, AlignmentMode, AutoSourceAlignmentSettings, BRISKFeatureAlignmentSettings,
+  FeatureAlignmentAlgorithm, FeatureAlignmentSettings, KAZEFeatureAlignmentSettings, ManualSourceAlignmentSettings,
+  ORBFeatureAlignmentSettings, PixelAlignmentSettings, SIFTFeatureAlignmentSettings, SourceAlignmentSettings, SURFFeatureAlignmentSettings,
+  WcsAlignmentSettings
+} from '../../../../jobs/models/alignment';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { WorkbenchState } from '../../workbench.state';
-import { CreateAlignmentJob, UpdateAligningPanelConfig, SelectFile, UpdatePhotometrySettings, UpdateAlignmentSettings } from '../../workbench.actions';
-import { JobsState } from '../../../jobs/jobs.state';
-import { ImageLayer, DataFile, Header, getCenterTime } from '../../../data-files/models/data-file';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { LoadLayerHeader } from '../../../data-files/data-files.actions';
-import { Source, sourceToAstrometryData } from '../../models/source';
-import { SourcesState } from '../../sources.state';
+import { WorkbenchState } from '../../../workbench.state';
+import { JobsState } from '../../../../jobs/jobs.state';
+import { ImageLayer, Header } from '../../../../data-files/models/data-file';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { LoadLayerHeader } from '../../../../data-files/data-files.actions';
+import { Source, sourceToAstrometryData } from '../../../models/source';
+import { SourcesState } from '../../../sources.state';
 
 import * as objectPath from 'object-path';
-import { AlignmentSettings, defaults } from '../../models/alignment-settings';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
-import { toSourceExtractionJobSettings } from '../../models/global-settings';
+import { toSourceExtractionJobSettings } from '../../../models/global-settings';
 import { SourceExtractionData } from 'src/app/jobs/models/source-extraction';
+import { AligningState, AligningStateModel } from '../aligning.state';
+import { CreateAligningJob, SetCurrentJobId, UpdateFormData } from '../aligning.actions';
+import { UpdateAlignmentSettings } from 'src/app/workbench/workbench.actions';
+import { AlignmentSettings, defaults } from 'src/app/workbench/models/alignment-settings';
+import { AligningFormData } from '../models/aligning-form-data';
 
 
 @Component({
@@ -30,7 +38,7 @@ import { SourceExtractionData } from 'src/app/jobs/models/source-extraction';
   styleUrls: ['./aligning-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AlignerPageComponent implements OnInit {
+export class AligningPanelComponent implements OnInit {
   @Input('layerIds')
   set layerIds(layerIds: string[]) {
     this.layerIds$.next(layerIds);
@@ -43,7 +51,7 @@ export class AlignerPageComponent implements OnInit {
   AlignmentMode = AlignmentMode;
   FeatureAlignmentAlgorithm = FeatureAlignmentAlgorithm;
 
-  config$: Observable<AligningPanelConfig>;
+  formData$: Observable<AligningFormData>;
 
   destroy$ = new Subject<boolean>();
 
@@ -152,17 +160,17 @@ export class AlignerPageComponent implements OnInit {
   alignmentSettings$ = this.store.select(WorkbenchState.getAlignmentSettings)
 
   constructor(private store: Store, private router: Router, private fb: FormBuilder) {
-    this.config$ = this.store.select(WorkbenchState.getAligningPanelConfig);
+    this.formData$ = this.store.select(AligningState.getFormData);
 
     this.layerSelectionForm.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.onLayerSelectionFormChange());
 
-    this.config$.pipe(
+    this.formData$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(config => this.onLayerSelectionSettingsChange(config))
 
-    this.onLayerSelectionSettingsChange(this.store.selectSnapshot(WorkbenchState.getAligningPanelConfig));
+    this.onLayerSelectionSettingsChange(this.store.selectSnapshot(AligningState.getFormData));
     this.onLayerSelectionFormChange();
 
     this.alignmentSettingsForm.valueChanges
@@ -177,7 +185,7 @@ export class AlignerPageComponent implements OnInit {
     this.onAlignmentSettingsChange(this.store.selectSnapshot(WorkbenchState.getAlignmentSettings));
     this.onAlignmentSettingsFormChange();
 
-    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.config$)).subscribe(([layerIds, config]) => {
+    this.layerIds$.pipe(takeUntil(this.destroy$), withLatestFrom(this.formData$)).subscribe(([layerIds, config]) => {
       if (!layerIds || !config) return;
       let selectedLayerIds = config.selectedLayerIds.filter((layerId) => layerIds.includes(layerId));
       if (selectedLayerIds.length != config.selectedLayerIds.length) {
@@ -188,7 +196,7 @@ export class AlignerPageComponent implements OnInit {
     });
 
 
-    this.refLayerId$ = this.config$.pipe(
+    this.refLayerId$ = this.formData$.pipe(
       map((data) => (data && data.refLayerId && data.selectedLayerIds.includes(data.refLayerId)) ? data.refLayerId : null),
       distinctUntilChanged()
     );
@@ -206,7 +214,7 @@ export class AlignerPageComponent implements OnInit {
       distinctUntilChanged()
     )
 
-    this.selectedLayerIds$ = this.config$.pipe(
+    this.selectedLayerIds$ = this.formData$.pipe(
       map(config => config.selectedLayerIds),
       distinctUntilChanged()
     )
@@ -281,21 +289,7 @@ export class AlignerPageComponent implements OnInit {
     //   // }
     // });
 
-    this.alignmentJob$ = combineLatest(
-      store.select(WorkbenchState.getState),
-      store.select(JobsState.getJobEntities)
-    ).pipe(
-      map(([state, jobEntities]) => {
-        if (
-          !state.aligningPanelConfig.currentAlignmentJobId ||
-          !jobEntities[state.aligningPanelConfig.currentAlignmentJobId]
-        ) {
-          return null;
-        }
-
-        return jobEntities[state.aligningPanelConfig.currentAlignmentJobId] as AlignmentJob;
-      })
-    );
+    this.alignmentJob$ = this.store.select(AligningState.getCurrentJob);
   }
 
   ngOnInit() { }
@@ -332,7 +326,7 @@ export class AlignerPageComponent implements OnInit {
       this.layerSelectionForm.controls['mosaicSearchRadius'].disable({ emitEvent: false });
     }
 
-    this.store.dispatch(new UpdateAligningPanelConfig(this.layerSelectionForm.value))
+    this.store.dispatch(new UpdateFormData(this.layerSelectionForm.value))
   }
 
   onAlignmentSettingsChange(settings: AlignmentSettings) {
@@ -416,7 +410,7 @@ export class AlignerPageComponent implements OnInit {
 
   setSelectedLayerIds(layerIds: string[]) {
     this.store.dispatch(
-      new UpdateAligningPanelConfig({
+      new UpdateFormData({
         ...this.layerSelectionForm.value,
         selectedLayerIds: layerIds
       })
@@ -432,14 +426,14 @@ export class AlignerPageComponent implements OnInit {
   }
 
   submit() {
-    this.store.dispatch(new UpdateAligningPanelConfig({ currentAlignmentJobId: null }));
+    this.store.dispatch(new SetCurrentJobId(null));
 
-    let config = this.store.selectSnapshot(WorkbenchState.getAligningPanelConfig);
+    let formData = this.store.selectSnapshot(AligningState.getFormData);
     let settings = this.store.selectSnapshot(WorkbenchState.getAlignmentSettings);
     let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getSettings));
     let jobSettingsBase: AlignmentJobSettingsBase = {
-      refImage: config.mosaicMode ? null : parseInt(config.refLayerId),
-      mosaicSearchRadius: config.mosaicSearchRadius,
+      refImage: formData.mosaicMode ? null : parseInt(formData.refLayerId),
+      mosaicSearchRadius: formData.mosaicSearchRadius,
       enableRot: settings.enableRot,
       enableScale: settings.enableScale,
       enableSkew: settings.enableSkew,
@@ -579,7 +573,7 @@ export class AlignerPageComponent implements OnInit {
       }
       jobSettings = s;
     }
-    if (jobSettings) this.store.dispatch(new CreateAlignmentJob(config.selectedLayerIds, config.mosaicMode ? false : settings.crop, jobSettings));
+    if (jobSettings) this.store.dispatch(new CreateAligningJob(formData.selectedLayerIds, formData.mosaicMode ? false : settings.crop, jobSettings));
   }
 
   restoreDefaults() {

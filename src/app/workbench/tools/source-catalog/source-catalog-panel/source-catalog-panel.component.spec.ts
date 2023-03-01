@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SourcePanelComponent } from './source-panel.component';
+import { SourceCatalogPanelComponent } from './source-catalog-panel.component';
 
 describe('SourcePanelComponent', () => {
-  let component: SourcePanelComponent;
-  let fixture: ComponentFixture<SourcePanelComponent>;
+  let component: SourceCatalogPanelComponent;
+  let fixture: ComponentFixture<SourceCatalogPanelComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ SourcePanelComponent ]
+      declarations: [SourceCatalogPanelComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SourcePanelComponent);
+    fixture = TestBed.createComponent(SourceCatalogPanelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

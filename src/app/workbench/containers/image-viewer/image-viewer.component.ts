@@ -104,6 +104,7 @@ import { formatDms } from '../../../utils/skynet-astro';
 import * as piexif from 'piexifjs';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { PhotometryState } from '../../tools/photometry/photometry.state';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -294,7 +295,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     );
 
     let photometryPanelState$ = viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(PhotometryState.getPhotometryViewerStateByViewerId(viewerId)))
     );
 
     let sourcePhotometryData$ = photometryPanelState$.pipe(

@@ -22,10 +22,7 @@ import {
   ViewerPanel,
   ViewerPanelContainer,
   WcsCalibrationPanelConfig,
-  ViewerLayoutItem,
-  KernelFilter,
-  SIZE_KERNELS,
-  SIGMA_KERNELS,
+  ViewerLayoutItem
 } from './models/workbench-state';
 import { ViewMode } from './models/view-mode';
 import { SidebarView } from './models/sidebar-view';
@@ -72,10 +69,6 @@ import {
   UpdateFieldCalSuccess,
   UpdateFieldCalFail,
   AddFieldCalSourcesFromCatalog,
-  CreatePixelOpsJob,
-  CreateAdvPixelOpsJob,
-  CreateAlignmentJob,
-  CreateStackingJob,
   ImportFromSurvey,
   ImportFromSurveySuccess,
   SetViewMode,
@@ -98,13 +91,7 @@ import {
   CloseSidenav,
   OpenSidenav,
   UpdateCustomMarkerPanelConfig,
-  UpdatePhotometryPanelConfig,
   ExtractSources,
-  ExtractSourcesFail,
-  SetViewerMarkers,
-  UpdatePixelOpsPageSettings as UpdatePixelOpsPanelConfig,
-  UpdateStackingPanelConfig,
-  UpdateAligningPanelConfig,
   ClearViewerMarkers,
   CreateViewer,
   CloseViewer,
@@ -117,7 +104,6 @@ import {
   AddRegionToHistory,
   UndoRegionSelection,
   RedoRegionSelection,
-  UpdatePhotometryFileState,
   InitializeWorkbenchLayerState,
   StartLine,
   UpdateLine,
@@ -132,9 +118,6 @@ import {
   SelectCustomMarkers,
   DeselectCustomMarkers,
   SetCustomMarkerSelection,
-  AddPhotDatas,
-  RemovePhotDatasByLayerId,
-  RemovePhotDatasBySourceId,
   Sonify,
   ClearSonification,
   SyncViewerTransformations,
@@ -153,17 +136,10 @@ import {
   EndCustomMarkerSelectionRegion,
   UpdateSettings,
   UpdateCalibrationSettings,
-  InvalidateAutoCalByLayerId,
-  InvalidateAutoPhotByLayerId,
-  UpdateAutoPhotometry,
-  UpdateAutoFieldCalibration,
-  BatchPhotometerSources,
   SyncAfterglowHeaders,
-  UpdateSourcePanelConfig,
-  EndSourceSelectionRegion,
-  UpdateSourceSelectionRegion,
   UpdateWcsCalibrationExtractionOverlay,
   InvalidateWcsCalibrationExtractionOverlayByLayerId,
+  UpdateCosmeticCorrectionSettings,
   UpdateAlignmentSettings,
 } from './workbench.actions';
 import {
@@ -235,7 +211,6 @@ import { Injectable } from '@angular/core';
 import * as deepEqual from 'fast-deep-equal';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
-import { PhotometryPanelState } from './models/photometry-file-state';
 import { GlobalSettings, defaults as defaultGlobalSettings, toPhotometryJobSettings, toSourceExtractionJobSettings, toFieldCalibration } from './models/global-settings';
 import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
@@ -247,11 +222,12 @@ import { I } from '@angular/cdk/keycodes';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { JobService } from '../jobs/services/job.service';
 import { Job } from '../jobs/models/job';
-import { SourcePanelState } from './models/source-file-state';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
+import { SourceCatalogState, SourceCatalogViewerStateModel } from './tools/source-catalog/source-catalog.state';
+import { InvalidateAutoCalByLayerId, InvalidateAutoPhotByLayerId, RemovePhotDatasByLayerId } from './tools/photometry/photometry.actions';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b25de65-93e3-435a-ff7b-ab357809cc',
+  version: '3b65de65-929223-435a-fgb-ab32809cc',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -290,77 +266,12 @@ const workbenchStateDefaults: WorkbenchStateModel = {
     centroidClicks: false,
     usePlanetCentroiding: false,
   },
-  sourcePanelConfig: {
-    showSourceLabels: false,
-    showSourceMarkers: true,
-    centroidClicks: true,
-    planetCentroiding: false,
-    showSourcesFromAllFiles: false,
-    selectedSourceIds: [],
-    coordMode: 'sky',
-  },
   plottingPanelConfig: {
     interpolatePixels: false,
     centroidClicks: false,
     planetCentroiding: false,
     plotterSyncEnabled: false,
     plotMode: '1D',
-  },
-  photometryPanelConfig: {
-    showSourceApertures: true,
-    batchPhotFormData: {
-      selectedLayerIds: [],
-    },
-    batchCalibrationEnabled: false,
-    batchPhotJobId: '',
-    batchCalJobId: '',
-    creatingBatchJobs: false,
-    autoPhot: true
-  },
-  pixelOpsPanelConfig: {
-    currentPixelOpsJobId: '',
-    showCurrentPixelOpsJobState: true,
-    pixelOpsFormData: {
-      operand: '+',
-      mode: 'image',
-      selectedLayerIds: [],
-      auxLayerId: '',
-      auxLayerIds: [],
-      primaryLayerIds: [],
-      scalarValue: 1,
-      inPlace: false,
-      opString: '',
-      kernelFilter: KernelFilter.MEDIAN_FILTER,
-      kernelSize: 3,
-      kernelSigma: 3
-    },
-  },
-  aligningPanelConfig: {
-    selectedLayerIds: [],
-    mosaicMode: false,
-    mosaicSearchRadius: 1,
-    refLayerId: '',
-    currentAlignmentJobId: '',
-  },
-  stackingPanelConfig: {
-    stackFormData: {
-      selectedLayerIds: [],
-      propagateMask: false,
-      mode: 'average',
-      scaling: 'none',
-      rejection: 'none',
-      smartStacking: 'none',
-      percentile: 50,
-      low: 0,
-      high: 0,
-      equalizeAdditive: false,
-      equalizeOrder: 0,
-      equalizeMultiplicative: false,
-      multiplicativePercentile: 99.9,
-      equalizeGlobal: false,
-
-    },
-    currentStackingJobId: '',
   },
   wcsCalibrationPanelConfig: {
     selectedLayerIds: [],
@@ -396,12 +307,6 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   nextSonificationPanelStateId: 0,
   sonificationPanelStateEntities: {},
   sonificationPanelStateIds: [],
-  nextPhotometryPanelStateId: 0,
-  photometryPanelStateEntities: {},
-  photometryPanelStateIds: [],
-  nextSourcePanelStateId: 0,
-  sourcePanelStateEntities: {},
-  sourcePanelStateIds: [],
   nextWcsCalibrationPanelStateId: 0,
   wcsCalibrationPanelStateEntities: {},
   wcsCalibrationPanelStateIds: [],
@@ -464,10 +369,7 @@ export class WorkbenchState {
     return state.showConfig;
   }
 
-  @Selector()
-  public static getShowSourceLabels(state: WorkbenchStateModel) {
-    return state.sourcePanelConfig.showSourceLabels;
-  }
+
 
   @Selector()
   public static getViewerSyncEnabled(state: WorkbenchStateModel) {
@@ -545,6 +447,11 @@ export class WorkbenchState {
     return state.settings.centroid;
   }
 
+  @Selector([WorkbenchState.getSettings])
+  public static getCosmeticCorrectionSettings(settings: GlobalSettings) {
+    return settings.cosmeticCorrection;
+  }
+
   @Selector()
   public static getCustomMarkerPanelConfig(state: WorkbenchStateModel) {
     return state.customMarkerPanelConfig;
@@ -560,40 +467,6 @@ export class WorkbenchState {
     return state.plottingPanelConfig;
   }
 
-  @Selector()
-  public static getPhotometryPanelConfig(state: WorkbenchStateModel) {
-    return state.photometryPanelConfig;
-  }
-
-  @Selector()
-  public static getSourcePanelConfig(state: WorkbenchStateModel) {
-    return state.sourcePanelConfig;
-  }
-
-  @Selector()
-  public static getAligningPanelConfig(state: WorkbenchStateModel) {
-    return state.aligningPanelConfig;
-  }
-
-  @Selector()
-  public static getStackingPanelConfig(state: WorkbenchStateModel) {
-    return state.stackingPanelConfig;
-  }
-
-  @Selector()
-  public static getPixelOpsPanelConfig(state: WorkbenchStateModel) {
-    return state.pixelOpsPanelConfig;
-  }
-
-  @Selector()
-  public static getSourceCoordMode(state: WorkbenchStateModel) {
-    return state.sourcePanelConfig.coordMode;
-  }
-
-  @Selector()
-  public static getShowSourcesFromAllFiles(state: WorkbenchStateModel) {
-    return state.sourcePanelConfig.showSourcesFromAllFiles;
-  }
 
   @Selector()
   public static getWcsCalibrationPanelConfig(state: WorkbenchStateModel) {
@@ -615,8 +488,8 @@ export class WorkbenchState {
     return Object.values(state.wcsCalibrationPanelStateEntities);
   }
 
-  @Selector([WorkbenchState.getPhotometryPanelStateEntities])
-  public static getWcsCalibrationPanelStateById(entities: { [id: string]: PhotometryPanelState }) {
+  @Selector([WorkbenchState.getWcsCalibrationPanelStateEntities])
+  public static getWcsCalibrationPanelStateById(entities: { [id: string]: WcsCalibrationFileState }) {
     return (wcsCalibrationPanelStateId: string) => {
       return entities[wcsCalibrationPanelStateId];
     };
@@ -789,37 +662,7 @@ export class WorkbenchState {
     };
   }
 
-  @Selector()
-  public static getPhotometryPanelStateEntities(state: WorkbenchStateModel) {
-    return state.photometryPanelStateEntities;
-  }
 
-  @Selector()
-  public static getPhotometryPanelStateIds(state: WorkbenchStateModel) {
-    return state.photometryPanelStateIds;
-  }
-
-  @Selector()
-  public static getPhotometryPanelStates(state: WorkbenchStateModel) {
-    return Object.values(state.photometryPanelStateEntities);
-  }
-
-  @Selector([WorkbenchState.getPhotometryPanelStateEntities])
-  public static getPhotometryPanelStateById(entities: { [id: string]: PhotometryPanelState }) {
-    return (photometryPanelStateId: string) => {
-      return entities[photometryPanelStateId];
-    };
-  }
-
-
-  /**
-   * Sources
-   */
-
-  @Selector()
-  public static getSourcePanelStateEntities(state: WorkbenchStateModel) {
-    return state.sourcePanelStateEntities;
-  }
 
   /** File Filtering and Selection
    *
@@ -1304,20 +1147,6 @@ export class WorkbenchState {
     );
   }
 
-  static getPhotometryPanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getPhotometryPanelStateEntities],
-      (workbenchState: IWorkbenchState, photometryPanelStateEntities: { [id: string]: PhotometryPanelState }) => {
-        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchImageLayerState;
-          return photometryPanelStateEntities[s.photometryPanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
-
   static getWcsCalibrationPanelStateByViewerId(viewerId: string) {
     return createSelector(
       [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getWcsCalibrationPanelStateEntities],
@@ -1332,19 +1161,7 @@ export class WorkbenchState {
     );
   }
 
-  static getSourcePanelStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateByViewerId(viewerId), WorkbenchState.getSourcePanelStateEntities],
-      (workbenchState: IWorkbenchState, sourcePanelStateEntities: { [id: string]: SourcePanelState }) => {
-        if ([WorkbenchStateType.IMAGE_LAYER].includes(workbenchState?.type)) {
-          let s = workbenchState as WorkbenchImageLayerState;
-          return sourcePanelStateEntities[s.sourcePanelStateId] || null;
-        } else {
-          return null;
-        }
-      }
-    );
-  }
+
 
   /** Focused Viewer */
 
@@ -2159,6 +1976,25 @@ export class WorkbenchState {
     });
   }
 
+  @Action(UpdateCosmeticCorrectionSettings)
+  @ImmutableContext()
+  public updateCosmeticCorrectionSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateCosmeticCorrectionSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.settings.cosmeticCorrection = {
+        ...state.settings.cosmeticCorrection,
+        ...changes,
+      }
+      return state;
+    });
+
+    //side-effects
+    let actions: any[] = [];
+    return dispatch(actions);
+  }
+
   @Action(UpdatePhotometrySettings)
   @ImmutableContext()
   public updatePhotometrySettings(
@@ -2317,103 +2153,6 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdatePhotometryPanelConfig)
-  @ImmutableContext()
-  public updatePhotometryPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdatePhotometryPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      if (changes.batchPhotFormData) {
-        changes.batchPhotFormData = {
-          ...state.photometryPanelConfig.batchPhotFormData,
-          ...changes.batchPhotFormData,
-        };
-      }
-      state.photometryPanelConfig = {
-        ...state.photometryPanelConfig,
-        ...changes,
-      };
-      return state;
-    });
-  }
-
-  @Action(UpdateSourcePanelConfig)
-  @ImmutableContext()
-  public updateSourcePanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateSourcePanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.sourcePanelConfig = {
-        ...state.sourcePanelConfig,
-        ...changes,
-      };
-      return state;
-    });
-  }
-
-  @Action(UpdatePixelOpsPanelConfig)
-  @ImmutableContext()
-  public updatePixelOpsPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdatePixelOpsPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      if (changes.pixelOpsFormData) {
-        changes.pixelOpsFormData = {
-          ...state.pixelOpsPanelConfig.pixelOpsFormData,
-          ...changes.pixelOpsFormData,
-        };
-      }
-      state.pixelOpsPanelConfig = {
-        ...state.pixelOpsPanelConfig,
-        ...changes,
-      };
-      return state;
-    });
-  }
-
-  @Action(UpdateAligningPanelConfig)
-  @ImmutableContext()
-  public updateAligningPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateAligningPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.aligningPanelConfig = {
-        ...state.aligningPanelConfig,
-        ...changes,
-      };
-
-      return state;
-    });
-  }
-
-  @Action(UpdateStackingPanelConfig)
-  @ImmutableContext()
-  public updateStackingPanelConfig(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { changes }: UpdateStackingPanelConfig
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      if (changes.stackFormData) {
-        changes.stackFormData = {
-          ...state.stackingPanelConfig.stackFormData,
-          ...changes.stackFormData,
-        };
-      }
-
-      state.stackingPanelConfig = {
-        ...state.stackingPanelConfig,
-        ...changes,
-      };
-
-
-      return state;
-    });
-  }
-
   @Action(UpdateWcsCalibrationFileState)
   @ImmutableContext()
   public updateWcsCalibrationPanelState(
@@ -2461,9 +2200,6 @@ export class WorkbenchState {
     let imageLayer = this.store.selectSnapshot(WorkbenchState.getImageLayerByViewerId(viewerId))
     if (!imageLayer) return;
     let layerId = imageLayer.id;
-
-    let coordMode = state.sourcePanelConfig.coordMode;
-    let showSourcesFromAllFiles = state.sourcePanelConfig.showSourcesFromAllFiles;
 
     let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
     if (!workbenchState) return;
@@ -2672,22 +2408,7 @@ export class WorkbenchState {
     { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
     { layerId: layerId }: CloseLayerSuccess
   ) {
-    setState((state: WorkbenchStateModel) => {
-      state.aligningPanelConfig.selectedLayerIds = state.aligningPanelConfig.selectedLayerIds.filter(
-        (id) => id != layerId
-      );
-      state.pixelOpsPanelConfig.pixelOpsFormData.primaryLayerIds = state.pixelOpsPanelConfig.pixelOpsFormData.primaryLayerIds.filter(
-        (id) => id != layerId
-      );
-      state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerIds = state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerIds.filter(
-        (id) => id != layerId
-      );
-      state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerId =
-        state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerId == layerId
-          ? ''
-          : state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerId;
-      return state;
-    });
+
   }
 
   @Action(SetFileListFilter)
@@ -3017,302 +2738,8 @@ export class WorkbenchState {
     // );
   }
 
-  @Action(CreatePixelOpsJob)
-  @ImmutableContext()
-  public createPixelOpsJob({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: CreatePixelOpsJob) {
-    let state = getState();
-    let layers = this.store.selectSnapshot(DataFilesState.getLayers);
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageLayers = [...data.selectedLayerIds, ...data.primaryLayerIds].map((id) => layers.find((f) => f.id == id)).filter(isNotEmpty);
-    let auxFileIds: string[] = [];
-    let op;
-    if (data.mode == 'scalar') {
-      op = `img ${data.operand} ${data.scalarValue}`;
-    } else if (data.mode == 'image') {
-      op = `img ${data.operand} aux_img`;
-      auxFileIds.push(data.auxLayerId);
-    } else if (data.mode == 'kernel') {
-      op = `${data.kernelFilter}(img`;
-      if (SIZE_KERNELS.includes(data.kernelFilter)) {
-        op += `, ${data.kernelSize}`
-      }
-      if (SIGMA_KERNELS.includes(data.kernelFilter)) {
-        op += `, ${data.kernelSigma}`
-      }
-      op += ')'
-    } else {
-      return;
-    }
-
-    let job: PixelOpsJob = {
-      type: JobType.PixelOps,
-      id: null,
-      fileIds: imageLayers
-        .sort((a, b) => {
-          return dataFiles[a.fileId].name < dataFiles[b.fileId].name
-            ? -1
-            : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0;
-        })
-        .map((f) => f.id),
-      auxFileIds: auxFileIds,
-      op: op,
-      inplace: data.inPlace,
-      state: null,
-    };
 
 
-    let job$ = this.jobService.createJob(job);
-    return job$.pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
-            return state;
-          });
-        }
-        if (job.state.status == 'completed' && job.result) {
-          let actions: any[] = [];
-          if (!isPixelOpsJob(job)) return;
-          let result = job.result;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered during pixel ops job: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered during pixel ops job: ', result.warnings);
-          }
-
-
-          if (job.inplace) {
-            let layerIds = result.fileIds.map((id) => id.toString());
-            layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
-            layerIds.forEach((layerId) => actions.push(new InvalidateHeader(layerId)));
-          }
-
-          actions.push(new LoadLibrary());
-          dispatch(actions);
-        }
-      })
-    )
-  }
-
-  @Action(CreateAdvPixelOpsJob)
-  @ImmutableContext()
-  public createAdvPixelOpsJob(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { }: CreateAdvPixelOpsJob
-  ) {
-    let state = getState();
-    let layers = this.store.selectSnapshot(DataFilesState.getLayers);
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let data = state.pixelOpsPanelConfig.pixelOpsFormData;
-    let imageLayers = [...data.selectedLayerIds, ...data.primaryLayerIds].map((id) => layers.find((f) => f.id == id)).filter(isNotEmpty);
-    let auxImageFiles = data.auxLayerIds.map((id) => layers.find((f) => f.id == id)).filter(isNotEmpty);
-    let job: PixelOpsJob = {
-      type: JobType.PixelOps,
-      id: null,
-      fileIds: imageLayers
-        .sort((a, b) =>
-          dataFiles[a.fileId].name < dataFiles[b.fileId].name
-            ? -1
-            : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0
-        )
-        .map((f) => f.id),
-      auxFileIds: auxImageFiles
-        .sort((a, b) =>
-          dataFiles[a.fileId].name < dataFiles[b.fileId].name
-            ? -1
-            : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0
-        )
-        .map((f) => f.id),
-      op: data.opString,
-      inplace: data.inPlace,
-      state: null,
-    };
-
-    let job$ = this.jobService.createJob(job);
-    return job$.pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.pixelOpsPanelConfig.currentPixelOpsJobId = job.id;
-            return state;
-          });
-        }
-        if (job.state.status == 'completed' && job.result) {
-          let actions: any[] = [];
-          if (!isPixelOpsJob(job)) return;
-          let result = job.result;
-          if (result.errors.length != 0) {
-            console.error('Errors encountered during pixel ops: ', result.errors);
-          }
-          if (result.warnings.length != 0) {
-            console.error('Warnings encountered during pixel ops: ', result.warnings);
-          }
-
-
-          if ((job as PixelOpsJob).inplace) {
-            let layerIds = result.fileIds.map((id) => id.toString());
-            layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
-            layerIds.forEach((layerId) => actions.push(new InvalidateHeader(layerId)));
-          }
-
-          actions.push(new LoadLibrary());
-          dispatch(actions);
-        }
-      })
-    )
-  }
-
-  @Action(CreateAlignmentJob)
-  @ImmutableContext()
-  public createAlignmentJob(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerIds, crop, settings }: CreateAlignmentJob
-  ) {
-    let state = getState();
-    let layers = this.store.selectSnapshot(DataFilesState.getLayers);
-    let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
-    let imageLayers = layerIds.map((id) => layers.find((f) => f.id == id)).filter(isNotEmpty);
-    let job: AlignmentJob = {
-      type: JobType.Alignment,
-      id: null,
-      fileIds: imageLayers
-        .sort((a, b) =>
-          dataFiles[a.fileId].name < dataFiles[b.fileId].name
-            ? -1
-            : dataFiles[a.fileId].name > dataFiles[b.fileId].name
-              ? 1
-              : 0
-        )
-        .map((f) => f.id),
-      inplace: true,
-      crop: crop,
-      settings: settings,
-      state: null,
-      result: null,
-    };
-
-    let job$ = this.jobService.createJob(job);
-
-    job$.pipe(
-      takeUntil(this.actions$.pipe(ofActionDispatched(CreateAlignmentJob))),
-      take(1)
-    ).subscribe(job => {
-      if (job.id) {
-        setState((state: WorkbenchStateModel) => {
-          state.aligningPanelConfig.currentAlignmentJobId = job.id;
-          return state;
-        });
-      }
-    })
-
-    job$.subscribe(job => {
-      if (job.state.status == 'completed' && job.result) {
-        let actions: any[] = [];
-        if (!isAlignmentJob(job)) return;
-        let result = job.result;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during aligning: ', result.errors);
-        }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during aligning: ', result.warnings);
-        }
-
-        let layerIds = result.fileIds.map((id) => id.toString());
-        if (settings.refImage) {
-          layerIds.push(settings.refImage.toString())
-        }
-
-
-        if (job.inplace) {
-          layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
-          layerIds.forEach((layerId) => actions.push(new InvalidateHeader(layerId)));
-        }
-
-        actions.push(new LoadLibrary());
-        dispatch(actions);
-      }
-    })
-
-
-    return job$
-  }
-
-  @Action(CreateStackingJob)
-  @ImmutableContext()
-  public createStackingJob(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerIds, settings, outFilename }: CreateStackingJob
-  ) {
-    let job: StackingJob = {
-      type: JobType.Stacking,
-      id: null,
-      fileIds: layerIds,
-      stackingSettings: settings,
-      state: null,
-    };
-
-    let job$ = this.jobService.createJob(job);
-
-    job$.pipe(
-      takeUntil(this.actions$.pipe(ofActionDispatched(CreateStackingJob))),
-      take(1)
-    ).subscribe(job => {
-      if (job.id) {
-        setState((state: WorkbenchStateModel) => {
-          state.stackingPanelConfig.currentStackingJobId = job.id;
-          return state;
-        });
-      }
-    })
-
-    job$.subscribe(job => {
-      if (job.state.status == 'completed' && job.result) {
-        if (!isStackingJob(job)) return;
-        let result = job.result;
-        if (result.errors.length != 0) {
-          console.error('Errors encountered during stacking: ', result.errors);
-        }
-        if (result.warnings.length != 0) {
-          console.error('Warnings encountered during stacking: ', result.warnings);
-        }
-        if (result.fileId) {
-          dispatch(new LoadLibrary()).subscribe(() => {
-            let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities)
-            let existingFileNames = Object.values(layerEntities).map(layer => layer.name)
-            let selectedFilenames = job.fileIds.map(id => layerEntities[id].name)
-            let outFilename = getLongestCommonStartingSubstring(selectedFilenames).replace(/_+$/, '').trim();
-
-            if (outFilename) {
-              outFilename = `${outFilename}_stack`
-              let base = outFilename
-              let iter = 0
-              while (existingFileNames.includes(`${outFilename}.fits`)) {
-                outFilename = `${base}_${iter}`
-                iter += 1;
-              }
-            }
-            this.dataFileService.updateFile(result.fileId, {
-              groupName: `${outFilename}.fits`,
-              name: `${outFilename}.fits`
-            }).pipe(
-              flatMap(() => dispatch(new LoadLibrary()))
-            ).subscribe()
-          })
-
-        }
-      }
-    })
-
-    return job$
-  }
 
   @Action(CreateWcsCalibrationJob)
   @ImmutableContext()
@@ -3470,282 +2897,7 @@ export class WorkbenchState {
 
   }
 
-  @Action(RemoveSources)
-  @ImmutableContext()
-  public removeSources(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceIds }: RemoveSources
-  ) {
-    let state = getState();
 
-    setState((state: WorkbenchStateModel) => {
-      state.sourcePanelConfig.selectedSourceIds = state.sourcePanelConfig.selectedSourceIds.filter(
-        (id) => !sourceIds.includes(id)
-      );
-      return state;
-    });
-  }
-
-  @Action(UpdateAutoPhotometry)
-  @ImmutableContext()
-  public updateAutoPhotometry(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { viewerId }: UpdateAutoPhotometry
-  ) {
-    let state = getState();
-
-    let imageLayer = this.store.selectSnapshot(WorkbenchState.getImageLayerByViewerId(viewerId))
-    if (!imageLayer) return;
-    let layerId = imageLayer.id;
-
-    let coordMode = state.sourcePanelConfig.coordMode;
-    let showSourcesFromAllFiles = state.sourcePanelConfig.showSourcesFromAllFiles;
-    let sources = this.store.selectSnapshot(SourcesState.getSources);
-
-
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(layerId))
-    let layer = this.store.selectSnapshot(DataFilesState.getLayerById(layerId))
-
-    if (!layer || !header) return;
-    if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
-    sources = sources.filter((source) => {
-      if (coordMode != source.posType) return false;
-      if (source.layerId == layerId) return true;
-      if (!showSourcesFromAllFiles) return false;
-      let coord = getSourceCoordinates(header, source);
-      if (coord == null) return false;
-      return true;
-    });
-
-    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
-    if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_LAYER) {
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let photPanelStateId = layerState.photometryPanelStateId;
-
-      let photometryJobSettings = toPhotometryJobSettings(state.settings);
-
-      let job: PhotometryJob = {
-        type: JobType.Photometry,
-        settings: photometryJobSettings,
-        id: null,
-        fileIds: [layerId],
-        sources: sources.map((source, index) => sourceToAstrometryData(source)),
-        state: null,
-      };
-
-      setState((state: WorkbenchStateModel) => {
-        let photState = state.photometryPanelStateEntities[photPanelStateId];
-        photState.autoPhotIsValid = true;
-        photState.autoPhotJobId = null;
-        return state;
-      });
-
-      let job$ = this.jobService.createJob(job);
-      return job$.pipe(
-        tap(job => {
-          if (job.id) {
-            setState((state: WorkbenchStateModel) => {
-              state.photometryPanelStateEntities[photPanelStateId].autoPhotJobId = job.id;
-              return state;
-            });
-          }
-          if (job.state.status == 'completed') {
-
-
-          }
-        })
-      )
-    }
-  }
-
-  @Action(UpdateAutoFieldCalibration)
-  @ImmutableContext()
-  public updateAutoFieldCalibration(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { viewerId }: UpdateAutoFieldCalibration
-  ) {
-    let state = getState();
-
-    let imageLayer = this.store.selectSnapshot(WorkbenchState.getImageLayerByViewerId(viewerId))
-    if (!imageLayer) return;
-    let layerId = imageLayer.id;
-
-    let coordMode = state.sourcePanelConfig.coordMode;
-    let header = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(layerId))
-    let layer = this.store.selectSnapshot(DataFilesState.getLayerById(layerId))
-
-    if (!layer || !header) return;
-    if (!header.wcs || !header.wcs.isValid()) coordMode = 'pixel';
-
-
-    let workbenchState = this.store.selectSnapshot(WorkbenchState.getWorkbenchStateByLayerId(layerId))
-    if (!workbenchState) return;
-    if (workbenchState.type == WorkbenchStateType.IMAGE_LAYER) {
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let photPanelStateId = layerState.photometryPanelStateId;
-
-      let photometryJobSettings = toPhotometryJobSettings(state.settings);
-      let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
-      let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
-      let fieldCalibration = toFieldCalibration(state.settings, catalogs);
-
-      let job: FieldCalibrationJob = {
-        type: JobType.FieldCalibration,
-        id: null,
-        photometrySettings: photometryJobSettings,
-        sourceExtractionSettings: sourceExtractionJobSettings,
-        fieldCal: fieldCalibration,
-        fileIds: [layerId],
-        state: null,
-      };
-
-      setState((state: WorkbenchStateModel) => {
-        let photState = state.photometryPanelStateEntities[photPanelStateId];
-        photState.autoCalIsValid = true;
-        photState.autoCalJobId = null;
-        return state;
-      });
-
-      let job$ = this.jobService.createJob(job);
-      return job$.pipe(
-        tap(job => {
-          if (job.id) {
-            setState((state: WorkbenchStateModel) => {
-              state.photometryPanelStateEntities[photPanelStateId].autoCalJobId = job.id;
-              return state;
-            });
-          }
-          if (job.state.status == 'completed') {
-          }
-        })
-      )
-    }
-  }
-
-  @Action(BatchPhotometerSources)
-  @ImmutableContext()
-  public batchPhotometerSources(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { }: BatchPhotometerSources
-  ) {
-    let state = getState();
-
-
-    setState((state: WorkbenchStateModel) => {
-      state.photometryPanelConfig.batchCalibrationEnabled = state.settings.calibration.calibrationEnabled;
-      state.photometryPanelConfig.batchCalJobId = null;
-      state.photometryPanelConfig.batchPhotJobId = null;
-      state.photometryPanelConfig.creatingBatchJobs = true;
-      return state;
-    });
-
-    let sources = this.store.selectSnapshot(SourcesState.getSources);
-    let photometryJobSettings = toPhotometryJobSettings(state.settings);
-    let layerIds = state.photometryPanelConfig.batchPhotFormData.selectedLayerIds;
-
-    let photJob: PhotometryJob = {
-      type: JobType.Photometry,
-      settings: photometryJobSettings,
-      id: null,
-      fileIds: layerIds,
-      sources: sources.map((source, index) => {
-        let x = null;
-        let y = null;
-        let pmPixel = null;
-        let pmPosAnglePixel = null;
-        let raHours = null;
-        let decDegs = null;
-        let pmSky = null;
-        let pmPosAngleSky = null;
-
-        if (source.posType == PosType.PIXEL) {
-          x = source.primaryCoord;
-          y = source.secondaryCoord;
-          pmPixel = source.pm;
-          pmPosAnglePixel = source.pmPosAngle;
-        } else {
-          raHours = source.primaryCoord;
-          decDegs = source.secondaryCoord;
-          pmSky = source.pm;
-          if (pmSky) pmSky /= 3600.0;
-          pmPosAngleSky = source.pmPosAngle;
-        }
-
-        let s: Astrometry & SourceId = {
-          id: source.id,
-          pmEpoch: source.pmEpoch ? new Date(source.pmEpoch).toISOString() : null,
-          x: x,
-          y: y,
-          pmPixel: pmPixel,
-          pmPosAnglePixel: pmPosAnglePixel,
-          raHours: raHours,
-          decDegs: decDegs,
-          pmSky: pmSky,
-          pmPosAngleSky: pmPosAngleSky,
-          fwhmX: null,
-          fwhmY: null,
-          theta: null,
-        };
-        return s;
-      }),
-      state: null,
-    };
-
-
-    let photJob$ = this.jobService.createJob(photJob).pipe(
-      tap(job => {
-        if (job.id) {
-          setState((state: WorkbenchStateModel) => {
-            state.photometryPanelConfig.batchPhotJobId = job.id;
-            state.photometryPanelConfig.creatingBatchJobs = false;
-            return state;
-          });
-        }
-        if (job.state.status == 'completed') {
-        }
-      })
-    )
-
-    let calJob$: Observable<Job> = of(null);
-
-    if (state.settings.calibration.calibrationEnabled) {
-
-      let sourceExtractionJobSettings = toSourceExtractionJobSettings(state.settings);
-      let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
-      let fieldCalibration = toFieldCalibration(state.settings, catalogs);
-
-      let calJob: FieldCalibrationJob = {
-        type: JobType.FieldCalibration,
-        id: null,
-        photometrySettings: photometryJobSettings,
-        sourceExtractionSettings: sourceExtractionJobSettings,
-        fieldCal: fieldCalibration,
-        fileIds: layerIds,
-        state: null,
-      };
-
-      calJob$ = this.jobService.createJob(calJob).pipe(
-        tap(job => {
-          if (job.id) {
-            setState((state: WorkbenchStateModel) => {
-              state.photometryPanelConfig.batchCalJobId = job.id;
-              state.photometryPanelConfig.creatingBatchJobs = false;
-              return state;
-            });
-          }
-          if (job.state.status == 'completed') {
-          }
-        })
-      )
-    }
-
-    return combineLatest([photJob$, calJob$])
-
-
-
-
-  }
 
 
   @Action(InitializeWorkbenchLayerState)
@@ -3799,28 +2951,9 @@ export class WorkbenchState {
         };
         state.sonificationPanelStateIds.push(sonificationPanelStateId);
 
-        let photometryPanelStateId = `PHOTOMETRY_PANEL_${state.nextPhotometryPanelStateId++}`;
-        state.photometryPanelStateEntities[photometryPanelStateId] = {
-          id: photometryPanelStateId,
-          sourceExtractionJobId: '',
-          sourcePhotometryData: {},
-          autoPhotIsValid: false,
-          autoPhotJobId: '',
-          autoCalIsValid: false,
-          autoCalJobId: '',
-        };
-        state.photometryPanelStateIds.push(photometryPanelStateId);
-
-        let sourcePanelStateId = `SOURCE_PANEL_${state.nextSourcePanelStateId++}`;
-        state.sourcePanelStateEntities[sourcePanelStateId] = {
-          id: sourcePanelStateId,
-          markerSelectionRegion: null,
-        };
-        state.sourcePanelStateIds.push(sourcePanelStateId);
-
         let wcsCalibrationPanelStateId = `WCS_CALIBRATION_${state.nextWcsCalibrationPanelStateId++}`;
         state.wcsCalibrationPanelStateEntities[wcsCalibrationPanelStateId] = {
-          id: sourcePanelStateId,
+          id: wcsCalibrationPanelStateId,
           sourceExtractionJobId: null,
           sourceExtractionOverlayIsValid: false
         };
@@ -3832,8 +2965,6 @@ export class WorkbenchState {
           plottingPanelStateId: plottingPanelStateId,
           customMarkerPanelStateId: customMarkerPanelStateId,
           sonificationPanelStateId: sonificationPanelStateId,
-          photometryPanelStateId: photometryPanelStateId,
-          sourcePanelStateId: sourcePanelStateId,
           wcsCalibrationPanelStateId: wcsCalibrationPanelStateId
         };
 
@@ -3944,30 +3075,7 @@ export class WorkbenchState {
         delete state.workbenchStateEntities[workbenchStateId];
       }
 
-      state.aligningPanelConfig.selectedLayerIds = state.aligningPanelConfig.selectedLayerIds.filter(
-        (id) => id != layerId
-      );
-      state.stackingPanelConfig.stackFormData.selectedLayerIds = state.stackingPanelConfig.stackFormData.selectedLayerIds.filter(
-        (id) => id != layerId
-      );
 
-      state.photometryPanelConfig.batchPhotFormData.selectedLayerIds = state.photometryPanelConfig.batchPhotFormData.selectedLayerIds.filter(
-        (id) => id != layerId
-      );
-
-      state.pixelOpsPanelConfig.pixelOpsFormData.selectedLayerIds = state.pixelOpsPanelConfig.pixelOpsFormData.selectedLayerIds.filter(
-        (id) => id != layerId
-      );
-
-      state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerIds = state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerIds.filter(
-        (id) => id != layerId
-      );
-
-      state.pixelOpsPanelConfig.pixelOpsFormData.primaryLayerIds = state.pixelOpsPanelConfig.pixelOpsFormData.primaryLayerIds.filter(
-        (id) => id != layerId
-      );
-
-      if (state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerId == layerId) state.pixelOpsPanelConfig.pixelOpsFormData.auxLayerId = null;
 
       state.wcsCalibrationPanelConfig.selectedLayerIds = state.wcsCalibrationPanelConfig.selectedLayerIds.filter(
         (id) => id != layerId
@@ -4266,7 +3374,7 @@ export class WorkbenchState {
       tap(job => {
         if (job.id) {
           setState((state: WorkbenchStateModel) => {
-            state.aligningPanelConfig.currentAlignmentJobId = job.id;
+            state.sonificationPanelStateEntities[sonificationPanelStateId].sonificationJobId = job.id;
             return state;
           });
         }
@@ -4316,89 +3424,6 @@ export class WorkbenchState {
     });
   }
 
-  @Action(UpdateSourceSelectionRegion)
-  @ImmutableContext()
-  public updateSourceRegionSelection(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId, region }: UpdateSourceSelectionRegion
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sourcePanelStateId = layerState.sourcePanelStateId;
-      let sourceState = state.sourcePanelStateEntities[sourcePanelStateId];
-      sourceState.markerSelectionRegion = {
-        ...region,
-      };
-      return state;
-    });
-  }
-
-  @Action(EndSourceSelectionRegion)
-  @ImmutableContext()
-  public endSourceRegionSelection(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId, mode }: EndSourceSelectionRegion
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let sourcePanelStateId = layerState.sourcePanelStateId;
-      let sourcesState = state.sourcePanelStateEntities[sourcePanelStateId];
-
-      let region = sourcesState.markerSelectionRegion;
-      let header = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(layerId));
-      if (!header || !region) return state;
-
-      let sourceIds = this.store
-        .selectSnapshot(SourcesState.getSources)
-        .filter((source) => {
-          let coord = getSourceCoordinates(header!, source);
-          let x1 = Math.min(region!.x, region!.x + region!.width);
-          let y1 = Math.min(region!.y, region!.y + region!.height);
-          let x2 = x1 + Math.abs(region!.width);
-          let y2 = y1 + Math.abs(region!.height);
-
-          return coord && coord.x >= x1 && coord.x < x2 && coord.y >= y1 && coord.y < y2;
-        })
-        .map((source) => source.id);
-
-      if (mode == 'remove') {
-        state.sourcePanelConfig.selectedSourceIds = state.sourcePanelConfig.selectedSourceIds.filter(
-          (id) => !sourceIds.includes(id)
-        );
-      } else {
-        let filteredSourceIds = sourceIds.filter((id) => !state.sourcePanelConfig.selectedSourceIds.includes(id));
-        state.sourcePanelConfig.selectedSourceIds = state.sourcePanelConfig.selectedSourceIds.concat(
-          filteredSourceIds
-        );
-      }
-      sourcesState.markerSelectionRegion = null;
-
-      return state;
-    });
-  }
-
-  @Action(UpdatePhotometryFileState)
-  @ImmutableContext()
-  public updatePhotometryFileState(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId, changes }: UpdatePhotometryFileState
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[layerId]];
-      if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return state;
-      let layerState = workbenchState as WorkbenchImageLayerState;
-      let photometryPanelState = state.photometryPanelStateEntities[layerState.photometryPanelStateId];
-      state.photometryPanelStateEntities[layerState.photometryPanelStateId] = {
-        ...photometryPanelState,
-        ...changes,
-      };
-      return state;
-    });
-  }
 
   @Action(StartLine)
   @ImmutableContext()
@@ -4588,110 +3613,6 @@ export class WorkbenchState {
     });
   }
 
-  @Action(AddPhotDatas)
-  @ImmutableContext()
-  public addPhotDatas(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { photDatas }: AddPhotDatas
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      //Photometry data from the Core refers to layer ids as file ids.
-      photDatas.forEach((d) => {
-        let workbenchState = state.workbenchStateEntities[state.layerIdToWorkbenchStateIdMap[d.fileId]];
-        if (!workbenchState || workbenchState.type != WorkbenchStateType.IMAGE_LAYER) return;
-        let layerState = workbenchState as WorkbenchImageLayerState;
-        if (!d.id) {
-          return;
-        }
-        let photometryPanelState = state.photometryPanelStateEntities[layerState.photometryPanelStateId];
-        photometryPanelState.sourcePhotometryData[d.id] = d;
-      });
-
-      return state;
-    });
-  }
-
-  @Action(RemovePhotDatasByLayerId)
-  @ImmutableContext()
-  public removePhotDatasByLayerId(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: RemovePhotDatasByLayerId
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.workbenchStateIds.forEach((stateId) => {
-        if (layerId === null || layerId === stateId) {
-          if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
-            return;
-          }
-          let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
-          state.photometryPanelStateEntities[layerState.photometryPanelStateId].sourcePhotometryData = {};
-        }
-
-      });
-      return state;
-    });
-  }
-
-  @Action(RemovePhotDatasBySourceId)
-  @ImmutableContext()
-  public removePhotDatasBySourceId(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { sourceId }: RemovePhotDatasBySourceId
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      state.workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
-          return;
-        }
-        let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
-        let photometryPanelState = state.photometryPanelStateEntities[layerState.photometryPanelStateId];
-        if (sourceId in photometryPanelState.sourcePhotometryData) {
-          delete photometryPanelState.sourcePhotometryData[sourceId];
-        }
-      });
-      return state;
-    });
-  }
-
-  @Action(InvalidateAutoCalByLayerId)
-  @ImmutableContext()
-  public resetAutoCalJobsByLayerId(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: RemovePhotDatasByLayerId
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchStateIds = state.workbenchStateIds;
-      if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
-      workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
-          return;
-        }
-        let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
-        state.photometryPanelStateEntities[layerState.photometryPanelStateId].autoCalIsValid = false;
-      });
-      return state;
-    });
-  }
-
-  @Action(InvalidateAutoPhotByLayerId)
-  @ImmutableContext()
-  public resetAutoPhotJobsByLayerId(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: InvalidateAutoPhotByLayerId
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchStateIds = state.workbenchStateIds;
-      if (layerId) workbenchStateIds = [state.layerIdToWorkbenchStateIdMap[layerId]]
-      workbenchStateIds.forEach((stateId) => {
-        if (state.workbenchStateEntities[stateId].type != WorkbenchStateType.IMAGE_LAYER) {
-          return;
-        }
-        let layerState = state.workbenchStateEntities[stateId] as WorkbenchImageLayerState;
-        state.photometryPanelStateEntities[layerState.photometryPanelStateId].autoPhotIsValid = false;
-      });
-      return state;
-    });
-  }
 
   @Action(SyncViewerTransformations)
   @ImmutableContext()

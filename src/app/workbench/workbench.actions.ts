@@ -2,14 +2,9 @@ import { ViewMode } from './models/view-mode';
 import {
   WorkbenchTool,
   PlottingPanelConfig,
-  PhotometryPanelConfig,
-  AligningPanelConfig as AligningPanelConfig,
-  PixelOpsPanelConfig,
-  StackingPanelConfig as StackingPanelConfig,
   CustomMarkerPanelConfig,
   ViewerPanel,
   WcsCalibrationPanelConfig,
-  SourcePanelConfig,
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
@@ -24,17 +19,14 @@ import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
 import { SonificationPanelState } from './models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
-import { PhotometryPanelState } from './models/photometry-file-state';
-import { PhotData } from './models/source-phot-data';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { PhotometryData } from '../jobs/models/photometry';
 import { FieldCalibration } from '../jobs/models/field-calibration';
 import { GlobalSettings } from './models/global-settings';
 import { CalibrationSettings } from './models/calibration-settings';
 import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
+import { CosmeticCorrectionSettings } from './models/cosmetic-correction-settings';
 import { AlignmentSettings } from './models/alignment-settings';
-import { AlignmentJobSettings } from '../jobs/models/alignment';
-import { StackSettings } from '../jobs/models/stacking';
 
 /* Core */
 
@@ -238,16 +230,16 @@ export class UpdatePhotometrySettings {
   constructor(public changes: Partial<PhotometrySettings>) { }
 }
 
-export class UpdateAlignmentSettings {
-  public static readonly type = '[Workbench] Update Alignment Settings';
-
-  constructor(public changes: Partial<AlignmentSettings>) { }
-}
-
 export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
   constructor(public changes: Partial<SourceExtractionSettings>) { }
+}
+
+export class UpdateAlignmentSettings {
+  public static readonly type = '[Workbench] Update Alignment Settings';
+
+  constructor(public changes: Partial<AlignmentSettings>) { }
 }
 
 export class UpdateCalibrationSettings {
@@ -274,34 +266,10 @@ export class UpdatePlottingPanelConfig {
   constructor(public changes: Partial<PlottingPanelConfig>) { }
 }
 
-export class UpdatePhotometryPanelConfig {
-  public static readonly type = '[Workbench] Update Photometry Panel Config';
+export class UpdateCosmeticCorrectionSettings {
+  public static readonly type = '[Workbench] Update Cosmetic Correction Settings';
 
-  constructor(public changes: Partial<PhotometryPanelConfig>) { }
-}
-
-export class UpdateSourcePanelConfig {
-  public static readonly type = '[Workbench] Update Source Panel Config';
-
-  constructor(public changes: Partial<SourcePanelConfig>) { }
-}
-
-export class UpdatePixelOpsPageSettings {
-  public static readonly type = '[Workbench] Update Pixel Ops Panel Config';
-
-  constructor(public changes: Partial<PixelOpsPanelConfig>) { }
-}
-
-export class UpdateAligningPanelConfig {
-  public static readonly type = '[Workbench] Update Aligning Panel Config';
-
-  constructor(public changes: Partial<AligningPanelConfig>) { }
-}
-
-export class UpdateStackingPanelConfig {
-  public static readonly type = '[Workbench] Update Stacking Panel Config';
-
-  constructor(public changes: Partial<StackingPanelConfig>) { }
+  constructor(public changes: Partial<CosmeticCorrectionSettings>) { }
 }
 
 export class UpdateWcsCalibrationFileState {
@@ -414,28 +382,6 @@ export class AddFieldCalSourcesFromCatalog {
   public static readonly type = '[Workbench] Add Field Cal Sources From Catalog';
 
   constructor(public fieldCalId: string, public catalogQueryJob: CatalogQueryJob) { }
-}
-
-export class CreatePixelOpsJob {
-  public static readonly type = '[Workbench] Create Pixel Ops Job';
-}
-
-export class CreateAdvPixelOpsJob {
-  public static readonly type = '[Workbench] Create Adv Pixel Ops Job';
-}
-
-export class HideCurrentPixelOpsJobState {
-  public static readonly type = '[Workbench] Hide Current Pixel Ops Job State';
-}
-
-export class CreateAlignmentJob {
-  public static readonly type = '[Workbench] Create Alignment Job';
-  constructor(public layerIds: string[], public crop: boolean, public settings: AlignmentJobSettings) { }
-}
-
-export class CreateStackingJob {
-  public static readonly type = '[Workbench] Create Stacking Job';
-  constructor(public layerIds: string[], public settings: StackSettings, public outFilename: string) { }
 }
 
 export class CreateWcsCalibrationJob {
@@ -607,17 +553,6 @@ export class UpdateLine {
 
 /* Sources */
 
-export class UpdateSourceSelectionRegion {
-  public static readonly type = '[Sources] Update Source Selection Region';
-
-  constructor(public layerId: string, public region: Region) { }
-}
-
-export class EndSourceSelectionRegion {
-  public static readonly type = '[Sources] End Source Selection Region';
-
-  constructor(public layerId: string, public mode: 'append' | 'remove') { }
-}
 
 export class RemoveSelectedSources {
   public static readonly type = '[Sources] Remove Selected Sources';
@@ -639,54 +574,6 @@ export class SetSourceLabel {
 
 
 /*Photometry */
-
-export class UpdateFilteredSources {
-  public static readonly type = '[Photometry] Update Filtered Sources';
-
-  constructor(public layerId: string) { }
-}
-
-export class UpdatePhotometryFileState {
-  public static readonly type = '[Photometry] Update File State';
-
-  constructor(public layerId: string, public changes: Partial<PhotometryPanelState>) { }
-}
-
-
-
-export class BatchPhotometerSources {
-  public static readonly type = '[Phot Data] Batch Photometer Sources';
-
-  constructor() { }
-}
-
-export class UpdateAutoPhotometry {
-  public static readonly type = '[Phot Data] Update Auto Photometry';
-
-  constructor(
-    public viewerId: string
-  ) { }
-}
-
-export class UpdateAutoFieldCalibration {
-  public static readonly type = '[Phot Data] Update Auto Field Calibration';
-
-  constructor(
-    public viewerId: string
-  ) { }
-}
-
-export class InvalidateAutoCalByLayerId {
-  public static readonly type = '[Phot Data] Invalidate Auto Cal By Layer ID';
-
-  constructor(public layerId: string = null) { }
-}
-
-export class InvalidateAutoPhotByLayerId {
-  public static readonly type = '[Phot Data] Invalidate Auto Phot By Layer ID';
-
-  constructor(public layerId: string = null) { }
-}
 
 
 /* Markers */
@@ -739,23 +626,6 @@ export class SetCustomMarkerSelection {
   constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
 }
 
-export class AddPhotDatas {
-  public static readonly type = '[Sources Phot Data] Add Source Phot Datas';
-
-  constructor(public photDatas: PhotometryData[]) { }
-}
-
-export class RemovePhotDatasByLayerId {
-  public static readonly type = '[Phot Data] Remove Phot Datas By Layer Id';
-
-  constructor(public layerId: string = null) { }
-}
-
-export class RemovePhotDatasBySourceId {
-  public static readonly type = '[Phot Data] Remove Phot Datas By Source Id';
-
-  constructor(public sourceId: string) { }
-}
 
 
 

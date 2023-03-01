@@ -9,6 +9,7 @@ import { BatchImportJobResult } from './batch-import';
 import { SonificationJobResult } from './sonification';
 import { WcsCalibrationJobResult } from './wcs_calibration';
 import { FieldCalibrationJobResult } from './field-calibration';
+import { CosmeticCorrectionJobResult } from './cosmetic-correction';
 
 export type JobResult =
   | SourceExtractionJobResult
@@ -21,4 +22,5 @@ export type JobResult =
   | BatchImportJobResult
   | SonificationJobResult
   | WcsCalibrationJobResult
-  | FieldCalibrationJobResult;
+  | FieldCalibrationJobResult
+  | CosmeticCorrectionJobResult;

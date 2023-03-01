@@ -231,6 +231,7 @@
           <ng-container *ngSwitchCase="WorkbenchTool.PIXEL_OPS" i18n>Pixel Operations</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.ALIGNER" i18n>Aligner</ng-container>
           <ng-container *ngSwitchCase="WorkbenchTool.STACKER" i18n>Stacker</ng-container>
+          <ng-container *ngSwitchCase="WorkbenchTool.COSMETIC_CORRECTION" i18n>Cosmetic Correction</ng-container>
         </h2>
       </div>
 
@@ -254,8 +255,8 @@
           [layerIds]="filteredLayerIds$ | async">
         </app-wcs-calibration-panel>
 
-        <app-source-panel *ngSwitchCase="WorkbenchTool.SOURCE" [viewerId]="focusedViewerId$ | async">
-        </app-source-panel>
+        <app-source-catalog-panel *ngSwitchCase="WorkbenchTool.SOURCE" [viewerId]="focusedViewerId$ | async">
+        </app-source-catalog-panel>
 
 
         <app-photometry-panel *ngSwitchCase="WorkbenchTool.PHOTOMETRY" [viewerId]="focusedViewerId$ | async"
@@ -273,6 +274,10 @@
 
         <app-stacking-panel *ngSwitchCase="WorkbenchTool.STACKER" [layerIds]="filteredLayerIds$ | async">
         </app-stacking-panel>
+
+        <app-cosmetic-correction-panel *ngSwitchCase="WorkbenchTool.COSMETIC_CORRECTION"
+          [layerIds]="filteredLayerIds$ | async">
+        </app-cosmetic-correction-panel>
       </div>
     </div>
   </div>
@@ -283,14 +288,14 @@
       <div class="vertical-icon-nav-item-group">
         <div *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.VIEWER else viewerButtonBlock"
           class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Display" [matTooltipPosition]="'left'"
-          attr.aria-label="Hide Display" aria-selected (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
+          aria-label="Hide Display" aria-selected (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
           <button mat-icon-button>
             <mat-icon>remove_red_eye</mat-icon>
           </button>
         </div>
         <ng-template #viewerButtonBlock>
           <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Display" [matTooltipPosition]="'left'"
-            attr.aria-label="Show Display" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
+            aria-label="Show Display" (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.VIEWER)">
             <button mat-icon-button>
               <mat-icon>remove_red_eye</mat-icon>
             </button>
@@ -470,6 +475,25 @@
             (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.PIXEL_OPS)">
             <button mat-icon-button>
               <mat-icon>add_to_photos</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+
+        <div
+          *ngIf="(showConfig$ | async) && activeTool == WorkbenchTool.COSMETIC_CORRECTION else cosmeticCorrectionButtonBlock"
+          class="vertical-icon-nav-item active" i18n-matTooltip matTooltip="Hide Cosmetic Correction"
+          [matTooltipPosition]="'left'" aria-label="Hide Cosmetic Correction" aria-selected
+          (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.COSMETIC_CORRECTION)">
+          <button mat-icon-button>
+            <mat-icon>auto_fix_high</mat-icon>
+          </button>
+        </div>
+        <ng-template #cosmeticCorrectionButtonBlock>
+          <div class="vertical-icon-nav-item" i18n-matTooltip matTooltip="Show Cosmetic Correction"
+            [matTooltipPosition]="'left'" aria-label="Show Cosmetic Correction"
+            (click)="onWorkbenchNavClick(activeTool, WorkbenchTool.COSMETIC_CORRECTION)">
+            <button mat-icon-button>
+              <mat-icon>auto_fix_high</mat-icon>
             </button>
           </div>
         </ng-template>

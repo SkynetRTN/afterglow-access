@@ -1,4 +1,3 @@
-import { PhotometryPanelState } from './photometry-file-state';
 import { PlottingPanelState } from './plotter-file-state';
 import { SonificationPanelState } from './sonifier-file-state';
 import { CustomMarkerPanelState } from './marker-file-state';
@@ -25,8 +24,6 @@ export interface WorkbenchImageLayerState extends IWorkbenchState {
   plottingPanelStateId: string;
   customMarkerPanelStateId: string;
   sonificationPanelStateId: string;
-  photometryPanelStateId: string;
-  sourcePanelStateId: string;
   wcsCalibrationPanelStateId: string;
 }
 
