@@ -17,7 +17,6 @@ import { PanZoomCanvasComponent } from './components/pan-zoom-canvas/pan-zoom-ca
 import { DataFileListComponent } from './containers/data-file-list/data-file-list.component';
 import { ImageViewerStatusBarComponent } from './components/image-viewer-status-bar/image-viewer-status-bar.component';
 import { ImageViewerMarkerOverlayComponent } from './components/image-viewer-marker-overlay/image-viewer-marker-overlay.component';
-import { NormalizerFormComponent } from './components/normalizer-form/normalizer-form.component';
 import { SourceExtractionRegionDialogComponent } from './components/source-extraction-dialog/source-extraction-dialog.component';
 import { SvgRectangleMarkerComponent } from './components/svg-rectangle-marker/svg-rectangle-marker.component';
 import { SvgLineMarkerComponent } from './components/svg-line-marker/svg-line-marker.component';
@@ -26,7 +25,6 @@ import { SvgTeardropMarkerComponent } from './components/svg-teardrop-marker/svg
 import { AppFooterComponent } from './components/app-footer/app-footer.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { WorkbenchComponent } from './containers/workbench.component';
-import { DisplayToolPanelComponent } from './containers/display-panel/display-panel.component';
 import { AfterglowDataFileService } from './services/afterglow-data-files';
 import { AfterglowDataProviderService } from './services/afterglow-data-providers';
 import { JobsModule } from '../jobs/jobs.module';
@@ -53,7 +51,6 @@ import { SvgOutlinedEllipseComponent } from './components/svg-outlined-ellipse/s
 import { ImageViewerEventService } from './services/image-viewer-event.service';
 import { CatalogImportComponent } from './components/catalog-import/catalog-import.component';
 import { ImageViewerMarkerService } from './services/image-viewer-marker.service';
-import { ImageOrientationToolbarComponent } from './components/image-orientation-toolbar/image-orientation-toolbar.component';
 import { SvgPhotometryMarkerComponent } from './components/svg-photometry-marker/svg-photometry-marker.component';
 import { SvgCrosshairMarkerComponent } from './components/svg-crosshair-marker/svg-crosshair-marker.component';
 import { PsfMatchingDialogComponent } from './components/psf-matching-dialog/psf-matching-dialog.component';
@@ -75,6 +72,7 @@ import { SonificationModule } from './tools/sonification/sonification.module';
 import { CustomMarkerModule } from './tools/custom-marker/custom-marker.module';
 import { PlottingModule } from './tools/plotting/plotting.module';
 import { FileInfoModule } from './tools/file-info/file-info.module';
+import { DisplayModule } from './tools/display/display.module';
 
 export const COMPONENTS = [
   NavbarComponent,
@@ -84,7 +82,6 @@ export const COMPONENTS = [
   PanZoomCanvasComponent,
   ImageViewerMarkerOverlayComponent,
   ImageViewerStatusBarComponent,
-  NormalizerFormComponent,
   SvgRectangleMarkerComponent,
   SvgCircleMarkerComponent,
   SvgTextMarkerComponent,
@@ -94,7 +91,6 @@ export const COMPONENTS = [
   SvgCrosshairMarkerComponent,
   SvgOutlinedEllipseComponent,
   WorkbenchComponent,
-  DisplayToolPanelComponent,
   SourceExtractionRegionDialogComponent,
   PixelOpsJobsDialogComponent,
   HelpDialogComponent,
@@ -106,7 +102,6 @@ export const COMPONENTS = [
   ImageLayerToolbarComponent,
   FileListOptionComponent,
   CatalogImportComponent,
-  ImageOrientationToolbarComponent,
   PsfMatchingDialogComponent,
   RenameLayerDialogComponent,
   RenameFileDialogComponent,
@@ -147,7 +142,8 @@ export const COMPONENTS = [
     SonificationModule,
     CustomMarkerModule,
     PlottingModule,
-    FileInfoModule
+    FileInfoModule,
+    DisplayModule,
   ],
   declarations: COMPONENTS,
   exports: COMPONENTS

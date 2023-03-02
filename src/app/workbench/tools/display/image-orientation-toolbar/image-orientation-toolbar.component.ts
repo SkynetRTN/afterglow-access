@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Store } from '@ngxs/store';
-import { Flip, ResetImageTransform, ResetViewportTransform, RotateBy } from '../../../data-files/data-files.actions';
-import { DataFile, ImageLayer } from '../../../data-files/models/data-file';
+import { Flip, ResetImageTransform, ResetViewportTransform, RotateBy } from '../../../../data-files/data-files.actions';
+import { DataFile, ImageLayer } from '../../../../data-files/models/data-file';
 
 @Component({
   selector: 'app-image-orientation-toolbar',

@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy, SimpleChanges } from '@angular/core';
-import { PixelNormalizer } from '../../../data-files/models/pixel-normalizer';
-import { StretchMode } from '../../../data-files/models/stretch-mode';
+import { PixelNormalizer } from '../../../../data-files/models/pixel-normalizer';
+import { StretchMode } from '../../../../data-files/models/stretch-mode';
 import {
   grayColorMap,
   rainbowColorMap,
@@ -14,7 +14,7 @@ import {
   oiiColorMap,
   COLOR_MAPS_BY_NAME,
   COLOR_MAPS,
-} from '../../../data-files/models/color-map';
+} from '../../../../data-files/models/color-map';
 import { FormControl } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 

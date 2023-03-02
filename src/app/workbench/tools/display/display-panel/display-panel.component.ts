@@ -16,7 +16,7 @@ import {
 declare let d3: any;
 
 import { Router } from '@angular/router';
-import { CorrelationIdGenerator } from '../../../utils/correlated-action';
+import { CorrelationIdGenerator } from '../../../../utils/correlated-action';
 import { Actions, ofActionCompleted, Store } from '@ngxs/store';
 import {
   DataFile,
@@ -28,7 +28,7 @@ import {
   isImageLayer,
   getFilter,
   ColorBalanceMode,
-} from '../../../data-files/models/data-file';
+} from '../../../../data-files/models/data-file';
 import {
   UpdateNormalizer,
   RotateBy,
@@ -40,18 +40,18 @@ import {
   UpdateChannelMixer,
   SetFileColorBalanceMode,
   SyncFileNormalizers,
-} from '../../../data-files/data-files.actions';
-import { StretchMode } from '../../../data-files/models/stretch-mode';
-import { LayerType } from '../../../data-files/models/data-file-type';
-import { Transform } from '../../../data-files/models/transformation';
-import { getPixel, IImageData } from '../../../data-files/models/image-data';
-import { WorkbenchState } from '../../workbench.state';
-import { DataFilesState } from '../../../data-files/data-files.state';
-import { BlendMode } from '../../../data-files/models/blend-mode';
-import { AfterglowConfigService } from '../../../afterglow-config.service';
-import { ImageViewerEventService } from '../../services/image-viewer-event.service';
+} from '../../../../data-files/data-files.actions';
+import { StretchMode } from '../../../../data-files/models/stretch-mode';
+import { LayerType } from '../../../../data-files/models/data-file-type';
+import { Transform } from '../../../../data-files/models/transformation';
+import { getPixel, IImageData } from '../../../../data-files/models/image-data';
+import { WorkbenchState } from '../../../workbench.state';
+import { DataFilesState } from '../../../../data-files/data-files.state';
+import { BlendMode } from '../../../../data-files/models/blend-mode';
+import { AfterglowConfigService } from '../../../../afterglow-config.service';
+import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
 import { MatDialog } from '@angular/material/dialog';
-import { PsfMatchingDialogComponent } from '../../components/psf-matching-dialog/psf-matching-dialog.component';
+import { PsfMatchingDialogComponent } from '../../../components/psf-matching-dialog/psf-matching-dialog.component';
 import { FormControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { calcLevels, calcPercentiles, getBinCenter, getCountsPerBin, ImageHistogram } from 'src/app/data-files/models/image-histogram';
@@ -60,9 +60,9 @@ import { erf } from 'src/app/utils/math';
 import { linear } from 'everpolate';
 
 import { saveAs } from 'file-saver/dist/FileSaver';
-import { PhotometricColorBalanceDialogComponent } from '../../components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
+import { PhotometricColorBalanceDialogComponent } from '../../../components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 import { fitHistogram } from 'src/app/utils/histogram-fitting';
-import { SourceNeutralizationDialogComponent } from '../../components/source-neutralization-dialog/source-neutralization-dialog.component';
+import { SourceNeutralizationDialogComponent } from '../../../components/source-neutralization-dialog/source-neutralization-dialog.component';
 const SAVE_CSV_FILES = false;
 
 
@@ -73,7 +73,7 @@ const SAVE_CSV_FILES = false;
   styleUrls: ['./display-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DisplayToolPanelComponent implements OnInit, AfterViewInit, OnDestroy {
+export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input('viewerId')
   set viewerId(viewer: string) {
     this.viewerId$.next(viewer);
