@@ -20,7 +20,7 @@ import { Job } from 'src/app/jobs/models/job';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
-import { CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLibrary } from 'src/app/data-files/data-files.actions';
+import { CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLibrary, LoadLibrarySuccess } from 'src/app/data-files/data-files.actions';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { SourcePanelConfig } from './models/source-panel-config';
@@ -31,7 +31,6 @@ import { SourcesState } from '../../sources.state';
 import { getSourceCoordinates } from 'src/app/data-files/models/data-file';
 import { WorkbenchState } from '../../workbench.state';
 import { Viewer } from '../../models/viewer';
-import { InitializeWorkbenchLayerState } from '../../workbench.actions';
 
 export interface SourceCatalogViewerStateModel {
     markerSelectionRegion: Region | null;
@@ -40,8 +39,7 @@ export interface SourceCatalogViewerStateModel {
 export interface SourceCatalogStateModel {
     version: string;
     config: SourcePanelConfig,
-    layerIdToState: { [id: string]: SourceCatalogViewerStateModel },
-    fileIdToState: { [id: string]: SourceCatalogViewerStateModel }
+    layerIdToViewerState: { [id: string]: SourceCatalogViewerStateModel },
 }
 
 const defaultState: SourceCatalogStateModel = {
@@ -55,8 +53,7 @@ const defaultState: SourceCatalogStateModel = {
         selectedSourceIds: [],
         coordMode: 'sky',
     },
-    layerIdToState: {},
-    fileIdToState: {}
+    layerIdToViewerState: {},
 };
 
 @State<SourceCatalogStateModel>({
@@ -74,7 +71,7 @@ export class SourceCatalogState {
 
     @Selector()
     public static getLayerIdToState(state: SourceCatalogStateModel) {
-        return state.layerIdToState;
+        return state.layerIdToViewerState;
     }
 
     public static getLayerStateById(id: string) {
@@ -83,32 +80,19 @@ export class SourceCatalogState {
         });
     }
 
-    @Selector()
-    public static getFileIdToState(state: SourceCatalogStateModel) {
-        return state.fileIdToState;
-    }
-
-    public static getFileStateById(id: string) {
-        return createSelector([SourceCatalogState.getFileIdToState], (fileIdToState: { [id: string]: SourceCatalogViewerStateModel }) => {
-            return fileIdToState[id] || null;
-        });
-    }
-
     static getSourceCatalogViewerStateByViewerId(viewerId: string) {
         return createSelector(
             [
                 WorkbenchState.getViewerEntities,
-                SourceCatalogState.getLayerIdToState,
-                SourceCatalogState.getFileIdToState,
+                SourceCatalogState.getLayerIdToState
             ],
             (
                 viewerEntities: { [id: string]: Viewer },
-                layerIdToState: { [id: string]: SourceCatalogViewerStateModel },
-                fileIdToState: { [id: string]: SourceCatalogViewerStateModel },
+                layerIdToState: { [id: string]: SourceCatalogViewerStateModel }
             ) => {
                 let viewer = viewerEntities[viewerId];
                 if (!viewer) return null;
-                return viewer.layerId ? layerIdToState[viewer.layerId] : fileIdToState[viewer.fileId];
+                return viewer.layerId ? layerIdToState[viewer.layerId] : null;
             }
         );
     }
@@ -146,18 +130,6 @@ export class SourceCatalogState {
         });
     }
 
-    @Action(CloseLayerSuccess)
-    @ImmutableContext()
-    public closeLayerSuccess(
-        { getState, setState, dispatch }: StateContext<SourceCatalogStateModel>,
-        { layerId: layerId }: CloseLayerSuccess
-    ) {
-        setState((state: SourceCatalogStateModel) => {
-
-            return state;
-        });
-    }
-
     @Action(RemoveSources)
     @ImmutableContext()
     public removeSources(
@@ -182,7 +154,7 @@ export class SourceCatalogState {
         { layerId: layerId, region }: UpdateSourceSelectionRegion
     ) {
         setState((state: SourceCatalogStateModel) => {
-            let sourceState = state.layerIdToState[layerId];
+            let sourceState = state.layerIdToViewerState[layerId];
             sourceState.markerSelectionRegion = {
                 ...region,
             };
@@ -197,7 +169,7 @@ export class SourceCatalogState {
         { layerId: layerId, mode }: EndSourceSelectionRegion
     ) {
         setState((state: SourceCatalogStateModel) => {
-            let sourcesState = state.layerIdToState[layerId];
+            let sourcesState = state.layerIdToViewerState[layerId];
 
             let region = sourcesState.markerSelectionRegion;
             let header = this.store.selectSnapshot(DataFilesState.getHeaderByLayerId(layerId));
@@ -232,18 +204,37 @@ export class SourceCatalogState {
         });
     }
 
-    @Action(InitializeWorkbenchLayerState)
+    @Action(LoadLibrarySuccess)
     @ImmutableContext()
-    public initializeWorkbenchLayerState(
+    public loadLibrarySuccess(
         { getState, setState, dispatch }: StateContext<SourceCatalogStateModel>,
-        { layerId: layerId }: InitializeWorkbenchLayerState
+        { layers, correlationId }: LoadLibrarySuccess
+    ) {
+        let state = getState();
+        let layerIds = Object.keys(state.layerIdToViewerState);
+        layers.filter((layer) => !(layer.id in layerIds)).forEach(layer => {
+            setState((state: SourceCatalogStateModel) => {
+                state.layerIdToViewerState[layer.id] = {
+                    markerSelectionRegion: null
+                }
+                return state;
+            })
+        })
+
+    }
+
+    @Action(CloseLayerSuccess)
+    @ImmutableContext()
+    public closeLayerSuccess(
+        { getState, setState, dispatch }: StateContext<SourceCatalogStateModel>,
+        { layerId: layerId }: CloseLayerSuccess
     ) {
         setState((state: SourceCatalogStateModel) => {
-            state.layerIdToState[layerId] = {
-                markerSelectionRegion: null
+            if (layerId in state.layerIdToViewerState) {
+                delete state.layerIdToViewerState[layerId]
             }
             return state;
-        })
+        });
     }
 
 }

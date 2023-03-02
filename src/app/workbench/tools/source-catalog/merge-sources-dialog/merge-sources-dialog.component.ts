@@ -14,7 +14,6 @@ import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
 import { toSourceExtractionJobSettings } from '../../../models/global-settings';
 import { SonifierRegionMode } from '../../sonification/models/sonifier-file-state';
 import { PosType, Source } from '../../../models/source';
-import { WorkbenchImageLayerState, WorkbenchStateType } from '../../../models/workbench-file-state';
 import { AddSources, RemoveSources, UpdateSource } from '../../../sources.actions';
 import { SourcesState } from '../../../sources.state';
 import { WorkbenchState } from '../../../workbench.state';

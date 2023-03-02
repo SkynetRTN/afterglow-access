@@ -23,10 +23,10 @@ import { Observable, combineLatest, Subject, BehaviorSubject } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { HeaderEntry } from '../../../../data-files/models/header-entry';
 import { WorkbenchState } from '../../../workbench.state';
-import { UpdateFileInfoPanelConfig } from '../../../workbench.actions';
 import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
 import { FileInfoPanelConfig } from '../models/file-info-panel-config';
 import { FileInfoState } from '../file-info.state';
+import { UpdateConfig } from '../file-info.actions';
 
 @Component({
   selector: 'app-file-info-panel',
@@ -200,10 +200,10 @@ export class FileInfoPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onShowRawHeaderChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdateFileInfoPanelConfig({ showRawHeader: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ showRawHeader: $event.checked }));
   }
 
   onUseSystemTimeChange($event: MatSlideToggleChange) {
-    this.store.dispatch(new UpdateFileInfoPanelConfig({ useSystemTime: $event.checked }));
+    this.store.dispatch(new UpdateConfig({ useSystemTime: $event.checked }));
   }
 }

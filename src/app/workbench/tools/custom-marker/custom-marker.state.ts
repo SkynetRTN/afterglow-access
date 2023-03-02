@@ -20,7 +20,7 @@ import { Job } from 'src/app/jobs/models/job';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
-import { CenterRegionInViewport, CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLayerHeader, LoadLayerHeaderSuccess, LoadLibrary } from 'src/app/data-files/data-files.actions';
+import { CenterRegionInViewport, CloseDataFileSuccess, CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLayerHeader, LoadLayerHeaderSuccess, LoadLibrary, LoadLibrarySuccess } from 'src/app/data-files/data-files.actions';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { RemoveSources } from '../../sources.actions';
@@ -29,7 +29,6 @@ import { SourcesState } from '../../sources.state';
 import { getHeight, getSourceCoordinates, getWidth, isImageLayer } from 'src/app/data-files/models/data-file';
 import { WorkbenchState } from '../../workbench.state';
 import { Viewer } from '../../models/viewer';
-import { InitializeWorkbenchFileState, InitializeWorkbenchLayerState } from '../../workbench.actions';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SourceExtractionJob, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
 import { parseDms } from 'src/app/utils/skynet-astro';
@@ -110,38 +109,10 @@ export class CustomMarkerState {
         return state.layerIdToViewerStateId;
     }
 
-    // public static getViewerStateIdByLayerId(layerId: string) {
-    //     return createSelector([CustomMarkerState.getLayerIdToViewerStateIdLookup],
-    //         (layerIdToViewerStateId: { [id: string]: string }) => {
-    //             return layerIdToViewerStateId[layerId] || null;
-    //         });
-    // }
-
-    // public static getViewerStateByLayerId(layerId: string) {
-    //     return createSelector([CustomMarkerState.getViewerStateIdByLayerId(layerId), CustomMarkerState.getIdToViewerStateLookup],
-    //         (viewerStateId: string, idToViewerState: { [id: string]: CustomMarkerViewerStateModel }) => {
-    //             return idToViewerState[viewerStateId] || null;
-    //         });
-    // }
-
     @Selector()
     public static getFileIdToViewerStateIdLookup(state: CustomMarkerStateModel) {
         return state.fileIdToViewerStateId;
     }
-
-    // public static getViewerStateIdByFileId(fileId: string) {
-    //     return createSelector([CustomMarkerState.getFileIdToViewerStateIdLookup],
-    //         (fileIdToViewerStateId: { [id: string]: string }) => {
-    //             return fileIdToViewerStateId[fileId] || null;
-    //         });
-    // }
-
-    // public static getViewerStateByFileId(fileId: string) {
-    //     return createSelector([CustomMarkerState.getViewerStateIdByFileId(fileId), CustomMarkerState.getIdToViewerStateLookup],
-    //         (viewerStateId: string, idToViewerState: { [id: string]: CustomMarkerViewerStateModel }) => {
-    //             return idToViewerState[viewerStateId] || null;
-    //         });
-    // }
 
     static getViewerStateIdByViewerId(viewerId: string) {
         return createSelector(
@@ -201,51 +172,65 @@ export class CustomMarkerState {
         { layerId }: CloseLayerSuccess
     ) {
         setState((state: CustomMarkerStateModel) => {
-
+            if (layerId in state.layerIdToViewerStateId) {
+                delete state.idToViewerState[state.layerIdToViewerStateId[layerId]]
+                delete state.layerIdToViewerStateId[layerId]
+            }
             return state;
         });
     }
 
-
-
-    @Action(InitializeWorkbenchLayerState)
+    @Action(CloseDataFileSuccess)
     @ImmutableContext()
-    public initializeWorkbenchLayerState(
+    public closeFileSuccess(
         { getState, setState, dispatch }: StateContext<CustomMarkerStateModel>,
-        { layerId }: InitializeWorkbenchLayerState
+        { fileId }: CloseDataFileSuccess
     ) {
         setState((state: CustomMarkerStateModel) => {
-            let id = (state.nextViewerStateId++).toString();
-            state.layerIdToViewerStateId[layerId] = id;
-            state.idToViewerState[id] = {
-                id: id,
-                markerEntities: {},
-                markerIds: [],
-                markerSelectionRegion: null,
+            if (fileId in state.fileIdToViewerStateId) {
+                delete state.idToViewerState[state.fileIdToViewerStateId[fileId]]
+                delete state.fileIdToViewerStateId[fileId]
             }
             return state;
-        })
+        });
     }
 
-    @Action(InitializeWorkbenchFileState)
+    @Action(LoadLibrarySuccess)
     @ImmutableContext()
-    public initializeWorkbenchFileState(
+    public loadLibrarySuccess(
         { getState, setState, dispatch }: StateContext<CustomMarkerStateModel>,
-        { fileId }: InitializeWorkbenchFileState
+        { layers, correlationId }: LoadLibrarySuccess
     ) {
-        setState((state: CustomMarkerStateModel) => {
-            let id = (state.nextViewerStateId++).toString();
-            state.fileIdToViewerStateId[fileId] = id;
-            state.idToViewerState[id] = {
-                id: id,
-                markerEntities: {},
-                markerIds: [],
-                markerSelectionRegion: null,
-            }
-            return state;
+        let state = getState();
+        let layerIds = Object.keys(state.layerIdToViewerStateId);
+        layers.filter((layer) => !(layer.id in layerIds)).forEach(layer => {
+            setState((state: CustomMarkerStateModel) => {
+                let id = (state.nextViewerStateId++).toString();
+                state.layerIdToViewerStateId[layer.id] = id;
+                state.idToViewerState[id] = {
+                    id: id,
+                    markerEntities: {},
+                    markerIds: [],
+                    markerSelectionRegion: null,
+                }
+                return state;
+            })
+        })
+        let fileIds = Object.keys(state.fileIdToViewerStateId);
+        layers.filter((layer) => !(layer.fileId in fileIds)).forEach(layer => {
+            setState((state: CustomMarkerStateModel) => {
+                let id = (state.nextViewerStateId++).toString();
+                state.fileIdToViewerStateId[layer.fileId] = id;
+                state.idToViewerState[id] = {
+                    id: id,
+                    markerEntities: {},
+                    markerIds: [],
+                    markerSelectionRegion: null,
+                }
+                return state;
+            })
         })
     }
-
 
     @Action(UpdateCustomMarkerSelectionRegion)
     @ImmutableContext()

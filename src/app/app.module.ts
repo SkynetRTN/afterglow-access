@@ -133,18 +133,18 @@ export function photometrySanitizer(v: PhotometryStateModel) {
     ...v,
   } as PhotometryStateModel;
 
-  state.layerIdToState = {
-    ...state.layerIdToState,
+  state.layerIdToViewerState = {
+    ...state.layerIdToViewerState,
   };
-  Object.keys(state.layerIdToState).forEach((key) => {
+  Object.keys(state.layerIdToViewerState).forEach((key) => {
     let photPanelState: PhotometryViewerStateModel = {
-      ...state.layerIdToState[key],
+      ...state.layerIdToViewerState[key],
       autoPhotIsValid: false,
       autoCalIsValid: false,
       sourcePhotometryData: {},
     };
 
-    state.layerIdToState[key] = photPanelState;
+    state.layerIdToViewerState[key] = photPanelState;
   });
   return state;
 }

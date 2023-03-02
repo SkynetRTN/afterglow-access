@@ -1,12 +1,6 @@
 import { SidebarView } from './sidebar-view';
 import { ViewMode } from './view-mode';
-import { IViewer, Viewer } from './viewer';
-import { CentroidSettings } from './centroid-settings';
-import { PhotometrySettings } from './photometry-settings';
-import { SourceExtractionSettings } from './source-extraction-settings';
-import { PlottingPanelState } from './plotter-file-state';
-import { CustomMarkerPanelState } from './marker-file-state';
-import { IWorkbenchState } from './workbench-file-state';
+import { Viewer } from './viewer';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { FieldCalibration } from 'src/app/jobs/models/field-calibration';
 import { GlobalSettings } from './global-settings';
@@ -99,9 +93,4 @@ export interface WorkbenchStateModel {
   addFieldCalSourcesFromCatalogJobId: string;
   addFieldCalSourcesFromCatalogFieldCalId: string;
   dssImportLoading: boolean;
-  fileIdToWorkbenchStateIdMap: { [id: string]: string };
-  layerIdToWorkbenchStateIdMap: { [id: string]: string };
-  nextWorkbenchStateId: number;
-  workbenchStateIds: string[];
-  workbenchStateEntities: { [id: string]: IWorkbenchState };
 }

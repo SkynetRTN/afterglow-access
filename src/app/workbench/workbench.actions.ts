@@ -11,7 +11,6 @@ import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Source, PosType } from './models/source';
 import { Marker } from './models/marker';
 import { IViewer, Viewer } from './models/viewer';
-import { FileInfoPanelConfig } from './models/file-info-panel';
 import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
 import { PlottingPanelState } from './models/plotter-file-state';
@@ -239,12 +238,6 @@ export class UpdateCalibrationSettings {
   constructor(public changes: Partial<CalibrationSettings>) { }
 }
 
-export class UpdateFileInfoPanelConfig {
-  public static readonly type = '[Workbench] Update File Info Panel Config';
-
-  constructor(public changes: Partial<FileInfoPanelConfig>) { }
-}
-
 export class UpdateCosmeticCorrectionSettings {
   public static readonly type = '[Workbench] Update Cosmetic Correction Settings';
 
@@ -394,23 +387,6 @@ export class OpenSidenav {
 export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
-
-export class InitializeWorkbenchLayerState {
-  public static readonly type = '[Workbench Layer State] Initialize Workbench Layer State';
-
-  constructor(public layerId: string) { }
-}
-
-export class InitializeWorkbenchFileState {
-  public static readonly type = '[Workbench File State] Initialize Workbench File State';
-
-  constructor(public fileId: string) { }
-}
-
-/* Sonification */
-
-/* Plotting */
-
 
 /* Sources */
 

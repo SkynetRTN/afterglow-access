@@ -82,7 +82,6 @@ import { DataProvider } from '../../data-providers/models/data-provider';
 import { CorrelationIdGenerator } from '../../utils/correlated-action';
 import { DataProvidersState } from '../../data-providers/data-providers.state';
 import { Navigate } from '@ngxs/router-plugin';
-import { WorkbenchFileState, WorkbenchImageLayerState, WorkbenchStateType } from '../models/workbench-file-state';
 import { WorkbenchTool, ViewerPanelContainer } from '../models/workbench-state';
 import { LayerType } from '../../data-files/models/data-file-type';
 import {

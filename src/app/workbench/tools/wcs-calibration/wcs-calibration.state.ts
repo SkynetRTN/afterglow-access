@@ -20,7 +20,7 @@ import { Job } from 'src/app/jobs/models/job';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
-import { CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLayerHeader, LoadLibrary } from 'src/app/data-files/data-files.actions';
+import { CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLayerHeader, LoadLibrary, LoadLibrarySuccess } from 'src/app/data-files/data-files.actions';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { RemoveSources } from '../../sources.actions';
@@ -29,7 +29,6 @@ import { SourcesState } from '../../sources.state';
 import { getSourceCoordinates } from 'src/app/data-files/models/data-file';
 import { WorkbenchState } from '../../workbench.state';
 import { Viewer } from '../../models/viewer';
-import { InitializeWorkbenchLayerState } from '../../workbench.actions';
 import { WcsCalibrationPanelConfig } from './models/wcs-calibration-panel-config';
 import { CreateWcsCalibrationJob, InvalidateWcsCalibrationExtractionOverlayByLayerId, UpdateConfig, UpdateWcsCalibrationExtractionOverlay } from './wcs-calibration.actions';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
@@ -47,8 +46,7 @@ export interface WcsCalibrationViewerStateModel {
 export interface WcsCalibrationStateModel {
     version: string;
     config: WcsCalibrationPanelConfig,
-    layerIdToState: { [id: string]: WcsCalibrationViewerStateModel },
-    fileIdToState: { [id: string]: WcsCalibrationViewerStateModel }
+    layerIdToViewerState: { [id: string]: WcsCalibrationViewerStateModel }
 }
 
 const defaultState: WcsCalibrationStateModel = {
@@ -64,8 +62,7 @@ const defaultState: WcsCalibrationStateModel = {
         maxSources: 100,
         showOverlay: false,
     },
-    layerIdToState: {},
-    fileIdToState: {}
+    layerIdToViewerState: {}
 };
 
 @State<WcsCalibrationStateModel>({
@@ -83,7 +80,7 @@ export class WcsCalibrationState {
 
     @Selector()
     public static getLayerIdToState(state: WcsCalibrationStateModel) {
-        return state.layerIdToState;
+        return state.layerIdToViewerState;
     }
 
     public static getLayerStateById(id: string) {
@@ -92,32 +89,19 @@ export class WcsCalibrationState {
         });
     }
 
-    @Selector()
-    public static getFileIdToState(state: WcsCalibrationStateModel) {
-        return state.fileIdToState;
-    }
-
-    public static getFileStateById(id: string) {
-        return createSelector([WcsCalibrationState.getFileIdToState], (fileIdToState: { [id: string]: WcsCalibrationViewerStateModel }) => {
-            return fileIdToState[id] || null;
-        });
-    }
-
     static getWcsCalibrationViewerStateByViewerId(viewerId: string) {
         return createSelector(
             [
                 WorkbenchState.getViewerEntities,
-                WcsCalibrationState.getLayerIdToState,
-                WcsCalibrationState.getFileIdToState,
+                WcsCalibrationState.getLayerIdToState
             ],
             (
                 viewerEntities: { [id: string]: Viewer },
-                layerIdToState: { [id: string]: WcsCalibrationViewerStateModel },
-                fileIdToState: { [id: string]: WcsCalibrationViewerStateModel },
+                layerIdToState: { [id: string]: WcsCalibrationViewerStateModel }
             ) => {
                 let viewer = viewerEntities[viewerId];
                 if (!viewer) return null;
-                return viewer.layerId ? layerIdToState[viewer.layerId] : fileIdToState[viewer.fileId];
+                return viewer.layerId ? layerIdToState[viewer.layerId] : null;
             }
         );
     }
@@ -147,6 +131,9 @@ export class WcsCalibrationState {
         { layerId: layerId }: CloseLayerSuccess
     ) {
         setState((state: WcsCalibrationStateModel) => {
+            if (layerId in state.layerIdToViewerState) {
+                delete state.layerIdToViewerState[layerId]
+            }
             state.config.selectedLayerIds = state.config.selectedLayerIds.filter(
                 (id) => id != layerId
             );
@@ -154,21 +141,24 @@ export class WcsCalibrationState {
         });
     }
 
-
-
-    @Action(InitializeWorkbenchLayerState)
+    @Action(LoadLibrarySuccess)
     @ImmutableContext()
-    public initializeWorkbenchLayerState(
+    public loadLibrarySuccess(
         { getState, setState, dispatch }: StateContext<WcsCalibrationStateModel>,
-        { layerId: layerId }: InitializeWorkbenchLayerState
+        { layers, correlationId }: LoadLibrarySuccess
     ) {
-        setState((state: WcsCalibrationStateModel) => {
-            state.layerIdToState[layerId] = {
-                sourceExtractionJobId: null,
-                sourceExtractionOverlayIsValid: false
-            }
-            return state;
+        let state = getState();
+        let layerIds = Object.keys(state.layerIdToViewerState);
+        layers.filter((layer) => !(layer.id in layerIds)).forEach(layer => {
+            setState((state: WcsCalibrationStateModel) => {
+                state.layerIdToViewerState[layer.id] = {
+                    sourceExtractionJobId: null,
+                    sourceExtractionOverlayIsValid: false
+                }
+                return state;
+            })
         })
+
     }
 
     @Action(UpdateWcsCalibrationExtractionOverlay)
@@ -198,7 +188,7 @@ export class WcsCalibrationState {
         };
 
         setState((state: WcsCalibrationStateModel) => {
-            let photState = state.layerIdToState[layerId];
+            let photState = state.layerIdToViewerState[layerId];
             photState.sourceExtractionOverlayIsValid = true;
             photState.sourceExtractionJobId = null;
             return state;
@@ -209,7 +199,7 @@ export class WcsCalibrationState {
             tap(job => {
                 if (job.id) {
                     setState((state: WcsCalibrationStateModel) => {
-                        state.layerIdToState[layerId].sourceExtractionJobId = job.id;
+                        state.layerIdToViewerState[layerId].sourceExtractionJobId = job.id;
                         return state;
                     });
                 }
@@ -230,11 +220,11 @@ export class WcsCalibrationState {
 
         setState((state: WcsCalibrationStateModel) => {
             if (layerId) {
-                state.layerIdToState[layerId].sourceExtractionOverlayIsValid = false;
+                state.layerIdToViewerState[layerId].sourceExtractionOverlayIsValid = false;
             }
             else {
-                Object.keys(state.layerIdToState).forEach(layerId => {
-                    state.layerIdToState[layerId].sourceExtractionOverlayIsValid = false
+                Object.keys(state.layerIdToViewerState).forEach(layerId => {
+                    state.layerIdToViewerState[layerId].sourceExtractionOverlayIsValid = false
                 })
             }
             return state;

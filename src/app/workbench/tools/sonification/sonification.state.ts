@@ -20,7 +20,7 @@ import { Job } from 'src/app/jobs/models/job';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
-import { CenterRegionInViewport, CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLayerHeader, LoadLayerHeaderSuccess, LoadLibrary } from 'src/app/data-files/data-files.actions';
+import { CenterRegionInViewport, CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLayerHeader, LoadLayerHeaderSuccess, LoadLibrary, LoadLibrarySuccess } from 'src/app/data-files/data-files.actions';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { RemoveSources } from '../../sources.actions';
@@ -29,7 +29,6 @@ import { SourcesState } from '../../sources.state';
 import { getHeight, getSourceCoordinates, getWidth, isImageLayer } from 'src/app/data-files/models/data-file';
 import { WorkbenchState } from '../../workbench.state';
 import { Viewer } from '../../models/viewer';
-import { InitializeWorkbenchLayerState } from '../../workbench.actions';
 import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SourceExtractionJob, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
 import { parseDms } from 'src/app/utils/skynet-astro';
@@ -59,14 +58,12 @@ export interface SonificationViewerStateModel {
 
 export interface SonificationStateModel {
     version: string;
-    layerIdToState: { [id: string]: SonificationViewerStateModel },
-    fileIdToState: { [id: string]: SonificationViewerStateModel }
+    layerIdToViewerState: { [id: string]: SonificationViewerStateModel },
 }
 
 const defaultState: SonificationStateModel = {
     version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
-    layerIdToState: {},
-    fileIdToState: {}
+    layerIdToViewerState: {},
 };
 
 @State<SonificationStateModel>({
@@ -85,7 +82,7 @@ export class SonificationState {
 
     @Selector()
     public static getLayerIdToState(state: SonificationStateModel) {
-        return state.layerIdToState;
+        return state.layerIdToViewerState;
     }
 
     public static getLayerStateById(id: string) {
@@ -94,37 +91,51 @@ export class SonificationState {
         });
     }
 
-    @Selector()
-    public static getFileIdToState(state: SonificationStateModel) {
-        return state.fileIdToState;
-    }
-
-    public static getFileStateById(id: string) {
-        return createSelector([SonificationState.getFileIdToState], (fileIdToState: { [id: string]: SonificationViewerStateModel }) => {
-            return fileIdToState[id] || null;
-        });
-    }
 
     static getSonificationViewerStateByViewerId(viewerId: string) {
         return createSelector(
             [
                 WorkbenchState.getViewerEntities,
-                SonificationState.getLayerIdToState,
-                SonificationState.getFileIdToState,
+                SonificationState.getLayerIdToState
             ],
             (
                 viewerEntities: { [id: string]: Viewer },
-                layerIdToState: { [id: string]: SonificationViewerStateModel },
-                fileIdToState: { [id: string]: SonificationViewerStateModel },
+                layerIdToState: { [id: string]: SonificationViewerStateModel }
             ) => {
                 let viewer = viewerEntities[viewerId];
                 if (!viewer) return null;
-                return viewer.layerId ? layerIdToState[viewer.layerId] : fileIdToState[viewer.fileId];
+                return viewer.layerId ? layerIdToState[viewer.layerId] : null;
             }
         );
     }
 
+    @Action(LoadLibrarySuccess)
+    @ImmutableContext()
+    public loadLibrarySuccess(
+        { getState, setState, dispatch }: StateContext<SonificationStateModel>,
+        { layers, correlationId }: LoadLibrarySuccess
+    ) {
+        let state = getState();
+        let layerIds = Object.keys(state.layerIdToViewerState);
+        layers.filter((layer) => !(layer.id in layerIds)).forEach(layer => {
+            setState((state: SonificationStateModel) => {
+                state.layerIdToViewerState[layer.id] = {
+                    regionHistory: [],
+                    regionHistoryIndex: null,
+                    regionHistoryInitialized: false,
+                    regionMode: SonifierRegionMode.CUSTOM,
+                    viewportSync: true,
+                    duration: 10,
+                    toneCount: 22,
+                    progressLine: null,
+                    sonificationLoading: null,
+                    sonificationJobId: '',
+                }
+                return state;
+            })
+        })
 
+    }
 
     @Action(CloseLayerSuccess)
     @ImmutableContext()
@@ -133,35 +144,13 @@ export class SonificationState {
         { layerId }: CloseLayerSuccess
     ) {
         setState((state: SonificationStateModel) => {
-
+            if (layerId in state.layerIdToViewerState) {
+                delete state.layerIdToViewerState[layerId]
+            }
             return state;
         });
     }
 
-
-
-    @Action(InitializeWorkbenchLayerState)
-    @ImmutableContext()
-    public initializeWorkbenchLayerState(
-        { getState, setState, dispatch }: StateContext<SonificationStateModel>,
-        { layerId }: InitializeWorkbenchLayerState
-    ) {
-        setState((state: SonificationStateModel) => {
-            state.layerIdToState[layerId] = {
-                regionHistory: [],
-                regionHistoryIndex: null,
-                regionHistoryInitialized: false,
-                regionMode: SonifierRegionMode.CUSTOM,
-                viewportSync: true,
-                duration: 10,
-                toneCount: 22,
-                progressLine: null,
-                sonificationLoading: null,
-                sonificationJobId: '',
-            }
-            return state;
-        })
-    }
 
     @Action(LoadLayerHeaderSuccess)
     @ImmutableContext()
@@ -173,7 +162,7 @@ export class SonificationState {
         let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId];
         if (!isImageLayer(layer)) return;
         let header = this.store.selectSnapshot(DataFilesState.getHeaderEntities)[layer.headerId];
-        let sonifierState = state.layerIdToState[layerId];
+        let sonifierState = state.layerIdToViewerState[layerId];
 
         if (!sonifierState.regionHistoryInitialized) {
             dispatch(
@@ -197,7 +186,7 @@ export class SonificationState {
         let state = getState();
         let layer = this.store.selectSnapshot(DataFilesState.getLayerEntities)[layerId];
         if (!isImageLayer(layer)) return;
-        let sonifierState = state.layerIdToState[layerId]
+        let sonifierState = state.layerIdToViewerState[layerId]
 
         if (sonifierState.regionMode == SonifierRegionMode.CUSTOM && sonifierState.viewportSync) {
             //find viewer which contains file
@@ -224,7 +213,7 @@ export class SonificationState {
         { layerId }: AddRegionToHistory | UndoRegionSelection | RedoRegionSelection
     ) {
         let state = getState();
-        let sonificationPanelState = state.layerIdToState[layerId];
+        let sonificationPanelState = state.layerIdToViewerState[layerId];
 
         if (sonificationPanelState.regionMode == SonifierRegionMode.CUSTOM) {
             dispatch(new SonificationRegionChanged(layerId));
@@ -238,8 +227,8 @@ export class SonificationState {
         { layerId, changes }: UpdateSonifierFileState
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId]
-            state.layerIdToState[layerId] = {
+            let sonificationPanelState = state.layerIdToViewerState[layerId]
+            state.layerIdToViewerState[layerId] = {
                 ...sonificationPanelState,
                 ...changes,
             };
@@ -257,7 +246,7 @@ export class SonificationState {
         { layerId, region }: AddRegionToHistory
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             if (!sonificationPanelState.regionHistoryInitialized) {
                 sonificationPanelState.regionHistoryIndex = 0;
                 sonificationPanelState.regionHistory = [region];
@@ -280,7 +269,7 @@ export class SonificationState {
         { layerId }: UndoRegionSelection
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             if (
                 !sonificationPanelState.regionHistoryInitialized ||
                 sonificationPanelState.regionHistoryIndex == null ||
@@ -299,7 +288,7 @@ export class SonificationState {
         { layerId }: RedoRegionSelection
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             if (
                 !sonificationPanelState.regionHistoryInitialized ||
                 sonificationPanelState.regionHistoryIndex == null ||
@@ -319,7 +308,7 @@ export class SonificationState {
         { layerId }: ClearRegionHistory
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             if (
                 !sonificationPanelState.regionHistoryInitialized ||
                 sonificationPanelState.regionHistoryIndex == sonificationPanelState.regionHistory.length - 1
@@ -339,7 +328,7 @@ export class SonificationState {
         { layerId, line }: SetProgressLine
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             sonificationPanelState.progressLine = line;
             return state;
         });
@@ -352,7 +341,7 @@ export class SonificationState {
         let getSonificationUrl = (jobId) => `${getCoreApiUrl(this.config)}/jobs/${jobId}/result/files/sonification`;
 
         let state = getState();
-        let sonificationPanelState = state.layerIdToState[layerId];
+        let sonificationPanelState = state.layerIdToViewerState[layerId];
         let settings = {
             x: Math.floor(region.x) + 1,
             y: Math.floor(region.y) + 1,
@@ -393,7 +382,7 @@ export class SonificationState {
         };
 
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             sonificationPanelState.sonificationLoading = true;
             return state;
         });
@@ -403,7 +392,7 @@ export class SonificationState {
             tap(job => {
                 if (job.id) {
                     setState((state: SonificationStateModel) => {
-                        state.layerIdToState[layerId].sonificationJobId = job.id;
+                        state.layerIdToViewerState[layerId].sonificationJobId = job.id;
                         return state;
                     });
                 }
@@ -418,11 +407,11 @@ export class SonificationState {
                             error = job.result.errors.map((e) => e.detail).join(', ');
                         }
                         setState((state: SonificationStateModel) => {
-                            let sonificationPanelState = state.layerIdToState[layerId];
+                            let sonificationPanelState = state.layerIdToViewerState[layerId];
                             sonificationPanelState.sonificationLoading = false;
                             sonificationPanelState.sonificationJobId = job.id;
 
-                            state.layerIdToState[layerId] = {
+                            state.layerIdToViewerState[layerId] = {
                                 ...sonificationPanelState,
                             };
                             return state;
@@ -441,7 +430,7 @@ export class SonificationState {
         { layerId }: ClearSonification
     ) {
         setState((state: SonificationStateModel) => {
-            let sonificationPanelState = state.layerIdToState[layerId];
+            let sonificationPanelState = state.layerIdToViewerState[layerId];
             sonificationPanelState.sonificationLoading = null;
             sonificationPanelState.sonificationJobId = '';
             return state;

@@ -20,7 +20,7 @@ import { Job } from 'src/app/jobs/models/job';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
-import { CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLibrary } from 'src/app/data-files/data-files.actions';
+import { CloseLayerSuccess, InvalidateHeader, InvalidateRawImageTiles, LoadLibrary, LoadLibrarySuccess } from 'src/app/data-files/data-files.actions';
 import { getLongestCommonStartingSubstring, isNotEmpty } from 'src/app/utils/utils';
 import { AfterglowDataFileService } from '../../services/afterglow-data-files';
 import { RemoveSources } from '../../sources.actions';
@@ -29,11 +29,9 @@ import { SourcesState } from '../../sources.state';
 import { getSourceCoordinates } from 'src/app/data-files/models/data-file';
 import { WorkbenchState } from '../../workbench.state';
 import { Viewer } from '../../models/viewer';
-import { InitializeWorkbenchLayerState } from '../../workbench.actions';
 import { PhotometryPanelConfig } from './models/photometry-panel-config';
 import { AddPhotDatas, BatchPhotometerSources, InvalidateAutoCalByLayerId, InvalidateAutoPhotByLayerId, RemovePhotDatasByLayerId, RemovePhotDatasBySourceId, UpdateAutoFieldCalibration, UpdateAutoPhotometry, UpdateConfig, UpdatePhotometryViewerState } from './photometry.actions';
 import { SourceCatalogState } from '../source-catalog/source-catalog.state';
-import { WorkbenchStateType } from '../../models/workbench-file-state';
 import { toFieldCalibration, toPhotometryJobSettings, toSourceExtractionJobSettings } from '../../models/global-settings';
 import { PhotometryData, PhotometryJob } from 'src/app/jobs/models/photometry';
 import { PosType, sourceToAstrometryData } from '../../models/source';
@@ -53,8 +51,7 @@ export interface PhotometryViewerStateModel {
 export interface PhotometryStateModel {
     version: string;
     config: PhotometryPanelConfig,
-    layerIdToState: { [id: string]: PhotometryViewerStateModel },
-    fileIdToState: { [id: string]: PhotometryViewerStateModel }
+    layerIdToViewerState: { [id: string]: PhotometryViewerStateModel }
 }
 
 const defaultState: PhotometryStateModel = {
@@ -70,8 +67,7 @@ const defaultState: PhotometryStateModel = {
         creatingBatchJobs: false,
         autoPhot: true
     },
-    layerIdToState: {},
-    fileIdToState: {}
+    layerIdToViewerState: {}
 };
 
 @State<PhotometryStateModel>({
@@ -89,7 +85,7 @@ export class PhotometryState {
 
     @Selector()
     public static getLayerIdToState(state: PhotometryStateModel) {
-        return state.layerIdToState;
+        return state.layerIdToViewerState;
     }
 
     public static getLayerStateById(id: string) {
@@ -98,32 +94,19 @@ export class PhotometryState {
         });
     }
 
-    @Selector()
-    public static getFileIdToState(state: PhotometryStateModel) {
-        return state.fileIdToState;
-    }
-
-    public static getFileStateById(id: string) {
-        return createSelector([PhotometryState.getFileIdToState], (fileIdToState: { [id: string]: PhotometryViewerStateModel }) => {
-            return fileIdToState[id] || null;
-        });
-    }
-
     static getPhotometryViewerStateByViewerId(viewerId: string) {
         return createSelector(
             [
                 WorkbenchState.getViewerEntities,
                 PhotometryState.getLayerIdToState,
-                PhotometryState.getFileIdToState,
             ],
             (
                 viewerEntities: { [id: string]: Viewer },
                 layerIdToState: { [id: string]: PhotometryViewerStateModel },
-                fileIdToState: { [id: string]: PhotometryViewerStateModel },
             ) => {
                 let viewer = viewerEntities[viewerId];
                 if (!viewer) return null;
-                return viewer.layerId ? layerIdToState[viewer.layerId] : fileIdToState[viewer.fileId];
+                return viewer.layerId ? layerIdToState[viewer.layerId] : null;
             }
         );
     }
@@ -147,6 +130,29 @@ export class PhotometryState {
         });
     }
 
+    @Action(LoadLibrarySuccess)
+    @ImmutableContext()
+    public loadLibrarySuccess(
+        { getState, setState, dispatch }: StateContext<PhotometryStateModel>,
+        { layers, correlationId }: LoadLibrarySuccess
+    ) {
+        let state = getState();
+        let layerIds = Object.keys(state.layerIdToViewerState);
+        layers.filter((layer) => !(layer.id in layerIds)).forEach(layer => {
+            setState((state: PhotometryStateModel) => {
+                state.layerIdToViewerState[layer.id] = {
+                    sourceExtractionJobId: '',
+                    sourcePhotometryData: {},
+                    autoPhotIsValid: false,
+                    autoPhotJobId: '',
+                    autoCalIsValid: false,
+                    autoCalJobId: '',
+                }
+                return state;
+            })
+        })
+    }
+
     @Action(CloseLayerSuccess)
     @ImmutableContext()
     public closeLayerSuccess(
@@ -161,27 +167,6 @@ export class PhotometryState {
         });
     }
 
-    @Action(InitializeWorkbenchLayerState)
-    @ImmutableContext()
-    public initializeWorkbenchLayerState(
-        { getState, setState, dispatch }: StateContext<PhotometryStateModel>,
-        { layerId: layerId }: InitializeWorkbenchLayerState
-    ) {
-        setState((state: PhotometryStateModel) => {
-            state.layerIdToState[layerId] = {
-                sourceExtractionJobId: '',
-                sourcePhotometryData: {},
-                autoPhotIsValid: false,
-                autoPhotJobId: '',
-                autoCalIsValid: false,
-                autoCalJobId: '',
-            }
-            return state;
-        })
-    }
-
-
-
     @Action(UpdatePhotometryViewerState)
     @ImmutableContext()
     public updatePhotometryFileState(
@@ -189,8 +174,8 @@ export class PhotometryState {
         { layerId: layerId, changes }: UpdatePhotometryViewerState
     ) {
         setState((state: PhotometryStateModel) => {
-            state.layerIdToState[layerId] = {
-                ...state.layerIdToState[layerId],
+            state.layerIdToViewerState[layerId] = {
+                ...state.layerIdToViewerState[layerId],
                 ...changes,
             };
             return state;
@@ -243,7 +228,7 @@ export class PhotometryState {
         };
 
         setState((state: PhotometryStateModel) => {
-            let photState = state.layerIdToState[layerId];
+            let photState = state.layerIdToViewerState[layerId];
             photState.autoPhotIsValid = true;
             photState.autoPhotJobId = null;
             return state;
@@ -254,7 +239,7 @@ export class PhotometryState {
             tap(job => {
                 if (job.id) {
                     setState((state: PhotometryStateModel) => {
-                        state.layerIdToState[layerId].autoPhotJobId = job.id;
+                        state.layerIdToViewerState[layerId].autoPhotJobId = job.id;
                         return state;
                     });
                 }
@@ -302,7 +287,7 @@ export class PhotometryState {
         };
 
         setState((state: PhotometryStateModel) => {
-            let photState = state.layerIdToState[layerId];
+            let photState = state.layerIdToViewerState[layerId];
             photState.autoCalIsValid = true;
             photState.autoCalJobId = null;
             return state;
@@ -313,7 +298,7 @@ export class PhotometryState {
             tap(job => {
                 if (job.id) {
                     setState((state: PhotometryStateModel) => {
-                        state.layerIdToState[layerId].autoCalJobId = job.id;
+                        state.layerIdToViewerState[layerId].autoCalJobId = job.id;
                         return state;
                     });
                 }
@@ -452,7 +437,7 @@ export class PhotometryState {
         setState((state: PhotometryStateModel) => {
             //Photometry data from the Core refers to layer ids as file ids.
             photDatas.forEach((d) => {
-                let photometryPanelState = state.layerIdToState[d.fileId];
+                let photometryPanelState = state.layerIdToViewerState[d.fileId];
                 photometryPanelState.sourcePhotometryData[d.id] = d;
             });
 
@@ -468,11 +453,11 @@ export class PhotometryState {
     ) {
         setState((state: PhotometryStateModel) => {
             if (layerId) {
-                state.layerIdToState[layerId].sourcePhotometryData = {}
+                state.layerIdToViewerState[layerId].sourcePhotometryData = {}
             }
             else {
-                Object.keys(state.layerIdToState).forEach(layerId => {
-                    state.layerIdToState[layerId].sourcePhotometryData = {}
+                Object.keys(state.layerIdToViewerState).forEach(layerId => {
+                    state.layerIdToViewerState[layerId].sourcePhotometryData = {}
                 })
             }
             return state;
@@ -487,8 +472,8 @@ export class PhotometryState {
         { sourceId }: RemovePhotDatasBySourceId
     ) {
         setState((state: PhotometryStateModel) => {
-            Object.keys(state.layerIdToState).forEach(layerId => {
-                let sourcePhotometryData = state.layerIdToState[layerId].sourcePhotometryData;
+            Object.keys(state.layerIdToViewerState).forEach(layerId => {
+                let sourcePhotometryData = state.layerIdToViewerState[layerId].sourcePhotometryData;
                 if (sourceId in sourcePhotometryData) {
                     delete sourcePhotometryData[sourceId];
                 }
@@ -506,11 +491,11 @@ export class PhotometryState {
     ) {
         setState((state: PhotometryStateModel) => {
             if (layerId) {
-                state.layerIdToState[layerId].autoCalIsValid = false;
+                state.layerIdToViewerState[layerId].autoCalIsValid = false;
             }
             else {
-                Object.keys(state.layerIdToState).forEach(layerId => {
-                    state.layerIdToState[layerId].autoCalIsValid = false
+                Object.keys(state.layerIdToViewerState).forEach(layerId => {
+                    state.layerIdToViewerState[layerId].autoCalIsValid = false
                 })
             }
             return state;
@@ -525,11 +510,11 @@ export class PhotometryState {
     ) {
         setState((state: PhotometryStateModel) => {
             if (layerId) {
-                state.layerIdToState[layerId].autoPhotIsValid = false;
+                state.layerIdToViewerState[layerId].autoPhotIsValid = false;
             }
             else {
-                Object.keys(state.layerIdToState).forEach(layerId => {
-                    state.layerIdToState[layerId].autoPhotIsValid = false
+                Object.keys(state.layerIdToViewerState).forEach(layerId => {
+                    state.layerIdToViewerState[layerId].autoPhotIsValid = false
                 })
             }
             return state;

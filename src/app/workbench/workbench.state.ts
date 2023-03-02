@@ -93,18 +93,15 @@ import {
   CloseViewer,
   KeepViewerOpen,
   SplitViewerPanel,
-  UpdateFileInfoPanelConfig,
   MoveViewer,
   Initialize,
   UpdateCurrentViewportSize,
-  InitializeWorkbenchLayerState,
   SyncViewerTransformations,
   SetViewerSyncMode,
   SyncViewerNormalizations,
   ToggleFileSelection,
   SetFileSelection,
   SetFileListFilter,
-  InitializeWorkbenchFileState,
   ImportFromSurveyFail,
   UpdateSettings,
   UpdateCalibrationSettings,
@@ -152,14 +149,7 @@ import { SourceId } from '../jobs/models/source-id';
 import { PhotData } from './models/source-phot-data';
 import { IViewer, ImageViewer, TableViewer, ViewerType, Viewer } from './models/viewer';
 import { ResetState } from '../auth/auth.actions';
-import {
-  WorkbenchImageLayerState,
-  WorkbenchTableLayerState,
-  WorkbenchFileState,
-  IWorkbenchState,
-  WorkbenchStateType,
-} from './models/workbench-file-state';
-import { DataFilesState, DataFilesStateModel } from '../data-files/data-files.state';
+import { DataFilesState } from '../data-files/data-files.state';
 import { LayerType } from '../data-files/models/data-file-type';
 import {
   getViewportRegion,
@@ -233,13 +223,7 @@ const workbenchStateDefaults: WorkbenchStateModel = {
   addFieldCalSourcesFromCatalogJobId: '',
   creatingAddFieldCalSourcesFromCatalogJob: false,
   addFieldCalSourcesFromCatalogFieldCalId: '',
-  dssImportLoading: false,
-
-  fileIdToWorkbenchStateIdMap: {},
-  layerIdToWorkbenchStateIdMap: {},
-  nextWorkbenchStateId: 0,
-  workbenchStateIds: [],
-  workbenchStateEntities: {}
+  dssImportLoading: false
 };
 
 @State<WorkbenchStateModel>({
@@ -255,11 +239,7 @@ export class WorkbenchState {
     private afterglowCatalogService: AfterglowCatalogService,
     private afterglowFieldCalService: AfterglowFieldCalService,
     private correlationIdGenerator: CorrelationIdGenerator,
-    private actions$: Actions,
-    private dialog: MatDialog,
-    private config: AfterglowConfigService,
-    private dataFileService: AfterglowDataFileService,
-    private jobService: JobService
+    private actions$: Actions
   ) { }
 
   /** Root Selectors */
@@ -426,38 +406,6 @@ export class WorkbenchState {
     return Object.values(state.viewerLayoutItems);
   }
 
-  @Selector()
-  public static getFileIdToWorkbenchStateIdMap(state: WorkbenchStateModel) {
-    return state.fileIdToWorkbenchStateIdMap;
-  }
-
-  @Selector()
-  public static getLayerIdToWorkbenchStateIdMap(state: WorkbenchStateModel) {
-    return state.layerIdToWorkbenchStateIdMap;
-  }
-
-  @Selector()
-  public static getWorkbenchStateEntities(state: WorkbenchStateModel) {
-    return state.workbenchStateEntities;
-  }
-
-  @Selector()
-  public static getWorkbenchStateIds(state: WorkbenchStateModel) {
-    return state.workbenchStateIds;
-  }
-
-  @Selector()
-  public static getWorkbenchStates(state: WorkbenchStateModel) {
-    return Object.values(state.workbenchStateEntities);
-  }
-
-  @Selector()
-  public static getWorkbenchStateById(state: WorkbenchStateModel) {
-    return (stateId: string) => {
-      return state.workbenchStateEntities[stateId] || null;
-    };
-  }
-
   /** File Filtering and Selection
    *
    */
@@ -575,32 +523,6 @@ export class WorkbenchState {
   @Selector()
   public static getFocusedViewerPanelId(state: WorkbenchStateModel) {
     return state.focusedViewerPanelId;
-  }
-
-  /** Workbench State */
-
-  static getWorkbenchStateByLayerId(layerId: string) {
-    return createSelector(
-      [WorkbenchState.getLayerIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
-      (
-        layerIdToWorkbenchStateId: { [id: string]: string },
-        workbenchStateEntities: { [id: string]: IWorkbenchState }
-      ) => {
-        return workbenchStateEntities[layerIdToWorkbenchStateId[layerId]] || null;
-      }
-    );
-  }
-
-  static getWorkbenchStateByFileId(fileId: string) {
-    return createSelector(
-      [WorkbenchState.getFileIdToWorkbenchStateIdMap, WorkbenchState.getWorkbenchStateEntities],
-      (
-        fileIdToWorkbenchStateId: { [id: string]: string },
-        workbenchStateEntities: { [id: string]: IWorkbenchState }
-      ) => {
-        return workbenchStateEntities[fileIdToWorkbenchStateId[fileId]] || null;
-      }
-    );
   }
 
   /** Viewer
@@ -866,34 +788,6 @@ export class WorkbenchState {
       ],
       (viewer: Viewer, fileImageToViewportTransform: Transform, layerImageToViewportTransform: Transform) => {
         return viewer?.layerId ? layerImageToViewportTransform : fileImageToViewportTransform;
-      }
-    );
-  }
-
-  static getWorkbenchStateIdByViewerId(viewerId: string) {
-    return createSelector(
-      [
-        WorkbenchState.getViewerEntities,
-        WorkbenchState.getLayerIdToWorkbenchStateIdMap,
-        WorkbenchState.getFileIdToWorkbenchStateIdMap,
-      ],
-      (
-        viewerEntities: { [id: string]: Viewer },
-        layerIdToWorkbenchStateId: { [id: string]: string },
-        fileIdToWorkbenchStateId: { [id: string]: string }
-      ) => {
-        let viewer = viewerEntities[viewerId];
-        if (!viewer) return null;
-        return viewer.layerId ? layerIdToWorkbenchStateId[viewer.layerId] : fileIdToWorkbenchStateId[viewer.fileId];
-      }
-    );
-  }
-
-  static getWorkbenchStateByViewerId(viewerId: string) {
-    return createSelector(
-      [WorkbenchState.getWorkbenchStateIdByViewerId(viewerId), WorkbenchState.getWorkbenchStateEntities],
-      (workbenchStateId: string, workbenchStateEntities: { [id: string]: IWorkbenchState }) => {
-        return workbenchStateEntities[workbenchStateId] || null;
       }
     );
   }
@@ -1896,14 +1790,6 @@ export class WorkbenchState {
     { layers, correlationId }: LoadLibrarySuccess
   ) {
     let state = getState();
-    let newLayerIds = layers.map((layer) => layer.id).filter((id) => !(id in state.layerIdToWorkbenchStateIdMap));
-    dispatch(newLayerIds.map((layerId) => new InitializeWorkbenchLayerState(layerId)));
-
-    let newFileIds = layers.map((layer) => layer.fileId).filter((id) => !(id in state.fileIdToWorkbenchStateIdMap));
-    newFileIds = [...new Set(newFileIds)];
-    dispatch(newFileIds.map((fileId) => new InitializeWorkbenchFileState(fileId)));
-
-    //TODO: remove workbench file states for files which no longer exist
 
     //when layers are merged or split,  viewers may need to be updated with the new file ID
     let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
@@ -1914,28 +1800,6 @@ export class WorkbenchState {
       }
       dispatch(new CloseViewer(viewerId));
     });
-    // setState((state: WorkbenchStateModel) => {
-    //   let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities)
-    //   state.aligningPanelConfig.alignFormData.selectedLayerIds = state.aligningPanelConfig.alignFormData.selectedLayerIds.filter(layerId => layerId in layerEntities)
-    //   state.stackingPanelConfig.stackFormData.selectedLayerIds = state.stackingPanelConfig.stackFormData.selectedLayerIds.filter(layerId => layerId in layerEntities)
-    //   return state;
-    // });
-
-    // let focusedViewer = this.store.selectSnapshot(WorkbenchState.getFocusedViewer);
-
-    // if (
-    //   !focusedViewer || //no viewers have focus
-    //   (!focusedViewer.layerId && !focusedViewer.fileId) //focused viewer has no assigned file
-    // ) {
-    //   if (layers[0]) {
-    //     dispatch(
-    //       new SelectDataFileListItem({
-    //         fileId: layers[0].fileId,
-    //         layerId: layers[0].id,
-    //       })
-    //     );
-    //   }
-    // }
   }
 
   @Action(CloseDataFile)
@@ -2323,124 +2187,6 @@ export class WorkbenchState {
 
 
 
-
-  @Action(InitializeWorkbenchLayerState)
-  @ImmutableContext()
-  public initializeWorkbenchLayerState(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: InitializeWorkbenchLayerState
-  ) {
-    let actions: any[] = [];
-    setState((state: WorkbenchStateModel) => {
-      let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
-      if (!(layerId in layerEntities)) return state;
-      let layer = layerEntities[layerId];
-      let workbenchState: IWorkbenchState;
-      let workbenchStateId = `WORKBENCH_STATE_${state.nextWorkbenchStateId++}`;
-      state.layerIdToWorkbenchStateIdMap[layerId] = workbenchStateId;
-
-      //initialize Layer states
-      if (layer.type == LayerType.IMAGE) {
-
-
-
-
-        let imageLayerState: WorkbenchImageLayerState = {
-          id: workbenchStateId,
-          type: WorkbenchStateType.IMAGE_LAYER,
-        };
-
-        workbenchState = imageLayerState;
-        state.workbenchStateEntities[workbenchState.id] = workbenchState;
-        state.workbenchStateIds.push(workbenchState.id);
-
-        actions.push(new InitializeWorkbenchFileState(layer.fileId));
-      } else if (layer.type == LayerType.TABLE) {
-        let tableLayerState: WorkbenchTableLayerState = {
-          id: workbenchStateId,
-          type: WorkbenchStateType.TABLE_LAYER,
-        };
-
-        workbenchState = tableLayerState;
-        state.workbenchStateEntities[workbenchState.id] = workbenchState;
-        state.workbenchStateIds.push(workbenchState.id);
-
-        actions.push(new InitializeWorkbenchFileState(layer.fileId));
-      }
-
-      return state;
-    });
-
-    return dispatch(actions);
-  }
-
-  @Action(InitializeWorkbenchFileState)
-  @ImmutableContext()
-  public initializeWorkbenchFileState(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { fileId }: InitializeWorkbenchFileState
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities);
-      if (!(fileId in fileEntities)) return state;
-      let file = fileEntities[fileId];
-      let workbenchStateId = state.fileIdToWorkbenchStateIdMap[fileId];
-      if (workbenchStateId && state.workbenchStateEntities[workbenchStateId]) return state;
-
-      workbenchStateId = `WORKBENCH_STATE_${state.nextWorkbenchStateId++}`;
-      state.fileIdToWorkbenchStateIdMap[fileId] = workbenchStateId;
-
-      let fileState: WorkbenchFileState = {
-        id: workbenchStateId,
-        type: WorkbenchStateType.FILE,
-      };
-
-      state.workbenchStateEntities[workbenchStateId] = fileState;
-      state.workbenchStateIds.push(fileState.id);
-
-      return state;
-    });
-  }
-
-  @Action(CloseDataFileSuccess)
-  @ImmutableContext()
-  public closeDataFileSuccess(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { fileId }: CloseDataFileSuccess
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchStateId = state.fileIdToWorkbenchStateIdMap[fileId];
-      if (workbenchStateId) {
-        delete state.fileIdToWorkbenchStateIdMap[fileId];
-      }
-      if (workbenchStateId in state.workbenchStateEntities) {
-        state.workbenchStateIds = state.workbenchStateIds.filter((id) => id != workbenchStateId);
-        delete state.workbenchStateEntities[workbenchStateId];
-      }
-      return state;
-    });
-  }
-
-  @Action(CloseLayerSuccess)
-  @ImmutableContext()
-  public closeLayerSuccess(
-    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
-    { layerId: layerId }: CloseLayerSuccess
-  ) {
-    setState((state: WorkbenchStateModel) => {
-      let workbenchStateId = state.layerIdToWorkbenchStateIdMap[layerId];
-      if (workbenchStateId) {
-        delete state.fileIdToWorkbenchStateIdMap[layerId];
-      }
-      if (workbenchStateId in state.workbenchStateEntities) {
-        state.workbenchStateIds = state.workbenchStateIds.filter((id) => id != workbenchStateId);
-        delete state.workbenchStateEntities[workbenchStateId];
-      }
-
-
-      return state;
-    });
-  }
 
 
   /*  Custom Markers */

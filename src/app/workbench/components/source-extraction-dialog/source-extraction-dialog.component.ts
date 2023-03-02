@@ -16,7 +16,6 @@ import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SonifierRegionMode } from '../../tools/sonification/models/sonifier-file-state';
 import { PosType, Source } from '../../models/source';
 import { SourceExtractionRegion } from '../../models/source-extraction-region';
-import { WorkbenchImageLayerState, WorkbenchStateType } from '../../models/workbench-file-state';
 import { AddSources } from '../../sources.actions';
 import { ExtractSources } from '../../workbench.actions';
 import { WorkbenchState } from '../../workbench.state';
