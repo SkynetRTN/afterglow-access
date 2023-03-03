@@ -17,7 +17,7 @@ export interface CosmeticCorrectionJobSettings {
   mCorrPixel: number;
   groupByInstrument: boolean;
   groupByFilter: boolean;
-  groupByExp_length: boolean;
+  groupByExpLength: boolean;
   maxGroupLen: number;
   maxGroupSpanHours: number;
   minGroupSepHours: number;
@@ -34,7 +34,7 @@ export interface CosmeticCorrectionJob extends JobBase {
   fileIds: string[];
   settings?: CosmeticCorrectionJobSettings;
   result?: CosmeticCorrectionJobResult;
-  inPlace: boolean;
+  inplace: boolean;
 }
 
 

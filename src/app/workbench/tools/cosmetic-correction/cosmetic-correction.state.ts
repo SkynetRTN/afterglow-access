@@ -15,10 +15,13 @@ import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip,
 import { of, merge, interval, Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { CosmeticCorrectionSettings, defaults } from './models/cosmetic-correction-settings';
-import { SetCurrentJobId, SetSelectedLayerIds, UpdateSettings } from './cosmetic-correction.actions';
+import { CreateCosmeticCorrectionJob, SetCurrentJobId, SetSelectedLayerIds, UpdateSettings } from './cosmetic-correction.actions';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { Job } from 'src/app/jobs/models/job';
-import { isCosmeticCorrectionJob } from 'src/app/jobs/models/cosmetic-correction';
+import { CosmeticCorrectionJob, isCosmeticCorrectionJob } from 'src/app/jobs/models/cosmetic-correction';
+import { JobType } from 'src/app/jobs/models/job-types';
+import { JobService } from 'src/app/jobs/services/job.service';
+import { InvalidateHeader, InvalidateRawImageTiles, LoadLibrary } from 'src/app/data-files/data-files.actions';
 
 export interface CosmeticCorrectionStateModel {
     version: string;
@@ -40,7 +43,7 @@ const cosmeticCorrectionDefaultState: CosmeticCorrectionStateModel = {
 })
 @Injectable()
 export class CosmeticCorrectionState {
-    constructor(private actions$: Actions) { }
+    constructor(private actions$: Actions, private jobService: JobService) { }
 
     @Selector()
     public static getState(state: CosmeticCorrectionStateModel) {
@@ -102,4 +105,62 @@ export class CosmeticCorrectionState {
             };
         });
     }
+
+
+    @Action(CreateCosmeticCorrectionJob)
+    @ImmutableContext()
+    public createCosmeticCorrectionJob(
+        { getState, setState, dispatch }: StateContext<CosmeticCorrectionStateModel>,
+        { layerIds, settings }: CreateCosmeticCorrectionJob
+    ) {
+        let job: CosmeticCorrectionJob = {
+            type: JobType.CosmeticCorrection,
+            id: null,
+            fileIds: layerIds,
+            settings: settings,
+            state: null,
+            inplace: true,
+        };
+
+        let job$ = this.jobService.createJob(job);
+
+        job$.pipe(
+            takeUntil(this.actions$.pipe(ofActionDispatched(CreateCosmeticCorrectionJob))),
+            take(1)
+        ).subscribe(job => {
+            if (job.id) {
+                setState((state: CosmeticCorrectionStateModel) => {
+                    state.currentJobId = job.id;
+                    return state;
+                });
+            }
+        })
+
+        job$.subscribe(job => {
+            if (job.state.status == 'completed' && job.result) {
+                if (!isCosmeticCorrectionJob(job)) return;
+                let actions: any[] = [];
+                let result = job.result;
+                if (result.errors.length != 0) {
+                    console.error('Errors encountered during cosmetic correction: ', result.errors);
+                }
+                if (result.warnings.length != 0) {
+                    console.error('Warnings encountered during cosmetic correction: ', result.warnings);
+                }
+
+                let layerIds = result.fileIds.map((id) => id.toString());
+
+                if (job.inplace) {
+                    layerIds.forEach((layerId) => actions.push(new InvalidateRawImageTiles(layerId)));
+                }
+
+                actions.push(new LoadLibrary());
+                dispatch(actions);
+
+            }
+        })
+
+        return job$
+    }
+
 }

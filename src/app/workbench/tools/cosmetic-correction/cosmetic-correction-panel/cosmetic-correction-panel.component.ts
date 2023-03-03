@@ -6,9 +6,9 @@ import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } fr
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 
 import { ImageLayer } from 'src/app/data-files/models/data-file';
-import { CosmeticCorrectionJob } from 'src/app/jobs/models/cosmetic-correction';
+import { CosmeticCorrectionJob, CosmeticCorrectionJobSettings } from 'src/app/jobs/models/cosmetic-correction';
 import { greaterThan, isNumber } from 'src/app/utils/validators';
-import { SetSelectedLayerIds, UpdateSettings } from '../cosmetic-correction.actions';
+import { CreateCosmeticCorrectionJob, SetCurrentJobId, SetSelectedLayerIds, UpdateSettings } from '../cosmetic-correction.actions';
 import { CosmeticCorrectionState } from '../cosmetic-correction.state';
 
 @Component({
@@ -37,6 +37,7 @@ export class CosmeticCorrectionPanelComponent implements OnInit {
     mCol: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
     nuCol: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
     mPixel: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
+    nuPixel: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
     mCorrCol: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
     mCorrPixel: this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0, true)], updateOn: 'blur' }),
     groupByInstrument: this.fb.control('', { updateOn: 'change' }),
@@ -69,6 +70,12 @@ export class CosmeticCorrectionPanelComponent implements OnInit {
         });
       }
     });
+
+    this.selectedLayers$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(selectedLayerIds => {
+      this.form.patchValue({ selectedLayerIds: selectedLayerIds }, { emitEvent: false })
+    })
 
 
 
@@ -110,6 +117,34 @@ export class CosmeticCorrectionPanelComponent implements OnInit {
   }
 
   submit() {
+
+    this.store.dispatch(new SetCurrentJobId(null));
+    let controls = this.form.controls;
+
+    let settings: CosmeticCorrectionJobSettings = {
+      mCol: controls.mCol.value,
+      nuCol: controls.nuCol.value,
+      mPixel: controls.mPixel.value,
+      nuPixel: controls.nuPixel.value,
+      mCorrCol: controls.mCorrCol.value,
+      mCorrPixel: controls.mCorrPixel.value,
+      groupByInstrument: controls.groupByInstrument.value,
+      groupByFilter: controls.groupByFilter.value,
+      groupByExpLength: controls.groupByExpLength.value,
+      maxGroupLen: controls.maxGroupLen.value,
+      maxGroupSpanHours: controls.maxGroupSpanHours.value,
+      minGroupSepHours: controls.minGroupSepHours.value,
+
+    }
+
+    let selectedLayerIds: string[] = this.form.controls.selectedLayerIds.value;
+    let state = this.store.selectSnapshot(CosmeticCorrectionState.getState)
+    let data = state.settings;
+    let layerEntities = this.store.selectSnapshot(DataFilesState.getLayerEntities);
+
+
+
+    this.store.dispatch(new CreateCosmeticCorrectionJob(selectedLayerIds, settings));
   }
 
 }

@@ -1,6 +1,6 @@
 <div *ngIf="layerIds">
     <form [formGroup]="form">
-        <div>
+        <div class="flex flex-row gap-4">
             <mat-form-field appearance="outline" style="width: 300px">
                 <mat-label i18n>Select Image(s) to Correct</mat-label>
                 <mat-select multiple formControlName="selectedLayerIds">
@@ -31,6 +31,10 @@
             </mat-form-field>
             <mat-form-field appearance="outline">
                 <mat-label i18n>mPixel</mat-label>
+                <input matInput formControlName="mPixel" type="number" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>nuPixel</mat-label>
                 <input matInput formControlName="mPixel" type="number" />
             </mat-form-field>
             <mat-form-field appearance="outline">
