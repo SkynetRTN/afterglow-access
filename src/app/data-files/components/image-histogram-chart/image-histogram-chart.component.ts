@@ -349,6 +349,7 @@ export class ImageHistogramChartComponent implements OnInit, OnChanges, OnDestro
       },
       shapes: shapes,
     };
+    this._changeDetectorRef.detectChanges();
 
   }
 

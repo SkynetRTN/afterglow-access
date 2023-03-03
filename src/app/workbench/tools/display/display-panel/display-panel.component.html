@@ -7,62 +7,68 @@
 </ng-template>
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
-  <ng-container *ngIf="activeLayer$ | async as layer; else multiLayerBlock">
-    <ng-container *ngIf="activeImageLayer$ | async as activeImageLayer; else invalidLayerTypeBlock">
+  <ng-container *ngIf="selectedImageLayer$ | async as selectedImageLayer; else compositeHistogramBlock">
+    <div *ngIf="selectedImageLayer.histogram?.loaded" class="pr-3 pl-3 pb-4 w-100" style="height: 400px;">
+      <app-image-histogram-chart [data]="selectedImageLayerHistData$ | async"
+        [backgroundLevel]="selectedImageLayer?.normalizer?.backgroundLevel"
+        [peakLevel]="selectedImageLayer?.normalizer?.peakLevel">
+      </app-image-histogram-chart>
+      <div style="clear: both"></div>
+    </div>
+    <app-normalizer [layerId]="selectedImageLayer.id"></app-normalizer>
+  </ng-container>
+  <ng-template #compositeHistogramBlock>
+    <ng-container *ngIf="compositeNormalizationLayer$ | async as selectedImageLayer">
+      <div class="flex flex-row gap-6 w-full">
+        <form [formGroup]="layerSelectionForm" class="flex-1">
+          <mat-form-field class="w-full">
+            <mat-label i18n>Select Layer To View Normalization Settings</mat-label>
+            <mat-select formControlName="selectedLayerId">
+              <mat-option *ngFor="let layer of layers$ | async" [value]="layer.id">
+                {{layer.name}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+        <button mat-raised-button style="height: 36px" class="flex-initial" [matMenuTriggerFor]="histogramFittingMenu">
+          <ng-container i18n>Histogram Fitting Tools</ng-container>
+          <mat-icon>keyboard_arrow_down</mat-icon>
+        </button>
 
-      <div *ngIf="activeImageLayer.histogram?.loaded" class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
-        <app-image-histogram-chart [data]="[activeHistData$ | async]"
-          [backgroundLevel]="activeImageLayer?.normalizer?.backgroundLevel"
-          [peakLevel]="activeImageLayer?.normalizer?.peakLevel">
+      </div>
+      <div class="pr-3 pl-3 pb-4 w-100" style="height: 400px;">
+        <app-image-histogram-chart [data]="compositeHistData$ | async"
+          [backgroundLevel]="selectedImageLayer?.normalizer?.backgroundLevel"
+          [peakLevel]="selectedImageLayer?.normalizer?.peakLevel">
         </app-image-histogram-chart>
         <div style="clear: both"></div>
       </div>
 
 
 
-      <div class="pt-1">
-        <h3 i18n>Brightness and Contrast Settings</h3>
-        <div class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
-          <div class="m-2">
-            <button mat-raised-button (click)="onPresetClick( 'faint')" i18n-aria-label
-              aria-label="Faint Target Preset">
-              <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
-            </button>
-          </div>
-          <div class="m-2">
-            <button mat-raised-button (click)="onPresetClick('default')" i18n-aria-label aria-label="Default Preset">
-              <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
-            </button>
-          </div>
-          <div class="m-2">
-            <button mat-raised-button (click)="onPresetClick('bright')" i18n-aria-label
-              aria-label="Bright Target Preset">
-              <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
-            </button>
-          </div>
-
-
-        </div>
-        <app-normalizer-form [normalizer]="activeImageLayer?.normalizer"
-          [showLayerScale]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
-          [showLayerOffset]="(file$ |async)?.colorBalanceMode != ColorBalanceMode.PERCENTILE"
-          (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-          (midPercentileChange)="onMidPercentileChange($event)" (peakPercentileChange)="onPeakPercentileChange($event)"
-          (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
-          (peakLevelChange)="onPeakLevelChange($event)" (colorMapChange)="onColorMapChange(activeImageLayer, $event)"
-          (stretchModeChange)="onStretchModeChange($event)"
-          (invertedChange)="onInvertedChange(activeImageLayer, $event)"
-          (layerScaleChange)="onLayerScaleChange(activeImageLayer, $event)"
-          (layerOffsetChange)="onLayerOffsetChange(activeImageLayer, $event)"
-          (modeChange)="onNormalizerModeChange($event)">
-        </app-normalizer-form>
-      </div>
-
-
+      <mat-menu #histogramFittingMenu="matMenu">
+        <button mat-menu-item (click)="neutralizeBackgroundsEvent$.next();" i18n-aria-label
+          aria-label="Neutralize Background">
+          <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
+        </button>
+        <button mat-menu-item (click)="neutralizeSourcesEvent$.next();" i18n-aria-label aria-label="Neutralize Sources">
+          <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources...</span>
+        </button>
+        <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
+          aria-label="Photometric Color Calibration...">
+          <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Color Calibration...</span>
+        </button>
+        <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
+          aria-label="Reset Histograms">
+          <mat-icon>refresh</mat-icon><span i18n>Reset Histogram Fitting</span>
+        </button>
+      </mat-menu>
+      <app-normalizer [layerId]="selectedImageLayer.id"></app-normalizer>
 
 
     </ng-container>
-  </ng-container>
+  </ng-template>
+  <!-- 
 
 
   <ng-template #multiLayerBlock>
@@ -114,49 +120,9 @@
         </div>
         <div style="clear: both"></div>
 
-        <!-- <div class="p-4">
-          <mat-slide-toggle [checked]="(file$ |async)?.syncLayerNormalizers"
-            (change)="setFileNormalizerSyncEvent$.next($event.checked)" color="primary" i18n>
-            Keep brightness and contrast settings synced across all layers
-          </mat-slide-toggle>
-        </div> -->
 
-        <!-- <ng-container *ngIf="(file$ |async)?.syncLayerNormalizers"> -->
         <ng-container *ngIf="compositeNormalizersSynced$ | async; else notSyncedBlock">
-          <div class="pb-4 pt-1" *ngIf="compositeNormalizer$ | async; let compositeNormalizer">
-            <h3 i18n>Brightness and Contrast Settings</h3>
-            <div class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
-              <div class="m-2">
-                <button mat-raised-button (click)="onPresetClick('faint')" i18n-aria-label
-                  aria-label="Faint Target Preset">
-                  <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
-                </button>
-              </div>
-              <div class="m-2">
-                <button mat-raised-button (click)="onPresetClick('default')" i18n-aria-label
-                  aria-label="Default Preset">
-                  <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
-                </button>
-              </div>
-              <div class="m-2">
-                <button mat-raised-button (click)="onPresetClick('bright')" i18n-aria-label
-                  aria-label="Bright Target Preset">
-                  <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
-                </button>
-              </div>
-            </div>
-
-
-            <app-normalizer-form [normalizer]="compositeNormalizer" [showMode]="true" [showColorMap]="false"
-              [showInverted]="false" [showStretchMode]="true" [showLayerOffset]="false" [showLayerScale]="false"
-              (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
-              (peakLevelChange)="onPeakLevelChange($event)"
-              (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
-              (midPercentileChange)="onMidPercentileChange($event)"
-              (peakPercentileChange)="onPeakPercentileChange($event)" (stretchModeChange)="onStretchModeChange($event)"
-              (modeChange)="onNormalizerModeChange($event)">
-            </app-normalizer-form>
-          </div>
+          
         </ng-container>
 
         <ng-template #notSyncedBlock>
@@ -184,67 +150,17 @@
         </ng-template>
 
 
-        <!-- </ng-container> -->
-
-        <!-- <div fxFlexLayout="column" fxLayoutGap="10px">
-          <div fxFlexLayout="row" fxLayoutGap="15px">
-            <div style="width: 100px;">Red</div>
-            <mat-form-field style="width: 50px;">
-              <mat-label>R</mat-label><input matInput type="number" [formControl]="channelMixerControls[0][0]"
-                step="0.05" />
-            </mat-form-field>
-            <mat-form-field style="width: 50px;">
-              <mat-label>G</mat-label><input matInput type="number" [formControl]="channelMixerControls[0][1]"
-                step="0.05" />
-            </mat-form-field>
-            <mat-form-field style="width: 50px;">
-              <mat-label>B</mat-label><input matInput type="number" [formControl]="channelMixerControls[0][2]"
-                step="0.05" />
-            </mat-form-field>
-          </div>
-          <div fxFlexLayout="row" fxLayoutGap="15px">
-            <div style="width: 100px;">Green</div>
-            <mat-form-field style="width: 50px;">
-              <mat-label>R</mat-label><input matInput type="number" [formControl]="channelMixerControls[1][0]"
-                step="0.05" />
-            </mat-form-field>
-            <mat-form-field style="width: 50px;">
-              <mat-label>G</mat-label><input matInput type="number" [formControl]="channelMixerControls[1][1]"
-                step="0.05" />
-            </mat-form-field>
-            <mat-form-field style="width: 50px;">
-              <mat-label>B</mat-label><input matInput type="number" [formControl]="channelMixerControls[1][2]"
-                step="0.05" />
-            </mat-form-field>
-          </div>
-          <div fxFlexLayout="row" fxLayoutGap="15px">
-            <div style="width: 100px;">Blue</div>
-            <mat-form-field style="width: 50px;">
-              <mat-label>R</mat-label><input matInput type="number" [formControl]="channelMixerControls[2][0]"
-                step="0.05" />
-            </mat-form-field>
-            <mat-form-field style="width: 50px;">
-              <mat-label>G</mat-label><input matInput type="number" [formControl]="channelMixerControls[2][1]"
-                step="0.05" />
-            </mat-form-field>
-            <mat-form-field style="width: 50px;">
-              <mat-label>B</mat-label><input matInput type="number" [formControl]="channelMixerControls[2][2]"
-                step="0.05" />
-            </mat-form-field>
-          </div>
-        </div> -->
-
       </div>
     </ng-container>
 
-  </ng-template>
+  </ng-template> -->
 
-  <hr>
+  <!-- <hr>
   <div>
     <h3 i18n>Image Orientation Options</h3>
     <div class="pb-4">
       <app-image-orientation-toolbar [data]="(activeImageLayer$ | async) || (file$ | async)"
         [viewportSize]="viewportSize$ | async"></app-image-orientation-toolbar>
     </div>
-  </div>
+  </div> -->
 </ng-container>

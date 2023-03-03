@@ -1,56 +1,120 @@
 <div fxLayout="column" fxLayoutGap="10px">
-  <div fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start center">
-    <mat-form-field *ngIf="showStretchMode" appearance="outline">
-      <mat-label i18n>Stretch Mode</mat-label>
-      <mat-select [value]="normalizer?.stretchMode" (selectionChange)="stretchModeChange.emit($event.value)"
-        style="width: 100%">
-        <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{
-          stretchModeOption.label
-          }}</mat-option>
+
+  <ng-template #linkedInfoBlock>
+    <!-- <div>
+      <div class="alert alert-warning" style="margin-bottom: 20px;" i18n>
+        Brightness and contrast settings are being set by a different layer.
+      </div>
+    </div> -->
+  </ng-template>
+  <div *ngIf="canBeLinked" fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start center">
+    <mat-form-field appearance="outline" class="w-full flex-auto">
+      <mat-label i18n>Brightness and Contrast Settings</mat-label>
+      <mat-select [value]="normalizer?.linkSourceLayerId || 'none'"
+        (selectionChange)="linkSourceLayerIdChange.emit($event.value == 'none' ? null : $event.value)">
+        <mat-option [value]="'none'">Manual
+        </mat-option>
+        <mat-option *ngFor="let linkLayerOption of linkLayerOptions" [value]="linkLayerOption.id">Linked to {{
+          linkLayerOption.name }}
+        </mat-option>
       </mat-select>
     </mat-form-field>
-    <mat-slide-toggle *ngIf="showMode && showLevels" [checked]="normalizer?.mode == 'percentile'"
-      (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')" color="primary" i18n>
-      Percentile Mode
-    </mat-slide-toggle>
-
+    <mat-form-field *ngIf="normalizer?.linkSourceLayerId" appearance="outline" class="w-full flex-initial">
+      <mat-label i18n>Linked Value</mat-label>
+      <mat-select [disabled]="!normalizer?.linkSourceLayerId" [value]="normalizer?.linkMode"
+        (selectionChange)="linkModeChange.emit($event.value)">
+        <mat-option [value]="'percentile'">Percentile
+        </mat-option>
+        <mat-option [value]="'pixel'">Pixel Value
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
   </div>
+
+  <div *ngIf="!normalizer.linkSourceLayerId" class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
+    <div class="m-2">
+      <button mat-raised-button (click)="presetClick.emit('faint')" i18n-aria-label aria-label="Faint Target Preset">
+        <mat-icon>brightness_3</mat-icon><span i18n>Faint Target</span>
+      </button>
+    </div>
+    <div class="m-2">
+      <button mat-raised-button (click)="presetClick.emit('default')" i18n-aria-label aria-label="Default Preset">
+        <mat-icon>brightness_2</mat-icon><span i18n>Default Preset</span>
+      </button>
+    </div>
+    <div class="m-2">
+      <button mat-raised-button (click)="presetClick.emit('bright')" i18n-aria-label aria-label="Bright Target Preset">
+        <mat-icon>brightness_5</mat-icon><span i18n>Bright Target</span>
+      </button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!normalizer?.linkSourceLayerId; else linkedInfoBlock">
+    <!-- <ng-container> -->
+    <div fxLayout="row" fxLayoutGap="20px" fxLayoutAlign="start center">
+      <mat-form-field *ngIf="showStretchMode" appearance="outline">
+        <mat-label i18n>Stretch Mode</mat-label>
+        <mat-select [disabled]="normalizer?.linkSourceLayerId" [value]="normalizer?.stretchMode"
+          (selectionChange)="stretchModeChange.emit($event.value)" style="width: 100%">
+          <mat-option *ngFor="let stretchModeOption of stretchModeOptions" [value]="stretchModeOption.value">{{
+            stretchModeOption.label
+            }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-slide-toggle [disabled]="normalizer?.linkSourceLayerId" *ngIf="showMode && showLevels"
+        [checked]="normalizer?.mode == 'percentile'" (change)="modeChange.emit($event.checked ? 'percentile' : 'pixel')"
+        color="primary" i18n>
+        Percentile Mode
+      </mat-slide-toggle>
+
+    </div>
+    <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">
+      <ng-container *ngIf="showLevels && normalizer?.mode == 'percentile'">
+        <mat-form-field class="" appearance="outline">
+          <mat-label i18n>Background Level Percentile</mat-label>
+          <input [disabled]="normalizer?.linkSourceLayerId" matInput
+            [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
+            (ngModelChange)="backgroundPercentileChange.emit($event)" type="number" [step]="backgroundStep" min="0"
+            max="100" />
+        </mat-form-field>
+        <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidTone" class="" appearance="outline">
+          <mat-label i18n>Midtone Level Percentile</mat-label>
+          <input [disabled]="normalizer?.linkSourceLayerId" matInput
+            [ngModel]="normalizer?.midPercentile | number:'1.0-5'" (ngModelChange)="midPercentileChange.emit($event)"
+            type="number" [step]="midStep" min="0" max="100" />
+        </mat-form-field>
+        <mat-form-field class="" appearance="outline">
+          <mat-label i18n>Saturation Level Percentile</mat-label>
+          <input [disabled]="normalizer?.linkSourceLayerId" matInput
+            [ngModel]="normalizer?.peakPercentile | number:'1.0-5'" (ngModelChange)="peakPercentileChange.emit($event)"
+            type="number" [step]="peakStep" min="0" max="100" />
+        </mat-form-field>
+      </ng-container>
+      <ng-container *ngIf="showLevels && normalizer?.mode == 'pixel'">
+        <mat-form-field class="" appearance="outline">
+          <mat-label i18n>Background Level</mat-label>
+          <input [disabled]="normalizer?.linkSourceLayerId" matInput [ngModel]="getFormattedBackgroundLevel()"
+            (ngModelChange)="backgroundLevelChange.emit($event)" type="number" />
+        </mat-form-field>
+        <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidTone" class="" appearance="outline">
+          <mat-label i18n>Midtone Level</mat-label>
+          <input [disabled]="normalizer?.linkSourceLayerId" matInput [ngModel]="getFormattedMidLevel()"
+            (ngModelChange)="midLevelChange.emit($event)" type="number" />
+        </mat-form-field>
+        <mat-form-field class="" appearance="outline">
+          <mat-label i18n>Saturation Level</mat-label>
+          <input [disabled]="normalizer?.linkSourceLayerId" matInput [ngModel]="getFormattedPeakLevel()"
+            (ngModelChange)="peakLevelChange.emit($event)" type="number" />
+        </mat-form-field>
+      </ng-container>
+
+    </div>
+  </ng-container>
+
+
+
+
   <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">
-    <ng-container *ngIf="showLevels && normalizer?.mode == 'percentile'">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Background Level Percentile</mat-label>
-        <input matInput [ngModel]="normalizer?.backgroundPercentile | number:'1.0-5'"
-          (ngModelChange)="backgroundPercentileChange.emit($event)" type="number" [step]="backgroundStep" min="0"
-          max="100" />
-      </mat-form-field>
-      <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidTone" class="" appearance="outline">
-        <mat-label i18n>Midtone Level Percentile</mat-label>
-        <input matInput [ngModel]="normalizer?.midPercentile | number:'1.0-5'"
-          (ngModelChange)="midPercentileChange.emit($event)" type="number" [step]="midStep" min="0" max="100" />
-      </mat-form-field>
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Saturation Level Percentile</mat-label>
-        <input matInput [ngModel]="normalizer?.peakPercentile | number:'1.0-5'"
-          (ngModelChange)="peakPercentileChange.emit($event)" type="number" [step]="peakStep" min="0" max="100" />
-      </mat-form-field>
-    </ng-container>
-    <ng-container *ngIf="showLevels && normalizer?.mode == 'pixel'">
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Background Level</mat-label>
-        <input matInput [ngModel]="getFormattedBackgroundLevel()" (ngModelChange)="backgroundLevelChange.emit($event)"
-          type="number" />
-      </mat-form-field>
-      <mat-form-field *ngIf="normalizer?.stretchMode == StretchMode.MidTone" class="" appearance="outline">
-        <mat-label i18n>Midtone Level</mat-label>
-        <input matInput [ngModel]="getFormattedMidLevel()" (ngModelChange)="midLevelChange.emit($event)"
-          type="number" />
-      </mat-form-field>
-      <mat-form-field class="" appearance="outline">
-        <mat-label i18n>Saturation Level</mat-label>
-        <input matInput [ngModel]="getFormattedPeakLevel()" (ngModelChange)="peakLevelChange.emit($event)"
-          type="number" />
-      </mat-form-field>
-    </ng-container>
     <ng-container *ngIf="showColorMap">
       <mat-form-field appearance="outline">
         <mat-label i18n>Color Map</mat-label>
@@ -76,8 +140,8 @@
       (change)="invertedChange.emit($event.checked)" color="primary" i18n>
       Inverted
     </mat-slide-toggle>
-
   </div>
+
 
 
 </div>

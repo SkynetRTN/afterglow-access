@@ -16,6 +16,8 @@ export interface PixelNormalizer {
   inverted: boolean;
   layerScale: number;
   layerOffset: number;
+  linkSourceLayerId: string;
+  linkMode: 'percentile' | 'pixel';
 }
 
 // export function createPixelNormalizer(backgroundLevel: number, peakLevel: number, colorMap: ColorMap, stretchMode: StretchMode) : PixelNormalizer {

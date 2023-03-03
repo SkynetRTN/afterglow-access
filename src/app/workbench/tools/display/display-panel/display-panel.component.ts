@@ -52,7 +52,7 @@ import { AfterglowConfigService } from '../../../../afterglow-config.service';
 import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
 import { MatDialog } from '@angular/material/dialog';
 import { PsfMatchingDialogComponent } from '../../../components/psf-matching-dialog/psf-matching-dialog.component';
-import { FormControl } from '@angular/forms';
+import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { calcLevels, calcPercentiles, getBinCenter, getCountsPerBin, ImageHistogram } from 'src/app/data-files/models/image-histogram';
 import { PixelNormalizer } from 'src/app/data-files/models/pixel-normalizer';
@@ -63,6 +63,8 @@ import { saveAs } from 'file-saver/dist/FileSaver';
 import { PhotometricColorBalanceDialogComponent } from '../../../components/photometric-color-balance-dialog/photometric-color-balance-dialog.component';
 import { fitHistogram } from 'src/app/utils/histogram-fitting';
 import { SourceNeutralizationDialogComponent } from '../../../components/source-neutralization-dialog/source-neutralization-dialog.component';
+import { DisplayState } from '../display.state';
+import { SetCompositeNormalizationLayerId } from '../display.actions';
 const SAVE_CSV_FILES = false;
 
 
@@ -83,36 +85,18 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   protected viewerId$ = new BehaviorSubject<string>(null);
 
-  ColorBalanceMode = ColorBalanceMode;
   viewportSize$: Observable<{ width: number; height: number }>;
   file$: Observable<DataFile>;
   layers$: Observable<ILayer[]>;
+  selectedLayer$: Observable<ILayer>;
+  selectedImageLayer$: Observable<ImageLayer>;
+  selectedImageLayerHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }[]>;
+  compositeNormalizationLayer$: Observable<ImageLayer>;
   compositeHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }[]>;
-  activeLayer$: Observable<ILayer>;
-  activeImageLayer$: Observable<ImageLayer>;
-  activeHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }>;
-  activeTableLayer$: Observable<TableLayer>;
-  firstImageLayer$: Observable<ImageLayer>;
-  compositeNormalizer$: Observable<PixelNormalizer>;
-  compositeNormalizersSynced$: Observable<boolean>;
+
+
   destroy$ = new Subject<boolean>();
 
-  referenceLayerOptions$: Observable<ImageLayer[]>;
-
-  setFileColorBalanceModeEvent$ = new Subject<ColorBalanceMode>();
-  backgroundPercentile$ = new Subject<number>();
-  midPercentile$ = new Subject<number>();
-  peakPercentile$ = new Subject<number>();
-  backgroundLevel$ = new Subject<number>();
-  midLevel$ = new Subject<number>();
-  peakLevel$ = new Subject<number>();
-  normalizerMode$ = new Subject<'pixel' | 'percentile'>();
-  stretchMode$ = new Subject<StretchMode>();
-  presetClick$ = new Subject<'faint' | 'default' | 'bright'>();
-  syncClick$ = new Subject<any>();
-
-  upperPercentileDefault: number;
-  lowerPercentileDefault: number;
   colorPickerMode = false;
   color = '#FFFFFF';
   whiteBalanceMode = false;
@@ -122,6 +106,10 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   resetColorBalanceEvent$ = new Subject<any>();
   photometricColorBalanceEvent$ = new Subject<any>();
 
+  layerSelectionForm = this.fb.group({
+    selectedLayerId: this.fb.control('', Validators.required),
+  })
+
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
   channelMixerControls = [
     [new FormControl(''), new FormControl(''), new FormControl('')],
@@ -129,7 +117,7 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
     [new FormControl(''), new FormControl(''), new FormControl('')]
   ]
 
-  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog, private eventService: ImageViewerEventService, private cd: ChangeDetectorRef, private actions$: Actions) {
+  constructor(private store: Store, private afterglowConfig: AfterglowConfigService, private dialog: MatDialog, private eventService: ImageViewerEventService, private cd: ChangeDetectorRef, private actions$: Actions, private fb: FormBuilder) {
     this.viewportSize$ = this.viewerId$.pipe(
       switchMap((viewerId) => this.store.select(WorkbenchState.getViewportSizeByViewerId(viewerId)))
     );
@@ -138,13 +126,46 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
       switchMap((viewerId) => this.store.select(WorkbenchState.getFileByViewerId(viewerId)))
     );
 
+    this.layers$ = this.file$.pipe(
+      switchMap((file) => file ? this.store.select(DataFilesState.getLayersByFileId(file.id)) : of([]))
+    )
+
+    this.selectedLayer$ = this.viewerId$.pipe(
+      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerByViewerId(viewerId)))
+    )
+
+    this.selectedImageLayer$ = this.selectedLayer$.pipe(
+      map(layer => layer && isImageLayer(layer) ? layer : null)
+    )
+
+    this.selectedImageLayerHistData$ = this.selectedImageLayer$.pipe(
+      map(layer => {
+        if (!layer) return [];
+        return [{ id: layer.id, hist: layer.histogram, normalizer: layer.normalizer }]
+      })
+    )
+
+    this.compositeNormalizationLayer$ = this.file$.pipe(
+      switchMap((file) => file ? this.store.select(DisplayState.getCompositeNormalizationLayerByFileId(file.id)) : of(null))
+    )
+
+    this.compositeNormalizationLayer$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(layer => {
+      if (!layer) return;
+      this.layerSelectionForm.patchValue({ selectedLayerId: layer.id }, { emitEvent: false })
+    })
+
+    this.layerSelectionForm.valueChanges.subscribe(value => {
+      this.store.dispatch(new SetCompositeNormalizationLayerId(value.selectedLayerId))
+    })
+
+
     this.channelMixer$ = this.file$.pipe(
       map(file => file?.channelMixer)
     )
 
-    this.layers$ = this.file$.pipe(
-      switchMap((file) => file ? this.store.select(DataFilesState.getLayersByFileId(file.id)) : [])
-    )
+
 
     this.compositeHistData$ = this.layers$.pipe(
       map(layers => layers.map(layer => {
@@ -154,257 +175,6 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
       }).filter(value => value !== null))
     )
 
-    this.firstImageLayer$ = this.layers$.pipe(
-      map(layers => {
-        return layers.find(layer => isImageLayer(layer)) as ImageLayer | null;
-      }))
-
-    this.referenceLayerOptions$ = this.layers$.pipe(
-      map(layers => layers.filter(isImageLayer).filter(layer => layer.visible))
-    )
-
-    this.compositeNormalizersSynced$ = combineLatest(
-      this.file$.pipe(map(file => file.colorBalanceMode), distinctUntilChanged()),
-      this.layers$.pipe(
-        map(layers => layers.filter(isImageLayer)
-          .filter(layer => layer.visible)
-          .map(layer => layer.normalizer)
-        )
-      )
-    ).pipe(
-      map(([colorBalanceMode, normalizers]) => {
-        if (normalizers.length == 0) return false;
-        if (normalizers.length == 1) return true;
-
-        if (!normalizers.every(n => n.stretchMode == normalizers[0].stretchMode)) return false;
-
-        let isEqual = (a: number, b: number, p: number) => a == b || Math.abs((a - b) / (a != 0 ? a : 1)) <= p
-        if (colorBalanceMode == ColorBalanceMode.PERCENTILE) {
-          if (!normalizers.every(n => isEqual(n.peakPercentile, normalizers[0].peakPercentile, 1e-6))) return false;
-          if (!normalizers.every(n => isEqual(n.backgroundPercentile, normalizers[0].backgroundPercentile, 1e-6))) return false;
-
-          if (normalizers[0].stretchMode == StretchMode.MidTone) {
-            if (!normalizers.every(n => isEqual(n.midPercentile, normalizers[0].midPercentile, 1e-6))) return false;
-          }
-        }
-        else {
-          if (!normalizers.every(n => isEqual(n.peakLevel, normalizers[0].peakLevel, 1e-6))) return false;
-          if (!normalizers.every(n => isEqual(n.backgroundLevel, normalizers[0].backgroundLevel, 1e-6))) return false;
-
-          if (normalizers[0].stretchMode == StretchMode.MidTone) {
-            if (!normalizers.every(n => isEqual(n.midLevel, normalizers[0].midLevel, 1e-6))) return false;
-          }
-        }
-
-        return true;
-
-      })
-    )
-
-    this.compositeNormalizer$ = this.firstImageLayer$.pipe(
-      map(firstImageLayer => firstImageLayer?.normalizer)
-    )
-
-    this.activeLayer$ = this.viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getLayerByViewerId(viewerId)))
-    );
-
-    this.activeImageLayer$ = this.activeLayer$.pipe(map((layer) => (layer && layer.type == LayerType.IMAGE ? (layer as ImageLayer) : null)));
-    this.activeHistData$ = this.activeImageLayer$.pipe(
-      map(layer => layer ? { id: layer.id, hist: layer.histogram, normalizer: layer.normalizer } : { id: null, hist: null, normalizer: null })
-    )
-
-
-    this.activeTableLayer$ = this.activeLayer$.pipe(map((layer) => (layer && layer.type == LayerType.TABLE ? (layer as TableLayer) : null)));
-
-    this.upperPercentileDefault = this.afterglowConfig.saturationDefault;
-    this.lowerPercentileDefault = this.afterglowConfig.backgroundDefault;
-
-
-
-
-    this.presetClick$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer;
-      let file: DataFile;
-      if (!layer) {
-        let imageLayers = layers.filter(isImageLayer);
-        layer = imageLayers.find(layer => layer.histogram.loaded && layer.visible)
-        if (!layer) return;
-        file = this.store.selectSnapshot(DataFilesState.getFileById(layer.fileId))
-      }
-
-      if (!layer) return;
-      let normalizer = layer.normalizer;
-
-
-      let backgroundPercentile = 10;
-      let midPercentile = 99.5;
-      let peakPercentile = 99.999;
-
-      if (normalizer.stretchMode != StretchMode.MidTone) {
-        let peakLookup = {
-          'faint': 95,
-          'default': 99,
-          'bright': 99.999
-        }
-
-        peakPercentile = peakLookup[value]
-      }
-      else {
-        backgroundPercentile = 1;
-        let midLookup = {
-          'faint': 50,
-          'default': 97.5,
-          'bright': 99.9
-        }
-
-        midPercentile = midLookup[value];
-      }
-
-
-
-      if (!file) {
-        this.store.dispatch(
-          new UpdateNormalizer(activeLayer.id, {
-            mode: 'percentile',
-            backgroundPercentile: backgroundPercentile,
-            midPercentile: midPercentile,
-            peakPercentile: peakPercentile
-          })
-        );
-      }
-      else {
-        if (file.colorBalanceMode == ColorBalanceMode.PERCENTILE) {
-          this.store.dispatch([
-            new UpdateNormalizer(layer.id, {
-              mode: 'percentile',
-              backgroundPercentile: backgroundPercentile,
-              midPercentile: midPercentile,
-              peakPercentile: peakPercentile
-            }), new SyncFileNormalizers(file.id, layer.id)]
-          );
-        }
-        else if (file.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING) {
-          let levels = calcLevels(layer.histogram, backgroundPercentile, midPercentile, peakPercentile);
-          this.store.dispatch([new UpdateNormalizer(layer.id, {
-            // mode: 'pixel',
-            backgroundLevel: levels.backgroundLevel * layer.normalizer.layerScale + layer.normalizer.layerOffset,
-            midLevel: levels.midLevel * layer.normalizer.layerScale + layer.normalizer.layerOffset,
-            peakLevel: levels.peakLevel * layer.normalizer.layerScale + layer.normalizer.layerOffset,
-            backgroundPercentile: backgroundPercentile,
-            midPercentile: midPercentile,
-            peakPercentile: peakPercentile
-          }), new SyncFileNormalizers(file.id, layer.id)]);
-        }
-
-      }
-    });
-
-    this.syncClick$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.file$, this.layers$)
-    ).subscribe(([value, file, layers]) => {
-      if (file) {
-        let imageLayers = layers.filter(isImageLayer);
-        let layer = imageLayers.find(layer => layer.histogram.loaded && layer.visible)
-        if (layer) {
-          this.store.dispatch(new SyncFileNormalizers(file.id, layer.id))
-        }
-      }
-    })
-
-
-    this.setFileColorBalanceModeEvent$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.file$)
-    ).subscribe(([value, file]) => {
-      if (file) {
-        this.store.dispatch(new SetFileColorBalanceMode(file.id, value))
-      }
-    })
-
-    this.backgroundPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { backgroundPercentile: value }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
-
-    this.midPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { midPercentile: value }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
-
-    this.peakPercentile$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { peakPercentile: value }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
-
-    this.backgroundLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { backgroundLevel: value, mode: 'pixel' }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
-
-    this.midLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { midLevel: value, mode: 'pixel' }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
-
-    this.peakLevel$.pipe(takeUntil(this.destroy$), auditTime(500), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { peakLevel: value, mode: 'pixel' }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
-
-    this.normalizerMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      this.store.dispatch(new UpdateNormalizer(layer.id, { mode: value }));
-    });
-
-    this.stretchMode$.pipe(takeUntil(this.destroy$), withLatestFrom(this.activeImageLayer$, this.layers$)).subscribe(([value, activeLayer, layers]) => {
-      let layer = activeLayer || layers.find(isImageLayer);
-      if (!layer) return;
-      let actions = [];
-      actions.push(new UpdateNormalizer(layer.id, { stretchMode: value }));
-      if (!activeLayer) {
-        actions.push(new SyncFileNormalizers(layer.fileId, layer.id))
-      }
-      this.store.dispatch(actions);
-    });
 
     this.resetWhiteBalance$.pipe(
       takeUntil(this.destroy$),
@@ -605,6 +375,10 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
+  onFileNormalizationLayerChange() {
+
+  }
+
   onColorBalanceModeChange(value: ColorBalanceMode) {
 
   }
@@ -619,76 +393,6 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
     let csv = csvRows.join('\n')
     var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, name);
-  }
-
-
-
-
-  onBackgroundPercentileChange(value: number) {
-    this.backgroundPercentile$.next(value);
-  }
-
-  onMidPercentileChange(value: number) {
-    this.midPercentile$.next(value);
-  }
-
-  onPeakPercentileChange(value: number) {
-    this.peakPercentile$.next(value);
-  }
-
-  onBackgroundLevelChange(value: number) {
-    this.backgroundLevel$.next(value);
-  }
-
-  onMidLevelChange(value: number) {
-    this.midLevel$.next(value);
-  }
-
-  onPeakLevelChange(value: number) {
-    this.peakLevel$.next(value);
-  }
-
-  onNormalizerModeChange(value: 'percentile' | 'pixel') {
-    this.normalizerMode$.next(value);
-  }
-
-  onColorMapChange(layer: ImageLayer, value: string) {
-    this.store.dispatch(new UpdateNormalizer(layer.id, { colorMapName: value }));
-  }
-
-  onStretchModeChange(value: StretchMode) {
-    this.stretchMode$.next(value)
-  }
-
-  onInvertedChange(layer: ImageLayer, value: boolean) {
-    this.store.dispatch(new UpdateNormalizer(layer.id, { inverted: value }));
-  }
-
-  onLayerScaleChange(layer: ImageLayer, value: number) {
-    this.store.dispatch(new UpdateNormalizer(layer.id, { layerScale: value }));
-  }
-
-  onLayerOffsetChange(layer: ImageLayer, value: number) {
-    this.store.dispatch(new UpdateNormalizer(layer.id, { layerOffset: value }));
-  }
-
-  onPresetClick(option: 'faint' | 'default' | 'bright') {
-
-    this.presetClick$.next(option)
-  }
-
-  onInvertClick(layer: ImageLayer) {
-    this.store.dispatch(
-      new UpdateNormalizer(layer.id, {
-        backgroundPercentile: layer.normalizer.peakPercentile,
-        peakPercentile: layer.normalizer.backgroundPercentile,
-      })
-    );
-  }
-
-  onSyncClick(refLayerId: string) {
-    console.log('ref: ', refLayerId)
-    this.syncClick$.next();
   }
 
   ngOnInit() { }

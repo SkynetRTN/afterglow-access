@@ -13,6 +13,8 @@ import { ImageOrientationToolbarComponent } from './image-orientation-toolbar/im
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { NormalizerComponent } from './normalizer/normalizer.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 
 
@@ -20,7 +22,8 @@ import { FlexLayoutModule } from '@angular/flex-layout';
   declarations: [
     DisplayPanelComponent,
     NormalizerFormComponent,
-    ImageOrientationToolbarComponent
+    ImageOrientationToolbarComponent,
+    NormalizerComponent
   ],
   imports: [
     CommonModule,
@@ -33,7 +36,8 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MatMenuModule,
     MatSlideToggleModule,
     FormsModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatCheckboxModule
   ],
   exports: [
     DisplayPanelComponent

@@ -17,6 +17,7 @@ import {
 } from '../../../../data-files/models/color-map';
 import { FormControl } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { ImageLayer } from 'src/app/data-files/models/data-file';
 
 @Component({
   selector: 'app-normalizer-form',
@@ -26,6 +27,8 @@ import { DecimalPipe } from '@angular/common';
 })
 export class NormalizerFormComponent implements OnInit, OnChanges {
   @Input() normalizer: PixelNormalizer;
+  @Input() linkLayerOptions: ImageLayer[];
+  @Input() canBeLinked: boolean = false;
   @Input() showMode = true;
   @Input() showLevels = true;
   @Input() showColorMap = true;
@@ -46,6 +49,9 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
   @Output() layerScaleChange = new EventEmitter<number>();
   @Output() layerOffsetChange = new EventEmitter<number>();
   @Output() modeChange = new EventEmitter<'percentile' | 'pixel'>();
+  @Output() linkSourceLayerIdChange = new EventEmitter<string>();
+  @Output() linkModeChange = new EventEmitter<'percentile' | 'pixel'>();
+  @Output() presetClick = new EventEmitter<'faint' | 'default' | 'bright'>();
 
   backgroundStep = 0.1;
   peakStep = 0.1;

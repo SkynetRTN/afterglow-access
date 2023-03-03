@@ -1,0 +1,17 @@
+<div class="pb-4 pt-1" *ngIf="normalizer$ | async; let normalizer">
+    <!-- <h3 i18n>Brightness and Contrast Settings</h3> -->
+
+
+    <app-normalizer-form [normalizer]="normalizer" [linkLayerOptions]="linkLayerOptions$ | async"
+        [canBeLinked]="canBeLinked$ | async" [showMode]="true" [showColorMap]="true" [showInverted]="true"
+        [showStretchMode]="true" [showLayerOffset]="true" [showLayerScale]="true"
+        (backgroundLevelChange)="onBackgroundLevelChange($event)" (midLevelChange)="onMidLevelChange($event)"
+        (peakLevelChange)="onPeakLevelChange($event)"
+        (backgroundPercentileChange)="onBackgroundPercentileChange($event)"
+        (midPercentileChange)="onMidPercentileChange($event)" (peakPercentileChange)="onPeakPercentileChange($event)"
+        (stretchModeChange)="onStretchModeChange($event)" (modeChange)="onNormalizerModeChange($event)"
+        (invertedChange)="onInvertedChange($event)" (linkSourceLayerIdChange)="onLinkSourceLayerIdChange($event)"
+        (linkModeChange)="onLinkModeChange($event)" (layerOffsetChange)="onLayerOffsetChange($event)"
+        (layerScaleChange)="onLayerScaleChange($event)" (presetClick)="presetClick$.next($event)">
+    </app-normalizer-form>
+</div>
