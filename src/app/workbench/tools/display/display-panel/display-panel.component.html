@@ -8,7 +8,7 @@
 
 <ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
   <ng-container *ngIf="selectedImageLayer$ | async as selectedImageLayer; else compositeHistogramBlock">
-    <div *ngIf="selectedImageLayer.histogram?.loaded" class="pr-3 pl-3 pb-4 w-100" style="height: 400px;">
+    <div *ngIf="selectedImageLayer.histogram?.loaded" class="pr-3 pl-3 pb-4 w-100" style="height: 350px;">
       <app-image-histogram-chart [data]="selectedImageLayerHistData$ | async"
         [backgroundLevel]="selectedImageLayer?.normalizer?.backgroundLevel"
         [peakLevel]="selectedImageLayer?.normalizer?.peakLevel">
@@ -27,7 +27,7 @@
               <mat-option *ngFor="let layer of layers$ | async" [value]="layer.id">
                 {{layer.name}}
                 <app-color-map-swatch *ngIf="showCompositeNormalizationLayerColorMap$ | async"
-                  style="margin-top: -20px; max-width: 300px" [colorMap]="getColorMap(layer)" [samples]="16"
+                  style="margin-top: -20px; max-width: 350px" [colorMap]="getColorMap(layer)" [samples]="16"
                   [height]="'32px'"></app-color-map-swatch>
               </mat-option>
             </mat-select>
@@ -42,7 +42,7 @@
 
 
       </div>
-      <div class="pr-3 pl-3 pb-4 w-100" style="height: 400px;">
+      <div class="pr-3 pl-3 pb-4 w-100" style="height: 300px;">
         <app-image-histogram-chart [data]="compositeHistData$ | async"
           [backgroundLevel]="selectedImageLayer?.normalizer?.backgroundLevel"
           [peakLevel]="selectedImageLayer?.normalizer?.peakLevel">
