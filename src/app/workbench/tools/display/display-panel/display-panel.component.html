@@ -30,10 +30,13 @@
             </mat-select>
           </mat-form-field>
         </form>
-        <button mat-raised-button style="height: 36px" class="flex-initial" [matMenuTriggerFor]="histogramFittingMenu">
-          <ng-container i18n>Histogram Fitting Tools</ng-container>
-          <mat-icon>keyboard_arrow_down</mat-icon>
-        </button>
+        <div class="mt-1 ">
+          <button mat-raised-button style="height: 36px" [matMenuTriggerFor]="histogramFittingMenu">
+            <ng-container i18n>Color Composite Tools</ng-container>
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
+        </div>
+
 
       </div>
       <div class="pr-3 pl-3 pb-4 w-100" style="height: 400px;">
@@ -47,39 +50,47 @@
 
 
       <mat-menu #histogramFittingMenu="matMenu">
-        <button mat-menu-item (click)="neutralizeBackgroundsEvent$.next();" i18n-aria-label
-          aria-label="Neutralize Background">
-          <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
+        <button mat-menu-item (click)="linkAllPercentile$.next(true)" i18n-aria-label
+          aria-label="Link All Layers (Percentile)">
+          <mat-icon>link</mat-icon><span i18n>Link All Layers (Percentile)</span>
+        </button>
+        <button mat-menu-item (click)="linkAllPixelValue$.next(true)" i18n-aria-label
+          aria-label="Link All Layers (Pixel Value)">
+          <mat-icon>link</mat-icon><span i18n>Link All Layers (Pixel Value)</span>
+        </button>
+        <button mat-menu-item (click)="resetLinking$.next(true)" i18n-aria-label aria-label="Reset Layer Linking">
+          <mat-icon>link_off</mat-icon><span i18n>Reset Layer Linking</span>
+        </button>
+        <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
+          aria-label="Photometric Calibration...">
+          <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Calibration...</span>
         </button>
         <button mat-menu-item (click)="neutralizeSourcesEvent$.next();" i18n-aria-label aria-label="Neutralize Sources">
           <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources...</span>
         </button>
-        <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
-          aria-label="Photometric Color Calibration...">
-          <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Color Calibration...</span>
+        <button mat-menu-item (click)="neutralizeBackgroundsEvent$.next();" i18n-aria-label
+          aria-label="Neutralize Background">
+          <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
         </button>
         <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
-          aria-label="Reset Histograms">
-          <mat-icon>refresh</mat-icon><span i18n>Reset Histogram Fitting</span>
+          aria-label="Reset Scales/Offsets">
+          <mat-icon>refresh</mat-icon><span i18n>Reset Scales/Offsets</span>
         </button>
 
-        <button mat-menu-item (click)="linkAllPercentile$.next(true)" i18n-aria-label
-          aria-label="Link All (Percentile)">
-          <mat-icon>link</mat-icon><span i18n>Link All (Percentile)</span>
-        </button>
-        <button mat-menu-item (click)="linkAllPixelValue$.next(true)" i18n-aria-label
-          aria-label="Link All (Pixel Value)">
-          <mat-icon>link</mat-icon><span i18n>Link All (Pixel Value)</span>
-        </button>
-        <button mat-menu-item (click)="resetLinking$.next(true)" i18n-aria-label aria-label="Reset Linking">
-          <mat-icon>link_off</mat-icon><span i18n>Reset Linking</span>
-        </button>
+
       </mat-menu>
       <app-normalizer [layerId]="selectedImageLayer.id"></app-normalizer>
 
 
     </ng-container>
   </ng-template>
+  <div>
+    <h3 i18n>Image Orientation Options</h3>
+    <div class="pb-4">
+      <app-image-orientation-toolbar [data]="(selectedImageLayer$ | async) || (file$ | async)"
+        [viewportSize]="viewportSize$ | async"></app-image-orientation-toolbar>
+    </div>
+  </div>
   <!-- 
 
 
@@ -167,12 +178,4 @@
 
   </ng-template> -->
 
-  <!-- <hr>
-  <div>
-    <h3 i18n>Image Orientation Options</h3>
-    <div class="pb-4">
-      <app-image-orientation-toolbar [data]="(activeImageLayer$ | async) || (file$ | async)"
-        [viewportSize]="viewportSize$ | async"></app-image-orientation-toolbar>
-    </div>
-  </div> -->
 </ng-container>

@@ -1,4 +1,24 @@
 <div fxLayout="column" fxLayoutGap="10px">
+  <div class="flex flex-row gap-6 items-center" *ngIf="showColorMap">
+    <mat-form-field appearance="outline">
+      <mat-label i18n>Color Map</mat-label>
+      <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
+        style="width: 100%">
+        <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">
+
+          <span>{{ colorMap.name }} Color Map</span>
+          <app-color-map-swatch style="margin-top: -20px; max-width: 300px" [colorMap]="colorMap" [samples]="16"
+            [height]="'32px'"></app-color-map-swatch>
+
+
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <app-color-map-swatch style="margin-top: -20px; max-width: 300px" [colorMap]="getSelectedColorMap()" [samples]="16"
+      [height]="'32px'"></app-color-map-swatch>
+
+  </div>
 
   <ng-template #linkedInfoBlock>
     <!-- <div>
@@ -30,6 +50,8 @@
       </mat-select>
     </mat-form-field>
   </div>
+
+
 
   <div *ngIf="!normalizer.linkSourceLayerId" class="pb-4" fxLayout="row wrap" fxLayoutGap="5px">
     <div class="m-2">
@@ -111,18 +133,7 @@
     </div>
   </ng-container>
 
-  <div class="flex flex-row gap-6 items-center" *ngIf="showColorMap">
-    <mat-form-field appearance="outline">
-      <mat-label i18n>Color Map</mat-label>
-      <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
-        style="width: 100%">
-        <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">{{ colorMap.name }} Color Map
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-    <app-color-map-swatch style="margin-top: -20px; max-width: 300px" [colorMap]="getSelectedColorMap()" [samples]="16"
-      [height]="'32px'"></app-color-map-swatch>
-  </div>
+
 
 
   <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">

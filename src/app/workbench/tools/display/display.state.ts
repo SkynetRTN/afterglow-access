@@ -124,7 +124,7 @@ export class DisplayState {
     ) {
         let state = getState();
         let fileIds = Object.keys(state.fileIdToCompositeNormalizationLayerId);
-        layers.filter((layer) => !(layer.fileId in fileIds)).forEach(layer => {
+        layers.filter((layer) => !(fileIds.includes(layer.fileId))).forEach(layer => {
             setState((state: DisplayStateModel) => {
                 state.fileIdToCompositeNormalizationLayerId[layer.fileId] = layer.id
                 return state;

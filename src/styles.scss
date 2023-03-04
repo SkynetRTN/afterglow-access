@@ -410,3 +410,15 @@ hr {
 }
 
 /** end bootstrap polyfill */
+
+
+/** allow multi-line options in material select **/
+/** used by color map */
+
+.mat-select-panel mat-option.mat-option {
+  height: unset;
+}
+
+.mat-option-text.mat-option-text {
+  white-space: normal;
+}
