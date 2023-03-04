@@ -146,4 +146,8 @@ export class NormalizerFormComponent implements OnInit, OnChanges {
     let result = this.decimalPipe.transform(mid, '1.0-3').replace(',', '')
     return result;
   }
+
+  getSelectedColorMap() {
+    return this.colorMaps.find(cm => cm.name == this.normalizer.colorMapName);
+  }
 }

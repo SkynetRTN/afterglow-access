@@ -111,20 +111,23 @@
     </div>
   </ng-container>
 
-
+  <div class="flex flex-row gap-6 items-center" *ngIf="showColorMap">
+    <mat-form-field appearance="outline">
+      <mat-label i18n>Color Map</mat-label>
+      <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
+        style="width: 100%">
+        <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">{{ colorMap.name }} Color Map
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <app-color-map-swatch style="margin-top: -20px; max-width: 300px" [colorMap]="getSelectedColorMap()" [samples]="16"
+      [height]="'32px'"></app-color-map-swatch>
+  </div>
 
 
   <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">
-    <ng-container *ngIf="showColorMap">
-      <mat-form-field appearance="outline">
-        <mat-label i18n>Color Map</mat-label>
-        <mat-select [value]="normalizer?.colorMapName" (selectionChange)="colorMapChange.emit($event.value)"
-          style="width: 100%">
-          <mat-option *ngFor="let colorMap of colorMaps" [value]="colorMap.name">{{ colorMap.name }} Color Map
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </ng-container>
+
+
 
     <mat-form-field *ngIf="showLayerScale" class="" appearance="outline">
       <mat-label i18n>Layer Scale</mat-label>
