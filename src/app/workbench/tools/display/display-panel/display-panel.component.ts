@@ -65,6 +65,7 @@ import { fitHistogram } from 'src/app/utils/histogram-fitting';
 import { SourceNeutralizationDialogComponent } from '../../../components/source-neutralization-dialog/source-neutralization-dialog.component';
 import { DisplayState } from '../display.state';
 import { SetCompositeNormalizationLayerId } from '../display.actions';
+import { COLOR_MAPS_BY_NAME } from 'src/app/data-files/models/color-map';
 const SAVE_CSV_FILES = false;
 
 
@@ -93,7 +94,7 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedImageLayerHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }[]>;
   compositeNormalizationLayer$: Observable<ImageLayer>;
   compositeHistData$: Observable<{ id: string, hist: ImageHistogram, normalizer: PixelNormalizer }[]>;
-
+  showCompositeNormalizationLayerColorMap$: Observable<boolean>;
 
   destroy$ = new Subject<boolean>();
 
@@ -132,6 +133,12 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.layers$ = this.file$.pipe(
       switchMap((file) => file ? this.store.select(DataFilesState.getLayersByFileId(file.id)) : of([]))
+    )
+
+
+    this.showCompositeNormalizationLayerColorMap$ = this.layers$.pipe(
+      map(layers => layers.filter(isImageLayer).map(layer => layer.normalizer.colorMapName)),
+      map(colorMapNames => colorMapNames.length != 0 && colorMapNames.some(name => name != colorMapNames[0]))
     )
 
     this.selectedLayer$ = this.viewerId$.pipe(
@@ -470,6 +477,11 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   photometricWhiteBalance() {
     this.photometricColorBalanceEvent$.next(true);
+  }
+
+  getColorMap(layer: ILayer) {
+    if (!isImageLayer(layer)) return null;
+    return COLOR_MAPS_BY_NAME[layer.normalizer.colorMapName] || null;
   }
 
 

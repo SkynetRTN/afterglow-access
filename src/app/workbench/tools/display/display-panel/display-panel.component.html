@@ -26,6 +26,9 @@
             <mat-select formControlName="selectedLayerId">
               <mat-option *ngFor="let layer of layers$ | async" [value]="layer.id">
                 {{layer.name}}
+                <app-color-map-swatch *ngIf="showCompositeNormalizationLayerColorMap$ | async"
+                  style="margin-top: -20px; max-width: 300px" [colorMap]="getColorMap(layer)" [samples]="16"
+                  [height]="'32px'"></app-color-map-swatch>
               </mat-option>
             </mat-select>
           </mat-form-field>
