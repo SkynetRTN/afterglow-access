@@ -105,6 +105,10 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   neutralizeSourcesEvent$ = new Subject<any>();
   resetColorBalanceEvent$ = new Subject<any>();
   photometricColorBalanceEvent$ = new Subject<any>();
+  resetLinking$ = new Subject<any>();
+  linkAllPercentile$ = new Subject<any>();
+  linkAllPixelValue$ = new Subject<any>();
+
 
   layerSelectionForm = this.fb.group({
     selectedLayerId: this.fb.control('', Validators.required),
@@ -182,6 +186,32 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
     ).subscribe(([v, file]) => {
       if (!file) return;
       // this.store.dispatch(new UpdateChannelMixer(file.id, [1, 1, 1]))
+    })
+
+    this.resetLinking$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.layers$)
+    ).subscribe(([v, layers]) => {
+      this.store.dispatch(layers.filter(isImageLayer).map(layer => new UpdateNormalizer(layer.id, { linkSourceLayerId: null })))
+
+    })
+
+    this.linkAllPercentile$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.compositeNormalizationLayer$, this.layers$)
+    ).subscribe(([v, selectedImageLayer, layers]) => {
+      if (!selectedImageLayer) return;
+      this.store.dispatch(layers.filter(isImageLayer).filter(layer => layer.id != selectedImageLayer.id).map(layer => new UpdateNormalizer(layer.id, { linkSourceLayerId: selectedImageLayer.id, linkMode: 'percentile' })))
+
+    })
+
+    this.linkAllPixelValue$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.compositeNormalizationLayer$, this.layers$)
+    ).subscribe(([v, selectedImageLayer, layers]) => {
+      if (!selectedImageLayer) return;
+      this.store.dispatch(layers.filter(isImageLayer).filter(layer => layer.id != selectedImageLayer.id).map(layer => new UpdateNormalizer(layer.id, { linkSourceLayerId: selectedImageLayer.id, linkMode: 'pixel' })))
+
     })
 
     this.resetColorBalanceEvent$.pipe(

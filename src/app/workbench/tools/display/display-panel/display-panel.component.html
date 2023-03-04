@@ -22,7 +22,7 @@
       <div class="flex flex-row gap-6 w-full">
         <form [formGroup]="layerSelectionForm" class="flex-1">
           <mat-form-field class="w-full">
-            <mat-label i18n>Select Layer To View Normalization Settings</mat-label>
+            <mat-label i18n>Select a layer to view display settings</mat-label>
             <mat-select formControlName="selectedLayerId">
               <mat-option *ngFor="let layer of layers$ | async" [value]="layer.id">
                 {{layer.name}}
@@ -61,6 +61,18 @@
         <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
           aria-label="Reset Histograms">
           <mat-icon>refresh</mat-icon><span i18n>Reset Histogram Fitting</span>
+        </button>
+
+        <button mat-menu-item (click)="linkAllPercentile$.next(true)" i18n-aria-label
+          aria-label="Link All (Percentile)">
+          <mat-icon>link</mat-icon><span i18n>Link All (Percentile)</span>
+        </button>
+        <button mat-menu-item (click)="linkAllPixelValue$.next(true)" i18n-aria-label
+          aria-label="Link All (Pixel Value)">
+          <mat-icon>link</mat-icon><span i18n>Link All (Pixel Value)</span>
+        </button>
+        <button mat-menu-item (click)="resetLinking$.next(true)" i18n-aria-label aria-label="Reset Linking">
+          <mat-icon>link_off</mat-icon><span i18n>Reset Linking</span>
         </button>
       </mat-menu>
       <app-normalizer [layerId]="selectedImageLayer.id"></app-normalizer>
