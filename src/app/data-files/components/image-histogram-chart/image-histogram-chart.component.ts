@@ -45,7 +45,7 @@ export class ImageHistogramChartComponent implements OnInit, OnChanges, OnDestro
     width: null,
     height: null,
     title: {
-      text: 'Histogram',
+      text: '',
       // font: {
       //   family: 'Courier New, monospace',
       //   size: 24
@@ -79,7 +79,7 @@ export class ImageHistogramChartComponent implements OnInit, OnChanges, OnDestro
       l: 50,
       r: 50,
       b: 50,
-      t: 50,
+      t: 10,
     },
 
     colorway: [
