@@ -47,7 +47,7 @@ import { Transform } from '../../../../data-files/models/transformation';
 import { getPixel, IImageData } from '../../../../data-files/models/image-data';
 import { WorkbenchState } from '../../../workbench.state';
 import { DataFilesState } from '../../../../data-files/data-files.state';
-import { BlendMode } from '../../../../data-files/models/blend-mode';
+import { BlendMode, BLEND_MODE_OPTIONS } from '../../../../data-files/models/blend-mode';
 import { AfterglowConfigService } from '../../../../afterglow-config.service';
 import { ImageViewerEventService } from '../../../services/image-viewer-event.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -66,6 +66,7 @@ import { SourceNeutralizationDialogComponent } from '../../../components/source-
 import { DisplayState } from '../display.state';
 import { SetCompositeNormalizationLayerId } from '../display.actions';
 import { COLOR_MAPS_BY_NAME } from 'src/app/data-files/models/color-map';
+import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
 const SAVE_CSV_FILES = false;
 
 
@@ -114,6 +115,12 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   layerSelectionForm = this.fb.group({
     selectedLayerId: this.fb.control('', Validators.required),
   })
+
+  compositionSettingsForm = this.fb.group({
+    blendMode: this.fb.control('', Validators.required),
+    alpha: this.fb.control('', [Validators.required, isNumber, greaterThan(0, true), lessThan(1, true)]),
+  })
+  blendModeOptions = BLEND_MODE_OPTIONS
 
   channelMixer$: Observable<[[number, number, number], [number, number, number], [number, number, number]]>;
   channelMixerControls = [
@@ -170,6 +177,34 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
     this.layerSelectionForm.valueChanges.subscribe(value => {
       this.store.dispatch(new SetCompositeNormalizationLayerId(value.selectedLayerId))
     })
+
+
+    this.compositeNormalizationLayer$.pipe(
+      map(layer => layer?.blendMode),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(blendMode => {
+      this.compositionSettingsForm.patchValue({ blendMode: blendMode }, { emitEvent: false })
+    })
+
+    this.compositeNormalizationLayer$.pipe(
+      map(layer => layer?.alpha),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(alpha => {
+      this.compositionSettingsForm.patchValue({ alpha: alpha }, { emitEvent: false })
+    })
+
+    this.compositionSettingsForm.valueChanges.pipe(
+      withLatestFrom(this.compositeNormalizationLayer$)
+    ).subscribe(([value, selectedImageLayer]) => {
+      if (!selectedImageLayer || !this.compositionSettingsForm.valid) return;
+      this.store.dispatch(new UpdateBlendMode(selectedImageLayer.id, value.blendMode))
+      this.store.dispatch(new UpdateAlpha(selectedImageLayer.id, value.alpha))
+    })
+
+
+
 
 
     this.channelMixer$ = this.file$.pipe(

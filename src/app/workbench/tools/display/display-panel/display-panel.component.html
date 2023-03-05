@@ -82,6 +82,21 @@
 
 
       </mat-menu>
+
+      <form [formGroup]="compositionSettingsForm" class="flex-1 flex flex-row gap-3">
+        <mat-form-field class="w-full">
+          <mat-label i18n>Blend Mode</mat-label>
+          <mat-select formControlName="blendMode">
+            <mat-option *ngFor="let option of blendModeOptions" [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label i18n>Alpha</mat-label>
+          <input matInput formControlName="alpha" type="number" min="0" max="1" step="0.05">
+        </mat-form-field>
+      </form>
       <app-normalizer [layerId]="selectedImageLayer.id"></app-normalizer>
 
 

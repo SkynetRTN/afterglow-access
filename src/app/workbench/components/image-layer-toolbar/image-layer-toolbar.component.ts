@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { BlendMode } from '../../../data-files/models/blend-mode';
+import { BlendMode, BLEND_MODE_OPTIONS } from '../../../data-files/models/blend-mode';
 import {
   grayColorMap,
   rainbowColorMap,
@@ -47,16 +47,7 @@ export class ImageLayerToolbarComponent implements OnInit, AfterViewInit, OnDest
   @Output() onVisibilityChange = new EventEmitter<boolean>();
 
   colorMaps = COLOR_MAPS;
-  blendModeOptions = [
-    { label: 'Normal', value: BlendMode.Normal },
-    { label: 'Screen', value: BlendMode.Screen },
-    { label: 'Lighten', value: BlendMode.Lighten },
-    { label: 'Multiply', value: BlendMode.Multiply },
-    { label: 'Darken', value: BlendMode.Darken },
-    { label: 'Overlay', value: BlendMode.Overlay },
-    { label: 'Luminosity', value: BlendMode.Luminosity },
-    { label: 'Color', value: BlendMode.Color },
-  ];
+  blendModeOptions = BLEND_MODE_OPTIONS;
 
   @ViewChild('colorMapMenuTrigger') colorMapMenuTrigger: MatMenuTrigger;
   destroy$ = new Subject<boolean>();
