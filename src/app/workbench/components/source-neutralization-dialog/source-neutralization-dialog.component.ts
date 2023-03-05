@@ -49,7 +49,7 @@ export class SourceNeutralizationDialogComponent implements OnInit {
     }
     this.form.patchValue({
       referenceLayerId: this.layerIds[0],
-      selectedLayerIds: this.layerIds,
+      // selectedLayerIds: this.layerIds,
     })
 
     let defaults = this.service.getDefault(this.fileId);
