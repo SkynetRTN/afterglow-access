@@ -2322,6 +2322,7 @@ export class WorkbenchState {
 
       actions.push(
         new UpdateNormalizer(layer.id, {
+          linkSourceLayerId: null,
           mode: normalization.mode,
           stretchMode: normalization.stretchMode,
           backgroundLevel: normalization.backgroundLevel,
