@@ -27,6 +27,12 @@ export function compose(
 
 
   let result8 = new Uint8ClampedArray(result.pixels.buffer);
+
+
+  for (let j = 3; j < result8.length; j += 4) {
+    result8[j] = result8[j] * layers[0].alpha
+  }
+
   let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.rgba.buffer));
   let blendHsl = new Float32Array(3)
   let baseHsl = new Float32Array(3);
@@ -61,13 +67,14 @@ export function compose(
       let tg = layers8[k][kj + 1] / 255.0;
       let tb = layers8[k][kj + 2] / 255.0;
       let ta = layers[k].alpha * layers8[k][kj + 3] / 255.0;
+      let ba = result8[j + 3] / 255.0;
 
       if (layers[k].blendMode == BlendMode.Screen) {
         //screen blend mode
-        result8[j] = (1 - (1 - result8[j] / 255.0) * (1 - tr)) * 255.0;
-        result8[j + 1] = (1 - (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
-        result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
-        result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
+        result8[j] = (1 - Math.pow(Math.pow(1 - result8[j] / 255.0, ba) * Math.pow(1 - tr, ta), 2 / (ta + ba))) * 255.0;
+        result8[j + 1] = (1 - Math.pow(Math.pow(1 - result8[j + 1] / 255.0, ba) * Math.pow(1 - tg, ta), 2 / (ta + ba))) * 255.0;
+        result8[j + 2] = (1 - Math.pow(Math.pow(1 - result8[j + 2] / 255.0, ba) * Math.pow(1 - tb, ta), 2 / (ta + ba))) * 255.0;
+        result8[j + 3] = (1 - Math.pow(Math.pow(1 - result8[j + 3] / 255.0, ba) * Math.pow(1 - ta, ta), 2 / (ta + ba))) * 255.0;
       } else if (layers[k].blendMode == BlendMode.Multiply) {
         result8[j] = (result8[j] / 255) * tr * 255;
         result8[j + 1] = (result8[j + 1] / 255) * tg * 255;
