@@ -208,6 +208,8 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
       withLatestFrom(this.compositeNormalizationLayer$, this.layers$)
     ).subscribe(([v, selectedImageLayer, layers]) => {
       if (!selectedImageLayer) return;
+
+      this.store.dispatch(new UpdateNormalizer(selectedImageLayer.id, { linkSourceLayerId: null }))
       this.store.dispatch(layers.filter(isImageLayer).filter(layer => layer.id != selectedImageLayer.id).map(layer => new UpdateNormalizer(layer.id, { linkSourceLayerId: selectedImageLayer.id, linkMode: 'percentile' })))
 
     })
@@ -217,6 +219,7 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
       withLatestFrom(this.compositeNormalizationLayer$, this.layers$)
     ).subscribe(([v, selectedImageLayer, layers]) => {
       if (!selectedImageLayer) return;
+      this.store.dispatch(new UpdateNormalizer(selectedImageLayer.id, { linkSourceLayerId: null }))
       this.store.dispatch(layers.filter(isImageLayer).filter(layer => layer.id != selectedImageLayer.id).map(layer => new UpdateNormalizer(layer.id, { linkSourceLayerId: selectedImageLayer.id, linkMode: 'pixel' })))
 
     })
