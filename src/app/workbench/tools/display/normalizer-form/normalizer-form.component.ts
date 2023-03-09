@@ -19,8 +19,8 @@ import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ImageLayer, isImageLayer } from 'src/app/data-files/models/data-file';
 import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { map, distinctUntilChanged, takeUntil, debounceTime, filter, auditTime, switchMap, withLatestFrom, tap } from 'rxjs/operators'
+import { BehaviorSubject, Observable, Subject, asyncScheduler } from 'rxjs';
+import { map, distinctUntilChanged, takeUntil, debounceTime, filter, auditTime, switchMap, withLatestFrom, tap, throttleTime } from 'rxjs/operators'
 import { Store } from '@ngxs/store';
 import { UpdateNormalizer } from 'src/app/data-files/data-files.actions';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
@@ -129,10 +129,10 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy, Af
     ).subscribe(handler)
   }
 
-  private bindField(name: string, control: FormControl, observable$: Observable<any>, debounce = 0, storeToFormMapper = (value) => value, formToStoreMapper = (value) => value) {
+  private bindField(name: string, control: FormControl, observable$: Observable<any>, throttle = 0, storeToFormMapper = (value) => value, formToStoreMapper = (value) => value) {
     control.valueChanges.pipe(
       takeUntil(this.destroy$),
-      auditTime(debounce),
+      throttleTime(throttle, asyncScheduler, { leading: true, trailing: true }),
       filter(value => control.valid),
       distinctUntilChanged(),
     ).subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { [name]: formToStoreMapper(value) })))
