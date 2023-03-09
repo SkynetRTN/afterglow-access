@@ -60,7 +60,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy, Af
   )
   linkLayerOptions$ = this.layer$.pipe(
     switchMap(layer => this.store.select(DataFilesState.getLayersByFileId(layer.fileId)).pipe(
-      map(linkedLayerOptions => linkedLayerOptions.filter(isImageLayer).filter(linkedLayer => linkedLayer.id != layer.id))
+      map(linkedLayerOptions => linkedLayerOptions.filter(isImageLayer).filter(linkedLayer => linkedLayer.normalizer.linkSourceLayerId == null && linkedLayer.id != layer.id))
     ))
   )
   canBeLinked$ = this.linkLayerOptions$.pipe(
@@ -134,13 +134,11 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy, Af
       takeUntil(this.destroy$),
       throttleTime(throttle, asyncScheduler, { leading: true, trailing: true }),
       filter(value => control.valid),
-      distinctUntilChanged(),
     ).subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { [name]: formToStoreMapper(value) })))
 
     observable$.pipe(
       map(obj => obj ? obj[name] : null),
       takeUntil(this.destroy$),
-      distinctUntilChanged(),
     ).subscribe(value => {
       let formValue = storeToFormMapper(value)
       if (control.value == value) return;
