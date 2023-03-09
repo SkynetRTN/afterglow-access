@@ -35,13 +35,24 @@ import { DataFilesStateModel, DataFilesState } from './data-files/data-files.sta
 import { IImageData } from './data-files/models/image-data';
 import { ngxsConfig } from './ngxs.config';
 import { WorkbenchStateModel } from './workbench/models/workbench-state';
-import { PhotometryPanelState } from './workbench/models/photometry-file-state';
 import { AfterglowConfigService } from './afterglow-config.service';
 import { AppState } from './app.state';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import localeEs from '@angular/common/locales/es';
 import { ColorPickerModule } from 'ngx-color-picker';
 import { SettingsModule } from './settings/settings.module';
+import { CosmeticCorrectionState } from './workbench/tools/cosmetic-correction/cosmetic-correction.state';
+import { PixelOpsState } from './workbench/tools/pixel-ops/pixel-ops.state';
+import { StackingState } from './workbench/tools/stacking/stacking.state';
+import { AligningState } from './workbench/tools/aligning/aligning.state';
+import { SourceCatalogState } from './workbench/tools/source-catalog/source-catalog.state';
+import { PhotometryState, PhotometryStateModel, PhotometryViewerStateModel } from './workbench/tools/photometry/photometry.state';
+import { WcsCalibrationState } from './workbench/tools/wcs-calibration/wcs-calibration.state';
+import { SonificationState } from './workbench/tools/sonification/sonification.state';
+import { CustomMarkerState } from './workbench/tools/custom-marker/custom-marker.state';
+import { PlottingState } from './workbench/tools/plotting/plotting.state';
+import { FileInfoState } from './workbench/tools/file-info/file-info.state';
+import { DisplayState } from './workbench/tools/display/display.state';
 
 
 registerLocaleData(localeEs, 'es');
@@ -114,18 +125,27 @@ export function workbenchSanitizer(v: WorkbenchStateModel) {
     ...v,
   } as WorkbenchStateModel;
 
-  state.photometryPanelStateEntities = {
-    ...state.photometryPanelStateEntities,
+
+  return state;
+}
+
+export function photometrySanitizer(v: PhotometryStateModel) {
+  let state = {
+    ...v,
+  } as PhotometryStateModel;
+
+  state.layerIdToViewerState = {
+    ...state.layerIdToViewerState,
   };
-  Object.keys(state.photometryPanelStateEntities).forEach((key) => {
-    let photPanelState: PhotometryPanelState = {
-      ...state.photometryPanelStateEntities[key],
+  Object.keys(state.layerIdToViewerState).forEach((key) => {
+    let photPanelState: PhotometryViewerStateModel = {
+      ...state.layerIdToViewerState[key],
       autoPhotIsValid: false,
       autoCalIsValid: false,
       sourcePhotometryData: {},
     };
 
-    state.photometryPanelStateEntities[key] = photPanelState;
+    state.layerIdToViewerState[key] = photPanelState;
   });
   return state;
 }
@@ -159,7 +179,26 @@ export function jobSanitizer(v: JobsStateModel) {
     AuthModule.forRoot(),
     KeyboardShortcutsModule.forRoot(),
     NgxsModule.forRoot(
-      [AppState, AuthState, JobsState, DataProvidersState, DataFilesState, WorkbenchState, SourcesState, PhotDataState],
+      [AppState,
+        AuthState,
+        JobsState,
+        DataProvidersState,
+        DataFilesState,
+        WorkbenchState,
+        SourcesState,
+        PhotDataState,
+        CosmeticCorrectionState,
+        PixelOpsState,
+        StackingState,
+        AligningState,
+        SourceCatalogState,
+        PhotometryState,
+        WcsCalibrationState,
+        SonificationState,
+        CustomMarkerState,
+        PlottingState,
+        FileInfoState,
+        DisplayState],
       ngxsConfig
     ),
     AfterglowStoragePluginModule.forRoot({
@@ -172,6 +211,18 @@ export function jobSanitizer(v: JobsStateModel) {
         WorkbenchState,
         SourcesState,
         PhotDataState,
+        CosmeticCorrectionState,
+        PixelOpsState,
+        StackingState,
+        AligningState,
+        SourceCatalogState,
+        PhotometryState,
+        WcsCalibrationState,
+        SonificationState,
+        CustomMarkerState,
+        PlottingState,
+        FileInfoState,
+        DisplayState
       ],
       sanitizations: [
         {
@@ -186,6 +237,10 @@ export function jobSanitizer(v: JobsStateModel) {
           key: JobsState,
           sanitize: jobSanitizer,
         },
+        {
+          key: PhotometryState,
+          sanitize: photometrySanitizer
+        }
       ],
       storage: StorageOption.SessionStorage,
     }),

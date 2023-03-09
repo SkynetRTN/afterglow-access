@@ -93,7 +93,7 @@ import { WorkbenchState } from '../../workbench.state';
 import { WorkbenchTool } from '../../models/workbench-state';
 import { CustomMarkerPanelState } from '../../models/marker-file-state';
 import { PlottingPanelState } from '../../models/plotter-file-state';
-import { SonificationPanelState, SonifierRegionMode } from '../../models/sonifier-file-state';
+import { SonificationPanelState, SonifierRegionMode } from '../../tools/sonification/models/sonifier-file-state';
 import { ImageHistogram } from '../../../data-files/models/image-histogram';
 import * as moment from 'moment';
 import { Papa } from 'ngx-papaparse';
@@ -104,6 +104,9 @@ import { formatDms } from '../../../utils/skynet-astro';
 import * as piexif from 'piexifjs';
 import { ImageViewerEventService } from '../../services/image-viewer-event.service';
 import { ImageViewerMarkerService } from '../../services/image-viewer-marker.service';
+import { PhotometryState } from '../../tools/photometry/photometry.state';
+import { SonificationState, SonificationViewerStateModel } from '../../tools/sonification/sonification.state';
+import { PlottingState } from '../../tools/plotting/plotting.state';
 
 export interface ViewerCanvasMouseEvent extends CanvasMouseEvent {
   viewerId: string;
@@ -161,7 +164,7 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
   imageToViewportTransform$: Observable<Transform>;
   customMarkerPanelState$: Observable<CustomMarkerPanelState>;
   plottingPanelState$: Observable<PlottingPanelState>;
-  sonificationPanelState$: Observable<SonificationPanelState>;
+  sonificationPanelState$: Observable<SonificationViewerStateModel>;
   activeTool$: Observable<WorkbenchTool>;
   markers$: Observable<Marker[]>;
 
@@ -286,15 +289,15 @@ export class ImageViewerComponent implements OnInit, OnDestroy {
     // );
 
     this.plottingPanelState$ = viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPlottingPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(PlottingState.getViewerStateByViewerId(viewerId)))
     );
 
     this.sonificationPanelState$ = viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getSonificationPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(SonificationState.getSonificationViewerStateByViewerId(viewerId)))
     );
 
     let photometryPanelState$ = viewerId$.pipe(
-      switchMap((viewerId) => this.store.select(WorkbenchState.getPhotometryPanelStateByViewerId(viewerId)))
+      switchMap((viewerId) => this.store.select(PhotometryState.getPhotometryViewerStateByViewerId(viewerId)))
     );
 
     let sourcePhotometryData$ = photometryPanelState$.pipe(

@@ -3,18 +3,19 @@
         <div fxLayout="column" fxLayoutGap="20px" style="width: 100%">
             <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
                 <mat-form-field style="width: 100%;">
-                    <mat-label i18n>Blue</mat-label>
-                    <mat-select formControlName="blueLayerId" style="width: 100%">
+                    <mat-label i18n>Red</mat-label>
+                    <mat-select formControlName="redLayerId" style="width: 100%">
                         <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <input type="number" matInput i18n-placeholder placeholder="Blue Zero Point"
-                        formControlName="blueZeroPoint" />
+                    <input type="number" matInput i18n-placeholder placeholder="Red Zero Point"
+                        formControlName="redZeroPoint" />
                     <mat-hint i18n></mat-hint>
                 </mat-form-field>
             </div>
+
             <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
                 <mat-form-field style="width: 100%;">
                     <mat-label i18n>Green</mat-label>
@@ -31,15 +32,15 @@
             </div>
             <div fxLayout="row" fxLayoutGap="20px" style="width: 100%">
                 <mat-form-field style="width: 100%;">
-                    <mat-label i18n>Red</mat-label>
-                    <mat-select formControlName="redLayerId" style="width: 100%">
+                    <mat-label i18n>Blue</mat-label>
+                    <mat-select formControlName="blueLayerId" style="width: 100%">
                         <mat-option *ngFor="let layer of layers" [value]="layer.id">{{ layer.name }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field>
-                    <input type="number" matInput i18n-placeholder placeholder="Red Zero Point"
-                        formControlName="redZeroPoint" />
+                    <input type="number" matInput i18n-placeholder placeholder="Blue Zero Point"
+                        formControlName="blueZeroPoint" />
                     <mat-hint i18n></mat-hint>
                 </mat-form-field>
             </div>

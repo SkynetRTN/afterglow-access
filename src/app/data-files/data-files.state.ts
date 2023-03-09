@@ -584,6 +584,8 @@ export class DataFilesState {
                     inverted: false,
                     layerScale: 1,
                     layerOffset: 0,
+                    linkSourceLayerId: null,
+                    linkMode: 'percentile'
                   },
                 };
                 layer = imageLayer;
@@ -1577,6 +1579,23 @@ export class DataFilesState {
       ...changes
     }
 
+    if (changes.linkSourceLayerId || (normalizer.linkSourceLayerId && changes.linkMode)) {
+      let linkedLayer = state.layerEntities[normalizer.linkSourceLayerId]
+      if (linkedLayer && isImageLayer(linkedLayer)) {
+        normalizer = {
+          ...normalizer,
+          mode: normalizer.linkMode,
+          backgroundPercentile: linkedLayer.normalizer.backgroundPercentile,
+          midPercentile: linkedLayer.normalizer.midPercentile,
+          peakPercentile: linkedLayer.normalizer.peakPercentile,
+          backgroundLevel: linkedLayer.normalizer.backgroundLevel,
+          midLevel: linkedLayer.normalizer.midLevel,
+          peakLevel: linkedLayer.normalizer.peakLevel,
+          stretchMode: linkedLayer.normalizer.stretchMode
+        }
+      }
+    }
+
     if (layer.histogram.loaded) {
       if (normalizer.mode == 'percentile') {
         let levels = calcLevels(layer.histogram, normalizer.backgroundPercentile, normalizer.midPercentile, normalizer.peakPercentile);
@@ -1587,9 +1606,9 @@ export class DataFilesState {
       else if (normalizer.mode == 'pixel') {
         let percentiles = calcPercentiles(
           layer.histogram,
-          (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale,
-          (normalizer.midLevel - normalizer.layerOffset) / normalizer.layerScale,
-          (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
+          !normalizer.layerScale ? 0 : (normalizer.backgroundLevel - normalizer.layerOffset) / normalizer.layerScale,
+          !normalizer.layerScale ? 0 : (normalizer.midLevel - normalizer.layerOffset) / normalizer.layerScale,
+          !normalizer.layerScale ? 0 : (normalizer.peakLevel - normalizer.layerOffset) / normalizer.layerScale)
         normalizer.backgroundPercentile = percentiles.lowerPercentile;
         normalizer.midPercentile = percentiles.midPercentile;
         normalizer.peakPercentile = percentiles.upperPercentile;
@@ -1614,6 +1633,23 @@ export class DataFilesState {
 
     actions.push(new InvalidateNormalizedImageTiles(layerId))
     actions.push(new UpdateNormalizerSuccess(layerId))
+
+    Object.values(state.layerEntities).forEach(linkedLayer => {
+      if (linkedLayer.id == layerId || !isImageLayer(linkedLayer) || linkedLayer.normalizer.linkSourceLayerId != layerId) return;
+      let linkChanges: Partial<PixelNormalizer> = {
+        mode: linkedLayer.normalizer.linkMode,
+        backgroundPercentile: normalizer.backgroundPercentile,
+        midPercentile: normalizer.midPercentile,
+        peakPercentile: normalizer.peakPercentile,
+        backgroundLevel: normalizer.backgroundLevel,
+        midLevel: normalizer.midLevel,
+        peakLevel: normalizer.peakLevel,
+        stretchMode: normalizer.stretchMode
+      }
+      actions.push(new UpdateNormalizer(linkedLayer.id, linkChanges))
+
+    })
+
 
 
     return this.store.dispatch(actions)

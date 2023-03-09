@@ -1,15 +1,7 @@
 import { ViewMode } from './models/view-mode';
 import {
   WorkbenchTool,
-  PlottingPanelConfig,
-  PhotometryPanelConfig,
-  AligningPanelConfig as AligningPanelConfig,
-  PixelOpsPanelConfig,
-  StackingPanelConfig as StackingPanelConfig,
-  CustomMarkerPanelConfig,
   ViewerPanel,
-  WcsCalibrationPanelConfig,
-  SourcePanelConfig,
 } from './models/workbench-state';
 import { SidebarView } from './models/sidebar-view';
 import { CentroidSettings } from './models/centroid-settings';
@@ -19,22 +11,16 @@ import { SourceExtractionSettings } from './models/source-extraction-settings';
 import { Source, PosType } from './models/source';
 import { Marker } from './models/marker';
 import { IViewer, Viewer } from './models/viewer';
-import { FileInfoPanelConfig } from './models/file-info-panel';
 import { DataFile, ILayer, Header } from '../data-files/models/data-file';
 import { Region } from '../data-files/models/region';
-import { SonificationPanelState } from './models/sonifier-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
-import { PhotometryPanelState } from './models/photometry-file-state';
-import { PhotData } from './models/source-phot-data';
 import { PixelNormalizer } from '../data-files/models/pixel-normalizer';
 import { PhotometryData } from '../jobs/models/photometry';
 import { FieldCalibration } from '../jobs/models/field-calibration';
 import { GlobalSettings } from './models/global-settings';
 import { CalibrationSettings } from './models/calibration-settings';
-import { WcsCalibrationFileState } from './models/wcs-calibration-file-state';
+import { CosmeticCorrectionSettings } from './models/cosmetic-correction-settings';
 import { AlignmentSettings } from './models/alignment-settings';
-import { AlignmentJobSettings } from '../jobs/models/alignment';
-import { StackSettings } from '../jobs/models/stacking';
 
 /* Core */
 
@@ -184,11 +170,7 @@ export class SetNormalizationSyncEnabled {
   constructor(public value: boolean) { }
 }
 
-export class SyncPlottingPanelStates {
-  public static readonly type = '[Workbench] Sync Plotting Panel States';
 
-  constructor(public referenceId: string, public ids: string[]) { }
-}
 
 export class SetActiveTool {
   public static readonly type = '[Workbench] Set Active Tool';
@@ -238,16 +220,16 @@ export class UpdatePhotometrySettings {
   constructor(public changes: Partial<PhotometrySettings>) { }
 }
 
-export class UpdateAlignmentSettings {
-  public static readonly type = '[Workbench] Update Alignment Settings';
-
-  constructor(public changes: Partial<AlignmentSettings>) { }
-}
-
 export class UpdateSourceExtractionSettings {
   public static readonly type = '[Workbench] Update Source Extraction Settings';
 
   constructor(public changes: Partial<SourceExtractionSettings>) { }
+}
+
+export class UpdateAlignmentSettings {
+  public static readonly type = '[Workbench] Update Alignment Settings';
+
+  constructor(public changes: Partial<AlignmentSettings>) { }
 }
 
 export class UpdateCalibrationSettings {
@@ -256,79 +238,12 @@ export class UpdateCalibrationSettings {
   constructor(public changes: Partial<CalibrationSettings>) { }
 }
 
-export class UpdateCustomMarkerPanelConfig {
-  public static readonly type = '[Workbench] Update Custom Marker Panel Config';
+export class UpdateCosmeticCorrectionSettings {
+  public static readonly type = '[Workbench] Update Cosmetic Correction Settings';
 
-  constructor(public changes: Partial<CustomMarkerPanelConfig>) { }
+  constructor(public changes: Partial<CosmeticCorrectionSettings>) { }
 }
 
-export class UpdateFileInfoPanelConfig {
-  public static readonly type = '[Workbench] Update File Info Panel Config';
-
-  constructor(public changes: Partial<FileInfoPanelConfig>) { }
-}
-
-export class UpdatePlottingPanelConfig {
-  public static readonly type = '[Workbench] Update Plotter Panel Config';
-
-  constructor(public changes: Partial<PlottingPanelConfig>) { }
-}
-
-export class UpdatePhotometryPanelConfig {
-  public static readonly type = '[Workbench] Update Photometry Panel Config';
-
-  constructor(public changes: Partial<PhotometryPanelConfig>) { }
-}
-
-export class UpdateSourcePanelConfig {
-  public static readonly type = '[Workbench] Update Source Panel Config';
-
-  constructor(public changes: Partial<SourcePanelConfig>) { }
-}
-
-export class UpdatePixelOpsPageSettings {
-  public static readonly type = '[Workbench] Update Pixel Ops Panel Config';
-
-  constructor(public changes: Partial<PixelOpsPanelConfig>) { }
-}
-
-export class UpdateAligningPanelConfig {
-  public static readonly type = '[Workbench] Update Aligning Panel Config';
-
-  constructor(public changes: Partial<AligningPanelConfig>) { }
-}
-
-export class UpdateStackingPanelConfig {
-  public static readonly type = '[Workbench] Update Stacking Panel Config';
-
-  constructor(public changes: Partial<StackingPanelConfig>) { }
-}
-
-export class UpdateWcsCalibrationFileState {
-  public static readonly type = '[Workbench] Update Wcs Calibration File State';
-
-  constructor(public layerId: string, public changes: Partial<WcsCalibrationFileState>) { }
-}
-
-export class UpdateWcsCalibrationPanelConfig {
-  public static readonly type = '[Workbench] Update Wcs Calibration Panel Config';
-
-  constructor(public changes: Partial<WcsCalibrationPanelConfig>) { }
-}
-
-export class UpdateWcsCalibrationExtractionOverlay {
-  public static readonly type = '[Workbench] Update WCS Calibration Extraction Overlay';
-
-  constructor(
-    public viewerId: string
-  ) { }
-}
-
-export class InvalidateWcsCalibrationExtractionOverlayByLayerId {
-  public static readonly type = '[Phot Data] Invalidate Wcs Calibration Extraction Overlay By Layer Id';
-
-  constructor(public layerId: string = null) { }
-}
 
 export class LoadCatalogs {
   public static readonly type = '[Workbench] Load Catalogs';
@@ -416,33 +331,6 @@ export class AddFieldCalSourcesFromCatalog {
   constructor(public fieldCalId: string, public catalogQueryJob: CatalogQueryJob) { }
 }
 
-export class CreatePixelOpsJob {
-  public static readonly type = '[Workbench] Create Pixel Ops Job';
-}
-
-export class CreateAdvPixelOpsJob {
-  public static readonly type = '[Workbench] Create Adv Pixel Ops Job';
-}
-
-export class HideCurrentPixelOpsJobState {
-  public static readonly type = '[Workbench] Hide Current Pixel Ops Job State';
-}
-
-export class CreateAlignmentJob {
-  public static readonly type = '[Workbench] Create Alignment Job';
-  constructor(public layerIds: string[], public crop: boolean, public settings: AlignmentJobSettings) { }
-}
-
-export class CreateStackingJob {
-  public static readonly type = '[Workbench] Create Stacking Job';
-  constructor(public layerIds: string[], public settings: StackSettings, public outFilename: string) { }
-}
-
-export class CreateWcsCalibrationJob {
-  public static readonly type = '[Workbench] Create Wcs Calibration Job';
-  constructor(public layerIds: string[]) { }
-}
-
 export class ExtractSources {
   public static readonly type = '[Workbench] Extract Sources';
 
@@ -500,124 +388,8 @@ export class CloseSidenav {
   public static readonly type = '[Layout] Close Sidenav';
 }
 
-export class InitializeWorkbenchLayerState {
-  public static readonly type = '[Workbench Layer State] Initialize Workbench Layer State';
-
-  constructor(public layerId: string) { }
-}
-
-export class InitializeWorkbenchFileState {
-  public static readonly type = '[Workbench File State] Initialize Workbench File State';
-
-  constructor(public fileId: string) { }
-}
-
-/* Sonification */
-export class SonificationViewportSync {
-  public static readonly type = '[Sonifier] Sonification Viewport Sync';
-
-  constructor(public layerId: string) { }
-}
-
-export class SonificationRegionChanged {
-  public static readonly type = '[Sonifier] Region Changed';
-
-  constructor(public layerId: string) { }
-}
-
-export class AddRegionToHistory {
-  public static readonly type = '[Sonifier] Add Region to History';
-
-  constructor(public layerId: string, public region: Region) { }
-}
-
-export class ClearRegionHistory {
-  public static readonly type = '[Sonifier] Clear Region History';
-
-  constructor(public layerId: string) { }
-}
-
-export class UndoRegionSelection {
-  public static readonly type = '[Sonifier] Undo Region Selection';
-
-  constructor(public layerId: string) { }
-}
-
-export class RedoRegionSelection {
-  public static readonly type = '[Sonifier] Redo Region Selection';
-
-  constructor(public layerId: string) { }
-}
-
-export class UpdateSonifierFileState {
-  public static readonly type = '[Sonifier] Update File State';
-
-  constructor(public layerId: string, public changes: Partial<SonificationPanelState>) { }
-}
-
-export class SetProgressLine {
-  public static readonly type = '[Sonifier] Set Progress Line';
-
-  constructor(public layerId: string, public line: { x1: number; y1: number; x2: number; y2: number }) { }
-}
-
-export class Sonify {
-  public static readonly type = '[Sonifier] Sonify';
-
-  constructor(public layerId: string, public region: Region) { }
-}
-
-export class ClearSonification {
-  public static readonly type = '[Sonifier] Clear Sonification';
-
-  constructor(public layerId: string) { }
-}
-
-export class SonificationCompleted {
-  public static readonly type = '[Sonifier] Sonification Completed';
-
-  constructor(public layerId: string, public url: string, public error: string) { }
-}
-
-/* Plotting */
-
-export class UpdatePlottingPanelState {
-  public static readonly type = '[Plotter] Update Layer Plotting Panel State';
-
-  constructor(public plottingPanelStateId: string, public changes: Partial<PlottingPanelState>) { }
-}
-
-export class StartLine {
-  public static readonly type = '[Plotter] Start Line';
-
-  constructor(
-    public plottingPanelStateId: string,
-    public point: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) { }
-}
-
-export class UpdateLine {
-  public static readonly type = '[Plotter] Update Line';
-
-  constructor(
-    public plottingPanelStateId: string,
-    public point: { primaryCoord: number; secondaryCoord: number; posType: PosType }
-  ) { }
-}
-
 /* Sources */
 
-export class UpdateSourceSelectionRegion {
-  public static readonly type = '[Sources] Update Source Selection Region';
-
-  constructor(public layerId: string, public region: Region) { }
-}
-
-export class EndSourceSelectionRegion {
-  public static readonly type = '[Sources] End Source Selection Region';
-
-  constructor(public layerId: string, public mode: 'append' | 'remove') { }
-}
 
 export class RemoveSelectedSources {
   public static readonly type = '[Sources] Remove Selected Sources';
@@ -640,122 +412,8 @@ export class SetSourceLabel {
 
 /*Photometry */
 
-export class UpdateFilteredSources {
-  public static readonly type = '[Photometry] Update Filtered Sources';
-
-  constructor(public layerId: string) { }
-}
-
-export class UpdatePhotometryFileState {
-  public static readonly type = '[Photometry] Update File State';
-
-  constructor(public layerId: string, public changes: Partial<PhotometryPanelState>) { }
-}
-
-
-
-export class BatchPhotometerSources {
-  public static readonly type = '[Phot Data] Batch Photometer Sources';
-
-  constructor() { }
-}
-
-export class UpdateAutoPhotometry {
-  public static readonly type = '[Phot Data] Update Auto Photometry';
-
-  constructor(
-    public viewerId: string
-  ) { }
-}
-
-export class UpdateAutoFieldCalibration {
-  public static readonly type = '[Phot Data] Update Auto Field Calibration';
-
-  constructor(
-    public viewerId: string
-  ) { }
-}
-
-export class InvalidateAutoCalByLayerId {
-  public static readonly type = '[Phot Data] Invalidate Auto Cal By Layer ID';
-
-  constructor(public layerId: string = null) { }
-}
-
-export class InvalidateAutoPhotByLayerId {
-  public static readonly type = '[Phot Data] Invalidate Auto Phot By Layer ID';
-
-  constructor(public layerId: string = null) { }
-}
-
 
 /* Markers */
-export class UpdateCustomMarkerSelectionRegion {
-  public static readonly type = '[Markers] Update Custom Marker Selection Region';
-
-  constructor(public customMarkerPanelStateId: string, public region: Region) { }
-}
-
-export class EndCustomMarkerSelectionRegion {
-  public static readonly type = '[Markers] End Custom Marker Selection Region';
-
-  constructor(public customMarkerPanelStateId: string, public mode: 'append' | 'remove') { }
-}
-
-export class UpdateCustomMarker {
-  public static readonly type = '[Markers] Update Custom Marker';
-
-  /* TODO:  Figure out why error TS2322 is thrown by compiler when changes type is set to Partial<Marker> */
-  constructor(public customMarkerPanelStateId: string, public markerId: string, public changes: any) { }
-}
-
-export class AddCustomMarkers {
-  public static readonly type = '[Markers] Add Custom Marker';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class RemoveCustomMarkers {
-  public static readonly type = '[Markers] Remove Custom Marker';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class SelectCustomMarkers {
-  public static readonly type = '[Markers] Select Custom Markers';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class DeselectCustomMarkers {
-  public static readonly type = '[Markers] Deselect Custom Markers';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class SetCustomMarkerSelection {
-  public static readonly type = '[Markers] Set Custom Marker Selection';
-
-  constructor(public customMarkerPanelStateId: string, public markers: Marker[]) { }
-}
-
-export class AddPhotDatas {
-  public static readonly type = '[Sources Phot Data] Add Source Phot Datas';
-
-  constructor(public photDatas: PhotometryData[]) { }
-}
-
-export class RemovePhotDatasByLayerId {
-  public static readonly type = '[Phot Data] Remove Phot Datas By Layer Id';
-
-  constructor(public layerId: string = null) { }
-}
-
-export class RemovePhotDatasBySourceId {
-  public static readonly type = '[Phot Data] Remove Phot Datas By Source Id';
-
-  constructor(public sourceId: string) { }
-}
 
 
 

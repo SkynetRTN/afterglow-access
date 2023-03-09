@@ -47,10 +47,10 @@ export class SourceNeutralizationDialogComponent implements OnInit {
       this.statusMessage$.next("Your file must contain at least two layers");
       return;
     }
-    this.form.patchValue({
-      referenceLayerId: this.layerIds[0],
-      selectedLayerIds: this.layerIds,
-    })
+    // this.form.patchValue({
+    // referenceLayerId: this.layerIds[0],
+    // selectedLayerIds: this.layerIds,
+    // })
 
     let defaults = this.service.getDefault(this.fileId);
     if (defaults) {
@@ -86,7 +86,7 @@ export class SourceNeutralizationDialogComponent implements OnInit {
   start() {
     this.running = true;
     this.statusMessage$.next('Fitting histograms...')
-    let selectedLayerIds: string[] = this.form.controls.selectedLayerIds.value;
+    let selectedLayerIds: string[] = [...this.form.controls.selectedLayerIds.value];
     selectedLayerIds.push(this.form.controls.referenceLayerId.value);
     let layers = selectedLayerIds.map((layerId: string) => this.store.selectSnapshot(DataFilesState.getLayerById(layerId))).filter(isImageLayer);
     this.service.saveDefault(this.fileId, this.form.value);

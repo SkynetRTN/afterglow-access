@@ -1,0 +1,202 @@
+<ng-template #fileNotSelectedBlock>
+  <div i18n class="alert alert-info" i18n>Select a file or image layer to see the display settings.</div>
+</ng-template>
+
+<ng-template #invalidLayerTypeBlock>
+  <div i18n class="alert alert-info" i18n>Select an image layer to adjust brightness and contrast settings.</div>
+</ng-template>
+
+<ng-container *ngIf="file$ | async as file; else fileNotSelectedBlock">
+  <ng-container *ngIf="selectedImageLayer$ | async as selectedImageLayer; else compositeHistogramBlock">
+    <div *ngIf="selectedImageLayer.histogram?.loaded" class="pr-3 pl-3 pb-4 w-100" style="height: 350px;">
+      <app-image-histogram-chart [data]="selectedImageLayerHistData$ | async"
+        [backgroundLevel]="selectedImageLayer?.normalizer?.backgroundLevel"
+        [peakLevel]="selectedImageLayer?.normalizer?.peakLevel">
+      </app-image-histogram-chart>
+      <div style="clear: both"></div>
+    </div>
+    <app-normalizer-form [layerId]="selectedImageLayer.id">
+    </app-normalizer-form>
+  </ng-container>
+  <ng-template #compositeHistogramBlock>
+    <ng-container *ngIf="compositeNormalizationLayer$ | async as selectedImageLayer">
+      <div class="flex flex-row gap-6 w-full">
+        <form [formGroup]="layerSelectionForm" class="flex-1">
+          <mat-form-field class="w-full">
+            <mat-label i18n>Select a layer to view display settings</mat-label>
+            <mat-select formControlName="selectedLayerId">
+              <mat-option *ngFor="let layer of layers$ | async" [value]="layer.id">
+                {{layer.name}}
+                <app-color-map-swatch *ngIf="showCompositeNormalizationLayerColorMap$ | async"
+                  style="margin-top: -20px; max-width: 350px" [colorMap]="getColorMap(layer)" [samples]="16"
+                  [height]="'32px'"></app-color-map-swatch>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+        <div class="mt-1 ">
+          <button mat-raised-button style="height: 36px" [matMenuTriggerFor]="histogramFittingMenu">
+            <ng-container i18n>Color Composite Tools</ng-container>
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
+        </div>
+
+
+      </div>
+      <div class="pr-3 pl-3 pb-4 w-100" style="height: 300px;">
+        <app-image-histogram-chart [data]="compositeHistData$ | async"
+          [backgroundLevel]="selectedImageLayer?.normalizer?.backgroundLevel"
+          [peakLevel]="selectedImageLayer?.normalizer?.peakLevel">
+        </app-image-histogram-chart>
+        <div style="clear: both"></div>
+      </div>
+
+
+
+      <mat-menu #histogramFittingMenu="matMenu">
+        <button mat-menu-item (click)="linkAllPercentile$.next(true)" i18n-aria-label
+          aria-label="Link All Layers (Percentile)">
+          <mat-icon>link</mat-icon><span i18n>Link All Layers (Percentile)</span>
+        </button>
+        <button mat-menu-item (click)="linkAllPixelValue$.next(true)" i18n-aria-label
+          aria-label="Link All Layers (Pixel Value)">
+          <mat-icon>link</mat-icon><span i18n>Link All Layers (Pixel Value)</span>
+        </button>
+        <button mat-menu-item (click)="resetLinking$.next(true)" i18n-aria-label aria-label="Reset Layer Linking">
+          <mat-icon>link_off</mat-icon><span i18n>Reset Layer Linking</span>
+        </button>
+        <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
+          aria-label="Photometric Calibration...">
+          <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Calibration...</span>
+        </button>
+        <button mat-menu-item (click)="neutralizeSourcesEvent$.next();" i18n-aria-label aria-label="Neutralize Sources">
+          <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources...</span>
+        </button>
+        <button mat-menu-item (click)="neutralizeBackgroundsEvent$.next();" i18n-aria-label
+          aria-label="Neutralize Background">
+          <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
+        </button>
+        <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
+          aria-label="Reset Scales/Offsets">
+          <mat-icon>refresh</mat-icon><span i18n>Reset Scales/Offsets</span>
+        </button>
+
+
+      </mat-menu>
+
+      <form [formGroup]="compositionSettingsForm" class="flex-1 flex flex-row gap-3">
+        <mat-form-field class="w-full">
+          <mat-label i18n>Blend Mode</mat-label>
+          <mat-select formControlName="blendMode">
+            <mat-option *ngFor="let option of blendModeOptions" [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="w-full">
+          <mat-label i18n>Alpha</mat-label>
+          <input matInput formControlName="alpha" type="number" min="0" max="1" step="0.05">
+        </mat-form-field>
+      </form>
+
+      <app-normalizer-form [layerId]="selectedImageLayer.id">
+      </app-normalizer-form>
+
+
+    </ng-container>
+  </ng-template>
+  <div>
+    <h3 i18n>Image Orientation Options</h3>
+    <div class="pb-4">
+      <app-image-orientation-toolbar [data]="(selectedImageLayer$ | async) || (file$ | async)"
+        [viewportSize]="viewportSize$ | async"></app-image-orientation-toolbar>
+    </div>
+  </div>
+  <!-- 
+
+
+  <ng-template #multiLayerBlock>
+
+    <ng-container *ngIf="layers$ | async; let layers">
+      <div *ngIf="layers.length > 1" fxLayout="column">
+        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start start" fxLayoutGap="40px">
+          <mat-form-field appearance="outline">
+            <mat-label i18n>Color Balance Mode</mat-label>
+            <mat-select [value]="(file$ |async)?.colorBalanceMode"
+              (selectionChange)="setFileColorBalanceModeEvent$.next($event.value)">
+              <mat-option [value]="ColorBalanceMode.PERCENTILE" i18n>Percentile</mat-option>
+              <mat-option [value]="ColorBalanceMode.HISTOGRAM_FITTING" i18n>Histogram Fitting</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button *ngIf="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING" mat-raised-button
+            style="height: 36px" [matMenuTriggerFor]="histogramFittingMenu">
+            <ng-container i18n>Histogram Fitting Tools</ng-container>
+            <mat-icon>keyboard_arrow_down</mat-icon>
+          </button>
+        </div>
+        <mat-menu #histogramFittingMenu="matMenu">
+          <button mat-menu-item (click)="neutralizeBackgroundsEvent$.next();" i18n-aria-label
+            aria-label="Neutralize Background">
+            <mat-icon class="mr-2">balance</mat-icon><span i18n>Neutralize Background</span>
+          </button>
+          <button mat-menu-item (click)="neutralizeSourcesEvent$.next();" i18n-aria-label
+            aria-label="Neutralize Sources">
+            <mat-icon class="mr-2">light_mode</mat-icon><span i18n>Neutralize Sources...</span>
+          </button>
+          <button mat-menu-item (click)="this.photometricColorBalanceEvent$.next()" i18n-aria-label
+            aria-label="Photometric Color Calibration...">
+            <mat-icon class="mr-2">star</mat-icon><span i18n>Photometric Color Calibration...</span>
+          </button>
+          <button mat-menu-item (click)="resetColorBalanceEvent$.next(true)" i18n-aria-label
+            aria-label="Reset Histograms">
+            <mat-icon>refresh</mat-icon><span i18n>Reset Histogram Fitting</span>
+          </button>
+        </mat-menu>
+
+
+
+        <div class="pr-3 pl-3 pb-0 w-100" style="height: 400px;">
+          <app-image-histogram-chart [data]="compositeHistData$ | async"
+            [backgroundLevel]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ? (compositeNormalizer$ | async)?.backgroundLevel : null"
+            [peakLevel]="(file$ |async)?.colorBalanceMode == ColorBalanceMode.HISTOGRAM_FITTING ?  (compositeNormalizer$ | async)?.peakLevel : null">
+          </app-image-histogram-chart>
+
+        </div>
+        <div style="clear: both"></div>
+
+
+        <ng-container *ngIf="compositeNormalizersSynced$ | async; else notSyncedBlock">
+          
+        </ng-container>
+
+        <ng-template #notSyncedBlock>
+          <div class="alert alert-warning" style="margin-top: 10px" i18n>
+            Brightness and contrast settings are not the same in all layers. In order to change the brightness and
+            contrast here, you must first click the sync button below to set all
+            brightness and contrast settings to match the selected reference layer.
+          </div>
+
+          <div class="w-full flex flex-row justify-center items-center">
+            <mat-form-field appearance="outline" class="pr-2.5 mt-5">
+              <mat-label i18n>Reference Layer</mat-label>
+              <mat-select #referenceLayerSelect>
+                <mat-option *ngFor="let layer of (referenceLayerOptions$ | async)" [value]="layer.id">{{layer.name}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-raised-button (click)="onSyncClick(referenceLayerSelect.value)" i18n-aria-label
+              aria-label="Sync brighness and contrast"
+              [disabled]="!referenceLayerSelect.value || !file?.layerIds.includes(referenceLayerSelect.value)">
+              Sync Brightness & Contrast in all Layers
+            </button>
+          </div>
+
+        </ng-template>
+
+
+      </div>
+    </ng-container>
+
+  </ng-template> -->
+
+</ng-container>

@@ -27,6 +27,12 @@ export function compose(
 
 
   let result8 = new Uint8ClampedArray(result.pixels.buffer);
+
+
+  for (let j = 3; j < result8.length; j += 4) {
+    result8[j] = result8[j] * layers[0].alpha
+  }
+
   let layers8 = layers.map((layer) => new Uint8ClampedArray(layer.rgba.buffer));
   let blendHsl = new Float32Array(3)
   let baseHsl = new Float32Array(3);
@@ -61,32 +67,36 @@ export function compose(
       let tg = layers8[k][kj + 1] / 255.0;
       let tb = layers8[k][kj + 2] / 255.0;
       let ta = layers[k].alpha * layers8[k][kj + 3] / 255.0;
+      let ba = result8[j + 3] / 255.0;
+      let aExp = 2 / (ta + ba);
+
+      if (aExp == 0) continue;
 
       if (layers[k].blendMode == BlendMode.Screen) {
         //screen blend mode
-        result8[j] = (1 - (1 - result8[j] / 255.0) * (1 - tr)) * 255.0;
-        result8[j + 1] = (1 - (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
-        result8[j + 2] = (1 - (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
-        result8[j + 3] = (1 - (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
+        result8[j] = (1 - Math.pow(Math.pow(1 - result8[j] / 255.0, ba) * Math.pow(1 - tr, ta), aExp)) * 255.0;
+        result8[j + 1] = (1 - Math.pow(Math.pow(1 - result8[j + 1] / 255.0, ba) * Math.pow(1 - tg, ta), aExp)) * 255.0;
+        result8[j + 2] = (1 - Math.pow(Math.pow(1 - result8[j + 2] / 255.0, ba) * Math.pow(1 - tb, ta), aExp)) * 255.0;
+        result8[j + 3] = (1 - Math.pow(Math.pow(1 - result8[j + 3] / 255.0, ba) * Math.pow(1 - ta, ta), aExp)) * 255.0;
       } else if (layers[k].blendMode == BlendMode.Multiply) {
-        result8[j] = (result8[j] / 255) * tr * 255;
-        result8[j + 1] = (result8[j + 1] / 255) * tg * 255;
-        result8[j + 2] = (result8[j + 2] / 255) * tb * 255;
-        result8[j + 3] = (result8[j + 3] / 255) * ta * 255;
+        result8[j] = Math.pow(Math.pow(result8[j] / 255, ba) * Math.pow(tr, ta), aExp) * 255;
+        result8[j + 1] = Math.pow(Math.pow(result8[j + 1] / 255, ba) * Math.pow(tg, ta), aExp) * 255;
+        result8[j + 2] = Math.pow(Math.pow(result8[j + 2] / 255, ba) * Math.pow(tb, ta), aExp) * 255;
+        result8[j + 3] = Math.pow(Math.pow(result8[j + 3] / 255, ba) * Math.pow(ta, ta), aExp) * 255;
 
       } else if (layers[k].blendMode == BlendMode.Overlay) {
         rgbToHsy([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
         if (baseHsl[2] > 0.5) {
-          result8[j] = (1 - 2 * (1 - result8[j] / 255.0) * (1 - tr)) * 255.0;
-          result8[j + 1] = (1 - 2 * (1 - result8[j + 1] / 255.0) * (1 - tg)) * 255.0;
-          result8[j + 2] = (1 - 2 * (1 - result8[j + 2] / 255.0) * (1 - tb)) * 255.0;
-          result8[j + 3] = (1 - 2 * (1 - result8[j + 3] / 255.0) * (1 - ta)) * 255.0;
+          result8[j] = (1 - 2 * Math.pow(Math.pow(1 - result8[j] / 255.0, ba) * Math.pow(1 - tr, ta), aExp)) * 255.0;
+          result8[j + 1] = (1 - 2 * Math.pow(Math.pow(1 - result8[j + 1] / 255.0, ba) * Math.pow(1 - tg, ta), aExp)) * 255.0;
+          result8[j + 2] = (1 - 2 * Math.pow(Math.pow(1 - result8[j + 2] / 255.0, ba) * Math.pow(1 - tb, ta), aExp)) * 255.0;
+          result8[j + 3] = (1 - 2 * Math.pow(Math.pow(1 - result8[j + 3] / 255.0, ba) * Math.pow(1 - ta, ta), aExp)) * 255.0;
         }
         else {
-          result8[j] = 2 * result8[j] * tr;
-          result8[j + 1] = 2 * result8[j + 1] * tg;
-          result8[j + 2] = 2 * result8[j + 2] * tb;
-          result8[j + 3] = 2 * result8[j + 3] * ta;
+          result8[j] = 2 * Math.pow(Math.pow(result8[j], ba) * Math.pow(tr, ta), aExp);
+          result8[j + 1] = 2 * Math.pow(Math.pow(result8[j + 1], ba) * Math.pow(tg, ta), aExp);
+          result8[j + 2] = 2 * Math.pow(Math.pow(result8[j + 2], ba) * Math.pow(tb, ta), aExp);
+          result8[j + 3] = 2 * Math.pow(Math.pow(result8[j + 3], ba) * Math.pow(ta, ta), aExp);
         }
       }
       else if (layers[k].blendMode == BlendMode.Luminosity) {
@@ -98,7 +108,7 @@ export function compose(
         result8[j] = rgb[0] * 255;
         result8[j + 1] = rgb[1] * 255;
         result8[j + 2] = rgb[2] * 255;
-        result8[j + 3] = 255.0;
+        result8[j + 3] = (result8[j + 3] + 255 * ta) / 2;
       } else if (layers[k].blendMode == BlendMode.Color) {
         rgbToHsy([tr, tg, tb], blendHsl);
         rgbToHsy([result8[j] / 255.0, result8[j + 1] / 255.0, result8[j + 2] / 255.0], baseHsl);
@@ -107,7 +117,7 @@ export function compose(
         result8[j] = rgb[0] * 255;
         result8[j + 1] = rgb[1] * 255;
         result8[j + 2] = rgb[2] * 255;
-        result8[j + 3] = 255.0;
+        result8[j + 3] = (result8[j + 3] + 255 * ta) / 2;
       } else if (layers[k].blendMode == BlendMode.Lighten) {
         result8[j] = tr > (result8[j] / 255) ? tr * 255 : result8[j];
         result8[j + 1] = tg > (result8[j + 1] / 255) ? tg * 255 : result8[j + 1];
@@ -128,7 +138,7 @@ export function compose(
         result8[j] = (ta * (tr - br) + br) * 255;
         result8[j + 1] = (ta * (tg - bg) + bg) * 255;
         result8[j + 2] = (ta * (tb - bb) + bb) * 255;
-        result8[j + 3] = 255.0;
+        result8[j + 3] = (result8[j + 3] + 255 * ta) / 2;
       }
     }
     let r = result8[j] * rr + result8[j + 1] * rg + result8[j + 2] * rb;

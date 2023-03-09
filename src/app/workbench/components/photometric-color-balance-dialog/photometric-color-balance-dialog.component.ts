@@ -169,7 +169,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
         blueLayerId: this.layers[0].id,
         greenLayerId: this.layers[1].id,
         redLayerId: this.layers[2].id,
-        referenceLayerId: this.layers[0].id
+        referenceLayerId: this.layers[2].id
       });
 
       if (!this.form.controls.whiteReference.value) this.form.controls.whiteReference.setValue(this.FILTER_REFERENCES.find(ref => ref.peak == this.layers[0].filter.center));

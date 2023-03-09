@@ -1,20 +1,13 @@
 <div fxLayout="column" fxLayoutGap="20px" style="height: 100%">
     <form [formGroup]="form">
         <div fxLayout="column" fxLayoutGap="20px" style="width: 100%">
-            <mat-form-field appearance="outline">
-                <mat-label i18n>Reference Layer</mat-label>
-                <mat-select formControlName="referenceLayerId">
-                    <mat-option *ngFor="let layerId of layerIds" [value]="layerId">
-                        {{ getLayerOptionLabel(layerId) | async }}
-                    </mat-option>
-                </mat-select>
-            </mat-form-field>
+
             <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
                 <mat-form-field fxFlex="1 1 auto" appearance="outline" width="100%">
                     <mat-label i18n>Select Layers(s) to Neutralize</mat-label>
                     <mat-select multiple formControlName="selectedLayerIds">
                         <ng-container *ngFor="let layerId of layerIds">
-                            <mat-option *ngIf="layerId != form.controls.referenceLayerId.value" [value]="layerId">
+                            <mat-option [value]="layerId">
                                 {{ getLayerOptionLabel(layerId) | async }}
                             </mat-option>
                         </ng-container>
@@ -30,6 +23,17 @@
                     <mat-icon>clear</mat-icon>
                 </button>
             </div>
+            <mat-form-field appearance="outline">
+                <mat-label i18n>Reference Layer</mat-label>
+                <mat-select formControlName="referenceLayerId">
+                    <ng-container *ngFor="let layerId of layerIds">
+                        <mat-option *ngIf="!form.controls.selectedLayerIds.value.includes(layerId)" [value]="layerId">
+                            {{ getLayerOptionLabel(layerId) | async }}
+                        </mat-option>
+                    </ng-container>
+
+                </mat-select>
+            </mat-form-field>
             <div fxFlex="1 1 auto" fxLayout="row" fxLayoutGap="20px" style="margin-bottom: 15px; margin-left: 20px">
                 <mat-checkbox formControlName="neutralizeBackground">Neutralize background</mat-checkbox>
             </div>

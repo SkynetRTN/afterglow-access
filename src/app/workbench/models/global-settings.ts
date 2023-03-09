@@ -5,6 +5,7 @@ import { SourceExtractionJobSettings } from "src/app/jobs/models/source-extracti
 import { AlignmentSettings, defaults as defaultAlignmentSettings } from "./alignment-settings";
 import { CalibrationSettings, defaults as defaultCalibrationSettings } from "./calibration-settings";
 import { CentroidSettings, defaults as defaultCentroidSettings } from "./centroid-settings";
+import { CosmeticCorrectionSettings, defaults as defaultCosmeticCorrectionSettings } from "./cosmetic-correction-settings";
 import { PhotometrySettings, defaults as defaultPhotometrySettings } from "./photometry-settings";
 import { SourceExtractionSettings, defaults as defaultSourceExtractionSettings } from "./source-extraction-settings";
 
@@ -14,6 +15,7 @@ export interface GlobalSettings {
     sourceExtraction: SourceExtractionSettings;
     centroid: CentroidSettings;
     alignment: AlignmentSettings;
+    cosmeticCorrection: CosmeticCorrectionSettings;
 }
 
 export let defaults: GlobalSettings = {
@@ -21,7 +23,8 @@ export let defaults: GlobalSettings = {
     calibration: { ...defaultCalibrationSettings },
     sourceExtraction: { ...defaultSourceExtractionSettings },
     centroid: { ...defaultCentroidSettings },
-    alignment: { ...defaultAlignmentSettings }
+    alignment: { ...defaultAlignmentSettings },
+    cosmeticCorrection: { ...defaultCosmeticCorrectionSettings }
 }
 
 
