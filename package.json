@@ -1,6 +1,6 @@
 {
   "name": "afterglow-access",
-  "version": "1.0.14",
+  "version": "1.0.17",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.config.json",
