@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy, SimpleChanges, OnDestroy, AfterViewInit } from '@angular/core';
 import { PixelNormalizer } from '../../../../data-files/models/pixel-normalizer';
 import { StretchMode } from '../../../../data-files/models/stretch-mode';
 import {
@@ -19,8 +19,8 @@ import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ImageLayer, isImageLayer } from 'src/app/data-files/models/data-file';
 import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { map, distinctUntilChanged, takeUntil, debounceTime, filter, auditTime, switchMap, withLatestFrom } from 'rxjs/operators'
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { map, distinctUntilChanged, takeUntil, debounceTime, filter, auditTime, switchMap, withLatestFrom, tap } from 'rxjs/operators'
 import { Store } from '@ngxs/store';
 import { UpdateNormalizer } from 'src/app/data-files/data-files.actions';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
@@ -31,7 +31,7 @@ import { DataFilesState } from 'src/app/data-files/data-files.state';
   styleUrls: ['./normalizer-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy {
+export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   @Input('layerId')
   set layerId(viewer: string) {
     this.layerId$.next(viewer);
@@ -89,50 +89,83 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy {
 
   colorMaps = COLOR_MAPS;
 
-  backgroundPercentileField = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'change' })
-  midPercentileField = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'change' })
-  peakPercentileField = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'change' })
-  backgroundLevelField = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
-  midLevelField = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
-  peakLevelField = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
-  colorMapField = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
-  stretchModeField = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
-  invertedField = this.fb.control('', { updateOn: 'change' })
-  layerScaleField = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'change' })
-  layerOffsetField = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
-  modeField = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
-  linkSourceLayerIdField = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
-  linkModeField = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
+  backgroundPercentileControl = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'change' })
+  midPercentileControl = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'change' })
+  peakPercentileControl = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0), lessThan(100, true)], updateOn: 'change' })
+  backgroundLevelControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
+  midLevelControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
+  peakLevelControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
+  colorMapControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
+  stretchModeControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
+  invertedControl = this.fb.control('', { updateOn: 'change' })
+  layerScaleControl = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'change' })
+  layerOffsetControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
+  modeControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
+  linkSourceLayerIdControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
+  linkModeControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
 
   form = this.fb.group({
-    backgroundPercentile: this.backgroundPercentileField,
-    midPercentile: this.midPercentileField,
-    peakPercentile: this.peakPercentileField,
-    backgroundLevel: this.backgroundLevelField,
-    midLevel: this.midLevelField,
-    peakLevel: this.peakLevelField,
-    colorMapName: this.colorMapField,
-    stretchMode: this.stretchModeField,
-    inverted: this.invertedField,
-    layerScale: this.layerScaleField,
-    layerOffset: this.layerOffsetField,
-    mode: this.modeField,
-    linkSourceLayerId: this.linkSourceLayerIdField,
-    linkMode: this.linkModeField
+    backgroundPercentile: this.backgroundPercentileControl,
+    midPercentile: this.midPercentileControl,
+    peakPercentile: this.peakPercentileControl,
+    backgroundLevel: this.backgroundLevelControl,
+    midLevel: this.midLevelControl,
+    peakLevel: this.peakLevelControl,
+    colorMapName: this.colorMapControl,
+    stretchMode: this.stretchModeControl,
+    inverted: this.invertedControl,
+    layerScale: this.layerScaleControl,
+    layerOffset: this.layerOffsetControl,
+    mode: this.modeControl,
+    linkSourceLayerId: this.linkSourceLayerIdControl,
+    linkMode: this.linkModeControl
   })
 
   private addDebouncedChangeHandler(field: FormControl, handler: (value: any) => void, debounce = 250) {
     field.valueChanges.pipe(
       auditTime(debounce),
       filter(value => field.valid),
-      distinctUntilChanged()
+      distinctUntilChanged(),
     ).subscribe(handler)
+  }
+
+  private bindField(name: string, control: FormControl, observable$: Observable<any>, debounce = 0, storeToFormMapper = (value) => value, formToStoreMapper = (value) => value) {
+    control.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      auditTime(debounce),
+      filter(value => control.valid),
+      distinctUntilChanged(),
+    ).subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { [name]: formToStoreMapper(value) })))
+
+    observable$.pipe(
+      map(obj => obj ? obj[name] : null),
+      takeUntil(this.destroy$),
+      distinctUntilChanged(),
+    ).subscribe(value => {
+      let formValue = storeToFormMapper(value)
+      if (control.value == value) return;
+      control.patchValue(formValue, { emitEvent: false })
+    })
   }
 
 
   constructor(private decimalPipe: DecimalPipe, private fb: FormBuilder, private store: Store) {
-
-
+    //only update form fields if the value is different to prevent 1.000 in the form from being replaced with 1 and interfere with typing
+    this.bindField('backgroundPercentile', this.backgroundPercentileControl, this.normalizer$, 250)
+    this.bindField('midPercentile', this.midPercentileControl, this.normalizer$, 250)
+    this.bindField('peakPercentile', this.peakPercentileControl, this.normalizer$, 250)
+    this.bindField('backgroundLevel', this.backgroundLevelControl, this.normalizer$, 250)
+    this.bindField('midLevel', this.midLevelControl, this.normalizer$, 250)
+    this.bindField('peakLevel', this.peakLevelControl, this.normalizer$, 250)
+    this.bindField('colorMapName', this.colorMapControl, this.normalizer$)
+    this.bindField('stretchMode', this.stretchModeControl, this.normalizer$)
+    this.bindField('inverted', this.invertedControl, this.normalizer$)
+    this.bindField('mode', this.modeControl, this.normalizer$, 0, (value) => value == 'percentile', (value) => value ? 'percentile' : 'pixel')
+    this.bindField('layerScale', this.layerScaleControl, this.normalizer$, 250)
+    this.bindField('layerOffset', this.layerOffsetControl, this.normalizer$, 250)
+    this.bindField('linkSourceLayerId', this.linkSourceLayerIdControl, this.normalizer$, 0, (value) => value || 'none', (value) => value == 'none' ? null : value)
+    this.bindField('linkMode', this.linkModeControl, this.normalizer$)
+    this.form.valueChanges.subscribe(value => this.updateSteps(value))
 
     this.normalizer$.pipe(
       takeUntil(this.destroy$)
@@ -143,51 +176,16 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy {
       this.updateSteps(normalizer);
 
       if (normalizer.linkSourceLayerId) {
-        this.linkModeField.enable({ emitEvent: false })
-        this.stretchModeField.disable({ emitEvent: false })
-        this.modeField.disable({ emitEvent: false })
+        this.linkModeControl.enable({ emitEvent: false })
+        this.stretchModeControl.disable({ emitEvent: false })
+        this.modeControl.disable({ emitEvent: false })
       }
       else {
-        this.linkModeField.disable({ emitEvent: false })
-        this.stretchModeField.enable({ emitEvent: false })
-        this.modeField.enable({ emitEvent: false })
+        this.linkModeControl.disable({ emitEvent: false })
+        this.stretchModeControl.enable({ emitEvent: false })
+        this.modeControl.enable({ emitEvent: false })
       }
-
-
-      this.form.patchValue({
-        ...normalizer,
-        backgroundPercentile: this.decimalPipe.transform(normalizer.backgroundPercentile, '1.0-5'),
-        midPercentile: this.decimalPipe.transform(normalizer.midPercentile, '1.0-5'),
-        peakPercentile: this.decimalPipe.transform(normalizer.peakPercentile, '1.0-5'),
-        backgroundLevel: this.decimalPipe.transform(normalizer.backgroundLevel, '1.0-5'),
-        midLevel: this.decimalPipe.transform(normalizer.midLevel, '1.0-5'),
-        peakLevel: this.decimalPipe.transform(normalizer.peakLevel, '1.0-5'),
-        linkSourceLayerId: normalizer.linkSourceLayerId || 'none',
-        mode: normalizer.mode == 'percentile'
-      }, { emitEvent: false })
     })
-
-
-    this.addDebouncedChangeHandler(this.backgroundPercentileField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { backgroundPercentile: value })))
-    this.addDebouncedChangeHandler(this.midPercentileField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { midPercentile: value })))
-    this.addDebouncedChangeHandler(this.peakPercentileField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { peakPercentile: value })))
-    this.addDebouncedChangeHandler(this.backgroundLevelField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { backgroundLevel: value })))
-    this.addDebouncedChangeHandler(this.midLevelField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { midLevel: value })))
-    this.addDebouncedChangeHandler(this.peakLevelField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { peakLevel: value })))
-
-    this.colorMapField.valueChanges.subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { colorMapName: value })))
-    this.stretchModeField.valueChanges.subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { stretchMode: value })))
-    this.invertedField.valueChanges.subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { inverted: value })))
-    this.modeField.valueChanges.subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { mode: value ? 'percentile' : 'pixel' })))
-
-    this.addDebouncedChangeHandler(this.layerScaleField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { layerScale: value })))
-    this.addDebouncedChangeHandler(this.layerOffsetField, value => this.store.dispatch(new UpdateNormalizer(this.layerId, { layerOffset: value })))
-
-
-    this.linkSourceLayerIdField.valueChanges.subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { linkSourceLayerId: value == 'none' ? null : value })))
-    this.linkModeField.valueChanges.subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { linkMode: value })))
-
-    this.form.valueChanges.subscribe(value => this.updateSteps(value))
 
     this.presetClick$.pipe(
       takeUntil(this.destroy$),
@@ -227,9 +225,14 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy {
         })
       );
     });
+
   }
 
   ngOnInit() { }
+
+  ngAfterViewInit(): void {
+
+  }
 
   ngOnDestroy() {
     this.destroy$.next(true);

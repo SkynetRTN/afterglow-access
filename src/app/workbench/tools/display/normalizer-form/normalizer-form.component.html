@@ -125,7 +125,7 @@
       </mat-form-field>
       <mat-form-field *ngIf="showLayerOffset" class="" appearance="outline">
         <mat-label i18n>Layer Offset</mat-label>
-        <input matInput formControlName="layerOffset" type="number" [step]="0.05" min="0" />
+        <input matInput formControlName="layerOffset" type="number" [step]="0.05" />
       </mat-form-field>
       <mat-slide-toggle class="mb-3 pl-4" formControlName="inverted" *ngIf="showInverted" [labelPosition]="'before'"
         color="primary" i18n>
