@@ -130,9 +130,13 @@ export function workbenchSanitizer(v: WorkbenchStateModel) {
 }
 
 export function photometrySanitizer(v: PhotometryStateModel) {
-  let state = {
+  let state: PhotometryStateModel = {
     ...v,
-  } as PhotometryStateModel;
+    config: {
+      ...v.config,
+      creatingBatchJobs: false
+    }
+  };
 
   state.layerIdToViewerState = {
     ...state.layerIdToViewerState,
