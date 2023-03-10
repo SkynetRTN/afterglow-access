@@ -4,7 +4,7 @@ import { AfterglowEnv } from './afterglow-env';
 export const env: AfterglowEnv = {
   production: false,
   environment: 'LOCAL',
-  version: '1.0.20',
+  version: '1.0.21',
   buildDate: 'Friday, March 10, 2023',
   coreVersion: 'v1',
   configUrl: 'afterglow.json',
