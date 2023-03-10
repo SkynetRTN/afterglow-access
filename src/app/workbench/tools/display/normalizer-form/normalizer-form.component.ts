@@ -100,7 +100,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy, Af
   invertedControl = this.fb.control('', { updateOn: 'change' })
   layerScaleControl = this.fb.control('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'change' })
   layerOffsetControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
-  modeControl = this.fb.control('', { validators: [Validators.required, isNumber], updateOn: 'change' })
+  modeControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
   linkSourceLayerIdControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
   linkModeControl = this.fb.control('', { validators: [Validators.required], updateOn: 'change' })
 
