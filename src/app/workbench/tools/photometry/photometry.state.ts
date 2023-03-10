@@ -12,8 +12,8 @@ import {
     Store,
 } from '@ngxs/store';
 import { ImmutableSelector, ImmutableContext } from '@ngxs-labs/immer-adapter';
-import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip, delay, combineLatest } from 'rxjs/operators';
-import { of, merge, interval, Observable } from 'rxjs';
+import { tap, catchError, finalize, filter, take, takeUntil, map, flatMap, skip, delay } from 'rxjs/operators';
+import { of, merge, interval, Observable, combineLatest } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { JobsState } from 'src/app/jobs/jobs.state';
 import { Job } from 'src/app/jobs/models/job';
