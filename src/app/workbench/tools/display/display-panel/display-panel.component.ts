@@ -163,6 +163,17 @@ export class DisplayPanelComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     )
 
+    this.file$.pipe(
+      switchMap((file) => file ? this.store.select(DisplayState.getCompositeNormalizationLayerIdByFileId(file.id)) : of(null)),
+      withLatestFrom(this.layers$)
+    ).subscribe(([selectedLayerId, layers]) => {
+
+      if (!selectedLayerId || layers.map(l => l.id).includes(selectedLayerId)) return;
+      let imageLayers = layers.filter(isImageLayer)
+      if (imageLayers.length == 0) return null;
+      this.store.dispatch(new SetCompositeNormalizationLayerId(imageLayers[0].id))
+    })
+
     this.compositeNormalizationLayer$ = this.file$.pipe(
       switchMap((file) => file ? this.store.select(DisplayState.getCompositeNormalizationLayerByFileId(file.id)) : of(null))
     )
