@@ -132,7 +132,7 @@ export class NormalizerFormComponent implements OnInit, OnChanges, OnDestroy, Af
   private bindField(name: string, control: FormControl, observable$: Observable<any>, throttle = 0, storeToFormMapper = (value) => value, formToStoreMapper = (value) => value) {
     control.valueChanges.pipe(
       takeUntil(this.destroy$),
-      throttleTime(throttle, asyncScheduler, { leading: true, trailing: true }),
+      throttleTime(throttle, asyncScheduler, { leading: false, trailing: true }),
       filter(value => control.valid),
     ).subscribe(value => this.store.dispatch(new UpdateNormalizer(this.layerId, { [name]: formToStoreMapper(value) })))
 
