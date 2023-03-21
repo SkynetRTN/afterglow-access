@@ -31,7 +31,7 @@ export interface CosmeticCorrectionStateModel {
 }
 
 const cosmeticCorrectionDefaultState: CosmeticCorrectionStateModel = {
-    version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
+    version: 'f24d45d4-5194-4416-be15-511911c5aaf5',
     settings: defaults,
     selectedLayerIds: [],
     currentJobId: null

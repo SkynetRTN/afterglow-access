@@ -17,13 +17,13 @@ export const defaults: CosmeticCorrectionSettings = {
   mCol: 10,
   nuCol: 0,
   mPixel: 2,
-  nuPixel: 4,
+  nuPixel: 2,
   mCorrCol: 2,
   mCorrPixel: 1,
   groupByInstrument: true,
   groupByFilter: true,
   groupByExpLength: false,
   maxGroupLen: 0,
-  maxGroupSpanHours: 0,
-  minGroupSepHours: 0
+  maxGroupSpanHours: 16,
+  minGroupSepHours: 12
 }
