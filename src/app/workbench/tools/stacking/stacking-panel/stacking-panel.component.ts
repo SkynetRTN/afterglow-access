@@ -196,6 +196,7 @@ export class StackingPanelComponent implements OnInit {
     let settings: StackSettings = {
       mode: data.mode,
       scaling: data.scaling == 'none' ? null : data.scaling,
+      prescaling: data.scaling == 'none' ? null : data.scaling,
       rejection: data.rejection == 'none' ? null : data.rejection,
       percentile: data.percentile,
       smartStacking: data.smartStacking,
