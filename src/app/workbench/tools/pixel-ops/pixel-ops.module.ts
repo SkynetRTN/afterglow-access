@@ -13,6 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { UtilsModule } from 'src/app/utils/utils.module';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
 
 
 
@@ -32,6 +33,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatTabsModule,
     MatTableModule,
     MatSortModule,
+    MatButtonModule,
     UtilsModule,
     MatCheckboxModule
   ],

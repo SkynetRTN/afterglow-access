@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatButtonModule } from '@angular/material/button';
 
 
 
@@ -23,7 +24,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     MatIconModule,
     MatProgressBarModule,
     MatInputModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatButtonModule,
   ],
   exports: [
     CosmeticCorrectionPanelComponent

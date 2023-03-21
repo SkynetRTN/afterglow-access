@@ -14,6 +14,7 @@ import { UtilsModule } from 'src/app/utils/utils.module';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AligningPanelComponent } from './aligning-panel/aligning-panel.component';
 import { RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 
 
 
@@ -35,7 +36,8 @@ import { RouterModule } from '@angular/router';
     MatSortModule,
     UtilsModule,
     MatCheckboxModule,
-    RouterModule
+    RouterModule,
+    MatButtonModule,
   ],
   exports: [AligningPanelComponent]
 })
