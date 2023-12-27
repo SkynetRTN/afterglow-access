@@ -2,10 +2,13 @@
   {{ config.title }}
 </div>
 <mat-dialog-content>
-  <div *ngIf="config.message" class="pb-4 dialog-message">{{ config.message }}</div>
-  <div *ngIf="config.description" class="pb-4 dialog-description">
-    <p>{{ config.description }}</p>
+  <div style="max-height: 500px; overflow: auto;">
+    <div *ngIf="config.message" class="pb-4 dialog-message">{{ config.message }}</div>
+    <div *ngIf="config.description" class="pb-4 dialog-description">
+      <p>{{ config.description }}</p>
+    </div>
   </div>
+
 </mat-dialog-content>
 <mat-dialog-actions align="end" class="pb-4">
   <button *ngFor="let button of config.buttons" mat-raised-button [mat-dialog-close]="button.value"
