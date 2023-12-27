@@ -259,12 +259,24 @@ export class WcsCalibrationState {
 
         let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
 
-        let sourceExtractionSettings = settings.sourceExtraction;
+        let sourceExtractionSettings = { ...settings.sourceExtraction };
         let sourceExtractionJobSettings: SourceExtractionJobSettings = {
             threshold: sourceExtractionSettings.threshold,
             fwhm: sourceExtractionSettings.fwhm,
             deblend: sourceExtractionSettings.deblend,
             limit: sourceExtractionSettings.limit,
+            bkSize: sourceExtractionSettings.bkSize,
+            bkFilterSize: sourceExtractionSettings.bkFilterSize,
+            minFwhm: sourceExtractionSettings.minFwhm,
+            maxFwhm: sourceExtractionSettings.maxFwhm,
+            maxEllipticity: sourceExtractionSettings.maxEllipticity,
+            minPixels: sourceExtractionSettings.minPixels,
+            deblendLevels: sourceExtractionSettings.deblendLevels,
+            deblendContrast: sourceExtractionSettings.deblendContrast,
+            clean: sourceExtractionSettings.clean,
+            centroid: sourceExtractionSettings.centroid,
+            satLevel: sourceExtractionSettings.satLevel,
+            discardSaturated: sourceExtractionSettings.discardSaturated
         };
 
         let job: WcsCalibrationJob = {
