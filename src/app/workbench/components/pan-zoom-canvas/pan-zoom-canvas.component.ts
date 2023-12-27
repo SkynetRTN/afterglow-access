@@ -260,6 +260,8 @@ export class PanZoomCanvasComponent implements OnInit, OnChanges, AfterViewInit,
     //ctx.oImageSmoothingEnabled = value;
     //ctx.webkitImageSmoothingEnabled = value;
     ctx.imageSmoothingEnabled = value;
+    // ctx.imageSmoothingEnabled = true;
+    // ctx.imageSmoothingQuality = 'high'
   }
 
   private debounce(func: any, context: any, wait: number, immediate: boolean = false) {
