@@ -48,19 +48,15 @@ export class JobsPageComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
       withLatestFrom(this.selectedJob$)
     ).subscribe(([id, selectedJob]) => {
-      if (!isNaN(+id)) {
-        if (id && (!selectedJob || selectedJob.id != id)) {
-          let actions = [];
-          let job = this.store.selectSnapshot(JobsState.getJobById(id))
-          if (!job) actions.push(new LoadJob(id))
-          if (!job || !job.result) actions.push(new LoadJobResult(id))
-          actions.push(new SelectJob(id))
-          this.store.dispatch(actions);
-        }
+      if (id && (!selectedJob || selectedJob.id != id)) {
+        let actions = [];
+        let job = this.store.selectSnapshot(JobsState.getJobById(id))
+        if (!job) actions.push(new LoadJob(id))
+        if (!job || !job.result) actions.push(new LoadJobResult(id))
+        actions.push(new SelectJob(id))
+        this.store.dispatch(actions);
       }
-      else {
-        this.store.dispatch(new SelectJob(null))
-      }
+
 
     })
 
@@ -75,12 +71,12 @@ export class JobsPageComponent implements OnInit, OnDestroy {
     //hide all auto-photometry jobs
     this.jobs$ = this.store.select(JobsState.getJobs).pipe(
       // map(jobs => jobs.filter(job => !isPhotometryJob(job) || job.fileIds.length > 1))
-      // map(jobs => jobs.sort((a, b) => {
-      //   let aDate = new Date(Date.parse((a.state?.completedOn || a.state?.createdOn) + ' GMT'))
-      //   let bDate = new Date(Date.parse((b.state?.completedOn || b.state?.createdOn) + ' GMT'))
-      //   return bDate.getTime() - aDate.getTime()
-      // })
-      map(jobs => jobs.sort((a, b) => +b.id - +a.id))
+      map(jobs => jobs.sort((a, b) => {
+        let aDate = new Date(Date.parse((a.state?.completedOn || a.state?.createdOn) + ' GMT'))
+        let bDate = new Date(Date.parse((b.state?.completedOn || b.state?.createdOn) + ' GMT'))
+        return bDate.getTime() - aDate.getTime()
+      })),
+      // map(jobs => jobs.sort((a, b) => +b.id - +a.id))
     )
 
   }
