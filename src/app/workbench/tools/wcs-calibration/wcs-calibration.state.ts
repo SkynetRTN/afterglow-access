@@ -292,14 +292,16 @@ export class WcsCalibrationState {
                         actions.push(new InvalidateHeader(layerId.toString()));
                     });
                     let viewerIds = this.store.selectSnapshot(WorkbenchState.getVisibleViewerIds);
-                    let layerIds = job.result.fileIds.map(id => id.toString())
+
                     viewerIds.forEach(viewerId => {
                         let viewer = this.store.selectSnapshot(WorkbenchState.getViewerById(viewerId));
 
-                        if (viewer.layerId && layerIds.includes(viewer.layerId)) {
+                        if (viewer.layerId && job.result.fileIds.includes(viewer.layerId)) {
                             actions.push(new LoadLayerHeader(viewer.layerId));
                         }
                     })
+
+                    let layerIds = job.fileIds.map(id => id.toString())
                     let message: string = '';
                     if (layerIds.length == job.result.fileIds.length) {
                         message = layerIds.length == 1 ? 'Successfully found solution' : `Successfully found solutions for all ${layerIds.length} files.`
