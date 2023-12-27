@@ -1,7 +1,7 @@
 import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
 
-import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom } from 'rxjs/operators';
+import { map, takeUntil, distinctUntilChanged, switchMap, tap, flatMap, filter, withLatestFrom, startWith } from 'rxjs/operators';
 import { FormGroup, FormControl, Validators, FormBuilder, AbstractControl } from '@angular/forms';
 import { MatSelectChange } from '@angular/material/select';
 import {
@@ -159,6 +159,8 @@ export class AligningPanelComponent implements OnInit {
   });
   alignmentSettings$ = this.store.select(WorkbenchState.getAlignmentSettings)
 
+  submitDisabled$: Observable<boolean>;
+
   constructor(private store: Store, private router: Router, private fb: FormBuilder) {
     this.formData$ = this.store.select(AligningState.getFormData);
 
@@ -290,6 +292,12 @@ export class AligningPanelComponent implements OnInit {
     // });
 
     this.alignmentJob$ = this.store.select(AligningState.getCurrentJob);
+
+    this.submitDisabled$ = this.alignmentJob$.pipe(startWith(null)).pipe(
+      map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+    )
+
+
   }
 
   ngOnInit() { }

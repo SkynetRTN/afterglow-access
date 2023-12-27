@@ -402,7 +402,8 @@
         <button mat-raised-button i18n (click)="restoreDefaults()">Restore Default Alignment Settings</button>
 
         <div class="">
-          <button mat-raised-button (click)="submit()" [disabled]="!alignForm.valid" i18n>
+          <button mat-raised-button (click)="submit()" [disabled]="!alignForm.valid || (this.submitDisabled$ | async)"
+            i18n>
             Submit
           </button>
         </div>

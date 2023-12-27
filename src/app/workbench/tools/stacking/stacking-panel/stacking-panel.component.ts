@@ -1,6 +1,6 @@
 import { Component, OnInit, HostBinding, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
-import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from 'rxjs/operators';
+import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom, startWith } from 'rxjs/operators';
 import { StackFormData } from '../../../models/workbench-state';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { StackingJob, StackingJobResult, StackSettings } from '../../../../jobs/models/stacking';
@@ -57,6 +57,8 @@ export class StackingPanelComponent implements OnInit {
     equalizeGlobal: new FormControl(''),
   });
 
+  submitDisabled$: Observable<boolean>;
+
   constructor(private store: Store, private router: Router) {
     this.dataFileEntities$ = this.store.select(DataFilesState.getFileEntities);
     this.config$ = this.store.select(StackingState.getState);
@@ -107,6 +109,12 @@ export class StackingPanelComponent implements OnInit {
 
 
     this.onStackSettingsFormChange();
+
+    this.submitDisabled$ = this.stackingJob$.pipe(startWith(null)).pipe(
+      map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+    )
+
+
   }
 
   onStackSettingsFormChange() {

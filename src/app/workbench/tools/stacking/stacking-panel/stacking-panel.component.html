@@ -108,7 +108,8 @@
     </div>
 
     <div style="clear: both"></div>
-    <button mat-raised-button (click)="submit()" [disabled]="!stackForm.valid" class="float-right" i18n>
+    <button mat-raised-button (click)="submit()" [disabled]="!stackForm.valid || (submitDisabled$ | async)"
+      class="float-right" i18n>
       Submit
     </button>
     <div style="clear: both"></div>

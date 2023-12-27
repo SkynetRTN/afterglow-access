@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Store } from '@ngxs/store';
 import { BehaviorSubject, combineLatest, Observable, Subject, merge, of } from 'rxjs';
-import { distinctUntilChanged, filter, flatMap, map, switchMap, catchError, takeUntil, withLatestFrom, take } from 'rxjs/operators';
+import { distinctUntilChanged, filter, flatMap, map, switchMap, catchError, takeUntil, withLatestFrom, take, startWith } from 'rxjs/operators';
 import { DataFilesState } from '../../../../data-files/data-files.state';
 import {
   getDecDegs,
@@ -87,6 +87,8 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     maxSources: new FormControl('', this.minZero),
     showOverlay: new FormControl('')
   });
+
+  submitDisabled$: Observable<boolean>;
 
   constructor(private store: Store, private dialog: MatDialog, private markerService: ImageViewerMarkerService, private dataFileService: AfterglowDataFileService, private cdRef: ChangeDetectorRef) {
     this.header$ = this.viewerId$.pipe(
@@ -279,6 +281,10 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
       //handle case where job ID is present and valid, but job is not in store
       if (!isValid || (jobId && !this.store.selectSnapshot(JobsState.getJobById(jobId)))) this.store.dispatch(new UpdateWcsCalibrationExtractionOverlay(this.viewerId))
     })
+
+    this.submitDisabled$ = this.activeJob$.pipe(startWith(null)).pipe(
+      map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+    )
   }
 
   ngOnInit() {

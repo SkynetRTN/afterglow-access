@@ -105,8 +105,8 @@
           </div>
 
           <div style="clear: both"></div>
-          <button mat-raised-button (click)="submit(imageCalcForm.value)" [disabled]="!imageCalcForm.valid"
-            class="float-right" i18n>
+          <button mat-raised-button (click)="submit(imageCalcForm.value)"
+            [disabled]="!imageCalcForm.valid || (submitDisabled$ | async)" class="float-right" i18n>
             Submit
           </button>
         </form>
@@ -204,8 +204,8 @@
           </div>
 
           <div style="clear: both"></div>
-          <button mat-raised-button (click)="submitAdv(imageCalcFormAdv.value)" [disabled]="!imageCalcFormAdv.valid"
-            class="float-right" i18n>
+          <button mat-raised-button (click)="submitAdv(imageCalcFormAdv.value)"
+            [disabled]="!imageCalcFormAdv.valid  || (submitDisabled$ | async)" class="float-right" i18n>
             Submit
           </button>
           <div style="clear: both"></div>
@@ -215,7 +215,6 @@
 
     </mat-tab>
   </mat-tab-group>
-
   <div *ngIf="showCurrentPixelOpsJobState$ | async" style="padding-top: 10px">
     <div *ngIf="currentPixelOpsJob$ | async; let job">
       <div class="alert alert-info"

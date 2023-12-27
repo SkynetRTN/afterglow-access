@@ -127,8 +127,8 @@
           </mat-form-field>
         </div>
         <div style="text-align: right; width: 100%">
-          <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()" [disabled]="!wcsCalibrationForm.valid"
-            i18n>
+          <button class="ml-2 mt-3" mat-raised-button (click)="onSubmitClick()"
+            [disabled]="!wcsCalibrationForm.valid || (submitDisabled$ | async)" i18n>
             Submit
           </button>
         </div>

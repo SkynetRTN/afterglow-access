@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Store } from '@ngxs/store';
 import { Observable, combineLatest, BehaviorSubject, Subject } from 'rxjs';
-import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom } from 'rxjs/operators';
+import { map, tap, takeUntil, distinctUntilChanged, flatMap, withLatestFrom, startWith } from 'rxjs/operators';
 import { DataFilesState } from 'src/app/data-files/data-files.state';
 
 import { ImageLayer } from 'src/app/data-files/models/data-file';
@@ -29,6 +29,7 @@ export class CosmeticCorrectionPanelComponent implements OnInit {
   destroy$ = new Subject<boolean>();
   selectedLayers$ = this.store.select(CosmeticCorrectionState.getSelectedLayerIds);
   job$ = this.store.select(CosmeticCorrectionState.getCurrentJob);
+  submitDisabled$: Observable<boolean>;
 
   // job$: Observable<CosmeticCorrectionJob>;
 
@@ -76,6 +77,10 @@ export class CosmeticCorrectionPanelComponent implements OnInit {
     ).subscribe(selectedLayerIds => {
       this.form.patchValue({ selectedLayerIds: selectedLayerIds }, { emitEvent: false })
     })
+
+    this.submitDisabled$ = this.job$.pipe(startWith(null)).pipe(
+      map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+    )
 
 
 

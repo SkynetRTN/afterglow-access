@@ -157,6 +157,8 @@ export class PhotometryPanelComponent implements AfterViewInit, OnDestroy, OnIni
   });
   batchPhotFormData$: Observable<BatchPhotometryFormData>;
 
+  submitDisabled$: Observable<boolean>;
+
   constructor(
     private dialog: MatDialog,
     private dmsPipe: DmsPipe,
@@ -677,6 +679,11 @@ export class PhotometryPanelComponent implements AfterViewInit, OnDestroy, OnIni
         this.store.dispatch(new RemoveSources(sources.map(s => s.id)));
       }
     )
+
+    this.submitDisabled$ = combineLatest([this.batchCalJob$.pipe(startWith(null)), this.batchPhotJob$.pipe(startWith(null))]).pipe(
+      map(([calJob, photJob]) => (calJob?.state?.status !== undefined && ['pending', 'in_progress'].includes(calJob.state.status)) || (photJob?.state?.status !== undefined && ['pending', 'in_progress'].includes(photJob.state.status)))
+    )
+
   }
 
   ngOnInit() {

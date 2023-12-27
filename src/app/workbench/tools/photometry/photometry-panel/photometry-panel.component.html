@@ -236,7 +236,7 @@
                     <mat-icon>clear</mat-icon>
                   </button>
                   <button class="ml-4" mat-raised-button color="primary" (click)="batchPhotometer()"
-                    [disabled]="config?.batchPhotFormData?.selectedLayerIds?.length == 0 || sources?.length == 0 || (creatingBatchJobs$ | async)"
+                    [disabled]="config?.batchPhotFormData?.selectedLayerIds?.length == 0 || sources?.length == 0 || (creatingBatchJobs$ | async) || (submitDisabled$ | async)"
                     i18n-matTooltip matTooltip="Batch Photometer">
                     <mat-icon>wb_incandescent</mat-icon>
                   </button>

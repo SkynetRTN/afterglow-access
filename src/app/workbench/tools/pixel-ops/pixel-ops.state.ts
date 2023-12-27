@@ -125,6 +125,11 @@ export class PixelOpsState {
     @ImmutableContext()
     public createPixelOpsJob({ getState, setState, dispatch }: StateContext<PixelOpsStateModel>, { }: CreatePixelOpsJob) {
         let state = getState();
+        setState((state: PixelOpsStateModel) => {
+            state.showCurrentPixelOpsJobState = true;
+            return state;
+        });
+
         let layers = this.store.selectSnapshot(DataFilesState.getLayers);
         let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         let data = state.formData;
@@ -209,6 +214,12 @@ export class PixelOpsState {
         { }: CreateAdvPixelOpsJob
     ) {
         let state = getState();
+
+        setState((state: PixelOpsStateModel) => {
+            state.showCurrentPixelOpsJobState = true;
+            return state;
+        });
+
         let layers = this.store.selectSnapshot(DataFilesState.getLayers);
         let dataFiles = this.store.selectSnapshot(DataFilesState.getFileEntities);
         let data = state.formData;

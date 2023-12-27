@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, HostBinding, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { Observable, combineLatest, BehaviorSubject, Subscription, Subject, of } from 'rxjs';
-import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, tap, filter, flatMap, takeUntil, distinctUntilChanged, switchMap, withLatestFrom, startWith } from 'rxjs/operators';
 import { FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors, AbstractControl } from '@angular/forms';
 
 import { MatDialog } from '@angular/material/dialog';
@@ -127,6 +127,8 @@ export class PixelOpsPanelComponent implements OnInit, OnDestroy, AfterViewInit 
     auxLayerIds: new FormControl([]),
     inPlace: new FormControl(false, Validators.required),
   });
+
+  submitDisabled$: Observable<boolean>;
 
   constructor(public dialog: MatDialog, private store: Store, private router: Router) {
     this.config$ = this.store.select(PixelOpsState.getState);
@@ -296,6 +298,10 @@ export class PixelOpsPanelComponent implements OnInit, OnDestroy, AfterViewInit 
     // );
 
     this.updateSimpleFormUI();
+
+    this.submitDisabled$ = this.currentPixelOpsJob$.pipe(startWith(null)).pipe(
+      map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+    )
   }
 
   updateSimpleFormUI() {
@@ -388,7 +394,7 @@ export class PixelOpsPanelComponent implements OnInit, OnDestroy, AfterViewInit 
   // }
 
   onTabChange($event: MatTabChangeEvent) {
-    this.store.dispatch(new HideCurrentPixelOpsJobState());
+    // this.store.dispatch(new HideCurrentPixelOpsJobState());
   }
 
   setAuxLayerIds(layerIds: string[]) {
