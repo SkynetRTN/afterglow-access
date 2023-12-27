@@ -28,7 +28,28 @@ export function isNumber(control: AbstractControl): ValidationErrors | null {
   return { isNumber: 'Not a valid number' };
 }
 
-export function lessThan(max: number, inclusive=false): ValidatorFn {
+export function isInteger(control: AbstractControl): ValidationErrors | null {
+  if (isEmptyInputValue(control.value)) {
+    return null; // don't validate empty values to allow optional controls
+  }
+
+  let numericRegex = /^[-+]?([0-9]+(\.[0-9]*)?|\.[0-9]+)$/;
+  let result = Validators.pattern(numericRegex)(control);
+  if (result == null) {
+    const value = parseFloat(control.value);
+    if (!isNaN(value)) {
+      if (Number.isInteger(value)) {
+        return null
+      }
+      else {
+        return { isInteger: 'Not a valid integer' };
+      }
+    }
+  }
+  return { isInteger: 'Not a valid number' };
+}
+
+export function lessThan(max: number, inclusive = false): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (isEmptyInputValue(control.value) || isEmptyInputValue(max)) {
       return null; // don't validate empty values to allow optional controls
@@ -40,7 +61,7 @@ export function lessThan(max: number, inclusive=false): ValidatorFn {
   };
 }
 
-export function greaterThan(min: number, inclusive=false): ValidatorFn {
+export function greaterThan(min: number, inclusive = false): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (isEmptyInputValue(control.value) || isEmptyInputValue(min)) {
       return null; // don't validate empty values to allow optional controls
