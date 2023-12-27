@@ -4,7 +4,7 @@ import { Store } from '@ngxs/store';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
-import { greaterThan, isNumber, lessThan } from 'src/app/utils/validators';
+import { greaterThan, isInteger, isNumber, lessThan } from 'src/app/utils/validators';
 import { UpdateCalibrationSettings, UpdateSourceExtractionSettings } from 'src/app/workbench/workbench.actions';
 import { WorkbenchState } from 'src/app/workbench/workbench.state';
 import { defaults } from '../../workbench/models/global-settings';
@@ -33,6 +33,9 @@ export class SourceExtractionSettingsComponent implements OnInit, OnDestroy {
     clean: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0)], updateOn: 'blur' }),
     satLevel: new FormControl('', { validators: [Validators.required, isNumber], updateOn: 'blur' }),
     discardSaturated: new FormControl('', { updateOn: 'change' }),
+    downsample: new FormControl('', { validators: [Validators.required, isInteger, greaterThan(0)], updateOn: 'blur' }),
+    clipLo: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true), lessThan(100, true)], updateOn: 'blur' }),
+    clipHi: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true), lessThan(100, true)], updateOn: 'blur' }),
   })
 
   settings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);

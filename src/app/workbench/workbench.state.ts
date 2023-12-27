@@ -185,7 +185,7 @@ import { InvalidateAutoCalByLayerId, InvalidateAutoPhotByLayerId, RemovePhotData
 import { InvalidateWcsCalibrationExtractionOverlayByLayerId } from './tools/wcs-calibration/wcs-calibration.actions';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b65de65-929223-435a-fgb-ab32809cc',
+  version: '3b65de65-929223-435a-fgb-ab328123123123',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',

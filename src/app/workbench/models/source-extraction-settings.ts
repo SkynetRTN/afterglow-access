@@ -15,6 +15,9 @@ export interface SourceExtractionSettings {
   limit?: number;
   satLevel: number;
   discardSaturated: boolean;
+  downsample: number;
+  clipLo: number;
+  clipHi: number;
 }
 
 export const defaults: SourceExtractionSettings = {
@@ -32,6 +35,8 @@ export const defaults: SourceExtractionSettings = {
   centroid: true,
   clean: 1,
   satLevel: 63000,
-  discardSaturated: true
-
+  discardSaturated: true,
+  downsample: 2,
+  clipLo: 0,
+  clipHi: 100,
 };

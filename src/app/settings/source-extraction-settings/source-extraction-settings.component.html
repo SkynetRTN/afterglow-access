@@ -124,6 +124,30 @@
                         </mat-form-field>
                         <app-print-form-error [control]="sourceExtractionForm.get('satLevel')"></app-print-form-error>
                     </div>
+                    <div>
+                        <mat-form-field>
+                            <mat-label i18n>Downsampling Factor</mat-label>
+                            <input type="number" matInput formControlName="downsample" />
+                            <mat-hint i18n>downsampling factor</mat-hint>
+                        </mat-form-field>
+                        <app-print-form-error [control]="sourceExtractionForm.get('downsample')"></app-print-form-error>
+                    </div>
+                    <div>
+                        <mat-form-field>
+                            <mat-label i18n>Low Clipping (pre-extraction)</mat-label>
+                            <input type="number" matInput formControlName="clipLo" />
+                            <mat-hint i18n>Low Clipping (pre-extraction)</mat-hint>
+                        </mat-form-field>
+                        <app-print-form-error [control]="sourceExtractionForm.get('clipLo')"></app-print-form-error>
+                    </div>
+                    <div>
+                        <mat-form-field>
+                            <mat-label i18n>High Clipping (pre-extraction)</mat-label>
+                            <input type="number" matInput formControlName="clipHi" />
+                            <mat-hint i18n>High Clipping (pre-extraction)</mat-hint>
+                        </mat-form-field>
+                        <app-print-form-error [control]="sourceExtractionForm.get('clipHi')"></app-print-form-error>
+                    </div>
                 </div>
 
             </div>

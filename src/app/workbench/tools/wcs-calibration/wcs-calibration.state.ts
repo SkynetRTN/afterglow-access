@@ -50,7 +50,7 @@ export interface WcsCalibrationStateModel {
 }
 
 const defaultState: WcsCalibrationStateModel = {
-    version: 'f24d45d4-5194-4406-be15-511911c5aaf5',
+    version: 'f24d4344-5194-4406-be15-511911c5aaf5',
     config: {
         selectedLayerIds: [],
         activeJobId: '',
@@ -259,25 +259,12 @@ export class WcsCalibrationState {
 
         let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
 
-        let sourceExtractionSettings = { ...settings.sourceExtraction };
-        let sourceExtractionJobSettings: SourceExtractionJobSettings = {
-            threshold: sourceExtractionSettings.threshold,
-            fwhm: sourceExtractionSettings.fwhm,
-            deblend: sourceExtractionSettings.deblend,
-            limit: sourceExtractionSettings.limit,
-            bkSize: sourceExtractionSettings.bkSize,
-            bkFilterSize: sourceExtractionSettings.bkFilterSize,
-            minFwhm: sourceExtractionSettings.minFwhm,
-            maxFwhm: sourceExtractionSettings.maxFwhm,
-            maxEllipticity: sourceExtractionSettings.maxEllipticity,
-            minPixels: sourceExtractionSettings.minPixels,
-            deblendLevels: sourceExtractionSettings.deblendLevels,
-            deblendContrast: sourceExtractionSettings.deblendContrast,
-            clean: sourceExtractionSettings.clean,
-            centroid: sourceExtractionSettings.centroid,
-            satLevel: sourceExtractionSettings.satLevel,
-            discardSaturated: sourceExtractionSettings.discardSaturated
-        };
+        let sourceExtractionJobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+        if (sourceExtractionJobSettings.clipHi == 100 && sourceExtractionJobSettings.clipLo == 0) {
+            // assume default behavior requested,  modify to defaults which are best for WCS
+            sourceExtractionJobSettings.clipHi = 90;
+            sourceExtractionJobSettings.clipLo = 10;
+        }
 
         let job: WcsCalibrationJob = {
             id: null,

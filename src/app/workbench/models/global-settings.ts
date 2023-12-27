@@ -122,6 +122,9 @@ export function toSourceExtractionJobSettings(settings: GlobalSettings): SourceE
         centroid: s.centroid,
         clean: s.clean,
         satLevel: s.satLevel,
-        discardSaturated: s.discardSaturated
+        discardSaturated: s.discardSaturated,
+        downsample: s.downsample,
+        clipHi: s.clipHi,
+        clipLo: s.clipLo
     }
 }
