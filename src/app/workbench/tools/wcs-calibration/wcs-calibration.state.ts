@@ -178,6 +178,12 @@ export class WcsCalibrationState {
         let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
         let sourceExtractionSettings = toSourceExtractionJobSettings(settings);
 
+        if (sourceExtractionSettings.clipHi == 100 && sourceExtractionSettings.clipLo == 0) {
+            // assume default behavior requested,  modify to defaults which are best for WCS
+            sourceExtractionSettings.clipHi = 90;
+            sourceExtractionSettings.clipLo = 10;
+        }
+
         let job: SourceExtractionJob = {
             type: JobType.SourceExtraction,
             sourceExtractionSettings: sourceExtractionSettings,
