@@ -300,12 +300,22 @@ export class WcsCalibrationState {
                             actions.push(new LoadLayerHeader(viewer.layerId));
                         }
                     })
-                    let message: string;
-                    let numFailed = layerIds.length - job.result.fileIds.length;
-                    if (numFailed != 0) {
-                        message = `Failed to find solution for ${numFailed} image(s).`;
-                    } else {
-                        message = `Successfully found solutions for all ${layerIds.length} files.`;
+                    let message: string = '';
+                    if (layerIds.length == job.result.fileIds.length) {
+                        message = layerIds.length == 1 ? 'Successfully found solution' : `Successfully found solutions for all ${layerIds.length} files.`
+                    }
+                    else {
+                        if (job.result.fileIds.length == 0) {
+                            message = layerIds.length == 1 ? 'Could not find solution' : `Could not find solutions for any of the ${layerIds.length} files.`
+                        }
+                        else {
+                            message = `Successfully found solutions for ${job.result.fileIds.length} file(s).  Could not find solutions for ${layerIds.length - job.result.fileIds.length} file(s).`
+                        }
+                        let fileEntities = this.store.selectSnapshot(DataFilesState.getFileEntities)
+                        let filenames = layerIds.filter(id => !job.result.fileIds.includes(id)).map(id => fileEntities[id]?.name || '').filter(filename => filename != '').join(', ')
+                        if (filenames != '') {
+                            message += `  Failed on: [${filenames}]`
+                        }
                     }
 
                     let dialogConfig: Partial<AlertDialogConfig> = {
@@ -327,6 +337,26 @@ export class WcsCalibrationState {
                     dispatch(actions)
 
                 }
+            }),
+            catchError(error => {
+                let dialogConfig: Partial<AlertDialogConfig> = {
+                    title: 'WCS Calibration Error',
+                    message: "An unexpected error occurred when creating the WCS calibration job.",
+                    buttons: [
+                        {
+                            color: '',
+                            value: false,
+                            label: 'Close',
+                        },
+                    ],
+                };
+                this.dialog.open(AlertDialogComponent, {
+                    width: '600px',
+                    data: dialogConfig,
+                });
+
+
+                return dispatch([])
             })
         )
     }
