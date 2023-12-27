@@ -217,20 +217,19 @@ export function getObject(header: Header) {
 }
 
 export function getRaHours(header: Header) {
-  let raEntry = getHeaderEntry(header, 'RA');
-  if (!raEntry) {
-    raEntry = getHeaderEntry(header, 'RAOBJ');
+  let raKeys = ["RA", "TELRA", "OBJRA", "RAOBJ", "OBJCTRA"];
+  let entry: HeaderEntry;
+  for (let key in raKeys) {
+    entry = getHeaderEntry(header, key);
+    if (entry) break;
   }
-  if (!raEntry) {
-    raEntry = getHeaderEntry(header, 'OBJCTRA');
-  }
-  if (!raEntry) return undefined;
+  if (!entry) return undefined;
 
   let ra;
-  if (typeof raEntry.value == 'string' && raEntry.value.includes(':')) {
-    ra = parseDms(raEntry.value);
+  if (typeof entry.value == 'string' && entry.value.includes(':')) {
+    ra = parseDms(entry.value);
   } else {
-    ra = parseFloat(raEntry.value);
+    ra = parseFloat(entry.value);
   }
 
   if (isNaN(ra) || ra == undefined || ra == null) return undefined;
@@ -239,20 +238,19 @@ export function getRaHours(header: Header) {
 }
 
 export function getDecDegs(header: Header) {
-  let decEntry = getHeaderEntry(header, 'DEC');
-  if (!decEntry) {
-    decEntry = getHeaderEntry(header, 'DECOBJ');
+  let keys = ["DEC", "TELDEC", "OBJDEC", "DECOBJ", "OBJCTDEC"];
+  let entry: HeaderEntry;
+  for (let key in keys) {
+    entry = getHeaderEntry(header, key);
+    if (entry) break;
   }
-  if (!decEntry) {
-    decEntry = getHeaderEntry(header, 'OBJCTDEC');
-  }
-  if (!decEntry) return undefined;
+  if (!entry) return undefined;
 
   let dec;
-  if (typeof decEntry.value == 'string' && decEntry.value.includes(':')) {
-    dec = parseDms(decEntry.value);
+  if (typeof entry.value == 'string' && entry.value.includes(':')) {
+    dec = parseDms(entry.value);
   } else {
-    dec = parseFloat(decEntry.value);
+    dec = parseFloat(entry.value);
   }
 
   if (isNaN(dec) || dec == undefined || dec == null) return undefined;
