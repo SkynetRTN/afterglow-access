@@ -490,7 +490,7 @@ export class Wcs {
     // return [alpha / 15.0, del];
   }
 
-  public getPixelScale() {
+  public getXPixelScale() {
     if (!this.isValid()) return null;
 
     let cd1_1 = this.m11;
@@ -498,7 +498,24 @@ export class Wcs {
     let cd2_1 = this.m21;
     let cd2_2 = this.m22;
 
-    return (Math.abs(cd1_1) + Math.abs(cd2_2)) / 2.0;
+    return (Math.sqrt(Math.pow(cd1_1, 2) + Math.pow(cd2_1, 2)))
+  }
+
+  public getYPixelScale() {
+    if (!this.isValid()) return null;
+
+    let cd1_1 = this.m11;
+    let cd1_2 = this.m12;
+    let cd2_1 = this.m21;
+    let cd2_2 = this.m22;
+
+    return (Math.sqrt(Math.pow(cd1_2, 2) + Math.pow(cd2_2, 2)))
+  }
+
+  public getPixelScale() {
+    if (!this.isValid()) return null;
+
+    return (this.getXPixelScale() + this.getYPixelScale()) / 2
   }
 
   public isFlipped() {
