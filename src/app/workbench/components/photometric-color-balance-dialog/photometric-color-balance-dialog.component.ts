@@ -264,7 +264,7 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
     this.running = true;
     let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
     let photometryJobSettings = toPhotometryJobSettings(settings);
-    let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+    let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings.sourceExtraction);
     let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
     let fieldCalibration = toFieldCalibration(settings, catalogs);
 

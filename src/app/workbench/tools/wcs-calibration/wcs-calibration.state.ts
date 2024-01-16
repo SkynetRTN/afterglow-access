@@ -176,13 +176,7 @@ export class WcsCalibrationState {
 
         let layerState = this.store.selectSnapshot(WcsCalibrationState.getLayerStateById(layerId))
         let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
-        let sourceExtractionSettings = toSourceExtractionJobSettings(settings);
-
-        if (sourceExtractionSettings.clipHi == 100 && sourceExtractionSettings.clipLo == 0) {
-            // assume default behavior requested,  modify to defaults which are best for WCS
-            sourceExtractionSettings.clipHi = 90;
-            sourceExtractionSettings.clipLo = 10;
-        }
+        let sourceExtractionSettings = toSourceExtractionJobSettings(settings.wcsSourceExtraction);
 
         let job: SourceExtractionJob = {
             type: JobType.SourceExtraction,
@@ -265,7 +259,7 @@ export class WcsCalibrationState {
 
         let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
 
-        let sourceExtractionJobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+        let sourceExtractionJobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings.wcsSourceExtraction);
         if (sourceExtractionJobSettings.clipHi == 100 && sourceExtractionJobSettings.clipLo == 0) {
             // assume default behavior requested,  modify to defaults which are best for WCS
             sourceExtractionJobSettings.clipHi = 90;

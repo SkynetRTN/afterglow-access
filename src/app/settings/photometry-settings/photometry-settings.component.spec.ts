@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AperturePhotometrySettingsComponent } from './aperture-photometry-settings.component';
+import { PhotometrySettingsComponent } from './photometry-settings.component';
 
 describe('AperturePhotometrySettingsComponent', () => {
-  let component: AperturePhotometrySettingsComponent;
-  let fixture: ComponentFixture<AperturePhotometrySettingsComponent>;
+  let component: PhotometrySettingsComponent;
+  let fixture: ComponentFixture<PhotometrySettingsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AperturePhotometrySettingsComponent ]
+      declarations: [PhotometrySettingsComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AperturePhotometrySettingsComponent);
+    fixture = TestBed.createComponent(PhotometrySettingsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

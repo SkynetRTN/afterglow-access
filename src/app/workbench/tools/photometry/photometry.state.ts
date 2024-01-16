@@ -272,7 +272,7 @@ export class PhotometryState {
 
         let settings = this.store.selectSnapshot(WorkbenchState.getSettings);
         let photometryJobSettings = toPhotometryJobSettings(settings);
-        let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+        let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings.sourceExtraction);
         let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
         let fieldCalibration = toFieldCalibration(settings, catalogs);
 
@@ -396,7 +396,7 @@ export class PhotometryState {
 
         if (settings.calibration.calibrationEnabled) {
 
-            let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+            let sourceExtractionJobSettings = toSourceExtractionJobSettings(settings.sourceExtraction);
             let catalogs = this.store.selectSnapshot(WorkbenchState.getCatalogs)
             let fieldCalibration = toFieldCalibration(settings, catalogs);
 

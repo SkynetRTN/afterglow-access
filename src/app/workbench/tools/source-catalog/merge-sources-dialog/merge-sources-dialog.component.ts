@@ -11,7 +11,6 @@ import { JobsState } from 'src/app/jobs/jobs.state';
 import { JobType } from 'src/app/jobs/models/job-types';
 import { JobService } from 'src/app/jobs/services/job.service';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
-import { toSourceExtractionJobSettings } from '../../../models/global-settings';
 import { SonifierRegionMode } from '../../sonification/models/sonifier-file-state';
 import { PosType, Source } from '../../../models/source';
 import { AddSources, RemoveSources, UpdateSource } from '../../../sources.actions';

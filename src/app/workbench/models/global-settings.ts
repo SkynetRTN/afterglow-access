@@ -13,6 +13,7 @@ export interface GlobalSettings {
     photometry: PhotometrySettings;
     calibration: CalibrationSettings;
     sourceExtraction: SourceExtractionSettings;
+    wcsSourceExtraction: SourceExtractionSettings
     centroid: CentroidSettings;
     alignment: AlignmentSettings;
     cosmeticCorrection: CosmeticCorrectionSettings;
@@ -22,6 +23,7 @@ export let defaults: GlobalSettings = {
     photometry: { ...defaultPhotometrySettings },
     calibration: { ...defaultCalibrationSettings },
     sourceExtraction: { ...defaultSourceExtractionSettings },
+    wcsSourceExtraction: { ...defaultSourceExtractionSettings },
     centroid: { ...defaultCentroidSettings },
     alignment: { ...defaultAlignmentSettings },
     cosmeticCorrection: { ...defaultCosmeticCorrectionSettings }
@@ -105,8 +107,8 @@ export function toFieldCalibration(settings: GlobalSettings, catalogs: Catalog[]
     return result;
 }
 
-export function toSourceExtractionJobSettings(settings: GlobalSettings): SourceExtractionJobSettings {
-    let s = settings.sourceExtraction;
+export function toSourceExtractionJobSettings(settings: SourceExtractionSettings): SourceExtractionJobSettings {
+    let s = settings;
     return {
         threshold: s.threshold,
         bkSize: s.bkSize,

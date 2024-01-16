@@ -108,6 +108,7 @@ import {
   SyncAfterglowHeaders,
   UpdateCosmeticCorrectionSettings,
   UpdateAlignmentSettings,
+  UpdateWcsSourceExtractionSettings,
 } from './workbench.actions';
 import {
   getWidth,
@@ -169,7 +170,7 @@ import { getLongestCommonStartingSubstring, isNotEmpty } from '../utils/utils';
 import { Injectable } from '@angular/core';
 import { CustomMarkerPanelState } from './models/marker-file-state';
 import { PlottingPanelState } from './models/plotter-file-state';
-import { GlobalSettings, defaults as defaultGlobalSettings, toPhotometryJobSettings, toSourceExtractionJobSettings, toFieldCalibration } from './models/global-settings';
+import { GlobalSettings, defaults as defaultGlobalSettings } from './models/global-settings';
 import { getCoreApiUrl } from '../afterglow-config';
 import { AfterglowConfigService } from '../afterglow-config.service';
 import { FieldCalibrationJob, FieldCalibrationJobResult } from '../jobs/models/field-calibration';
@@ -185,7 +186,7 @@ import { InvalidateAutoCalByLayerId, InvalidateAutoPhotByLayerId, RemovePhotData
 import { InvalidateWcsCalibrationExtractionOverlayByLayerId } from './tools/wcs-calibration/wcs-calibration.actions';
 
 const workbenchStateDefaults: WorkbenchStateModel = {
-  version: '3b65de65-929223-435a-fgb-ab328123123123',
+  version: 'f40bd5a8-79a8-47f6-bf9d-1bef4c46f2ea',
   showSideNav: false,
   inFullScreenMode: false,
   fullScreenPanel: 'file',
@@ -347,6 +348,11 @@ export class WorkbenchState {
   @Selector()
   public static getSourceExtractionSettings(state: WorkbenchStateModel) {
     return state.settings.sourceExtraction;
+  }
+
+  @Selector()
+  public static getWcsSourceExtractionSettings(state: WorkbenchStateModel) {
+    return state.settings.wcsSourceExtraction;
   }
 
   @Selector()
@@ -1702,6 +1708,28 @@ export class WorkbenchState {
     setState((state: WorkbenchStateModel) => {
       state.settings.sourceExtraction = {
         ...state.settings.sourceExtraction,
+        ...changes,
+      };
+      return state;
+    });
+
+    //side-effects
+    let actions: any[] = [];
+    // clear all auto-cal jobs to trigger recalibration of photometry
+    actions.push(new InvalidateAutoCalByLayerId());
+    actions.push(new InvalidateWcsCalibrationExtractionOverlayByLayerId())
+    return dispatch(actions);
+  }
+
+  @Action(UpdateWcsSourceExtractionSettings)
+  @ImmutableContext()
+  public updateWcsSourceExtractionSettings(
+    { getState, setState, dispatch }: StateContext<WorkbenchStateModel>,
+    { changes }: UpdateWcsSourceExtractionSettings
+  ) {
+    setState((state: WorkbenchStateModel) => {
+      state.settings.wcsSourceExtraction = {
+        ...state.settings.wcsSourceExtraction,
         ...changes,
       };
       return state;

@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SourceExtractionSettingsComponent } from './source-extraction-settings.component';
+import { WcsCalibrationSettingsComponent } from './wcs-calibration-settings.component';
 
 describe('SourceExtractionSettingsComponent', () => {
-  let component: SourceExtractionSettingsComponent;
-  let fixture: ComponentFixture<SourceExtractionSettingsComponent>;
+  let component: WcsCalibrationSettingsComponent;
+  let fixture: ComponentFixture<WcsCalibrationSettingsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ SourceExtractionSettingsComponent ]
+      declarations: [WcsCalibrationSettingsComponent]
     })
-    .compileComponents();
+      .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SourceExtractionSettingsComponent);
+    fixture = TestBed.createComponent(WcsCalibrationSettingsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

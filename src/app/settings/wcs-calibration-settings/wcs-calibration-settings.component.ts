@@ -5,16 +5,16 @@ import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Catalog } from 'src/app/jobs/models/catalog-query';
 import { greaterThan, isInteger, isNumber, lessThan } from 'src/app/utils/validators';
-import { UpdateCalibrationSettings, UpdateSourceExtractionSettings } from 'src/app/workbench/workbench.actions';
+import { UpdateCalibrationSettings, UpdateSourceExtractionSettings, UpdateWcsSourceExtractionSettings } from 'src/app/workbench/workbench.actions';
 import { WorkbenchState } from 'src/app/workbench/workbench.state';
 import { defaults } from '../../workbench/models/global-settings';
 
 @Component({
-  selector: 'app-source-extraction-settings',
-  templateUrl: './source-extraction-settings.component.html',
-  styleUrls: ['./source-extraction-settings.component.scss']
+  selector: 'app-wcs-calibration-settings',
+  templateUrl: './wcs-calibration-settings.component.html',
+  styleUrls: ['./wcs-calibration-settings.component.scss']
 })
-export class SourceExtractionSettingsComponent implements OnInit, OnDestroy {
+export class WcsCalibrationSettingsComponent implements OnInit, OnDestroy {
   destroy$ = new Subject<boolean>();
 
   sourceExtractionForm = new FormGroup({
@@ -38,24 +38,23 @@ export class SourceExtractionSettingsComponent implements OnInit, OnDestroy {
     clipHi: new FormControl('', { validators: [Validators.required, isNumber, greaterThan(0, true), lessThan(100, true)], updateOn: 'blur' }),
   })
 
-  settings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
-  catalogs$: Observable<Catalog[]>;
-  selectedCatalog$: Observable<Catalog>;
+  sourceExtractionSettings$ = this.store.select(WorkbenchState.getWcsSourceExtractionSettings);
+
 
   constructor(private store: Store) {
     this.sourceExtractionForm.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.onFormChange();
+        this.onSourceExtractionFormChange();
       });
 
-    this.settings$.pipe(
+    this.sourceExtractionSettings$.pipe(
       takeUntil(this.destroy$)
-    ).subscribe(settings => this.onSettingsChange())
+    ).subscribe(settings => this.onSourceExtractionSettingsChange())
 
     //init
-    this.onSettingsChange();
-    this.onFormChange();
+    this.onSourceExtractionSettingsChange();
+    this.onSourceExtractionFormChange();
   }
 
   ngOnInit(): void {
@@ -71,14 +70,14 @@ export class SourceExtractionSettingsComponent implements OnInit, OnDestroy {
     return Object.keys(controls).filter(key => controls[key].enabled && (!controls[key].dirty || controls[key].valid))
   }
 
-  onSettingsChange() {
-    let settings = this.store.selectSnapshot(WorkbenchState.getSourceExtractionSettings);
+  onSourceExtractionSettingsChange() {
+    let settings = this.store.selectSnapshot(WorkbenchState.getWcsSourceExtractionSettings);
     let value = {};
     this.getValidFormFields().forEach(key => value[key] = settings[key])
     this.sourceExtractionForm.patchValue(value, { emitEvent: false })
   }
 
-  onFormChange() {
+  onSourceExtractionFormChange() {
     let controls = this.sourceExtractionForm.controls;
 
     if (controls.deblend.value) {
@@ -95,13 +94,13 @@ export class SourceExtractionSettingsComponent implements OnInit, OnDestroy {
       value[key] = controls[key].value
     })
 
-    this.store.dispatch(new UpdateSourceExtractionSettings(value))
+    this.store.dispatch(new UpdateWcsSourceExtractionSettings(value))
 
   }
 
-  restoreDefaults() {
+  restoreSourceExtractionDefaults() {
     this.sourceExtractionForm.markAsPristine();
-    this.store.dispatch(new UpdateSourceExtractionSettings({ ...defaults.sourceExtraction }))
+    this.store.dispatch(new UpdateWcsSourceExtractionSettings({ ...defaults.sourceExtraction }))
   }
 
 }

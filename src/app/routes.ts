@@ -6,9 +6,8 @@ import { LogoutPageComponent } from './auth/containers/logout-page/logout-page.c
 import { LoginPageComponent } from './auth/containers/login-page/login-page.component';
 import { JobsPageComponent } from './jobs/containers/jobs-page/jobs-page.component';
 import { SettingsPageComponent } from './settings/settings-page/settings-page.component';
-import { AperturePhotometrySettingsComponent } from './settings/aperture-photometry-settings/aperture-photometry-settings.component';
-import { PhotometryCalibrationSettingsComponent } from './settings/photometry-calibration-settings/photometry-calibration-settings.component';
-import { SourceExtractionSettingsComponent } from './settings/source-extraction-settings/source-extraction-settings.component';
+import { PhotometrySettingsComponent } from './settings/photometry-settings/photometry-settings.component';
+import { WcsCalibrationSettingsComponent } from './settings/wcs-calibration-settings/wcs-calibration-settings.component';
 import { ThemeSettingsComponent } from './settings/theme-settings/theme-settings.component';
 
 export const AFTERGLOW_ROUTES: Routes = [
@@ -57,21 +56,15 @@ export const AFTERGLOW_ROUTES: Routes = [
         canActivate: [AuthGuard],
       },
       {
-        path: 'aperture-photometry',
-        component: AperturePhotometrySettingsComponent,
-        data: { title: 'Aperture Photometry Settings' },
+        path: 'photometry',
+        component: PhotometrySettingsComponent,
+        data: { title: 'Photometry Settings' },
         canActivate: [AuthGuard],
       },
       {
-        path: 'photometry-calibration',
-        component: PhotometryCalibrationSettingsComponent,
-        data: { title: 'Photometry Calibration Settings' },
-        canActivate: [AuthGuard],
-      },
-      {
-        path: 'source-extraction',
-        component: SourceExtractionSettingsComponent,
-        data: { title: 'Source Extraction Settings' },
+        path: 'wcs-calibration',
+        component: WcsCalibrationSettingsComponent,
+        data: { title: 'WCS Calibration Settings' },
         canActivate: [AuthGuard],
       },
     ]

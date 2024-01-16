@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 import { SettingsPageComponent } from './settings-page/settings-page.component';
 import { MatListModule } from '@angular/material/list';
 import { RouterModule } from '@angular/router';
-import { AperturePhotometrySettingsComponent } from './aperture-photometry-settings/aperture-photometry-settings.component';
-import { PhotometryCalibrationSettingsComponent } from './photometry-calibration-settings/photometry-calibration-settings.component';
-import { SourceExtractionSettingsComponent } from './source-extraction-settings/source-extraction-settings.component';
+import { PhotometrySettingsComponent } from './photometry-settings/photometry-settings.component';
+import { WcsCalibrationSettingsComponent } from './wcs-calibration-settings/wcs-calibration-settings.component';
 import { ThemeSettingsComponent } from './theme-settings/theme-settings.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
@@ -28,9 +27,8 @@ import { ThemePickerModule } from '../theme-picker';
   ],
   declarations: [
     SettingsPageComponent,
-    AperturePhotometrySettingsComponent,
-    PhotometryCalibrationSettingsComponent,
-    SourceExtractionSettingsComponent,
+    PhotometrySettingsComponent,
+    WcsCalibrationSettingsComponent,
     ThemeSettingsComponent
   ],
   imports: [

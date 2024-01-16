@@ -99,7 +99,7 @@ export class WcsCalibrationPanelComponent implements OnInit, OnDestroy {
     this.selectedLayerIds$ = this.config$.pipe(map((state) => state.selectedLayerIds));
 
     this.wcsCalibrationSettings$ = this.store.select(WcsCalibrationState.getConfig);
-    this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getSourceExtractionSettings);
+    this.sourceExtractionSettings$ = this.store.select(WorkbenchState.getWcsSourceExtractionSettings);
 
     this.refLayerId$ = this.config$.pipe(
       map((data) => (data && data.refLayerId && data.selectedLayerIds.includes(data.refLayerId)) ? data.refLayerId : null),

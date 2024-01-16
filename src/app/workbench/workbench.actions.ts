@@ -226,6 +226,12 @@ export class UpdateSourceExtractionSettings {
   constructor(public changes: Partial<SourceExtractionSettings>) { }
 }
 
+export class UpdateWcsSourceExtractionSettings {
+  public static readonly type = '[Workbench] Update Wcs Source Extraction Settings';
+
+  constructor(public changes: Partial<SourceExtractionSettings>) { }
+}
+
 export class UpdateAlignmentSettings {
   public static readonly type = '[Workbench] Update Alignment Settings';
 

@@ -90,7 +90,7 @@ export class SourceExtractionRegionDialogComponent implements OnInit, OnDestroy 
     let rawImageData = this.store.selectSnapshot(DataFilesState.getImageDataById(layer.rawImageDataId))
     let header = this.store.selectSnapshot(DataFilesState.getHeaderById(layer.headerId))
 
-    let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings);
+    let jobSettings: SourceExtractionJobSettings = toSourceExtractionJobSettings(settings.sourceExtraction);
 
     if (
       region == SourceExtractionRegion.VIEWPORT ||

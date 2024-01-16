@@ -29,7 +29,6 @@ import { SourcesState } from '../../sources.state';
 import { getHeight, getSourceCoordinates, getWidth, isImageLayer } from 'src/app/data-files/models/data-file';
 import { WorkbenchState } from '../../workbench.state';
 import { Viewer } from '../../models/viewer';
-import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { SourceExtractionJob, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
 import { parseDms } from 'src/app/utils/skynet-astro';
 import { AlertDialogComponent, AlertDialogConfig } from 'src/app/utils/alert-dialog/alert-dialog.component';

@@ -14,7 +14,6 @@ import { JobType } from 'src/app/jobs/models/job-types';
 import { PixelOpsJob, PixelOpsJobResult } from 'src/app/jobs/models/pixel-ops';
 import { isSourceExtractionJob, SourceExtractionJob, SourceExtractionJobResult, SourceExtractionJobSettings } from 'src/app/jobs/models/source-extraction';
 import { CorrelationIdGenerator } from 'src/app/utils/correlated-action';
-import { toSourceExtractionJobSettings } from '../../models/global-settings';
 import { WorkbenchState } from '../../workbench.state';
 
 @Component({
