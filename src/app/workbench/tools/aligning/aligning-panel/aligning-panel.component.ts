@@ -179,6 +179,21 @@ export class AligningPanelComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.onAlignmentSettingsFormChange());
 
+    this.alignmentSettingsForm.controls.mode.valueChanges.subscribe(() => {
+      let controls = this.alignmentSettingsForm.controls;
+      let mode = controls.mode.value;
+      if ((mode == AlignmentMode.features || mode == AlignmentMode.pixels)) {
+        controls.enableRot.setValue(false);
+        controls.enableScale.setValue(false);
+        controls.enableSkew.setValue(false);
+      }
+      else {
+        controls.enableRot.setValue(true);
+        controls.enableScale.setValue(true);
+        controls.enableSkew.setValue(true);
+      }
+    })
+
     this.alignmentSettings$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(settings => this.onAlignmentSettingsChange(settings))
@@ -401,6 +416,8 @@ export class AligningPanelComponent implements OnInit {
       this.alignmentSettingsForm.controls['pixelModeSettings'].enable({ emitEvent: false });
     }
 
+
+
     let value = {};
     this.getValidFormFields(this.alignmentSettingsForm).forEach(key => {
       objectPath.set(value, key, this.alignmentSettingsForm.get(key).value)
@@ -438,7 +455,7 @@ export class AligningPanelComponent implements OnInit {
 
     let formData = this.store.selectSnapshot(AligningState.getFormData);
     let settings = this.store.selectSnapshot(WorkbenchState.getAlignmentSettings);
-    let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getSettings));
+    let sourceExtractionSettings = toSourceExtractionJobSettings(this.store.selectSnapshot(WorkbenchState.getWcsSourceExtractionSettings));
     let jobSettingsBase: AlignmentJobSettingsBase = {
       refImage: formData.mosaicMode ? null : parseInt(formData.refLayerId),
       mosaicSearchRadius: formData.mosaicSearchRadius,
