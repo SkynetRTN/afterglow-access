@@ -107,7 +107,7 @@ export const defaults: AlignmentSettings = {
     },
     featureModeSettings: {
         algorithm: FeatureAlignmentAlgorithm.AKAZE,
-        ratioThreshold: 0.5,
+        ratioThreshold: 0.4,
         detectEdges: false,
         percentileMax: 99,
         percentileMin: 10,
