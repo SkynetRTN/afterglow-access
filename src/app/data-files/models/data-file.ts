@@ -219,7 +219,7 @@ export function getObject(header: Header) {
 export function getRaHours(header: Header) {
   let raKeys = ["RA", "TELRA", "OBJRA", "RAOBJ", "OBJCTRA"];
   let entry: HeaderEntry;
-  for (let key in raKeys) {
+  for (let key of raKeys) {
     entry = getHeaderEntry(header, key);
     if (entry) break;
   }
@@ -240,7 +240,7 @@ export function getRaHours(header: Header) {
 export function getDecDegs(header: Header) {
   let keys = ["DEC", "TELDEC", "OBJDEC", "DECOBJ", "OBJCTDEC"];
   let entry: HeaderEntry;
-  for (let key in keys) {
+  for (let key of keys) {
     entry = getHeaderEntry(header, key);
     if (entry) break;
   }
