@@ -86,7 +86,7 @@ export interface AlignmentSettings {
 export const defaults: AlignmentSettings = {
     enableRot: true,
     enableScale: true,
-    enableSkew: true,
+    enableSkew: false,
     crop: true,
     mode: AlignmentMode.wcs,
     wcsModeSettings: {
