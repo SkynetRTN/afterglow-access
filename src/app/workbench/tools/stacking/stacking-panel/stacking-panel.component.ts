@@ -111,7 +111,9 @@ export class StackingPanelComponent implements OnInit {
     this.onStackSettingsFormChange();
 
     this.submitDisabled$ = this.stackingJob$.pipe(startWith(null)).pipe(
-      map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+      // map(job => (job?.state?.status !== undefined && ['pending', 'in_progress'].includes(job.state.status)))
+      //TODO: temporarily allow multiple stacking jobs.  In the future,  keep track of list of jobs and show status for all of them
+      map(job => false)
     )
 
 
