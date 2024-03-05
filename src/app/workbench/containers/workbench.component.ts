@@ -1096,9 +1096,10 @@ export class WorkbenchComponent implements OnInit, OnDestroy, AfterViewInit {
           if (filename.length == 0) {
             filename = 'afterglow-files'
           }
-          filename += '.zip'
+
 
         }
+        filename += '.zip'
 
         let job: BatchDownloadJob = {
           type: JobType.BatchDownload,
