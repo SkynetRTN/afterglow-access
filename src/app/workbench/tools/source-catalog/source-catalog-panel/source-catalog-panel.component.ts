@@ -250,17 +250,11 @@ export class SourceCatalogPanelComponent implements AfterViewInit, OnDestroy, On
               primaryCoord = result.x;
               secondaryCoord = result.y;
             }
-            if (config.coordMode == 'sky' && header?.wcs?.isValid()) {
-              let wcs = header.wcs;
-              let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
-              primaryCoord = raDec[0];
-              secondaryCoord = raDec[1];
-              posType = PosType.SKY;
-            }
 
             let centerEpoch = getCenterTime(header);
 
-            let source: Source = {
+            let sources: Source[] = [];
+            sources.push({
               id: null,
               label: null,
               objectId: null,
@@ -271,8 +265,30 @@ export class SourceCatalogPanelComponent implements AfterViewInit, OnDestroy, On
               pm: null,
               pmPosAngle: null,
               pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
-            };
-            this.store.dispatch([new AddSources([source]), new InvalidateAutoPhotByLayerId()]);
+            })
+
+            if (header?.wcs?.isValid()) {
+              let wcs = header.wcs;
+              let raDec = wcs.pixToWorld([primaryCoord, secondaryCoord]);
+              primaryCoord = raDec[0];
+              secondaryCoord = raDec[1];
+              posType = PosType.SKY;
+
+              sources.push({
+                id: null,
+                label: null,
+                objectId: null,
+                layerId: imageLayer.id,
+                primaryCoord: primaryCoord,
+                secondaryCoord: secondaryCoord,
+                posType: posType,
+                pm: null,
+                pmPosAngle: null,
+                pmEpoch: centerEpoch ? centerEpoch.toISOString() : null,
+              })
+            }
+
+            this.store.dispatch([new AddSources(sources), new InvalidateAutoPhotByLayerId()]);
           } else if (!$event.mouseEvent.ctrlKey) {
             this.store.dispatch(
               new UpdateConfig({
@@ -371,7 +387,8 @@ export class SourceCatalogPanelComponent implements AfterViewInit, OnDestroy, On
 
     // local events
     this.onRemoveAllSources$.pipe(
-      withLatestFrom(this.sources$),
+      // withLatestFrom(this.sources$),
+      withLatestFrom(this.store.select(SourcesState.getSources)),
       takeUntil(this.destroy$)
     ).subscribe(
       ([event, sources]) => {

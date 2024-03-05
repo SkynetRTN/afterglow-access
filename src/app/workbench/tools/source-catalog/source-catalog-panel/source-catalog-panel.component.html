@@ -9,7 +9,8 @@
 <ng-container *ngIf="config$ | async; let config">
     <ng-container *ngIf="layer$ | async as layer; else layerNotSelectedBlock">
         <ng-container *ngIf="imageLayer$ | async as imageLayer; else invalidLayerTypeBlock">
-            <div class="mb-3" [hidden]="!(header$ | async)?.wcs?.isValid()">
+            <!-- <div class="mb-3" [hidden]="!(header$ | async)?.wcs?.isValid()"> -->
+            <div class="mb-3">
                 <mat-button-toggle-group name="coordMode" aria-label="Coordinate Mode"
                     [value]="(header$ | async)?.wcs?.isValid() ? config?.coordMode : 'pixel'"
                     [disabled]="!(header$ | async)?.wcs?.isValid()" (change)="onCoordModeChange($event)">
