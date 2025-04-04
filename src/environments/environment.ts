@@ -4,8 +4,8 @@ import { AfterglowEnv } from './afterglow-env';
 export const env: AfterglowEnv = {
   production: false,
   environment: 'LOCAL',
-  version: '1.0.28',
-  buildDate: 'Tuesday, March 5, 2024',
+  version: '1.0.29',
+  buildDate: 'Friday, April 4, 2025',
   coreVersion: 'v1',
   configUrl: 'afterglow.json',
   plugins: [NgxsLoggerPluginModule.forRoot()],
