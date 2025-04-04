@@ -2023,17 +2023,17 @@ export class WorkbenchState {
   public loadCatalogs({ getState, setState, dispatch }: StateContext<WorkbenchStateModel>, { }: LoadCatalogs) {
     return this.afterglowCatalogService.getCatalogs().pipe(
       tap((catalogs) => {
-        catalogs.forEach(catalog => {
-          if (!catalog.filterLookup) catalog.filterLookup = {};
-          let red = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
-          if (red) catalog.filterLookup['Red'] = red;
-          let green = (catalog.mags['V'] ? 'V' : catalog.filterLookup['V']) || '';
-          if (green) catalog.filterLookup['Green'] = green;
-          let blue = (catalog.mags['B'] ? 'B' : catalog.filterLookup['B']) || '';
-          if (blue) catalog.filterLookup['Blue'] = blue;
-          let lum = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
-          if (lum) catalog.filterLookup['Lum'] = lum;
-        })
+        // catalogs.forEach(catalog => {
+        //   if (!catalog.filterLookup) catalog.filterLookup = {};
+        //   let red = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
+        //   if (red) catalog.filterLookup['Red'] = red;
+        //   let green = (catalog.mags['V'] ? 'V' : catalog.filterLookup['V']) || '';
+        //   if (green) catalog.filterLookup['Green'] = green;
+        //   let blue = (catalog.mags['B'] ? 'B' : catalog.filterLookup['B']) || '';
+        //   if (blue) catalog.filterLookup['Blue'] = blue;
+        //   let lum = (catalog.mags['R'] ? 'R' : catalog.filterLookup['R']) || '';
+        //   if (lum) catalog.filterLookup['Lum'] = lum;
+        // })
 
         setState((state: WorkbenchStateModel) => {
           state.catalogs = catalogs;
