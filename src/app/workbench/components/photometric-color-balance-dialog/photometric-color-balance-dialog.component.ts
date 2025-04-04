@@ -25,7 +25,7 @@ interface Filter {
   name: string;
   aliases: string[];
   center: number;
-  FNu: number;
+  FNu?: number;
 }
 
 interface Layer {
@@ -46,22 +46,28 @@ export class PhotometricColorBalanceDialogComponent implements OnInit, AfterView
   layers: Layer[] = [];
 
   FILTERS: Filter[] = [
-    { name: "Blue", aliases: [], center: 0.462, FNu: 4.063 * .983 },
-    { name: "Green", aliases: [], center: 0.540, FNu: 3.636 * 1.048 },
-    { name: "Red", aliases: [], center: 0.646, FNu: 3.064 * .359 },
-    { name: "U", aliases: [], center: 0.366, FNu: 1.79 },
-    { name: "B", aliases: [], center: 0.438, FNu: 4.063 },
-    { name: "V", aliases: [], center: 0.545, FNu: 3.636 },
-    { name: "R", aliases: [], center: 0.641, FNu: 3.064 },
-    { name: "I", aliases: [], center: 0.798, FNu: 2.416 },
-    { name: "u'", aliases: ["uprime"], center: 0.35, FNu: 3.68 },
-    { name: "g'", aliases: ["gprime"], center: 0.475, FNu: 3.643 },
-    { name: "r'", aliases: ["rprime"], center: 0.6222, FNu: 3.648 },
-    { name: "i'", aliases: ["iprime"], center: 0.7362, FNu: 3.644 },
-    { name: "z'", aliases: ["zprime"], center: 0.9049, FNu: 3.631 },
-    { name: "J", aliases: [], center: 1.235, FNu: 1.594 },
-    { name: "H", aliases: [], center: 1.662, FNu: 1.024 },
-    { name: "Ks", aliases: [], center: 2.159, FNu: 0.6667 }
+    { name: "Blue", aliases: [], center: 0.438 },
+    { name: "Blue,B", aliases: [], center: 0.438 },
+    { name: "B,Blue", aliases: [], center: 0.438 },
+    { name: "Green", aliases: [], center: 0.545 },
+    { name: "Green,V", aliases: [], center: 0.545 },
+    { name: "V,Green", aliases: [], center: 0.545 },
+    { name: "Red", aliases: [], center: 0.641 },
+    { name: "Red,R", aliases: [], center: 0.641 },
+    { name: "R,Red", aliases: [], center: 0.641 },
+    { name: "U", aliases: [], center: 0.366 },
+    { name: "B", aliases: [], center: 0.438 },
+    { name: "V", aliases: [], center: 0.545 },
+    { name: "R", aliases: [], center: 0.641 },
+    { name: "I", aliases: [], center: 0.798 },
+    { name: "u'", aliases: ["uprime"], center: 0.35 },
+    { name: "g'", aliases: ["gprime"], center: 0.475 },
+    { name: "r'", aliases: ["rprime"], center: 0.6222 },
+    { name: "i'", aliases: ["iprime"], center: 0.7362 },
+    { name: "z'", aliases: ["zprime"], center: 0.9049 },
+    { name: "J", aliases: [], center: 1.235 },
+    { name: "H", aliases: [], center: 1.662 },
+    { name: "Ks", aliases: [], center: 2.159 }
   ]
 
   FILTER_REFERENCES = FILTER_REFERENCES;
